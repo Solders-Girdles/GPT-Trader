@@ -43,6 +43,12 @@ from gpt_trader.tui.services.mode_service import create_bot_for_mode
 from gpt_trader.tui.services.worker_service import WorkerService
 from gpt_trader.tui.state import TuiState
 from gpt_trader.tui.widgets import LiveWarningModal, SlimStatusWidget
+from gpt_trader.tui.notification_helpers import (
+    notify_action,
+    notify_error,
+    notify_success,
+    notify_warning,
+)
 from gpt_trader.tui.widgets.error_indicator import ErrorIndicatorWidget
 from gpt_trader.tui.widgets.status import BotStatusWidget
 from gpt_trader.utilities.logging_patterns import get_logger
@@ -258,11 +264,7 @@ class TraderApp(App):
         except Exception as e:
             self.tui_state.data_fetching = False
             logger.error(f"Failed to start read-only data feed: {e}", exc_info=True)
-            self.notify(
-                f"Failed to start data feed: {e}",
-                title="Error",
-                severity="error",
-            )
+            notify_error(self, f"Failed to start data feed: {e}", title="Error")
 
     def _handle_signal(self, signum: int, frame: Any) -> None:
         """Handle termination signals for graceful shutdown."""
@@ -299,7 +301,7 @@ class TraderApp(App):
                     if cache_valid:
                         # Cache hit - skip validation screen, show toast and proceed
                         logger.debug("Credential cache valid for %s, quick resume", saved_mode)
-                        self.notify("Credentials verified ✓", timeout=2)
+                        notify_success(self, "Credentials verified ✓")
                         await self._finish_saved_mode_setup(saved_mode)
                         return
                     else:
@@ -322,7 +324,7 @@ class TraderApp(App):
 
         except Exception as e:
             logger.critical(f"Failed to mount TUI: {e}", exc_info=True)
-            self.notify(f"TUI initialization failed: {e}", severity="error", timeout=30)
+            notify_error(self, f"TUI initialization failed: {e}", timeout=30)
             raise
 
     async def _handle_mode_selection(self, selected_mode: str | None) -> None:
@@ -330,6 +332,22 @@ class TraderApp(App):
         if selected_mode is None:
             logger.info("User cancelled mode selection")
             self.exit()
+            return
+
+        # Handle setup wizard request from mode selection
+        if selected_mode == "setup":
+            from gpt_trader.tui.screens.api_setup_wizard import APISetupWizardScreen
+            from gpt_trader.tui.screens.mode_selection import ModeSelectionScreen
+
+            logger.info("User requested API setup wizard from mode selection")
+
+            def handle_wizard_complete(result: str | None) -> None:
+                """Return to mode selection after wizard completes."""
+                if result == "verify":
+                    self.notify("Credentials saved! Select a mode to continue.", timeout=5)
+                self.push_screen(ModeSelectionScreen(), callback=self._handle_mode_selection)
+
+            self.push_screen(APISetupWizardScreen(), callback=handle_wizard_complete)
             return
 
         # Validate credentials for non-demo modes
@@ -387,12 +405,7 @@ class TraderApp(App):
             self.tui_state.degraded_mode = True
             self.tui_state.degraded_reason = "StatusReporter not available"
             self.tui_state.connection_healthy = False
-            self.notify(
-                "Limited functionality: Data source unavailable",
-                title="Degraded Mode",
-                severity="warning",
-                timeout=10,
-            )
+            notify_warning(self, "Limited functionality: Data source unavailable", title="Degraded Mode")
         else:
             self.tui_state.degraded_mode = False
             self.tui_state.degraded_reason = ""
@@ -403,7 +416,7 @@ class TraderApp(App):
         # In read_only mode, auto-start data feed so users see market data immediately.
         # Trading controls (S key) remain for starting the actual trading bot.
         if self.data_source_mode == "read_only":
-            self.notify("Read-only mode - starting data feed...", timeout=3)
+            notify_action(self, "Read-only mode - starting data feed...")
             self.tui_state.data_fetching = True
             self.call_later(self._start_readonly_data_feed)
             logger.debug("Auto-starting data feed for read_only mode")
@@ -462,7 +475,7 @@ class TraderApp(App):
                 elif should_proceed == "retry":
                     # User wants to retry validation (e.g., after fixing env vars)
                     logger.info(f"User requested retry validation for {mode} mode")
-                    self.notify("Retrying validation...", timeout=2)
+                    notify_action(self, "Retrying validation...")
                     self._show_validation_screen(mode, on_complete)
                 elif should_proceed:
                     logger.info(f"Credential validation passed for {mode} mode")
@@ -998,12 +1011,7 @@ class TraderApp(App):
         except Exception as e:
             logger.warning("Bootstrap snapshot failed: %s", e)
             try:
-                self.notify(
-                    f"Failed to fetch account snapshot: {e}",
-                    title="Startup",
-                    severity="warning",
-                    timeout=5,
-                )
+                notify_warning(self, f"Failed to fetch account snapshot: {e}", title="Startup")
             except Exception:
                 pass
             self._bootstrap_snapshot_inflight = False
@@ -1075,7 +1083,7 @@ class TraderApp(App):
         try:
             log_widget = self.query_one("#dash-logs", LogWidget)
             log_widget.set_level(level_map.get(level, 20))
-            self.notify(f"Log level: {level}", timeout=2)
+            notify_action(self, f"Log level: {level}")
         except Exception:
             pass
 

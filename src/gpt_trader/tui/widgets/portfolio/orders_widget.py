@@ -18,19 +18,29 @@ from gpt_trader.tui.formatting import format_price, format_quantity
 from gpt_trader.tui.helpers import safe_update
 from gpt_trader.tui.theme import THEME
 from gpt_trader.tui.types import Order
+from gpt_trader.tui.widgets.table_copy_mixin import TableCopyMixin
+from gpt_trader.tui.widgets.tile_states import TileEmptyState
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="tui")
 
 
-class OrdersWidget(Static):
+class OrdersWidget(TableCopyMixin, Static):
     """Displays active orders in a data table.
 
     Shows pending and active orders with their details including
     symbol, side (BUY/SELL with color coding), quantity, price, and status.
 
     Uses row keys (order_id) for efficient DataTable updates.
+
+    Keyboard shortcuts:
+        c: Copy selected row to clipboard
+        C: Copy all rows to clipboard
     """
+
+    BINDINGS = [
+        *TableCopyMixin.COPY_BINDINGS,
+    ]
 
     # Styles moved to styles/widgets/portfolio.tcss
 
@@ -40,7 +50,13 @@ class OrdersWidget(Static):
         table.can_focus = True
         table.cursor_type = "row"
         yield table
-        yield Label("", id="orders-empty", classes="empty-state")
+        yield TileEmptyState(
+            title="No Active Orders",
+            subtitle="Orders appear when the bot places trades",
+            icon="◌",
+            actions=["[S] Start Bot", "[R] Refresh"],
+            id="orders-empty",
+        )
 
     def on_mount(self) -> None:
         """Initialize the orders table with columns."""
@@ -58,7 +74,7 @@ class OrdersWidget(Static):
             orders: List of Order objects to display.
         """
         table = self.query_one("#orders-table", DataTable)
-        empty_label = self.query_one("#orders-empty", Label)
+        empty_state = self.query_one("#orders-empty", TileEmptyState)
 
         # Show empty state or data
         if not orders:
@@ -66,11 +82,12 @@ class OrdersWidget(Static):
             if table.row_count > 0:
                 table.clear()
             table.display = False
-            empty_label.display = True
-            empty_label.update("No orders yet. Orders appear when the bot places trades.")
+            empty_state.display = True
+            # Keep default message - orders are only for active trading
+            return
         else:
             table.display = True
-            empty_label.display = False
+            empty_state.display = False
 
             # Get current row keys
             existing_keys = set(table.rows.keys())

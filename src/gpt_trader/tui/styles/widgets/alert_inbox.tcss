@@ -3,7 +3,8 @@
 AlertInbox {
     height: auto;
     max-height: 20;
-    border: solid $border-subtle;
+    border: none;
+    border-left: wide $accent-muted;
     background: $bg-primary;
 }
 

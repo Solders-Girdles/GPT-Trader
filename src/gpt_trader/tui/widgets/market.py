@@ -5,12 +5,19 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from textual.app import ComposeResult
+from textual.containers import Horizontal
 from textual.reactive import reactive
 from textual.widgets import DataTable, Label, Static
 
 from gpt_trader.tui.formatting import format_price
 from gpt_trader.tui.helpers import safe_update
+from gpt_trader.tui.staleness_helpers import (
+    get_empty_state_config,
+    get_freshness_display,
+    get_staleness_banner,
+)
 from gpt_trader.tui.theme import THEME
+from gpt_trader.tui.widgets.tile_states import TileBanner, TileEmptyState
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -83,12 +90,21 @@ class MarketWatchWidget(Static):
         return "".join(chars)
 
     def compose(self) -> ComposeResult:
-        yield Label("MARKET WATCH", classes="widget-header")
+        with Horizontal(classes="market-header"):
+            yield Label("MARKET WATCH", classes="widget-header")
+            yield Label("", id="market-freshness", classes="data-state-label")
+        yield TileBanner(id="market-watch-banner", classes="tile-banner hidden")
         table = DataTable(id="market-table", zebra_stripes=True)
         table.can_focus = True
         table.cursor_type = "row"
         yield table
-        yield Label("", id="market-empty", classes="empty-state")
+        yield TileEmptyState(
+            title="No Market Data",
+            subtitle="Waiting for price feed...",
+            icon="◌",
+            actions=["[S] Start Bot", "[R] Refresh"],
+            id="market-empty",
+        )
 
     def on_mount(self) -> None:
         table = self.query_one(DataTable)
@@ -106,6 +122,32 @@ class MarketWatchWidget(Static):
 
     def on_state_updated(self, state: TuiState) -> None:
         """Called by StateRegistry when state changes."""
+        # Update staleness banner
+        try:
+            banner = self.query_one("#market-watch-banner", TileBanner)
+            staleness_result = get_staleness_banner(state)
+            if staleness_result:
+                banner.update_banner(staleness_result[0], severity=staleness_result[1])
+            else:
+                banner.update_banner("")
+        except Exception:
+            pass
+
+        # Update freshness indicator
+        try:
+            indicator = self.query_one("#market-freshness", Label)
+            freshness = get_freshness_display(state)
+            if freshness:
+                text, css_class = freshness
+                indicator.update(text)
+                indicator.remove_class("fresh", "stale", "critical")
+                indicator.add_class(css_class)
+            else:
+                indicator.update("")
+                indicator.remove_class("fresh", "stale", "critical")
+        except Exception:
+            pass
+
         self.state = state
 
     @safe_update(notify_user=True, error_tracker=True, severity="warning")
@@ -116,23 +158,41 @@ class MarketWatchWidget(Static):
         price_history: dict[str, list[Decimal]] | None = None,
     ) -> None:
         table = self.query_one(DataTable)
-        empty_label = self.query_one("#market-empty", Label)
+        empty_state = self.query_one("#market-empty", TileEmptyState)
 
         # Handle empty state with actionable hint
         if not prices:
             if table.row_count > 0:
                 table.clear()
             table.display = False
-            empty_label.display = True
-            mode = getattr(self.state, "data_source_mode", None) if self.state is not None else None
-            hint = "Press [S] to start bot."
-            if mode == "read_only":
-                hint = "Press [S] to start data feed."
-            empty_label.update(f"No market data yet. {hint}")
+            empty_state.display = True
+
+            # Use shared empty state config for consistency
+            if self.state is not None:
+                bot_running = getattr(self.state, "running", False)
+                mode = getattr(self.state, "data_source_mode", "demo")
+                conn_status = ""
+                try:
+                    conn_status = str(self.state.system_data.connection_status or "")
+                except Exception:
+                    pass
+
+                config = get_empty_state_config(
+                    data_type="Market",
+                    bot_running=bot_running,
+                    data_source_mode=mode,
+                    connection_status=conn_status,
+                )
+                empty_state.update_state(
+                    title=config["title"],
+                    subtitle=config["subtitle"],
+                    icon=config["icon"],
+                    actions=config["actions"],
+                )
             return
         else:
             table.display = True
-            empty_label.display = False
+            empty_state.display = False
 
         updated_str = "N/A"
         if last_update:

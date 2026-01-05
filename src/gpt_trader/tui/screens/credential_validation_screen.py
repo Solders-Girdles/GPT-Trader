@@ -53,6 +53,8 @@ class CredentialValidationScreen(ModalScreen[bool | str]):
     BINDINGS = [
         Binding("enter", "proceed", "Proceed", show=True),
         Binding("escape", "cancel", "Cancel", show=True),
+        Binding("r", "retry", "Retry", show=False),
+        Binding("s", "setup", "Setup", show=False),
     ]
 
     def __init__(
@@ -79,10 +81,9 @@ class CredentialValidationScreen(ModalScreen[bool | str]):
             # Title based on result
             yield self._create_title()
 
-            # Scrollable findings list
+            # Scrollable findings list grouped by category
             with VerticalScroll(id="findings-scroll"):
-                for finding in self.result.findings:
-                    yield from self._create_finding_row(finding)
+                yield from self._create_grouped_findings()
 
             # Summary line
             yield self._create_summary()
@@ -96,6 +97,50 @@ class CredentialValidationScreen(ModalScreen[bool | str]):
                     yield Button("Retry", id="retry-btn", variant="warning")
                     yield Button("Setup API Key", id="setup-btn", variant="primary")
                 yield Button("Cancel", id="cancel-btn", variant="error")
+
+    def _create_grouped_findings(self) -> list[Static | Label]:
+        """Create findings grouped by category with section headers."""
+        from collections import defaultdict
+
+        widgets: list[Static | Label] = []
+
+        # Group findings by category
+        by_category: dict[ValidationCategory, list[ValidationFinding]] = defaultdict(list)
+        for finding in self.result.findings:
+            by_category[finding.category].append(finding)
+
+        # Display each category group
+        for category in ValidationCategory:
+            findings = by_category.get(category, [])
+            if not findings:
+                continue
+
+            # Category section header
+            category_name = CATEGORY_NAMES.get(category, category.value)
+
+            # Determine category status based on findings
+            has_error = any(f.severity == ValidationSeverity.ERROR for f in findings)
+            has_warning = any(f.severity == ValidationSeverity.WARNING for f in findings)
+
+            if has_error:
+                status_icon = "✗"
+                header_class = "category-header category-error"
+            elif has_warning:
+                status_icon = "⚠"
+                header_class = "category-header category-warning"
+            else:
+                status_icon = "✓"
+                header_class = "category-header category-success"
+
+            widgets.append(
+                Label(f"{status_icon} {category_name}", classes=header_class)
+            )
+
+            # Individual findings under this category
+            for finding in findings:
+                widgets.extend(self._create_finding_row(finding))
+
+        return widgets
 
     def _create_title(self) -> Label:
         """Create the title label based on validation status."""
@@ -186,6 +231,14 @@ class CredentialValidationScreen(ModalScreen[bool | str]):
     def action_cancel(self) -> None:
         """Cancel and return to mode selection."""
         self.dismiss(False)
+
+    def action_retry(self) -> None:
+        """Retry credential validation."""
+        self.dismiss("retry")
+
+    def action_setup(self) -> None:
+        """Launch the API setup wizard."""
+        self.dismiss("setup")
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Handle button presses."""

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import time
-from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
@@ -11,6 +9,7 @@ from textual.widgets import DataTable, Label, Static
 
 from gpt_trader.tui.formatting import format_currency
 from gpt_trader.tui.helpers import safe_update
+from gpt_trader.tui.staleness_helpers import get_freshness_display, get_staleness_banner
 from gpt_trader.tui.types import AccountSummary
 from gpt_trader.tui.widgets.tile_states import TileBanner
 from gpt_trader.utilities.logging_patterns import get_logger
@@ -125,18 +124,15 @@ class AccountWidget(Static):
         self._bot_running = bool(getattr(state, "running", False))
         self._data_source_mode = str(getattr(state, "data_source_mode", "demo") or "demo")
 
-        # Update timestamp
-        self._update_timestamp(state.last_data_fetch or state.last_update_timestamp)
+        # Update freshness indicator (using shared helper)
+        self._update_freshness_indicator(state)
 
-        # Handle degraded mode
+        # Handle staleness/degraded mode with shared helper
         try:
             banner = self.query_one("#account-banner", TileBanner)
-            if state.degraded_mode:
-                reason = state.degraded_reason or "Status reporter unavailable"
-                banner.update_banner(f"Degraded: {reason}", severity="warning")
-            elif state.is_data_stale:
-                age = int(time.time() - state.last_data_fetch)
-                banner.update_banner(f"Data stale ({age}s)", severity="warning")
+            staleness_result = get_staleness_banner(state)
+            if staleness_result:
+                banner.update_banner(staleness_result[0], severity=staleness_result[1])
             else:
                 banner.update_banner("")
         except Exception as e:
@@ -160,17 +156,22 @@ class AccountWidget(Static):
             total_pnl=total_pnl,
         )
 
-    def _update_timestamp(self, timestamp: float) -> None:
-        """Update the 'Updated HH:MM:SS' timestamp label."""
+    def _update_freshness_indicator(self, state: TuiState) -> None:
+        """Update freshness indicator with relative time and color coding."""
         try:
-            ts_label = self.query_one("#account-timestamp", Label)
-            if timestamp and timestamp > 0:
-                dt = datetime.fromtimestamp(timestamp)
-                ts_label.update(f"Updated {dt.strftime('%H:%M:%S')}")
+            indicator = self.query_one("#account-timestamp", Label)
+            freshness = get_freshness_display(state)
+
+            if freshness:
+                text, css_class = freshness
+                indicator.update(text)
+                indicator.remove_class("fresh", "stale", "critical")
+                indicator.add_class(css_class)
             else:
-                ts_label.update("")
+                indicator.update("")
+                indicator.remove_class("fresh", "stale", "critical")
         except Exception as e:
-            logger.debug("Failed to update account timestamp: %s", e)
+            logger.debug("Failed to update account freshness: %s", e)
 
     def _toggle_metrics_row_visibility(self, data: AccountSummary) -> None:
         """Show data or contextual messages for Volume/Fee/Tier.

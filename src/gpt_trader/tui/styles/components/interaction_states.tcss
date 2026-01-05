@@ -13,24 +13,25 @@ $transition-slow: 300ms;
 /* Standardized focus indicator for accessibility */
 *:focus {
     outline: none;  /* Remove default outline */
-    border: solid $accent;
+    border-left: wide $accent;
 }
 
 /* === Button Interaction States === */
 
 Button {
-    border: solid $border-subtle;
+    border: none;
+    border-left: wide $accent-muted;
     background: $bg-elevated;
     color: $text-primary;
 }
 
 Button:hover {
     background: $bg-highlight;
-    border: solid $accent-muted;
+    border-left: wide $accent;
 }
 
 Button:focus {
-    border: solid $accent;
+    border-left: wide $accent;
     background: $accent-subtle;
 }
 
@@ -38,82 +39,88 @@ Button.-disabled {
     opacity: 0.4;
     color: $text-muted;
     background: $bg-secondary;
-    border: solid $border-subtle;
+    border: none;
+    border-left: wide $border-subtle;
 }
 
 /* Primary variant */
 Button.-primary {
     background: $accent;
     color: $bg-primary;
-    border: solid $accent;
+    border: none;
+    border-left: wide $accent;
 }
 
 Button.-primary:hover {
     background: $accent-hover;
-    border: solid $accent-hover;
+    border-left: wide $accent;
 }
 
 Button.-primary:focus {
     background: $accent-bright;
-    border: thick $accent;
+    border-left: wide $accent;
 }
 
 Button.-primary.-disabled {
     background: $accent-muted;
     color: $text-muted;
-    border: solid $accent-muted;
+    border: none;
+    border-left: wide $accent-muted;
 }
 
 /* Success variant */
 Button.-success, #start-btn, #slim-start-btn {
     background: $success-dim;
     color: $text-primary;
-    border: solid $success-dim;
+    border: none;
+    border-left: wide $success;
 }
 
 Button.-success:hover, #start-btn:hover, #slim-start-btn:hover {
     background: $success;
     color: $bg-primary;
-    border: solid $success;
+    border-left: wide $success;
 }
 
 Button.-success:focus, #start-btn:focus, #slim-start-btn:focus {
     background: $success;
-    border: thick $success;
+    border-left: wide $success;
 }
 
 /* Error/Danger variant */
 Button.-error, Button.-danger, #stop-btn, #slim-stop-btn {
     background: $error-dim;
     color: $text-primary;
-    border: solid $error-dim;
+    border: none;
+    border-left: wide $error;
 }
 
 Button.-error:hover, Button.-danger:hover, #stop-btn:hover, #slim-stop-btn:hover {
     background: $error;
     color: $bg-primary;
-    border: solid $error;
+    border-left: wide $error;
 }
 
 Button.-error:focus, Button.-danger:focus, #stop-btn:focus, #slim-stop-btn:focus {
     background: $error;
-    border: thick $error;
+    border-left: wide $error;
 }
 
 /* === Input Interaction States === */
 
 Input {
     background: $bg-elevated;
-    border: solid $border-subtle;
+    border: none;
+    border-left: wide $accent-muted;
     color: $text-primary;
 }
 
 Input:hover {
-    border: solid $accent-muted;
+    border-left: wide $accent;
 }
 
 Input:focus {
-    border: solid $accent;
+    border-left: wide $accent;
     background: $bg-highlight;
 }
 
@@ -124,23 +131,24 @@ Input.-disabled {
 }
 
 Input.-invalid {
-    border: solid $error;
+    border-left: wide $error;
 }
 
 /* === Select/Dropdown Interaction States === */
 
 Select {
     background: $bg-elevated;
-    border: solid $border-subtle;
+    border: none;
+    border-left: wide $accent-muted;
     color: $text-primary;
 }
 
 Select:hover {
-    border: solid $accent-muted;
+    border-left: wide $accent;
 }
 
 Select:focus {
-    border: solid $accent;
+    border-left: wide $accent;
 }
 
 Select.-disabled {
@@ -157,7 +165,7 @@ DataTable {
 }
 
 DataTable:focus {
-    border: solid $accent;
+    border-left: wide $accent;
 }
 
 /* Row hover - subtle highlight */
@@ -196,7 +204,7 @@ Tab.-active {
 }
 
 Tab:focus {
-    border: solid $accent;
+    border-left: wide $accent;
 }
 
 /* === ListItem Interaction States === */
@@ -221,37 +229,38 @@ ListItem:focus {
 /* For bento grid tiles and card-like containers */
 
 .bento-tile {
-    border: solid $border-subtle;
-    background: $elevation-1;
+    border: none;
+    background: transparent;
 }
 
 .bento-tile:hover {
-    border: solid $accent-muted;
-    background: $elevation-2;
+    border-left: wide $accent-muted;
+    background: $elevation-1;
 }
 
 .bento-tile:focus-within,
 .bento-tile.tile-focused {
-    border: solid $accent;
-    background: $elevation-2;
+    border-left: wide $accent;
+    background: $elevation-1;
 }
 
 /* === Option/Choice Interaction States === */
 /* For mode selection, settings options, etc. */
 
 .option-card {
-    border: solid $border-subtle;
+    border: none;
+    border-left: wide $accent-muted;
     background: $bg-elevated;
 }
 
 .option-card:hover {
-    border: solid $accent-muted;
+    border-left: wide $accent;
     background: $bg-highlight;
 }
 
 .option-card:focus,
 .option-card.-selected {
-    border: solid $accent;
+    border-left: wide $accent;
     background: $accent-subtle;
 }
 

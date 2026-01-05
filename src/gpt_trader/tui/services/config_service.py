@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from gpt_trader.tui.events import ConfigChanged, ConfigReloadRequested
+from gpt_trader.tui.notification_helpers import notify_error
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -51,7 +52,7 @@ class ConfigService:
             logger.debug("Config modal opened")
         except Exception as e:
             logger.error(f"Failed to show config modal: {e}", exc_info=True)
-            self.app.notify(f"Error showing config: {e}", severity="error")
+            notify_error(self.app, f"Error showing config: {e}")
 
     def request_reload(self) -> None:
         """Request a configuration reload.

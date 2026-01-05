@@ -40,9 +40,38 @@ LoadingSpinner {
 .loading-container {
     padding: $spacing-lg;
     background: rgba(58, 53, 48, 0.2);
-    border: solid $border-subtle;
+    border: none;
+    border-left: wide $accent-muted;
     align-horizontal: center;
     align-vertical: middle;
+}
+
+/* === Spinner Content Container === */
+.spinner-content {
+    width: 100%;
+    height: auto;
+    align: center middle;
+}
+
+.loading-subtitle {
+    color: $text-muted;
+    text-align: center;
+    margin-top: 0;
+    text-style: italic;
+}
+
+/* === Skeleton Loader === */
+SkeletonLoader {
+    width: 100%;
+    height: auto;
+    align: center middle;
+    padding: 1;
+}
+
+.skeleton-line {
+    color: $bg-elevated;
+    height: 1;
+    margin-bottom: 1;
 }
 
 /* Note: Textual doesn't support @keyframes or @media queries

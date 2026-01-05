@@ -129,13 +129,13 @@ PositionCardWidget {
     content-align: center middle;
     text-style: bold;
     color: $text-muted;
-    background: $bg-secondary;
-    border: solid $border-subtle;
-    margin: 1 0;
+    background: transparent;
+    border: none;
+    margin: 0;
 }
 
-.pnl-positive { color: $success; border: solid $success; }
-.pnl-negative { color: $error; border: solid $error; }
+.pnl-positive { color: $success; }
+.pnl-negative { color: $error; }
 
 .pos-details {
     layout: grid;
@@ -204,15 +204,15 @@ SystemMonitorWidget {
 }
 
 .sys-header {
-    height: 2;  /* Increased height for better visibility */
+    height: 1;
     text-style: bold;
     color: $text-primary;
     background: transparent;
-    padding: 0 $spacing-sm; /* Added padding */
-    border-left: wide $accent; /* Accent border */
-    border-bottom: solid $border-subtle; /* Subtle bottom border */
+    padding: 0 1;
+    border-left: wide $accent;
+    border-bottom: none;
     content-align: left middle;
-    margin-bottom: $spacing-xs; /* Spacing after header */
+    margin-bottom: 0;
 }
 
 /* System metrics - Professional list layout */
@@ -383,6 +383,21 @@ SystemMonitorWidget {
     padding: 0 $spacing-md; /* Horizontal padding */
 }
 
+/* Empty state action hints */
+.empty-actions {
+    width: auto;
+    height: auto;
+    align: center middle;
+    margin-top: 1;
+    padding: 0 1;
+}
+
+.empty-actions .action-hint {
+    color: $accent;
+    padding: 0 1;
+    background: $accent-subtle;
+}
+
 /* === Quick Actions - Keyboard hints when stopped === */
 .quick-actions {
     width: 100%;
@@ -406,12 +421,13 @@ SystemMonitorWidget {
     align: center middle;
 }
 
-.action-hint {
+/* Quick-actions specific styling - more spacing between hints */
+.quick-actions .action-hint {
     color: $text-secondary;
     padding: 0 2;
 }
 
-.action-hint:first-of-type {
+.quick-actions .action-hint:first-of-type {
     padding-left: 0;
 }
 
@@ -425,6 +441,19 @@ SystemMonitorWidget {
 }
 
 .market-header .widget-header {
+    width: auto;
+}
+
+/* === Position Header with Data State Indicator === */
+.position-header {
+    layout: horizontal;
+    width: 100%;
+    height: auto;
+    padding: 0;
+    margin-bottom: 1;
+}
+
+.position-header .widget-header {
     width: auto;
 }
 
@@ -495,8 +524,9 @@ SystemMonitorWidget {
     width: 100%;
     height: auto;
     margin-top: 1;
-    padding-top: 1;
-    border-top: solid $border-subtle;
+    padding-top: 0;
+    padding-left: 1;
+    border-left: wide $accent-muted;
 }
 
 .resilience-metrics .sys-metric {

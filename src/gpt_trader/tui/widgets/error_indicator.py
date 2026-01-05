@@ -12,7 +12,6 @@ from textual.containers import Horizontal, Vertical
 from textual.reactive import reactive
 from textual.widgets import Button, Label, Static
 
-from gpt_trader.tui.events import StateValidationFailed, StateValidationPassed
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -197,39 +196,6 @@ class ErrorIndicatorWidget(Static):
         elif event.button.id == "clear-btn":
             self.clear_errors()
 
-    def on_state_validation_failed(self, event: StateValidationFailed) -> None:
-        """
-        Handle state validation failure events.
-
-        Adds validation errors to the error tracker for user visibility.
-
-        Args:
-            event: The validation failure event containing error details.
-        """
-        for error in event.errors:
-            # Convert ValidationError to our format
-            # error.field contains the field name (e.g., "market.price")
-            # error.message contains the validation message
-            self.add_error(
-                widget=f"Validation:{event.component}",
-                method=error.field,
-                error=error.message,
-            )
-        logger.debug(
-            f"Received StateValidationFailed with {len(event.errors)} errors "
-            f"from component: {event.component}"
-        )
-
-    def on_state_validation_passed(self, event: StateValidationPassed) -> None:  # noqa: ARG002
-        """
-        Handle state validation success events.
-
-        Optionally clears validation-related errors when state becomes valid.
-        Currently a no-op - errors persist until manually cleared.
-
-        Args:
-            event: The validation success event (unused).
-        """
-        # Intentionally not clearing errors automatically
-        # Users should acknowledge errors before they're cleared
-        logger.debug("Received StateValidationPassed event")
+    # NOTE: Validation events are now handled exclusively by ValidationIndicatorWidget
+    # to avoid showing the same validation issues in multiple places.
+    # ErrorIndicatorWidget focuses on runtime errors from safe_update decorator.

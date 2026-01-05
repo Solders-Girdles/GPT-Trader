@@ -8,11 +8,8 @@ via StateRegistry broadcast instead of direct property assignment.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from decimal import Decimal
 from typing import TYPE_CHECKING
-
-from gpt_trader.utilities.logging_patterns import get_logger
-
-logger = get_logger(__name__, component="tui")
 
 from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, Vertical
@@ -20,8 +17,63 @@ from textual.reactive import reactive
 from textual.widgets import Label, Static
 
 from gpt_trader.tui.formatting import format_currency
+from gpt_trader.utilities.logging_patterns import get_logger
+
+logger = get_logger(__name__, component="tui")
+
+
+def calculate_price_change_percent(
+    current_price: float,
+    history: list[Decimal] | list[float],
+) -> float:
+    """Calculate percentage change from oldest price in history to current.
+
+    Since the price history is a rolling window (not timestamped 24h data),
+    this calculates change from the oldest available price to current.
+
+    Args:
+        current_price: Current price value.
+        history: List of historical prices (oldest first).
+
+    Returns:
+        Percentage change (e.g., 2.5 for +2.5%, -1.2 for -1.2%).
+        Returns 0.0 if history is empty or oldest price is zero.
+    """
+    if not history:
+        return 0.0
+
+    # Get oldest price from history
+    try:
+        oldest_price = float(history[0])
+    except (ValueError, TypeError, IndexError):
+        return 0.0
+
+    if oldest_price == 0.0:
+        return 0.0
+
+    # Calculate percentage change: ((new - old) / old) * 100
+    return ((current_price - oldest_price) / oldest_price) * 100
+
+
+from gpt_trader.tui.staleness_helpers import (
+    get_connection_banner,
+    get_empty_state_config,
+    get_freshness_display,
+    get_staleness_banner,
+)
+from gpt_trader.tui.thresholds import (
+    DEFAULT_THRESHOLDS as PERF_THRESHOLDS,
+    get_cpu_status,
+    get_error_rate_status,
+    get_latency_status,
+    get_memory_status,
+    get_rate_limit_status,
+    get_status_color,
+    get_status_icon,
+)
 from gpt_trader.tui.widgets.primitives import ProgressBarWidget, SparklineWidget
 from gpt_trader.tui.widgets.tile_states import TileBanner, tile_empty_state, tile_loading_state
+from gpt_trader.tui.widgets.value_flash import flash_label
 
 if TYPE_CHECKING:
     from gpt_trader.tui.state import TuiState
@@ -50,6 +102,7 @@ class TickerRow(Static):
         self._history = history
         self._spread = spread
         self._logged_update_error = False
+        self._last_flash_time: float = 0.0  # Rate limit flashing
 
     @property
     def symbol(self) -> str:
@@ -98,15 +151,26 @@ class TickerRow(Static):
         ):
             return
 
+        # Capture old price for flash detection before updating
+        old_price = self._price
+
         self._price = price
         self._change_24h = change_24h
         self._history = history
         self._spread = spread
 
         try:
-            # Update price label
+            # Update price label with flash effect
             price_label = self.query_one("#ticker-price", Label)
             price_label.update(f"{format_currency(price)}")
+
+            # Flash price if it changed (rate limited to 1 per second)
+            import time as time_mod
+            now = time_mod.time()
+            if old_price != price and (now - self._last_flash_time) > 1.0:
+                direction = "up" if price > old_price else "down"
+                flash_label(price_label, direction=direction, duration=0.4)
+                self._last_flash_time = now
 
             # Update change label with color
             price_color = "green" if change_24h >= 0 else "red"
@@ -189,29 +253,23 @@ class MarketPulseWidget(Static):
         # Banner reflects overall connection health for this tile.
         try:
             banner = self.query_one(TileBanner)
-            conn = self._connection_status.upper()
 
-            # If the bot is intentionally stopped (manual start), avoid showing
-            # alarming "Broker: UNKNOWN" banners. The empty-state copy already
-            # instructs the user to start.
-            if not self._bot_running and not state.degraded_mode:
-                banner.update_banner("")
-            elif state.degraded_mode:
-                reason = state.degraded_reason or "Status reporter unavailable"
-                banner.update_banner(f"Degraded mode: {reason}", severity="warning")
-            elif not conn or conn in ("UNKNOWN", "CONNECTING", "RECONNECTING", "SYNCING", "--"):
-                banner.update_banner("")
-            elif conn not in ("CONNECTED", "OK", "HEALTHY"):
-                severity = "error" if conn in ("DISCONNECTED", "ERROR", "FAILED") else "warning"
-                banner.update_banner(f"Broker: {conn}", severity=severity)
-            elif not state.connection_healthy:
-                banner.update_banner("Market feed stale — reconnecting…", severity="warning")
-            elif state.is_data_stale:
-                import time
-                age = int(time.time() - state.last_data_fetch)
-                banner.update_banner(f"Data stale ({age}s)", severity="warning")
+            # Use shared helpers for consistent banner logic
+            # Priority 1: Staleness/degraded banner
+            staleness_result = get_staleness_banner(state)
+            if staleness_result:
+                banner.update_banner(staleness_result[0], severity=staleness_result[1])
             else:
-                banner.update_banner("")
+                # Priority 2: Connection-specific banner
+                conn_result = get_connection_banner(
+                    self._connection_status,
+                    self._bot_running,
+                    state.degraded_mode,
+                )
+                if conn_result:
+                    banner.update_banner(conn_result[0], severity=conn_result[1])
+                else:
+                    banner.update_banner("")
         except Exception as e:
             logger.debug("MarketPulseWidget banner update failed: %s", e, exc_info=True)
 
@@ -227,10 +285,14 @@ class MarketPulseWidget(Static):
         for symbol, price in state.market_data.prices.items():
             history = state.market_data.price_history.get(symbol, [])
             spread = state.market_data.spreads.get(symbol)
+            # Calculate change from oldest price in history
+            price_float = float(price)
+            change_pct = calculate_price_change_percent(price_float, history)
+
             market_list.append({
                 "symbol": symbol,
-                "price": float(price),
-                "change_24h": 0.0,  # TODO: Calculate from history if needed
+                "price": price_float,
+                "change_24h": change_pct,  # Recent change from oldest price in rolling history
                 "history": [float(h) for h in history[-10:]] if history else [],
                 "spread": float(spread) if spread else None,
             })
@@ -238,21 +300,20 @@ class MarketPulseWidget(Static):
         self.market_data = market_list
 
     def _update_data_state_indicator(self, state: TuiState) -> None:
-        """Update data freshness indicator in header."""
+        """Update data freshness indicator in header with relative time."""
         try:
             indicator = self.query_one("#market-data-state", Label)
-            if state.data_fetching:
-                indicator.update("[cyan]Fetching...[/cyan]")
-            elif state.is_data_stale:
-                import time as time_mod
-                age = int(time_mod.time() - state.last_data_fetch)
-                indicator.update(f"[yellow]Stale ({age}s)[/yellow]")
-            elif state.last_data_fetch > 0:
-                from datetime import datetime
-                dt = datetime.fromtimestamp(state.last_data_fetch)
-                indicator.update(f"[dim]{dt.strftime('%H:%M:%S')}[/dim]")
+            freshness = get_freshness_display(state)
+
+            if freshness:
+                text, css_class = freshness
+                indicator.update(text)
+                # Update CSS classes
+                indicator.remove_class("fresh", "stale", "critical")
+                indicator.add_class(css_class)
             else:
                 indicator.update("")
+                indicator.remove_class("fresh", "stale", "critical")
         except Exception:
             pass
 
@@ -281,29 +342,32 @@ class MarketPulseWidget(Static):
                 container.remove_children()
                 self._ticker_cache.clear()
                 if not self._has_received_update:
-                    container.mount(tile_loading_state("Waiting for market feed…"))
+                    container.mount(tile_loading_state("Waiting for market feed..."))
                     return
 
-                if not self._bot_running:
-                    if self._data_source_mode == "read_only":
-                        container.mount(tile_empty_state("Market Data", "Press [S] to start data feed"))
-                    else:
-                        container.mount(tile_empty_state("Market Data", "Press [S] to start bot"))
-                    return
+                # Use shared empty state config for consistency
+                config = get_empty_state_config(
+                    data_type="Market",
+                    bot_running=self._bot_running,
+                    data_source_mode=self._data_source_mode,
+                    connection_status=self._connection_status,
+                )
 
+                # Handle connecting state with loading spinner
                 conn = self._connection_status.upper()
-                if conn in ("DISCONNECTED", "ERROR", "FAILED"):
-                    container.mount(
-                        tile_empty_state(
-                            "Market Data Unavailable",
-                            "Broker disconnected — check API credentials",
-                            icon="!",
-                        )
+                if conn in ("CONNECTING", "RECONNECTING", "SYNCING", "UNKNOWN", "--", ""):
+                    if self._bot_running:
+                        container.mount(tile_loading_state("Connecting to market feed..."))
+                        return
+
+                container.mount(
+                    tile_empty_state(
+                        config["title"],
+                        config["subtitle"],
+                        icon=config["icon"],
+                        actions=config["actions"],
                     )
-                elif conn in ("CONNECTING", "RECONNECTING", "SYNCING", "UNKNOWN", "--", ""):
-                    container.mount(tile_loading_state("Connecting to market feed…"))
-                else:
-                    container.mount(tile_loading_state("Waiting for first tick…"))
+                )
                 return
 
             # Track which symbols we see in this update
@@ -348,7 +412,8 @@ class MarketPulseWidget(Static):
                     tile_empty_state(
                         "Market Pulse Error",
                         "Render failed — see logs",
-                        icon="!",
+                        icon="⚠",
+                        actions=["[R] Reconnect", "[L] Logs"],
                     )
                 )
                 try:
@@ -382,6 +447,11 @@ class PositionCardWidget(Static):
         self._bot_running = False
         self._data_source_mode = "demo"
         self._connection_status = "UNKNOWN"
+        # Track previous PnL for flash animation
+        self._prev_pnl: float | None = None
+        self._last_pnl_flash: float = 0.0  # Rate limit PnL flashing
+        # Track last update for freshness display
+        self._last_position_update: float = 0.0
 
     def on_mount(self) -> None:
         """Register with StateRegistry on mount."""
@@ -392,6 +462,23 @@ class PositionCardWidget(Static):
         """Unregister from StateRegistry on unmount."""
         if hasattr(self.app, "state_registry"):
             self.app.state_registry.unregister(self)
+
+    def _update_position_freshness(self, state: TuiState) -> None:
+        """Update position data freshness indicator in header."""
+        try:
+            indicator = self.query_one("#position-data-state", Label)
+            freshness = get_freshness_display(state)
+
+            if freshness:
+                text, css_class = freshness
+                indicator.update(text)
+                indicator.remove_class("fresh", "stale", "critical")
+                indicator.add_class(css_class)
+            else:
+                indicator.update("")
+                indicator.remove_class("fresh", "stale", "critical")
+        except Exception:
+            pass
 
     def on_state_updated(self, state: TuiState) -> None:
         """Handle state updates from StateRegistry broadcast.
@@ -410,29 +497,26 @@ class PositionCardWidget(Static):
         # Banner reflects overall connection health for this tile.
         try:
             banner = self.query_one(TileBanner)
-            conn = self._connection_status.upper()
 
-            # When stopped, don't show "Broker: UNKNOWN" banners (manual start).
-            if not self._bot_running and not state.degraded_mode:
-                banner.update_banner("")
-            elif state.degraded_mode:
-                reason = state.degraded_reason or "Status reporter unavailable"
-                banner.update_banner(f"Degraded mode: {reason}", severity="warning")
-            elif not conn or conn in ("UNKNOWN", "CONNECTING", "RECONNECTING", "SYNCING", "--"):
-                banner.update_banner("")
-            elif conn not in ("CONNECTED", "OK", "HEALTHY"):
-                severity = "error" if conn in ("DISCONNECTED", "ERROR", "FAILED") else "warning"
-                banner.update_banner(f"Broker: {conn}", severity=severity)
-            elif not state.connection_healthy:
-                banner.update_banner("Position data stale — reconnecting…", severity="warning")
-            elif state.is_data_stale:
-                import time
-                age = int(time.time() - state.last_data_fetch)
-                banner.update_banner(f"Data stale ({age}s)", severity="warning")
+            # Use shared helpers for consistent banner logic
+            staleness_result = get_staleness_banner(state)
+            if staleness_result:
+                banner.update_banner(staleness_result[0], severity=staleness_result[1])
             else:
-                banner.update_banner("")
+                conn_result = get_connection_banner(
+                    self._connection_status,
+                    self._bot_running,
+                    state.degraded_mode,
+                )
+                if conn_result:
+                    banner.update_banner(conn_result[0], severity=conn_result[1])
+                else:
+                    banner.update_banner("")
         except Exception as e:
             logger.debug("PositionCardWidget banner update failed: %s", e, exc_info=True)
+
+        # Update data freshness indicator
+        self._update_position_freshness(state)
 
         if not state.position_data.positions:
             self.position_data = None
@@ -454,6 +538,9 @@ class PositionCardWidget(Static):
         self.position_data = pos_dict
 
     def compose(self) -> ComposeResult:
+        with Horizontal(classes="position-header"):
+            yield Label("POSITION", classes="widget-header")
+            yield Label("", id="position-data-state", classes="data-state-label")
         yield TileBanner(id="position-banner", classes="tile-banner hidden")
         with Vertical(id="pos-body"):
             yield tile_loading_state("Waiting for position data…")
@@ -472,22 +559,32 @@ class PositionCardWidget(Static):
                 return
 
             if not pos:
+                # Use shared empty state config for stopped/failed states
                 if not self._bot_running:
-                    if self._data_source_mode == "read_only":
-                        body.mount(tile_empty_state("No Active Position", "Bot is stopped"))
-                    else:
-                        body.mount(tile_empty_state("No Active Position", "Bot is stopped"))
-                    # Add quick actions when bot is stopped
-                    body.mount(self._build_quick_actions())
+                    config = get_empty_state_config(
+                        data_type="Position",
+                        bot_running=self._bot_running,
+                        data_source_mode=self._data_source_mode,
+                        connection_status=self._connection_status,
+                    )
+                    body.mount(
+                        tile_empty_state(
+                            config["title"],
+                            config["subtitle"],
+                            icon=config["icon"],
+                            actions=config["actions"],
+                        )
+                    )
                     return
 
                 conn = self._connection_status.upper()
                 if conn in ("DISCONNECTED", "ERROR", "FAILED"):
                     body.mount(
                         tile_empty_state(
-                            "Position Data Unavailable",
-                            "Broker disconnected — check API credentials",
-                            icon="!",
+                            "Connection Failed",
+                            "Check credentials and network",
+                            icon="⚠",
+                            actions=["[R] Reconnect", "[C] Config"],
                         )
                     )
                     return
@@ -497,6 +594,21 @@ class PositionCardWidget(Static):
                 return
 
             body.mount(self._build_active_state(pos))
+
+            # Flash PnL if it changed (rate limited to 1 per second)
+            import time as time_mod
+            current_pnl = float(pos.get("pnl", 0.0))
+            now = time_mod.time()
+            if self._prev_pnl is not None and current_pnl != self._prev_pnl:
+                if (now - self._last_pnl_flash) > 1.0:
+                    try:
+                        pnl_label = self.query_one("#pnl-hero-label", Label)
+                        direction = "up" if current_pnl > self._prev_pnl else "down"
+                        flash_label(pnl_label, direction=direction, duration=0.5)
+                        self._last_pnl_flash = now
+                    except Exception:
+                        pass  # Label may not be mounted yet
+            self._prev_pnl = current_pnl
         except Exception as e:
             logger.warning("PositionCardWidget render failed: %s", e, exc_info=True)
             try:
@@ -505,7 +617,8 @@ class PositionCardWidget(Static):
                     tile_empty_state(
                         "Position Tile Error",
                         "Render failed — see logs",
-                        icon="!",
+                        icon="⚠",
+                        actions=["[R] Reconnect", "[L] Logs"],
                     )
                 )
                 try:
@@ -520,7 +633,12 @@ class PositionCardWidget(Static):
 
     def _build_empty_state(self) -> Vertical:
         """Build empty state widget with proper Textual compose pattern."""
-        return tile_empty_state("No Active Position", "Press [S] to start bot")
+        return tile_empty_state(
+            "No Active Position",
+            "Start the bot to begin trading",
+            icon="◇",
+            actions=["[S] Start Bot", "[C] Config"],
+        )
 
     def _build_quick_actions(self) -> Vertical:
         """Build quick actions container when stopped and no position."""
@@ -644,8 +762,8 @@ class PositionCardWidget(Static):
         header_row.compose_add_child(Label(f" {symbol} ", classes="pos-symbol"))
         root.compose_add_child(header_row)
 
-        # 2. PnL Hero
-        root.compose_add_child(Label(f"[{color}]💰 {pnl_fmt}[/]", classes="pnl-hero"))
+        # 2. PnL Hero (with ID for flash animation)
+        root.compose_add_child(Label(f"[{color}]💰 {pnl_fmt}[/]", id="pnl-hero-label", classes="pnl-hero"))
 
         # 3. Details Grid
         details_grid = Horizontal(classes="pos-details-grid")
@@ -676,25 +794,26 @@ class PositionCardWidget(Static):
 class SystemThresholds:
     """Configurable thresholds for system monitor color coding.
 
-    All values define boundaries between good/warning/critical states.
+    All values define boundaries between OK/WARNING/CRITICAL states.
+    Values aligned with shared thresholds in gpt_trader.tui.thresholds.
     """
 
     # Latency thresholds (milliseconds)
-    latency_good: float = 50.0  # Below this = green
-    latency_warn: float = 200.0  # Below this = yellow, above = red
+    latency_good: float = 50.0  # Below = OK
+    latency_warn: float = 150.0  # Below = WARNING, above = CRITICAL
 
     # Rate limit thresholds (percentage)
-    rate_limit_good: float = 50.0  # Below this = green
-    rate_limit_warn: float = 80.0  # Below this = yellow, above = red
+    rate_limit_good: float = 50.0  # Below = OK
+    rate_limit_warn: float = 80.0  # Below = WARNING, above = CRITICAL
 
     # CPU thresholds (percentage)
-    cpu_warn: float = 60.0  # Below this = green
-    cpu_critical: float = 85.0  # Below this = yellow, above = red
+    cpu_warn: float = 50.0  # Below = OK
+    cpu_critical: float = 80.0  # Below = WARNING, above = CRITICAL
 
     # Memory thresholds (MB)
     memory_max: float = 1024.0  # Max memory for percentage calculation
-    memory_warn: float = 70.0  # Percentage threshold for yellow
-    memory_critical: float = 90.0  # Percentage threshold for red
+    memory_warn: float = 60.0  # Percentage threshold for WARNING
+    memory_critical: float = 80.0  # Percentage threshold for CRITICAL
 
 
 # Default thresholds instance
@@ -866,13 +985,11 @@ class SystemMonitorWidget(Static):
     def watch_latency(self, val: float) -> None:
         try:
             lbl = self.query_one("#lbl-latency", Label)
-            # Color code based on configurable thresholds
-            if val < self.thresholds.latency_good:
-                lbl.update(f"[green]Latency: {val:.0f}ms[/green]")
-            elif val < self.thresholds.latency_warn:
-                lbl.update(f"[yellow]Latency: {val:.0f}ms[/yellow]")
-            else:
-                lbl.update(f"[red]Latency: {val:.0f}ms[/red]")
+            # Color code using shared thresholds with icon for accessibility
+            status = get_latency_status(val, PERF_THRESHOLDS)
+            color = get_status_color(status)
+            icon = get_status_icon(status)
+            lbl.update(f"[{color}]{icon} Latency: {val:.0f}ms[/{color}]")
         except Exception as e:
             logger.debug("Failed to update latency display: %s", e)
 
@@ -884,6 +1001,8 @@ class SystemMonitorWidget(Static):
                 lbl.update("[green]● Connected[/green]")
                 lbl.remove_class("stopped", "warning", "bad")
                 lbl.add_class("good")
+                # Flash green when connection is established
+                flash_label(lbl, direction="up", duration=0.6)
             elif status_upper in ("STOPPED", "IDLE"):
                 lbl.update("[cyan]■ Stopped[/cyan]")
                 lbl.remove_class("good", "warning", "bad")
@@ -896,6 +1015,8 @@ class SystemMonitorWidget(Static):
                 lbl.update(f"[red]■ {val}[/red]")
                 lbl.remove_class("stopped", "good", "warning")
                 lbl.add_class("bad")
+                # Flash red when connection has issues
+                flash_label(lbl, direction="down", duration=0.6)
         except Exception as e:
             logger.debug("Failed to update connection status display: %s", e)
 
@@ -928,15 +1049,14 @@ class SystemMonitorWidget(Static):
             logger.debug("Failed to update latency percentiles: %s", e)
 
     def watch_error_rate_pct(self, val: float) -> None:
-        """Update the error rate display with color coding."""
+        """Update the error rate display with color coding and icon for accessibility."""
         try:
             lbl = self.query_one("#lbl-error-rate", Label)
-            if val < 1:
-                lbl.update(f"[green]Errors: {val:.1f}%[/green]")
-            elif val < 5:
-                lbl.update(f"[yellow]Errors: {val:.1f}%[/yellow]")
-            else:
-                lbl.update(f"[red]Errors: {val:.1f}%[/red]")
+            # Color code using shared thresholds with icon for accessibility
+            status = get_error_rate_status(val, PERF_THRESHOLDS)
+            color = get_status_color(status)
+            icon = get_status_icon(status)
+            lbl.update(f"[{color}]{icon} Errors: {val:.1f}%[/{color}]")
         except Exception as e:
             logger.debug("Failed to update error rate: %s", e)
 

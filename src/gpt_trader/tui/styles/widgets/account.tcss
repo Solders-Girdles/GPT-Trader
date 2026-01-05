@@ -5,8 +5,8 @@
 AccountWidget {
     layout: vertical;
     height: 1fr;
-    padding: $spacing-md $spacing-lg; /* Increased padding for breathing room */
-    background: $bg-secondary;
+    padding: 0 1; /* Minimal padding - tile provides outer spacing */
+    background: transparent;
 }
 
 AccountWidget DataTable {
@@ -60,16 +60,15 @@ AccountWidget .widget-header {
     width: 1fr;
     min-width: 10;
     height: auto;
-    min-height: 3;                     /* Slightly taller */
-    background: transparent;           /* Clean: no background */
+    min-height: 2;
+    background: transparent;
     border: none;
-    border-bottom: solid $border-subtle;  /* Separator instead of box */
-    padding: 1 0;                      /* Vertical padding only */
-    margin: 0;
+    padding: 0;
+    margin: 0 0 1 0;
 }
 
 .account-metric:last-of-type {
-    border-bottom: none;               /* No border on last item */
+    margin-bottom: 0;
 }
 
 .account-metric-label {
@@ -94,13 +93,13 @@ AccountWidget .widget-header {
 
 .portfolio-metric {
     width: 1fr;
-    min-width: 12;
+    min-width: 10;
     height: auto;
-    min-height: 4; /* Increased height for better visual weight */
-    background: $bg-elevated;
-    border: solid $border-subtle;
-    border-left: wide $accent-muted; /* Subtle accent border */
-    padding: $spacing-sm $spacing-md; /* Increased padding */
+    min-height: 3;
+    background: transparent;
+    border: none;
+    border-left: wide $accent-muted;
+    padding: 0 1;
     margin: 0 1 0 0;
 }
 
@@ -132,8 +131,8 @@ AccountWidget .widget-header {
 .account-metrics-row .portfolio-metric {
     background: transparent;
     border: none;
-    border-bottom: solid $border-subtle;
-    padding: 1 1;
+    border-left: wide $accent-muted;
+    padding: 0 1;
     margin: 0;
 }
 

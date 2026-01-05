@@ -6,7 +6,8 @@
     height: 4;
     background: $bg-secondary;
     color: $text-primary;
-    border-bottom: solid $accent;
+    border-bottom: none;
+    border-left: wide $accent;
     padding: 0;
 }
 
@@ -161,7 +162,7 @@ ContextualFooter {
     height: 1;
     min-height: 1;
     background: $elevation-2;
-    border-top: solid $border-subtle;
+    border-top: none;
 }
 
 #contextual-footer {
@@ -200,13 +201,13 @@ ContextualFooter {
     margin-right: 0;
 }
 
-/* Key label with increased spacing */
+/* Key label - compact spacing for more keys */
 .footer-label {
     height: 1;
     width: auto;
     color: $text-secondary;
-    margin-right: 2;
-    padding: 0 1;
+    margin-right: 1;
+    padding: 0;
 }
 
 /* Group separator - more visible */
@@ -237,7 +238,8 @@ ContextualFooter {
     layout: vertical;  /* Explicit layout for proper child sizing */
     background: $bg-elevated;
     color: $text-primary;
-    border-bottom: thick $accent;
+    border: none;
+    border-left: wide $accent;
     padding: 0;
 }
 
@@ -362,24 +364,24 @@ ContextualFooter {
 #slim-start-btn {
     background: $success;
     color: $bg-primary;
-    border: solid $success;
+    border: none;
+    border-left: wide $success;
 }
 
 #slim-start-btn:hover {
     background: $success;
-    border: solid $success;
     text-style: bold;
 }
 
 #slim-stop-btn {
     background: $error;
     color: $bg-primary;
-    border: solid $error;
+    border: none;
+    border-left: wide $error;
 }
 
 #slim-stop-btn:hover {
     background: $error;
-    border: solid $error;
     text-style: bold;
 }
 
@@ -388,7 +390,8 @@ ContextualFooter {
     opacity: 0.4;
     background: $bg-secondary;
     color: $text-muted;
-    border: solid $border-subtle;
+    border: none;
+    border-left: wide $border-subtle;
 }
 
 /* === Slim Mode Selector === */
@@ -397,11 +400,13 @@ ContextualFooter {
     min-width: 15;
     height: 3;
     background: $bg-secondary;
-    border: solid $border-accent;
+    border: none;
+    border-left: wide $accent-muted;
 }
 
 #slim-mode-select:hover {
-    border: solid $accent;
+    border: none;
+    border-left: wide $accent;
 }
 
 #slim-mode-select Select {

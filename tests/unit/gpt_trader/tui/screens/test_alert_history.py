@@ -44,8 +44,9 @@ class TestAlertHistoryScreen:
         screen = AlertHistoryScreen()
         binding_keys = [b[0] for b in screen.BINDINGS]
         assert "escape" in binding_keys
-        assert "c" in binding_keys
-        assert "r" in binding_keys
+        assert "x" in binding_keys  # Clear history
+        assert "y" in binding_keys  # Copy row
+        assert "r" in binding_keys  # Reset cooldowns
 
     def test_action_clear_history_clears_alerts(self, mock_app):
         """Test that clear history action calls alert manager."""

@@ -6,7 +6,8 @@ CommandBar {
     dock: top;
     height: 3;
     background: $bg-elevated;
-    border-bottom: solid $border-emphasis;
+    border: none;
+    border-left: wide $accent;
     layout: horizontal;
     padding: 0 2;
 }
@@ -17,11 +18,10 @@ CommandBar {
     min-width: 12;
     height: 3;
     color: $text-primary;
-    background: $bg-secondary;
+    background: transparent;
     text-style: bold;
     content-align: center middle;
     padding: 0 2;
-    border-right: solid $border-subtle;
 }
 
 /* === Status Section - Center info === */
@@ -87,7 +87,6 @@ CommandBar {
 .system-section {
     width: auto;
     height: 100%;
-    border-left: solid $border-subtle;
     padding-left: 2;
     layout: horizontal;
     align-vertical: middle;

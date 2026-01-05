@@ -19,6 +19,16 @@ from gpt_trader.tui.services.performance_service import (
     PerformanceSnapshot,
     get_tui_performance_service,
 )
+from gpt_trader.tui.thresholds import (
+    DEFAULT_THRESHOLDS,
+    StatusLevel,
+    get_cpu_status,
+    get_fps_status,
+    get_latency_status,
+    get_memory_status,
+    get_status_class,
+    get_status_icon,
+)
 
 
 class PerformanceDashboardWidget(Static):
@@ -155,34 +165,42 @@ class PerformanceDashboardWidget(Static):
         if self._budget_label is not None:
             violations = snapshot.budget_violations
             if violations == 0:
-                self._budget_label.update("✓ All metrics OK")
-                self._budget_label.set_classes("perf-value good")
+                status = StatusLevel.OK
+                text = f"{get_status_icon(status)} All metrics OK"
             elif violations <= 2:
-                self._budget_label.update(f"⚠ {violations} warning(s)")
-                self._budget_label.set_classes("perf-value warning")
+                status = StatusLevel.WARNING
+                text = f"{get_status_icon(status)} {violations} warning(s)"
             else:
-                self._budget_label.update(f"✗ {violations} violation(s)")
-                self._budget_label.set_classes("perf-value bad")
+                status = StatusLevel.CRITICAL
+                text = f"{get_status_icon(status)} {violations} violation(s)"
+            self._budget_label.update(text)
+            self._budget_label.set_classes(f"perf-value {get_status_class(status)}")
 
         # Update FPS (use cached reference)
         if self._fps_label is not None:
-            fps_class = self._get_fps_class(snapshot.fps)
-            self._fps_label.update(f"{snapshot.fps:.1f}")
+            fps_status = get_fps_status(snapshot.fps, DEFAULT_THRESHOLDS)
+            fps_class = get_status_class(fps_status)
+            fps_icon = get_status_icon(fps_status)
+            self._fps_label.update(f"{fps_icon} {snapshot.fps:.1f}")
             self._fps_label.set_classes(f"perf-value {fps_class}")
 
         # Update latency
         if self._latency_label is not None:
             avg_ms = snapshot.avg_frame_time * 1000
             p95_ms = snapshot.p95_frame_time * 1000
-            latency_class = self._get_latency_class(avg_ms)
-            self._latency_label.update(f"{avg_ms:.0f}ms avg, {p95_ms:.0f}ms p95")
+            latency_status = get_latency_status(avg_ms, DEFAULT_THRESHOLDS)
+            latency_class = get_status_class(latency_status)
+            latency_icon = get_status_icon(latency_status)
+            self._latency_label.update(f"{latency_icon} {avg_ms:.0f}ms avg, {p95_ms:.0f}ms p95")
             self._latency_label.set_classes(f"perf-value {latency_class}")
 
         # Update memory
         if self._memory_label is not None:
-            memory_class = self._get_memory_class(snapshot.memory_percent)
+            memory_status = get_memory_status(snapshot.memory_percent, DEFAULT_THRESHOLDS)
+            memory_class = get_status_class(memory_status)
+            memory_icon = get_status_icon(memory_status)
             self._memory_label.update(
-                f"{snapshot.memory_mb:.0f}MB ({snapshot.memory_percent:.0f}%)"
+                f"{memory_icon} {snapshot.memory_mb:.0f}MB ({snapshot.memory_percent:.0f}%)"
             )
             self._memory_label.set_classes(f"perf-value {memory_class}")
 
@@ -194,8 +212,10 @@ class PerformanceDashboardWidget(Static):
         # Update CPU
         try:
             cpu_label = self.query_one("#perf-cpu", Label)
-            cpu_class = self._get_cpu_class(snapshot.cpu_percent)
-            cpu_label.update(f"{snapshot.cpu_percent:.1f}%")
+            cpu_status = get_cpu_status(snapshot.cpu_percent, DEFAULT_THRESHOLDS)
+            cpu_class = get_status_class(cpu_status)
+            cpu_icon = get_status_icon(cpu_status)
+            cpu_label.update(f"{cpu_icon} {snapshot.cpu_percent:.1f}%")
             cpu_label.set_classes(f"perf-value {cpu_class}")
         except Exception:
             pass
@@ -242,36 +262,24 @@ class PerformanceDashboardWidget(Static):
 
     @staticmethod
     def _get_fps_class(fps: float) -> str:
-        """Get CSS class for FPS value."""
-        if fps >= 0.5:
-            return "good"
-        elif fps >= 0.2:
-            return "warning"
-        return "bad"
+        """Get CSS class for FPS value using shared thresholds."""
+        status = get_fps_status(fps, DEFAULT_THRESHOLDS)
+        return get_status_class(status)
 
     @staticmethod
     def _get_latency_class(avg_ms: float) -> str:
-        """Get CSS class for latency value."""
-        if avg_ms < 50:
-            return "good"
-        elif avg_ms < 100:
-            return "warning"
-        return "bad"
+        """Get CSS class for latency value using shared thresholds."""
+        status = get_latency_status(avg_ms, DEFAULT_THRESHOLDS)
+        return get_status_class(status)
 
     @staticmethod
     def _get_memory_class(memory_percent: float) -> str:
-        """Get CSS class for memory value."""
-        if memory_percent < 50:
-            return "good"
-        elif memory_percent < 80:
-            return "warning"
-        return "bad"
+        """Get CSS class for memory value using shared thresholds."""
+        status = get_memory_status(memory_percent, DEFAULT_THRESHOLDS)
+        return get_status_class(status)
 
     @staticmethod
     def _get_cpu_class(cpu_percent: float) -> str:
-        """Get CSS class for CPU value."""
-        if cpu_percent < 50:
-            return "good"
-        elif cpu_percent < 80:
-            return "warning"
-        return "bad"
+        """Get CSS class for CPU value using shared thresholds."""
+        status = get_cpu_status(cpu_percent, DEFAULT_THRESHOLDS)
+        return get_status_class(status)

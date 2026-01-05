@@ -52,6 +52,13 @@ class HelpScreen(ModalScreen):
                 yield self._create_shortcut("A", "Show alert history")
                 yield self._create_shortcut("I", "Show mode information")
 
+                # Data Tables
+                yield Label("Data Tables (Positions, Trades, Orders)", classes="help-category")
+                yield self._create_shortcut("c", "Copy selected row to clipboard")
+                yield self._create_shortcut("C", "Copy all rows with headers")
+                yield self._create_shortcut("↑/↓", "Navigate rows")
+                yield self._create_shortcut("ENTER", "Select/expand row")
+
                 # Accessibility
                 yield Label("Accessibility", classes="help-category")
                 yield self._create_shortcut("TAB", "Focus next widget")
@@ -85,6 +92,15 @@ class HelpScreen(ModalScreen):
                 # Emergency Actions
                 yield Label("Emergency Actions", classes="help-category")
                 yield self._create_shortcut("P", "PANIC - Emergency stop & flatten positions")
+
+                # Alert History Screen
+                yield Label("Alert History (press A to open)", classes="help-category")
+                yield self._create_shortcut("1-5", "Filter: All/Trade/System/Risk/Error")
+                yield self._create_shortcut("y", "Copy selected alert")
+                yield self._create_shortcut("Y", "Copy all alerts with headers")
+                yield self._create_shortcut("x", "Clear alert history")
+                yield self._create_shortcut("r", "Reset alert cooldowns")
+                yield self._create_shortcut("ESC", "Close alert history")
 
                 # Modal-Specific
                 yield Label("Modal Controls (when overlay open)", classes="help-category")

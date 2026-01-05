@@ -32,6 +32,7 @@ class ModeSelectionScreen(Screen):
         ("2", "select_paper", "Paper"),
         ("3", "select_observe", "Observe"),
         ("4", "select_live", "Live"),
+        ("s", "setup_api", "Setup API"),
         ("q", "quit", "Quit"),
     ]
 
@@ -152,6 +153,13 @@ class ModeSelectionScreen(Screen):
                         classes="mode-option-description",
                     )
 
+                # First-time setup hint
+                with Container(classes="setup-hint-container"):
+                    yield Label(
+                        "First time? Press [S] to setup Coinbase API credentials",
+                        classes="setup-hint",
+                    )
+
                 yield Button("Quit [Q]", variant="default", id="quit-button")
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -196,3 +204,11 @@ class ModeSelectionScreen(Screen):
     def action_quit(self) -> None:
         """Quit the application."""
         self.app.exit()
+
+    def action_setup_api(self) -> None:
+        """Launch the API setup wizard.
+
+        Returns "setup" to signal the app to show the wizard flow.
+        """
+        logger.info("User requested API setup wizard from mode selection")
+        self.dismiss("setup")

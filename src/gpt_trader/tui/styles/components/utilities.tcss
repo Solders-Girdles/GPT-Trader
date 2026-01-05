@@ -67,14 +67,16 @@
     color: $success;
     background: rgba(122, 168, 116, 0.2);
     padding: 0 $spacing-md;
-    border: solid $success;
+    border: none;
+    border-left: wide $success;
 }
 
 .status-stopped {
     color: $error;
     background: rgba(212, 115, 110, 0.2);
     padding: 0 $spacing-md;
-    border: solid $error;
+    border: none;
+    border-left: wide $error;
 }
 
 /* === Connection Status Indicators === */
@@ -135,4 +137,29 @@
     background: $error-muted;
     border-left: wide $error;
     color: $error;
+}
+
+/* === Sort Hint for Detail Screens === */
+
+.sort-hint {
+    height: 1;
+    color: $text-muted;
+    text-style: italic;
+    padding: 0 1;
+    margin-bottom: 1;
+}
+
+/* === Action Hints (Base Style) === */
+/* Keyboard shortcut hints shown in tiles, empty states, and quick actions.
+   Context-specific overrides in focus.tcss, dashboard.tcss */
+
+.action-hint {
+    height: 1;
+    padding: 0 1;
+    color: $text-muted;
+}
+
+.action-key {
+    color: $accent;
+    text-style: bold;
 }

@@ -5,6 +5,7 @@ from textual.reactive import reactive
 from textual.widgets import Button, Label, Static
 
 from gpt_trader.tui.events import ResponsiveStateChanged
+from gpt_trader.tui.helpers import safe_update
 from gpt_trader.tui.responsive_state import ResponsiveState
 from gpt_trader.tui.widgets.mode_indicator import ModeIndicator
 from gpt_trader.tui.widgets.mode_selector import ModeSelector
@@ -115,6 +116,7 @@ class BotStatusWidget(Static):
         if event.button.id in ("start-btn", "stop-btn"):
             self.post_message(self.ToggleBotPressed())
 
+    @safe_update
     def watch_running(self, running: bool) -> None:
         """Update UI when bot running state changes."""
         # Use cached references (fall back to query if not cached yet)
@@ -135,6 +137,7 @@ class BotStatusWidget(Static):
             start_btn.disabled = False
             stop_btn.disabled = True
 
+    @safe_update
     def watch_uptime(self, uptime: float) -> None:
         """Update uptime display."""
         m, s = divmod(int(uptime), 60)
@@ -142,12 +145,14 @@ class BotStatusWidget(Static):
         label = self._uptime_label or self.query_one("#uptime-value", Label)
         label.update(f"{h:02d}:{m:02d}:{s:02d}")
 
+    @safe_update
     def watch_equity(self, equity: str) -> None:
         """Update equity display."""
         label = self._equity_label or self.query_one("#equity-value", Label)
         label.update(f"${equity}")
         self._flash_value(label)
 
+    @safe_update
     def watch_pnl(self, pnl: str) -> None:
         """Update P&L display with color coding."""
         pnl_label = self._pnl_label or self.query_one("#pnl-value", Label)
@@ -168,6 +173,7 @@ class BotStatusWidget(Static):
 
         self._flash_value(pnl_label)
 
+    @safe_update
     def watch_margin_usage(self, margin: str) -> None:
         """Update margin usage display."""
         label = self._margin_label or self.query_one("#margin-value", Label)
@@ -194,6 +200,7 @@ class BotStatusWidget(Static):
             # No event loop available (e.g., in tests), skip animation
             label.remove_class("value-updating")
 
+    @safe_update
     def watch_heartbeat(self, heartbeat: float) -> None:
         """Update heartbeat with smooth opacity transition."""
         indicator = self._heartbeat_indicator
@@ -205,6 +212,7 @@ class BotStatusWidget(Static):
         opacity = 0.3 + (0.7 * heartbeat)
         indicator.styles.opacity = opacity
 
+    @safe_update
     def watch_connection_status(self, status: str) -> None:
         """Update connection status display via indicator icon."""
         indicator = self._conn_indicator
@@ -224,24 +232,28 @@ class BotStatusWidget(Static):
             indicator.update("")
             indicator.add_class("status-unknown")
 
+    @safe_update
     def watch_api_latency(self, latency: float) -> None:
         """Update API latency display."""
         label = self._latency_label
         if label:
             label.update(f"{latency:.0f}ms")
 
+    @safe_update
     def watch_cpu_usage(self, cpu: str) -> None:
         """Update CPU usage display."""
         label = self._cpu_label
         if label:
             label.update(cpu)
 
+    @safe_update
     def watch_rate_limit_usage(self, rate_limit: str) -> None:
         """Update rate limit usage display."""
         label = self._rate_limit_label
         if label:
             label.update(rate_limit)
 
+    @safe_update
     def watch_responsive_state(self, state: ResponsiveState) -> None:
         """Update status bar layout based on responsive state.
 

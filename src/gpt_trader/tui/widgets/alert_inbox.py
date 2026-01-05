@@ -15,6 +15,7 @@ from textual.containers import Horizontal, Vertical
 from textual.reactive import reactive
 from textual.widgets import Button, Label, ListView, ListItem, Static
 
+from gpt_trader.tui.widgets.tile_states import TileEmptyState
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -26,6 +27,39 @@ if TYPE_CHECKING:
     )
 
 logger = get_logger(__name__, component="tui")
+
+# Recovery action hints mapped by rule_id
+RECOVERY_HINTS: dict[str, str] = {
+    "connection_lost": "[R] Reconnect",
+    "rate_limit_high": "Wait or reduce requests",
+    "reduce_only_active": "[C] Check config",
+    "daily_loss_warning": "[P] Pause trading",
+    "large_unrealized_loss": "Consider exit",
+    "bot_stopped": "[S] Start bot",
+}
+
+
+def get_recovery_hint(rule_id: str, category_value: str) -> str | None:
+    """Get recovery action hint for an alert.
+
+    Args:
+        rule_id: The alert rule identifier.
+        category_value: The alert category value.
+
+    Returns:
+        Recovery hint string or None if no hint available.
+    """
+    # Check specific rule first
+    if rule_id in RECOVERY_HINTS:
+        return RECOVERY_HINTS[rule_id]
+
+    # Fall back to category-based hints
+    category_hints = {
+        "system": "[R] Reconnect",
+        "risk": "[C] Check config",
+        "error": "Check logs",
+    }
+    return category_hints.get(category_value)
 
 
 class AlertItem(ListItem):
@@ -53,10 +87,12 @@ class AlertItem(ListItem):
             # Alert content
             with Vertical(classes="alert-content"):
                 yield Label(self.alert.title, classes="alert-title")
-                yield Label(
-                    self._truncate(self.alert.message, 50),
-                    classes="alert-message",
-                )
+                # Include recovery hint in message if available
+                hint = get_recovery_hint(self.alert.rule_id, self.alert.category.value)
+                message = self._truncate(self.alert.message, 40)
+                if hint:
+                    message = f"{message} — {hint}"
+                yield Label(message, classes="alert-message")
 
             # Category badge
             yield Label(
@@ -100,7 +136,8 @@ class AlertInbox(Static):
     AlertInbox {
         height: auto;
         max-height: 20;
-        border: solid $border-subtle;
+        border: none;
+        border-left: wide $accent-muted;
         background: $bg-primary;
     }
 
@@ -224,11 +261,34 @@ class AlertInbox(Static):
         color: $error;
     }
 
-    .empty-inbox {
-        height: 3;
+    /* Compact empty state for AlertInbox */
+    #empty-inbox {
+        height: auto;
+        min-height: 3;
         width: 100%;
+        padding: 0;
         align: center middle;
+    }
+
+    #empty-inbox .empty-icon {
+        display: none;
+        height: 0;
+    }
+
+    #empty-inbox .empty-title {
+        height: 1;
         color: $text-muted;
+        margin-bottom: 0;
+    }
+
+    #empty-inbox .empty-subtitle {
+        height: 1;
+        color: $text-muted;
+        padding: 0;
+    }
+
+    #empty-inbox #empty-actions-container {
+        display: none;
     }
     """
 
@@ -271,8 +331,13 @@ class AlertInbox(Static):
         # Alert list
         yield ListView(id="alert-list")
 
-        # Empty state
-        yield Label("No alerts", id="empty-inbox", classes="empty-inbox")
+        # Empty state (compact - icon hidden via CSS)
+        yield TileEmptyState(
+            title="No Alerts",
+            subtitle="You're all caught up",
+            icon="○",
+            id="empty-inbox",
+        )
 
     def on_mount(self) -> None:
         """Initialize on mount."""
@@ -311,16 +376,16 @@ class AlertInbox(Static):
         # Update list
         try:
             list_view = self.query_one("#alert-list", ListView)
-            empty_label = self.query_one("#empty-inbox", Label)
+            empty_state = self.query_one("#empty-inbox", TileEmptyState)
 
             list_view.clear()
 
             if not alerts:
                 list_view.display = False
-                empty_label.display = True
+                empty_state.display = True
             else:
                 list_view.display = True
-                empty_label.display = False
+                empty_state.display = False
 
                 for alert in alerts:
                     list_view.append(AlertItem(alert))
@@ -332,11 +397,11 @@ class AlertInbox(Static):
         """Show empty state."""
         try:
             list_view = self.query_one("#alert-list", ListView)
-            empty_label = self.query_one("#empty-inbox", Label)
+            empty_state = self.query_one("#empty-inbox", TileEmptyState)
 
             list_view.clear()
             list_view.display = False
-            empty_label.display = True
+            empty_state.display = True
         except Exception:
             pass
 

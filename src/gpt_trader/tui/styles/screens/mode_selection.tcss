@@ -11,7 +11,8 @@ ModeSelectionScreen {
     width: 80;
     height: auto;
     background: $bg-secondary;
-    border: solid $accent;
+    border: none;
+    border-left: wide $accent;
     padding: 2;
     align: center middle;
 }
@@ -38,7 +39,8 @@ ModeSelectionScreen {
     padding: 1 2;
     margin-bottom: 2;
     background: $accent-muted;
-    border: solid $accent;
+    border: none;
+    border-left: wide $accent;
 }
 
 .resume-hint {
@@ -56,13 +58,12 @@ ModeSelectionScreen {
     width: 100%;
     height: auto;
     background: $bg-elevated;
-    border: solid $border-subtle;
+    border: none;
     padding: 1 2;
     margin: 1 0;
 }
 
 .mode-option:hover {
-    border: solid $accent;
     background: $accent-muted;
 }
 
@@ -91,6 +92,23 @@ ModeSelectionScreen {
 
 .mode-live {
     border-left: wide $error;
+}
+
+/* First-time setup hint */
+.setup-hint-container {
+    width: 100%;
+    height: auto;
+    padding: 1 2;
+    margin-top: 2;
+    background: $bg-elevated;
+    border: none;
+    border-left: wide $info;
+}
+
+.setup-hint {
+    text-align: center;
+    color: $info;
+    width: 100%;
 }
 
 #quit-button {

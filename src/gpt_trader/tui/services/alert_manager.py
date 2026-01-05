@@ -316,12 +316,18 @@ class AlertManager:
         Args:
             alert: Alert to notify about.
         """
+        from gpt_trader.tui.notification_helpers import TIMEOUT_ALERT, get_recovery_hint
+
         try:
+            # Add recovery hint if available for this rule
+            hint = get_recovery_hint(alert.rule_id)
+            message = f"{alert.message} — {hint}" if hint else alert.message
+
             self.app.notify(
-                alert.message,
+                message,
                 title=alert.title,
                 severity=alert.severity.value,
-                timeout=10,
+                timeout=TIMEOUT_ALERT,
             )
             logger.info(f"Alert triggered: {alert.title} - {alert.message}")
         except Exception as e:

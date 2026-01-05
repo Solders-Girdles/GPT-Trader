@@ -12,6 +12,7 @@ from gpt_trader.tui.events import (
     ModeSelectorLoadingChanged,
     ModeSelectorValueChanged,
 )
+from gpt_trader.tui.widgets.spinner import SPINNER_INTERVAL
 
 
 class ModeSelector(Static):
@@ -80,7 +81,7 @@ class ModeSelector(Static):
                 select.disabled = True
                 loading_label.update(self.SPINNER_FRAMES[0])
                 self._spinner_frame = 0
-                self._spinner_timer = self.set_interval(0.1, self._animate_spinner)
+                self._spinner_timer = self.set_interval(SPINNER_INTERVAL, self._animate_spinner)
             else:
                 # Re-enable selector (unless externally disabled) and stop spinner
                 if self.enabled:

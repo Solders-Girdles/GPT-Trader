@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING, Any
 
 from textual.worker import Worker, WorkerState
 
+from gpt_trader.tui.notification_helpers import notify_error, notify_success, notify_warning
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -95,16 +96,14 @@ class BotLifecycleManager:
             else:
                 # Edge case: bot says it's running but we don't have task/worker reference
                 logger.warning("Bot state inconsistent: running=True but no task/worker reference")
-                self.app.notify(
-                    "Bot state inconsistent, attempting recovery...", severity="warning"
-                )
+                notify_warning(self.app, "Bot state inconsistent, attempting recovery...")
                 await self.app.bot.stop()
                 self._bot_task = None
                 self._bot_worker = None
 
         except Exception as e:
             logger.error(f"Failed to toggle bot state: {e}", exc_info=True)
-            self.app.notify(f"Failed to toggle bot: {e}", severity="error", title="Bot Control")
+            notify_error(self.app, f"Failed to toggle bot: {e}", title="Bot Control")
 
     async def start_bot(self) -> None:
         """Start the bot.
@@ -178,7 +177,7 @@ class BotLifecycleManager:
         self.app._sync_state_from_bot()
         self._update_main_screen()
 
-        self.app.notify("Bot started.", title="Status", severity="information")
+        notify_success(self.app, "Bot started.", title="Status")
         logger.info("Bot started successfully via TUI")
 
     async def stop_bot(self) -> None:
@@ -214,7 +213,7 @@ class BotLifecycleManager:
         self.app._sync_state_from_bot()
         self._update_main_screen()
 
-        self.app.notify("Bot stopped.", title="Status", severity="information")
+        notify_success(self.app, "Bot stopped.", title="Status")
         logger.info("Bot stopped successfully via TUI")
 
     def panic_stop(self) -> None:
@@ -267,11 +266,7 @@ class BotLifecycleManager:
 
         # Step 0: Validate bot is stopped
         if self.app.bot.running:
-            self.app.notify(
-                "Please stop the bot before switching modes",
-                severity="warning",
-                title="Mode Switch",
-            )
+            notify_warning(self.app, "Please stop the bot before switching modes", title="Mode Switch")
             return False
 
         # Step 1: For live mode, show warning modal
@@ -365,11 +360,7 @@ class BotLifecycleManager:
             # Save mode preference for future launches
             self.app.mode_service.save_mode_preference(target_mode)
 
-            self.app.notify(
-                f"Switched to {target_mode.upper()} mode",
-                severity="information",
-                title="Mode Switch",
-            )
+            notify_success(self.app, f"Switched to {target_mode.upper()} mode", title="Mode Switch")
             logger.info(f"Mode switch completed successfully to {target_mode}")
 
             # Clean up old bot (optional, will be garbage collected)
@@ -382,11 +373,7 @@ class BotLifecycleManager:
             self._set_mode_selector_loading(False)
 
             logger.error(f"Failed to switch modes: {e}", exc_info=True)
-            self.app.notify(
-                f"Mode switch failed: {e}",
-                severity="error",
-                title="Mode Switch",
-            )
+            notify_error(self.app, f"Mode switch failed: {e}", title="Mode Switch")
             return False
 
     async def _create_demo_bot(self) -> Any:

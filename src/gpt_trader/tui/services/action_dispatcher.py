@@ -9,6 +9,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from gpt_trader.tui.notification_helpers import (
+    notify_action,
+    notify_error,
+    notify_success,
+    notify_warning,
+)
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -51,7 +57,7 @@ class ActionDispatcher:
         if self.app.bot and hasattr(self.app.bot, "config"):
             self.app.config_service.show_config_modal(self.app.bot.config)
         else:
-            self.app.notify("No configuration available", severity="warning")
+            notify_warning(self.app, "No configuration available")
 
     async def focus_logs(self) -> None:
         """Focus the log widget on the current screen."""
@@ -65,13 +71,13 @@ class ActionDispatcher:
                 log_widget = self.app.query_one("#full-logs")
             else:
                 # Other screens may not have log widgets
-                self.app.notify("No log widget on this screen", severity="information")
+                notify_action(self.app, "No log widget on this screen")
                 return
 
             log_widget.focus()
         except Exception as e:
             logger.warning(f"Failed to focus log widget: {e}")
-            self.app.notify("Could not focus logs widget", severity="warning")
+            notify_warning(self.app, "Could not focus logs widget")
 
     async def show_full_logs(self) -> None:
         """Show full logs screen (expanded view)."""
@@ -82,7 +88,7 @@ class ActionDispatcher:
             self.app.push_screen(FullLogsScreen())
         except Exception as e:
             logger.error(f"Failed to show full logs screen: {e}", exc_info=True)
-            self.app.notify(f"Error showing full logs: {e}", severity="error")
+            notify_error(self.app, f"Error showing full logs: {e}")
 
     async def show_system_details(self) -> None:
         """Show detailed system metrics screen."""
@@ -93,7 +99,7 @@ class ActionDispatcher:
             self.app.push_screen(SystemDetailsScreen())
         except Exception as e:
             logger.error(f"Failed to show system details screen: {e}", exc_info=True)
-            self.app.notify(f"Error showing system details: {e}", severity="error")
+            notify_error(self.app, f"Error showing system details: {e}")
 
     async def show_mode_info(self) -> None:
         """Show detailed mode information modal."""
@@ -104,7 +110,7 @@ class ActionDispatcher:
             self.app.push_screen(ModeInfoModal(self.app.data_source_mode))
         except Exception as e:
             logger.error(f"Failed to show mode info modal: {e}", exc_info=True)
-            self.app.notify(f"Error showing mode info: {e}", severity="error")
+            notify_error(self.app, f"Error showing mode info: {e}")
 
     async def show_help(self) -> None:
         """Show comprehensive keyboard shortcut help screen."""
@@ -115,7 +121,7 @@ class ActionDispatcher:
             self.app.push_screen(HelpScreen())
         except Exception as e:
             logger.error(f"Failed to show help screen: {e}", exc_info=True)
-            self.app.notify(f"Error showing help: {e}", severity="error")
+            notify_error(self.app, f"Error showing help: {e}")
 
     async def reconnect_data(self) -> None:
         """Start/refresh data feed.
@@ -127,7 +133,7 @@ class ActionDispatcher:
         """
         try:
             if self.app.data_source_mode == "demo":
-                self.app.notify("Demo mode uses simulated data", severity="information")
+                notify_action(self.app, "Demo mode uses simulated data")
                 return
 
             # Set data_fetching flag for UI feedback
@@ -135,10 +141,10 @@ class ActionDispatcher:
 
             # Context-aware notification
             if not self.app.tui_state.data_available:
-                self.app.notify("Starting data feed...", severity="information")
+                notify_action(self.app, "Starting data feed...")
                 logger.info("User initiated data feed start")
             else:
-                self.app.notify("Refreshing data...", severity="information")
+                notify_action(self.app, "Refreshing data...")
                 logger.info("User initiated data refresh")
 
             # Even when STOPPED, fetch a fresh account/market snapshot so the UI
@@ -160,19 +166,13 @@ class ActionDispatcher:
             # Check connection health immediately (no artificial delay)
             is_healthy = self.app.tui_state.check_connection_health()
             if is_healthy:
-                self.app.notify(
-                    "Data refreshed successfully", title="Connection", severity="information"
-                )
+                notify_success(self.app, "Data refreshed successfully", title="Connection")
             else:
-                self.app.notify(
-                    "Waiting for data update...",
-                    title="Connection",
-                    severity="warning",
-                )
+                notify_warning(self.app, "Waiting for data update...", title="Connection")
         except Exception as e:
             self.app.tui_state.data_fetching = False
             logger.error(f"Failed to reconnect: {e}", exc_info=True)
-            self.app.notify(f"Error reconnecting: {e}", severity="error")
+            notify_error(self.app, f"Error reconnecting: {e}")
 
     async def panic(self) -> None:
         """Show panic confirmation modal for emergency stop.
@@ -186,10 +186,10 @@ class ActionDispatcher:
             """Handle panic modal result."""
             if confirmed:
                 logger.warning("User triggered PANIC - emergency stop initiated")
-                self.app.notify(
+                notify_error(
+                    self.app,
                     "PANIC INITIATED - Stopping bot and flattening all positions",
                     title="Emergency Stop",
-                    severity="error",
                     timeout=30,
                 )
                 # Delegate to lifecycle manager for safe shutdown
@@ -198,15 +198,15 @@ class ActionDispatcher:
                         self.app.lifecycle_manager.panic_stop()
                 except Exception as e:
                     logger.error(f"Panic stop failed: {e}", exc_info=True)
-                    self.app.notify(
+                    notify_error(
+                        self.app,
                         f"PANIC STOP FAILED: {e}",
                         title="Critical Error",
-                        severity="error",
                         timeout=60,
                     )
             else:
                 logger.info("Panic cancelled by user")
-                self.app.notify("Panic cancelled", severity="information")
+                notify_action(self.app, "Panic cancelled")
 
         self.app.push_screen(PanicModal(), handle_panic_confirm)
 
@@ -219,7 +219,7 @@ class ActionDispatcher:
             self.app.theme_service.toggle_theme()
         except Exception as e:
             logger.error(f"Failed to toggle theme: {e}", exc_info=True)
-            self.app.notify(f"Theme switch failed: {e}", severity="error")
+            notify_error(self.app, f"Theme switch failed: {e}")
 
     async def show_alert_history(self) -> None:
         """Show alert history screen."""
@@ -230,7 +230,7 @@ class ActionDispatcher:
             self.app.push_screen(AlertHistoryScreen())
         except Exception as e:
             logger.error(f"Failed to show alert history screen: {e}", exc_info=True)
-            self.app.notify(f"Error showing alerts: {e}", severity="error")
+            notify_error(self.app, f"Error showing alerts: {e}")
 
     async def force_refresh(self) -> None:
         """Force a full refresh of bot state and UI.
@@ -239,7 +239,7 @@ class ActionDispatcher:
         """
         try:
             logger.info("User initiated force refresh")
-            self.app.notify("Refreshing bot state...", severity="information")
+            notify_action(self.app, "Refreshing bot state...")
 
             # Sync state from bot
             if self.app.ui_coordinator:
@@ -255,11 +255,11 @@ class ActionDispatcher:
                 # Re-check alerts with fresh state
                 self.app.alert_manager.check_alerts(self.app.tui_state)
 
-            self.app.notify("Refresh complete", severity="information")
+            notify_success(self.app, "Refresh complete")
             logger.info("Force refresh completed")
         except Exception as e:
             logger.error(f"Force refresh failed: {e}", exc_info=True)
-            self.app.notify(f"Refresh failed: {e}", severity="error")
+            notify_error(self.app, f"Refresh failed: {e}")
 
     async def quit_app(self) -> None:
         """Quit the application gracefully."""
@@ -296,7 +296,7 @@ class ActionDispatcher:
             self.app.push_screen(WatchlistScreen())
         except Exception as e:
             logger.error(f"Failed to open watchlist editor: {e}", exc_info=True)
-            self.app.notify(f"Error opening watchlist: {e}", severity="error")
+            notify_error(self.app, f"Error opening watchlist: {e}")
 
     async def clear_watchlist(self) -> None:
         """Clear all symbols from the watchlist."""
@@ -305,11 +305,11 @@ class ActionDispatcher:
         try:
             prefs = get_preferences_service()
             prefs.clear_watchlist()
-            self.app.notify("Watchlist cleared", severity="information")
+            notify_success(self.app, "Watchlist cleared")
             logger.info("User cleared watchlist")
         except Exception as e:
             logger.error(f"Failed to clear watchlist: {e}", exc_info=True)
-            self.app.notify(f"Error clearing watchlist: {e}", severity="error")
+            notify_error(self.app, f"Error clearing watchlist: {e}")
 
     # =========================================================================
     # Operator/Diagnostics Actions
@@ -319,7 +319,7 @@ class ActionDispatcher:
         """Run connection diagnostics and display results."""
         try:
             logger.info("Running connection diagnostics")
-            self.app.notify("Running diagnostics...", severity="information")
+            notify_action(self.app, "Running diagnostics...")
 
             results = []
 
@@ -347,16 +347,11 @@ class ActionDispatcher:
 
             # Display results
             diagnostics_text = "\n".join(results)
-            self.app.notify(
-                diagnostics_text,
-                title="Connection Diagnostics",
-                severity="information",
-                timeout=15,
-            )
+            notify_action(self.app, diagnostics_text, title="Connection Diagnostics", timeout=15)
             logger.info(f"Diagnostics complete: {results}")
         except Exception as e:
             logger.error(f"Diagnostics failed: {e}", exc_info=True)
-            self.app.notify(f"Diagnostics failed: {e}", severity="error")
+            notify_error(self.app, f"Diagnostics failed: {e}")
 
     async def export_logs(self) -> None:
         """Export current logs to a timestamped file."""
@@ -375,17 +370,13 @@ class ActionDispatcher:
                     for log in logs:
                         f.write(f"{log}\n")
 
-                self.app.notify(
-                    f"Logs exported to {export_path}",
-                    title="Export Complete",
-                    severity="information",
-                )
+                notify_success(self.app, f"Logs exported to {export_path}", title="Export Complete")
                 logger.info(f"Exported {len(logs)} log entries to {export_path}")
             else:
-                self.app.notify("Log manager not available", severity="warning")
+                notify_warning(self.app, "Log manager not available")
         except Exception as e:
             logger.error(f"Log export failed: {e}", exc_info=True)
-            self.app.notify(f"Export failed: {e}", severity="error")
+            notify_error(self.app, f"Export failed: {e}")
 
     async def export_state(self) -> None:
         """Export current TuiState as JSON snapshot."""
@@ -432,47 +423,34 @@ class ActionDispatcher:
             with open(export_path, "w") as f:
                 json.dump(snapshot, f, indent=2)
 
-            self.app.notify(
-                f"State exported to {export_path}",
-                title="Export Complete",
-                severity="information",
-            )
+            notify_success(self.app, f"State exported to {export_path}", title="Export Complete")
             logger.info(f"Exported state snapshot to {export_path}")
         except Exception as e:
             logger.error(f"State export failed: {e}", exc_info=True)
-            self.app.notify(f"Export failed: {e}", severity="error")
+            notify_error(self.app, f"Export failed: {e}")
 
     async def reconnect_websocket(self) -> None:
         """Force WebSocket reconnection."""
         try:
             logger.info("User initiated WebSocket reconnection")
-            self.app.notify("Reconnecting WebSocket...", severity="information")
+            notify_action(self.app, "Reconnecting WebSocket...")
 
             # Check if bot has a client with websocket
             if self.app.bot and hasattr(self.app.bot, "client"):
                 client = self.app.bot.client
                 if hasattr(client, "reconnect_websocket"):
                     await client.reconnect_websocket()
-                    self.app.notify(
-                        "WebSocket reconnection initiated",
-                        severity="information",
-                    )
+                    notify_success(self.app, "WebSocket reconnection initiated")
                 elif hasattr(client, "ws") and hasattr(client.ws, "reconnect"):
                     await client.ws.reconnect()
-                    self.app.notify(
-                        "WebSocket reconnection initiated",
-                        severity="information",
-                    )
+                    notify_success(self.app, "WebSocket reconnection initiated")
                 else:
-                    self.app.notify(
-                        "WebSocket reconnect not available for this client",
-                        severity="warning",
-                    )
+                    notify_warning(self.app, "WebSocket reconnect not available for this client")
             else:
-                self.app.notify("No active client connection", severity="warning")
+                notify_warning(self.app, "No active client connection")
         except Exception as e:
             logger.error(f"WebSocket reconnection failed: {e}", exc_info=True)
-            self.app.notify(f"Reconnection failed: {e}", severity="error")
+            notify_error(self.app, f"Reconnection failed: {e}")
 
     async def reset_circuit_breakers(self) -> None:
         """Reset all circuit breakers to closed state."""
@@ -503,16 +481,10 @@ class ActionDispatcher:
                     reset_count += 1
 
             if reset_count > 0:
-                self.app.notify(
-                    f"Reset {reset_count} circuit breaker(s)",
-                    severity="information",
-                )
+                notify_success(self.app, f"Reset {reset_count} circuit breaker(s)")
                 logger.info(f"Reset {reset_count} circuit breakers")
             else:
-                self.app.notify(
-                    "No circuit breakers found to reset",
-                    severity="warning",
-                )
+                notify_warning(self.app, "No circuit breakers found to reset")
         except Exception as e:
             logger.error(f"Circuit breaker reset failed: {e}", exc_info=True)
-            self.app.notify(f"Reset failed: {e}", severity="error")
+            notify_error(self.app, f"Reset failed: {e}")

@@ -13,7 +13,8 @@ Header {
 Header.app-header {
     height: 3;
     background: $bg-elevated;
-    border-bottom: solid $border-emphasis;
+    border: none;
+    border-left: wide $accent;
     color: $text-primary;
     text-style: bold;
     padding: 0 1;
@@ -27,7 +28,8 @@ Header.sub-header {
     height: 3;
     background: $bg-elevated;
     color: $text-primary;
-    border-bottom: solid $border-accent; /* Sharp accent line */
+    border: none;
+    border-left: wide $accent;
     text-style: bold;
 }
 
@@ -55,7 +57,6 @@ Header.sub-header HeaderClock {
     min-width: 14;
     background: $bg-secondary;
     color: $accent;
-    border-left: solid $border-subtle;
     padding: 0 2;
     text-style: bold;
     content-align: center middle;
@@ -68,14 +69,12 @@ Header.app-header HeaderIcon {
     content-align: center middle;
     color: $text-primary;
     background: $bg-secondary;
-    border-right: solid $border-subtle;
     text-style: bold;
 }
 
 Header.app-header HeaderIcon:hover {
     background: $bg-highlight;
     color: $text-bright;
-    border-right: solid $accent; /* Interaction hint */
 }
 
 Header.app-header HeaderTitle {
@@ -91,7 +90,6 @@ Header.app-header HeaderClock {
     min-width: 12;
     background: transparent;
     color: $text-secondary;
-    border-left: solid $border-subtle;
     padding: 0 $spacing-md;
     content-align: center middle;
 }
@@ -101,23 +99,22 @@ Footer {
     height: 1;
     background: $bg-secondary;
     color: $text-primary;
-    border-top: solid $border-subtle;
 }
 
 /* === Widget Headers === */
 
-/* Standard widget header - professional and refined */
+/* Standard widget header - minimal and clean */
 .widget-header {
     color: $text-primary;
     text-style: bold;
     text-align: left;
-    background: $bg-elevated;
-    padding: 0 2; /* Increased padding for breathing room */
-    border-left: wide $accent; /* Accent accent line for visual hierarchy */
-    border-bottom: solid $border-emphasis; /* Stronger separator */
-    height: 3; /* More comfortable height */
+    background: transparent;
+    padding: 0 1;
+    border-left: wide $accent;
+    border-bottom: none;
+    height: 2;
     content-align: left middle;
-    margin-bottom: 1; /* Better spacing from content */
+    margin-bottom: 0;
 }
 
 /* Screen-level header */
@@ -127,7 +124,8 @@ Footer {
     text-align: center;
     background: $bg-elevated;
     padding: 0 2;
-    border-bottom: solid $border-emphasis;
+    border: none;
+    border-left: wide $accent;
     height: 3;
     content-align: center middle;
     margin-bottom: 1;
@@ -135,7 +133,7 @@ Footer {
 
 /* Accent variant */
 .widget-header-accent {
-    border-left: solid $accent;
+    border-left: wide $accent;
     background: $bg-highlight;
 }
 

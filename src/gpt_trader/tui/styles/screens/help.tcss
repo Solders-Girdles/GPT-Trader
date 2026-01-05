@@ -13,7 +13,8 @@ HelpScreen #help-container {
     height: auto;
     max-height: 90%;
     background: $bg-secondary;
-    border: thick $accent;
+    border: none;
+    border-left: wide $accent;
     padding: $spacing-md;
 }
 

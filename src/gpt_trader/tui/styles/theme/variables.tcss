@@ -19,7 +19,7 @@ $accent-subtle: rgba(0, 122, 255, 0.1);  /* Subtle Blue Tint */
 /* === Text Colors (High Contrast) === */
 $text-primary: #FFFFFF;    /* Pure White - Primary Data */
 $text-secondary: #B0B0B0;  /* Light Grey - Labels/Secondary Info */
-$text-muted: #606060;      /* Dark Grey - Disabled/Hints */
+$text-muted: #8A8682;      /* Dark Grey - Disabled/Hints */
 $text-bright: #FFFFFF;     /* Pure White - Headers/Emphasis */
 
 /* === Semantic Colors (Neon/Sharp) === */

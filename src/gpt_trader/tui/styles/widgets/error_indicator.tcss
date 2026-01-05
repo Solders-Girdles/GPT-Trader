@@ -10,8 +10,8 @@ ErrorIndicatorWidget {
     min-height: 1;
     background: $bg-elevated;
     color: $text-primary;
+    border: none;
     border-left: wide $error;
-    border-bottom: solid $border-subtle;
     padding: 0 1;
 }
 

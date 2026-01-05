@@ -28,6 +28,7 @@ CSS_MODULE_ORDER = [
     "components/select.tcss",
     "components/utilities.tcss",
     "components/animations.tcss",
+    "components/status.tcss",  # Unified status indicators (ok/warning/critical)
     # P3: Interaction states and polish
     "components/interaction_states.tcss",
     "components/polish.tcss",
@@ -50,6 +51,8 @@ CSS_MODULE_ORDER = [
     "widgets/validation.tcss",
     "widgets/shell.tcss",
     "widgets/performance.tcss",
+    "widgets/breadcrumb.tcss",
+    "widgets/alert_inbox.tcss",
     # 5. Screens (screen-specific overrides)
     "screens/mode_selection.tcss",
     "screens/alert_history.tcss",

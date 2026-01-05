@@ -14,9 +14,10 @@ from __future__ import annotations
 from textual._context import NoActiveAppError
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.containers import Container, Grid
+from textual.containers import Container, Grid, Horizontal
 from textual.reactive import reactive
 from textual.screen import Screen
+from textual.widgets import Label
 
 from gpt_trader.tui.events import MainScreenRefreshRequested
 from gpt_trader.tui.responsive_state import ResponsiveState
@@ -94,22 +95,27 @@ class MainScreen(Screen):
             # Hero: Active Position
             with Container(id="tile-hero", classes="bento-tile"):
                 yield PositionCardWidget(id="dash-position")
+                yield Horizontal(id="hints-hero", classes="tile-actions-hint")
 
             # Tile: Account Summary
             with Container(id="tile-account", classes="bento-tile"):
                 yield AccountWidget(compact_mode=False, id="dash-account")
+                yield Horizontal(id="hints-account", classes="tile-actions-hint")
 
             # Tile: Market Pulse
             with Container(id="tile-market", classes="bento-tile"):
                 yield MarketPulseWidget(id="dash-market")
+                yield Horizontal(id="hints-market", classes="tile-actions-hint")
 
             # Tile: System Monitor (Small strip)
             with Container(id="tile-system", classes="bento-tile"):
                 yield SystemMonitorWidget(id="dash-system")
+                yield Horizontal(id="hints-system", classes="tile-actions-hint")
 
             # -- Console Area --
             with Container(id="tile-logs", classes="bento-tile"):
-                 yield LogWidget(id="dash-logs", classes="logs-panel")
+                yield LogWidget(id="dash-logs", classes="logs-panel")
+                yield Horizontal(id="hints-logs", classes="tile-actions-hint")
 
         # 3. Footer
         yield ContextualFooter()
@@ -264,7 +270,34 @@ class MainScreen(Screen):
     def on_tile_focus_changed(self, event: TileFocusChanged) -> None:
         """Handle tile focus change events.
 
+        Updates the action hints row in the focused tile with relevant shortcuts.
+
         Args:
             event: The focus change event with tile_id and actions.
         """
         logger.debug(f"Tile focus changed to: {event.tile_id}")
+
+        # Map tile IDs to their hint container IDs
+        hint_map = {
+            "tile-hero": "hints-hero",
+            "tile-account": "hints-account",
+            "tile-market": "hints-market",
+            "tile-system": "hints-system",
+            "tile-logs": "hints-logs",
+        }
+
+        # Update the focused tile's hints
+        hint_id = hint_map.get(event.tile_id)
+        if hint_id:
+            try:
+                hint_container = self.query_one(f"#{hint_id}", Horizontal)
+                hint_container.remove_children()
+
+                # Add action hints as Labels
+                for key, description in event.actions:
+                    # Format: [Key] Description
+                    hint_container.mount(
+                        Label(f"[{key}] {description}", classes="action-hint")
+                    )
+            except Exception as e:
+                logger.debug(f"Could not update hints for {event.tile_id}: {e}")

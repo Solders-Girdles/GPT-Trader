@@ -25,6 +25,7 @@ from textual.widgets import DataTable, Label, Static
 
 from gpt_trader.tui.formatting import format_currency
 from gpt_trader.tui.helpers import safe_update
+from gpt_trader.tui.staleness_helpers import get_freshness_display, get_staleness_banner
 from gpt_trader.tui.theme import THEME
 from gpt_trader.tui.utilities import (
     copy_to_clipboard,
@@ -34,6 +35,7 @@ from gpt_trader.tui.utilities import (
 )
 from gpt_trader.tui.widgets import ContextualFooter
 from gpt_trader.tui.widgets.shell import CommandBar
+from gpt_trader.tui.widgets.tile_states import TileBanner, TileEmptyState
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -284,6 +286,7 @@ class AccountDetailScreen(Screen):
             bot_mode=getattr(self.app, "data_source_mode", "DEMO").upper(),
             id="header-bar",
         )
+        yield TileBanner(id="account-detail-banner", classes="tile-banner hidden")
 
         with Container(id="account-detail-container"):
             # Top: Account metrics summary
@@ -301,7 +304,13 @@ class AccountDetailScreen(Screen):
                 )
                 table.can_focus = True
                 yield table
-                yield Label("", id="balances-empty", classes="empty-state")
+                yield TileEmptyState(
+                    title="No Balance Data",
+                    subtitle="Waiting for account snapshot",
+                    icon="◌",
+                    actions=["[R] Refresh"],
+                    id="balances-empty",
+                )
 
             # Bottom right: Holdings breakdown
             with Container(id="breakdown-panel"):
@@ -338,6 +347,17 @@ class AccountDetailScreen(Screen):
 
     def on_state_updated(self, state: TuiState) -> None:
         """Handle state updates from StateRegistry."""
+        # Update staleness banner
+        try:
+            banner = self.query_one("#account-detail-banner", TileBanner)
+            staleness_result = get_staleness_banner(state)
+            if staleness_result:
+                banner.update_banner(staleness_result[0], severity=staleness_result[1])
+            else:
+                banner.update_banner("")
+        except Exception:
+            pass
+
         self.state = state
 
     def watch_state(self, state: TuiState | None) -> None:
@@ -377,6 +397,12 @@ class AccountDetailScreen(Screen):
                 fee_tier=account_data.fee_tier,
                 last_update=state.last_data_fetch or state.last_update_timestamp,
             )
+
+            # Update freshness indicator with color coding
+            freshness = get_freshness_display(state)
+            if freshness:
+                text, _ = freshness
+                metrics.query_one("#metric-updated", Label).update(text)
         except Exception as e:
             logger.debug(f"Failed to update metrics panel: {e}")
 
@@ -389,16 +415,15 @@ class AccountDetailScreen(Screen):
     def _update_balances(self, balances: list[AccountBalance]) -> None:
         """Update balances table with account data."""
         table = self.query_one("#balances-table", DataTable)
-        empty_label = self.query_one("#balances-empty", Label)
+        empty_state = self.query_one("#balances-empty", TileEmptyState)
 
         if not balances:
             table.display = False
-            empty_label.display = True
-            empty_label.update("No balance data available")
+            empty_state.display = True
             return
 
         table.display = True
-        empty_label.display = False
+        empty_state.display = False
 
         # Build data rows
         data_rows: list[dict[str, Any]] = []
@@ -498,7 +523,7 @@ class AccountDetailScreen(Screen):
             indicator = self.query_one("#sort-indicator", Label)
             arrow = get_sort_indicator(self.sort_column, self.sort_column, self.sort_ascending)
             col_display = self.sort_column.capitalize()
-            indicator.update(f"Sorted by: {col_display}{arrow}")
+            indicator.update(f"[S] Sort: {col_display}{arrow}")
         except Exception:
             pass
 
@@ -561,7 +586,6 @@ class AccountDetailScreen(Screen):
             logger.debug(f"Copy row failed: {e}")
 
     def action_refresh(self) -> None:
-        """Manually refresh account data."""
-        if hasattr(self.app, "tui_state"):
-            self.state = self.app.tui_state  # type: ignore[attr-defined]
-            self.notify("Account data refreshed", timeout=2)
+        """Manually refresh account data via app-level reconnect."""
+        if hasattr(self.app, "action_reconnect_data"):
+            self.app.action_reconnect_data()

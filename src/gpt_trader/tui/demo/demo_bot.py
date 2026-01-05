@@ -51,12 +51,38 @@ class DemoRuntimeState:
     """Mock runtime state."""
 
     def __init__(self) -> None:
+        import threading
+
         self.start_time = time.time()
+
+        # Mark data state (required by RuntimeStateProtocol)
+        self.mark_lock = threading.Lock()
+        self.mark_windows: dict[str, Any] = {}
+
+        # Order book data state (required by RuntimeStateProtocol)
+        self.orderbook_lock = threading.Lock()
+        self.orderbook_snapshots: dict[str, Any] = {}
+
+        # Trade flow data state (required by RuntimeStateProtocol)
+        self.trade_lock = threading.Lock()
+        self.trade_aggregators: dict[str, Any] = {}
+
+        # Other protocol fields (minimal defaults)
+        self.equity: Any = None
+        self.positions: dict[str, Any] = {}
+        self.positions_pnl: dict[str, dict[str, Any]] = {}
+        self.positions_dict: dict[str, dict[str, Any]] = {}
+        self.strategy: Any = None
+        self.symbol_strategies: dict[str, Any] = {}
 
     @property
     def uptime(self) -> float:
         """Calculate current uptime."""
         return time.time() - self.start_time
+
+    def update_equity(self, value: Any) -> None:
+        """Update current equity value."""
+        self.equity = value
 
 
 class DemoStatusReporter:

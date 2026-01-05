@@ -15,6 +15,7 @@ import time
 from typing import TYPE_CHECKING, Any
 
 from gpt_trader.monitoring.status_reporter import BotStatus
+from gpt_trader.tui.notification_helpers import notify_error, notify_success
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -155,12 +156,7 @@ class UICoordinator:
                 )
             except Exception as e:
                 logger.error(f"Failed to update TuiState from bot status: {e}", exc_info=True)
-                self.app.notify(
-                    "Critical: State update failed. UI may show stale data.",
-                    title="State Update Error",
-                    severity="error",
-                    timeout=10,
-                )
+                notify_error(self.app, "Critical: State update failed. UI may show stale data.", title="State Update Error")
                 # Don't proceed to UI update if state update failed
                 return
             finally:
@@ -182,12 +178,7 @@ class UICoordinator:
             logger.error(f"Critical error in apply_observer_update: {e}", exc_info=True)
             # Last resort notification
             try:
-                self.app.notify(
-                    "Critical UI update failure. Consider restarting TUI.",
-                    title="Critical Error",
-                    severity="error",
-                    timeout=30,
-                )
+                notify_error(self.app, "Critical UI update failure. Consider restarting TUI.", title="Critical Error", timeout=30)
             except Exception:
                 # Even notification failed - log and continue
                 logger.critical("Cannot notify user of critical error - TUI may be unresponsive")
@@ -415,12 +406,7 @@ class UICoordinator:
         reporter.add_observer(self.app._on_status_update)
 
         # Notify user
-        self.app.notify(
-            "Data connection restored",
-            title="Connected",
-            severity="information",
-            timeout=5,
-        )
+        notify_success(self.app, "Data connection restored", title="Connected")
 
         # Sync state immediately
         self.sync_state_from_bot()

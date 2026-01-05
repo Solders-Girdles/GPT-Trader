@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 
 from rich.text import Text
 from textual.app import ComposeResult
+from textual.binding import Binding
 from textual.reactive import reactive
 from textual.widgets import DataTable, Label, Static
 
@@ -23,6 +24,8 @@ from gpt_trader.tui.formatting import (
 )
 from gpt_trader.tui.helpers import safe_update
 from gpt_trader.tui.types import Position
+from gpt_trader.tui.widgets.table_copy_mixin import TableCopyMixin
+from gpt_trader.tui.widgets.tile_states import TileEmptyState
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -31,15 +34,23 @@ if TYPE_CHECKING:
 logger = get_logger(__name__, component="tui")
 
 
-class PositionsWidget(Static):
+class PositionsWidget(TableCopyMixin, Static):
     """Displays active positions with P&L and leverage information.
 
     This widget shows a data table with all active trading positions,
     including entry price, current price, unrealized P&L, and leverage.
 
+    Keyboard shortcuts:
+        c: Copy selected row to clipboard
+        C: Copy all rows to clipboard
+
     Attributes:
         state: Reactive TuiState for automatic updates when state changes.
     """
+
+    BINDINGS = [
+        *TableCopyMixin.COPY_BINDINGS,
+    ]
 
     # Styles moved to styles/widgets/portfolio.tcss
 
@@ -70,7 +81,13 @@ class PositionsWidget(Static):
         table.can_focus = True
         table.cursor_type = "row"
         yield table
-        yield Label("", id="positions-empty", classes="empty-state")
+        yield TileEmptyState(
+            title="No Active Positions",
+            subtitle="Positions appear when trades are opened",
+            icon="◇",
+            actions=["[S] Start Bot", "[R] Refresh"],
+            id="positions-empty",
+        )
 
     def on_mount(self) -> None:
         """Initialize the positions table with columns."""
@@ -111,7 +128,7 @@ class PositionsWidget(Static):
             risk_data: Optional dictionary of leverage values per symbol.
         """
         table = self.query_one(DataTable)
-        empty_label = self.query_one("#positions-empty", Label)
+        empty_state = self.query_one("#positions-empty", TileEmptyState)
 
         # Show empty state or data
         if not positions:
@@ -119,20 +136,25 @@ class PositionsWidget(Static):
             if table.row_count > 0:
                 table.clear()
             table.display = False
-            empty_label.display = True
+            empty_state.display = True
 
-            # Mode-aware empty state message (single-line format)
+            # Mode-aware empty state
             if self.app and hasattr(self.app, "data_source_mode"):
                 mode = self.app.data_source_mode  # type: ignore[attr-defined]
                 if mode == "read_only":
-                    empty_label.update("No positions yet. Read-only mode is observing market data.")
+                    empty_state.update_state(
+                        subtitle="Observing market (read-only mode)",
+                        actions=["[S] Start Feed", "[R] Refresh"],
+                    )
                 else:
-                    empty_label.update("No positions yet. Press [S] to start bot.")
-            else:
-                empty_label.update("No positions yet. Press [S] to start bot.")
+                    empty_state.update_state(
+                        subtitle="Positions appear when trades are opened",
+                        actions=["[S] Start Bot", "[R] Refresh"],
+                    )
+            return
         else:
             table.display = True
-            empty_label.display = False
+            empty_state.display = False
 
             # Get current row keys
             existing_keys = set(table.rows.keys())

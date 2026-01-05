@@ -9,7 +9,8 @@ AlertHistoryScreen {
 AlertHistoryScreen > Container {
     width: 90%;
     height: 90%;
-    border: thick $accent;
+    border: none;
+    border-left: wide $accent;
     background: $bg-secondary;
 }
 
@@ -22,10 +23,42 @@ AlertHistoryScreen .title {
     color: $text-primary;
 }
 
+/* Filter chips row */
+AlertHistoryScreen .filter-chips {
+    dock: top;
+    height: 3;
+    padding: 0 2;
+    align: center middle;
+    background: $bg-elevated;
+}
+
+AlertHistoryScreen .filter-chip {
+    min-width: 12;
+    height: 1;
+    margin: 0 1;
+    background: transparent;
+    color: $text-muted;
+    border: tall $border-subtle;
+}
+
+AlertHistoryScreen .filter-chip:hover {
+    background: $bg-highlight;
+    border: tall $border-subtle;
+}
+
+AlertHistoryScreen .filter-chip.active {
+    background: $accent-muted;
+    color: $accent;
+    border: tall $accent;
+    text-style: bold;
+}
+
 AlertHistoryScreen .stats {
     dock: top;
-    padding: 1 2;
-    background: $bg-highlight;
+    padding: 0 2;
+    height: 1;
+    background: $bg-secondary;
+    color: $text-muted;
 }
 
 AlertHistoryScreen DataTable {

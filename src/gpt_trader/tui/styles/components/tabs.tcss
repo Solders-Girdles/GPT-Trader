@@ -3,22 +3,23 @@
 /* ========================================================================== */
 
 Tabs {
-    background: $bg-secondary;
+    background: transparent;
     color: $text-primary;
     dock: top;
-    height: 3;
-    border-bottom: solid $border-subtle; /* Subtle bottom border */
+    height: 2;
+    border-bottom: none;
 }
 
 Tab {
-    padding: $spacing-xs $spacing-md;
-    margin-right: $spacing-xs; /* Spacing between tabs */
+    padding: 0 2;
+    margin-right: 1;
+    border: none;
 }
 
 Tab.-active {
-    background: $bg-elevated;
+    background: transparent;
     color: $accent;
     text-style: bold;
-    border-bottom: wide $accent; /* Wider accent border for active tab */
-    border-top: solid $accent-muted; /* Subtle top border */
+    border-bottom: wide $accent;
+    border-top: none;
 }

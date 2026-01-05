@@ -9,7 +9,8 @@ PerformanceDashboardWidget {
     height: auto;
     min-height: 8;
     padding: 1;
-    border: solid $border;
+    border: none;
+    border-left: wide $accent;
     background: $bg-secondary;
 }
 
@@ -45,7 +46,6 @@ PerformanceDashboardWidget .perf-target {
 /* Budget summary row */
 PerformanceDashboardWidget .budget-summary {
     margin-bottom: 1;
-    border-bottom: solid $border-subtle;
     padding-bottom: 1;
 }
 
@@ -88,7 +88,8 @@ PerformanceScreen #perf-modal {
     height: auto;
     max-height: 30;
     background: $bg-secondary;
-    border: solid $border;
+    border: none;
+    border-left: wide $accent;
     padding: 1 2;
 }
 

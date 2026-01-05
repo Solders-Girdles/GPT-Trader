@@ -22,7 +22,8 @@ ModeInfoModal #mode-info-modal {
     height: auto;
     padding: $spacing-md;
     background: $bg-secondary;
-    border: thick $accent;
+    border: none;
+    border-left: wide $accent;
 }
 
 ModeInfoModal #mode-title {
@@ -75,7 +76,8 @@ ConfigModal #dialog {
     grid-rows: 1fr 3;
     padding: 0 $spacing-xs;
     height: auto;
-    border: thick $border-subtle;
+    border: none;
+    border-left: wide $accent;
     background: $bg-secondary;
 }
 
@@ -128,7 +130,8 @@ PanicModal #panic-message {
 
 PanicModal #panic-input {
     margin-bottom: $spacing-sm;
-    border: solid $error;
+    border: none;
+    border-left: wide $error;
 }
 
 PanicModal #panic-actions {

@@ -16,6 +16,27 @@ from textual.widgets import Button, Label, Static
 # Total number of wizard steps
 TOTAL_STEPS = 5
 
+
+def _build_step_dots(current: int, total: int) -> str:
+    """Build visual step indicator like ● ○ ○ ○ ○.
+
+    Args:
+        current: Current step (1-indexed).
+        total: Total number of steps.
+
+    Returns:
+        String of dots showing progress.
+    """
+    dots = []
+    for i in range(1, total + 1):
+        if i < current:
+            dots.append("●")  # Completed
+        elif i == current:
+            dots.append("◉")  # Current (larger filled)
+        else:
+            dots.append("○")  # Pending
+    return " ".join(dots)
+
 # Content for each wizard step
 STEP_CONTENT: dict[int, dict[str, str | list[str]]] = {
     1: {
@@ -136,6 +157,11 @@ class APISetupWizardScreen(ModalScreen[str | None]):
         Binding("left", "previous", "Back", show=True),
         Binding("right", "next", "Next", show=True),
         Binding("escape", "cancel", "Cancel", show=True),
+        Binding("1", "goto_step_1", "Step 1", show=False),
+        Binding("2", "goto_step_2", "Step 2", show=False),
+        Binding("3", "goto_step_3", "Step 3", show=False),
+        Binding("4", "goto_step_4", "Step 4", show=False),
+        Binding("5", "goto_step_5", "Step 5", show=False),
     ]
 
     def __init__(
@@ -157,6 +183,13 @@ class APISetupWizardScreen(ModalScreen[str | None]):
     def compose(self) -> ComposeResult:
         """Build the wizard layout."""
         with Container(id="wizard-container"):
+            # Visual step progress (dots)
+            yield Label(
+                _build_step_dots(self.current_step, TOTAL_STEPS),
+                classes="wizard-dots",
+                id="step-dots",
+            )
+
             # Header with step indicator and title
             with Container(classes="wizard-header"):
                 yield Label(
@@ -186,6 +219,11 @@ class APISetupWizardScreen(ModalScreen[str | None]):
     def _update_content(self) -> None:
         """Update wizard content for the current step."""
         step_data = STEP_CONTENT[self.current_step]
+
+        # Update step dots
+        self.query_one("#step-dots", Label).update(
+            _build_step_dots(self.current_step, TOTAL_STEPS)
+        )
 
         # Update step indicator
         self.query_one("#step-indicator", Label).update(
@@ -243,6 +281,32 @@ class APISetupWizardScreen(ModalScreen[str | None]):
     def action_cancel(self) -> None:
         """Cancel and close wizard."""
         self.dismiss(None)
+
+    def _goto_step(self, step: int) -> None:
+        """Jump to a specific step."""
+        if 1 <= step <= TOTAL_STEPS:
+            self.current_step = step
+            self._update_content()
+
+    def action_goto_step_1(self) -> None:
+        """Jump to step 1."""
+        self._goto_step(1)
+
+    def action_goto_step_2(self) -> None:
+        """Jump to step 2."""
+        self._goto_step(2)
+
+    def action_goto_step_3(self) -> None:
+        """Jump to step 3."""
+        self._goto_step(3)
+
+    def action_goto_step_4(self) -> None:
+        """Jump to step 4."""
+        self._goto_step(4)
+
+    def action_goto_step_5(self) -> None:
+        """Jump to step 5."""
+        self._goto_step(5)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Handle button presses."""

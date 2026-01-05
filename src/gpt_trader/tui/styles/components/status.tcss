@@ -1,0 +1,93 @@
+/* ========================================================================== */
+/* STATUS INDICATORS - Unified status classes for all widgets                 */
+/* ========================================================================== */
+/*
+ * Standard status levels:
+ * - status-ok: Normal operation (green)
+ * - status-warning: Needs attention (yellow)
+ * - status-critical: Requires action (red)
+ *
+ * These classes can be applied to any element that shows metric status.
+ */
+
+/* === Status Colors === */
+/* Each status has color + text-style differentiation for accessibility */
+/* OK: normal weight, no decoration */
+/* WARNING: italic for visual distinction */
+/* CRITICAL: bold + underline for maximum visibility */
+
+.status-ok {
+    color: $success;
+    /* Normal text-style - no decoration needed for healthy state */
+}
+
+.status-warning {
+    color: $warning;
+    text-style: italic;  /* Visual distinction beyond color */
+}
+
+.status-critical {
+    color: $error;
+    text-style: bold underline;  /* Maximum visibility for critical state */
+}
+
+/* === Status with bold text (for emphasis) === */
+/* Maintains accessibility differentiation with bold base */
+.status-ok-bold {
+    color: $success;
+    text-style: bold;
+}
+
+.status-warning-bold {
+    color: $warning;
+    text-style: bold italic;  /* Bold + italic for warning emphasis */
+}
+
+.status-critical-bold {
+    color: $error;
+    text-style: bold underline;  /* Bold + underline for critical emphasis */
+}
+
+/* === Status backgrounds (for badges/pills) === */
+.status-ok-bg {
+    background: $success;
+    color: #000000;
+}
+
+.status-warning-bg {
+    background: $warning;
+    color: #000000;
+}
+
+.status-critical-bg {
+    background: $error;
+    color: #FFFFFF;
+}
+
+/* === Legacy aliases for backward compatibility === */
+/* These map old class names to new standardized colors */
+
+.good {
+    color: $success;
+}
+
+.warning {
+    color: $warning;
+}
+
+.bad {
+    color: $error;
+}
+
+/* Risk widget legacy classes */
+.risk-status-low {
+    color: $success;
+}
+
+.risk-status-medium {
+    color: $warning;
+}
+
+.risk-status-high {
+    color: $error;
+}

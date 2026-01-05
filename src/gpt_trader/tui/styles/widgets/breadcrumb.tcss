@@ -1,0 +1,44 @@
+/* ========================================================================== */
+/* BREADCRUMB WIDGET - Navigation Hierarchy Display                           */
+/* ========================================================================== */
+
+BreadcrumbWidget,
+ScreenBreadcrumb {
+    width: 100%;
+    height: 1;
+    padding: 0 1;
+    background: transparent;
+}
+
+.breadcrumb-widget {
+    width: 100%;
+    height: 1;
+}
+
+.breadcrumb-container {
+    width: 100%;
+    height: 1;
+    align: left middle;
+}
+
+.breadcrumb-content {
+    width: auto;
+    height: 1;
+    color: $text-muted;
+}
+
+/* Breadcrumb in header area */
+.header-breadcrumb {
+    margin-bottom: 1;
+    padding-left: 2;
+}
+
+/* Compact breadcrumb for tight spaces */
+.breadcrumb-compact {
+    height: 1;
+    padding: 0;
+}
+
+.breadcrumb-compact .breadcrumb-content {
+    color: $text-muted;
+}

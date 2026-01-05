@@ -20,12 +20,14 @@ from gpt_trader.tui.helpers import safe_update
 from gpt_trader.tui.theme import THEME
 from gpt_trader.tui.trade_matcher import TradeMatcher
 from gpt_trader.tui.types import Trade
+from gpt_trader.tui.widgets.table_copy_mixin import TableCopyMixin
+from gpt_trader.tui.widgets.tile_states import TileEmptyState
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="tui")
 
 
-class TradesWidget(Static):
+class TradesWidget(TableCopyMixin, Static):
     """Displays recent trades with P&L calculation.
 
     Shows executed trades with their details including symbol, side,
@@ -33,7 +35,15 @@ class TradesWidget(Static):
 
     The widget uses a TradeMatcher to calculate P&L by matching
     buy and sell trades for the same symbol.
+
+    Keyboard shortcuts:
+        c: Copy selected row to clipboard
+        C: Copy all rows to clipboard
     """
+
+    BINDINGS = [
+        *TableCopyMixin.COPY_BINDINGS,
+    ]
 
     # Styles moved to styles/widgets/portfolio.tcss
 
@@ -43,7 +53,13 @@ class TradesWidget(Static):
         table.can_focus = True
         table.cursor_type = "row"
         yield table
-        yield Label("", id="trades-empty", classes="empty-state")
+        yield TileEmptyState(
+            title="No Trade History",
+            subtitle="Trades appear after execution",
+            icon="○",
+            actions=["[S] Start Bot", "[R] Refresh"],
+            id="trades-empty",
+        )
 
     def on_mount(self) -> None:
         """Initialize the trades table with columns and trade matcher."""
@@ -78,7 +94,7 @@ class TradesWidget(Static):
             trades: List of Trade objects to display.
         """
         table = self.query_one("#trades-table", DataTable)
-        empty_label = self.query_one("#trades-empty", Label)
+        empty_state = self.query_one("#trades-empty", TileEmptyState)
 
         # Show empty state or data
         if not trades:
@@ -86,11 +102,12 @@ class TradesWidget(Static):
             if table.row_count > 0:
                 table.clear()
             table.display = False
-            empty_label.display = True
-            empty_label.update("No trades yet. Trade history appears after execution.")
+            empty_state.display = True
+            # Keep default message - trades only appear after execution
+            return
         else:
             table.display = True
-            empty_label.display = False
+            empty_state.display = False
 
             # Process trades to calculate P&L matches
             pnl_map = self._trade_matcher.process_trades(trades)

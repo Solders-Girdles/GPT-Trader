@@ -3,24 +3,25 @@
 /* ========================================================================== */
 
 Button {
-    min-width: 10;  /* Compact width */
-    height: 3;      /* Restored from 1 to 3 for readability */
-    margin: 0 $spacing-xs;
-    border: $border-default;  /* Restored border for visual separation */
-    padding: 0 $spacing-md;
+    min-width: 10;
+    height: 2;
+    margin: 0 1;
+    border: none;
+    border-left: wide $accent-muted;
+    padding: 0 2;
     background: $bg-elevated;
     color: $text-primary;
     text-style: bold;
 }
 
 Button:hover {
-    border: solid $accent;  /* Restored border for hover state */
+    border-left: wide $accent;
     background: $accent-muted;
     color: $text-primary;
 }
 
 Button:focus {
-    border: solid $accent;  /* Restored border for focus state */
+    border-left: wide $accent;
     background: $accent;
     color: $bg-primary;
 }
@@ -28,7 +29,8 @@ Button:focus {
 Button.-disabled {
     opacity: 0.5;
     color: $text-muted;
-    border: solid $border-subtle;
+    border: none;
+    border-left: wide $border-subtle;
 }
 
 /* === Control Buttons (Start/Stop) === */
@@ -36,26 +38,30 @@ Button.-disabled {
 #start-btn {
     background: $success;
     color: $bg-primary;
+    border: none;
     border-left: wide $success;
 }
 
 #start-btn:hover {
     background: $success;
     color: $bg-primary;
-    border: solid $success;
+    border: none;
+    border-left: wide $success;
     text-style: bold;
 }
 
 #stop-btn {
     background: $error;
     color: $bg-primary;
+    border: none;
     border-left: wide $error;
 }
 
 #stop-btn:hover {
     background: $error;
     color: $bg-primary;
-    border: solid $error;
+    border: none;
+    border-left: wide $error;
     text-style: bold;
 }
 

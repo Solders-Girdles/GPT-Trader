@@ -91,6 +91,48 @@ class FocusManager:
         """Get actions for the currently focused tile."""
         return self.TILE_ACTIONS.get(self._current_tile_id, [])
 
+    @property
+    def current_position(self) -> tuple[int, int]:
+        """Get the current focus position as (index, total).
+
+        Returns:
+            Tuple of (1-based index, total tile count).
+
+        Example:
+            (1, 5) means "tile 1 of 5"
+        """
+        try:
+            idx = self.TILE_ORDER.index(self._current_tile_id)
+            return (idx + 1, len(self.TILE_ORDER))
+        except ValueError:
+            return (0, len(self.TILE_ORDER))
+
+    @property
+    def position_label(self) -> str:
+        """Get a human-readable position label.
+
+        Returns:
+            String like "1/5" or "Position Details" for current tile.
+        """
+        pos, total = self.current_position
+        return f"{pos}/{total}"
+
+    @property
+    def current_tile_name(self) -> str:
+        """Get a friendly name for the current tile.
+
+        Returns:
+            Human-readable tile name like "Position", "Account", etc.
+        """
+        tile_names = {
+            "tile-hero": "Position",
+            "tile-account": "Account",
+            "tile-market": "Market",
+            "tile-system": "System",
+            "tile-logs": "Logs",
+        }
+        return tile_names.get(self._current_tile_id, "Unknown")
+
     def enable(self) -> None:
         """Enable focus management."""
         self._focus_enabled = True

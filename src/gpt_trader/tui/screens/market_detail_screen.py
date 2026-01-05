@@ -25,6 +25,7 @@ from textual.widgets import DataTable, Label, Static
 
 from gpt_trader.tui.formatting import format_price
 from gpt_trader.tui.helpers import safe_update
+from gpt_trader.tui.staleness_helpers import get_freshness_display, get_staleness_banner
 from gpt_trader.tui.theme import THEME
 from gpt_trader.tui.utilities import (
     copy_to_clipboard,
@@ -34,6 +35,7 @@ from gpt_trader.tui.utilities import (
 )
 from gpt_trader.tui.widgets import ContextualFooter
 from gpt_trader.tui.widgets.shell import CommandBar
+from gpt_trader.tui.widgets.tile_states import TileBanner, TileEmptyState
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -239,11 +241,14 @@ class MarketDetailScreen(Screen):
             bot_mode=getattr(self.app, "data_source_mode", "DEMO").upper(),
             id="header-bar",
         )
+        yield TileBanner(id="market-detail-banner", classes="tile-banner hidden")
 
         with Container(id="market-detail-container"):
             # Left: Watchlist table
             with Vertical(id="watchlist-panel"):
-                yield Label("WATCHLIST", classes="widget-header")
+                with Horizontal(classes="watchlist-header"):
+                    yield Label("WATCHLIST", classes="widget-header")
+                    yield Label("", id="market-detail-freshness", classes="data-state-label")
                 yield Label("", id="sort-indicator", classes="sort-hint")
                 table = DataTable(
                     id="watchlist-table",
@@ -252,7 +257,13 @@ class MarketDetailScreen(Screen):
                 )
                 table.can_focus = True
                 yield table
-                yield Label("", id="watchlist-empty", classes="empty-state")
+                yield TileEmptyState(
+                    title="Watchlist Empty",
+                    subtitle="Add symbols to your watchlist",
+                    icon="◌",
+                    actions=["[W] Edit Watchlist", "[R] Refresh"],
+                    id="watchlist-empty",
+                )
 
             # Right top: Order book depth
             with Container(id="depth-panel"):
@@ -295,6 +306,32 @@ class MarketDetailScreen(Screen):
 
     def on_state_updated(self, state: TuiState) -> None:
         """Handle state updates from StateRegistry."""
+        # Update staleness banner
+        try:
+            banner = self.query_one("#market-detail-banner", TileBanner)
+            staleness_result = get_staleness_banner(state)
+            if staleness_result:
+                banner.update_banner(staleness_result[0], severity=staleness_result[1])
+            else:
+                banner.update_banner("")
+        except Exception:
+            pass
+
+        # Update freshness indicator
+        try:
+            indicator = self.query_one("#market-detail-freshness", Label)
+            freshness = get_freshness_display(state)
+            if freshness:
+                text, css_class = freshness
+                indicator.update(text)
+                indicator.remove_class("fresh", "stale", "critical")
+                indicator.add_class(css_class)
+            else:
+                indicator.update("")
+                indicator.remove_class("fresh", "stale", "critical")
+        except Exception:
+            pass
+
         self.state = state
 
     def watch_state(self, state: TuiState | None) -> None:
@@ -334,7 +371,7 @@ class MarketDetailScreen(Screen):
     def _update_watchlist(self, market_data: MarketState) -> None:
         """Update watchlist table with market data."""
         table = self.query_one("#watchlist-table", DataTable)
-        empty_label = self.query_one("#watchlist-empty", Label)
+        empty_state = self.query_one("#watchlist-empty", TileEmptyState)
 
         prices = market_data.prices
         price_history = market_data.price_history
@@ -342,12 +379,11 @@ class MarketDetailScreen(Screen):
 
         if not prices:
             table.display = False
-            empty_label.display = True
-            empty_label.update("No market data. Press [W] to edit watchlist.")
+            empty_state.display = True
             return
 
         table.display = True
-        empty_label.display = False
+        empty_state.display = False
 
         # Build data rows
         data_rows: list[dict[str, Any]] = []
@@ -442,7 +478,7 @@ class MarketDetailScreen(Screen):
             indicator = self.query_one("#sort-indicator", Label)
             arrow = get_sort_indicator(self.sort_column, self.sort_column, self.sort_ascending)
             col_display = self.sort_column.capitalize()
-            indicator.update(f"Sorted by: {col_display}{arrow}")
+            indicator.update(f"[S] Sort: {col_display}{arrow}")
         except Exception:
             pass
 
@@ -516,10 +552,9 @@ class MarketDetailScreen(Screen):
             logger.debug("WatchlistScreen not yet implemented")
 
     def action_refresh(self) -> None:
-        """Manually refresh market data."""
-        if hasattr(self.app, "tui_state"):
-            self.state = self.app.tui_state  # type: ignore[attr-defined]
-            self.notify("Market data refreshed", timeout=2)
+        """Manually refresh market data via app-level reconnect."""
+        if hasattr(self.app, "action_reconnect_data"):
+            self.app.action_reconnect_data()
 
     # === Table Events ===
 

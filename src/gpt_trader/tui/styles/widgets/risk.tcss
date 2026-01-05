@@ -25,9 +25,9 @@ RiskWidget .risk-label {
 RiskWidget .risk-value {
     color: $text-primary;
     text-style: bold;
-    padding: $spacing-xs $spacing-sm; /* Subtle padding */
-    background: $bg-elevated; /* Subtle background for values */
-    border-left: solid $accent-muted; /* Accent border */
+    padding: 0 1;
+    background: transparent;
+    border-left: wide $accent-muted;
 }
 
 /* Risk status indicators */

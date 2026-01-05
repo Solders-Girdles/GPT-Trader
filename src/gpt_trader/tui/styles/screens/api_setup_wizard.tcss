@@ -13,8 +13,17 @@ APISetupWizardScreen #wizard-container {
     height: auto;
     max-height: 85%;
     background: $bg-secondary;
-    border: thick $accent;
+    border: none;
+    border-left: wide $accent;
     padding: 1 2;
+}
+
+/* Step progress dots (● ◉ ○ ○ ○) */
+APISetupWizardScreen .wizard-dots {
+    text-align: center;
+    color: $accent;
+    padding: $spacing-xs 0;
+    text-style: bold;
 }
 
 APISetupWizardScreen .wizard-header {

@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from gpt_trader.tui.events import ThemeChanged
+from gpt_trader.tui.notification_helpers import notify_success, notify_warning
 from gpt_trader.tui.preferences_paths import resolve_preferences_paths
 from gpt_trader.tui.theme import Theme, ThemeMode, get_theme_manager
 from gpt_trader.utilities.logging_patterns import get_logger
@@ -128,9 +129,9 @@ class ThemeService:
             logger.debug("Theme CSS hot-swap failed: %s", e)
 
         if not apply_ok:
-            self.app.notify(
+            notify_warning(
+                self.app,
                 "Theme switch failed (missing CSS). Run `python scripts/build_tui_css.py`.",
-                severity="warning",
                 title="Theme",
             )
             return self.theme_manager.current_theme
@@ -149,11 +150,7 @@ class ThemeService:
         except Exception:
             pass
 
-        self.app.notify(
-            f"Theme set to {mode_name}",
-            severity="information",
-            title="Theme",
-        )
+        notify_success(self.app, f"Theme set to {mode_name}", title="Theme")
 
         logger.debug("Theme preference updated to: %s", new_mode.value)
         return self.theme_manager.current_theme

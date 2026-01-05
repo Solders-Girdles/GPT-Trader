@@ -2,15 +2,14 @@
 /* FOCUS INDICATORS (Accessibility)                                           */
 /* ========================================================================== */
 
-/* Global focus indicator - bright accent border */
+/* Global focus indicator - subtle accent */
 *:focus {
-    border: thick $accent;
-    border-title-color: $accent;
+    border-left: wide $accent;
 }
 
 /* DataTable focus - highlight selected row */
 DataTable:focus {
-    border: thick $accent;
+    border-left: wide $accent;
 }
 
 DataTable > .datatable--cursor {
@@ -24,25 +23,14 @@ DataTable:focus > .datatable--cursor {
 
 /* TabbedContent focus - highlight active tab */
 TabbedContent:focus Tab.-active {
-    border: solid $accent;
+    border: none;
+    border-left: wide $accent;
     text-style: bold;
 }
 
-/* Input/Select focus - bright border */
+/* Input/Select focus - subtle left accent */
 Input:focus, Select:focus {
-    border: thick $accent;
-}
-
-/* === Accessibility === */
-
-/* Focus indicators for keyboard navigation */
-*:focus {
-    border: solid $accent;
-    outline: solid $accent;
-}
-
-DataTable:focus {
-    border: solid $accent;
+    border-left: wide $accent;
 }
 
 /* ========================================================================== */
@@ -51,19 +39,42 @@ DataTable:focus {
 
 /* === Focus Ring for Bento Tiles === */
 
-/* Focused tile - prominent accent border */
+/* Focused tile - clean left accent only */
 .bento-tile.tile-focused {
-    border: heavy $accent;
+    border: none;
     border-left: wide $accent;
     background: $elevation-2;
 }
 
+/* Focused tile header gets accent color */
+.bento-tile.tile-focused .widget-header {
+    color: $accent;
+    border-left: wide $accent;
+}
+
 /* Hero tile gets extra emphasis when focused */
 #tile-hero.tile-focused {
-    border: heavy $accent;
+    border: none;
     border-left: wide $accent;
-    background: $elevation-3;
+    background: $elevation-2;
 }
+
+/* === Focus Navigation Hints === */
+
+/* Arrow indicators showing navigation direction
+ * Note: Textual uses dock-based positioning, not absolute.
+ */
+.focus-nav-hint {
+    color: $accent;
+    text-style: bold;
+    width: auto;
+    height: auto;
+}
+
+.focus-nav-up { dock: top; }
+.focus-nav-down { dock: bottom; }
+.focus-nav-left { dock: left; }
+.focus-nav-right { dock: right; }
 
 /* === Actions Hint Row === */
 
@@ -71,12 +82,12 @@ DataTable:focus {
 .tile-actions-hint {
     height: 1;
     width: 100%;
-    background: $bg-elevated;
-    color: $text-muted;
+    background: $accent-subtle;
+    color: $text-secondary;
     padding: 0 1;
     layout: horizontal;
     align: left middle;
-    border-top: solid $border-subtle;
+    border: none;
     display: none;
 }
 
@@ -85,29 +96,68 @@ DataTable:focus {
     display: block;
 }
 
-/* Individual action hint */
-.action-hint {
+/* Tile-specific action hint styling - slightly more prominent */
+.tile-actions-hint .action-hint {
     padding: 0 2;
-    height: 1;
     color: $text-secondary;
-}
-
-/* Action key highlight */
-.action-key {
-    color: $accent;
-    text-style: bold;
 }
 
 /* === Focus Indicator Badge === */
 
+/* Numbered badge showing current tile position */
 .focus-indicator {
     background: $accent;
     color: $bg-primary;
     padding: 0 1;
     text-style: bold;
     display: none;
+    min-width: 3;
+    text-align: center;
 }
 
 .bento-tile.tile-focused .focus-indicator {
     display: block;
+}
+
+/* === Focus Position Label === */
+
+/* Shows "1/4" style position indicator */
+.focus-position {
+    color: $text-muted;
+    padding: 0 1;
+    text-align: right;
+    display: none;
+}
+
+.bento-tile.tile-focused .focus-position {
+    display: block;
+}
+
+/* === Keyboard Shortcut Overlay === */
+
+/* Enter key hint shown on focused tile */
+.focus-enter-hint {
+    color: $accent;
+    text-style: bold;
+    padding: 0 1;
+    background: $accent-subtle;
+    display: none;
+}
+
+.bento-tile.tile-focused .focus-enter-hint {
+    display: block;
+}
+
+/* === Unfocused Tile Styling === */
+
+/* Note: Textual doesn't support :not() pseudo-class.
+ * Unfocused tile dimming is handled by the focused tile's
+ * elevated background creating visual contrast instead.
+ */
+
+/* === Focus Ring Animation (Terminal-safe) === */
+
+/* Pulsing indicator class - toggled by Python */
+.focus-pulse {
+    border-left: wide $accent;
 }

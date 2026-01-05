@@ -64,7 +64,8 @@ DataTable:focus > .datatable--cursor {
 }
 
 .state-invalid {
-    border: solid $error;
+    border: none;
+    border-left: wide $error;
 }
 
 /* === Contrast Improvements === */
@@ -143,13 +144,8 @@ DataTable:focus > .datatable--cursor {
     border: solid $accent-muted;
 }
 
-/* === Action Hint Accessibility === */
-/* Make keyboard shortcuts visible */
-
-.action-hint {
-    padding: 0 1;
-    color: $text-muted;
-}
+/* === Action Key Accessibility === */
+/* Enhanced visibility for keyboard shortcut keys */
 
 .action-key {
     color: $accent;

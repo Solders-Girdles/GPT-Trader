@@ -95,6 +95,37 @@ $border-medium: #444444;    /* Slightly more visible */
     text-align: right;
 }
 
+/* === Freshness Indicator === */
+/* Used in tile headers to show data age */
+
+.freshness-indicator {
+    width: auto;
+    min-width: 8;
+    height: 1;
+    padding: 0 1;
+    color: $text-muted;
+    text-align: right;
+}
+
+.freshness-indicator.fresh {
+    color: $text-muted;
+}
+
+.freshness-indicator.stale {
+    color: $warning;
+}
+
+.freshness-indicator.critical {
+    color: $error;
+    text-style: bold;
+}
+
+.timestamp-chip.critical {
+    color: $error;
+    background: $error-muted;
+    text-style: bold;
+}
+
 /* === Inline Banners (Toast-like notifications within tiles) === */
 
 .inline-banner {
@@ -223,19 +254,20 @@ $border-medium: #444444;    /* Slightly more visible */
 
 .card {
     background: $bg-secondary;
-    border: solid $border-light;
+    border: none;
+    border-left: wide $accent-muted;
     padding: 1;
 }
 
 .card-elevated {
     background: $bg-elevated;
-    border: solid $border-medium;
+    border: none;
+    border-left: wide $accent;
 }
 
 .card-flat {
     background: transparent;
     border: none;
-    border-bottom: solid $border-hairline;
 }
 
 /* === Metric Display === */

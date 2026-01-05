@@ -68,6 +68,14 @@ class RuntimeStateProtocol(Protocol):
     mark_lock: Any  # threading.Lock
     mark_windows: dict[str, Any]  # Per-symbol mark price windows
 
+    # Order book data state (for advanced strategies)
+    orderbook_lock: Any  # threading.Lock for orderbook access
+    orderbook_snapshots: dict[str, Any]  # Per-symbol DepthSnapshot
+
+    # Trade flow data state (for volume analysis)
+    trade_lock: Any  # threading.Lock for trade data access
+    trade_aggregators: dict[str, Any]  # Per-symbol TradeTapeAgg
+
     def update_equity(self, value: Any) -> None:
         """Update current equity value."""
         ...

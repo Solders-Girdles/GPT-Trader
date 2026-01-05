@@ -1,3 +1,9 @@
+"""Legacy service registry composition root.
+
+DEPRECATED: Prefer `ApplicationContainer` in `gpt_trader.app.container` for all new code.
+`ServiceRegistry` exists only to support older call sites while the codebase migrates.
+"""
+
 from __future__ import annotations
 
 import warnings

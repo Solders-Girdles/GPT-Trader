@@ -8,6 +8,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Protocol, cast
 
 from gpt_trader.core import Product
+from gpt_trader.features.live_trade.strategies.base import MarketDataContext
 from gpt_trader.features.live_trade.strategies.perps_baseline import (
     BaselinePerpsStrategy,
     Decision,
@@ -36,6 +37,14 @@ class DecisionEngineMixin(_HasBotAndStrategy):
 
     async def _resolve_decision(self, symbol_context: SymbolProcessingContext) -> Decision:
         strategy = self.get_strategy(symbol_context.symbol)
+
+        # Build market data context from symbol context (optional, for advanced strategies)
+        market_data = MarketDataContext(
+            orderbook_snapshot=symbol_context.orderbook_snapshot,
+            trade_volume_stats=symbol_context.trade_volume_stats,
+            spread_bps=symbol_context.spread_bps,
+        )
+
         decision = self._evaluate_strategy(
             strategy,
             symbol_context.symbol,
@@ -43,6 +52,7 @@ class DecisionEngineMixin(_HasBotAndStrategy):
             symbol_context.position_state,
             symbol_context.equity,
             symbol_context.product,
+            market_data,
         )
 
         if self._bot.config.profile == Profile.SPOT:
@@ -57,6 +67,7 @@ class DecisionEngineMixin(_HasBotAndStrategy):
         position_state: dict[str, Any] | None,
         equity: Decimal,
         product: Product | None,
+        market_data: MarketDataContext | None = None,
     ) -> Decision:
         _t0 = _time.perf_counter()
         product_meta = product
@@ -75,6 +86,7 @@ class DecisionEngineMixin(_HasBotAndStrategy):
             recent_marks=list(marks[:-1]) if len(marks) > 1 else [],
             equity=equity,
             product=product_meta,
+            market_data=market_data,
         )
         _dt_ms = (_time.perf_counter() - _t0) * 1000.0
         try:

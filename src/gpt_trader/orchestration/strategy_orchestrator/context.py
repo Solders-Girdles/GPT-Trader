@@ -14,6 +14,7 @@ from .logging_utils import logger  # naming: allow
 from .models import SymbolProcessingContext
 
 if TYPE_CHECKING:
+    from gpt_trader.features.brokerages.coinbase.market_data_features import DepthSnapshot
     from gpt_trader.orchestration.trading_bot import TradingBot
 
 
@@ -75,6 +76,15 @@ class ContextBuilderMixin(_HasBot):
                 symbol=symbol,
             )
 
+        # Get orderbook snapshot and trade stats (optional, for advanced strategies)
+        orderbook_snapshot = self._get_orderbook_snapshot(symbol)
+        trade_stats = self._get_trade_volume_stats(symbol)
+        spread_bps = (
+            Decimal(str(orderbook_snapshot.spread_bps))
+            if orderbook_snapshot and orderbook_snapshot.spread_bps
+            else None
+        )
+
         context = SymbolProcessingContext(
             symbol=symbol,
             balances=balances,
@@ -84,6 +94,9 @@ class ContextBuilderMixin(_HasBot):
             position_quantity=position_quantity,
             marks=list(marks),
             product=product,
+            orderbook_snapshot=orderbook_snapshot,
+            trade_volume_stats=trade_stats,
+            spread_bps=spread_bps,
         )
 
         if not self._run_risk_gates(context):
@@ -144,6 +157,27 @@ class ContextBuilderMixin(_HasBot):
     def _get_marks(self, symbol: str) -> list[Decimal]:
         raw_marks = self._bot.mark_windows.get(symbol, [])  # type: ignore[attr-defined]
         return [Decimal(str(mark)) for mark in raw_marks]
+
+    def _get_orderbook_snapshot(self, symbol: str) -> "DepthSnapshot | None":
+        """Get latest orderbook snapshot for symbol."""
+        runtime_state = getattr(self._bot, "runtime_state", None)
+        if runtime_state is None:
+            return None
+        if not hasattr(runtime_state, "orderbook_lock"):
+            return None
+        with runtime_state.orderbook_lock:
+            return runtime_state.orderbook_snapshots.get(symbol)
+
+    def _get_trade_volume_stats(self, symbol: str) -> dict[str, Any] | None:
+        """Get trade volume statistics for symbol."""
+        runtime_state = getattr(self._bot, "runtime_state", None)
+        if runtime_state is None:
+            return None
+        if not hasattr(runtime_state, "trade_lock"):
+            return None
+        with runtime_state.trade_lock:
+            agg = runtime_state.trade_aggregators.get(symbol)
+            return agg.get_stats() if agg else None
 
     def _adjust_equity(
         self, equity: Decimal, position_quantity: Decimal, marks: Sequence[Decimal], symbol: str

@@ -1,7 +1,32 @@
-"""Bootstrap helpers for preparing TradingBot dependencies."""
+"""Bootstrap helpers for preparing TradingBot dependencies.
+
+DEPRECATED MODULE (Transitional)
+================================
+This module provides legacy bootstrap functions that wrap the modern
+``ApplicationContainer`` pattern. New code should use ``ApplicationContainer``
+directly.
+
+Migration Guide::
+
+    # OLD (deprecated):
+    from gpt_trader.orchestration.bootstrap import prepare_bot
+    result = prepare_bot(config)
+    bot = result.registry.extras["container"].create_bot()
+
+    # NEW (preferred):
+    from gpt_trader.app.container import ApplicationContainer
+    container = ApplicationContainer(config)
+    bot = container.create_bot()
+
+Convenience functions ``build_bot()`` and ``bot_from_profile()`` remain
+supported as they delegate to ``ApplicationContainer`` internally.
+
+Removal planned for v3.0.
+"""
 
 from __future__ import annotations
 
+import warnings
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -33,7 +58,17 @@ class BootstrapLogRecord:
 
 @dataclass(frozen=True)
 class BootstrapResult:
-    """Outcome of preparing dependencies for :class:`TradingBot`."""
+    """Outcome of preparing dependencies for :class:`TradingBot`.
+
+    .. deprecated:: 2.0
+        BootstrapResult uses the deprecated ServiceRegistry pattern.
+        Use ``ApplicationContainer`` directly instead::
+
+            container = ApplicationContainer(config)
+            bot = container.create_bot()
+
+        Removal planned for v3.0.
+    """
 
     config: BotConfig
     registry: ServiceRegistry
@@ -82,8 +117,23 @@ def prepare_bot(
     *,
     env: Mapping[str, str] | None = None,
 ) -> BootstrapResult:
-    """Prepare directories and registry dependencies for :class:`TradingBot`."""
+    """Prepare directories and registry dependencies for :class:`TradingBot`.
 
+    .. deprecated:: 2.0
+        Use ``ApplicationContainer`` directly instead::
+
+            from gpt_trader.app.container import ApplicationContainer
+            container = ApplicationContainer(config)
+            bot = container.create_bot()
+
+        Removal planned for v3.0.
+    """
+    warnings.warn(
+        "prepare_bot() is deprecated. Use ApplicationContainer directly. "
+        "See migration guide in module docstring.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     normalization_log_payload = config.metadata.get("symbol_normalization_logs", [])
     if normalization_log_payload:
         logs = [
@@ -143,16 +193,24 @@ def prepare_bot_with_container(
     *,
     env: Mapping[str, str] | None = None,
 ) -> BootstrapResult:
-    """Prepare directories and registry dependencies for :class:`TradingBot` using container."""
+    """Prepare directories and registry dependencies for :class:`TradingBot`.
+
+    .. deprecated:: 2.0
+        Use ``ApplicationContainer`` directly instead. Removal planned for v3.0.
+    """
+    # Note: warning is emitted by prepare_bot()
     return prepare_bot(config, registry=None, env=env)
 
 
 def build_bot(config: BotConfig) -> TradingBot:
-    """
-    Build a TradingBot from a BotConfig using ApplicationContainer.
+    """Build a TradingBot from a BotConfig using ApplicationContainer.
 
     This is the canonical way to create a TradingBot. The container
     handles all dependency wiring.
+
+    Note:
+        This function is NOT deprecated. It is a supported convenience
+        function that uses ``ApplicationContainer`` internally.
 
     Args:
         config: The bot configuration.
@@ -175,8 +233,11 @@ def build_bot(config: BotConfig) -> TradingBot:
 
 
 def bot_from_profile(profile: str) -> TradingBot:
-    """
-    Create a TradingBot from a profile name.
+    """Create a TradingBot from a profile name.
+
+    Note:
+        This function is NOT deprecated. It is a supported convenience
+        function that uses ``ApplicationContainer`` internally.
 
     Args:
         profile: One of 'dev', 'demo', 'prod', 'test', 'spot', 'canary'

@@ -83,23 +83,25 @@ class TestOrdersWidget:
                 status="OPEN",
                 creation_time=1600000000.0,  # Float timestamp for age calculation
                 filled_quantity=Decimal("0.5"),  # 50% filled
+                avg_fill_price=Decimal("99.50"),  # Avg fill price
             )
         ]
 
         widget.update_orders(orders)
 
         # With row-key optimization, add_row is called with key parameter
-        # Columns: Symbol, Side, Quantity, Price, Filled, Age, Status
+        # Columns: Symbol, Side, Qty, Price, Fill%, Avg Px, Age, Status
         mock_table.add_row.assert_called_once()
         args, kwargs = mock_table.add_row.call_args
         assert args[0] == "BTC"
         assert "BUY" in str(args[1])
         # Quantity and price are formatted, check string representation
-        assert "1" in str(args[2])
-        assert "100" in str(args[3])
-        assert str(args[4]) == "50%"  # Filled column
-        # args[5] is Age (Rich Text)
-        assert args[6] == "OPEN"  # Status is now at index 6
+        assert "1" in str(args[2])  # Qty
+        assert "100" in str(args[3])  # Price
+        assert str(args[4]) == "50%"  # Fill%
+        assert "99" in str(args[5])  # Avg Px (99.50)
+        # args[6] is Age (Rich Text)
+        assert args[7] == "OPEN"  # Status is now at index 7
         assert kwargs.get("key") == "ord_1"
 
 

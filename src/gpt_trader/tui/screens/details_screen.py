@@ -80,10 +80,13 @@ class DetailsScreen(Screen):
         except Exception as e:
             logger.debug(f"Failed to update PositionsWidget: {e}")
 
-        # Update OrdersWidget
+        # Update OrdersWidget with trade data for fill derivation
         try:
             orders_widget = self.query_one("#details-orders", OrdersWidget)
-            orders_widget.update_orders(state.order_data.orders)
+            orders_widget.update_orders(
+                state.order_data.orders,
+                trades=state.trade_data.trades,
+            )
         except Exception as e:
             logger.debug(f"Failed to update OrdersWidget: {e}")
 

@@ -34,7 +34,7 @@ class ExecutionWidget(Static):
             f"trades={len(state.trade_data.trades)}"
         )
 
-        self.update_orders(state.order_data.orders)
+        self.update_orders(state.order_data.orders, trades=state.trade_data.trades)
         self.update_trades(state.trade_data.trades)
 
     def on_mount(self) -> None:
@@ -59,9 +59,9 @@ class ExecutionWidget(Static):
             with TabPane("Trades", id="trades-tab"):
                 yield TradesWidget(id="trades-content")
 
-    def update_orders(self, orders: list) -> None:
-        """Update orders table."""
-        self.query_one(OrdersWidget).update_orders(orders)
+    def update_orders(self, orders: list, trades: list | None = None) -> None:
+        """Update orders table with optional trade data for fill derivation."""
+        self.query_one(OrdersWidget).update_orders(orders, trades=trades)
 
     def update_trades(self, trades: list) -> None:
         """Update trades table."""

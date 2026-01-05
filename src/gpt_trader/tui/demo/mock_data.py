@@ -59,6 +59,47 @@ class MockDataGenerator:
                 },
             }
 
+        # Initialize with some sample orders showing different fill states
+        if not self.orders:
+            btc_price = self.base_prices["BTC-USD"]
+            eth_price = self.base_prices["ETH-USD"]
+            self.orders = [
+                {
+                    "order_id": "demo_order_1",
+                    "product_id": "BTC-USD",
+                    "symbol": "BTC-USD",
+                    "side": "BUY",
+                    "size": "0.05",
+                    "quantity": "0.05",
+                    "price": f"{btc_price * 0.99:.2f}",  # Limit below market
+                    "filled_size": "0.02",  # 40% filled
+                    "filled_quantity": "0.02",
+                    "average_filled_price": f"{btc_price * 0.985:.2f}",
+                    "status": "OPEN",
+                    "order_type": "LIMIT",
+                    "time_in_force": "GTC",
+                    "created_time": datetime.now().isoformat() + "Z",
+                    "creation_time": time.time() - 45,  # 45 seconds ago
+                },
+                {
+                    "order_id": "demo_order_2",
+                    "product_id": "ETH-USD",
+                    "symbol": "ETH-USD",
+                    "side": "SELL",
+                    "size": "1.0",
+                    "quantity": "1.0",
+                    "price": f"{eth_price * 1.02:.2f}",  # Limit above market
+                    "filled_size": "0",  # Not filled yet
+                    "filled_quantity": "0",
+                    "average_filled_price": None,
+                    "status": "OPEN",
+                    "order_type": "LIMIT",
+                    "time_in_force": "GTC",
+                    "created_time": datetime.now().isoformat() + "Z",
+                    "creation_time": time.time() - 15,  # 15 seconds ago
+                },
+            ]
+
     def update_prices(self) -> dict[str, str]:
         """Generate new price updates with realistic random walk."""
         prices = {}

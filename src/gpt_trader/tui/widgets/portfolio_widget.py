@@ -67,7 +67,10 @@ class PortfolioWidget(Static):
 
         try:
             orders_widget = self.query_one(OrdersWidget)
-            orders_widget.update_orders(state.order_data.orders)
+            orders_widget.update_orders(
+                state.order_data.orders,
+                trades=state.trade_data.trades,
+            )
         except Exception as e:
             logger.error(f"Failed to update orders in portfolio: {e}")
 

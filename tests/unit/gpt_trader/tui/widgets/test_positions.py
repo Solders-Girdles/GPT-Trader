@@ -110,24 +110,89 @@ class TestOrdersWidget:
                 time_in_force="GTC",
                 creation_time=1600000000.0,  # Float timestamp for age calculation
                 filled_quantity=Decimal("0.025"),  # 25% filled
+                avg_fill_price=Decimal("49950.00"),  # Avg fill price
             )
         ]
 
         widget.update_orders(orders)
 
         # With row-key optimization, add_row is called with key=order_id
-        # Columns: Symbol, Side, Quantity, Price, Filled, Age, Status
+        # Columns: Symbol, Side, Qty, Price, Fill%, Avg Px, Age, Status
         mock_table.add_row.assert_called_once()
         args, kwargs = mock_table.add_row.call_args
         assert args[0] == "BTC-USD"
         assert "BUY" in args[1]
-        assert str(args[2]) == "0.1"
-        assert str(args[3]) == "50,000.0000"  # Formatted with commas and 4 decimal places
-        assert str(args[4]) == "25%"  # Filled column
-        # args[5] is Age (Rich Text)
-        assert args[6] == "OPEN"  # Status is now at index 6
+        assert str(args[2]) == "0.1"  # Qty
+        assert str(args[3]) == "50,000.0000"  # Price
+        assert str(args[4]) == "25%"  # Fill%
+        assert "49,950" in str(args[5])  # Avg Px
+        # args[6] is Age (Rich Text)
+        assert args[7] == "OPEN"  # Status is now at index 7
         # Verify row key is set
         assert kwargs.get("key") == "ord_123"
+
+    def test_update_orders_trade_derived_fill(self):
+        """Test that fill info can be derived from trades when order fields are empty."""
+        widget = OrdersWidget()
+
+        mock_table = create_mock_datatable()
+        mock_empty_label = MagicMock()
+        widget.query_one = MagicMock(
+            side_effect=lambda selector, *args: (
+                mock_table
+                if ("#orders-table" in str(selector) or selector == DataTable)
+                else mock_empty_label
+            )
+        )
+
+        # Order without fill info
+        orders = [
+            Order(
+                order_id="ord_456",
+                symbol="ETH-USD",
+                side="SELL",
+                quantity=Decimal("2.0"),
+                price=Decimal("3000.00"),
+                status="OPEN",
+                type="LIMIT",
+                time_in_force="GTC",
+                creation_time=1600000000.0,
+                filled_quantity=Decimal("0"),  # No fill info on order
+                avg_fill_price=None,
+            )
+        ]
+
+        # Trades that link to the order
+        trades = [
+            Trade(
+                trade_id="trd_1",
+                symbol="ETH-USD",
+                side="SELL",
+                quantity=Decimal("0.5"),
+                price=Decimal("3010.00"),
+                order_id="ord_456",
+                time="2024-01-01T12:00:00Z",
+            ),
+            Trade(
+                trade_id="trd_2",
+                symbol="ETH-USD",
+                side="SELL",
+                quantity=Decimal("0.5"),
+                price=Decimal("3020.00"),
+                order_id="ord_456",
+                time="2024-01-01T12:01:00Z",
+            ),
+        ]
+
+        widget.update_orders(orders, trades=trades)
+
+        mock_table.add_row.assert_called_once()
+        args, kwargs = mock_table.add_row.call_args
+        # Fill% should be 50% (1.0 filled out of 2.0)
+        assert str(args[4]) == "50%"
+        # Avg Px should be weighted average: (0.5*3010 + 0.5*3020) / 1.0 = 3015
+        assert "3,015" in str(args[5])
+        assert kwargs.get("key") == "ord_456"
 
 
 class TestTradesWidget:

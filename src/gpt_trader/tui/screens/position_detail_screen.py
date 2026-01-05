@@ -24,7 +24,14 @@ from textual.widgets import DataTable, Label, Static
 
 from gpt_trader.tui.formatting import format_currency, format_price
 from gpt_trader.tui.helpers import safe_update
+from gpt_trader.tui.staleness_helpers import get_staleness_banner
 from gpt_trader.tui.theme import THEME
+from gpt_trader.tui.thresholds import (
+    get_confidence_label,
+    get_confidence_status,
+    get_loss_ratio_status,
+    get_status_color,
+)
 from gpt_trader.tui.utilities import (
     copy_to_clipboard,
     format_leverage_colored,
@@ -32,11 +39,12 @@ from gpt_trader.tui.utilities import (
 )
 from gpt_trader.tui.widgets import ContextualFooter
 from gpt_trader.tui.widgets.shell import CommandBar
+from gpt_trader.tui.widgets.tile_states import TileBanner, TileEmptyState
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
     from gpt_trader.tui.state import TuiState
-    from gpt_trader.tui.types import DecisionData, Position, RiskState, TradeRecord
+    from gpt_trader.tui.types import DecisionData, Position, RiskState
 
 logger = get_logger(__name__, component="tui")
 
@@ -56,7 +64,7 @@ class PositionCard(Static):
 
             with Vertical(classes="metric"):
                 yield Label("Quantity", classes="metric-label")
-                yield Label("--", id="pos-qty", classes="metric-value")
+                yield Label("--", id="pos-qty", classes="metric-value")  # naming: allow
 
             with Vertical(classes="metric"):
                 yield Label("Entry Price", classes="metric-label")
@@ -85,7 +93,14 @@ class PositionCard(Static):
         """Update position display."""
         if position is None:
             self.query_one("#position-symbol", Label).update("No Active Position")
-            for label_id in ["pos-side", "pos-qty", "pos-entry", "pos-mark", "pos-pnl", "pos-leverage"]:
+            for label_id in [
+                "pos-side",
+                "pos-qty",  # naming: allow
+                "pos-entry",
+                "pos-mark",
+                "pos-pnl",
+                "pos-leverage",
+            ]:
                 self.query_one(f"#{label_id}", Label).update("--")
             return
 
@@ -93,22 +108,26 @@ class PositionCard(Static):
             self.query_one("#position-symbol", Label).update(position.symbol)
 
             # Side with color
-            side_color = THEME.colors.success if position.side.lower() == "long" else THEME.colors.error
+            side_color = (
+                THEME.colors.success if position.side.lower() == "long" else THEME.colors.error
+            )
             self.query_one("#pos-side", Label).update(
                 Text.from_markup(f"[{side_color}]{position.side.upper()}[/{side_color}]")
             )
 
-            # Quantity
-            qty = float(position.quantity)
-            qty_str = f"{qty:,.8f}" if qty < 1 else f"{qty:,.4f}"
-            self.query_one("#pos-qty", Label).update(qty_str)
+            # Quantity  # naming: allow
+            qty = float(position.quantity)  # naming: allow
+            qty_str = f"{qty:,.8f}" if qty < 1 else f"{qty:,.4f}"  # naming: allow
+            self.query_one("#pos-qty", Label).update(qty_str)  # naming: allow
 
             # Prices
             self.query_one("#pos-entry", Label).update(format_price(position.entry_price))
             self.query_one("#pos-mark", Label).update(format_price(position.mark_price))
 
             # P&L with color
-            pnl_text = format_pnl_colored(float(position.unrealized_pnl), format_currency(position.unrealized_pnl))
+            pnl_text = format_pnl_colored(
+                float(position.unrealized_pnl), format_currency(position.unrealized_pnl)
+            )
             self.query_one("#pos-pnl", Label).update(pnl_text)
 
             # Leverage with color coding
@@ -119,7 +138,9 @@ class PositionCard(Static):
             futures_info = self.query_one("#futures-info", Horizontal)
             if position.is_futures and position.liquidation_price:
                 futures_info.remove_class("hidden")
-                self.query_one("#pos-liquidation", Label).update(format_price(position.liquidation_price))
+                self.query_one("#pos-liquidation", Label).update(
+                    format_price(position.liquidation_price)
+                )
                 buffer_pct = position.liquidation_buffer_pct or 0
                 self.query_one("#pos-buffer", Label).update(f"{buffer_pct:.1f}%")
             else:
@@ -132,9 +153,21 @@ class PositionCard(Static):
 class StrategyDecisionCard(Static):
     """Card displaying last strategy decision with indicators."""
 
+    # Indicator categories for semantic grouping
+    INDICATOR_CATEGORIES = {
+        "trend": ["trend", "crossover_signal", "short_ma", "long_ma", "adx"],
+        "momentum": ["rsi", "rsi_signal", "momentum"],
+        "regime": ["regime"],
+        "order_flow": ["aggressor_ratio", "trade_count", "volume", "vwap"],
+        "microstructure": ["spread_bps", "spread", "quality"],
+    }
+
     def compose(self) -> ComposeResult:
         """Compose the strategy decision card layout."""
         yield Label("LAST STRATEGY DECISION", classes="widget-header")
+
+        # Regime badge (shown when available, e.g., for ensemble strategies)
+        yield Label("", id="decision-regime", classes="decision-regime hidden")
 
         with Horizontal(classes="decision-header"):
             yield Label("", id="decision-action", classes="decision-action")
@@ -154,11 +187,15 @@ class StrategyDecisionCard(Static):
 
     def update_decision(self, decision: DecisionData | None, symbol: str = "") -> None:
         """Update decision display."""
+        regime_label = self.query_one("#decision-regime", Label)
+
         if decision is None or decision.symbol != symbol:
             self.query_one("#decision-action", Label).update("No recent decision")
             self.query_one("#decision-confidence", Label).update("")
             self.query_one("#decision-reason", Label).update("")
             self.query_one("#decision-time", Label).update("")
+            regime_label.update("")
+            regime_label.add_class("hidden")
             try:
                 self.query_one("#indicators-table", DataTable).clear()
             except Exception:
@@ -166,6 +203,22 @@ class StrategyDecisionCard(Static):
             return
 
         try:
+            # Regime badge (for ensemble strategies)
+            regime = decision.indicators.get("regime")
+            if regime:
+                regime_icon = (
+                    "📈" if regime == "trending" else "📊" if regime == "ranging" else "⚪"
+                )
+                regime_text = f"{regime_icon} {regime.upper()}"
+                adx = decision.indicators.get("adx")
+                if adx is not None:
+                    regime_text += f" (ADX: {adx:.1f})"
+                regime_label.update(regime_text)
+                regime_label.remove_class("hidden")
+            else:
+                regime_label.update("")
+                regime_label.add_class("hidden")
+
             # Action with color
             action = decision.action.upper()
             if action in ("BUY", "LONG"):
@@ -177,13 +230,15 @@ class StrategyDecisionCard(Static):
 
             self.query_one("#decision-action", Label).update(Text.from_markup(action_markup))
 
-            # Confidence with progress bar
+            # Confidence with progress bar and badge
             confidence = decision.confidence
             conf_bar = self._make_confidence_bar(confidence)
             self.query_one("#decision-confidence", Label).update(conf_bar)
 
             # Reason
-            self.query_one("#decision-reason", Label).update(decision.reason or "No reason provided")
+            self.query_one("#decision-reason", Label).update(
+                decision.reason or "No reason provided"
+            )
 
             # Timestamp
             if decision.timestamp > 0:
@@ -192,18 +247,26 @@ class StrategyDecisionCard(Static):
             else:
                 self.query_one("#decision-time", Label).update("")
 
-            # Indicators table
+            # Indicators table with semantic grouping
             table = self.query_one("#indicators-table", DataTable)
             table.clear()
-            for name, value in decision.indicators.items():
-                formatted_value = self._format_indicator_value(value)
-                table.add_row(name, formatted_value)
+
+            # Group indicators by category
+            grouped = self._group_indicators(decision.indicators)
+            for category, indicators in grouped.items():
+                if not indicators:
+                    continue
+                # Add category header (skip regime as it's shown in badge)
+                if category != "regime":
+                    for name, value in indicators:
+                        formatted_value = self._format_indicator_value(value)
+                        table.add_row(name, formatted_value)
 
         except Exception as e:
             logger.debug(f"Failed to update decision card: {e}")
 
     def _make_confidence_bar(self, confidence: float) -> Text:
-        """Create visual confidence bar."""
+        """Create visual confidence bar with badge using shared thresholds."""
         # 0-1 scale
         if confidence > 1:
             confidence = confidence / 100  # Assume percentage
@@ -211,14 +274,38 @@ class StrategyDecisionCard(Static):
         filled = int(confidence * 10)
         bar = "●" * filled + "○" * (10 - filled)
 
-        if confidence >= 0.7:
-            color = THEME.colors.success
-        elif confidence >= 0.4:
-            color = THEME.colors.warning
-        else:
-            color = THEME.colors.error
+        # Use shared threshold functions
+        status = get_confidence_status(confidence)
+        label = get_confidence_label(status)
+        color = get_status_color(status)
 
-        return Text.from_markup(f"[{color}]{bar}[/{color}] {confidence:.0%}")
+        return Text.from_markup(
+            f"[{color}]{bar}[/{color}] {confidence:.0%} [{color}]{label}[/{color}]"
+        )
+
+    def _group_indicators(self, indicators: dict[str, Any]) -> dict[str, list[tuple[str, Any]]]:
+        """Group indicators by semantic category.
+
+        Args:
+            indicators: Raw indicator dictionary from decision.
+
+        Returns:
+            Dictionary mapping category name to list of (indicator_name, value) tuples.
+        """
+        grouped: dict[str, list[tuple[str, Any]]] = {cat: [] for cat in self.INDICATOR_CATEGORIES}
+        grouped["other"] = []
+
+        for name, value in indicators.items():
+            categorized = False
+            for category, indicator_names in self.INDICATOR_CATEGORIES.items():
+                if name.lower() in indicator_names:
+                    grouped[category].append((name, value))
+                    categorized = True
+                    break
+            if not categorized:
+                grouped["other"].append((name, value))
+
+        return grouped
 
     def _format_indicator_value(self, value: Any) -> str:
         """Format indicator value for display."""
@@ -265,16 +352,13 @@ class RiskMetricsCard(Static):
 
         try:
             # Daily loss with color based on proximity to limit
+            # Uses shared thresholds with abs() to correctly handle negative losses
             loss_pct = risk_state.current_daily_loss_pct
             limit_pct = risk_state.daily_loss_limit_pct
 
-            loss_ratio = loss_pct / limit_pct if limit_pct > 0 else 0
-            if loss_ratio >= 0.8:
-                loss_color = THEME.colors.error
-            elif loss_ratio >= 0.5:
-                loss_color = THEME.colors.warning
-            else:
-                loss_color = THEME.colors.success
+            # Use shared threshold function (correctly uses abs())
+            loss_status = get_loss_ratio_status(loss_pct, limit_pct)
+            loss_color = get_status_color(loss_status)
 
             self.query_one("#risk-daily-loss", Label).update(
                 Text.from_markup(f"[{loss_color}]{loss_pct:.2f}%[/{loss_color}]")
@@ -284,15 +368,18 @@ class RiskMetricsCard(Static):
             # Max leverage
             self.query_one("#risk-max-leverage", Label).update(f"{risk_state.max_leverage:.1f}x")
 
-            # Reduce only mode
+            # Reduce only mode - unified display: "ON (reason)" / "OFF"
             if risk_state.reduce_only_mode:
-                reason = risk_state.reduce_only_reason or "Active"
+                reason = risk_state.reduce_only_reason or "Risk limit"
+                # Truncate long reasons
+                if len(reason) > 20:
+                    reason = reason[:17] + "..."
                 self.query_one("#risk-reduce-only", Label).update(
-                    Text.from_markup(f"[{THEME.colors.error}]YES[/{THEME.colors.error}] ({reason})")
+                    Text.from_markup(f"[{THEME.colors.error}]ON[/{THEME.colors.error}] ({reason})")
                 )
             else:
                 self.query_one("#risk-reduce-only", Label).update(
-                    Text.from_markup(f"[{THEME.colors.success}]NO[/{THEME.colors.success}]")
+                    Text.from_markup(f"[{THEME.colors.success}]OFF[/{THEME.colors.success}]")
                 )
 
             # Active guards
@@ -300,7 +387,9 @@ class RiskMetricsCard(Static):
             if guards:
                 guards_str = ", ".join(guards)
                 self.query_one("#active-guards", Label).update(
-                    Text.from_markup(f"[{THEME.colors.warning}]{guards_str}[/{THEME.colors.warning}]")
+                    Text.from_markup(
+                        f"[{THEME.colors.warning}]{guards_str}[/{THEME.colors.warning}]"
+                    )
                 )
             else:
                 self.query_one("#active-guards", Label).update("None active")
@@ -449,6 +538,7 @@ class PositionDetailScreen(Screen):
             bot_mode=getattr(self.app, "data_source_mode", "DEMO").upper(),
             id="header-bar",
         )
+        yield TileBanner(id="position-detail-banner", classes="tile-banner hidden")
 
         with Container(id="position-detail-container"):
             # Top left: Position card
@@ -469,7 +559,13 @@ class PositionDetailScreen(Screen):
                 table = DataTable(id="history-table", zebra_stripes=True)
                 table.can_focus = True
                 yield table
-                yield Label("", id="history-empty", classes="empty-state")
+                yield TileEmptyState(
+                    title="No Recent Trades",
+                    subtitle="Trade history will appear here",
+                    icon="○",
+                    actions=["[R] Refresh"],
+                    id="history-empty",
+                )
 
         yield ContextualFooter()
 
@@ -500,6 +596,17 @@ class PositionDetailScreen(Screen):
 
     def on_state_updated(self, state: TuiState) -> None:
         """Handle state updates from StateRegistry."""
+        # Update staleness banner
+        try:
+            banner = self.query_one("#position-detail-banner", TileBanner)
+            staleness_result = get_staleness_banner(state)
+            if staleness_result:
+                banner.update_banner(staleness_result[0], severity=staleness_result[1])
+            else:
+                banner.update_banner("")
+        except Exception:
+            pass
+
         self.state = state
 
     def watch_state(self, state: TuiState | None) -> None:
@@ -551,7 +658,7 @@ class PositionDetailScreen(Screen):
     def _update_trade_history(self, state: TuiState, position: Position | None) -> None:
         """Update trade history table filtered by position symbol."""
         table = self.query_one("#history-table", DataTable)
-        empty_label = self.query_one("#history-empty", Label)
+        empty_state = self.query_one("#history-empty", TileEmptyState)
 
         trades = state.trade_data.trades
         symbol = position.symbol if position else None
@@ -564,12 +671,14 @@ class PositionDetailScreen(Screen):
 
         if not filtered_trades:
             table.display = False
-            empty_label.display = True
-            empty_label.update("No recent trades" + (f" for {symbol}" if symbol else ""))
+            empty_state.display = True
+            # Dynamic subtitle based on symbol context
+            subtitle = f"No trades for {symbol}" if symbol else "Trade history will appear here"
+            empty_state.update_state(subtitle=subtitle)
             return
 
         table.display = True
-        empty_label.display = False
+        empty_state.display = False
         table.clear()
 
         for trade in filtered_trades[:10]:  # Show last 10
@@ -635,7 +744,6 @@ class PositionDetailScreen(Screen):
             self.notify("Copy failed", severity="warning", timeout=2)
 
     def action_refresh(self) -> None:
-        """Manually refresh data."""
-        if hasattr(self.app, "tui_state"):
-            self.state = self.app.tui_state  # type: ignore[attr-defined]
-            self.notify("Data refreshed", timeout=2)
+        """Manually refresh data via app-level reconnect."""
+        if hasattr(self.app, "action_reconnect_data"):
+            self.app.action_reconnect_data()

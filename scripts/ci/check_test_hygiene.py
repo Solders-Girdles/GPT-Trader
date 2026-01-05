@@ -179,6 +179,7 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/tui/test_events.py",  # custom event type coverage and dispatch patterns
     "tests/unit/gpt_trader/tui/services/test_mode_service.py",  # mode service state transitions
     "tests/unit/gpt_trader/tui/widgets/test_positions.py",  # positions widget comprehensive scenarios
+    "tests/unit/gpt_trader/tui/test_thresholds.py",  # unified threshold system test coverage (status levels, risk, confidence)
 }
 
 SLEEP_ALLOWLIST = {

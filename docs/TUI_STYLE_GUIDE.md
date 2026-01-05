@@ -16,6 +16,10 @@ This document defines the visual standards and component patterns for the GPT-Tr
   - [Loading States](#loading-states)
   - [Value Changes](#value-changes)
   - [Badges & Status Indicators](#badges--status-indicators)
+  - [Unified Status Classes](#unified-status-classes)
+  - [Unified Threshold System](#unified-threshold-system)
+  - [Staleness & Freshness Indicators](#staleness--freshness-indicators)
+  - [Strategy Decision Display](#strategy-decision-display)
   - [Buttons](#buttons)
   - [Focus & Keyboard Navigation](#focus--keyboard-navigation)
 - [Layout Rules](#layout-rules)
@@ -230,37 +234,57 @@ DataTable:focus > .datatable--cursor {
 
 ### Empty States
 
-When a table or list has no data, show a helpful empty state.
+Use `TileEmptyState` for all empty/error states. This provides consistent structure with icon, title, subtitle, and action hints.
 
-```tcss
-.empty-state {
-    padding: 2;
-    color: $text-muted;
-    text-align: center;
-}
+```python
+from gpt_trader.tui.widgets.tile_states import TileEmptyState
 
-.empty-state-title {
-    color: $text-secondary;
-    text-style: bold;
-    margin-bottom: 0;
-}
+# Basic empty state
+yield TileEmptyState(
+    title="No Positions",
+    subtitle="Positions appear when trades are opened",
+    icon="◇",
+    actions=["[S] Start Bot", "[R] Refresh"],
+    id="positions-empty",
+)
 
-.empty-state-subtitle {
-    color: $text-muted;
-}
+# Error state with retry affordance
+yield TileEmptyState(
+    title="Connection Failed",
+    subtitle="Check API credentials and network",
+    icon="⚠",
+    actions=["[R] Reconnect", "[C] Config"],
+    id="connection-error",
+)
 ```
+
+**Standard Icons:**
+| Icon | Usage |
+|------|-------|
+| `◇` | No data (positions, trades) |
+| `◌` | Waiting/pending (orders, watchlist) |
+| `○` | Empty history (trades, alerts) |
+| `⚠` | Error/failure states |
 
 **Rules:**
-- Center the empty state vertically and horizontally
-- Use an icon (optional) + title + subtitle pattern
-- Title in `$text-secondary`, subtitle in `$text-muted`
-- Keep messaging helpful: "No positions yet" not "Empty"
+- Always use `TileEmptyState` instead of raw `.empty-state` Labels
+- Include relevant action hints for keyboard shortcuts that exist
+- Use `⚠` icon for all error/failure states
+- Update dynamically with `empty_state.update_state(subtitle="New message")`
+- For compact spaces (AlertInbox), hide icon via CSS:
+  ```tcss
+  #empty-inbox .empty-icon { display: none; height: 0; }
+  ```
 
-**Example:**
-```
-    📭
-  No Positions
-  Open a trade to see positions here
+**Error State Pattern:**
+```python
+# On render/connection failure
+tile_empty_state(
+    "Connection Failed",
+    "Cannot retrieve data",
+    icon="⚠",
+    actions=["[R] Reconnect", "[L] Logs"],
+)
 ```
 
 ### Loading States
@@ -339,6 +363,229 @@ Compact labels for status and categorization.
 - Always include `text-style: bold`
 - Use semantic variants for status
 - Keep text short (1-2 words)
+
+### Unified Status Classes
+
+The TUI uses a centralized threshold system for consistent status indicators across all widgets. Status is always one of three levels: **OK**, **WARNING**, or **CRITICAL**.
+
+```tcss
+/* Unified status classes - use these instead of widget-specific variants */
+.status-ok       { color: $success; }
+.status-warning  { color: $warning; text-style: italic; }
+.status-critical { color: $error;   text-style: bold underline; }
+```
+
+**Accessibility:** Status classes include text-style differentiation (not just color):
+- OK: Normal weight (green)
+- WARNING: Italic (yellow)
+- CRITICAL: Bold + underline (red)
+
+**Usage in Python:**
+```python
+from gpt_trader.tui.thresholds import (
+    StatusLevel,
+    get_status_class,
+    get_status_color,
+    get_status_icon,
+)
+
+# Get appropriate class for CSS
+status = StatusLevel.WARNING
+css_class = get_status_class(status)  # "status-warning"
+color = get_status_color(status)       # "yellow"
+icon = get_status_icon(status)         # "⚠"
+```
+
+### Unified Threshold System
+
+All metrics use centralized thresholds defined in `gpt_trader.tui.thresholds`. This ensures consistent status boundaries across all widgets.
+
+#### Performance Thresholds
+
+```python
+from gpt_trader.tui.thresholds import (
+    get_latency_status,
+    get_cpu_status,
+    get_memory_status,
+    get_fps_status,
+)
+
+# Latency: OK < 50ms, WARNING < 150ms, CRITICAL >= 150ms
+status = get_latency_status(latency_ms=75.0)  # StatusLevel.WARNING
+
+# CPU: OK < 50%, WARNING < 80%, CRITICAL >= 80%
+status = get_cpu_status(cpu_percent=65.0)  # StatusLevel.WARNING
+```
+
+| Metric | OK | WARNING | CRITICAL |
+|--------|-----|---------|----------|
+| Latency | < 50ms | 50-150ms | ≥ 150ms |
+| CPU | < 50% | 50-80% | ≥ 80% |
+| Memory | < 60% | 60-80% | ≥ 80% |
+| FPS | ≥ 0.5 | 0.2-0.5 | < 0.2 |
+
+#### Risk Thresholds
+
+```python
+from gpt_trader.tui.thresholds import (
+    get_loss_ratio_status,
+    get_risk_score_status,
+    get_risk_status_label,
+)
+
+# Loss ratio uses abs() to handle negative losses correctly
+status = get_loss_ratio_status(
+    current_loss_pct=-0.05,  # -5% loss
+    limit_pct=0.10,          # 10% limit
+)  # StatusLevel.WARNING (50% of limit used)
+
+# Risk score maps to LOW/MEDIUM/HIGH
+label = get_risk_status_label(status)  # "MEDIUM"
+```
+
+| Metric | OK (LOW) | WARNING (MEDIUM) | CRITICAL (HIGH) |
+|--------|----------|------------------|-----------------|
+| Loss Ratio | < 50% of limit | 50-75% of limit | ≥ 75% of limit |
+| Risk Score | < 2 | 2-5 | ≥ 5 |
+
+**Important:** `get_loss_ratio_status()` uses `abs()` internally to correctly handle negative loss values.
+
+#### Confidence Thresholds
+
+Confidence is inverted - higher is better:
+
+```python
+from gpt_trader.tui.thresholds import (
+    get_confidence_status,
+    get_confidence_label,
+    format_confidence_with_badge,
+)
+
+# HIGH confidence = OK (green), LOW confidence = CRITICAL (red)
+status = get_confidence_status(0.75)  # StatusLevel.OK
+label = get_confidence_label(status)   # "HIGH"
+
+# Format with badge for display
+text, css_class = format_confidence_with_badge(0.75)
+# text = "0.75 HIGH", css_class = "status-ok"
+```
+
+| Confidence | Status | Label | Color |
+|------------|--------|-------|-------|
+| ≥ 0.70 | OK | HIGH | Green |
+| 0.40-0.70 | WARNING | MED | Yellow |
+| < 0.40 | CRITICAL | LOW | Red |
+
+### Staleness & Freshness Indicators
+
+Use `TileBanner` and staleness helpers to show data freshness state.
+
+#### TileBanner Component
+
+```python
+from gpt_trader.tui.widgets.tile_states import TileBanner
+
+# In compose()
+yield TileBanner(id="my-banner", classes="tile-banner hidden")
+
+# Update based on state
+banner = self.query_one(TileBanner)
+banner.update_banner("Data is 30s stale", severity="warning")
+# Or hide when fresh:
+banner.hide()
+```
+
+#### Staleness Helpers
+
+```python
+from gpt_trader.tui.staleness_helpers import (
+    get_staleness_banner,
+    get_freshness_display,
+    get_empty_state_config,
+)
+
+# Get banner text and severity based on state
+result = get_staleness_banner(state)
+if result:
+    text, severity = result  # ("Data 30s stale", "warning")
+    banner.update_banner(text, severity=severity)
+else:
+    banner.hide()  # Data is fresh
+
+# Get freshness indicator for header
+freshness = get_freshness_display(state)
+if freshness:
+    text, css_class = freshness  # ("● 2s", "fresh")
+```
+
+**Staleness Thresholds:**
+| Age | State | Display |
+|-----|-------|---------|
+| < 10s | Fresh | Green dot `● 2s` |
+| 10-30s | Stale | Yellow banner "Data Xs stale" |
+| > 30s | Critical | Red banner "Data Xs stale - may be outdated" |
+
+### Strategy Decision Display
+
+Strategy decisions use confidence badges and regime indicators for clarity.
+
+#### Confidence with Badge
+
+Display confidence values with semantic badges:
+
+```python
+# In strategy widget table
+from gpt_trader.tui.thresholds import (
+    get_confidence_status,
+    get_confidence_label,
+    get_status_color,
+)
+
+conf_status = get_confidence_status(decision.confidence)
+conf_label = get_confidence_label(conf_status)
+conf_color = get_status_color(conf_status)
+
+# Outputs: "[green]0.85 HIGH[/green]"
+confidence_cell = f"[{conf_color}]{decision.confidence:.2f} {conf_label}[/{conf_color}]"
+```
+
+#### Regime Badge (Ensemble Strategies)
+
+Display market regime for ensemble strategies:
+
+```python
+# Check for regime in indicators
+regime = decision.indicators.get("regime")
+if regime:
+    regime_icon = "📈" if regime == "trending" else "📊" if regime == "ranging" else "⚪"
+    regime_text = f"{regime_icon} {regime.upper()}"
+
+    # Optionally include ADX
+    adx = decision.indicators.get("adx")
+    if adx is not None:
+        regime_text += f" (ADX: {adx:.1f})"
+```
+
+**Regime Icons:**
+| Regime | Icon | Meaning |
+|--------|------|---------|
+| Trending | 📈 | Trend-following signals weighted higher |
+| Ranging | 📊 | Mean-reversion signals weighted higher |
+| Neutral | ⚪ | Balanced signal weights |
+
+#### Indicator Grouping
+
+Group strategy indicators by semantic category:
+
+```python
+INDICATOR_CATEGORIES = {
+    "trend": ["trend", "crossover_signal", "short_ma", "long_ma", "adx"],
+    "momentum": ["rsi", "rsi_signal", "momentum"],
+    "regime": ["regime"],
+    "order_flow": ["aggressor_ratio", "trade_count", "volume", "vwap"],
+    "microstructure": ["spread_bps", "spread", "quality"],
+}
+```
 
 ### Buttons
 
@@ -557,8 +804,39 @@ BADGES
 ├── .badge-error     → Red
 └── .badge-info      → Blue
 
+UNIFIED STATUS (use these for metrics)
+├── .status-ok       → Green (OK, HIGH confidence, LOW risk)
+├── .status-warning  → Yellow + italic (WARNING, MED confidence, MEDIUM risk)
+└── .status-critical → Red + bold underline (CRITICAL, LOW confidence, HIGH risk)
+
+THRESHOLDS (from gpt_trader.tui.thresholds)
+├── Performance
+│   ├── get_latency_status()  → < 50ms OK, < 150ms WARN
+│   ├── get_cpu_status()      → < 50% OK, < 80% WARN
+│   └── get_memory_status()   → < 60% OK, < 80% WARN
+├── Risk
+│   ├── get_loss_ratio_status() → < 50% OK, < 75% WARN (uses abs()!)
+│   └── get_risk_score_status() → < 2 LOW, < 5 MEDIUM
+└── Confidence (inverted - higher = better)
+    └── get_confidence_status() → ≥ 0.7 HIGH, ≥ 0.4 MED
+
+STALENESS
+├── TileBanner       → Contextual banner in tiles
+├── get_staleness_banner()   → Returns (text, severity) or None
+└── get_freshness_display()  → Returns (text, css_class) for headers
+
+STRATEGY DISPLAY
+├── Confidence badge → "[green]0.85 HIGH[/green]"
+├── Regime icons    → 📈 TRENDING | 📊 RANGING | ⚪ NEUTRAL
+└── Indicator groups → trend | momentum | regime | order_flow | microstructure
+
 STATES
-├── .empty-state     → Centered, muted
+├── TileEmptyState   → Empty/error states (replaces .empty-state)
+│   ├── icon ◇      → No data
+│   ├── icon ◌      → Waiting/pending
+│   ├── icon ○      → Empty history
+│   └── icon ⚠      → Error/failure
+├── TileLoadingState → Loading with spinner
 ├── .skeleton        → Loading placeholder
 ├── .value-changed-up   → Green flash
 ├── .value-changed-down → Red flash

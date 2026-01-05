@@ -40,7 +40,7 @@ self.app.post_message(TradeMatcherResetRequested())
 ```python
 # managers/bot_lifecycle.py
 try:
-    from gpt_trader.tui.widgets.positions import TradesWidget
+    from gpt_trader.tui.widgets.portfolio import TradesWidget
 
     main_screen = self.app.query_one(MainScreen)
     exec_widget = main_screen.query_one("#dash-execution")

@@ -109,8 +109,8 @@ class TestRiskWidget:
 
         widget.update_risk(data)
 
-        # Risk should be LOW with minimal usage
-        mock_label.add_class.assert_any_call("risk-status-low")
+        # Risk should be LOW with minimal usage (now uses unified status classes)
+        mock_label.add_class.assert_any_call("status-ok")
 
     def test_risk_status_medium(self):
         """Test risk status calculation for MEDIUM risk."""
@@ -126,8 +126,8 @@ class TestRiskWidget:
 
         widget.update_risk(data)
 
-        # Risk should be MEDIUM with moderate usage
-        mock_label.add_class.assert_any_call("risk-status-medium")
+        # Risk should be MEDIUM with moderate usage (now uses unified status classes)
+        mock_label.add_class.assert_any_call("status-warning")
 
     def test_risk_status_high(self):
         """Test risk status calculation for HIGH risk."""
@@ -144,8 +144,8 @@ class TestRiskWidget:
 
         widget.update_risk(data)
 
-        # Risk should be HIGH with severe conditions
-        mock_label.add_class.assert_any_call("risk-status-high")
+        # Risk should be HIGH with severe conditions (now uses unified status classes)
+        mock_label.add_class.assert_any_call("status-critical")
 
     def test_no_daily_loss_limit_configured(self):
         """Test handling when no daily loss limit is configured."""

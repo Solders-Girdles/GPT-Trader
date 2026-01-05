@@ -51,5 +51,7 @@ class TestStrategyWidget:
         args, kwargs = mock_table.add_row.call_args
         assert args[0] == "BTC-USD"
         assert "BUY" in args[1]
-        assert args[2] == "0.95"
+        # Confidence now includes badge (e.g., "[green]0.95 HIGH[/green]")
+        assert "0.95" in args[2]
+        assert "HIGH" in args[2]  # High confidence badge
         assert kwargs.get("key") == "BTC-USD"  # Row key for delta updates

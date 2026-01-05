@@ -12,3 +12,44 @@ StrategyWidget DataTable {
 }
 
 /* Empty state styling uses global .empty-state from utilities.tcss */
+
+
+/* ========================================================================== */
+/* STRATEGY DECISION CARD (Position Detail Screen)                            */
+/* ========================================================================== */
+
+/* Regime badge - shows market regime for ensemble strategies */
+.decision-regime {
+    padding: 0 1;
+    margin-bottom: 1;
+    text-style: bold;
+    background: $bg-elevated;
+}
+
+.decision-regime.hidden {
+    display: none;
+}
+
+/* Decision header with action and confidence */
+.decision-header {
+    height: auto;
+    margin-bottom: 1;
+}
+
+.decision-action {
+    text-style: bold;
+    min-width: 8;
+}
+
+.decision-confidence {
+    margin-left: 2;
+}
+
+.decision-reason {
+    color: $text-secondary;
+    margin-bottom: 1;
+}
+
+.decision-time {
+    color: $text-muted;
+}

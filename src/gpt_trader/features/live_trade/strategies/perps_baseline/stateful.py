@@ -12,7 +12,7 @@ The trading logic is identical to BaselinePerpsStrategy.
 
 from collections.abc import Sequence
 from decimal import Decimal
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from gpt_trader.core import Product
 from gpt_trader.features.live_trade.stateful_indicators import (
@@ -29,6 +29,9 @@ from .strategy import (
     IndicatorState,
     StrategyConfig,
 )
+
+if TYPE_CHECKING:
+    from gpt_trader.features.live_trade.strategies.base import MarketDataContext
 
 
 class StatefulBaselineStrategy(StatefulStrategyBase):
@@ -131,6 +134,7 @@ class StatefulBaselineStrategy(StatefulStrategyBase):
         recent_marks: Sequence[Decimal],
         equity: Decimal,
         product: Product | None,
+        market_data: "MarketDataContext | None" = None,
     ) -> Decision:
         """Generate a trading decision using stateful indicators.
 
@@ -145,6 +149,7 @@ class StatefulBaselineStrategy(StatefulStrategyBase):
             recent_marks: Historical mark prices (for compatibility)
             equity: Account equity
             product: Product specification
+            market_data: Optional enhanced market data (orderbook depth, trade flow)
 
         Returns:
             Decision with action, reason, confidence, and indicator state

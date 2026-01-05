@@ -28,6 +28,8 @@ class RegimeCombinerConfig:
             SignalType.MEAN_REVERSION: 0.0,
             SignalType.VOLATILITY: 0.5,
             SignalType.SENTIMENT: 0.5,
+            SignalType.ORDER_FLOW: 0.8,  # High weight - confirms trend direction
+            SignalType.MICROSTRUCTURE: 0.5,  # Medium weight - execution quality
         }
     )
 
@@ -38,6 +40,8 @@ class RegimeCombinerConfig:
             SignalType.MEAN_REVERSION: 1.0,
             SignalType.VOLATILITY: 0.5,
             SignalType.SENTIMENT: 0.5,
+            SignalType.ORDER_FLOW: 0.6,  # Still useful for entry timing
+            SignalType.MICROSTRUCTURE: 0.7,  # Higher weight - important for mean reversion
         }
     )
 

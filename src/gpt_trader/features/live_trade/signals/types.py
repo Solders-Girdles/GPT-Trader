@@ -14,6 +14,8 @@ class SignalType(Enum):
     MEAN_REVERSION = "mean_reversion"
     VOLATILITY = "volatility"
     SENTIMENT = "sentiment"
+    ORDER_FLOW = "order_flow"
+    MICROSTRUCTURE = "microstructure"
     OTHER = "other"
 
 

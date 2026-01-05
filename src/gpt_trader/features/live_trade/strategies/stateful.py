@@ -13,13 +13,16 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Sequence
 from decimal import Decimal
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from gpt_trader.core import Product
 from gpt_trader.core.math.incremental import IncrementalStats
 from gpt_trader.features.live_trade.interfaces import TradingStrategy
 from gpt_trader.features.live_trade.strategies.perps_baseline import Decision
 from gpt_trader.utilities.logging_patterns import get_logger
+
+if TYPE_CHECKING:
+    from gpt_trader.features.live_trade.strategies.base import MarketDataContext
 
 logger = get_logger(__name__, component="stateful_strategy")
 
@@ -82,6 +85,7 @@ class StatefulStrategy(TradingStrategy, ABC):
         recent_marks: Sequence[Decimal],
         equity: Decimal,
         product: Product | None,
+        market_data: "MarketDataContext | None" = None,
         candles: Sequence[Any] | None = None,
     ) -> Decision:
         """

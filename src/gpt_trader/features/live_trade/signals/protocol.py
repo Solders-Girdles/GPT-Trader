@@ -5,15 +5,29 @@ Protocols for the Signal Ensemble architecture.
 from collections.abc import Sequence
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 from gpt_trader.core import Product
 from gpt_trader.features.live_trade.signals.types import SignalOutput
 
+if TYPE_CHECKING:
+    from gpt_trader.features.live_trade.strategies.base import MarketDataContext
+
 
 @dataclass
 class StrategyContext:
-    """Context object containing all market data needed for decision making."""
+    """Context object containing all market data needed for decision making.
+
+    Attributes:
+        symbol: Trading pair symbol (e.g., "BTC-USD")
+        current_mark: Current mark/spot price
+        position_state: Current position info, or None if no position
+        recent_marks: Historical prices (oldest first)
+        equity: Account equity for position sizing
+        product: Product specification from exchange
+        candles: Historical OHLCV candles (optional)
+        market_data: Enhanced market microstructure data (optional)
+    """
 
     symbol: str
     current_mark: Decimal
@@ -21,9 +35,8 @@ class StrategyContext:
     recent_marks: Sequence[Decimal]
     equity: Decimal
     product: Product | None
-    candles: Sequence[Any] | None = (
-        None  # Sequence[Candle] but avoiding circular import if possible
-    )
+    candles: Sequence[Any] | None = None
+    market_data: "MarketDataContext | None" = None
 
 
 @runtime_checkable

@@ -13,7 +13,7 @@ import statistics
 from collections.abc import Sequence
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from gpt_trader.core import Product
 from gpt_trader.features.live_trade.strategies.perps_baseline import Action, Decision
@@ -21,6 +21,9 @@ from gpt_trader.orchestration.configuration.bot_config.bot_config import (
     MeanReversionConfig,
 )
 from gpt_trader.utilities.logging_patterns import get_logger
+
+if TYPE_CHECKING:
+    from gpt_trader.features.live_trade.strategies.base import MarketDataContext
 
 logger = get_logger(__name__, component="mean_reversion")
 
@@ -67,6 +70,7 @@ class MeanReversionStrategy:
         recent_marks: Sequence[Decimal],
         equity: Decimal,
         product: Product | None,
+        market_data: "MarketDataContext | None" = None,
         candles: Sequence[Any] | None = None,
     ) -> Decision:
         """Generate a trading decision based on Z-Score.
@@ -78,6 +82,7 @@ class MeanReversionStrategy:
             recent_marks: Historical mark prices (oldest first)
             equity: Account equity
             product: Product specification
+            market_data: Optional enhanced market data (orderbook depth, trade flow)
             candles: Historical candles (optional)
 
         Returns:

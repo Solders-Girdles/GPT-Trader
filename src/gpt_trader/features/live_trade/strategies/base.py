@@ -8,17 +8,55 @@ Includes:
 - StatefulStrategy: Protocol for strategies with O(1) incremental updates
 - BaseStrategy: Abstract base class for stateless strategies
 - StatefulStrategyBase: Abstract base class for stateful strategies
+- MarketDataContext: Optional enhanced market data for advanced strategies
 """
 
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
+from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 from gpt_trader.core import Product
 
 if TYPE_CHECKING:
+    from gpt_trader.features.brokerages.coinbase.market_data_features import DepthSnapshot
+
     from .perps_baseline.strategy import Decision
+
+
+@dataclass(slots=True)
+class MarketDataContext:
+    """Optional enhanced market data for advanced strategies.
+
+    Contains order book depth and trade flow statistics that strategies
+    can use for more sophisticated decision-making. All fields are optional
+    to support graceful degradation when data is unavailable.
+
+    Attributes:
+        orderbook_snapshot: Latest order book depth with bid/ask levels
+        trade_volume_stats: Rolling trade statistics (VWAP, avg_size, aggressor_ratio)
+        spread_bps: Current bid-ask spread in basis points
+    """
+
+    orderbook_snapshot: "DepthSnapshot | None" = field(default=None)
+    """Latest order book snapshot with bid/ask depth."""
+
+    trade_volume_stats: dict[str, Any] | None = field(default=None)
+    """Rolling trade statistics: vwap, avg_size, aggressor_ratio, etc."""
+
+    spread_bps: Decimal | None = field(default=None)
+    """Current bid-ask spread in basis points."""
+
+    @property
+    def has_orderbook(self) -> bool:
+        """Check if orderbook data is available."""
+        return self.orderbook_snapshot is not None
+
+    @property
+    def has_trade_stats(self) -> bool:
+        """Check if trade statistics are available."""
+        return self.trade_volume_stats is not None
 
 
 @runtime_checkable
@@ -38,6 +76,7 @@ class StrategyProtocol(Protocol):
         recent_marks: Sequence[Decimal],
         equity: Decimal,
         product: Product | None,
+        market_data: MarketDataContext | None = None,
     ) -> "Decision":
         """Generate a trading decision based on market data.
 
@@ -48,6 +87,7 @@ class StrategyProtocol(Protocol):
             recent_marks: Historical prices (oldest first)
             equity: Account equity for position sizing
             product: Product specification from exchange
+            market_data: Optional enhanced market data (orderbook depth, trade flow)
 
         Returns:
             Decision with action, reason, confidence, and indicator state
@@ -91,6 +131,7 @@ class BaseStrategy(ABC):
         recent_marks: Sequence[Decimal],
         equity: Decimal,
         product: Product | None,
+        market_data: MarketDataContext | None = None,
     ) -> "Decision":
         """Generate a trading decision based on market data."""
         ...
@@ -236,6 +277,7 @@ class StatefulStrategyBase(BaseStrategy):
 
 __all__ = [
     "BaseStrategy",
+    "MarketDataContext",
     "RehydratableStrategy",
     "StatefulStrategy",
     "StatefulStrategyBase",

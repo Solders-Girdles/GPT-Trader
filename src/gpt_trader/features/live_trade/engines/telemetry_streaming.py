@@ -313,7 +313,8 @@ def _run_stream_loop(
 
     stream: Any | None = None
     try:
-        stream = broker.stream_orderbook(symbols, level=level)
+        # Enable include_trades=True to get market_trades for volume analysis
+        stream = broker.stream_orderbook(symbols, level=level, include_trades=True)
     except Exception as exc:  # pragma: no cover - dependent on broker impl
         logger.warning(
             f"Orderbook stream unavailable, falling back to trades ({exc})",
@@ -357,15 +358,27 @@ def _run_stream_loop(
             if not isinstance(msg, dict):
                 continue
             ctx = coordinator.context
-            sym = str(msg.get("product_id") or msg.get("symbol") or "")
-            if not sym:
-                continue
 
-            mark = coordinator._extract_mark_from_message(msg)
-            if mark is None or mark <= 0:
-                continue
+            # Route message based on channel type
+            channel = msg.get("channel", "")
 
-            coordinator._update_mark_and_metrics(ctx, sym, mark)
+            if channel == "l2_data":
+                # Level 2 orderbook update
+                _handle_orderbook_message(coordinator, ctx, msg)
+            elif channel == "market_trades":
+                # Market trade event
+                _handle_trade_message(coordinator, ctx, msg)
+            else:
+                # Ticker or other message - extract mark price
+                sym = str(msg.get("product_id") or msg.get("symbol") or "")
+                if not sym:
+                    continue
+
+                mark = coordinator._extract_mark_from_message(msg)
+                if mark is None or mark <= 0:
+                    continue
+
+                coordinator._update_mark_and_metrics(ctx, sym, mark)
     except Exception as exc:  # pragma: no cover - defensive logging
         ctx = coordinator.context
         _emit_metric(
@@ -382,6 +395,62 @@ def _run_stream_loop(
         )
 
 
+def _handle_orderbook_message(coordinator: Any, ctx: Any, msg: dict) -> None:
+    """Handle level2 orderbook update message."""
+    from gpt_trader.features.brokerages.coinbase.ws_events import OrderbookUpdate
+    from gpt_trader.features.live_trade.engines.telemetry_health import (
+        update_orderbook_snapshot,
+    )
+
+    try:
+        event = OrderbookUpdate.from_message(msg)
+        if event.product_id:
+            update_orderbook_snapshot(ctx, event)
+
+            # Also extract mark from orderbook for price tracking
+            if event.bids and event.asks:
+                best_bid = event.bids[0][0] if event.bids else None
+                best_ask = event.asks[0][0] if event.asks else None
+                if best_bid and best_ask:
+                    from decimal import Decimal
+
+                    mark = (best_bid + best_ask) / Decimal("2")
+                    if mark > 0:
+                        coordinator._update_mark_and_metrics(ctx, event.product_id, mark)
+    except Exception as exc:
+        logger.debug(
+            "Failed to handle orderbook message",
+            error=str(exc),
+            operation="telemetry_stream",
+            stage="orderbook_handler",
+        )
+
+
+def _handle_trade_message(coordinator: Any, ctx: Any, msg: dict) -> None:
+    """Handle market_trades message."""
+    from gpt_trader.features.brokerages.coinbase.ws_events import TradeEvent
+    from gpt_trader.features.live_trade.engines.telemetry_health import (
+        update_trade_aggregator,
+    )
+
+    try:
+        events = TradeEvent.from_message(msg)
+        for event in events:
+            if event.product_id:
+                update_trade_aggregator(ctx, event)
+
+                # Also use trade price for mark tracking
+                if event.price and event.price > 0:
+                    coordinator._update_mark_and_metrics(ctx, event.product_id, event.price)
+    except Exception as exc:
+        logger.debug(
+            "Failed to handle trade message",
+            error=str(exc),
+            operation="telemetry_stream",
+            stage="trade_handler",
+        )
+
+
 __all__ = [
     "start_streaming_background",
     "stop_streaming_background",
@@ -392,5 +461,7 @@ __all__ = [
     "_handle_stream_task_completion",
     "_run_stream_loop_async",
     "_run_stream_loop",
+    "_handle_orderbook_message",
+    "_handle_trade_message",
     "_should_enable_streaming",
 ]

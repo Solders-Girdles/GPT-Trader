@@ -196,8 +196,278 @@ def health_check(
     return HealthStatus(healthy=healthy, component=coordinator.name, details=details)
 
 
+def update_orderbook_snapshot(
+    ctx: CoordinatorContext,
+    event: Any,
+) -> None:
+    """
+    Update orderbook snapshot from WebSocket OrderbookUpdate event.
+
+    Stores the latest depth snapshot in runtime_state for strategy consumption.
+
+    Args:
+        ctx: Coordinator context with runtime_state
+        event: OrderbookUpdate dataclass from ws_events.py
+    """
+    runtime_state = ctx.runtime_state
+    if runtime_state is None:
+        return
+
+    # Check if runtime_state has orderbook support
+    if not hasattr(runtime_state, "orderbook_lock") or not hasattr(
+        runtime_state, "orderbook_snapshots"
+    ):
+        return
+
+    try:
+        from gpt_trader.features.brokerages.coinbase.market_data_features import DepthSnapshot
+
+        snapshot = DepthSnapshot.from_orderbook_update(event)
+        product_id = getattr(event, "product_id", None)
+
+        if product_id:
+            with runtime_state.orderbook_lock:
+                runtime_state.orderbook_snapshots[product_id] = snapshot
+
+            logger.debug(
+                "Updated orderbook snapshot",
+                symbol=product_id,
+                spread_bps=snapshot.spread_bps,
+                bid_levels=len(snapshot.bids),
+                ask_levels=len(snapshot.asks),
+                operation="telemetry_orderbook",
+            )
+
+            # Emit to EventStore (throttled)
+            emit_orderbook_snapshot(ctx, product_id)
+    except Exception as exc:
+        logger.error(
+            "Failed to update orderbook snapshot",
+            error_type=type(exc).__name__,
+            error_message=str(exc),
+            operation="telemetry_orderbook",
+            exc_info=True,
+        )
+
+
+def update_trade_aggregator(
+    ctx: CoordinatorContext,
+    event: Any,
+) -> None:
+    """
+    Update trade aggregator from WebSocket TradeEvent.
+
+    Maintains rolling trade flow statistics for volume analysis.
+
+    Args:
+        ctx: Coordinator context with runtime_state
+        event: TradeEvent dataclass from ws_events.py
+    """
+    runtime_state = ctx.runtime_state
+    if runtime_state is None:
+        return
+
+    # Check if runtime_state has trade aggregator support
+    if not hasattr(runtime_state, "trade_lock") or not hasattr(
+        runtime_state, "trade_aggregators"
+    ):
+        return
+
+    try:
+        from gpt_trader.features.brokerages.coinbase.market_data_features import TradeTapeAgg
+
+        product_id = getattr(event, "product_id", None)
+        price = getattr(event, "price", None)
+        size = getattr(event, "size", None)
+        side = getattr(event, "side", None)
+        timestamp = getattr(event, "timestamp", None)
+
+        if not all([product_id, price is not None, size is not None, side]):
+            return
+
+        with runtime_state.trade_lock:
+            # Create aggregator if it doesn't exist (60-second rolling window)
+            if product_id not in runtime_state.trade_aggregators:
+                runtime_state.trade_aggregators[product_id] = TradeTapeAgg(duration_seconds=60)
+
+            agg = runtime_state.trade_aggregators[product_id]
+            agg.add_trade(price, size, side, timestamp)
+
+        logger.debug(
+            "Updated trade aggregator",
+            symbol=product_id,
+            price=str(price),
+            size=str(size),
+            side=side,
+            operation="telemetry_trade",
+        )
+
+        # Emit to EventStore (throttled)
+        emit_trade_flow_summary(ctx, product_id)
+    except Exception as exc:
+        logger.error(
+            "Failed to update trade aggregator",
+            error_type=type(exc).__name__,
+            error_message=str(exc),
+            operation="telemetry_trade",
+            exc_info=True,
+        )
+
+
+# Snapshot throttling state (per-symbol)
+_last_snapshot_times: dict[str, float] = {}
+_SNAPSHOT_INTERVAL_SECONDS = 5.0  # Emit snapshots every 5 seconds per symbol
+
+
+def emit_orderbook_snapshot(
+    ctx: "CoordinatorContext",
+    symbol: str,
+) -> None:
+    """
+    Emit orderbook snapshot to EventStore for backtesting.
+
+    This function is called periodically (throttled) to persist orderbook
+    depth data for historical analysis and strategy backtesting.
+
+    Args:
+        ctx: Coordinator context with event_store and runtime_state
+        symbol: Product symbol to emit snapshot for
+    """
+    import time
+
+    runtime_state = ctx.runtime_state
+    event_store = ctx.event_store
+
+    if runtime_state is None or event_store is None:
+        return
+
+    if not hasattr(runtime_state, "orderbook_lock") or not hasattr(
+        runtime_state, "orderbook_snapshots"
+    ):
+        return
+
+    # Throttle snapshots
+    current_time = time.time()
+    last_time = _last_snapshot_times.get(f"orderbook:{symbol}", 0.0)
+    if current_time - last_time < _SNAPSHOT_INTERVAL_SECONDS:
+        return
+
+    try:
+        with runtime_state.orderbook_lock:
+            snapshot = runtime_state.orderbook_snapshots.get(symbol)
+            if snapshot is None:
+                return
+
+            # Extract relevant data
+            bid_depth, ask_depth = snapshot.get_depth(10)
+            event_data = {
+                "symbol": symbol,
+                "spread_bps": snapshot.spread_bps,
+                "mid_price": str(snapshot.mid) if snapshot.mid else None,
+                "bid_depth_l10": str(bid_depth),
+                "ask_depth_l10": str(ask_depth),
+                "bid_levels": len(snapshot.bids),
+                "ask_levels": len(snapshot.asks),
+                "bot_id": ctx.bot_id,
+            }
+
+        event_store.append("orderbook_snapshot", event_data)
+        _last_snapshot_times[f"orderbook:{symbol}"] = current_time
+
+        logger.debug(
+            "Emitted orderbook snapshot",
+            symbol=symbol,
+            spread_bps=snapshot.spread_bps,
+            operation="event_store",
+        )
+    except Exception as exc:
+        logger.error(
+            "Failed to emit orderbook snapshot",
+            error_type=type(exc).__name__,
+            error_message=str(exc),
+            symbol=symbol,
+            operation="event_store",
+            exc_info=True,
+        )
+
+
+def emit_trade_flow_summary(
+    ctx: "CoordinatorContext",
+    symbol: str,
+) -> None:
+    """
+    Emit trade flow summary to EventStore for backtesting.
+
+    This function is called periodically (throttled) to persist trade flow
+    statistics for historical analysis and strategy backtesting.
+
+    Args:
+        ctx: Coordinator context with event_store and runtime_state
+        symbol: Product symbol to emit summary for
+    """
+    import time
+
+    runtime_state = ctx.runtime_state
+    event_store = ctx.event_store
+
+    if runtime_state is None or event_store is None:
+        return
+
+    if not hasattr(runtime_state, "trade_lock") or not hasattr(
+        runtime_state, "trade_aggregators"
+    ):
+        return
+
+    # Throttle snapshots
+    current_time = time.time()
+    last_time = _last_snapshot_times.get(f"trade:{symbol}", 0.0)
+    if current_time - last_time < _SNAPSHOT_INTERVAL_SECONDS:
+        return
+
+    try:
+        with runtime_state.trade_lock:
+            agg = runtime_state.trade_aggregators.get(symbol)
+            if agg is None:
+                return
+
+            stats = agg.get_stats()
+
+        event_data = {
+            "symbol": symbol,
+            "trade_count": stats.get("count", 0),
+            "volume": str(stats.get("volume", 0)),
+            "vwap": str(stats.get("vwap", 0)),
+            "avg_size": str(stats.get("avg_size", 0)),
+            "aggressor_ratio": stats.get("aggressor_ratio", 0.0),
+            "bot_id": ctx.bot_id,
+        }
+
+        event_store.append("trade_flow_summary", event_data)
+        _last_snapshot_times[f"trade:{symbol}"] = current_time
+
+        logger.debug(
+            "Emitted trade flow summary",
+            symbol=symbol,
+            trade_count=stats.get("count", 0),
+            operation="event_store",
+        )
+    except Exception as exc:
+        logger.error(
+            "Failed to emit trade flow summary",
+            error_type=type(exc).__name__,
+            error_message=str(exc),
+            symbol=symbol,
+            operation="event_store",
+            exc_info=True,
+        )
+
+
 __all__ = [
     "extract_mark_from_message",
     "update_mark_and_metrics",
+    "update_orderbook_snapshot",
+    "update_trade_aggregator",
+    "emit_orderbook_snapshot",
+    "emit_trade_flow_summary",
     "health_check",
 ]

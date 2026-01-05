@@ -29,6 +29,7 @@ from .types import (
 
 if TYPE_CHECKING:
     from gpt_trader.core import Product
+    from gpt_trader.features.live_trade.strategies.base import MarketDataContext
     from gpt_trader.features.live_trade.strategies.perps_baseline.strategy import Decision
 
 logger = get_logger(__name__, component="hybrid_strategy")
@@ -99,7 +100,8 @@ class HybridStrategyBase(StatefulStrategyBase):
         position_state: dict[str, Any] | None,
         recent_marks: Sequence[Decimal],
         equity: Decimal,
-        product: Product | None,
+        product: "Product | None",
+        market_data: "MarketDataContext | None" = None,
     ) -> "Decision":
         """Standard strategy interface - delegates to decide_hybrid.
 
@@ -113,6 +115,7 @@ class HybridStrategyBase(StatefulStrategyBase):
             recent_marks: Recent price history
             equity: Account equity
             product: Product specification
+            market_data: Optional enhanced market data (orderbook depth, trade flow)
 
         Returns:
             Standard Decision (first actionable decision or HOLD)

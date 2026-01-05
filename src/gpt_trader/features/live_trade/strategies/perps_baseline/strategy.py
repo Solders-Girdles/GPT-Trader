@@ -11,7 +11,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from gpt_trader.core import Product
 from gpt_trader.features.live_trade.indicators import (
@@ -20,6 +20,9 @@ from gpt_trader.features.live_trade.indicators import (
     relative_strength_index,
     simple_moving_average,
 )
+
+if TYPE_CHECKING:
+    from gpt_trader.features.live_trade.strategies.base import MarketDataContext
 
 
 class Action(Enum):
@@ -170,6 +173,7 @@ class BaselinePerpsStrategy:
         recent_marks: Sequence[Decimal],
         equity: Decimal,
         product: Product | None,
+        market_data: "MarketDataContext | None" = None,
         candles: Sequence[Any] | None = None,
     ) -> Decision:
         """Generate a trading decision based on technical indicators.
@@ -181,6 +185,7 @@ class BaselinePerpsStrategy:
             recent_marks: Historical mark prices (oldest first)
             equity: Account equity
             product: Product specification
+            market_data: Optional enhanced market data (orderbook depth, trade flow)
             candles: Historical candles (optional)
 
         Returns:

@@ -1,0 +1,34 @@
+# Codebase Map (Agent Quick Reference)
+
+Use this as a “where do I start?” index when you already know what you’re trying to change.
+
+## Quick Navigation
+
+| Task | Start Here | Key Files / Notes |
+|------|------------|-------------------|
+| Run the bot (CLI) | `src/gpt_trader/cli/__init__.py` | Commands live in `src/gpt_trader/cli/commands/` (start with `run.py`) |
+| Wire services / composition root | `src/gpt_trader/app/container.py` | `ApplicationContainer` is the canonical DI entry point |
+| Add/modify a trading strategy | `src/gpt_trader/features/live_trade/factory.py` | Strategies in `src/gpt_trader/features/live_trade/strategies/` |
+| Change the trading loop | `src/gpt_trader/features/live_trade/engines/strategy.py` | Runs `create_strategy()` and executes decisions each cycle |
+| Modify order execution (hybrid router) | `src/gpt_trader/features/live_trade/execution/router.py` | Routes spot vs CFM orders; used by hybrid strategies |
+| Modify live execution (guarded engine) | `src/gpt_trader/orchestration/live_execution.py` | Uses `src/gpt_trader/orchestration/execution/` helpers |
+| Change risk rules | `src/gpt_trader/features/live_trade/risk/manager/__init__.py` | Also see runtime guards in `src/gpt_trader/orchestration/execution/guards/` |
+| Add monitoring / alerts | `src/gpt_trader/monitoring/` | Heartbeat/status wiring in `src/gpt_trader/features/live_trade/engines/strategy.py` |
+| Add a TUI widget/screen | `src/gpt_trader/tui/widgets/` | Screens in `src/gpt_trader/tui/screens/`; style guide: `docs/TUI_STYLE_GUIDE.md` |
+| Change TUI styles | `src/gpt_trader/tui/styles/` | Edit modules under `styles/{theme,layout,components,widgets,screens}/` then run `scripts/build_tui_css.py` |
+| Backtesting / simulation | `src/gpt_trader/backtesting/` | Entrypoints vary; see `docs/guides/backtesting.md` |
+| Security & secrets | `src/gpt_trader/security/` | Reference: `docs/SECURITY.md` |
+
+## Golden Path (Avoiding Legacy Patterns)
+
+- Prefer `ApplicationContainer` (`src/gpt_trader/app/container.py`) for wiring.
+- Avoid introducing new call sites of `ServiceRegistry` (`src/gpt_trader/orchestration/service_registry.py` is deprecated).
+- If you need to understand architecture decisions, start at `docs/ARCHITECTURE.md` and `docs/adr/README.md`.
+
+## Useful Commands
+
+- `uv run coinbase-trader --help`
+- `uv run agent-map` (dependency map tooling)
+- `uv run agent-tests` (test selection helpers)
+- `rg -n "symbol" src/gpt_trader/features/live_trade` (fast codebase search)
+

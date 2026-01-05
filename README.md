@@ -70,7 +70,6 @@ uv run agent-naming     # Naming convention check
 
 - [Architecture](docs/ARCHITECTURE.md) - System design
 - [Contributing](CONTRIBUTING.md) - Development workflow
-- [Project Roadmap](PROJECT_ROADMAP.md) - Current goals
 
 ## Development
 

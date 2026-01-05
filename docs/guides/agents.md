@@ -2,6 +2,11 @@
 
 This is the consolidated reference for AI agents working with the GPT-Trader repository.
 
+## Quick Navigation
+
+- Codebase map: `docs/agents/CODEBASE_MAP.md`
+- Migration status (legacy → modern wiring): `docs/MIGRATION_STATUS.md`
+
 ## Current State
 
 **Active System**: Spot trading bot with Coinbase Advanced Trade

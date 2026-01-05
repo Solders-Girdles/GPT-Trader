@@ -7,15 +7,13 @@ last-updated: 2025-11-24
 
 ## Start Here
 
-1. **[Quick Start](QUICK_START.md)** - Spin up the dev stack with `make` helpers
-2. **[Architecture](ARCHITECTURE.md)** - Understand vertical slices before touching code
-3. **[Monitoring Playbook](MONITORING_PLAYBOOK.md)** - Wire dashboards and alerts before live trading
+1. **[Architecture](ARCHITECTURE.md)** - Understand vertical slices before touching code
+2. **[Monitoring Playbook](MONITORING_PLAYBOOK.md)** - Wire dashboards and alerts before live trading
 
 ## Quick Links
 
 | Document | Purpose |
 |----------|---------|
-| [Quick Start](QUICK_START.md) | Development bootstrap + core commands |
 | [Architecture](ARCHITECTURE.md) | System design and capabilities |
 | [Production Guide](guides/production.md) | Deployment, rollout, and emergency procedures |
 | [Coinbase Reference](reference/coinbase_complete.md) | Complete API integration docs |
@@ -24,7 +22,6 @@ last-updated: 2025-11-24
 ## Core Documentation
 
 ### Getting Started
-- [Quick Start](QUICK_START.md) - Local workflow with `make` and Compose profiles
 - [Complete Setup Guide](guides/complete_setup_guide.md) - Full installation to first trade
 - [Testing Guide](guides/testing.md) - Running and writing tests
 
@@ -66,7 +63,6 @@ last-updated: 2025-11-24
 
 ## Additional Resources
 
-- [Dashboard Guide](DASHBOARD_GUIDE.md) - Monitoring UI setup
 - [Risk Integration](RISK_INTEGRATION_GUIDE.md) - Risk management configuration
 - [Training Guide](TRAINING_GUIDE.md) - ML model training
 - [PnL Calculations](PNL_CALCULATION_DIFFERENCES.md) - Profit/loss methodology
@@ -90,7 +86,6 @@ last-updated: 2025-11-24
 
 ## Getting Help
 
-- **Quick Questions**: [QUICK_START.md](QUICK_START.md)
 - **Architecture**: [ARCHITECTURE.md](ARCHITECTURE.md)
 - **AI Development**: [guides/agents.md](guides/agents.md)
 - **Issues**: GitHub Issues

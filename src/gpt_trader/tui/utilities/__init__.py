@@ -40,7 +40,9 @@ from gpt_trader.tui.utilities.table_formatting import (
     format_row_for_copy,
     format_table_cell,
     format_timestamp,
+    get_age_seconds,
     get_sort_indicator,
+    parse_timestamp_to_epoch,
     sort_table_data,
     truncate_id,
 )
@@ -55,6 +57,9 @@ __all__ = [
     "format_timestamp",
     "get_sort_indicator",
     "truncate_id",
+    # Time/age utilities
+    "get_age_seconds",
+    "parse_timestamp_to_epoch",
     # P&L and color formatting
     "format_direction_colored",
     "format_leverage_colored",

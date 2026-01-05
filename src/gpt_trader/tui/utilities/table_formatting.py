@@ -97,6 +97,77 @@ def truncate_id(order_id: str, length: int = 8) -> str:
     return order_id[-length:] if len(order_id) > length else order_id
 
 
+def parse_timestamp_to_epoch(value: str | float | int | None) -> float | None:
+    """
+    Parse a timestamp from various formats to epoch float.
+
+    Handles:
+    - float/int epoch timestamps
+    - ISO 8601 strings (with or without trailing Z, with or without microseconds)
+    - None values
+
+    Args:
+        value: Timestamp as ISO string, float, int, or None.
+
+    Returns:
+        Epoch timestamp as float, or None if parsing fails or value is None.
+
+    Examples:
+        >>> parse_timestamp_to_epoch(1705312245.0)
+        1705312245.0
+        >>> parse_timestamp_to_epoch("2024-01-15T10:30:45Z")  # Returns epoch
+        >>> parse_timestamp_to_epoch("2024-01-15T10:30:45.123456Z")  # Returns epoch
+        >>> parse_timestamp_to_epoch(None)
+        None
+    """
+    if value is None:
+        return None
+
+    # Already a numeric type
+    if isinstance(value, (int, float)):
+        return float(value)
+
+    # ISO string (e.g., "2024-01-15T10:30:00Z" or "2024-01-15T10:30:00.123456Z")
+    if isinstance(value, str):
+        if not value:
+            return None
+        try:
+            # Strip trailing Z and parse
+            clean = value.rstrip("Z")
+            dt = datetime.fromisoformat(clean)
+            return dt.timestamp()
+        except (ValueError, TypeError):
+            pass
+
+    return None
+
+
+def get_age_seconds(timestamp: float | None) -> int | None:
+    """
+    Calculate age in seconds from an epoch timestamp.
+
+    Args:
+        timestamp: Epoch timestamp as float, or None.
+
+    Returns:
+        Age in seconds as int, or None if timestamp is None or invalid.
+
+    Examples:
+        >>> import time
+        >>> get_age_seconds(time.time() - 30)
+        30
+        >>> get_age_seconds(None)
+        None
+    """
+    import time
+
+    if timestamp is None or timestamp <= 0:
+        return None
+
+    age = time.time() - timestamp
+    return max(0, int(age))
+
+
 def create_numeric_cell(
     value: Any,
     format_fn: callable | None = None,

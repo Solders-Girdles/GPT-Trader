@@ -2,7 +2,7 @@
 Orders widget for displaying active trading orders.
 
 This widget displays a table of active orders with symbol, side,
-quantity, price, and status information.
+quantity, price, fill progress, age, and status information.
 
 Uses row keys for efficient DataTable updates - only adds/removes
 changed rows instead of rebuilding the entire table.
@@ -12,17 +12,23 @@ from __future__ import annotations
 
 from rich.text import Text
 from textual.app import ComposeResult
-from textual.widgets import DataTable, Label, Static
+from textual.widgets import DataTable, Static
 
 from gpt_trader.tui.formatting import format_price, format_quantity
 from gpt_trader.tui.helpers import safe_update
+from gpt_trader.tui.staleness_helpers import format_freshness_label
 from gpt_trader.tui.theme import THEME
 from gpt_trader.tui.types import Order
+from gpt_trader.tui.utilities import get_age_seconds
 from gpt_trader.tui.widgets.table_copy_mixin import TableCopyMixin
 from gpt_trader.tui.widgets.tile_states import TileEmptyState
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="tui")
+
+# Order age thresholds for status coloring (seconds)
+ORDER_AGE_WARNING_SECONDS = 30
+ORDER_AGE_CRITICAL_SECONDS = 60
 
 
 class OrdersWidget(TableCopyMixin, Static):
@@ -62,7 +68,8 @@ class OrdersWidget(TableCopyMixin, Static):
         """Initialize the orders table with columns."""
         table = self.query_one("#orders-table", DataTable)
         # Add columns - alignment handled in add_row with Text objects
-        table.add_columns("Symbol", "Side", "Quantity", "Price", "Status")
+        # Filled shows fill progress, Age shows time since order creation
+        table.add_columns("Symbol", "Side", "Quantity", "Price", "Filled", "Age", "Status")
 
     @safe_update
     def update_orders(self, orders: list[Order]) -> None:
@@ -134,13 +141,69 @@ class OrdersWidget(TableCopyMixin, Static):
         side_color = THEME.colors.success if order.side == "BUY" else THEME.colors.error
         formatted_side = f"[{side_color}]{order.side}[/{side_color}]"
 
+        # Calculate fill percentage
+        filled_pct = self._format_fill_progress(order)
+
+        # Calculate and format order age
+        age_display = self._format_order_age(order)
+
         return (
             order.symbol,
             formatted_side,  # Preserves color markup
             Text(format_quantity(order.quantity), justify="right"),
             Text(format_price(order.price), justify="right"),
+            Text(filled_pct, justify="right"),
+            age_display,
             order.status,
         )
+
+    def _format_fill_progress(self, order: Order) -> str:
+        """Format fill progress as percentage.
+
+        Args:
+            order: Order object.
+
+        Returns:
+            Fill percentage string (e.g., "75%", "0%", "100%").
+        """
+        if order.quantity <= 0:
+            return "0%"
+
+        filled = float(order.filled_quantity)
+        total = float(order.quantity)
+
+        if total <= 0:
+            return "0%"
+
+        pct = (filled / total) * 100
+        return f"{pct:.0f}%"
+
+    def _format_order_age(self, order: Order) -> Text:
+        """Format order age with color coding.
+
+        Args:
+            order: Order object.
+
+        Returns:
+            Rich Text with colored age display.
+        """
+        age = get_age_seconds(order.creation_time)
+
+        if age is None:
+            return Text("--", justify="right")
+
+        # Format as relative time
+        age_str = format_freshness_label(age)
+
+        # Color based on age thresholds
+        if age >= ORDER_AGE_CRITICAL_SECONDS:
+            color = THEME.colors.error
+        elif age >= ORDER_AGE_WARNING_SECONDS:
+            color = THEME.colors.warning
+        else:
+            color = THEME.colors.text_muted
+
+        return Text(age_str, style=color, justify="right")
 
     def _update_row_cells(
         self,

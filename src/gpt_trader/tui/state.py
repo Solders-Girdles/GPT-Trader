@@ -374,6 +374,9 @@ class TuiState(Widget):
         orders_list = []
         for o in raw_orders:
             # OrderStatus from status_reporter has order_type field (not type)
+            # creation_time is now a float epoch timestamp
+            creation_time = float(o.creation_time) if o.creation_time else 0.0
+
             orders_list.append(
                 Order(
                     order_id=o.order_id,
@@ -384,7 +387,9 @@ class TuiState(Widget):
                     status=o.status,
                     type=o.order_type,  # OrderStatus uses order_type field
                     time_in_force=o.time_in_force,
-                    creation_time=str(o.creation_time) if o.creation_time else "",
+                    creation_time=creation_time,
+                    filled_quantity=safe_decimal(o.filled_quantity),
+                    avg_fill_price=(safe_decimal(o.avg_fill_price) if o.avg_fill_price else None),
                 )
             )
         self.order_data = ActiveOrders(orders=orders_list)

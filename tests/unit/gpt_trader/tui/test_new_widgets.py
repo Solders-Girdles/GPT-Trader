@@ -81,13 +81,15 @@ class TestOrdersWidget:
                 quantity=Decimal("1"),
                 price=Decimal("100"),
                 status="OPEN",
-                creation_time="1600000000",
+                creation_time=1600000000.0,  # Float timestamp for age calculation
+                filled_quantity=Decimal("0.5"),  # 50% filled
             )
         ]
 
         widget.update_orders(orders)
 
         # With row-key optimization, add_row is called with key parameter
+        # Columns: Symbol, Side, Quantity, Price, Filled, Age, Status
         mock_table.add_row.assert_called_once()
         args, kwargs = mock_table.add_row.call_args
         assert args[0] == "BTC"
@@ -95,7 +97,9 @@ class TestOrdersWidget:
         # Quantity and price are formatted, check string representation
         assert "1" in str(args[2])
         assert "100" in str(args[3])
-        assert args[4] == "OPEN"
+        assert str(args[4]) == "50%"  # Filled column
+        # args[5] is Age (Rich Text)
+        assert args[6] == "OPEN"  # Status is now at index 6
         assert kwargs.get("key") == "ord_1"
 
 

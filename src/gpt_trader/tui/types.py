@@ -59,7 +59,9 @@ class Order:
     status: str
     type: str = "UNKNOWN"
     time_in_force: str = "UNKNOWN"
-    creation_time: str = ""
+    creation_time: float = 0.0  # Epoch timestamp for age calculation
+    filled_quantity: Decimal = Decimal("0")
+    avg_fill_price: Decimal | None = None
 
 
 @dataclass

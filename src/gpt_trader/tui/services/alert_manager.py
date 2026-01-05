@@ -194,6 +194,30 @@ class AlertManager:
             )
         )
 
+        # Stale open orders (TRADE category)
+        self.add_rule(
+            AlertRule(
+                rule_id="stale_open_orders",
+                title="Stale Orders",
+                condition=self._check_stale_orders,
+                severity=AlertSeverity.WARNING,
+                category=AlertCategory.TRADE,
+                cooldown=120.0,  # 2 minute cooldown
+            )
+        )
+
+        # Rejected/failed orders (TRADE category)
+        self.add_rule(
+            AlertRule(
+                rule_id="failed_orders",
+                title="Order Failed",
+                condition=self._check_failed_orders,
+                severity=AlertSeverity.ERROR,
+                category=AlertCategory.TRADE,
+                cooldown=30.0,
+            )
+        )
+
         logger.debug("Registered %s default alert rules", len(self._rules))
 
     def _check_rate_limit(self, state: TuiState) -> tuple[bool, str]:
@@ -229,6 +253,55 @@ class AlertManager:
         if not state.running and len(state.position_data.positions) > 0:
             count = len(state.position_data.positions)
             return True, f"Bot stopped with {count} open position(s)."
+        return False, ""
+
+    def _check_stale_orders(self, state: TuiState) -> tuple[bool, str]:
+        """Check for open orders that are older than threshold.
+
+        Orders open for more than 60 seconds may indicate issues with
+        order execution or market conditions.
+        """
+        import time
+
+        STALE_ORDER_THRESHOLD_SECONDS = 60
+
+        stale_orders = []
+        for order in state.order_data.orders:
+            # Only check open/pending orders
+            if order.status.upper() not in ("OPEN", "PENDING"):
+                continue
+
+            # Check creation time
+            if order.creation_time > 0:
+                age = time.time() - order.creation_time
+                if age >= STALE_ORDER_THRESHOLD_SECONDS:
+                    stale_orders.append((order.symbol, int(age)))
+
+        if stale_orders:
+            # Report oldest stale order
+            stale_orders.sort(key=lambda x: x[1], reverse=True)
+            oldest_symbol, oldest_age = stale_orders[0]
+            count = len(stale_orders)
+            if count == 1:
+                return True, f"Order for {oldest_symbol} open for {oldest_age}s."
+            else:
+                return True, f"{count} orders stale. Oldest: {oldest_symbol} ({oldest_age}s)."
+
+        return False, ""
+
+    def _check_failed_orders(self, state: TuiState) -> tuple[bool, str]:
+        """Check for rejected or failed orders."""
+        failed_statuses = {"REJECTED", "FAILED", "EXPIRED", "CANCELLED"}
+
+        failed_orders = [
+            order for order in state.order_data.orders if order.status.upper() in failed_statuses
+        ]
+
+        if failed_orders:
+            # Report first failed order found
+            order = failed_orders[0]
+            return True, f"Order for {order.symbol} {order.status.lower()}."
+
         return False, ""
 
     def add_rule(self, rule: AlertRule) -> None:

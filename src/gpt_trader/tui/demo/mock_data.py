@@ -294,18 +294,29 @@ class MockDataGenerator:
             price = self.base_prices[symbol] * (1 + random.uniform(-0.02, 0.02))
             order_id = f"order_{int(time.time() * 1000)}"
 
+            order_quantity = random.uniform(0.001, 0.01)
+            # Simulate partial fills (30% chance)
+            filled_pct = (
+                random.choice([0.0, 0.0, 0.0, 0.25, 0.5, 0.75]) if random.random() < 0.3 else 0.0
+            )
+            filled_order_quantity = order_quantity * filled_pct
+
             self.orders.append(
                 {
                     "order_id": order_id,
+                    "product_id": symbol,  # Coinbase uses product_id
                     "symbol": symbol,
                     "side": side,
-                    "quantity": f"{random.uniform(0.001, 0.01):.4f}",
+                    "size": f"{order_quantity:.6f}",
+                    "quantity": f"{order_quantity:.6f}",
                     "price": f"{price:.2f}",
-                    "avg_execution_price": "",
-                    "status": "OPEN",
+                    "average_filled_price": f"{price:.2f}" if filled_order_quantity > 0 else None,
+                    "filled_size": f"{filled_order_quantity:.6f}",
+                    "status": "OPEN" if filled_pct < 1.0 else "FILLED",
                     "order_type": "LIMIT",
                     "time_in_force": "GTC",
-                    "creation_time": datetime.now().isoformat(),
+                    "created_time": datetime.now().isoformat() + "Z",  # Coinbase format
+                    "creation_time": datetime.now().isoformat(),  # Legacy field
                 }
             )
 

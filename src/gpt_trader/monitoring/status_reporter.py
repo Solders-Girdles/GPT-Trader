@@ -87,6 +87,8 @@ class OrderStatus:
     order_type: str = "MARKET"
     time_in_force: str = "GTC"
     creation_time: float = 0.0
+    filled_quantity: Decimal = Decimal("0")
+    avg_fill_price: Decimal | None = None
 
 
 @dataclass
@@ -576,6 +578,23 @@ class StatusReporter:
             except Exception:
                 price = None
 
+            # Parse creation_time from ISO string or float
+            creation_time = self._parse_order_timestamp(o.get("created_time"))
+
+            # Parse filled_quantity (Coinbase uses "filled_size")
+            filled_raw = o.get("filled_size", "0")
+            try:
+                filled_quantity = Decimal(str(filled_raw)) if filled_raw else Decimal("0")
+            except Exception:
+                filled_quantity = Decimal("0")
+
+            # Parse avg_fill_price (Coinbase uses "average_filled_price")
+            avg_fill_raw = o.get("average_filled_price")
+            try:
+                avg_fill_price = Decimal(str(avg_fill_raw)) if avg_fill_raw else None
+            except Exception:
+                avg_fill_price = None
+
             order_statuses.append(
                 OrderStatus(
                     order_id=o.get("order_id", ""),
@@ -586,10 +605,44 @@ class StatusReporter:
                     status=o.get("status", "UNKNOWN"),
                     order_type=order_type,
                     time_in_force=tif,
-                    creation_time=time.time(),  # Or parse creation_time
+                    creation_time=creation_time,
+                    filled_quantity=filled_quantity,
+                    avg_fill_price=avg_fill_price,
                 )
             )
         self._status.orders = order_statuses
+
+    def _parse_order_timestamp(self, value: Any) -> float:
+        """Parse order timestamp from various formats to epoch float.
+
+        Args:
+            value: Timestamp as ISO string, float, int, or None.
+
+        Returns:
+            Epoch timestamp as float, or current time if parsing fails.
+        """
+        if value is None:
+            return time.time()
+
+        # Already a numeric type
+        if isinstance(value, (int, float)):
+            return float(value)
+
+        # ISO string (e.g., "2024-01-15T10:30:00Z" or "2024-01-15T10:30:00.123456Z")
+        if isinstance(value, str):
+            try:
+                # Strip trailing Z and parse
+                clean = value.rstrip("Z")
+                # Handle optional microseconds
+                if "." in clean:
+                    dt = datetime.fromisoformat(clean)
+                else:
+                    dt = datetime.fromisoformat(clean)
+                return dt.timestamp()
+            except (ValueError, TypeError):
+                pass
+
+        return time.time()
 
     def add_trade(self, trade: dict[str, Any]) -> None:
         """Add a recent trade."""

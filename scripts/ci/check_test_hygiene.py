@@ -180,6 +180,7 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/tui/services/test_mode_service.py",  # mode service state transitions
     "tests/unit/gpt_trader/tui/widgets/test_positions.py",  # positions widget comprehensive scenarios
     "tests/unit/gpt_trader/tui/test_thresholds.py",  # unified threshold system test coverage (status levels, risk, confidence)
+    "tests/unit/gpt_trader/tui/utilities/test_table_formatting.py",  # table formatting utilities with timestamp parsing, sorting, clipboard, and cell formatting
 }
 
 SLEEP_ALLOWLIST = {

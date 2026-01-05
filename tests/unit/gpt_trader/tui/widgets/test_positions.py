@@ -108,20 +108,24 @@ class TestOrdersWidget:
                 status="OPEN",
                 type="LIMIT",
                 time_in_force="GTC",
-                creation_time="1600000000",
+                creation_time=1600000000.0,  # Float timestamp for age calculation
+                filled_quantity=Decimal("0.025"),  # 25% filled
             )
         ]
 
         widget.update_orders(orders)
 
         # With row-key optimization, add_row is called with key=order_id
+        # Columns: Symbol, Side, Quantity, Price, Filled, Age, Status
         mock_table.add_row.assert_called_once()
         args, kwargs = mock_table.add_row.call_args
         assert args[0] == "BTC-USD"
         assert "BUY" in args[1]
         assert str(args[2]) == "0.1"
         assert str(args[3]) == "50,000.0000"  # Formatted with commas and 4 decimal places
-        assert args[4] == "OPEN"
+        assert str(args[4]) == "25%"  # Filled column
+        # args[5] is Age (Rich Text)
+        assert args[6] == "OPEN"  # Status is now at index 6
         # Verify row key is set
         assert kwargs.get("key") == "ord_123"
 

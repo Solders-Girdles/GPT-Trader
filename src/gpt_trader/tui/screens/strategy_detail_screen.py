@@ -286,6 +286,21 @@ class StrategyDetailScreen(Screen):
                 yield Label("W/L:", classes="perf-label")
                 yield Label("--", id="perf-wl", classes="perf-value")
 
+            # Backtest section (placeholder until backend supplies data)
+            yield Label("BACKTEST", classes="section-header")
+            with Container(classes="perf-grid", id="backtest-grid"):
+                yield Label("Win Rate:", classes="perf-label")
+                yield Label("--", id="backtest-win-rate", classes="perf-value")
+                yield Label("Trades:", classes="perf-label")
+                yield Label("--", id="backtest-trades", classes="perf-value")
+
+                yield Label("Profit Factor:", classes="perf-label")
+                yield Label("--", id="backtest-profit-factor", classes="perf-value")
+                yield Label("Drawdown:", classes="perf-label")
+                yield Label("--", id="backtest-drawdown", classes="perf-value")
+
+            yield Label("No backtest data available", id="backtest-note", classes="muted")
+
             # Recent decisions section
             yield Label("RECENT DECISIONS", classes="section-header")
             with Container(id="decisions-section"):
@@ -331,6 +346,7 @@ class StrategyDetailScreen(Screen):
         self._update_performance(state.strategy_performance)
         self._update_regime(state.regime_data)
         self._update_decisions(state)
+        self._update_backtest(state)
 
     @safe_update
     def _update_header(self, state: TuiState) -> None:
@@ -452,6 +468,54 @@ class StrategyDetailScreen(Screen):
             table.add_row(
                 symbol, formatted_action, confidence, decision.reason, time_str, key=symbol
             )
+
+    def _build_backtest_display(
+        self, performance: StrategyPerformance | None
+    ) -> tuple[dict[str, str], str]:
+        """Build backtest display values and note.
+
+        Args:
+            performance: StrategyPerformance with backtest data, or None.
+
+        Returns:
+            Tuple of (values dict, note string).
+            Values dict keys: win_rate, trades, profit_factor, drawdown.
+        """
+        if performance is None or performance.total_trades == 0:
+            return {
+                "win_rate": "--",
+                "trades": "--",
+                "profit_factor": "--",
+                "drawdown": "--",
+            }, "No backtest data available"
+
+        return {
+            "win_rate": f"{performance.win_rate_pct:.1f}%",
+            "trades": str(performance.total_trades),
+            "profit_factor": f"{performance.profit_factor:.2f}",
+            "drawdown": f"{performance.max_drawdown_pct:.1f}%",
+        }, ""
+
+    @safe_update
+    def _update_backtest(self, state: TuiState) -> None:
+        """Update the backtest section."""
+        # Get backtest performance if available (placeholder for future backend data)
+        backtest = getattr(state, "backtest_performance", None)
+        values, note = self._build_backtest_display(backtest)
+
+        # Update labels
+        self.query_one("#backtest-win-rate", Label).update(values["win_rate"])
+        self.query_one("#backtest-trades", Label).update(values["trades"])
+        self.query_one("#backtest-profit-factor", Label).update(values["profit_factor"])
+        self.query_one("#backtest-drawdown", Label).update(values["drawdown"])
+
+        # Update note visibility
+        note_label = self.query_one("#backtest-note", Label)
+        if note:
+            note_label.update(note)
+            note_label.remove_class("hidden")
+        else:
+            note_label.add_class("hidden")
 
     def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
         """Handle row highlight to show signal breakdown."""

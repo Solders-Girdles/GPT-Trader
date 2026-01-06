@@ -5,7 +5,7 @@ from gpt_trader.tui.screens.strategy_detail_screen import (
     StrategyDetailScreen,
     _get_indicator_hint,
 )
-from gpt_trader.tui.types import IndicatorContribution
+from gpt_trader.tui.types import IndicatorContribution, StrategyPerformance
 
 
 class TestBuildSignalDetailContent:
@@ -156,3 +156,39 @@ class TestGetIndicatorHint:
         """Unknown indicator returns None."""
         assert _get_indicator_hint("CustomIndicator") is None
         assert _get_indicator_hint("XYZ123") is None
+
+
+class TestBuildBacktestDisplay:
+    """Tests for _build_backtest_display helper."""
+
+    def test_build_backtest_display_placeholder(self):
+        """None performance returns placeholder values and note."""
+        screen = StrategyDetailScreen()
+
+        values, note = screen._build_backtest_display(None)
+
+        assert values == {
+            "win_rate": "--",
+            "trades": "--",
+            "profit_factor": "--",
+            "drawdown": "--",
+        }
+        assert note == "No backtest data available"
+
+    def test_build_backtest_display_values(self):
+        """Performance with trades returns formatted values."""
+        screen = StrategyDetailScreen()
+        performance = StrategyPerformance(
+            win_rate=0.652,
+            profit_factor=1.85,
+            max_drawdown_pct=-3.2,
+            total_trades=23,
+        )
+
+        values, note = screen._build_backtest_display(performance)
+
+        assert values["win_rate"] == "65.2%"
+        assert values["trades"] == "23"
+        assert values["profit_factor"] == "1.85"
+        assert values["drawdown"] == "-3.2%"
+        assert note == ""

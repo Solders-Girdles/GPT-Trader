@@ -30,7 +30,7 @@ src/gpt_trader/                    # Main codebase
 ├── features/                      # Vertical feature slices
 │   ├── live_trade/                # Production trading engine
 │   ├── brokerages/coinbase/       # Coinbase adapter
-│   └── position_sizing/           # Risk management
+│   └── intelligence/sizing/       # Position sizing (Kelly criterion)
 ├── monitoring/                    # Runtime guards and metrics
 └── validation/                    # Input validation framework
 
@@ -124,7 +124,7 @@ bot.execution_coordinator
 # Active imports
 from gpt_trader.features.live_trade.risk import LiveRiskManager
 from gpt_trader.features.brokerages.coinbase import CoinbaseClient
-from gpt_trader.features.position_sizing import calculate_position_size
+from gpt_trader.features.intelligence.sizing import PositionSizer
 ```
 
 ## Common Confusion Points

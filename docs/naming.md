@@ -27,8 +27,8 @@ This document establishes the naming conventions for the GPT-Trader codebase. Ad
 ### 2.4 Variables & Attributes
 - **Format:** `snake_case` for mutable state; `UPPER_SNAKE_CASE` for constants.
 - **Rules:** Prefer full words; use domain terms that match docs (`portfolio`, `position`, `exposure`).
-- **Quantity terminology:** Spell out `quantity` instead of `qty`; legacy identifiers may remain temporarily with `# naming: allow` markers during migration.
-- **Banned abbreviations:** `amt` (prefer `amount`), `qty` (prefer `quantity`), `cfg`.
+- **Quantity terminology:** `qty` is approved for trading domain use (see glossary); prefer `quantity` for non-trading contexts.
+- **Banned abbreviations:** `amt` (prefer `amount`), `cfg` (prefer `config`).
 
 ### 2.5 Configuration Keys & Environment Variables
 - **Format:**

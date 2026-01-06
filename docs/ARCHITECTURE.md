@@ -8,7 +8,7 @@ This project is currently undergoing a major architectural migration from a lega
 
 - **Legacy Core:** `src/gpt_trader/orchestration/` (being phased out/refactored)
 - **Modern Core:** `src/gpt_trader/app/` (Composition Root) and `src/gpt_trader/features/` (Vertical Slices)
-- **Migration Guide:** See [COMPOSITION_ROOT_MIGRATION_GUIDE.md](COMPOSITION_ROOT_MIGRATION_GUIDE.md) for detailed instructions on how to use the new container system.
+- **Migration Guide:** See [MIGRATION_STATUS.md](MIGRATION_STATUS.md) for current migration progress and patterns.
 
 While this document describes the **target architecture**, you will encounter "zombie" files, legacy shims, and competing patterns (e.g., `PerpsBotBuilder` vs `ApplicationContainer`) in the codebase. Always prefer the patterns defined in `src/gpt_trader/app` and `src/gpt_trader/features` over those in `src/gpt_trader/orchestration` where they conflict.
 
@@ -40,16 +40,18 @@ GPT-Trader V2 is a production-ready Coinbase trading system supporting **spot** 
 
 ### Vertical Slice Design
 
-The system is organized into vertical feature slices under `src/gpt_trader/features/`. Production-critical slices (e.g., `live_trade`, `brokerages`, `position_sizing`) ship with full test coverage.
+The system is organized into vertical feature slices under `src/gpt_trader/features/`. Production-critical slices (e.g., `live_trade`, `brokerages`, `intelligence`) ship with full test coverage.
 
 ```
 src/gpt_trader/features/
-├── analyze/             # Market analytics helpers
 ├── brokerages/          # Exchange integrations
 ├── data/                # Data acquisition helpers
+├── intelligence/        # Strategy intelligence (sizing, regime, ensemble)
+│   └── sizing/          # Kelly criterion position sizing
 ├── live_trade/          # Production trading engine
 ├── optimize/            # Parameter optimisation experiments
-├── position_sizing/     # Kelly & intelligent sizing utilities
+├── research/            # Research and backtesting evaluation
+├── strategy_dev/        # Strategy development lab
 └── strategy_tools/      # Shared helpers for strategy slices
 ```
 
@@ -96,7 +98,7 @@ Risk Guards → Coinbase Brokerage Adapter → Metrics + Telemetry
 | `gpt_trader/features/brokerages/coinbase` | REST/WS integration for Coinbase Advanced Trade spot markets |
 | `gpt_trader/features/brokerages/coinbase/client/` | Modular client package with mixins (accounts, orders, portfolio, market data) |
 | `gpt_trader/features/brokerages/coinbase/rest/` | REST service layer: orders, portfolio, products, P&L calculation |
-| `gpt_trader/features/position_sizing` | Kelly-style sizing with guardrails |
+| `gpt_trader/features/intelligence/sizing` | Kelly-style sizing with regime awareness |
 | `gpt_trader/monitoring` | Runtime guard orchestration, alert dispatch, system metrics |
 | `gpt_trader/tui` | Terminal User Interface for monitoring and control |
 | `gpt_trader/validation` | Predicate-based validators and input decorators |
@@ -310,25 +312,21 @@ python scripts/build_tui_css.py
 ### Feature Slice Reference
 
 
-#### Position Sizing (`features/position_sizing/`)
-- **Purpose:** Intelligent position sizing that combines Kelly Criterion math, confidence modifiers, and market-regime scaling while remaining slice-local.
+#### Position Sizing (`features/intelligence/sizing/`)
+- **Purpose:** Regime-aware position sizing combining Kelly Criterion, ATR-based volatility scaling, and risk budgeting.
 - **Usage:**
-    from features.position_sizing import PositionSizeRequest, calculate_position_size
-
-    recommendation = calculate_position_size(
-        PositionSizeRequest(
-            symbol="AAPL",
-            current_price=150,
-            portfolio_value=10_000,
-            strategy_name="momentum",
-            win_rate=0.65,
-            avg_win=0.08,
-            avg_loss=-0.04,
-            confidence=0.75,
-            market_regime="bull_quiet",
-        )
+    ```python
+    from gpt_trader.features.intelligence.sizing import (
+        PositionSizer,
+        PositionSizingConfig,
+        SizingResult,
     )
-- **Integration hooks:** Built to ingest future ML strategy signals and market-regime detectors without cross-slice imports.
+
+    config = PositionSizingConfig(...)
+    sizer = PositionSizer(config)
+    result: SizingResult = sizer.calculate_size(...)
+    ```
+- **Integration hooks:** Built to ingest market-regime detectors from `intelligence/regime/` without cross-slice imports.
 
 ### Key Design Principles
 

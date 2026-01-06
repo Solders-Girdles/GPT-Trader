@@ -10,7 +10,7 @@ from unittest.mock import MagicMock
 import pytest
 from cryptography.fernet import Fernet
 
-from gpt_trader.orchestration.configuration import BotConfig
+from gpt_trader.app.config import BotConfig
 
 
 @pytest.fixture

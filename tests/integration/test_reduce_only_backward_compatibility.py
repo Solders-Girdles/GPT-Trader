@@ -6,10 +6,10 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from gpt_trader.app.config import BotConfig
 from gpt_trader.app.container import ApplicationContainer
 from gpt_trader.features.live_trade.engines.runtime import RuntimeEngine
 from gpt_trader.orchestration.config_controller import ConfigController
-from gpt_trader.orchestration.configuration import BotConfig
 
 
 class TestReduceOnlyBackwardCompatibility:

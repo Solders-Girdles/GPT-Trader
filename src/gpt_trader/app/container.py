@@ -2,13 +2,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
+from gpt_trader.app.config import BotConfig
+from gpt_trader.config.types import Profile
 from gpt_trader.features.brokerages.coinbase.auth import SimpleAuth
 from gpt_trader.features.brokerages.coinbase.client.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.credentials import resolve_coinbase_credentials
 from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
 from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
 from gpt_trader.orchestration.config_controller import ConfigController
-from gpt_trader.orchestration.configuration import BotConfig, Profile
 from gpt_trader.orchestration.deterministic_broker import DeterministicBroker
 from gpt_trader.orchestration.protocols import EventStoreProtocol
 from gpt_trader.orchestration.runtime_paths import RuntimePaths, resolve_runtime_paths

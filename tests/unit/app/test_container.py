@@ -8,6 +8,7 @@ from unittest.mock import ANY, MagicMock, patch
 
 import pytest
 
+from gpt_trader.app.config import BotConfig
 from gpt_trader.app.container import (
     ApplicationContainer,
     clear_application_container,
@@ -15,7 +16,6 @@ from gpt_trader.app.container import (
     get_application_container,
     set_application_container,
 )
-from gpt_trader.orchestration.configuration import BotConfig
 from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.persistence.orders_store import OrdersStore
 

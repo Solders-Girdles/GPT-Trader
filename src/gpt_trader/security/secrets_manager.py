@@ -17,7 +17,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
-from gpt_trader.orchestration.configuration import BotConfig
+from gpt_trader.app.config import BotConfig
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:  # pragma: no cover - type hints only

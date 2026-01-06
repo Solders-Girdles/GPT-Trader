@@ -9,7 +9,7 @@ from typing import Any
 import pytest
 from freezegun import freeze_time
 
-from gpt_trader.orchestration.configuration import BotConfig
+from gpt_trader.app.config import BotConfig
 
 
 @pytest.fixture

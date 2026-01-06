@@ -15,11 +15,9 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
+from gpt_trader.app.config import MeanReversionConfig
 from gpt_trader.core import Product
 from gpt_trader.features.live_trade.strategies.perps_baseline import Action, Decision
-from gpt_trader.orchestration.configuration.bot_config.bot_config import (
-    MeanReversionConfig,
-)
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:

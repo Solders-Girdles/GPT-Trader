@@ -11,7 +11,7 @@ from gpt_trader.features.live_trade.interfaces import TradingStrategy
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
-    from gpt_trader.orchestration.configuration.bot_config.bot_config import BotConfig
+    from gpt_trader.app.config import BotConfig
 
 logger = get_logger(__name__, component="strategy_factory")
 

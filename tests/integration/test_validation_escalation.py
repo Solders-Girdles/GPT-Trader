@@ -17,9 +17,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from gpt_trader.app.config import BotConfig
 from gpt_trader.core import OrderSide
 from gpt_trader.features.live_trade.risk import LiveRiskManager
-from gpt_trader.orchestration.configuration import BotConfig
 from gpt_trader.orchestration.live_execution import LiveExecutionEngine
 
 

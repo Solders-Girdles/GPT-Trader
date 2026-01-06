@@ -4,8 +4,8 @@ This test verifies that the composition root pattern works correctly and that
 TradingBot can be created and started using the ApplicationContainer.
 """
 
+from gpt_trader.app.config import BotConfig
 from gpt_trader.app.container import ApplicationContainer
-from gpt_trader.orchestration.configuration import BotConfig
 
 
 def test_container_bot_boot_roundtrip():

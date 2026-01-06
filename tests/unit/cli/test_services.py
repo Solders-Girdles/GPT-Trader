@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from gpt_trader.app.config import BotConfig
 from gpt_trader.app.container import (
     ApplicationContainer,
     clear_application_container,
@@ -14,7 +15,6 @@ from gpt_trader.app.container import (
 )
 from gpt_trader.cli.commands.run import _run_bot
 from gpt_trader.cli.services import instantiate_bot
-from gpt_trader.orchestration.configuration import BotConfig
 
 
 @pytest.fixture

@@ -13,8 +13,8 @@ def simulate_dry_run(checker: PreflightCheck) -> bool:
     print("Simulating dry-run execution...")
 
     try:
+        from gpt_trader.app.config import BotConfig
         from gpt_trader.app.container import create_application_container
-        from gpt_trader.orchestration.configuration import BotConfig
 
         config = BotConfig.from_profile(profile=checker.profile, dry_run=True, mock_broker=True)
         checker.log_info(f"Config: {checker.profile} profile, dry_run=True, deterministic broker")

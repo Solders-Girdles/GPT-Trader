@@ -13,11 +13,11 @@ try:
 except ModuleNotFoundError:  # pragma: no cover - optional dependency
     load_dotenv = None  # type: ignore
 
+from gpt_trader.app.config import BotConfig
 from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
 from gpt_trader.features.brokerages.coinbase.models import APIConfig
 from gpt_trader.features.brokerages.coinbase.transports import MockTransport, NoopTransport
 from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
-from gpt_trader.orchestration.configuration import BotConfig
 
 
 @dataclass(frozen=True)

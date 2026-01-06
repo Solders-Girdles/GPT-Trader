@@ -16,9 +16,9 @@ import pytest
 # Force mock broker for all integration tests
 os.environ.setdefault("PERPS_FORCE_MOCK", "1")
 
+from gpt_trader.app.config import BotConfig
 from gpt_trader.features.live_trade.strategies.perps_baseline import PerpsStrategyConfig
 from gpt_trader.orchestration.bootstrap import bot_from_profile, build_bot
-from gpt_trader.orchestration.configuration import BotConfig
 
 if TYPE_CHECKING:
     from gpt_trader.orchestration.trading_bot import TradingBot

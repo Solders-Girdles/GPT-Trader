@@ -24,7 +24,7 @@ class TestSimulateDryRun:
         mock_container.create_bot.return_value = mock_bot
 
         with (
-            patch("gpt_trader.orchestration.configuration.BotConfig") as mock_bot_config,
+            patch("gpt_trader.app.config.BotConfig") as mock_bot_config,
             patch("gpt_trader.app.container.create_application_container") as mock_create_container,
         ):
             mock_bot_config.from_profile.return_value = mock_config
@@ -49,7 +49,7 @@ class TestSimulateDryRun:
         mock_container.create_bot.return_value = mock_bot
 
         with (
-            patch("gpt_trader.orchestration.configuration.BotConfig") as mock_bot_config,
+            patch("gpt_trader.app.config.BotConfig") as mock_bot_config,
             patch("gpt_trader.app.container.create_application_container") as mock_create_container,
         ):
             mock_bot_config.from_profile.return_value = mock_config
@@ -65,7 +65,7 @@ class TestSimulateDryRun:
         """Should fail when config creation fails."""
         checker = PreflightCheck(profile="dev")
 
-        with patch("gpt_trader.orchestration.configuration.BotConfig") as mock_bot_config:
+        with patch("gpt_trader.app.config.BotConfig") as mock_bot_config:
             mock_bot_config.from_profile.side_effect = Exception("Config error")
 
             result = simulate_dry_run(checker)
@@ -80,7 +80,7 @@ class TestSimulateDryRun:
         mock_config = MagicMock()
 
         with (
-            patch("gpt_trader.orchestration.configuration.BotConfig") as mock_bot_config,
+            patch("gpt_trader.app.config.BotConfig") as mock_bot_config,
             patch("gpt_trader.app.container.create_application_container") as mock_create_container,
         ):
             mock_bot_config.from_profile.return_value = mock_config
@@ -100,7 +100,7 @@ class TestSimulateDryRun:
         mock_container.create_bot.side_effect = Exception("Bot creation failed")
 
         with (
-            patch("gpt_trader.orchestration.configuration.BotConfig") as mock_bot_config,
+            patch("gpt_trader.app.config.BotConfig") as mock_bot_config,
             patch("gpt_trader.app.container.create_application_container") as mock_create_container,
         ):
             mock_bot_config.from_profile.return_value = mock_config
@@ -122,7 +122,7 @@ class TestSimulateDryRun:
         mock_container.create_bot.return_value = mock_bot
 
         with (
-            patch("gpt_trader.orchestration.configuration.BotConfig") as mock_bot_config,
+            patch("gpt_trader.app.config.BotConfig") as mock_bot_config,
             patch("gpt_trader.app.container.create_application_container") as mock_create_container,
         ):
             mock_bot_config.from_profile.return_value = mock_config
@@ -139,7 +139,7 @@ class TestSimulateDryRun:
         """Should print section header."""
         checker = PreflightCheck(profile="dev")
 
-        with patch("gpt_trader.orchestration.configuration.BotConfig") as mock_bot_config:
+        with patch("gpt_trader.app.config.BotConfig") as mock_bot_config:
             mock_bot_config.from_profile.side_effect = Exception("Skip")
             simulate_dry_run(checker)
 
@@ -157,7 +157,7 @@ class TestSimulateDryRun:
         mock_container.create_bot.return_value = mock_bot
 
         with (
-            patch("gpt_trader.orchestration.configuration.BotConfig") as mock_bot_config,
+            patch("gpt_trader.app.config.BotConfig") as mock_bot_config,
             patch("gpt_trader.app.container.create_application_container") as mock_create_container,
         ):
             mock_bot_config.from_profile.return_value = mock_config

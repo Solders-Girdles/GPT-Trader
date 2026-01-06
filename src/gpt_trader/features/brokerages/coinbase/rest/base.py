@@ -13,6 +13,7 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
+from gpt_trader.app.config import BotConfig
 from gpt_trader.core import (
     InsufficientFunds,
     InvalidRequestError,
@@ -33,7 +34,6 @@ from gpt_trader.features.brokerages.coinbase.utilities import (
     enforce_perp_rules,
     quantize_to_increment,
 )
-from gpt_trader.orchestration.configuration import BotConfig
 from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.utilities.logging_patterns import get_logger
 from gpt_trader.utilities.parsing import coerce_enum

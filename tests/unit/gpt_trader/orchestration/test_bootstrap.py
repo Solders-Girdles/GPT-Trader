@@ -7,6 +7,8 @@ from unittest.mock import patch
 
 import pytest
 
+from gpt_trader.app.config import BotConfig
+from gpt_trader.config.types import Profile
 from gpt_trader.orchestration.bootstrap import (
     BootstrapLogRecord,
     bot_from_profile,
@@ -14,7 +16,6 @@ from gpt_trader.orchestration.bootstrap import (
     normalise_symbols,
     resolve_runtime_paths,
 )
-from gpt_trader.orchestration.configuration import BotConfig, Profile
 
 
 @pytest.fixture

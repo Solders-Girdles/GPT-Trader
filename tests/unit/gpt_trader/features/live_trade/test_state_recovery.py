@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from gpt_trader.app.config import BotConfig
 from gpt_trader.features.live_trade.engines.base import CoordinatorContext
 from gpt_trader.features.live_trade.engines.strategy import (
     EVENT_PRICE_TICK,
@@ -14,7 +15,6 @@ from gpt_trader.features.live_trade.strategies.perps_baseline import (
     BaselinePerpsStrategy,
     PerpsStrategyConfig,
 )
-from gpt_trader.orchestration.configuration import BotConfig
 
 
 @pytest.fixture

@@ -4,7 +4,7 @@ This test ensures that the ConfigManager-based configuration system works
 correctly and can replace the deprecated ConfigLoader.
 """
 
-from gpt_trader.orchestration.configuration import BotConfig
+from gpt_trader.app.config import BotConfig
 
 
 def test_config_manager_basic_functionality():

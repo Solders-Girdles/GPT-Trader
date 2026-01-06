@@ -8,12 +8,12 @@ from typing import Any
 
 import yaml
 
+from gpt_trader.app.config import BotConfig, BotRiskConfig
 from gpt_trader.app.container import (
     create_application_container,
     get_application_container,
     set_application_container,
 )
-from gpt_trader.orchestration.configuration.bot_config import BotConfig, BotRiskConfig
 from gpt_trader.orchestration.trading_bot.bot import TradingBot
 from gpt_trader.utilities.logging_patterns import get_logger
 

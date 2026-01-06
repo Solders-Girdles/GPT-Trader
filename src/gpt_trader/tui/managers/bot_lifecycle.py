@@ -266,7 +266,9 @@ class BotLifecycleManager:
 
         # Step 0: Validate bot is stopped
         if self.app.bot.running:
-            notify_warning(self.app, "Please stop the bot before switching modes", title="Mode Switch")
+            notify_warning(
+                self.app, "Please stop the bot before switching modes", title="Mode Switch"
+            )
             return False
 
         # Step 1: For live mode, show warning modal
@@ -416,7 +418,8 @@ class BotLifecycleManager:
         Raises:
             ValueError: If mode is unknown
         """
-        from gpt_trader.orchestration.configuration import BotConfig, Profile
+        from gpt_trader.app.config import BotConfig
+        from gpt_trader.config.types import Profile
 
         if mode == "paper":
             # Paper trading: Real data, HybridPaperBroker

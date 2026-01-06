@@ -2,9 +2,9 @@ from unittest.mock import patch
 
 import pytest
 
+from gpt_trader.app.config import BotConfig
 from gpt_trader.app.container import ApplicationContainer
 from gpt_trader.features.live_trade.strategies.perps_baseline import Action, Decision
-from gpt_trader.orchestration.configuration import BotConfig
 
 
 @pytest.mark.asyncio

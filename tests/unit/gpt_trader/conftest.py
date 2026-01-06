@@ -1,6 +1,6 @@
 import pytest
 
-from gpt_trader.orchestration.configuration import BotConfig
+from gpt_trader.app.config import BotConfig
 
 
 @pytest.fixture

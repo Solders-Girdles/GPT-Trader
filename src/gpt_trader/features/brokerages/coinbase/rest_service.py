@@ -17,6 +17,7 @@ from collections.abc import Callable
 from decimal import Decimal
 from typing import Any
 
+from gpt_trader.app.config import BotConfig
 from gpt_trader.core import (
     Balance,
     Candle,
@@ -39,7 +40,6 @@ from gpt_trader.features.brokerages.coinbase.rest.portfolio_service import Portf
 from gpt_trader.features.brokerages.coinbase.rest.position_state_store import PositionStateStore
 from gpt_trader.features.brokerages.coinbase.rest.product_service import ProductService
 from gpt_trader.features.brokerages.coinbase.utilities import PositionState, ProductCatalog
-from gpt_trader.orchestration.configuration import BotConfig
 from gpt_trader.persistence.event_store import EventStore
 
 

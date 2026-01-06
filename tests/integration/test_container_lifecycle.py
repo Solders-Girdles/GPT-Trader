@@ -15,13 +15,13 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from gpt_trader.app.config import BotConfig
 from gpt_trader.app.container import (
     ApplicationContainer,
     clear_application_container,
     get_application_container,
     set_application_container,
 )
-from gpt_trader.orchestration.configuration import BotConfig
 
 # Mark all tests in this module as integration tests
 pytestmark = pytest.mark.integration

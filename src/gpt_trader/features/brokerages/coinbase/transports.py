@@ -43,7 +43,7 @@ except ImportError:  # pragma: no cover - fallback stub for tests
     _HAS_WEBSOCKET = False
 
 if TYPE_CHECKING:
-    from gpt_trader.orchestration.configuration import BotConfig
+    from gpt_trader.app.config import BotConfig
 
 _TRUTHY = {"1", "true", "yes", "on"}
 

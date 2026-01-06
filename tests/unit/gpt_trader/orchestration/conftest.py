@@ -12,9 +12,10 @@ from unittest.mock import Mock
 
 import pytest
 
+from gpt_trader.app.config import BotConfig
+from gpt_trader.config.types import Profile
 from gpt_trader.core import Balance, Position
 from gpt_trader.features.live_trade.engines.base import CoordinatorContext
-from gpt_trader.orchestration.configuration import BotConfig, Profile
 
 # Mock imports for missing types
 try:

@@ -8,7 +8,7 @@ import asyncio
 from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Any
 
-from gpt_trader.orchestration.configuration import BotConfig
+from gpt_trader.app.config import BotConfig
 
 if TYPE_CHECKING:
     from gpt_trader.app.container import ApplicationContainer

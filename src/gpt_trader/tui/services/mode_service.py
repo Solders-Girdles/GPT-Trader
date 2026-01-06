@@ -45,8 +45,9 @@ def create_bot_for_mode(mode: str, demo_scenario: str = "mixed") -> Any:
         scenario = get_scenario(demo_scenario)
         return DemoBot(data_generator=scenario)
     else:
+        from gpt_trader.app.config import BotConfig
         from gpt_trader.cli.services import instantiate_bot, load_config_from_yaml
-        from gpt_trader.orchestration.configuration import BotConfig, Profile
+        from gpt_trader.config.types import Profile
 
         if mode == "paper":
             try:
@@ -147,7 +148,11 @@ class ModeService:
             source_path = (
                 self.preferences_path
                 if self.preferences_path.exists()
-                else (self._fallback_path if self._fallback_path and self._fallback_path.exists() else None)
+                else (
+                    self._fallback_path
+                    if self._fallback_path and self._fallback_path.exists()
+                    else None
+                )
             )
             if source_path is not None:
                 with open(source_path) as f:

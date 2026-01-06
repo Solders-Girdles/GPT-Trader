@@ -48,6 +48,7 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/utilities/test_trading_operations_core.py",  # trading ops regression suite
     "tests/unit/gpt_trader/orchestration/test_execution_runtime_guards.py",  # guardrail regression suite
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_websocket.py",  # websocket integration matrix
+    "tests/unit/gpt_trader/tui/test_risk_preview.py",  # comprehensive risk preview helper coverage
     "tests/unit/gpt_trader/features/live_trade/test_coinbase_pnl.py",  # pnl engine behavioural coverage
     "tests/unit/gpt_trader/utilities/test_console_logging_functions.py",  # logging formatting matrix
     "tests/unit/gpt_trader/types/test_trading.py",  # trading dataclass behaviours

@@ -282,6 +282,17 @@ RiskDetailModal .guard-explanation {
     height: auto;
 }
 
+/* Position Impact Rows */
+RiskDetailModal .position-impact-row {
+    height: auto;
+    padding-left: $spacing-xs;
+}
+
+RiskDetailModal .position-impact-more {
+    height: auto;
+    padding-left: $spacing-xs;
+}
+
 /* === Execution Issues Modal === */
 
 ExecutionIssuesModal {

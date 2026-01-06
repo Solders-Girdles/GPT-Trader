@@ -15,6 +15,7 @@ from gpt_trader.tui.responsive import calculate_modal_width
 from gpt_trader.tui.risk_guard_explanations import get_guard_explanation
 from gpt_trader.tui.risk_preview import (
     SHOCK_SCENARIOS,
+    GuardPositionImpact,
     RiskPreviewResult,
     compute_preview,
 )
@@ -458,6 +459,17 @@ class RiskDetailModal(ModalScreen):
                         classes="preview-guard-line",
                     )
 
+        # Show position impacts for worst-case scenario (most negative shock)
+        # Find the scenario with position impacts that has the most projected loss
+        scenarios_with_pos_impacts = [r for r in results if r.position_impacts]
+        if scenarios_with_pos_impacts:
+            # Use the worst (most negative) scenario
+            worst_scenario = max(
+                scenarios_with_pos_impacts,
+                key=lambda r: len(r.position_impacts),
+            )
+            yield from self._render_position_impacts(worst_scenario)
+
         # Show legend
         yield Static(
             "[dim]Projected utilization if market moves by shock %[/dim]",
@@ -484,6 +496,86 @@ class RiskDetailModal(ModalScreen):
             chip_text += " [red]![/red]"
 
         return Static(chip_text, classes="preview-chip")
+
+    def _render_position_impacts(self, result: RiskPreviewResult) -> ComposeResult:
+        """Render per-position impacts for a scenario.
+
+        Groups impacts by guard and shows top 3 positions per guard.
+
+        Args:
+            result: RiskPreviewResult with position impacts.
+
+        Yields:
+            Widgets for the position impacts section.
+        """
+        if not result.position_impacts:
+            return
+
+        # Group by guard
+        impacts_by_guard: dict[str, list[GuardPositionImpact]] = {}
+        for impact in result.position_impacts:
+            if impact.guard_name not in impacts_by_guard:
+                impacts_by_guard[impact.guard_name] = []
+            impacts_by_guard[impact.guard_name].append(impact)
+
+        # Render header
+        yield Static(
+            f"─── Position Impacts ({result.label}) ───",
+            classes="section-header",
+        )
+
+        max_positions_per_guard = 3
+
+        for guard_name, impacts in impacts_by_guard.items():
+            # Guard header with count
+            yield Static(
+                Text.assemble(
+                    "  ",
+                    Text(guard_name, style="yellow"),
+                    f" ({len(impacts)} position{'s' if len(impacts) > 1 else ''})",
+                )
+            )
+
+            # Show top N positions
+            for impact in impacts[:max_positions_per_guard]:
+                yield Static(
+                    self._format_position_impact_row(impact),
+                    classes="position-impact-row",
+                )
+
+            # Show "+N more" if truncated
+            remaining = len(impacts) - max_positions_per_guard
+            if remaining > 0:
+                yield Static(
+                    f"    [dim]… +{remaining} more[/dim]",
+                    classes="position-impact-more",
+                )
+
+    def _format_position_impact_row(self, impact: GuardPositionImpact) -> Text:
+        """Format a single position impact row.
+
+        Args:
+            impact: GuardPositionImpact to format.
+
+        Returns:
+            Rich Text for display.
+        """
+        # Color based on projected P&L
+        if impact.projected_pnl_pct < -5:
+            pnl_color = "red bold"
+        elif impact.projected_pnl_pct < 0:
+            pnl_color = "red"
+        elif impact.projected_pnl_pct > 0:
+            pnl_color = "green"
+        else:
+            pnl_color = "dim"
+
+        return Text.assemble(
+            "    • ",
+            Text(impact.symbol, style="cyan"),
+            " ",
+            Text(impact.reason, style=pnl_color),
+        )
 
     async def action_toggle_bot(self) -> None:
         """Toggle bot running state via app action dispatcher."""

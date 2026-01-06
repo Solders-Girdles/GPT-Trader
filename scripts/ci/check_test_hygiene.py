@@ -205,6 +205,7 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/tui/widgets/test_account.py",  # account widget partial state and signature caching tests
     "tests/unit/gpt_trader/tui/widgets/test_position_card.py",  # position card widget resilience with missing data
     "tests/integration/test_validation_escalation.py",  # validation escalation integration flow coverage
+    "tests/integration/test_container_lifecycle.py",  # container lifecycle and service registration coverage
 }
 
 SLEEP_ALLOWLIST = {

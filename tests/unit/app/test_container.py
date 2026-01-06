@@ -8,7 +8,13 @@ from unittest.mock import ANY, MagicMock, patch
 
 import pytest
 
-from gpt_trader.app.container import ApplicationContainer, create_application_container
+from gpt_trader.app.container import (
+    ApplicationContainer,
+    clear_application_container,
+    create_application_container,
+    get_application_container,
+    set_application_container,
+)
 from gpt_trader.orchestration.configuration import BotConfig
 from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.persistence.orders_store import OrdersStore
@@ -31,6 +37,8 @@ class TestApplicationContainer:
         assert container._product_catalog is None
         assert container._risk_manager is None
         assert container._notification_service is None
+        assert container._validation_failure_tracker is None
+        assert container._profile_loader is None
 
     def test_config_controller_creation(self, mock_config: BotConfig) -> None:
         """Test that config controller is created correctly."""
@@ -158,6 +166,7 @@ class TestApplicationContainer:
             config=mock_config,
         )
 
+    @pytest.mark.legacy  # ServiceRegistry scheduled for removal in v3.0
     @patch("gpt_trader.app.container.create_brokerage")
     @patch("gpt_trader.app.container.MarketDataService")
     @patch("gpt_trader.app.container.ProductCatalog")
@@ -185,8 +194,9 @@ class TestApplicationContainer:
 
         container = ApplicationContainer(mock_config)
 
-        # Create service registry
-        registry = container.create_service_registry()
+        # Create service registry (expect deprecation warnings)
+        with pytest.warns(DeprecationWarning, match="create_service_registry.*deprecated"):
+            registry = container.create_service_registry()
 
         # Verify registry contains correct services
         assert registry.config == mock_config
@@ -274,6 +284,49 @@ class TestApplicationContainer:
         assert call_args.kwargs["notification_service"] is not None
         assert call_args.kwargs["notification_service"] == container.notification_service
 
+    @patch("gpt_trader.orchestration.live_execution.LiveExecutionEngine")
+    @patch("gpt_trader.app.container.create_brokerage")
+    @patch("gpt_trader.app.container.MarketDataService")
+    @patch("gpt_trader.app.container.ProductCatalog")
+    def test_create_live_execution_engine(
+        self,
+        mock_product_catalog: MagicMock,
+        mock_market_data_service: MagicMock,
+        mock_create_brokerage: MagicMock,
+        mock_engine_class: MagicMock,
+        mock_config: BotConfig,
+    ) -> None:
+        """Test that LiveExecutionEngine is created with container dependencies."""
+        # Setup mocks
+        mock_broker = MagicMock()
+        mock_engine = MagicMock()
+
+        mock_create_brokerage.return_value = (
+            mock_broker,
+            MagicMock(),
+            MagicMock(),
+            MagicMock(),
+        )
+        mock_engine_class.return_value = mock_engine
+
+        container = ApplicationContainer(mock_config)
+
+        # Create engine with custom bot_id
+        engine = container.create_live_execution_engine(bot_id="test_engine")
+
+        # Verify engine was created with correct dependencies
+        mock_engine_class.assert_called_once()
+        call_args = mock_engine_class.call_args
+
+        assert call_args.kwargs["broker"] == mock_broker
+        assert call_args.kwargs["config"] == mock_config
+        assert call_args.kwargs["risk_manager"] == container.risk_manager
+        assert call_args.kwargs["event_store"] == container.event_store
+        assert call_args.kwargs["bot_id"] == "test_engine"
+        assert call_args.kwargs["failure_tracker"] is None  # Default: engine creates own
+
+        assert engine == mock_engine
+
     @patch("gpt_trader.app.container.create_brokerage")
     @patch("gpt_trader.app.container.MarketDataService")
     @patch("gpt_trader.app.container.ProductCatalog")
@@ -330,6 +383,71 @@ class TestApplicationContainer:
         assert config_controller2 is not None
         assert config_controller2 is not config_controller  # New instance
 
+    def test_validation_failure_tracker_creation(self, mock_config: BotConfig) -> None:
+        """Test that validation failure tracker is created correctly."""
+        from gpt_trader.orchestration.execution.validation import ValidationFailureTracker
+
+        container = ApplicationContainer(mock_config)
+
+        # First access should create the tracker
+        tracker = container.validation_failure_tracker
+
+        assert isinstance(tracker, ValidationFailureTracker)
+        assert container._validation_failure_tracker == tracker
+        # Verify default configuration
+        assert tracker.escalation_threshold == 5
+        assert tracker.escalation_callback is None
+
+        # Second access should return the same instance
+        tracker2 = container.validation_failure_tracker
+        assert tracker is tracker2
+
+    def test_profile_loader_creation(self, mock_config: BotConfig) -> None:
+        """Test that profile loader is created correctly."""
+        from gpt_trader.orchestration.configuration.profile_loader import ProfileLoader
+
+        container = ApplicationContainer(mock_config)
+
+        # First access should create the loader
+        loader = container.profile_loader
+
+        assert isinstance(loader, ProfileLoader)
+        assert container._profile_loader == loader
+
+        # Second access should return the same instance
+        loader2 = container.profile_loader
+        assert loader is loader2
+
+    @pytest.mark.legacy  # ServiceRegistry scheduled for removal in v3.0
+    @patch("gpt_trader.app.container.create_brokerage")
+    @patch("gpt_trader.app.container.MarketDataService")
+    @patch("gpt_trader.app.container.ProductCatalog")
+    def test_create_service_registry_emits_deprecation_warning(
+        self,
+        mock_product_catalog: MagicMock,
+        mock_market_data_service: MagicMock,
+        mock_create_brokerage: MagicMock,
+        mock_config: BotConfig,
+    ) -> None:
+        """Test that create_service_registry emits DeprecationWarning."""
+        # Setup mocks
+        mock_create_brokerage.return_value = (MagicMock(), MagicMock(), MagicMock(), MagicMock())
+
+        container = ApplicationContainer(mock_config)
+
+        # Verify warning is emitted with correct message
+        with pytest.warns(DeprecationWarning) as warning_info:
+            registry = container.create_service_registry()
+
+        # Check at least one warning matches our expected message
+        messages = [str(w.message) for w in warning_info]
+        assert any("create_service_registry" in msg and "deprecated" in msg for msg in messages)
+
+        # Verify registry is still functional despite deprecation
+        assert registry is not None
+        assert registry.config == mock_config
+        assert registry.broker is not None
+
 
 class TestCreateApplicationContainer:
     """Test cases for create_application_container function."""
@@ -340,6 +458,64 @@ class TestCreateApplicationContainer:
 
         assert isinstance(container, ApplicationContainer)
         assert container.config == mock_config
+
+
+class TestContainerRegistry:
+    """Test cases for container registry functions."""
+
+    def test_get_returns_none_when_not_set(self) -> None:
+        """Test that get_application_container returns None when not set."""
+        clear_application_container()
+        assert get_application_container() is None
+
+    def test_set_and_get_container(self, mock_config: BotConfig) -> None:
+        """Test that set and get work correctly."""
+        clear_application_container()
+
+        container = ApplicationContainer(mock_config)
+        set_application_container(container)
+
+        assert get_application_container() is container
+
+        clear_application_container()
+        assert get_application_container() is None
+
+    def test_clear_container(self, mock_config: BotConfig) -> None:
+        """Test that clear_application_container clears the container."""
+        container = ApplicationContainer(mock_config)
+        set_application_container(container)
+
+        clear_application_container()
+
+        assert get_application_container() is None
+
+    def test_service_resolution_via_registry(self, mock_config: BotConfig) -> None:
+        """Test that services can be resolved via registered container."""
+        from gpt_trader.orchestration.configuration.profile_loader import get_profile_loader
+        from gpt_trader.orchestration.execution.validation import get_failure_tracker
+
+        clear_application_container()
+
+        # Without container, should return fallback instances
+        tracker_fallback = get_failure_tracker()
+        loader_fallback = get_profile_loader()
+
+        # Set container
+        container = ApplicationContainer(mock_config)
+        set_application_container(container)
+
+        # With container, should return container instances
+        tracker_container = get_failure_tracker()
+        loader_container = get_profile_loader()
+
+        assert tracker_container is container.validation_failure_tracker
+        assert loader_container is container.profile_loader
+
+        # Verify they're different from fallback
+        assert tracker_container is not tracker_fallback
+        assert loader_container is not loader_fallback
+
+        clear_application_container()
 
 
 @pytest.fixture

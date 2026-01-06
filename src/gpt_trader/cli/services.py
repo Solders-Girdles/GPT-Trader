@@ -8,7 +8,11 @@ from typing import Any
 
 import yaml
 
-from gpt_trader.app.container import create_application_container
+from gpt_trader.app.container import (
+    create_application_container,
+    get_application_container,
+    set_application_container,
+)
 from gpt_trader.orchestration.configuration.bot_config import BotConfig, BotRiskConfig
 from gpt_trader.orchestration.trading_bot.bot import TradingBot
 from gpt_trader.utilities.logging_patterns import get_logger
@@ -156,6 +160,20 @@ def build_config_from_args(args: Namespace, **kwargs: Any) -> BotConfig:
 
 
 def instantiate_bot(config: BotConfig) -> TradingBot:
-    """Instantiate a TradingBot using the ApplicationContainer."""
+    """Instantiate a TradingBot using the ApplicationContainer.
+
+    Registers the container globally so services can resolve dependencies
+    via get_application_container(). Avoids overriding an existing container
+    (e.g., one set by tests).
+    """
+    # Check if container already set (e.g., by tests)
+    existing = get_application_container()
+    if existing is not None:
+        logger.debug("Using existing application container")
+        return existing.create_bot()
+
+    # Create and register new container
     container = create_application_container(config)
+    set_application_container(container)
+    logger.debug("Created and registered application container")
     return container.create_bot()

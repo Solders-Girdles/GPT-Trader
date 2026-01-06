@@ -8,6 +8,7 @@ from argparse import Namespace
 from types import FrameType
 from typing import Any
 
+from gpt_trader.app.container import clear_application_container
 from gpt_trader.cli import options, services
 from gpt_trader.orchestration.configuration import ConfigValidationError
 from gpt_trader.tui.helpers import run_tui_app_with_cleanup
@@ -155,5 +156,8 @@ def _run_bot(bot: Any, *, single_cycle: bool) -> int:
         asyncio.run(bot.run(single_cycle=single_cycle))
     except KeyboardInterrupt:  # pragma: no cover - defensive
         logger.info("Shutdown complete.", status="stopped")
+    finally:
+        # Clear container registry to prevent leaks between runs
+        clear_application_container()
 
     return 0

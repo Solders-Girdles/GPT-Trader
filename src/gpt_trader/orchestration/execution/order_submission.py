@@ -24,16 +24,73 @@ from gpt_trader.utilities.logging_patterns import get_logger
 logger = get_logger(__name__, component="order_submission")
 
 
+def _classify_rejection_reason(status_or_error: str) -> str:
+    """Classify a rejection or error into a standardized reason category.
+
+    Args:
+        status_or_error: The status string or error message.
+
+    Returns:
+        Standardized reason: rate_limit, insufficient_funds, invalid_size,
+        invalid_price, market_closed, timeout, network, rejected, failed, unknown.
+    """
+    text = status_or_error.lower()
+
+    # Rate limiting
+    if any(term in text for term in ["rate_limit", "rate limit", "429", "too many"]):
+        return "rate_limit"
+
+    # Insufficient funds
+    if any(term in text for term in ["insufficient", "balance", "funds", "margin"]):
+        return "insufficient_funds"
+
+    # Invalid size
+    if any(term in text for term in ["size", "quantity", "min_", "max_", "amount"]):
+        return "invalid_size"
+
+    # Invalid price
+    if any(term in text for term in ["price", "tick", "increment"]):
+        return "invalid_price"
+
+    # Timeout
+    if any(term in text for term in ["timeout", "timed out", "deadline"]):
+        return "timeout"
+
+    # Network issues (check before market_closed to avoid "socket closed" matching "closed")
+    if any(term in text for term in ["connection", "network", "socket", "dns", "ssl"]):
+        return "network"
+
+    # Market closed
+    if any(term in text for term in ["market closed", "trading halt", "suspended"]):
+        return "market_closed"
+
+    # Generic rejection/failure
+    if "reject" in text:
+        return "rejected"
+    if "fail" in text or "error" in text:
+        return "failed"
+
+    return "unknown"
+
+
 def _record_execution_telemetry(
     latency_ms: float,
     success: bool,
     rejected: bool = False,
     failure_reason: str = "",
+    rejection_reason: str = "",
 ) -> None:
     """Record execution telemetry if TUI service is available.
 
     This is a best-effort operation - failures are silently ignored
     to avoid impacting order execution.
+
+    Args:
+        latency_ms: Time from submission to response.
+        success: Whether the submission succeeded.
+        rejected: Whether broker rejected the order.
+        failure_reason: Human-readable failure reason.
+        rejection_reason: Categorized reason for rejection/failure.
     """
     try:
         from gpt_trader.tui.services.execution_telemetry import get_execution_telemetry
@@ -44,6 +101,7 @@ def _record_execution_telemetry(
             success=success,
             rejected=rejected,
             failure_reason=failure_reason,
+            rejection_reason=rejection_reason,
         )
     except Exception:
         # Don't let telemetry errors affect order execution
@@ -165,18 +223,30 @@ class OrderSubmitter:
             if result is not None:
                 _record_execution_telemetry(latency_ms=latency_ms, success=True)
             else:
-                # Order was rejected by broker
-                _record_execution_telemetry(latency_ms=latency_ms, success=False, rejected=True)
+                # Order was rejected by broker (fallback case - no order returned)
+                _record_execution_telemetry(
+                    latency_ms=latency_ms,
+                    success=False,
+                    rejected=True,
+                    rejection_reason="rejected",
+                )
 
             return result
 
         except Exception as exc:
             latency_ms = (time.perf_counter() - start_time) * 1000
+            # Classify the error for telemetry
+            error_str = str(exc)
+            reason = _classify_rejection_reason(error_str)
+            is_rejection = "rejected by broker" in error_str.lower()
+
             # Record telemetry for failed submission
             _record_execution_telemetry(
                 latency_ms=latency_ms,
                 success=False,
-                failure_reason=str(exc)[:100],
+                rejected=is_rejection,
+                failure_reason=error_str[:100],
+                rejection_reason=reason,
             )
             # 4. Handle Failure
             self._handle_order_failure(exc, symbol, side, order_quantity)

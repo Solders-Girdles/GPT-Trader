@@ -149,6 +149,11 @@ class SlimStatusWidget(Static):
 
     def watch_running(self, running: bool) -> None:
         """Update UI when bot running state changes."""
+        _last = getattr(self, "_last_running", object())
+        if running == _last:
+            return
+        self._last_running = running
+
         indicator = self._status_indicator or self.query_one("#status-indicator", Label)
         text = self._status_text or self.query_one("#status-text", Label)
         start_btn = self._start_btn or self.query_one("#slim-start-btn", Button)
@@ -180,6 +185,11 @@ class SlimStatusWidget(Static):
 
     def watch_uptime(self, uptime: float) -> None:
         """Update uptime display."""
+        _last = getattr(self, "_last_uptime", object())
+        if uptime == _last:
+            return
+        self._last_uptime = uptime
+
         m, s = divmod(int(uptime), 60)
         h, m = divmod(m, 60)
         label = self._uptime_label or self.query_one("#uptime", Label)
@@ -187,11 +197,21 @@ class SlimStatusWidget(Static):
 
     def watch_equity(self, equity: str) -> None:
         """Update equity display."""
+        _last = getattr(self, "_last_equity", object())
+        if equity == _last:
+            return
+        self._last_equity = equity
+
         label = self._equity_value or self.query_one("#equity-value", Label)
         label.update(f"${equity}")
 
     def watch_pnl(self, pnl: str) -> None:
         """Update P&L display with color coding."""
+        _last = getattr(self, "_last_pnl", object())
+        if pnl == _last:
+            return
+        self._last_pnl = pnl
+
         label = self._pnl_value or self.query_one("#pnl-value", Label)
 
         try:
@@ -214,6 +234,11 @@ class SlimStatusWidget(Static):
 
     def watch_position_count(self, count: int) -> None:
         """Update position count display."""
+        _last = getattr(self, "_last_position_count", object())
+        if count == _last:
+            return
+        self._last_position_count = count
+
         label = self._positions or self.query_one("#positions-count", Label)
         if count == 0:
             label.update("No Pos")
@@ -224,6 +249,11 @@ class SlimStatusWidget(Static):
 
     def watch_data_source_mode(self, mode: str) -> None:
         """Update mode selector to reflect current mode."""
+        _last = getattr(self, "_last_data_source_mode", object())
+        if mode == _last:
+            return
+        self._last_data_source_mode = mode
+
         select = self._mode_select
         if select and select.value != mode:
             select.value = mode
@@ -238,6 +268,11 @@ class SlimStatusWidget(Static):
 
     def watch_error_badge_count(self, count: int) -> None:
         """Update error badge visibility and count."""
+        _last = getattr(self, "_last_error_badge_count", object())
+        if count == _last:
+            return
+        self._last_error_badge_count = count
+
         badge = self._error_badge or self.query_one("#error-badge", Label)
         if count == 0:
             badge.add_class("hidden")

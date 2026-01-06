@@ -119,6 +119,11 @@ class BotStatusWidget(Static):
     @safe_update
     def watch_running(self, running: bool) -> None:
         """Update UI when bot running state changes."""
+        _last = getattr(self, "_last_running", object())
+        if running == _last:
+            return
+        self._last_running = running
+
         # Use cached references (fall back to query if not cached yet)
         label = self._status_label or self.query_one("#status-value", Label)
         start_btn = self._start_btn or self.query_one("#start-btn", Button)
@@ -140,6 +145,11 @@ class BotStatusWidget(Static):
     @safe_update
     def watch_uptime(self, uptime: float) -> None:
         """Update uptime display."""
+        _last = getattr(self, "_last_uptime", object())
+        if uptime == _last:
+            return
+        self._last_uptime = uptime
+
         m, s = divmod(int(uptime), 60)
         h, m = divmod(m, 60)
         label = self._uptime_label or self.query_one("#uptime-value", Label)
@@ -148,6 +158,11 @@ class BotStatusWidget(Static):
     @safe_update
     def watch_equity(self, equity: str) -> None:
         """Update equity display."""
+        _last = getattr(self, "_last_equity", object())
+        if equity == _last:
+            return
+        self._last_equity = equity
+
         label = self._equity_label or self.query_one("#equity-value", Label)
         label.update(f"${equity}")
         self._flash_value(label)
@@ -155,6 +170,11 @@ class BotStatusWidget(Static):
     @safe_update
     def watch_pnl(self, pnl: str) -> None:
         """Update P&L display with color coding."""
+        _last = getattr(self, "_last_pnl", object())
+        if pnl == _last:
+            return
+        self._last_pnl = pnl
+
         pnl_label = self._pnl_label or self.query_one("#pnl-value", Label)
         pnl_label.update(f"${pnl}")
 
@@ -176,6 +196,11 @@ class BotStatusWidget(Static):
     @safe_update
     def watch_margin_usage(self, margin: str) -> None:
         """Update margin usage display."""
+        _last = getattr(self, "_last_margin_usage", object())
+        if margin == _last:
+            return
+        self._last_margin_usage = margin
+
         label = self._margin_label or self.query_one("#margin-value", Label)
         label.update(f"{margin}")
         self._flash_value(label)
@@ -203,6 +228,11 @@ class BotStatusWidget(Static):
     @safe_update
     def watch_heartbeat(self, heartbeat: float) -> None:
         """Update heartbeat with smooth opacity transition."""
+        _last = getattr(self, "_last_heartbeat", object())
+        if heartbeat == _last:
+            return
+        self._last_heartbeat = heartbeat
+
         indicator = self._heartbeat_indicator
         if not indicator:
             return
@@ -215,6 +245,11 @@ class BotStatusWidget(Static):
     @safe_update
     def watch_connection_status(self, status: str) -> None:
         """Update connection status display via indicator icon."""
+        _last = getattr(self, "_last_connection_status", object())
+        if status == _last:
+            return
+        self._last_connection_status = status
+
         indicator = self._conn_indicator
         if not indicator:
             return
@@ -235,6 +270,11 @@ class BotStatusWidget(Static):
     @safe_update
     def watch_api_latency(self, latency: float) -> None:
         """Update API latency display."""
+        _last = getattr(self, "_last_api_latency", object())
+        if latency == _last:
+            return
+        self._last_api_latency = latency
+
         label = self._latency_label
         if label:
             label.update(f"{latency:.0f}ms")
@@ -242,6 +282,11 @@ class BotStatusWidget(Static):
     @safe_update
     def watch_cpu_usage(self, cpu: str) -> None:
         """Update CPU usage display."""
+        _last = getattr(self, "_last_cpu_usage", object())
+        if cpu == _last:
+            return
+        self._last_cpu_usage = cpu
+
         label = self._cpu_label
         if label:
             label.update(cpu)
@@ -249,6 +294,11 @@ class BotStatusWidget(Static):
     @safe_update
     def watch_rate_limit_usage(self, rate_limit: str) -> None:
         """Update rate limit usage display."""
+        _last = getattr(self, "_last_rate_limit_usage", object())
+        if rate_limit == _last:
+            return
+        self._last_rate_limit_usage = rate_limit
+
         label = self._rate_limit_label
         if label:
             label.update(rate_limit)
@@ -270,6 +320,11 @@ class BotStatusWidget(Static):
             - COMFORTABLE (140-159): Full labels, all metrics visible
             - WIDE (160+): Expanded labels
         """
+        _last = getattr(self, "_last_responsive_state", object())
+        if state == _last:
+            return
+        self._last_responsive_state = state
+
         # Use cached references (fall back to query if not cached yet)
         start_btn = self._start_btn
         stop_btn = self._stop_btn

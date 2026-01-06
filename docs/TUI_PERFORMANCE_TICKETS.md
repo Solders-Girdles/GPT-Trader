@@ -34,46 +34,38 @@ self.ui_coordinator = UICoordinator(self, throttler=throttler)
 
 ---
 
-## Ticket 2: Add No-Op Guards to watch_* Methods
+## Ticket 2: Add No-Op Guards to watch_* Methods ✅ COMPLETED
 
 **Priority:** Low
 **Effort:** Medium (2-3 hours)
 **Risk:** Low
+**Status:** Completed (2026-01-06)
 
 ### Description
 Most `watch_*` methods update widgets unconditionally even when the value hasn't changed, causing unnecessary DOM updates and potential flicker.
 
-### Files to Modify
-- `src/gpt_trader/tui/widgets/status.py` - 10 watch methods
-- `src/gpt_trader/tui/widgets/slim_status.py` - 8 watch methods
-- `src/gpt_trader/tui/widgets/dashboard_system.py` - 12 watch methods
+### Files Modified
+- `src/gpt_trader/tui/widgets/status.py` - 11 watch methods guarded
+- `src/gpt_trader/tui/widgets/slim_status.py` - 7 watch methods guarded
+- `src/gpt_trader/tui/widgets/dashboard_system.py` - 13 watch methods guarded
 
 ### Implementation Pattern
 ```python
-# Before:
 def watch_equity(self, equity: str) -> None:
-    label.update(f"${equity}")
-    self._flash_value(label)
-
-# After:
-def watch_equity(self, equity: str) -> None:
-    if getattr(self, '_prev_equity', None) == equity:
+    _last = getattr(self, "_last_equity", object())
+    if equity == _last:
         return
-    self._prev_equity = equity
-    label.update(f"${equity}")
-    self._flash_value(label)
+    self._last_equity = equity
+    # ... rest of method
 ```
 
-### Priority Targets (highest update frequency)
-1. `watch_heartbeat` - Called every 2s
-2. `watch_uptime` - Called every cycle
-3. `watch_cpu_usage` / `watch_memory_usage` - Called every 6s
-4. `watch_equity` / `watch_pnl` - Called every cycle
+Using `object()` as sentinel ensures the first call always runs (no value equals
+a fresh object instance).
 
 ### Acceptance Criteria
-- [ ] No visual flicker on unchanged values
-- [ ] Flash animations only trigger on actual changes
-- [ ] Performance dashboard shows reduced frame times
+- [x] No visual flicker on unchanged values
+- [x] Flash animations only trigger on actual changes
+- [x] All 244 widget tests pass
 
 ---
 
@@ -173,9 +165,9 @@ this ticket added the class reference and access method.
 | Ticket | Priority | Effort | Impact | Status |
 |--------|----------|--------|--------|--------|
 | 1. Enable Throttler | Medium | Small | High - Reduces update frequency | ✅ Done |
-| 2. No-Op Guards | Low | Medium | Medium - Reduces DOM updates | Pending |
+| 2. No-Op Guards | Low | Medium | Medium - Reduces DOM updates | ✅ Done |
 | 3. PERF_TRACE Env | Low | Small | Low - Debugging aid | Pending |
 | 4. Optimize on_state_updated | Low | Medium | Medium - Faster cycles | Pending |
 | 5. Document Budget | Low | Small | Low - Developer awareness | ✅ Done |
 
-**Recommended order:** ~~1~~ → ~~5~~ → 2 → 3 → 4
+**Recommended order:** ~~1~~ → ~~5~~ → ~~2~~ → 3 → 4

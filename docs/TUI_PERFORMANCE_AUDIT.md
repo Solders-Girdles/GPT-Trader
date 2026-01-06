@@ -154,21 +154,20 @@ per update cycle instead of two.
 
 ---
 
-### Fix 2: Enable Update Throttler (Medium Impact, Low Risk)
+### Fix 2: Enable Update Throttler (Medium Impact, Low Risk) ✅ APPLIED
 
-**File:** `src/gpt_trader/tui/app_lifecycle.py` (in `_initialize_with_bot`)
+**File Modified:** `src/gpt_trader/tui/app_lifecycle.py` (in `_initialize_with_bot`)
 
+**Change:** Added UpdateThrottler instantiation with 100ms batching interval:
 ```python
-# After creating WorkerService, before creating UICoordinator:
 from gpt_trader.tui.services import UpdateThrottler
 
 throttler = UpdateThrottler(min_interval=0.1)  # 100ms batching
-
-self.lifecycle_manager = BotLifecycleManager(self, worker_service=self.worker_service)
-self.ui_coordinator = UICoordinator(self, throttler=throttler)  # Pass throttler
+self.ui_coordinator = UICoordinator(self, throttler=throttler)
 ```
 
-**Risk:** Low. The throttler code is already tested and handles edge cases.
+**Result:** High-frequency market data updates are now batched within 100ms windows,
+reducing UI refresh rate during periods of rapid data arrival.
 
 ---
 

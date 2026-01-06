@@ -155,6 +155,18 @@ class PositionDetailModal(ModalScreen):
                 else:
                     yield Static("No recent fills", classes="muted")
 
+                # Fill quality section
+                yield Static("─── Fill Quality ───", classes="section-header")
+                opens, closes = self._categorize_trades()
+                open_quality = self._build_fill_quality_line(opens, "Open fills")
+                close_quality = self._build_fill_quality_line(closes, "Close fills")
+
+                if opens or closes:
+                    yield Static(open_quality, classes="fill-quality-row")
+                    yield Static(close_quality, classes="fill-quality-row")
+                else:
+                    yield Static("No fill data available", classes="muted")
+
                 # Leverage section (for futures)
                 if pos.is_futures:
                     yield Static("─── Leverage ───", classes="section-header")
@@ -377,6 +389,48 @@ class PositionDetailModal(ModalScreen):
             " @ ",
             Text(format_price(trade.price), style="white"),
             Text(f" (fee: {format_currency(trade.fee)})", style="dim"),
+        )
+
+    def _build_fill_quality_line(self, trades: list[Trade], label: str) -> str:
+        """Build a fill quality summary line for a set of trades.
+
+        Computes VWAP, price range percentage, and fee basis points.
+
+        Args:
+            trades: List of trades to analyze.
+            label: Label for the line (e.g., "Open fills", "Close fills").
+
+        Returns:
+            Formatted string like "Open fills (n=2): avg 105.0000 | range 9.52% | fee 9.5 bps"
+            or "{label}: --" if no trades or zero notional.
+        """
+        if not trades:
+            return f"{label}: --"
+
+        # Calculate VWAP (Volume-Weighted Average Price)
+        total_notional = sum(t.price * t.quantity for t in trades)
+        total_quantity = sum(t.quantity for t in trades)
+
+        if total_quantity == 0 or total_notional == 0:
+            return f"{label}: --"
+
+        avg_price = total_notional / total_quantity
+
+        # Calculate price range percentage
+        prices = [t.price for t in trades]
+        min_price = min(prices)
+        max_price = max(prices)
+        range_pct = ((max_price - min_price) / avg_price) * 100 if avg_price > 0 else Decimal("0")
+
+        # Calculate fee basis points (fee / notional * 10,000)
+        total_fees = sum(t.fee for t in trades)
+        fee_bps = (total_fees / total_notional) * 10000 if total_notional > 0 else Decimal("0")
+
+        return (
+            f"{label} (n={len(trades)}): "
+            f"avg {format_price(avg_price)} | "
+            f"range {range_pct:.2f}% | "
+            f"fee {fee_bps:.1f} bps"
         )
 
     def on_button_pressed(self, event: Button.Pressed) -> None:

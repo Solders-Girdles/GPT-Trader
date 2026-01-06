@@ -1511,3 +1511,118 @@ class TestPositionDetailModal:
 
         # Should contain fee
         assert "12.50" in plain_text
+
+
+class TestFillQuality:
+    """Tests for _build_fill_quality_line method."""
+
+    def test_build_fill_quality_line_no_trades(self):
+        """Returns placeholder when no trades provided."""
+        from gpt_trader.tui.widgets.portfolio.position_detail_modal import (
+            PositionDetailModal,
+        )
+
+        position = Position(
+            symbol="BTC-USD",
+            quantity=Decimal("1.0"),
+            entry_price=Decimal("50000.00"),
+            mark_price=Decimal("50000.00"),
+            unrealized_pnl=Decimal("0"),
+            side="long",
+        )
+
+        modal = PositionDetailModal(position)
+        result = modal._build_fill_quality_line([], "Open fills")
+        assert result == "Open fills: --"
+
+    def test_build_fill_quality_line_formats_values(self):
+        """Returns formatted string with avg, range, and fee bps."""
+        from gpt_trader.tui.widgets.portfolio.position_detail_modal import (
+            PositionDetailModal,
+        )
+
+        position = Position(
+            symbol="BTC-USD",
+            quantity=Decimal("1.0"),
+            entry_price=Decimal("50000.00"),
+            mark_price=Decimal("50000.00"),
+            unrealized_pnl=Decimal("0"),
+            side="long",
+        )
+
+        trades = [
+            Trade(
+                trade_id="t1",
+                symbol="BTC-USD",
+                side="BUY",
+                quantity=Decimal("0.5"),
+                price=Decimal("100.00"),
+                order_id="o1",
+                time="2024-01-15T10:00:00Z",
+                fee=Decimal("0.50"),
+            ),
+            Trade(
+                trade_id="t2",
+                symbol="BTC-USD",
+                side="BUY",
+                quantity=Decimal("0.5"),
+                price=Decimal("110.00"),
+                order_id="o2",
+                time="2024-01-15T11:00:00Z",
+                fee=Decimal("0.55"),
+            ),
+        ]
+
+        modal = PositionDetailModal(position)
+        result = modal._build_fill_quality_line(trades, "Open fills")
+
+        # Should contain label and count
+        assert "Open fills (n=2)" in result
+
+        # Should contain avg (VWAP = (100*0.5 + 110*0.5) / 1.0 = 105)
+        assert "avg" in result
+        assert "105" in result
+
+        # Should contain range ((110-100)/105 * 100 = 9.52%)
+        assert "range" in result
+        assert "9.52%" in result
+
+        # Should contain fee bps (1.05 / 105 * 10000 = 100 bps)
+        assert "bps" in result
+
+    def test_build_fill_quality_line_single_trade_zero_range(self):
+        """Single trade has zero range."""
+        from gpt_trader.tui.widgets.portfolio.position_detail_modal import (
+            PositionDetailModal,
+        )
+
+        position = Position(
+            symbol="BTC-USD",
+            quantity=Decimal("1.0"),
+            entry_price=Decimal("50000.00"),
+            mark_price=Decimal("50000.00"),
+            unrealized_pnl=Decimal("0"),
+            side="long",
+        )
+
+        trades = [
+            Trade(
+                trade_id="t1",
+                symbol="BTC-USD",
+                side="BUY",
+                quantity=Decimal("1.0"),
+                price=Decimal("100.00"),
+                order_id="o1",
+                time="2024-01-15T10:00:00Z",
+                fee=Decimal("0.10"),
+            ),
+        ]
+
+        modal = PositionDetailModal(position)
+        result = modal._build_fill_quality_line(trades, "Close fills")
+
+        # Should have count of 1
+        assert "Close fills (n=1)" in result
+
+        # Range should be 0.00% for single trade
+        assert "range 0.00%" in result

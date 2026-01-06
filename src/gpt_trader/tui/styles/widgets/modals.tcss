@@ -330,3 +330,8 @@ PositionDetailModal .recent-fills-note {
     text-style: italic;
     height: auto;
 }
+
+PositionDetailModal .fill-quality-row {
+    height: auto;
+    padding-left: $spacing-xs;
+}

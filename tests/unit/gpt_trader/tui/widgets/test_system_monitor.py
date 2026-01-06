@@ -46,7 +46,7 @@ class TestSystemMonitorWidget:
 
             # Check that header is rendered
             header = app.query_one(".sys-header", Label)
-            assert "SYSTEM" in str(header.renderable)
+            assert "SYSTEM" in str(header.render())
 
     @pytest.mark.asyncio
     async def test_on_state_updated_extracts_system_data(self) -> None:
@@ -136,7 +136,7 @@ class TestSystemMonitorWidget:
             widget.latency = 25.0
 
             lbl = app.query_one("#lbl-latency", Label)
-            rendered = str(lbl.renderable)
+            rendered = str(lbl.render())
             assert "green" in rendered.lower() or "25ms" in rendered
 
     @pytest.mark.asyncio
@@ -150,7 +150,7 @@ class TestSystemMonitorWidget:
             widget.latency = 100.0
 
             lbl = app.query_one("#lbl-latency", Label)
-            rendered = str(lbl.renderable)
+            rendered = str(lbl.render())
             assert "yellow" in rendered.lower() or "100ms" in rendered
 
     @pytest.mark.asyncio
@@ -164,7 +164,7 @@ class TestSystemMonitorWidget:
             widget.latency = 300.0
 
             lbl = app.query_one("#lbl-latency", Label)
-            rendered = str(lbl.renderable)
+            rendered = str(lbl.render())
             assert "red" in rendered.lower() or "300ms" in rendered
 
     @pytest.mark.asyncio
@@ -178,7 +178,7 @@ class TestSystemMonitorWidget:
             widget.connection_status = "CONNECTED"
 
             lbl = app.query_one("#lbl-conn", Label)
-            rendered = str(lbl.renderable)
+            rendered = str(lbl.render())
             assert "Connected" in rendered or "green" in rendered.lower()
             assert lbl.has_class("good")
 
@@ -193,7 +193,7 @@ class TestSystemMonitorWidget:
             widget.connection_status = "DISCONNECTED"
 
             lbl = app.query_one("#lbl-conn", Label)
-            rendered = str(lbl.renderable)
+            rendered = str(lbl.render())
             assert "DISCONNECTED" in rendered or "red" in rendered.lower()
             assert lbl.has_class("bad")
 

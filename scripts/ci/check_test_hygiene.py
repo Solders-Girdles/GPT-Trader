@@ -198,6 +198,8 @@ ALLOWLIST = {
     "tests/tui/test_state_logic.py",  # TUI state logic comprehensive scenarios
     "tests/unit/gpt_trader/tui/services/test_trading_stats_service.py",  # trading stats FIFO matching comprehensive scenarios
     "tests/unit/gpt_trader/orchestration/configuration/risk/test_cfm_risk_config.py",  # CFM risk config validation matrix
+    "tests/unit/gpt_trader/tui/test_snapshots.py",  # TUI snapshot and layout guardrail comprehensive scenarios
+    "tests/unit/gpt_trader/tui/widgets/test_system_monitor.py",  # system monitor widget comprehensive state scenarios
 }
 
 SLEEP_ALLOWLIST = {

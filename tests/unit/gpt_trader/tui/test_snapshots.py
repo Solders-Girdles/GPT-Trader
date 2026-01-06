@@ -409,10 +409,10 @@ class TestLayoutGuardrails:
         async with app.run_test(size=(120, 40)) as pilot:
             await pilot.pause()
 
-            # Get all visible widgets
+            # Get all visible widgets from active screen (Textual 7.0+ query scope)
             # Note: This is a simplified check; full overlap detection would
             # require comparing computed regions
-            widgets = list(app.query("Static, Button, Label, DataTable"))
+            widgets = list(app.screen.query("Static, Button, Label, DataTable"))
             assert len(widgets) > 0, "No widgets found"
 
 

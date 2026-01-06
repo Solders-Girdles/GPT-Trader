@@ -111,8 +111,8 @@ class TestPortfolioWidgetInteractions:
         async with app.run_test() as pilot:
             await pilot.pause()
 
-            # Query for log widget (primary view on main screen)
-            logs = app.query("LogWidget")
+            # Query for log widget from active screen (Textual 7.0+ query scope)
+            logs = app.screen.query("LogWidget")
             assert len(logs) > 0, "LogWidget should exist on main screen"
 
     @pytest.mark.asyncio
@@ -127,8 +127,8 @@ class TestPortfolioWidgetInteractions:
             await pilot.press("d")
             await pilot.pause()
 
-            # Query for portfolio-related widgets in Details screen
-            positions = app.query("PositionsWidget")
+            # Query from active screen (Textual 7.0+ query scope)
+            positions = app.screen.query("PositionsWidget")
             assert len(positions) > 0, "PositionsWidget should exist in Details overlay"
 
 
@@ -188,10 +188,10 @@ class TestLogWidgetInteractions:
         async with app.run_test() as pilot:
             await pilot.pause()
 
-            # Verify level filter chip buttons exist
+            # Verify level filter chip buttons exist (query from active screen)
             chip_ids = ["level-all", "level-error", "level-warn", "level-info", "level-debug"]
             for chip_id in chip_ids:
-                chip = app.query_one(f"#{chip_id}", Button)
+                chip = app.screen.query_one(f"#{chip_id}", Button)
                 assert chip is not None
 
 

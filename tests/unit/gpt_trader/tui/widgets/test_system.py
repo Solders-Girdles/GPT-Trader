@@ -35,15 +35,15 @@ class TestSystemHealthWidget:
             # Verify internal state
             assert widget.system_data == new_data
 
-            # Verify UI updates
-            assert app.query_one("#connection-status", Label).renderable == "CONNECTED"
+            # Verify UI updates (use str() to get label content in Textual 7.0+)
+            assert str(app.query_one("#connection-status", Label).render()) == "CONNECTED"
             assert app.query_one("#connection-status", Label).has_class("status-connected")
-            assert app.query_one("#latency", Label).renderable == "123ms"
+            assert str(app.query_one("#latency", Label).render()) == "123ms"
             assert (
-                app.query_one("#rate-limit", Label).renderable == "15%"
+                str(app.query_one("#rate-limit", Label).render()) == "15%"
             )  # No prefix in non-compact mode
-            assert app.query_one("#memory", Label).renderable == "42MB"
-            assert app.query_one("#cpu", Label).renderable == "5%"
+            assert str(app.query_one("#memory", Label).render()) == "42MB"
+            assert str(app.query_one("#cpu", Label).render()) == "5%"
 
     @pytest.mark.asyncio
     async def test_disconnected_status(self) -> None:
@@ -53,6 +53,6 @@ class TestSystemHealthWidget:
             new_data = SystemStatus(connection_status="DISCONNECTED")
             widget.update_system(new_data)
 
-            assert app.query_one("#connection-status", Label).renderable == "DISCONNECTED"
+            assert str(app.query_one("#connection-status", Label).render()) == "DISCONNECTED"
             assert app.query_one("#connection-status", Label).has_class("status-disconnected")
             assert not app.query_one("#connection-status", Label).has_class("status-connected")

@@ -29,6 +29,39 @@ if TYPE_CHECKING:
     from gpt_trader.tui.state import TuiState
 
 
+# Static tuning hints keyed by indicator name (uppercase)
+TUNING_HINTS: dict[str, str] = {
+    "RSI": "Higher period = slower signals",
+    "MACD": "Wider spread = smoother trend",
+    "ADX": "Higher period = smoother regime",
+    "VWAP": "Longer window = slower mean",
+    "BOLL": "Wider bands = fewer signals",
+    "EMA": "Longer EMA = slower trend",
+}
+
+
+def _get_indicator_hint(name: str) -> str | None:
+    """Get tuning hint for an indicator by name.
+
+    Normalizes indicator name by taking first alphabetic token
+    (e.g., "RSI(14)" -> "RSI", "MACD_signal" -> "MACD").
+
+    Args:
+        name: Indicator name (may include parameters).
+
+    Returns:
+        Hint string if found, None otherwise.
+    """
+    import re
+
+    # Extract first alphabetic token
+    match = re.match(r"([A-Za-z]+)", name)
+    if match:
+        key = match.group(1).upper()
+        return TUNING_HINTS.get(key)
+    return None
+
+
 class StrategyDetailScreen(Screen):
     """Full-page strategy analysis screen.
 
@@ -187,6 +220,13 @@ class StrategyDetailScreen(Screen):
         height: 1;
     }
 
+    StrategyDetailScreen .signal-detail-hint-note {
+        color: $text-muted;
+        text-style: dim italic;
+        height: 1;
+        margin-bottom: 1;
+    }
+
     StrategyDetailScreen .signal-bar-row {
         height: 1;
     }
@@ -259,6 +299,10 @@ class StrategyDetailScreen(Screen):
                 yield Label(
                     "Signal     Value   Wt   Contrib",
                     classes="signal-detail-header",
+                )
+                yield Label(
+                    "Hints: tuned defaults shown; no live config",
+                    classes="signal-detail-hint-note",
                 )
                 yield Vertical(id="signal-bars-detail")
 
@@ -477,7 +521,7 @@ class StrategyDetailScreen(Screen):
         """Build the markup string for a signal detail row.
 
         Format: Signal     Value   Wt   Contrib
-                RSI       35.20  0.80  ███░░░░░░ +0.42 ↑
+                RSI       35.20  0.80  ███░░░░░░ +0.42 ↑  (hint)
 
         Args:
             contrib: IndicatorContribution with signal data.
@@ -522,9 +566,16 @@ class StrategyDetailScreen(Screen):
         contrib_str = f"{sign}{contrib.contribution:.2f}"
 
         # Build the row
-        return (
+        row = (
             f"[dim]{name}[/dim] "
             f"{value_str} "
             f"{weight_str}  "
             f"[{color}]{bar} {contrib_str} {direction}[/{color}]"
         )
+
+        # Append tuning hint if available
+        hint = _get_indicator_hint(contrib.name)
+        if hint:
+            row += f"  [dim]({hint})[/dim]"
+
+        return row

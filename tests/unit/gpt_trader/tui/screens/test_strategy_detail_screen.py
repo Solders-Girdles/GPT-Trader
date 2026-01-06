@@ -1,6 +1,10 @@
 """Tests for StrategyDetailScreen signal detail formatting."""
 
-from gpt_trader.tui.screens.strategy_detail_screen import StrategyDetailScreen
+from gpt_trader.tui.screens.strategy_detail_screen import (
+    TUNING_HINTS,
+    StrategyDetailScreen,
+    _get_indicator_hint,
+)
 from gpt_trader.tui.types import IndicatorContribution
 
 
@@ -95,3 +99,60 @@ class TestBuildSignalDetailContent:
         assert "72.50" in content
         # Should contain weight
         assert "0.75" in content
+
+    def test_rsi_row_includes_tuning_hint(self):
+        """RSI row includes tuning hint text."""
+        screen = StrategyDetailScreen()
+        contrib = IndicatorContribution(
+            name="RSI",
+            value=35.0,
+            contribution=0.30,
+            weight=0.80,
+        )
+
+        content = screen._build_signal_detail_content(contrib)
+
+        # Should contain the RSI hint
+        assert "Higher period = slower signals" in content
+
+    def test_unknown_indicator_has_no_hint(self):
+        """Unknown indicator row has no hint appended."""
+        screen = StrategyDetailScreen()
+        contrib = IndicatorContribution(
+            name="CustomIndicator",
+            value=50.0,
+            contribution=0.20,
+            weight=1.0,
+        )
+
+        content = screen._build_signal_detail_content(contrib)
+
+        # Should not contain any hint parentheses at end
+        # (check that none of the known hints appear)
+        for hint in TUNING_HINTS.values():
+            assert hint not in content
+
+
+class TestGetIndicatorHint:
+    """Tests for _get_indicator_hint helper."""
+
+    def test_exact_match(self):
+        """Exact indicator name returns hint."""
+        assert _get_indicator_hint("RSI") == "Higher period = slower signals"
+        assert _get_indicator_hint("MACD") == "Wider spread = smoother trend"
+
+    def test_case_insensitive(self):
+        """Hint lookup is case-insensitive."""
+        assert _get_indicator_hint("rsi") == "Higher period = slower signals"
+        assert _get_indicator_hint("Macd") == "Wider spread = smoother trend"
+
+    def test_with_parameters(self):
+        """Indicator with parameters extracts first token."""
+        assert _get_indicator_hint("RSI(14)") == "Higher period = slower signals"
+        assert _get_indicator_hint("MACD_signal") == "Wider spread = smoother trend"
+        assert _get_indicator_hint("EMA20") == "Longer EMA = slower trend"
+
+    def test_unknown_returns_none(self):
+        """Unknown indicator returns None."""
+        assert _get_indicator_hint("CustomIndicator") is None
+        assert _get_indicator_hint("XYZ123") is None

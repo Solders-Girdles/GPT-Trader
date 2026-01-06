@@ -118,7 +118,7 @@ class PositionCardWidget(Static):
             state.data_source_mode,
             conn_status,
             state.degraded_mode,
-            state.last_update,
+            state.last_update_timestamp,
             pos_sig,
         )
 

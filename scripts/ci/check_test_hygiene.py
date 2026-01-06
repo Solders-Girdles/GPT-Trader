@@ -200,6 +200,10 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/orchestration/configuration/risk/test_cfm_risk_config.py",  # CFM risk config validation matrix
     "tests/unit/gpt_trader/tui/test_snapshots.py",  # TUI snapshot and layout guardrail comprehensive scenarios
     "tests/unit/gpt_trader/tui/widgets/test_system_monitor.py",  # system monitor widget comprehensive state scenarios
+    # TUI reliability/fault-injection tests
+    "tests/integration/test_tui_degraded_paths.py",  # TUI degraded state handling with partial/missing data scenarios
+    "tests/unit/gpt_trader/tui/widgets/test_account.py",  # account widget partial state and signature caching tests
+    "tests/unit/gpt_trader/tui/widgets/test_position_card.py",  # position card widget resilience with missing data
 }
 
 SLEEP_ALLOWLIST = {

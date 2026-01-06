@@ -161,7 +161,7 @@ class AccountWidget(Static):
             state.running,
             state.data_source_mode,
             state.degraded_mode,
-            state.last_update,
+            state.last_update_timestamp,
             acct_sig,
             pos_sig,
         )

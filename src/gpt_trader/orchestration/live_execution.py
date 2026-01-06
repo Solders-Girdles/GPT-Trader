@@ -18,7 +18,6 @@ from typing import cast
 
 from gpt_trader.core import OrderSide, OrderType, Product, TimeInForce
 from gpt_trader.features.brokerages.coinbase.rest_service import CoinbaseRestService
-from gpt_trader.features.brokerages.coinbase.specs import validate_order as spec_validate_order
 from gpt_trader.features.brokerages.core.protocols import ExtendedBrokerProtocol
 from gpt_trader.features.live_trade.risk import LiveRiskManager, ValidationError
 from gpt_trader.orchestration.configuration import BotConfig
@@ -26,7 +25,6 @@ from gpt_trader.orchestration.execution import (
     GuardManager,
     OrderSubmitter,
     OrderValidator,
-    RuntimeGuardState,
     StateCollector,
     ValidationFailureTracker,
 )
@@ -35,8 +33,7 @@ from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="live_execution")
 
-# Re-export for backward compatibility
-__all__ = ["LiveExecutionEngine", "LiveOrder", "RuntimeGuardState", "spec_validate_order"]
+__all__ = ["LiveExecutionEngine", "LiveOrder"]
 
 
 @dataclass

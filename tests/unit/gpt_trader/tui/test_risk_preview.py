@@ -4,10 +4,11 @@ import pytest
 
 from gpt_trader.tui.risk_preview import (
     SHOCK_SCENARIOS,
+    GuardImpact,
     RiskPreviewResult,
     RiskPreviewScenario,
+    _get_guard_impacts,
     _get_ratio_status,
-    _get_triggered_guards,
     compute_all_previews,
     compute_preview,
     get_default_scenarios,
@@ -38,15 +39,17 @@ class TestRiskPreviewResult:
             label="-5%",
             projected_loss_pct=75.0,
             status=StatusLevel.WARNING,
-            guards_triggered=["DailyLossGuard"],
+            guard_impacts=[GuardImpact(name="DailyLossGuard", reason=">=75% of limit")],
         )
         assert result.label == "-5%"
         assert result.projected_loss_pct == 75.0
-        assert result.guards_triggered == ["DailyLossGuard"]
+        assert len(result.guard_impacts) == 1
+        assert result.guard_impacts[0].name == "DailyLossGuard"
+        assert result.guard_impacts[0].reason == ">=75% of limit"
 
         # Test default empty guards
         result2 = RiskPreviewResult(label="+2%", projected_loss_pct=30.0, status=StatusLevel.OK)
-        assert result2.guards_triggered == []
+        assert result2.guard_impacts == []
 
 
 class TestGetRatioStatus:
@@ -65,21 +68,33 @@ class TestGetRatioStatus:
         assert _get_ratio_status(1.5, DEFAULT_RISK_THRESHOLDS) == StatusLevel.CRITICAL
 
 
-class TestGetTriggeredGuards:
-    """Tests for _get_triggered_guards helper."""
+class TestGetGuardImpacts:
+    """Tests for _get_guard_impacts helper."""
 
     def test_guards_by_threshold(self):
-        """Guards trigger at correct thresholds."""
+        """Guards trigger at correct thresholds with reasons."""
         # Below warning: no guards
-        assert _get_triggered_guards(0.74, DEFAULT_RISK_THRESHOLDS) == []
+        assert _get_guard_impacts(0.74, DEFAULT_RISK_THRESHOLDS) == []
+
         # At warning: DailyLossGuard triggers
-        guards = _get_triggered_guards(0.75, DEFAULT_RISK_THRESHOLDS)
-        assert "DailyLossGuard" in guards
-        assert "ReduceOnlyMode" not in guards
+        impacts = _get_guard_impacts(0.75, DEFAULT_RISK_THRESHOLDS)
+        assert len(impacts) == 1
+        assert impacts[0].name == "DailyLossGuard"
+        assert "75%" in impacts[0].reason
+
         # At 100%: both guards trigger
-        guards = _get_triggered_guards(1.0, DEFAULT_RISK_THRESHOLDS)
-        assert "DailyLossGuard" in guards
-        assert "ReduceOnlyMode" in guards
+        impacts = _get_guard_impacts(1.0, DEFAULT_RISK_THRESHOLDS)
+        guard_names = [g.name for g in impacts]
+        assert "DailyLossGuard" in guard_names
+        assert "ReduceOnlyMode" in guard_names
+
+    def test_reasons_include_threshold_text(self):
+        """Guard reasons include threshold percentage text."""
+        impacts = _get_guard_impacts(1.0, DEFAULT_RISK_THRESHOLDS)
+        reasons = {g.name: g.reason for g in impacts}
+
+        assert ">=75% of limit" in reasons["DailyLossGuard"]
+        assert ">=100% of limit" in reasons["ReduceOnlyMode"]
 
 
 class TestComputePreview:
@@ -123,8 +138,9 @@ class TestComputePreview:
         # 50% + 50% = 100% -> CRITICAL
         assert result.projected_loss_pct == pytest.approx(100.0, rel=0.01)
         assert result.status == StatusLevel.CRITICAL
-        assert "DailyLossGuard" in result.guards_triggered
-        assert "ReduceOnlyMode" in result.guards_triggered
+        guard_names = [g.name for g in result.guard_impacts]
+        assert "DailyLossGuard" in guard_names
+        assert "ReduceOnlyMode" in guard_names
 
     def test_leverage_fallback_and_no_limit(self, tui_state: TuiState):
         """Falls back to 1.0 leverage; returns OK when no limit configured."""

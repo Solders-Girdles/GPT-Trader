@@ -45,6 +45,19 @@ class RiskPreviewScenario:
     shock_pct: float
 
 
+@dataclass(frozen=True)
+class GuardImpact:
+    """A guard that would trigger with its reason.
+
+    Attributes:
+        name: Guard name (e.g., "DailyLossGuard").
+        reason: Human-readable reason (e.g., ">=75% of limit").
+    """
+
+    name: str
+    reason: str
+
+
 @dataclass
 class RiskPreviewResult:
     """Result of computing a risk preview scenario.
@@ -53,13 +66,13 @@ class RiskPreviewResult:
         label: Scenario label for display.
         projected_loss_pct: Projected loss as percentage of limit (0-100+).
         status: Status level (OK/WARNING/CRITICAL) based on thresholds.
-        guards_triggered: List of guard names that would trip.
+        guard_impacts: List of guards that would trigger with reasons.
     """
 
     label: str
     projected_loss_pct: float
     status: StatusLevel
-    guards_triggered: list[str] = field(default_factory=list)
+    guard_impacts: list[GuardImpact] = field(default_factory=list)
 
 
 def compute_preview(
@@ -100,7 +113,7 @@ def compute_preview(
             label=label,
             projected_loss_pct=0.0,
             status=StatusLevel.OK,
-            guards_triggered=[],
+            guard_impacts=[],
         )
 
     current_ratio = current_loss_pct / limit_pct
@@ -125,14 +138,14 @@ def compute_preview(
     # Determine status using thresholds
     status = _get_ratio_status(projected_ratio, thresholds)
 
-    # Determine which guards would trigger
-    guards_triggered = _get_triggered_guards(projected_ratio, thresholds)
+    # Determine which guards would trigger with reasons
+    guard_impacts = _get_guard_impacts(projected_ratio, thresholds)
 
     return RiskPreviewResult(
         label=label,
         projected_loss_pct=projected_pct,
         status=status,
-        guards_triggered=guards_triggered,
+        guard_impacts=guard_impacts,
     )
 
 
@@ -153,8 +166,8 @@ def _get_ratio_status(loss_ratio: float, thresholds: RiskThresholds) -> StatusLe
     return StatusLevel.CRITICAL
 
 
-def _get_triggered_guards(loss_ratio: float, thresholds: RiskThresholds) -> list[str]:
-    """Determine which guards would trigger at the given loss ratio.
+def _get_guard_impacts(loss_ratio: float, thresholds: RiskThresholds) -> list[GuardImpact]:
+    """Determine which guards would trigger at the given loss ratio with reasons.
 
     This is a simplified UI projection - the actual guards have more
     complex logic, but this gives users a sense of what might trip.
@@ -164,19 +177,20 @@ def _get_triggered_guards(loss_ratio: float, thresholds: RiskThresholds) -> list
         thresholds: Thresholds for guard boundaries.
 
     Returns:
-        List of guard names that would likely trigger.
+        List of GuardImpact objects with names and reasons.
     """
-    guards = []
+    impacts = []
 
     # DailyLossGuard triggers at warning threshold (75% by default)
     if loss_ratio >= thresholds.loss_ratio_warn:
-        guards.append("DailyLossGuard")
+        warn_pct = int(thresholds.loss_ratio_warn * 100)
+        impacts.append(GuardImpact(name="DailyLossGuard", reason=f">={warn_pct}% of limit"))
 
     # At critical (100%+), reduce-only would likely engage
     if loss_ratio >= 1.0:
-        guards.append("ReduceOnlyMode")
+        impacts.append(GuardImpact(name="ReduceOnlyMode", reason=">=100% of limit"))
 
-    return guards
+    return impacts
 
 
 def get_default_scenarios() -> list[RiskPreviewScenario]:

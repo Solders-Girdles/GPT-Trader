@@ -405,11 +405,28 @@ class RiskDetailModal(ModalScreen):
         current_pct = (abs(data.current_daily_loss_pct) / data.daily_loss_limit_pct) * 100
         yield Static(f"Current: {current_pct:.1f}% of limit", classes="preview-current")
 
+        # Compute all previews
+        results = []
+        for label, shock_pct in SHOCK_SCENARIOS:
+            result = compute_preview(tui_state, shock_pct, label=label)
+            results.append(result)
+
         # Render shock scenario chips in a horizontal row
         with Horizontal(classes="preview-chips"):
-            for label, shock_pct in SHOCK_SCENARIOS:
-                result = compute_preview(tui_state, shock_pct, label=label)
+            for result in results:
                 yield self._render_preview_chip(result)
+
+        # Show guard impacts for scenarios that trip guards
+        scenarios_with_impacts = [r for r in results if r.guard_impacts]
+        if scenarios_with_impacts:
+            with Container(classes="preview-guards"):
+                for result in scenarios_with_impacts:
+                    color = get_status_color(result.status)
+                    impacts_str = ", ".join(f"{g.name} ({g.reason})" for g in result.guard_impacts)
+                    yield Static(
+                        f"[{color}]{result.label}[/{color}]: {impacts_str}",
+                        classes="preview-guard-line",
+                    )
 
         # Show legend
         yield Static(
@@ -433,7 +450,7 @@ class RiskDetailModal(ModalScreen):
         chip_text = f"[{color}]{result.label}: {pct_str}[/{color}]"
 
         # Add warning indicator if guards would trip
-        if result.guards_triggered:
+        if result.guard_impacts:
             chip_text += " [red]![/red]"
 
         return Static(chip_text, classes="preview-chip")

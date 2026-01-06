@@ -264,6 +264,17 @@ RiskDetailModal .preview-focused {
     padding: 0 $spacing-xs;
 }
 
+RiskDetailModal .preview-guards {
+    margin-top: $spacing-xs;
+    margin-bottom: $spacing-xs;
+    padding-left: $spacing-xs;
+}
+
+RiskDetailModal .preview-guard-line {
+    color: $text-muted;
+    height: auto;
+}
+
 /* === Position Detail Modal === */
 
 PositionDetailModal {

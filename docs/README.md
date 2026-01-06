@@ -45,6 +45,7 @@ last-updated: 2025-11-24
 ### Development
 - [AI Agent Guide](guides/agents.md) - For Claude and other AI agents
 - [Development Guidelines](DEVELOPMENT_GUIDELINES.md) - Standards for contributing
+- [DI Policy](DI_POLICY.md) - Dependency injection patterns and container usage
 - [Security](SECURITY.md) - Security practices and considerations
 
 ## Configuration

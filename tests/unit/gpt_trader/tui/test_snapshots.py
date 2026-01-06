@@ -35,6 +35,7 @@ from gpt_trader.tui.types import (
     DecisionData,
     IndicatorContribution,
     RegimeData,
+    RiskGuard,
     RiskState,
     StrategyPerformance,
     StrategyState,
@@ -592,6 +593,80 @@ class TestRiskPreviewSnapshots:
             create_app(),
             terminal_size=(100, 40),
             run_before=open_risk_preview,
+        )
+
+
+class TestGuardThresholdSnapshots:
+    """Snapshot tests for the Guard Thresholds section in RiskDetailModal."""
+
+    def test_risk_modal_with_active_guards(self, snap_compare, mock_demo_bot):
+        """Snapshot test for RiskDetailModal with active guards and explanations.
+
+        Shows the Guard Thresholds section with human-readable explanations
+        for each active guard (e.g., "triggers at >= 75% of daily loss limit").
+        """
+        risk_data = RiskState(
+            daily_loss_limit_pct=0.05,  # 5% limit
+            current_daily_loss_pct=-0.031,  # 3.1% loss (62% of limit)
+            max_leverage=5.0,
+            reduce_only_mode=False,
+            active_guards=["DailyLossGuard", "MaxLeverageGuard"],
+            guards=[
+                RiskGuard(name="DailyLossGuard", severity="CRITICAL"),
+                RiskGuard(name="MaxLeverageGuard", severity="HIGH"),
+            ],
+        )
+
+        async def open_risk_modal(pilot):
+            app = pilot.app
+            app.tui_state.risk_data = risk_data
+            app.tui_state.refresh()
+            app.push_screen(RiskDetailModal(risk_data))
+            await pilot.pause()
+
+        def create_app():
+            return TraderApp(bot=mock_demo_bot)
+
+        assert snap_compare(
+            create_app(),
+            terminal_size=(100, 45),
+            run_before=open_risk_modal,
+        )
+
+    def test_risk_modal_multiple_guard_types(self, snap_compare, mock_demo_bot):
+        """Snapshot test for RiskDetailModal with multiple guard types.
+
+        Shows guard explanations for various guard types including
+        reduce-only, drawdown, and volatility guards.
+        """
+        risk_data = RiskState(
+            daily_loss_limit_pct=0.10,
+            current_daily_loss_pct=-0.08,  # 80% of limit
+            max_leverage=3.0,
+            reduce_only_mode=True,
+            reduce_only_reason="Daily loss limit exceeded",
+            active_guards=["DailyLossGuard", "ReduceOnlyGuard", "VolatilityGuard"],
+            guards=[
+                RiskGuard(name="DailyLossGuard", severity="CRITICAL"),
+                RiskGuard(name="ReduceOnlyGuard", severity="HIGH"),
+                RiskGuard(name="VolatilityGuard", severity="HIGH"),
+            ],
+        )
+
+        async def open_risk_modal(pilot):
+            app = pilot.app
+            app.tui_state.risk_data = risk_data
+            app.tui_state.refresh()
+            app.push_screen(RiskDetailModal(risk_data))
+            await pilot.pause()
+
+        def create_app():
+            return TraderApp(bot=mock_demo_bot)
+
+        assert snap_compare(
+            create_app(),
+            terminal_size=(100, 50),
+            run_before=open_risk_modal,
         )
 
 

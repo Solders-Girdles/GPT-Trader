@@ -43,7 +43,7 @@ class PositionCardWidget(Static):
 
     SCOPED_CSS = False  # Use global styles from dashboard.tcss
 
-    position_data = reactive(None, always_update=True)  # type: ignore
+    position_data = reactive(None, always_update=True)  # type: ignore[var-annotated]
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)

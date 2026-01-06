@@ -25,7 +25,7 @@ class TraderCommands(Provider):
     @property
     def app(self) -> TraderApp:
         """Get the app instance with proper typing."""
-        return self.screen.app  # type: ignore
+        return self.screen.app  # type: ignore[return-value]
 
     async def search(self, query: str) -> Hits:
         """Search for commands matching the query.

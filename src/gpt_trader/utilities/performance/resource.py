@@ -7,9 +7,9 @@ from typing import Any
 from gpt_trader.utilities.logging_patterns import get_logger
 
 try:  # pragma: no cover - optional dependency
-    import psutil  # type: ignore
+    import psutil  # type: ignore[import-not-found]
 except Exception:  # pragma: no cover - optional dependency missing
-    psutil = None  # type: ignore
+    psutil = None  # type: ignore[assignment]
 
 logger = get_logger("performance", component="monitoring")
 
@@ -33,7 +33,7 @@ class ResourceMonitor:
             self._psutil = psutil
             return
         try:
-            import psutil as psutil_mod  # type: ignore
+            import psutil as psutil_mod  # type: ignore[import-not-found]
 
             self._psutil = psutil_mod
         except ImportError:

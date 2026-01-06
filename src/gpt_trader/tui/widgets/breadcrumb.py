@@ -32,7 +32,7 @@ class BreadcrumbWidget(Static):
     SCOPED_CSS = False
 
     # The navigation path as a list of screen names
-    path: list[str] = reactive([], always_update=True)  # type: ignore
+    path: list[str] = reactive([], always_update=True)  # type: ignore[var-annotated]
 
     def __init__(
         self,
@@ -175,9 +175,7 @@ class ScreenBreadcrumb(BreadcrumbWidget):
                         if name.endswith("Screen"):
                             name = name[:-6]
                         # Add spaces before capitals for readability
-                        name = "".join(
-                            f" {c}" if c.isupper() else c for c in name
-                        ).strip()
+                        name = "".join(f" {c}" if c.isupper() else c for c in name).strip()
                     path.append(name)
         except Exception:
             pass

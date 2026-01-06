@@ -160,7 +160,7 @@ class MainScreen(Screen):
         if hasattr(self.app, "_sync_state_from_bot"):
             self.app._sync_state_from_bot()
             if hasattr(self.app, "tui_state"):
-                self.update_ui(self.app.tui_state)  # type: ignore
+                self.update_ui(self.app.tui_state)  # type: ignore[attr-defined]
             logger.debug("Initial UI sync completed successfully")
 
         # Populate balances / initial market snapshot even while STOPPED.
@@ -173,7 +173,7 @@ class MainScreen(Screen):
 
         # Initialize responsive state from app
         if hasattr(self.app, "responsive_state"):
-            self.responsive_state = self.app.responsive_state  # type: ignore
+            self.responsive_state = self.app.responsive_state  # type: ignore[attr-defined]
 
         # Log system ready message with mode information
         mode = (

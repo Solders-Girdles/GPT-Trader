@@ -214,7 +214,7 @@ class MarketPulseWidget(Static):
     SCOPED_CSS = False  # Use global styles from dashboard.tcss
 
     # Can accept a list of market data dicts
-    market_data = reactive([], always_update=True)  # type: ignore
+    market_data = reactive([], always_update=True)  # type: ignore[var-annotated]
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)

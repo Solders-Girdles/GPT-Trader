@@ -150,7 +150,7 @@ def safe_update(
 
                 return None
 
-        return wrapper  # type: ignore
+        return wrapper  # type: ignore[return-value]
 
     # Support both @safe_update and @safe_update(notify_user=True)
     if func is None:

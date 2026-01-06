@@ -482,7 +482,7 @@ class RegimeTransitionMatrix:
         if not from_counts:
             return None, 0.0
 
-        best_regime = max(from_counts, key=from_counts.get)  # type: ignore
+        best_regime = max(from_counts, key=from_counts.get)  # type: ignore[arg-type]
         total_from = sum(from_counts.values())
 
         return best_regime, from_counts[best_regime] / total_from

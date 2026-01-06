@@ -15,7 +15,7 @@ class SparklineWidget(Static):
     Renders a crypto-style sparkline graph using Unicode block characters.
     """
 
-    data = reactive([])  # type: ignore
+    data = reactive([])  # type: ignore[var-annotated]
 
     def __init__(
         self,

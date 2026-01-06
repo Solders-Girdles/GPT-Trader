@@ -3,8 +3,8 @@ from types import SimpleNamespace
 
 import pytest
 
+from gpt_trader.core import AuthError
 from gpt_trader.features.brokerages.coinbase.client import CoinbaseAuth, CoinbaseClient
-from gpt_trader.features.brokerages.core.interfaces import AuthError
 
 
 def make_client():

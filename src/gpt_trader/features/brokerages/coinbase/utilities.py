@@ -10,12 +10,12 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Literal
 
-from gpt_trader.features.brokerages.coinbase.models import to_product
-from gpt_trader.features.brokerages.core.interfaces import (
+from gpt_trader.core import (
     InvalidRequestError,
     NotFoundError,
     Product,
 )
+from gpt_trader.features.brokerages.coinbase.models import to_product
 
 
 @dataclass

@@ -8,10 +8,7 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 
-from gpt_trader.features.brokerages.coinbase.endpoints import CoinbaseEndpoints
-from gpt_trader.features.brokerages.coinbase.models import APIConfig, to_product
-from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
-from gpt_trader.features.brokerages.core.interfaces import (
+from gpt_trader.core import (
     Balance,
     Candle,
     MarketType,
@@ -24,6 +21,9 @@ from gpt_trader.features.brokerages.core.interfaces import (
     Quote,
     TimeInForce,
 )
+from gpt_trader.features.brokerages.coinbase.endpoints import CoinbaseEndpoints
+from gpt_trader.features.brokerages.coinbase.models import APIConfig, to_product
+from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
 
 logger = logging.getLogger(__name__)
 

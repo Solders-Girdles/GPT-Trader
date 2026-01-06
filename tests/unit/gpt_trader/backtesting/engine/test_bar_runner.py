@@ -15,7 +15,7 @@ from gpt_trader.backtesting.engine.bar_runner import (
     IHistoricalDataProvider,
 )
 from gpt_trader.backtesting.types import ClockSpeed
-from gpt_trader.features.brokerages.core.interfaces import Candle
+from gpt_trader.core import Candle
 
 
 def _create_mock_candle(

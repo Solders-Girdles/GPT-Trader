@@ -9,7 +9,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Literal
 
-from gpt_trader.features.brokerages.core.interfaces import (
+from gpt_trader.core import (
     Candle,
     MarketType,
     Order,

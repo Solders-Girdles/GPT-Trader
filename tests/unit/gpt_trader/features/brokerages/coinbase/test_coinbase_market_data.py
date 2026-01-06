@@ -11,6 +11,14 @@ from urllib.parse import parse_qs, unquote, unquote_plus, urlparse
 
 import pytest
 
+from gpt_trader.core import (
+    InvalidRequestError as CoreInvalidRequestError,
+)
+from gpt_trader.core import (
+    MarketType,
+    NotFoundError,
+    Product,
+)
 from gpt_trader.features.brokerages.coinbase.market_data_features import (
     DepthSnapshot,
     RollingWindow,
@@ -21,14 +29,6 @@ from gpt_trader.features.brokerages.coinbase.utilities import (
     ProductCatalog,
     enforce_perp_rules,
     quantize_to_increment,
-)
-from gpt_trader.features.brokerages.core.interfaces import (
-    InvalidRequestError as CoreInvalidRequestError,
-)
-from gpt_trader.features.brokerages.core.interfaces import (
-    MarketType,
-    NotFoundError,
-    Product,
 )
 from tests.unit.gpt_trader.features.brokerages.coinbase.minimal_brokerage import (
     MinimalCoinbaseBrokerage,

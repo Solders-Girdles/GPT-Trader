@@ -9,7 +9,7 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Any, Protocol
 
-from gpt_trader.features.brokerages.core.interfaces import (
+from gpt_trader.core import (
     Order,
     OrderSide,
     OrderType,

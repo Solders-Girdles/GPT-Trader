@@ -7,7 +7,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from gpt_trader.features.brokerages.core.interfaces import OrderSide, OrderType
+from gpt_trader.core import OrderSide, OrderType
 from gpt_trader.features.live_trade.risk import ValidationError
 from gpt_trader.orchestration.live_execution import (
     LiveExecutionEngine,

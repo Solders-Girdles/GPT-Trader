@@ -5,9 +5,9 @@ from unittest.mock import Mock
 
 import pytest
 
+from gpt_trader.core import InvalidRequestError
 from gpt_trader.features.brokerages.coinbase.endpoints import CoinbaseEndpoints
 from gpt_trader.features.brokerages.coinbase.rest.portfolio_service import PortfolioService
-from gpt_trader.features.brokerages.core.interfaces import InvalidRequestError
 from gpt_trader.persistence.event_store import EventStore
 
 

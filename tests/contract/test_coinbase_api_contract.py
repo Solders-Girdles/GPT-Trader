@@ -5,13 +5,7 @@ from decimal import Decimal
 
 import pytest
 
-from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
-from gpt_trader.features.brokerages.coinbase.endpoints import CoinbaseEndpoints
-from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
-from gpt_trader.features.brokerages.coinbase.models import APIConfig
-from gpt_trader.features.brokerages.coinbase.rest_service import CoinbaseRestService
-from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
-from gpt_trader.features.brokerages.core.interfaces import (
+from gpt_trader.core import (
     Balance,
     MarketType,
     Order,
@@ -21,6 +15,12 @@ from gpt_trader.features.brokerages.core.interfaces import (
     Product,
     TimeInForce,
 )
+from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
+from gpt_trader.features.brokerages.coinbase.endpoints import CoinbaseEndpoints
+from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
+from gpt_trader.features.brokerages.coinbase.models import APIConfig
+from gpt_trader.features.brokerages.coinbase.rest_service import CoinbaseRestService
+from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
 from gpt_trader.persistence.event_store import EventStore
 
 
@@ -194,7 +194,7 @@ async def test_order_lifecycle_contract(broker):
     """
     Contract: Place order -> Get order -> Cancel order.
     """
-    from gpt_trader.features.brokerages.core.interfaces import (
+    from gpt_trader.core import (
         OrderSide,
         OrderStatus,
         OrderType,

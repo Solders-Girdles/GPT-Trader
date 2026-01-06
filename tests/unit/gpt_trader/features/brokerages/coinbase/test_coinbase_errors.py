@@ -7,13 +7,13 @@ from unittest.mock import patch
 
 import pytest
 
-from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
-from gpt_trader.features.brokerages.core.interfaces import (
+from gpt_trader.core import (
     AuthError,
     BrokerageError,
     InvalidRequestError,
     RateLimitError,
 )
+from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
 
 
 def make_client(api_mode: str = "advanced") -> CoinbaseClient:

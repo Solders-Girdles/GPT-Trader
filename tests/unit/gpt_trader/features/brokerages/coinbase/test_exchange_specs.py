@@ -1,11 +1,11 @@
 from decimal import Decimal
 
+from gpt_trader.core import MarketType, Product
 from gpt_trader.features.brokerages.coinbase.specs import (
     calculate_safe_position_size,
     quantize_price_side_aware,
     validate_order,
 )
-from gpt_trader.features.brokerages.core.interfaces import MarketType, Product
 
 
 def make_product(symbol: str) -> Product:

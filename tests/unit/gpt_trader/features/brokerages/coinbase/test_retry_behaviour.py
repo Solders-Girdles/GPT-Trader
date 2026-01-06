@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
+from gpt_trader.core import AuthError, BrokerageError
 from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
-from gpt_trader.features.brokerages.core.interfaces import AuthError, BrokerageError
 
 
 def _make_client() -> CoinbaseClient:

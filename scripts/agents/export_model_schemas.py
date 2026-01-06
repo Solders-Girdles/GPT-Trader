@@ -182,7 +182,7 @@ def enum_to_schema(enum_cls: type) -> dict[str, Any]:
 
 def generate_interface_schemas() -> dict[str, Any]:
     """Generate schemas for core trading interfaces."""
-    from gpt_trader.features.brokerages.core.interfaces import (
+    from gpt_trader.core import (
         Balance,
         Candle,
         Order,
@@ -285,7 +285,7 @@ def generate_interface_schemas() -> dict[str, Any]:
 
 def generate_enum_schemas() -> dict[str, Any]:
     """Generate schemas for all enumeration types."""
-    from gpt_trader.features.brokerages.core.interfaces import (
+    from gpt_trader.core import (
         MarketType,
         OrderSide,
         OrderStatus,

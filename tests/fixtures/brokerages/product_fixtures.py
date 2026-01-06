@@ -11,7 +11,7 @@ from typing import Any
 
 import yaml
 
-from gpt_trader.features.brokerages.core.interfaces import MarketType, Product
+from gpt_trader.core import MarketType, Product
 
 _FIXTURE_FILENAME = "mock_products.yaml"
 

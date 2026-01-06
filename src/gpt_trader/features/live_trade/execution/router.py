@@ -11,7 +11,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
-from gpt_trader.features.brokerages.core.interfaces import (
+from gpt_trader.core import (
     Order,
     OrderSide,
     OrderType,

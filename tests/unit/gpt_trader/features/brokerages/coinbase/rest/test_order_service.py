@@ -5,6 +5,13 @@ from unittest.mock import Mock
 
 import pytest
 
+from gpt_trader.core import (
+    Order,
+    OrderSide,
+    OrderType,
+    Position,
+    TimeInForce,
+)
 from gpt_trader.errors import ValidationError
 from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.errors import (
@@ -16,13 +23,6 @@ from gpt_trader.features.brokerages.coinbase.rest.protocols import (
     OrderPayloadBuilder,
     OrderPayloadExecutor,
     PositionProvider,
-)
-from gpt_trader.features.brokerages.core.interfaces import (
-    Order,
-    OrderSide,
-    OrderType,
-    Position,
-    TimeInForce,
 )
 
 

@@ -9,11 +9,11 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Any, cast
 
+from gpt_trader.core import Candle, Product, Quote
 from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
 from gpt_trader.features.brokerages.coinbase.models import to_candle, to_product, to_quote
 from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
-from gpt_trader.features.brokerages.core.interfaces import Candle, Product, Quote
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="coinbase_product")
@@ -152,10 +152,7 @@ class ProductService:
             List of CFM futures products.
         """
         products = self.list_products()
-        return [
-            p for p in products
-            if p.market_type == "FUTURE" and p.expiry is not None
-        ]
+        return [p for p in products if p.market_type == "FUTURE" and p.expiry is not None]
 
     def get_spot_products(self) -> list[Product]:
         """List spot products.

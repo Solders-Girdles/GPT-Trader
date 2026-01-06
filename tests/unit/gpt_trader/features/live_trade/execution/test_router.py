@@ -3,7 +3,7 @@
 from decimal import Decimal
 from unittest.mock import MagicMock, Mock
 
-from gpt_trader.features.brokerages.core.interfaces import Order, OrderSide, OrderType
+from gpt_trader.core import Order, OrderSide, OrderType
 from gpt_trader.features.live_trade.execution.router import OrderResult, OrderRouter
 from gpt_trader.features.live_trade.risk.manager import LiveRiskManager, ValidationError
 from gpt_trader.features.live_trade.strategies.hybrid.types import (

@@ -5,13 +5,13 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 
-from gpt_trader.features.brokerages.coinbase.models import to_candle, to_order, to_product, to_quote
-from gpt_trader.features.brokerages.core.interfaces import (
+from gpt_trader.core import (
     MarketType,
     OrderSide,
     OrderType,
     TimeInForce,
 )
+from gpt_trader.features.brokerages.coinbase.models import to_candle, to_order, to_product, to_quote
 
 
 def test_to_product_handles_spot_payload():

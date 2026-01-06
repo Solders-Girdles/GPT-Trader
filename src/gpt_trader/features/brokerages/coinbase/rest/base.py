@@ -13,6 +13,14 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
+from gpt_trader.core import (
+    InsufficientFunds,
+    InvalidRequestError,
+    Order,
+    OrderSide,
+    OrderType,
+    TimeInForce,
+)
 from gpt_trader.errors import ValidationError
 from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.endpoints import CoinbaseEndpoints
@@ -24,14 +32,6 @@ from gpt_trader.features.brokerages.coinbase.utilities import (
     ProductCatalog,
     enforce_perp_rules,
     quantize_to_increment,
-)
-from gpt_trader.features.brokerages.core.interfaces import (
-    InsufficientFunds,
-    InvalidRequestError,
-    Order,
-    OrderSide,
-    OrderType,
-    TimeInForce,
 )
 from gpt_trader.orchestration.configuration import BotConfig
 from gpt_trader.persistence.event_store import EventStore

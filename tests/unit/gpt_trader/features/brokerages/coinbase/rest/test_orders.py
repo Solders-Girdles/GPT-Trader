@@ -8,19 +8,19 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from gpt_trader.errors import ValidationError
-from gpt_trader.features.brokerages.coinbase.errors import (
-    OrderCancellationError,
-    OrderQueryError,
-)
-from gpt_trader.features.brokerages.coinbase.rest.order_service import OrderService
-from gpt_trader.features.brokerages.core.interfaces import (
+from gpt_trader.core import (
     Order,
     OrderSide,
     OrderStatus,
     OrderType,
     TimeInForce,
 )
+from gpt_trader.errors import ValidationError
+from gpt_trader.features.brokerages.coinbase.errors import (
+    OrderCancellationError,
+    OrderQueryError,
+)
+from gpt_trader.features.brokerages.coinbase.rest.order_service import OrderService
 
 # ============================================================
 # Fixtures

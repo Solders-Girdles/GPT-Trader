@@ -10,6 +10,12 @@ from collections.abc import Callable
 from decimal import Decimal
 from typing import Any
 
+from gpt_trader.core import (
+    Order,
+    OrderSide,
+    OrderType,
+    TimeInForce,
+)
 from gpt_trader.errors import ValidationError
 from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.errors import (
@@ -23,12 +29,6 @@ from gpt_trader.features.brokerages.coinbase.rest.protocols import (
     OrderPayloadBuilder,
     OrderPayloadExecutor,
     PositionProvider,
-)
-from gpt_trader.features.brokerages.core.interfaces import (
-    Order,
-    OrderSide,
-    OrderType,
-    TimeInForce,
 )
 from gpt_trader.utilities.logging_patterns import get_logger
 

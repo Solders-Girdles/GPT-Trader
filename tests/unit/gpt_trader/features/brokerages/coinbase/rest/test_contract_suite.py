@@ -7,6 +7,15 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from gpt_trader.core import (
+    Balance,
+    InsufficientFunds,
+    InvalidRequestError,
+    Order,
+    OrderSide,
+    OrderType,
+    Position,
+)
 from gpt_trader.errors import ValidationError
 from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.endpoints import CoinbaseEndpoints
@@ -22,15 +31,6 @@ from gpt_trader.features.brokerages.coinbase.rest.pnl_service import PnLService
 from gpt_trader.features.brokerages.coinbase.rest.portfolio_service import PortfolioService
 from gpt_trader.features.brokerages.coinbase.rest.position_state_store import PositionStateStore
 from gpt_trader.features.brokerages.coinbase.utilities import PositionState
-from gpt_trader.features.brokerages.core.interfaces import (
-    Balance,
-    InsufficientFunds,
-    InvalidRequestError,
-    Order,
-    OrderSide,
-    OrderType,
-    Position,
-)
 from gpt_trader.persistence.event_store import EventStore
 
 

@@ -12,19 +12,19 @@ from unittest.mock import Mock  # Added this import
 
 import pytest
 
-from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
-from gpt_trader.features.brokerages.coinbase.endpoints import CoinbaseEndpoints
-from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
-from gpt_trader.features.brokerages.coinbase.models import APIConfig
-from gpt_trader.features.brokerages.coinbase.rest_service import CoinbaseRestService
-from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
-from gpt_trader.features.brokerages.core.interfaces import (
+from gpt_trader.core import (
     Balance,
     InvalidRequestError,
     Order,
     Position,
     Product,
 )
+from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
+from gpt_trader.features.brokerages.coinbase.endpoints import CoinbaseEndpoints
+from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
+from gpt_trader.features.brokerages.coinbase.models import APIConfig
+from gpt_trader.features.brokerages.coinbase.rest_service import CoinbaseRestService
+from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
 from gpt_trader.persistence.event_store import EventStore
 
 

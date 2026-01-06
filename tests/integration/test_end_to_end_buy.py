@@ -43,6 +43,6 @@ async def test_end_to_end_buy_execution():
         call_args = mock_place.call_args
         # place_order is called with positional args: (symbol, side, order_type, quantity)
         assert call_args[0][0] == "BTC-USD"  # symbol
-        from gpt_trader.features.brokerages.core.interfaces import OrderSide
+        from gpt_trader.core import OrderSide
 
         assert call_args[0][1] == OrderSide.BUY  # side

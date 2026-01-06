@@ -6,7 +6,7 @@ import pytest
 
 from gpt_trader.backtesting.simulation.broker import SimulatedBroker
 from gpt_trader.backtesting.types import FeeTier
-from gpt_trader.features.brokerages.core.interfaces import MarketType, Product
+from gpt_trader.core import MarketType, Product
 
 
 class TestSimulatedBrokerInitialization:
@@ -304,7 +304,7 @@ class TestSimulatedBrokerMarketData:
         """Test get_quote returns stored quote."""
         from datetime import datetime
 
-        from gpt_trader.features.brokerages.core.interfaces import Quote
+        from gpt_trader.core import Quote
 
         broker = SimulatedBroker()
         test_quote = Quote(
@@ -333,7 +333,7 @@ class TestSimulatedBrokerMarketData:
 
     def test_get_position_with_position(self) -> None:
         """Test get_position returns stored position."""
-        from gpt_trader.features.brokerages.core.interfaces import Position
+        from gpt_trader.core import Position
 
         broker = SimulatedBroker()
         test_position = Position(
@@ -358,7 +358,7 @@ class TestSimulatedBrokerMarketData:
         """Test get_ticker returns data from quote."""
         from datetime import datetime
 
-        from gpt_trader.features.brokerages.core.interfaces import Quote
+        from gpt_trader.core import Quote
 
         broker = SimulatedBroker()
         test_quote = Quote(
@@ -380,7 +380,7 @@ class TestSimulatedBrokerMarketData:
         """Test get_ticker returns data from bar when no quote."""
         from datetime import datetime
 
-        from gpt_trader.features.brokerages.core.interfaces import Candle
+        from gpt_trader.core import Candle
 
         broker = SimulatedBroker()
         test_bar = Candle(
@@ -421,7 +421,7 @@ class TestSimulatedBrokerMarketData:
         """Test get_candles returns stored candles."""
         from datetime import datetime
 
-        from gpt_trader.features.brokerages.core.interfaces import Candle
+        from gpt_trader.core import Candle
 
         broker = SimulatedBroker()
         test_candles = [
@@ -445,7 +445,7 @@ class TestSimulatedBrokerMarketData:
         """Test get_candles respects limit parameter."""
         from datetime import datetime, timedelta
 
-        from gpt_trader.features.brokerages.core.interfaces import Candle
+        from gpt_trader.core import Candle
 
         broker = SimulatedBroker()
         base_time = datetime(2024, 1, 1, 0, 0, 0)
@@ -542,7 +542,7 @@ class TestSimulatedBrokerMarginCalculation:
 
     def test_calculate_margin_used_with_position(self) -> None:
         """Test margin calculation with open position."""
-        from gpt_trader.features.brokerages.core.interfaces import Position
+        from gpt_trader.core import Position
 
         broker = SimulatedBroker()
         # Position: 1 BTC at $50000 with 5x leverage
@@ -566,7 +566,7 @@ class TestSimulatedBrokerMarginCalculation:
 
     def test_calculate_margin_used_multiple_positions(self) -> None:
         """Test margin calculation with multiple positions."""
-        from gpt_trader.features.brokerages.core.interfaces import Position
+        from gpt_trader.core import Position
 
         broker = SimulatedBroker()
         # BTC: 1 * 50000 / 5 = 10000
@@ -599,7 +599,7 @@ class TestSimulatedBrokerMarginCalculation:
 
     def test_calculate_margin_used_default_leverage(self) -> None:
         """Test margin calculation defaults to 1x leverage if not set."""
-        from gpt_trader.features.brokerages.core.interfaces import Position
+        from gpt_trader.core import Position
 
         broker = SimulatedBroker()
         # 1 BTC at $50000 with no leverage (defaults to 1x)
@@ -634,7 +634,7 @@ class TestSimulatedBrokerOrderCancellation:
 
     def test_cancel_open_order(self) -> None:
         """Test cancelling an open order succeeds."""
-        from gpt_trader.features.brokerages.core.interfaces import (
+        from gpt_trader.core import (
             Order,
             OrderSide,
             OrderStatus,
@@ -679,7 +679,7 @@ class TestSimulatedBrokerAccountInfoDetailed:
 
     def test_get_account_info_with_unrealized_pnl(self) -> None:
         """Test get_account_info includes unrealized PnL from positions."""
-        from gpt_trader.features.brokerages.core.interfaces import Position
+        from gpt_trader.core import Position
 
         broker = SimulatedBroker(initial_equity_usd=Decimal("100000"))
         # Add position with unrealized profit
@@ -707,7 +707,7 @@ class TestSimulatedBrokerMarkPrice:
     def test_get_mark_price_from_quote(self) -> None:
         from datetime import datetime
 
-        from gpt_trader.features.brokerages.core.interfaces import Quote
+        from gpt_trader.core import Quote
 
         broker = SimulatedBroker()
         quote = Quote(
@@ -726,7 +726,7 @@ class TestSimulatedBrokerMarkPrice:
     def test_get_mark_price_from_bar(self) -> None:
         from datetime import datetime
 
-        from gpt_trader.features.brokerages.core.interfaces import Candle
+        from gpt_trader.core import Candle
 
         broker = SimulatedBroker()
         bar = Candle(
@@ -757,7 +757,7 @@ class TestSimulatedBrokerMarketSnapshot:
     def test_snapshot_with_quote(self) -> None:
         from datetime import datetime
 
-        from gpt_trader.features.brokerages.core.interfaces import Quote
+        from gpt_trader.core import Quote
 
         broker = SimulatedBroker()
         quote = Quote(
@@ -781,7 +781,7 @@ class TestSimulatedBrokerMarketSnapshot:
     def test_snapshot_with_bar(self) -> None:
         from datetime import datetime
 
-        from gpt_trader.features.brokerages.core.interfaces import Candle
+        from gpt_trader.core import Candle
 
         broker = SimulatedBroker()
         bar = Candle(
@@ -815,7 +815,7 @@ class TestSimulatedBrokerPositionPnl:
     """Tests for get_position_pnl method."""
 
     def test_pnl_with_position(self) -> None:
-        from gpt_trader.features.brokerages.core.interfaces import Position
+        from gpt_trader.core import Position
 
         broker = SimulatedBroker()
         broker.positions["BTC-USD"] = Position(
@@ -851,7 +851,7 @@ class TestSimulatedBrokerPositionRisk:
     def test_risk_with_long_position(self) -> None:
         from datetime import datetime
 
-        from gpt_trader.features.brokerages.core.interfaces import Position, Quote
+        from gpt_trader.core import Position, Quote
 
         broker = SimulatedBroker()
         broker.positions["BTC-USD"] = Position(
@@ -908,7 +908,7 @@ class TestSimulatedBrokerPlaceOrder:
     def test_place_limit_order_submitted(self) -> None:
         from datetime import datetime
 
-        from gpt_trader.features.brokerages.core.interfaces import Candle
+        from gpt_trader.core import Candle
 
         broker = SimulatedBroker()
         # Add market data
@@ -949,7 +949,7 @@ class TestSimulatedBrokerCancelOrder:
     def test_cancel_open_order(self) -> None:
         from datetime import datetime
 
-        from gpt_trader.features.brokerages.core.interfaces import Candle
+        from gpt_trader.core import Candle
 
         broker = SimulatedBroker()
         # Add market data

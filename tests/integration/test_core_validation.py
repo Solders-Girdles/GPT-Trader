@@ -11,12 +11,12 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from gpt_trader.features.brokerages.coinbase.ws import SequenceGuard
-from gpt_trader.features.brokerages.core.interfaces import (
+from gpt_trader.core import (
     OrderSide,
     OrderStatus,
     OrderType,
 )
+from gpt_trader.features.brokerages.coinbase.ws import SequenceGuard
 
 if TYPE_CHECKING:
     from gpt_trader.orchestration.trading_bot import TradingBot

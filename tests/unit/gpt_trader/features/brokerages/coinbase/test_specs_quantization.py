@@ -616,7 +616,7 @@ class TestEnforcePerpsRules:
     @staticmethod
     def make_product():
         """Helper to create test product."""
-        from gpt_trader.features.brokerages.core.interfaces import MarketType, Product
+        from gpt_trader.core import MarketType, Product
 
         return Product(
             symbol="BTC-PERP",

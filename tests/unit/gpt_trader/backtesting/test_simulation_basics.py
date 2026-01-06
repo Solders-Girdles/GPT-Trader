@@ -5,7 +5,7 @@ from decimal import Decimal
 
 from gpt_trader.backtesting.simulation import FeeCalculator, FundingPnLTracker, SimulatedBroker
 from gpt_trader.backtesting.types import FeeTier
-from gpt_trader.features.brokerages.core.interfaces import MarketType, Product
+from gpt_trader.core import MarketType, Product
 
 
 class TestFeeCalculator:

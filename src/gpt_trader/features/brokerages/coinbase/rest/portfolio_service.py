@@ -13,12 +13,12 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, cast
 
+from gpt_trader.core import Balance, InvalidRequestError, Position
 from gpt_trader.core.account import CFMBalance, UnifiedBalance
 from gpt_trader.core.account import Position as CorePosition
 from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.endpoints import CoinbaseEndpoints
 from gpt_trader.features.brokerages.coinbase.models import to_position
-from gpt_trader.features.brokerages.core.interfaces import Balance, InvalidRequestError, Position
 from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.utilities.logging_patterns import get_logger
 
@@ -423,9 +423,7 @@ class PortfolioService:
                 expiry = None
                 if p.get("expiration_time"):
                     try:
-                        expiry = datetime.fromisoformat(
-                            p["expiration_time"].replace("Z", "+00:00")
-                        )
+                        expiry = datetime.fromisoformat(p["expiration_time"].replace("Z", "+00:00"))
                     except (ValueError, TypeError):
                         pass
 

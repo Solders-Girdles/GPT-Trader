@@ -12,9 +12,9 @@ from urllib.parse import parse_qs, urlparse
 import pytest
 
 import gpt_trader.features.brokerages.coinbase.client as client_mod
+from gpt_trader.core import InvalidRequestError, MarketType, Product
 from gpt_trader.features.brokerages.coinbase.account_manager import CoinbaseAccountManager
 from gpt_trader.features.brokerages.coinbase.models import APIConfig
-from gpt_trader.features.brokerages.core.interfaces import InvalidRequestError, MarketType, Product
 from tests.unit.gpt_trader.features.brokerages.coinbase.test_helpers import (
     ACCOUNT_ENDPOINT_CASES,
     CoinbaseBrokerage,

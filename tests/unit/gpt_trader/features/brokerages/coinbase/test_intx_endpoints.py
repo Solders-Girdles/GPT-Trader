@@ -13,8 +13,8 @@ import json
 
 import pytest
 
+from gpt_trader.core import InvalidRequestError
 from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
-from gpt_trader.features.brokerages.core.interfaces import InvalidRequestError
 
 pytestmark = pytest.mark.endpoints
 

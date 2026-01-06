@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from gpt_trader.features.brokerages.core.interfaces import Balance, MarketType, Product
+from gpt_trader.core import Balance, MarketType, Product
 from gpt_trader.features.live_trade.risk import ValidationError
 from gpt_trader.orchestration.execution.state_collection import StateCollector
 

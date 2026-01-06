@@ -1,24 +1,24 @@
 """Error types and mappers for Coinbase adapter."""
 
-from gpt_trader.features.brokerages.core.interfaces import (
+from gpt_trader.core import (
     AuthError as CoreAuthError,
 )
-from gpt_trader.features.brokerages.core.interfaces import (
+from gpt_trader.core import (
     BrokerageError as CoreBrokerageError,
 )
-from gpt_trader.features.brokerages.core.interfaces import (
+from gpt_trader.core import (
     InsufficientFunds as CoreInsufficientFunds,
 )
-from gpt_trader.features.brokerages.core.interfaces import (
+from gpt_trader.core import (
     InvalidRequestError as CoreInvalidRequestError,
 )
-from gpt_trader.features.brokerages.core.interfaces import (
+from gpt_trader.core import (
     NotFoundError as CoreNotFoundError,
 )
-from gpt_trader.features.brokerages.core.interfaces import (
+from gpt_trader.core import (
     PermissionDeniedError as CorePermissionDeniedError,
 )
-from gpt_trader.features.brokerages.core.interfaces import (
+from gpt_trader.core import (
     RateLimitError as CoreRateLimitError,
 )
 

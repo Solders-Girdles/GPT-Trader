@@ -3,9 +3,9 @@
 from decimal import Decimal
 from unittest.mock import Mock
 
+from gpt_trader.core import Product
 from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
 from gpt_trader.features.brokerages.coinbase.rest.product_service import ProductService
-from gpt_trader.features.brokerages.core.interfaces import Product
 
 
 class TestProductService:

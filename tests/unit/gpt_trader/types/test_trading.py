@@ -3,7 +3,7 @@
 from datetime import datetime
 from decimal import Decimal
 
-from gpt_trader.features.brokerages.core.interfaces import OrderSide, OrderType
+from gpt_trader.core import OrderSide, OrderType
 from gpt_trader.types.trading import (
     AccountSnapshot,
     OrderTicket,

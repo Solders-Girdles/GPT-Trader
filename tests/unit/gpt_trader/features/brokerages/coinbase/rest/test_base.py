@@ -6,14 +6,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from gpt_trader.errors import ValidationError
-from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
-from gpt_trader.features.brokerages.coinbase.endpoints import CoinbaseEndpoints
-from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
-from gpt_trader.features.brokerages.coinbase.models import APIConfig, Product
-from gpt_trader.features.brokerages.coinbase.rest.base import CoinbaseRestServiceBase
-from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
-from gpt_trader.features.brokerages.core.interfaces import (
+from gpt_trader.core import (
     InsufficientFunds,
     InvalidRequestError,
     NotFoundError,
@@ -22,6 +15,13 @@ from gpt_trader.features.brokerages.core.interfaces import (
     OrderType,
     TimeInForce,
 )
+from gpt_trader.errors import ValidationError
+from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
+from gpt_trader.features.brokerages.coinbase.endpoints import CoinbaseEndpoints
+from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
+from gpt_trader.features.brokerages.coinbase.models import APIConfig, Product
+from gpt_trader.features.brokerages.coinbase.rest.base import CoinbaseRestServiceBase
+from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
 from gpt_trader.persistence.event_store import EventStore
 
 

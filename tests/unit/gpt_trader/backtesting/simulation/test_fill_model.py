@@ -6,7 +6,7 @@ from decimal import Decimal
 import pytest
 
 from gpt_trader.backtesting.simulation.fill_model import FillResult, OrderFillModel
-from gpt_trader.features.brokerages.core.interfaces import (
+from gpt_trader.core import (
     Candle,
     Order,
     OrderSide,

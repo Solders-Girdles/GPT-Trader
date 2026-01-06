@@ -11,9 +11,9 @@ from urllib.parse import parse_qs, urlparse
 
 import pytest
 
+from gpt_trader.core import Order, OrderSide, OrderType
 from gpt_trader.features.brokerages.coinbase.errors import InsufficientFunds
 from gpt_trader.features.brokerages.coinbase.models import APIConfig
-from gpt_trader.features.brokerages.core.interfaces import Order, OrderSide, OrderType
 from tests.unit.gpt_trader.features.brokerages.coinbase.test_helpers import (
     SYSTEM_ENDPOINT_CASES,
     CoinbaseBrokerage,

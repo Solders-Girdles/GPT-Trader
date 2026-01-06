@@ -98,3 +98,49 @@ class TestDemoBotSeeding:
         # Should use the provided generator, not create new one with seed=42
         assert bot.engine.status_reporter.data_generator is custom_gen
         assert bot.engine.status_reporter.data_generator.seed == 99
+
+
+class TestGenerateStrategyDataPerformance:
+    """Tests for generate_strategy_data performance fields."""
+
+    def test_generate_strategy_data_includes_performance_dicts(self) -> None:
+        """generate_strategy_data includes both performance dicts."""
+        gen = MockDataGenerator(seed=42)
+        data = gen.generate_strategy_data()
+
+        # Verify performance dict exists with expected keys
+        assert "performance" in data
+        perf = data["performance"]
+        assert "win_rate" in perf
+        assert "profit_factor" in perf
+        assert "total_return" in perf
+        assert "max_drawdown" in perf
+        assert "total_trades" in perf
+
+        # Verify backtest_performance dict exists with expected keys
+        assert "backtest_performance" in data
+        backtest = data["backtest_performance"]
+        assert "win_rate" in backtest
+        assert "profit_factor" in backtest
+        assert "total_trades" in backtest
+
+    def test_generate_strategy_data_performance_is_deterministic(self) -> None:
+        """Performance dicts are deterministic with same seed."""
+        seed = 42
+
+        gen1 = MockDataGenerator(seed=seed)
+        gen2 = MockDataGenerator(seed=seed)
+
+        data1 = gen1.generate_strategy_data()
+        data2 = gen2.generate_strategy_data()
+
+        # Performance values should match exactly
+        assert data1["performance"]["win_rate"] == data2["performance"]["win_rate"]
+        assert data1["performance"]["total_trades"] == data2["performance"]["total_trades"]
+        assert (
+            data1["backtest_performance"]["win_rate"] == data2["backtest_performance"]["win_rate"]
+        )
+        assert (
+            data1["backtest_performance"]["total_trades"]
+            == data2["backtest_performance"]["total_trades"]
+        )

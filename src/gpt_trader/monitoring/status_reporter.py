@@ -147,6 +147,10 @@ class StrategyStatus:
 
     active_strategies: list[str] = field(default_factory=list)
     last_decisions: list[DecisionEntry] = field(default_factory=list)
+    # Live performance metrics (from real trades)
+    performance: dict[str, Any] | None = None
+    # Historical backtest performance (from backtesting)
+    backtest_performance: dict[str, Any] | None = None
 
 
 @dataclass
@@ -793,6 +797,23 @@ class StatusReporter:
         self._status.strategy.last_decisions.extend(normalized_decisions)
         if len(self._status.strategy.last_decisions) > 50:
             self._status.strategy.last_decisions = self._status.strategy.last_decisions[-50:]
+
+    def update_strategy_performance(
+        self,
+        performance: dict[str, Any] | None = None,
+        backtest: dict[str, Any] | None = None,
+    ) -> None:
+        """Update strategy performance metrics without changing update_strategy().
+
+        Args:
+            performance: Live performance dict with keys like win_rate, profit_factor,
+                        total_return, max_drawdown, total_trades, etc.
+            backtest: Historical backtest performance dict with same structure.
+        """
+        if performance is not None:
+            self._status.strategy.performance = performance
+        if backtest is not None:
+            self._status.strategy.backtest_performance = backtest
 
     def update_risk(
         self,

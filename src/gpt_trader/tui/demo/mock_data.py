@@ -301,9 +301,42 @@ class MockDataGenerator:
                 }
             )
 
+        # Generate deterministic performance metrics
+        # Use RNG for slight variation but keep values realistic
+        live_win_rate = 0.58 + self._rng.uniform(-0.05, 0.05)
+        live_profit_factor = 1.65 + self._rng.uniform(-0.1, 0.1)
+        live_total_trades = 45 + int(self._rng.uniform(-5, 5))
+        live_winning = int(live_total_trades * live_win_rate)
+        live_losing = live_total_trades - live_winning
+
+        backtest_win_rate = 0.56 + self._rng.uniform(-0.03, 0.03)
+        backtest_profit_factor = 1.42 + self._rng.uniform(-0.08, 0.08)
+        backtest_total_trades = 120 + int(self._rng.uniform(-10, 10))
+        backtest_winning = int(backtest_total_trades * backtest_win_rate)
+        backtest_losing = backtest_total_trades - backtest_winning
+
         return {
             "active_strategies": ["Momentum", "Mean Reversion"],
             "last_decisions": decisions,
+            "performance": {
+                "win_rate": live_win_rate,
+                "profit_factor": live_profit_factor,
+                "total_return": 0.082,  # 8.2%
+                "max_drawdown": -0.041,  # -4.1%
+                "total_trades": live_total_trades,
+                "winning_trades": live_winning,
+                "losing_trades": live_losing,
+                "sharpe_ratio": 1.05,
+            },
+            "backtest_performance": {
+                "win_rate": backtest_win_rate,
+                "profit_factor": backtest_profit_factor,
+                "total_return": 0.124,  # 12.4%
+                "max_drawdown": -0.062,  # -6.2%
+                "total_trades": backtest_total_trades,
+                "winning_trades": backtest_winning,
+                "losing_trades": backtest_losing,
+            },
         }
 
     def generate_risk_data(self) -> dict[str, Any]:

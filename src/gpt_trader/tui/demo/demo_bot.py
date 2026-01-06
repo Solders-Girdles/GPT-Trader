@@ -245,6 +245,8 @@ class DemoStatusReporter:
             strategy_status = StrategyStatus(
                 active_strategies=strat_data.get("active_strategies", []),
                 last_decisions=decisions,
+                performance=strat_data.get("performance"),
+                backtest_performance=strat_data.get("backtest_performance"),
             )
 
             # Convert RiskStatus

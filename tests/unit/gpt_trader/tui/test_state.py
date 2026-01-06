@@ -300,3 +300,60 @@ class TestTuiState:
         state.update_resilience_data(resilience_status)
 
         assert state.resilience_data.any_circuit_open is False
+
+    def test_update_from_bot_status_populates_performance_metrics(self):
+        """Test that update_from_bot_status populates strategy_performance and backtest_performance."""
+        state = TuiState()
+
+        # Create StrategyStatus with performance dicts
+        strategy_status = StrategyStatus(
+            active_strategies=["Momentum"],
+            last_decisions=[],
+            performance={
+                "win_rate": 0.58,
+                "profit_factor": 1.65,
+                "total_return": 0.082,
+                "max_drawdown": -0.041,
+                "total_trades": 45,
+                "winning_trades": 26,
+                "losing_trades": 19,
+                "sharpe_ratio": 1.05,
+            },
+            backtest_performance={
+                "win_rate": 0.56,
+                "profit_factor": 1.42,
+                "total_return": 0.124,
+                "max_drawdown": -0.062,
+                "total_trades": 120,
+                "winning_trades": 67,
+                "losing_trades": 53,
+            },
+        )
+
+        status = BotStatus(
+            bot_id="test-bot",
+            engine=EngineStatus(),
+            market=MarketStatus(),
+            positions=PositionStatus(),
+            orders=[],
+            trades=[],
+            account=AccountStatus(),
+            strategy=strategy_status,
+            risk=RiskStatus(),
+            system=SystemStatus(),
+            heartbeat=HeartbeatStatus(),
+        )
+
+        state.update_from_bot_status(status)
+
+        # Verify live performance was populated
+        assert state.strategy_performance.win_rate == 0.58
+        assert state.strategy_performance.profit_factor == 1.65
+        assert abs(state.strategy_performance.total_return_pct - 8.2) < 0.001  # 0.082 * 100
+        assert state.strategy_performance.total_trades == 45
+
+        # Verify backtest performance was populated
+        assert state.backtest_performance is not None
+        assert state.backtest_performance.win_rate == 0.56
+        assert state.backtest_performance.profit_factor == 1.42
+        assert state.backtest_performance.total_trades == 120

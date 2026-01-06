@@ -111,6 +111,9 @@ class TuiState(Widget):
     # Strategy performance metrics (from PerformanceSnapshot)
     strategy_performance = reactive(StrategyPerformance())
 
+    # Backtest performance metrics (from historical backtesting)
+    backtest_performance: reactive[StrategyPerformance | None] = reactive(None)
+
     # Market regime data
     regime_data = reactive(RegimeData())
 
@@ -511,6 +514,12 @@ class TuiState(Widget):
             last_decisions=decisions,
         )
 
+        # Update performance metrics if present
+        if hasattr(strat, "performance") and strat.performance is not None:
+            self.update_strategy_performance(strat.performance)
+        if hasattr(strat, "backtest_performance") and strat.backtest_performance is not None:
+            self.update_backtest_performance(strat.backtest_performance)
+
     def _update_risk_data(self, risk: Any) -> None:  # RiskStatus from status_reporter
         """Update risk data from typed RiskStatus."""
         # Parse enhanced guards if available
@@ -721,6 +730,28 @@ class TuiState(Widget):
             volatility_pct=float(performance_data.get("volatility", 0.0)) * 100,
         )
         self._changed_fields.add("strategy_performance")
+
+    def update_backtest_performance(self, performance_data: dict[str, Any] | None) -> None:
+        """Update backtest performance metrics.
+
+        Args:
+            performance_data: Dict with backtest metrics, or None to clear.
+                Expected keys: win_rate, profit_factor, total_return, max_drawdown,
+                total_trades, winning_trades, losing_trades.
+        """
+        if performance_data is None:
+            self.backtest_performance = None
+        else:
+            self.backtest_performance = StrategyPerformance(
+                win_rate=float(performance_data.get("win_rate", 0.0)),
+                profit_factor=float(performance_data.get("profit_factor", 0.0)),
+                total_return_pct=float(performance_data.get("total_return", 0.0)) * 100,
+                max_drawdown_pct=float(performance_data.get("max_drawdown", 0.0)) * 100,
+                total_trades=int(performance_data.get("total_trades", 0)),
+                winning_trades=int(performance_data.get("winning_trades", 0)),
+                losing_trades=int(performance_data.get("losing_trades", 0)),
+            )
+        self._changed_fields.add("backtest_performance")
 
     def update_regime_data(self, regime_state: dict[str, Any]) -> None:
         """Update market regime data.

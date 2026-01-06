@@ -2,12 +2,16 @@
 TUI Test Configuration.
 
 Provides fixtures for TUI testing including mock bots, pilot apps, and factories.
+
+Note: pickle is required for pytest-textual-snapshot report compatibility.
 """
 
+import asyncio
 import inspect
-import pickle  # Required for pytest-textual-snapshot report compatibility
+import pickle  # noqa: S403 - Required for pytest-textual-snapshot report format
 import re
 from collections.abc import Awaitable, Callable, Iterable
+from importlib.util import module_from_spec, spec_from_file_location  # naming: allow
 from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
@@ -15,6 +19,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 import pytest_textual_snapshot as pts
 from _pytest.fixtures import FixtureRequest
+from rich.console import Console
 from syrupy import SnapshotAssertion
 from syrupy.extensions.single_file import SingleFileSnapshotExtension, WriteMode
 
@@ -28,6 +33,7 @@ from tests.unit.gpt_trader.tui.factories import (
     TuiStateFactory,
 )
 from textual.app import App
+from textual.pilot import Pilot
 
 from gpt_trader.monitoring.status_reporter import StatusReporter
 from gpt_trader.tui.app import TraderApp
@@ -60,6 +66,59 @@ class NormalizedSVGImageExtension(SingleFileSnapshotExtension):
         return _normalize_svg(text)
 
 
+def _import_app_from_path(app_path: str) -> App[Any]:
+    """Import an App class from a file path using public stdlib APIs.
+
+    This replaces textual._import_app.import_app with standard library equivalents.
+    """
+    path = Path(app_path)
+    spec = spec_from_file_location(path.stem, path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Cannot load module from {app_path}")
+
+    module = module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    # Find the App subclass in the module
+    for name in dir(module):
+        obj = getattr(module, name)
+        if isinstance(obj, type) and issubclass(obj, App) and obj is not App:
+            return obj()
+
+    raise ImportError(f"No App subclass found in {app_path}")
+
+
+async def _capture_screenshot(
+    app: App[Any],
+    press: Iterable[str],
+    terminal_size: tuple[int, int],
+    run_before: Callable[[Pilot], Awaitable[None] | None] | None,
+) -> str:
+    """Capture an SVG screenshot using public Textual APIs.
+
+    This replaces textual._doc.take_svg_screenshot with run_test() + export_screenshot().
+    """
+    async with app.run_test(size=terminal_size) as pilot:
+        # Run any setup code
+        if run_before is not None:
+            result = run_before(pilot)
+            if asyncio.iscoroutine(result):
+                await result
+
+        # Apply key presses
+        for key in press:
+            if key == "_":
+                await pilot.pause()
+            else:
+                await pilot.press(key)
+
+        # Small pause to let UI settle
+        await pilot.pause()
+
+        # Capture screenshot using public API
+        return app.export_screenshot()
+
+
 @pytest.fixture
 def snap_compare(
     snapshot: SnapshotAssertion, request: FixtureRequest
@@ -69,6 +128,8 @@ def snap_compare(
 
     This overrides pytest-textual-snapshot's snap_compare to strip the session-specific
     terminal-<digits>- prefix from SVG output, ensuring snapshots remain stable across runs.
+
+    Uses only public Textual APIs (no private _doc or _import_app imports).
     """
     # Use our normalized extension
     snapshot = snapshot.use_extension(NormalizedSVGImageExtension)
@@ -77,13 +138,9 @@ def snap_compare(
         app: str | Path | App[Any],
         press: Iterable[str] = (),
         terminal_size: tuple[int, int] = (80, 24),
-        run_before: Callable[["Pilot"], Awaitable[None] | None] | None = None,  # noqa: F821
+        run_before: Callable[[Pilot], Awaitable[None] | None] | None = None,
     ) -> bool:
         """Compare a screenshot with normalized terminal class names."""
-        from rich.console import Console
-        from textual._doc import take_svg_screenshot
-        from textual._import_app import import_app
-
         node = request.node
 
         if isinstance(app, App):
@@ -93,18 +150,15 @@ def snap_compare(
             path = Path(app)
             if path.is_absolute():
                 app_path = str(path.resolve())
-                app_instance = import_app(app_path)
             else:
                 node_path = node.path.parent
                 resolved = (node_path / app).resolve()
                 app_path = str(resolved)
-                app_instance = import_app(app_path)
+            app_instance = _import_app_from_path(app_path)
 
-        actual_screenshot = take_svg_screenshot(
-            app=app_instance,
-            press=press,
-            terminal_size=terminal_size,
-            run_before=run_before,
+        # Capture screenshot using public APIs
+        actual_screenshot = asyncio.get_event_loop().run_until_complete(
+            _capture_screenshot(app_instance, press, terminal_size, run_before)
         )
 
         # Normalize the actual screenshot
@@ -143,7 +197,7 @@ def snap_compare(
             snapshot_exists,
         )
         data_path = pts.node_to_report_path(request.node)
-        data_path.write_bytes(pickle.dumps(data))
+        data_path.write_bytes(pickle.dumps(data))  # noqa: S301
 
         return result
 

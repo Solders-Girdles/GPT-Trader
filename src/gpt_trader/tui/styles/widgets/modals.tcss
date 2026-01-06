@@ -319,3 +319,14 @@ PositionDetailModal #close-btn {
     margin-top: $spacing-sm;
     width: 100%;
 }
+
+PositionDetailModal .recent-fills-row {
+    padding-left: $spacing-xs;
+    height: auto;
+}
+
+PositionDetailModal .recent-fills-note {
+    color: $text-muted;
+    text-style: italic;
+    height: auto;
+}

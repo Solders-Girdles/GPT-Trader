@@ -1388,3 +1388,126 @@ class TestPositionDetailModal:
         # Should only have BTC-USD trades
         assert len(modal._linked_trades) == 2
         assert all(t.symbol == "BTC-USD" for t in modal._linked_trades)
+
+    def test_get_recent_fills_ordering_and_limit(self):
+        """Test that recent fills are ordered by time (most recent first) and limited."""
+        from gpt_trader.tui.widgets.portfolio.position_detail_modal import (
+            PositionDetailModal,
+        )
+
+        position = Position(
+            symbol="BTC-USD",
+            quantity=Decimal("1.0"),
+            entry_price=Decimal("50000.00"),
+            mark_price=Decimal("50000.00"),
+            unrealized_pnl=Decimal("0"),
+            side="long",
+        )
+
+        trades = [
+            Trade(
+                trade_id="t1",
+                symbol="BTC-USD",
+                side="BUY",
+                quantity=Decimal("0.25"),
+                price=Decimal("49000.00"),
+                order_id="o1",
+                time="2024-01-15T08:00:00Z",  # Earliest
+            ),
+            Trade(
+                trade_id="t2",
+                symbol="BTC-USD",
+                side="BUY",
+                quantity=Decimal("0.25"),
+                price=Decimal("50000.00"),
+                order_id="o2",
+                time="2024-01-15T10:00:00Z",
+            ),
+            Trade(
+                trade_id="t3",
+                symbol="BTC-USD",
+                side="BUY",
+                quantity=Decimal("0.25"),
+                price=Decimal("51000.00"),
+                order_id="o3",
+                time="2024-01-15T12:00:00Z",
+            ),
+            Trade(
+                trade_id="t4",
+                symbol="BTC-USD",
+                side="BUY",
+                quantity=Decimal("0.25"),
+                price=Decimal("52000.00"),
+                order_id="o4",
+                time="2024-01-15T14:00:00Z",  # Most recent
+            ),
+        ]
+
+        modal = PositionDetailModal(position, trades=trades)
+        # Simulate compose() filtering and sorting
+        modal._linked_trades = [t for t in trades if t.symbol == position.symbol]
+        modal._linked_trades.sort(key=lambda t: t.time, reverse=True)
+
+        # Test default limit of 3
+        recent = modal._get_recent_fills()
+        assert len(recent) == 3
+        # Most recent first
+        assert recent[0].trade_id == "t4"
+        assert recent[1].trade_id == "t3"
+        assert recent[2].trade_id == "t2"
+
+        # Test custom limit
+        recent_2 = modal._get_recent_fills(limit=2)
+        assert len(recent_2) == 2
+        assert recent_2[0].trade_id == "t4"
+        assert recent_2[1].trade_id == "t3"
+
+    def test_format_recent_fill_row_contains_all_fields(self):
+        """Test that formatted fill row contains time, side, OPEN/CLOSE, qty, price, fee."""
+        from gpt_trader.tui.widgets.portfolio.position_detail_modal import (
+            PositionDetailModal,
+        )
+
+        position = Position(
+            symbol="BTC-USD",
+            quantity=Decimal("1.0"),
+            entry_price=Decimal("50000.00"),
+            mark_price=Decimal("50000.00"),
+            unrealized_pnl=Decimal("0"),
+            side="long",
+        )
+
+        trade = Trade(
+            trade_id="t1",
+            symbol="BTC-USD",
+            side="BUY",
+            quantity=Decimal("0.5"),
+            price=Decimal("49500.00"),
+            order_id="o1",
+            time="2024-01-15T14:30:45.123Z",
+            fee=Decimal("12.50"),
+        )
+
+        modal = PositionDetailModal(position)
+        result = modal._format_recent_fill_row(trade)
+
+        # Convert to plain text for easier assertion
+        plain_text = result.plain
+
+        # Should contain time
+        assert "14:30:45" in plain_text
+
+        # Should contain side
+        assert "BUY" in plain_text
+
+        # Should contain OPEN (since BUY opens a LONG position)
+        assert "OPEN" in plain_text
+
+        # Should contain quantity
+        assert "0.5" in plain_text
+
+        # Should contain price
+        assert "49,500" in plain_text
+
+        # Should contain fee
+        assert "12.50" in plain_text

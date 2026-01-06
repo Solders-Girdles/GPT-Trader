@@ -141,6 +141,20 @@ class PositionDetailModal(ModalScreen):
                 # Fees
                 yield Static(f"Total Fees: {format_currency(total_fees)}")
 
+                # Recent fills section (quick glance at most recent executions)
+                yield Static("─── Recent Fills ───", classes="section-header")
+                recent_fills = self._get_recent_fills(limit=3)
+                if recent_fills:
+                    for fill in recent_fills:
+                        yield Static(self._format_recent_fill_row(fill), classes="recent-fills-row")
+                    if len(self._linked_trades) > 3:
+                        yield Static(
+                            f"  … and {len(self._linked_trades) - 3} more (see Linked Trades below)",
+                            classes="recent-fills-note",
+                        )
+                else:
+                    yield Static("No recent fills", classes="muted")
+
                 # Leverage section (for futures)
                 if pos.is_futures:
                     yield Static("─── Leverage ───", classes="section-header")
@@ -320,6 +334,50 @@ class PositionDetailModal(ModalScreen):
         except (IndexError, ValueError):
             pass
         return time_str[:10]
+
+    def _get_recent_fills(self, limit: int = 3) -> list[Trade]:
+        """Get the most recent fills for this position.
+
+        Args:
+            limit: Maximum number of fills to return.
+
+        Returns:
+            List of most recent trades, sorted by time descending.
+        """
+        # _linked_trades is already sorted by time (most recent first) in compose()
+        return self._linked_trades[:limit]
+
+    def _format_recent_fill_row(self, trade: Trade) -> Text:
+        """Format a single recent fill as a compact row.
+
+        Args:
+            trade: Trade to format.
+
+        Returns:
+            Rich Text object with time, side, type, qty, price, fee.
+        """
+        time_display = self._format_trade_time(trade.time)
+        trade_type = self._get_trade_type(trade)
+
+        # Side color
+        side = trade.side.upper()
+        side_color = "green" if side == "BUY" else "red"
+
+        # Type color (OPEN=cyan, CLOSE=magenta)
+        type_color = "cyan" if trade_type == "OPEN" else "magenta"
+
+        return Text.assemble(
+            Text(time_display, style="dim"),
+            " ",
+            Text(side, style=side_color),
+            " ",
+            Text(trade_type, style=type_color),
+            " ",
+            Text(format_quantity(trade.quantity), style="white"),
+            " @ ",
+            Text(format_price(trade.price), style="white"),
+            Text(f" (fee: {format_currency(trade.fee)})", style="dim"),
+        )
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Handle button press."""

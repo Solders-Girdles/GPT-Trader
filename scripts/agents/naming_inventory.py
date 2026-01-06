@@ -27,7 +27,6 @@ DEFAULT_PATTERNS = (
     "mgr",  # naming: allow
     "util",  # naming: allow
     "utils",  # naming: allow
-    "qty",  # naming: allow
     "amt",  # naming: allow
     "calc",  # naming: allow
     "upd",  # naming: allow

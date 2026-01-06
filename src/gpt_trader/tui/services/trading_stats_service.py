@@ -5,8 +5,6 @@ Computes trading performance metrics from trade history with time window
 support and sample size tracking for informed decision-making.
 """
 
-# naming: allow - qty is standard trading abbreviation for quantity
-
 from __future__ import annotations
 
 import time

@@ -11,8 +11,6 @@ Supports trade-linking: when order.filled_quantity/avg_fill_price are
 missing, fill info can be derived from matching trades.
 """
 
-# naming: allow - qty is standard trading abbreviation for quantity
-
 from __future__ import annotations
 
 from decimal import Decimal

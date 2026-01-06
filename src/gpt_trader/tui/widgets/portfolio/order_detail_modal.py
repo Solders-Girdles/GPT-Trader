@@ -1,7 +1,5 @@
 """Order detail modal for displaying order fill history and linked trades."""
 
-# naming: allow - qty is standard trading abbreviation for quantity
-
 from __future__ import annotations
 
 from decimal import Decimal

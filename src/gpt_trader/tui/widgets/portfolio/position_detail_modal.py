@@ -1,7 +1,5 @@
 """Position detail modal for displaying position breakdown and linked trades."""
 
-# naming: allow - qty is standard trading abbreviation for quantity
-
 from __future__ import annotations
 
 from decimal import Decimal

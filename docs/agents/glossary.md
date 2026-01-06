@@ -32,6 +32,7 @@ Any abbreviation not listed here should be spelled out in full.
 | `CD` | Continuous Deployment | Development | Industry standard |
 | `E2E` | End-to-End | Testing | Industry standard |
 | `TUI` | Terminal User Interface | UI | Textual-based interface |
+| `qty` | Quantity | Trading domain | Standard trading term for order/position size |
 
 ## Banned Abbreviations
 
@@ -43,7 +44,6 @@ These abbreviations are banned and must be spelled out:
 | `svc` | `service` | Clarity over brevity |
 | `mgr` | `manager` | Clarity over brevity |
 | `util` / `utils` | `utilities` | Clarity over brevity |
-| `qty` | `quantity` | Clarity over brevity |
 | `amt` | `amount` | Clarity over brevity |
 | `calc` | `calculate` | Clarity over brevity |
 | `upd` | `update` | Clarity over brevity |

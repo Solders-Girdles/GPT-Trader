@@ -1,5 +1,3 @@
-# naming: allow - qty is standard trading abbreviation for quantity
-
 from decimal import Decimal
 from unittest.mock import MagicMock
 

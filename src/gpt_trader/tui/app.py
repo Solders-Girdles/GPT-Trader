@@ -953,11 +953,13 @@ class TraderApp(App):
             seen: set[str] = set()
 
             try:
-                cfg_symbols = list(getattr(getattr(self.bot, "config", None), "symbols", []) or [])
+                config_symbols = list(
+                    getattr(getattr(self.bot, "config", None), "symbols", []) or []
+                )
             except Exception:
-                cfg_symbols = []
+                config_symbols = []
 
-            for sym in cfg_symbols:
+            for sym in config_symbols:
                 sym_str = str(sym)
                 if sym_str and sym_str not in seen:
                     seen.add(sym_str)

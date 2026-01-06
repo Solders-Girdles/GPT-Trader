@@ -5,8 +5,6 @@ Provides reactive state management for the TUI with validation and
 delta update capabilities to minimize UI flicker and catch data issues.
 """
 
-# naming: allow - margin_util is standard finance term for margin utilization
-
 from __future__ import annotations
 
 from decimal import Decimal
@@ -566,7 +564,7 @@ class TuiState(Widget):
             logger.debug(
                 f"[TuiState] CFM balance updated: "
                 f"buying_power={cfm_balance.futures_buying_power}, "
-                f"margin_util={cfm_balance.margin_utilization_pct:.1f}%, "
+                f"margin_utilization={cfm_balance.margin_utilization_pct:.1f}%, "
                 f"liq_buffer={cfm_balance.liquidation_buffer_percentage:.1f}%"
             )
 

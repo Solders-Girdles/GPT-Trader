@@ -202,8 +202,13 @@ class StrategyWidget(Static):
                 color = THEME.colors.success
             elif action == "SELL":
                 color = THEME.colors.error
+            elif action in ("CLOSE", "EXIT"):
+                color = THEME.colors.warning
             elif action == "HOLD":
                 color = THEME.colors.warning
+
+            # Entry/Exit badge
+            entry_exit_badge = self._get_entry_exit_badge(action)
 
             # Build status indicator
             status_indicator = ""
@@ -219,7 +224,7 @@ class StrategyWidget(Static):
             elif action in ("BUY", "SELL") and decision_blocked_by:
                 status_indicator = " [red]⊘[/red]"
 
-            formatted_action = f"[{color}]{action}[/{color}]{status_indicator}"
+            formatted_action = f"[{color}]{action}[/{color}]{entry_exit_badge}{status_indicator}"
 
             # Show blocking reason in the reason column for actionable decisions
             display_reason = reason
@@ -308,6 +313,22 @@ class StrategyWidget(Static):
         except Exception:
             pass
 
+        return ""
+
+    def _get_entry_exit_badge(self, action: str) -> str:
+        """Get entry/exit badge for an action.
+
+        Args:
+            action: The action string (BUY, SELL, CLOSE, EXIT, HOLD).
+
+        Returns:
+            Badge string like " [cyan]ENTRY[/cyan]" or " [magenta]EXIT[/magenta]", or empty.
+        """
+        action_upper = action.upper()
+        if action_upper in ("BUY", "SELL"):
+            return " [cyan]ENTRY[/cyan]"
+        elif action_upper in ("CLOSE", "EXIT"):
+            return " [magenta]EXIT[/magenta]"
         return ""
 
     def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:

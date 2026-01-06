@@ -282,3 +282,45 @@ class TestDecisionBlockedBy:
         # Since decision.blocked_by is empty, fallback is used
         decision_blocked_by = decision.blocked_by or current_blocking
         assert decision_blocked_by == "MaxDrawdownGuard"
+
+
+class TestEntryExitBadge:
+    """Tests for _get_entry_exit_badge method."""
+
+    def test_buy_action_returns_entry_badge(self):
+        """BUY action returns ENTRY badge."""
+        widget = StrategyWidget()
+        badge = widget._get_entry_exit_badge("BUY")
+        assert "ENTRY" in badge
+        assert "cyan" in badge
+
+    def test_sell_action_returns_entry_badge(self):
+        """SELL action returns ENTRY badge."""
+        widget = StrategyWidget()
+        badge = widget._get_entry_exit_badge("SELL")
+        assert "ENTRY" in badge
+
+    def test_close_action_returns_exit_badge(self):
+        """CLOSE action returns EXIT badge."""
+        widget = StrategyWidget()
+        badge = widget._get_entry_exit_badge("CLOSE")
+        assert "EXIT" in badge
+        assert "magenta" in badge
+
+    def test_exit_action_returns_exit_badge(self):
+        """EXIT action returns EXIT badge."""
+        widget = StrategyWidget()
+        badge = widget._get_entry_exit_badge("EXIT")
+        assert "EXIT" in badge
+
+    def test_hold_action_returns_empty(self):
+        """HOLD action returns empty string."""
+        widget = StrategyWidget()
+        badge = widget._get_entry_exit_badge("HOLD")
+        assert badge == ""
+
+    def test_case_insensitive(self):
+        """Badge lookup is case-insensitive."""
+        widget = StrategyWidget()
+        assert "ENTRY" in widget._get_entry_exit_badge("buy")
+        assert "EXIT" in widget._get_entry_exit_badge("close")

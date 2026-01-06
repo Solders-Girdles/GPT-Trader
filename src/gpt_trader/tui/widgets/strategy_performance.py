@@ -32,6 +32,9 @@ class StrategyPerformanceWidget(Static):
     └────────────────────────────────────┘
     """
 
+    # Track previous performance for delta calculation
+    _last_performance: StrategyPerformance | None = None
+
     DEFAULT_CSS = """
     StrategyPerformanceWidget {
         height: auto;
@@ -161,6 +164,35 @@ class StrategyPerformanceWidget(Static):
         """Called by StateRegistry when state changes."""
         self.state = state
 
+    def _format_delta(
+        self,
+        current: float,
+        previous: float | None,
+        precision: int = 1,
+        suffix: str = "",
+    ) -> str:
+        """Format a delta indicator for metric changes.
+
+        Args:
+            current: Current value.
+            previous: Previous value (None if no previous).
+            precision: Decimal places for display.
+            suffix: Optional suffix (e.g., "%" for percentages).
+
+        Returns:
+            Formatted delta string (e.g., " [green]+1.2%[/green]") or empty string.
+        """
+        if previous is None:
+            return ""
+
+        delta = current - previous
+        if abs(delta) < 0.01:  # Ignore tiny changes
+            return ""
+
+        sign = "+" if delta > 0 else ""
+        color = "green" if delta > 0 else "red"
+        return f" [{color}]{sign}{delta:.{precision}f}{suffix}[/{color}]"
+
     @safe_update
     def update_display(
         self,
@@ -173,10 +205,15 @@ class StrategyPerformanceWidget(Static):
             performance: Strategy performance metrics.
             regime: Current market regime data.
         """
+        # Get previous values for delta calculation
+        prev = self._last_performance
+
         # Win Rate
         win_rate_label = self.query_one("#val-win-rate", Label)
         if performance.total_trades > 0:
-            win_rate_label.update(f"{performance.win_rate_pct:.1f}%")
+            prev_win_rate = prev.win_rate_pct if prev else None
+            delta = self._format_delta(performance.win_rate_pct, prev_win_rate, suffix="%")
+            win_rate_label.update(f"{performance.win_rate_pct:.1f}%{delta}")
             win_rate_label.remove_class("positive", "negative", "neutral")
             if performance.win_rate >= 0.5:
                 win_rate_label.add_class("positive")
@@ -188,12 +225,16 @@ class StrategyPerformanceWidget(Static):
 
         # Trades
         trades_label = self.query_one("#val-trades", Label)
-        trades_label.update(str(performance.total_trades))
+        prev_trades = prev.total_trades if prev else None
+        delta = self._format_delta(performance.total_trades, prev_trades, precision=0)
+        trades_label.update(f"{performance.total_trades}{delta}")
 
         # Profit Factor
         pf_label = self.query_one("#val-pf", Label)
         if performance.profit_factor > 0:
-            pf_label.update(f"{performance.profit_factor:.2f}")
+            prev_pf = prev.profit_factor if prev else None
+            delta = self._format_delta(performance.profit_factor, prev_pf, precision=2)
+            pf_label.update(f"{performance.profit_factor:.2f}{delta}")
             pf_label.remove_class("positive", "negative", "neutral")
             if performance.profit_factor >= 1.5:
                 pf_label.add_class("positive")
@@ -213,7 +254,9 @@ class StrategyPerformanceWidget(Static):
         return_label = self.query_one("#val-return", Label)
         if performance.total_return_pct != 0:
             sign = "+" if performance.total_return_pct > 0 else ""
-            return_label.update(f"{sign}{performance.total_return_pct:.1f}%")
+            prev_return = prev.total_return_pct if prev else None
+            delta = self._format_delta(performance.total_return_pct, prev_return, suffix="%")
+            return_label.update(f"{sign}{performance.total_return_pct:.1f}%{delta}")
             return_label.remove_class("positive", "negative", "neutral")
             if performance.total_return_pct > 0:
                 return_label.add_class("positive")
@@ -228,7 +271,9 @@ class StrategyPerformanceWidget(Static):
         # Sharpe
         sharpe_label = self.query_one("#val-sharpe", Label)
         if performance.sharpe_ratio != 0:
-            sharpe_label.update(f"{performance.sharpe_ratio:.2f}")
+            prev_sharpe = prev.sharpe_ratio if prev else None
+            delta = self._format_delta(performance.sharpe_ratio, prev_sharpe, precision=2)
+            sharpe_label.update(f"{performance.sharpe_ratio:.2f}{delta}")
             sharpe_label.remove_class("positive", "negative", "neutral")
             if performance.sharpe_ratio >= 1.5:
                 sharpe_label.add_class("positive")
@@ -243,7 +288,9 @@ class StrategyPerformanceWidget(Static):
         # Drawdown
         dd_label = self.query_one("#val-dd", Label)
         if performance.max_drawdown_pct != 0:
-            dd_label.update(f"{performance.max_drawdown_pct:.1f}%")
+            prev_dd = prev.max_drawdown_pct if prev else None
+            delta = self._format_delta(performance.max_drawdown_pct, prev_dd, suffix="%")
+            dd_label.update(f"{performance.max_drawdown_pct:.1f}%{delta}")
             dd_label.remove_class("positive", "negative", "neutral")
             if performance.max_drawdown_pct > -5:
                 dd_label.add_class("neutral")
@@ -272,3 +319,6 @@ class StrategyPerformanceWidget(Static):
         else:
             regime_label.update("--")
             regime_label.remove_class("bullish", "bearish", "sideways", "crisis")
+
+        # Store current performance for next delta calculation
+        self._last_performance = performance

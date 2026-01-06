@@ -242,6 +242,7 @@ class StrategyDetailScreen(Screen):
         """Initialize the strategy detail screen."""
         super().__init__(**kwargs)
         self._selected_symbol: str | None = None
+        self._last_performance: StrategyPerformance | None = None
 
     def compose(self) -> ComposeResult:
         with ScrollableContainer(id="strategy-detail-container"):
@@ -365,13 +366,62 @@ class StrategyDetailScreen(Screen):
         decision_count = len(strategy_data.last_decisions)
         info_label.update(f"{decision_count} decisions tracked")
 
+    def _format_delta(
+        self,
+        current: float,
+        previous: float | None,
+        precision: int = 1,
+        suffix: str = "",
+    ) -> str:
+        """Format a delta indicator for metric changes.
+
+        Args:
+            current: Current value.
+            previous: Previous value (None if no previous).
+            precision: Decimal places for display.
+            suffix: Optional suffix (e.g., "%" for percentages).
+
+        Returns:
+            Formatted delta string (e.g., " [green]+1.2%[/green]") or empty string.
+        """
+        if previous is None:
+            return ""
+
+        delta = current - previous
+        if abs(delta) < 0.01:  # Ignore tiny changes
+            return ""
+
+        sign = "+" if delta > 0 else ""
+        color = "green" if delta > 0 else "red"
+        return f" [{color}]{sign}{delta:.{precision}f}{suffix}[/{color}]"
+
+    def _get_entry_exit_badge(self, action: str) -> str:
+        """Get entry/exit badge for an action.
+
+        Args:
+            action: The action string (BUY, SELL, CLOSE, EXIT, HOLD).
+
+        Returns:
+            Badge string like " [cyan]ENTRY[/cyan]" or " [magenta]EXIT[/magenta]", or empty.
+        """
+        action_upper = action.upper()
+        if action_upper in ("BUY", "SELL"):
+            return " [cyan]ENTRY[/cyan]"
+        elif action_upper in ("CLOSE", "EXIT"):
+            return " [magenta]EXIT[/magenta]"
+        return ""
+
     @safe_update
     def _update_performance(self, performance: StrategyPerformance) -> None:
         """Update the performance section."""
+        prev = self._last_performance
+
         # Win Rate
         win_rate = self.query_one("#perf-win-rate", Label)
         if performance.total_trades > 0:
-            win_rate.update(f"{performance.win_rate_pct:.1f}%")
+            prev_win_rate = prev.win_rate_pct if prev else None
+            delta = self._format_delta(performance.win_rate_pct, prev_win_rate, suffix="%")
+            win_rate.update(f"{performance.win_rate_pct:.1f}%{delta}")
             win_rate.remove_class("positive", "negative")
             win_rate.add_class("positive" if performance.win_rate >= 0.5 else "negative")
         else:
@@ -380,13 +430,17 @@ class StrategyDetailScreen(Screen):
 
         # Trades
         trades = self.query_one("#perf-trades", Label)
-        trades.update(str(performance.total_trades))
+        prev_trades = prev.total_trades if prev else None
+        delta = self._format_delta(performance.total_trades, prev_trades, precision=0)
+        trades.update(f"{performance.total_trades}{delta}")
 
         # Return
         ret = self.query_one("#perf-return", Label)
         if performance.total_return_pct != 0:
             sign = "+" if performance.total_return_pct > 0 else ""
-            ret.update(f"{sign}{performance.total_return_pct:.1f}%")
+            prev_return = prev.total_return_pct if prev else None
+            delta = self._format_delta(performance.total_return_pct, prev_return, suffix="%")
+            ret.update(f"{sign}{performance.total_return_pct:.1f}%{delta}")
             ret.remove_class("positive", "negative")
             ret.add_class("positive" if performance.total_return_pct > 0 else "negative")
         else:
@@ -396,14 +450,18 @@ class StrategyDetailScreen(Screen):
         # Sharpe
         sharpe = self.query_one("#perf-sharpe", Label)
         if performance.sharpe_ratio != 0:
-            sharpe.update(f"{performance.sharpe_ratio:.2f}")
+            prev_sharpe = prev.sharpe_ratio if prev else None
+            delta = self._format_delta(performance.sharpe_ratio, prev_sharpe, precision=2)
+            sharpe.update(f"{performance.sharpe_ratio:.2f}{delta}")
         else:
             sharpe.update("--")
 
         # Drawdown
         dd = self.query_one("#perf-drawdown", Label)
         if performance.max_drawdown_pct != 0:
-            dd.update(f"{performance.max_drawdown_pct:.1f}%")
+            prev_dd = prev.max_drawdown_pct if prev else None
+            delta = self._format_delta(performance.max_drawdown_pct, prev_dd, suffix="%")
+            dd.update(f"{performance.max_drawdown_pct:.1f}%{delta}")
             dd.remove_class("positive", "negative")
             dd.add_class("negative")
         else:
@@ -413,6 +471,9 @@ class StrategyDetailScreen(Screen):
         # W/L
         wl = self.query_one("#perf-wl", Label)
         wl.update(f"{performance.winning_trades}/{performance.losing_trades}")
+
+        # Store current performance for next delta calculation
+        self._last_performance = performance
 
     @safe_update
     def _update_regime(self, regime: RegimeData) -> None:
@@ -451,11 +512,17 @@ class StrategyDetailScreen(Screen):
 
             # Color code action
             if action == "BUY":
-                formatted_action = f"[green]{action}[/green]"
+                color = "green"
             elif action == "SELL":
-                formatted_action = f"[red]{action}[/red]"
+                color = "red"
+            elif action in ("CLOSE", "EXIT"):
+                color = "yellow"
             else:
-                formatted_action = f"[yellow]{action}[/yellow]"
+                color = "yellow"
+
+            # Entry/Exit badge
+            badge = self._get_entry_exit_badge(action)
+            formatted_action = f"[{color}]{action}[/{color}]{badge}"
 
             # Format confidence
             confidence = f"{decision.confidence:.2f}"

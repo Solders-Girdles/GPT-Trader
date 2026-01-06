@@ -208,6 +208,7 @@ ALLOWLIST = {
     "tests/integration/test_container_lifecycle.py",  # container lifecycle and service registration coverage
     "tests/unit/gpt_trader/tui/widgets/test_alert_inbox.py",  # alert inbox widget comprehensive scenarios
     "tests/unit/gpt_trader/tui/test_state.py",  # TuiState comprehensive scenarios: update cycles, CFM, resilience, performance
+    "tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen.py",  # signal detail formatting, backtest display, delta formatting, entry/exit badges
 }
 
 SLEEP_ALLOWLIST = {

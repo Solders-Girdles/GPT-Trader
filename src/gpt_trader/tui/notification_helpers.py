@@ -101,31 +101,31 @@ def notify_error(
 # Standard recovery hints for common scenarios
 RECOVERY_HINTS = {
     # Connection issues
-    "connection_lost": "Press R to reconnect",
-    "connection_error": "Press R to reconnect",
+    "connection_lost": "Press [R] to reconnect",
+    "connection_error": "Press [R] to reconnect",
     "reconnecting": "Reconnecting...",
     # Rate limiting
     "rate_limit": "Reduce request frequency",
     "rate_limit_high": "Reduce request frequency",
     "throttled": "Wait and retry",
     # Risk management
-    "reduce_only": "Reduce positions or wait for reset",
-    "reduce_only_active": "Reduce positions or wait for reset",
-    "daily_loss": "Consider pausing or reducing exposure",
-    "daily_loss_warning": "Consider pausing or reducing exposure",
+    "reduce_only": "Reduce positions or [D] Reset Day",
+    "reduce_only_active": "Reduce positions or [D] Reset Day",
+    "daily_loss": "[D] Reset Day or reduce exposure",
+    "daily_loss_warning": "[D] Reset Day or reduce exposure",
     "position_limit": "Close positions to continue",
     "large_unrealized_loss": "Review position sizing",
     # Validation failures
-    "validation_escalation": "Check API connectivity. Trading restricted.",
-    "validation_failures": "Intermittent API issues detected",
+    "validation_escalation": "API issue triggered reduce-only. [D] Reset Day",
+    "validation_failures": "API issues detected. Monitor for escalation",
     # Configuration
-    "config_error": "Press C to check config",
-    "invalid_config": "Press C to fix config",
+    "config_error": "Press [C] to check config",
+    "invalid_config": "Press [C] to fix config",
     # Bot state
-    "bot_stopped": "Press S to start",
+    "bot_stopped": "Press [S] to start",
     "bot_error": "Check logs for details",
     # Execution health
-    "circuit_breaker_open": "Wait for auto-recovery or press R",
+    "circuit_breaker_open": "Wait for auto-recovery or [R] reconnect",
     "execution_critical": "Check broker status",
     "execution_degraded": "Monitor for improvement",
     "execution_p95_spike": "Network may be congested",

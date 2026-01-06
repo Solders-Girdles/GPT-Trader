@@ -148,11 +148,8 @@ class AlertManager:
         self.add_rule(
             AlertRule(
                 rule_id="reduce_only_active",
-                title="Risk: Reduce-Only",
-                condition=lambda state: (
-                    state.risk_data.reduce_only_mode,
-                    f"Trading restricted to reduce-only. Reason: {state.risk_data.reduce_only_reason or 'risk limit'}",
-                ),
+                title="Risk: Reduce-Only Mode",
+                condition=self._check_reduce_only,
                 severity=AlertSeverity.WARNING,
                 category=AlertCategory.RISK,
                 cooldown=300.0,  # 5 minute cooldown
@@ -330,8 +327,18 @@ class AlertManager:
             pass
         return False, ""
 
+    def _check_reduce_only(self, state: TuiState) -> tuple[bool, str]:
+        """Check if reduce-only mode is active."""
+        if state.risk_data.reduce_only_mode:
+            reason = state.risk_data.reduce_only_reason or "risk limit"
+            return (
+                True,
+                f"Trading restricted to reduce-only. Guard: {reason}.",
+            )
+        return False, ""
+
     def _check_daily_loss(self, state: TuiState) -> tuple[bool, str]:
-        """Check if daily loss is approaching limit."""
+        """Check if daily loss is approaching limit (Daily Loss Guard)."""
         if state.risk_data.daily_loss_limit_pct > 0:
             current = abs(state.risk_data.current_daily_loss_pct)
             limit = state.risk_data.daily_loss_limit_pct
@@ -339,7 +346,7 @@ class AlertManager:
                 pct_of_limit = (current / limit) * 100
                 return (
                     True,
-                    f"Loss utilization at {pct_of_limit:.0f}% of daily limit ({current:.1%} / {limit:.1%}).",
+                    f"Daily Loss Guard: {pct_of_limit:.0f}% of limit ({current:.1%} / {limit:.1%}).",
                 )
         return False, ""
 

@@ -34,6 +34,8 @@ class AccountWidget(Static):
         self._has_received_update = False
         self._bot_running = False
         self._data_source_mode = "demo"
+        # Display signature cache for early-exit optimization
+        self._last_display_signature: tuple | None = None
 
     def compose(self) -> ComposeResult:
         # Header with timestamp
@@ -130,11 +132,51 @@ class AccountWidget(Static):
         if hasattr(self.app, "state_registry"):
             self.app.state_registry.unregister(self)
 
+    def _compute_display_signature(self, state: TuiState) -> tuple:
+        """Compute a signature from all fields displayed by this widget.
+
+        Returns a tuple that can be compared for equality to detect changes.
+        """
+        # Account data signature (balances hash)
+        acct_sig = ()
+        if state.account_data:
+            acct = state.account_data
+            # Use tuple of balance tuples for hashable signature
+            bal_sig = tuple((b.asset, str(b.total), str(b.available)) for b in acct.balances)
+            acct_sig = (acct.volume_30d, acct.fees_30d, acct.fee_tier, bal_sig)
+
+        # Position data signature (portfolio metrics)
+        pos_sig = ()
+        if state.position_data:
+            pos = state.position_data
+            pos_sig = (
+                str(pos.equity),
+                str(pos.total_unrealized_pnl),
+                str(pos.total_realized_pnl),
+                str(pos.total_fees),
+                str(pos.net_pnl),
+            )
+
+        return (
+            state.running,
+            state.data_source_mode,
+            state.degraded_mode,
+            state.last_update,
+            acct_sig,
+            pos_sig,
+        )
+
     def on_state_updated(self, state: TuiState) -> None:
         """Handle state updates from StateRegistry broadcast.
 
         Extracts account data from TuiState and calls update_account().
         """
+        # Early exit if display signature unchanged
+        sig = self._compute_display_signature(state)
+        if sig == self._last_display_signature:
+            return
+        self._last_display_signature = sig
+
         self._has_received_update = True
         self._bot_running = bool(getattr(state, "running", False))
         self._data_source_mode = str(getattr(state, "data_source_mode", "demo") or "demo")

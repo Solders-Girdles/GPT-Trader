@@ -105,6 +105,8 @@ class SystemMonitorWidget(Static):
     ) -> None:
         super().__init__(*args, **kwargs)
         self.thresholds = thresholds or DEFAULT_THRESHOLDS
+        # Display signature cache for early-exit optimization
+        self._last_display_signature: tuple | None = None
 
     def on_mount(self) -> None:
         """Register with StateRegistry on mount."""
@@ -116,6 +118,56 @@ class SystemMonitorWidget(Static):
         if hasattr(self.app, "state_registry"):
             self.app.state_registry.unregister(self)
 
+    def _compute_display_signature(self, state: TuiState) -> tuple:
+        """Compute a signature from all fields displayed by this widget.
+
+        Returns a tuple that can be compared for equality to detect changes.
+        """
+        sys = state.system_data
+        res = state.resilience_data
+        exec_data = state.execution_data
+
+        # System metrics section
+        sys_sig = (
+            (
+                getattr(sys, "cpu_usage", None),
+                getattr(sys, "api_latency", None),
+                getattr(sys, "memory_usage", None),
+                getattr(sys, "connection_status", None),
+                getattr(sys, "rate_limit_usage", None),
+            )
+            if sys
+            else ()
+        )
+
+        # Resilience metrics section
+        res_sig = (
+            (
+                getattr(res, "latency_p50_ms", None),
+                getattr(res, "latency_p95_ms", None),
+                getattr(res, "error_rate", None),
+                getattr(res, "cache_hit_rate", None),
+                getattr(res, "any_circuit_open", None),
+                getattr(res, "last_update", None),
+            )
+            if res
+            else ()
+        )
+
+        # Execution metrics section
+        exec_sig = (
+            (
+                getattr(exec_data, "success_rate", None),
+                getattr(exec_data, "avg_latency_ms", None),
+                getattr(exec_data, "submissions_total", None),
+            )
+            if exec_data
+            else ()
+        )
+
+        # Include running state for connection status logic
+        return (sys_sig, res_sig, exec_sig, state.running, state.data_source_mode)
+
     def on_state_updated(self, state: TuiState) -> None:
         """Handle state updates from StateRegistry broadcast.
 
@@ -123,6 +175,12 @@ class SystemMonitorWidget(Static):
         """
         if not state.system_data:
             return
+
+        # Early exit if display signature unchanged
+        sig = self._compute_display_signature(state)
+        if sig == self._last_display_signature:
+            return
+        self._last_display_signature = sig
 
         system_data = state.system_data
 

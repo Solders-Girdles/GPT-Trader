@@ -275,6 +275,13 @@ RiskDetailModal .preview-guard-line {
     height: auto;
 }
 
+/* Guard Threshold Explanations */
+RiskDetailModal .guard-explanation {
+    color: $text-secondary;
+    padding-left: $spacing-xs;
+    height: auto;
+}
+
 /* === Position Detail Modal === */
 
 PositionDetailModal {

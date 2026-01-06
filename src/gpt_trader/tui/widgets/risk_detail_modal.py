@@ -12,6 +12,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Label, Static
 
 from gpt_trader.tui.responsive import calculate_modal_width
+from gpt_trader.tui.risk_guard_explanations import get_guard_explanation
 from gpt_trader.tui.risk_preview import (
     SHOCK_SCENARIOS,
     RiskPreviewResult,
@@ -156,6 +157,15 @@ class RiskDetailModal(ModalScreen):
                     # Display each guard with enhanced info
                     for guard_info in guards_to_display:
                         yield Static(self._format_guard_row(guard_info))
+
+                    # Guard thresholds section (only when guards are active)
+                    yield Static("─── Guard Thresholds ───", classes="section-header")
+                    for guard_info in guards_to_display:
+                        explanation = get_guard_explanation(guard_info.name, data)
+                        yield Static(
+                            f"  {guard_info.name}: {explanation}",
+                            classes="guard-explanation",
+                        )
                 else:
                     yield Static(Text("No active guards", style="dim"), classes="muted")
 

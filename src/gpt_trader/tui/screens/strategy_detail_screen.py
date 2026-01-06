@@ -181,6 +181,12 @@ class StrategyDetailScreen(Screen):
         margin-top: 1;
     }
 
+    StrategyDetailScreen .signal-detail-header {
+        color: $text-muted;
+        text-style: italic;
+        height: 1;
+    }
+
     StrategyDetailScreen .signal-bar-row {
         height: 1;
     }
@@ -249,7 +255,11 @@ class StrategyDetailScreen(Screen):
 
             # Signal detail panel (shown when row selected)
             with Vertical(id="signal-detail", classes="hidden"):
-                yield Label("Signal Breakdown", classes="breakdown-title")
+                yield Label("Signal Details", classes="breakdown-title")
+                yield Label(
+                    "Signal     Value   Wt   Contrib",
+                    classes="signal-detail-header",
+                )
                 yield Vertical(id="signal-bars-detail")
 
     def on_mount(self) -> None:
@@ -437,8 +447,8 @@ class StrategyDetailScreen(Screen):
             )
 
             for contrib in sorted_contributions[:6]:
-                bar = self._create_signal_bar(contrib)
-                bars.mount(bar)
+                row = self._format_signal_detail_row(contrib)
+                bars.mount(row)
 
         except Exception:
             self._hide_signal_detail()
@@ -451,27 +461,70 @@ class StrategyDetailScreen(Screen):
         except Exception:
             pass
 
-    def _create_signal_bar(self, contrib: IndicatorContribution) -> Static:
-        """Create a signal bar widget."""
+    def _format_signal_detail_row(self, contrib: IndicatorContribution) -> Static:
+        """Format a signal detail row with name, value, weight, bar, and direction.
+
+        Args:
+            contrib: IndicatorContribution with signal data.
+
+        Returns:
+            Static widget with formatted row.
+        """
+        content = self._build_signal_detail_content(contrib)
+        return Static(content, classes="signal-bar-row")
+
+    def _build_signal_detail_content(self, contrib: IndicatorContribution) -> str:
+        """Build the markup string for a signal detail row.
+
+        Format: Signal     Value   Wt   Contrib
+                RSI       35.20  0.80  ███░░░░░░ +0.42 ↑
+
+        Args:
+            contrib: IndicatorContribution with signal data.
+
+        Returns:
+            Markup string for the row.
+        """
+        # Signal name (truncate to 10 chars, left-aligned)
         name = contrib.name[:10].ljust(10)
-        bar_length = 12
+
+        # Value (right-aligned, 6 chars)
+        value_str = f"{contrib.value:6.2f}"
+
+        # Weight (right-aligned, 4 chars)
+        weight_str = f"{contrib.weight:4.2f}"
+
+        # Contribution bar (9 chars)
+        bar_length = 9
         fill_count = int(abs(contrib.contribution) * bar_length)
         fill_count = min(fill_count, bar_length)
+        fill = "█" * fill_count
+        empty = "░" * (bar_length - fill_count)
 
-        if contrib.contribution >= 0:
-            fill = "█" * fill_count
-            empty = "░" * (bar_length - fill_count)
+        # Determine color and direction
+        if contrib.contribution > 0.01:
             bar = f"{empty}{fill}"
             color = "green"
             sign = "+"
-        else:
-            fill = "█" * fill_count
-            empty = "░" * (bar_length - fill_count)
+            direction = "↑"
+        elif contrib.contribution < -0.01:
             bar = f"{fill}{empty}"
             color = "red"
             sign = ""
+            direction = "↓"
+        else:
+            bar = "░" * bar_length
+            color = "dim"
+            sign = ""
+            direction = "→"
 
-        value_str = f"{sign}{contrib.contribution:.2f}"
-        content = f"[dim]{name}[/dim] [{color}]{bar}[/{color}] [{color}]{value_str}[/{color}]"
+        # Contribution value (signed, 5 chars)
+        contrib_str = f"{sign}{contrib.contribution:.2f}"
 
-        return Static(content, classes="signal-bar-row")
+        # Build the row
+        return (
+            f"[dim]{name}[/dim] "
+            f"{value_str} "
+            f"{weight_str}  "
+            f"[{color}]{bar} {contrib_str} {direction}[/{color}]"
+        )

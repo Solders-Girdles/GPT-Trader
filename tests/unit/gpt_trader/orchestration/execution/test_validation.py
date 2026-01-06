@@ -862,3 +862,405 @@ class TestValidationIntegration:
         mock_spec_validate.assert_called_once()
         mock_risk_manager.check_mark_staleness.assert_called_once()
         mock_risk_manager.pre_trade_validate.assert_called_once()
+
+
+# ============================================================
+# Test: ValidationFailureTracker
+# ============================================================
+
+
+class TestValidationFailureTracker:
+    """Tests for ValidationFailureTracker class."""
+
+    def test_initial_failure_count_is_zero(self) -> None:
+        """Test that initial failure count is zero."""
+        from gpt_trader.orchestration.execution.validation import ValidationFailureTracker
+
+        tracker = ValidationFailureTracker()
+        assert tracker.get_failure_count("mark_staleness") == 0
+
+    def test_record_failure_increments_count(self) -> None:
+        """Test that record_failure increments the count."""
+        from gpt_trader.orchestration.execution.validation import ValidationFailureTracker
+
+        tracker = ValidationFailureTracker()
+        tracker.record_failure("mark_staleness")
+        assert tracker.get_failure_count("mark_staleness") == 1
+
+        tracker.record_failure("mark_staleness")
+        assert tracker.get_failure_count("mark_staleness") == 2
+
+    def test_record_success_resets_count(self) -> None:
+        """Test that record_success resets the failure count."""
+        from gpt_trader.orchestration.execution.validation import ValidationFailureTracker
+
+        tracker = ValidationFailureTracker()
+        tracker.record_failure("mark_staleness")
+        tracker.record_failure("mark_staleness")
+        assert tracker.get_failure_count("mark_staleness") == 2
+
+        tracker.record_success("mark_staleness")
+        assert tracker.get_failure_count("mark_staleness") == 0
+
+    def test_escalation_triggered_at_threshold(self) -> None:
+        """Test that escalation is triggered at threshold."""
+        from gpt_trader.orchestration.execution.validation import ValidationFailureTracker
+
+        escalation_called = []
+        tracker = ValidationFailureTracker(
+            escalation_threshold=3,
+            escalation_callback=lambda: escalation_called.append(True),
+        )
+
+        # First two failures - no escalation
+        assert tracker.record_failure("mark_staleness") is False
+        assert tracker.record_failure("mark_staleness") is False
+        assert len(escalation_called) == 0
+
+        # Third failure - triggers escalation
+        assert tracker.record_failure("mark_staleness") is True
+        assert len(escalation_called) == 1
+
+    def test_escalation_without_callback(self) -> None:
+        """Test that escalation works without callback."""
+        from gpt_trader.orchestration.execution.validation import ValidationFailureTracker
+
+        tracker = ValidationFailureTracker(
+            escalation_threshold=2,
+            escalation_callback=None,
+        )
+
+        tracker.record_failure("test")
+        # Should not raise even without callback
+        escalated = tracker.record_failure("test")
+        assert escalated is True
+
+    def test_separate_tracking_per_check_type(self) -> None:
+        """Test that different check types are tracked separately."""
+        from gpt_trader.orchestration.execution.validation import ValidationFailureTracker
+
+        tracker = ValidationFailureTracker()
+        tracker.record_failure("mark_staleness")
+        tracker.record_failure("mark_staleness")
+        tracker.record_failure("slippage_guard")
+
+        assert tracker.get_failure_count("mark_staleness") == 2
+        assert tracker.get_failure_count("slippage_guard") == 1
+
+
+# ============================================================
+# Test: Metrics Recording
+# ============================================================
+
+
+class TestMetricsRecording:
+    """Tests for metrics recording on validation failures."""
+
+    @patch("gpt_trader.orchestration.execution.validation.record_counter")
+    def test_mark_staleness_failure_records_metric(
+        self,
+        mock_record_counter: MagicMock,
+        mock_broker: MagicMock,
+        mock_risk_manager: MagicMock,
+    ) -> None:
+        """Test that mark staleness check failure records a metric."""
+        from gpt_trader.orchestration.execution.validation import (
+            METRIC_MARK_STALENESS_CHECK_FAILED,
+            ValidationFailureTracker,
+        )
+
+        mock_risk_manager.check_mark_staleness.side_effect = RuntimeError("API error")
+
+        tracker = ValidationFailureTracker()
+        validator = OrderValidator(
+            broker=mock_broker,
+            risk_manager=mock_risk_manager,
+            enable_order_preview=False,
+            record_preview_callback=MagicMock(),
+            record_rejection_callback=MagicMock(),
+            failure_tracker=tracker,
+        )
+
+        # Should not raise
+        validator.ensure_mark_is_fresh("BTC-PERP")
+
+        # Metric should be recorded
+        mock_record_counter.assert_called_with(METRIC_MARK_STALENESS_CHECK_FAILED)
+
+    @patch("gpt_trader.orchestration.execution.validation.record_counter")
+    def test_slippage_guard_failure_records_metric(
+        self,
+        mock_record_counter: MagicMock,
+        mock_broker: MagicMock,
+        mock_risk_manager: MagicMock,
+    ) -> None:
+        """Test that slippage guard check failure records a metric."""
+        from gpt_trader.orchestration.execution.validation import (
+            METRIC_SLIPPAGE_GUARD_CHECK_FAILED,
+            ValidationFailureTracker,
+        )
+
+        mock_broker.get_market_snapshot.side_effect = RuntimeError("API error")
+
+        tracker = ValidationFailureTracker()
+        validator = OrderValidator(
+            broker=mock_broker,
+            risk_manager=mock_risk_manager,
+            enable_order_preview=False,
+            record_preview_callback=MagicMock(),
+            record_rejection_callback=MagicMock(),
+            failure_tracker=tracker,
+        )
+
+        # Should not raise
+        validator.enforce_slippage_guard(
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_quantity=Decimal("1.0"),
+            effective_price=Decimal("50000"),
+        )
+
+        # Metric should be recorded
+        mock_record_counter.assert_called_with(METRIC_SLIPPAGE_GUARD_CHECK_FAILED)
+
+    @patch("gpt_trader.orchestration.execution.validation.record_counter")
+    def test_preview_failure_records_metric(
+        self,
+        mock_record_counter: MagicMock,
+        mock_risk_manager: MagicMock,
+    ) -> None:
+        """Test that preview failure records a metric."""
+        from gpt_trader.orchestration.execution.validation import (
+            METRIC_ORDER_PREVIEW_FAILED,
+            ValidationFailureTracker,
+        )
+
+        broker = MagicMock()
+        broker.preview_order = MagicMock(side_effect=RuntimeError("API error"))
+        broker.edit_order_preview = MagicMock()
+
+        tracker = ValidationFailureTracker()
+        validator = OrderValidator(
+            broker=broker,
+            risk_manager=mock_risk_manager,
+            enable_order_preview=True,
+            record_preview_callback=MagicMock(),
+            record_rejection_callback=MagicMock(),
+            failure_tracker=tracker,
+        )
+
+        # Should not raise
+        validator.maybe_preview_order(
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_type=OrderType.LIMIT,
+            order_quantity=Decimal("1.0"),
+            effective_price=Decimal("50000"),
+            stop_price=None,
+            tif=TimeInForce.GTC,
+            reduce_only=False,
+            leverage=10,
+        )
+
+        # Metric should be recorded
+        mock_record_counter.assert_called_with(METRIC_ORDER_PREVIEW_FAILED)
+
+
+# ============================================================
+# Test: Failure Tracker Integration
+# ============================================================
+
+
+class TestFailureTrackerIntegration:
+    """Tests for failure tracker integration with OrderValidator."""
+
+    def test_success_resets_mark_staleness_counter(
+        self,
+        mock_broker: MagicMock,
+        mock_risk_manager: MagicMock,
+    ) -> None:
+        """Test that successful mark staleness check resets counter."""
+        from gpt_trader.orchestration.execution.validation import ValidationFailureTracker
+
+        mock_risk_manager.check_mark_staleness.return_value = False
+
+        tracker = ValidationFailureTracker()
+        # Pre-set some failures
+        tracker.record_failure("mark_staleness")
+        tracker.record_failure("mark_staleness")
+        assert tracker.get_failure_count("mark_staleness") == 2
+
+        validator = OrderValidator(
+            broker=mock_broker,
+            risk_manager=mock_risk_manager,
+            enable_order_preview=False,
+            record_preview_callback=MagicMock(),
+            record_rejection_callback=MagicMock(),
+            failure_tracker=tracker,
+        )
+
+        # Successful check
+        validator.ensure_mark_is_fresh("BTC-PERP")
+
+        # Counter should be reset
+        assert tracker.get_failure_count("mark_staleness") == 0
+
+    def test_failure_increments_slippage_counter(
+        self,
+        mock_broker: MagicMock,
+        mock_risk_manager: MagicMock,
+    ) -> None:
+        """Test that slippage guard failure increments counter."""
+        from gpt_trader.orchestration.execution.validation import ValidationFailureTracker
+
+        mock_broker.get_market_snapshot.side_effect = RuntimeError("API error")
+
+        tracker = ValidationFailureTracker()
+        validator = OrderValidator(
+            broker=mock_broker,
+            risk_manager=mock_risk_manager,
+            enable_order_preview=False,
+            record_preview_callback=MagicMock(),
+            record_rejection_callback=MagicMock(),
+            failure_tracker=tracker,
+        )
+
+        validator.enforce_slippage_guard(
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_quantity=Decimal("1.0"),
+            effective_price=Decimal("50000"),
+        )
+
+        assert tracker.get_failure_count("slippage_guard") == 1
+
+        validator.enforce_slippage_guard(
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_quantity=Decimal("1.0"),
+            effective_price=Decimal("50000"),
+        )
+
+        assert tracker.get_failure_count("slippage_guard") == 2
+
+    @patch("gpt_trader.orchestration.execution.validation.record_counter")
+    def test_escalation_triggered_after_repeated_failures(
+        self,
+        mock_record_counter: MagicMock,
+        mock_broker: MagicMock,
+        mock_risk_manager: MagicMock,
+    ) -> None:
+        """Test that escalation is triggered after repeated failures."""
+        from gpt_trader.orchestration.execution.validation import (
+            METRIC_CONSECUTIVE_FAILURES_ESCALATION,
+            ValidationFailureTracker,
+        )
+
+        mock_risk_manager.check_mark_staleness.side_effect = RuntimeError("API error")
+
+        escalation_called = []
+        tracker = ValidationFailureTracker(
+            escalation_threshold=3,
+            escalation_callback=lambda: escalation_called.append(True),
+        )
+
+        validator = OrderValidator(
+            broker=mock_broker,
+            risk_manager=mock_risk_manager,
+            enable_order_preview=False,
+            record_preview_callback=MagicMock(),
+            record_rejection_callback=MagicMock(),
+            failure_tracker=tracker,
+        )
+
+        # First two failures - no escalation
+        validator.ensure_mark_is_fresh("BTC-PERP")
+        validator.ensure_mark_is_fresh("BTC-PERP")
+        assert len(escalation_called) == 0
+
+        # Third failure - triggers escalation
+        validator.ensure_mark_is_fresh("BTC-PERP")
+        assert len(escalation_called) == 1
+
+        # Verify escalation metric was recorded
+        mock_record_counter.assert_any_call(METRIC_CONSECUTIVE_FAILURES_ESCALATION)
+
+
+# ============================================================
+# Test: get_validation_metrics
+# ============================================================
+
+
+class TestGetValidationMetrics:
+    """Tests for get_validation_metrics function."""
+
+    def test_returns_empty_failures_initially(self) -> None:
+        """Test that get_validation_metrics returns empty failures initially."""
+        # Reset the fallback tracker for this test
+        import gpt_trader.orchestration.execution.validation as validation_module
+        from gpt_trader.orchestration.execution.validation import (
+            ValidationFailureTracker,
+            get_validation_metrics,
+        )
+
+        original_tracker = validation_module._FALLBACK_FAILURE_TRACKER
+        validation_module._FALLBACK_FAILURE_TRACKER = ValidationFailureTracker()
+
+        try:
+            metrics = get_validation_metrics()
+
+            assert "failures" in metrics
+            assert "escalation_threshold" in metrics
+            assert "any_escalated" in metrics
+            assert metrics["failures"] == {}
+            assert metrics["any_escalated"] is False
+        finally:
+            validation_module._FALLBACK_FAILURE_TRACKER = original_tracker
+
+    def test_returns_failure_counts(self) -> None:
+        """Test that get_validation_metrics returns current failure counts."""
+        import gpt_trader.orchestration.execution.validation as validation_module
+        from gpt_trader.orchestration.execution.validation import (
+            ValidationFailureTracker,
+            get_validation_metrics,
+        )
+
+        original_tracker = validation_module._FALLBACK_FAILURE_TRACKER
+        tracker = ValidationFailureTracker()
+        tracker.record_failure("mark_staleness")
+        tracker.record_failure("mark_staleness")
+        tracker.record_failure("slippage_guard")
+        validation_module._FALLBACK_FAILURE_TRACKER = tracker
+
+        try:
+            metrics = get_validation_metrics()
+
+            assert metrics["failures"]["mark_staleness"] == 2
+            assert metrics["failures"]["slippage_guard"] == 1
+            assert metrics["any_escalated"] is False
+        finally:
+            validation_module._FALLBACK_FAILURE_TRACKER = original_tracker
+
+    def test_reports_escalation_status(self) -> None:
+        """Test that get_validation_metrics reports escalation status."""
+        import gpt_trader.orchestration.execution.validation as validation_module
+        from gpt_trader.orchestration.execution.validation import (
+            ValidationFailureTracker,
+            get_validation_metrics,
+        )
+
+        original_tracker = validation_module._FALLBACK_FAILURE_TRACKER
+        tracker = ValidationFailureTracker(escalation_threshold=3)
+        # Record 3 failures to trigger escalation
+        tracker.record_failure("mark_staleness")
+        tracker.record_failure("mark_staleness")
+        tracker.record_failure("mark_staleness")
+        validation_module._FALLBACK_FAILURE_TRACKER = tracker
+
+        try:
+            metrics = get_validation_metrics()
+
+            assert metrics["any_escalated"] is True
+            assert metrics["escalation_threshold"] == 3
+        finally:
+            validation_module._FALLBACK_FAILURE_TRACKER = original_tracker

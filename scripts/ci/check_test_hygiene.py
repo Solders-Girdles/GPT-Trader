@@ -204,6 +204,7 @@ ALLOWLIST = {
     "tests/integration/test_tui_degraded_paths.py",  # TUI degraded state handling with partial/missing data scenarios
     "tests/unit/gpt_trader/tui/widgets/test_account.py",  # account widget partial state and signature caching tests
     "tests/unit/gpt_trader/tui/widgets/test_position_card.py",  # position card widget resilience with missing data
+    "tests/integration/test_validation_escalation.py",  # validation escalation integration flow coverage
 }
 
 SLEEP_ALLOWLIST = {

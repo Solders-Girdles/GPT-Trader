@@ -3,10 +3,23 @@ Order validation logic for live trading execution.
 
 This module handles pre-trade validation including exchange rules,
 mark price staleness checks, slippage guards, and order previews.
+
+Error Handling Strategy:
+    ValidationError exceptions are always propagated as they indicate
+    actual trading rule violations. Generic exceptions from monitoring
+    infrastructure (API errors, timeouts) are logged and counted via
+    metrics, but do not block trade execution. This prevents monitoring
+    failures from causing trade failures.
+
+    The ValidationFailureTracker monitors consecutive failures and can
+    trigger reduce-only mode if thresholds are exceeded, providing a
+    safety net when validation infrastructure is consistently failing.
 """
 
 from __future__ import annotations
 
+from collections import defaultdict
+from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Any, Protocol, cast, runtime_checkable
 
@@ -14,10 +27,148 @@ from gpt_trader.core import OrderSide, OrderType, Product, TimeInForce
 from gpt_trader.features.brokerages.coinbase.rest_service import CoinbaseRestService
 from gpt_trader.features.brokerages.coinbase.specs import validate_order as spec_validate_order
 from gpt_trader.features.live_trade.risk import LiveRiskManager, ValidationError
+from gpt_trader.monitoring.metrics_collector import record_counter
 from gpt_trader.utilities.logging_patterns import get_logger
 from gpt_trader.utilities.quantization import quantize_price_side_aware
 
 logger = get_logger(__name__, component="order_validation")
+
+
+# Metric names for validation failures
+METRIC_MARK_STALENESS_CHECK_FAILED = "validation.mark_staleness_check_failed"
+METRIC_SLIPPAGE_GUARD_CHECK_FAILED = "validation.slippage_guard_check_failed"
+METRIC_ORDER_PREVIEW_FAILED = "validation.order_preview_failed"
+METRIC_CONSECUTIVE_FAILURES_ESCALATION = "validation.consecutive_failures_escalation"
+
+
+@dataclass
+class ValidationFailureTracker:
+    """Tracks consecutive validation failures and triggers escalation.
+
+    When validation infrastructure fails repeatedly (not actual validation
+    rejections, but failures to perform the checks), this tracker can
+    trigger reduce-only mode to prevent trading with broken safety checks.
+
+    Attributes:
+        consecutive_failures: Count of consecutive failures per check type.
+        escalation_threshold: Number of failures before triggering escalation.
+        escalation_callback: Optional callback to trigger reduce-only mode.
+    """
+
+    consecutive_failures: dict[str, int] = field(default_factory=lambda: defaultdict(int))
+    escalation_threshold: int = 5
+    escalation_callback: Any = None  # Callable[[], None] | None
+
+    def record_failure(self, check_type: str) -> bool:
+        """Record a failure and check if escalation is needed.
+
+        Args:
+            check_type: Type of validation check that failed.
+
+        Returns:
+            True if escalation was triggered, False otherwise.
+        """
+        self.consecutive_failures[check_type] += 1
+        count = self.consecutive_failures[check_type]
+
+        if count >= self.escalation_threshold:
+            logger.warning(
+                "Validation check failing repeatedly - triggering escalation",
+                check_type=check_type,
+                consecutive_failures=count,
+                threshold=self.escalation_threshold,
+                operation="validation_escalation",
+            )
+            record_counter(METRIC_CONSECUTIVE_FAILURES_ESCALATION)
+
+            if self.escalation_callback is not None:
+                try:
+                    self.escalation_callback()
+                except Exception as callback_error:
+                    logger.error(
+                        "Failed to execute escalation callback",
+                        error=str(callback_error),
+                        check_type=check_type,
+                    )
+            return True
+        return False
+
+    def record_success(self, check_type: str) -> None:
+        """Record a successful check, resetting the failure counter.
+
+        Args:
+            check_type: Type of validation check that succeeded.
+        """
+        self.consecutive_failures[check_type] = 0
+
+    def get_failure_count(self, check_type: str) -> int:
+        """Get current consecutive failure count for a check type.
+
+        Args:
+            check_type: Type of validation check.
+
+        Returns:
+            Current consecutive failure count.
+        """
+        return self.consecutive_failures[check_type]
+
+
+# Fallback failure tracker instance (used when no container is set)
+_FALLBACK_FAILURE_TRACKER = ValidationFailureTracker()
+
+
+def get_failure_tracker() -> ValidationFailureTracker:
+    """Get the failure tracker instance.
+
+    Resolves from the application container if set, otherwise returns
+    the module-level fallback instance for backward compatibility.
+
+    Returns:
+        The ValidationFailureTracker instance.
+    """
+    from gpt_trader.app.container import get_application_container
+
+    container = get_application_container()
+    if container is not None:
+        return container.validation_failure_tracker
+    logger.debug("No application container set, using fallback failure tracker")
+    return _FALLBACK_FAILURE_TRACKER
+
+
+def configure_failure_tracker(
+    escalation_threshold: int = 5,
+    escalation_callback: Any = None,
+) -> None:
+    """Configure the failure tracker.
+
+    Configures the container's tracker if set, otherwise the fallback instance.
+
+    Args:
+        escalation_threshold: Number of consecutive failures before escalation.
+        escalation_callback: Optional callback to trigger on escalation.
+    """
+    tracker = get_failure_tracker()
+    tracker.escalation_threshold = escalation_threshold
+    tracker.escalation_callback = escalation_callback
+
+
+def get_validation_metrics() -> dict[str, Any]:
+    """Get validation failure metrics for TUI display.
+
+    Returns:
+        Dict with keys:
+            - failures: Dict mapping check_type to consecutive failure count
+            - escalation_threshold: Number of failures before escalation
+            - any_escalated: True if any check type has reached threshold
+    """
+    tracker = get_failure_tracker()
+    failures = dict(tracker.consecutive_failures)
+    any_escalated = any(count >= tracker.escalation_threshold for count in failures.values())
+    return {
+        "failures": failures,
+        "escalation_threshold": tracker.escalation_threshold,
+        "any_escalated": any_escalated,
+    }
 
 
 class OrderValidator:
@@ -30,6 +181,7 @@ class OrderValidator:
         enable_order_preview: bool,
         record_preview_callback: Any,
         record_rejection_callback: Any,
+        failure_tracker: ValidationFailureTracker | None = None,
     ) -> None:
         """
         Initialize order validator.
@@ -40,12 +192,17 @@ class OrderValidator:
             enable_order_preview: Whether to preview orders before submission
             record_preview_callback: Function to record preview results
             record_rejection_callback: Function to record rejections
+            failure_tracker: Optional tracker for consecutive failures.
+                If not provided, uses the global tracker.
         """
         self.broker = broker
         self.risk_manager = risk_manager
         self.enable_order_preview = enable_order_preview
         self._record_preview = record_preview_callback
         self._record_rejection = record_rejection_callback
+        self._failure_tracker = (
+            failure_tracker if failure_tracker is not None else get_failure_tracker()
+        )
 
     def validate_exchange_rules(
         self,
@@ -115,19 +272,32 @@ class OrderValidator:
 
         Raises:
             ValidationError: If mark price is stale
+
+        Note:
+            Non-ValidationError exceptions are logged and counted via metrics
+            but do not block execution. This prevents monitoring failures from
+            blocking trades. Use the failure tracker to detect repeated failures.
         """
         try:
             if self.risk_manager.check_mark_staleness(symbol):
                 raise ValidationError(f"Mark price is stale for {symbol}; halting order placement")
+            # Check succeeded - reset failure counter
+            self._failure_tracker.record_success("mark_staleness")
         except ValidationError:
             raise
         except Exception as exc:
+            # Record metric for visibility
+            record_counter(METRIC_MARK_STALENESS_CHECK_FAILED)
+            # Track consecutive failures
+            self._failure_tracker.record_failure("mark_staleness")
+
             logger.error(
                 "Failed to check mark price staleness",
                 error_type=type(exc).__name__,
                 error_message=str(exc),
                 operation="ensure_mark_is_fresh",
                 symbol=symbol,
+                consecutive_failures=self._failure_tracker.get_failure_count("mark_staleness"),
             )
 
     def enforce_slippage_guard(
@@ -148,6 +318,11 @@ class OrderValidator:
 
         Raises:
             ValidationError: If expected slippage exceeds limit
+
+        Note:
+            Non-ValidationError exceptions are logged and counted via metrics
+            but do not block execution. This prevents monitoring failures from
+            blocking trades. Use the failure tracker to detect repeated failures.
         """
         try:
             snapshot = None
@@ -166,9 +341,16 @@ class OrderValidator:
                         raise ValidationError(
                             f"Expected slippage {expected_bps:.0f} bps exceeds guard {guard_limit}"
                         )
+            # Check succeeded - reset failure counter
+            self._failure_tracker.record_success("slippage_guard")
         except ValidationError:
             raise
         except Exception as exc:
+            # Record metric for visibility
+            record_counter(METRIC_SLIPPAGE_GUARD_CHECK_FAILED)
+            # Track consecutive failures
+            self._failure_tracker.record_failure("slippage_guard")
+
             logger.error(
                 "Failed to enforce slippage guard",
                 error_type=type(exc).__name__,
@@ -176,6 +358,7 @@ class OrderValidator:
                 operation="enforce_slippage_guard",
                 symbol=symbol,
                 side=side.value,
+                consecutive_failures=self._failure_tracker.get_failure_count("slippage_guard"),
             )
 
     def run_pre_trade_validation(
@@ -240,6 +423,11 @@ class OrderValidator:
             tif: Time in force
             reduce_only: Whether order is reduce-only
             leverage: Leverage multiplier
+
+        Note:
+            Preview failures are informational and do not block order execution.
+            Non-ValidationError exceptions are logged at debug level and counted
+            via metrics for monitoring purposes.
         """
         if not self.enable_order_preview:
             logger.debug(
@@ -273,14 +461,22 @@ class OrderValidator:
             self._record_preview(
                 symbol, side, order_type, order_quantity, effective_price, preview_data
             )
+            # Preview succeeded - reset failure counter
+            self._failure_tracker.record_success("order_preview")
         except ValidationError:
             raise
         except Exception as exc:
+            # Record metric for visibility (preview failures are less critical)
+            record_counter(METRIC_ORDER_PREVIEW_FAILED)
+            # Track consecutive failures (but don't trigger escalation for preview)
+            self._failure_tracker.record_failure("order_preview")
+
             logger.debug(
                 "Preview call failed",
                 error=str(exc),
                 operation="order_preview",
                 stage="error",
+                consecutive_failures=self._failure_tracker.get_failure_count("order_preview"),
             )
 
     def finalize_reduce_only_flag(self, reduce_only: bool, symbol: str) -> bool:

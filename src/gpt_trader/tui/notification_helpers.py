@@ -115,6 +115,9 @@ RECOVERY_HINTS = {
     "daily_loss_warning": "Consider pausing trading",
     "position_limit": "Close positions to continue",
     "large_unrealized_loss": "Review position sizing",
+    # Validation failures
+    "validation_escalation": "Check API connectivity",
+    "validation_failures": "Intermittent API issues detected",
     # Configuration
     "config_error": "Press C to check config",
     "invalid_config": "Press C to fix config",

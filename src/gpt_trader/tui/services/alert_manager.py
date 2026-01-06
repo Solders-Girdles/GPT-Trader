@@ -293,6 +293,30 @@ class AlertManager:
             )
         )
 
+        # Validation escalation (consecutive validation failures triggered reduce-only)
+        self.add_rule(
+            AlertRule(
+                rule_id="validation_escalation",
+                title="Validation Escalation",
+                condition=self._check_validation_escalation,
+                severity=AlertSeverity.ERROR,
+                category=AlertCategory.RISK,
+                cooldown=300.0,  # 5 minute cooldown
+            )
+        )
+
+        # Validation failures warning (before escalation)
+        self.add_rule(
+            AlertRule(
+                rule_id="validation_failures",
+                title="Validation Warnings",
+                condition=self._check_validation_failures,
+                severity=AlertSeverity.WARNING,
+                category=AlertCategory.SYSTEM,
+                cooldown=120.0,  # 2 minute cooldown
+            )
+        )
+
         logger.debug("Registered %s default alert rules", len(self._rules))
 
     def _check_rate_limit(self, state: TuiState) -> tuple[bool, str]:
@@ -468,6 +492,37 @@ class AlertManager:
                         True,
                         f"Retry rate at {exec_data.retry_rate:.1f}x. Intermittent failures.",
                     )
+        except (AttributeError, TypeError):
+            pass
+        return False, ""
+
+    def _check_validation_escalation(self, state: TuiState) -> tuple[bool, str]:
+        """Check if validation failures triggered escalation (reduce-only mode)."""
+        try:
+            if state.system_data.validation_escalated:
+                total = sum(state.system_data.validation_failures.values())
+                return (
+                    True,
+                    f"Validation checks failed {total}x consecutively. Reduce-only mode active.",
+                )
+        except (AttributeError, TypeError):
+            pass
+        return False, ""
+
+    def _check_validation_failures(self, state: TuiState) -> tuple[bool, str]:
+        """Check for validation failures before escalation (warning level)."""
+        try:
+            failures = state.system_data.validation_failures
+            total = sum(failures.values())
+            # Warn when failures exist but haven't escalated yet
+            if total >= 2 and not state.system_data.validation_escalated:
+                # List which checks are failing
+                failing = [k for k, v in failures.items() if v > 0]
+                checks_str = ", ".join(failing[:3])  # Limit to first 3
+                return (
+                    True,
+                    f"{total} validation failures ({checks_str}). Monitor for escalation.",
+                )
         except (AttributeError, TypeError):
             pass
         return False, ""

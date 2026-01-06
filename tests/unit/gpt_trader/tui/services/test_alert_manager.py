@@ -564,3 +564,314 @@ class TestExecutionHealthAlerts:
         cb_alerts = [a for a in alerts if a.rule_id == "circuit_breaker_open"]
         assert len(cb_alerts) == 1
         assert cb_alerts[0].category == AlertCategory.SYSTEM
+
+
+class TestTradeAlerts:
+    """Test suite for trade-related alert rules (stale, failed, expired orders)."""
+
+    def test_stale_orders_rules_registered(self, alert_manager):
+        """Test that trade alert rules are registered."""
+        status = alert_manager.get_rule_status()
+        assert "stale_open_orders" in status
+        assert "failed_orders" in status
+        assert "expired_orders" in status
+
+    def test_stale_orders_alert_triggers(self, alert_manager, mock_app, test_state):
+        """Test stale orders alert triggers when order is old enough."""
+        import time
+
+        from gpt_trader.tui.thresholds import DEFAULT_ORDER_THRESHOLDS
+        from gpt_trader.tui.types import ActiveOrders, Order
+
+        # Create an order older than the warning threshold
+        stale_age = DEFAULT_ORDER_THRESHOLDS.age_warn + 10
+        old_order = Order(
+            order_id="stale-1",
+            symbol="BTC-USD",
+            side="BUY",
+            quantity=Decimal("0.1"),
+            price=Decimal("50000"),
+            status="OPEN",
+            creation_time=time.time() - stale_age,
+        )
+        test_state.order_data = ActiveOrders(orders=[old_order])
+
+        alerts = alert_manager.check_alerts(test_state)
+
+        stale_alerts = [a for a in alerts if a.rule_id == "stale_open_orders"]
+        assert len(stale_alerts) == 1
+        assert stale_alerts[0].severity == AlertSeverity.WARNING
+        assert stale_alerts[0].category == AlertCategory.TRADE
+        assert "BTC-USD" in stale_alerts[0].message
+
+    def test_stale_orders_no_alert_when_fresh(self, alert_manager, mock_app, test_state):
+        """Test no stale orders alert when orders are fresh."""
+        import time
+
+        from gpt_trader.tui.types import ActiveOrders, Order
+
+        # Create a fresh order (just created)
+        fresh_order = Order(
+            order_id="fresh-1",
+            symbol="BTC-USD",
+            side="BUY",
+            quantity=Decimal("0.1"),
+            price=Decimal("50000"),
+            status="OPEN",
+            creation_time=time.time() - 5,  # 5 seconds old
+        )
+        test_state.order_data = ActiveOrders(orders=[fresh_order])
+
+        alerts = alert_manager.check_alerts(test_state)
+
+        stale_alerts = [a for a in alerts if a.rule_id == "stale_open_orders"]
+        assert len(stale_alerts) == 0
+
+    def test_stale_orders_ignores_filled_orders(self, alert_manager, mock_app, test_state):
+        """Test stale orders alert ignores non-open orders."""
+        import time
+
+        from gpt_trader.tui.thresholds import DEFAULT_ORDER_THRESHOLDS
+        from gpt_trader.tui.types import ActiveOrders, Order
+
+        # Old but already filled - should not trigger
+        stale_age = DEFAULT_ORDER_THRESHOLDS.age_warn + 100
+        filled_order = Order(
+            order_id="filled-1",
+            symbol="BTC-USD",
+            side="BUY",
+            quantity=Decimal("0.1"),
+            price=Decimal("50000"),
+            status="FILLED",
+            creation_time=time.time() - stale_age,
+        )
+        test_state.order_data = ActiveOrders(orders=[filled_order])
+
+        alerts = alert_manager.check_alerts(test_state)
+
+        stale_alerts = [a for a in alerts if a.rule_id == "stale_open_orders"]
+        assert len(stale_alerts) == 0
+
+    def test_failed_orders_alert_triggers(self, alert_manager, mock_app, test_state):
+        """Test failed orders alert triggers on REJECTED status."""
+        from gpt_trader.tui.types import ActiveOrders, Order
+
+        rejected_order = Order(
+            order_id="rejected-1",
+            symbol="ETH-USD",
+            side="SELL",
+            quantity=Decimal("1.0"),
+            price=Decimal("3000"),
+            status="REJECTED",
+        )
+        test_state.order_data = ActiveOrders(orders=[rejected_order])
+
+        alerts = alert_manager.check_alerts(test_state)
+
+        failed_alerts = [a for a in alerts if a.rule_id == "failed_orders"]
+        assert len(failed_alerts) == 1
+        assert failed_alerts[0].severity == AlertSeverity.ERROR
+        assert failed_alerts[0].category == AlertCategory.TRADE
+        assert "ETH-USD" in failed_alerts[0].message
+        assert "rejected" in failed_alerts[0].message.lower()
+
+    def test_failed_orders_alert_triggers_on_failed_status(
+        self, alert_manager, mock_app, test_state
+    ):
+        """Test failed orders alert triggers on FAILED status."""
+        from gpt_trader.tui.types import ActiveOrders, Order
+
+        failed_order = Order(
+            order_id="failed-1",
+            symbol="SOL-USD",
+            side="BUY",
+            quantity=Decimal("10.0"),
+            price=Decimal("100"),
+            status="FAILED",
+        )
+        test_state.order_data = ActiveOrders(orders=[failed_order])
+
+        alerts = alert_manager.check_alerts(test_state)
+
+        failed_alerts = [a for a in alerts if a.rule_id == "failed_orders"]
+        assert len(failed_alerts) == 1
+        assert "SOL-USD" in failed_alerts[0].message
+
+    def test_failed_orders_no_alert_on_cancelled(self, alert_manager, mock_app, test_state):
+        """Test failed orders alert does NOT trigger on CANCELLED (user-initiated)."""
+        from gpt_trader.tui.types import ActiveOrders, Order
+
+        cancelled_order = Order(
+            order_id="cancelled-1",
+            symbol="BTC-USD",
+            side="BUY",
+            quantity=Decimal("0.5"),
+            price=Decimal("50000"),
+            status="CANCELLED",
+        )
+        test_state.order_data = ActiveOrders(orders=[cancelled_order])
+
+        alerts = alert_manager.check_alerts(test_state)
+
+        failed_alerts = [a for a in alerts if a.rule_id == "failed_orders"]
+        assert len(failed_alerts) == 0
+
+    def test_expired_orders_alert_triggers(self, alert_manager, mock_app, test_state):
+        """Test expired orders alert triggers on EXPIRED status."""
+        from gpt_trader.tui.types import ActiveOrders, Order
+
+        expired_order = Order(
+            order_id="expired-1",
+            symbol="BTC-USD",
+            side="SELL",
+            quantity=Decimal("0.2"),
+            price=Decimal("50000"),
+            status="EXPIRED",
+        )
+        test_state.order_data = ActiveOrders(orders=[expired_order])
+
+        alerts = alert_manager.check_alerts(test_state)
+
+        expired_alerts = [a for a in alerts if a.rule_id == "expired_orders"]
+        assert len(expired_alerts) == 1
+        assert expired_alerts[0].severity == AlertSeverity.WARNING
+        assert expired_alerts[0].category == AlertCategory.TRADE
+        assert "BTC-USD" in expired_alerts[0].message
+        assert "expired" in expired_alerts[0].message.lower()
+
+    def test_expired_orders_no_alert_when_none_expired(self, alert_manager, mock_app, test_state):
+        """Test no expired orders alert when no orders are expired."""
+        from gpt_trader.tui.types import ActiveOrders, Order
+
+        open_order = Order(
+            order_id="open-1",
+            symbol="BTC-USD",
+            side="BUY",
+            quantity=Decimal("0.1"),
+            price=Decimal("50000"),
+            status="OPEN",
+        )
+        test_state.order_data = ActiveOrders(orders=[open_order])
+
+        alerts = alert_manager.check_alerts(test_state)
+
+        expired_alerts = [a for a in alerts if a.rule_id == "expired_orders"]
+        assert len(expired_alerts) == 0
+
+    def test_multiple_expired_orders_message(self, alert_manager, mock_app, test_state):
+        """Test expired orders alert message when multiple orders expired."""
+        from gpt_trader.tui.types import ActiveOrders, Order
+
+        expired_orders = [
+            Order(
+                order_id="exp-1",
+                symbol="BTC-USD",
+                side="BUY",
+                quantity=Decimal("0.1"),
+                price=Decimal("50000"),
+                status="EXPIRED",
+            ),
+            Order(
+                order_id="exp-2",
+                symbol="ETH-USD",
+                side="SELL",
+                quantity=Decimal("1.0"),
+                price=Decimal("3000"),
+                status="EXPIRED",
+            ),
+        ]
+        test_state.order_data = ActiveOrders(orders=expired_orders)
+
+        alerts = alert_manager.check_alerts(test_state)
+
+        expired_alerts = [a for a in alerts if a.rule_id == "expired_orders"]
+        assert len(expired_alerts) == 1
+        assert "2 orders expired" in expired_alerts[0].message
+
+
+class TestValidationAlerts:
+    """Test suite for validation failure alert rules."""
+
+    def test_validation_rules_registered(self, alert_manager):
+        """Test that validation alert rules are registered."""
+        status = alert_manager.get_rule_status()
+        assert "validation_escalation" in status
+        assert "validation_failures" in status
+
+    def test_validation_escalation_alert_triggers(self, alert_manager, mock_app, test_state):
+        """Test validation escalation alert triggers when escalated."""
+        test_state.system_data.validation_escalated = True
+        test_state.system_data.validation_failures = {"mark_staleness": 5}
+
+        alerts = alert_manager.check_alerts(test_state)
+
+        escalation_alerts = [a for a in alerts if a.rule_id == "validation_escalation"]
+        assert len(escalation_alerts) == 1
+        assert escalation_alerts[0].severity == AlertSeverity.ERROR
+        assert escalation_alerts[0].category == AlertCategory.RISK
+        assert "5" in escalation_alerts[0].message
+        assert "Reduce-only" in escalation_alerts[0].message
+
+    def test_validation_escalation_no_alert_when_not_escalated(
+        self, alert_manager, mock_app, test_state
+    ):
+        """Test no validation escalation alert when not escalated."""
+        test_state.system_data.validation_escalated = False
+        test_state.system_data.validation_failures = {"mark_staleness": 2}
+
+        alerts = alert_manager.check_alerts(test_state)
+
+        escalation_alerts = [a for a in alerts if a.rule_id == "validation_escalation"]
+        assert len(escalation_alerts) == 0
+
+    def test_validation_failures_alert_triggers_at_threshold(
+        self, alert_manager, mock_app, test_state
+    ):
+        """Test validation failures warning triggers at 2+ failures."""
+        test_state.system_data.validation_escalated = False
+        test_state.system_data.validation_failures = {"mark_staleness": 2, "slippage_guard": 1}
+
+        alerts = alert_manager.check_alerts(test_state)
+
+        failure_alerts = [a for a in alerts if a.rule_id == "validation_failures"]
+        assert len(failure_alerts) == 1
+        assert failure_alerts[0].severity == AlertSeverity.WARNING
+        assert failure_alerts[0].category == AlertCategory.SYSTEM
+        assert "3 validation failures" in failure_alerts[0].message
+        assert "mark_staleness" in failure_alerts[0].message
+
+    def test_validation_failures_no_alert_below_threshold(
+        self, alert_manager, mock_app, test_state
+    ):
+        """Test no validation failures alert below 2 failures."""
+        test_state.system_data.validation_escalated = False
+        test_state.system_data.validation_failures = {"mark_staleness": 1}
+
+        alerts = alert_manager.check_alerts(test_state)
+
+        failure_alerts = [a for a in alerts if a.rule_id == "validation_failures"]
+        assert len(failure_alerts) == 0
+
+    def test_validation_failures_no_alert_when_escalated(self, alert_manager, mock_app, test_state):
+        """Test validation failures warning doesn't fire when already escalated."""
+        test_state.system_data.validation_escalated = True  # Already escalated
+        test_state.system_data.validation_failures = {"mark_staleness": 5}
+
+        alerts = alert_manager.check_alerts(test_state)
+
+        # Escalation alert should fire, but not failures warning
+        escalation_alerts = [a for a in alerts if a.rule_id == "validation_escalation"]
+        failure_alerts = [a for a in alerts if a.rule_id == "validation_failures"]
+        assert len(escalation_alerts) == 1
+        assert len(failure_alerts) == 0
+
+    def test_validation_alerts_handle_missing_data(self, alert_manager, mock_app, test_state):
+        """Test validation alerts gracefully handle missing data."""
+        # Don't set validation_failures or validation_escalated
+        # SystemStatus defaults should handle this
+        alerts = alert_manager.check_alerts(test_state)
+
+        validation_alerts = [
+            a for a in alerts if a.rule_id in {"validation_escalation", "validation_failures"}
+        ]
+        assert len(validation_alerts) == 0

@@ -38,12 +38,66 @@ from textual.pilot import Pilot
 from gpt_trader.monitoring.status_reporter import StatusReporter
 from gpt_trader.tui.app import TraderApp
 
+# ============================================================
+# Singleton cleanup for test isolation
+# ============================================================
+
+
+@pytest.fixture(autouse=True)
+def clear_tui_singletons():
+    """Clear TUI singleton services before each test for isolation.
+
+    This prevents state leakage between tests which can cause flaky
+    snapshot comparisons due to accumulated state from prior tests.
+    """
+    # Clear before test
+    _clear_all_tui_singletons()
+    yield
+    # Clear after test
+    _clear_all_tui_singletons()
+
+
+def _clear_all_tui_singletons():
+    """Clear all TUI singleton services."""
+    from gpt_trader.tui.services.onboarding_service import clear_onboarding_service
+    from gpt_trader.tui.services.performance_service import clear_tui_performance_service
+    from gpt_trader.tui.services.trading_stats_service import clear_trading_stats_service
+
+    clear_tui_performance_service()
+    clear_trading_stats_service()
+    clear_onboarding_service()
+
+    # Clear theme manager
+    import gpt_trader.tui.theme as theme_module
+
+    theme_module._theme_manager = None
+
+    # Clear log handler
+    import gpt_trader.tui.log_manager as log_module
+
+    if log_module._tui_log_handler is not None:
+        log_module.detach_tui_log_handler()
+        log_module._tui_log_handler = None
+
+    # Clear execution telemetry
+    import gpt_trader.tui.services.execution_telemetry as exec_module
+
+    exec_module._execution_telemetry = None
+
+    # Clear preferences service
+    import gpt_trader.tui.services.preferences_service as prefs_module
+
+    prefs_module._preferences_service = None
+
+
 # Patterns to normalize for stable snapshots
 _TERMINAL_HASH_RE = re.compile(r"terminal-\d+-")
 # Normalize timing values like "(157ms)" to "(XXms)" for API connectivity checks
 _TIMING_RE = re.compile(r"\((\d+)ms\)")
 # Normalize UTC time display like "19:22&#160;UTC" to "XX:XX&#160;UTC"
 _UTC_TIME_RE = re.compile(r"\d{2}:\d{2}(&#160;| )UTC")
+# Normalize braille spinner characters to a fixed state (spinner animation frames)
+_BRAILLE_SPINNER_RE = re.compile(r"[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏]")
 
 
 def _normalize_svg(text: str) -> str:
@@ -51,6 +105,7 @@ def _normalize_svg(text: str) -> str:
     text = _TERMINAL_HASH_RE.sub("terminal-", text)
     text = _TIMING_RE.sub("(XXms)", text)
     text = _UTC_TIME_RE.sub("XX:XX UTC", text)
+    text = _BRAILLE_SPINNER_RE.sub("⠋", text)  # Normalize to first spinner frame
     return text
 
 

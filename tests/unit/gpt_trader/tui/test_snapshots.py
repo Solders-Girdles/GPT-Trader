@@ -636,7 +636,6 @@ class TestGuardThresholdSnapshots:
             run_before=open_risk_modal,
         )
 
-    @pytest.mark.xfail(reason="Flaky: test order dependency causing snapshot mismatch")
     def test_risk_modal_multiple_guard_types(self, snap_compare, mock_demo_bot):
         """Snapshot test for RiskDetailModal with multiple guard types.
 

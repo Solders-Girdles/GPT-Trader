@@ -56,3 +56,59 @@ class TestSystemHealthWidget:
             assert str(app.query_one("#connection-status", Label).render()) == "DISCONNECTED"
             assert app.query_one("#connection-status", Label).has_class("status-disconnected")
             assert not app.query_one("#connection-status", Label).has_class("status-connected")
+
+    @pytest.mark.asyncio
+    async def test_validation_failures_display_ok(self) -> None:
+        """Test that validation failures show OK when no failures."""
+        app = SystemHealthTestApp()
+        async with app.run_test():
+            widget = app.query_one(SystemHealthWidget)
+            new_data = SystemStatus(
+                connection_status="CONNECTED",
+                validation_failures={},
+                validation_escalated=False,
+            )
+            widget.update_system(new_data)
+
+            vfail_label = app.query_one("#validation-failures", Label)
+            assert str(vfail_label.render()) == "OK"
+            assert vfail_label.has_class("status-ok")
+
+    @pytest.mark.asyncio
+    async def test_validation_failures_display_warning(self) -> None:
+        """Test that validation failures show warning style when failures exist."""
+        app = SystemHealthTestApp()
+        async with app.run_test():
+            widget = app.query_one(SystemHealthWidget)
+            new_data = SystemStatus(
+                connection_status="CONNECTED",
+                validation_failures={"mark_staleness": 2, "slippage_guard": 1},
+                validation_escalated=False,
+            )
+            widget.update_system(new_data)
+
+            vfail_label = app.query_one("#validation-failures", Label)
+            # Expanded mode shows "mark:2 slip:1" format
+            rendered = str(vfail_label.render())
+            assert "mark:2" in rendered
+            assert "slip:1" in rendered
+            assert vfail_label.has_class("status-warning")
+            assert not vfail_label.has_class("status-error")
+
+    @pytest.mark.asyncio
+    async def test_validation_failures_display_escalated(self) -> None:
+        """Test that validation failures show error style when escalated."""
+        app = SystemHealthTestApp()
+        async with app.run_test():
+            widget = app.query_one(SystemHealthWidget)
+            new_data = SystemStatus(
+                connection_status="CONNECTED",
+                validation_failures={"mark_staleness": 5},
+                validation_escalated=True,
+            )
+            widget.update_system(new_data)
+
+            vfail_label = app.query_one("#validation-failures", Label)
+            assert "ESCALATED" in str(vfail_label.render())
+            assert vfail_label.has_class("status-error")
+            assert not vfail_label.has_class("status-warning")

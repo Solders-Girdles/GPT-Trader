@@ -426,9 +426,13 @@ class TestContainerRegistry:
 
         clear_application_container()
 
-        # Without container, should return fallback instances
+        # Without container, failure_tracker returns fallback (still supported)
         tracker_fallback = get_failure_tracker()
-        loader_fallback = get_profile_loader()
+        assert tracker_fallback is not None
+
+        # Without container, profile_loader raises RuntimeError (no fallback)
+        with pytest.raises(RuntimeError, match="No application container set"):
+            get_profile_loader()
 
         # Set container
         container = ApplicationContainer(mock_config)
@@ -441,9 +445,8 @@ class TestContainerRegistry:
         assert tracker_container is container.validation_failure_tracker
         assert loader_container is container.profile_loader
 
-        # Verify they're different from fallback
+        # Verify tracker is different from fallback (profile_loader had no fallback)
         assert tracker_container is not tracker_fallback
-        assert loader_container is not loader_fallback
 
         clear_application_container()
 

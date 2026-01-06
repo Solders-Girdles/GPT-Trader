@@ -301,19 +301,20 @@ class TestContainerServiceAccess:
         assert container is None
 
     def test_service_resolution_functions_handle_missing_container(self) -> None:
-        """Test that service resolution functions handle missing container gracefully."""
+        """Test that service resolution functions handle missing container correctly."""
         from gpt_trader.orchestration.configuration.profile_loader import get_profile_loader
         from gpt_trader.orchestration.execution.validation import get_failure_tracker
 
         # Ensure no container is set
         clear_application_container()
 
-        # These should return fallback instances, not raise
+        # Failure tracker still returns fallback (for backward compatibility)
         tracker = get_failure_tracker()
-        loader = get_profile_loader()
-
         assert tracker is not None
-        assert loader is not None
+
+        # Profile loader requires container (no fallback)
+        with pytest.raises(RuntimeError, match="No application container set"):
+            get_profile_loader()
 
 
 class TestContainerDebugLogging:

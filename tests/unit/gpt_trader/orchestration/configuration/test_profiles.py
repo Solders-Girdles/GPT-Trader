@@ -9,6 +9,12 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from gpt_trader.app.config import BotConfig
+from gpt_trader.app.container import (
+    ApplicationContainer,
+    clear_application_container,
+    set_application_container,
+)
 from gpt_trader.config.types import Profile
 from gpt_trader.orchestration.configuration.profile_loader import (
     ProfileLoader,
@@ -18,6 +24,16 @@ from gpt_trader.orchestration.configuration.profile_loader import (
 from gpt_trader.orchestration.configuration.profiles import (
     build_profile_config,
 )
+
+
+@pytest.fixture(autouse=True)
+def container_fixture():
+    """Set up container for tests that require it."""
+    config = BotConfig(symbols=["BTC-USD"])
+    container = ApplicationContainer(config)
+    set_application_container(container)
+    yield container
+    clear_application_container()
 
 
 def _create_mock_config_factory() -> MagicMock:

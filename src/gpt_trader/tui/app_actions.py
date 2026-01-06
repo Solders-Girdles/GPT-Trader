@@ -9,7 +9,7 @@ import asyncio
 from typing import TYPE_CHECKING, Any
 
 from gpt_trader.tui.notification_helpers import notify_action
-from gpt_trader.tui.screens import DetailsScreen, MarketScreen
+from gpt_trader.tui.screens import DetailsScreen, MarketScreen, StrategyDetailScreen
 from gpt_trader.tui.widgets import SlimStatusWidget
 from gpt_trader.tui.widgets.status import BotStatusWidget
 from gpt_trader.utilities.logging_patterns import get_logger
@@ -33,6 +33,7 @@ class TraderAppActionsMixin:
     - action_show_mode_info: Show mode information modal
     - action_show_market: Show market overlay
     - action_show_details: Show details overlay
+    - action_show_strategy: Show strategy detail screen
     - action_show_help: Show help screen
     - action_reconnect_data: Reconnect data source
     - action_panic: Show panic confirmation modal
@@ -106,6 +107,10 @@ class TraderAppActionsMixin:
     async def action_show_details(self: TraderApp) -> None:
         """Show details overlay screen."""
         self.push_screen(DetailsScreen())
+
+    async def action_show_strategy(self: TraderApp) -> None:
+        """Show strategy detail screen."""
+        self.push_screen(StrategyDetailScreen())
 
     async def action_show_help(self: TraderApp) -> None:
         """Show help screen."""

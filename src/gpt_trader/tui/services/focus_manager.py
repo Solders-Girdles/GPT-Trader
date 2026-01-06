@@ -53,20 +53,28 @@ class FocusManager:
     GRID = [
         # Row 0: Hero (0-1), Account (2-3)
         [("tile-hero", 0, 1), ("tile-account", 2, 3)],
-        # Row 1: Market (0-2), System (3)
-        [("tile-market", 0, 2), ("tile-system", 3, 3)],
+        # Row 1: Market (0-1), Strategy (2), System (3)
+        [("tile-market", 0, 1), ("tile-strategy", 2, 2), ("tile-system", 3, 3)],
         # Row 2-3: Logs (0-3)
         [("tile-logs", 0, 3)],
     ]
 
     # Linear order for Tab navigation
-    TILE_ORDER = ["tile-hero", "tile-account", "tile-market", "tile-system", "tile-logs"]
+    TILE_ORDER = [
+        "tile-hero",
+        "tile-account",
+        "tile-market",
+        "tile-strategy",
+        "tile-system",
+        "tile-logs",
+    ]
 
     # Actions available per tile (for hint display)
     TILE_ACTIONS: dict[str, list[tuple[str, str]]] = {
         "tile-hero": [("Enter", "Details"), ("S", "Start/Stop")],
         "tile-account": [("Enter", "Details"), ("w", "Window"), ("C", "Copy")],
         "tile-market": [("Enter", "Details"), ("W", "Watchlist")],
+        "tile-strategy": [("Enter", "Details"), ("Y", "Strategy")],
         "tile-system": [("Enter", "Details"), ("R", "Reconnect")],
         "tile-logs": [("Enter", "Full Logs"), ("Space", "Pause")],
     }
@@ -130,6 +138,7 @@ class FocusManager:
             "tile-hero": "Position",
             "tile-account": "Account",
             "tile-market": "Market",
+            "tile-strategy": "Strategy",
             "tile-system": "System",
             "tile-logs": "Logs",
         }

@@ -108,6 +108,7 @@ class TraderApp(
         ("t", "toggle_theme", "Toggle Theme"),
         ("a", "show_alerts", "Alerts"),
         ("f", "force_refresh", "Refresh"),
+        ("y", "show_strategy", "Strategy"),
         ("1", "show_full_logs", "Full Logs"),
         ("2", "show_system_details", "System"),
         ("?", "show_help", "Help"),

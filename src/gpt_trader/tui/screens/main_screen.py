@@ -33,6 +33,7 @@ from gpt_trader.tui.widgets.dashboard import (
     SystemMonitorWidget,
 )
 from gpt_trader.tui.widgets.shell import CommandBar
+from gpt_trader.tui.widgets.strategy_performance import StrategyPerformanceWidget
 from gpt_trader.tui.widgets.trading_stats import TradingStatsWidget
 from gpt_trader.utilities.logging_patterns import get_logger
 
@@ -112,6 +113,11 @@ class MainScreen(Screen):
             with Container(id="tile-market", classes="bento-tile"):
                 yield MarketPulseWidget(id="dash-market")
                 yield Horizontal(id="hints-market", classes="tile-actions-hint")
+
+            # Tile: Strategy Performance
+            with Container(id="tile-strategy", classes="bento-tile"):
+                yield StrategyPerformanceWidget(id="dash-strategy")
+                yield Horizontal(id="hints-strategy", classes="tile-actions-hint")
 
             # Tile: System Monitor (Small strip)
             with Container(id="tile-system", classes="bento-tile"):
@@ -292,6 +298,7 @@ class MainScreen(Screen):
             "tile-hero": "hints-hero",
             "tile-account": "hints-account",
             "tile-market": "hints-market",
+            "tile-strategy": "hints-strategy",
             "tile-system": "hints-system",
             "tile-logs": "hints-logs",
         }

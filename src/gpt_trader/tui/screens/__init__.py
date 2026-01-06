@@ -12,6 +12,7 @@ from .full_logs_screen import FullLogsScreen
 from .main_screen import MainScreen
 from .market_screen import MarketScreen
 from .mode_selection import ModeSelectionScreen
+from .strategy_detail_screen import StrategyDetailScreen
 from .system_details_screen import SystemDetailsScreen
 
 __all__ = [
@@ -23,5 +24,6 @@ __all__ = [
     "MainScreen",
     "MarketScreen",
     "ModeSelectionScreen",
+    "StrategyDetailScreen",
     "SystemDetailsScreen",
 ]

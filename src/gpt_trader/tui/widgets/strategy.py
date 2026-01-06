@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from textual.app import ComposeResult
-from textual.containers import Horizontal
+from textual.containers import Horizontal, Vertical
 from textual.reactive import reactive
 from textual.widgets import DataTable, Label, Static
 
@@ -20,7 +20,7 @@ from gpt_trader.tui.thresholds import (
     get_confidence_status,
     get_status_color,
 )
-from gpt_trader.tui.types import StrategyState
+from gpt_trader.tui.types import IndicatorContribution, StrategyState
 from gpt_trader.tui.widgets.tile_states import TileBanner, TileEmptyState
 from gpt_trader.utilities.logging_patterns import get_logger
 
@@ -31,12 +31,19 @@ logger = get_logger(__name__, component="tui")
 
 
 class StrategyWidget(Static):
-    """Displays strategy status and decisions."""
+    """Displays strategy status and decisions with signal breakdown.
+
+    When a row is highlighted, the signal breakdown panel shows the
+    indicator contributions that led to that decision.
+    """
 
     # Styles moved to styles/widgets/strategy.tcss
 
     # Reactive state property for automatic updates
     state = reactive(None)  # Type: TuiState | None
+
+    # Track selected symbol for signal breakdown display
+    _selected_symbol: str | None = None
 
     def watch_state(self, state: TuiState | None) -> None:
         """React to state changes - update strategy automatically."""
@@ -67,6 +74,10 @@ class StrategyWidget(Static):
             actions=["[S] Start Bot", "[R] Refresh"],
             id="strategy-empty",
         )
+        # Signal breakdown panel (hidden by default)
+        with Vertical(id="signal-breakdown-panel", classes="signal-breakdown-panel hidden"):
+            yield Label("Signal Breakdown", classes="breakdown-title")
+            yield Vertical(id="signal-bars", classes="signal-bars-container")
 
     def on_mount(self) -> None:
         table = self.query_one(DataTable)
@@ -298,3 +309,103 @@ class StrategyWidget(Static):
             pass
 
         return ""
+
+    def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
+        """Handle row highlight to show signal breakdown."""
+        if event.row_key is None:
+            self._hide_signal_breakdown()
+            return
+
+        symbol = str(event.row_key.value)
+        self._selected_symbol = symbol
+        self._show_signal_breakdown(symbol)
+
+    def _show_signal_breakdown(self, symbol: str) -> None:
+        """Show the signal breakdown panel for the selected decision.
+
+        Args:
+            symbol: The symbol to show breakdown for.
+        """
+        if self.state is None:
+            return
+
+        try:
+            # Get the decision for this symbol
+            decision = self.state.strategy_data.last_decisions.get(symbol)
+            if not decision or not decision.contributions:
+                self._hide_signal_breakdown()
+                return
+
+            # Show the panel
+            panel = self.query_one("#signal-breakdown-panel", Vertical)
+            panel.remove_class("hidden")
+
+            # Update the signal bars
+            bars_container = self.query_one("#signal-bars", Vertical)
+
+            # Clear existing bars
+            bars_container.remove_children()
+
+            # Sort contributions by absolute value (strongest first)
+            sorted_contributions = sorted(
+                decision.contributions,
+                key=lambda c: abs(c.contribution),
+                reverse=True,
+            )
+
+            # Add signal bars for each contribution
+            for contrib in sorted_contributions[:5]:  # Limit to top 5
+                bar_widget = self._create_signal_bar(contrib)
+                bars_container.mount(bar_widget)
+
+        except Exception as e:
+            logger.debug(f"Error showing signal breakdown: {e}")
+            self._hide_signal_breakdown()
+
+    def _hide_signal_breakdown(self) -> None:
+        """Hide the signal breakdown panel."""
+        try:
+            panel = self.query_one("#signal-breakdown-panel", Vertical)
+            panel.add_class("hidden")
+        except Exception:
+            pass
+
+    def _create_signal_bar(self, contrib: IndicatorContribution) -> Static:
+        """Create a signal bar widget for an indicator contribution.
+
+        Args:
+            contrib: The indicator contribution to display.
+
+        Returns:
+            A Static widget containing the formatted signal bar.
+        """
+        # Format name (truncate and pad)
+        name = contrib.name[:8].ljust(8)
+
+        # Create bar visualization
+        # Map contribution (-1 to +1) to bar characters
+        bar_length = 10
+        fill_count = int(abs(contrib.contribution) * bar_length)
+        fill_count = min(fill_count, bar_length)  # Cap at max
+
+        if contrib.contribution >= 0:
+            # Bullish: green fill on right
+            fill = "█" * fill_count
+            empty = "░" * (bar_length - fill_count)
+            bar = f"{empty}{fill}"
+            color = "green"
+            sign = "+"
+        else:
+            # Bearish: red fill on left
+            fill = "█" * fill_count
+            empty = "░" * (bar_length - fill_count)
+            bar = f"{fill}{empty}"
+            color = "red"
+            sign = ""
+
+        value_str = f"{sign}{contrib.contribution:.2f}"
+
+        # Create the bar content with Rich markup
+        content = f"[dim]{name}[/dim] [{color}]{bar}[/{color}] [{color}]{value_str}[/{color}]"
+
+        return Static(content, classes="signal-bar-row")

@@ -365,3 +365,115 @@ class ExecutionMetrics:
     def is_healthy(self) -> bool:
         """Check if execution metrics indicate healthy state."""
         return self.success_rate >= 95.0 and self.retry_rate < 0.5
+
+
+@dataclass
+class StrategyPerformance:
+    """Strategy performance metrics for TUI display.
+
+    Aggregates key performance indicators from the trading strategy
+    for dashboard visualization.
+    """
+
+    # Win/loss metrics
+    win_rate: float = 0.0  # 0.0 to 1.0
+    profit_factor: float = 0.0  # gross_profit / gross_loss
+
+    # Return metrics
+    total_return_pct: float = 0.0  # Total return %
+    daily_return_pct: float = 0.0  # Daily return %
+    max_drawdown_pct: float = 0.0  # Max drawdown % (negative value)
+
+    # Trade counts
+    total_trades: int = 0
+    winning_trades: int = 0
+    losing_trades: int = 0
+
+    # Risk-adjusted metrics
+    sharpe_ratio: float = 0.0
+    sortino_ratio: float = 0.0
+
+    # Volatility
+    volatility_pct: float = 0.0  # Annualized volatility
+
+    @property
+    def win_rate_pct(self) -> float:
+        """Win rate as percentage (0-100)."""
+        return self.win_rate * 100
+
+    @property
+    def has_sufficient_data(self) -> bool:
+        """Check if enough trades for meaningful statistics."""
+        return self.total_trades >= 5
+
+
+@dataclass
+class RegimeData:
+    """Market regime information for TUI display.
+
+    Captures the current market regime classification and confidence
+    from the regime detection system.
+    """
+
+    # Current regime
+    regime: str = "UNKNOWN"  # BULL_QUIET, BULL_VOLATILE, BEAR_QUIET, etc.
+    confidence: float = 0.0  # 0.0 to 1.0
+
+    # Regime metrics
+    trend_score: float = 0.0  # -1.0 (bearish) to +1.0 (bullish)
+    volatility_pct: float = 0.0  # Current volatility percentile (0.0 to 1.0)
+    momentum_score: float = 0.0  # -1.0 to +1.0
+
+    # Stability
+    regime_age_ticks: int = 0  # How long in current regime
+    transition_probability: float = 0.0  # Likelihood of regime change
+
+    @property
+    def is_bullish(self) -> bool:
+        """Check if regime is bullish."""
+        return self.regime in ("BULL_QUIET", "BULL_VOLATILE")
+
+    @property
+    def is_bearish(self) -> bool:
+        """Check if regime is bearish."""
+        return self.regime in ("BEAR_QUIET", "BEAR_VOLATILE")
+
+    @property
+    def is_volatile(self) -> bool:
+        """Check if regime is volatile."""
+        return self.regime in ("BULL_VOLATILE", "BEAR_VOLATILE", "SIDEWAYS_VOLATILE", "CRISIS")
+
+    @property
+    def is_crisis(self) -> bool:
+        """Check if regime is crisis mode."""
+        return self.regime == "CRISIS"
+
+    @property
+    def short_label(self) -> str:
+        """Short human-readable regime label."""
+        labels = {
+            "BULL_QUIET": "BULL",
+            "BULL_VOLATILE": "BULL+",
+            "BEAR_QUIET": "BEAR",
+            "BEAR_VOLATILE": "BEAR+",
+            "SIDEWAYS_QUIET": "RANGE",
+            "SIDEWAYS_VOLATILE": "CHOP",
+            "CRISIS": "CRISIS",
+            "UNKNOWN": "---",
+        }
+        return labels.get(self.regime, self.regime)
+
+    @property
+    def icon(self) -> str:
+        """Icon representing the regime."""
+        icons = {
+            "BULL_QUIET": "↑",
+            "BULL_VOLATILE": "⇈",
+            "BEAR_QUIET": "↓",
+            "BEAR_VOLATILE": "⇊",
+            "SIDEWAYS_QUIET": "→",
+            "SIDEWAYS_VOLATILE": "↔",
+            "CRISIS": "⚠",
+            "UNKNOWN": "?",
+        }
+        return icons.get(self.regime, "?")

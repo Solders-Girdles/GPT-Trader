@@ -37,9 +37,11 @@ from gpt_trader.tui.types import (
     Order,
     PortfolioSummary,
     Position,
+    RegimeData,
     ResilienceState,
     RiskGuard,
     RiskState,
+    StrategyPerformance,
     StrategyState,
     SystemStatus,
     Trade,
@@ -106,6 +108,12 @@ class TuiState(Widget):
     # API resilience metrics
     resilience_data = reactive(ResilienceState())
 
+    # Strategy performance metrics (from PerformanceSnapshot)
+    strategy_performance = reactive(StrategyPerformance())
+
+    # Market regime data
+    regime_data = reactive(RegimeData())
+
     def __init__(
         self,
         *args: Any,
@@ -143,6 +151,8 @@ class TuiState(Widget):
         self.system_data = SystemStatus()
         self.resilience_data = ResilienceState()
         self.execution_data = ExecutionMetrics()
+        self.strategy_performance = StrategyPerformance()
+        self.regime_data = RegimeData()
 
     def update_from_bot_status(
         self,
@@ -687,3 +697,46 @@ class TuiState(Widget):
             if decision.decision_id == decision_id:
                 return decision
         return None
+
+    def update_strategy_performance(self, performance_data: dict[str, Any]) -> None:
+        """Update strategy performance metrics.
+
+        Args:
+            performance_data: Dict with performance metrics from PerformanceSnapshot.
+                Expected keys: win_rate, profit_factor, total_return, daily_return,
+                max_drawdown, total_trades, winning_trades, losing_trades,
+                sharpe_ratio, sortino_ratio, volatility.
+        """
+        self.strategy_performance = StrategyPerformance(
+            win_rate=float(performance_data.get("win_rate", 0.0)),
+            profit_factor=float(performance_data.get("profit_factor", 0.0)),
+            total_return_pct=float(performance_data.get("total_return", 0.0)) * 100,
+            daily_return_pct=float(performance_data.get("daily_return", 0.0)) * 100,
+            max_drawdown_pct=float(performance_data.get("max_drawdown", 0.0)) * 100,
+            total_trades=int(performance_data.get("total_trades", 0)),
+            winning_trades=int(performance_data.get("winning_trades", 0)),
+            losing_trades=int(performance_data.get("losing_trades", 0)),
+            sharpe_ratio=float(performance_data.get("sharpe_ratio", 0.0)),
+            sortino_ratio=float(performance_data.get("sortino_ratio", 0.0)),
+            volatility_pct=float(performance_data.get("volatility", 0.0)) * 100,
+        )
+        self._changed_fields.add("strategy_performance")
+
+    def update_regime_data(self, regime_state: dict[str, Any]) -> None:
+        """Update market regime data.
+
+        Args:
+            regime_state: Dict with regime detection results from RegimeState.
+                Expected keys: regime, confidence, trend_score, volatility_percentile,
+                momentum_score, regime_age_ticks, transition_probability.
+        """
+        self.regime_data = RegimeData(
+            regime=str(regime_state.get("regime", "UNKNOWN")),
+            confidence=float(regime_state.get("confidence", 0.0)),
+            trend_score=float(regime_state.get("trend_score", 0.0)),
+            volatility_pct=float(regime_state.get("volatility_percentile", 0.0)),
+            momentum_score=float(regime_state.get("momentum_score", 0.0)),
+            regime_age_ticks=int(regime_state.get("regime_age_ticks", 0)),
+            transition_probability=float(regime_state.get("transition_probability", 0.0)),
+        )
+        self._changed_fields.add("regime")

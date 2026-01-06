@@ -23,6 +23,7 @@ from .risk import RiskWidget
 from .slim_status import SlimStatusWidget
 from .status import BotStatusWidget
 from .strategy import StrategyWidget
+from .strategy_performance import StrategyPerformanceWidget
 from .system import SystemHealthWidget
 from .trading_stats import TradingStatsWidget
 
@@ -47,6 +48,7 @@ __all__ = [
     "PositionsWidget",
     "RiskWidget",
     "SlimStatusWidget",
+    "StrategyPerformanceWidget",
     "StrategyWidget",
     "SystemHealthWidget",
     "TradesWidget",

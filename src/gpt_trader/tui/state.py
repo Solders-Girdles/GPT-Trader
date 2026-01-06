@@ -620,6 +620,33 @@ class TuiState(Widget):
         )
         self._changed_fields.add("resilience")
 
+    def update_validation_metrics(self, metrics: dict[str, Any]) -> None:
+        """Update validation failure metrics from the failure tracker.
+
+        Updates the system_data with validation failure counts, allowing
+        operators to monitor when validation checks are failing repeatedly.
+
+        Args:
+            metrics: Dict with keys:
+                - failures: Dict mapping check_type to consecutive failure count
+                - escalation_threshold: Threshold for escalation
+                - any_escalated: True if any check has reached threshold
+        """
+        failures = metrics.get("failures", {})
+        any_escalated = metrics.get("any_escalated", False)
+
+        # Update system_data with validation metrics
+        self.system_data = SystemStatus(
+            api_latency=self.system_data.api_latency,
+            connection_status=self.system_data.connection_status,
+            rate_limit_usage=self.system_data.rate_limit_usage,
+            memory_usage=self.system_data.memory_usage,
+            cpu_usage=self.system_data.cpu_usage,
+            validation_failures=failures,
+            validation_escalated=any_escalated,
+        )
+        self._changed_fields.add("system")
+
     def update_execution_data(self) -> None:
         """Update execution metrics from the telemetry collector.
 

@@ -19,18 +19,17 @@ async def test_bot_startup_shutdown(monkeypatch):
     # Ensure list_orders returns dict with list
     mock_broker.list_orders.return_value = {"orders": []}
 
-    # Mock Registry
-    mock_registry = MagicMock()
-    mock_registry.broker = mock_broker
-    mock_registry.risk_manager._start_of_day_equity = Decimal("1000.0")
-    mock_registry.risk_manager.config = None  # Ensure no config mocks
-    # Ensure no mocks leak into JSON serialization
-    mock_registry.account_telemetry = None
-    mock_registry.runtime_state = None
-
-    # Mock Container
+    # Mock Container with services directly (no registry)
     mock_container = MagicMock()
-    mock_container.create_service_registry.return_value = mock_registry
+    mock_container.broker = mock_broker
+    mock_container.risk_manager = MagicMock()
+    mock_container.risk_manager._start_of_day_equity = Decimal("1000.0")
+    mock_container.risk_manager.config = None  # Ensure no config mocks
+    mock_container.event_store = MagicMock()
+    mock_container.notification_service = MagicMock()
+    # Ensure no mocks leak into JSON serialization
+    mock_container.account_telemetry = None
+    mock_container.runtime_state = None
 
     # Mock StatusReporter to avoid JSON serialization issues with mocks
     with patch("gpt_trader.features.live_trade.engines.strategy.StatusReporter") as MockReporter:

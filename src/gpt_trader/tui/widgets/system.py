@@ -32,6 +32,8 @@ class SystemHealthWidget(Static):
                 yield Label("Rate: 0%", id="rate-limit", classes="value")
                 yield Label("|", classes="metric-separator")
                 yield Label("CPU: 0%", id="cpu", classes="value")
+                yield Label("|", classes="metric-separator")
+                yield Label("Vfail: 0", id="validation-failures", classes="value")
         else:
             # Full vertical layout (existing implementation)
             with Vertical():
@@ -54,6 +56,10 @@ class SystemHealthWidget(Static):
                 with Horizontal(classes="metric-row"):
                     yield Label("CPU:", classes="label")
                     yield Label("0%", id="cpu", classes="value")
+
+                with Horizontal(classes="metric-row"):
+                    yield Label("Validation:", classes="label")
+                    yield Label("OK", id="validation-failures", classes="value")
 
     @safe_update
     def update_system(self, data: SystemStatus) -> None:
@@ -104,3 +110,76 @@ class SystemHealthWidget(Static):
             self.query_one("#rate-limit", Label).update(data.rate_limit_usage)
             self.query_one("#memory", Label).update(data.memory_usage)
             self.query_one("#cpu", Label).update(data.cpu_usage)
+
+        # Update validation failure display
+        self._update_validation_display(data)
+
+    def _update_validation_display(self, data: SystemStatus) -> None:
+        """Update the validation failure indicator.
+
+        Shows total consecutive failures across all check types.
+        Highlights in warning style if failures exist or if escalated.
+        In expanded mode, shows which specific checks are failing.
+        """
+        try:
+            vfail_label = self.query_one("#validation-failures", Label)
+
+            # Calculate total failures across all check types
+            total_failures = sum(data.validation_failures.values())
+
+            # Update display text
+            if self.compact_mode:
+                if data.validation_escalated:
+                    vfail_label.update(f"Vfail: {total_failures} ⚠")
+                else:
+                    vfail_label.update(f"Vfail: {total_failures}")
+            else:
+                # Expanded mode shows more detail
+                if data.validation_escalated:
+                    vfail_label.update(f"{total_failures} (ESCALATED)")
+                elif total_failures > 0:
+                    # Show which checks are failing
+                    failing_checks = self._format_failing_checks(data.validation_failures)
+                    vfail_label.update(failing_checks)
+                else:
+                    vfail_label.update("OK")
+
+            # Update styling based on state
+            vfail_label.remove_class("status-warning")
+            vfail_label.remove_class("status-error")
+            vfail_label.remove_class("status-ok")
+
+            if data.validation_escalated:
+                vfail_label.add_class("status-error")
+            elif total_failures > 0:
+                vfail_label.add_class("status-warning")
+            else:
+                vfail_label.add_class("status-ok")
+        except Exception:
+            pass  # Label may not exist yet during initial compose
+
+    def _format_failing_checks(self, failures: dict[str, int]) -> str:
+        """Format failing validation checks for display.
+
+        Args:
+            failures: Dict mapping check_type to consecutive failure count.
+
+        Returns:
+            Formatted string showing which checks are failing.
+        """
+        # Short names for check types
+        check_names = {
+            "mark_staleness": "mark",
+            "slippage_guard": "slip",
+            "order_preview": "prev",
+        }
+
+        parts = []
+        for check_type, count in failures.items():
+            if count > 0:
+                short_name = check_names.get(check_type, check_type[:4])
+                parts.append(f"{short_name}:{count}")
+
+        if parts:
+            return " ".join(parts)
+        return "OK"

@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any
 from gpt_trader.orchestration.configuration import BotConfig
 
 if TYPE_CHECKING:
+    from gpt_trader.app.container import ApplicationContainer
     from gpt_trader.features.brokerages.core.protocols import (
         BrokerProtocol,
     )  # Protocol import is OK
@@ -25,7 +26,24 @@ if TYPE_CHECKING:
 
 @dataclass
 class CoordinatorContext:
+    """Context object passed to trading engines.
+
+    Attributes:
+        config: Bot configuration.
+        container: Application container for dependency resolution (preferred).
+        registry: Deprecated. Use container instead. Removal planned for v3.0.
+        broker: Broker client for order execution.
+        symbols: Trading symbols.
+        runtime_state: Runtime state tracking.
+        risk_manager: Risk management service.
+        event_store: Event persistence.
+        notification_service: Notification delivery.
+        bot_id: Bot identifier for logging.
+    """
+
     config: BotConfig
+    container: ApplicationContainer | None = None
+    # Deprecated: Use container instead. Removal planned for v3.0.
     registry: ServiceRegistryProtocol | None = None
     broker: BrokerProtocol | None = None
     symbols: tuple[str, ...] = ()

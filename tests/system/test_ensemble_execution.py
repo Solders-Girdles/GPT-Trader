@@ -26,10 +26,8 @@ class TestEnsembleSystemExecution:
             ensemble_config={"buy_threshold": 0.1, "combiner_config": {"adx_period": 14}},
         )
 
-        # 2. Mock Container and Registry
+        # 2. Mock Container with services
         mock_container = MagicMock()
-        mock_registry = MagicMock()
-        mock_container.create_service_registry.return_value = mock_registry
 
         # Mock Broker
         mock_broker = MagicMock()
@@ -37,13 +35,14 @@ class TestEnsembleSystemExecution:
         mock_broker.list_orders.return_value = {"orders": []}
         mock_broker.get_candles.return_value = []  # For ADX
 
-        mock_registry.broker = mock_broker
-        mock_registry.account_manager = MagicMock()
-        mock_registry.risk_manager = MagicMock()
+        # Set container attributes directly (no registry)
+        mock_container.broker = mock_broker
+        mock_container.account_manager = MagicMock()
+        mock_container.risk_manager = MagicMock()
         # Set start_of_day_equity to avoid TypeError in TradingEngine._cycle
-        mock_registry.risk_manager._start_of_day_equity = Decimal("1000.00")
-        mock_registry.event_store = MagicMock()
-        mock_registry.notification_service = MagicMock()
+        mock_container.risk_manager._start_of_day_equity = Decimal("1000.00")
+        mock_container.event_store = MagicMock()
+        mock_container.notification_service = MagicMock()
 
         # 3. Initialize Bot
         bot = TradingBot(config, mock_container)

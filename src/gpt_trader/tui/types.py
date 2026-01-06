@@ -243,6 +243,10 @@ class SystemStatus:
     memory_usage: str = "0MB"
     cpu_usage: str = "0%"
 
+    # Validation failure tracking (from ValidationFailureTracker)
+    validation_failures: dict[str, int] = field(default_factory=dict)
+    validation_escalated: bool = False
+
 
 @dataclass
 class TradingStats:

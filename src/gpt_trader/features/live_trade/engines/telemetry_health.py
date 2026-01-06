@@ -99,23 +99,19 @@ def update_mark_and_metrics(
                 if len(window) > max_size:
                     runtime_state.mark_windows[symbol] = window[-max_size:]
 
-    extras = getattr(ctx.registry, "extras", {})
-    monitor = None
-    if isinstance(extras, dict):
-        monitor = extras.get("market_monitor")
-    if monitor is None:
-        monitor = coordinator._market_monitor
-        if monitor is not None:
-            try:
-                monitor.record_update(symbol)
-            except Exception:  # pragma: no cover - defensive logging
-                logger.debug(
-                    "Failed to record market update",
-                    symbol=symbol,
-                    exc_info=True,
-                    operation="telemetry_stream",
-                    stage="market_monitor",
-                )
+    # Use coordinator's market monitor directly (registry.extras is deprecated)
+    monitor = coordinator._market_monitor
+    if monitor is not None:
+        try:
+            monitor.record_update(symbol)
+        except Exception:  # pragma: no cover - defensive logging
+            logger.debug(
+                "Failed to record market update",
+                symbol=symbol,
+                exc_info=True,
+                operation="telemetry_stream",
+                stage="market_monitor",
+            )
 
     risk_manager = ctx.risk_manager
     if risk_manager is not None:
@@ -168,29 +164,25 @@ def update_mark_and_metrics(
 def health_check(
     coordinator: Any,
 ) -> Any:  # Returns HealthStatus but accepts various coordinator types
+    """Check coordinator health status.
+
+    Health is based on:
+    - Market monitor presence
+    - Active streaming task
+    - Background task count
+    """
     from gpt_trader.features.live_trade.engines.base import HealthStatus
 
-    raw_extras = getattr(coordinator.context.registry, "extras", {})
-    if not isinstance(raw_extras, dict):
-        try:
-            raw_extras = dict(raw_extras)
-        except Exception as exc:
-            logger.error(
-                "Failed to convert raw_extras to dict",
-                error_type=type(exc).__name__,
-                error_message=str(exc),
-                operation="health_check",
-                extras_type=type(raw_extras).__name__,
-            )
-            raw_extras = {}
-    account_telemetry = raw_extras.get("account_telemetry")
-    healthy = account_telemetry is not None
+    # Use coordinator's market monitor directly (registry.extras is deprecated)
+    has_market_monitor = coordinator._market_monitor is not None
+    streaming_active = coordinator._stream_task is not None and not coordinator._stream_task.done()
+
+    # Healthy if streaming is active or market monitor is available
+    healthy = streaming_active or has_market_monitor
+
     details = {
-        "has_account_telemetry": account_telemetry is not None,
-        "has_market_monitor": raw_extras.get("market_monitor") is not None
-        or coordinator._market_monitor is not None,
-        "streaming_active": coordinator._stream_task is not None
-        and not coordinator._stream_task.done(),
+        "has_market_monitor": has_market_monitor,
+        "streaming_active": streaming_active,
         "background_tasks": len(coordinator._background_tasks),
     }
     return HealthStatus(healthy=healthy, component=coordinator.name, details=details)
@@ -268,9 +260,7 @@ def update_trade_aggregator(
         return
 
     # Check if runtime_state has trade aggregator support
-    if not hasattr(runtime_state, "trade_lock") or not hasattr(
-        runtime_state, "trade_aggregators"
-    ):
+    if not hasattr(runtime_state, "trade_lock") or not hasattr(runtime_state, "trade_aggregators"):
         return
 
     try:
@@ -320,7 +310,7 @@ _SNAPSHOT_INTERVAL_SECONDS = 5.0  # Emit snapshots every 5 seconds per symbol
 
 
 def emit_orderbook_snapshot(
-    ctx: "CoordinatorContext",
+    ctx: CoordinatorContext,
     symbol: str,
 ) -> None:
     """
@@ -392,7 +382,7 @@ def emit_orderbook_snapshot(
 
 
 def emit_trade_flow_summary(
-    ctx: "CoordinatorContext",
+    ctx: CoordinatorContext,
     symbol: str,
 ) -> None:
     """
@@ -413,9 +403,7 @@ def emit_trade_flow_summary(
     if runtime_state is None or event_store is None:
         return
 
-    if not hasattr(runtime_state, "trade_lock") or not hasattr(
-        runtime_state, "trade_aggregators"
-    ):
+    if not hasattr(runtime_state, "trade_lock") or not hasattr(runtime_state, "trade_aggregators"):
         return
 
     # Throttle snapshots

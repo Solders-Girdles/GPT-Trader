@@ -112,7 +112,7 @@ class DetailsScreen(Screen):
                 account_widget.update_account(
                     state.account_data,
                     portfolio_value=state.position_data.equity,
-                    total_pnl=state.position_data.total_unrealized_pnl,
+                    unrealized_pnl=state.position_data.total_unrealized_pnl,
                 )
         except Exception as e:
             logger.debug(f"Failed to update AccountWidget: {e}")

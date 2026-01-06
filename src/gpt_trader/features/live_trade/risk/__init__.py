@@ -10,7 +10,7 @@ This package provides real-time risk controls for the live trading engine:
 Key Components
 --------------
 - ``LiveRiskManager``: Central risk control class
-- ``ValidationError``: Raised when risk checks fail
+- ``RiskValidationError``: Raised when risk checks fail
 
 Configuration
 -------------
@@ -26,7 +26,7 @@ Key config fields:
 
 Example::
 
-    from gpt_trader.features.live_trade.risk import LiveRiskManager, ValidationError
+    from gpt_trader.features.live_trade.risk import LiveRiskManager, RiskValidationError
     from gpt_trader.orchestration.configuration.risk import RiskConfig
 
     config = RiskConfig(max_leverage=3, daily_loss_limit_pct=0.05)
@@ -34,11 +34,11 @@ Example::
 
     try:
         risk_manager.pre_trade_validate(symbol, side, quantity, price, ...)
-    except ValidationError as e:
+    except RiskValidationError as e:
         # Order blocked by risk rules
         pass
 """
 
-from .manager import LiveRiskManager, ValidationError
+from .manager import LiveRiskManager, RiskValidationError, ValidationError
 
-__all__ = ["LiveRiskManager", "ValidationError"]
+__all__ = ["LiveRiskManager", "RiskValidationError", "ValidationError"]

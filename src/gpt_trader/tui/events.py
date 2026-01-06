@@ -135,11 +135,14 @@ class StateUpdateReceived(Message):
 
 
 @dataclass
-class ValidationError(Message):
+class FieldValidationError(Message):
     """
     Details of a single state validation error.
 
     Used as a component of StateValidationFailed event.
+
+    Note: This is NOT the same as gpt_trader.errors.ValidationError (the canonical
+    exception type). This is a Textual Message for UI event handling.
 
     Attributes:
         field: Field name that failed validation
@@ -152,6 +155,10 @@ class ValidationError(Message):
     message: str
     severity: str = "error"  # "warning" or "error"
     value: Any = None
+
+
+# Transitional alias for backwards compatibility - remove after migration
+ValidationError = FieldValidationError
 
 
 @dataclass

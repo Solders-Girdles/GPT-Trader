@@ -17,7 +17,7 @@ from textual.widgets import Static
 from gpt_trader.tui.events import StateValidationFailed, StateValidationPassed
 
 if TYPE_CHECKING:
-    from gpt_trader.tui.state.validators import ValidationError
+    from gpt_trader.tui.state_management.validators import FieldValidationError as ValidationError
 
 
 class ValidationIndicatorWidget(Static):

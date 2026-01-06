@@ -28,10 +28,18 @@ if TYPE_CHECKING:
     from gpt_trader.persistence.event_store import EventStore
 
 
-class ValidationError(Exception):
-    """Raised when a trade fails risk validation checks."""
+class RiskValidationError(Exception):
+    """Raised when a trade fails risk validation checks.
+
+    Note: This is specific to risk validation failures. For general validation
+    errors, use gpt_trader.errors.ValidationError instead.
+    """
 
     pass
+
+
+# Transitional alias for backwards compatibility - remove after migration
+ValidationError = RiskValidationError
 
 
 class RiskWarningLevel(Enum):

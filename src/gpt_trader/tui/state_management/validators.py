@@ -24,8 +24,11 @@ logger = get_logger(__name__, component="tui")
 
 
 @dataclass
-class ValidationError:
+class FieldValidationError:
     """Details of a single validation error.
+
+    Note: This is NOT the same as gpt_trader.errors.ValidationError (the canonical
+    exception type). This is a data structure for validation result details.
 
     Attributes:
         field: Field path that failed validation (e.g., "market.prices.BTC-USD")
@@ -38,6 +41,10 @@ class ValidationError:
     message: str
     severity: str = "error"
     value: Any = None
+
+
+# Transitional alias for backwards compatibility - remove after migration
+ValidationError = FieldValidationError
 
 
 @dataclass

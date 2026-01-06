@@ -111,6 +111,7 @@ class TraderApp(
         ("y", "show_strategy", "Strategy"),
         ("1", "show_full_logs", "Full Logs"),
         ("2", "show_system_details", "System"),
+        ("e", "show_exec_issues", "Exec Issues"),
         ("?", "show_help", "Help"),
         # Command palette (Ctrl+K is more intuitive than default Ctrl+\)
         Binding("ctrl+k", "command_palette", "Commands", show=True),

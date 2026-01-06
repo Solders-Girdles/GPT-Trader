@@ -10,7 +10,9 @@ from typing import TYPE_CHECKING, Any
 
 from gpt_trader.tui.notification_helpers import notify_action
 from gpt_trader.tui.screens import DetailsScreen, MarketScreen, StrategyDetailScreen
+from gpt_trader.tui.services.execution_telemetry import get_execution_telemetry
 from gpt_trader.tui.widgets import SlimStatusWidget
+from gpt_trader.tui.widgets.execution_issues_modal import ExecutionIssuesModal
 from gpt_trader.tui.widgets.status import BotStatusWidget
 from gpt_trader.utilities.logging_patterns import get_logger
 
@@ -95,6 +97,11 @@ class TraderAppActionsMixin:
     async def action_show_system_details(self: TraderApp) -> None:
         """Show system details screen."""
         await self.action_dispatcher.show_system_details()
+
+    async def action_show_exec_issues(self: TraderApp) -> None:
+        """Show execution issues modal."""
+        metrics = get_execution_telemetry().get_metrics()
+        self.push_screen(ExecutionIssuesModal(metrics))
 
     async def action_show_mode_info(self: TraderApp) -> None:
         """Show mode information modal."""

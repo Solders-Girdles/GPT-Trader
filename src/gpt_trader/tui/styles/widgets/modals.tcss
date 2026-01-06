@@ -282,6 +282,54 @@ RiskDetailModal .guard-explanation {
     height: auto;
 }
 
+/* === Execution Issues Modal === */
+
+ExecutionIssuesModal {
+    align: center middle;
+    background: $overlay-disabled;
+}
+
+ExecutionIssuesModal #execution-issues-modal {
+    height: auto;
+    max-height: 85%;
+    padding: $spacing-md;
+    background: $bg-secondary;
+    border: none;
+    border-left: wide $accent;
+}
+
+ExecutionIssuesModal #exec-issues-title {
+    text-align: center;
+    text-style: bold;
+    color: $accent;
+    margin-bottom: $spacing-xs;
+}
+
+ExecutionIssuesModal .section-header {
+    color: $text-muted;
+    margin-top: $spacing-xs;
+    margin-bottom: 0;
+}
+
+ExecutionIssuesModal .muted {
+    color: $text-muted;
+}
+
+ExecutionIssuesModal .issue-row {
+    height: auto;
+    padding-left: $spacing-xs;
+}
+
+ExecutionIssuesModal .summary-line {
+    color: $text-secondary;
+    margin-top: $spacing-xs;
+}
+
+ExecutionIssuesModal #close-btn {
+    margin-top: $spacing-sm;
+    width: 100%;
+}
+
 /* === Position Detail Modal === */
 
 PositionDetailModal {

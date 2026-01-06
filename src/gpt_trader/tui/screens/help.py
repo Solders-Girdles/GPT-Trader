@@ -49,6 +49,7 @@ class HelpScreen(ModalScreen):
                 yield self._create_shortcut("L", "Focus log viewer (scroll/read)")
                 yield self._create_shortcut("1", "Show full logs screen")
                 yield self._create_shortcut("2", "Show system details screen")
+                yield self._create_shortcut("E", "Show execution issues (rejections/retries)")
                 yield self._create_shortcut("A", "Show alert history")
                 yield self._create_shortcut("I", "Show mode information")
 

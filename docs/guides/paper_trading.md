@@ -129,7 +129,7 @@ from gpt_trader.orchestration.deterministic_broker import DeterministicBroker
 
 broker = DeterministicBroker(equity=Decimal("100000"))
 broker.set_mark("BTC-PERP", Decimal("50000"))
-# Inject `broker` into a custom ServiceRegistry or patch `TradingBot` during tests
+# Set container._broker = broker before calling container.create_bot()
 ```
 
 ## Transition to Live Trading

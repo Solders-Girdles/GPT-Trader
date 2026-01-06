@@ -7,8 +7,8 @@ rules that referenced the monolithic `src/bot` package have been archived.
 
 - **Vertical slices**: Add features within `src/gpt_trader/features/<slice>/` and
   keep cross-slice coupling minimal.
-- **Explicit wiring**: Register new dependencies in
-  `gpt_trader/orchestration/service_registry.py` instead of hidden imports.
+- **Explicit wiring**: Register new dependencies in `ApplicationContainer`
+  (`gpt_trader/app/container.py`) instead of hidden imports.
 - **Configuration-first**: Extend `BotConfig` when new runtime options are
   required; expose overrides through the CLI when appropriate.
 - **Modular refactoring**: Extract large modules (>500 lines) into focused

@@ -68,7 +68,7 @@ src/gpt_trader/
 ### High-Level Flow
 
 ```
-CLI (coinbase-trader) → Config (BotConfig) → Service Registry → LiveExecutionEngine →
+CLI (coinbase-trader) → Config (BotConfig) → ApplicationContainer → TradingBot →
 Risk Guards → Coinbase Brokerage Adapter → Metrics + Telemetry
 ```
 
@@ -76,9 +76,14 @@ Risk Guards → Coinbase Brokerage Adapter → Metrics + Telemetry
 
 - `uv run coinbase-trader` invokes `gpt_trader.cli:main`, producing a `BotConfig` from
   CLI arguments and environment overrides.
-- `gpt_trader/orchestration/bootstrap.py` hydrates the `ServiceRegistry`, wiring the
-  broker adapter, risk manager, execution engine, and telemetry surfaces before
-  handing the bundle to `TradingBot`.
+- `ApplicationContainer` (`gpt_trader/app/container.py`) is the **canonical composition root**.
+  It lazily initializes all services (broker, risk manager, event store, etc.) and wires
+  them into `TradingBot` via `container.create_bot()`.
+- `TradingBot` receives services directly from the container—no intermediate registry.
+
+> **Note:** Legacy `gpt_trader/orchestration/bootstrap.py` still exists for backwards
+> compatibility but internally delegates to `ApplicationContainer`. New code should use
+> `ApplicationContainer` directly.
 
 ### Core Subsystems
 
@@ -132,7 +137,7 @@ TradingBot
 
 **Lifecycle flow**
 
-1. `TradingBot` constructs a `CoordinatorRegistry` using the initial context from the service registry.
+1. `TradingBot` constructs a `CoordinatorRegistry` using the initial context from `ApplicationContainer`.
 2. `LifecycleManager.bootstrap()` calls `initialize_all()` so each coordinator can create
    dependencies and emit context updates.
 3. `LifecycleManager.run()` delegates to `start_all_background_tasks()` to launch async work.
@@ -255,6 +260,18 @@ The TUI services layer (`tui/services/`) provides:
 - `OnboardingService` - First-run wizard state management
 - `FocusManager` - Keyboard navigation and focus ring management
 
+**App Organization (Mixin Pattern)**
+
+The main `TraderApp` class uses mixins to organize functionality into focused modules:
+
+- `app_mode_flow.py` - Mode selection, credential validation, mode switching
+- `app_lifecycle.py` - Mount/unmount lifecycle, initialization, cleanup
+- `app_bootstrap.py` - Bootstrap snapshot, read-only data feed startup
+- `app_status.py` - Status updates, observer connections, state sync
+- `app_actions.py` - Action methods and event handlers
+
+Import `TraderApp` from `gpt_trader.tui.app`; mixins are internal implementation details.
+
 **Data Freshness & Resilience UX**
 
 The `staleness_helpers.py` module provides unified data trust signals:
@@ -350,7 +367,7 @@ The orchestration layer provides coordinated control across trading operations t
 - `system_monitor.py` - System health monitoring and metrics publication
 
 **Infrastructure:**
-- `service_registry.py` - Explicit dependency container for runtime components
+- `service_registry.py` - **Legacy** dependency container (deprecated; use `ApplicationContainer`)
 - `storage.py` - Persistent storage abstraction for checkpoints and state
 - `broker_factory.py` - Broker instantiation with environment-based configuration
 - `session_guard.py` - Trading window enforcement

@@ -17,9 +17,10 @@ together. Legacy material describing `src/bot/risk/*` has been archived.
 ## Execution Path
 
 1. `gpt_trader/cli/__init__.py` builds a `BotConfig` with risk-specific overrides via the `run` command.
-2. `gpt_trader/orchestration/bootstrap.py` seeds a `ServiceRegistry` for the active
-   profile and passes it into `TradingBot`.
-3. `gpt_trader/orchestration/trading_bot/bot.py` constructs the
+2. `ApplicationContainer` (`gpt_trader/app/container.py`) creates broker, risk manager,
+   and other services lazily.
+3. `gpt_trader/orchestration/trading_bot/bot.py` receives services directly from the
+   container and constructs the
    `LiveExecutionEngine` (defined in `gpt_trader/orchestration/live_execution.py`),
    which wires:
    - `RiskEngine` (`features/live_trade/risk.py`)
@@ -57,8 +58,8 @@ instances defined in `features/live_trade/guard_errors.py`.
 
 ## Extension Points
 
-- Inject a custom `LiveRiskManager` into the `ServiceRegistry` before calling
-  `build_bot()` when you need bespoke guard behaviour.
+- Create a custom `ApplicationContainer` subclass or use `container.reset_risk_manager()`
+  before calling `create_bot()` when you need bespoke guard behaviour.
 - Extend `TradingBot._init_risk_manager()` for one-off experiments while we build
   the dedicated guard bootstrapper.
 - When derivatives become available, supply a derivative-specific risk config

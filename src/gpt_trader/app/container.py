@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 from gpt_trader.app.config import BotConfig
+from gpt_trader.app.health_server import HealthState
 from gpt_trader.config.types import Profile
 from gpt_trader.features.brokerages.coinbase.auth import SimpleAuth
 from gpt_trader.features.brokerages.coinbase.client.client import CoinbaseClient
@@ -93,6 +94,7 @@ class ApplicationContainer:
         self._notification_service: NotificationService | None = None
         self._validation_failure_tracker: ValidationFailureTracker | None = None
         self._profile_loader: ProfileLoader | None = None
+        self._health_state: HealthState | None = None
 
     @property
     def config_controller(self) -> ConfigController:
@@ -214,6 +216,17 @@ class ApplicationContainer:
 
             self._profile_loader = PL()
         return self._profile_loader
+
+    @property
+    def health_state(self) -> HealthState:
+        """Create or return the health state instance.
+
+        The health state tracks application liveness and readiness for
+        Kubernetes/Docker health probes.
+        """
+        if self._health_state is None:
+            self._health_state = HealthState()
+        return self._health_state
 
     def reset_broker(self) -> None:
         self._broker = None

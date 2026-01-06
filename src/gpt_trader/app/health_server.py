@@ -52,18 +52,48 @@ class HealthState:
         self.checks[name] = {"status": "pass" if status else "fail", "details": details or {}}
 
 
-# Global health state - can be updated by the application
-_health_state = HealthState()
+# Legacy: Module-level health state for backward compatibility
+# Prefer using container.health_state instead
+_health_state: HealthState | None = None
+
+
+def _get_health_state_from_container() -> HealthState | None:
+    """Attempt to get health state from container."""
+    try:
+        from gpt_trader.app.container import get_application_container
+
+        container = get_application_container()
+        if container is not None:
+            return container.health_state
+    except ImportError:
+        pass
+    return None
 
 
 def get_health_state() -> HealthState:
-    """Get the global health state instance."""
+    """Get the health state instance.
+
+    Prefers container-based resolution. Falls back to module-level
+    singleton for backward compatibility.
+
+    Note: Prefer using container.health_state directly when container
+    is available.
+    """
+    # Try container first
+    state = _get_health_state_from_container()
+    if state is not None:
+        return state
+
+    # Fallback to module singleton
+    global _health_state
+    if _health_state is None:
+        _health_state = HealthState()
     return _health_state
 
 
 def _build_health_response() -> dict[str, Any]:
     """Build comprehensive health response combining all checks."""
-    state = _health_state
+    state = get_health_state()
     perf_health = get_performance_health_check()
 
     overall_status = "healthy"
@@ -90,7 +120,7 @@ def _build_health_response() -> dict[str, Any]:
 
 def _build_liveness_response() -> dict[str, Any]:
     """Build liveness probe response."""
-    state = _health_state
+    state = get_health_state()
     return {
         "status": "pass" if state.live else "fail",
         "live": state.live,
@@ -99,7 +129,7 @@ def _build_liveness_response() -> dict[str, Any]:
 
 def _build_readiness_response() -> dict[str, Any]:
     """Build readiness probe response."""
-    state = _health_state
+    state = get_health_state()
     return {
         "status": "pass" if state.ready else "fail",
         "ready": state.ready,
@@ -252,7 +282,7 @@ async def start_health_server(
 
 def mark_ready(ready: bool = True, reason: str = "application_ready") -> None:
     """Mark the application as ready to receive traffic."""
-    _health_state.set_ready(ready, reason)
+    get_health_state().set_ready(ready, reason)
     logger.info(
         "Application readiness changed",
         operation="readiness_update",
@@ -263,7 +293,7 @@ def mark_ready(ready: bool = True, reason: str = "application_ready") -> None:
 
 def mark_live(live: bool = True, reason: str = "") -> None:
     """Mark the application as live/alive."""
-    _health_state.set_live(live, reason)
+    get_health_state().set_live(live, reason)
 
 
 def add_health_check(name: str, check_fn: Callable[[], tuple[bool, dict[str, Any]]]) -> None:
@@ -273,11 +303,12 @@ def add_health_check(name: str, check_fn: Callable[[], tuple[bool, dict[str, Any
         name: Name of the health check
         check_fn: Function that returns (status, details)
     """
+    state = get_health_state()
     try:
         status, details = check_fn()
-        _health_state.add_check(name, status, details)
+        state.add_check(name, status, details)
     except Exception as exc:
-        _health_state.add_check(name, False, {"error": str(exc)})
+        state.add_check(name, False, {"error": str(exc)})
 
 
 __all__ = [

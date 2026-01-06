@@ -378,6 +378,25 @@ class TestApplicationContainer:
         loader2 = container.profile_loader
         assert loader is loader2
 
+    def test_health_state_creation(self, mock_config: BotConfig) -> None:
+        """Test that health state is created correctly."""
+        from gpt_trader.app.health_server import HealthState
+
+        container = ApplicationContainer(mock_config)
+
+        # First access should create the health state
+        health_state = container.health_state
+
+        assert isinstance(health_state, HealthState)
+        assert container._health_state == health_state
+        # Verify default values
+        assert health_state.ready is False
+        assert health_state.live is True
+
+        # Second access should return the same instance
+        health_state2 = container.health_state
+        assert health_state is health_state2
+
 
 class TestCreateApplicationContainer:
     """Test cases for create_application_container function."""

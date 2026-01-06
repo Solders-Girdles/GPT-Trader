@@ -9,7 +9,6 @@ During operation, persists price ticks to EventStore for crash recovery.
 
 import asyncio
 import time
-from collections import defaultdict
 from decimal import Decimal
 from typing import Any
 
@@ -18,6 +17,10 @@ from gpt_trader.features.live_trade.engines.base import (
     BaseEngine,
     CoordinatorContext,
     HealthStatus,
+)
+from gpt_trader.features.live_trade.engines.price_tick_store import (
+    EVENT_PRICE_TICK,
+    PriceTickStore,
 )
 from gpt_trader.features.live_trade.factory import create_strategy
 from gpt_trader.features.live_trade.risk.manager import ValidationError
@@ -32,8 +35,8 @@ from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="trading_engine")
 
-# Event type for price ticks
-EVENT_PRICE_TICK = "price_tick"
+# Re-export for backward compatibility
+__all__ = ["TradingEngine", "EVENT_PRICE_TICK"]
 
 
 class TradingEngine(BaseEngine):
@@ -48,10 +51,16 @@ class TradingEngine(BaseEngine):
         self.running = False
         # Create strategy via factory (supports baseline and mean_reversion)
         self.strategy = create_strategy(self.context.config)
-        self.price_history: dict[str, list[Decimal]] = defaultdict(list)
         self._current_positions: dict[str, Position] = {}
         self._rehydrated = False
         self._cycle_count = 0
+
+        # Initialize price tick store for state recovery
+        self._price_tick_store = PriceTickStore(
+            event_store=context.event_store,
+            symbols=list(context.config.symbols),
+            bot_id=context.bot_id,
+        )
 
         # Initialize heartbeat service
         self._heartbeat = HeartbeatService(
@@ -82,6 +91,11 @@ class TradingEngine(BaseEngine):
     @property
     def status_reporter(self) -> StatusReporter:
         return self._status_reporter
+
+    @property
+    def price_history(self) -> dict[str, list[Decimal]]:
+        """Access price history via PriceTickStore."""
+        return self._price_tick_store.price_history
 
     async def _notify(
         self,
@@ -149,51 +163,17 @@ class TradingEngine(BaseEngine):
     def _rehydrate_from_events(self) -> int:
         """Restore price history from persisted events.
 
+        Delegates to PriceTickStore for the actual rehydration logic.
+
         Returns:
             Number of price ticks restored
         """
-        if self.context.event_store is None:
-            logger.debug("No event store configured - skipping rehydration")
-            return 0
-
-        events = self.context.event_store.get_recent(count=1000)
-        restored = 0
-
-        for event in events:
-            if event.get("type") != EVENT_PRICE_TICK:
-                continue
-
-            data = event.get("data", {})
-            symbol = data.get("symbol")
-            price_str = data.get("price")
-
-            if not symbol or not price_str:
-                continue
-
-            # Only restore prices for symbols we're trading
-            if symbol not in self.context.config.symbols:
-                continue
-
-            try:
-                price = Decimal(str(price_str))
-                self.price_history[symbol].append(price)
-                # Keep history bounded
-                if len(self.price_history[symbol]) > 20:
-                    self.price_history[symbol].pop(0)
-                restored += 1
-            except Exception as e:
-                logger.warning(f"Failed to parse price from event: {e}")
-
-        if restored > 0:
-            logger.info(f"Rehydrated {restored} price ticks from EventStore")
-            for symbol, prices in self.price_history.items():
-                logger.info(f"  {symbol}: {len(prices)} prices")
-
-        # Also call strategy rehydration (for future stateful strategies)
+        # Prepare strategy rehydration callback if strategy supports it
+        strategy_callback = None
         if hasattr(self.strategy, "rehydrate"):
-            self.strategy.rehydrate(events)
+            strategy_callback = self.strategy.rehydrate
 
-        return restored
+        return self._price_tick_store.rehydrate(strategy_rehydrate_callback=strategy_callback)
 
     async def _run_loop(self) -> None:
         logger.info("Starting strategy loop...")
@@ -352,11 +332,7 @@ class TradingEngine(BaseEngine):
             # Update status reporter with price
             self._status_reporter.update_price(symbol, price)
 
-            self.price_history[symbol].append(price)
-            if len(self.price_history[symbol]) > 20:
-                self.price_history[symbol].pop(0)
-
-            # Persist price tick for crash recovery
+            # Record price tick (updates in-memory history + persists for crash recovery)
             self._record_price_tick(symbol, price)
 
             position_state = self._build_position_state(symbol, positions)
@@ -559,7 +535,9 @@ class TradingEngine(BaseEngine):
 
             # Log USD/USDC result with context
             cash_label = "Total cash holdings" if use_total_balance else "Available cash collateral"
-            logger.info("%s (%s): $%s", cash_label, quote, cash_collateral.quantize(Decimal("0.01")))
+            logger.info(
+                "%s (%s): $%s", cash_label, quote, cash_collateral.quantize(Decimal("0.01"))
+            )
             if usd_usdc_found:
                 logger.info(f"USD/USDC assets counted: {', '.join(usd_usdc_found)}")
             else:
@@ -643,21 +621,12 @@ class TradingEngine(BaseEngine):
         }
 
     def _record_price_tick(self, symbol: str, price: Decimal) -> None:
-        """Persist price tick to EventStore for crash recovery."""
-        if self.context.event_store is None:
-            return
+        """Persist price tick to EventStore for crash recovery.
 
-        self.context.event_store.store(
-            {
-                "type": EVENT_PRICE_TICK,
-                "data": {
-                    "symbol": symbol,
-                    "price": str(price),
-                    "timestamp": time.time(),
-                    "bot_id": self.context.bot_id,
-                },
-            }
-        )
+        Delegates to PriceTickStore which handles both in-memory
+        history update and EventStore persistence.
+        """
+        self._price_tick_store.record_price_tick(symbol, price)
 
     def _positions_to_risk_format(
         self, positions: dict[str, Position]

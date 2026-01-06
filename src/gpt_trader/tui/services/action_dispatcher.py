@@ -452,6 +452,38 @@ class ActionDispatcher:
             logger.error(f"WebSocket reconnection failed: {e}", exc_info=True)
             notify_error(self.app, f"Reconnection failed: {e}")
 
+    async def reset_daily_risk(self) -> None:
+        """Reset daily risk tracking (P&L, limits).
+
+        Calls reset_daily_tracking() on the execution engine if available.
+        Useful at the start of a new trading day.
+        """
+        try:
+            logger.info("User initiated daily risk reset")
+
+            # Check if bot has execution engine with reset method
+            if self.app.bot and hasattr(self.app.bot, "execution_engine"):
+                engine = self.app.bot.execution_engine
+                if hasattr(engine, "reset_daily_tracking"):
+                    engine.reset_daily_tracking()
+                    notify_success(self.app, "Daily risk tracking reset", title="Risk Reset")
+                    logger.info("Daily risk tracking reset completed")
+                    return
+
+            # Fallback: check for risk manager directly
+            if self.app.bot and hasattr(self.app.bot, "risk_manager"):
+                risk_manager = self.app.bot.risk_manager
+                if hasattr(risk_manager, "reset_daily_tracking"):
+                    risk_manager.reset_daily_tracking()
+                    notify_success(self.app, "Daily risk tracking reset", title="Risk Reset")
+                    logger.info("Daily risk tracking reset completed via risk manager")
+                    return
+
+            notify_warning(self.app, "Reset not available - no active bot engine")
+        except Exception as e:
+            logger.error(f"Daily risk reset failed: {e}", exc_info=True)
+            notify_error(self.app, f"Risk reset failed: {e}")
+
     async def reset_circuit_breakers(self) -> None:
         """Reset all circuit breakers to closed state."""
         try:

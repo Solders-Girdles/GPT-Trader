@@ -77,7 +77,9 @@ class HelpScreen(ModalScreen):
 
                 # Risk Tile
                 yield Label("Risk Tile (when focused)", classes="help-category")
-                yield self._create_shortcut("ENTER", "View risk detail (guards, limits, score)")
+                yield self._create_shortcut("ENTER/G", "View risk detail (guards, limits, score)")
+                yield self._create_shortcut("L", "Focus log viewer")
+                yield self._create_shortcut("D", "Reset daily risk tracking")
 
                 # Accessibility
                 yield Label("Accessibility", classes="help-category")

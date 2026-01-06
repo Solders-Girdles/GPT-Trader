@@ -187,7 +187,14 @@ class TestFocusManager:
 
     def test_tile_order(self, focus_manager):
         """Test that all tiles are in TILE_ORDER."""
-        expected_tiles = {"tile-hero", "tile-account", "tile-market", "tile-system", "tile-logs"}
+        expected_tiles = {
+            "tile-hero",
+            "tile-account",
+            "tile-market",
+            "tile-strategy",
+            "tile-system",
+            "tile-logs",
+        }
         assert set(focus_manager.TILE_ORDER) == expected_tiles
 
     def test_tile_actions_defined(self, focus_manager):

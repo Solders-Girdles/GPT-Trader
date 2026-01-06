@@ -37,14 +37,19 @@ class RiskWidget(Static):
     - Color-coded risk status (low/medium/high)
     - Reduce-only mode indicator
     - Active risk guards display
-    - Enter key opens detailed risk modal
+    - Quick actions for risk management
 
     Keyboard shortcuts:
-        Enter: Open risk detail modal
+        Enter/G: Open risk detail modal (guards view)
+        L: Focus logs widget
+        D: Reset daily risk tracking
     """
 
     BINDINGS = [
         Binding("enter", "show_risk_detail", "Details", show=True),
+        Binding("g", "show_risk_detail", "Guards", show=False),
+        Binding("l", "focus_logs", "Logs", show=False),
+        Binding("d", "reset_daily_risk", "Reset Day", show=False),
     ]
 
     # Styles moved to styles/widgets/risk.tcss
@@ -325,3 +330,13 @@ class RiskWidget(Static):
             return
 
         self.app.push_screen(RiskDetailModal(self._risk_data))
+
+    async def action_focus_logs(self) -> None:
+        """Focus the logs widget via app action dispatcher."""
+        if hasattr(self.app, "action_dispatcher"):
+            await self.app.action_dispatcher.focus_logs()
+
+    async def action_reset_daily_risk(self) -> None:
+        """Reset daily risk tracking via app action dispatcher."""
+        if hasattr(self.app, "action_dispatcher"):
+            await self.app.action_dispatcher.reset_daily_risk()

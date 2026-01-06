@@ -56,7 +56,6 @@ def mock_demo_bot():
 class TestMainScreenSnapshots:
     """Snapshot tests for the main trading screen at various sizes."""
 
-    @pytest.mark.skip(reason="Initial snapshot needs to be generated with --snapshot-update")
     def test_main_screen_initial_state(self, snap_compare, mock_demo_bot):
         """Snapshot test for MainScreen in its initial stopped state."""
 
@@ -68,7 +67,6 @@ class TestMainScreenSnapshots:
             terminal_size=(120, 40),
         )
 
-    @pytest.mark.skip(reason="Initial snapshot needs to be generated with --snapshot-update")
     def test_main_screen_compact_80x24(self, snap_compare, mock_demo_bot):
         """Snapshot test for MainScreen in minimum compact terminal (80x24)."""
 
@@ -80,7 +78,6 @@ class TestMainScreenSnapshots:
             terminal_size=(80, 24),
         )
 
-    @pytest.mark.skip(reason="Initial snapshot needs to be generated with --snapshot-update")
     def test_main_screen_standard_120x40(self, snap_compare, mock_demo_bot):
         """Snapshot test for MainScreen in standard terminal (120x40)."""
 
@@ -92,7 +89,6 @@ class TestMainScreenSnapshots:
             terminal_size=(120, 40),
         )
 
-    @pytest.mark.skip(reason="Initial snapshot needs to be generated with --snapshot-update")
     def test_main_screen_wide_200x50(self, snap_compare, mock_demo_bot):
         """Snapshot test for MainScreen in wide terminal (200x50)."""
 
@@ -108,7 +104,6 @@ class TestMainScreenSnapshots:
 class TestThemeSnapshots:
     """Snapshot tests for different theme variations."""
 
-    @pytest.mark.skip(reason="Initial snapshot needs to be generated with --snapshot-update")
     def test_main_screen_dark_theme(self, snap_compare, mock_demo_bot):
         """Snapshot test for MainScreen with dark theme (default)."""
 
@@ -121,7 +116,6 @@ class TestThemeSnapshots:
             terminal_size=(120, 40),
         )
 
-    @pytest.mark.skip(reason="Initial snapshot needs to be generated with --snapshot-update")
     def test_main_screen_light_theme(self, snap_compare, mock_demo_bot):
         """Snapshot test for MainScreen with light theme."""
 
@@ -141,7 +135,6 @@ class TestThemeSnapshots:
             run_before=apply_light_theme,
         )
 
-    @pytest.mark.skip(reason="Initial snapshot needs to be generated with --snapshot-update")
     def test_main_screen_high_contrast_theme(self, snap_compare, mock_demo_bot):
         """Snapshot test for MainScreen with high-contrast accessibility theme."""
 
@@ -164,7 +157,6 @@ class TestThemeSnapshots:
 class TestEmptyStateSnapshots:
     """Snapshot tests for empty data states."""
 
-    @pytest.mark.skip(reason="Initial snapshot needs to be generated with --snapshot-update")
     def test_portfolio_empty_positions(self, snap_compare, mock_demo_bot):
         """Snapshot test for portfolio widget with no positions."""
 
@@ -176,7 +168,6 @@ class TestEmptyStateSnapshots:
             terminal_size=(120, 40),
         )
 
-    @pytest.mark.skip(reason="Initial snapshot needs to be generated with --snapshot-update")
     def test_portfolio_empty_orders(self, snap_compare, mock_demo_bot):
         """Snapshot test for orders tab with no open orders."""
 
@@ -197,7 +188,6 @@ class TestEmptyStateSnapshots:
 class TestHelpScreenSnapshots:
     """Snapshot tests for the help screen."""
 
-    @pytest.mark.skip(reason="Initial snapshot needs to be generated with --snapshot-update")
     def test_help_screen(self, snap_compare, mock_demo_bot):
         """Snapshot test for HelpScreen."""
 
@@ -218,7 +208,6 @@ class TestHelpScreenSnapshots:
 class TestModeSelectionSnapshots:
     """Snapshot tests for mode selection screen."""
 
-    @pytest.mark.skip(reason="Initial snapshot needs to be generated with --snapshot-update")
     def test_mode_selection_screen(self, snap_compare):
         """Snapshot test for ModeSelectionScreen (no bot provided)."""
 
@@ -235,7 +224,6 @@ class TestModeSelectionSnapshots:
 class TestWidgetSnapshots:
     """Snapshot tests for individual widgets."""
 
-    @pytest.mark.skip(reason="Initial snapshot needs to be generated with --snapshot-update")
     def test_portfolio_widget_with_positions(self, snap_compare, mock_demo_bot):
         """Snapshot test for portfolio widget with positions loaded."""
 
@@ -256,7 +244,6 @@ class TestWidgetSnapshots:
 class TestErrorStateSnapshots:
     """Snapshot tests for error states and indicators."""
 
-    @pytest.mark.skip(reason="Initial snapshot needs to be generated with --snapshot-update")
     def test_error_indicator_visible(self, snap_compare, mock_demo_bot):
         """Snapshot test for error indicator when errors are present."""
 
@@ -277,7 +264,6 @@ class TestErrorStateSnapshots:
 class TestScreenTransitionSnapshots:
     """Snapshot tests for screen transitions."""
 
-    @pytest.mark.skip(reason="Initial snapshot needs to be generated with --snapshot-update")
     def test_full_logs_screen(self, snap_compare, mock_demo_bot):
         """Snapshot test for full logs screen."""
 
@@ -294,7 +280,6 @@ class TestScreenTransitionSnapshots:
             run_before=open_logs,
         )
 
-    @pytest.mark.skip(reason="Initial snapshot needs to be generated with --snapshot-update")
     def test_system_details_screen(self, snap_compare, mock_demo_bot):
         """Snapshot test for system details screen."""
 
@@ -311,7 +296,6 @@ class TestScreenTransitionSnapshots:
             run_before=open_system_details,
         )
 
-    @pytest.mark.skip(reason="Initial snapshot needs to be generated with --snapshot-update")
     def test_alert_history_screen(self, snap_compare, mock_demo_bot):
         """Snapshot test for alert history screen."""
 
@@ -332,7 +316,6 @@ class TestScreenTransitionSnapshots:
 class TestFocusStateSnapshots:
     """Snapshot tests for focus states and keyboard navigation."""
 
-    @pytest.mark.skip(reason="Initial snapshot needs to be generated with --snapshot-update")
     def test_tile_focus_ring(self, snap_compare, mock_demo_bot):
         """Snapshot test for tile focus ring visibility."""
 
@@ -350,7 +333,6 @@ class TestFocusStateSnapshots:
             run_before=focus_tile,
         )
 
-    @pytest.mark.skip(reason="Initial snapshot needs to be generated with --snapshot-update")
     def test_focus_navigation_arrow_keys(self, snap_compare, mock_demo_bot):
         """Snapshot test for focus after arrow key navigation."""
 

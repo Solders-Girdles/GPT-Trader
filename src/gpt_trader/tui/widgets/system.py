@@ -4,7 +4,7 @@ from textual.reactive import reactive
 from textual.widgets import Label, Static
 
 from gpt_trader.tui.helpers import safe_update
-from gpt_trader.tui.types import SystemStatus
+from gpt_trader.tui.types import ExecutionMetrics, SystemStatus
 
 
 class SystemHealthWidget(Static):
@@ -60,6 +60,12 @@ class SystemHealthWidget(Static):
                 with Horizontal(classes="metric-row"):
                     yield Label("Validation:", classes="label")
                     yield Label("OK", id="validation-failures", classes="value")
+
+                # Execution Issues section (hidden by default, shown when issues exist)
+                with Vertical(id="execution-issues", classes="execution-issues hidden"):
+                    yield Label("Exec Issues:", classes="label execution-label")
+                    yield Label("", id="exec-rejects", classes="value")
+                    yield Label("", id="exec-retries", classes="value")
 
     @safe_update
     def update_system(self, data: SystemStatus) -> None:
@@ -183,3 +189,77 @@ class SystemHealthWidget(Static):
         if parts:
             return " ".join(parts)
         return "OK"
+
+    @safe_update
+    def update_execution_metrics(self, metrics: ExecutionMetrics) -> None:
+        """Update execution issues display.
+
+        Shows rejection and retry reason breakdowns when issues exist.
+        Hidden when no issues are present.
+
+        Args:
+            metrics: ExecutionMetrics with rejection_reasons and retry_reasons.
+        """
+        if self.compact_mode:
+            # Compact mode doesn't show execution details
+            return
+
+        try:
+            issues_container = self.query_one("#execution-issues", Vertical)
+            rejects_label = self.query_one("#exec-rejects", Label)
+            retries_label = self.query_one("#exec-retries", Label)
+
+            has_rejects = bool(metrics.rejection_reasons)
+            has_retries = bool(metrics.retry_reasons)
+
+            if not has_rejects and not has_retries:
+                # No issues - hide section
+                issues_container.add_class("hidden")
+                return
+
+            # Show section
+            issues_container.remove_class("hidden")
+
+            # Format rejection reasons (top 2)
+            if has_rejects:
+                rejects_text = self._format_reason_summary(metrics.top_rejection_reasons, "Rejects")
+                rejects_label.update(rejects_text)
+                rejects_label.remove_class("hidden")
+            else:
+                rejects_label.add_class("hidden")
+
+            # Format retry reasons (top 2)
+            if has_retries:
+                retries_text = self._format_reason_summary(metrics.top_retry_reasons, "Retries")
+                retries_label.update(retries_text)
+                retries_label.remove_class("hidden")
+            else:
+                retries_label.add_class("hidden")
+
+        except Exception:
+            pass  # Section may not exist in compact mode
+
+    def _format_reason_summary(self, reasons: list[tuple[str, int]], prefix: str) -> str:
+        """Format reason breakdown for display.
+
+        Shows top 2 reasons with counts, ellipsis if more.
+
+        Args:
+            reasons: List of (reason, count) tuples sorted by count.
+            prefix: Label prefix (e.g., "Rejects", "Retries").
+
+        Returns:
+            Formatted string like "Rejects: rate_limit(3), timeout(1)"
+        """
+        if not reasons:
+            return ""
+
+        # Take top 2
+        top_reasons = reasons[:2]
+        parts = [f"{reason}({count})" for reason, count in top_reasons]
+
+        # Add ellipsis if more
+        if len(reasons) > 2:
+            parts.append("…")
+
+        return f"{prefix}: {', '.join(parts)}"

@@ -50,3 +50,34 @@ SystemHealthWidget .label {
     width: 12; /* Increased width for better alignment */
     color: $text-muted;
 }
+
+/* Execution issues section */
+SystemHealthWidget .execution-issues {
+    margin-top: 1;
+    padding-top: 1;
+    border-top: solid $border;
+}
+
+SystemHealthWidget .execution-issues.hidden {
+    display: none;
+}
+
+SystemHealthWidget .execution-label {
+    color: $warning;
+    text-style: bold;
+}
+
+SystemHealthWidget #exec-rejects {
+    color: $error;
+    padding-left: 2;
+}
+
+SystemHealthWidget #exec-retries {
+    color: $warning;
+    padding-left: 2;
+}
+
+SystemHealthWidget #exec-rejects.hidden,
+SystemHealthWidget #exec-retries.hidden {
+    display: none;
+}

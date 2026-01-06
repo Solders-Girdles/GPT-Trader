@@ -1,8 +1,9 @@
 import pytest
 from textual.app import App, ComposeResult
+from textual.containers import Vertical
 from textual.widgets import Label
 
-from gpt_trader.tui.types import SystemStatus
+from gpt_trader.tui.types import ExecutionMetrics, SystemStatus
 from gpt_trader.tui.widgets.system import SystemHealthWidget
 
 
@@ -112,3 +113,112 @@ class TestSystemHealthWidget:
             assert "ESCALATED" in str(vfail_label.render())
             assert vfail_label.has_class("status-error")
             assert not vfail_label.has_class("status-warning")
+
+
+class TestExecutionIssues:
+    """Tests for execution issues display."""
+
+    @pytest.mark.asyncio
+    async def test_execution_issues_hidden_when_empty(self) -> None:
+        """Test that execution issues section is hidden when no issues."""
+        app = SystemHealthTestApp()
+        async with app.run_test():
+            widget = app.query_one(SystemHealthWidget)
+
+            # Update with empty metrics
+            metrics = ExecutionMetrics()
+            widget.update_execution_metrics(metrics)
+
+            # Section should be hidden
+            issues_container = app.query_one("#execution-issues", Vertical)
+            assert issues_container.has_class("hidden")
+
+    @pytest.mark.asyncio
+    async def test_execution_issues_shows_rejections(self) -> None:
+        """Test that rejection reasons are displayed."""
+        app = SystemHealthTestApp()
+        async with app.run_test():
+            widget = app.query_one(SystemHealthWidget)
+
+            # Update with rejection reasons
+            metrics = ExecutionMetrics(rejection_reasons={"rate_limit": 3, "insufficient_funds": 1})
+            widget.update_execution_metrics(metrics)
+
+            # Section should be visible
+            issues_container = app.query_one("#execution-issues", Vertical)
+            assert not issues_container.has_class("hidden")
+
+            # Check rejection text
+            rejects_label = app.query_one("#exec-rejects", Label)
+            rendered = str(rejects_label.render())
+            assert "Rejects:" in rendered
+            assert "rate_limit(3)" in rendered
+            assert "insufficient_funds(1)" in rendered
+
+    @pytest.mark.asyncio
+    async def test_execution_issues_shows_retries(self) -> None:
+        """Test that retry reasons are displayed."""
+        app = SystemHealthTestApp()
+        async with app.run_test():
+            widget = app.query_one(SystemHealthWidget)
+
+            # Update with retry reasons
+            metrics = ExecutionMetrics(retry_reasons={"timeout": 2, "network": 1})
+            widget.update_execution_metrics(metrics)
+
+            # Section should be visible
+            issues_container = app.query_one("#execution-issues", Vertical)
+            assert not issues_container.has_class("hidden")
+
+            # Check retry text
+            retries_label = app.query_one("#exec-retries", Label)
+            rendered = str(retries_label.render())
+            assert "Retries:" in rendered
+            assert "timeout(2)" in rendered
+            assert "network(1)" in rendered
+
+    @pytest.mark.asyncio
+    async def test_execution_issues_truncates_to_top_two(self) -> None:
+        """Test that only top 2 reasons are shown with ellipsis."""
+        app = SystemHealthTestApp()
+        async with app.run_test():
+            widget = app.query_one(SystemHealthWidget)
+
+            # Update with many rejection reasons
+            metrics = ExecutionMetrics(
+                rejection_reasons={
+                    "rate_limit": 5,
+                    "timeout": 3,
+                    "network": 2,
+                    "unknown": 1,
+                }
+            )
+            widget.update_execution_metrics(metrics)
+
+            # Check rejection text shows top 2 + ellipsis
+            rejects_label = app.query_one("#exec-rejects", Label)
+            rendered = str(rejects_label.render())
+            assert "rate_limit(5)" in rendered
+            assert "timeout(3)" in rendered
+            assert "…" in rendered
+            # Should not show all reasons
+            assert "unknown(1)" not in rendered
+
+    @pytest.mark.asyncio
+    async def test_execution_issues_hides_empty_category(self) -> None:
+        """Test that empty categories are hidden."""
+        app = SystemHealthTestApp()
+        async with app.run_test():
+            widget = app.query_one(SystemHealthWidget)
+
+            # Update with only rejection reasons (no retries)
+            metrics = ExecutionMetrics(rejection_reasons={"rate_limit": 1}, retry_reasons={})
+            widget.update_execution_metrics(metrics)
+
+            # Rejects should be visible
+            rejects_label = app.query_one("#exec-rejects", Label)
+            assert not rejects_label.has_class("hidden")
+
+            # Retries should be hidden
+            retries_label = app.query_one("#exec-retries", Label)
+            assert retries_label.has_class("hidden")

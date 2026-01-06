@@ -39,9 +39,20 @@ class RiskDetailModal(ModalScreen):
     - Reduce-only mode status and reason
     - Max leverage setting
     - Full list of active guards with color coding
+
+    Keyboard shortcuts:
+        S: Toggle bot (pause/resume trading)
+        O: Enable reduce-only mode
+        D: Reset daily risk tracking
+        Escape: Close modal
     """
 
-    BINDINGS = [("escape", "dismiss", "Close")]
+    BINDINGS = [
+        ("escape", "dismiss", "Close"),
+        ("s", "toggle_bot", "Pause/Resume"),
+        ("o", "enable_reduce_only", "Reduce-Only"),
+        ("d", "reset_daily_risk", "Reset Day"),
+    ]
 
     def __init__(self, risk_data: RiskState, focus_preview: bool = False) -> None:
         """Initialize risk detail modal.
@@ -151,6 +162,15 @@ class RiskDetailModal(ModalScreen):
                 # Score breakdown section
                 yield Static("─── Score Breakdown ───", classes="section-header")
                 yield Static(self._format_score_breakdown(data), classes="muted")
+
+                # Quick actions section
+                yield Static("─── Quick Actions ───", classes="section-header")
+                yield Static(
+                    "[dim][S][/dim] Pause/Resume  "
+                    "[dim][O][/dim] Reduce-Only  "
+                    "[dim][D][/dim] Reset Day",
+                    classes="quick-actions-hint",
+                )
 
                 # Close button
                 yield Button("Close", variant="primary", id="close-btn")
@@ -454,3 +474,18 @@ class RiskDetailModal(ModalScreen):
             chip_text += " [red]![/red]"
 
         return Static(chip_text, classes="preview-chip")
+
+    async def action_toggle_bot(self) -> None:
+        """Toggle bot running state via app action dispatcher."""
+        if hasattr(self.app, "action_dispatcher"):
+            await self.app.action_dispatcher.toggle_bot()
+
+    async def action_enable_reduce_only(self) -> None:
+        """Enable reduce-only mode via app action dispatcher."""
+        if hasattr(self.app, "action_dispatcher"):
+            await self.app.action_dispatcher.enable_reduce_only()
+
+    async def action_reset_daily_risk(self) -> None:
+        """Reset daily risk tracking via app action dispatcher."""
+        if hasattr(self.app, "action_dispatcher"):
+            await self.app.action_dispatcher.reset_daily_risk()

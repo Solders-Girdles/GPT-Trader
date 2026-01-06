@@ -42,6 +42,8 @@ class RiskWidget(Static):
     Keyboard shortcuts:
         Enter/G: Open risk detail modal (guards view)
         P: Open risk detail modal focused on preview section
+        S: Toggle bot (pause/resume trading)
+        O: Enable reduce-only mode
         L: Focus logs widget
         D: Reset daily risk tracking
     """
@@ -50,6 +52,8 @@ class RiskWidget(Static):
         Binding("enter", "show_risk_detail", "Details", show=True),
         Binding("g", "show_risk_detail", "Guards", show=False),
         Binding("p", "show_risk_preview", "Preview", show=False),
+        Binding("s", "toggle_bot", "Pause/Resume", show=False),
+        Binding("o", "enable_reduce_only", "Reduce-Only", show=False),
         Binding("l", "focus_logs", "Logs", show=False),
         Binding("d", "reset_daily_risk", "Reset Day", show=False),
     ]
@@ -352,3 +356,13 @@ class RiskWidget(Static):
         """Reset daily risk tracking via app action dispatcher."""
         if hasattr(self.app, "action_dispatcher"):
             await self.app.action_dispatcher.reset_daily_risk()
+
+    async def action_toggle_bot(self) -> None:
+        """Toggle bot running state via app action dispatcher."""
+        if hasattr(self.app, "action_dispatcher"):
+            await self.app.action_dispatcher.toggle_bot()
+
+    async def action_enable_reduce_only(self) -> None:
+        """Enable reduce-only mode via app action dispatcher."""
+        if hasattr(self.app, "action_dispatcher"):
+            await self.app.action_dispatcher.enable_reduce_only()

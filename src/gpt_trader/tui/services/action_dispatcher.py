@@ -484,6 +484,40 @@ class ActionDispatcher:
             logger.error(f"Daily risk reset failed: {e}", exc_info=True)
             notify_error(self.app, f"Risk reset failed: {e}")
 
+    async def enable_reduce_only(self) -> None:
+        """Enable reduce-only mode to prevent new position entries.
+
+        Sets reduce_only_mode on the risk manager with reason "operator_reduce_only".
+        Only allows closing/reducing existing positions until manually cleared.
+        """
+        try:
+            logger.info("User initiated reduce-only mode")
+
+            # Check if bot has risk manager
+            if self.app.bot and hasattr(self.app.bot, "risk_manager"):
+                risk_manager = self.app.bot.risk_manager
+
+                # Check if already in reduce-only mode
+                if hasattr(risk_manager, "reduce_only_mode") and risk_manager.reduce_only_mode:
+                    notify_warning(self.app, "Already in reduce-only mode", title="Risk")
+                    return
+
+                # Enable reduce-only mode
+                if hasattr(risk_manager, "set_reduce_only_mode"):
+                    risk_manager.set_reduce_only_mode(True, reason="operator_reduce_only")
+                    notify_success(
+                        self.app,
+                        "Reduce-only mode enabled - no new entries",
+                        title="Risk",
+                    )
+                    logger.info("Reduce-only mode enabled by operator")
+                    return
+
+            notify_warning(self.app, "No risk manager available")
+        except Exception as e:
+            logger.error(f"Enable reduce-only failed: {e}", exc_info=True)
+            notify_error(self.app, f"Failed to enable reduce-only: {e}")
+
     async def reset_circuit_breakers(self) -> None:
         """Reset all circuit breakers to closed state."""
         try:

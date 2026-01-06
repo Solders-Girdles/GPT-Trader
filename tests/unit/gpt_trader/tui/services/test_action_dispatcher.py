@@ -253,3 +253,47 @@ class TestForceRefresh:
         # Should not raise
         await dispatcher.force_refresh()
         mock_app.ui_coordinator.sync_state_from_bot.assert_called_once()
+
+
+class TestEnableReduceOnly:
+    """Tests for enable_reduce_only action."""
+
+    @pytest.mark.asyncio
+    async def test_enable_reduce_only_calls_risk_manager(
+        self, dispatcher: ActionDispatcher, mock_app: MagicMock
+    ) -> None:
+        """enable_reduce_only should call risk_manager.set_reduce_only_mode."""
+        mock_app.bot.risk_manager = MagicMock()
+        mock_app.bot.risk_manager.reduce_only_mode = False
+        mock_app.bot.risk_manager.set_reduce_only_mode = MagicMock()
+
+        await dispatcher.enable_reduce_only()
+
+        mock_app.bot.risk_manager.set_reduce_only_mode.assert_called_once_with(
+            True, reason="operator_reduce_only"
+        )
+
+    @pytest.mark.asyncio
+    async def test_enable_reduce_only_notifies_already_enabled(
+        self, dispatcher: ActionDispatcher, mock_app: MagicMock
+    ) -> None:
+        """enable_reduce_only should notify if already in reduce-only mode."""
+        mock_app.bot.risk_manager = MagicMock()
+        mock_app.bot.risk_manager.reduce_only_mode = True
+
+        await dispatcher.enable_reduce_only()
+
+        mock_app.notify.assert_called_once()
+        assert "Already" in mock_app.notify.call_args[0][0]
+
+    @pytest.mark.asyncio
+    async def test_enable_reduce_only_no_risk_manager(
+        self, dispatcher: ActionDispatcher, mock_app: MagicMock
+    ) -> None:
+        """enable_reduce_only should warn when no risk manager available."""
+        mock_app.bot = None
+
+        await dispatcher.enable_reduce_only()
+
+        mock_app.notify.assert_called_once()
+        assert "No risk manager" in mock_app.notify.call_args[0][0]

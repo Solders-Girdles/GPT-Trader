@@ -22,6 +22,9 @@ from gpt_trader.features.live_trade.engines.price_tick_store import (
     EVENT_PRICE_TICK,
     PriceTickStore,
 )
+from gpt_trader.features.live_trade.engines.system_maintenance import (
+    SystemMaintenanceService,
+)
 from gpt_trader.features.live_trade.factory import create_strategy
 from gpt_trader.features.live_trade.risk.manager import ValidationError
 from gpt_trader.features.live_trade.strategies.perps_baseline import (
@@ -80,9 +83,11 @@ class TradingEngine(BaseEngine):
         )
         self._status_reporter.set_heartbeat_service(self._heartbeat)
 
-        # Pruning configuration
-        self._prune_interval_seconds = 3600  # 1 hour
-        self._prune_max_rows = 1_000_000  # Keep 1M events max
+        # Initialize system maintenance service (health reporting + pruning)
+        self._system_maintenance = SystemMaintenanceService(
+            status_reporter=self._status_reporter,
+            event_store=context.event_store,
+        )
 
         # System health tracking
         self._last_latency = 0.0
@@ -153,8 +158,8 @@ class TradingEngine(BaseEngine):
             self._register_background_task(status_task)
             tasks.append(status_task)
 
-        # Start database pruning task
-        prune_task = asyncio.create_task(self._prune_loop())
+        # Start database pruning task via system maintenance service
+        prune_task = await self._system_maintenance.start_prune_loop()
         self._register_background_task(prune_task)
         tasks.append(prune_task)
 
@@ -195,55 +200,14 @@ class TradingEngine(BaseEngine):
 
             await asyncio.sleep(self.context.config.interval)
 
-    async def _prune_loop(self) -> None:
-        """Periodically prune the event store to prevent unbounded growth."""
-        logger.info(
-            f"Starting database prune task (interval={self._prune_interval_seconds}s, "
-            f"max_rows={self._prune_max_rows})"
-        )
-        while self.running:
-            await asyncio.sleep(self._prune_interval_seconds)
-
-            if self.context.event_store is None:
-                continue
-
-            try:
-                # Check if the event store supports pruning
-                if hasattr(self.context.event_store, "prune"):
-                    pruned = self.context.event_store.prune(max_rows=self._prune_max_rows)
-                    if pruned > 0:
-                        logger.info(f"Pruned {pruned} old events from database")
-            except Exception as e:
-                logger.error(f"Database pruning failed: {e}")
-
     def _report_system_status(self) -> None:
-        """Collect and report system health metrics."""
-        try:
-            import psutil
+        """Collect and report system health metrics.
 
-            process = psutil.Process()
-            memory_info = process.memory_info()
-            memory_usage = f"{memory_info.rss / 1024 / 1024:.1f}MB"
-            cpu_usage = f"{process.cpu_percent()}%"
-        except ImportError:
-            memory_usage = "N/A"
-            cpu_usage = "N/A"
-        except Exception:
-            memory_usage = "Unknown"
-            cpu_usage = "Unknown"
-
-        # Use tracked latency and connection status
-        latency = self._last_latency * 1000  # Convert to ms
-
-        # Rate limit usage is tricky without broker headers, placeholder for now
-        rate_limit = "OK"
-
-        self._status_reporter.update_system(
-            latency=latency,
-            connection=self._connection_status,
-            rate_limit=rate_limit,
-            memory=memory_usage,
-            cpu=cpu_usage,
+        Delegates to SystemMaintenanceService for the actual reporting.
+        """
+        self._system_maintenance.report_system_status(
+            latency_seconds=self._last_latency,
+            connection_status=self._connection_status,
         )
 
     async def _cycle(self) -> None:
@@ -800,6 +764,7 @@ class TradingEngine(BaseEngine):
 
     async def shutdown(self) -> None:
         self.running = False
+        await self._system_maintenance.stop()
         await self._status_reporter.stop()
         await self._heartbeat.stop()
         await super().shutdown()

@@ -263,7 +263,6 @@ uv run python scripts/testing/selective_runner.py --paths src/gpt_trader/orchest
 
 CI safeguards:
 - Upgrades to full suite if selection exceeds 70% of total tests
-- Changes to `gpt_trader.features.brokerages.core.interfaces` force full run
 - Push builds to `main` always run full coverage suite
 
 ## Common Issues

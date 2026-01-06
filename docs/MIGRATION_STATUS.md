@@ -49,12 +49,10 @@ The following legacy items were removed in v3.0:
 | `BootstrapResult` | Removed from `orchestration/bootstrap.py` |
 | `CoordinatorContext.registry` | Field removed |
 | Legacy test marker | Removed from `pytest.ini` |
+| `features/brokerages/core/interfaces.py` | Deleted (was deprecated re-export shim) |
+| `orchestration/storage.py` | Deleted (StorageBootstrapper was unused) |
+| `orchestration/read_only_broker.py` | Deleted (ReadOnlyBroker was unused) |
 
-## Remaining Deprecated Items
+## Status
 
-| File | Item | Status | Notes |
-|------|------|--------|-------|
-| `orchestration/storage.py` | `StorageBootstrapper` | Deprecated | Use container properties |
-| `orchestration/read_only_broker.py` | `ReadOnlyBroker` | Deprecated | Unused; use `BotConfig.read_only` |
-
-These may be removed in a future cleanup pass.
+All deprecated modules have been removed. The migration is complete.

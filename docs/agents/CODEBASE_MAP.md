@@ -19,10 +19,10 @@ Use this as a “where do I start?” index when you already know what you’re 
 | Backtesting / simulation | `src/gpt_trader/backtesting/` | Entrypoints vary; see `docs/guides/backtesting.md` |
 | Security & secrets | `src/gpt_trader/security/` | Reference: `docs/SECURITY.md` |
 
-## Golden Path (Avoiding Legacy Patterns)
+## Golden Path
 
-- Prefer `ApplicationContainer` (`src/gpt_trader/app/container.py`) for wiring.
-- Avoid introducing new call sites of `ServiceRegistry` (`src/gpt_trader/orchestration/service_registry.py` is deprecated).
+- Use `ApplicationContainer` (`src/gpt_trader/app/container.py`) for all dependency wiring.
+- Use `build_bot()` or `bot_from_profile()` from `bootstrap.py` for simple bot creation.
 - If you need to understand architecture decisions, start at `docs/ARCHITECTURE.md` and `docs/adr/README.md`.
 
 ## Useful Commands
@@ -31,4 +31,3 @@ Use this as a “where do I start?” index when you already know what you’re 
 - `uv run agent-map` (dependency map tooling)
 - `uv run agent-tests` (test selection helpers)
 - `rg -n "symbol" src/gpt_trader/features/live_trade` (fast codebase search)
-

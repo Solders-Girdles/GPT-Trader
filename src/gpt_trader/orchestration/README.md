@@ -6,7 +6,7 @@ from configuration loading through order execution and runtime monitoring.
 ## Philosophy
 
 This package follows **composition over inheritance**. Components are assembled at runtime
-via the `ApplicationContainer` (preferred) or legacy `ServiceRegistry`. This enables:
+via the `ApplicationContainer` in `gpt_trader.app.container`. This enables:
 
 - Easy testing via mock injection
 - Profile-based configuration switching

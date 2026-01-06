@@ -5,7 +5,6 @@ from textual.containers import Horizontal
 from textual.message import Message
 from textual.reactive import reactive
 from textual.widgets import Label, Select, Static
-from textual.widgets._select import SelectCurrent
 
 from gpt_trader.tui.events import (
     ModeSelectorEnabledChanged,
@@ -61,12 +60,6 @@ class ModeSelector(Static):
         """Initialize selector with current mode."""
         select = self.query_one("#mode-select", Select)
         select.value = self.current_mode
-        try:
-            # Force the current label to render for debugging (some terminals clip styles)
-            select_current = select.query_one(SelectCurrent)
-            select_current.update("DEMO")
-        except Exception:
-            pass
         self._spinner_frame = 0
         self._spinner_timer = None
 
@@ -125,14 +118,13 @@ class ModeSelector(Static):
 
     def on_select_changed(self, event: Select.Changed) -> None:
         """Handle mode selection change."""
-        from textual.widgets._select import NoSelection
-
+        # Check for valid string value (ignore blank/sentinel values)
         if (
             event.select.id == "mode-select"
             and event.value is not None
-            and not isinstance(event.value, NoSelection)
+            and isinstance(event.value, str)
         ):
-            new_mode = str(event.value)
+            new_mode = event.value
             if new_mode != self.current_mode:
                 # Post message to app for handling
                 self.post_message(self.ModeChanged(new_mode))

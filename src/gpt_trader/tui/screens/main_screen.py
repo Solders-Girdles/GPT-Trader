@@ -11,7 +11,6 @@ Supports 2D tile navigation via arrow keys and Enter to drill-down.
 
 from __future__ import annotations
 
-from textual._context import NoActiveAppError
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Grid, Horizontal
@@ -78,13 +77,14 @@ class MainScreen(Screen):
 
     def watch_state(self, state: TuiState | None) -> None:
         """Propagate state to all registered widgets via StateRegistry."""
-        if state is None:
+        if state is None or not self.is_mounted:
             return
 
         try:
             if hasattr(self.app, "state_registry"):
                 self.app.state_registry.broadcast(state)
-        except NoActiveAppError:
+        except Exception:
+            # App context may not be active during mount/unmount transitions
             pass
 
     def compose(self) -> ComposeResult:

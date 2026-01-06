@@ -233,6 +233,32 @@ RiskDetailModal #close-btn {
     width: 100%;
 }
 
+/* Risk Preview Section */
+RiskDetailModal .preview-current {
+    color: $text-secondary;
+    margin-bottom: $spacing-xs;
+}
+
+RiskDetailModal .preview-chips {
+    layout: horizontal;
+    height: auto;
+    margin-bottom: $spacing-xs;
+}
+
+RiskDetailModal .preview-chip {
+    padding: 0 $spacing-xs;
+    margin-right: $spacing-xs;
+    background: $bg-elevated;
+    min-width: 10;
+    text-align: center;
+}
+
+RiskDetailModal .preview-legend {
+    color: $text-muted;
+    text-style: italic;
+    margin-bottom: $spacing-xs;
+}
+
 /* === Position Detail Modal === */
 
 PositionDetailModal {

@@ -7,11 +7,16 @@ from typing import TYPE_CHECKING
 
 from rich.text import Text
 from textual.app import ComposeResult
-from textual.containers import Container, Vertical
+from textual.containers import Container, Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, Label, Static
 
 from gpt_trader.tui.responsive import calculate_modal_width
+from gpt_trader.tui.risk_preview import (
+    SHOCK_SCENARIOS,
+    RiskPreviewResult,
+    compute_preview,
+)
 from gpt_trader.tui.thresholds import (
     DEFAULT_RISK_THRESHOLDS,
     StatusLevel,
@@ -99,6 +104,10 @@ class RiskDetailModal(ModalScreen):
                     yield Static(Text.assemble("Utilization: ", utilization_text, " of limit"))
                 else:
                     yield Static("Daily Limit: Not configured", classes="muted")
+
+                # Risk Preview section (shock scenarios)
+                yield Static("─── Risk Preview ───", classes="section-header")
+                yield from self._render_preview_section(data)
 
                 # Leverage section
                 yield Static("─── Leverage ───", classes="section-header")
@@ -361,3 +370,57 @@ class RiskDetailModal(ModalScreen):
             return f"{int(diff / 3600)}h ago"
         else:
             return f"{int(diff / 86400)}d ago"
+
+    def _render_preview_section(self, data: RiskState) -> ComposeResult:
+        """Render the risk preview section with shock scenario chips.
+
+        Shows projected utilization for standard shock scenarios (±2%, ±5%, ±10%).
+
+        Args:
+            data: RiskState containing current risk metrics.
+
+        Yields:
+            Widgets for the preview section.
+        """
+        # Check if we can compute previews (need TuiState from app)
+        tui_state = getattr(self.app, "tui_state", None)
+        if not tui_state or data.daily_loss_limit_pct <= 0:
+            yield Static("Preview requires daily loss limit configured", classes="muted")
+            return
+
+        # Show current loss ratio for reference
+        current_pct = (abs(data.current_daily_loss_pct) / data.daily_loss_limit_pct) * 100
+        yield Static(f"Current: {current_pct:.1f}% of limit", classes="preview-current")
+
+        # Render shock scenario chips in a horizontal row
+        with Horizontal(classes="preview-chips"):
+            for label, shock_pct in SHOCK_SCENARIOS:
+                result = compute_preview(tui_state, shock_pct, label=label)
+                yield self._render_preview_chip(result)
+
+        # Show legend
+        yield Static(
+            "[dim]Projected utilization if market moves by shock %[/dim]",
+            classes="preview-legend",
+        )
+
+    def _render_preview_chip(self, result: RiskPreviewResult) -> Static:
+        """Render a single preview chip with status coloring.
+
+        Args:
+            result: RiskPreviewResult containing projected metrics.
+
+        Returns:
+            Static widget displaying the chip.
+        """
+        color = get_status_color(result.status)
+
+        # Format: "-5%: 85%" with status color
+        pct_str = f"{result.projected_loss_pct:.0f}%"
+        chip_text = f"[{color}]{result.label}: {pct_str}[/{color}]"
+
+        # Add warning indicator if guards would trip
+        if result.guards_triggered:
+            chip_text += " [red]![/red]"
+
+        return Static(chip_text, classes="preview-chip")

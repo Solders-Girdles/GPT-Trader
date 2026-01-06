@@ -109,14 +109,14 @@ RECOVERY_HINTS = {
     "rate_limit_high": "Reduce request frequency",
     "throttled": "Wait and retry",
     # Risk management
-    "reduce_only": "Check risk settings",
-    "reduce_only_active": "Check risk settings",
-    "daily_loss": "Consider pausing trading",
-    "daily_loss_warning": "Consider pausing trading",
+    "reduce_only": "Reduce positions or wait for reset",
+    "reduce_only_active": "Reduce positions or wait for reset",
+    "daily_loss": "Consider pausing or reducing exposure",
+    "daily_loss_warning": "Consider pausing or reducing exposure",
     "position_limit": "Close positions to continue",
     "large_unrealized_loss": "Review position sizing",
     # Validation failures
-    "validation_escalation": "Check API connectivity",
+    "validation_escalation": "Check API connectivity. Trading restricted.",
     "validation_failures": "Intermittent API issues detected",
     # Configuration
     "config_error": "Press C to check config",

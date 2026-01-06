@@ -50,3 +50,24 @@ RiskWidget .risk-grid {
     grid-gutter: $spacing-md; /* Increased gutter for better spacing */
     padding: $spacing-sm 0; /* Vertical padding */
 }
+
+/* Risk summary row - compact at-a-glance status */
+RiskWidget .risk-summary-row {
+    layout: grid;
+    grid-size: 6;
+    grid-gutter: 1;
+    height: 1;
+    margin-bottom: $spacing-sm;
+    padding: 0 1;
+    background: $surface;
+}
+
+RiskWidget .risk-summary-row .risk-label {
+    margin-bottom: 0;
+    text-style: none;
+}
+
+RiskWidget .risk-summary-row .risk-value {
+    border-left: none;
+    padding: 0;
+}

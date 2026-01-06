@@ -148,10 +148,10 @@ class AlertManager:
         self.add_rule(
             AlertRule(
                 rule_id="reduce_only_active",
-                title="Reduce-Only Mode",
+                title="Risk: Reduce-Only",
                 condition=lambda state: (
                     state.risk_data.reduce_only_mode,
-                    f"Reduce-only mode active: {state.risk_data.reduce_only_reason}",
+                    f"Trading restricted to reduce-only. Reason: {state.risk_data.reduce_only_reason or 'risk limit'}",
                 ),
                 severity=AlertSeverity.WARNING,
                 category=AlertCategory.RISK,
@@ -163,7 +163,7 @@ class AlertManager:
         self.add_rule(
             AlertRule(
                 rule_id="daily_loss_warning",
-                title="Daily Loss Warning",
+                title="Risk: Daily Loss",
                 condition=self._check_daily_loss,
                 severity=AlertSeverity.WARNING,
                 category=AlertCategory.RISK,
@@ -297,7 +297,7 @@ class AlertManager:
         self.add_rule(
             AlertRule(
                 rule_id="validation_escalation",
-                title="Validation Escalation",
+                title="Risk: Validation Escalation",
                 condition=self._check_validation_escalation,
                 severity=AlertSeverity.ERROR,
                 category=AlertCategory.RISK,
@@ -337,7 +337,10 @@ class AlertManager:
             limit = state.risk_data.daily_loss_limit_pct
             if current >= limit * 0.75:  # 75% of limit
                 pct_of_limit = (current / limit) * 100
-                return True, f"Daily loss at {pct_of_limit:.0f}% of limit."
+                return (
+                    True,
+                    f"Loss utilization at {pct_of_limit:.0f}% of daily limit ({current:.1%} / {limit:.1%}).",
+                )
         return False, ""
 
     def _check_unrealized_loss(self, state: TuiState) -> tuple[bool, str]:
@@ -503,7 +506,7 @@ class AlertManager:
                 total = sum(state.system_data.validation_failures.values())
                 return (
                     True,
-                    f"Validation checks failed {total}x consecutively. Reduce-only mode active.",
+                    f"Validation failed {total}x consecutively. Trading restricted to reduce-only.",
                 )
         except (AttributeError, TypeError):
             pass

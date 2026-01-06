@@ -60,6 +60,15 @@ class RiskWidget(Static):
         # Staleness/degraded banner (initially hidden)
         yield TileBanner()
 
+        # Compact risk summary row
+        with Grid(classes="risk-summary-row"):
+            yield Label("Reduce-Only:", classes="risk-label")
+            yield Label("OFF", id="summary-reduce-only", classes="risk-value status-ok")
+            yield Label("Guards:", classes="risk-label")
+            yield Label("0", id="summary-guards", classes="risk-value status-ok")
+            yield Label("Loss:", classes="risk-label")
+            yield Label("0%", id="summary-loss-usage", classes="risk-value status-ok")
+
         with Vertical(classes="risk-section"):
             # Daily Loss Progress
             yield Label("Daily P&L:", classes="risk-label")
@@ -98,6 +107,9 @@ class RiskWidget(Static):
         if state is not None:
             self._update_staleness_banner(state)
 
+        # Update compact summary row
+        self._update_summary_row(data)
+
         # Update Max Leverage
         self.query_one("#max-leverage", Label).update(f"{data.max_leverage}x")
 
@@ -112,6 +124,51 @@ class RiskWidget(Static):
 
         # Update Active Guards
         self._update_guards(data)
+
+    def _update_summary_row(self, data: RiskState) -> None:
+        """Update the compact risk summary row.
+
+        Args:
+            data: RiskState containing current risk metrics.
+        """
+        # Reduce-only status
+        reduce_only_label = self.query_one("#summary-reduce-only", Label)
+        reduce_only_label.remove_class("status-ok", "status-warning", "status-critical")
+        if data.reduce_only_mode:
+            reduce_only_label.update("ON")
+            reduce_only_label.add_class("status-critical")
+        else:
+            reduce_only_label.update("OFF")
+            reduce_only_label.add_class("status-ok")
+
+        # Guards count - use guards list if present, otherwise active_guards
+        guards_label = self.query_one("#summary-guards", Label)
+        guards_label.remove_class("status-ok", "status-warning", "status-critical")
+        guard_count = len(data.guards) if data.guards else len(data.active_guards)
+        guards_label.update(str(guard_count))
+        if guard_count >= 3:
+            guards_label.add_class("status-critical")
+        elif guard_count >= 1:
+            guards_label.add_class("status-warning")
+        else:
+            guards_label.add_class("status-ok")
+
+        # Loss usage %
+        loss_label = self.query_one("#summary-loss-usage", Label)
+        loss_label.remove_class("status-ok", "status-warning", "status-critical")
+        if data.daily_loss_limit_pct > 0:
+            usage_pct = (abs(data.current_daily_loss_pct) / data.daily_loss_limit_pct) * 100
+            usage_pct = min(usage_pct, 100)
+            loss_label.update(f"{usage_pct:.0f}%")
+
+            # Use existing threshold helper for status
+            loss_status = get_loss_ratio_status(
+                data.current_daily_loss_pct, data.daily_loss_limit_pct
+            )
+            loss_label.add_class(get_status_class(loss_status))
+        else:
+            loss_label.update("--")
+            loss_label.add_class("status-ok")
 
     def _update_staleness_banner(self, state: TuiState) -> None:
         """Update staleness/degraded banner based on state."""

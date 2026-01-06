@@ -810,7 +810,7 @@ class TestValidationAlerts:
         assert escalation_alerts[0].severity == AlertSeverity.ERROR
         assert escalation_alerts[0].category == AlertCategory.RISK
         assert "5" in escalation_alerts[0].message
-        assert "Reduce-only" in escalation_alerts[0].message
+        assert "reduce-only" in escalation_alerts[0].message.lower()
 
     def test_validation_escalation_no_alert_when_not_escalated(
         self, alert_manager, mock_app, test_state

@@ -100,7 +100,10 @@ class StateRegistry:
             state: The TuiState to broadcast.
         """
         # Import here to avoid circular imports
-        from gpt_trader.tui.services.performance_service import get_tui_performance_service
+        from gpt_trader.tui.services.performance_service import (
+            get_tui_performance_service,
+            perf_trace,
+        )
 
         perf = get_tui_performance_service()
         start_time = time.time()
@@ -124,6 +127,13 @@ class StateRegistry:
         duration = time.time() - start_time
         if duration > SLOW_BROADCAST_THRESHOLD:
             perf.record_slow_operation(f"broadcast({notified_count})", duration)
+
+        # Trace broadcast timing
+        perf_trace(
+            "StateRegistry.broadcast",
+            duration * 1000,
+            observers=notified_count,
+        )
 
     @property
     def observer_count(self) -> int:

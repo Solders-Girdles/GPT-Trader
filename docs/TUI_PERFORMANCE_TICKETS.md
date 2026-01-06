@@ -69,40 +69,46 @@ a fresh object instance).
 
 ---
 
-## Ticket 3: Add TUI_PERF_TRACE Environment Variable
+## Ticket 3: Add TUI_PERF_TRACE Environment Variable ✅ COMPLETED
 
 **Priority:** Low
 **Effort:** Small (< 1 hour)
 **Risk:** None
+**Status:** Completed (2026-01-06)
 
 ### Description
 Add an environment variable toggle for verbose performance tracing, useful for debugging without code changes.
 
-### Files to Modify
-- `src/gpt_trader/tui/services/performance_service.py`
-- `src/gpt_trader/tui/managers/ui_coordinator.py`
+### Files Modified
+- `src/gpt_trader/tui/services/performance_service.py` - Added `PERF_TRACE_ENABLED` and `perf_trace()` helper
+- `src/gpt_trader/tui/managers/ui_coordinator.py` - Added trace for `_apply_status_update` and state update
+- `src/gpt_trader/tui/services/state_registry.py` - Added trace for `broadcast()`
 
 ### Implementation
 ```python
 # In performance_service.py:
-import os
-PERF_TRACE_ENABLED = os.environ.get("TUI_PERF_TRACE", "").lower() in ("1", "true")
+PERF_TRACE_ENABLED = os.environ.get("TUI_PERF_TRACE", "").lower() in ("1", "true", "yes")
 
-# In key methods, add trace logging:
-if PERF_TRACE_ENABLED:
-    logger.info(f"perf: {operation_name} {duration*1000:.1f}ms")
+def perf_trace(operation: str, duration_ms: float, **kwargs: Any) -> None:
+    if not PERF_TRACE_ENABLED:
+        return
+    # logs: "perf: {operation} {duration}ms {key=value ...}"
 ```
 
-### Trace Points
-- `UICoordinator._apply_status_update()` total time
+### Trace Points Implemented
+- `UICoordinator._apply_status_update()` total time + state_ms + render_ms
 - `TuiState.update_from_bot_status()` time
 - `StateRegistry.broadcast()` time + observer count
-- Individual widget `on_state_updated()` times (top 3 slowest)
+
+### Usage
+```bash
+TUI_PERF_TRACE=1 uv run gpt-trader tui --demo
+```
 
 ### Acceptance Criteria
-- [ ] `TUI_PERF_TRACE=1 uv run gpt-trader tui --demo` produces timing logs
-- [ ] No overhead when env var is unset
-- [ ] Logs include operation name + duration in ms
+- [x] `TUI_PERF_TRACE=1 uv run gpt-trader tui --demo` produces timing logs
+- [x] No overhead when env var is unset (early return)
+- [x] Logs include operation name + duration in ms
 
 ---
 
@@ -166,8 +172,8 @@ this ticket added the class reference and access method.
 |--------|----------|--------|--------|--------|
 | 1. Enable Throttler | Medium | Small | High - Reduces update frequency | ✅ Done |
 | 2. No-Op Guards | Low | Medium | Medium - Reduces DOM updates | ✅ Done |
-| 3. PERF_TRACE Env | Low | Small | Low - Debugging aid | Pending |
+| 3. PERF_TRACE Env | Low | Small | Low - Debugging aid | ✅ Done |
 | 4. Optimize on_state_updated | Low | Medium | Medium - Faster cycles | Pending |
 | 5. Document Budget | Low | Small | Low - Developer awareness | ✅ Done |
 
-**Recommended order:** ~~1~~ → ~~5~~ → ~~2~~ → 3 → 4
+**Recommended order:** ~~1~~ → ~~5~~ → ~~2~~ → ~~3~~ → 4

@@ -92,6 +92,7 @@ class UICoordinator:
         from gpt_trader.tui.services.performance_service import (
             FrameMetrics,
             get_tui_performance_service,
+            perf_trace,
         )
 
         perf = get_tui_performance_service()
@@ -156,11 +157,16 @@ class UICoordinator:
                 )
             except Exception as e:
                 logger.error(f"Failed to update TuiState from bot status: {e}", exc_info=True)
-                notify_error(self.app, "Critical: State update failed. UI may show stale data.", title="State Update Error")
+                notify_error(
+                    self.app,
+                    "Critical: State update failed. UI may show stale data.",
+                    title="State Update Error",
+                )
                 # Don't proceed to UI update if state update failed
                 return
             finally:
                 state_duration = time.time() - state_start
+                perf_trace("TuiState.update_from_bot_status", state_duration * 1000)
 
             # Update UI (already has some error handling in update_main_screen)
             render_start = time.time()
@@ -178,20 +184,32 @@ class UICoordinator:
             logger.error(f"Critical error in apply_observer_update: {e}", exc_info=True)
             # Last resort notification
             try:
-                notify_error(self.app, "Critical UI update failure. Consider restarting TUI.", title="Critical Error", timeout=30)
+                notify_error(
+                    self.app,
+                    "Critical UI update failure. Consider restarting TUI.",
+                    title="Critical Error",
+                    timeout=30,
+                )
             except Exception:
                 # Even notification failed - log and continue
                 logger.critical("Cannot notify user of critical error - TUI may be unresponsive")
         finally:
             # Record frame metrics for performance monitoring
             frame_end = time.time()
+            total_duration = frame_end - frame_start
             metrics = FrameMetrics(
                 timestamp=frame_end,
-                total_duration=frame_end - frame_start,
+                total_duration=total_duration,
                 state_update_duration=state_duration,
                 widget_render_duration=render_duration,
             )
             perf.record_frame(metrics)
+            perf_trace(
+                "UICoordinator._apply_status_update",
+                total_duration * 1000,
+                state_ms=f"{state_duration * 1000:.1f}",
+                render_ms=f"{render_duration * 1000:.1f}",
+            )
 
     def _apply_throttled_updates(self, updates: dict[str, Any]) -> None:
         """
@@ -265,8 +283,9 @@ class UICoordinator:
                 # SystemDetailsScreen not mounted - that's fine
                 pass
 
-            # Broadcast state on every UI update so StateRegistry observers update
-            # even when the active screen doesn't change (TuiState is mutated in-place).
+            # Broadcast state to all registered StateObserver widgets.
+            # This is the single broadcast point - MainScreen.watch_state() is a no-op
+            # to avoid double broadcasts when TuiState is mutated in-place.
             try:
                 if hasattr(self.app, "state_registry"):
                     self.app.state_registry.broadcast(self.app.tui_state)  # type: ignore[attr-defined]
@@ -348,6 +367,7 @@ class UICoordinator:
                 # Collect resilience metrics periodically for System tile
                 if loop_count % resilience_check_interval == 0:
                     self._collect_resilience_metrics()
+                    self._collect_validation_metrics()
 
                 # Collect spread data periodically for Market tile (rate-limited)
                 if loop_count % spread_check_interval == 0:
@@ -442,6 +462,21 @@ class UICoordinator:
                 logger.debug("Collected resilience metrics from client")
         except Exception as e:
             logger.debug("Failed to collect resilience metrics: %s", e)
+
+    def _collect_validation_metrics(self) -> None:
+        """Collect validation failure metrics from the global failure tracker.
+
+        Updates the TUI state with current validation failure counts,
+        showing operators when validation checks are failing repeatedly.
+        """
+        try:
+            from gpt_trader.orchestration.execution import get_validation_metrics
+
+            metrics = get_validation_metrics()
+            self.app.tui_state.update_validation_metrics(metrics)
+            logger.debug("Collected validation metrics")
+        except Exception as e:
+            logger.debug("Failed to collect validation metrics: %s", e)
 
     def _get_client(self) -> Any | None:
         """Get CoinbaseClient from bot -> engine -> broker -> client chain.

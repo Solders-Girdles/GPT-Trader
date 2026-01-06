@@ -3,10 +3,13 @@ TUI Performance Monitoring Service.
 
 Provides centralized performance metrics collection and reporting for the TUI.
 Bridges existing performance utilities with TUI-specific instrumentation.
+
+Set TUI_PERF_TRACE=1 to enable verbose performance tracing to logs.
 """
 
 from __future__ import annotations
 
+import os
 import time
 from collections import deque
 from contextlib import AbstractContextManager
@@ -26,6 +29,28 @@ if TYPE_CHECKING:
     from gpt_trader.tui.app import TraderApp
 
 logger = get_logger(__name__, component="tui")
+
+# Environment variable to enable verbose performance tracing
+# Usage: TUI_PERF_TRACE=1 uv run gpt-trader tui --demo
+PERF_TRACE_ENABLED = os.environ.get("TUI_PERF_TRACE", "").lower() in ("1", "true", "yes")
+
+
+def perf_trace(operation: str, duration_ms: float, **kwargs: Any) -> None:
+    """Log a performance trace message if tracing is enabled.
+
+    Args:
+        operation: Name of the operation being traced.
+        duration_ms: Duration in milliseconds.
+        **kwargs: Additional context to include in the trace.
+    """
+    if not PERF_TRACE_ENABLED:
+        return
+
+    extra = " ".join(f"{k}={v}" for k, v in kwargs.items())
+    if extra:
+        logger.info(f"perf: {operation} {duration_ms:.1f}ms {extra}")
+    else:
+        logger.info(f"perf: {operation} {duration_ms:.1f}ms")
 
 
 @dataclass
@@ -116,9 +141,7 @@ class PerformanceSnapshot:
         self.budget_violations = 0
 
         # FPS (inverted: higher is better)
-        fps_status = self._evaluate_inverted(
-            "FPS", self.fps, budget.fps_target, budget.fps_warning
-        )
+        fps_status = self._evaluate_inverted("FPS", self.fps, budget.fps_target, budget.fps_warning)
         self.budget_statuses.append(fps_status)
         if fps_status.status == "critical":
             self.budget_violations += 1
@@ -179,9 +202,7 @@ class PerformanceSnapshot:
             self.budget_violations += 1
 
     @staticmethod
-    def _evaluate(
-        name: str, value: float, target: float, warning: float
-    ) -> BudgetStatus:
+    def _evaluate(name: str, value: float, target: float, warning: float) -> BudgetStatus:
         """Evaluate a metric (lower is better)."""
         if value <= target:
             status = "good"
@@ -192,9 +213,7 @@ class PerformanceSnapshot:
         return BudgetStatus(name, value, target, warning, status)
 
     @staticmethod
-    def _evaluate_inverted(
-        name: str, value: float, target: float, warning: float
-    ) -> BudgetStatus:
+    def _evaluate_inverted(name: str, value: float, target: float, warning: float) -> BudgetStatus:
         """Evaluate a metric (higher is better)."""
         if value >= target:
             status = "good"
@@ -208,7 +227,7 @@ class PerformanceSnapshot:
 class _NoOpContext:
     """No-op context manager when monitoring is disabled."""
 
-    def __enter__(self) -> "_NoOpContext":
+    def __enter__(self) -> _NoOpContext:
         return self
 
     def __exit__(self, *args: object) -> None:
@@ -237,7 +256,7 @@ class TuiPerformanceService:
     # Maximum slow operations to track
     MAX_SLOW_OPERATIONS = 20
 
-    def __init__(self, app: "TraderApp | None" = None, enabled: bool = True) -> None:
+    def __init__(self, app: TraderApp | None = None, enabled: bool = True) -> None:
         """Initialize the performance service.
 
         Args:
@@ -271,9 +290,7 @@ class TuiPerformanceService:
 
         logger.debug("TuiPerformanceService initialized (enabled=%s)", enabled)
 
-    def time_operation(
-        self, name: str
-    ) -> AbstractContextManager[None] | _NoOpContext:
+    def time_operation(self, name: str) -> AbstractContextManager[None] | _NoOpContext:
         """Context manager for timing an operation.
 
         Args:
@@ -303,9 +320,7 @@ class TuiPerformanceService:
 
         # Track slow frames
         if metrics.total_duration > self.SLOW_THRESHOLD:
-            self._slow_operations.append(
-                ("frame", metrics.total_duration, metrics.timestamp)
-            )
+            self._slow_operations.append(("frame", metrics.total_duration, metrics.timestamp))
 
     def record_slow_operation(self, name: str, duration: float) -> None:
         """Record a slow operation for dashboard display.
@@ -346,9 +361,7 @@ class TuiPerformanceService:
             # P95 calculation
             sorted_durations = sorted(durations)
             p95_index = int(len(sorted_durations) * 0.95)
-            snapshot.p95_frame_time = sorted_durations[
-                min(p95_index, len(sorted_durations) - 1)
-            ]
+            snapshot.p95_frame_time = sorted_durations[min(p95_index, len(sorted_durations) - 1)]
 
         # System metrics from ResourceMonitor
         if self._resource_monitor.is_available():
@@ -372,8 +385,7 @@ class TuiPerformanceService:
 
         # Recent slow operations (most recent 5)
         snapshot.slow_operations = [
-            (name, duration)
-            for name, duration, _ in list(self._slow_operations)[-5:]
+            (name, duration) for name, duration, _ in list(self._slow_operations)[-5:]
         ]
 
         # Evaluate against performance budget
@@ -471,10 +483,12 @@ __all__ = [
     "BudgetStatus",
     "DEFAULT_BUDGET",
     "FrameMetrics",
+    "PERF_TRACE_ENABLED",
     "PerformanceBudget",
     "PerformanceSnapshot",
     "TuiPerformanceService",
     "clear_tui_performance_service",
     "get_tui_performance_service",
+    "perf_trace",
     "set_tui_performance_service",
 ]

@@ -359,12 +359,26 @@ class DemoBot:
 
     Simulates a trading bot without connecting to real exchanges.
     Perfect for UI development and testing.
+
+    Args:
+        config: Optional configuration object.
+        data_generator: Optional pre-configured MockDataGenerator.
+        seed: Optional random seed for reproducible demo output.
+            Only used if data_generator is not provided.
     """
 
     def __init__(
-        self, config: Any | None = None, data_generator: MockDataGenerator | None = None
+        self,
+        config: Any | None = None,
+        data_generator: MockDataGenerator | None = None,
+        seed: int | None = None,
     ) -> None:
         self.config = config or DemoConfig()
+
+        # Create seeded generator if seed provided and no generator given
+        if data_generator is None and seed is not None:
+            data_generator = MockDataGenerator(seed=seed)
+
         self.engine = DemoEngine(data_generator=data_generator)
         self.running = False
         self._task: asyncio.Task | None = None

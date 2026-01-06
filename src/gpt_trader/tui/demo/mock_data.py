@@ -3,6 +3,8 @@ Mock data generator for TUI demo mode.
 
 Generates realistic-looking trading data that simulates a live bot
 without needing real exchange connections.
+
+Supports optional seeding for reproducible demo/test scenarios.
 """
 
 import random
@@ -14,7 +16,12 @@ from typing import Any
 
 @dataclass
 class MockDataGenerator:
-    """Generates realistic mock data for TUI testing."""
+    """Generates realistic mock data for TUI testing.
+
+    Attributes:
+        seed: Optional random seed for reproducible output. When provided,
+            the same seed produces identical data sequences across runs.
+    """
 
     symbols: list[str] = field(default_factory=lambda: ["BTC-USD", "ETH-USD", "SOL-USD"])
     base_prices: dict[str, float] = field(default_factory=dict)
@@ -29,13 +36,22 @@ class MockDataGenerator:
     orders: list[dict[str, Any]] = field(default_factory=list)
     trades: list[dict[str, Any]] = field(default_factory=list)
 
+    # Optional seed for reproducibility
+    seed: int | None = None
+
+    # Internal RNG instance (set in __post_init__)
+    _rng: random.Random = field(default_factory=random.Random, repr=False)
+
     def __post_init__(self) -> None:
-        """Initialize base prices and history."""
+        """Initialize RNG, base prices and history."""
+        # Create seeded or unseeded RNG
+        self._rng = random.Random(self.seed)
+
         if not self.base_prices:
             self.base_prices = {
-                "BTC-USD": 45000.0 + random.uniform(-2000, 2000),
-                "ETH-USD": 2500.0 + random.uniform(-200, 200),
-                "SOL-USD": 100.0 + random.uniform(-10, 10),
+                "BTC-USD": 45000.0 + self._rng.uniform(-2000, 2000),
+                "ETH-USD": 2500.0 + self._rng.uniform(-200, 200),
+                "SOL-USD": 100.0 + self._rng.uniform(-10, 10),
             }
 
         for symbol in self.symbols:
@@ -108,7 +124,7 @@ class MockDataGenerator:
             current = self.base_prices[symbol]
 
             # Random walk: ±0.5% movement
-            change_pct = random.uniform(-0.005, 0.005)
+            change_pct = self._rng.uniform(-0.005, 0.005)
             new_price = current * (1 + change_pct)
 
             self.base_prices[symbol] = new_price
@@ -162,7 +178,7 @@ class MockDataGenerator:
 
         # Calculate realized P&L from trades (sum of profitable closes)
         # For demo, simulate realized P&L based on trade count
-        total_realized_pnl = len(self.trades) * random.uniform(-5, 15)
+        total_realized_pnl = len(self.trades) * self._rng.uniform(-5, 15)
 
         return {
             "positions": positions,
@@ -206,8 +222,8 @@ class MockDataGenerator:
         ]
 
         return {
-            "volume_30d": f"{random.uniform(50000, 150000):.2f}",
-            "fees_30d": f"{random.uniform(100, 500):.2f}",
+            "volume_30d": f"{self._rng.uniform(50000, 150000):.2f}",
+            "fees_30d": f"{self._rng.uniform(100, 500):.2f}",
             "fee_tier": "Advanced Trade",
             "balances": balances,
             "daily_pnl": f"{daily_pnl:.2f}",
@@ -227,18 +243,18 @@ class MockDataGenerator:
         ]
 
         for symbol in self.symbols:
-            action = random.choice(["BUY", "SELL", "HOLD"])
-            confidence = random.uniform(0.5, 0.95)
+            action = self._rng.choice(["BUY", "SELL", "HOLD"])
+            confidence = self._rng.uniform(0.5, 0.95)
 
             # Occasionally block BUY/SELL decisions (20% chance)
             blocked_by = ""
-            if action in ("BUY", "SELL") and random.random() < 0.2:
-                blocked_by = random.choice(blocking_guards)
+            if action in ("BUY", "SELL") and self._rng.random() < 0.2:
+                blocked_by = self._rng.choice(blocking_guards)
 
             # Generate indicator values
-            rsi = random.uniform(30, 70)
-            macd = random.uniform(-50, 50)
-            trend = random.choice(["bullish", "bearish", "neutral"])
+            rsi = self._rng.uniform(30, 70)
+            macd = self._rng.uniform(-50, 50)
+            trend = self._rng.choice(["bullish", "bearish", "neutral"])
 
             # Generate contributions based on action and indicator values
             # RSI: < 30 is bullish (oversold), > 70 is bearish (overbought)
@@ -330,17 +346,17 @@ class MockDataGenerator:
         ]
 
         # Select 2-4 random guards as "active"
-        num_active = random.randint(2, 4)
-        active_guard_defs = random.sample(available_guards, num_active)
+        num_active = self._rng.randint(2, 4)
+        active_guard_defs = self._rng.sample(available_guards, num_active)
 
         # Build enhanced guards with timestamps
         guards = []
         for guard_def in active_guard_defs:
             # Simulate last_triggered (some recent, some never)
-            if random.random() < 0.6:  # 60% chance was triggered
+            if self._rng.random() < 0.6:  # 60% chance was triggered
                 # Random time in past: 10s to 2h ago
-                last_triggered = now - random.uniform(10, 7200)
-                triggered_count = random.randint(1, 15)
+                last_triggered = now - self._rng.uniform(10, 7200)
+                triggered_count = self._rng.randint(1, 15)
             else:
                 last_triggered = 0.0
                 triggered_count = 0
@@ -371,11 +387,13 @@ class MockDataGenerator:
     def generate_system_data(self) -> dict[str, Any]:
         """Generate system health data."""
         return {
-            "api_latency": random.uniform(50, 200),
-            "connection_status": random.choice(["CONNECTED", "CONNECTED", "CONNECTED", "DEGRADED"]),
-            "rate_limit_usage": f"{random.randint(10, 40)}%",
-            "memory_usage": f"{random.randint(200, 400)}MB",
-            "cpu_usage": f"{random.randint(5, 25)}%",
+            "api_latency": self._rng.uniform(50, 200),
+            "connection_status": self._rng.choice(
+                ["CONNECTED", "CONNECTED", "CONNECTED", "DEGRADED"]
+            ),
+            "rate_limit_usage": f"{self._rng.randint(10, 40)}%",
+            "memory_usage": f"{self._rng.randint(200, 400)}MB",
+            "cpu_usage": f"{self._rng.randint(5, 25)}%",
         }
 
     def generate_engine_status(self) -> dict[str, Any]:
@@ -440,23 +458,25 @@ class MockDataGenerator:
         self.cycle_count += 1
 
         # Random chance to execute a trade
-        if random.random() < 0.2:  # 20% chance per cycle
-            symbol = random.choice(self.symbols)
-            side = random.choice(["BUY", "SELL"])
-            quantity = random.uniform(0.001, 0.01)
+        if self._rng.random() < 0.2:  # 20% chance per cycle
+            symbol = self._rng.choice(self.symbols)
+            side = self._rng.choice(["BUY", "SELL"])
+            quantity = self._rng.uniform(0.001, 0.01)
             self.simulate_trade(symbol, side, quantity)
 
         # Random chance to place an order
-        if random.random() < 0.1 and len(self.orders) < 5:  # 10% chance, max 5 orders
-            symbol = random.choice(self.symbols)
-            side = random.choice(["BUY", "SELL"])
-            price = self.base_prices[symbol] * (1 + random.uniform(-0.02, 0.02))
+        if self._rng.random() < 0.1 and len(self.orders) < 5:  # 10% chance, max 5 orders
+            symbol = self._rng.choice(self.symbols)
+            side = self._rng.choice(["BUY", "SELL"])
+            price = self.base_prices[symbol] * (1 + self._rng.uniform(-0.02, 0.02))
             order_id = f"order_{int(time.time() * 1000)}"
 
-            order_quantity = random.uniform(0.001, 0.01)
+            order_quantity = self._rng.uniform(0.001, 0.01)
             # Simulate partial fills (30% chance)
             filled_pct = (
-                random.choice([0.0, 0.0, 0.0, 0.25, 0.5, 0.75]) if random.random() < 0.3 else 0.0
+                self._rng.choice([0.0, 0.0, 0.0, 0.25, 0.5, 0.75])
+                if self._rng.random() < 0.3
+                else 0.0
             )
             filled_order_quantity = order_quantity * filled_pct
 
@@ -480,8 +500,8 @@ class MockDataGenerator:
             )
 
         # Random chance to cancel an order
-        if self.orders and random.random() < 0.15:  # 15% chance
-            cancelled = random.choice(self.orders)
+        if self.orders and self._rng.random() < 0.15:  # 15% chance
+            cancelled = self._rng.choice(self.orders)
             self.orders.remove(cancelled)
 
     def generate_full_status(self) -> dict[str, Any]:

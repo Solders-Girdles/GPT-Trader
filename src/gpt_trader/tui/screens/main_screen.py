@@ -76,16 +76,15 @@ class MainScreen(Screen):
         self._focus_manager: FocusManager | None = None
 
     def watch_state(self, state: TuiState | None) -> None:
-        """Propagate state to all registered widgets via StateRegistry."""
-        if state is None or not self.is_mounted:
-            return
+        """Handle state changes.
 
-        try:
-            if hasattr(self.app, "state_registry"):
-                self.app.state_registry.broadcast(state)
-        except Exception:
-            # App context may not be active during mount/unmount transitions
-            pass
+        Note: StateRegistry.broadcast() is called by UICoordinator.update_main_screen()
+        to ensure consistent update timing. This watcher is kept for reactive property
+        semantics but does not broadcast to avoid double updates.
+        """
+        # Broadcast is handled by UICoordinator.update_main_screen() to avoid
+        # double broadcasts when TuiState is mutated in-place (same object reference).
+        pass
 
     def compose(self) -> ComposeResult:
         """Compose the Bento Grid layout."""

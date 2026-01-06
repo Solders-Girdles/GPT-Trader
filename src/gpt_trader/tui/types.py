@@ -327,6 +327,19 @@ class ResilienceState:
 
 
 @dataclass
+class ExecutionIssue:
+    """A recent execution issue such as a rejection or retry."""
+
+    timestamp: float
+    symbol: str
+    side: str
+    quantity: float
+    price: float
+    reason: str
+    is_retry: bool = False
+
+
+@dataclass
 class ExecutionMetrics:
     """Execution telemetry for order submission tracking.
 
@@ -357,6 +370,8 @@ class ExecutionMetrics:
     # Reason breakdowns (rolling window)
     rejection_reasons: dict[str, int] = field(default_factory=dict)
     retry_reasons: dict[str, int] = field(default_factory=dict)
+    recent_rejections: list[ExecutionIssue] = field(default_factory=list)
+    recent_retries: list[ExecutionIssue] = field(default_factory=list)
 
     @property
     def success_rate(self) -> float:

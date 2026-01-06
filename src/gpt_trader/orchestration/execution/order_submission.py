@@ -79,6 +79,10 @@ def _record_execution_telemetry(
     rejected: bool = False,
     failure_reason: str = "",
     rejection_reason: str = "",
+    symbol: str = "",
+    side: str = "",
+    quantity: float = 0.0,
+    price: float = 0.0,
 ) -> None:
     """Record execution telemetry if TUI service is available.
 
@@ -91,6 +95,10 @@ def _record_execution_telemetry(
         rejected: Whether broker rejected the order.
         failure_reason: Human-readable failure reason.
         rejection_reason: Categorized reason for rejection/failure.
+        symbol: Order symbol.
+        side: Order side (BUY/SELL).
+        quantity: Order quantity.
+        price: Order price.
     """
     try:
         from gpt_trader.tui.services.execution_telemetry import get_execution_telemetry
@@ -102,6 +110,10 @@ def _record_execution_telemetry(
             rejected=rejected,
             failure_reason=failure_reason,
             rejection_reason=rejection_reason,
+            symbol=symbol,
+            side=side,
+            quantity=quantity,
+            price=price,
         )
     except Exception:
         # Don't let telemetry errors affect order execution
@@ -220,8 +232,19 @@ class OrderSubmitter:
             )
 
             # Record telemetry for successful submission
+            side_str = side.value if hasattr(side, "value") else str(side)
+            price_float = float(price) if price is not None else 0.0
+            qty_float = float(order_quantity)
+
             if result is not None:
-                _record_execution_telemetry(latency_ms=latency_ms, success=True)
+                _record_execution_telemetry(
+                    latency_ms=latency_ms,
+                    success=True,
+                    symbol=symbol,
+                    side=side_str,
+                    quantity=qty_float,
+                    price=price_float,
+                )
             else:
                 # Order was rejected by broker (fallback case - no order returned)
                 _record_execution_telemetry(
@@ -229,6 +252,10 @@ class OrderSubmitter:
                     success=False,
                     rejected=True,
                     rejection_reason="rejected",
+                    symbol=symbol,
+                    side=side_str,
+                    quantity=qty_float,
+                    price=price_float,
                 )
 
             return result
@@ -240,6 +267,11 @@ class OrderSubmitter:
             reason = _classify_rejection_reason(error_str)
             is_rejection = "rejected by broker" in error_str.lower()
 
+            # Compute order context for telemetry
+            side_str = side.value if hasattr(side, "value") else str(side)
+            price_float = float(price) if price is not None else 0.0
+            qty_float = float(order_quantity)
+
             # Record telemetry for failed submission
             _record_execution_telemetry(
                 latency_ms=latency_ms,
@@ -247,6 +279,10 @@ class OrderSubmitter:
                 rejected=is_rejection,
                 failure_reason=error_str[:100],
                 rejection_reason=reason,
+                symbol=symbol,
+                side=side_str,
+                quantity=qty_float,
+                price=price_float,
             )
             # 4. Handle Failure
             self._handle_order_failure(exc, symbol, side, order_quantity)

@@ -14,7 +14,7 @@ from collections import deque
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from gpt_trader.tui.types import ExecutionMetrics
+from gpt_trader.tui.types import ExecutionIssue, ExecutionMetrics
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -25,6 +25,7 @@ logger = get_logger(__name__, component="tui")
 # Rolling window size for metrics
 METRICS_WINDOW_SIZE = 100
 LATENCY_WINDOW_SIZE = 50
+ISSUES_WINDOW_SIZE = 10
 
 
 @dataclass
@@ -38,6 +39,10 @@ class SubmissionRecord:
     retry_count: int = 0
     failure_reason: str = ""
     rejection_reason: str = ""  # Specific reason for rejection (e.g., rate_limit)
+    symbol: str = ""
+    side: str = ""
+    quantity: float = 0.0
+    price: float = 0.0
 
 
 class ExecutionTelemetryCollector:
@@ -62,6 +67,8 @@ class ExecutionTelemetryCollector:
         self._submissions: deque[SubmissionRecord] = deque(maxlen=window_size)
         self._latencies: deque[float] = deque(maxlen=LATENCY_WINDOW_SIZE)
         self._retry_reasons: deque[str] = deque(maxlen=window_size)
+        self._recent_rejections: deque[ExecutionIssue] = deque(maxlen=ISSUES_WINDOW_SIZE)
+        self._recent_retries: deque[ExecutionIssue] = deque(maxlen=ISSUES_WINDOW_SIZE)
         self._lock = threading.Lock()
 
         # Counters for total lifetime stats
@@ -76,6 +83,10 @@ class ExecutionTelemetryCollector:
         retry_count: int = 0,
         failure_reason: str = "",
         rejection_reason: str = "",
+        symbol: str = "",
+        side: str = "",
+        quantity: float = 0.0,
+        price: float = 0.0,
     ) -> None:
         """Record an order submission.
 
@@ -87,6 +98,10 @@ class ExecutionTelemetryCollector:
             failure_reason: Reason for failure (if failed).
             rejection_reason: Categorized reason for rejection (e.g., rate_limit,
                 insufficient_funds, invalid_size, timeout, network, unknown).
+            symbol: Order symbol (if available).
+            side: Order side (if available).
+            quantity: Order quantity (if available).
+            price: Order price (if available).
         """
         record = SubmissionRecord(
             timestamp=time.time(),
@@ -96,26 +111,65 @@ class ExecutionTelemetryCollector:
             retry_count=retry_count,
             failure_reason=failure_reason,
             rejection_reason=rejection_reason,
+            symbol=symbol,
+            side=side,
+            quantity=quantity,
+            price=price,
         )
 
         with self._lock:
             self._submissions.append(record)
             if success:
                 self._latencies.append(latency_ms)
+            else:
+                issue_reason = rejection_reason or failure_reason or "unknown"
+                self._recent_rejections.append(
+                    ExecutionIssue(
+                        timestamp=record.timestamp,
+                        symbol=record.symbol,
+                        side=record.side,
+                        quantity=record.quantity,
+                        price=record.price,
+                        reason=issue_reason,
+                        is_retry=False,
+                    )
+                )
             self._total_submissions += 1
             self._total_retries += retry_count
 
-    def record_retry(self, reason: str = "") -> None:
+    def record_retry(
+        self,
+        reason: str = "",
+        symbol: str = "",
+        side: str = "",
+        quantity: float = 0.0,
+        price: float = 0.0,
+    ) -> None:
         """Record a retry attempt (called during retry loop).
 
         Args:
             reason: Categorized reason for retry (e.g., timeout, connection,
                 rate_limit, network, unknown).
+            symbol: Order symbol (if available).
+            side: Order side (if available).
+            quantity: Order quantity (if available).
+            price: Order price (if available).
         """
         with self._lock:
             self._total_retries += 1
             if reason:
                 self._retry_reasons.append(reason)
+                self._recent_retries.append(
+                    ExecutionIssue(
+                        timestamp=time.time(),
+                        symbol=symbol,
+                        side=side,
+                        quantity=quantity,
+                        price=price,
+                        reason=reason,
+                        is_retry=True,
+                    )
+                )
 
     def get_metrics(self) -> ExecutionMetrics:
         """Get current execution metrics.
@@ -172,6 +226,9 @@ class ExecutionTelemetryCollector:
             for reason in self._retry_reasons:
                 retry_reasons[reason] = retry_reasons.get(reason, 0) + 1
 
+            recent_rejections = list(reversed(self._recent_rejections))
+            recent_retries = list(reversed(self._recent_retries))
+
             return ExecutionMetrics(
                 submissions_total=total,
                 submissions_success=success,
@@ -187,6 +244,8 @@ class ExecutionTelemetryCollector:
                 last_failure_reason=last_reason,
                 rejection_reasons=rejection_reasons,
                 retry_reasons=retry_reasons,
+                recent_rejections=recent_rejections,
+                recent_retries=recent_retries,
             )
 
     def clear(self) -> None:
@@ -195,6 +254,8 @@ class ExecutionTelemetryCollector:
             self._submissions.clear()
             self._latencies.clear()
             self._retry_reasons.clear()
+            self._recent_rejections.clear()
+            self._recent_retries.clear()
             self._total_submissions = 0
             self._total_retries = 0
 

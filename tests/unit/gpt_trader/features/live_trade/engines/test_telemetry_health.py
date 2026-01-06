@@ -282,34 +282,38 @@ class TestHealthCheck:
         coordinator.context.registry.extras = {}
         return coordinator
 
-    def test_healthy_when_account_telemetry_present(self) -> None:
-        """Test returns healthy when account_telemetry is present."""
+    def test_healthy_when_market_monitor_present(self) -> None:
+        """Test returns healthy when market_monitor is present."""
         coordinator = self._create_mock_coordinator()
-        coordinator.context.registry.extras = {"account_telemetry": Mock()}
+        coordinator._market_monitor = Mock()
 
         result = health_check(coordinator)
 
         assert result.healthy is True
         assert result.component == "telemetry"
-        assert result.details["has_account_telemetry"] is True
+        assert result.details["has_market_monitor"] is True
 
-    def test_unhealthy_when_account_telemetry_missing(self) -> None:
-        """Test returns unhealthy when account_telemetry is missing."""
+    def test_unhealthy_when_no_monitor_or_streaming(self) -> None:
+        """Test returns unhealthy when no market_monitor and no streaming."""
         coordinator = self._create_mock_coordinator()
 
         result = health_check(coordinator)
 
         assert result.healthy is False
-        assert result.details["has_account_telemetry"] is False
+        assert result.details["has_market_monitor"] is False
+        assert result.details["streaming_active"] is False
 
-    def test_detects_market_monitor_from_extras(self) -> None:
-        """Test detects market_monitor from extras."""
+    def test_healthy_when_streaming_active(self) -> None:
+        """Test returns healthy when streaming is active (even without monitor)."""
         coordinator = self._create_mock_coordinator()
-        coordinator.context.registry.extras = {"market_monitor": Mock()}
+        task = Mock()
+        task.done.return_value = False
+        coordinator._stream_task = task
 
         result = health_check(coordinator)
 
-        assert result.details["has_market_monitor"] is True
+        assert result.healthy is True
+        assert result.details["streaming_active"] is True
 
     def test_detects_market_monitor_from_coordinator(self) -> None:
         """Test detects market_monitor from coordinator attribute."""
@@ -367,23 +371,26 @@ class TestHealthCheck:
 
         assert result.details["background_tasks"] == 3
 
-    def test_handles_non_dict_extras_conversion(self) -> None:
-        """Test handles non-dict extras that can be converted."""
+    def test_health_with_both_monitor_and_streaming(self) -> None:
+        """Test health when both market_monitor and streaming are present."""
         coordinator = self._create_mock_coordinator()
-        # Use a list of tuples that can be converted to dict
-        coordinator.context.registry.extras = [("account_telemetry", Mock())]
+        coordinator._market_monitor = Mock()
+        task = Mock()
+        task.done.return_value = False
+        coordinator._stream_task = task
 
         result = health_check(coordinator)
 
         assert result.healthy is True
-        assert result.details["has_account_telemetry"] is True
+        assert result.details["has_market_monitor"] is True
+        assert result.details["streaming_active"] is True
 
-    def test_handles_unconvertible_extras(self) -> None:
-        """Test handles extras that cannot be converted to dict."""
+    def test_health_details_always_present(self) -> None:
+        """Test that all expected keys are present in details."""
         coordinator = self._create_mock_coordinator()
-        coordinator.context.registry.extras = 12345  # Cannot convert to dict
 
         result = health_check(coordinator)
 
-        assert result.healthy is False
-        assert result.details["has_account_telemetry"] is False
+        assert "has_market_monitor" in result.details
+        assert "streaming_active" in result.details
+        assert "background_tasks" in result.details

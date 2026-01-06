@@ -140,37 +140,31 @@ Some `on_state_updated()` implementations do expensive operations (string parsin
 
 ---
 
-## Ticket 5: Document Performance Budget in TUI_STYLE_GUIDE
+## Ticket 5: Document Performance Budget in TUI_STYLE_GUIDE ✅ COMPLETED
 
 **Priority:** Low
 **Effort:** Small (< 30 min)
 **Risk:** None
+**Status:** Completed (2026-01-06)
 
 ### Description
 Add performance budget section to TUI_STYLE_GUIDE.md documenting the thresholds already defined in `PerformanceBudget`.
 
-### Files to Modify
-- `docs/TUI_STYLE_GUIDE.md`
+### Files Modified
+- `docs/TUI_STYLE_GUIDE.md` - Enhanced Performance Budgets section
 
-### Content to Add
-```markdown
-## Performance Budget
+### Changes Made
+- Added reference to `PerformanceBudget` class location
+- Added `F9` access instructions
+- Added CPU % to Resource Usage table
+- Updated "command palette" reference to "F9"
 
-| Metric | Target | Warning | Critical |
-|--------|--------|---------|----------|
-| FPS | ≥ 0.5 | ≥ 0.2 | < 0.2 |
-| Avg Frame Time | ≤ 50ms | ≤ 100ms | > 100ms |
-| P95 Frame Time | ≤ 100ms | ≤ 200ms | > 200ms |
-| Max Frame Time | ≤ 200ms | ≤ 500ms | > 500ms |
-| Memory % | ≤ 50% | ≤ 80% | > 80% |
-| CPU % | ≤ 50% | ≤ 80% | > 80% |
-
-Access via F9 (Performance Dashboard) in TUI.
-```
+Note: TUI_STYLE_GUIDE.md already had comprehensive performance budget tables;
+this ticket added the class reference and access method.
 
 ### Acceptance Criteria
-- [ ] Budget table added to TUI_STYLE_GUIDE.md
-- [ ] References `PerformanceBudget` class location
+- [x] Budget table added to TUI_STYLE_GUIDE.md (already existed, enhanced)
+- [x] References `PerformanceBudget` class location
 
 ---
 
@@ -182,6 +176,6 @@ Access via F9 (Performance Dashboard) in TUI.
 | 2. No-Op Guards | Low | Medium | Medium - Reduces DOM updates | Pending |
 | 3. PERF_TRACE Env | Low | Small | Low - Debugging aid | Pending |
 | 4. Optimize on_state_updated | Low | Medium | Medium - Faster cycles | Pending |
-| 5. Document Budget | Low | Small | Low - Developer awareness | Pending |
+| 5. Document Budget | Low | Small | Low - Developer awareness | ✅ Done |
 
-**Recommended order:** ~~1~~ → 5 → 2 → 3 → 4
+**Recommended order:** ~~1~~ → ~~5~~ → 2 → 3 → 4

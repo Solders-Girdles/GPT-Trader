@@ -706,7 +706,10 @@ Every tile follows this structure:
 
 ## Performance Budgets
 
-The TUI enforces these performance targets:
+The TUI enforces these performance targets. Thresholds are defined in
+`PerformanceBudget` class at `src/gpt_trader/tui/services/performance_service.py`.
+
+**Access:** Press `F9` to open the Performance Dashboard.
 
 ### Frame Timing
 
@@ -717,10 +720,11 @@ The TUI enforces these performance targets:
 | **P95 Frame Time** | < 100ms | 100-200ms | > 200ms |
 | **Max Frame Time** | < 200ms | 200-500ms | > 500ms |
 
-### Memory
+### Resource Usage
 
 | Metric | Target | Warning | Critical |
 |--------|--------|---------|----------|
+| **CPU %** | < 50% | 50-80% | > 80% |
 | **Memory %** | < 50% | 50-80% | > 80% |
 | **RSS Growth** | < 10MB/hour | 10-50MB/hour | > 50MB/hour |
 
@@ -741,7 +745,7 @@ The TUI enforces these performance targets:
 | Single widget update | < 10ms |
 | Table row update | < 5ms |
 
-The performance overlay (accessible via command palette) surfaces these metrics in real-time.
+The Performance Dashboard (`F9`) surfaces these metrics in real-time.
 
 ---
 

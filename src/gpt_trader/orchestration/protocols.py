@@ -7,7 +7,6 @@ and core services, enabling structural typing and better testability.
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
 
@@ -34,13 +33,6 @@ class AccountManagerProtocol(Protocol):
     def snapshot(self, emit_metric: bool = True) -> dict[str, Any]:
         """Collect account state snapshot."""
         ...
-
-
-@runtime_checkable
-class OrdersStoreProtocol(Protocol):
-    """Protocol for order persistence implementations."""
-
-    storage_path: Path
 
 
 @runtime_checkable
@@ -80,6 +72,5 @@ class RuntimeStateProtocol(Protocol):
 __all__ = [
     "AccountManagerProtocol",
     "EventStoreProtocol",
-    "OrdersStoreProtocol",
     "RuntimeStateProtocol",
 ]

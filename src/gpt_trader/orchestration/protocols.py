@@ -1,18 +1,14 @@
 """
 Protocol definitions for orchestration abstractions.
 
-These protocols define the expected interfaces for service registry
-and runtime state, enabling structural typing and better testability.
+These protocols define the expected interfaces for runtime state
+and core services, enabling structural typing and better testability.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
-
-if TYPE_CHECKING:
-    from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
-    from gpt_trader.orchestration.configuration import BotConfig
+from typing import Any, Protocol, runtime_checkable
 
 
 @runtime_checkable
@@ -81,34 +77,9 @@ class RuntimeStateProtocol(Protocol):
         ...
 
 
-@runtime_checkable
-class ServiceRegistryProtocol(Protocol):
-    """
-    Protocol for service registry implementations.
-
-    Defines the interface for accessing shared services used by
-    trading components. Implementations can be frozen dataclasses
-    or dynamic container objects.
-    """
-
-    @property
-    def config(self) -> BotConfig: ...
-    @property
-    def broker(self) -> BrokerProtocol | None: ...
-    @property
-    def event_store(self) -> EventStoreProtocol | None: ...
-    @property
-    def orders_store(self) -> OrdersStoreProtocol | None: ...
-
-    def with_updates(self, **kwargs: Any) -> ServiceRegistryProtocol:
-        """Return a new registry with updated values."""
-        ...
-
-
 __all__ = [
     "AccountManagerProtocol",
     "EventStoreProtocol",
     "OrdersStoreProtocol",
     "RuntimeStateProtocol",
-    "ServiceRegistryProtocol",
 ]

@@ -30,7 +30,7 @@ def dev_bot() -> Generator[TradingBot]:
 
     Yields:
         TradingBot: A fully configured trading bot.
-        Access registry via bot.container.create_service_registry() if needed.
+        Access services directly via bot.container.<service>.
     """
     bot = bot_from_profile("dev")
 

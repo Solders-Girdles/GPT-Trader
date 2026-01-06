@@ -135,7 +135,7 @@ class TestCoreValidation:
     def test_state_persistence_surface(self, dev_bot: TradingBot) -> None:
         """Verify state persistence components are available."""
         bot = dev_bot
-        registry = bot.container.create_service_registry()
+        container = bot.container
 
-        assert registry.orders_store is not None, "OrdersStore not in registry"
-        assert hasattr(registry.orders_store, "storage_path"), "OrdersStore missing storage_path"
+        assert container.orders_store is not None, "OrdersStore not in container"
+        assert hasattr(container.orders_store, "storage_path"), "OrdersStore missing storage_path"

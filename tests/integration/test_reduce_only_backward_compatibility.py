@@ -1,4 +1,4 @@
-"""Tests to verify backward compatibility of the StateManager implementation."""
+"""Tests to verify backward compatibility of the reduce-only state management."""
 
 from __future__ import annotations
 
@@ -6,11 +6,10 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from gpt_trader.app.container import ApplicationContainer
 from gpt_trader.features.live_trade.engines.runtime import RuntimeEngine
 from gpt_trader.orchestration.config_controller import ConfigController
 from gpt_trader.orchestration.configuration import BotConfig
-from gpt_trader.orchestration.service_registry import ServiceRegistry
-from gpt_trader.persistence.event_store import EventStore
 
 
 class TestReduceOnlyBackwardCompatibility:
@@ -21,20 +20,15 @@ class TestReduceOnlyBackwardCompatibility:
     )
     def test_runtime_coordinator_without_state_manager(self) -> None:
         """Test that RuntimeEngine works without StateManager."""
-        event_store = EventStore()
-        config = BotConfig(symbols=["BTC-USD"])
-
-        registry = ServiceRegistry(
-            config=config,
-            event_store=event_store,
-        )
+        config = BotConfig(symbols=["BTC-USD"], mock_broker=True)
+        container = ApplicationContainer(config)
 
         from gpt_trader.features.live_trade.engines.base import CoordinatorContext
 
         context = CoordinatorContext(
             config=config,
-            registry=registry,
-            event_store=event_store,
+            container=container,
+            event_store=container.event_store,
             symbols=(),
             bot_id="test",
         )
@@ -56,8 +50,8 @@ class TestReduceOnlyBackwardCompatibility:
     )
     def test_mixed_environment_compatibility(self) -> None:
         """Test that components work in a mixed environment with and without StateManager."""
-        event_store = EventStore()
-        config = BotConfig(symbols=["BTC-USD"])
+        config = BotConfig(symbols=["BTC-USD"], mock_broker=True)
+        container = ApplicationContainer(config)
 
         # Create config controller with StateManager
         state_manager = MagicMock()  # Mocking StateManager
@@ -66,18 +60,12 @@ class TestReduceOnlyBackwardCompatibility:
             reduce_only_state_manager=state_manager,
         )
 
-        # Create runtime coordinator without StateManager
-        registry = ServiceRegistry(
-            config=config,
-            event_store=event_store,
-        )
-
         from gpt_trader.features.live_trade.engines.base import CoordinatorContext
 
         context = CoordinatorContext(
             config=config,
-            registry=registry,
-            event_store=event_store,
+            container=container,
+            event_store=container.event_store,
             symbols=(),
             bot_id="test",
         )

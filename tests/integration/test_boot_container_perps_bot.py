@@ -50,29 +50,26 @@ def test_container_bot_boot_roundtrip():
     print("Container-based TradingBot integration test passed!")
 
 
-def test_container_service_registry_compatibility():
-    """Test that container can create ServiceRegistry for backward compatibility."""
+def test_container_services():
+    """Test that container provides all expected services."""
 
     config = BotConfig.from_profile("dev", symbols=["ETH-USD"], mock_broker=True)
 
     # Create container
     container = ApplicationContainer(config)
 
-    # Create service registry from container
-    registry = container.create_service_registry()
+    # Verify container has all expected services
+    assert container.config is not None
+    assert container.broker is not None
+    assert container.event_store is not None
+    assert container.orders_store is not None
+    assert container.risk_manager is not None
+    assert container.notification_service is not None
 
-    # Verify registry has all expected services
-    assert registry.config is not None
-    assert registry.broker is not None
-    assert registry.event_store is not None
-    assert registry.orders_store is not None
-    assert registry.risk_manager is not None
-    assert registry.notification_service is not None
-
-    print("Container ServiceRegistry compatibility test passed!")
+    print("Container services test passed!")
 
 
 if __name__ == "__main__":
     # Run the tests directly
-    test_container_service_registry_compatibility()
+    test_container_services()
     print("\nAll container integration tests passed!")

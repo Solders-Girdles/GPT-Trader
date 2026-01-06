@@ -166,46 +166,6 @@ class TestApplicationContainer:
             config=mock_config,
         )
 
-    @pytest.mark.legacy  # ServiceRegistry scheduled for removal in v3.0
-    @patch("gpt_trader.app.container.create_brokerage")
-    @patch("gpt_trader.app.container.MarketDataService")
-    @patch("gpt_trader.app.container.ProductCatalog")
-    def test_create_service_registry(
-        self,
-        mock_product_catalog: MagicMock,
-        mock_market_data_service: MagicMock,
-        mock_create_brokerage: MagicMock,
-        mock_config: BotConfig,
-    ) -> None:
-        """Test that service registry is created correctly."""
-        # Setup mocks
-        mock_broker = MagicMock()
-        mock_market_data_instance = MagicMock()
-        mock_product_catalog_instance = MagicMock()
-
-        mock_create_brokerage.return_value = (
-            mock_broker,
-            MagicMock(),
-            MagicMock(),
-            MagicMock(),
-        )
-        mock_market_data_service.return_value = mock_market_data_instance
-        mock_product_catalog.return_value = mock_product_catalog_instance
-
-        container = ApplicationContainer(mock_config)
-
-        # Create service registry (expect deprecation warnings)
-        with pytest.warns(DeprecationWarning, match="create_service_registry.*deprecated"):
-            registry = container.create_service_registry()
-
-        # Verify registry contains correct services
-        assert registry.config == mock_config
-        assert registry.broker == mock_broker
-        assert registry.event_store == container.event_store
-        assert registry.orders_store == container.orders_store
-        assert registry.market_data_service == mock_market_data_instance
-        assert registry.product_catalog == mock_product_catalog_instance
-
     @patch("gpt_trader.orchestration.trading_bot.bot.TradingBot")
     @patch("gpt_trader.app.container.create_brokerage")
     @patch("gpt_trader.app.container.MarketDataService")
@@ -417,36 +377,6 @@ class TestApplicationContainer:
         # Second access should return the same instance
         loader2 = container.profile_loader
         assert loader is loader2
-
-    @pytest.mark.legacy  # ServiceRegistry scheduled for removal in v3.0
-    @patch("gpt_trader.app.container.create_brokerage")
-    @patch("gpt_trader.app.container.MarketDataService")
-    @patch("gpt_trader.app.container.ProductCatalog")
-    def test_create_service_registry_emits_deprecation_warning(
-        self,
-        mock_product_catalog: MagicMock,
-        mock_market_data_service: MagicMock,
-        mock_create_brokerage: MagicMock,
-        mock_config: BotConfig,
-    ) -> None:
-        """Test that create_service_registry emits DeprecationWarning."""
-        # Setup mocks
-        mock_create_brokerage.return_value = (MagicMock(), MagicMock(), MagicMock(), MagicMock())
-
-        container = ApplicationContainer(mock_config)
-
-        # Verify warning is emitted with correct message
-        with pytest.warns(DeprecationWarning) as warning_info:
-            registry = container.create_service_registry()
-
-        # Check at least one warning matches our expected message
-        messages = [str(w.message) for w in warning_info]
-        assert any("create_service_registry" in msg and "deprecated" in msg for msg in messages)
-
-        # Verify registry is still functional despite deprecation
-        assert registry is not None
-        assert registry.config == mock_config
-        assert registry.broker is not None
 
 
 class TestCreateApplicationContainer:

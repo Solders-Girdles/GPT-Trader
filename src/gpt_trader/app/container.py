@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import warnings
 from typing import TYPE_CHECKING, cast
 
 from gpt_trader.features.brokerages.coinbase.auth import SimpleAuth
@@ -13,7 +12,6 @@ from gpt_trader.orchestration.configuration import BotConfig, Profile
 from gpt_trader.orchestration.deterministic_broker import DeterministicBroker
 from gpt_trader.orchestration.protocols import EventStoreProtocol
 from gpt_trader.orchestration.runtime_paths import RuntimePaths, resolve_runtime_paths
-from gpt_trader.orchestration.service_registry import ServiceRegistry
 from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.persistence.orders_store import OrdersStore
 from gpt_trader.utilities.logging_patterns import get_logger
@@ -224,32 +222,6 @@ class ApplicationContainer:
 
     def reset_risk_manager(self) -> None:
         self._risk_manager = None
-
-    def create_service_registry(self) -> ServiceRegistry:
-        """
-        Create a ServiceRegistry populated with all container services.
-
-        .. deprecated:: 2.0
-            ServiceRegistry is a legacy pattern. Access services directly
-            from ApplicationContainer instead. Removal planned for v3.0.
-        """
-        warnings.warn(
-            "create_service_registry() is deprecated. "
-            "Access services directly from ApplicationContainer.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        registry = ServiceRegistry(self.config)
-        registry = registry.with_updates(
-            event_store=self.event_store,
-            orders_store=self.orders_store,
-            broker=self.broker,
-            risk_manager=self.risk_manager,
-            notification_service=self.notification_service,
-            market_data_service=self.market_data_service,
-            product_catalog=self.product_catalog,
-        )
-        return registry
 
     def create_bot(self) -> TradingBot:
         """

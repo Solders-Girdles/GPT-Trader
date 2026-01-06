@@ -20,7 +20,6 @@ if TYPE_CHECKING:
     from gpt_trader.orchestration.protocols import (
         EventStoreProtocol,
         RuntimeStateProtocol,
-        ServiceRegistryProtocol,
     )
 
 
@@ -30,8 +29,7 @@ class CoordinatorContext:
 
     Attributes:
         config: Bot configuration.
-        container: Application container for dependency resolution (preferred).
-        registry: Deprecated. Use container instead. Removal planned for v3.0.
+        container: Application container for dependency resolution.
         broker: Broker client for order execution.
         symbols: Trading symbols.
         runtime_state: Runtime state tracking.
@@ -43,8 +41,6 @@ class CoordinatorContext:
 
     config: BotConfig
     container: ApplicationContainer | None = None
-    # Deprecated: Use container instead. Removal planned for v3.0.
-    registry: ServiceRegistryProtocol | None = None
     broker: BrokerProtocol | None = None
     symbols: tuple[str, ...] = ()
     runtime_state: RuntimeStateProtocol | None = None

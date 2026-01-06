@@ -1,44 +1,32 @@
 """Bootstrap helpers for preparing TradingBot dependencies.
 
-DEPRECATED MODULE (Transitional)
-================================
-This module provides legacy bootstrap functions that wrap the modern
-``ApplicationContainer`` pattern. New code should use ``ApplicationContainer``
-directly.
+This module provides convenience functions for creating TradingBot instances.
+All functions use ``ApplicationContainer`` internally as the canonical
+composition root.
 
-Migration Guide::
+Usage::
 
-    # OLD (deprecated):
-    from gpt_trader.orchestration.bootstrap import prepare_bot
-    result = prepare_bot(config)
-    bot = result.registry.extras["container"].create_bot()
-
-    # NEW (preferred):
     from gpt_trader.app.container import ApplicationContainer
     container = ApplicationContainer(config)
     bot = container.create_bot()
 
-Convenience functions ``build_bot()`` and ``bot_from_profile()`` remain
-supported as they delegate to ``ApplicationContainer`` internally.
-
-Removal planned for v3.0.
+    # Or use convenience functions:
+    from gpt_trader.orchestration.bootstrap import build_bot, bot_from_profile
+    bot = build_bot(config)
+    bot = bot_from_profile("demo")
 """
 
 from __future__ import annotations
 
-import warnings
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from gpt_trader.persistence.event_store import EventStore
-from gpt_trader.persistence.orders_store import OrdersStore
 from gpt_trader.utilities.logging_patterns import get_logger
 
 from .configuration import TOP_VOLUME_BASES, BotConfig, Profile
 from .runtime_paths import RuntimePaths
 from .runtime_paths import resolve_runtime_paths as compute_runtime_paths
-from .service_registry import ServiceRegistry
 from .symbols import PERPS_ALLOWLIST, normalize_symbol_list
 
 if TYPE_CHECKING:
@@ -54,28 +42,6 @@ class BootstrapLogRecord:
     level: int
     message: str
     args: tuple[object, ...] = ()
-
-
-@dataclass(frozen=True)
-class BootstrapResult:
-    """Outcome of preparing dependencies for :class:`TradingBot`.
-
-    .. deprecated:: 2.0
-        BootstrapResult uses the deprecated ServiceRegistry pattern.
-        Use ``ApplicationContainer`` directly instead::
-
-            container = ApplicationContainer(config)
-            bot = container.create_bot()
-
-        Removal planned for v3.0.
-    """
-
-    config: BotConfig
-    registry: ServiceRegistry
-    runtime_paths: RuntimePaths
-    event_store: EventStore
-    orders_store: OrdersStore
-    logs: list[BootstrapLogRecord]
 
 
 def normalise_symbols(
@@ -111,106 +77,11 @@ def resolve_runtime_paths(
     return compute_runtime_paths(config=config, profile=profile)
 
 
-def prepare_bot(
-    config: BotConfig,
-    registry: ServiceRegistry | None = None,
-    *,
-    env: Mapping[str, str] | None = None,
-) -> BootstrapResult:
-    """Prepare directories and registry dependencies for :class:`TradingBot`.
-
-    .. deprecated:: 2.0
-        Use ``ApplicationContainer`` directly instead::
-
-            from gpt_trader.app.container import ApplicationContainer
-            container = ApplicationContainer(config)
-            bot = container.create_bot()
-
-        Removal planned for v3.0.
-    """
-    warnings.warn(
-        "prepare_bot() is deprecated. Use ApplicationContainer directly. "
-        "See migration guide in module docstring.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    normalization_log_payload = config.metadata.get("symbol_normalization_logs", [])
-    if normalization_log_payload:
-        logs = [
-            BootstrapLogRecord(
-                level=int(entry.get("level", 20)),
-                message=str(entry.get("message", "")),
-                args=tuple(entry.get("args", ())),
-            )
-            for entry in normalization_log_payload
-            if isinstance(entry, dict)
-        ]
-    else:
-        _, fallback_logs = normalise_symbols(config.symbols, config=config)
-        logs = [
-            BootstrapLogRecord(level=record.level, message=record.message, args=record.args)
-            for record in fallback_logs
-        ]
-
-    from gpt_trader.app.container import ApplicationContainer
-
-    # Create container - this is now the source of truth
-    container = ApplicationContainer(config)
-
-    # Get registry from container (legacy support)
-    # If a registry was passed in, we ignore it in favor of the container's registry
-    # to ensure consistency, or we could try to merge, but container should be authoritative.
-    # For now, we'll use the container's registry.
-    prepared_registry = container.create_service_registry()
-
-    # Add container to result extras for backward compatibility
-    prepared_registry.extras["container"] = container
-
-    # Get stores from container
-    final_event_store = container.event_store
-    final_orders_store = container.orders_store
-
-    result = BootstrapResult(
-        config=config,
-        registry=prepared_registry,
-        runtime_paths=container.runtime_paths,
-        event_store=final_event_store,
-        orders_store=final_orders_store,
-        logs=logs,
-    )
-
-    logger.debug(
-        "Prepared TradingBot with container",
-        operation="bot_bootstrap",
-        stage="container_enabled",
-    )
-
-    return result
-
-
-def prepare_bot_with_container(
-    config: BotConfig,
-    *,
-    env: Mapping[str, str] | None = None,
-) -> BootstrapResult:
-    """Prepare directories and registry dependencies for :class:`TradingBot`.
-
-    .. deprecated:: 2.0
-        Use ``ApplicationContainer`` directly instead. Removal planned for v3.0.
-    """
-    # Note: warning is emitted by prepare_bot()
-    return prepare_bot(config, registry=None, env=env)
-
-
 def build_bot(config: BotConfig) -> TradingBot:
     """Build a TradingBot from a BotConfig using ApplicationContainer.
 
     This is the canonical way to create a TradingBot. The container
     handles all dependency wiring.
-
-    Note:
-        This function is NOT deprecated. It is a supported convenience
-        function that uses ``ApplicationContainer`` internally.
 
     Args:
         config: The bot configuration.
@@ -235,10 +106,6 @@ def build_bot(config: BotConfig) -> TradingBot:
 def bot_from_profile(profile: str) -> TradingBot:
     """Create a TradingBot from a profile name.
 
-    Note:
-        This function is NOT deprecated. It is a supported convenience
-        function that uses ``ApplicationContainer`` internally.
-
     Args:
         profile: One of 'dev', 'demo', 'prod', 'test', 'spot', 'canary'
 
@@ -260,9 +127,6 @@ def bot_from_profile(profile: str) -> TradingBot:
 
 __all__ = [
     "BootstrapLogRecord",
-    "BootstrapResult",
-    "prepare_bot",
-    "prepare_bot_with_container",
     "normalise_symbols",
     "resolve_runtime_paths",
     "RuntimePaths",

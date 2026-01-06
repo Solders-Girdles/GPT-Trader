@@ -15,7 +15,6 @@ import pytest
 from gpt_trader.core import Balance, Position
 from gpt_trader.features.live_trade.engines.base import CoordinatorContext
 from gpt_trader.orchestration.configuration import BotConfig, Profile
-from gpt_trader.orchestration.service_registry import ServiceRegistry
 
 # Mock imports for missing types
 try:
@@ -98,18 +97,11 @@ def base_coordinator_context(
     fake_guard_manager, fake_event_bus, fake_trade_service, fake_runtime_state
 ):
     """Base coordinator context with mocked dependencies."""
-    # Use Profile if available, else use a dummy profile object or value
     config = BotConfig(profile=Profile.PROD, symbols=["BTC-PERP"], dry_run=False)
-    registry = ServiceRegistry(config=config)
 
-    # Add mocks to registry extras
-    registry = registry.with_updates(
-        extras={
-            "guard_manager": fake_guard_manager,
-            "event_bus": fake_event_bus,
-            "trade_service": fake_trade_service,
-        }
-    )
+    # Create mock container
+    container = Mock()
+    container.config = config
 
     broker = Mock()
     risk_manager = Mock()
@@ -120,22 +112,17 @@ def base_coordinator_context(
     )
     risk_manager.check_mark_staleness = Mock(return_value=False)
 
-    orders_store = Mock()
     event_store = Mock()
 
     context = CoordinatorContext(
         config=config,
-        registry=registry,
+        container=container,
         event_store=event_store,
-        orders_store=orders_store,
         broker=broker,
         risk_manager=risk_manager,
         symbols=("BTC-PERP",),
         bot_id="test-bot",
         runtime_state=fake_runtime_state,
-        config_controller=Mock(),
-        strategy_orchestrator=Mock(),
-        set_running_flag=lambda _: None,
     )
     return context
 

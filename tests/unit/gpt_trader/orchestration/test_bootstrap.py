@@ -9,15 +9,12 @@ import pytest
 
 from gpt_trader.orchestration.bootstrap import (
     BootstrapLogRecord,
-    BootstrapResult,
     bot_from_profile,
     build_bot,
     normalise_symbols,
-    prepare_bot,
     resolve_runtime_paths,
 )
 from gpt_trader.orchestration.configuration import BotConfig, Profile
-from gpt_trader.persistence.event_store import EventStore
 
 
 @pytest.fixture
@@ -94,44 +91,6 @@ class TestResolveRuntimePaths:
 
         # Different profiles should have different storage directories
         assert test_paths.storage_dir != dev_paths.storage_dir
-
-
-class TestPrepareBot:
-    """Tests for prepare_bot function."""
-
-    def test_prepare_bot_returns_bootstrap_result(self, mock_config: BotConfig) -> None:
-        result = prepare_bot(mock_config)
-
-        assert isinstance(result, BootstrapResult)
-        assert result.config is mock_config
-        assert result.registry is not None
-        assert result.runtime_paths is not None
-        assert result.event_store is not None
-        assert result.orders_store is not None
-
-    def test_prepare_bot_creates_event_store(self, mock_config: BotConfig) -> None:
-        result = prepare_bot(mock_config)
-
-        assert isinstance(result.event_store, EventStore)
-
-    @pytest.mark.legacy  # ServiceRegistry scheduled for removal in v3.0
-    def test_prepare_bot_with_existing_registry(self, mock_config: BotConfig) -> None:
-        from gpt_trader.orchestration.service_registry import empty_registry
-
-        existing_registry = empty_registry(mock_config)
-        result = prepare_bot(mock_config, registry=existing_registry)
-
-        assert result.registry is not None
-
-    def test_prepare_bot_adds_container_to_extras(self, mock_config: BotConfig) -> None:
-        result = prepare_bot(mock_config)
-
-        assert "container" in result.registry.extras
-
-    def test_prepare_bot_logs_are_collected(self, mock_config: BotConfig) -> None:
-        result = prepare_bot(mock_config)
-
-        assert isinstance(result.logs, list)
 
 
 class TestBuildBot:
@@ -234,20 +193,6 @@ class TestBootstrapLogRecord:
             record.level = 30  # type: ignore
 
 
-class TestBootstrapResult:
-    """Tests for BootstrapResult dataclass."""
-
-    def test_result_contains_all_fields(self, mock_config: BotConfig) -> None:
-        result = prepare_bot(mock_config)
-
-        assert result.config is not None
-        assert result.registry is not None
-        assert result.runtime_paths is not None
-        assert result.event_store is not None
-        assert result.orders_store is not None
-        assert isinstance(result.logs, list)
-
-
 class TestEnvironmentVariableHandling:
     """Tests for environment variable handling during bootstrap."""
 
@@ -267,12 +212,6 @@ class TestEnvironmentVariableHandling:
 
             # Config should be created successfully
             assert config.profile == Profile.TEST
-
-    def test_prepare_bot_with_env_parameter(self, mock_config: BotConfig) -> None:
-        # prepare_bot accepts env parameter
-        result = prepare_bot(mock_config, env={"TEST_VAR": "value"})
-
-        assert result is not None
 
 
 class TestProfileLoading:
@@ -303,27 +242,15 @@ class TestProfileLoading:
 class TestContainerInitialization:
     """Tests for ApplicationContainer initialization during bootstrap."""
 
-    def test_container_created_during_prepare(self, mock_config: BotConfig) -> None:
-        result = prepare_bot(mock_config)
+    def test_build_bot_creates_container(self, mock_config: BotConfig) -> None:
+        """Test that build_bot uses ApplicationContainer internally."""
+        bot = build_bot(mock_config)
 
-        container = result.registry.extras.get("container")
-        assert container is not None
+        # Bot should have a container reference
+        assert bot.container is not None
 
     def test_container_has_config(self, mock_config: BotConfig) -> None:
-        result = prepare_bot(mock_config)
+        """Test that container created during build_bot has config."""
+        bot = build_bot(mock_config)
 
-        container = result.registry.extras.get("container")
-        assert hasattr(container, "config") or hasattr(container, "_config")
-
-    @pytest.mark.legacy  # ServiceRegistry scheduled for removal in v3.0
-    def test_build_bot_container_creates_registry(self, mock_config: BotConfig) -> None:
-        from gpt_trader.app.container import ApplicationContainer
-
-        container = ApplicationContainer(mock_config)
-
-        # Expect deprecation warning from create_service_registry
-        with pytest.warns(DeprecationWarning, match="create_service_registry.*deprecated"):
-            registry = container.create_service_registry()
-
-        assert registry is not None
-        assert registry.config is mock_config
+        assert bot.container.config == mock_config

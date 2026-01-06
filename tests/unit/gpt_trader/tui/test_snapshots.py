@@ -30,6 +30,8 @@ import pytest
 from gpt_trader.monitoring.status_reporter import StatusReporter
 from gpt_trader.tui.app import TraderApp
 from gpt_trader.tui.theme import ThemeMode
+from gpt_trader.tui.types import RiskState
+from gpt_trader.tui.widgets.risk_detail_modal import RiskDetailModal
 
 
 @pytest.fixture
@@ -521,6 +523,68 @@ class TestLayoutGuardrails:
             # require comparing computed regions
             widgets = list(app.screen.query("Static, Button, Label, DataTable"))
             assert len(widgets) > 0, "No widgets found"
+
+
+class TestRiskPreviewSnapshots:
+    """Snapshot tests for the Risk Preview section in RiskDetailModal."""
+
+    def test_risk_preview_safe(self, snap_compare, mock_demo_bot):
+        """Snapshot test for Risk Preview in safe state (10% of limit).
+
+        Shows preview chips with all OK status when loss utilization is low.
+        """
+        risk_data = RiskState(
+            daily_loss_limit_pct=0.10,
+            current_daily_loss_pct=-0.01,  # 10% of limit
+            max_leverage=1.0,
+            reduce_only_mode=False,
+        )
+
+        async def open_risk_preview(pilot):
+            app = pilot.app
+            app.tui_state.risk_data = risk_data
+            app.tui_state.refresh()
+            app.push_screen(RiskDetailModal(risk_data))
+            await pilot.pause()
+
+        def create_app():
+            return TraderApp(bot=mock_demo_bot)
+
+        assert snap_compare(
+            create_app(),
+            terminal_size=(100, 40),
+            run_before=open_risk_preview,
+        )
+
+    def test_risk_preview_critical(self, snap_compare, mock_demo_bot):
+        """Snapshot test for Risk Preview in critical state (70% of limit).
+
+        Shows preview chips with warning/critical status when loss is high.
+        With 5x leverage, even small shocks push projections into critical.
+        """
+        risk_data = RiskState(
+            daily_loss_limit_pct=0.10,
+            current_daily_loss_pct=-0.07,  # 70% of limit
+            max_leverage=5.0,
+            reduce_only_mode=True,
+            reduce_only_reason="Daily loss limit",
+        )
+
+        async def open_risk_preview(pilot):
+            app = pilot.app
+            app.tui_state.risk_data = risk_data
+            app.tui_state.refresh()
+            app.push_screen(RiskDetailModal(risk_data))
+            await pilot.pause()
+
+        def create_app():
+            return TraderApp(bot=mock_demo_bot)
+
+        assert snap_compare(
+            create_app(),
+            terminal_size=(100, 40),
+            run_before=open_risk_preview,
+        )
 
 
 # Helper function for generating initial snapshots

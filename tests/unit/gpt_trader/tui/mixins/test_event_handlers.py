@@ -359,32 +359,6 @@ class TestUtilityMethods:
         assert "SimpleEvent" in call_args
 
 
-class TestMixinIntegration:
-    """Integration tests for mixin with Textual app."""
-
-    @pytest.mark.skip(reason="Textual message routing is framework-specific")
-    @pytest.mark.asyncio
-    async def test_mixin_widget_receives_events(self):
-        """Test that mixin widget can receive events in app.
-
-        Note: Skipped because testing Textual's internal message routing
-        is beyond the scope of our mixin tests. The framework's message
-        delivery is well-tested by Textual itself.
-        """
-        pass
-
-    @pytest.mark.skip(reason="Textual message routing is framework-specific")
-    @pytest.mark.asyncio
-    async def test_multiple_mixin_widgets_receive_events(self):
-        """Test that multiple mixin widgets all receive events.
-
-        Note: Skipped because testing Textual's internal message routing
-        is beyond the scope of our mixin tests. The framework's message
-        delivery is well-tested by Textual itself.
-        """
-        pass
-
-
 class TestMixinDocumentation:
     """Test mixin documentation."""
 

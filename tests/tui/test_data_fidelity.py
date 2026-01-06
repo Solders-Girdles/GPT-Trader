@@ -49,10 +49,3 @@ async def test_data_flow_from_reporter_to_state(mock_app):
     assert mock_app.tui_state.system_data.connection_status == "CONNECTED"
     assert mock_app.tui_state.market_data.prices["BTC-USD"] == Decimal("50000.00")
     assert mock_app.tui_state.account_data.balances[0].asset == "USD"
-
-
-@pytest.mark.skip(reason="LogWidget internal filtering logic has moved to TuiLogHandler")
-@pytest.mark.asyncio
-async def test_log_filtering(mock_app):
-    """Verify LogWidget filtering logic."""
-    pass

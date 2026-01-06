@@ -325,17 +325,6 @@ class TestEventIntegration:
             assert widget.events_received[0].running is True
             assert widget.events_received[0].uptime == 10.0
 
-    @pytest.mark.skip(reason="Textual message routing between widgets is framework-specific")
-    @pytest.mark.asyncio
-    async def test_multiple_widgets_receive_same_event(self):
-        """Test that multiple widgets can handle the same event.
-
-        Note: Skipped because testing Textual's internal message routing
-        is beyond the scope of our event system tests. The framework's
-        message delivery is well-tested by Textual itself.
-        """
-        pass
-
     @pytest.mark.asyncio
     async def test_event_handler_invocation(self):
         """Test that event handlers are properly invoked."""

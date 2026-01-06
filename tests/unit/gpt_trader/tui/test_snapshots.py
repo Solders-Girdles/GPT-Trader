@@ -350,6 +350,131 @@ class TestFocusStateSnapshots:
         )
 
 
+class TestValidationDisplaySnapshots:
+    """Snapshot tests for validation failure display states."""
+
+    def test_validation_failures_warning(self, snap_compare, mock_demo_bot):
+        """Snapshot test for validation failures in warning state (yellow).
+
+        Shows the System tile with validation failures present but not escalated.
+        """
+
+        async def set_validation_warning(pilot):
+            app = pilot.app
+            # Update TUI state with validation failures (warning, not escalated)
+            app.tui_state.system_data.validation_failures = {
+                "mark_staleness": 2,
+                "slippage_guard": 1,
+            }
+            app.tui_state.system_data.validation_escalated = False
+            # Trigger UI refresh
+            app.tui_state.refresh()
+            await pilot.pause()
+
+        def create_app():
+            return TraderApp(bot=mock_demo_bot)
+
+        assert snap_compare(
+            create_app(),
+            terminal_size=(120, 40),
+            run_before=set_validation_warning,
+        )
+
+    def test_validation_escalated_error(self, snap_compare, mock_demo_bot):
+        """Snapshot test for validation escalated state (red).
+
+        Shows the System tile when validation failures have escalated
+        and reduce-only mode is active.
+        """
+
+        async def set_validation_escalated(pilot):
+            app = pilot.app
+            # Update TUI state with escalated validation (5+ consecutive failures)
+            app.tui_state.system_data.validation_failures = {
+                "mark_staleness": 5,
+            }
+            app.tui_state.system_data.validation_escalated = True
+            # Trigger UI refresh
+            app.tui_state.refresh()
+            await pilot.pause()
+
+        def create_app():
+            return TraderApp(bot=mock_demo_bot)
+
+        assert snap_compare(
+            create_app(),
+            terminal_size=(120, 40),
+            run_before=set_validation_escalated,
+        )
+
+
+class TestDegradedStateSnapshots:
+    """Snapshot tests for degraded and stale data states.
+
+    These tests validate visual appearance of staleness banners
+    and degraded mode indicators that appear when data sources
+    are unavailable or connection is unhealthy.
+    """
+
+    def test_degraded_mode_banner(self, snap_compare, mock_demo_bot):
+        """Snapshot test for degraded mode with status reporter unavailable.
+
+        Shows tiles with "Degraded: <reason>" warning banners when
+        StatusReporter is not returning valid data.
+        """
+        import time
+
+        async def set_degraded_mode(pilot):
+            app = pilot.app
+            # Set degraded mode state
+            app.tui_state.degraded_mode = True
+            app.tui_state.degraded_reason = "StatusReporter unavailable"
+            app.tui_state.running = True
+            app.tui_state.connection_healthy = True  # Still connected, just degraded
+            app.tui_state.last_data_fetch = time.time()  # Fresh timestamp
+            # Trigger UI refresh
+            app.tui_state.refresh()
+            await pilot.pause()
+
+        def create_app():
+            return TraderApp(bot=mock_demo_bot)
+
+        assert snap_compare(
+            create_app(),
+            terminal_size=(120, 40),
+            run_before=set_degraded_mode,
+        )
+
+    def test_connection_unhealthy_stale_data(self, snap_compare, mock_demo_bot):
+        """Snapshot test for stale data with unhealthy connection.
+
+        Shows tiles with "Data stale (Xs) — press R to reconnect" error
+        banners when connection is unhealthy and data is stale.
+        """
+        import time
+
+        async def set_connection_unhealthy(pilot):
+            app = pilot.app
+            # Set connection unhealthy state
+            app.tui_state.connection_healthy = False
+            app.tui_state.running = True
+            app.tui_state.degraded_mode = False
+            # Set stale data (35 seconds old)
+            app.tui_state.last_data_fetch = time.time() - 35
+            # Trigger UI refresh
+            app.tui_state.refresh()
+            await pilot.pause()
+
+        def create_app():
+            return TraderApp(bot=mock_demo_bot)
+
+        assert snap_compare(
+            create_app(),
+            terminal_size=(120, 40),
+            run_before=set_connection_unhealthy,
+        )
+
+
 # Layout guardrail tests - these validate layout integrity programmatically
 class TestLayoutGuardrails:
     """Programmatic layout validation tests."""

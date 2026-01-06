@@ -25,6 +25,7 @@ if TYPE_CHECKING:
     from gpt_trader.orchestration.execution.validation import ValidationFailureTracker
     from gpt_trader.orchestration.live_execution import LiveExecutionEngine
     from gpt_trader.orchestration.trading_bot.bot import TradingBot
+    from gpt_trader.security.secrets_manager import SecretsManager
 
 
 logger = get_logger(__name__, component="container")
@@ -95,6 +96,7 @@ class ApplicationContainer:
         self._validation_failure_tracker: ValidationFailureTracker | None = None
         self._profile_loader: ProfileLoader | None = None
         self._health_state: HealthState | None = None
+        self._secrets_manager: SecretsManager | None = None
 
     @property
     def config_controller(self) -> ConfigController:
@@ -227,6 +229,20 @@ class ApplicationContainer:
         if self._health_state is None:
             self._health_state = HealthState()
         return self._health_state
+
+    @property
+    def secrets_manager(self) -> SecretsManager:
+        """Create or return the secrets manager instance.
+
+        The secrets manager provides secure storage and retrieval of
+        sensitive data including API keys and credentials. Supports
+        HashiCorp Vault integration with encrypted file fallback.
+        """
+        if self._secrets_manager is None:
+            from gpt_trader.security.secrets_manager import SecretsManager as SM
+
+            self._secrets_manager = SM(config=self.config)
+        return self._secrets_manager
 
     def reset_broker(self) -> None:
         self._broker = None

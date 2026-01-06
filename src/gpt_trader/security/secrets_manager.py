@@ -422,12 +422,39 @@ class SecretsManager:
             self._secrets_cache.clear()
 
 
-# Global instance
+# Legacy: Module-level secrets manager for backward compatibility
+# Prefer using container.secrets_manager instead
 _secrets_manager: SecretsManager | None = None
 
 
+def _get_secrets_manager_from_container() -> SecretsManager | None:
+    """Attempt to get secrets manager from container."""
+    try:
+        from gpt_trader.app.container import get_application_container
+
+        container = get_application_container()
+        if container is not None:
+            return container.secrets_manager
+    except ImportError:
+        pass
+    return None
+
+
 def get_secrets_manager() -> SecretsManager:
-    """Get the global secrets manager instance"""
+    """Get the secrets manager instance.
+
+    Prefers container-based resolution. Falls back to module-level
+    singleton for backward compatibility.
+
+    Note: Prefer using container.secrets_manager directly when container
+    is available.
+    """
+    # Try container first
+    manager = _get_secrets_manager_from_container()
+    if manager is not None:
+        return manager
+
+    # Fallback to module singleton
     global _secrets_manager
     if _secrets_manager is None:
         _secrets_manager = SecretsManager()

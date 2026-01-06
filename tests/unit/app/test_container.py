@@ -397,6 +397,24 @@ class TestApplicationContainer:
         health_state2 = container.health_state
         assert health_state is health_state2
 
+    def test_secrets_manager_creation(self, mock_config: BotConfig) -> None:
+        """Test that secrets manager is created correctly."""
+        from gpt_trader.security.secrets_manager import SecretsManager
+
+        container = ApplicationContainer(mock_config)
+
+        # First access should create the secrets manager
+        secrets_manager = container.secrets_manager
+
+        assert isinstance(secrets_manager, SecretsManager)
+        assert container._secrets_manager == secrets_manager
+        # Verify config is passed
+        assert secrets_manager._config == mock_config
+
+        # Second access should return the same instance
+        secrets_manager2 = container.secrets_manager
+        assert secrets_manager is secrets_manager2
+
 
 class TestCreateApplicationContainer:
     """Test cases for create_application_container function."""

@@ -41,6 +41,7 @@ from gpt_trader.tui.types import (
     ResilienceState,
     RiskGuard,
     RiskState,
+    StrategyParameters,
     StrategyPerformance,
     StrategyState,
     SystemStatus,
@@ -509,9 +510,32 @@ class TuiState(Widget):
                 contributions=contributions,
             )
 
+        # Parse strategy parameters if present
+        params: StrategyParameters | None = None
+        raw_params = getattr(strat, "parameters", None)
+        if raw_params and isinstance(raw_params, dict):
+            params = StrategyParameters(
+                rsi_period=raw_params.get("rsi_period"),
+                rsi_overbought=raw_params.get("rsi_overbought"),
+                rsi_oversold=raw_params.get("rsi_oversold"),
+                ma_fast_period=raw_params.get("ma_fast_period"),
+                ma_slow_period=raw_params.get("ma_slow_period"),
+                ma_type=raw_params.get("ma_type"),
+                zscore_lookback=raw_params.get("zscore_lookback"),
+                zscore_entry_threshold=raw_params.get("zscore_entry_threshold"),
+                zscore_exit_threshold=raw_params.get("zscore_exit_threshold"),
+                vwap_deviation_threshold=raw_params.get("vwap_deviation_threshold"),
+                spread_tight_bps=raw_params.get("spread_tight_bps"),
+                spread_normal_bps=raw_params.get("spread_normal_bps"),
+                spread_wide_bps=raw_params.get("spread_wide_bps"),
+                orderbook_levels=raw_params.get("orderbook_levels"),
+                orderbook_imbalance_threshold=raw_params.get("orderbook_imbalance_threshold"),
+            )
+
         self.strategy_data = StrategyState(
             active_strategies=strat.active_strategies,
             last_decisions=decisions,
+            parameters=params,
         )
 
         # Update performance metrics if present

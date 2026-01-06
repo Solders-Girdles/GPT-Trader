@@ -151,6 +151,8 @@ class StrategyStatus:
     performance: dict[str, Any] | None = None
     # Historical backtest performance (from backtesting)
     backtest_performance: dict[str, Any] | None = None
+    # Strategy indicator parameters (RSI period, MA periods, etc.)
+    parameters: dict[str, Any] | None = None
 
 
 @dataclass
@@ -814,6 +816,22 @@ class StatusReporter:
             self._status.strategy.performance = performance
         if backtest is not None:
             self._status.strategy.backtest_performance = backtest
+
+    def update_strategy_parameters(self, parameters: dict[str, Any] | None) -> None:
+        """Update strategy indicator parameters for TUI display.
+
+        Args:
+            parameters: Dict with indicator config values, e.g.:
+                {
+                    "rsi_period": 14,
+                    "ma_fast_period": 5,
+                    "ma_slow_period": 20,
+                    "ma_type": "SMA",
+                    "zscore_lookback": 20,
+                    ...
+                }
+        """
+        self._status.strategy.parameters = parameters
 
     def update_risk(
         self,

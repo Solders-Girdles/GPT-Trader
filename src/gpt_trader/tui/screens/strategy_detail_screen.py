@@ -22,6 +22,7 @@ from gpt_trader.tui.helpers import safe_update
 from gpt_trader.tui.types import (
     IndicatorContribution,
     RegimeData,
+    StrategyParameters,
     StrategyPerformance,
 )
 
@@ -29,7 +30,7 @@ if TYPE_CHECKING:
     from gpt_trader.tui.state import TuiState
 
 
-# Static tuning hints keyed by indicator name (uppercase)
+# Static tuning hints keyed by indicator name (uppercase) - fallback when no live params
 TUNING_HINTS: dict[str, str] = {
     "RSI": "Higher period = slower signals",
     "MACD": "Wider spread = smoother trend",
@@ -37,21 +38,35 @@ TUNING_HINTS: dict[str, str] = {
     "VWAP": "Longer window = slower mean",
     "BOLL": "Wider bands = fewer signals",
     "EMA": "Longer EMA = slower trend",
+    "MA": "Longer MA = slower trend",
+    "ZSCORE": "Higher threshold = fewer signals",
+    "MEAN": "Higher threshold = fewer signals",
+    "SPREAD": "Tighter spread = stricter filter",
+    "ORDERBOOK": "More levels = smoother signal",
+    "TREND": "Wider spread = smoother signal",
 }
 
 
-def _get_indicator_hint(name: str) -> str | None:
-    """Get tuning hint for an indicator by name.
+def _get_indicator_hint(name: str, params: StrategyParameters | None = None) -> str | None:
+    """Get tuning hint for an indicator, preferring live params.
 
-    Normalizes indicator name by taking first alphabetic token
-    (e.g., "RSI(14)" -> "RSI", "MACD_signal" -> "MACD").
+    When live params are available, formats them for display
+    (e.g., "period=14"). Falls back to static hints when no params.
 
     Args:
         name: Indicator name (may include parameters).
+        params: Optional live StrategyParameters for real config values.
 
     Returns:
-        Hint string if found, None otherwise.
+        Hint string with live params or static hint, None if neither available.
     """
+    # Try live params first
+    if params is not None:
+        live_hint = params.format_indicator_params(name)
+        if live_hint:
+            return live_hint
+
+    # Fall back to static hints
     import re
 
     # Extract first alphabetic token
@@ -243,6 +258,7 @@ class StrategyDetailScreen(Screen):
         super().__init__(**kwargs)
         self._selected_symbol: str | None = None
         self._last_performance: StrategyPerformance | None = None
+        self._strategy_params: StrategyParameters | None = None
 
     def compose(self) -> ComposeResult:
         with ScrollableContainer(id="strategy-detail-container"):
@@ -343,11 +359,15 @@ class StrategyDetailScreen(Screen):
 
     def on_state_updated(self, state: TuiState) -> None:
         """Update the screen when state changes."""
+        # Store strategy params for hint formatting
+        self._strategy_params = state.strategy_data.parameters
+
         self._update_header(state)
         self._update_performance(state.strategy_performance)
         self._update_regime(state.regime_data)
         self._update_decisions(state)
         self._update_backtest(state)
+        self._update_hint_note()
 
     @safe_update
     def _update_header(self, state: TuiState) -> None:
@@ -704,9 +724,21 @@ class StrategyDetailScreen(Screen):
             f"[{color}]{bar} {contrib_str} {direction}[/{color}]"
         )
 
-        # Append tuning hint if available
-        hint = _get_indicator_hint(contrib.name)
+        # Append tuning hint if available (live params preferred, static fallback)
+        hint = _get_indicator_hint(contrib.name, self._strategy_params)
         if hint:
             row += f"  [dim]({hint})[/dim]"
 
         return row
+
+    @safe_update
+    def _update_hint_note(self) -> None:
+        """Update the hint note to reflect live vs static config status."""
+        try:
+            note = self.query_one(".signal-detail-hint-note", Label)
+            if self._strategy_params is not None:
+                note.update("Hints: live config parameters shown")
+            else:
+                note.update("Hints: tuned defaults shown; no live config")
+        except Exception:
+            pass

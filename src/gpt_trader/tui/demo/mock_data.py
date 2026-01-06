@@ -337,6 +337,30 @@ class MockDataGenerator:
                 "winning_trades": backtest_winning,
                 "losing_trades": backtest_losing,
             },
+            # Strategy indicator parameters for live config display
+            "parameters": {
+                # RSI config
+                "rsi_period": 14,
+                "rsi_overbought": 70,
+                "rsi_oversold": 30,
+                # MA config (Trend signal)
+                "ma_fast_period": 5,
+                "ma_slow_period": 20,
+                "ma_type": "SMA",
+                # Z-Score / Mean Reversion config
+                "zscore_lookback": 20,
+                "zscore_entry_threshold": 2.0,
+                "zscore_exit_threshold": 0.5,
+                # VWAP config
+                "vwap_deviation_threshold": 0.01,
+                # Spread config
+                "spread_tight_bps": 5.0,
+                "spread_normal_bps": 15.0,
+                "spread_wide_bps": 30.0,
+                # Orderbook config
+                "orderbook_levels": 5,
+                "orderbook_imbalance_threshold": 0.2,
+            },
         }
 
     def generate_risk_data(self) -> dict[str, Any]:

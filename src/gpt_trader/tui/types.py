@@ -185,11 +185,106 @@ class DecisionData:
 
 
 @dataclass
+class StrategyParameters:
+    """Strategy indicator parameters for TUI display.
+
+    Maps indicator configuration to displayable values.
+    Used to show live params in Strategy Detail screen hints
+    (e.g., "RSI (period=14)" instead of static "Higher period = slower").
+    """
+
+    # RSI parameters
+    rsi_period: int | None = None
+    rsi_overbought: int | None = None
+    rsi_oversold: int | None = None
+
+    # MA parameters (Trend signal)
+    ma_fast_period: int | None = None
+    ma_slow_period: int | None = None
+    ma_type: str | None = None  # "SMA" or "EMA"
+
+    # Z-Score / Mean Reversion
+    zscore_lookback: int | None = None
+    zscore_entry_threshold: float | None = None
+    zscore_exit_threshold: float | None = None
+
+    # VWAP
+    vwap_deviation_threshold: float | None = None
+
+    # Spread
+    spread_tight_bps: float | None = None
+    spread_normal_bps: float | None = None
+    spread_wide_bps: float | None = None
+
+    # Orderbook
+    orderbook_levels: int | None = None
+    orderbook_imbalance_threshold: float | None = None
+
+    def format_indicator_params(self, indicator_name: str) -> str | None:
+        """Format parameters for a given indicator name.
+
+        Args:
+            indicator_name: Indicator name (e.g., "RSI", "MACD", "MA").
+
+        Returns:
+            Formatted param string (e.g., "period=14") or None if no params.
+        """
+        import re
+
+        # Normalize: extract first alphabetic token
+        match = re.match(r"([A-Za-z]+)", indicator_name)
+        if not match:
+            return None
+
+        key = match.group(1).upper()
+
+        if key == "RSI" and self.rsi_period is not None:
+            return f"period={self.rsi_period}"
+
+        if key in ("MA", "EMA", "SMA"):
+            parts = []
+            if self.ma_fast_period is not None:
+                parts.append(f"fast={self.ma_fast_period}")
+            if self.ma_slow_period is not None:
+                parts.append(f"slow={self.ma_slow_period}")
+            if self.ma_type is not None:
+                parts.append(f"type={self.ma_type}")
+            return ", ".join(parts) if parts else None
+
+        if key in ("ZSCORE", "MEAN", "MEANREV"):
+            parts = []
+            if self.zscore_lookback is not None:
+                parts.append(f"lookback={self.zscore_lookback}")
+            if self.zscore_entry_threshold is not None:
+                parts.append(f"entry={self.zscore_entry_threshold:.1f}")
+            return ", ".join(parts) if parts else None
+
+        if key == "VWAP" and self.vwap_deviation_threshold is not None:
+            return f"dev={self.vwap_deviation_threshold:.1%}"
+
+        if key == "SPREAD":
+            if self.spread_tight_bps is not None:
+                return f"tight={self.spread_tight_bps:.0f}bps"
+            return None
+
+        if key in ("ORDERBOOK", "OB", "IMBALANCE"):
+            parts = []
+            if self.orderbook_levels is not None:
+                parts.append(f"levels={self.orderbook_levels}")
+            if self.orderbook_imbalance_threshold is not None:
+                parts.append(f"thresh={self.orderbook_imbalance_threshold:.0%}")
+            return ", ".join(parts) if parts else None
+
+        return None
+
+
+@dataclass
 class StrategyState:
     """Data structure for strategy information."""
 
     active_strategies: list[str] = field(default_factory=list)
     last_decisions: dict[str, DecisionData] = field(default_factory=dict)
+    parameters: StrategyParameters | None = None
 
 
 @dataclass

@@ -41,6 +41,7 @@ class RiskWidget(Static):
 
     Keyboard shortcuts:
         Enter/G: Open risk detail modal (guards view)
+        P: Open risk detail modal focused on preview section
         L: Focus logs widget
         D: Reset daily risk tracking
     """
@@ -48,6 +49,7 @@ class RiskWidget(Static):
     BINDINGS = [
         Binding("enter", "show_risk_detail", "Details", show=True),
         Binding("g", "show_risk_detail", "Guards", show=False),
+        Binding("p", "show_risk_preview", "Preview", show=False),
         Binding("l", "focus_logs", "Logs", show=False),
         Binding("d", "reset_daily_risk", "Reset Day", show=False),
     ]
@@ -330,6 +332,16 @@ class RiskWidget(Static):
             return
 
         self.app.push_screen(RiskDetailModal(self._risk_data))
+
+    def action_show_risk_preview(self) -> None:
+        """Open risk detail modal focused on preview section."""
+        from gpt_trader.tui.widgets.risk_detail_modal import RiskDetailModal
+
+        if self._risk_data is None:
+            self.notify("No risk data available", timeout=2)
+            return
+
+        self.app.push_screen(RiskDetailModal(self._risk_data, focus_preview=True))
 
     async def action_focus_logs(self) -> None:
         """Focus the logs widget via app action dispatcher."""

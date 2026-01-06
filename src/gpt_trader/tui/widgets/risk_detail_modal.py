@@ -43,14 +43,16 @@ class RiskDetailModal(ModalScreen):
 
     BINDINGS = [("escape", "dismiss", "Close")]
 
-    def __init__(self, risk_data: RiskState) -> None:
+    def __init__(self, risk_data: RiskState, focus_preview: bool = False) -> None:
         """Initialize risk detail modal.
 
         Args:
             risk_data: RiskState containing current risk metrics.
+            focus_preview: If True, highlight the risk preview section on open.
         """
         super().__init__()
         self.risk_data = risk_data
+        self._focus_preview = focus_preview
 
     def compose(self) -> ComposeResult:
         """Compose modal layout."""
@@ -154,9 +156,20 @@ class RiskDetailModal(ModalScreen):
                 yield Button("Close", variant="primary", id="close-btn")
 
     def on_mount(self) -> None:
-        """Set dynamic width on mount."""
+        """Set dynamic width on mount and handle focus_preview."""
         width = calculate_modal_width(self.app.size.width, "medium")
         self.query_one("#risk-detail-modal").styles.width = width
+
+        # If focus_preview requested, highlight the preview section
+        if self._focus_preview:
+            try:
+                # Add highlight class to preview chips container
+                preview_chips = self.query_one(".preview-chips", Horizontal)
+                preview_chips.add_class("preview-focused")
+                # Scroll the preview section into view
+                preview_chips.scroll_visible(animate=False)
+            except Exception:
+                pass  # Preview section may not exist if no limit configured
 
     def _calculate_risk_score(self, data: RiskState) -> int:
         """Calculate overall risk score.

@@ -259,6 +259,11 @@ RiskDetailModal .preview-legend {
     margin-bottom: $spacing-xs;
 }
 
+RiskDetailModal .preview-focused {
+    border: wide $accent;
+    padding: 0 $spacing-xs;
+}
+
 /* === Position Detail Modal === */
 
 PositionDetailModal {

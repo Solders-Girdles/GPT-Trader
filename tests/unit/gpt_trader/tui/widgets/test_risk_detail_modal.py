@@ -307,3 +307,25 @@ class TestEnhancedGuardVisibility:
         assert RiskGuard(name="test", severity="low").severity_order == 1
         assert RiskGuard(name="test", severity="HIGH").severity_order == 3
         assert RiskGuard(name="test", severity="Critical").severity_order == 4
+
+
+class TestFocusPreviewParameter:
+    """Tests for focus_preview parameter functionality."""
+
+    def test_default_focus_preview_is_false(self):
+        """Modal defaults to focus_preview=False."""
+        data = RiskState()
+        modal = RiskDetailModal(data)
+        assert modal._focus_preview is False
+
+    def test_focus_preview_parameter_stored(self):
+        """Modal stores focus_preview parameter when True."""
+        data = RiskState()
+        modal = RiskDetailModal(data, focus_preview=True)
+        assert modal._focus_preview is True
+
+    def test_focus_preview_explicit_false(self):
+        """Modal accepts explicit focus_preview=False."""
+        data = RiskState()
+        modal = RiskDetailModal(data, focus_preview=False)
+        assert modal._focus_preview is False

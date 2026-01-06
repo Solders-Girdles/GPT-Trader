@@ -37,6 +37,7 @@ class SubmissionRecord:
     rejected: bool = False
     retry_count: int = 0
     failure_reason: str = ""
+    rejection_reason: str = ""  # Specific reason for rejection (e.g., rate_limit)
 
 
 class ExecutionTelemetryCollector:
@@ -60,6 +61,7 @@ class ExecutionTelemetryCollector:
         self._window_size = window_size
         self._submissions: deque[SubmissionRecord] = deque(maxlen=window_size)
         self._latencies: deque[float] = deque(maxlen=LATENCY_WINDOW_SIZE)
+        self._retry_reasons: deque[str] = deque(maxlen=window_size)
         self._lock = threading.Lock()
 
         # Counters for total lifetime stats
@@ -73,6 +75,7 @@ class ExecutionTelemetryCollector:
         rejected: bool = False,
         retry_count: int = 0,
         failure_reason: str = "",
+        rejection_reason: str = "",
     ) -> None:
         """Record an order submission.
 
@@ -82,6 +85,8 @@ class ExecutionTelemetryCollector:
             rejected: Whether broker rejected the order.
             retry_count: Number of retries before this result.
             failure_reason: Reason for failure (if failed).
+            rejection_reason: Categorized reason for rejection (e.g., rate_limit,
+                insufficient_funds, invalid_size, timeout, network, unknown).
         """
         record = SubmissionRecord(
             timestamp=time.time(),
@@ -90,6 +95,7 @@ class ExecutionTelemetryCollector:
             rejected=rejected,
             retry_count=retry_count,
             failure_reason=failure_reason,
+            rejection_reason=rejection_reason,
         )
 
         with self._lock:
@@ -99,10 +105,17 @@ class ExecutionTelemetryCollector:
             self._total_submissions += 1
             self._total_retries += retry_count
 
-    def record_retry(self) -> None:
-        """Record a retry attempt (called during retry loop)."""
+    def record_retry(self, reason: str = "") -> None:
+        """Record a retry attempt (called during retry loop).
+
+        Args:
+            reason: Categorized reason for retry (e.g., timeout, connection,
+                rate_limit, network, unknown).
+        """
         with self._lock:
             self._total_retries += 1
+            if reason:
+                self._retry_reasons.append(reason)
 
     def get_metrics(self) -> ExecutionMetrics:
         """Get current execution metrics.
@@ -146,6 +159,19 @@ class ExecutionTelemetryCollector:
             # Calculate retry rate
             retry_rate = retries / total if total > 0 else 0.0
 
+            # Aggregate rejection reasons from submissions in window
+            rejection_reasons: dict[str, int] = {}
+            for s in self._submissions:
+                if s.rejection_reason:
+                    rejection_reasons[s.rejection_reason] = (
+                        rejection_reasons.get(s.rejection_reason, 0) + 1
+                    )
+
+            # Aggregate retry reasons from retry_reasons deque
+            retry_reasons: dict[str, int] = {}
+            for reason in self._retry_reasons:
+                retry_reasons[reason] = retry_reasons.get(reason, 0) + 1
+
             return ExecutionMetrics(
                 submissions_total=total,
                 submissions_success=success,
@@ -159,6 +185,8 @@ class ExecutionTelemetryCollector:
                 retry_rate=retry_rate,
                 last_submission_time=last_time,
                 last_failure_reason=last_reason,
+                rejection_reasons=rejection_reasons,
+                retry_reasons=retry_reasons,
             )
 
     def clear(self) -> None:
@@ -166,6 +194,7 @@ class ExecutionTelemetryCollector:
         with self._lock:
             self._submissions.clear()
             self._latencies.clear()
+            self._retry_reasons.clear()
             self._total_submissions = 0
             self._total_retries = 0
 

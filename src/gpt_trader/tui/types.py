@@ -354,6 +354,10 @@ class ExecutionMetrics:
     last_submission_time: float = 0.0
     last_failure_reason: str = ""
 
+    # Reason breakdowns (rolling window)
+    rejection_reasons: dict[str, int] = field(default_factory=dict)
+    retry_reasons: dict[str, int] = field(default_factory=dict)
+
     @property
     def success_rate(self) -> float:
         """Calculate success rate as percentage."""
@@ -365,6 +369,16 @@ class ExecutionMetrics:
     def is_healthy(self) -> bool:
         """Check if execution metrics indicate healthy state."""
         return self.success_rate >= 95.0 and self.retry_rate < 0.5
+
+    @property
+    def top_rejection_reasons(self) -> list[tuple[str, int]]:
+        """Get rejection reasons sorted by count (highest first)."""
+        return sorted(self.rejection_reasons.items(), key=lambda x: -x[1])
+
+    @property
+    def top_retry_reasons(self) -> list[tuple[str, int]]:
+        """Get retry reasons sorted by count (highest first)."""
+        return sorted(self.retry_reasons.items(), key=lambda x: -x[1])
 
 
 @dataclass

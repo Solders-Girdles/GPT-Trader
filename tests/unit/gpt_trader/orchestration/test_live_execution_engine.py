@@ -901,6 +901,124 @@ class TestResetDailyTrackingEdgeCases:
         engine.guard_manager.invalidate_cache.assert_called_once()
 
 
+# ============================================================
+# Test: Validation Failure Tracker Wiring
+# ============================================================
+
+
+class TestValidationFailureTrackerWiring:
+    """Tests for failure tracker escalation wiring to risk manager."""
+
+    @pytest.fixture
+    def mock_broker(self) -> Mock:
+        """Create a mock broker."""
+        broker = Mock()
+        broker.list_balances.return_value = []
+        broker.get_product.return_value = Mock()
+        return broker
+
+    @pytest.fixture
+    def mock_risk_manager(self) -> Mock:
+        """Create a mock risk manager."""
+        manager = Mock()
+        manager.event_store = None
+        manager.set_reduce_only_mode = Mock()
+        return manager
+
+    def test_init_creates_failure_tracker_with_escalation_callback(
+        self, mock_broker: Mock, mock_risk_manager: Mock, bot_config_factory
+    ) -> None:
+        """Test that init creates a failure tracker with escalation callback."""
+        config = bot_config_factory()
+        engine = LiveExecutionEngine(
+            broker=mock_broker,
+            config=config,
+            risk_manager=mock_risk_manager,
+        )
+
+        # Verify failure tracker exists on order_validator
+        assert engine.order_validator._failure_tracker is not None
+        assert engine.order_validator._failure_tracker.escalation_threshold == 5
+        assert engine.order_validator._failure_tracker.escalation_callback is not None
+
+    def test_escalation_callback_triggers_reduce_only_mode(
+        self, mock_broker: Mock, mock_risk_manager: Mock, bot_config_factory
+    ) -> None:
+        """Test that escalation callback triggers reduce-only mode on risk manager."""
+        config = bot_config_factory()
+        engine = LiveExecutionEngine(
+            broker=mock_broker,
+            config=config,
+            risk_manager=mock_risk_manager,
+        )
+
+        # Get the failure tracker and manually trigger escalation
+        failure_tracker = engine.order_validator._failure_tracker
+
+        # Invoke the escalation callback directly
+        failure_tracker.escalation_callback()
+
+        # Verify reduce-only mode was set
+        mock_risk_manager.set_reduce_only_mode.assert_called_once_with(
+            True, reason="consecutive_validation_failures"
+        )
+
+    def test_consecutive_failures_trigger_reduce_only_mode(
+        self, mock_broker: Mock, mock_risk_manager: Mock, bot_config_factory
+    ) -> None:
+        """Test that 5 consecutive failures trigger reduce-only mode."""
+        config = bot_config_factory()
+        engine = LiveExecutionEngine(
+            broker=mock_broker,
+            config=config,
+            risk_manager=mock_risk_manager,
+        )
+
+        failure_tracker = engine.order_validator._failure_tracker
+
+        # Record failures up to threshold
+        for i in range(4):
+            escalated = failure_tracker.record_failure("mark_staleness")
+            assert not escalated
+
+        # Fifth failure should trigger escalation
+        escalated = failure_tracker.record_failure("mark_staleness")
+        assert escalated
+
+        # Verify reduce-only mode was triggered
+        mock_risk_manager.set_reduce_only_mode.assert_called_once_with(
+            True, reason="consecutive_validation_failures"
+        )
+
+    def test_success_resets_failure_counter(
+        self, mock_broker: Mock, mock_risk_manager: Mock, bot_config_factory
+    ) -> None:
+        """Test that success resets the failure counter, preventing escalation."""
+        config = bot_config_factory()
+        engine = LiveExecutionEngine(
+            broker=mock_broker,
+            config=config,
+            risk_manager=mock_risk_manager,
+        )
+
+        failure_tracker = engine.order_validator._failure_tracker
+
+        # Record 3 failures
+        for _ in range(3):
+            failure_tracker.record_failure("mark_staleness")
+
+        # Record success - should reset counter
+        failure_tracker.record_success("mark_staleness")
+
+        # Record 4 more failures - still shouldn't escalate
+        for _ in range(4):
+            escalated = failure_tracker.record_failure("mark_staleness")
+            assert not escalated
+
+        # Reduce-only should NOT have been called
+        mock_risk_manager.set_reduce_only_mode.assert_not_called()
+
+
 class TestLiveOrderEdgeCases:
     """Additional tests for LiveOrder dataclass."""
 

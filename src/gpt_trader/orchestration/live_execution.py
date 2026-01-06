@@ -28,6 +28,7 @@ from gpt_trader.orchestration.execution import (
     OrderValidator,
     RuntimeGuardState,
     StateCollector,
+    ValidationFailureTracker,
 )
 from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.utilities.logging_patterns import get_logger
@@ -72,6 +73,7 @@ class LiveExecutionEngine:
         bot_id: str = "live_execution",
         slippage_multipliers: dict[str, float] | None = None,
         enable_preview: bool | None = None,
+        failure_tracker: ValidationFailureTracker | None = None,
     ) -> None:
         """
         Initialize live execution engine.
@@ -84,6 +86,8 @@ class LiveExecutionEngine:
             bot_id: Bot identifier for logging
             slippage_multipliers: Symbol-specific slippage multipliers
             enable_preview: Enable order preview (defaults to config)
+            failure_tracker: Optional validation failure tracker. If not provided,
+                creates a per-engine tracker with escalation to reduce-only mode.
         """
         self.broker = broker
         self._config = config
@@ -135,12 +139,32 @@ class LiveExecutionEngine:
             self.open_orders,
             integration_mode=self._integration_mode,
         )
+        # Use injected failure tracker or create one with escalation to reduce-only mode
+        if failure_tracker is not None:
+            effective_tracker = failure_tracker
+        else:
+
+            def _escalation_callback() -> None:
+                self.risk_manager.set_reduce_only_mode(
+                    True, reason="consecutive_validation_failures"
+                )
+                logger.warning(
+                    "Validation failures triggered reduce-only mode",
+                    operation="validation_escalation",
+                )
+
+            effective_tracker = ValidationFailureTracker(
+                escalation_threshold=5,
+                escalation_callback=_escalation_callback,
+            )
+
         self.order_validator: OrderValidator = OrderValidator(
             broker,
             self.risk_manager,
             self.enable_order_preview,
             self.order_submitter.record_preview,
             self.order_submitter.record_rejection,
+            failure_tracker=effective_tracker,
         )
         self.guard_manager: GuardManager = GuardManager(
             broker,

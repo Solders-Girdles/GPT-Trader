@@ -21,29 +21,18 @@ class TestTradingBotInitialization:
         config.interval = 60
         return config
 
-    @pytest.fixture
-    def mock_registry(self) -> Mock:
-        """Create a mock service registry."""
-        registry = Mock()
-        registry.broker = Mock()
-        registry.account_manager = Mock()
-        registry.account_telemetry = Mock()
-        registry.risk_manager = Mock()
-        registry.runtime_state = Mock()
-        registry.event_store = Mock()
-        registry.notification_service = Mock()
-        return registry
-
     def test_init_with_config_only(self, mock_config: Mock) -> None:
         """Test initialization with only config."""
         mock_container = Mock()
-        # Ensure container creates a registry with None broker for this test
-        mock_registry = Mock()
-        mock_registry.broker = None
-        mock_registry.account_manager = None
-        mock_registry.risk_manager = None
-        mock_registry.runtime_state = None
-        mock_container.create_service_registry.return_value = mock_registry
+        # Set container attributes to None for this test
+        mock_container.broker = None
+        mock_container.risk_manager = None
+        mock_container.event_store = Mock()
+        mock_container.notification_service = Mock()
+        # Explicitly set optional attributes to None (Mock auto-creates them)
+        mock_container.account_manager = None
+        mock_container.account_telemetry = None
+        mock_container.runtime_state = None
 
         with patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine:
             mock_engine.return_value = Mock()
@@ -57,20 +46,26 @@ class TestTradingBotInitialization:
         assert bot.risk_manager is None
         assert bot.runtime_state is None
 
-    def test_init_with_registry(self, mock_config: Mock, mock_registry: Mock) -> None:
-        """Test initialization with registry."""
+    def test_init_with_container_services(self, mock_config: Mock) -> None:
+        """Test initialization with container services."""
         mock_container = Mock()
-        mock_container.create_service_registry.return_value = mock_registry
+        mock_container.broker = Mock()
+        mock_container.risk_manager = Mock()
+        mock_container.event_store = Mock()
+        mock_container.notification_service = Mock()
+        mock_container.account_manager = Mock()
+        mock_container.account_telemetry = Mock()
+        mock_container.runtime_state = Mock()
 
         with patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine:
             mock_engine.return_value = Mock()
             bot = TradingBot(config=mock_config, container=mock_container)
 
-        assert bot.broker is mock_registry.broker
-        assert bot.account_manager is mock_registry.account_manager
-        assert bot.account_telemetry is mock_registry.account_telemetry
-        assert bot.risk_manager is mock_registry.risk_manager
-        assert bot.runtime_state is mock_registry.runtime_state
+        assert bot.broker is mock_container.broker
+        assert bot.account_manager is mock_container.account_manager
+        assert bot.account_telemetry is mock_container.account_telemetry
+        assert bot.risk_manager is mock_container.risk_manager
+        assert bot.runtime_state is mock_container.runtime_state
 
     def test_init_with_container(self, mock_config: Mock) -> None:
         """Test initialization with container."""
@@ -82,9 +77,14 @@ class TestTradingBotInitialization:
 
         assert bot.container is mock_container
 
-    def test_init_creates_context(self, mock_config: Mock, mock_registry: Mock) -> None:
+    def test_init_creates_context(self, mock_config: Mock) -> None:
         """Test that initialization creates CoordinatorContext."""
         mock_container = Mock()
+        mock_container.broker = Mock()
+        mock_container.risk_manager = Mock()
+        mock_container.event_store = Mock()
+        mock_container.notification_service = Mock()
+
         with (
             patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine,
             patch("gpt_trader.orchestration.trading_bot.bot.CoordinatorContext") as mock_context,
@@ -92,18 +92,16 @@ class TestTradingBotInitialization:
             mock_engine.return_value = Mock()
             mock_context.return_value = Mock()
 
-            mock_container.create_service_registry.return_value = mock_registry
-
             bot = TradingBot(config=mock_config, container=mock_container)
 
             mock_context.assert_called_once_with(
                 config=mock_config,
-                registry=mock_registry,
-                broker=mock_registry.broker,
+                container=mock_container,
+                broker=mock_container.broker,
                 symbols=tuple(mock_config.symbols),
-                risk_manager=mock_registry.risk_manager,
-                event_store=mock_registry.event_store,
-                notification_service=mock_registry.notification_service,
+                risk_manager=mock_container.risk_manager,
+                event_store=mock_container.event_store,
+                notification_service=mock_container.notification_service,
             )
             assert bot.context is not None
 
@@ -117,21 +115,27 @@ class TestTradingBotInitialization:
             assert bot.engine is not None
             mock_engine.assert_called_once()
 
-    def test_init_registry_missing_attributes(self, mock_config: Mock) -> None:
-        """Test initialization handles registry with missing attributes."""
-        mock_container = Mock()
-        minimal_registry = Mock(spec=["broker"])
-        minimal_registry.broker = Mock()
+    def test_init_container_missing_optional_attributes(self, mock_config: Mock) -> None:
+        """Test initialization handles container with missing optional attributes."""
+        from types import SimpleNamespace
 
-        mock_container.create_service_registry.return_value = minimal_registry
+        # Use SimpleNamespace with only required attributes
+        mock_container = SimpleNamespace(
+            broker=Mock(),
+            risk_manager=Mock(),
+            event_store=Mock(),
+            notification_service=Mock(),
+            # Optional attributes not set - getattr will return None
+        )
 
         with patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine:
             mock_engine.return_value = Mock()
             bot = TradingBot(config=mock_config, container=mock_container)
 
-        assert bot.broker is minimal_registry.broker
-        assert bot.account_manager is None
-        assert bot.risk_manager is None
+        assert bot.broker is mock_container.broker
+        assert bot.account_manager is None  # Not set in SimpleNamespace
+        assert bot.account_telemetry is None  # Not set in SimpleNamespace
+        assert bot.runtime_state is None  # Not set in SimpleNamespace
 
 
 class TestTradingBotRun:
@@ -322,12 +326,12 @@ class TestTradingBotGetProduct:
         config.interval = 60
         mock_container = Mock()
 
-        registry = Mock()
         mock_product = Mock()
-        registry.broker = Mock()
-        registry.broker.get_product = Mock(return_value=mock_product)
-
-        mock_container.create_service_registry.return_value = registry
+        mock_container.broker = Mock()
+        mock_container.broker.get_product = Mock(return_value=mock_product)
+        mock_container.risk_manager = Mock()
+        mock_container.event_store = Mock()
+        mock_container.notification_service = Mock()
 
         with patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine:
             mock_engine.return_value = Mock()
@@ -336,7 +340,7 @@ class TestTradingBotGetProduct:
         result = bot.get_product("BTC-PERP-USDC")
 
         assert result is mock_product
-        registry.broker.get_product.assert_called_once_with("BTC-PERP-USDC")
+        mock_container.broker.get_product.assert_called_once_with("BTC-PERP-USDC")
 
     def test_get_product_without_broker(self) -> None:
         """Test get_product when broker is None."""
@@ -345,11 +349,11 @@ class TestTradingBotGetProduct:
         config.interval = 60
         mock_container = Mock()
 
-        # Ensure registry has None broker
-        mock_registry = Mock()
-        mock_registry.broker = None
-
-        mock_container.create_service_registry.return_value = mock_registry
+        # Set container.broker to None
+        mock_container.broker = None
+        mock_container.risk_manager = Mock()
+        mock_container.event_store = Mock()
+        mock_container.notification_service = Mock()
 
         with patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine:
             mock_engine.return_value = Mock()
@@ -366,10 +370,10 @@ class TestTradingBotGetProduct:
         config.interval = 60
         mock_container = Mock()
 
-        registry = Mock()
-        registry.broker = Mock(spec=[])  # No get_product
-
-        mock_container.create_service_registry.return_value = registry
+        mock_container.broker = Mock(spec=[])  # No get_product
+        mock_container.risk_manager = Mock()
+        mock_container.event_store = Mock()
+        mock_container.notification_service = Mock()
 
         with patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine:
             mock_engine.return_value = Mock()

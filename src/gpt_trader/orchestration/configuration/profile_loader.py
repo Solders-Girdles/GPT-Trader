@@ -420,16 +420,31 @@ class ProfileLoader:
         return kwargs
 
 
-# Module-level singleton for convenience
-_loader: ProfileLoader | None = None
+# Fallback singleton for when no container is set
+_fallback_loader: ProfileLoader | None = None
 
 
 def get_profile_loader() -> ProfileLoader:
-    """Get the module-level ProfileLoader singleton."""
-    global _loader
-    if _loader is None:
-        _loader = ProfileLoader()
-    return _loader
+    """Get the ProfileLoader instance.
+
+    Resolves from the application container if set, otherwise returns
+    a module-level fallback instance for backward compatibility.
+
+    Returns:
+        The ProfileLoader instance.
+    """
+    from gpt_trader.app.container import get_application_container
+
+    container = get_application_container()
+    if container is not None:
+        return container.profile_loader
+
+    # Fallback for when no container is set (e.g., tests, scripts)
+    logger.debug("No application container set, using fallback profile loader")
+    global _fallback_loader
+    if _fallback_loader is None:
+        _fallback_loader = ProfileLoader()
+    return _fallback_loader
 
 
 def load_profile(profile: Profile) -> ProfileSchema:

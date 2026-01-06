@@ -114,6 +114,7 @@ class TestPrepareBot:
 
         assert isinstance(result.event_store, EventStore)
 
+    @pytest.mark.legacy  # ServiceRegistry scheduled for removal in v3.0
     def test_prepare_bot_with_existing_registry(self, mock_config: BotConfig) -> None:
         from gpt_trader.orchestration.service_registry import empty_registry
 
@@ -314,11 +315,15 @@ class TestContainerInitialization:
         container = result.registry.extras.get("container")
         assert hasattr(container, "config") or hasattr(container, "_config")
 
+    @pytest.mark.legacy  # ServiceRegistry scheduled for removal in v3.0
     def test_build_bot_container_creates_registry(self, mock_config: BotConfig) -> None:
         from gpt_trader.app.container import ApplicationContainer
 
         container = ApplicationContainer(mock_config)
-        registry = container.create_service_registry()
+
+        # Expect deprecation warning from create_service_registry
+        with pytest.warns(DeprecationWarning, match="create_service_registry.*deprecated"):
+            registry = container.create_service_registry()
 
         assert registry is not None
         assert registry.config is mock_config

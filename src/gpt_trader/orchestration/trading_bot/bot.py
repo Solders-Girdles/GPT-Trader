@@ -41,33 +41,25 @@ class TradingBot:
         self.container = container
         self.running = False
 
-        # Create registry from container
-        registry = container.create_service_registry()
-
-        # Store registry components for CLI access
-        self._registry = registry
-        self.broker: BrokerProtocol | None = registry.broker
+        # Get services directly from container (no longer using ServiceRegistry)
+        self.broker: BrokerProtocol | None = container.broker
+        self.risk_manager: RiskManagerProtocol | None = container.risk_manager
         self.account_manager: AccountManagerProtocol | None = getattr(
-            registry, "account_manager", None
+            container, "account_manager", None
         )
-        self.account_telemetry: Any = getattr(registry, "account_telemetry", None)
-        self.risk_manager: RiskManagerProtocol | None = getattr(registry, "risk_manager", None)
-        self.runtime_state: RuntimeStateProtocol | None = getattr(registry, "runtime_state", None)
+        self.account_telemetry: Any = getattr(container, "account_telemetry", None)
+        self.runtime_state: RuntimeStateProtocol | None = getattr(container, "runtime_state", None)
 
-        # Get event_store from parameter or registry
-        self._event_store = event_store or (
-            getattr(registry, "event_store", None) if registry else None
-        )
+        # Get event_store from parameter or container
+        self._event_store = event_store or container.event_store
 
-        # Get notification_service from parameter or registry
-        self._notification_service = notification_service or (
-            getattr(registry, "notification_service", None) if registry else None
-        )
+        # Get notification_service from parameter or container
+        self._notification_service = notification_service or container.notification_service
 
-        # Setup context (simplified)
+        # Setup context
         self.context = CoordinatorContext(
             config=config,
-            registry=registry,
+            container=container,
             broker=self.broker,
             symbols=tuple(config.symbols),
             risk_manager=self.risk_manager,

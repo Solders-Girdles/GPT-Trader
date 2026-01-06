@@ -342,37 +342,37 @@ python scripts/build_tui_css.py
 The orchestration layer provides coordinated control across trading operations through specialized modules:
 
 **Configuration & Symbol Management:**
-- `configuration.py` - Profile-aware defaults (`BotConfig`, `ConfigManager`) with validation
+- `configuration/` - Profile-aware configuration (`BotConfig`, profiles, validation)
 - `config_controller.py` - Dynamic configuration management and hot-reloading
 - `symbols.py` - Symbol normalization, derivatives gating, and profile-specific defaults
 
 **Execution Coordination:**
-- `live_execution.py` - Main execution engine facade (395 lines, down from 1,063)
+- `live_execution.py` - Main execution engine facade
 - `execution/` subpackage:
-  - `guards.py` - Runtime guard management (368 lines)
-  - `validation.py` - Pre-trade validation (272 lines)
-  - `order_submission.py` - Order submission and recording (231 lines)
-  - `state_collection.py` - Account state collection (185 lines)
+  - `guard_manager.py` - Runtime guard management
+  - `validation.py` - Pre-trade validation
+  - `order_submission.py` - Order submission and recording
+  - `state_collection.py` - Account state collection
+  - `broker_executor.py` - Broker execution abstraction
 
 **Strategy & Runtime Coordination:**
-- `strategy_orchestrator.py` - Strategy lifecycle management and symbol processing
-- `coordinators/runtime.py` - Runtime orchestration and derivatives validation
-- `coordinators/execution.py` - Execution flow coordination across strategies
-- `coordinators/telemetry.py` - Streaming, telemetry, and monitoring integration
+- `strategy_orchestrator/` - Strategy lifecycle management and symbol processing
+  - `orchestrator.py` - Main strategy orchestrator
+  - `decision.py` - Trading decision logic
+  - `spot_filters.py` - Spot-specific filtering rules
 
 **Services & Telemetry:**
 - `spot_profile_service.py` - Spot trading profile loading and rule management
 - `account_telemetry.py` - Account metrics tracking and periodic snapshots
-- `order_reconciler.py` - Order state reconciliation on startup
-- `system_monitor.py` - System health monitoring and metrics publication
+- `system_monitor_metrics.py` - System metrics collection
+- `system_monitor_positions.py` - Position monitoring
 
 **Infrastructure:**
-- `service_registry.py` - **Legacy** dependency container (deprecated; use `ApplicationContainer`)
-- `storage.py` - Persistent storage abstraction for checkpoints and state
-- `broker_factory.py` - Broker instantiation with environment-based configuration
-- `session_guard.py` - Trading window enforcement
-- `market_monitor.py` - Market data freshness monitoring
 - `trading_bot/bot.py` - Main orchestrator coordinating all components
+- `deterministic_broker.py` - Deterministic broker for testing
+- `hybrid_paper_broker.py` - Paper trading broker implementation
+- `runtime_paths.py` - Runtime path resolution
+- `bootstrap.py` - Bot creation helpers (`build_bot`, `bot_from_profile`)
 
 ## What's Actually Working
 

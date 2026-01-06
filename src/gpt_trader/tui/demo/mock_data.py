@@ -160,10 +160,15 @@ class MockDataGenerator:
         # Update equity
         self.total_equity = self.starting_equity + total_upnl
 
+        # Calculate realized P&L from trades (sum of profitable closes)
+        # For demo, simulate realized P&L based on trade count
+        total_realized_pnl = len(self.trades) * random.uniform(-5, 15)
+
         return {
             "positions": positions,
             "total_unrealized_pnl": f"{total_upnl:.2f}",
             "equity": f"{self.total_equity:.2f}",
+            "total_realized_pnl": f"{total_realized_pnl:.2f}",
         }
 
     def generate_orders(self) -> list[dict[str, Any]]:
@@ -213,9 +218,55 @@ class MockDataGenerator:
         """Generate strategy decision data."""
         decisions = []
 
+        # Possible guards that can block decisions
+        blocking_guards = [
+            "DailyLossGuard",
+            "VolatilityGuard",
+            "PositionSizeGuard",
+            "MaxDrawdownGuard",
+        ]
+
         for symbol in self.symbols:
             action = random.choice(["BUY", "SELL", "HOLD"])
             confidence = random.uniform(0.5, 0.95)
+
+            # Occasionally block BUY/SELL decisions (20% chance)
+            blocked_by = ""
+            if action in ("BUY", "SELL") and random.random() < 0.2:
+                blocked_by = random.choice(blocking_guards)
+
+            # Generate indicator values
+            rsi = random.uniform(30, 70)
+            macd = random.uniform(-50, 50)
+            trend = random.choice(["bullish", "bearish", "neutral"])
+
+            # Generate contributions based on action and indicator values
+            # RSI: < 30 is bullish (oversold), > 70 is bearish (overbought)
+            rsi_contribution = (50 - rsi) / 50  # -0.4 to +0.4
+            if action == "BUY":
+                rsi_contribution = (
+                    abs(rsi_contribution) if rsi < 50 else -abs(rsi_contribution) * 0.5
+                )
+            elif action == "SELL":
+                rsi_contribution = (
+                    -abs(rsi_contribution) if rsi > 50 else abs(rsi_contribution) * 0.5
+                )
+
+            # MACD: positive is bullish, negative is bearish
+            macd_contribution = macd / 100  # -0.5 to +0.5
+
+            # Trend: direct mapping
+            trend_contribution = 0.3 if trend == "bullish" else -0.3 if trend == "bearish" else 0.0
+
+            contributions = [
+                {"name": "RSI", "value": round(rsi, 1), "contribution": round(rsi_contribution, 2)},
+                {
+                    "name": "MACD",
+                    "value": round(macd, 1),
+                    "contribution": round(macd_contribution, 2),
+                },
+                {"name": "Trend", "value": trend, "contribution": round(trend_contribution, 2)},
+            ]
 
             decisions.append(
                 {
@@ -224,11 +275,13 @@ class MockDataGenerator:
                     "reason": f"Technical indicators favor {action.lower()}",
                     "confidence": confidence,
                     "indicators": {
-                        "rsi": random.uniform(30, 70),
-                        "macd": random.uniform(-50, 50),
-                        "trend": random.choice(["bullish", "bearish", "neutral"]),
+                        "rsi": rsi,
+                        "macd": macd,
+                        "trend": trend,
                     },
+                    "contributions": contributions,
                     "timestamp": time.time(),
+                    "blocked_by": blocked_by,
                 }
             )
 
@@ -238,8 +291,72 @@ class MockDataGenerator:
         }
 
     def generate_risk_data(self) -> dict[str, Any]:
-        """Generate risk management data."""
+        """Generate risk management data with enhanced guard info."""
         daily_loss_pct = ((self.total_equity - self.starting_equity) / self.starting_equity) * 100
+        now = time.time()
+
+        # Enhanced guard definitions with severity and timestamps
+        available_guards = [
+            {
+                "name": "DailyLossGuard",
+                "severity": "CRITICAL",
+                "description": "Blocks trades when daily loss exceeds limit",
+            },
+            {
+                "name": "MaxDrawdownGuard",
+                "severity": "CRITICAL",
+                "description": "Blocks trades at max drawdown threshold",
+            },
+            {
+                "name": "VolatilityGuard",
+                "severity": "HIGH",
+                "description": "Blocks trades during extreme volatility",
+            },
+            {
+                "name": "PositionSizeGuard",
+                "severity": "MEDIUM",
+                "description": "Limits position size per trade",
+            },
+            {
+                "name": "ExposureGuard",
+                "severity": "HIGH",
+                "description": "Limits total market exposure",
+            },
+            {
+                "name": "RateLimitGuard",
+                "severity": "LOW",
+                "description": "Throttles trade frequency",
+            },
+        ]
+
+        # Select 2-4 random guards as "active"
+        num_active = random.randint(2, 4)
+        active_guard_defs = random.sample(available_guards, num_active)
+
+        # Build enhanced guards with timestamps
+        guards = []
+        for guard_def in active_guard_defs:
+            # Simulate last_triggered (some recent, some never)
+            if random.random() < 0.6:  # 60% chance was triggered
+                # Random time in past: 10s to 2h ago
+                last_triggered = now - random.uniform(10, 7200)
+                triggered_count = random.randint(1, 15)
+            else:
+                last_triggered = 0.0
+                triggered_count = 0
+
+            guards.append(
+                {
+                    "name": guard_def["name"],
+                    "severity": guard_def["severity"],
+                    "last_triggered": last_triggered,
+                    "triggered_count": triggered_count,
+                    "description": guard_def["description"],
+                }
+            )
+
+        # Legacy active_guards for backward compatibility
+        active_guards = [g["name"] for g in guards]
 
         return {
             "max_leverage": 2.0,
@@ -247,7 +364,8 @@ class MockDataGenerator:
             "current_daily_loss_pct": abs(min(0, daily_loss_pct)),
             "reduce_only_mode": False,
             "reduce_only_reason": "",
-            "active_guards": ["daily_loss_limit", "position_size_limit"],
+            "active_guards": active_guards,
+            "guards": guards,
         }
 
     def generate_system_data(self) -> dict[str, Any]:

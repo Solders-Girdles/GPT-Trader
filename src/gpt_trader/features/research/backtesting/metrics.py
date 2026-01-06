@@ -9,7 +9,6 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from decimal import Decimal
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -59,10 +58,10 @@ class PerformanceMetrics:
     @classmethod
     def from_result(
         cls,
-        result: "BacktestResult",
+        result: BacktestResult,
         risk_free_rate: float = 0.02,
         periods_per_year: int = 252,
-    ) -> "PerformanceMetrics":
+    ) -> PerformanceMetrics:
         """Calculate metrics from a BacktestResult.
 
         Args:
@@ -79,9 +78,7 @@ class PerformanceMetrics:
             return metrics
 
         # Convert equity curve
-        equity_curve = [
-            (ts, float(eq)) for ts, eq in result.equity_curve
-        ]
+        equity_curve = [(ts, float(eq)) for ts, eq in result.equity_curve]
         metrics._equity_curve = equity_curve
 
         initial_equity = equity_curve[0][1]
@@ -89,7 +86,9 @@ class PerformanceMetrics:
 
         # Basic returns
         metrics.final_equity = final_equity
-        metrics.total_return = (final_equity - initial_equity) / initial_equity if initial_equity > 0 else 0.0
+        metrics.total_return = (
+            (final_equity - initial_equity) / initial_equity if initial_equity > 0 else 0.0
+        )
 
         # Calculate period returns for risk metrics
         returns = cls._calculate_returns(equity_curve)
@@ -109,7 +108,9 @@ class PerformanceMetrics:
         # Risk metrics
         if returns:
             metrics.sharpe_ratio = cls._calculate_sharpe(returns, risk_free_rate, periods_per_year)
-            metrics.sortino_ratio = cls._calculate_sortino(returns, risk_free_rate, periods_per_year)
+            metrics.sortino_ratio = cls._calculate_sortino(
+                returns, risk_free_rate, periods_per_year
+            )
 
         # Drawdown analysis
         dd_stats = cls._calculate_drawdown(equity_curve)
@@ -191,7 +192,7 @@ class PerformanceMetrics:
 
         # Downside deviation (only negative returns)
         downside_returns = [min(0, r - rf_per_period) for r in returns]
-        downside_variance = sum(r ** 2 for r in downside_returns) / len(downside_returns)
+        downside_variance = sum(r**2 for r in downside_returns) / len(downside_returns)
         downside_dev = math.sqrt(downside_variance) if downside_variance > 0 else 0.0
 
         if downside_dev == 0:
@@ -200,9 +201,7 @@ class PerformanceMetrics:
         return (mean_return - rf_per_period) / downside_dev * math.sqrt(periods_per_year)
 
     @staticmethod
-    def _calculate_drawdown(
-        equity_curve: list[tuple[datetime, float]]
-    ) -> dict:
+    def _calculate_drawdown(equity_curve: list[tuple[datetime, float]]) -> dict:
         """Calculate maximum drawdown and duration."""
         if not equity_curve:
             return {"max_drawdown": 0.0, "max_duration": timedelta()}
@@ -241,7 +240,7 @@ class PerformanceMetrics:
         return {"max_drawdown": max_drawdown, "max_duration": max_duration}
 
     @staticmethod
-    def _calculate_trade_pnls(result: "BacktestResult") -> list[float]:
+    def _calculate_trade_pnls(result: BacktestResult) -> list[float]:
         """Calculate P&L for each round-trip trade.
 
         Pairs entry and exit trades to calculate individual trade returns.
@@ -284,7 +283,7 @@ class PerformanceMetrics:
         return gross_profit / gross_loss
 
     @staticmethod
-    def _calculate_avg_holding_period(result: "BacktestResult") -> timedelta:
+    def _calculate_avg_holding_period(result: BacktestResult) -> timedelta:
         """Calculate average holding period across trades."""
         trades = result.trades
         if len(trades) < 2:

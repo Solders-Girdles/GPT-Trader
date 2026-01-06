@@ -4,9 +4,8 @@ Reusable UI primitives for the High-Fidelity TUI.
 
 from __future__ import annotations
 
-from textual.app import ComposeResult
 from textual.reactive import reactive
-from textual.widgets import Label, Static
+from textual.widgets import Static
 
 from gpt_trader.tui.theme import THEME
 
@@ -16,11 +15,15 @@ class SparklineWidget(Static):
     Renders a crypto-style sparkline graph using Unicode block characters.
     """
 
-
-
     data = reactive([])  # type: ignore
 
-    def __init__(self, data: list[float] | None = None, color_trend: bool = True, id: str | None = None, classes: str | None = None):
+    def __init__(
+        self,
+        data: list[float] | None = None,
+        color_trend: bool = True,
+        id: str | None = None,
+        classes: str | None = None,
+    ):
         super().__init__(id=id, classes=classes)
         self.data: list[float] = data or []
         self._color_trend = color_trend
@@ -55,7 +58,7 @@ class SparklineWidget(Static):
             start, end = data[0], data[-1]
             color = THEME.colors.success if end >= start else THEME.colors.error
             return f"[{color}]{line}[/]"
-        
+
         return line
 
 
@@ -65,11 +68,15 @@ class ProgressBarWidget(Static):
     Valid percentage: 0.0 to 1.0 (or 0 to 100)
     """
 
-
-
     percentage = reactive(0.0)
 
-    def __init__(self, percentage: float = 0.0, label: str = "", id: str | None = None, classes: str | None = None):
+    def __init__(
+        self,
+        percentage: float = 0.0,
+        label: str = "",
+        id: str | None = None,
+        classes: str | None = None,
+    ):
         super().__init__(id=id, classes=classes)
         self.label = label
         self.percentage = percentage
@@ -113,8 +120,6 @@ class StatusBadgeWidget(Static):
     Renders a pill-shaped status badge.
     """
 
-
-
     status = reactive("UNKNOWN")
 
     def __init__(self, status: str = "UNKNOWN", id: str | None = None, classes: str | None = None):
@@ -125,9 +130,9 @@ class StatusBadgeWidget(Static):
         self._update_badge(status)
 
     def _update_badge(self, status: str) -> None:
-        self.classes = "" # Reset
+        self.classes = ""  # Reset
         icon = "•"
-        
+
         s_upper = status.upper()
         if s_upper in ("LIVE", "RUNNING", "CONNECTED"):
             self.add_class("badge-live")
@@ -138,5 +143,5 @@ class StatusBadgeWidget(Static):
         elif s_upper in ("SYNCING", "CONNECTING", "WARNING"):
             self.add_class("badge-syncing")
             icon = "○"
-            
+
         self.update(f"{icon} {s_upper}")

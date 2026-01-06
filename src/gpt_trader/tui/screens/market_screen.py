@@ -13,11 +13,10 @@ from textual.app import ComposeResult
 from textual.containers import Container
 from textual.reactive import reactive
 from textual.screen import Screen
-from gpt_trader.tui.widgets import ContextualFooter
-from gpt_trader.tui.widgets.shell import CommandBar
 
 from gpt_trader.tui.state import TuiState
-from gpt_trader.tui.widgets import MarketWatchWidget
+from gpt_trader.tui.widgets import ContextualFooter, MarketWatchWidget
+from gpt_trader.tui.widgets.shell import CommandBar
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="tui")

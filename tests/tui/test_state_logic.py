@@ -182,46 +182,34 @@ def test_malformed_data_handling(tui_state):
     # Actually TuiState accesses status.market, passes to _update_market_data.
     # _update_market_data attempts to read attributes.
     status.market = "Not an object"
-    
+
     # FIX: Define observer_interval as a float so > 0 comparison works
     status.observer_interval = 1.0
 
     # ensure other fields exist to avoid errors in update loop before component update
     # Need full mock objects for these to pass Update methods
-    
+
     # Positions
-    status.positions = SimpleNamespace(
-        positions={}, 
-        total_unrealized_pnl="0.0", 
-        equity="10000.0"
-    )
+    status.positions = SimpleNamespace(positions={}, total_unrealized_pnl="0.0", equity="10000.0")
     status.orders = []
     status.trades = []
-    
+
     # Account
-    status.account = SimpleNamespace(
-        balances=[], 
-        volume_30d="0.0", 
-        fees_30d="0.0", 
-        fee_tier="None"
-    )
-    
+    status.account = SimpleNamespace(balances=[], volume_30d="0.0", fees_30d="0.0", fee_tier="None")
+
     # Strategy
-    status.strategy = SimpleNamespace(
-        last_decisions=[], 
-        active_strategies=[]
-    )
-    
+    status.strategy = SimpleNamespace(last_decisions=[], active_strategies=[])
+
     # Risk
     status.risk = SimpleNamespace(
-        max_leverage=1.0, 
-        daily_loss_limit_pct=0.01, 
-        current_daily_loss_pct=0.0, 
-        reduce_only_mode=False, 
+        max_leverage=1.0,
+        daily_loss_limit_pct=0.01,
+        current_daily_loss_pct=0.0,
+        reduce_only_mode=False,
         reduce_only_reason="",
-        active_guards=[]
+        active_guards=[],
     )
-    
+
     status.system = SimpleNamespace(
         api_latency=0.0,
         connection_status="CONNECTED",

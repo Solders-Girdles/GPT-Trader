@@ -1,6 +1,6 @@
 """Tests for FocusManager service."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -90,7 +90,7 @@ class TestFocusManager:
 
     def test_move_up_from_start(self, focus_manager):
         """Test moving focus up from start position."""
-        result = focus_manager.move("up")
+        focus_manager.move("up")
         # Should stay at top (already at row 0)
         assert focus_manager._current_row == 0
 
@@ -107,13 +107,13 @@ class TestFocusManager:
     def test_move_right(self, focus_manager):
         """Test moving focus right."""
         # Start at hero (col 0-1), move right to account (col 2-3)
-        result = focus_manager.move("right")
+        focus_manager.move("right")
         # Should be at account tile now
         assert focus_manager._current_tile_id in ["tile-hero", "tile-account"]
 
     def test_move_left_from_start(self, focus_manager):
         """Test moving focus left from start position."""
-        result = focus_manager.move("left")
+        focus_manager.move("left")
         # Should stay at left edge
         assert focus_manager._current_col == 0
 

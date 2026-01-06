@@ -1,6 +1,5 @@
 """Tests for API Metrics Collection."""
 
-import time
 from concurrent.futures import ThreadPoolExecutor
 
 import pytest

@@ -1,9 +1,6 @@
 """Tests for CircuitBreaker pattern implementation."""
 
-import threading
 from concurrent.futures import ThreadPoolExecutor
-
-import pytest
 
 from gpt_trader.features.brokerages.coinbase.client.circuit_breaker import (
     CircuitBreaker,

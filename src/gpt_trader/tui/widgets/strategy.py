@@ -164,6 +164,12 @@ class StrategyWidget(Static):
         # Get column keys for cell updates
         columns = list(table.columns.keys()) if table.columns else []
 
+        # Build set of executed decision_ids from orders
+        executed_decision_ids = self._get_executed_decision_ids()
+
+        # Get current blocking context from risk state (fallback for decisions without blocked_by)
+        current_blocking_reason = self._get_blocking_reason()
+
         for symbol, decision in data.last_decisions.items():
             action = decision.action.upper()
             reason = decision.reason
@@ -188,8 +194,44 @@ class StrategyWidget(Static):
             elif action == "HOLD":
                 color = THEME.colors.warning
 
-            formatted_action = f"[{color}]{action}[/{color}]"
-            row_data = (symbol, formatted_action, confidence, reason, time_str)
+            # Build status indicator
+            status_indicator = ""
+
+            # Determine blocking reason for this specific decision
+            # Prefer decision's own blocked_by (historical), fall back to current risk state
+            decision_blocked_by = decision.blocked_by or current_blocking_reason
+
+            # Check for execution (order placed)
+            if decision.decision_id and decision.decision_id in executed_decision_ids:
+                status_indicator = " [green]✓[/green]"
+            # Check for blocking reason (guards/reduce-only preventing execution)
+            elif action in ("BUY", "SELL") and decision_blocked_by:
+                status_indicator = " [red]⊘[/red]"
+
+            formatted_action = f"[{color}]{action}[/{color}]{status_indicator}"
+
+            # Show blocking reason in the reason column for actionable decisions
+            display_reason = reason
+            if action in ("BUY", "SELL") and decision_blocked_by and status_indicator:
+                display_reason = f"[dim]blocked: {decision_blocked_by}[/dim]"
+
+            # Add compact movers summary to reason column if available
+            movers_summary = ""
+            if decision.contributions:
+                top = decision.top_contributors[:2]  # Top 2 for compact view
+                if top:
+                    movers = []
+                    for c in top:
+                        direction = "↑" if c.contribution > 0 else "↓"
+                        color = "green" if c.contribution > 0 else "red"
+                        movers.append(f"[{color}]{c.name}{direction}[/{color}]")
+                    movers_summary = " " + " ".join(movers)
+
+            # Combine reason with movers if not blocked
+            if status_indicator != " [red]⊘[/red]":
+                display_reason = f"{reason}{movers_summary}" if movers_summary else reason
+
+            row_data = (symbol, formatted_action, confidence, display_reason, time_str)
 
             if symbol in existing_keys:
                 # Update existing row in-place
@@ -206,3 +248,53 @@ class StrategyWidget(Static):
             else:
                 # Add new decision
                 table.add_row(*row_data, key=symbol)
+
+    def _get_executed_decision_ids(self) -> set[str]:
+        """Get set of decision_ids that have associated orders.
+
+        Returns:
+            Set of decision_id strings that appear in current orders.
+        """
+        executed_ids: set[str] = set()
+        if self.state is None:
+            return executed_ids
+
+        try:
+            for order in self.state.order_data.orders:
+                if order.decision_id:
+                    executed_ids.add(order.decision_id)
+        except Exception:
+            pass
+
+        return executed_ids
+
+    def _get_blocking_reason(self) -> str:
+        """Get blocking reason from risk state if execution is prevented.
+
+        Returns:
+            Short description of blocking condition, or empty string if not blocked.
+        """
+        if self.state is None:
+            return ""
+
+        try:
+            risk = self.state.risk_data
+
+            # Check reduce-only mode first (highest priority)
+            if risk.reduce_only_mode:
+                reason = risk.reduce_only_reason or "risk limit"
+                # Truncate long reasons
+                if len(reason) > 20:
+                    reason = reason[:17] + "..."
+                return f"reduce-only ({reason})"
+
+            # Check active guards
+            if risk.active_guards:
+                if len(risk.active_guards) == 1:
+                    return risk.active_guards[0]
+                return f"{len(risk.active_guards)} guards"
+
+        except Exception:
+            pass
+
+        return ""

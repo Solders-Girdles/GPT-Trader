@@ -53,6 +53,8 @@ CSS_MODULE_ORDER = [
     "widgets/performance.tcss",
     "widgets/breadcrumb.tcss",
     "widgets/alert_inbox.tcss",
+    "widgets/onboarding.tcss",
+    "widgets/trading_stats.tcss",
     # 5. Screens (screen-specific overrides)
     "screens/mode_selection.tcss",
     "screens/alert_history.tcss",

@@ -112,7 +112,7 @@ class TileEmptyState(Vertical):
         # Add action hints container (can be updated later)
         from textual.containers import Horizontal
 
-        with Horizontal(id="empty-actions-container", classes="empty-actions") as container:
+        with Horizontal(id="empty-actions-container", classes="empty-actions"):
             for action in self._actions:
                 yield Label(action, classes="action-hint")
 

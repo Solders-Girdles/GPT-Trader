@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from gpt_trader.orchestration.configuration.risk import RiskConfig
@@ -546,9 +546,7 @@ class LiveRiskManager:
             # Handle both object and dict access
             if isinstance(position, dict):
                 quantity = Decimal(str(position.get("quantity", 0)))
-                mark_price = Decimal(
-                    str(position.get("mark_price") or position.get("mark", 0))
-                )
+                mark_price = Decimal(str(position.get("mark_price") or position.get("mark", 0)))
                 product_type = position.get("product_type", "SPOT")
                 leverage = int(position.get("leverage", 1))
             else:

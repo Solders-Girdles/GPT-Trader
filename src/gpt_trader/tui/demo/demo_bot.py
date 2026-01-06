@@ -223,14 +223,23 @@ class DemoStatusReporter:
             strat_data = data.get("strategy", {})
             decisions = []
             for d in strat_data.get("last_decisions", []):
+                timestamp = float(d.get("timestamp", 0.0))
+                symbol = d.get("symbol", "")
+                # Generate decision_id if not provided
+                decision_id = d.get("decision_id", "")
+                if not decision_id and timestamp:
+                    decision_id = f"{int(timestamp * 1000)}_{symbol}"
                 decisions.append(
                     DecisionEntry(
-                        symbol=d.get("symbol", ""),
+                        symbol=symbol,
                         action=d.get("action", "HOLD"),
                         reason=d.get("reason", ""),
                         confidence=float(d.get("confidence", 0.0)),
                         indicators=d.get("indicators", {}),
-                        timestamp=float(d.get("timestamp", 0.0)),
+                        timestamp=timestamp,
+                        decision_id=decision_id,
+                        blocked_by=d.get("blocked_by", ""),
+                        contributions=d.get("contributions", []),
                     )
                 )
             strategy_status = StrategyStatus(

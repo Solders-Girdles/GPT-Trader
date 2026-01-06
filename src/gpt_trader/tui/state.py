@@ -5,8 +5,11 @@ Provides reactive state management for the TUI with validation and
 delta update capabilities to minimize UI flicker and catch data issues.
 """
 
+# naming: allow - margin_util is standard finance term for margin utilization
+
 from __future__ import annotations
 
+from decimal import Decimal
 from typing import Any
 
 from textual.reactive import reactive
@@ -30,11 +33,14 @@ from gpt_trader.tui.types import (
     AccountSummary,
     ActiveOrders,
     DecisionData,
+    ExecutionMetrics,
+    IndicatorContribution,
     MarketState,
     Order,
     PortfolioSummary,
     Position,
     ResilienceState,
+    RiskGuard,
     RiskState,
     StrategyState,
     SystemStatus,
@@ -138,6 +144,7 @@ class TuiState(Widget):
         self.risk_data = RiskState()
         self.system_data = SystemStatus()
         self.resilience_data = ResilienceState()
+        self.execution_data = ExecutionMetrics()
 
     def update_from_bot_status(
         self,
@@ -363,10 +370,23 @@ class TuiState(Widget):
                 side=side,
             )
 
+        # Calculate total fees from trade history
+        total_fees = Decimal("0")
+        try:
+            for trade in self.trade_data.trades:
+                total_fees += trade.fee
+        except Exception:
+            pass
+
+        # Get realized P&L from status if available
+        total_realized_pnl = safe_decimal(getattr(pos_data, "total_realized_pnl", "0"))
+
         self.position_data = PortfolioSummary(
             positions=positions_map,
             total_unrealized_pnl=safe_decimal(pos_data.total_unrealized_pnl),
             equity=safe_decimal(pos_data.equity),
+            total_realized_pnl=total_realized_pnl,
+            total_fees=total_fees,
         )
 
     def _update_order_data(self, raw_orders: list[Any]) -> None:  # list[OrderStatus]
@@ -446,6 +466,26 @@ class TuiState(Widget):
             if not hasattr(dec, "symbol") or not dec.symbol:
                 continue
 
+            # Parse indicator contributions if available
+            contributions: list[IndicatorContribution] = []
+            raw_contributions = getattr(dec, "contributions", []) or []
+            for contrib in raw_contributions:
+                if isinstance(contrib, dict):
+                    contributions.append(
+                        IndicatorContribution(
+                            name=str(contrib.get("name", "")),
+                            value=(
+                                float(contrib.get("value", 0))
+                                if isinstance(contrib.get("value"), (int, float))
+                                else 0.0
+                            ),
+                            contribution=float(contrib.get("contribution", 0)),
+                            weight=float(contrib.get("weight", 1.0)),
+                        )
+                    )
+                elif isinstance(contrib, IndicatorContribution):
+                    contributions.append(contrib)
+
             decisions[dec.symbol] = DecisionData(
                 symbol=dec.symbol,
                 action=dec.action,
@@ -453,6 +493,9 @@ class TuiState(Widget):
                 confidence=dec.confidence,  # Already float from DecisionEntry
                 indicators=dec.indicators,
                 timestamp=dec.timestamp,  # Already float from DecisionEntry
+                decision_id=getattr(dec, "decision_id", ""),  # For order linkage
+                blocked_by=getattr(dec, "blocked_by", ""),  # Guard that blocked execution
+                contributions=contributions,
             )
 
         self.strategy_data = StrategyState(
@@ -462,6 +505,23 @@ class TuiState(Widget):
 
     def _update_risk_data(self, risk: Any) -> None:  # RiskStatus from status_reporter
         """Update risk data from typed RiskStatus."""
+        # Parse enhanced guards if available
+        guards: list[RiskGuard] = []
+        raw_guards = getattr(risk, "guards", []) or []
+        for guard_data in raw_guards:
+            if isinstance(guard_data, dict):
+                guards.append(
+                    RiskGuard(
+                        name=str(guard_data.get("name", "")),
+                        severity=str(guard_data.get("severity", "MEDIUM")),
+                        last_triggered=float(guard_data.get("last_triggered", 0.0) or 0.0),
+                        triggered_count=int(guard_data.get("triggered_count", 0) or 0),
+                        description=str(guard_data.get("description", "") or ""),
+                    )
+                )
+            elif isinstance(guard_data, RiskGuard):
+                guards.append(guard_data)
+
         self.risk_data = RiskState(
             max_leverage=float(getattr(risk, "max_leverage", 0.0) or 0.0),
             daily_loss_limit_pct=float(getattr(risk, "daily_loss_limit_pct", 0.0) or 0.0),
@@ -469,6 +529,7 @@ class TuiState(Widget):
             reduce_only_mode=bool(getattr(risk, "reduce_only_mode", False)),
             reduce_only_reason=str(getattr(risk, "reduce_only_reason", "") or ""),
             active_guards=list(getattr(risk, "active_guards", []) or []),
+            guards=guards,
         )
 
     def _update_system_data(self, sys: Any) -> None:  # SystemStatus from status_reporter
@@ -561,6 +622,22 @@ class TuiState(Widget):
         )
         self._changed_fields.add("resilience")
 
+    def update_execution_data(self) -> None:
+        """Update execution metrics from the telemetry collector.
+
+        Pulls current metrics from the global ExecutionTelemetryCollector
+        if available. Safe to call even if collector hasn't been initialized.
+        """
+        try:
+            from gpt_trader.tui.services.execution_telemetry import get_execution_telemetry
+
+            collector = get_execution_telemetry()
+            self.execution_data = collector.get_metrics()
+            self._changed_fields.add("execution")
+        except Exception:
+            # Collector not available or error - leave existing data
+            pass
+
     def get_changed_fields(self) -> set[str]:
         """Get the set of fields that changed in the last update.
 
@@ -569,3 +646,19 @@ class TuiState(Widget):
             widget notifications where only affected widgets need updating.
         """
         return self._changed_fields.copy()
+
+    def get_decision_by_id(self, decision_id: str) -> DecisionData | None:
+        """Look up a strategy decision by its ID.
+
+        Args:
+            decision_id: The unique decision identifier.
+
+        Returns:
+            DecisionData if found, None otherwise.
+        """
+        if not decision_id:
+            return None
+        for decision in self.strategy_data.last_decisions.values():
+            if decision.decision_id == decision_id:
+                return decision
+        return None

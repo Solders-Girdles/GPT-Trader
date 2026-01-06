@@ -12,8 +12,7 @@ from textual.containers import Horizontal
 from textual.screen import Screen
 from textual.widgets import Input, Label
 
-from gpt_trader.tui.widgets import LogWidget
-from gpt_trader.tui.widgets import ContextualFooter
+from gpt_trader.tui.widgets import ContextualFooter, LogWidget
 from gpt_trader.tui.widgets.shell import CommandBar
 
 

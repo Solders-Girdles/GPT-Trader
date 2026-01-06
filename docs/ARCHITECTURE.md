@@ -14,8 +14,7 @@ While this document describes the **target architecture**, you will encounter "z
 
 ---
 status: transition
-last-updated: 2025-11-29
-roadmap: See docs/TUI_ROADMAP.md for TUI phases
+last-updated: 2026-01-05
 ---
 
 ## Current State
@@ -246,6 +245,37 @@ The TUI uses a concatenated CSS approach due to Textual not supporting `@import`
 - `StateRegistry` broadcasts `TuiState` to registered widgets via `on_state_updated()`
 - Widgets implement `StateObserver` protocol for automatic state updates
 - Delta tracking (`_changed_fields`) identifies which state components changed
+
+**Services Layer**
+
+The TUI services layer (`tui/services/`) provides:
+
+- `AlertManager` - Threshold-based alert rules with cooldown, history, and notification integration
+- `ExecutionTelemetryCollector` - Thread-safe order submission metrics (success rate, latency percentiles, retry tracking)
+- `OnboardingService` - First-run wizard state management
+- `FocusManager` - Keyboard navigation and focus ring management
+
+**Data Freshness & Resilience UX**
+
+The `staleness_helpers.py` module provides unified data trust signals:
+
+- **Thresholds**: Fresh (<10s), Stale (10-30s), Critical (>30s or connection unhealthy)
+- **Execution Health**: Circuit breaker status, success rate warnings (<95%), critical alerts (<80%)
+- **Banner Priority**: Reconnecting → Degraded mode → Execution health → Data staleness
+- **Empty States**: Standardized configurations for stopped, connecting, and error states
+
+**Alert System**
+
+Built-in alert rules with configurable cooldowns:
+
+| Category | Rules |
+|----------|-------|
+| SYSTEM | `connection_lost`, `rate_limit_high`, `bot_stopped`, `circuit_breaker_open`, `execution_critical`, `execution_degraded`, `execution_p95_spike`, `execution_retry_high` |
+| RISK | `reduce_only_active`, `daily_loss_warning` |
+| POSITION | `large_unrealized_loss` |
+| TRADE | `stale_open_orders`, `failed_orders`, `expired_orders` |
+
+Recovery hints are provided via `notification_helpers.py` for actionable guidance.
 
 **Rebuilding CSS**
 

@@ -1,0 +1,197 @@
+"""
+Execution Telemetry Collector.
+
+Tracks order submission metrics including latency, success rates,
+and retry activity for monitoring execution health.
+"""
+
+from __future__ import annotations
+
+import statistics
+import threading
+import time
+from collections import deque
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+from gpt_trader.tui.types import ExecutionMetrics
+from gpt_trader.utilities.logging_patterns import get_logger
+
+if TYPE_CHECKING:
+    pass
+
+logger = get_logger(__name__, component="tui")
+
+# Rolling window size for metrics
+METRICS_WINDOW_SIZE = 100
+LATENCY_WINDOW_SIZE = 50
+
+
+@dataclass
+class SubmissionRecord:
+    """Record of a single order submission."""
+
+    timestamp: float
+    latency_ms: float
+    success: bool
+    rejected: bool = False
+    retry_count: int = 0
+    failure_reason: str = ""
+
+
+class ExecutionTelemetryCollector:
+    """Collects and aggregates execution telemetry.
+
+    Thread-safe collector that maintains rolling windows of submission
+    metrics for real-time monitoring.
+
+    Usage:
+        collector = get_execution_telemetry()
+        collector.record_submission(latency_ms=45.2, success=True)
+        metrics = collector.get_metrics()
+    """
+
+    def __init__(self, window_size: int = METRICS_WINDOW_SIZE) -> None:
+        """Initialize the collector.
+
+        Args:
+            window_size: Max submissions to track in rolling window.
+        """
+        self._window_size = window_size
+        self._submissions: deque[SubmissionRecord] = deque(maxlen=window_size)
+        self._latencies: deque[float] = deque(maxlen=LATENCY_WINDOW_SIZE)
+        self._lock = threading.Lock()
+
+        # Counters for total lifetime stats
+        self._total_submissions = 0
+        self._total_retries = 0
+
+    def record_submission(
+        self,
+        latency_ms: float,
+        success: bool,
+        rejected: bool = False,
+        retry_count: int = 0,
+        failure_reason: str = "",
+    ) -> None:
+        """Record an order submission.
+
+        Args:
+            latency_ms: Time from submission to broker response.
+            success: Whether the submission succeeded.
+            rejected: Whether broker rejected the order.
+            retry_count: Number of retries before this result.
+            failure_reason: Reason for failure (if failed).
+        """
+        record = SubmissionRecord(
+            timestamp=time.time(),
+            latency_ms=latency_ms,
+            success=success,
+            rejected=rejected,
+            retry_count=retry_count,
+            failure_reason=failure_reason,
+        )
+
+        with self._lock:
+            self._submissions.append(record)
+            if success:
+                self._latencies.append(latency_ms)
+            self._total_submissions += 1
+            self._total_retries += retry_count
+
+    def record_retry(self) -> None:
+        """Record a retry attempt (called during retry loop)."""
+        with self._lock:
+            self._total_retries += 1
+
+    def get_metrics(self) -> ExecutionMetrics:
+        """Get current execution metrics.
+
+        Returns:
+            ExecutionMetrics with aggregated statistics.
+        """
+        with self._lock:
+            if not self._submissions:
+                return ExecutionMetrics()
+
+            # Count submissions in window
+            total = len(self._submissions)
+            success = sum(1 for s in self._submissions if s.success)
+            failed = sum(1 for s in self._submissions if not s.success and not s.rejected)
+            rejected = sum(1 for s in self._submissions if s.rejected)
+            retries = sum(s.retry_count for s in self._submissions)
+
+            # Calculate latency percentiles
+            latencies = list(self._latencies)
+            if latencies:
+                avg_latency = statistics.mean(latencies)
+                p50_latency = statistics.median(latencies)
+                # Calculate p95
+                sorted_latencies = sorted(latencies)
+                p95_idx = int(len(sorted_latencies) * 0.95)
+                p95_latency = sorted_latencies[min(p95_idx, len(sorted_latencies) - 1)]
+            else:
+                avg_latency = p50_latency = p95_latency = 0.0
+
+            # Get last submission info
+            last = self._submissions[-1]
+            last_latency = last.latency_ms
+            last_time = last.timestamp
+            last_reason = ""
+            for s in reversed(self._submissions):
+                if s.failure_reason:
+                    last_reason = s.failure_reason
+                    break
+
+            # Calculate retry rate
+            retry_rate = retries / total if total > 0 else 0.0
+
+            return ExecutionMetrics(
+                submissions_total=total,
+                submissions_success=success,
+                submissions_failed=failed,
+                submissions_rejected=rejected,
+                avg_latency_ms=avg_latency,
+                p50_latency_ms=p50_latency,
+                p95_latency_ms=p95_latency,
+                last_latency_ms=last_latency,
+                retry_total=retries,
+                retry_rate=retry_rate,
+                last_submission_time=last_time,
+                last_failure_reason=last_reason,
+            )
+
+    def clear(self) -> None:
+        """Clear all collected metrics."""
+        with self._lock:
+            self._submissions.clear()
+            self._latencies.clear()
+            self._total_submissions = 0
+            self._total_retries = 0
+
+
+# Global singleton
+_execution_telemetry: ExecutionTelemetryCollector | None = None
+
+
+def get_execution_telemetry() -> ExecutionTelemetryCollector:
+    """Get or create the global execution telemetry collector."""
+    global _execution_telemetry
+    if _execution_telemetry is None:
+        _execution_telemetry = ExecutionTelemetryCollector()
+    return _execution_telemetry
+
+
+def clear_execution_telemetry() -> None:
+    """Clear the global execution telemetry collector (for testing)."""
+    global _execution_telemetry
+    _execution_telemetry = None
+
+
+__all__ = [
+    "ExecutionMetrics",
+    "ExecutionTelemetryCollector",
+    "SubmissionRecord",
+    "clear_execution_telemetry",
+    "get_execution_telemetry",
+]

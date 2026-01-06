@@ -2904,6 +2904,42 @@ AccountWidget .widget-header {
     height: 1;
 }
 
+/* P&L Breakdown Row - Unrealized, Realized, Fees */
+.pnl-breakdown-row {
+    layout: horizontal;
+    height: auto;
+    min-height: 2;
+    width: 100%;
+    margin-bottom: 1;
+    padding: 0;
+}
+
+.pnl-metric {
+    width: 1fr;
+    min-width: 8;
+    height: auto;
+    background: transparent;
+    border: none;
+    padding: 0 1;
+    margin: 0;
+}
+
+.pnl-metric-label {
+    color: $text-muted;
+    height: 1;
+}
+
+.pnl-metric-value {
+    color: $text-primary;
+    height: 1;
+}
+
+/* Compact mode P&L breakdown hint */
+.pnl-breakdown {
+    color: $text-muted;
+    margin-left: 1;
+}
+
 .account-metrics-row {
     layout: horizontal;
     height: auto;
@@ -3013,6 +3049,19 @@ TradesWidget DataTable {
     height: 1fr;
 }
 
+/* Filter status bar for trades */
+TradesWidget .filter-status {
+    height: 1;
+    padding: 0 1;
+    background: $surface;
+    color: $text-secondary;
+    border-bottom: solid $border;
+}
+
+TradesWidget .filter-status.hidden {
+    display: none;
+}
+
 
 /* ---------------------------------------------------------------------------- */
 /* WIDGETS: Market                                                            */
@@ -3094,6 +3143,37 @@ LogWidget .log-filter {
     width: 14;
     min-width: 8;
     max-width: 18;
+}
+
+/* === Level Filter Chips (aligned with AlertHistory pattern) === */
+
+LogWidget .log-filter-chips {
+    height: 2;
+    width: auto;
+    layout: horizontal;
+    align: left middle;
+    margin: 0 1;
+}
+
+LogWidget .level-chip {
+    min-width: 8;
+    height: 1;
+    margin: 0;
+    padding: 0 1;
+    background: transparent;
+    color: $text-muted;
+    border: none;
+}
+
+LogWidget .level-chip:hover {
+    background: $bg-highlight;
+    color: $text-primary;
+}
+
+LogWidget .level-chip.active {
+    background: $accent-muted;
+    color: $accent;
+    text-style: bold;
 }
 
 LogWidget .log-sep {
@@ -3737,6 +3817,21 @@ SystemMonitorWidget {
     padding: 0;
 }
 
+/* === Execution Metrics Section (SystemMonitorWidget) === */
+.execution-metrics {
+    width: 100%;
+    height: auto;
+    margin-top: 1;
+    padding-top: 0;
+    padding-left: 1;
+    border-left: wide $success;
+}
+
+.execution-metrics .sys-metric {
+    height: 1;
+    padding: 0;
+}
+
 
 /* ---------------------------------------------------------------------------- */
 /* WIDGETS: Modals                                                            */
@@ -3893,6 +3988,134 @@ PanicModal #btn-panic-confirm {
 
 PanicModal #btn-panic-cancel {
     background: $bg-elevated;
+}
+
+/* === Order Detail Modal === */
+
+OrderDetailModal {
+    align: center middle;
+    background: $overlay-disabled;
+}
+
+OrderDetailModal #order-detail-modal {
+    height: auto;
+    max-height: 80%;
+    padding: $spacing-md;
+    background: $bg-secondary;
+    border: none;
+    border-left: wide $accent;
+}
+
+OrderDetailModal #order-detail-title {
+    text-align: center;
+    text-style: bold;
+    color: $accent;
+    margin-bottom: $spacing-xs;
+}
+
+OrderDetailModal .section-header {
+    color: $text-muted;
+    margin-top: $spacing-xs;
+    margin-bottom: 0;
+}
+
+OrderDetailModal .muted {
+    color: $text-muted;
+}
+
+OrderDetailModal #linked-trades-table {
+    height: auto;
+    max-height: 10;
+    margin-top: $spacing-xs;
+    margin-bottom: $spacing-xs;
+}
+
+OrderDetailModal #close-btn {
+    margin-top: $spacing-sm;
+    width: 100%;
+}
+
+/* === Risk Detail Modal === */
+
+RiskDetailModal {
+    align: center middle;
+    background: $overlay-disabled;
+}
+
+RiskDetailModal #risk-detail-modal {
+    height: auto;
+    max-height: 85%;
+    padding: $spacing-md;
+    background: $bg-secondary;
+    border: none;
+    border-left: wide $accent;
+}
+
+RiskDetailModal #risk-detail-title {
+    text-align: center;
+    text-style: bold;
+    color: $accent;
+    margin-bottom: $spacing-xs;
+}
+
+RiskDetailModal .section-header {
+    color: $text-muted;
+    margin-top: $spacing-xs;
+    margin-bottom: 0;
+}
+
+RiskDetailModal .muted {
+    color: $text-muted;
+}
+
+RiskDetailModal #close-btn {
+    margin-top: $spacing-sm;
+    width: 100%;
+}
+
+/* === Position Detail Modal === */
+
+PositionDetailModal {
+    align: center middle;
+    background: $overlay-disabled;
+}
+
+PositionDetailModal #position-detail-modal {
+    height: auto;
+    max-height: 85%;
+    padding: $spacing-md;
+    background: $bg-secondary;
+    border: none;
+    border-left: wide $accent;
+}
+
+PositionDetailModal #position-detail-title {
+    text-align: center;
+    text-style: bold;
+    color: $accent;
+    margin-bottom: $spacing-xs;
+}
+
+PositionDetailModal .section-header {
+    color: $text-muted;
+    margin-top: $spacing-xs;
+    margin-bottom: 0;
+}
+
+PositionDetailModal .muted {
+    color: $text-muted;
+}
+
+PositionDetailModal #linked-trades-table {
+    height: auto;
+    max-height: 10;
+    margin-top: $spacing-xs;
+    margin-bottom: $spacing-xs;
+}
+
+PositionDetailModal #close-btn {
+    margin-top: $spacing-sm;
+    width: 100%;
 }
 
 
@@ -4215,6 +4438,12 @@ StrategyWidget DataTable {
     color: $text-muted;
 }
 
+.decision-movers {
+    padding: 0 1;
+    margin-bottom: 1;
+    height: auto;
+}
+
 
 /* ---------------------------------------------------------------------------- */
 /* WIDGETS: Validation                                                        */
@@ -4310,6 +4539,44 @@ CommandBar .mode-badge.paper {
 CommandBar .status-text {
     color: $text-muted;
     margin-right: 1;
+}
+
+/* Connection status colors */
+CommandBar .status-text.connected {
+    color: $success;
+}
+
+CommandBar .status-text.stopped {
+    color: $text-muted;
+}
+
+CommandBar .status-text.stale {
+    color: $warning;
+}
+
+CommandBar .status-text.disconnected {
+    color: $error;
+}
+
+/* Ready badge - shows onboarding status for non-demo modes */
+CommandBar .ready-badge {
+    padding: 0 1;
+    margin-left: 1;
+    text-style: bold;
+}
+
+CommandBar .ready-badge.ready {
+    background: $success;
+    color: $bg-primary;
+}
+
+CommandBar .ready-badge.not-ready {
+    background: $bg-highlight;
+    color: $warning;
+}
+
+CommandBar .ready-badge.hidden {
+    display: none;
 }
 
 CommandBar .clock {
@@ -4630,6 +4897,188 @@ AlertInbox {
     width: 100%;
     align: center middle;
     color: $text-muted;
+}
+
+
+/* ---------------------------------------------------------------------------- */
+/* WIDGETS: Onboarding                                                        */
+/* Source: styles/widgets/onboarding.tcss                                      */
+/* ---------------------------------------------------------------------------- */
+
+/* ========================================================================== */
+/* ONBOARDING CHECKLIST WIDGET                                                */
+/* ========================================================================== */
+
+OnboardingChecklist {
+    layout: vertical;
+    height: auto;
+    padding: 1;
+    background: $bg-elevated;
+    border: solid $border;
+}
+
+OnboardingChecklist .widget-header {
+    text-style: bold;
+    color: $accent;
+    margin-bottom: 1;
+}
+
+OnboardingChecklist .checklist-items {
+    height: auto;
+    margin-bottom: 1;
+}
+
+/* Checklist item styling */
+OnboardingChecklist .checklist-item {
+    padding: 0 1;
+    height: 1;
+}
+
+OnboardingChecklist .checklist-item.completed {
+    color: $text-secondary;
+}
+
+OnboardingChecklist .checklist-item.pending {
+    color: $text-primary;
+}
+
+OnboardingChecklist .checklist-item.next {
+    color: $warning;
+    background: $bg-highlight;
+}
+
+OnboardingChecklist .checklist-item.optional {
+    color: $text-muted;
+}
+
+OnboardingChecklist .checklist-summary {
+    margin-top: 1;
+    padding: 0 1;
+}
+
+
+/* ---------------------------------------------------------------------------- */
+/* WIDGETS: Trading Stats                                                     */
+/* Source: styles/widgets/trading_stats.tcss                                   */
+/* ---------------------------------------------------------------------------- */
+
+/* ========================================================================== */
+/* TRADING STATS WIDGET                                                       */
+/* ========================================================================== */
+
+TradingStatsWidget {
+    height: auto;
+    background: $bg-secondary;
+    border-left: wide $accent;
+    padding: 0 1;
+}
+
+/* === Header === */
+
+TradingStatsWidget .stats-header {
+    height: 2;
+    align: left middle;
+}
+
+TradingStatsWidget .widget-header {
+    color: $text-primary;
+    text-style: bold;
+    width: auto;
+    padding-right: 1;
+}
+
+TradingStatsWidget .window-label {
+    color: $accent;
+    text-style: italic;
+    width: auto;
+    padding-right: 1;
+}
+
+TradingStatsWidget .sample-label {
+    color: $text-muted;
+    width: auto;
+}
+
+TradingStatsWidget .sample-label.insufficient {
+    color: $warning;
+}
+
+/* === Compact View === */
+
+TradingStatsWidget .stats-compact {
+    height: 1;
+    align: left middle;
+}
+
+TradingStatsWidget .stats-compact .stat-value {
+    width: auto;
+    padding: 0 1;
+}
+
+TradingStatsWidget .stats-compact .stat-separator {
+    color: $border-subtle;
+    width: 1;
+}
+
+/* === Expanded View === */
+
+TradingStatsWidget .stats-body {
+    height: auto;
+    padding: 0;
+}
+
+TradingStatsWidget .stats-row {
+    height: 2;
+    layout: horizontal;
+    align: left middle;
+}
+
+TradingStatsWidget .stat-metric {
+    width: 1fr;
+    height: 2;
+    padding: 0 1;
+}
+
+TradingStatsWidget .stat-label {
+    color: $text-muted;
+    text-style: italic;
+    height: 1;
+}
+
+TradingStatsWidget .stat-value {
+    color: $text-primary;
+    text-style: bold;
+    height: 1;
+}
+
+/* === Time Window Chips === */
+
+TradingStatsWidget .window-chips {
+    height: 2;
+    align: left middle;
+    padding: 0;
+    margin-top: 1;
+}
+
+TradingStatsWidget .window-chip {
+    min-width: 10;
+    height: 1;
+    margin: 0;
+    padding: 0 1;
+    background: transparent;
+    color: $text-muted;
+    border: none;
+}
+
+TradingStatsWidget .window-chip:hover {
+    background: $bg-highlight;
+    color: $text-primary;
+}
+
+TradingStatsWidget .window-chip.active {
+    background: $accent-muted;
+    color: $accent;
+    text-style: bold;
 }
 
 

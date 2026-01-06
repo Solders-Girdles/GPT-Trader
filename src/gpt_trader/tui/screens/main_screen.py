@@ -34,6 +34,7 @@ from gpt_trader.tui.widgets.dashboard import (
     SystemMonitorWidget,
 )
 from gpt_trader.tui.widgets.shell import CommandBar
+from gpt_trader.tui.widgets.trading_stats import TradingStatsWidget
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="tui")
@@ -59,6 +60,9 @@ class MainScreen(Screen):
         Binding("left", "focus_left", "Focus Left", show=False),
         Binding("right", "focus_right", "Focus Right", show=False),
         Binding("enter", "tile_action", "Open Detail", show=False),
+        # Trading stats window toggle (shown in tile hints when account focused)
+        Binding("w", "cycle_stats_window", "Window", show=False),
+        Binding("W", "reset_stats_window", "All", show=False),
     ]
 
     # Responsive design property
@@ -86,7 +90,9 @@ class MainScreen(Screen):
     def compose(self) -> ComposeResult:
         """Compose the Bento Grid layout."""
         # 1. Top Command Bar (Header Area)
-        yield CommandBar(bot_mode=getattr(self.app, "data_source_mode", "DEMO").upper(), id="header-bar")
+        yield CommandBar(
+            bot_mode=getattr(self.app, "data_source_mode", "DEMO").upper(), id="header-bar"
+        )
 
         # 2. Main Grid Area
         with Grid(id="bento-grid"):
@@ -97,9 +103,10 @@ class MainScreen(Screen):
                 yield PositionCardWidget(id="dash-position")
                 yield Horizontal(id="hints-hero", classes="tile-actions-hint")
 
-            # Tile: Account Summary
+            # Tile: Account Summary + Trading Stats
             with Container(id="tile-account", classes="bento-tile"):
                 yield AccountWidget(compact_mode=False, id="dash-account")
+                yield TradingStatsWidget(compact=True, id="dash-trading-stats")
                 yield Horizontal(id="hints-account", classes="tile-actions-hint")
 
             # Tile: Market Pulse
@@ -164,7 +171,11 @@ class MainScreen(Screen):
             self.responsive_state = self.app.responsive_state  # type: ignore
 
         # Log system ready message with mode information
-        mode = getattr(self.app, "data_source_mode", "unknown") if hasattr(self.app, "data_source_mode") else "unknown"
+        mode = (
+            getattr(self.app, "data_source_mode", "unknown")
+            if hasattr(self.app, "data_source_mode")
+            else "unknown"
+        )
         logger.info(f"GPT-Trader High-Fidelity TUI Ready - Mode: {mode.upper()}")
 
         # Initialize focus manager for 2D tile navigation
@@ -296,8 +307,24 @@ class MainScreen(Screen):
                 # Add action hints as Labels
                 for key, description in event.actions:
                     # Format: [Key] Description
-                    hint_container.mount(
-                        Label(f"[{key}] {description}", classes="action-hint")
-                    )
+                    hint_container.mount(Label(f"[{key}] {description}", classes="action-hint"))
             except Exception as e:
                 logger.debug(f"Could not update hints for {event.tile_id}: {e}")
+
+    # === Trading Stats Window Actions ===
+
+    def action_cycle_stats_window(self) -> None:
+        """Cycle trading stats time window."""
+        try:
+            stats_widget = self.query_one("#dash-trading-stats", TradingStatsWidget)
+            stats_widget.action_cycle_window()
+        except Exception as e:
+            logger.debug(f"Could not cycle stats window: {e}")
+
+    def action_reset_stats_window(self) -> None:
+        """Reset trading stats to 'All Session' window."""
+        try:
+            stats_widget = self.query_one("#dash-trading-stats", TradingStatsWidget)
+            stats_widget.action_reset_window()
+        except Exception as e:
+            logger.debug(f"Could not reset stats window: {e}")

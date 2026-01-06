@@ -35,7 +35,7 @@ class ExecutionWidget(Static):
         )
 
         self.update_orders(state.order_data.orders, trades=state.trade_data.trades)
-        self.update_trades(state.trade_data.trades)
+        self.update_trades(state.trade_data.trades, state)
 
     def on_mount(self) -> None:
         """Register with state registry on mount."""
@@ -63,6 +63,6 @@ class ExecutionWidget(Static):
         """Update orders table with optional trade data for fill derivation."""
         self.query_one(OrdersWidget).update_orders(orders, trades=trades)
 
-    def update_trades(self, trades: list) -> None:
-        """Update trades table."""
-        self.query_one(TradesWidget).update_trades(trades)
+    def update_trades(self, trades: list, state: TuiState | None = None) -> None:
+        """Update trades table with optional state for linkage lookups."""
+        self.query_one(TradesWidget).update_trades(trades, state)

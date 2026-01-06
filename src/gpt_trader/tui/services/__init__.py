@@ -17,14 +17,28 @@ Services are initialized by TraderApp and handle specific concerns:
 - StateRegistry: Broadcast state updates to registered widgets
 - TuiPerformanceService: Performance monitoring and metrics collection
 - FocusManager: 2D tile navigation and focus management
+- OnboardingService: Setup progress tracking and first-run guidance
 """
 
 from gpt_trader.tui.services.action_dispatcher import ActionDispatcher
 from gpt_trader.tui.services.alert_manager import AlertManager
-from gpt_trader.tui.services.focus_manager import FocusManager, TileFocusChanged
 from gpt_trader.tui.services.config_service import ConfigService
 from gpt_trader.tui.services.credential_validator import CredentialValidator
+from gpt_trader.tui.services.execution_telemetry import (
+    ExecutionTelemetryCollector,
+    SubmissionRecord,
+    clear_execution_telemetry,
+    get_execution_telemetry,
+)
+from gpt_trader.tui.services.focus_manager import FocusManager, TileFocusChanged
 from gpt_trader.tui.services.mode_service import ModeService
+from gpt_trader.tui.services.onboarding_service import (
+    ChecklistItem,
+    OnboardingService,
+    OnboardingStatus,
+    clear_onboarding_service,
+    get_onboarding_service,
+)
 from gpt_trader.tui.services.performance_service import (
     FrameMetrics,
     PerformanceSnapshot,
@@ -40,28 +54,47 @@ from gpt_trader.tui.services.preferences_service import (
 from gpt_trader.tui.services.responsive_manager import ResponsiveManager
 from gpt_trader.tui.services.state_registry import StateRegistry
 from gpt_trader.tui.services.theme_service import ThemeService
+from gpt_trader.tui.services.trading_stats_service import (
+    TIME_WINDOWS,
+    TradingStatsService,
+    clear_trading_stats_service,
+    get_trading_stats_service,
+)
 from gpt_trader.tui.services.update_throttler import UpdateThrottler
 from gpt_trader.tui.services.worker_service import WorkerService
 
 __all__ = [
     "ActionDispatcher",
     "AlertManager",
+    "ChecklistItem",
     "ConfigService",
     "CredentialValidator",
+    "ExecutionTelemetryCollector",
     "FocusManager",
     "FrameMetrics",
     "ModeService",
+    "OnboardingService",
+    "OnboardingStatus",
+    "SubmissionRecord",
     "TileFocusChanged",
     "PerformanceSnapshot",
     "PreferencesService",
     "ResponsiveManager",
     "StateRegistry",
     "ThemeService",
+    "TIME_WINDOWS",
+    "TradingStatsService",
     "TuiPerformanceService",
     "UpdateThrottler",
     "WorkerService",
+    "clear_execution_telemetry",
+    "clear_onboarding_service",
+    "clear_trading_stats_service",
     "clear_tui_performance_service",
+    "get_execution_telemetry",
+    "get_onboarding_service",
     "get_preferences_service",
+    "get_trading_stats_service",
     "get_tui_performance_service",
     "set_tui_performance_service",
 ]

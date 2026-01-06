@@ -15,7 +15,7 @@ from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
     from textual.app import App
-    from gpt_trader.tui.widgets.config import ConfigModal
+
 
 logger = get_logger(__name__, component="tui")
 

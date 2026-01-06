@@ -5,8 +5,6 @@ import os
 import tempfile
 from decimal import Decimal
 
-import pytest
-
 from gpt_trader.orchestration.configuration.risk import RiskConfig
 
 
@@ -207,7 +205,10 @@ class TestCFMRiskConfigFromJson:
 
         try:
             config = RiskConfig.from_json(temp_path)
-            assert config.cfm_leverage_max_per_symbol == {"BTC-20DEC30-CDE": 10, "ETH-20DEC30-CDE": 5}
+            assert config.cfm_leverage_max_per_symbol == {
+                "BTC-20DEC30-CDE": 10,
+                "ETH-20DEC30-CDE": 5,
+            }
             assert config.cfm_day_leverage_max_per_symbol == {"BTC-20DEC30-CDE": 15}
             assert config.cfm_night_leverage_max_per_symbol == {"BTC-20DEC30-CDE": 5}
         finally:

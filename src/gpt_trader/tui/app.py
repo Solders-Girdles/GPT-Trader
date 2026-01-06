@@ -24,6 +24,12 @@ from textual.reactive import reactive
 from gpt_trader.monitoring.status_reporter import BotStatus
 from gpt_trader.tui.commands import TraderCommands
 from gpt_trader.tui.managers import BotLifecycleManager, UICoordinator
+from gpt_trader.tui.notification_helpers import (
+    notify_action,
+    notify_error,
+    notify_success,
+    notify_warning,
+)
 from gpt_trader.tui.preferences_paths import resolve_preferences_paths
 from gpt_trader.tui.responsive_state import ResponsiveState
 from gpt_trader.tui.screens import DetailsScreen, MainScreen, MarketScreen
@@ -43,12 +49,6 @@ from gpt_trader.tui.services.mode_service import create_bot_for_mode
 from gpt_trader.tui.services.worker_service import WorkerService
 from gpt_trader.tui.state import TuiState
 from gpt_trader.tui.widgets import LiveWarningModal, SlimStatusWidget
-from gpt_trader.tui.notification_helpers import (
-    notify_action,
-    notify_error,
-    notify_success,
-    notify_warning,
-)
 from gpt_trader.tui.widgets.error_indicator import ErrorIndicatorWidget
 from gpt_trader.tui.widgets.status import BotStatusWidget
 from gpt_trader.utilities.logging_patterns import get_logger
@@ -140,7 +140,9 @@ class TraderApp(App):
                 theme_mode = ThemeMode.DARK
 
         styles_dir = self.Path(__file__).parent / "styles"
-        css_file = styles_dir / ("main_light.tcss" if theme_mode == ThemeMode.LIGHT else "main.tcss")
+        css_file = styles_dir / (
+            "main_light.tcss" if theme_mode == ThemeMode.LIGHT else "main.tcss"
+        )
         if not css_file.exists():
             # Prefer a functional UI over a hard crash if the light CSS hasn't
             # been generated yet.
@@ -395,17 +397,20 @@ class TraderApp(App):
         self.log("TUI Started")
 
         # Handle missing StatusReporter with graceful degradation
-        if not hasattr(self.bot.engine, "status_reporter") or self.bot.engine.status_reporter is None:
-            logger.warning(
-                "StatusReporter not available - TUI will operate in degraded mode"
-            )
+        if (
+            not hasattr(self.bot.engine, "status_reporter")
+            or self.bot.engine.status_reporter is None
+        ):
+            logger.warning("StatusReporter not available - TUI will operate in degraded mode")
             from gpt_trader.tui.adapters.null_status_reporter import NullStatusReporter
 
             self.bot.engine.status_reporter = NullStatusReporter()
             self.tui_state.degraded_mode = True
             self.tui_state.degraded_reason = "StatusReporter not available"
             self.tui_state.connection_healthy = False
-            notify_warning(self, "Limited functionality: Data source unavailable", title="Degraded Mode")
+            notify_warning(
+                self, "Limited functionality: Data source unavailable", title="Degraded Mode"
+            )
         else:
             self.tui_state.degraded_mode = False
             self.tui_state.degraded_reason = ""
@@ -1024,7 +1029,9 @@ class TraderApp(App):
             for symbol, price in prices.items():
                 reporter.update_price(symbol, price)
         except Exception as e:
-            logger.debug("Failed applying bootstrap snapshot to StatusReporter: %s", e, exc_info=True)
+            logger.debug(
+                "Failed applying bootstrap snapshot to StatusReporter: %s", e, exc_info=True
+            )
 
         # Refresh TuiState/UI from StatusReporter.
         try:

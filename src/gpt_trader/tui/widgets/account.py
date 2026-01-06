@@ -45,13 +45,14 @@ class AccountWidget(Static):
         yield TileBanner(id="account-banner", classes="tile-banner hidden")
 
         if self.compact_mode:
-            # Compact horizontal layout - just portfolio value and P&L
+            # Compact horizontal layout - portfolio value, net P&L, and breakdown hint
             from textual.containers import Horizontal
 
             with Horizontal(classes="portfolio-summary"):
                 yield Label("Portfolio: $0.00", id="portfolio-value", classes="value")
                 yield Label("|", classes="metric-separator")
-                yield Label("P&L: $0.00", id="total-pnl", classes="value pnl-value")
+                yield Label("Net: $0.00", id="net-pnl", classes="value pnl-value")
+                yield Label("", id="pnl-breakdown", classes="value pnl-breakdown")
         else:
             # Full vertical layout (existing implementation)
             # Portfolio Summary Row (Primary Metrics)
@@ -61,8 +62,22 @@ class AccountWidget(Static):
                     yield Label("$0.00", id="portfolio-value", classes="portfolio-metric-value")
 
                 with Static(classes="portfolio-metric"):
-                    yield Label("Total P&L", classes="portfolio-metric-label")
-                    yield Label("$0.00", id="total-pnl", classes="portfolio-metric-value pnl-value")
+                    yield Label("Net P&L", classes="portfolio-metric-label")
+                    yield Label("$0.00", id="net-pnl", classes="portfolio-metric-value pnl-value")
+
+            # P&L Breakdown Row
+            with Container(classes="pnl-breakdown-row"):
+                with Static(classes="pnl-metric"):
+                    yield Label("Unrealized", classes="pnl-metric-label")
+                    yield Label("$0.00", id="unrealized-pnl", classes="pnl-metric-value")
+
+                with Static(classes="pnl-metric"):
+                    yield Label("Realized", classes="pnl-metric-label")
+                    yield Label("$0.00", id="realized-pnl", classes="pnl-metric-value")
+
+                with Static(classes="pnl-metric"):
+                    yield Label("Fees", classes="pnl-metric-label")
+                    yield Label("$0.00", id="total-fees", classes="pnl-metric-value")
 
             # Account Metrics Row
             with Container(classes="account-metrics-row"):
@@ -144,16 +159,24 @@ class AccountWidget(Static):
         # Toggle metrics row visibility based on data availability
         self._toggle_metrics_row_visibility(state.account_data)
 
-        # Get portfolio value from position_data.equity
+        # Get portfolio metrics from position_data
         portfolio_value = state.position_data.equity if state.position_data else Decimal("0")
-
-        # Get total P&L from position_data
-        total_pnl = state.position_data.total_unrealized_pnl if state.position_data else Decimal("0")
+        unrealized_pnl = (
+            state.position_data.total_unrealized_pnl if state.position_data else Decimal("0")
+        )
+        realized_pnl = (
+            state.position_data.total_realized_pnl if state.position_data else Decimal("0")
+        )
+        total_fees = state.position_data.total_fees if state.position_data else Decimal("0")
+        net_pnl = state.position_data.net_pnl if state.position_data else Decimal("0")
 
         self.update_account(
             state.account_data,
             portfolio_value=portfolio_value,
-            total_pnl=total_pnl,
+            unrealized_pnl=unrealized_pnl,
+            realized_pnl=realized_pnl,
+            total_fees=total_fees,
+            net_pnl=net_pnl,
         )
 
     def _update_freshness_indicator(self, state: TuiState) -> None:
@@ -212,7 +235,10 @@ class AccountWidget(Static):
         self,
         data: AccountSummary,
         portfolio_value: Decimal = Decimal("0"),
-        total_pnl: Decimal = Decimal("0"),
+        unrealized_pnl: Decimal = Decimal("0"),
+        realized_pnl: Decimal = Decimal("0"),
+        total_fees: Decimal = Decimal("0"),
+        net_pnl: Decimal = Decimal("0"),
     ) -> None:
         # Update Portfolio Summary (Primary Metrics)
         try:
@@ -226,34 +252,82 @@ class AccountWidget(Static):
                 # Expanded mode shows just values
                 portfolio_label.update(portfolio_str)
 
-            # Color-code P&L
-            pnl_label = self.query_one("#total-pnl", Label)
-            try:
-                pnl_str = format_currency(total_pnl, decimals=2)
-                if self.compact_mode:
-                    # Compact mode with inline label
-                    if total_pnl > 0:
-                        pnl_label.update(f"P&L: [green]+{pnl_str}[/green]")
-                    elif total_pnl < 0:
-                        pnl_label.update(f"P&L: [red]{pnl_str}[/red]")
-                    else:
-                        pnl_label.update(f"P&L: {pnl_str}")
+            # Color-code Net P&L
+            pnl_label = self.query_one("#net-pnl", Label)
+            pnl_str = format_currency(net_pnl, decimals=2)
+            if self.compact_mode:
+                # Compact mode with inline label
+                if net_pnl > 0:
+                    pnl_label.update(f"Net: [green]+{pnl_str}[/green]")
+                elif net_pnl < 0:
+                    pnl_label.update(f"Net: [red]{pnl_str}[/red]")
                 else:
-                    # Expanded mode without inline label
-                    if total_pnl > 0:
-                        pnl_label.update(f"[green]+{pnl_str}[/green]")
-                    elif total_pnl < 0:
-                        pnl_label.update(f"[red]{pnl_str}[/red]")
-                    else:
-                        pnl_label.update(pnl_str)
-            except (ValueError, TypeError):
-                pnl_str = format_currency(total_pnl, decimals=2)
-                if self.compact_mode:
-                    pnl_label.update(f"P&L: {pnl_str}")
+                    pnl_label.update(f"Net: {pnl_str}")
+
+                # Show P&L breakdown hint in compact mode
+                breakdown_label = self.query_one("#pnl-breakdown", Label)
+                breakdown_parts = []
+                if unrealized_pnl != 0:
+                    u_color = "green" if unrealized_pnl > 0 else "red"
+                    breakdown_parts.append(
+                        f"[{u_color}]U:{format_currency(unrealized_pnl, decimals=0)}[/{u_color}]"
+                    )
+                if realized_pnl != 0:
+                    r_color = "green" if realized_pnl > 0 else "red"
+                    breakdown_parts.append(
+                        f"[{r_color}]R:{format_currency(realized_pnl, decimals=0)}[/{r_color}]"
+                    )
+                if total_fees > 0:
+                    breakdown_parts.append(
+                        f"[dim]F:-{format_currency(total_fees, decimals=0)}[/dim]"
+                    )
+                if breakdown_parts:
+                    breakdown_label.update(" " + " ".join(breakdown_parts))
+                else:
+                    breakdown_label.update("")
+            else:
+                # Expanded mode without inline label
+                if net_pnl > 0:
+                    pnl_label.update(f"[green]+{pnl_str}[/green]")
+                elif net_pnl < 0:
+                    pnl_label.update(f"[red]{pnl_str}[/red]")
                 else:
                     pnl_label.update(pnl_str)
         except Exception as e:
             logger.error(f"Failed to update portfolio summary: {e}", exc_info=True)
+
+        # Update P&L Breakdown (only in expanded mode)
+        if not self.compact_mode:
+            try:
+                # Unrealized P&L
+                unrealized_label = self.query_one("#unrealized-pnl", Label)
+                u_str = format_currency(unrealized_pnl, decimals=2)
+                if unrealized_pnl > 0:
+                    unrealized_label.update(f"[green]+{u_str}[/green]")
+                elif unrealized_pnl < 0:
+                    unrealized_label.update(f"[red]{u_str}[/red]")
+                else:
+                    unrealized_label.update(u_str)
+
+                # Realized P&L
+                realized_label = self.query_one("#realized-pnl", Label)
+                r_str = format_currency(realized_pnl, decimals=2)
+                if realized_pnl > 0:
+                    realized_label.update(f"[green]+{r_str}[/green]")
+                elif realized_pnl < 0:
+                    realized_label.update(f"[red]{r_str}[/red]")
+                else:
+                    realized_label.update(r_str)
+
+                # Total Fees (always negative impact)
+                fees_label = self.query_one("#total-fees", Label)
+                f_str = format_currency(total_fees, decimals=2)
+                if total_fees > 0:
+                    fees_label.update(f"[red]-{f_str}[/red]")
+                else:
+                    fees_label.update(f_str)
+            except Exception as e:
+                logger.error(f"Failed to update P&L breakdown: {e}", exc_info=True)
 
         # Update Account Summary (only in expanded mode)
         if not self.compact_mode:

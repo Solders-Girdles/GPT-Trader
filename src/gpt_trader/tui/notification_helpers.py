@@ -104,23 +104,33 @@ RECOVERY_HINTS = {
     "connection_lost": "Press R to reconnect",
     "connection_error": "Press R to reconnect",
     "reconnecting": "Reconnecting...",
-
     # Rate limiting
     "rate_limit": "Reduce request frequency",
+    "rate_limit_high": "Reduce request frequency",
     "throttled": "Wait and retry",
-
     # Risk management
     "reduce_only": "Check risk settings",
+    "reduce_only_active": "Check risk settings",
     "daily_loss": "Consider pausing trading",
+    "daily_loss_warning": "Consider pausing trading",
     "position_limit": "Close positions to continue",
-
+    "large_unrealized_loss": "Review position sizing",
     # Configuration
     "config_error": "Press C to check config",
     "invalid_config": "Press C to fix config",
-
     # Bot state
     "bot_stopped": "Press S to start",
     "bot_error": "Check logs for details",
+    # Execution health
+    "circuit_breaker_open": "Wait for auto-recovery or press R",
+    "execution_critical": "Check broker status",
+    "execution_degraded": "Monitor for improvement",
+    "execution_p95_spike": "Network may be congested",
+    "execution_retry_high": "Check broker connectivity",
+    # Order issues
+    "stale_open_orders": "Review or cancel stale orders",
+    "failed_orders": "Check order parameters",
+    "expired_orders": "Review limit prices",
 }
 
 

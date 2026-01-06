@@ -47,6 +47,37 @@ LogWidget .log-filter {
     max-width: 18;
 }
 
+/* === Level Filter Chips (aligned with AlertHistory pattern) === */
+
+LogWidget .log-filter-chips {
+    height: 2;
+    width: auto;
+    layout: horizontal;
+    align: left middle;
+    margin: 0 1;
+}
+
+LogWidget .level-chip {
+    min-width: 8;
+    height: 1;
+    margin: 0;
+    padding: 0 1;
+    background: transparent;
+    color: $text-muted;
+    border: none;
+}
+
+LogWidget .level-chip:hover {
+    background: $bg-highlight;
+    color: $text-primary;
+}
+
+LogWidget .level-chip.active {
+    background: $accent-muted;
+    color: $accent;
+    text-style: bold;
+}
+
 LogWidget .log-sep {
     color: $border-subtle;
     height: 2;

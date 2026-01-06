@@ -5,7 +5,7 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal
 from textual.reactive import reactive
-from textual.widgets import Input, Label, RichLog, Select, Static
+from textual.widgets import Button, Input, Label, RichLog, Static
 
 from gpt_trader.utilities.logging_patterns import get_logger
 
@@ -27,6 +27,15 @@ class LogWidget(Static):
     BINDINGS = [
         # Pause/resume
         Binding("space", "toggle_pause", "Pause/Resume", show=True),
+        # Level filter chips (aligned with AlertHistory 1-5 pattern)
+        Binding("1", "filter_all", "All Levels", show=False),
+        Binding("2", "filter_error", "Errors", show=False),
+        Binding("3", "filter_warning", "Warnings", show=False),
+        Binding("4", "filter_info", "Info", show=False),
+        Binding("5", "filter_debug", "Debug", show=False),
+        # Filter cycling (aligned with trades 'f'/'F' pattern)
+        Binding("f", "cycle_level_filter", "Cycle Level", show=True),
+        Binding("F", "clear_filters", "Clear Filters", show=True),
         # Format toggle
         Binding("v", "cycle_format", "Format", show=True),
         # Line navigation
@@ -42,12 +51,11 @@ class LogWidget(Static):
         Binding("n", "next_error", "Next Error", show=True),
         Binding("N", "previous_error", "Prev Error", show=False),
         # Timestamp toggle
-        Binding("ctrl+t", "cycle_timestamp_format", "Timestamps", show=True),
+        Binding("ctrl+t", "cycle_timestamp_format", "Timestamps", show=False),
         # Startup section toggle
         Binding("ctrl+s", "toggle_startup_section", "Startup", show=False),
-        # Ergonomics
+        # Legacy ergonomics
         Binding("ctrl+f", "focus_filter", "Filter", show=False),
-        Binding("ctrl+0", "clear_filters", "Clear Filters", show=False),
     ]
 
     # Reactive counters for log statistics
@@ -88,23 +96,16 @@ class LogWidget(Static):
             yield Label("LOGS", id="log-title", classes="log-title")
             yield Label("", id="pause-indicator", classes="pause-indicator")
 
-            select = Select(
-                [
-                    ("DEBUG", logging.DEBUG),
-                    ("INFO", logging.INFO),
-                    ("WARN", logging.WARNING),
-                    ("ERROR", logging.ERROR),
-                ],
-                value=logging.INFO,
-                allow_blank=False,
-                id="log-level-select",
-                classes="log-level-select",
-            )
-            select.can_focus = True
-            yield select
+            # Level filter chips (aligned with AlertHistory pattern)
+            with Horizontal(classes="log-filter-chips"):
+                yield Button("All [1]", id="level-all", classes="level-chip active")
+                yield Button("ERR [2]", id="level-error", classes="level-chip")
+                yield Button("WRN [3]", id="level-warn", classes="level-chip")
+                yield Button("INF [4]", id="level-info", classes="level-chip")
+                yield Button("DBG [5]", id="level-debug", classes="level-chip")
 
             filter_input = Input(
-                placeholder="filter...",
+                placeholder="filter logger...",
                 id="logger-filter-input",
                 classes="log-filter",
             )
@@ -179,12 +180,13 @@ class LogWidget(Static):
     def _write_startup_messages(self) -> None:
         """Write startup messages to verify log widget is working."""
         from rich.text import Text
+
         from gpt_trader.tui.theme import THEME
 
         log = self.query_one("#log-stream", RichLog)
         success_style = THEME.colors.success
         log.write(Text("✓ Log system initialized", style=success_style))
-        log.write(Text("Set log level using dropdown above", style=success_style))
+        log.write(Text("Use filter chips or [1-5] to set log level", style=success_style))
 
         # Mode-aware hint message
         if self.app and hasattr(self.app, "data_source_mode"):
@@ -192,7 +194,9 @@ class LogWidget(Static):
             if mode == "read_only":
                 log.write(Text("Observing market data (read-only mode)", style=success_style))
             else:
-                log.write(Text("Waiting for bot to start... Press 'S' to begin", style=success_style))
+                log.write(
+                    Text("Waiting for bot to start... Press 'S' to begin", style=success_style)
+                )
         else:
             log.write(Text("Waiting for bot to start... Press 'S' to begin", style=success_style))
 
@@ -208,24 +212,62 @@ class LogWidget(Static):
             # Widget may already be cleaned up
             pass
 
-    def on_select_changed(self, event: Select.Changed) -> None:
-        """Handle log level selection change."""
-        from typing import cast
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Handle level filter chip button presses."""
+        button_id = event.button.id
 
-        from textual.widgets._select import NoSelection
+        level_map = {
+            "level-all": None,  # Show all (DEBUG)
+            "level-error": logging.ERROR,
+            "level-warn": logging.WARNING,
+            "level-info": logging.INFO,
+            "level-debug": logging.DEBUG,
+        }
 
+        if button_id in level_map:
+            level = level_map[button_id]
+            if level is None:
+                # "All" means show DEBUG and above
+                self._set_level_filter(logging.DEBUG, "all")
+            else:
+                filter_name = button_id.replace("level-", "")
+                self._set_level_filter(level, filter_name)
+
+    def _set_level_filter(self, level: int, filter_name: str) -> None:
+        """Set the log level filter and update UI.
+
+        Args:
+            level: Logging level to filter to.
+            filter_name: Name of the filter for chip highlighting.
+        """
         from gpt_trader.tui.log_manager import get_tui_log_handler
 
-        if (
-            event.select.id == "log-level-select"
-            and event.value is not None
-            and not isinstance(event.value, NoSelection)
-        ):
-            self._min_level = int(cast(int, event.value))
-            # Update handler's level filter for this widget
-            handler = get_tui_log_handler()
-            log_display = self.query_one("#log-stream", RichLog)
-            handler.update_widget_level(log_display, self._min_level)
+        self._min_level = level
+        self._current_level_filter = filter_name
+
+        # Update handler's level filter for this widget
+        handler = get_tui_log_handler()
+        log_display = self.query_one("#log-stream", RichLog)
+        handler.update_widget_level(log_display, self._min_level)
+
+        # Update chip styles
+        self._update_level_chips()
+
+    def _update_level_chips(self) -> None:
+        """Update level chip styles to show active state."""
+        chip_ids = ["level-all", "level-error", "level-warn", "level-info", "level-debug"]
+        current_filter = getattr(self, "_current_level_filter", "info")
+
+        for chip_id in chip_ids:
+            try:
+                chip = self.query_one(f"#{chip_id}", Button)
+                expected_id = f"level-{current_filter}"
+                if chip_id == expected_id:
+                    chip.add_class("active")
+                else:
+                    chip.remove_class("active")
+            except Exception:
+                pass
 
     def on_input_changed(self, event: Input.Changed) -> None:
         """Handle logger filter input change."""
@@ -256,11 +298,7 @@ class LogWidget(Static):
 
             self._min_level = logging.INFO
             self._logger_filter = ""
-
-            try:
-                self.query_one("#log-level-select", Select).value = logging.INFO
-            except Exception:
-                pass
+            self._current_level_filter = "info"
 
             try:
                 self.query_one("#logger-filter-input", Input).value = ""
@@ -271,9 +309,62 @@ class LogWidget(Static):
             handler.update_widget_logger_filter(log_display, self._logger_filter)
             handler.refresh_widget(log_display)
             log_display.auto_scroll = True
+
+            # Update chip UI
+            self._update_level_chips()
             self.notify("Log filters cleared", timeout=2)
         except Exception:
             pass
+
+    # ==================== Level Filter Actions (1-5 keys) ====================
+
+    def action_filter_all(self) -> None:
+        """Show all log levels (DEBUG and above)."""
+        self._set_level_filter(logging.DEBUG, "all")
+        self.notify("Showing all levels", timeout=2)
+
+    def action_filter_error(self) -> None:
+        """Show only ERROR level logs."""
+        self._set_level_filter(logging.ERROR, "error")
+        self.notify("Showing errors only", timeout=2)
+
+    def action_filter_warning(self) -> None:
+        """Show WARNING and above."""
+        self._set_level_filter(logging.WARNING, "warn")
+        self.notify("Showing warnings+", timeout=2)
+
+    def action_filter_info(self) -> None:
+        """Show INFO and above."""
+        self._set_level_filter(logging.INFO, "info")
+        self.notify("Showing info+", timeout=2)
+
+    def action_filter_debug(self) -> None:
+        """Show DEBUG and above (same as all)."""
+        self._set_level_filter(logging.DEBUG, "debug")
+        self.notify("Showing debug+", timeout=2)
+
+    def action_cycle_level_filter(self) -> None:
+        """Cycle through level filters (matching trades 'f' pattern)."""
+        levels = [
+            ("info", logging.INFO),
+            ("warn", logging.WARNING),
+            ("error", logging.ERROR),
+            ("debug", logging.DEBUG),
+            ("all", logging.DEBUG),
+        ]
+        current = getattr(self, "_current_level_filter", "info")
+
+        # Find current index and move to next
+        current_idx = 0
+        for i, (name, _) in enumerate(levels):
+            if name == current:
+                current_idx = i
+                break
+
+        next_idx = (current_idx + 1) % len(levels)
+        next_name, next_level = levels[next_idx]
+        self._set_level_filter(next_level, next_name)
+        self.notify(f"Level filter: {next_name.upper()}", timeout=2)
 
     def increment_counter(self, level: int) -> None:
         """
@@ -322,20 +413,15 @@ class LogWidget(Static):
         Args:
             level: Logging level (e.g., logging.DEBUG, logging.INFO)
         """
-        from gpt_trader.tui.log_manager import get_tui_log_handler
-
-        self._min_level = level
-        try:
-            # Update the select widget to reflect new level
-            select = self.query_one("#log-level-select", Select)
-            select.value = level
-
-            # Update the handler's level filter
-            handler = get_tui_log_handler()
-            log_display = self.query_one("#log-stream", RichLog)
-            handler.update_widget_level(log_display, level)
-        except Exception:
-            pass
+        # Map level to filter name for chip highlighting
+        level_map = {
+            logging.DEBUG: "debug",
+            logging.INFO: "info",
+            logging.WARNING: "warn",
+            logging.ERROR: "error",
+        }
+        filter_name = level_map.get(level, "info")
+        self._set_level_filter(level, filter_name)
 
     # ==================== Pause/Resume Actions ====================
 

@@ -125,6 +125,10 @@ class DecisionEntry:
     confidence: float = 0.0
     indicators: dict[str, Any] = field(default_factory=dict)
     timestamp: float = 0.0
+    decision_id: str = ""  # Unique ID for linking to orders/trades
+    blocked_by: str = ""  # Guard/reason that blocked execution (empty if executed)
+    # Indicator contributions for transparency (list of dicts with name, value, contribution)
+    contributions: list[dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass
@@ -766,6 +770,13 @@ class StatusReporter:
             elif not isinstance(timestamp, (int, float)):
                 timestamp = 0.0
 
+            # Generate decision_id if not provided (timestamp-based)
+            decision_id = str(d.get("decision_id", ""))
+            if not decision_id and timestamp:
+                # Generate ID from timestamp + symbol for linkage
+                symbol = str(d.get("symbol", ""))
+                decision_id = f"{int(timestamp * 1000)}_{symbol}"
+
             # Create typed entry
             normalized_decisions.append(
                 DecisionEntry(
@@ -775,6 +786,7 @@ class StatusReporter:
                     confidence=confidence,
                     indicators=d.get("indicators", {}),
                     timestamp=timestamp,
+                    decision_id=decision_id,
                 )
             )
 

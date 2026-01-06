@@ -104,9 +104,24 @@ class RiskThresholds:
     risk_score_warn: int = 5  # Below = MEDIUM risk, above = HIGH risk
 
 
+@dataclass(frozen=True)
+class OrderThresholds:
+    """Unified thresholds for order age metrics.
+
+    All thresholds define boundaries between OK/WARNING/CRITICAL states.
+    Values are in seconds since order creation.
+    """
+
+    # === Order Age (seconds) ===
+    # Time since order was placed - used for UI coloring and alerts
+    age_ok: float = 30.0  # Below = OK (normal)
+    age_warn: float = 60.0  # Below = WARNING, at/above = CRITICAL (triggers alert)
+
+
 # Default thresholds instances
 DEFAULT_THRESHOLDS = PerformanceThresholds()
 DEFAULT_RISK_THRESHOLDS = RiskThresholds()
+DEFAULT_ORDER_THRESHOLDS = OrderThresholds()
 
 
 def get_latency_status(
@@ -429,6 +444,59 @@ def format_confidence_with_badge(confidence: float) -> tuple[str, str]:
     label = get_confidence_label(status)
     css_class = get_status_class(status)
     return f"{confidence:.2f} {label}", css_class
+
+
+# === Order-specific helper functions ===
+
+
+def get_order_age_status(
+    age_seconds: float,
+    thresholds: OrderThresholds = DEFAULT_ORDER_THRESHOLDS,
+) -> StatusLevel:
+    """Get status level for order age.
+
+    Args:
+        age_seconds: Order age in seconds.
+        thresholds: Thresholds to use.
+
+    Returns:
+        StatusLevel for the order age.
+    """
+    if age_seconds < thresholds.age_ok:
+        return StatusLevel.OK
+    elif age_seconds < thresholds.age_warn:
+        return StatusLevel.WARNING
+    return StatusLevel.CRITICAL
+
+
+def get_order_status_level(status: str) -> StatusLevel:
+    """Get status level for order status string.
+
+    Maps order status to visual severity for at-a-glance readability:
+    - OK (green): Active orders working normally (OPEN, PENDING, FILLED)
+    - WARNING (yellow): Needs attention (PARTIAL, EXPIRED)
+    - CRITICAL (red): Error states (REJECTED, FAILED)
+
+    CANCELLED is mapped to OK since it's user-initiated, not an error.
+
+    Args:
+        status: Order status string (e.g., "OPEN", "REJECTED").
+
+    Returns:
+        StatusLevel for the order status.
+    """
+    status_upper = status.upper()
+
+    # Error states - red
+    if status_upper in {"REJECTED", "FAILED"}:
+        return StatusLevel.CRITICAL
+
+    # Attention needed - yellow
+    if status_upper in {"PARTIAL", "EXPIRED"}:
+        return StatusLevel.WARNING
+
+    # Normal states - green (OPEN, PENDING, FILLED, CANCELLED)
+    return StatusLevel.OK
 
 
 # Legacy aliases for backward compatibility

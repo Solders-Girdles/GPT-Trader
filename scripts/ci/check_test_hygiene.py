@@ -181,6 +181,23 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/tui/widgets/test_positions.py",  # positions widget comprehensive scenarios
     "tests/unit/gpt_trader/tui/test_thresholds.py",  # unified threshold system test coverage (status levels, risk, confidence)
     "tests/unit/gpt_trader/tui/utilities/test_table_formatting.py",  # table formatting utilities with timestamp parsing, sorting, clipboard, and cell formatting
+    "tests/unit/gpt_trader/tui/services/test_alert_manager.py",  # alert system comprehensive coverage with execution health alerts
+    "tests/unit/gpt_trader/tui/test_staleness_helpers.py",  # staleness and execution health banner comprehensive testing
+    "tests/unit/gpt_trader/tui/services/test_execution_telemetry.py",  # execution telemetry metrics collection coverage
+    "tests/unit/gpt_trader/tui/services/test_onboarding_service.py",  # onboarding service state machine and persistence
+    "tests/unit/gpt_trader/tui/widgets/test_strategy.py",  # strategy widget comprehensive display scenarios
+    "tests/unit/gpt_trader/tui/widgets/test_risk_detail_modal.py",  # risk detail modal comprehensive scenarios
+    "tests/unit/gpt_trader/features/live_trade/strategies/hybrid/test_base.py",  # hybrid strategy base comprehensive coverage
+    "tests/unit/gpt_trader/features/live_trade/strategies/hybrid/test_types.py",  # hybrid strategy types validation matrix
+    "tests/unit/gpt_trader/features/live_trade/signals/test_orderbook_imbalance.py",  # orderbook imbalance signal comprehensive scenarios
+    "tests/unit/gpt_trader/features/live_trade/signals/test_spread.py",  # spread signal comprehensive scenarios
+    "tests/unit/gpt_trader/features/live_trade/execution/test_router.py",  # execution router comprehensive flow coverage
+    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience.py",  # API resilience patterns comprehensive coverage
+    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_circuit_breaker.py",  # circuit breaker state machine coverage
+    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics.py",  # API metrics collection comprehensive scenarios
+    "tests/tui/test_state_logic.py",  # TUI state logic comprehensive scenarios
+    "tests/unit/gpt_trader/tui/services/test_trading_stats_service.py",  # trading stats FIFO matching comprehensive scenarios
+    "tests/unit/gpt_trader/orchestration/configuration/risk/test_cfm_risk_config.py",  # CFM risk config validation matrix
 }
 
 SLEEP_ALLOWLIST = {
@@ -190,6 +207,7 @@ SLEEP_ALLOWLIST = {
     "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming.py",  # uses time.sleep for run_in_executor cancellation test
     "tests/unit/gpt_trader/utilities/performance/test_timing.py",  # timing utility coverage requires real sleep for precision tests
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin.py",  # uses time.sleep for WebSocket thread synchronization
+    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_response_cache.py",  # TTL-based cache expiration requires real time elapsed
 }
 
 

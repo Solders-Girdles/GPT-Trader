@@ -53,3 +53,9 @@ StrategyWidget DataTable {
 .decision-time {
     color: $text-muted;
 }
+
+.decision-movers {
+    padding: 0 1;
+    margin-bottom: 1;
+    height: auto;
+}

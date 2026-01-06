@@ -565,7 +565,7 @@ class TestTuiLogHandler:
 
     def test_compact_formatter_produces_short_output(self):
         """Test that CompactTuiFormatter produces compact output with icons."""
-        from gpt_trader.tui.log_manager import CompactTuiFormatter, LEVEL_ICONS
+        from gpt_trader.tui.log_manager import LEVEL_ICONS, CompactTuiFormatter
 
         formatter = CompactTuiFormatter()
         record = logging.LogRecord(
@@ -589,7 +589,7 @@ class TestTuiLogHandler:
 
     def test_compact_formatter_uses_correct_icons(self):
         """Test that CompactTuiFormatter uses correct icons for each level."""
-        from gpt_trader.tui.log_manager import CompactTuiFormatter, LEVEL_ICONS
+        from gpt_trader.tui.log_manager import LEVEL_ICONS, CompactTuiFormatter
 
         formatter = CompactTuiFormatter()
 

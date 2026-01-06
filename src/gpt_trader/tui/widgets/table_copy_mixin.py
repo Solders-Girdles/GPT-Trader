@@ -7,7 +7,7 @@ Mix this into widgets that contain DataTable elements.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from textual.binding import Binding
 from textual.widgets import DataTable
@@ -17,7 +17,7 @@ from gpt_trader.tui.utilities.table_formatting import copy_to_clipboard
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
-    from rich.text import Text
+    pass
 
 logger = get_logger(__name__, component="tui")
 
@@ -121,7 +121,7 @@ class TableCopyMixin:
             logger.debug(f"Copy all failed: {e}")
             notify_warning(self, "Copy failed")
 
-    def _extract_row_data(self, table: DataTable, row_key) -> list[str]:
+    def _extract_row_data(self, table: DataTable, row_key: Any) -> list[str]:
         """Extract data from a table row.
 
         Args:

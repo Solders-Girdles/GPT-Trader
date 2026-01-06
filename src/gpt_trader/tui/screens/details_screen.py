@@ -93,7 +93,7 @@ class DetailsScreen(Screen):
         # Update TradesWidget
         try:
             trades_widget = self.query_one("#details-trades", TradesWidget)
-            trades_widget.update_trades(state.trade_data.trades)
+            trades_widget.update_trades(state.trade_data.trades, state)
         except Exception as e:
             logger.debug(f"Failed to update TradesWidget: {e}")
 

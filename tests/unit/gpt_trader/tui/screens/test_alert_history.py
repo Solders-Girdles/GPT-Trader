@@ -120,3 +120,61 @@ class TestAlertHistoryScreen:
             # Should not raise
             screen.action_clear_history()
             screen.action_reset_cooldowns()
+
+
+class TestAlertHistoryFilterActions:
+    """Tests for filter cycling actions (aligned with Logs 'f'/'F' pattern)."""
+
+    @pytest.fixture
+    def screen_with_mocks(self):
+        """Create AlertHistoryScreen with mocked _set_filter and notify."""
+        screen = AlertHistoryScreen()
+        mock_app = MagicMock()
+        mock_app.notify = MagicMock()
+        return screen, mock_app
+
+    def test_cycle_filter_cycles_through_all_filters(self, screen_with_mocks):
+        """Test 'f' key cycles through all filter options."""
+        screen, mock_app = screen_with_mocks
+
+        with patch.object(type(screen), "app", new_callable=PropertyMock, return_value=mock_app):
+            with patch.object(screen, "_set_filter") as mock_set_filter:
+                # Start at 'all', should cycle to 'trade'
+                screen._current_filter = "all"
+                screen.action_cycle_filter()
+                mock_set_filter.assert_called_with("trade")
+
+    def test_cycle_filter_wraps_around(self, screen_with_mocks):
+        """Test filter cycling wraps from last to first."""
+        screen, mock_app = screen_with_mocks
+
+        with patch.object(type(screen), "app", new_callable=PropertyMock, return_value=mock_app):
+            with patch.object(screen, "_set_filter") as mock_set_filter:
+                # At 'error' (last), should wrap to 'all'
+                screen._current_filter = "error"
+                screen.action_cycle_filter()
+                mock_set_filter.assert_called_with("all")
+
+    def test_clear_filter_resets_to_all(self, screen_with_mocks):
+        """Test 'F' key resets filter to 'all'."""
+        screen, mock_app = screen_with_mocks
+
+        with patch.object(type(screen), "app", new_callable=PropertyMock, return_value=mock_app):
+            with patch.object(screen, "_set_filter") as mock_set_filter:
+                screen._current_filter = "risk"
+                screen.action_clear_filter()
+                mock_set_filter.assert_called_with("all")
+
+    def test_filter_bindings_present(self):
+        """Test 'f' and 'F' keybinds are present."""
+        screen = AlertHistoryScreen()
+        binding_keys = [b[0] for b in screen.BINDINGS]
+        assert "f" in binding_keys  # Cycle filter
+        assert "F" in binding_keys  # Clear filter
+
+    def test_number_filter_bindings_present(self):
+        """Test 1-5 keybinds for direct filter selection are present."""
+        screen = AlertHistoryScreen()
+        binding_keys = [b[0] for b in screen.BINDINGS]
+        for key in ["1", "2", "3", "4", "5"]:
+            assert key in binding_keys

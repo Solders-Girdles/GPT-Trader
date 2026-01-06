@@ -101,7 +101,8 @@ class TestOrdersWidget:
         assert str(args[4]) == "50%"  # Fill%
         assert "99" in str(args[5])  # Avg Px (99.50)
         # args[6] is Age (Rich Text)
-        assert args[7] == "OPEN"  # Status is now at index 7
+        # args[7] is Status (Rich Text with color)
+        assert "OPEN" in str(args[7])
         assert kwargs.get("key") == "ord_1"
 
 
@@ -146,9 +147,11 @@ class TestTradesWidget:
         # With row-key optimization, add_row is called with key parameter
         mock_table.add_row.assert_called_once()
         args, kwargs = mock_table.add_row.call_args
+        # Column order: Symbol, Links, Side, Quantity, Price, Order ID, P&L, Time
         assert args[0] == "ETH"
-        assert "SELL" in str(args[1])
+        # args[1] is Links column (badge text)
+        assert "SELL" in str(args[2])  # Side is now at index 2
         # Quantity and price are formatted, check string representation
-        assert "2" in str(args[2])
-        assert "2000" in str(args[3]) or "2,000" in str(args[3])
+        assert "2" in str(args[3])  # Quantity at index 3
+        assert "2000" in str(args[4]) or "2,000" in str(args[4])  # Price at index 4
         assert kwargs.get("key") == "trd_1"

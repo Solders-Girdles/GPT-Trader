@@ -10,6 +10,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from textual.message import Message
+
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -63,7 +65,7 @@ class FocusManager:
     # Actions available per tile (for hint display)
     TILE_ACTIONS: dict[str, list[tuple[str, str]]] = {
         "tile-hero": [("Enter", "Details"), ("S", "Start/Stop")],
-        "tile-account": [("Enter", "Details"), ("C", "Copy")],
+        "tile-account": [("Enter", "Details"), ("w", "Window"), ("C", "Copy")],
         "tile-market": [("Enter", "Details"), ("W", "Watchlist")],
         "tile-system": [("Enter", "Details"), ("R", "Reconnect")],
         "tile-logs": [("Enter", "Full Logs"), ("Space", "Pause")],
@@ -304,10 +306,6 @@ class FocusManager:
                 tile.remove_class("tile-focused")
             except Exception:
                 pass
-
-
-# Event for focus changes
-from textual.message import Message
 
 
 class TileFocusChanged(Message):

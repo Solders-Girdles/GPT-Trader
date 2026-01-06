@@ -50,6 +50,7 @@ class PositionsWidget(TableCopyMixin, Static):
 
     BINDINGS = [
         *TableCopyMixin.COPY_BINDINGS,
+        Binding("enter", "show_position_detail", "Details", show=True),
     ]
 
     # Styles moved to styles/widgets/portfolio.tcss
@@ -288,3 +289,48 @@ class PositionsWidget(TableCopyMixin, Static):
         # Update each cell
         for col_idx, (col_key, value) in enumerate(zip(columns, row_data)):
             table.update_cell(row_key, col_key, value)
+
+    def action_show_position_detail(self) -> None:
+        """Open position detail modal for the selected position."""
+        from gpt_trader.tui.widgets.portfolio.position_detail_modal import (
+            PositionDetailModal,
+        )
+
+        try:
+            table = self.query_one("#positions-table", DataTable)
+            if table.row_count == 0:
+                self.notify("No positions to view", timeout=2)
+                return
+
+            # Get selected row key (symbol)
+            cursor_row = table.cursor_row
+            if cursor_row < 0:
+                self.notify("Select a position first", timeout=2)
+                return
+
+            row_keys = list(table.rows.keys())
+            if cursor_row >= len(row_keys):
+                self.notify("Invalid selection", timeout=2)
+                return
+
+            symbol = str(row_keys[cursor_row])
+
+            # Find the position from state
+            if self.state is None:
+                self.notify("No position data available", timeout=2)
+                return
+
+            position = self.state.position_data.positions.get(symbol)
+            if not position:
+                self.notify(f"Position not found: {symbol}", timeout=2)
+                return
+
+            # Get trades from state for linkage
+            trades = self.state.trade_data.trades if self.state.trade_data else []
+
+            # Open the detail modal
+            self.app.push_screen(PositionDetailModal(position, trades=trades))
+
+        except Exception as e:
+            logger.debug(f"Error opening position detail: {e}")
+            self.notify("Could not open position details", timeout=2)

@@ -3,12 +3,6 @@ from unittest.mock import MagicMock
 
 from gpt_trader.tui.screens import MainScreen
 from gpt_trader.tui.state import TuiState
-from gpt_trader.tui.widgets import (
-    MarketWatchWidget,
-    RiskWidget,
-    SlimStatusWidget,
-    SystemHealthWidget,
-)
 
 
 class TestMainScreen:

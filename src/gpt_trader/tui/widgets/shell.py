@@ -14,6 +14,7 @@ from textual.containers import Container
 from textual.reactive import reactive
 from textual.widgets import Label, Static
 
+from gpt_trader.tui.services.onboarding_service import get_onboarding_service
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -38,6 +39,7 @@ class CommandBar(Static):
     def __init__(self, bot_mode: str = "DEMO", id: str | None = None, classes: str | None = None):
         super().__init__(id=id, classes=classes)
         self.bot_mode = bot_mode
+        self._onboarding = get_onboarding_service()
 
     def on_mount(self) -> None:
         self.set_interval(1.0, self.update_time)
@@ -59,12 +61,15 @@ class CommandBar(Static):
     def compose(self) -> ComposeResult:
         # 1. Identity
         yield Label("GPT-TRADER", classes="identity")
-        
+
         # 2. Central Status Area using containers for alignment
         with Container(classes="status-area"):
-            yield Label(self.bot_mode, id="mode-badge", classes=f"mode-badge {self.bot_mode.lower()}")
+            yield Label(
+                self.bot_mode, id="mode-badge", classes=f"mode-badge {self.bot_mode.lower()}"
+            )
             yield Label("○ CONNECTING", id="connection-status", classes="status-text")
-        
+            yield Label("", id="ready-badge", classes="ready-badge hidden")
+
         # 3. System Area
         with Container(classes="system-area"):
             yield Label(self.time_str, classes="clock")
@@ -93,6 +98,7 @@ class CommandBar(Static):
             logger.debug("Failed updating mode badge: %s", e)
 
         self._update_connection_badge(state)
+        self._update_ready_badge(state)
 
     def _update_connection_badge(self, state: TuiState) -> None:
         """Update the connection badge in the header.
@@ -134,3 +140,31 @@ class CommandBar(Static):
             conn_label.add_class(status_cls)
         except Exception as e:
             logger.debug("Failed updating connection badge: %s", e)
+
+    def _update_ready_badge(self, state: TuiState) -> None:
+        """Update the ready badge showing onboarding status.
+
+        Shows "Ready" when setup is complete, or progress like "2/3" when incomplete.
+        Hidden in demo mode since demo is always ready.
+        """
+        try:
+            ready_label = self.query_one("#ready-badge", Label)
+            status = self._onboarding.get_status(state)
+
+            # Hide in demo mode - it's always ready
+            if status.mode == "demo":
+                ready_label.add_class("hidden")
+                return
+
+            # Show badge with status
+            ready_label.remove_class("hidden")
+            ready_label.remove_class("ready", "not-ready")
+
+            if status.is_ready:
+                ready_label.update("✓ READY")
+                ready_label.add_class("ready")
+            else:
+                ready_label.update(f"○ {status.ready_label}")
+                ready_label.add_class("not-ready")
+        except Exception as e:
+            logger.debug("Failed updating ready badge: %s", e)

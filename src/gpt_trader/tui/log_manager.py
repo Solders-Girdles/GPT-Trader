@@ -200,9 +200,7 @@ STRATEGY_DEBUG_PATTERN = re.compile(
 )
 
 # Actual decision format: "Strategy Decision for BTC-USD: BUY (momentum crossover)"
-STRATEGY_DECISION_PATTERN = re.compile(
-    r"Strategy Decision for (\S+):\s*(\w+)\s*\(([^)]+)\)"
-)
+STRATEGY_DECISION_PATTERN = re.compile(r"Strategy Decision for (\S+):\s*(\w+)\s*\(([^)]+)\)")
 
 ORDER_PATTERN = re.compile(r"(Order|order).*?(BUY|SELL|buy|sell).*?(\d+\.?\d*)\s*(\w+-\w+)")
 POSITION_PATTERN = re.compile(r"(Position|position).*?(\w+-\w+).*?(\$?\d+\.?\d*)")
@@ -298,16 +296,37 @@ class StructuredTuiFormatter(logging.Formatter):
         # Message - apply domain-specific formatting (check if system log first)
         message = self._format_message(record)
         logger_name = record.name.lower()
-        
+
         # System/startup logs - use more descriptive logger names
         system_keywords = [
-            "startup", "initializ", "mount", "ready", "connect", "disconnect",
-            "error", "failed", "critical", "warning", "status", "state",
-            "config", "mode", "credential", "validation", "bot", "engine",
-            "app", "tui", "lifecycle", "coordinator", "service"
+            "startup",
+            "initializ",
+            "mount",
+            "ready",
+            "connect",
+            "disconnect",
+            "error",
+            "failed",
+            "critical",
+            "warning",
+            "status",
+            "state",
+            "config",
+            "mode",
+            "credential",
+            "validation",
+            "bot",
+            "engine",
+            "app",
+            "tui",
+            "lifecycle",
+            "coordinator",
+            "service",
         ]
-        is_system_log = any(keyword in logger_name or keyword in message.lower() for keyword in system_keywords)
-        
+        is_system_log = any(
+            keyword in logger_name or keyword in message.lower() for keyword in system_keywords
+        )
+
         if is_system_log:
             # For system logs, use more descriptive logger name (last 2 components)
             # e.g., "gpt_trader.tui.app" -> "tui.app" instead of just "app"
@@ -316,7 +335,7 @@ class StructuredTuiFormatter(logging.Formatter):
                 logger_abbrev = parts[-2] + "." + parts[-1]
                 # Truncate if still too long, but preserve more context
                 if len(logger_abbrev) > self.LOGGER_WIDTH:
-                    logger_abbrev = logger_abbrev[-(self.LOGGER_WIDTH-1):]
+                    logger_abbrev = logger_abbrev[-(self.LOGGER_WIDTH - 1) :]
             else:
                 logger_abbrev = _abbreviate_logger(record.name, self.LOGGER_WIDTH)
         else:
@@ -352,12 +371,29 @@ class StructuredTuiFormatter(logging.Formatter):
         # System/startup logs - preserve full context for better debugging
         # These logs are critical for understanding system state
         system_keywords = [
-            "startup", "initializ", "mount", "ready", "connect", "disconnect",
-            "error", "failed", "critical", "warning", "status", "state",
-            "config", "mode", "credential", "validation", "bot", "engine"
+            "startup",
+            "initializ",
+            "mount",
+            "ready",
+            "connect",
+            "disconnect",
+            "error",
+            "failed",
+            "critical",
+            "warning",
+            "status",
+            "state",
+            "config",
+            "mode",
+            "credential",
+            "validation",
+            "bot",
+            "engine",
         ]
-        is_system_log = any(keyword in logger_name or keyword in message.lower() for keyword in system_keywords)
-        
+        is_system_log = any(
+            keyword in logger_name or keyword in message.lower() for keyword in system_keywords
+        )
+
         # For system logs, preserve more context - don't condense as aggressively
         if is_system_log:
             # Still apply basic formatting but preserve important details
@@ -550,10 +586,10 @@ class TuiLogHandler(logging.Handler):
         """
         try:
             # Ensure widget is mounted and has an app before replaying
-            if not hasattr(widget, 'is_mounted') or not widget.is_mounted:
+            if not hasattr(widget, "is_mounted") or not widget.is_mounted:
                 # Widget not ready yet, skip replay (will be handled by normal emit flow)
                 return
-            if not hasattr(widget, 'app') or not widget.app:
+            if not hasattr(widget, "app") or not widget.app:
                 return
 
             # Get the most recent logs up to replay_count
@@ -569,7 +605,11 @@ class TuiLogHandler(logging.Handler):
                     continue
 
                 # Hide startup INFO logs when requested (still show warnings/errors)
-                if not show_startup and entry.category == "startup" and entry.level < logging.WARNING:
+                if (
+                    not show_startup
+                    and entry.category == "startup"
+                    and entry.level < logging.WARNING
+                ):
                     continue
 
                 # Check logger filter
@@ -582,8 +622,10 @@ class TuiLogHandler(logging.Handler):
                         self._write_to_widget(widget, entry.styled_message)
                     else:
                         # On background thread, schedule on main thread
-                        if hasattr(widget, 'app') and widget.app:
-                            widget.app.call_from_thread(self._write_to_widget, widget, entry.styled_message)
+                        if hasattr(widget, "app") and widget.app:
+                            widget.app.call_from_thread(
+                                self._write_to_widget, widget, entry.styled_message
+                            )
                     replayed += 1
                 except Exception as e:
                     # Skip this entry if write fails, continue with others
@@ -595,13 +637,15 @@ class TuiLogHandler(logging.Handler):
                 from gpt_trader.tui.theme import THEME
 
                 total_available = len(logs_to_replay)
-                separator_msg = f"─── {replayed} previous logs replayed (from {total_available} available) ───"
+                separator_msg = (
+                    f"─── {replayed} previous logs replayed (from {total_available} available) ───"
+                )
                 separator = Text(separator_msg, style=THEME.colors.text_muted)
                 try:
                     if threading.current_thread() is threading.main_thread():
                         widget.write(separator)
                     else:
-                        if hasattr(widget, 'app') and widget.app:
+                        if hasattr(widget, "app") and widget.app:
                             widget.app.call_from_thread(widget.write, separator)
                 except Exception:
                     pass  # Ignore separator write errors
@@ -738,7 +782,9 @@ class TuiLogHandler(logging.Handler):
                             break
 
             # Early exit if no recipients and buffer is full (oldest will be dropped anyway)
-            if not has_recipient and len(self._log_buffer) >= (self._log_buffer.maxlen or MAX_LOG_ENTRIES):
+            if not has_recipient and len(self._log_buffer) >= (
+                self._log_buffer.maxlen or MAX_LOG_ENTRIES
+            ):
                 return
 
             # LAZY FORMATTING: Only format the style we need for display
@@ -761,6 +807,7 @@ class TuiLogHandler(logging.Handler):
                 domain_fields = None
                 try:
                     from gpt_trader.logging.correlation import get_log_context
+
                     context = get_log_context()
                     if context:
                         correlation_id = context.get("correlation_id")
@@ -794,6 +841,7 @@ class TuiLogHandler(logging.Handler):
             if self._format_mode != "json":  # Already fetched for JSON mode above
                 try:
                     from gpt_trader.logging.correlation import get_log_context
+
                     context = get_log_context()
                     if context:
                         correlation_id = context.get("correlation_id")

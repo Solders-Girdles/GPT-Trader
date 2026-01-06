@@ -53,6 +53,44 @@ CommandBar .status-text {
     margin-right: 1;
 }
 
+/* Connection status colors */
+CommandBar .status-text.connected {
+    color: $success;
+}
+
+CommandBar .status-text.stopped {
+    color: $text-muted;
+}
+
+CommandBar .status-text.stale {
+    color: $warning;
+}
+
+CommandBar .status-text.disconnected {
+    color: $error;
+}
+
+/* Ready badge - shows onboarding status for non-demo modes */
+CommandBar .ready-badge {
+    padding: 0 1;
+    margin-left: 1;
+    text-style: bold;
+}
+
+CommandBar .ready-badge.ready {
+    background: $success;
+    color: $bg-primary;
+}
+
+CommandBar .ready-badge.not-ready {
+    background: $bg-highlight;
+    color: $warning;
+}
+
+CommandBar .ready-badge.hidden {
+    display: none;
+}
+
 CommandBar .clock {
     color: $accent;
 }

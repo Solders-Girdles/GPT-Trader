@@ -149,3 +149,131 @@ PanicModal #btn-panic-confirm {
 PanicModal #btn-panic-cancel {
     background: $bg-elevated;
 }
+
+/* === Order Detail Modal === */
+
+OrderDetailModal {
+    align: center middle;
+    background: $overlay-disabled;
+}
+
+OrderDetailModal #order-detail-modal {
+    height: auto;
+    max-height: 80%;
+    padding: $spacing-md;
+    background: $bg-secondary;
+    border: none;
+    border-left: wide $accent;
+}
+
+OrderDetailModal #order-detail-title {
+    text-align: center;
+    text-style: bold;
+    color: $accent;
+    margin-bottom: $spacing-xs;
+}
+
+OrderDetailModal .section-header {
+    color: $text-muted;
+    margin-top: $spacing-xs;
+    margin-bottom: 0;
+}
+
+OrderDetailModal .muted {
+    color: $text-muted;
+}
+
+OrderDetailModal #linked-trades-table {
+    height: auto;
+    max-height: 10;
+    margin-top: $spacing-xs;
+    margin-bottom: $spacing-xs;
+}
+
+OrderDetailModal #close-btn {
+    margin-top: $spacing-sm;
+    width: 100%;
+}
+
+/* === Risk Detail Modal === */
+
+RiskDetailModal {
+    align: center middle;
+    background: $overlay-disabled;
+}
+
+RiskDetailModal #risk-detail-modal {
+    height: auto;
+    max-height: 85%;
+    padding: $spacing-md;
+    background: $bg-secondary;
+    border: none;
+    border-left: wide $accent;
+}
+
+RiskDetailModal #risk-detail-title {
+    text-align: center;
+    text-style: bold;
+    color: $accent;
+    margin-bottom: $spacing-xs;
+}
+
+RiskDetailModal .section-header {
+    color: $text-muted;
+    margin-top: $spacing-xs;
+    margin-bottom: 0;
+}
+
+RiskDetailModal .muted {
+    color: $text-muted;
+}
+
+RiskDetailModal #close-btn {
+    margin-top: $spacing-sm;
+    width: 100%;
+}
+
+/* === Position Detail Modal === */
+
+PositionDetailModal {
+    align: center middle;
+    background: $overlay-disabled;
+}
+
+PositionDetailModal #position-detail-modal {
+    height: auto;
+    max-height: 85%;
+    padding: $spacing-md;
+    background: $bg-secondary;
+    border: none;
+    border-left: wide $accent;
+}
+
+PositionDetailModal #position-detail-title {
+    text-align: center;
+    text-style: bold;
+    color: $accent;
+    margin-bottom: $spacing-xs;
+}
+
+PositionDetailModal .section-header {
+    color: $text-muted;
+    margin-top: $spacing-xs;
+    margin-bottom: 0;
+}
+
+PositionDetailModal .muted {
+    color: $text-muted;
+}
+
+PositionDetailModal #linked-trades-table {
+    height: auto;
+    max-height: 10;
+    margin-top: $spacing-xs;
+    margin-bottom: $spacing-xs;
+}
+
+PositionDetailModal #close-btn {
+    margin-top: $spacing-sm;
+    width: 100%;
+}

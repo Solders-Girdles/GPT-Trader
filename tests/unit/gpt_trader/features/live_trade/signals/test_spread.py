@@ -5,11 +5,11 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from gpt_trader.features.live_trade.signals.protocol import StrategyContext
 from gpt_trader.features.live_trade.signals.spread import (
     SpreadSignal,
     SpreadSignalConfig,
 )
-from gpt_trader.features.live_trade.signals.protocol import StrategyContext
 from gpt_trader.features.live_trade.signals.types import SignalType
 from gpt_trader.features.live_trade.strategies.base import MarketDataContext
 
@@ -130,9 +130,7 @@ class TestSpreadSignal:
     ) -> None:
         """Test that spread is taken from orderbook if not in market_data."""
         snapshot = MockDepthSnapshot(spread_bps=8.0)
-        base_context.market_data = MarketDataContext(
-            spread_bps=None, orderbook_snapshot=snapshot
-        )
+        base_context.market_data = MarketDataContext(spread_bps=None, orderbook_snapshot=snapshot)
         result = signal.generate(base_context)
 
         assert result.metadata["spread_bps"] == 8.0
@@ -152,9 +150,7 @@ class TestSpreadSignal:
         assert result.confidence == 0.0
         assert result.metadata["reason"] == "no_spread_data"
 
-    def test_confidence_scaling(
-        self, signal: SpreadSignal, base_context: StrategyContext
-    ) -> None:
+    def test_confidence_scaling(self, signal: SpreadSignal, base_context: StrategyContext) -> None:
         """Test that confidence scales appropriately across spread ranges."""
         spreads_and_expected = [
             (1.0, "tight", 0.8),  # Very tight
@@ -170,9 +166,9 @@ class TestSpreadSignal:
             base_context.market_data = MarketDataContext(spread_bps=Decimal(str(spread)))
             result = signal.generate(base_context)
 
-            assert result.metadata["quality"] == expected_quality, (
-                f"Spread {spread} should be {expected_quality}"
-            )
+            assert (
+                result.metadata["quality"] == expected_quality
+            ), f"Spread {spread} should be {expected_quality}"
 
     def test_custom_thresholds(self, base_context: StrategyContext) -> None:
         """Test signal with custom thresholds."""

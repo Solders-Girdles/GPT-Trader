@@ -4,7 +4,6 @@ Covers both performance and risk threshold calculations with a focus on
 verifying the abs() fix for loss ratio calculations.
 """
 
-
 from gpt_trader.tui.thresholds import (
     DEFAULT_CONFIDENCE_THRESHOLDS,
     DEFAULT_RISK_THRESHOLDS,
@@ -18,6 +17,7 @@ from gpt_trader.tui.thresholds import (
     get_latency_status,
     get_loss_ratio_status,
     get_memory_status,
+    get_order_status_level,
     get_risk_score_status,
     get_risk_status_label,
     get_status_class,
@@ -314,3 +314,58 @@ class TestFormatConfidenceWithBadge:
         text, css_class = format_confidence_with_badge(0.25)
         assert text == "0.25 LOW"
         assert css_class == "status-critical"
+
+
+class TestOrderStatusLevel:
+    """Tests for get_order_status_level function.
+
+    Maps order status strings to visual severity for at-a-glance readability:
+    - OK (green): OPEN, PENDING, FILLED, CANCELLED
+    - WARNING (yellow): PARTIAL, EXPIRED
+    - CRITICAL (red): REJECTED, FAILED
+    """
+
+    def test_open_status_returns_ok(self):
+        """OPEN orders are normal - OK status."""
+        assert get_order_status_level("OPEN") == StatusLevel.OK
+        assert get_order_status_level("open") == StatusLevel.OK
+
+    def test_pending_status_returns_ok(self):
+        """PENDING orders are normal - OK status."""
+        assert get_order_status_level("PENDING") == StatusLevel.OK
+
+    def test_filled_status_returns_ok(self):
+        """FILLED orders are complete - OK status."""
+        assert get_order_status_level("FILLED") == StatusLevel.OK
+
+    def test_cancelled_status_returns_ok(self):
+        """CANCELLED orders are user-initiated - OK status (not error)."""
+        assert get_order_status_level("CANCELLED") == StatusLevel.OK
+        assert get_order_status_level("CANCELED") == StatusLevel.OK  # US spelling
+
+    def test_partial_status_returns_warning(self):
+        """PARTIAL fills need attention - WARNING status."""
+        assert get_order_status_level("PARTIAL") == StatusLevel.WARNING
+
+    def test_expired_status_returns_warning(self):
+        """EXPIRED orders may indicate stale strategy - WARNING status."""
+        assert get_order_status_level("EXPIRED") == StatusLevel.WARNING
+
+    def test_rejected_status_returns_critical(self):
+        """REJECTED orders are errors - CRITICAL status."""
+        assert get_order_status_level("REJECTED") == StatusLevel.CRITICAL
+
+    def test_failed_status_returns_critical(self):
+        """FAILED orders are errors - CRITICAL status."""
+        assert get_order_status_level("FAILED") == StatusLevel.CRITICAL
+
+    def test_unknown_status_returns_ok(self):
+        """Unknown statuses default to OK (safe fallback)."""
+        assert get_order_status_level("UNKNOWN") == StatusLevel.OK
+        assert get_order_status_level("SOME_NEW_STATUS") == StatusLevel.OK
+
+    def test_case_insensitive(self):
+        """Status matching is case-insensitive."""
+        assert get_order_status_level("rejected") == StatusLevel.CRITICAL
+        assert get_order_status_level("Rejected") == StatusLevel.CRITICAL
+        assert get_order_status_level("REJECTED") == StatusLevel.CRITICAL

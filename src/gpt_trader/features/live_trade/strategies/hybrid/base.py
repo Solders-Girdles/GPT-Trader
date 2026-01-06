@@ -14,7 +14,6 @@ from typing import TYPE_CHECKING, Any
 from gpt_trader.features.live_trade.strategies.base import StatefulStrategyBase
 from gpt_trader.orchestration.symbols import (
     get_cfm_symbol,
-    get_spot_symbol,
 )
 from gpt_trader.utilities.logging_patterns import get_logger
 
@@ -100,9 +99,9 @@ class HybridStrategyBase(StatefulStrategyBase):
         position_state: dict[str, Any] | None,
         recent_marks: Sequence[Decimal],
         equity: Decimal,
-        product: "Product | None",
-        market_data: "MarketDataContext | None" = None,
-    ) -> "Decision":
+        product: Product | None,
+        market_data: MarketDataContext | None = None,
+    ) -> Decision:
         """Standard strategy interface - delegates to decide_hybrid.
 
         This method adapts the hybrid strategy to the standard StrategyProtocol
@@ -123,6 +122,8 @@ class HybridStrategyBase(StatefulStrategyBase):
         # Import here to avoid circular dependency
         from gpt_trader.features.live_trade.strategies.perps_baseline.strategy import (
             Action as LegacyAction,
+        )
+        from gpt_trader.features.live_trade.strategies.perps_baseline.strategy import (
             Decision,
         )
 
@@ -254,7 +255,9 @@ class HybridStrategyBase(StatefulStrategyBase):
             size_pct = (self.config.spot_position_size_pct + self.config.cfm_position_size_pct) / 2
 
         # For CFM, leverage effectively increases buying power
-        effective_equity = equity * Decimal(str(leverage)) if mode == TradingMode.CFM_ONLY else equity
+        effective_equity = (
+            equity * Decimal(str(leverage)) if mode == TradingMode.CFM_ONLY else equity
+        )
 
         return effective_equity * Decimal(str(size_pct))
 

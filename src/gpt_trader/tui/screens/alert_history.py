@@ -22,7 +22,7 @@ from gpt_trader.tui.widgets.table_copy_mixin import TableCopyMixin
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
-    from gpt_trader.tui.services.alert_manager import Alert, AlertCategory
+    from gpt_trader.tui.services.alert_manager import Alert
 
 logger = get_logger(__name__, component="tui")
 
@@ -38,7 +38,9 @@ class AlertHistoryScreen(TableCopyMixin, Screen):
         y: Copy selected row
         Y: Copy all rows
         r: Reset cooldowns
-        1-5: Filter by category
+        1-5: Filter by category (All, Trade, System, Risk, Error)
+        f: Cycle through filters
+        F: Clear filter (show all)
     """
 
     BINDINGS = [
@@ -47,11 +49,15 @@ class AlertHistoryScreen(TableCopyMixin, Screen):
         ("y", "copy_row", "Copy"),
         ("Y", "copy_all", "Copy All"),
         ("r", "reset_cooldowns", "Reset"),
+        # Filter chips (1-5 selects directly)
         ("1", "filter_all", "All"),
         ("2", "filter_trade", "Trade"),
         ("3", "filter_system", "System"),
         ("4", "filter_risk", "Risk"),
         ("5", "filter_error", "Error"),
+        # Cycle/clear filters (aligned with Logs/trades 'f'/'F' pattern)
+        ("f", "cycle_filter", "Cycle"),
+        ("F", "clear_filter", "Clear Filter"),
     ]
 
     # Current category filter (None = all categories)
@@ -104,7 +110,6 @@ class AlertHistoryScreen(TableCopyMixin, Screen):
 
     def _refresh_table(self) -> None:
         """Refresh the alert table from history."""
-        from gpt_trader.tui.services.alert_manager import AlertCategory
         from gpt_trader.tui.theme import THEME
 
         table = self.query_one("#alert-table", DataTable)
@@ -241,6 +246,19 @@ class AlertHistoryScreen(TableCopyMixin, Screen):
     def action_filter_error(self) -> None:
         """Show error alerts."""
         self._set_filter("error")
+
+    def action_cycle_filter(self) -> None:
+        """Cycle through filter categories (aligned with Logs 'f' pattern)."""
+        filters = ["all", "trade", "system", "risk", "error"]
+        current_idx = filters.index(self._current_filter) if self._current_filter in filters else 0
+        next_idx = (current_idx + 1) % len(filters)
+        self._set_filter(filters[next_idx])
+        self.notify(f"Filter: {filters[next_idx].upper()}", timeout=2)
+
+    def action_clear_filter(self) -> None:
+        """Reset filter to 'all' (aligned with Logs 'F' pattern)."""
+        self._set_filter("all")
+        self.notify("Filter cleared", timeout=2)
 
     def _set_filter(self, filter_name: str) -> None:
         """Set the active filter and refresh.

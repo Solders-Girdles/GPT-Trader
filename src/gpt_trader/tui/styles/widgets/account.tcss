@@ -118,6 +118,42 @@ AccountWidget .widget-header {
     height: 1;
 }
 
+/* P&L Breakdown Row - Unrealized, Realized, Fees */
+.pnl-breakdown-row {
+    layout: horizontal;
+    height: auto;
+    min-height: 2;
+    width: 100%;
+    margin-bottom: 1;
+    padding: 0;
+}
+
+.pnl-metric {
+    width: 1fr;
+    min-width: 8;
+    height: auto;
+    background: transparent;
+    border: none;
+    padding: 0 1;
+    margin: 0;
+}
+
+.pnl-metric-label {
+    color: $text-muted;
+    height: 1;
+}
+
+.pnl-metric-value {
+    color: $text-primary;
+    height: 1;
+}
+
+/* Compact mode P&L breakdown hint */
+.pnl-breakdown {
+    color: $text-muted;
+    margin-left: 1;
+}
+
 .account-metrics-row {
     layout: horizontal;
     height: auto;

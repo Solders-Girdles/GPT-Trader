@@ -10,13 +10,11 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from textual.widgets._select import SelectOverlay
 from tests.unit.gpt_trader.tui.factories import (
     BotStatusFactory,
     TuiStateFactory,
 )
-
-from textual.widgets import Select
+from textual.widgets import Button
 
 from gpt_trader.monitoring.status_reporter import StatusReporter
 from gpt_trader.tui.app import TraderApp
@@ -183,20 +181,18 @@ class TestLogWidgetInteractions:
             assert app.query("LogWidget") is not None
 
     @pytest.mark.asyncio
-    async def test_log_level_select_overlay_is_screen_overlay(self, mock_bot_with_status):
-        """Select dropdowns should render on the screen overlay layer (no clipping)."""
+    async def test_log_level_filter_chips_present(self, mock_bot_with_status):
+        """Log level filter chips should be present in log widget."""
         app = TraderApp(bot=mock_bot_with_status)
 
         async with app.run_test() as pilot:
             await pilot.pause()
 
-            select = app.query_one("#log-level-select", Select)
-            select.action_show_overlay()
-            await pilot.pause()
-
-            overlay = app.query_one(SelectOverlay)
-            assert overlay.styles.overlay == "screen"
-            assert overlay.styles.layer == "overlay"
+            # Verify level filter chip buttons exist
+            chip_ids = ["level-all", "level-error", "level-warn", "level-info", "level-debug"]
+            for chip_id in chip_ids:
+                chip = app.query_one(f"#{chip_id}", Button)
+                assert chip is not None
 
 
 class TestFactoryIntegration:

@@ -4,8 +4,6 @@ Tests that cache, circuit breaker, metrics, and priority work together
 correctly when integrated into the Coinbase client.
 """
 
-import pytest
-
 from gpt_trader.features.brokerages.coinbase.client.circuit_breaker import (
     CircuitBreakerRegistry,
     CircuitState,

@@ -14,6 +14,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import TYPE_CHECKING
 
+from gpt_trader.tui.thresholds import DEFAULT_ORDER_THRESHOLDS
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -230,6 +231,68 @@ class AlertManager:
             )
         )
 
+        # === Execution Health Alerts (SYSTEM category) ===
+
+        # Circuit breaker open - execution paused
+        self.add_rule(
+            AlertRule(
+                rule_id="circuit_breaker_open",
+                title="Circuit Breaker Open",
+                condition=self._check_circuit_breaker,
+                severity=AlertSeverity.ERROR,
+                category=AlertCategory.SYSTEM,
+                cooldown=60.0,
+            )
+        )
+
+        # Execution success rate critical (<80%)
+        self.add_rule(
+            AlertRule(
+                rule_id="execution_critical",
+                title="Execution Critical",
+                condition=self._check_execution_critical,
+                severity=AlertSeverity.ERROR,
+                category=AlertCategory.SYSTEM,
+                cooldown=120.0,  # 2 minute cooldown
+            )
+        )
+
+        # Execution success rate warning (<95%)
+        self.add_rule(
+            AlertRule(
+                rule_id="execution_degraded",
+                title="Execution Degraded",
+                condition=self._check_execution_degraded,
+                severity=AlertSeverity.WARNING,
+                category=AlertCategory.SYSTEM,
+                cooldown=180.0,  # 3 minute cooldown
+            )
+        )
+
+        # High p95 latency (>500ms)
+        self.add_rule(
+            AlertRule(
+                rule_id="execution_p95_spike",
+                title="Latency Spike",
+                condition=self._check_p95_latency,
+                severity=AlertSeverity.WARNING,
+                category=AlertCategory.SYSTEM,
+                cooldown=120.0,
+            )
+        )
+
+        # High retry rate (>0.5)
+        self.add_rule(
+            AlertRule(
+                rule_id="execution_retry_high",
+                title="High Retry Rate",
+                condition=self._check_retry_rate,
+                severity=AlertSeverity.WARNING,
+                category=AlertCategory.SYSTEM,
+                cooldown=180.0,
+            )
+        )
+
         logger.debug("Registered %s default alert rules", len(self._rules))
 
     def _check_rate_limit(self, state: TuiState) -> tuple[bool, str]:
@@ -270,12 +333,11 @@ class AlertManager:
     def _check_stale_orders(self, state: TuiState) -> tuple[bool, str]:
         """Check for open orders that are older than threshold.
 
-        Orders open for more than 60 seconds may indicate issues with
-        order execution or market conditions.
+        Uses centralized threshold from gpt_trader.tui.thresholds.OrderThresholds.
+        Alert fires at the CRITICAL threshold (same as red coloring in UI).
         """
-        import time
-
-        STALE_ORDER_THRESHOLD_SECONDS = 60
+        # Use CRITICAL threshold (age_warn) for alert - aligns with red color in UI
+        stale_threshold = DEFAULT_ORDER_THRESHOLDS.age_warn
 
         stale_orders = []
         for order in state.order_data.orders:
@@ -286,7 +348,7 @@ class AlertManager:
             # Check creation time
             if order.creation_time > 0:
                 age = time.time() - order.creation_time
-                if age >= STALE_ORDER_THRESHOLD_SECONDS:
+                if age >= stale_threshold:
                     stale_orders.append((order.symbol, int(age)))
 
         if stale_orders:
@@ -336,6 +398,78 @@ class AlertManager:
                 return True, f"Order for {order.symbol} expired."
             return True, f"{count} orders expired."
 
+        return False, ""
+
+    # === Execution Health Check Methods ===
+
+    def _check_circuit_breaker(self, state: TuiState) -> tuple[bool, str]:
+        """Check if circuit breaker is open."""
+        try:
+            if state.resilience_data.any_circuit_open:
+                return True, "Execution paused. Broker may be experiencing issues."
+        except (AttributeError, TypeError):
+            pass
+        return False, ""
+
+    def _check_execution_critical(self, state: TuiState) -> tuple[bool, str]:
+        """Check for critically low execution success rate (<80%)."""
+        try:
+            exec_data = state.execution_data
+            # Only alert if we have meaningful sample size
+            if exec_data.submissions_total >= 5:
+                if exec_data.success_rate < 80.0:
+                    return (
+                        True,
+                        f"Success rate at {exec_data.success_rate:.0f}%. Check broker connection.",
+                    )
+        except (AttributeError, TypeError):
+            pass
+        return False, ""
+
+    def _check_execution_degraded(self, state: TuiState) -> tuple[bool, str]:
+        """Check for degraded execution success rate (<95%, >=80%)."""
+        try:
+            exec_data = state.execution_data
+            # Only alert if we have meaningful sample size
+            if exec_data.submissions_total >= 10:
+                # Only fire warning if not already critical
+                if 80.0 <= exec_data.success_rate < 95.0:
+                    return (
+                        True,
+                        f"Success rate at {exec_data.success_rate:.0f}%. Monitor closely.",
+                    )
+        except (AttributeError, TypeError):
+            pass
+        return False, ""
+
+    def _check_p95_latency(self, state: TuiState) -> tuple[bool, str]:
+        """Check for high p95 latency (>500ms)."""
+        try:
+            exec_data = state.execution_data
+            # Only alert if we have meaningful sample size
+            if exec_data.submissions_total >= 10:
+                if exec_data.p95_latency_ms > 500.0:
+                    return (
+                        True,
+                        f"p95 latency at {exec_data.p95_latency_ms:.0f}ms. Broker may be slow.",
+                    )
+        except (AttributeError, TypeError):
+            pass
+        return False, ""
+
+    def _check_retry_rate(self, state: TuiState) -> tuple[bool, str]:
+        """Check for high retry rate (>0.5)."""
+        try:
+            exec_data = state.execution_data
+            # Only alert if we have meaningful sample size
+            if exec_data.submissions_total >= 10:
+                if exec_data.retry_rate > 0.5:
+                    return (
+                        True,
+                        f"Retry rate at {exec_data.retry_rate:.1f}x. Intermittent failures.",
+                    )
+        except (AttributeError, TypeError):
+            pass
         return False, ""
 
     def add_rule(self, rule: AlertRule) -> None:

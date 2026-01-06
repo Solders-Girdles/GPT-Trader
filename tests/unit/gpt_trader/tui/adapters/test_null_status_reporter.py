@@ -5,7 +5,6 @@ Verifies the null adapter implements the StatusReporter interface correctly
 and returns appropriate unavailable status data.
 """
 
-import asyncio
 from unittest.mock import MagicMock
 
 import pytest

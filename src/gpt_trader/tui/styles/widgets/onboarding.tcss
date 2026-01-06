@@ -1,0 +1,50 @@
+/* ========================================================================== */
+/* ONBOARDING CHECKLIST WIDGET                                                */
+/* ========================================================================== */
+
+OnboardingChecklist {
+    layout: vertical;
+    height: auto;
+    padding: 1;
+    background: $bg-elevated;
+    border: solid $border;
+}
+
+OnboardingChecklist .widget-header {
+    text-style: bold;
+    color: $accent;
+    margin-bottom: 1;
+}
+
+OnboardingChecklist .checklist-items {
+    height: auto;
+    margin-bottom: 1;
+}
+
+/* Checklist item styling */
+OnboardingChecklist .checklist-item {
+    padding: 0 1;
+    height: 1;
+}
+
+OnboardingChecklist .checklist-item.completed {
+    color: $text-secondary;
+}
+
+OnboardingChecklist .checklist-item.pending {
+    color: $text-primary;
+}
+
+OnboardingChecklist .checklist-item.next {
+    color: $warning;
+    background: $bg-highlight;
+}
+
+OnboardingChecklist .checklist-item.optional {
+    color: $text-muted;
+}
+
+OnboardingChecklist .checklist-summary {
+    margin-top: 1;
+    padding: 0 1;
+}

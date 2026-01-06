@@ -1,7 +1,6 @@
 """Tests for OrderbookImbalanceSignal."""
 
 from decimal import Decimal
-from unittest.mock import MagicMock
 
 import pytest
 
@@ -237,9 +236,7 @@ class TestOrderbookImbalanceSignal:
 
     def test_levels_config_passed_to_depth(self, base_context: StrategyContext) -> None:
         """Test that levels config is passed to get_depth."""
-        custom_signal = OrderbookImbalanceSignal(
-            OrderbookImbalanceSignalConfig(levels=10)
-        )
+        custom_signal = OrderbookImbalanceSignal(OrderbookImbalanceSignalConfig(levels=10))
 
         snapshot = MockDepthSnapshot(
             bid_depth=Decimal("100"),

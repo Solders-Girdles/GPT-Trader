@@ -533,3 +533,18 @@ SystemMonitorWidget {
     height: 1;
     padding: 0;
 }
+
+/* === Execution Metrics Section (SystemMonitorWidget) === */
+.execution-metrics {
+    width: 100%;
+    height: auto;
+    margin-top: 1;
+    padding-top: 0;
+    padding-left: 1;
+    border-left: wide $success;
+}
+
+.execution-metrics .sys-metric {
+    height: 1;
+    padding: 0;
+}

@@ -5,7 +5,7 @@ Verifies the TUI gracefully handles missing StatusReporter by entering
 degraded mode instead of crashing.
 """
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 

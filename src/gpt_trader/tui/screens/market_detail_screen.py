@@ -11,14 +11,13 @@ Extends the basic market screen with:
 
 from __future__ import annotations
 
-from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
 from rich.text import Text
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.containers import Container, Grid, Horizontal, Vertical
+from textual.containers import Container, Horizontal, Vertical
 from textual.reactive import reactive
 from textual.screen import Screen
 from textual.widgets import DataTable, Label, Static
@@ -374,7 +373,6 @@ class MarketDetailScreen(Screen):
         empty_state = self.query_one("#watchlist-empty", TileEmptyState)
 
         prices = market_data.prices
-        price_history = market_data.price_history
         spreads = market_data.spreads
 
         if not prices:
@@ -398,13 +396,15 @@ class MarketDetailScreen(Screen):
             # Get spread if available
             spread = spreads.get(symbol, Decimal("0"))
 
-            data_rows.append({
-                "symbol": symbol,
-                "price": current,
-                "change": change_pct,
-                "spread": float(spread),
-                "_raw_price": price,
-            })
+            data_rows.append(
+                {
+                    "symbol": symbol,
+                    "price": current,
+                    "change": change_pct,
+                    "spread": float(spread),
+                    "_raw_price": price,
+                }
+            )
 
         self._watchlist_data = data_rows
 
@@ -515,7 +515,9 @@ class MarketDetailScreen(Screen):
             self.sort_ascending = True
 
         self.sort_column = self._column_keys[next_idx]
-        self.notify(f"Sorted by {self.sort_column} {'↑' if self.sort_ascending else '↓'}", timeout=2)
+        self.notify(
+            f"Sorted by {self.sort_column} {'↑' if self.sort_ascending else '↓'}", timeout=2
+        )
 
     def action_copy_row(self) -> None:
         """Copy selected row to clipboard."""
@@ -546,6 +548,7 @@ class MarketDetailScreen(Screen):
         # Import here to avoid circular imports
         try:
             from gpt_trader.tui.screens.watchlist_screen import WatchlistScreen
+
             self.app.push_screen(WatchlistScreen())
         except ImportError:
             self.notify("Watchlist editor not available", severity="warning", timeout=2)

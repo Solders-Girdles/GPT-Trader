@@ -34,17 +34,20 @@ from gpt_trader.config.constants import (
     RETRY_BASE_DELAY,
     THROTTLE_TARGET_UTILIZATION,
 )
+from gpt_trader.features.brokerages.coinbase.client.circuit_breaker import (
+    CircuitBreakerRegistry,
+    CircuitOpenError,
+)
 from gpt_trader.features.brokerages.coinbase.client.constants import (
     BASE_URL,
     DEFAULT_API_VERSION,
     ENDPOINT_MAP,
 )
-from gpt_trader.features.brokerages.coinbase.client.circuit_breaker import (
-    CircuitBreakerRegistry,
-    CircuitOpenError,
-)
 from gpt_trader.features.brokerages.coinbase.client.metrics import APIMetricsCollector
-from gpt_trader.features.brokerages.coinbase.client.priority import PriorityManager, RequestDeferredError
+from gpt_trader.features.brokerages.coinbase.client.priority import (
+    PriorityManager,
+    RequestDeferredError,
+)
 from gpt_trader.features.brokerages.coinbase.client.response_cache import ResponseCache
 from gpt_trader.features.brokerages.coinbase.errors import InvalidRequestError, map_http_error
 from gpt_trader.utilities.logging_patterns import get_correlation_id, get_logger
@@ -292,7 +295,10 @@ class CoinbaseClientBase:
                 self._request_times = [
                     t for t in self._request_times if now - t < RATE_LIMIT_WINDOW_SECONDS
                 ]
-            elif len(self._request_times) >= self.rate_limit_per_minute * RATE_LIMIT_WARNING_THRESHOLD:
+            elif (
+                len(self._request_times)
+                >= self.rate_limit_per_minute * RATE_LIMIT_WARNING_THRESHOLD
+            ):
                 logger.warning(
                     "Approaching rate limit: %d/%d requests in last minute",
                     len(self._request_times),
@@ -308,7 +314,11 @@ class CoinbaseClientBase:
             active_requests = sum(
                 1 for t in self._request_times if now - t < RATE_LIMIT_WINDOW_SECONDS
             )
-            return active_requests / self.rate_limit_per_minute if self.rate_limit_per_minute > 0 else 0.0
+            return (
+                active_requests / self.rate_limit_per_minute
+                if self.rate_limit_per_minute > 0
+                else 0.0
+            )
 
     def _request(self, method: str, path: str, payload: dict | None = None) -> dict:
         start_time = time.perf_counter()
@@ -348,9 +358,8 @@ class CoinbaseClientBase:
         normalized_path = normalized_path.split("?", 1)[0]
         if normalized_path and not normalized_path.startswith("/"):
             normalized_path = "/" + normalized_path
-        is_public_market = (
-            self.api_mode == "advanced"
-            and normalized_path.startswith("/api/v3/brokerage/market/")
+        is_public_market = self.api_mode == "advanced" and normalized_path.startswith(
+            "/api/v3/brokerage/market/"
         )
 
         # Sign request if auth is available

@@ -21,6 +21,11 @@ if TYPE_CHECKING:
 FRESH_THRESHOLD_SECONDS = 10
 STALE_THRESHOLD_SECONDS = 30
 
+# Execution health thresholds
+EXEC_SUCCESS_RATE_WARNING = 95.0  # Below this shows warning
+EXEC_SUCCESS_RATE_CRITICAL = 80.0  # Below this shows critical
+EXEC_RETRY_RATE_WARNING = 0.5  # Above this shows warning
+
 Severity = Literal["fresh", "stale", "critical"]
 
 
@@ -108,14 +113,57 @@ def get_freshness_display(state: TuiState) -> tuple[str, str] | None:
     return f"[dim]{label}[/dim]", "fresh"
 
 
+def get_execution_health_banner(state: TuiState) -> tuple[str, str] | None:
+    """Get banner text for execution health issues.
+
+    Checks execution telemetry for degraded states:
+    - Circuit breaker open
+    - Low success rate
+    - High retry rate
+
+    Args:
+        state: TuiState instance.
+
+    Returns:
+        Tuple of (banner_text, severity) or None if execution is healthy.
+    """
+    try:
+        # Check resilience data for circuit breaker
+        if state.resilience_data.any_circuit_open:
+            return "Circuit breaker OPEN — execution paused", "error"
+
+        # Check execution metrics
+        exec_data = state.execution_data
+        if exec_data.submissions_total == 0:
+            return None  # No executions yet
+
+        # Critical: success rate below 80%
+        if exec_data.success_rate < EXEC_SUCCESS_RATE_CRITICAL:
+            return f"Execution degraded: {exec_data.success_rate:.0f}% success", "error"
+
+        # Warning: success rate below 95%
+        if exec_data.success_rate < EXEC_SUCCESS_RATE_WARNING:
+            return f"Execution warning: {exec_data.success_rate:.0f}% success", "warning"
+
+        # Warning: high retry rate
+        if exec_data.retry_rate > EXEC_RETRY_RATE_WARNING:
+            return f"High retry rate: {exec_data.retry_rate:.1f}x", "warning"
+
+    except (AttributeError, TypeError):
+        pass  # Execution data not available
+
+    return None
+
+
 def get_staleness_banner(state: TuiState) -> tuple[str, str] | None:
     """Get banner text and severity for staleness/degraded states.
 
     Checks conditions in priority order:
     1. Data fetching (reconnecting)
     2. Degraded mode (StatusReporter unavailable)
-    3. Critical staleness (>30s or connection unhealthy)
-    4. Stale data (10-30s)
+    3. Execution health (circuit breaker, success rate)
+    4. Critical staleness (>30s or connection unhealthy)
+    5. Stale data (10-30s)
 
     Args:
         state: TuiState instance.
@@ -133,10 +181,15 @@ def get_staleness_banner(state: TuiState) -> tuple[str, str] | None:
         reason = state.degraded_reason or "Status reporter unavailable"
         return f"Degraded: {reason}", "warning"
 
-    # Priority 3: Connection state banners (handled separately by widgets
+    # Priority 3: Execution health issues (circuit breaker, low success rate)
+    exec_banner = get_execution_health_banner(state)
+    if exec_banner:
+        return exec_banner
+
+    # Priority 4: Connection state banners (handled separately by widgets
     # for connection-specific copy like "Connecting...")
 
-    # Priority 3: Staleness based on data age
+    # Priority 5: Staleness based on data age
     age = get_data_age_seconds(state)
     if age is None:
         return None

@@ -13,7 +13,7 @@ from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
 from textual.reactive import reactive
-from textual.widgets import Button, Label, ListView, ListItem, Static
+from textual.widgets import Button, Label, ListItem, ListView, Static
 
 from gpt_trader.tui.widgets.tile_states import TileEmptyState
 from gpt_trader.utilities.logging_patterns import get_logger
@@ -21,9 +21,7 @@ from gpt_trader.utilities.logging_patterns import get_logger
 if TYPE_CHECKING:
     from gpt_trader.tui.services.alert_manager import (
         Alert,
-        AlertCategory,
         AlertManager,
-        AlertSeverity,
     )
 
 logger = get_logger(__name__, component="tui")

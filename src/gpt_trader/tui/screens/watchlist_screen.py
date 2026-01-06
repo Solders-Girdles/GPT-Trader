@@ -18,10 +18,9 @@ from textual.binding import Binding
 from textual.containers import Container, Horizontal, Vertical
 from textual.reactive import reactive
 from textual.screen import ModalScreen
-from textual.widgets import Button, DataTable, Input, Label, Static
+from textual.widgets import Button, DataTable, Input, Label
 
 from gpt_trader.tui.services.preferences_service import get_preferences_service
-from gpt_trader.tui.theme import THEME
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:

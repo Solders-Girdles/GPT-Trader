@@ -11,29 +11,36 @@ Supports trade-linking: when order.filled_quantity/avg_fill_price are
 missing, fill info can be derived from matching trades.
 """
 
+# naming: allow - qty is standard trading abbreviation for quantity
+
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import Any
 
 from rich.text import Text
 from textual.app import ComposeResult
-from textual.widgets import DataTable, Static
+from textual.binding import Binding
+from textual.reactive import reactive
+from textual.widgets import DataTable, Label, Static
 
 from gpt_trader.tui.formatting import format_price, format_quantity
 from gpt_trader.tui.helpers import safe_update
 from gpt_trader.tui.staleness_helpers import format_freshness_label
 from gpt_trader.tui.theme import THEME
+from gpt_trader.tui.thresholds import (
+    StatusLevel,
+    get_order_age_status,
+    get_order_status_level,
+    get_status_color,
+)
 from gpt_trader.tui.types import Order, Trade
-from gpt_trader.tui.utilities import get_age_seconds
+from gpt_trader.tui.utilities import get_age_seconds, get_sort_indicator, sort_table_data
 from gpt_trader.tui.widgets.table_copy_mixin import TableCopyMixin
 from gpt_trader.tui.widgets.tile_states import TileEmptyState
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="tui")
-
-# Order age thresholds for status coloring (seconds)
-ORDER_AGE_WARNING_SECONDS = 30
-ORDER_AGE_CRITICAL_SECONDS = 60
 
 
 def _build_order_fill_index(
@@ -79,7 +86,7 @@ def _build_order_fill_index(
 
 
 class OrdersWidget(TableCopyMixin, Static):
-    """Displays active orders in a data table.
+    """Displays active orders in a data table with sorting.
 
     Shows pending and active orders with their details including
     symbol, side (BUY/SELL with color coding), quantity, price, and status.
@@ -89,17 +96,42 @@ class OrdersWidget(TableCopyMixin, Static):
     Keyboard shortcuts:
         c: Copy selected row to clipboard
         C: Copy all rows to clipboard
+        s: Cycle sort column (Fill%, Age, none)
+        Enter: Open order detail modal
     """
 
     BINDINGS = [
         *TableCopyMixin.COPY_BINDINGS,
+        Binding("s", "cycle_sort", "Sort", show=True),
+        Binding("enter", "show_order_detail", "Details", show=True),
     ]
 
-    # Styles moved to styles/widgets/portfolio.tcss
+    # Sortable columns: fill_pct (Fill%), age
+    _sortable_columns = ["fill_pct", "age"]
+
+    # Sort state - reactive properties trigger watchers on change
+    sort_column: reactive[str | None] = reactive(None)
+    sort_ascending: reactive[bool] = reactive(True)
+
+    # Cached data for re-sorting
+    _orders_data: list[dict[str, Any]]
+    _fill_index: dict[str, tuple[Decimal, Decimal]]
+
+    def __init__(self, **kwargs: Any) -> None:
+        """Initialize OrdersWidget with sort state."""
+        super().__init__(**kwargs)
+        self._orders_data = []
+        self._fill_index = {}
+        self._trades: list[Trade] = []
+        # Force reactive property initialization to prevent watcher triggering
+        # during first access in _refresh_table
+        _ = self.sort_column
+        _ = self.sort_ascending
 
     def compose(self) -> ComposeResult:
         """Compose the widget layout."""
-        table = DataTable(id="orders-table", zebra_stripes=True)
+        yield Label("", id="orders-sort-indicator", classes="sort-hint")
+        table: DataTable[str] = DataTable(id="orders-table", zebra_stripes=True)
         table.can_focus = True
         table.cursor_type = "row"
         yield table
@@ -107,7 +139,7 @@ class OrdersWidget(TableCopyMixin, Static):
             title="No Active Orders",
             subtitle="Orders appear when the bot places trades",
             icon="◌",
-            actions=["[S] Start Bot", "[R] Refresh"],
+            actions=["[S] Sort", "[R] Refresh"],
             id="orders-empty",
         )
 
@@ -117,6 +149,107 @@ class OrdersWidget(TableCopyMixin, Static):
         # Add columns - short headers for width; alignment in add_row
         # Fill%: fill progress, Avg Px: average fill price, Age: time since creation
         table.add_columns("Symbol", "Side", "Qty", "Price", "Fill%", "Avg Px", "Age", "Status")
+        # Initialize sort indicator
+        self._update_sort_indicator()
+
+    def watch_sort_column(self, column: str | None) -> None:
+        """Handle sort column change - refresh table display."""
+        self._update_sort_indicator()
+        # Only refresh if we have data (avoids re-render during init)
+        if self._orders_data:
+            self._refresh_table()
+
+    def watch_sort_ascending(self, ascending: bool) -> None:
+        """Handle sort direction change - refresh table display."""
+        self._update_sort_indicator()
+        # Only refresh if we have data (avoids re-render during init)
+        if self._orders_data:
+            self._refresh_table()
+
+    def _update_sort_indicator(self) -> None:
+        """Update the sort indicator label with sort state and Enter hint."""
+        try:
+            indicator = self.query_one("#orders-sort-indicator", Label)
+            if self.sort_column is None:
+                sort_text = "None"
+            else:
+                arrow = get_sort_indicator(self.sort_column, self.sort_column, self.sort_ascending)
+                col_display = "Fill%" if self.sort_column == "fill_pct" else "Age"
+                sort_text = f"{col_display}{arrow}"
+
+            # Show both sort state and Enter hint
+            indicator.update(f"[S] Sort: {sort_text}  │  [Enter] Details")
+        except Exception:
+            pass
+
+    def action_cycle_sort(self) -> None:
+        """Cycle through sort columns: None → Fill% ↑ → Fill% ↓ → Age ↑ → Age ↓ → None."""
+        if self.sort_column is None:
+            # Start sorting by fill_pct ascending
+            self.sort_column = "fill_pct"
+            self.sort_ascending = True
+        elif self.sort_ascending:
+            # Toggle to descending
+            self.sort_ascending = False
+        else:
+            # Move to next column or back to None
+            current_idx = self._sortable_columns.index(self.sort_column)
+            next_idx = current_idx + 1
+            if next_idx >= len(self._sortable_columns):
+                # Back to no sort
+                self.sort_column = None
+                self.sort_ascending = True
+            else:
+                self.sort_column = self._sortable_columns[next_idx]
+                self.sort_ascending = True
+
+        # Notify user
+        if self.sort_column is None:
+            self.notify("Sort cleared", timeout=2)
+        else:
+            col_name = "Fill%" if self.sort_column == "fill_pct" else "Age"
+            direction = "↑" if self.sort_ascending else "↓"
+            self.notify(f"Sorted by {col_name} {direction}", timeout=2)
+
+    def action_show_order_detail(self) -> None:
+        """Open order detail modal for the selected order."""
+        from gpt_trader.tui.widgets.portfolio.order_detail_modal import OrderDetailModal
+
+        try:
+            table = self.query_one("#orders-table", DataTable)
+            if table.row_count == 0:
+                self.notify("No orders to view", timeout=2)
+                return
+
+            # Get selected row key (order_id)
+            cursor_row = table.cursor_row
+            if cursor_row is None or cursor_row < 0:
+                self.notify("Select an order first", timeout=2)
+                return
+
+            # Get the row key at cursor position
+            row_key = table.get_row_at(cursor_row)
+            if row_key is None:
+                return
+
+            # Find the order by ID from cached data
+            order_id = str(list(table.rows.keys())[cursor_row])
+            order = next(
+                (row["order"] for row in self._orders_data if row["order"].order_id == order_id),
+                None,
+            )
+
+            if order is None:
+                self.notify("Order not found", timeout=2)
+                return
+
+            # Open the detail modal with tui_state for decision linkage
+            tui_state = getattr(self.app, "tui_state", None)
+            self.app.push_screen(OrderDetailModal(order, trades=self._trades, tui_state=tui_state))
+
+        except Exception as e:
+            logger.debug(f"Error opening order detail: {e}")
+            self.notify("Could not open order details", timeout=2)
 
     @safe_update
     def update_orders(
@@ -134,56 +267,102 @@ class OrdersWidget(TableCopyMixin, Static):
             orders: List of Order objects to display.
             trades: Optional list of Trade objects to derive fill info from.
         """
-        table = self.query_one("#orders-table", DataTable)
-        empty_state = self.query_one("#orders-empty", TileEmptyState)
+        # Store trades for detail modal access
+        self._trades = trades or []
 
-        # Build fill index from trades if provided
-        fill_index = _build_order_fill_index(trades) if trades else {}
+        # Build and cache fill index from trades
+        self._fill_index = _build_order_fill_index(trades) if trades else {}
+
+        # Build sortable data rows
+        self._orders_data = []
+        for order in orders:
+            filled_qty, _ = self._get_fill_info(order, self._fill_index)
+            fill_pct = self._calculate_fill_pct(order.quantity, filled_qty)
+            age = get_age_seconds(order.creation_time)
+
+            self._orders_data.append(
+                {
+                    "order": order,
+                    "fill_pct": fill_pct,
+                    "age": age if age is not None else float("inf"),  # Sort missing age to end
+                }
+            )
+
+        # Refresh table with sorted data
+        self._refresh_table()
+
+    def _calculate_fill_pct(self, total_qty: Decimal, filled_qty: Decimal) -> float:
+        """Calculate fill percentage as float for sorting.
+
+        Args:
+            total_qty: Total order quantity.
+            filled_qty: Filled quantity.
+
+        Returns:
+            Fill percentage as float (0.0 to 100.0).
+        """
+        if total_qty <= 0:
+            return 0.0
+        return float(filled_qty) / float(total_qty) * 100.0
+
+    def _refresh_table(self) -> None:
+        """Re-sort and refresh the table with cached order data."""
+        try:
+            table = self.query_one("#orders-table", DataTable)
+            empty_state = self.query_one("#orders-empty", TileEmptyState)
+        except Exception:
+            return
 
         # Show empty state or data
-        if not orders:
-            # Clear all rows when empty
+        if not self._orders_data:
             if table.row_count > 0:
                 table.clear()
             table.display = False
             empty_state.display = True
-            # Keep default message - orders are only for active trading
             return
-        else:
-            table.display = True
-            empty_state.display = False
 
-            # Get current row keys
-            existing_keys = set(table.rows.keys())
-            new_keys = {order.order_id for order in orders}
+        table.display = True
+        empty_state.display = False
 
-            # Remove orders no longer present (filled/cancelled)
-            for key in existing_keys - new_keys:
+        # Sort data if sort column is set
+        sorted_data = self._orders_data
+        if self.sort_column is not None:
+            sorted_data = sort_table_data(
+                self._orders_data,
+                self.sort_column,
+                self.sort_ascending,
+                numeric_columns={"fill_pct", "age"},
+            )
+
+        # Get current row keys
+        existing_keys = set(table.rows.keys())
+        new_keys = {row["order"].order_id for row in sorted_data}
+
+        # Remove orders no longer present (filled/cancelled)
+        for key in existing_keys - new_keys:
+            try:
+                table.remove_row(key)
+                logger.debug(f"Removed order row: {key}")
+            except Exception:
+                pass
+
+        # Add/update orders
+        for row in sorted_data:
+            order = row["order"]
+            row_data = self._format_order_row(order, self._fill_index)
+
+            if order.order_id in existing_keys:
                 try:
-                    table.remove_row(key)
-                    logger.debug(f"Removed order row: {key}")
+                    self._update_row_cells(table, order.order_id, row_data)
                 except Exception:
-                    pass  # Row may not exist
-
-            # Add/update orders
-            for order in orders:
-                row_data = self._format_order_row(order, fill_index)
-
-                if order.order_id in existing_keys:
-                    # Update existing row in-place
                     try:
-                        self._update_row_cells(table, order.order_id, row_data)
+                        table.remove_row(order.order_id)
                     except Exception:
-                        # Fallback: remove and re-add if update fails
-                        try:
-                            table.remove_row(order.order_id)
-                        except Exception:
-                            pass
-                        table.add_row(*row_data, key=order.order_id)
-                else:
-                    # Add new order
+                        pass
                     table.add_row(*row_data, key=order.order_id)
-                    logger.debug(f"Added new order row: {order.order_id}")
+            else:
+                table.add_row(*row_data, key=order.order_id)
+                logger.debug(f"Added new order row: {order.order_id}")
 
     def _format_order_row(
         self,
@@ -215,6 +394,9 @@ class OrdersWidget(TableCopyMixin, Static):
         # Calculate and format order age
         age_display = self._format_order_age(order)
 
+        # Format status with color based on severity
+        status_display = self._format_order_status(order.status)
+
         return (
             order.symbol,
             formatted_side,  # Preserves color markup
@@ -223,7 +405,7 @@ class OrdersWidget(TableCopyMixin, Static):
             Text(filled_pct, justify="right"),
             avg_px_display,
             age_display,
-            order.status,
+            status_display,
         )
 
     def _get_fill_info(
@@ -290,6 +472,8 @@ class OrdersWidget(TableCopyMixin, Static):
     def _format_order_age(self, order: Order) -> Text:
         """Format order age with color coding.
 
+        Uses centralized thresholds from gpt_trader.tui.thresholds.
+
         Args:
             order: Order object.
 
@@ -304,15 +488,35 @@ class OrdersWidget(TableCopyMixin, Static):
         # Format as relative time
         age_str = format_freshness_label(age)
 
-        # Color based on age thresholds
-        if age >= ORDER_AGE_CRITICAL_SECONDS:
+        # Color based on centralized age thresholds
+        status = get_order_age_status(age)
+        if status == StatusLevel.CRITICAL:
             color = THEME.colors.error
-        elif age >= ORDER_AGE_WARNING_SECONDS:
+        elif status == StatusLevel.WARNING:
             color = THEME.colors.warning
         else:
             color = THEME.colors.text_muted
 
         return Text(age_str, style=color, justify="right")
+
+    def _format_order_status(self, status: str) -> Text:
+        """Format order status with color coding based on severity.
+
+        Uses centralized status classification from gpt_trader.tui.thresholds.
+        - OK (green): OPEN, PENDING, FILLED, CANCELLED
+        - WARNING (yellow): PARTIAL, EXPIRED
+        - CRITICAL (red): REJECTED, FAILED
+
+        Args:
+            status: Order status string.
+
+        Returns:
+            Rich Text with colored status display.
+        """
+        status_level = get_order_status_level(status)
+        color = get_status_color(status_level)
+
+        return Text(status, style=color)
 
     def _update_row_cells(
         self,

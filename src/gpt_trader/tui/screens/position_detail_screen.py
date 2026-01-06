@@ -176,6 +176,9 @@ class StrategyDecisionCard(Static):
         yield Label("", id="decision-reason", classes="decision-reason")
         yield Label("", id="decision-time", classes="decision-time dim")
 
+        yield Label("TOP MOVERS", classes="subsection-header", id="movers-header")
+        yield Label("", id="decision-movers", classes="decision-movers")
+
         yield Label("INDICATORS", classes="subsection-header")
         yield DataTable(id="indicators-table", zebra_stripes=True)
 
@@ -194,6 +197,8 @@ class StrategyDecisionCard(Static):
             self.query_one("#decision-confidence", Label).update("")
             self.query_one("#decision-reason", Label).update("")
             self.query_one("#decision-time", Label).update("")
+            self.query_one("#decision-movers", Label).update("")
+            self.query_one("#movers-header", Label).add_class("hidden")
             regime_label.update("")
             regime_label.add_class("hidden")
             try:
@@ -247,6 +252,31 @@ class StrategyDecisionCard(Static):
             else:
                 self.query_one("#decision-time", Label).update("")
 
+            # Top movers display
+            movers_label = self.query_one("#decision-movers", Label)
+            movers_header = self.query_one("#movers-header", Label)
+            if decision.contributions:
+                top_movers = decision.top_contributors
+                if top_movers:
+                    movers_header.remove_class("hidden")
+                    mover_lines = []
+                    for contrib in top_movers:
+                        # Create visual contribution bar
+                        bar = self._make_contribution_bar(contrib.contribution)
+                        value_str = (
+                            f"{contrib.value}"
+                            if isinstance(contrib.value, str)
+                            else f"{contrib.value:.2f}"
+                        )
+                        mover_lines.append(f"{contrib.name}: {bar} ({value_str})")
+                    movers_label.update("\n".join(mover_lines))
+                else:
+                    movers_header.add_class("hidden")
+                    movers_label.update("")
+            else:
+                movers_header.add_class("hidden")
+                movers_label.update("")
+
             # Indicators table with semantic grouping
             table = self.query_one("#indicators-table", DataTable)
             table.clear()
@@ -282,6 +312,39 @@ class StrategyDecisionCard(Static):
         return Text.from_markup(
             f"[{color}]{bar}[/{color}] {confidence:.0%} [{color}]{label}[/{color}]"
         )
+
+    def _make_contribution_bar(self, contribution: float) -> str:
+        """Create visual contribution bar.
+
+        Shows a bi-directional bar where:
+        - Green bars on right = bullish contribution
+        - Red bars on left = bearish contribution
+
+        Args:
+            contribution: Contribution score from -1.0 to +1.0
+
+        Returns:
+            Markup string with colored bar.
+        """
+        # Clamp to -1 to +1
+        contribution = max(-1.0, min(1.0, contribution))
+
+        # 5-segment bar (each direction)
+        magnitude = int(abs(contribution) * 5)
+
+        if contribution > 0:
+            # Bullish (green, right side)
+            bar = "     " + "[green]" + "▶" * magnitude + "[/green]"
+            sign = "+"
+        elif contribution < 0:
+            # Bearish (red, left side)
+            bar = "[red]" + "◀" * magnitude + "[/red]" + "     "[magnitude:]
+            sign = ""
+        else:
+            bar = "  ○  "
+            sign = ""
+
+        return f"{bar} {sign}{contribution:.2f}"
 
     def _group_indicators(self, indicators: dict[str, Any]) -> dict[str, list[tuple[str, Any]]]:
         """Group indicators by semantic category.

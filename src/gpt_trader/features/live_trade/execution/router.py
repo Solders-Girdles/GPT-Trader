@@ -25,7 +25,6 @@ from gpt_trader.features.live_trade.strategies.hybrid.types import (
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
-    from gpt_trader.features.brokerages.coinbase.rest.order_service import OrderService
     from gpt_trader.features.live_trade.risk.manager import LiveRiskManager
 
 logger = get_logger(__name__, component="order_router")
@@ -73,7 +72,11 @@ class OrderResult:
         return {
             "success": self.success,
             "order_id": self.order.order_id if self.order else None,
-            "symbol": self.order.symbol if self.order else (self.decision.symbol if self.decision else None),
+            "symbol": (
+                self.order.symbol
+                if self.order
+                else (self.decision.symbol if self.decision else None)
+            ),
             "error": self.error,
             "error_code": self.error_code,
             "mode": self.decision.mode.value if self.decision else None,
@@ -127,8 +130,13 @@ class OrderRouter:
 
         # Check risk manager reduce-only modes
         if self._risk_manager:
-            if decision.mode == TradingMode.CFM_ONLY and self._risk_manager.is_cfm_reduce_only_mode():
-                if decision.action in (Action.BUY, Action.SELL) and not self._is_position_reducing(decision):
+            if (
+                decision.mode == TradingMode.CFM_ONLY
+                and self._risk_manager.is_cfm_reduce_only_mode()
+            ):
+                if decision.action in (Action.BUY, Action.SELL) and not self._is_position_reducing(
+                    decision
+                ):
                     return OrderResult(
                         success=False,
                         decision=decision,

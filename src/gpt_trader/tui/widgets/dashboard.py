@@ -17,6 +17,22 @@ from textual.reactive import reactive
 from textual.widgets import Label, Static
 
 from gpt_trader.tui.formatting import format_currency
+from gpt_trader.tui.staleness_helpers import (
+    get_connection_banner,
+    get_empty_state_config,
+    get_freshness_display,
+    get_staleness_banner,
+)
+from gpt_trader.tui.thresholds import DEFAULT_THRESHOLDS as PERF_THRESHOLDS
+from gpt_trader.tui.thresholds import (
+    get_error_rate_status,
+    get_latency_status,
+    get_status_color,
+    get_status_icon,
+)
+from gpt_trader.tui.widgets.primitives import ProgressBarWidget, SparklineWidget
+from gpt_trader.tui.widgets.tile_states import TileBanner, tile_empty_state, tile_loading_state
+from gpt_trader.tui.widgets.value_flash import flash_label
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="tui")
@@ -54,26 +70,6 @@ def calculate_price_change_percent(
     # Calculate percentage change: ((new - old) / old) * 100
     return ((current_price - oldest_price) / oldest_price) * 100
 
-
-from gpt_trader.tui.staleness_helpers import (
-    get_connection_banner,
-    get_empty_state_config,
-    get_freshness_display,
-    get_staleness_banner,
-)
-from gpt_trader.tui.thresholds import (
-    DEFAULT_THRESHOLDS as PERF_THRESHOLDS,
-    get_cpu_status,
-    get_error_rate_status,
-    get_latency_status,
-    get_memory_status,
-    get_rate_limit_status,
-    get_status_color,
-    get_status_icon,
-)
-from gpt_trader.tui.widgets.primitives import ProgressBarWidget, SparklineWidget
-from gpt_trader.tui.widgets.tile_states import TileBanner, tile_empty_state, tile_loading_state
-from gpt_trader.tui.widgets.value_flash import flash_label
 
 if TYPE_CHECKING:
     from gpt_trader.tui.state import TuiState
@@ -113,12 +109,20 @@ class TickerRow(Static):
         # Compact row: Symbol | Sparkline | Price (Change) | Spread
         with Horizontal(classes="ticker-row-inner"):
             yield Label(self._symbol, classes="ticker-symbol", id="ticker-symbol")
-            yield SparklineWidget(self._history, color_trend=True, classes="ticker-spark", id="ticker-spark")
+            yield SparklineWidget(
+                self._history, color_trend=True, classes="ticker-spark", id="ticker-spark"
+            )
 
             price_color = "green" if self._change_24h >= 0 else "red"
             arrow = "↗" if self._change_24h >= 0 else "↘"
-            yield Label(f"{format_currency(self._price)}", classes="ticker-price", id="ticker-price")
-            yield Label(f"[{price_color}]{arrow} {self._change_24h:+.1f}%[/]", classes="ticker-change", id="ticker-change")
+            yield Label(
+                f"{format_currency(self._price)}", classes="ticker-price", id="ticker-price"
+            )
+            yield Label(
+                f"[{price_color}]{arrow} {self._change_24h:+.1f}%[/]",
+                classes="ticker-change",
+                id="ticker-change",
+            )
 
             # Spread column
             spread_str = f"{self._spread:.3f}%" if self._spread is not None else "--"
@@ -166,6 +170,7 @@ class TickerRow(Static):
 
             # Flash price if it changed (rate limited to 1 per second)
             import time as time_mod
+
             now = time_mod.time()
             if old_price != price and (now - self._last_flash_time) > 1.0:
                 direction = "up" if price > old_price else "down"
@@ -289,13 +294,15 @@ class MarketPulseWidget(Static):
             price_float = float(price)
             change_pct = calculate_price_change_percent(price_float, history)
 
-            market_list.append({
-                "symbol": symbol,
-                "price": price_float,
-                "change_24h": change_pct,  # Recent change from oldest price in rolling history
-                "history": [float(h) for h in history[-10:]] if history else [],
-                "spread": float(spread) if spread else None,
-            })
+            market_list.append(
+                {
+                    "symbol": symbol,
+                    "price": price_float,
+                    "change_24h": change_pct,  # Recent change from oldest price in rolling history
+                    "history": [float(h) for h in history[-10:]] if history else [],
+                    "spread": float(spread) if spread else None,
+                }
+            )
 
         self.market_data = market_list
 
@@ -392,7 +399,9 @@ class MarketPulseWidget(Static):
                     self._ticker_cache[symbol].update_values(price, change, history, spread)
                 else:
                     # NEW: Create and mount new row
-                    row = TickerRow(symbol, price, change, history, spread=spread, id=f"ticker-{symbol}")
+                    row = TickerRow(
+                        symbol, price, change, history, spread=spread, id=f"ticker-{symbol}"
+                    )
                     self._ticker_cache[symbol] = row
                     container.mount(row)
 
@@ -597,6 +606,7 @@ class PositionCardWidget(Static):
 
             # Flash PnL if it changed (rate limited to 1 per second)
             import time as time_mod
+
             current_pnl = float(pos.get("pnl", 0.0))
             now = time_mod.time()
             if self._prev_pnl is not None and current_pnl != self._prev_pnl:
@@ -662,7 +672,9 @@ class PositionCardWidget(Static):
 
         # Title row
         root.compose_add_child(Label("No Active Position", classes="no-pos-title"))
-        root.compose_add_child(Label("System monitoring market conditions", classes="no-pos-subtitle"))
+        root.compose_add_child(
+            Label("System monitoring market conditions", classes="no-pos-subtitle")
+        )
 
         # Strategy Snapshot section
         strategy_section = Vertical(classes="snapshot-section")
@@ -672,7 +684,11 @@ class PositionCardWidget(Static):
             decisions = self.app.tui_state.strategy_data.last_decisions
             if decisions:
                 for symbol, dec in list(decisions.items())[:2]:
-                    color = "green" if dec.action == "BUY" else "red" if dec.action == "SELL" else "yellow"
+                    color = (
+                        "green"
+                        if dec.action == "BUY"
+                        else "red" if dec.action == "SELL" else "yellow"
+                    )
                     confidence_str = f"{dec.confidence:.0%}" if dec.confidence else "--"
                     strategy_section.compose_add_child(
                         Label(
@@ -711,12 +727,16 @@ class PositionCardWidget(Static):
             # Equity
             if state.position_data.equity:
                 portfolio_section.compose_add_child(
-                    Label(f"Equity: {format_currency(state.position_data.equity)}", classes="snapshot-row")
+                    Label(
+                        f"Equity: {format_currency(state.position_data.equity)}",
+                        classes="snapshot-row",
+                    )
                 )
 
             # Top crypto holdings (excluding USD/USDC)
             holdings = [
-                b for b in state.account_data.balances
+                b
+                for b in state.account_data.balances
                 if b.asset not in ("USD", "USDC") and float(b.total) > 0
             ][:3]
             if holdings:
@@ -758,12 +778,16 @@ class PositionCardWidget(Static):
 
         # 1. Header Row
         header_row = Horizontal(classes="pos-header-row")
-        header_row.compose_add_child(Label(f" {side} {leverage}x ", classes=f"pos-badge {side_cls}"))
+        header_row.compose_add_child(
+            Label(f" {side} {leverage}x ", classes=f"pos-badge {side_cls}")
+        )
         header_row.compose_add_child(Label(f" {symbol} ", classes="pos-symbol"))
         root.compose_add_child(header_row)
 
         # 2. PnL Hero (with ID for flash animation)
-        root.compose_add_child(Label(f"[{color}]💰 {pnl_fmt}[/]", id="pnl-hero-label", classes="pnl-hero"))
+        root.compose_add_child(
+            Label(f"[{color}]💰 {pnl_fmt}[/]", id="pnl-hero-label", classes="pnl-hero")
+        )
 
         # 3. Details Grid
         details_grid = Horizontal(classes="pos-details-grid")
@@ -847,6 +871,11 @@ class SystemMonitorWidget(Static):
     error_rate_pct = reactive(0.0)
     cache_hit_rate_pct = reactive(0.0)
     circuit_state = reactive("OK")
+
+    # Execution telemetry
+    exec_success_rate = reactive(100.0)
+    exec_latency_ms = reactive(0.0)
+    exec_count = reactive(0)
 
     def __init__(
         self,
@@ -934,6 +963,16 @@ class SystemMonitorWidget(Static):
         except (TypeError, AttributeError) as e:
             logger.debug("Failed to extract resilience metrics: %s", e)
 
+        # Extract execution telemetry if available
+        try:
+            exec_data = state.execution_data
+            if exec_data and exec_data.submissions_total > 0:
+                self.exec_success_rate = exec_data.success_rate
+                self.exec_latency_ms = exec_data.avg_latency_ms
+                self.exec_count = exec_data.submissions_total
+        except (TypeError, AttributeError) as e:
+            logger.debug("Failed to extract execution metrics: %s", e)
+
     def compose(self) -> ComposeResult:
         yield Label("SYSTEM", classes="sys-header")
 
@@ -958,6 +997,11 @@ class SystemMonitorWidget(Static):
             yield Label("Errors: 0.0%", id="lbl-error-rate", classes="sys-metric")
             yield Label("Cache: --%", id="lbl-cache-hit", classes="sys-metric")
             yield Label("[green]Circuit: OK[/green]", id="lbl-circuit", classes="sys-metric")
+
+        # Execution telemetry section
+        with Container(id="execution-section", classes="execution-metrics"):
+            yield Label("Exec: --% (0)", id="lbl-exec-rate", classes="sys-metric")
+            yield Label("Exec Lat: --ms", id="lbl-exec-latency", classes="sys-metric")
 
     def watch_cpu_usage(self, val: float) -> None:
         try:
@@ -1081,3 +1125,58 @@ class SystemMonitorWidget(Static):
                 lbl.update("[red]Circuit: OPEN[/red]")
         except Exception as e:
             logger.debug("Failed to update circuit state: %s", e)
+
+    def watch_exec_success_rate(self, val: float) -> None:
+        """Update the execution success rate display."""
+        try:
+            lbl = self.query_one("#lbl-exec-rate", Label)
+            # Color code based on success rate
+            if val >= 95:
+                color = "green"
+                icon = "✓"
+            elif val >= 80:
+                color = "yellow"
+                icon = "●"
+            else:
+                color = "red"
+                icon = "✗"
+            lbl.update(f"[{color}]{icon} Exec: {val:.0f}% ({self.exec_count})[/{color}]")
+        except Exception as e:
+            logger.debug("Failed to update execution rate: %s", e)
+
+    def watch_exec_latency_ms(self, val: float) -> None:
+        """Update the execution latency display."""
+        try:
+            lbl = self.query_one("#lbl-exec-latency", Label)
+            if val > 0:
+                # Color code based on latency
+                if val < 100:
+                    color = "green"
+                elif val < 500:
+                    color = "yellow"
+                else:
+                    color = "red"
+                lbl.update(f"[{color}]Exec Lat: {val:.0f}ms[/{color}]")
+            else:
+                lbl.update("Exec Lat: --ms")
+        except Exception as e:
+            logger.debug("Failed to update execution latency: %s", e)
+
+    def watch_exec_count(self, val: int) -> None:
+        """Update execution count in the rate display."""
+        # Triggers update via watch_exec_success_rate
+        try:
+            lbl = self.query_one("#lbl-exec-rate", Label)
+            rate = self.exec_success_rate
+            if rate >= 95:
+                color = "green"
+                icon = "✓"
+            elif rate >= 80:
+                color = "yellow"
+                icon = "●"
+            else:
+                color = "red"
+                icon = "✗"
+            lbl.update(f"[{color}]{icon} Exec: {rate:.0f}% ({val})[/{color}]")
+        except Exception as e:
+            logger.debug("Failed to update execution count: %s", e)

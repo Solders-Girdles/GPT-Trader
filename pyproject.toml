@@ -21,6 +21,9 @@ dependencies = [
     "optuna>=4.0.0,<5.0.0",
     "pandas>=2.3.3",
     "textual>=0.87.0,<1.0.0",
+    # Transitive security fixes (pin minimum versions for CVE patches)
+    "urllib3>=2.6.0",   # GHSA-gm62-xv2j-4w53, GHSA-2xpw-w6gg-jr37
+    "filelock>=3.20.1", # GHSA-w853-jp5j-5j7f
 ]
 
 [project.optional-dependencies]

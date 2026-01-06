@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from rich.text import Text
 from textual.app import ComposeResult
+from textual.binding import Binding
 from textual.containers import Grid, Vertical
 from textual.widgets import Label, ProgressBar, Static
 
@@ -11,10 +12,12 @@ from gpt_trader.tui.helpers import safe_update
 from gpt_trader.tui.staleness_helpers import get_staleness_banner
 from gpt_trader.tui.thresholds import (
     DEFAULT_RISK_THRESHOLDS,
+    StatusLevel,
     get_loss_ratio_status,
     get_risk_score_status,
     get_risk_status_label,
     get_status_class,
+    get_status_color,
 )
 from gpt_trader.tui.types import RiskState
 from gpt_trader.tui.widgets.tile_states import TileBanner
@@ -34,9 +37,22 @@ class RiskWidget(Static):
     - Color-coded risk status (low/medium/high)
     - Reduce-only mode indicator
     - Active risk guards display
+    - Enter key opens detailed risk modal
+
+    Keyboard shortcuts:
+        Enter: Open risk detail modal
     """
 
+    BINDINGS = [
+        Binding("enter", "show_risk_detail", "Details", show=True),
+    ]
+
     # Styles moved to styles/widgets/risk.tcss
+
+    def __init__(self, **kwargs) -> None:
+        """Initialize RiskWidget."""
+        super().__init__(**kwargs)
+        self._risk_data: RiskState | None = None
 
     def compose(self) -> ComposeResult:
         yield Label("RISK MANAGEMENT", classes="widget-header")
@@ -75,6 +91,9 @@ class RiskWidget(Static):
             data: RiskState containing current risk metrics.
             state: Optional TuiState for staleness banner updates.
         """
+        # Store data for detail modal access
+        self._risk_data = data
+
         # Update staleness banner if state provided
         if state is not None:
             self._update_staleness_banner(state)
@@ -210,15 +229,42 @@ class RiskWidget(Static):
             reduce_only_label.remove_class("risk-alert")
 
     def _update_guards(self, data: RiskState) -> None:
-        """Update active guards display."""
+        """Update active guards display with color coding.
+
+        Color coding based on guard count:
+        - 0 guards: dim (normal)
+        - 1-2 guards: yellow (warning)
+        - 3+ guards: red (critical)
+        """
         guards_label = self.query_one("#active-guards", Label)
         if data.active_guards:
-            # Show count and first few guards
             count = len(data.active_guards)
+
+            # Determine status level based on count
+            if count >= 3:
+                status = StatusLevel.CRITICAL
+            else:
+                status = StatusLevel.WARNING
+
+            color = get_status_color(status)
+
+            # Format display text
             if count <= 2:
-                guards_label.update(", ".join(data.active_guards))
+                display_text = ", ".join(data.active_guards)
             else:
                 first_two = ", ".join(data.active_guards[:2])
-                guards_label.update(f"{first_two} +{count - 2} more")
+                display_text = f"{first_two} +{count - 2} more"
+
+            guards_label.update(Text(display_text, style=color))
         else:
             guards_label.update(Text("None", style="dim"))
+
+    def action_show_risk_detail(self) -> None:
+        """Open risk detail modal."""
+        from gpt_trader.tui.widgets.risk_detail_modal import RiskDetailModal
+
+        if self._risk_data is None:
+            self.notify("No risk data available", timeout=2)
+            return
+
+        self.app.push_screen(RiskDetailModal(self._risk_data))

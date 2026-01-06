@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import pytest
 
-from gpt_trader.tui.services.preferences_service import PreferencesService, UserPreferences
+from gpt_trader.tui.services.preferences_service import PreferencesService
 
 
 class TestCredentialCache:
@@ -55,18 +55,14 @@ class TestCredentialCache:
         is_valid = prefs_service.is_credential_cache_valid(fingerprint, "paper")
         assert is_valid is True
 
-    def test_cache_invalid_fingerprint_mismatch(
-        self, prefs_service: PreferencesService
-    ) -> None:
+    def test_cache_invalid_fingerprint_mismatch(self, prefs_service: PreferencesService) -> None:
         """Test cache is invalid when API key fingerprint changes."""
         prefs_service.set_credential_cache("original...finger", {"paper": True})
 
         is_valid = prefs_service.is_credential_cache_valid("different...finger", "paper")
         assert is_valid is False
 
-    def test_cache_invalid_mode_not_validated(
-        self, prefs_service: PreferencesService
-    ) -> None:
+    def test_cache_invalid_mode_not_validated(self, prefs_service: PreferencesService) -> None:
         """Test cache is invalid for a mode that wasn't validated."""
         fingerprint = "orgsfake...keyfake"
         prefs_service.set_credential_cache(fingerprint, {"paper": True})
@@ -86,9 +82,7 @@ class TestCredentialCache:
         is_valid = prefs_service.is_credential_cache_valid(fingerprint, "paper")
         assert is_valid is False
 
-    def test_cache_valid_within_age_limit(
-        self, prefs_service: PreferencesService
-    ) -> None:
+    def test_cache_valid_within_age_limit(self, prefs_service: PreferencesService) -> None:
         """Test cache is valid when within custom age limit."""
         fingerprint = "orgsfake...keyfake"
         prefs_service.set_credential_cache(fingerprint, {"paper": True})
@@ -96,9 +90,7 @@ class TestCredentialCache:
         # Set to 23 hours ago (should still be valid with 24h limit)
         prefs_service.preferences.credential_validated_at = time.time() - (23 * 3600)
 
-        is_valid = prefs_service.is_credential_cache_valid(
-            fingerprint, "paper", max_age_hours=24.0
-        )
+        is_valid = prefs_service.is_credential_cache_valid(fingerprint, "paper", max_age_hours=24.0)
         assert is_valid is True
 
     def test_cache_persists_across_sessions(self, temp_prefs_path: Path) -> None:
@@ -118,9 +110,7 @@ class TestCredentialCache:
         assert cache["fingerprint"] == fingerprint
         assert cache["validation_modes"] == validation_modes
 
-    def test_update_existing_cache_modes(
-        self, prefs_service: PreferencesService
-    ) -> None:
+    def test_update_existing_cache_modes(self, prefs_service: PreferencesService) -> None:
         """Test updating cache adds new modes while preserving existing."""
         fingerprint = "orgsfake...keyfake"
 

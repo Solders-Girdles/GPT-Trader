@@ -2,8 +2,6 @@
 
 from decimal import Decimal
 
-import pytest
-
 from gpt_trader.features.live_trade.strategies.hybrid.base import HybridStrategyBase
 from gpt_trader.features.live_trade.strategies.hybrid.types import (
     Action,
@@ -85,7 +83,9 @@ class TestHybridStrategyBaseDecide:
             product=None,
         )
 
-        from gpt_trader.features.live_trade.strategies.perps_baseline.strategy import Action as LegacyAction
+        from gpt_trader.features.live_trade.strategies.perps_baseline.strategy import (
+            Action as LegacyAction,
+        )
 
         assert decision.action == LegacyAction.HOLD
 
@@ -113,7 +113,9 @@ class TestHybridStrategyBaseDecide:
             product=None,
         )
 
-        from gpt_trader.features.live_trade.strategies.perps_baseline.strategy import Action as LegacyAction
+        from gpt_trader.features.live_trade.strategies.perps_baseline.strategy import (
+            Action as LegacyAction,
+        )
 
         assert decision.action == LegacyAction.BUY
         assert decision.reason == "Test buy"
@@ -140,7 +142,9 @@ class TestHybridStrategyBaseDecide:
             product=None,
         )
 
-        from gpt_trader.features.live_trade.strategies.perps_baseline.strategy import Action as LegacyAction
+        from gpt_trader.features.live_trade.strategies.perps_baseline.strategy import (
+            Action as LegacyAction,
+        )
 
         assert decision.action == LegacyAction.SELL
 
@@ -171,7 +175,9 @@ class TestHybridStrategyBaseDecide:
             product=None,
         )
 
-        from gpt_trader.features.live_trade.strategies.perps_baseline.strategy import Action as LegacyAction
+        from gpt_trader.features.live_trade.strategies.perps_baseline.strategy import (
+            Action as LegacyAction,
+        )
 
         assert decision.action == LegacyAction.BUY
         assert decision.reason == "Second decision"

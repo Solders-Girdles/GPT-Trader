@@ -45,6 +45,14 @@ class PortfolioSummary:
     positions: dict[str, Position] = field(default_factory=dict)
     total_unrealized_pnl: Decimal = Decimal("0")  # Changed from str to Decimal
     equity: Decimal = Decimal("0")  # Changed from str to Decimal
+    # P&L breakdown
+    total_realized_pnl: Decimal = Decimal("0")  # Realized P&L from closed trades
+    total_fees: Decimal = Decimal("0")  # Cumulative trading fees
+
+    @property
+    def net_pnl(self) -> Decimal:
+        """Net P&L = Realized + Unrealized - Fees."""
+        return self.total_realized_pnl + self.total_unrealized_pnl - self.total_fees
 
 
 @dataclass
@@ -62,6 +70,7 @@ class Order:
     creation_time: float = 0.0  # Epoch timestamp for age calculation
     filled_quantity: Decimal = Decimal("0")
     avg_fill_price: Decimal | None = None
+    decision_id: str = ""  # Links to originating strategy decision
 
 
 @dataclass
@@ -110,6 +119,38 @@ class AccountSummary:
     fees_30d: Decimal = Decimal("0")  # Changed from str to Decimal
     fee_tier: str = ""
     balances: list[AccountBalance] = field(default_factory=list)
+    # Daily P&L tracking
+    daily_pnl: Decimal = Decimal("0")  # P&L for current trading day
+    daily_pnl_pct: Decimal = Decimal("0")  # Daily P&L as percentage of equity
+
+
+@dataclass
+class IndicatorContribution:
+    """Contribution of a single indicator to the decision.
+
+    Captures how much each indicator influenced the final decision,
+    enabling transparency into which factors mattered most.
+    """
+
+    name: str
+    value: float  # Current indicator value
+    contribution: float  # -1.0 to +1.0 (negative = bearish, positive = bullish)
+    weight: float = 1.0  # Relative importance weight
+
+    @property
+    def is_bullish(self) -> bool:
+        """Check if this indicator is contributing bullishly."""
+        return self.contribution > 0
+
+    @property
+    def is_bearish(self) -> bool:
+        """Check if this indicator is contributing bearishly."""
+        return self.contribution < 0
+
+    @property
+    def abs_contribution(self) -> float:
+        """Absolute contribution magnitude for sorting."""
+        return abs(self.contribution)
 
 
 @dataclass
@@ -122,6 +163,25 @@ class DecisionData:
     confidence: float
     indicators: dict[str, Any] = field(default_factory=dict)
     timestamp: float = 0.0
+    decision_id: str = ""  # Unique ID for linking to orders/trades
+    blocked_by: str = ""  # Guard/reason that blocked execution (empty if executed)
+    # Indicator contributions for transparency (sorted by impact)
+    contributions: list[IndicatorContribution] = field(default_factory=list)
+
+    @property
+    def top_contributors(self) -> list[IndicatorContribution]:
+        """Get top 3 contributors by absolute contribution."""
+        return sorted(self.contributions, key=lambda c: c.abs_contribution, reverse=True)[:3]
+
+    @property
+    def bullish_contributors(self) -> list[IndicatorContribution]:
+        """Get contributors pushing toward bullish."""
+        return [c for c in self.contributions if c.is_bullish]
+
+    @property
+    def bearish_contributors(self) -> list[IndicatorContribution]:
+        """Get contributors pushing toward bearish."""
+        return [c for c in self.contributions if c.is_bearish]
 
 
 @dataclass
@@ -130,6 +190,27 @@ class StrategyState:
 
     active_strategies: list[str] = field(default_factory=list)
     last_decisions: dict[str, DecisionData] = field(default_factory=dict)
+
+
+@dataclass
+class RiskGuard:
+    """Data structure for a single risk guard with metadata.
+
+    Provides detailed guard information including severity,
+    last-triggered timestamp, and trigger count for debugging.
+    """
+
+    name: str
+    severity: str = "MEDIUM"  # LOW, MEDIUM, HIGH, CRITICAL
+    last_triggered: float = 0.0  # Epoch timestamp (0 = never triggered)
+    triggered_count: int = 0  # Total times this guard has triggered
+    description: str = ""  # Optional human-readable description
+
+    @property
+    def severity_order(self) -> int:
+        """Return numeric value for sorting by severity (higher = more severe)."""
+        severity_map = {"LOW": 1, "MEDIUM": 2, "HIGH": 3, "CRITICAL": 4}
+        return severity_map.get(self.severity.upper(), 2)
 
 
 @dataclass
@@ -146,7 +227,10 @@ class RiskState:
     current_daily_loss_pct: float = 0.0
     reduce_only_mode: bool = False
     reduce_only_reason: str = ""
+    # Legacy: simple guard names (for backward compatibility)
     active_guards: list[str] = field(default_factory=list)
+    # Enhanced: full guard objects with metadata
+    guards: list[RiskGuard] = field(default_factory=list)
 
 
 @dataclass
@@ -158,6 +242,50 @@ class SystemStatus:
     rate_limit_usage: str = "0%"
     memory_usage: str = "0MB"
     cpu_usage: str = "0%"
+
+
+@dataclass
+class TradingStats:
+    """Trading performance statistics with sample sizes.
+
+    Computed from trade history with optional time window filtering.
+    Includes sample counts for statistical context.
+    """
+
+    # Trade counts
+    total_trades: int = 0
+    winning_trades: int = 0
+    losing_trades: int = 0
+    break_even_trades: int = 0
+
+    # Win/loss metrics
+    win_rate: float = 0.0  # 0.0 to 1.0
+    avg_win: Decimal = Decimal("0")
+    avg_loss: Decimal = Decimal("0")
+    profit_factor: float = 0.0  # gross_profit / gross_loss
+
+    # P&L
+    total_pnl: Decimal = Decimal("0")
+    gross_profit: Decimal = Decimal("0")
+    gross_loss: Decimal = Decimal("0")
+
+    # Average trade
+    avg_trade_pnl: Decimal = Decimal("0")
+    avg_trade_size: Decimal = Decimal("0")
+
+    # Time window info
+    window_minutes: int = 0  # 0 = all session
+    window_label: str = "All Session"
+
+    @property
+    def sample_label(self) -> str:
+        """Return sample size label for display (e.g., 'n=23')."""
+        return f"n={self.total_trades}"
+
+    @property
+    def has_sufficient_data(self) -> bool:
+        """Check if enough trades for meaningful statistics (n >= 5)."""
+        return self.total_trades >= 5
 
 
 @dataclass
@@ -192,3 +320,44 @@ class ResilienceState:
     any_circuit_open: bool = False
 
     last_update: float = 0.0
+
+
+@dataclass
+class ExecutionMetrics:
+    """Execution telemetry for order submission tracking.
+
+    Tracks order submission performance including latency, success rates,
+    and retry activity for monitoring execution health.
+    """
+
+    # Submission counts (rolling window)
+    submissions_total: int = 0
+    submissions_success: int = 0
+    submissions_failed: int = 0
+    submissions_rejected: int = 0
+
+    # Latency metrics (milliseconds)
+    avg_latency_ms: float = 0.0
+    p50_latency_ms: float = 0.0
+    p95_latency_ms: float = 0.0
+    last_latency_ms: float = 0.0
+
+    # Retry metrics
+    retry_total: int = 0
+    retry_rate: float = 0.0  # retries per submission
+
+    # Recent activity
+    last_submission_time: float = 0.0
+    last_failure_reason: str = ""
+
+    @property
+    def success_rate(self) -> float:
+        """Calculate success rate as percentage."""
+        if self.submissions_total == 0:
+            return 100.0
+        return (self.submissions_success / self.submissions_total) * 100
+
+    @property
+    def is_healthy(self) -> bool:
+        """Check if execution metrics indicate healthy state."""
+        return self.success_rate >= 95.0 and self.retry_rate < 0.5

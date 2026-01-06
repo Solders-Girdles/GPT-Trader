@@ -15,6 +15,7 @@ from .market import MarketWatchWidget
 from .mode_indicator import ModeIndicator
 from .mode_info_modal import ModeInfoModal
 from .mode_selector import ModeSelector
+from .onboarding_checklist import OnboardingChecklist
 from .performance_dashboard import PerformanceDashboardWidget
 from .portfolio import OrdersWidget, PositionsWidget, TradesWidget
 from .portfolio_widget import PortfolioWidget
@@ -23,6 +24,7 @@ from .slim_status import SlimStatusWidget
 from .status import BotStatusWidget
 from .strategy import StrategyWidget
 from .system import SystemHealthWidget
+from .trading_stats import TradingStatsWidget
 
 __all__ = [
     "AccountWidget",
@@ -38,6 +40,7 @@ __all__ = [
     "ModeIndicator",
     "ModeInfoModal",
     "ModeSelector",
+    "OnboardingChecklist",
     "OrdersWidget",
     "PerformanceDashboardWidget",
     "PortfolioWidget",
@@ -47,4 +50,5 @@ __all__ = [
     "StrategyWidget",
     "SystemHealthWidget",
     "TradesWidget",
+    "TradingStatsWidget",
 ]

@@ -1,0 +1,118 @@
+/* ========================================================================== */
+/* TRADING STATS WIDGET                                                       */
+/* ========================================================================== */
+
+TradingStatsWidget {
+    height: auto;
+    background: $bg-secondary;
+    border-left: wide $accent;
+    padding: 0 1;
+}
+
+/* === Header === */
+
+TradingStatsWidget .stats-header {
+    height: 2;
+    align: left middle;
+}
+
+TradingStatsWidget .widget-header {
+    color: $text-primary;
+    text-style: bold;
+    width: auto;
+    padding-right: 1;
+}
+
+TradingStatsWidget .window-label {
+    color: $accent;
+    text-style: italic;
+    width: auto;
+    padding-right: 1;
+}
+
+TradingStatsWidget .sample-label {
+    color: $text-muted;
+    width: auto;
+}
+
+TradingStatsWidget .sample-label.insufficient {
+    color: $warning;
+}
+
+/* === Compact View === */
+
+TradingStatsWidget .stats-compact {
+    height: 1;
+    align: left middle;
+}
+
+TradingStatsWidget .stats-compact .stat-value {
+    width: auto;
+    padding: 0 1;
+}
+
+TradingStatsWidget .stats-compact .stat-separator {
+    color: $border-subtle;
+    width: 1;
+}
+
+/* === Expanded View === */
+
+TradingStatsWidget .stats-body {
+    height: auto;
+    padding: 0;
+}
+
+TradingStatsWidget .stats-row {
+    height: 2;
+    layout: horizontal;
+    align: left middle;
+}
+
+TradingStatsWidget .stat-metric {
+    width: 1fr;
+    height: 2;
+    padding: 0 1;
+}
+
+TradingStatsWidget .stat-label {
+    color: $text-muted;
+    text-style: italic;
+    height: 1;
+}
+
+TradingStatsWidget .stat-value {
+    color: $text-primary;
+    text-style: bold;
+    height: 1;
+}
+
+/* === Time Window Chips === */
+
+TradingStatsWidget .window-chips {
+    height: 2;
+    align: left middle;
+    padding: 0;
+    margin-top: 1;
+}
+
+TradingStatsWidget .window-chip {
+    min-width: 10;
+    height: 1;
+    margin: 0;
+    padding: 0 1;
+    background: transparent;
+    color: $text-muted;
+    border: none;
+}
+
+TradingStatsWidget .window-chip:hover {
+    background: $bg-highlight;
+    color: $text-primary;
+}
+
+TradingStatsWidget .window-chip.active {
+    background: $accent-muted;
+    color: $accent;
+    text-style: bold;
+}

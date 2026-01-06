@@ -36,11 +36,12 @@ from gpt_trader.tui.utilities import (
 from gpt_trader.tui.widgets import ContextualFooter
 from gpt_trader.tui.widgets.shell import CommandBar
 from gpt_trader.tui.widgets.tile_states import TileBanner, TileEmptyState
+from gpt_trader.tui.widgets.trading_stats import TradingStatsWidget
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
     from gpt_trader.tui.state import TuiState
-    from gpt_trader.tui.types import AccountBalance, AccountSummary
+    from gpt_trader.tui.types import AccountBalance
 
 logger = get_logger(__name__, component="tui")
 
@@ -183,6 +184,8 @@ class AccountDetailScreen(Screen):
     - ESC/Q: Close and return to main screen
     - S: Cycle sort column
     - C: Copy selected row
+    - W: Cycle time window (All/5m/15m/30m/1h)
+    - Shift+W: Reset to All Session
     - ↑↓: Navigate table rows
     """
 
@@ -191,6 +194,8 @@ class AccountDetailScreen(Screen):
         Binding("q", "dismiss", "Close"),
         Binding("s", "cycle_sort", "Sort", show=True),
         Binding("c", "copy_row", "Copy", show=True),
+        Binding("w", "cycle_window", "Window", show=True),
+        Binding("W", "reset_window", "All", show=False),
         Binding("r", "refresh", "Refresh", show=False),
     ]
 
@@ -265,6 +270,13 @@ class AccountDetailScreen(Screen):
     .breakdown-bar {
         height: 1;
     }
+
+    #stats-panel {
+        border: round $border-primary;
+        padding: 1;
+        margin-top: 1;
+        height: auto;
+    }
     """
 
     # State
@@ -312,9 +324,11 @@ class AccountDetailScreen(Screen):
                     id="balances-empty",
                 )
 
-            # Bottom right: Holdings breakdown
-            with Container(id="breakdown-panel"):
+            # Bottom right: Holdings breakdown + Trading stats
+            with Vertical(id="breakdown-panel"):
                 yield HoldingsBreakdown(id="breakdown-widget")
+                with Container(id="stats-panel"):
+                    yield TradingStatsWidget(id="trading-stats-widget")
 
         yield ContextualFooter()
 
@@ -428,12 +442,14 @@ class AccountDetailScreen(Screen):
         # Build data rows
         data_rows: list[dict[str, Any]] = []
         for bal in balances:
-            data_rows.append({
-                "asset": bal.asset,
-                "total": float(bal.total),
-                "available": float(bal.available),
-                "hold": float(bal.hold),
-            })
+            data_rows.append(
+                {
+                    "asset": bal.asset,
+                    "total": float(bal.total),
+                    "available": float(bal.available),
+                    "hold": float(bal.hold),
+                }
+            )
 
         self._balances_data = data_rows
 
@@ -559,7 +575,9 @@ class AccountDetailScreen(Screen):
             self.sort_ascending = True
 
         self.sort_column = self._column_keys[next_idx]
-        self.notify(f"Sorted by {self.sort_column} {'↑' if self.sort_ascending else '↓'}", timeout=2)
+        self.notify(
+            f"Sorted by {self.sort_column} {'↑' if self.sort_ascending else '↓'}", timeout=2
+        )
 
     def action_copy_row(self) -> None:
         """Copy selected row to clipboard."""
@@ -589,3 +607,19 @@ class AccountDetailScreen(Screen):
         """Manually refresh account data via app-level reconnect."""
         if hasattr(self.app, "action_reconnect_data"):
             self.app.action_reconnect_data()
+
+    def action_cycle_window(self) -> None:
+        """Cycle trading stats time window."""
+        try:
+            stats_widget = self.query_one("#trading-stats-widget", TradingStatsWidget)
+            stats_widget.action_cycle_window()
+        except Exception:
+            pass
+
+    def action_reset_window(self) -> None:
+        """Reset trading stats to 'All Session' window."""
+        try:
+            stats_widget = self.query_one("#trading-stats-widget", TradingStatsWidget)
+            stats_widget.action_reset_window()
+        except Exception:
+            pass

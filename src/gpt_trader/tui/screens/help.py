@@ -52,12 +52,32 @@ class HelpScreen(ModalScreen):
                 yield self._create_shortcut("A", "Show alert history")
                 yield self._create_shortcut("I", "Show mode information")
 
+                # Trading Stats (Account Tile)
+                yield Label("Trading Stats (Account Tile focused)", classes="help-category")
+                yield self._create_shortcut("w", "Cycle time window (1h/4h/24h/7d)")
+                yield self._create_shortcut("W", "Reset to all-time stats")
+
                 # Data Tables
                 yield Label("Data Tables (Positions, Trades, Orders)", classes="help-category")
                 yield self._create_shortcut("c", "Copy selected row to clipboard")
                 yield self._create_shortcut("C", "Copy all rows with headers")
                 yield self._create_shortcut("↑/↓", "Navigate rows")
                 yield self._create_shortcut("ENTER", "Select/expand row")
+
+                # Orders Table
+                yield Label("Orders Table (when focused)", classes="help-category")
+                yield self._create_shortcut("ENTER", "View order details (fills, fees, trades)")
+                yield self._create_shortcut("S", "Cycle sort: Fill% → Age → None")
+                yield self._create_shortcut("c", "Copy selected order to clipboard")
+
+                # Trades Table
+                yield Label("Trades Table (when focused)", classes="help-category")
+                yield self._create_shortcut("f", "Cycle symbol filter")
+                yield self._create_shortcut("F", "Clear all filters")
+
+                # Risk Tile
+                yield Label("Risk Tile (when focused)", classes="help-category")
+                yield self._create_shortcut("ENTER", "View risk detail (guards, limits, score)")
 
                 # Accessibility
                 yield Label("Accessibility", classes="help-category")
@@ -79,6 +99,9 @@ class HelpScreen(ModalScreen):
                 yield self._create_shortcut("n/N", "Jump to next/previous error")
                 yield self._create_shortcut("CTRL+T", "Cycle timestamp format")
                 yield self._create_shortcut("CTRL+S", "Toggle startup section")
+                yield self._create_shortcut("1-5", "Filter: All/Error/Warn/Info/Debug")
+                yield self._create_shortcut("f", "Cycle level filter")
+                yield self._create_shortcut("F", "Clear all filters")
 
                 # Configuration & Display
                 yield Label("Configuration & Display", classes="help-category")

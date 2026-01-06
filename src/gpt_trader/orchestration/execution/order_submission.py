@@ -24,6 +24,32 @@ from gpt_trader.utilities.logging_patterns import get_logger
 logger = get_logger(__name__, component="order_submission")
 
 
+def _record_execution_telemetry(
+    latency_ms: float,
+    success: bool,
+    rejected: bool = False,
+    failure_reason: str = "",
+) -> None:
+    """Record execution telemetry if TUI service is available.
+
+    This is a best-effort operation - failures are silently ignored
+    to avoid impacting order execution.
+    """
+    try:
+        from gpt_trader.tui.services.execution_telemetry import get_execution_telemetry
+
+        collector = get_execution_telemetry()
+        collector.record_submission(
+            latency_ms=latency_ms,
+            success=success,
+            rejected=rejected,
+            failure_reason=failure_reason,
+        )
+    except Exception:
+        # Don't let telemetry errors affect order execution
+        pass
+
+
 class OrderSubmitter:
     """Handles order submission and event recording."""
 
@@ -113,6 +139,7 @@ class OrderSubmitter:
         # 1. Log submission attempt
         self._log_submission_attempt(submit_id, symbol, side, order_type, order_quantity, price)
 
+        start_time = time.perf_counter()
         try:
             # 2. Execute Broker Request
             order = self._execute_broker_order(
@@ -127,13 +154,30 @@ class OrderSubmitter:
                 reduce_only=reduce_only,
                 leverage=leverage,
             )
+            latency_ms = (time.perf_counter() - start_time) * 1000
 
             # 3. Handle Result (Success/Rejection)
-            return self._handle_order_result(
+            result = self._handle_order_result(
                 order, symbol, side, order_quantity, price, effective_price, reduce_only, submit_id
             )
 
+            # Record telemetry for successful submission
+            if result is not None:
+                _record_execution_telemetry(latency_ms=latency_ms, success=True)
+            else:
+                # Order was rejected by broker
+                _record_execution_telemetry(latency_ms=latency_ms, success=False, rejected=True)
+
+            return result
+
         except Exception as exc:
+            latency_ms = (time.perf_counter() - start_time) * 1000
+            # Record telemetry for failed submission
+            _record_execution_telemetry(
+                latency_ms=latency_ms,
+                success=False,
+                failure_reason=str(exc)[:100],
+            )
             # 4. Handle Failure
             self._handle_order_failure(exc, symbol, side, order_quantity)
             return None

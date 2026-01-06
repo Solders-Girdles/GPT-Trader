@@ -56,3 +56,16 @@ TradesWidget {
 TradesWidget DataTable {
     height: 1fr;
 }
+
+/* Filter status bar for trades */
+TradesWidget .filter-status {
+    height: 1;
+    padding: 0 1;
+    background: $surface;
+    color: $text-secondary;
+    border-bottom: solid $border;
+}
+
+TradesWidget .filter-status.hidden {
+    display: none;
+}

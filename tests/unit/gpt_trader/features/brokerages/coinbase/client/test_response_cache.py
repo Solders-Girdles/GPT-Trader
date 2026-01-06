@@ -1,10 +1,7 @@
 """Tests for ResponseCache HTTP caching."""
 
-import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
-
-import pytest
 
 from gpt_trader.features.brokerages.coinbase.client.response_cache import (
     CachedResponse,

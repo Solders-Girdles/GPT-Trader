@@ -2,8 +2,6 @@
 
 from decimal import Decimal
 
-import pytest
-
 from gpt_trader.features.live_trade.strategies.hybrid.types import (
     Action,
     HybridDecision,
@@ -76,30 +74,22 @@ class TestHybridDecision:
 
     def test_is_actionable_buy(self):
         """BUY is actionable."""
-        decision = HybridDecision(
-            action=Action.BUY, symbol="BTC-USD", mode=TradingMode.SPOT_ONLY
-        )
+        decision = HybridDecision(action=Action.BUY, symbol="BTC-USD", mode=TradingMode.SPOT_ONLY)
         assert decision.is_actionable() is True
 
     def test_is_actionable_sell(self):
         """SELL is actionable."""
-        decision = HybridDecision(
-            action=Action.SELL, symbol="BTC-USD", mode=TradingMode.SPOT_ONLY
-        )
+        decision = HybridDecision(action=Action.SELL, symbol="BTC-USD", mode=TradingMode.SPOT_ONLY)
         assert decision.is_actionable() is True
 
     def test_is_actionable_hold(self):
         """HOLD is not actionable."""
-        decision = HybridDecision(
-            action=Action.HOLD, symbol="BTC-USD", mode=TradingMode.SPOT_ONLY
-        )
+        decision = HybridDecision(action=Action.HOLD, symbol="BTC-USD", mode=TradingMode.SPOT_ONLY)
         assert decision.is_actionable() is False
 
     def test_is_actionable_close(self):
         """CLOSE is actionable."""
-        decision = HybridDecision(
-            action=Action.CLOSE, symbol="BTC-USD", mode=TradingMode.SPOT_ONLY
-        )
+        decision = HybridDecision(action=Action.CLOSE, symbol="BTC-USD", mode=TradingMode.SPOT_ONLY)
         assert decision.is_actionable() is True
 
     def test_to_dict(self):

@@ -34,6 +34,7 @@ from gpt_trader.tui.types import (
     ExecutionMetrics,
     IndicatorContribution,
     MarketState,
+    MetricsSnapshot,
     Order,
     PortfolioSummary,
     Position,
@@ -103,6 +104,7 @@ class TuiState(Widget):
     risk_data = reactive(RiskState())
     system_data = reactive(SystemStatus())
     websocket_data = reactive(WebSocketState())
+    metrics_data = reactive(MetricsSnapshot())
 
     # CFM (Coinbase Financial Markets) futures state
     cfm_balance: reactive[CFMBalance | None] = reactive(None)
@@ -240,6 +242,7 @@ class TuiState(Widget):
             ("risk", lambda: self._update_risk_data(status.risk)),
             ("system", lambda: self._update_system_data(status.system)),
             ("websocket", lambda: self._update_websocket_data(status.websocket)),
+            ("metrics", lambda: self._update_metrics_data()),
             ("runtime", lambda: self._update_runtime_stats(runtime_state)),
         ]
 
@@ -600,6 +603,54 @@ class TuiState(Widget):
             message_stale=bool(getattr(ws, "message_stale", False)),
             heartbeat_stale=bool(getattr(ws, "heartbeat_stale", False)),
         )
+
+    def _update_metrics_data(self) -> None:
+        """Update metrics snapshot from the metrics collector."""
+        try:
+            from gpt_trader.monitoring.metrics_collector import get_metrics_collector
+
+            collector = get_metrics_collector()
+            summary = collector.get_metrics_summary()
+
+            # Extract cycle duration from histogram
+            cycle_duration_mean = 0.0
+            cycle_count = 0
+            histograms = summary.get("histograms", {})
+
+            # Sum across all result labels (ok, error)
+            for key, hist_data in histograms.items():
+                if key.startswith("gpt_trader_cycle_duration_seconds"):
+                    cycle_count += hist_data.get("count", 0)
+                    # Weighted contribution to mean
+                    if hist_data.get("count", 0) > 0:
+                        cycle_duration_mean += hist_data.get("sum", 0)
+
+            if cycle_count > 0:
+                cycle_duration_mean = cycle_duration_mean / cycle_count
+
+            # Extract order counts from counters
+            orders_total = 0
+            orders_success = 0
+            orders_failed = 0
+            counters = summary.get("counters", {})
+
+            for key, count in counters.items():
+                if key.startswith("gpt_trader_order_submission_total"):
+                    orders_total += count
+                    if "result=success" in key:
+                        orders_success += count
+                    elif "result=failed" in key or "result=rejected" in key:
+                        orders_failed += count
+
+            self.metrics_data = MetricsSnapshot(
+                cycle_duration_mean=cycle_duration_mean,
+                cycle_count=cycle_count,
+                orders_total=orders_total,
+                orders_success=orders_success,
+                orders_failed=orders_failed,
+            )
+        except Exception as e:
+            logger.debug(f"Failed to update metrics data: {e}")
 
     def _update_runtime_stats(self, runtime_state: Any | None) -> None:
         """Update runtime statistics (uptime, cycle count, etc.)."""

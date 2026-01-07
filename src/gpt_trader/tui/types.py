@@ -507,6 +507,30 @@ class ExecutionMetrics:
 
 
 @dataclass
+class MetricsSnapshot:
+    """Snapshot of runtime metrics for TUI display.
+
+    Computed from metrics_collector summary for dashboard visualization.
+    """
+
+    # Cycle duration (from histogram)
+    cycle_duration_mean: float = 0.0  # seconds
+    cycle_count: int = 0
+
+    # Order submission (from counter)
+    orders_total: int = 0
+    orders_success: int = 0
+    orders_failed: int = 0
+
+    @property
+    def success_rate_pct(self) -> float:
+        """Calculate order success rate as percentage."""
+        if self.orders_total == 0:
+            return 100.0
+        return (self.orders_success / self.orders_total) * 100
+
+
+@dataclass
 class StrategyPerformance:
     """Strategy performance metrics for TUI display.
 

@@ -4,7 +4,7 @@ from textual.reactive import reactive
 from textual.widgets import Label, Static
 
 from gpt_trader.tui.helpers import safe_update
-from gpt_trader.tui.types import ExecutionMetrics, SystemStatus, WebSocketState
+from gpt_trader.tui.types import ExecutionMetrics, MetricsSnapshot, SystemStatus, WebSocketState
 
 
 class SystemHealthWidget(Static):
@@ -14,6 +14,7 @@ class SystemHealthWidget(Static):
 
     system_data = reactive(SystemStatus())
     websocket_data = reactive(WebSocketState())
+    metrics_data = reactive(MetricsSnapshot())
 
     def __init__(self, compact_mode: bool = True, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -37,6 +38,10 @@ class SystemHealthWidget(Static):
                 yield Label("WS: --", id="ws-status", classes="value")
                 yield Label("|", classes="metric-separator")
                 yield Label("Vfail: 0", id="validation-failures", classes="value")
+                yield Label("|", classes="metric-separator")
+                yield Label("Cyc: --", id="metrics-cycle", classes="value")
+                yield Label("|", classes="metric-separator")
+                yield Label("Ord: --", id="metrics-orders", classes="value")
         else:
             # Full vertical layout (existing implementation)
             with Vertical():
@@ -67,6 +72,10 @@ class SystemHealthWidget(Static):
                 with Horizontal(classes="metric-row"):
                     yield Label("WebSocket:", classes="label")
                     yield Label("--", id="ws-status", classes="value")
+
+                with Horizontal(classes="metric-row"):
+                    yield Label("Metrics:", classes="label")
+                    yield Label("--", id="metrics-summary", classes="value")
 
                 # Execution Issues section (hidden by default, shown when issues exist)
                 with Vertical(id="execution-issues", classes="execution-issues hidden"):
@@ -355,3 +364,60 @@ class SystemHealthWidget(Static):
             return "DISCONNECTED"
         else:
             return "--"
+
+    @safe_update
+    def update_metrics(self, data: MetricsSnapshot) -> None:
+        """Update runtime metrics display.
+
+        Shows cycle duration mean and order success rate.
+
+        Args:
+            data: MetricsSnapshot with aggregated metrics.
+        """
+        self.metrics_data = data
+
+        try:
+            if self.compact_mode:
+                # Compact mode: separate labels for cycle and orders
+                cycle_label = self.query_one("#metrics-cycle", Label)
+                orders_label = self.query_one("#metrics-orders", Label)
+
+                # Format cycle duration
+                if data.cycle_count > 0:
+                    cycle_label.update(f"Cyc: {data.cycle_duration_mean:.2f}s")
+                else:
+                    cycle_label.update("Cyc: --")
+
+                # Format order success rate
+                if data.orders_total > 0:
+                    rate = data.success_rate_pct
+                    orders_label.update(f"Ord: {rate:.0f}%")
+                    # Style based on success rate
+                    orders_label.remove_class("status-ok", "status-warning", "status-error")
+                    if rate >= 95:
+                        orders_label.add_class("status-ok")
+                    elif rate >= 80:
+                        orders_label.add_class("status-warning")
+                    else:
+                        orders_label.add_class("status-error")
+                else:
+                    orders_label.update("Ord: --")
+            else:
+                # Expanded mode: single summary line
+                summary_label = self.query_one("#metrics-summary", Label)
+                parts = []
+
+                if data.cycle_count > 0:
+                    parts.append(f"cycle: {data.cycle_duration_mean:.2f}s")
+
+                if data.orders_total > 0:
+                    rate = data.success_rate_pct
+                    parts.append(f"orders: {rate:.0f}% ({data.orders_success}/{data.orders_total})")
+
+                if parts:
+                    summary_label.update(", ".join(parts))
+                else:
+                    summary_label.update("--")
+
+        except Exception:
+            pass  # Widget elements may not exist yet

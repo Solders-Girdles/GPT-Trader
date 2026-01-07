@@ -53,6 +53,8 @@ class SystemDetailsScreen(Screen):
                 system_widget.update_system(state.system_data)
             if hasattr(system_widget, "update_websocket"):
                 system_widget.update_websocket(state.websocket_data)
+            if hasattr(system_widget, "update_metrics"):
+                system_widget.update_metrics(state.metrics_data)
         except Exception as e:
             logger.debug(f"Failed to update SystemHealthWidget: {e}")
 

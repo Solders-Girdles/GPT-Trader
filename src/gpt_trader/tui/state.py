@@ -47,6 +47,7 @@ from gpt_trader.tui.types import (
     SystemStatus,
     Trade,
     TradeHistory,
+    WebSocketState,
 )
 from gpt_trader.utilities.logging_patterns import get_logger
 
@@ -101,6 +102,7 @@ class TuiState(Widget):
     strategy_data = reactive(StrategyState())
     risk_data = reactive(RiskState())
     system_data = reactive(SystemStatus())
+    websocket_data = reactive(WebSocketState())
 
     # CFM (Coinbase Financial Markets) futures state
     cfm_balance: reactive[CFMBalance | None] = reactive(None)
@@ -153,6 +155,7 @@ class TuiState(Widget):
         self.strategy_data = StrategyState()
         self.risk_data = RiskState()
         self.system_data = SystemStatus()
+        self.websocket_data = WebSocketState()
         self.resilience_data = ResilienceState()
         self.execution_data = ExecutionMetrics()
         self.strategy_performance = StrategyPerformance()
@@ -236,6 +239,7 @@ class TuiState(Widget):
             ("strategy", lambda: self._update_strategy_data(status.strategy)),
             ("risk", lambda: self._update_risk_data(status.risk)),
             ("system", lambda: self._update_system_data(status.system)),
+            ("websocket", lambda: self._update_websocket_data(status.websocket)),
             ("runtime", lambda: self._update_runtime_stats(runtime_state)),
         ]
 
@@ -581,6 +585,20 @@ class TuiState(Widget):
             rate_limit_usage=sys.rate_limit_usage,
             memory_usage=sys.memory_usage,
             cpu_usage=sys.cpu_usage,
+        )
+
+    def _update_websocket_data(self, ws: Any) -> None:  # WebSocketStatus from status_reporter
+        """Update WebSocket state from typed WebSocketStatus."""
+        self.websocket_data = WebSocketState(
+            connected=bool(getattr(ws, "connected", False)),
+            last_message_ts=getattr(ws, "last_message_ts", None),
+            last_heartbeat_ts=getattr(ws, "last_heartbeat_ts", None),
+            last_close_ts=getattr(ws, "last_close_ts", None),
+            last_error_ts=getattr(ws, "last_error_ts", None),
+            gap_count=int(getattr(ws, "gap_count", 0) or 0),
+            reconnect_count=int(getattr(ws, "reconnect_count", 0) or 0),
+            message_stale=bool(getattr(ws, "message_stale", False)),
+            heartbeat_stale=bool(getattr(ws, "heartbeat_stale", False)),
         )
 
     def _update_runtime_stats(self, runtime_state: Any | None) -> None:

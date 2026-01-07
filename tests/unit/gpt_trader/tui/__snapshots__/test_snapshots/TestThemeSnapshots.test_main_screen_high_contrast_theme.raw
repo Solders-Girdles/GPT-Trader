@@ -49,7 +49,7 @@
 .terminal-r15 { fill: #717171 }
 .terminal-r16 { fill: #ff3366;font-weight: bold }
 .terminal-r17 { fill: #000000 }
-.terminal-r18 { fill: #00ff41 }
+.terminal-r18 { fill: #00ff66 }
 .terminal-r19 { fill: #000000;font-weight: bold }
 .terminal-r20 { fill: #cccccc }
     </style>

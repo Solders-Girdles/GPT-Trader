@@ -374,6 +374,170 @@ def mixed_failures_scenario() -> FaultPlan:
     return plan
 
 
+# =============================================================================
+# WebSocket Chaos Scenarios
+# =============================================================================
+
+
+def ws_stale_messages_scenario(stale_age_seconds: float = 30.0) -> FaultPlan:
+    """
+    Create a fault plan simulating stale WebSocket messages.
+
+    Returns WS health with old last_message_ts to trigger staleness detection.
+
+    Args:
+        stale_age_seconds: How old the last message timestamp should be.
+    """
+    stale_health = {
+        "connected": True,
+        "last_message_ts": time.time() - stale_age_seconds,
+        "last_heartbeat_ts": time.time(),
+        "last_close_ts": None,
+        "last_error_ts": None,
+        "gap_count": 0,
+        "reconnect_count": 0,
+    }
+    return FaultPlan().add(
+        "get_ws_health",
+        fault_always(return_value=stale_health),
+    )
+
+
+def ws_stale_heartbeat_scenario(stale_age_seconds: float = 60.0) -> FaultPlan:
+    """
+    Create a fault plan simulating stale WebSocket heartbeat.
+
+    Returns WS health with old last_heartbeat_ts.
+
+    Args:
+        stale_age_seconds: How old the last heartbeat timestamp should be.
+    """
+    stale_health = {
+        "connected": True,
+        "last_message_ts": time.time(),
+        "last_heartbeat_ts": time.time() - stale_age_seconds,
+        "last_close_ts": None,
+        "last_error_ts": None,
+        "gap_count": 0,
+        "reconnect_count": 0,
+    }
+    return FaultPlan().add(
+        "get_ws_health",
+        fault_always(return_value=stale_health),
+    )
+
+
+def ws_disconnect_scenario() -> FaultPlan:
+    """
+    Create a fault plan simulating WebSocket disconnection.
+
+    Returns WS health with connected=False.
+    """
+    disconnected_health = {
+        "connected": False,
+        "last_message_ts": time.time() - 60.0,  # Old timestamp
+        "last_heartbeat_ts": time.time() - 60.0,
+        "last_close_ts": time.time(),  # Just closed
+        "last_error_ts": None,
+        "gap_count": 0,
+        "reconnect_count": 0,
+    }
+    return FaultPlan().add(
+        "get_ws_health",
+        fault_always(return_value=disconnected_health),
+    )
+
+
+def ws_reconnect_scenario(reconnect_count: int = 1) -> FaultPlan:
+    """
+    Create a fault plan simulating WebSocket reconnection event.
+
+    Returns WS health with incremented reconnect_count.
+
+    Args:
+        reconnect_count: Number of reconnects to simulate.
+    """
+    reconnected_health = {
+        "connected": True,
+        "last_message_ts": time.time(),
+        "last_heartbeat_ts": time.time(),
+        "last_close_ts": time.time() - 5.0,  # Closed recently
+        "last_error_ts": None,
+        "gap_count": 0,
+        "reconnect_count": reconnect_count,
+    }
+    return FaultPlan().add(
+        "get_ws_health",
+        fault_always(return_value=reconnected_health),
+    )
+
+
+def ws_gap_scenario(gap_count: int = 5) -> FaultPlan:
+    """
+    Create a fault plan simulating WebSocket sequence gaps.
+
+    Returns WS health with elevated gap_count.
+
+    Args:
+        gap_count: Number of sequence gaps to report.
+    """
+    gapped_health = {
+        "connected": True,
+        "last_message_ts": time.time(),
+        "last_heartbeat_ts": time.time(),
+        "last_close_ts": None,
+        "last_error_ts": None,
+        "gap_count": gap_count,
+        "reconnect_count": 0,
+    }
+    return FaultPlan().add(
+        "get_ws_health",
+        fault_always(return_value=gapped_health),
+    )
+
+
+def ws_error_scenario() -> FaultPlan:
+    """
+    Create a fault plan simulating WebSocket error event.
+
+    Returns WS health with recent error timestamp.
+    """
+    error_health = {
+        "connected": True,
+        "last_message_ts": time.time(),
+        "last_heartbeat_ts": time.time(),
+        "last_close_ts": None,
+        "last_error_ts": time.time(),  # Just errored
+        "gap_count": 0,
+        "reconnect_count": 0,
+    }
+    return FaultPlan().add(
+        "get_ws_health",
+        fault_always(return_value=error_health),
+    )
+
+
+def ws_healthy_scenario() -> FaultPlan:
+    """
+    Create a fault plan returning healthy WebSocket state.
+
+    Useful as a baseline or for recovery testing.
+    """
+    healthy = {
+        "connected": True,
+        "last_message_ts": time.time(),
+        "last_heartbeat_ts": time.time(),
+        "last_close_ts": None,
+        "last_error_ts": None,
+        "gap_count": 0,
+        "reconnect_count": 0,
+    }
+    return FaultPlan().add(
+        "get_ws_health",
+        fault_always(return_value=healthy),
+    )
+
+
 __all__ = [
     "FaultAction",
     "FaultPlan",
@@ -389,4 +553,12 @@ __all__ = [
     "preview_failures_scenario",
     "broker_read_failures_scenario",
     "mixed_failures_scenario",
+    # WebSocket chaos scenarios
+    "ws_stale_messages_scenario",
+    "ws_stale_heartbeat_scenario",
+    "ws_disconnect_scenario",
+    "ws_reconnect_scenario",
+    "ws_gap_scenario",
+    "ws_error_scenario",
+    "ws_healthy_scenario",
 ]

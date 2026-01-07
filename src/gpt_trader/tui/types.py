@@ -344,6 +344,21 @@ class SystemStatus:
 
 
 @dataclass
+class WebSocketState:
+    """Data structure for WebSocket connection health."""
+
+    connected: bool = False
+    last_message_ts: float | None = None
+    last_heartbeat_ts: float | None = None
+    last_close_ts: float | None = None
+    last_error_ts: float | None = None
+    gap_count: int = 0
+    reconnect_count: int = 0
+    message_stale: bool = False
+    heartbeat_stale: bool = False
+
+
+@dataclass
 class TradingStats:
     """Trading performance statistics with sample sizes.
 

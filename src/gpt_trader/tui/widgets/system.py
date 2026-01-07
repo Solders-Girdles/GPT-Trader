@@ -4,7 +4,7 @@ from textual.reactive import reactive
 from textual.widgets import Label, Static
 
 from gpt_trader.tui.helpers import safe_update
-from gpt_trader.tui.types import ExecutionMetrics, SystemStatus
+from gpt_trader.tui.types import ExecutionMetrics, SystemStatus, WebSocketState
 
 
 class SystemHealthWidget(Static):
@@ -13,6 +13,7 @@ class SystemHealthWidget(Static):
     # Styles moved to styles/widgets/system.tcss
 
     system_data = reactive(SystemStatus())
+    websocket_data = reactive(WebSocketState())
 
     def __init__(self, compact_mode: bool = True, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -32,6 +33,8 @@ class SystemHealthWidget(Static):
                 yield Label("Rate: 0%", id="rate-limit", classes="value")
                 yield Label("|", classes="metric-separator")
                 yield Label("CPU: 0%", id="cpu", classes="value")
+                yield Label("|", classes="metric-separator")
+                yield Label("WS: --", id="ws-status", classes="value")
                 yield Label("|", classes="metric-separator")
                 yield Label("Vfail: 0", id="validation-failures", classes="value")
         else:
@@ -60,6 +63,10 @@ class SystemHealthWidget(Static):
                 with Horizontal(classes="metric-row"):
                     yield Label("Validation:", classes="label")
                     yield Label("OK", id="validation-failures", classes="value")
+
+                with Horizontal(classes="metric-row"):
+                    yield Label("WebSocket:", classes="label")
+                    yield Label("--", id="ws-status", classes="value")
 
                 # Execution Issues section (hidden by default, shown when issues exist)
                 with Vertical(id="execution-issues", classes="execution-issues hidden"):
@@ -263,3 +270,88 @@ class SystemHealthWidget(Static):
             parts.append("…")
 
         return f"{prefix}: {', '.join(parts)}"
+
+    @safe_update
+    def update_websocket(self, data: WebSocketState) -> None:
+        """Update WebSocket health display.
+
+        Shows connection state, staleness indicators, and gap count.
+
+        Args:
+            data: WebSocketState with connection health metrics.
+        """
+        self.websocket_data = data
+
+        try:
+            ws_label = self.query_one("#ws-status", Label)
+
+            # Build status string
+            if self.compact_mode:
+                status_text = self._format_ws_compact(data)
+            else:
+                status_text = self._format_ws_expanded(data)
+
+            ws_label.update(status_text)
+
+            # Update styling based on state
+            ws_label.remove_class("status-connected")
+            ws_label.remove_class("status-warning")
+            ws_label.remove_class("status-error")
+            ws_label.remove_class("status-unknown")
+
+            if data.message_stale or data.heartbeat_stale:
+                ws_label.add_class("status-error")
+            elif data.connected:
+                ws_label.add_class("status-connected")
+            elif data.last_message_ts is not None:
+                # Has had messages before but currently disconnected
+                ws_label.add_class("status-warning")
+            else:
+                ws_label.add_class("status-unknown")
+
+        except Exception:
+            pass  # Widget may not exist yet
+
+    def _format_ws_compact(self, data: WebSocketState) -> str:
+        """Format WS status for compact display.
+
+        Shows: WS: OK / STALE / gaps:N / --
+        """
+        if data.message_stale or data.heartbeat_stale:
+            return "WS: STALE"
+        elif data.gap_count > 0:
+            return f"WS: gaps:{data.gap_count}"
+        elif data.connected:
+            return "WS: OK"
+        elif data.last_message_ts is not None:
+            return "WS: DISC"
+        else:
+            return "WS: --"
+
+    def _format_ws_expanded(self, data: WebSocketState) -> str:
+        """Format WS status for expanded display.
+
+        Shows more detail: CONNECTED (gaps: N, reconnects: N)
+        """
+        import time
+
+        if data.message_stale or data.heartbeat_stale:
+            age = 0.0
+            if data.message_stale and data.last_message_ts:
+                age = time.time() - data.last_message_ts
+            elif data.heartbeat_stale and data.last_heartbeat_ts:
+                age = time.time() - data.last_heartbeat_ts
+            return f"STALE ({age:.0f}s)"
+        elif data.connected:
+            details = []
+            if data.gap_count > 0:
+                details.append(f"gaps:{data.gap_count}")
+            if data.reconnect_count > 0:
+                details.append(f"reconn:{data.reconnect_count}")
+            if details:
+                return f"OK ({', '.join(details)})"
+            return "OK"
+        elif data.last_message_ts is not None:
+            return "DISCONNECTED"
+        else:
+            return "--"

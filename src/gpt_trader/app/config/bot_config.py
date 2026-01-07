@@ -42,6 +42,9 @@ class BotRiskConfig:
     trailing_stop_pct: Decimal = Decimal("0.01")
     max_drawdown_pct: Decimal | None = None
     reduce_only_threshold: Decimal | None = None
+    # Daily loss limit as percentage of equity (0.05 = 5%)
+    # When daily loss exceeds this, reduce-only mode is triggered
+    daily_loss_limit_pct: float = 0.05
 
 
 @dataclass
@@ -224,26 +227,58 @@ class BotConfig:
             long_ma_period=parse_int_env("LONG_MA", 20) or 20,
         )
 
-        # Build risk config from env
+        # Build risk config from env (supports RISK_* prefix for all fields)
+        # RISK_* prefixed names take precedence over legacy unprefixed names
+        def _risk_env(key: str, default: str) -> str:
+            """Get risk env var with RISK_ prefix taking precedence."""
+            prefixed = os.getenv(f"RISK_{key}")
+            if prefixed is not None:
+                return prefixed
+            return os.getenv(key, default)
+
+        def _risk_int(key: str, default: int) -> int:
+            """Get risk int env var with RISK_ prefix taking precedence."""
+            return int(_risk_env(key, str(default)))
+
+        def _risk_decimal(key: str, default: str) -> Decimal:
+            """Get risk Decimal env var with RISK_ prefix taking precedence."""
+            return Decimal(_risk_env(key, default))
+
+        def _risk_float(key: str, default: float) -> float:
+            """Get risk float env var with RISK_ prefix taking precedence."""
+            return float(_risk_env(key, str(default)))
+
+        # Map RISK_MAX_POSITION_PCT_PER_SYMBOL -> position_fraction
+        # Also support legacy POSITION_FRACTION
+        position_fraction_raw = (
+            os.getenv("RISK_MAX_POSITION_PCT_PER_SYMBOL") or os.getenv("POSITION_FRACTION") or "0.1"
+        )
+
         risk = BotRiskConfig(
-            max_position_size=parse_decimal_env("MAX_POSITION_SIZE", Decimal("1000"))
-            or Decimal("1000"),
-            max_leverage=parse_int_env("MAX_LEVERAGE", 5) or 5,
-            target_leverage=parse_int_env("TARGET_LEVERAGE", 1) or 1,
-            stop_loss_pct=parse_decimal_env("STOP_LOSS_PCT", Decimal("0.02")) or Decimal("0.02"),
-            take_profit_pct=parse_decimal_env("TAKE_PROFIT_PCT", Decimal("0.04"))
-            or Decimal("0.04"),
-            position_fraction=parse_decimal_env("POSITION_FRACTION", Decimal("0.1"))
-            or Decimal("0.1"),
-        )  # type: ignore[arg-type]
+            max_position_size=_risk_decimal("MAX_POSITION_SIZE", "1000"),
+            max_leverage=_risk_int("MAX_LEVERAGE", 5),
+            target_leverage=_risk_int("TARGET_LEVERAGE", 1),
+            stop_loss_pct=_risk_decimal("STOP_LOSS_PCT", "0.02"),
+            take_profit_pct=_risk_decimal("TAKE_PROFIT_PCT", "0.04"),
+            position_fraction=Decimal(position_fraction_raw),
+            # Daily loss limit as percentage (0.05 = 5%)
+            daily_loss_limit_pct=_risk_float("DAILY_LOSS_LIMIT_PCT", 0.05),
+        )
 
         derivatives_enabled = parse_bool_env("COINBASE_ENABLE_DERIVATIVES", default=False)
+
+        # Support both TRADING_SYMBOLS (canonical) and SYMBOLS (legacy)
+        symbols_raw = os.getenv("TRADING_SYMBOLS") or os.getenv("SYMBOLS")
+        if symbols_raw:
+            symbols = [s.strip() for s in symbols_raw.split(",") if s.strip()]
+        else:
+            symbols = ["BTC-USD", "ETH-USD"]
 
         return cls(
             strategy=strategy,
             risk=risk,
             interval=parse_int_env("INTERVAL", 60) or 60,
-            symbols=parse_list_env("SYMBOLS", str, default=["BTC-USD", "ETH-USD"]),
+            symbols=symbols,
             log_level=os.getenv("LOG_LEVEL", "INFO"),
             dry_run=parse_bool_env("DRY_RUN", default=False),
             webhook_url=os.getenv("WEBHOOK_URL"),

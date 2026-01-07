@@ -73,7 +73,8 @@ class RiskConfig:
     max_position_size: Decimal = field(default_factory=lambda: Decimal("10000"))
     position_fraction: Decimal = field(default_factory=lambda: Decimal("0.1"))
     enable_shorts: bool = False
-    daily_loss_limit: Decimal | None = None
+    daily_loss_limit: Decimal | None = None  # Absolute dollar limit (legacy)
+    daily_loss_limit_pct: float = 0.05  # Percentage of equity (0.05 = 5%)
     stop_loss_pct: Decimal = field(default_factory=lambda: Decimal("0.02"))
     take_profit_pct: Decimal = field(default_factory=lambda: Decimal("0.04"))
 
@@ -167,6 +168,7 @@ class ProfileSchema:
                 if "daily_loss_limit" in risk_data
                 else None
             ),
+            daily_loss_limit_pct=float(risk_data.get("daily_loss_limit_pct", 0.05)),
             stop_loss_pct=Decimal(str(risk_data.get("stop_loss_pct", "0.02"))),
             take_profit_pct=Decimal(str(risk_data.get("take_profit_pct", "0.04"))),
         )
@@ -301,6 +303,20 @@ _PROFILE_DEFAULTS: dict[Profile, ProfileSchema] = {
         ),
         execution=ExecutionConfig(dry_run=False, mock_broker=False),
     ),
+    Profile.PAPER: ProfileSchema(
+        profile_name="paper",
+        environment="paper",
+        description="Paper trading profile with simulated execution",
+        trading=TradingConfig(symbols=["BTC-USD", "ETH-USD"], mode="normal"),
+        risk=RiskConfig(
+            max_position_size=Decimal("10000"),
+            max_leverage=3,
+            enable_shorts=True,
+            daily_loss_limit_pct=0.05,
+        ),
+        execution=ExecutionConfig(dry_run=False, mock_broker=True, mock_fills=True),
+        monitoring=MonitoringConfig(log_level="INFO"),
+    ),
 }
 
 
@@ -371,12 +387,39 @@ class ProfileLoader:
         Returns:
             Dictionary of kwargs for BotConfig constructor
         """
+        from gpt_trader.app.config.bot_config import BotRiskConfig
+        from gpt_trader.features.live_trade.strategies.perps_baseline import (
+            PerpsStrategyConfig,
+        )
+
+        # Build BotRiskConfig from schema.risk
+        risk_config = BotRiskConfig(
+            max_leverage=schema.risk.max_leverage,
+            max_position_size=schema.risk.max_position_size,
+            position_fraction=schema.risk.position_fraction,
+            stop_loss_pct=schema.risk.stop_loss_pct,
+            take_profit_pct=schema.risk.take_profit_pct,
+            daily_loss_limit_pct=schema.risk.daily_loss_limit_pct,
+        )
+
+        # Build PerpsStrategyConfig from schema.strategy
+        strategy_config = PerpsStrategyConfig(
+            short_ma_period=schema.strategy.short_ma_period,
+            long_ma_period=schema.strategy.long_ma_period,
+            rsi_period=schema.strategy.rsi_period,
+            rsi_overbought=schema.strategy.rsi_overbought,
+            rsi_oversold=schema.strategy.rsi_oversold,
+        )
+
         kwargs: dict[str, Any] = {
             "profile": profile,
             "symbols": schema.trading.symbols,
             "interval": schema.trading.interval,
-            # Risk settings
-            "max_leverage": schema.risk.max_leverage,
+            # Nested risk config (BotRiskConfig instance)
+            "risk": risk_config,
+            # Nested strategy config (PerpsStrategyConfig instance)
+            "strategy": strategy_config,
+            # Top-level config fields
             "enable_shorts": schema.risk.enable_shorts,
             # Execution settings
             "time_in_force": schema.execution.time_in_force,
@@ -386,36 +429,16 @@ class ProfileLoader:
             "log_level": schema.monitoring.log_level,
             "status_interval": schema.monitoring.update_interval,
             "status_enabled": schema.monitoring.status_enabled,
+            # Strategy type
+            "strategy_type": schema.strategy.type,
         }
 
         # Mode mapping
         if schema.trading.mode == "reduce_only":
             kwargs["reduce_only_mode"] = True
 
-        # Strategy settings (nested)
-        kwargs["strategy_type"] = schema.strategy.type
-
-        # Risk nested config
-        kwargs["risk"] = {
-            "max_position_size": schema.risk.max_position_size,
-            "position_fraction": schema.risk.position_fraction,
-            "stop_loss_pct": schema.risk.stop_loss_pct,
-            "take_profit_pct": schema.risk.take_profit_pct,
-            "max_leverage": schema.risk.max_leverage,
-        }
-
-        # Optional fields
-        if schema.risk.daily_loss_limit is not None:
-            kwargs["daily_loss_limit"] = schema.risk.daily_loss_limit
-
-        if schema.session.start_time is not None:
-            kwargs["trading_window_start"] = schema.session.start_time
-
-        if schema.session.end_time is not None:
-            kwargs["trading_window_end"] = schema.session.end_time
-
-        if schema.session.trading_days:
-            kwargs["trading_days"] = schema.session.trading_days
+        # Note: Session time fields (trading_window_start, trading_window_end, trading_days)
+        # are not currently in BotConfig. If needed, add them to BotConfig first.
 
         return kwargs
 

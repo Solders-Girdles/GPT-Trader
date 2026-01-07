@@ -210,6 +210,7 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/tui/widgets/test_alert_inbox.py",  # alert inbox widget comprehensive scenarios
     "tests/unit/gpt_trader/tui/test_state.py",  # TuiState comprehensive scenarios: update cycles, CFM, resilience, performance
     "tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen.py",  # signal detail formatting, backtest display, delta formatting, entry/exit badges
+    "tests/unit/gpt_trader/config/test_bot_config_env.py",  # BotConfig env/profile wiring: RISK_* prefixes, daily loss limit, reduce-only enforcement, mark staleness
 }
 
 SLEEP_ALLOWLIST = {

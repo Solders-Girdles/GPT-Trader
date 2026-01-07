@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from decimal import Decimal
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -15,13 +14,34 @@ def check_risk_configuration(checker: PreflightCheck) -> bool:
         from gpt_trader.orchestration.configuration import RiskConfig
 
         config = RiskConfig.from_env()
-        checks = [
+
+        # Validate daily_loss_limit_pct (percentage-based, preferred)
+        # Fall back to daily_loss_limit (absolute) if pct not configured
+        has_pct_limit = config.daily_loss_limit_pct > 0
+        has_abs_limit = config.daily_loss_limit > 0
+
+        checks: list[tuple[str, object, object]] = [
             ("Max leverage", config.max_leverage, lambda x: 1 <= x <= 10),
-            ("Daily loss limit", config.daily_loss_limit, lambda x: x > 0),
             ("Liquidation buffer", config.min_liquidation_buffer_pct, lambda x: x >= 0.10),
             ("Position limit", config.max_position_pct_per_symbol, lambda x: 0 < x <= 0.25),
             ("Slippage guard", config.slippage_guard_bps, lambda x: 10 <= x <= 100),
         ]
+
+        # Add daily loss limit check (prefer pct, fall back to absolute)
+        if has_pct_limit:
+            checks.append(
+                (
+                    "Daily loss limit (pct)",
+                    config.daily_loss_limit_pct,
+                    lambda x: 0 < x <= 0.20,  # 0-20% is reasonable
+                )
+            )
+        elif has_abs_limit:
+            checks.append(("Daily loss limit ($)", config.daily_loss_limit, lambda x: x > 0))
+        else:
+            checker.log_warning(
+                "No daily loss limit configured - consider setting RISK_DAILY_LOSS_LIMIT_PCT"
+            )
 
         all_good = True
         for name, value, validator in checks:
@@ -37,9 +57,9 @@ def check_risk_configuration(checker: PreflightCheck) -> bool:
         if config.reduce_only_mode:
             checker.log_warning("Reduce-only mode ENABLED - can only close positions")
 
-        if config.daily_loss_limit > Decimal("1000"):
+        if config.daily_loss_limit_pct > 0.10:
             checker.log_warning(
-                f"Daily loss limit ${config.daily_loss_limit} seems high for testing"
+                f"Daily loss limit {config.daily_loss_limit_pct:.0%} seems high for testing"
             )
 
         if config.max_leverage > 5:

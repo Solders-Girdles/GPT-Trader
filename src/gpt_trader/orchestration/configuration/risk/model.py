@@ -29,7 +29,8 @@ RISK_CONFIG_ENV_ALIASES: dict[str, str] = {}
 class RiskConfig:
     # General risk parameters
     max_leverage: int = 5
-    daily_loss_limit: Decimal = Decimal("100")
+    daily_loss_limit: Decimal = Decimal("100")  # Absolute dollar limit (legacy)
+    daily_loss_limit_pct: float = 0.05  # Percentage of equity (0.05 = 5%)
     max_exposure_pct: float = 0.8
     max_position_pct_per_symbol: float = 0.2
 
@@ -70,11 +71,31 @@ class RiskConfig:
 
     @classmethod
     def from_env(cls) -> "RiskConfig":
+        """Load risk configuration from environment variables.
+
+        Supports both legacy names (e.g., MAX_LEVERAGE) and RISK_* prefixed names
+        (e.g., RISK_MAX_LEVERAGE). The RISK_* prefixed names take precedence.
+        """
+
+        def _get_env(key: str, default: str) -> str:
+            """Get env var with RISK_ prefix fallback."""
+            # Try RISK_* prefixed version first (canonical)
+            prefixed = os.getenv(f"RISK_{key}")
+            if prefixed is not None:
+                return prefixed
+            # Fall back to legacy non-prefixed version
+            return os.getenv(key, default)
+
         return cls(
-            max_leverage=int(os.getenv("MAX_LEVERAGE", "5")),
-            daily_loss_limit=Decimal(os.getenv("DAILY_LOSS_LIMIT", "100")),
-            max_exposure_pct=float(os.getenv("MAX_EXPOSURE_PCT", "0.8")),
-            max_position_pct_per_symbol=float(os.getenv("MAX_POSITION_PCT_PER_SYMBOL", "0.2")),
+            max_leverage=int(_get_env("MAX_LEVERAGE", "5")),
+            daily_loss_limit=Decimal(_get_env("DAILY_LOSS_LIMIT", "100")),
+            daily_loss_limit_pct=float(_get_env("DAILY_LOSS_LIMIT_PCT", "0.05")),
+            max_exposure_pct=float(_get_env("MAX_EXPOSURE_PCT", "0.8")),
+            max_position_pct_per_symbol=float(_get_env("MAX_POSITION_PCT_PER_SYMBOL", "0.2")),
+            min_liquidation_buffer_pct=float(_get_env("MIN_LIQUIDATION_BUFFER_PCT", "0.1")),
+            slippage_guard_bps=int(_get_env("SLIPPAGE_GUARD_BPS", "50")),
+            kill_switch_enabled=_get_env("KILL_SWITCH_ENABLED", "0") == "1",
+            reduce_only_mode=_get_env("REDUCE_ONLY_MODE", "0") == "1",
             # CFM-specific parameters
             cfm_max_leverage=int(os.getenv("CFM_MAX_LEVERAGE", "5")),
             cfm_min_liquidation_buffer_pct=float(

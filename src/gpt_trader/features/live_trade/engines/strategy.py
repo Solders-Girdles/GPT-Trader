@@ -34,6 +34,14 @@ from gpt_trader.features.live_trade.strategies.perps_baseline import (
 from gpt_trader.monitoring.alert_types import AlertSeverity
 from gpt_trader.monitoring.heartbeat import HeartbeatService
 from gpt_trader.monitoring.status_reporter import StatusReporter
+from gpt_trader.orchestration.execution.guard_manager import GuardManager
+from gpt_trader.orchestration.execution.order_submission import OrderSubmitter
+from gpt_trader.orchestration.execution.state_collection import StateCollector
+from gpt_trader.orchestration.execution.validation import (
+    OrderValidator,
+    get_failure_tracker,
+)
+from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="trading_engine")
@@ -92,6 +100,63 @@ class TradingEngine(BaseEngine):
         # System health tracking
         self._last_latency = 0.0
         self._connection_status = "UNKNOWN"
+
+        # Initialize pre-trade guard stack (Option A: embedded guards)
+        self._init_guard_stack()
+
+    def _init_guard_stack(self) -> None:
+        """Initialize StateCollector, OrderValidator, OrderSubmitter for pre-trade guards."""
+        # Event store fallback
+        event_store = self.context.event_store or EventStore()
+
+        # Broker and risk manager must exist
+        broker = self.context.broker
+        risk_manager = self.context.risk_manager
+
+        # Track open orders
+        self._open_orders: list[str] = []
+
+        # StateCollector: needs broker, config
+        self._state_collector = StateCollector(
+            broker=broker,  # type: ignore[arg-type]
+            config=self.context.config,
+            integration_mode=False,
+        )
+
+        # OrderSubmitter: broker + event store + bot_id + open_orders
+        self._order_submitter = OrderSubmitter(
+            broker=broker,  # type: ignore[arg-type]
+            event_store=event_store,
+            bot_id=self.context.bot_id or self.context.config.profile or "live",
+            open_orders=self._open_orders,
+            integration_mode=False,
+        )
+
+        # Failure tracker (global)
+        failure_tracker = get_failure_tracker()
+
+        # OrderValidator: broker + risk_manager + preview config + callbacks + tracker
+        self._order_validator: OrderValidator | None = None
+        if risk_manager is not None:
+            self._order_validator = OrderValidator(
+                broker=broker,  # type: ignore[arg-type]
+                risk_manager=risk_manager,
+                enable_order_preview=self.context.config.enable_order_preview,
+                record_preview_callback=self._order_submitter.record_preview,
+                record_rejection_callback=self._order_submitter.record_rejection,
+                failure_tracker=failure_tracker,
+            )
+
+        # GuardManager: runtime guards (daily loss, liquidation buffer, volatility)
+        self._guard_manager: GuardManager | None = None
+        if broker is not None and risk_manager is not None:
+            self._guard_manager = GuardManager(
+                broker=broker,  # type: ignore[arg-type]
+                risk_manager=risk_manager,
+                equity_calculator=self._state_collector.calculate_equity_from_balances,
+                open_orders=self._open_orders,
+                invalidate_cache_callback=lambda: None,
+            )
 
     @property
     def status_reporter(self) -> StatusReporter:
@@ -163,6 +228,14 @@ class TradingEngine(BaseEngine):
         self._register_background_task(prune_task)
         tasks.append(prune_task)
 
+        # Start runtime guard sweep (daily loss, liquidation buffer, volatility)
+        if self._guard_manager is not None:
+            guard_task = asyncio.create_task(
+                self._runtime_guard_sweep(), name="runtime_guard_sweep"
+            )
+            self._register_background_task(guard_task)
+            tasks.append(guard_task)
+
         return tasks
 
     def _rehydrate_from_events(self) -> int:
@@ -179,6 +252,21 @@ class TradingEngine(BaseEngine):
             strategy_callback = self.strategy.rehydrate
 
         return self._price_tick_store.rehydrate(strategy_rehydrate_callback=strategy_callback)
+
+    async def _runtime_guard_sweep(self) -> None:
+        """Periodically run runtime guards to check risk limits.
+
+        Runs on a cadence to proactively detect risk breaches (daily loss,
+        liquidation buffer, volatility) rather than only at order time.
+        """
+        interval = getattr(self.context.config, "runtime_guard_interval", 60)
+        while self.running:
+            try:
+                if self._guard_manager is not None:
+                    self._guard_manager.safe_run_runtime_guards()
+            except Exception:
+                logger.exception("Runtime guard sweep failed", operation="runtime_guards")
+            await asyncio.sleep(interval)
 
     async def _run_loop(self) -> None:
         logger.info("Starting strategy loop...")
@@ -292,6 +380,10 @@ class TradingEngine(BaseEngine):
 
             price = Decimal(str(ticker.get("price", 0)))
             logger.info(f"{symbol} price: {price}")
+
+            # Seed mark staleness timestamp from REST fetch (prevents deadlock on startup)
+            if self.context.risk_manager is not None:
+                self.context.risk_manager.last_mark_update[symbol] = time.time()
 
             # Update status reporter with price
             self._status_reporter.update_price(symbol, price)
@@ -725,18 +817,201 @@ class TradingEngine(BaseEngine):
                 current_positions=self._positions_to_risk_format(self._current_positions),
             )
             logger.info(f"Risk validation passed for {symbol} {side.value}")
+
+            # Check reduce-only mode enforcement
+            # Determine if this order would reduce an existing position
+            current_pos = self._current_positions.get(symbol)
+            is_reducing = False
+
+            if current_pos is not None:
+                # Handle both Position objects and dicts
+                if hasattr(current_pos, "side") and hasattr(current_pos, "quantity"):
+                    # Position object: use side attribute
+                    pos_side = current_pos.side.lower() if current_pos.side else ""
+                    pos_qty = current_pos.quantity
+                    # Reducing = LONG + SELL or SHORT + BUY
+                    is_reducing = (
+                        pos_side == "long" and side == OrderSide.SELL and pos_qty > 0
+                    ) or (pos_side == "short" and side == OrderSide.BUY and pos_qty > 0)
+                elif isinstance(current_pos, dict):
+                    # Dict: check for side key, fall back to quantity sign
+                    pos_side = str(current_pos.get("side", "")).lower()
+                    pos_qty = Decimal(str(current_pos.get("quantity", 0)))
+                    if pos_side in ("long", "short"):
+                        is_reducing = (
+                            pos_side == "long" and side == OrderSide.SELL and pos_qty > 0
+                        ) or (pos_side == "short" and side == OrderSide.BUY and pos_qty > 0)
+                    else:
+                        # Legacy: quantity sign indicates direction
+                        is_reducing = (pos_qty > 0 and side == OrderSide.SELL) or (
+                            pos_qty < 0 and side == OrderSide.BUY
+                        )
+
+            # In reduce-only mode, clamp quantity to prevent position flips
+            reduce_only_active = (
+                self.context.risk_manager._reduce_only_mode
+                or self.context.risk_manager._daily_pnl_triggered
+            )
+            if reduce_only_active and is_reducing and current_pos is not None:
+                # Get current position quantity
+                if hasattr(current_pos, "quantity"):
+                    current_qty = abs(current_pos.quantity)
+                elif isinstance(current_pos, dict):
+                    current_qty = abs(Decimal(str(current_pos.get("quantity", 0))))
+                else:
+                    current_qty = Decimal("0")
+
+                # Clamp order quantity to current position size
+                if quantity > current_qty:
+                    logger.warning(
+                        f"Reduce-only: clamping order from {quantity} to {current_qty} "
+                        f"to prevent position flip for {symbol}"
+                    )
+                    quantity = current_qty
+
+                # If clamped to zero, skip the order
+                if quantity <= 0:
+                    logger.info(f"Reduce-only: no position to reduce for {symbol}, skipping order")
+                    return
+
+            # Create order dict for check_order
+            order_for_check = {
+                "symbol": symbol,
+                "side": side.value,
+                "quantity": float(quantity),
+                "reduce_only": is_reducing,
+            }
+
+            if not self.context.risk_manager.check_order(order_for_check):
+                error_msg = (
+                    f"Order blocked by risk manager: "
+                    f"reduce_only_mode={self.context.risk_manager._reduce_only_mode}, "
+                    f"daily_pnl_triggered={self.context.risk_manager._daily_pnl_triggered}"
+                )
+                logger.warning(error_msg)
+                await self._notify(
+                    title="Order Blocked - Reduce Only Mode",
+                    message=f"Cannot open new {side.value} position for {symbol} while in reduce-only mode",
+                    severity=AlertSeverity.WARNING,
+                    context=order_for_check,
+                )
+                return
         else:
             logger.warning("No risk manager configured - skipping validation")
 
+        # Guard: Check mark price staleness before placing order
+        if self.context.risk_manager is not None:
+            if self.context.risk_manager.check_mark_staleness(symbol):
+                logger.warning(f"Order blocked: mark price stale for {symbol}")
+                await self._notify(
+                    title="Order Blocked - Stale Mark Price",
+                    message=f"Cannot place order for {symbol}: mark price data is stale",
+                    severity=AlertSeverity.WARNING,
+                    context={"symbol": symbol, "side": side.value},
+                )
+                return
+
+        # Pre-trade guards via OrderValidator (exchange rules, slippage, preview)
+        if self._order_validator is not None:
+            try:
+                # Get product for exchange rules validation
+                product = self._state_collector.require_product(symbol, product=None)
+
+                # Resolve effective price via StateCollector
+                effective_price = self._state_collector.resolve_effective_price(
+                    symbol, side.value.lower(), price, product
+                )
+
+                # Exchange rules + quantization
+                quantity, _ = self._order_validator.validate_exchange_rules(
+                    symbol=symbol,
+                    side=side,
+                    order_type=OrderType.MARKET,
+                    order_quantity=quantity,
+                    price=None,
+                    effective_price=effective_price,
+                    product=product,
+                )
+
+                # Slippage guard
+                self._order_validator.enforce_slippage_guard(
+                    symbol, side, quantity, effective_price
+                )
+
+                # Mark staleness via OrderValidator
+                self._order_validator.ensure_mark_is_fresh(symbol)
+
+                # Pre-trade validation via OrderValidator (leverage/exposure)
+                current_positions_dict = self._state_collector.build_positions_dict(
+                    list(self._current_positions.values())
+                )
+                self._order_validator.run_pre_trade_validation(
+                    symbol=symbol,
+                    side=side,
+                    order_quantity=quantity,
+                    effective_price=effective_price,
+                    product=product,
+                    equity=equity,
+                    current_positions=current_positions_dict,
+                )
+
+                # Order preview (if enabled)
+                self._order_validator.maybe_preview_order(
+                    symbol=symbol,
+                    side=side,
+                    order_type=OrderType.MARKET,
+                    order_quantity=quantity,
+                    effective_price=effective_price,
+                    stop_price=None,
+                    tif=self.context.config.time_in_force,
+                    reduce_only=is_reducing,
+                    leverage=None,
+                )
+
+                # Finalize reduce-only flag (risk manager may have triggered it)
+                is_reducing = self._order_validator.finalize_reduce_only_flag(is_reducing, symbol)
+
+            except ValidationError as exc:
+                logger.warning(f"Pre-trade guard rejected order: {exc}")
+                self._order_submitter.record_rejection(
+                    symbol, side.value, quantity, effective_price, str(exc)
+                )
+                await self._notify(
+                    title="Order Blocked - Guard Rejection",
+                    message=f"Cannot place order for {symbol}: {exc}",
+                    severity=AlertSeverity.WARNING,
+                    context={"symbol": symbol, "side": side.value, "reason": str(exc)},
+                )
+                return
+            except Exception as exc:
+                # Non-validation errors: log + record metrics but still block order (fail-closed)
+                logger.error(f"Guard check error: {exc}")
+                self._order_submitter.record_rejection(
+                    symbol, side.value, quantity, price, f"guard_error: {exc}"
+                )
+                await self._notify(
+                    title="Order Blocked - Guard Error",
+                    message=f"Cannot place order for {symbol}: guard check failed",
+                    severity=AlertSeverity.ERROR,
+                    context={"symbol": symbol, "side": side.value, "error": str(exc)},
+                )
+                return
+        else:
+            effective_price = price
+
         # Place order only after validation passes
         assert self.context.broker is not None, "Broker not initialized"
-        await asyncio.to_thread(
+        order_id = await asyncio.to_thread(
             self.context.broker.place_order,
             symbol,
             side,
             OrderType.MARKET,
             quantity,
         )
+
+        # Track order if ID returned
+        if order_id and isinstance(order_id, str):
+            self._open_orders.append(order_id)
 
         # Notify on successful order placement
         await self._notify(

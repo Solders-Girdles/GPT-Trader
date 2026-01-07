@@ -1,31 +1,44 @@
 # Paper Trading Profile
 # Conservative settings for testing with real market data and simulated execution
 
+profile_name: "paper"
+environment: "development"
+description: "Paper trading profile with mock execution for testing strategies"
+
+trading:
+  mode: "normal"
+  symbols:
+    - "BTC-USD"
+  interval: 60
+
 strategy:
-  btc:
-    type: ma
-    short_window: 10
-    long_window: 50
-    volatility_filter: null
-    volume_filter:
-      window: 10
-      multiplier: 1.2
-    momentum_filter:
-      window: 14
-      oversold: 35
-      overbought: 70
-    trend_filter: null
-    regime_filter:
-      window: 14
-      adx_threshold: 25
+  type: "baseline"
+  short_ma_period: 10
+  long_ma_period: 50
+  rsi_period: 14
+  rsi_overbought: 70
+  rsi_oversold: 35
 
-risk:
-  commission_bps: 5  # Conservative fee estimate
-  max_position_pct: 0.10  # Max 10% of equity per position
-  max_daily_loss: 50  # Conservative daily loss limit for paper trading
+risk_management:
+  max_leverage: 3
+  max_position_size: 1000
+  position_fraction: 0.10
+  daily_loss_limit_pct: 0.05
+  enable_shorts: true
+  stop_loss_pct: 0.02
+  take_profit_pct: 0.04
 
-symbols:
-  - BTC-USD
+execution:
+  time_in_force: "GTC"
+  dry_run: true
+  mock_broker: true
+  mock_fills: true
+
+monitoring:
+  log_level: "INFO"
+  metrics:
+    interval_seconds: 60
+  status_enabled: true
 
 # Paper trading metadata
 paper_mode: true

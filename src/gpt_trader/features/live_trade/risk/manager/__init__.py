@@ -238,13 +238,9 @@ class LiveRiskManager:
         Returns:
             True if order is allowed, False if blocked by risk rules.
         """
-        # Check if daily loss limit was triggered
-        if self._daily_pnl_triggered:
-            return False
-
-        # Check reduce-only mode
-        if self._reduce_only_mode:
-            # In reduce-only mode, only allow orders that reduce position
+        # Check reduce-only mode (triggered by daily loss limit or other conditions)
+        # When in reduce-only mode, only allow orders that reduce position
+        if self._reduce_only_mode or self._daily_pnl_triggered:
             reduce_only = False
             if hasattr(order, "reduce_only"):
                 reduce_only = order.reduce_only

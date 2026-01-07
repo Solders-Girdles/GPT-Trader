@@ -69,6 +69,73 @@ Preflight Diagnostics:
 | `COINBASE_PREFLIGHT_SKIP_REMOTE` | unset | Skip remote checks (dev/offline) |
 | `COINBASE_PREFLIGHT_FORCE_REMOTE` | unset | Force remote checks even on dev |
 
+## Metrics
+
+Lightweight in-memory metrics for runtime observability. Exporters (Prometheus, etc.) are future work.
+
+### Conventions
+
+- **Prefix**: `gpt_trader_`
+- **Unit suffixes**: `_seconds`, `_dollars`, `_total`
+- **Label format**: `name{key=value,key2=value2}` with alphabetically sorted keys
+- **Labels**: snake_case, low cardinality only (no `order_id`, `correlation_id`)
+
+### Access
+
+```python
+from gpt_trader.monitoring.metrics_collector import (
+    get_metrics_collector,
+    record_counter,
+    record_gauge,
+    record_histogram,
+)
+
+# Record metrics
+record_counter("gpt_trader_order_submission_total", labels={"result": "success", "side": "buy"})
+record_gauge("gpt_trader_equity_dollars", 10500.0)
+record_histogram("gpt_trader_cycle_duration_seconds", 0.45, labels={"result": "ok"})
+
+# Get summary
+summary = get_metrics_collector().get_metrics_summary()
+```
+
+### Summary Schema
+
+```json
+{
+  "timestamp": "2024-01-07T12:00:00.000000+00:00",
+  "counters": {
+    "gpt_trader_order_submission_total{reason=none,result=success,side=buy}": 10
+  },
+  "gauges": {
+    "gpt_trader_equity_dollars": 10500.50,
+    "gpt_trader_ws_gap_count": 0
+  },
+  "histograms": {
+    "gpt_trader_cycle_duration_seconds{result=ok}": {
+      "count": 100,
+      "sum": 45.5,
+      "mean": 0.455,
+      "buckets": {"0.1": 20, "0.5": 85, "1.0": 98}
+    }
+  }
+}
+```
+
+### Current Metrics
+
+| Metric | Type | Labels | Location |
+| --- | --- | --- | --- |
+| `gpt_trader_cycle_duration_seconds` | histogram | `result=ok\|error` | `strategy.py` |
+| `gpt_trader_order_submission_total` | counter | `result`, `reason`, `side` | `order_submission.py` |
+| `gpt_trader_equity_dollars` | gauge | — | `status_reporter.py` |
+| `gpt_trader_ws_gap_count` | gauge | — | `status_reporter.py` |
+
+**Label values**:
+- `result`: `success`, `rejected`, `failed`, `error`, `ok`
+- `reason`: `none`, `rate_limit`, `insufficient_funds`, `invalid_size`, `invalid_price`, `timeout`, `network`, `rejected`, `failed`, `unknown`
+- `side`: `buy`, `sell`
+
 ## Chaos Harness (Fault Injection)
 
 The chaos harness is intended for deterministic tests that validate the

@@ -21,6 +21,7 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from gpt_trader.monitoring.metrics_collector import record_gauge
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -572,6 +573,11 @@ class StatusReporter:
     def update_equity(self, equity: Decimal) -> None:
         """Update the current equity."""
         self._equity = equity
+        # Record equity gauge for metrics
+        try:
+            record_gauge("gpt_trader_equity_dollars", float(equity))
+        except Exception:
+            pass  # Don't let metrics errors affect operation
 
     def update_orders(self, orders: list[dict[str, Any]]) -> None:
         """Update the list of active orders."""
@@ -919,6 +925,12 @@ class StatusReporter:
         self._status.websocket.heartbeat_stale = (
             last_heartbeat_ts is not None and (now - last_heartbeat_ts) > 30
         )
+
+        # Record WS gap gauge for metrics
+        try:
+            record_gauge("gpt_trader_ws_gap_count", float(self._status.websocket.gap_count))
+        except Exception:
+            pass  # Don't let metrics errors affect operation
 
     def get_status(self) -> BotStatus:
         """

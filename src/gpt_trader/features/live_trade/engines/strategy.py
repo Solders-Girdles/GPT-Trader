@@ -52,8 +52,10 @@ from gpt_trader.features.live_trade.strategies.perps_baseline import (
     Action,
     Decision,
 )
+from gpt_trader.logging.correlation import correlation_context
 from gpt_trader.monitoring.alert_types import AlertSeverity
 from gpt_trader.monitoring.heartbeat import HeartbeatService
+from gpt_trader.monitoring.metrics_collector import record_histogram
 from gpt_trader.monitoring.status_reporter import StatusReporter
 from gpt_trader.orchestration.execution.degradation import DegradationState
 from gpt_trader.orchestration.execution.guard_manager import GuardManager
@@ -657,6 +659,25 @@ class TradingEngine(BaseEngine):
         assert self.context.broker is not None, "Broker not initialized"
         self._cycle_count += 1
 
+        # Wrap entire cycle in correlation context for tracing
+        start_time = time.perf_counter()
+        result = "ok"
+        with correlation_context(cycle=self._cycle_count):
+            try:
+                await self._cycle_inner()
+            except Exception:
+                result = "error"
+                raise
+            finally:
+                duration = time.perf_counter() - start_time
+                record_histogram(
+                    "gpt_trader_cycle_duration_seconds",
+                    duration,
+                    labels={"result": result},
+                )
+
+    async def _cycle_inner(self) -> None:
+        """Inner cycle logic wrapped in correlation context."""
         logger.info(f"=== CYCLE {self._cycle_count} START ===")
 
         # Report system status at start of cycle

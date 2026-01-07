@@ -15,6 +15,7 @@ from gpt_trader.core import (
     OrderType,
     TimeInForce,
 )
+from gpt_trader.logging.correlation import correlation_context, get_domain_context
 from gpt_trader.orchestration.execution.order_submission import OrderSubmitter
 
 # ============================================================
@@ -973,3 +974,253 @@ class TestClassifyRejectionReason:
 
         assert _classify_rejection_reason("Something weird happened") == "unknown"
         assert _classify_rejection_reason("") == "unknown"
+
+
+# ============================================================
+# Test: Metrics Recording
+# ============================================================
+
+
+class TestOrderSubmissionMetrics:
+    """Tests for order submission metrics recording."""
+
+    @pytest.fixture(autouse=True)
+    def reset_metrics(self):
+        """Reset metrics before and after each test."""
+        from gpt_trader.monitoring.metrics_collector import reset_all
+
+        reset_all()
+        yield
+        reset_all()
+
+    @patch("gpt_trader.orchestration.execution.order_event_recorder.get_monitoring_logger")
+    def test_successful_order_records_metric(
+        self,
+        mock_get_logger: MagicMock,
+        mock_broker: MagicMock,
+        mock_event_store: MagicMock,
+        open_orders: list[str],
+        mock_order: Order,
+    ) -> None:
+        """Test that successful order records metric with success labels."""
+        from gpt_trader.monitoring.metrics_collector import get_metrics_collector
+
+        mock_logger = MagicMock()
+        mock_get_logger.return_value = mock_logger
+        mock_broker.place_order.return_value = mock_order
+
+        submitter = OrderSubmitter(
+            broker=mock_broker,
+            event_store=mock_event_store,
+            bot_id="test-bot",
+            open_orders=open_orders,
+        )
+
+        submitter.submit_order(
+            symbol="BTC-USD",
+            side=OrderSide.BUY,
+            order_type=OrderType.LIMIT,
+            order_quantity=Decimal("1.0"),
+            price=Decimal("50000"),
+            effective_price=Decimal("50000"),
+            stop_price=None,
+            tif=TimeInForce.GTC,
+            reduce_only=False,
+            leverage=10,
+            client_order_id=None,
+        )
+
+        collector = get_metrics_collector()
+        # Check for success metric with correct labels
+        success_key = "gpt_trader_order_submission_total{reason=none,result=success,side=buy}"
+        assert success_key in collector.counters
+        assert collector.counters[success_key] == 1
+
+    @patch("gpt_trader.orchestration.execution.order_event_recorder.get_monitoring_logger")
+    def test_failed_order_records_metric_with_reason(
+        self,
+        mock_get_logger: MagicMock,
+        mock_broker: MagicMock,
+        mock_event_store: MagicMock,
+        open_orders: list[str],
+    ) -> None:
+        """Test that failed order records metric with failure reason."""
+        from gpt_trader.monitoring.metrics_collector import get_metrics_collector
+
+        mock_logger = MagicMock()
+        mock_get_logger.return_value = mock_logger
+        mock_broker.place_order.side_effect = RuntimeError("Insufficient balance")
+
+        submitter = OrderSubmitter(
+            broker=mock_broker,
+            event_store=mock_event_store,
+            bot_id="test-bot",
+            open_orders=open_orders,
+        )
+
+        submitter.submit_order(
+            symbol="ETH-USD",
+            side=OrderSide.SELL,
+            order_type=OrderType.MARKET,
+            order_quantity=Decimal("0.5"),
+            price=None,
+            effective_price=Decimal("3000"),
+            stop_price=None,
+            tif=None,
+            reduce_only=False,
+            leverage=None,
+            client_order_id=None,
+        )
+
+        collector = get_metrics_collector()
+        # Check for failure metric with insufficient_funds reason
+        failed_key = (
+            "gpt_trader_order_submission_total{reason=insufficient_funds,result=failed,side=sell}"
+        )
+        assert failed_key in collector.counters
+        assert collector.counters[failed_key] == 1
+
+
+# ============================================================
+# Test: Correlation Context Propagation
+# ============================================================
+
+
+class TestCorrelationContextPropagation:
+    """Tests for correlation context propagation during order submission."""
+
+    @patch("gpt_trader.orchestration.execution.order_event_recorder.get_monitoring_logger")
+    def test_order_context_set_during_submission(
+        self,
+        mock_get_logger: MagicMock,
+        mock_broker: MagicMock,
+        mock_event_store: MagicMock,
+        open_orders: list[str],
+        mock_order: Order,
+    ) -> None:
+        """Test that order context is set during order submission."""
+        mock_logger = MagicMock()
+        mock_get_logger.return_value = mock_logger
+        captured_context: dict = {}
+
+        def capture_context(*args, **kwargs):
+            # Capture the domain context during broker call
+            captured_context.update(get_domain_context())
+            return mock_order
+
+        mock_broker.place_order.side_effect = capture_context
+
+        submitter = OrderSubmitter(
+            broker=mock_broker,
+            event_store=mock_event_store,
+            bot_id="test-bot",
+            open_orders=open_orders,
+        )
+
+        submitter.submit_order(
+            symbol="BTC-USD",
+            side=OrderSide.BUY,
+            order_type=OrderType.LIMIT,
+            order_quantity=Decimal("1.0"),
+            price=Decimal("50000"),
+            effective_price=Decimal("50000"),
+            stop_price=None,
+            tif=TimeInForce.GTC,
+            reduce_only=False,
+            leverage=10,
+            client_order_id="test-order-id",
+        )
+
+        # Verify order context was set
+        assert captured_context.get("order_id") == "test-order-id"
+        assert captured_context.get("symbol") == "BTC-USD"
+
+    @patch("gpt_trader.orchestration.execution.order_event_recorder.get_monitoring_logger")
+    def test_correlation_context_preserved_during_submission(
+        self,
+        mock_get_logger: MagicMock,
+        mock_broker: MagicMock,
+        mock_event_store: MagicMock,
+        open_orders: list[str],
+        mock_order: Order,
+    ) -> None:
+        """Test that outer correlation context is preserved during submission."""
+        mock_logger = MagicMock()
+        mock_get_logger.return_value = mock_logger
+        captured_context: dict = {}
+
+        def capture_context(*args, **kwargs):
+            captured_context.update(get_domain_context())
+            return mock_order
+
+        mock_broker.place_order.side_effect = capture_context
+
+        submitter = OrderSubmitter(
+            broker=mock_broker,
+            event_store=mock_event_store,
+            bot_id="test-bot",
+            open_orders=open_orders,
+        )
+
+        # Wrap in outer correlation context (simulating StrategyEngine cycle)
+        with correlation_context(cycle=42):
+            submitter.submit_order(
+                symbol="ETH-USD",
+                side=OrderSide.SELL,
+                order_type=OrderType.MARKET,
+                order_quantity=Decimal("0.5"),
+                price=None,
+                effective_price=Decimal("3000"),
+                stop_price=None,
+                tif=None,
+                reduce_only=True,
+                leverage=None,
+                client_order_id=None,
+            )
+
+        # Verify both outer cycle and inner order context were present
+        assert captured_context.get("cycle") == 42
+        assert captured_context.get("symbol") == "ETH-USD"
+        assert "order_id" in captured_context  # Auto-generated ID
+
+    @patch("gpt_trader.orchestration.execution.order_event_recorder.get_monitoring_logger")
+    def test_order_context_cleared_after_submission(
+        self,
+        mock_get_logger: MagicMock,
+        mock_broker: MagicMock,
+        mock_event_store: MagicMock,
+        open_orders: list[str],
+        mock_order: Order,
+    ) -> None:
+        """Test that order context is cleared after submission completes."""
+        mock_logger = MagicMock()
+        mock_get_logger.return_value = mock_logger
+        mock_broker.place_order.return_value = mock_order
+
+        submitter = OrderSubmitter(
+            broker=mock_broker,
+            event_store=mock_event_store,
+            bot_id="test-bot",
+            open_orders=open_orders,
+        )
+
+        with correlation_context(cycle=1):
+            submitter.submit_order(
+                symbol="BTC-USD",
+                side=OrderSide.BUY,
+                order_type=OrderType.LIMIT,
+                order_quantity=Decimal("1.0"),
+                price=Decimal("50000"),
+                effective_price=Decimal("50000"),
+                stop_price=None,
+                tif=TimeInForce.GTC,
+                reduce_only=False,
+                leverage=10,
+                client_order_id="test-id",
+            )
+
+            # After submission, order_id should be cleared but cycle should remain
+            context = get_domain_context()
+            assert context.get("cycle") == 1
+            assert "order_id" not in context
+            assert "symbol" not in context

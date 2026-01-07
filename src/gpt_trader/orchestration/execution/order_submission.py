@@ -16,6 +16,8 @@ from typing import Any, cast
 from gpt_trader.core import OrderSide, OrderType
 from gpt_trader.features.brokerages.coinbase.rest_service import CoinbaseRestService
 from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
+from gpt_trader.logging.correlation import order_context
+from gpt_trader.monitoring.metrics_collector import record_counter
 from gpt_trader.orchestration.execution.broker_executor import BrokerExecutor
 from gpt_trader.orchestration.execution.order_event_recorder import OrderEventRecorder
 from gpt_trader.persistence.event_store import EventStore
@@ -120,6 +122,32 @@ def _record_execution_telemetry(
         pass
 
 
+def _record_order_submission_metric(
+    result: str,
+    reason: str,
+    side: str,
+) -> None:
+    """Record order submission metric with labels.
+
+    Args:
+        result: "success", "rejected", "failed", or "error"
+        reason: Rejection/failure reason or "none" for success
+        side: "buy" or "sell"
+    """
+    try:
+        record_counter(
+            "gpt_trader_order_submission_total",
+            labels={
+                "result": result,
+                "reason": reason,
+                "side": side.lower(),
+            },
+        )
+    except Exception:
+        # Don't let metrics errors affect order execution
+        pass
+
+
 class OrderSubmitter:
     """Handles order submission and event recording."""
 
@@ -206,6 +234,38 @@ class OrderSubmitter:
         """
         submit_id = self._generate_submit_id(client_order_id)
 
+        # Wrap entire submission in order context for correlation tracing
+        with order_context(order_id=submit_id, symbol=symbol):
+            return self._submit_order_inner(
+                submit_id=submit_id,
+                symbol=symbol,
+                side=side,
+                order_type=order_type,
+                order_quantity=order_quantity,
+                price=price,
+                effective_price=effective_price,
+                stop_price=stop_price,
+                tif=tif,
+                reduce_only=reduce_only,
+                leverage=leverage,
+            )
+
+    def _submit_order_inner(
+        self,
+        *,
+        submit_id: str,
+        symbol: str,
+        side: OrderSide,
+        order_type: OrderType,
+        order_quantity: Decimal,
+        price: Decimal | None,
+        effective_price: Decimal,
+        stop_price: Decimal | None,
+        tif: Any | None,
+        reduce_only: bool,
+        leverage: int | None,
+    ) -> str | None:
+        """Inner order submission logic wrapped in correlation context."""
         # 1. Log submission attempt
         self._log_submission_attempt(submit_id, symbol, side, order_type, order_quantity, price)
 
@@ -245,6 +305,11 @@ class OrderSubmitter:
                     quantity=qty_float,
                     price=price_float,
                 )
+                _record_order_submission_metric(
+                    result="success",
+                    reason="none",
+                    side=side_str,
+                )
             else:
                 # Order was rejected by broker (fallback case - no order returned)
                 _record_execution_telemetry(
@@ -256,6 +321,11 @@ class OrderSubmitter:
                     side=side_str,
                     quantity=qty_float,
                     price=price_float,
+                )
+                _record_order_submission_metric(
+                    result="rejected",
+                    reason="rejected",
+                    side=side_str,
                 )
 
             return result
@@ -283,6 +353,13 @@ class OrderSubmitter:
                 side=side_str,
                 quantity=qty_float,
                 price=price_float,
+            )
+            # Record metric with rejection/failure classification
+            metric_result = "rejected" if is_rejection else "failed"
+            _record_order_submission_metric(
+                result=metric_result,
+                reason=reason,
+                side=side_str,
             )
             # 4. Handle Failure
             self._handle_order_failure(exc, symbol, side, order_quantity)

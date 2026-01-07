@@ -9,6 +9,7 @@ from .checks import (
     check_disk_space,
     check_environment_variables,
     check_key_permissions,
+    check_pretrade_diagnostics,
     check_profile_configuration,
     check_python_version,
     check_risk_configuration,
@@ -98,6 +99,9 @@ class PreflightCheck:
 
     def check_risk_configuration(self) -> bool:
         return check_risk_configuration(self)
+
+    def check_pretrade_diagnostics(self) -> bool:
+        return check_pretrade_diagnostics(self)
 
     def check_test_suite(self) -> bool:
         return check_test_suite(self)

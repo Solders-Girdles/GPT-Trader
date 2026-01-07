@@ -21,6 +21,7 @@ class TestCheckRiskConfiguration:
         mock_config = MagicMock()
         mock_config.max_leverage = 3
         mock_config.daily_loss_limit = Decimal("500")
+        mock_config.daily_loss_limit_pct = 0.05  # 5%
         mock_config.min_liquidation_buffer_pct = Decimal("0.15")
         mock_config.max_position_pct_per_symbol = Decimal("0.10")
         mock_config.slippage_guard_bps = 50
@@ -41,6 +42,7 @@ class TestCheckRiskConfiguration:
         mock_config = MagicMock()
         mock_config.max_leverage = 15  # Outside 1-10
         mock_config.daily_loss_limit = Decimal("500")
+        mock_config.daily_loss_limit_pct = 0.05
         mock_config.min_liquidation_buffer_pct = Decimal("0.15")
         mock_config.max_position_pct_per_symbol = Decimal("0.10")
         mock_config.slippage_guard_bps = 50
@@ -137,6 +139,7 @@ class TestCheckRiskConfiguration:
         mock_config = MagicMock()
         mock_config.max_leverage = 3
         mock_config.daily_loss_limit = Decimal("500")
+        mock_config.daily_loss_limit_pct = 0.05
         mock_config.min_liquidation_buffer_pct = Decimal("0.15")
         mock_config.max_position_pct_per_symbol = Decimal("0.10")
         mock_config.slippage_guard_bps = 50
@@ -157,6 +160,7 @@ class TestCheckRiskConfiguration:
         mock_config = MagicMock()
         mock_config.max_leverage = 3
         mock_config.daily_loss_limit = Decimal("500")
+        mock_config.daily_loss_limit_pct = 0.05
         mock_config.min_liquidation_buffer_pct = Decimal("0.15")
         mock_config.max_position_pct_per_symbol = Decimal("0.10")
         mock_config.slippage_guard_bps = 50
@@ -171,12 +175,13 @@ class TestCheckRiskConfiguration:
         assert any("Reduce-only" in w for w in checker.warnings)
 
     def test_warns_on_high_daily_loss_limit(self) -> None:
-        """Should warn when daily loss limit exceeds $1000."""
+        """Should warn when daily loss limit pct is high."""
         checker = PreflightCheck(profile="prod")
 
         mock_config = MagicMock()
         mock_config.max_leverage = 3
-        mock_config.daily_loss_limit = Decimal("5000")  # High limit
+        mock_config.daily_loss_limit = Decimal("5000")
+        mock_config.daily_loss_limit_pct = 0.15  # 15% - high for testing
         mock_config.min_liquidation_buffer_pct = Decimal("0.15")
         mock_config.max_position_pct_per_symbol = Decimal("0.10")
         mock_config.slippage_guard_bps = 50
@@ -197,6 +202,7 @@ class TestCheckRiskConfiguration:
         mock_config = MagicMock()
         mock_config.max_leverage = 8  # High but within 1-10
         mock_config.daily_loss_limit = Decimal("500")
+        mock_config.daily_loss_limit_pct = 0.05
         mock_config.min_liquidation_buffer_pct = Decimal("0.15")
         mock_config.max_position_pct_per_symbol = Decimal("0.10")
         mock_config.slippage_guard_bps = 50

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 from collections.abc import Callable, Sequence
 from datetime import datetime, timezone
 
@@ -29,8 +30,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         choices=["dev", "canary", "prod"],
         help="Trading profile to validate (default: canary)",
     )
+    parser.add_argument(
+        "--warn-only",
+        action="store_true",
+        help="Downgrade diagnostic failures to warnings (also: GPT_TRADER_PREFLIGHT_WARN_ONLY=1)",
+    )
 
     args = parser.parse_args(argv)
+
+    # Set warn-only env var if CLI flag is provided
+    if args.warn_only:
+        os.environ["GPT_TRADER_PREFLIGHT_WARN_ONLY"] = "1"
     _header(args.profile)
 
     checker = PreflightCheck(verbose=args.verbose, profile=args.profile)
@@ -41,6 +51,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         checker.check_api_connectivity,
         checker.check_key_permissions,
         checker.check_risk_configuration,
+        checker.check_pretrade_diagnostics,
         checker.check_test_suite,
         checker.check_profile_configuration,
         checker.check_system_time,

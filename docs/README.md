@@ -16,6 +16,7 @@ last-updated: 2025-11-24
 |----------|---------|
 | [Architecture](ARCHITECTURE.md) | System design and capabilities |
 | [Production Guide](guides/production.md) | Deployment, rollout, and emergency procedures |
+| [Reliability Guide](RELIABILITY.md) | Guard stack, degradation responses, chaos testing |
 | [Coinbase Reference](reference/coinbase_complete.md) | Complete API integration docs |
 | [AI Agent Guide](guides/agents.md) | For AI agents working with this codebase |
 
@@ -33,6 +34,7 @@ last-updated: 2025-11-24
 
 ### Trading Operations
 - [Production Deployment](guides/production.md) - Deployment, monitoring, rollback, emergencies
+- [Reliability Guide](RELIABILITY.md) - Degradation matrix, config defaults, chaos harness
 - [Monitoring Playbook](MONITORING_PLAYBOOK.md) - Metrics, alerting, and dashboards
 - [Paper Trading](guides/paper_trading.md) - Safe testing with mock broker
 - [Backtesting](guides/backtesting.md) - Historical strategy validation

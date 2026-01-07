@@ -69,6 +69,12 @@ class RiskConfig:
     cfm_day_leverage_max_per_symbol: dict[str, int] = field(default_factory=dict)
     cfm_night_leverage_max_per_symbol: dict[str, int] = field(default_factory=dict)
 
+    # ==========================================================================
+    # API Health Guard Thresholds
+    # ==========================================================================
+    api_error_rate_threshold: float = 0.2  # 20% error rate triggers guard
+    api_rate_limit_usage_threshold: float = 0.9  # 90% rate limit usage triggers guard
+
     @classmethod
     def from_env(cls) -> "RiskConfig":
         """Load risk configuration from environment variables.
@@ -103,6 +109,9 @@ class RiskConfig:
             ),
             cfm_max_exposure_pct=float(os.getenv("CFM_MAX_EXPOSURE_PCT", "0.8")),
             cfm_max_position_size_pct=float(os.getenv("CFM_MAX_POSITION_SIZE_PCT", "0.25")),
+            # API health guard thresholds
+            api_error_rate_threshold=float(_get_env("API_ERROR_RATE_THRESHOLD", "0.2")),
+            api_rate_limit_usage_threshold=float(_get_env("API_RATE_LIMIT_USAGE_THRESHOLD", "0.9")),
         )
 
     def to_dict(self) -> dict[str, Any]:

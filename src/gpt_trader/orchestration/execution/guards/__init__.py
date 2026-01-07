@@ -9,6 +9,7 @@ Import it from gpt_trader.orchestration.execution.guard_manager or
 gpt_trader.orchestration.execution (which re-exports it).
 """
 
+from gpt_trader.orchestration.execution.guards.api_health import ApiHealthGuard
 from gpt_trader.orchestration.execution.guards.cache import GuardStateCache
 from gpt_trader.orchestration.execution.guards.daily_loss import DailyLossGuard
 from gpt_trader.orchestration.execution.guards.liquidation_buffer import LiquidationBufferGuard
@@ -25,6 +26,7 @@ __all__ = [
     # Cache
     "GuardStateCache",
     # Guards
+    "ApiHealthGuard",
     "DailyLossGuard",
     "LiquidationBufferGuard",
     "MarkStalenessGuard",

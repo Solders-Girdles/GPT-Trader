@@ -611,8 +611,8 @@ def test_run_guards_for_state_calls_all_guards(guard_manager, sample_guard_state
     with patch.object(guard_manager, "run_guard_step") as mock_step:
         guard_manager.run_guards_for_state(sample_guard_state, incremental=False)
 
-    # Should call all 6 guards
-    assert mock_step.call_count == 6
+    # Should call all 7 guards
+    assert mock_step.call_count == 7
     guard_names = [call[0][0] for call in mock_step.call_args_list]
     assert "pnl_telemetry" in guard_names
     assert "daily_loss" in guard_names
@@ -620,6 +620,7 @@ def test_run_guards_for_state_calls_all_guards(guard_manager, sample_guard_state
     assert "mark_staleness" in guard_names
     assert "risk_metrics" in guard_names
     assert "volatility_circuit_breaker" in guard_names
+    assert "api_health" in guard_names
 
 
 # =============================================================================
@@ -794,3 +795,195 @@ def test_safe_run_runtime_guards_reduce_only_failure(guard_manager, mock_risk_ma
         guard_manager.safe_run_runtime_guards()
 
     guard_manager._invalidate_cache_callback.assert_called()
+
+
+# =============================================================================
+# Tests for ApiHealthGuard
+# =============================================================================
+
+
+def test_api_health_guard_skips_without_client(
+    mock_risk_manager, mock_equity_calculator, sample_guard_state
+):
+    """Test ApiHealthGuard skips gracefully when no client is available."""
+    # Create broker without client attribute
+    broker = MagicMock(spec=["list_balances", "list_positions", "cancel_order"])
+    broker.list_balances.return_value = []
+    broker.list_positions.return_value = []
+
+    gm = GuardManager(
+        broker=broker,
+        risk_manager=mock_risk_manager,
+        equity_calculator=mock_equity_calculator,
+        open_orders=[],
+        invalidate_cache_callback=MagicMock(),
+    )
+
+    # Should not raise - skips gracefully
+    gm.guard_api_health(sample_guard_state)
+
+
+def test_api_health_guard_triggers_on_open_breaker(
+    mock_risk_manager, mock_equity_calculator, sample_guard_state
+):
+    """Test ApiHealthGuard triggers when circuit breaker is open."""
+    mock_client = MagicMock()
+    mock_client.get_resilience_status.return_value = {
+        "metrics": {"error_rate": 0.05},
+        "circuit_breakers": {
+            "orders": {"state": "open"},
+            "market_data": {"state": "closed"},
+        },
+        "rate_limit_usage": 0.5,
+    }
+
+    broker = MagicMock()
+    broker.list_balances.return_value = []
+    broker.list_positions.return_value = []
+    broker.client = mock_client
+
+    gm = GuardManager(
+        broker=broker,
+        risk_manager=mock_risk_manager,
+        equity_calculator=mock_equity_calculator,
+        open_orders=[],
+        invalidate_cache_callback=MagicMock(),
+    )
+
+    from gpt_trader.features.live_trade.guard_errors import RiskLimitExceeded
+
+    with pytest.raises(RiskLimitExceeded) as exc_info:
+        gm.guard_api_health(sample_guard_state)
+
+    assert "circuit breakers open" in str(exc_info.value)
+    assert "orders" in str(exc_info.value.details)
+
+
+def test_api_health_guard_triggers_on_high_error_rate(
+    mock_risk_manager, mock_equity_calculator, sample_guard_state
+):
+    """Test ApiHealthGuard triggers when error rate exceeds threshold."""
+    mock_client = MagicMock()
+    mock_client.get_resilience_status.return_value = {
+        "metrics": {"error_rate": 0.25},  # 25% > 20% default threshold
+        "circuit_breakers": {},
+        "rate_limit_usage": 0.5,
+    }
+
+    broker = MagicMock()
+    broker.list_balances.return_value = []
+    broker.list_positions.return_value = []
+    broker.client = mock_client
+
+    # Set threshold via config
+    mock_risk_manager.config.api_error_rate_threshold = 0.2
+
+    gm = GuardManager(
+        broker=broker,
+        risk_manager=mock_risk_manager,
+        equity_calculator=mock_equity_calculator,
+        open_orders=[],
+        invalidate_cache_callback=MagicMock(),
+    )
+
+    from gpt_trader.features.live_trade.guard_errors import RiskLimitExceeded
+
+    with pytest.raises(RiskLimitExceeded) as exc_info:
+        gm.guard_api_health(sample_guard_state)
+
+    assert "error rate" in str(exc_info.value)
+
+
+def test_api_health_guard_triggers_on_high_rate_limit_usage(
+    mock_risk_manager, mock_equity_calculator, sample_guard_state
+):
+    """Test ApiHealthGuard triggers when rate limit usage exceeds threshold."""
+    mock_client = MagicMock()
+    mock_client.get_resilience_status.return_value = {
+        "metrics": {"error_rate": 0.05},
+        "circuit_breakers": {},
+        "rate_limit_usage": 0.95,  # 95% > 90% default threshold
+    }
+
+    broker = MagicMock()
+    broker.list_balances.return_value = []
+    broker.list_positions.return_value = []
+    broker.client = mock_client
+
+    # Set threshold via config
+    mock_risk_manager.config.api_rate_limit_usage_threshold = 0.9
+
+    gm = GuardManager(
+        broker=broker,
+        risk_manager=mock_risk_manager,
+        equity_calculator=mock_equity_calculator,
+        open_orders=[],
+        invalidate_cache_callback=MagicMock(),
+    )
+
+    from gpt_trader.features.live_trade.guard_errors import RiskLimitExceeded
+
+    with pytest.raises(RiskLimitExceeded) as exc_info:
+        gm.guard_api_health(sample_guard_state)
+
+    assert "rate limit usage" in str(exc_info.value)
+
+
+def test_api_health_guard_handles_status_fetch_failure(
+    mock_risk_manager, mock_equity_calculator, sample_guard_state
+):
+    """Test ApiHealthGuard raises recoverable error on status fetch failure."""
+    mock_client = MagicMock()
+    mock_client.get_resilience_status.side_effect = Exception("Network error")
+
+    broker = MagicMock()
+    broker.list_balances.return_value = []
+    broker.list_positions.return_value = []
+    broker.client = mock_client
+
+    gm = GuardManager(
+        broker=broker,
+        risk_manager=mock_risk_manager,
+        equity_calculator=mock_equity_calculator,
+        open_orders=[],
+        invalidate_cache_callback=MagicMock(),
+    )
+
+    with pytest.raises(RiskGuardDataUnavailable) as exc_info:
+        gm.guard_api_health(sample_guard_state)
+
+    assert "Failed to get API resilience status" in str(exc_info.value)
+
+
+def test_api_health_guard_passes_when_healthy(
+    mock_risk_manager, mock_equity_calculator, sample_guard_state
+):
+    """Test ApiHealthGuard passes when all metrics are healthy."""
+    mock_client = MagicMock()
+    mock_client.get_resilience_status.return_value = {
+        "metrics": {"error_rate": 0.05},  # 5% < 20% threshold
+        "circuit_breakers": {
+            "orders": {"state": "closed"},
+            "market_data": {"state": "closed"},
+        },
+        "rate_limit_usage": 0.5,  # 50% < 90% threshold
+    }
+
+    broker = MagicMock()
+    broker.list_balances.return_value = []
+    broker.list_positions.return_value = []
+    broker.client = mock_client
+
+    mock_risk_manager.config.api_error_rate_threshold = 0.2
+    mock_risk_manager.config.api_rate_limit_usage_threshold = 0.9
+
+    gm = GuardManager(
+        broker=broker,
+        risk_manager=mock_risk_manager,
+        equity_calculator=mock_equity_calculator,
+        open_orders=[],
+        invalidate_cache_callback=MagicMock(),
+    )
+
+    # Should not raise
+    gm.guard_api_health(sample_guard_state)

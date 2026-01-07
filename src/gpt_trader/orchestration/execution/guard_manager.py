@@ -21,6 +21,7 @@ from gpt_trader.features.live_trade.guard_errors import (
     record_guard_failure,
     record_guard_success,
 )
+from gpt_trader.orchestration.execution.guards.api_health import ApiHealthGuard
 from gpt_trader.orchestration.execution.guards.cache import GuardStateCache
 from gpt_trader.orchestration.execution.guards.daily_loss import DailyLossGuard
 from gpt_trader.orchestration.execution.guards.liquidation_buffer import LiquidationBufferGuard
@@ -85,6 +86,7 @@ class GuardManager:
             MarkStalenessGuard(broker=broker, risk_manager=risk_manager),
             RiskMetricsGuard(risk_manager=risk_manager),
             VolatilityGuard(broker=cast(BrokerProtocol, broker), risk_manager=risk_manager),
+            ApiHealthGuard(broker=broker, risk_manager=risk_manager),
         ]
 
     # Backward compatibility properties
@@ -364,3 +366,7 @@ class GuardManager:
     def guard_volatility(self, state: RuntimeGuardState) -> None:
         """Check volatility circuit breakers."""
         self._guards[5].check(state)  # VolatilityGuard
+
+    def guard_api_health(self, state: RuntimeGuardState) -> None:
+        """Check API health (error rate, rate limits, circuit breakers)."""
+        self._guards[6].check(state)  # ApiHealthGuard

@@ -83,7 +83,7 @@ adapter without repeated `os.getenv` calls.
 
 ### Basic Connection
 ```python
-from gpt_trader.orchestration.broker_factory import create_brokerage
+from gpt_trader.features.brokerages.factory import create_brokerage
 
 # Will auto-configure from environment
 broker, event_store, market_data, product_catalog = create_brokerage()

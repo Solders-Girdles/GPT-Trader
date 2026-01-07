@@ -3,17 +3,18 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 from gpt_trader.app.config import BotConfig
+from gpt_trader.app.containers.brokerage import BrokerageContainer
+from gpt_trader.app.containers.persistence import PersistenceContainer
 from gpt_trader.app.health_server import HealthState
 from gpt_trader.config.types import Profile
-from gpt_trader.features.brokerages.coinbase.auth import SimpleAuth
 from gpt_trader.features.brokerages.coinbase.client.client import CoinbaseClient
-from gpt_trader.features.brokerages.coinbase.credentials import resolve_coinbase_credentials
 from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
 from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
+from gpt_trader.features.brokerages.factory import create_brokerage
 from gpt_trader.orchestration.config_controller import ConfigController
 from gpt_trader.orchestration.deterministic_broker import DeterministicBroker
 from gpt_trader.orchestration.protocols import EventStoreProtocol
-from gpt_trader.orchestration.runtime_paths import RuntimePaths, resolve_runtime_paths
+from gpt_trader.orchestration.runtime_paths import RuntimePaths
 from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.persistence.orders_store import OrdersStore
 from gpt_trader.utilities.logging_patterns import get_logger
@@ -29,43 +30,6 @@ if TYPE_CHECKING:
 
 
 logger = get_logger(__name__, component="container")
-
-
-def create_brokerage(
-    event_store: EventStore,
-    market_data: MarketDataService,
-    product_catalog: ProductCatalog,
-    config: BotConfig,
-) -> tuple[CoinbaseClient | DeterministicBroker, EventStore, MarketDataService, ProductCatalog]:
-    """
-    Factory function to create the brokerage and verify dependencies.
-
-    Returns DeterministicBroker when mock_broker=True.
-    """
-    # Check for mock mode FIRST - before credential validation
-    if config.mock_broker:
-        from gpt_trader.orchestration.deterministic_broker import DeterministicBroker
-
-        return DeterministicBroker(), event_store, market_data, product_catalog
-
-    creds = resolve_coinbase_credentials()
-    if not creds:
-        raise ValueError(
-            "Coinbase Credentials not found. Set COINBASE_CREDENTIALS_FILE to a JSON key file, "
-            "or set COINBASE_CDP_API_KEY + COINBASE_CDP_PRIVATE_KEY "
-            "(legacy: COINBASE_API_KEY_NAME + COINBASE_PRIVATE_KEY)."
-        )
-
-    for warning in creds.warnings:
-        logger.warning("Coinbase credential configuration: %s", warning)
-    logger.info("Using Coinbase credentials from %s (%s)", creds.source, creds.masked_key_name)
-
-    auth_client = SimpleAuth(key_name=creds.key_name, private_key=creds.private_key)
-
-    broker = CoinbaseClient(
-        auth=auth_client,
-    )
-    return broker, event_store, market_data, product_catalog
 
 
 class ApplicationContainer:
@@ -85,18 +49,23 @@ class ApplicationContainer:
         self.config = config
 
         self._config_controller: ConfigController | None = None
-        self._runtime_paths: RuntimePaths | None = None
-        self._broker: CoinbaseClient | DeterministicBroker | None = None
-        self._event_store: EventStore | None = None
-        self._orders_store: OrdersStore | None = None
-        self._market_data_service: MarketDataService | None = None
-        self._product_catalog: ProductCatalog | None = None
         self._risk_manager: LiveRiskManager | None = None
         self._notification_service: NotificationService | None = None
         self._validation_failure_tracker: ValidationFailureTracker | None = None
         self._profile_loader: ProfileLoader | None = None
         self._health_state: HealthState | None = None
         self._secrets_manager: SecretsManager | None = None
+
+        # Sub-containers (lazily delegate to these for grouped dependencies)
+        self._persistence = PersistenceContainer(
+            config=config,
+            profile_provider=lambda: cast(Profile, config.profile),
+        )
+        self._brokerage = BrokerageContainer(
+            config=config,
+            event_store_provider=lambda: self.event_store,
+            broker_factory=create_brokerage,
+        )
 
     @property
     def config_controller(self) -> ConfigController:
@@ -106,46 +75,33 @@ class ApplicationContainer:
 
     @property
     def runtime_paths(self) -> RuntimePaths:
-        """Resolve storage directories for the configured profile."""
-        if self._runtime_paths is None:
-            profile = cast(Profile, self.config.profile)
-            self._runtime_paths = resolve_runtime_paths(config=self.config, profile=profile)
-        return self._runtime_paths
+        """Delegate to PersistenceContainer."""
+        return self._persistence.runtime_paths
 
     @property
     def event_store(self) -> EventStore:
-        if self._event_store is None:
-            self._event_store = EventStore(root=self.runtime_paths.event_store_root)
-        return self._event_store
+        """Delegate to PersistenceContainer."""
+        return self._persistence.event_store
 
     @property
     def orders_store(self) -> OrdersStore:
-        if self._orders_store is None:
-            self._orders_store = OrdersStore(storage_path=self.runtime_paths.storage_dir)
-        return self._orders_store
+        """Delegate to PersistenceContainer."""
+        return self._persistence.orders_store
 
     @property
     def market_data_service(self) -> MarketDataService:
-        if self._market_data_service is None:
-            self._market_data_service = MarketDataService(symbols=list(self.config.symbols))
-        return self._market_data_service
+        """Delegate to BrokerageContainer."""
+        return self._brokerage.market_data_service
 
     @property
     def product_catalog(self) -> ProductCatalog:
-        if self._product_catalog is None:
-            self._product_catalog = ProductCatalog()
-        return self._product_catalog
+        """Delegate to BrokerageContainer."""
+        return self._brokerage.product_catalog
 
     @property
     def broker(self) -> CoinbaseClient | DeterministicBroker:
-        if self._broker is None:
-            self._broker, _, _, _ = create_brokerage(
-                event_store=self.event_store,
-                market_data=self.market_data_service,
-                product_catalog=self.product_catalog,
-                config=self.config,
-            )
-        return self._broker
+        """Delegate to BrokerageContainer."""
+        return self._brokerage.broker
 
     @property
     def risk_manager(self) -> LiveRiskManager:
@@ -248,7 +204,8 @@ class ApplicationContainer:
         return self._secrets_manager
 
     def reset_broker(self) -> None:
-        self._broker = None
+        """Delegate to BrokerageContainer."""
+        self._brokerage.reset_broker()
 
     def reset_config(self) -> None:
         self._config_controller = None

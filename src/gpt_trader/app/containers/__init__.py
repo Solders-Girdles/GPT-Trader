@@ -1,0 +1,11 @@
+"""Sub-containers for ApplicationContainer.
+
+This package contains focused containers that manage related groups of
+dependencies. The main ApplicationContainer delegates to these sub-containers
+to keep concerns separated and the codebase maintainable.
+"""
+
+from gpt_trader.app.containers.brokerage import BrokerageContainer
+from gpt_trader.app.containers.persistence import PersistenceContainer
+
+__all__ = ["BrokerageContainer", "PersistenceContainer"]

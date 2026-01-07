@@ -75,6 +75,30 @@ class RiskConfig:
     api_error_rate_threshold: float = 0.2  # 20% error rate triggers guard
     api_rate_limit_usage_threshold: float = 0.9  # 90% rate limit usage triggers guard
 
+    # ==========================================================================
+    # Graceful Degradation Settings
+    # ==========================================================================
+    # API health trip: pause duration before allowing new entries
+    api_health_cooldown_seconds: int = 300  # 5 minutes
+
+    # Mark staleness: pause symbol duration when mark price is stale
+    mark_staleness_cooldown_seconds: int = 120  # 2 minutes
+    mark_staleness_allow_reduce_only: bool = True  # Allow reduce-only during mark staleness
+
+    # Slippage guard: pause symbol after repeated failures
+    slippage_failure_pause_after: int = 3  # Pause after N consecutive failures
+    slippage_pause_seconds: int = 60  # Pause duration per symbol
+
+    # Validation infrastructure failure: pause all trading
+    validation_failure_cooldown_seconds: int = 180  # 3 minutes
+
+    # Order preview failures: disable preview after repeated failures
+    preview_failure_disable_after: int = 5  # Disable preview after N failures
+
+    # Broker read failures (positions/equity): pause all trading
+    broker_outage_max_failures: int = 3  # Max consecutive failures before pause
+    broker_outage_cooldown_seconds: int = 120  # Pause duration
+
     @classmethod
     def from_env(cls) -> "RiskConfig":
         """Load risk configuration from environment variables.
@@ -112,6 +136,19 @@ class RiskConfig:
             # API health guard thresholds
             api_error_rate_threshold=float(_get_env("API_ERROR_RATE_THRESHOLD", "0.2")),
             api_rate_limit_usage_threshold=float(_get_env("API_RATE_LIMIT_USAGE_THRESHOLD", "0.9")),
+            # Graceful degradation settings
+            api_health_cooldown_seconds=int(_get_env("API_HEALTH_COOLDOWN_SECONDS", "300")),
+            mark_staleness_cooldown_seconds=int(_get_env("MARK_STALENESS_COOLDOWN_SECONDS", "120")),
+            mark_staleness_allow_reduce_only=_get_env("MARK_STALENESS_ALLOW_REDUCE_ONLY", "1")
+            == "1",
+            slippage_failure_pause_after=int(_get_env("SLIPPAGE_FAILURE_PAUSE_AFTER", "3")),
+            slippage_pause_seconds=int(_get_env("SLIPPAGE_PAUSE_SECONDS", "60")),
+            validation_failure_cooldown_seconds=int(
+                _get_env("VALIDATION_FAILURE_COOLDOWN_SECONDS", "180")
+            ),
+            preview_failure_disable_after=int(_get_env("PREVIEW_FAILURE_DISABLE_AFTER", "5")),
+            broker_outage_max_failures=int(_get_env("BROKER_OUTAGE_MAX_FAILURES", "3")),
+            broker_outage_cooldown_seconds=int(_get_env("BROKER_OUTAGE_COOLDOWN_SECONDS", "120")),
         )
 
     def to_dict(self) -> dict[str, Any]:

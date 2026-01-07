@@ -26,6 +26,7 @@ from gpt_trader.features.live_trade.engines.system_maintenance import (
     SystemMaintenanceService,
 )
 from gpt_trader.features.live_trade.factory import create_strategy
+from gpt_trader.features.live_trade.guard_errors import GuardError
 from gpt_trader.features.live_trade.risk.manager import ValidationError
 from gpt_trader.features.live_trade.strategies.perps_baseline import (
     Action,
@@ -34,6 +35,7 @@ from gpt_trader.features.live_trade.strategies.perps_baseline import (
 from gpt_trader.monitoring.alert_types import AlertSeverity
 from gpt_trader.monitoring.heartbeat import HeartbeatService
 from gpt_trader.monitoring.status_reporter import StatusReporter
+from gpt_trader.orchestration.execution.degradation import DegradationState
 from gpt_trader.orchestration.execution.guard_manager import GuardManager
 from gpt_trader.orchestration.execution.order_submission import OrderSubmitter
 from gpt_trader.orchestration.execution.state_collection import StateCollector
@@ -101,6 +103,9 @@ class TradingEngine(BaseEngine):
         self._last_latency = 0.0
         self._connection_status = "UNKNOWN"
 
+        # Initialize graceful degradation state
+        self._degradation = DegradationState()
+
         # Initialize pre-trade guard stack (Option A: embedded guards)
         self._init_guard_stack()
 
@@ -132,8 +137,28 @@ class TradingEngine(BaseEngine):
             integration_mode=False,
         )
 
-        # Failure tracker (global)
+        # Failure tracker (global) with escalation callback for graceful degradation
         failure_tracker = get_failure_tracker()
+
+        # Wire escalation callback: on repeated validation failures, pause + reduce-only
+        def _on_validation_escalation() -> None:
+            """Handle validation infrastructure failures by pausing and setting reduce-only."""
+            if risk_manager is not None and risk_manager.config is not None:
+                cooldown = risk_manager.config.validation_failure_cooldown_seconds
+                risk_manager.set_reduce_only_mode(True, reason="validation_failures")
+                self._degradation.pause_all(
+                    seconds=cooldown,
+                    reason="validation_failures",
+                    allow_reduce_only=True,
+                )
+                logger.warning(
+                    "Validation escalation triggered - pausing trading",
+                    cooldown_seconds=cooldown,
+                    operation="degradation",
+                    stage="validation_escalation",
+                )
+
+        failure_tracker.escalation_callback = _on_validation_escalation
 
         # OrderValidator: broker + risk_manager + preview config + callbacks + tracker
         self._order_validator: OrderValidator | None = None
@@ -258,15 +283,79 @@ class TradingEngine(BaseEngine):
 
         Runs on a cadence to proactively detect risk breaches (daily loss,
         liquidation buffer, volatility) rather than only at order time.
+
+        On guard failure, triggers graceful degradation (pause + reduce-only).
         """
         interval = getattr(self.context.config, "runtime_guard_interval", 60)
         while self.running:
             try:
                 if self._guard_manager is not None:
-                    self._guard_manager.safe_run_runtime_guards()
+                    # Use run_runtime_guards directly to catch GuardError for degradation
+                    self._guard_manager.run_runtime_guards()
+
+            except GuardError as err:
+                # Trigger graceful degradation on guard failure
+                await self._handle_guard_failure(err)
+
             except Exception:
                 logger.exception("Runtime guard sweep failed", operation="runtime_guards")
+
             await asyncio.sleep(interval)
+
+    async def _handle_guard_failure(self, err: GuardError) -> None:
+        """Handle guard failure by triggering graceful degradation."""
+        risk_manager = self.context.risk_manager
+        config = risk_manager.config if risk_manager else None
+
+        # Determine cooldown from config
+        cooldown_seconds = 300  # Default 5 minutes
+        if config is not None:
+            cooldown_seconds = config.api_health_cooldown_seconds
+
+        # Set reduce-only mode
+        if risk_manager is not None:
+            risk_manager.set_reduce_only_mode(True, reason=f"guard_failure:{err.guard_name}")
+
+        # Cancel all open orders
+        if self._guard_manager is not None:
+            cancelled = self._guard_manager.cancel_all_orders()
+            logger.warning(
+                "Guard failure triggered order cancellation",
+                guard_name=err.guard_name,
+                cancelled_orders=cancelled,
+                operation="degradation",
+                stage="cancel_orders",
+            )
+
+        # Pause all trading
+        self._degradation.pause_all(
+            seconds=cooldown_seconds,
+            reason=f"guard_failure:{err.guard_name}",
+            allow_reduce_only=True,
+        )
+
+        # Record rejection for telemetry
+        self._order_submitter.record_rejection(
+            symbol="*",
+            side="*",
+            quantity=0,
+            price=0,
+            reason=f"guard_failure:{err.guard_name}",
+        )
+
+        # Notify
+        await self._notify(
+            title="Guard Failure - Trading Paused",
+            message=f"Runtime guard '{err.guard_name}' failed: {err.message}. "
+            f"Trading paused for {cooldown_seconds}s. Reduce-only mode activated.",
+            severity=AlertSeverity.ERROR,
+            context={
+                "guard_name": err.guard_name,
+                "message": err.message,
+                "cooldown_seconds": cooldown_seconds,
+                "recoverable": err.recoverable,
+            },
+        )
 
     async def _run_loop(self) -> None:
         logger.info("Starting strategy loop...")
@@ -636,6 +725,8 @@ class TradingEngine(BaseEngine):
                     "4) No funds in account"
                 )
 
+            # Success: reset broker failure counter (shared with position fetch)
+            self._degradation.reset_broker_failures()
             return total_equity
         except Exception as e:
             logger.error(
@@ -650,6 +741,10 @@ class TradingEngine(BaseEngine):
                 "2) API credentials validity, "
                 "3) Broker service health"
             )
+            # Track broker failure for degradation
+            config = self.context.risk_manager.config if self.context.risk_manager else None
+            if config is not None:
+                self._degradation.record_broker_failure(config)
             return None
 
     async def _fetch_positions(self) -> dict[str, Position]:
@@ -657,9 +752,15 @@ class TradingEngine(BaseEngine):
         assert self.context.broker is not None
         try:
             positions_list = await asyncio.to_thread(self.context.broker.list_positions)
+            # Success: reset broker failure counter
+            self._degradation.reset_broker_failures()
             return {p.symbol: p for p in positions_list}
         except Exception as e:
             logger.error(f"Failed to fetch positions: {e}")
+            # Track broker failure for degradation
+            config = self.context.risk_manager.config if self.context.risk_manager else None
+            if config is not None:
+                self._degradation.record_broker_failure(config)
             return {}
 
     def _build_position_state(
@@ -748,6 +849,35 @@ class TradingEngine(BaseEngine):
 
         return quantity
 
+    def _is_reduce_only_order(self, current_pos: Position | None, side: OrderSide) -> bool:
+        """Determine if an order would reduce an existing position."""
+        if current_pos is None:
+            return False
+
+        # Handle Position objects
+        if hasattr(current_pos, "side") and hasattr(current_pos, "quantity"):
+            pos_side = current_pos.side.lower() if current_pos.side else ""
+            pos_qty = current_pos.quantity
+            # Reducing = LONG + SELL or SHORT + BUY
+            return (pos_side == "long" and side == OrderSide.SELL and pos_qty > 0) or (
+                pos_side == "short" and side == OrderSide.BUY and pos_qty > 0
+            )
+
+        # Handle dict format
+        if isinstance(current_pos, dict):
+            pos_side = str(current_pos.get("side", "")).lower()
+            pos_qty = Decimal(str(current_pos.get("quantity", 0)))
+            if pos_side in ("long", "short"):
+                return (pos_side == "long" and side == OrderSide.SELL and pos_qty > 0) or (
+                    pos_side == "short" and side == OrderSide.BUY and pos_qty > 0
+                )
+            # Legacy: quantity sign indicates direction
+            return (pos_qty > 0 and side == OrderSide.SELL) or (
+                pos_qty < 0 and side == OrderSide.BUY
+            )
+
+        return False
+
     async def _validate_and_place_order(
         self,
         symbol: str,
@@ -761,6 +891,32 @@ class TradingEngine(BaseEngine):
             ValidationError: If risk validation fails.
         """
         side = OrderSide.BUY if decision.action == Action.BUY else OrderSide.SELL
+
+        # Early check: is this order reduce-only? (needed for degradation check)
+        current_pos = self._current_positions.get(symbol)
+        is_reducing = self._is_reduce_only_order(current_pos, side)
+
+        # Gate: Check degradation state before proceeding
+        if self._degradation.is_paused(symbol, is_reduce_only=is_reducing):
+            pause_reason = self._degradation.get_pause_reason(symbol)
+            logger.warning(
+                f"Order blocked: trading paused for {symbol}",
+                symbol=symbol,
+                side=side.value,
+                reason=pause_reason,
+                operation="degradation",
+                stage="order_blocked",
+            )
+            self._order_submitter.record_rejection(
+                symbol, side.value, Decimal("0"), price, f"paused:{pause_reason}"
+            )
+            await self._notify(
+                title="Order Blocked - Trading Paused",
+                message=f"Cannot place {side.value} order for {symbol}: {pause_reason}",
+                severity=AlertSeverity.WARNING,
+                context={"symbol": symbol, "side": side.value, "reason": pause_reason},
+            )
+            return
 
         # Dynamic position sizing
         quantity = self._calculate_order_quantity(symbol, price, equity, product=None)
@@ -902,14 +1058,44 @@ class TradingEngine(BaseEngine):
         # Guard: Check mark price staleness before placing order
         if self.context.risk_manager is not None:
             if self.context.risk_manager.check_mark_staleness(symbol):
-                logger.warning(f"Order blocked: mark price stale for {symbol}")
-                await self._notify(
-                    title="Order Blocked - Stale Mark Price",
-                    message=f"Cannot place order for {symbol}: mark price data is stale",
-                    severity=AlertSeverity.WARNING,
-                    context={"symbol": symbol, "side": side.value},
-                )
-                return
+                # Trigger degradation: pause symbol for staleness cooldown
+                config = self.context.risk_manager.config
+                if config is not None:
+                    allow_reduce = config.mark_staleness_allow_reduce_only
+                    cooldown = config.mark_staleness_cooldown_seconds
+                    self._degradation.pause_symbol(
+                        symbol=symbol,
+                        seconds=cooldown,
+                        reason="mark_staleness",
+                        allow_reduce_only=allow_reduce,
+                    )
+                    # If reduce-only allowed and this is a reduce order, let it through
+                    if allow_reduce and is_reducing:
+                        logger.info(
+                            f"Mark stale for {symbol} but allowing reduce-only order",
+                            operation="degradation",
+                        )
+                    else:
+                        logger.warning(f"Order blocked: mark price stale for {symbol}")
+                        self._order_submitter.record_rejection(
+                            symbol, side.value, quantity, price, "mark_staleness"
+                        )
+                        await self._notify(
+                            title="Order Blocked - Stale Mark Price",
+                            message=f"Cannot place order for {symbol}: mark price data is stale",
+                            severity=AlertSeverity.WARNING,
+                            context={"symbol": symbol, "side": side.value},
+                        )
+                        return
+                else:
+                    logger.warning(f"Order blocked: mark price stale for {symbol}")
+                    await self._notify(
+                        title="Order Blocked - Stale Mark Price",
+                        message=f"Cannot place order for {symbol}: mark price data is stale",
+                        severity=AlertSeverity.WARNING,
+                        context={"symbol": symbol, "side": side.value},
+                    )
+                    return
 
         # Pre-trade guards via OrderValidator (exchange rules, slippage, preview)
         if self._order_validator is not None:
@@ -933,10 +1119,19 @@ class TradingEngine(BaseEngine):
                     product=product,
                 )
 
-                # Slippage guard
-                self._order_validator.enforce_slippage_guard(
-                    symbol, side, quantity, effective_price
-                )
+                # Slippage guard with degradation tracking
+                try:
+                    self._order_validator.enforce_slippage_guard(
+                        symbol, side, quantity, effective_price
+                    )
+                    # Success: reset slippage failure count
+                    self._degradation.reset_slippage_failures(symbol)
+                except ValidationError as slippage_exc:
+                    # Track slippage failures and potentially pause symbol
+                    config = self.context.risk_manager.config if self.context.risk_manager else None
+                    if config is not None:
+                        self._degradation.record_slippage_failure(symbol, config)
+                    raise slippage_exc
 
                 # Mark staleness via OrderValidator
                 self._order_validator.ensure_mark_is_fresh(symbol)
@@ -955,7 +1150,26 @@ class TradingEngine(BaseEngine):
                     current_positions=current_positions_dict,
                 )
 
-                # Order preview (if enabled)
+                # Order preview (if enabled) - with auto-disable on repeated failures
+                failure_tracker = get_failure_tracker()
+                config = self.context.risk_manager.config if self.context.risk_manager else None
+                preview_disable_threshold = config.preview_failure_disable_after if config else 5
+
+                # Check if preview should be auto-disabled due to repeated failures
+                if (
+                    self._order_validator.enable_order_preview
+                    and failure_tracker.get_failure_count("order_preview")
+                    >= preview_disable_threshold
+                ):
+                    logger.warning(
+                        "Auto-disabling order preview due to repeated failures",
+                        consecutive_failures=failure_tracker.get_failure_count("order_preview"),
+                        threshold=preview_disable_threshold,
+                        operation="degradation",
+                        stage="preview_disable",
+                    )
+                    self._order_validator.enable_order_preview = False
+
                 self._order_validator.maybe_preview_order(
                     symbol=symbol,
                     side=side,

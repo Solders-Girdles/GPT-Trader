@@ -63,6 +63,17 @@ def context(mock_broker):
     risk_manager._start_of_day_equity = Decimal("1000.0")
     # Default check_mark_staleness to return False (fresh mark price)
     risk_manager.check_mark_staleness.return_value = False
+    # Mock config with degradation settings for graceful degradation tests
+    risk_manager.config = MagicMock()
+    risk_manager.config.broker_outage_max_failures = 3
+    risk_manager.config.broker_outage_cooldown_seconds = 120
+    risk_manager.config.mark_staleness_cooldown_seconds = 120
+    risk_manager.config.mark_staleness_allow_reduce_only = True
+    risk_manager.config.slippage_failure_pause_after = 3
+    risk_manager.config.slippage_pause_seconds = 60
+    risk_manager.config.validation_failure_cooldown_seconds = 180
+    risk_manager.config.preview_failure_disable_after = 5
+    risk_manager.config.api_health_cooldown_seconds = 300
     return CoordinatorContext(config=config, broker=mock_broker, risk_manager=risk_manager)
 
 
@@ -599,7 +610,7 @@ async def test_slippage_guard_blocks_order(engine):
 
 @pytest.mark.asyncio
 async def test_runtime_guard_sweep_calls_guard_manager(engine, monkeypatch):
-    """Test that runtime guard sweep calls GuardManager.safe_run_runtime_guards."""
+    """Test that runtime guard sweep calls GuardManager.run_runtime_guards."""
     engine._guard_manager = MagicMock()
     engine.running = True
 
@@ -613,7 +624,7 @@ async def test_runtime_guard_sweep_calls_guard_manager(engine, monkeypatch):
     with pytest.raises(asyncio.CancelledError):
         await engine._runtime_guard_sweep()
 
-    engine._guard_manager.safe_run_runtime_guards.assert_called_once()
+    engine._guard_manager.run_runtime_guards.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -658,9 +669,9 @@ async def test_runtime_guard_sweep_uses_config_interval(engine, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_runtime_guard_sweep_handles_exceptions(engine, monkeypatch):
-    """Test that runtime guard sweep continues after guard failures."""
+    """Test that runtime guard sweep continues after generic exceptions."""
     engine._guard_manager = MagicMock()
-    engine._guard_manager.safe_run_runtime_guards.side_effect = RuntimeError("test error")
+    engine._guard_manager.run_runtime_guards.side_effect = RuntimeError("test error")
     engine.running = True
 
     call_count = 0
@@ -679,4 +690,4 @@ async def test_runtime_guard_sweep_handles_exceptions(engine, monkeypatch):
         await engine._runtime_guard_sweep()
 
     # Guard manager was called twice before cancellation
-    assert engine._guard_manager.safe_run_runtime_guards.call_count == 2
+    assert engine._guard_manager.run_runtime_guards.call_count == 2

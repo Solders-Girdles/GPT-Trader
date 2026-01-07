@@ -5,9 +5,14 @@ Replaces the 608-line enterprise coordinator with a simple loop.
 State Recovery:
 On startup, reads `price_tick` events from EventStore to restore price history.
 During operation, persists price ticks to EventStore for crash recovery.
+
+Streaming Lifecycle:
+When enabled, starts WebSocket streaming for real-time market data.
+Includes WS health watchdog that monitors staleness and triggers degradation.
 """
 
 import asyncio
+import threading
 import time
 from decimal import Decimal
 from typing import Any
@@ -24,6 +29,21 @@ from gpt_trader.features.live_trade.engines.price_tick_store import (
 )
 from gpt_trader.features.live_trade.engines.system_maintenance import (
     SystemMaintenanceService,
+)
+from gpt_trader.features.live_trade.engines.telemetry_health import (
+    extract_mark_from_message,
+    update_mark_and_metrics,
+)
+from gpt_trader.features.live_trade.engines.telemetry_streaming import (
+    _handle_stream_task_completion,
+    _run_stream_loop,
+    _run_stream_loop_async,
+    _schedule_coroutine,
+    _should_enable_streaming,
+    _start_streaming,
+    _stop_streaming,
+    start_streaming_background,
+    stop_streaming_background,
 )
 from gpt_trader.features.live_trade.factory import create_strategy
 from gpt_trader.features.live_trade.guard_errors import GuardError
@@ -106,6 +126,19 @@ class TradingEngine(BaseEngine):
         # Initialize graceful degradation state
         self._degradation = DegradationState()
 
+        # Initialize streaming lifecycle attributes
+        self._ws_stop: threading.Event | None = None
+        self._pending_stream_config: tuple[list[str], int] | None = None
+        self._stream_task: asyncio.Task[Any] | None = None
+        self._loop_task_handle: asyncio.Task[Any] | None = None
+        self._market_monitor: Any = None  # Market monitor for telemetry
+
+        # WS health watchdog attributes
+        self._ws_health_task: asyncio.Task[Any] | None = None
+        self._ws_reconnect_attempts: int = 0
+        self._ws_reconnect_delay: float = 1.0
+        self._ws_last_health_check: float = 0.0
+
         # Initialize pre-trade guard stack (Option A: embedded guards)
         self._init_guard_stack()
 
@@ -182,6 +215,61 @@ class TradingEngine(BaseEngine):
                 open_orders=self._open_orders,
                 invalidate_cache_callback=lambda: None,
             )
+
+    # =========================================================================
+    # Streaming Lifecycle Methods
+    # =========================================================================
+
+    def _should_enable_streaming(self) -> bool:
+        """Check if streaming should be enabled based on config."""
+        return _should_enable_streaming(self)
+
+    def _schedule_coroutine(self, coro: Any) -> None:
+        """Schedule a coroutine for execution."""
+        _schedule_coroutine(self, coro)
+
+    async def _start_streaming(self) -> asyncio.Task[Any] | None:
+        """Start WebSocket streaming."""
+        return await _start_streaming(self)
+
+    async def _stop_streaming(self) -> None:
+        """Stop WebSocket streaming."""
+        await _stop_streaming(self)
+
+    def _handle_stream_task_completion(self, task: asyncio.Task[Any]) -> None:
+        """Handle stream task completion callback."""
+        _handle_stream_task_completion(self, task)
+
+    async def _run_stream_loop_async(
+        self,
+        symbols: list[str],
+        level: int,
+        stop_signal: threading.Event | None,
+    ) -> None:
+        """Run streaming loop asynchronously."""
+        await _run_stream_loop_async(self, symbols, level, stop_signal)
+
+    def _run_stream_loop(
+        self,
+        symbols: list[str],
+        level: int,
+        stop_signal: threading.Event | None,
+    ) -> None:
+        """Run streaming loop synchronously (called from executor)."""
+        _run_stream_loop(self, symbols, level, stop_signal)
+
+    def _extract_mark_from_message(self, msg: dict[str, Any]) -> Decimal | None:
+        """Extract mark price from WebSocket message."""
+        return extract_mark_from_message(msg)
+
+    def _update_mark_and_metrics(
+        self,
+        ctx: CoordinatorContext,
+        symbol: str,
+        mark: Decimal,
+    ) -> None:
+        """Update mark price and related metrics."""
+        update_mark_and_metrics(self, ctx, symbol, mark)
 
     @property
     def status_reporter(self) -> StatusReporter:
@@ -260,6 +348,27 @@ class TradingEngine(BaseEngine):
             )
             self._register_background_task(guard_task)
             tasks.append(guard_task)
+
+        # Start WebSocket streaming if enabled
+        if self._should_enable_streaming():
+            start_streaming_background(self)
+            logger.info(
+                "Started WebSocket streaming",
+                operation="streaming",
+                stage="start",
+            )
+
+        # Start WS health watchdog
+        self._ws_health_task = asyncio.create_task(
+            self._monitor_ws_health(), name="ws_health_watchdog"
+        )
+        self._register_background_task(self._ws_health_task)
+        tasks.append(self._ws_health_task)
+        logger.info(
+            "Started WS health watchdog",
+            operation="ws_health",
+            stage="start",
+        )
 
         return tasks
 
@@ -356,6 +465,162 @@ class TradingEngine(BaseEngine):
                 "recoverable": err.recoverable,
             },
         )
+
+    async def _monitor_ws_health(self) -> None:
+        """Monitor WebSocket health and trigger degradation on staleness.
+
+        Periodically polls WS health metrics from the broker. If messages
+        or heartbeats are stale beyond configured thresholds, triggers:
+        - Reduce-only mode for affected symbols
+        - Symbol pause for configured cooldown
+        - Notification alerts
+
+        On reconnect, pauses briefly to allow state synchronization.
+        """
+        risk_manager = self.context.risk_manager
+        config = risk_manager.config if risk_manager else None
+
+        # Get thresholds from config or use defaults
+        interval = config.ws_health_interval_seconds if config else 5
+        message_stale_threshold = config.ws_message_stale_seconds if config else 15
+        heartbeat_stale_threshold = config.ws_heartbeat_stale_seconds if config else 30
+        reconnect_pause = config.ws_reconnect_pause_seconds if config else 30
+
+        last_reconnect_count = 0
+
+        while self.running:
+            try:
+                # Get WS health from broker (if it supports the method)
+                broker = self.context.broker
+                ws_health: dict[str, Any] = {}
+
+                if broker is not None and hasattr(broker, "get_ws_health"):
+                    try:
+                        ws_health = broker.get_ws_health()
+                    except Exception as exc:
+                        logger.debug(
+                            "Failed to get WS health",
+                            error=str(exc),
+                            operation="ws_health",
+                            stage="poll",
+                        )
+
+                if not ws_health:
+                    # No WS connection or broker doesn't support health check
+                    await asyncio.sleep(interval)
+                    continue
+
+                current_time = time.time()
+                last_message_ts = ws_health.get("last_message_ts")
+                last_heartbeat_ts = ws_health.get("last_heartbeat_ts")
+                reconnect_count = ws_health.get("reconnect_count", 0)
+                gap_count = ws_health.get("gap_count", 0)
+                connected = ws_health.get("connected", False)
+
+                # Check for reconnect event
+                if reconnect_count > last_reconnect_count:
+                    logger.warning(
+                        "WebSocket reconnected - pausing for state sync",
+                        reconnect_count=reconnect_count,
+                        pause_seconds=reconnect_pause,
+                        operation="ws_health",
+                        stage="reconnect",
+                    )
+                    last_reconnect_count = reconnect_count
+
+                    # Reset reconnect attempts on successful reconnect
+                    self._ws_reconnect_attempts = 0
+                    self._ws_reconnect_delay = 1.0
+
+                    # Pause all symbols briefly after reconnect
+                    self._degradation.pause_all(
+                        seconds=reconnect_pause,
+                        reason="ws_reconnect",
+                        allow_reduce_only=True,
+                    )
+
+                    await self._notify(
+                        title="WebSocket Reconnected",
+                        message=f"Trading paused for {reconnect_pause}s for state sync.",
+                        severity=AlertSeverity.WARNING,
+                        context={"reconnect_count": reconnect_count},
+                    )
+
+                    await asyncio.sleep(interval)
+                    continue
+
+                # Check message staleness
+                is_message_stale = False
+                if last_message_ts is not None:
+                    message_age = current_time - last_message_ts
+                    is_message_stale = message_age > message_stale_threshold
+
+                # Check heartbeat staleness
+                is_heartbeat_stale = False
+                if last_heartbeat_ts is not None:
+                    heartbeat_age = current_time - last_heartbeat_ts
+                    is_heartbeat_stale = heartbeat_age > heartbeat_stale_threshold
+
+                # Trigger degradation if stale
+                if is_message_stale or is_heartbeat_stale:
+                    stale_reason = "ws_message_stale" if is_message_stale else "ws_heartbeat_stale"
+                    stale_age = (
+                        (current_time - last_message_ts)
+                        if is_message_stale and last_message_ts
+                        else (current_time - last_heartbeat_ts if last_heartbeat_ts else 0)
+                    )
+
+                    logger.warning(
+                        "WebSocket data stale - triggering degradation",
+                        reason=stale_reason,
+                        stale_age_seconds=stale_age,
+                        message_stale=is_message_stale,
+                        heartbeat_stale=is_heartbeat_stale,
+                        connected=connected,
+                        gap_count=gap_count,
+                        operation="ws_health",
+                        stage="degradation",
+                    )
+
+                    # Set reduce-only mode
+                    if risk_manager is not None:
+                        risk_manager.set_reduce_only_mode(True, reason=stale_reason)
+
+                    # Pause all trading (allow reduce-only)
+                    cooldown = reconnect_pause
+                    self._degradation.pause_all(
+                        seconds=cooldown,
+                        reason=stale_reason,
+                        allow_reduce_only=True,
+                    )
+
+                    await self._notify(
+                        title="WebSocket Stale - Trading Paused",
+                        message=f"No WS data for {stale_age:.1f}s. Reduce-only mode enabled.",
+                        severity=AlertSeverity.WARNING,
+                        context={
+                            "reason": stale_reason,
+                            "stale_age_seconds": stale_age,
+                            "cooldown_seconds": cooldown,
+                        },
+                    )
+
+                # Log gap detection warnings
+                if gap_count > 0 and self._cycle_count % 60 == 0:
+                    logger.info(
+                        "WebSocket sequence gaps detected",
+                        gap_count=gap_count,
+                        operation="ws_health",
+                        stage="info",
+                    )
+
+                # Update status reporter with WS health
+                self._status_reporter.update_ws_health(ws_health)
+
+            except Exception:
+                logger.exception("WS health watchdog error", operation="ws_health")
+
+            await asyncio.sleep(interval)
 
     async def _run_loop(self) -> None:
         logger.info("Starting strategy loop...")
@@ -1253,6 +1518,29 @@ class TradingEngine(BaseEngine):
 
     async def shutdown(self) -> None:
         self.running = False
+
+        # Stop WS health watchdog
+        if self._ws_health_task is not None and not self._ws_health_task.done():
+            self._ws_health_task.cancel()
+            try:
+                await self._ws_health_task
+            except asyncio.CancelledError:
+                pass
+            self._ws_health_task = None
+            logger.info(
+                "Stopped WS health watchdog",
+                operation="ws_health",
+                stage="stop",
+            )
+
+        # Stop streaming
+        stop_streaming_background(self)
+        logger.info(
+            "Stopped WebSocket streaming",
+            operation="streaming",
+            stage="stop",
+        )
+
         await self._system_maintenance.stop()
         await self._status_reporter.stop()
         await self._heartbeat.stop()

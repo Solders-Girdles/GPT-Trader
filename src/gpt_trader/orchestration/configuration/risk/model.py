@@ -99,6 +99,14 @@ class RiskConfig:
     broker_outage_max_failures: int = 3  # Max consecutive failures before pause
     broker_outage_cooldown_seconds: int = 120  # Pause duration
 
+    # ==========================================================================
+    # WebSocket Health Monitoring
+    # ==========================================================================
+    ws_health_interval_seconds: int = 5  # How often to check WS health
+    ws_message_stale_seconds: int = 15  # Max age of last message before stale
+    ws_heartbeat_stale_seconds: int = 30  # Max age of last heartbeat before stale
+    ws_reconnect_pause_seconds: int = 30  # Pause duration after WS reconnect
+
     @classmethod
     def from_env(cls) -> "RiskConfig":
         """Load risk configuration from environment variables.
@@ -149,6 +157,11 @@ class RiskConfig:
             preview_failure_disable_after=int(_get_env("PREVIEW_FAILURE_DISABLE_AFTER", "5")),
             broker_outage_max_failures=int(_get_env("BROKER_OUTAGE_MAX_FAILURES", "3")),
             broker_outage_cooldown_seconds=int(_get_env("BROKER_OUTAGE_COOLDOWN_SECONDS", "120")),
+            # WebSocket health monitoring
+            ws_health_interval_seconds=int(_get_env("WS_HEALTH_INTERVAL_SECONDS", "5")),
+            ws_message_stale_seconds=int(_get_env("WS_MESSAGE_STALE_SECONDS", "15")),
+            ws_heartbeat_stale_seconds=int(_get_env("WS_HEARTBEAT_STALE_SECONDS", "30")),
+            ws_reconnect_pause_seconds=int(_get_env("WS_RECONNECT_PAUSE_SECONDS", "30")),
         )
 
     def to_dict(self) -> dict[str, Any]:

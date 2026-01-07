@@ -168,6 +168,21 @@ class RiskStatus:
 
 
 @dataclass
+class WebSocketStatus:
+    """Status snapshot of WebSocket connection health."""
+
+    connected: bool = False
+    last_message_ts: float | None = None
+    last_heartbeat_ts: float | None = None
+    last_close_ts: float | None = None
+    last_error_ts: float | None = None
+    gap_count: int = 0
+    reconnect_count: int = 0
+    message_stale: bool = False
+    heartbeat_stale: bool = False
+
+
+@dataclass
 class SystemStatus:
     """Status snapshot of system health and brokerage connection."""
 
@@ -197,6 +212,7 @@ class BotStatus:
     risk: RiskStatus = field(default_factory=RiskStatus)
     system: SystemStatus = field(default_factory=SystemStatus)
     heartbeat: HeartbeatStatus = field(default_factory=HeartbeatStatus)
+    websocket: WebSocketStatus = field(default_factory=WebSocketStatus)
 
     # Overall health
     healthy: bool = True
@@ -479,6 +495,14 @@ class StatusReporter:
         if self._heartbeat_service and self._status.heartbeat.enabled:
             if not self._status.heartbeat.is_healthy:
                 issues.append("Heartbeat unhealthy")
+
+        # Check WebSocket health
+        if self._status.websocket.message_stale:
+            issues.append("WebSocket messages stale")
+        if self._status.websocket.heartbeat_stale:
+            issues.append("WebSocket heartbeat stale")
+        if self._status.websocket.gap_count > 0:
+            issues.append(f"WebSocket sequence gaps: {self._status.websocket.gap_count}")
 
         self._status.healthy = len(issues) == 0
         self._status.health_issues = issues
@@ -861,6 +885,41 @@ class StatusReporter:
         self._status.system.memory_usage = memory
         self._status.system.cpu_usage = cpu
 
+    def update_ws_health(self, health: dict[str, Any]) -> None:
+        """Update WebSocket health status.
+
+        Args:
+            health: Dict with WS health metrics from broker.get_ws_health():
+                - connected: bool
+                - last_message_ts: float | None
+                - last_heartbeat_ts: float | None
+                - last_close_ts: float | None
+                - last_error_ts: float | None
+                - gap_count: int
+                - reconnect_count: int
+        """
+        now = time.time()
+
+        # Extract values with defaults
+        self._status.websocket.connected = bool(health.get("connected", False))
+        self._status.websocket.last_message_ts = health.get("last_message_ts")
+        self._status.websocket.last_heartbeat_ts = health.get("last_heartbeat_ts")
+        self._status.websocket.last_close_ts = health.get("last_close_ts")
+        self._status.websocket.last_error_ts = health.get("last_error_ts")
+        self._status.websocket.gap_count = int(health.get("gap_count", 0))
+        self._status.websocket.reconnect_count = int(health.get("reconnect_count", 0))
+
+        # Calculate staleness based on thresholds (15s message, 30s heartbeat)
+        last_message_ts = self._status.websocket.last_message_ts
+        last_heartbeat_ts = self._status.websocket.last_heartbeat_ts
+
+        self._status.websocket.message_stale = (
+            last_message_ts is not None and (now - last_message_ts) > 15
+        )
+        self._status.websocket.heartbeat_stale = (
+            last_heartbeat_ts is not None and (now - last_heartbeat_ts) > 30
+        )
+
     def get_status(self) -> BotStatus:
         """
         Get current status as a BotStatus dataclass.
@@ -897,4 +956,5 @@ __all__ = [
     "RiskStatus",
     "SystemStatus",
     "HeartbeatStatus",
+    "WebSocketStatus",
 ]

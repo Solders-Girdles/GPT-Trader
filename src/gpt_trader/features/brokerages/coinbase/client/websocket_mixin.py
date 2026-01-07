@@ -222,5 +222,18 @@ class WebSocketClientMixin:
         """Check if a stream is currently active."""
         return self._stream_active
 
+    def get_ws_health(self) -> dict:
+        """
+        Get WebSocket health metrics.
+
+        Returns:
+            Dict with health metrics from the underlying WebSocket,
+            or empty dict if no WebSocket is active.
+        """
+        with self._ws_lock:
+            if self._ws is not None:
+                return self._ws.get_health()
+            return {}
+
 
 __all__ = ["WebSocketClientMixin"]

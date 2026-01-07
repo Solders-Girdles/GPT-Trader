@@ -83,6 +83,7 @@ class CoinbaseWebSocket:
     - Event dispatching with typed handlers
     - Exponential backoff reconnection
     - Sequence gap detection
+    - Health monitoring with timestamps
     - Public and private channel support
 
     Thread Safety:
@@ -117,6 +118,13 @@ class CoinbaseWebSocket:
         self._reconnect_delay: float = float(WS_RECONNECT_DELAY)
         self._reconnect_count = 0
         self._closed = False
+
+        # Health monitoring state
+        self._last_message_ts: float | None = None
+        self._last_heartbeat_ts: float | None = None
+        self._last_close_ts: float | None = None
+        self._last_error_ts: float | None = None
+        self._gap_count: int = 0
 
     @property
     def running(self) -> bool:
@@ -277,15 +285,26 @@ class CoinbaseWebSocket:
         try:
             data = json.loads(message)
 
+            # Update health timestamps
+            self._last_message_ts = time.time()
+
+            # Check for heartbeat message
+            channel = data.get("channel", "")
+            msg_type = data.get("type", "")
+            if channel == "heartbeats" or msg_type == "heartbeat":
+                self._last_heartbeat_ts = time.time()
+
             # Annotate with sequence gap detection
             data = self._sequence_guard.annotate(data)
 
-            # Log if gap detected
+            # Log and track if gap detected
             if data.get("gap_detected"):
+                self._gap_count += 1
                 logger.warning(
                     "WebSocket sequence gap detected",
                     sequence=data.get("sequence"),
                     channel=data.get("channel"),
+                    gap_count=self._gap_count,
                 )
 
             # Dispatch to event handlers
@@ -301,6 +320,7 @@ class CoinbaseWebSocket:
             logger.error(f"Error processing message: {e}")
 
     def _on_error(self, ws: Any, error: Exception) -> None:
+        self._last_error_ts = time.time()
         logger.error(
             "WebSocket error",
             error=str(error),
@@ -308,6 +328,7 @@ class CoinbaseWebSocket:
         )
 
     def _on_close(self, ws: Any, close_status_code: int | None, close_msg: str | None) -> None:
+        self._last_close_ts = time.time()
         logger.info(
             "WebSocket closed",
             status_code=close_status_code,
@@ -326,7 +347,10 @@ class CoinbaseWebSocket:
                 self._reconnect_count += 1
 
                 # Check reconnection limit (0 = unlimited)
-                if MAX_WS_RECONNECT_ATTEMPTS > 0 and self._reconnect_count > MAX_WS_RECONNECT_ATTEMPTS:
+                if (
+                    MAX_WS_RECONNECT_ATTEMPTS > 0
+                    and self._reconnect_count > MAX_WS_RECONNECT_ATTEMPTS
+                ):
                     logger.error(
                         "Maximum reconnection attempts reached",
                         max_attempts=MAX_WS_RECONNECT_ATTEMPTS,
@@ -346,7 +370,9 @@ class CoinbaseWebSocket:
                 "Attempting reconnect",
                 delay_seconds=delay,
                 attempt=self._reconnect_count,
-                max_attempts=MAX_WS_RECONNECT_ATTEMPTS if MAX_WS_RECONNECT_ATTEMPTS > 0 else "unlimited",
+                max_attempts=(
+                    MAX_WS_RECONNECT_ATTEMPTS if MAX_WS_RECONNECT_ATTEMPTS > 0 else "unlimited"
+                ),
             )
 
             time.sleep(delay)
@@ -354,6 +380,30 @@ class CoinbaseWebSocket:
             # Double-check shutdown wasn't requested during sleep
             if not self._shutdown.is_set():
                 self.connect()
+
+    def get_health(self) -> dict[str, Any]:
+        """
+        Get current WebSocket health state.
+
+        Returns:
+            Dict with health metrics:
+                - last_message_ts: Timestamp of last received message
+                - last_heartbeat_ts: Timestamp of last heartbeat
+                - last_close_ts: Timestamp of last close event
+                - last_error_ts: Timestamp of last error
+                - gap_count: Number of sequence gaps detected
+                - reconnect_count: Number of reconnection attempts
+                - connected: Whether WebSocket is currently connected
+        """
+        return {
+            "last_message_ts": self._last_message_ts,
+            "last_heartbeat_ts": self._last_heartbeat_ts,
+            "last_close_ts": self._last_close_ts,
+            "last_error_ts": self._last_error_ts,
+            "gap_count": self._gap_count,
+            "reconnect_count": self._reconnect_count,
+            "connected": self.running,
+        }
 
 
 __all__ = ["CoinbaseWebSocket", "EventDispatcher", "SequenceGuard"]

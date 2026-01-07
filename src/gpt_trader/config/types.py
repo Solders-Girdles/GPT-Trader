@@ -12,3 +12,4 @@ class Profile(Enum):
     CANARY = "canary"
     SPOT = "spot"
     TEST = "test"
+    PAPER = "paper"

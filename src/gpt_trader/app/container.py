@@ -160,7 +160,10 @@ class ApplicationContainer:
             bot_risk = self.config.risk
             risk_config = RiskConfig(
                 max_leverage=bot_risk.max_leverage,
-                daily_loss_limit=bot_risk.max_drawdown_pct or Decimal("0.1"),
+                # daily_loss_limit is absolute dollar amount (legacy)
+                daily_loss_limit=Decimal("100"),
+                # daily_loss_limit_pct is percentage of equity (used by LiveRiskManager)
+                daily_loss_limit_pct=bot_risk.daily_loss_limit_pct,
                 max_position_pct_per_symbol=float(bot_risk.position_fraction),
                 # Map other relevant fields if needed, or rely on defaults
                 kill_switch_enabled=self.config.mean_reversion.kill_switch_enabled,

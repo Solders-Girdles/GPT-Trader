@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING, cast
 
 from gpt_trader.app.config import BotConfig
 from gpt_trader.app.containers.brokerage import BrokerageContainer
+from gpt_trader.app.containers.config import ConfigContainer
+from gpt_trader.app.containers.observability import ObservabilityContainer
 from gpt_trader.app.containers.persistence import PersistenceContainer
 from gpt_trader.app.health_server import HealthState
 from gpt_trader.config.types import Profile
@@ -48,15 +50,13 @@ class ApplicationContainer:
     def __init__(self, config: BotConfig):
         self.config = config
 
-        self._config_controller: ConfigController | None = None
+        # Direct dependencies (risk/validation stay here for now)
         self._risk_manager: LiveRiskManager | None = None
-        self._notification_service: NotificationService | None = None
         self._validation_failure_tracker: ValidationFailureTracker | None = None
-        self._profile_loader: ProfileLoader | None = None
-        self._health_state: HealthState | None = None
-        self._secrets_manager: SecretsManager | None = None
 
         # Sub-containers (lazily delegate to these for grouped dependencies)
+        self._config_container = ConfigContainer(config=config)
+        self._observability = ObservabilityContainer(config=config)
         self._persistence = PersistenceContainer(
             config=config,
             profile_provider=lambda: cast(Profile, config.profile),
@@ -69,9 +69,8 @@ class ApplicationContainer:
 
     @property
     def config_controller(self) -> ConfigController:
-        if self._config_controller is None:
-            self._config_controller = ConfigController(self.config)
-        return self._config_controller
+        """Delegate to ConfigContainer."""
+        return self._config_container.config_controller
 
     @property
     def runtime_paths(self) -> RuntimePaths:
@@ -134,15 +133,8 @@ class ApplicationContainer:
 
     @property
     def notification_service(self) -> NotificationService:
-        """Create or return the notification service instance."""
-        if self._notification_service is None:
-            from gpt_trader.monitoring.notifications import create_notification_service
-
-            self._notification_service = create_notification_service(
-                webhook_url=self.config.webhook_url,
-                console_enabled=True,
-            )
-        return self._notification_service
+        """Delegate to ObservabilityContainer."""
+        return self._observability.notification_service
 
     @property
     def validation_failure_tracker(self) -> ValidationFailureTracker:
@@ -165,50 +157,26 @@ class ApplicationContainer:
 
     @property
     def profile_loader(self) -> ProfileLoader:
-        """Create or return the profile loader instance.
-
-        The profile loader handles loading and validating trading profile
-        configurations from YAML files.
-        """
-        if self._profile_loader is None:
-            from gpt_trader.orchestration.configuration.profile_loader import (
-                ProfileLoader as PL,
-            )
-
-            self._profile_loader = PL()
-        return self._profile_loader
+        """Delegate to ConfigContainer."""
+        return self._config_container.profile_loader
 
     @property
     def health_state(self) -> HealthState:
-        """Create or return the health state instance.
-
-        The health state tracks application liveness and readiness for
-        Kubernetes/Docker health probes.
-        """
-        if self._health_state is None:
-            self._health_state = HealthState()
-        return self._health_state
+        """Delegate to ObservabilityContainer."""
+        return self._observability.health_state
 
     @property
     def secrets_manager(self) -> SecretsManager:
-        """Create or return the secrets manager instance.
-
-        The secrets manager provides secure storage and retrieval of
-        sensitive data including API keys and credentials. Supports
-        HashiCorp Vault integration with encrypted file fallback.
-        """
-        if self._secrets_manager is None:
-            from gpt_trader.security.secrets_manager import SecretsManager as SM
-
-            self._secrets_manager = SM(config=self.config)
-        return self._secrets_manager
+        """Delegate to ObservabilityContainer."""
+        return self._observability.secrets_manager
 
     def reset_broker(self) -> None:
         """Delegate to BrokerageContainer."""
         self._brokerage.reset_broker()
 
     def reset_config(self) -> None:
-        self._config_controller = None
+        """Delegate to ConfigContainer."""
+        self._config_container.reset_config()
 
     def reset_risk_manager(self) -> None:
         self._risk_manager = None

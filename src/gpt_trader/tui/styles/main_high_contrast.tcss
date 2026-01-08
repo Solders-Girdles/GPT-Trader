@@ -241,53 +241,16 @@ Label {
 
 /* === Responsive Variants === */
 
-/* Compact mode: Simplified 2-column layout for narrow terminals (< 120 cols) */
 #bento-grid.compact {
-    grid-size: 2 3;
-    grid-columns: 1fr 1fr;
-    grid-rows: 2fr 2fr 1fr;
     grid-gutter: 0;
     padding: 0;
 }
 
-/* Compact: Position spans full width (2 cols) */
-#bento-grid.compact #tile-hero {
-    column-span: 2;
-}
-
-/* Compact: Account and Market share second row */
-#bento-grid.compact #tile-account {
-    column-span: 1;
-}
-
-#bento-grid.compact #tile-market {
-    column-span: 1;
-}
-
-/* Compact: Hide system tile - too cramped */
-#bento-grid.compact #tile-system {
-    display: none;
-}
-
-/* Compact: Logs take full width */
-#bento-grid.compact #tile-logs {
-    column-span: 2;
-    row-span: 1;
-}
-
-/* Standard mode (120-139 cols): Default grid */
-#bento-grid.standard {
-    grid-gutter: 1;
-    padding: 0 1;
-}
-
-/* Comfortable mode (140-159 cols): More breathing room */
 #bento-grid.comfortable {
     grid-gutter: 1;
     padding: 1 2;
 }
 
-/* Wide mode (160+ cols): Luxurious spacing */
 #bento-grid.wide {
     grid-gutter: 2;
     padding: 1 2;

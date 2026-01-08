@@ -117,9 +117,7 @@ def test_get_candles_falls_back_to_authenticated_when_public_not_found() -> None
 
     def transport(method, url, headers, body, timeout):  # noqa: ANN001, ANN002, ANN003
         calls.append(url)
-        if url.endswith(
-            "/api/v3/brokerage/market/products/BTC-USD/candles?granularity=1H&limit=2"
-        ):
+        if url.endswith("/api/v3/brokerage/market/products/BTC-USD/candles?granularity=1H&limit=2"):
             return 404, {}, json.dumps({"message": "not found"})
         return 200, {}, json.dumps({"candles": []})
 

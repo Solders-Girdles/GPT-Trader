@@ -43,27 +43,26 @@ class ResponseCache:
 
     # Endpoint pattern -> TTL in seconds
     # More specific patterns should come first
-    ENDPOINT_TTLS: dict[str, float] = field(default_factory=lambda: {
-        # Market data (very volatile)
-        "**/best_bid_ask*": 5.0,
-        "**/ticker*": 5.0,
-        "**/market/**": 10.0,
-
-        # Position/balance data (moderate volatility)
-        "**/positions*": 30.0,
-        "**/cfm/positions*": 30.0,
-        "**/intx/positions*": 30.0,
-        "**/accounts*": 60.0,
-        "**/cfm/balance_summary*": 60.0,
-
-        # Order data (changes frequently during trading)
-        "**/orders*": 15.0,
-        "**/fills*": 30.0,
-
-        # Product metadata (stable, rarely changes)
-        "**/products*": 300.0,
-        "**/product*": 300.0,
-    })
+    ENDPOINT_TTLS: dict[str, float] = field(
+        default_factory=lambda: {
+            # Market data (very volatile)
+            "**/best_bid_ask*": 5.0,
+            "**/ticker*": 5.0,
+            "**/market/**": 10.0,
+            # Position/balance data (moderate volatility)
+            "**/positions*": 30.0,
+            "**/cfm/positions*": 30.0,
+            "**/intx/positions*": 30.0,
+            "**/accounts*": 60.0,
+            "**/cfm/balance_summary*": 60.0,
+            # Order data (changes frequently during trading)
+            "**/orders*": 15.0,
+            "**/fills*": 30.0,
+            # Product metadata (stable, rarely changes)
+            "**/products*": 300.0,
+            "**/product*": 300.0,
+        }
+    )
 
     default_ttl: float = 30.0
     max_size: int = 1000
@@ -165,7 +164,8 @@ class ResponseCache:
         """
         with self._lock:
             keys_to_remove = [
-                key for key in self._cache.keys()
+                key
+                for key in self._cache.keys()
                 if fnmatch.fnmatch(key, pattern) or fnmatch.fnmatch(f"/{key}", pattern)
             ]
 
@@ -173,7 +173,9 @@ class ResponseCache:
                 del self._cache[key]
 
             if keys_to_remove:
-                logger.debug(f"Invalidated {len(keys_to_remove)} cache entries matching '{pattern}'")
+                logger.debug(
+                    f"Invalidated {len(keys_to_remove)} cache entries matching '{pattern}'"
+                )
 
             return len(keys_to_remove)
 

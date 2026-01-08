@@ -30,7 +30,6 @@ ENDPOINT_PRIORITIES: dict[str, RequestPriority] = {
     # Critical - order management
     "orders": RequestPriority.CRITICAL,
     "cancel": RequestPriority.CRITICAL,
-
     # High - account/position data for trading decisions
     "accounts": RequestPriority.HIGH,
     "positions": RequestPriority.HIGH,
@@ -38,12 +37,10 @@ ENDPOINT_PRIORITIES: dict[str, RequestPriority] = {
     "cfm/positions": RequestPriority.HIGH,
     "intx/positions": RequestPriority.HIGH,
     "fills": RequestPriority.HIGH,
-
     # Normal - market data
     "ticker": RequestPriority.NORMAL,
     "best_bid_ask": RequestPriority.NORMAL,
     "market/": RequestPriority.NORMAL,
-
     # Low - stable/historical data
     "products": RequestPriority.LOW,
     "candles": RequestPriority.LOW,
@@ -73,11 +70,13 @@ class PriorityManager:
     _lock: threading.Lock = field(default_factory=threading.Lock)
 
     # Stats tracking
-    _blocked_requests: dict[str, int] = field(default_factory=lambda: {
-        "low": 0,
-        "normal": 0,
-        "high": 0,
-    })
+    _blocked_requests: dict[str, int] = field(
+        default_factory=lambda: {
+            "low": 0,
+            "normal": 0,
+            "high": 0,
+        }
+    )
     _allowed_requests: int = 0
 
     def _get_priority(self, path: str) -> RequestPriority:

@@ -44,10 +44,12 @@ WS_CHANNEL_USER: Final[str] = "user"
 WS_CHANNEL_FUTURES_BALANCE_SUMMARY: Final[str] = "futures_balance_summary"
 
 # Channels requiring authentication
-WS_AUTH_CHANNELS: Final[frozenset[str]] = frozenset({
-    WS_CHANNEL_USER,
-    WS_CHANNEL_FUTURES_BALANCE_SUMMARY,
-})
+WS_AUTH_CHANNELS: Final[frozenset[str]] = frozenset(
+    {
+        WS_CHANNEL_USER,
+        WS_CHANNEL_FUTURES_BALANCE_SUMMARY,
+    }
+)
 
 # =============================================================================
 # Endpoint Map

@@ -108,7 +108,9 @@ class CircuitBreaker:
 
             if self._state == CircuitState.HALF_OPEN:
                 # Any failure in half-open goes back to open
-                logger.warning(f"Circuit breaker: failure in half-open state, reopening. Error: {error}")
+                logger.warning(
+                    f"Circuit breaker: failure in half-open state, reopening. Error: {error}"
+                )
                 self._transition_to(CircuitState.OPEN)
             elif self._state == CircuitState.CLOSED:
                 self._failure_count += 1
@@ -167,18 +169,20 @@ class CircuitBreakerRegistry:
     _lock: threading.Lock = field(default_factory=threading.Lock)
 
     # Endpoint path patterns -> category name
-    ENDPOINT_CATEGORIES: dict[str, str] = field(default_factory=lambda: {
-        "orders": "orders",
-        "fills": "orders",
-        "accounts": "accounts",
-        "positions": "positions",
-        "cfm": "positions",
-        "intx": "positions",
-        "products": "products",
-        "market": "market",
-        "ticker": "market",
-        "candles": "market",
-    })
+    ENDPOINT_CATEGORIES: dict[str, str] = field(
+        default_factory=lambda: {
+            "orders": "orders",
+            "fills": "orders",
+            "accounts": "accounts",
+            "positions": "positions",
+            "cfm": "positions",
+            "intx": "positions",
+            "products": "products",
+            "market": "market",
+            "ticker": "market",
+            "candles": "market",
+        }
+    )
 
     def _categorize_endpoint(self, path: str) -> str:
         """Determine the category for an endpoint path."""
@@ -246,10 +250,7 @@ class CircuitBreakerRegistry:
             Dict mapping category -> status dict.
         """
         with self._lock:
-            return {
-                category: breaker.get_status()
-                for category, breaker in self._breakers.items()
-            }
+            return {category: breaker.get_status() for category, breaker in self._breakers.items()}
 
     def reset_all(self) -> None:
         """Reset all circuit breakers to closed state."""
@@ -264,6 +265,4 @@ class CircuitOpenError(Exception):
     def __init__(self, category: str, time_until_retry: float):
         self.category = category
         self.time_until_retry = time_until_retry
-        super().__init__(
-            f"Circuit breaker open for '{category}'. Retry in {time_until_retry:.1f}s"
-        )
+        super().__init__(f"Circuit breaker open for '{category}'. Retry in {time_until_retry:.1f}s")

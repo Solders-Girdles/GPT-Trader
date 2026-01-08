@@ -39,6 +39,11 @@ class SystemDetailsScreen(Screen):
     # Reactive state property
     state = reactive(None)  # Type: TuiState | None
 
+    @property
+    def observer_priority(self) -> int:
+        """High priority so screen updates before individual widgets."""
+        return 100
+
     def watch_state(self, state: TuiState | None) -> None:
         """React to state changes - update system details widgets."""
         if state is None:

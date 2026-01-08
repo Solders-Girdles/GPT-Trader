@@ -268,35 +268,20 @@ class UICoordinator:
             self.app.tui_state.connection_healthy = False
 
     def update_main_screen(self) -> None:
-        """Update the main screen UI with current state."""
+        """Broadcast state to all registered observers.
+
+        Uses StateRegistry to notify all registered StateObservers (screens and widgets).
+        This decouples the coordinator from specific screen implementations.
+        """
         try:
-            from gpt_trader.tui.screens import MainScreen, SystemDetailsScreen
-
-            main_screen = self.app.query_one(MainScreen)
-            main_screen.update_ui(self.app.tui_state)
-
-            # Propagate state to SystemDetailsScreen if it's showing
-            try:
-                system_details = self.app.query_one(SystemDetailsScreen)
-                system_details.state = self.app.tui_state
-            except Exception:
-                # SystemDetailsScreen not mounted - that's fine
-                pass
-
-            # Broadcast state to all registered StateObserver widgets.
-            # This is the single broadcast point - MainScreen.watch_state() is a no-op
-            # to avoid double broadcasts when TuiState is mutated in-place.
-            try:
-                if hasattr(self.app, "state_registry"):
-                    self.app.state_registry.broadcast(self.app.tui_state)  # type: ignore[attr-defined]
-            except Exception:
-                pass
+            if hasattr(self.app, "state_registry"):
+                self.app.state_registry.broadcast(self.app.tui_state)  # type: ignore[attr-defined]
 
             # Toggle heartbeat to show dashboard is alive
             self.app._pulse_heartbeat()
-            logger.debug("UI updated successfully")
+            logger.debug("UI updated via registry broadcast")
         except Exception as e:
-            logger.warning(f"Failed to update main screen from status update: {e}")
+            logger.warning(f"Failed to broadcast state update: {e}")
 
     async def start_update_loop(self) -> None:
         """

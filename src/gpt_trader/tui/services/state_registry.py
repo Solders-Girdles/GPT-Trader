@@ -31,6 +31,9 @@ class StateObserver(Protocol):
 
     Widgets implementing this protocol can register with StateRegistry
     to receive state updates via on_state_updated().
+
+    Observers can optionally define observer_priority to control update order.
+    Higher priority observers are updated first (default: 0).
     """
 
     def on_state_updated(self, state: TuiState) -> None:
@@ -40,6 +43,15 @@ class StateObserver(Protocol):
             state: The updated TuiState instance.
         """
         ...
+
+    @property
+    def observer_priority(self) -> int:
+        """Priority for update order. Higher values are updated first.
+
+        Returns:
+            Priority value (default 0). Screens should use 100, widgets 0.
+        """
+        return 0
 
 
 class StateRegistry:
@@ -108,8 +120,12 @@ class StateRegistry:
         perf = get_tui_performance_service()
         start_time = time.time()
 
-        # Convert to list to avoid iteration issues if observers are modified
-        observers = list(self._observers)
+        # Convert to list and sort by priority (higher priority first)
+        observers = sorted(
+            self._observers,
+            key=lambda o: getattr(o, "observer_priority", 0),
+            reverse=True,
+        )
         notified_count = 0
 
         for observer in observers:

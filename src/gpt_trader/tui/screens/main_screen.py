@@ -51,6 +51,8 @@ class MainScreen(Screen):
     - Logs: Console (Bottom)
 
     Supports 2D tile navigation via arrow keys and Enter to drill-down.
+
+    Implements StateObserver for decoupled state updates via StateRegistry.
     """
 
     BINDINGS = [
@@ -75,6 +77,19 @@ class MainScreen(Screen):
         """Initialize MainScreen with FocusManager."""
         super().__init__(**kwargs)
         self._focus_manager: FocusManager | None = None
+
+    @property
+    def observer_priority(self) -> int:
+        """High priority so screen updates before individual widgets."""
+        return 100
+
+    def on_state_updated(self, state: TuiState) -> None:
+        """Receive state updates via StateRegistry broadcast.
+
+        This is the primary update path - UICoordinator calls state_registry.broadcast()
+        and this method receives the update, triggering the reactive cascade.
+        """
+        self.state = state
 
     def watch_state(self, state: TuiState | None) -> None:
         """Handle state changes.
@@ -137,8 +152,14 @@ class MainScreen(Screen):
 
         This is the safe point to connect the StatusReporter observer since
         all widgets are now mounted and ready to receive updates.
+
+        Registers self as StateObserver for decoupled updates via broadcast.
         """
         logger.debug("MainScreen mounted (Bento Layout), performing initial UI sync")
+
+        # Register as StateObserver for decoupled updates
+        if hasattr(self.app, "state_registry"):
+            self.app.state_registry.register(self)
 
         # Ensure the global error indicator is visible on the main dashboard.
         # It will remain attached to this screen (and continue collecting errors
@@ -187,6 +208,11 @@ class MainScreen(Screen):
         self._focus_manager = FocusManager(self.app)
         self._focus_manager.enable()
         logger.debug("FocusManager initialized for tile navigation")
+
+    def on_unmount(self) -> None:
+        """Unregister from StateRegistry when screen is unmounted."""
+        if hasattr(self.app, "state_registry"):
+            self.app.state_registry.unregister(self)
 
     def update_ui(self, state: TuiState) -> None:
         """Update widgets from TuiState - triggers reactive cascade.

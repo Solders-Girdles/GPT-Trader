@@ -23,13 +23,13 @@ from gpt_trader.app.container import (
     clear_application_container,
     set_application_container,
 )
+from gpt_trader.features.brokerages.mock import DeterministicBroker
 from gpt_trader.features.live_trade.strategies.perps_baseline import PerpsStrategyConfig
 from gpt_trader.orchestration.bootstrap import bot_from_profile, build_bot
-from gpt_trader.orchestration.deterministic_broker import DeterministicBroker
 from gpt_trader.persistence.event_store import EventStore
 
 if TYPE_CHECKING:
-    from gpt_trader.orchestration.trading_bot import TradingBot
+    from gpt_trader.features.live_trade.bot import TradingBot
 
 
 @pytest.fixture

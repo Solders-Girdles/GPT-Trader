@@ -16,7 +16,7 @@ from gpt_trader.features.brokerages.coinbase.client.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
 from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
 from gpt_trader.features.brokerages.factory import create_brokerage
-from gpt_trader.orchestration.deterministic_broker import DeterministicBroker
+from gpt_trader.features.brokerages.mock import DeterministicBroker
 from gpt_trader.orchestration.protocols import EventStoreProtocol
 from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.persistence.orders_store import OrdersStore
@@ -24,11 +24,11 @@ from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
     from gpt_trader.app.config.profile_loader import ProfileLoader
+    from gpt_trader.features.live_trade.bot import TradingBot
+    from gpt_trader.features.live_trade.execution.engine import LiveExecutionEngine
     from gpt_trader.features.live_trade.execution.validation import ValidationFailureTracker
     from gpt_trader.features.live_trade.risk.manager import LiveRiskManager
     from gpt_trader.monitoring.notifications.service import NotificationService
-    from gpt_trader.orchestration.live_execution import LiveExecutionEngine
-    from gpt_trader.orchestration.trading_bot.bot import TradingBot
     from gpt_trader.security.secrets_manager import SecretsManager
 
 
@@ -159,7 +159,7 @@ class ApplicationContainer:
         Returns:
             TradingBot: A fully configured trading bot ready to run.
         """
-        from gpt_trader.orchestration.trading_bot.bot import TradingBot
+        from gpt_trader.features.live_trade.bot import TradingBot
 
         return TradingBot(
             config=self.config,
@@ -199,7 +199,7 @@ class ApplicationContainer:
         Returns:
             LiveExecutionEngine: A configured execution engine ready for use.
         """
-        from gpt_trader.orchestration.live_execution import (
+        from gpt_trader.features.live_trade.execution.engine import (
             LiveExecutionEngine as LEE,
         )
 

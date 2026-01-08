@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from textual.widgets import Input
 
-from gpt_trader.orchestration.trading_bot.bot import TradingBot
+from gpt_trader.features.live_trade.bot import TradingBot
 from gpt_trader.tui.widgets.config import ConfigModal
 
 

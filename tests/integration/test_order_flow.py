@@ -15,10 +15,10 @@ import pytest
 from gpt_trader.app.config import BotConfig
 from gpt_trader.app.container import ApplicationContainer
 from gpt_trader.core import OrderSide, OrderType
+from gpt_trader.features.brokerages.mock import DeterministicBroker
+from gpt_trader.features.live_trade.execution.engine import LiveExecutionEngine
 from gpt_trader.features.live_trade.risk.config import RiskConfig
 from gpt_trader.features.live_trade.risk.manager import LiveRiskManager
-from gpt_trader.orchestration.deterministic_broker import DeterministicBroker
-from gpt_trader.orchestration.live_execution import LiveExecutionEngine
 from gpt_trader.persistence.event_store import EventStore
 
 if TYPE_CHECKING:

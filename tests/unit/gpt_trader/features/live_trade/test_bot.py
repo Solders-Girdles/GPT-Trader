@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from gpt_trader.orchestration.trading_bot.bot import TradingBot
+from gpt_trader.features.live_trade.bot import TradingBot
 
 
 class TestTradingBotInitialization:
@@ -34,7 +34,7 @@ class TestTradingBotInitialization:
         mock_container.account_telemetry = None
         mock_container.runtime_state = None
 
-        with patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine:
+        with patch("gpt_trader.features.live_trade.bot.TradingEngine") as mock_engine:
             mock_engine.return_value = Mock()
             bot = TradingBot(config=mock_config, container=mock_container)
 
@@ -57,7 +57,7 @@ class TestTradingBotInitialization:
         mock_container.account_telemetry = Mock()
         mock_container.runtime_state = Mock()
 
-        with patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine:
+        with patch("gpt_trader.features.live_trade.bot.TradingEngine") as mock_engine:
             mock_engine.return_value = Mock()
             bot = TradingBot(config=mock_config, container=mock_container)
 
@@ -71,7 +71,7 @@ class TestTradingBotInitialization:
         """Test initialization with container."""
         mock_container = Mock()
 
-        with patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine:
+        with patch("gpt_trader.features.live_trade.bot.TradingEngine") as mock_engine:
             mock_engine.return_value = Mock()
             bot = TradingBot(config=mock_config, container=mock_container)
 
@@ -86,8 +86,8 @@ class TestTradingBotInitialization:
         mock_container.notification_service = Mock()
 
         with (
-            patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine,
-            patch("gpt_trader.orchestration.trading_bot.bot.CoordinatorContext") as mock_context,
+            patch("gpt_trader.features.live_trade.bot.TradingEngine") as mock_engine,
+            patch("gpt_trader.features.live_trade.bot.CoordinatorContext") as mock_context,
         ):
             mock_engine.return_value = Mock()
             mock_context.return_value = Mock()
@@ -108,7 +108,7 @@ class TestTradingBotInitialization:
     def test_init_creates_engine(self, mock_config: Mock) -> None:
         """Test that initialization creates TradingEngine."""
         mock_container = Mock()
-        with patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine:
+        with patch("gpt_trader.features.live_trade.bot.TradingEngine") as mock_engine:
             mock_engine.return_value = Mock()
             bot = TradingBot(config=mock_config, container=mock_container)
 
@@ -128,7 +128,7 @@ class TestTradingBotInitialization:
             # Optional attributes not set - getattr will return None
         )
 
-        with patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine:
+        with patch("gpt_trader.features.live_trade.bot.TradingEngine") as mock_engine:
             mock_engine.return_value = Mock()
             bot = TradingBot(config=mock_config, container=mock_container)
 
@@ -149,7 +149,7 @@ class TestTradingBotRun:
         config.interval = 1  # Short interval for testing
         mock_container = Mock()
 
-        with patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine:
+        with patch("gpt_trader.features.live_trade.bot.TradingEngine") as mock_engine:
             engine = AsyncMock()
             engine.start_background_tasks = AsyncMock(return_value=[])
             engine.shutdown = AsyncMock()
@@ -211,7 +211,7 @@ class TestTradingBotStop:
         config.interval = 60
         mock_container = Mock()
 
-        with patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine:
+        with patch("gpt_trader.features.live_trade.bot.TradingEngine") as mock_engine:
             engine = AsyncMock()
             engine.shutdown = AsyncMock()
             mock_engine.return_value = engine
@@ -254,7 +254,7 @@ class TestTradingBotExecuteDecision:
         config.interval = 60
         mock_container = Mock()
 
-        with patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine:
+        with patch("gpt_trader.features.live_trade.bot.TradingEngine") as mock_engine:
             engine = Mock()
             engine.execute_decision = Mock(return_value="order-123")
             mock_engine.return_value = engine
@@ -289,7 +289,7 @@ class TestTradingBotExecuteDecision:
         config.interval = 60
         mock_container = Mock()
 
-        with patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine:
+        with patch("gpt_trader.features.live_trade.bot.TradingEngine") as mock_engine:
             engine = Mock(spec=[])  # No execute_decision
             mock_engine.return_value = engine
             bot = TradingBot(config=config, container=mock_container)
@@ -333,7 +333,7 @@ class TestTradingBotGetProduct:
         mock_container.event_store = Mock()
         mock_container.notification_service = Mock()
 
-        with patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine:
+        with patch("gpt_trader.features.live_trade.bot.TradingEngine") as mock_engine:
             mock_engine.return_value = Mock()
             bot = TradingBot(config=config, container=mock_container)
 
@@ -355,7 +355,7 @@ class TestTradingBotGetProduct:
         mock_container.event_store = Mock()
         mock_container.notification_service = Mock()
 
-        with patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine:
+        with patch("gpt_trader.features.live_trade.bot.TradingEngine") as mock_engine:
             mock_engine.return_value = Mock()
             bot = TradingBot(config=config, container=mock_container)
 
@@ -375,7 +375,7 @@ class TestTradingBotGetProduct:
         mock_container.event_store = Mock()
         mock_container.notification_service = Mock()
 
-        with patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine:
+        with patch("gpt_trader.features.live_trade.bot.TradingEngine") as mock_engine:
             mock_engine.return_value = Mock()
             bot = TradingBot(config=config, container=mock_container)
 
@@ -394,7 +394,7 @@ class TestTradingBotStateManagement:
         config.interval = 60
         mock_container = Mock()
 
-        with patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine:
+        with patch("gpt_trader.features.live_trade.bot.TradingEngine") as mock_engine:
             mock_engine.return_value = Mock()
             bot = TradingBot(config=config, container=mock_container)
 
@@ -416,7 +416,7 @@ class TestTradingBotStateManagement:
             running_states.append(bot.running)
             return []
 
-        with patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine:
+        with patch("gpt_trader.features.live_trade.bot.TradingEngine") as mock_engine:
             engine = AsyncMock()
             engine.start_background_tasks = capture_state
             engine.shutdown = AsyncMock()

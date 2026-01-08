@@ -35,7 +35,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from gpt_trader.app.container import create_application_container
 from gpt_trader.orchestration.configuration import BotConfig
-from gpt_trader.orchestration.hybrid_paper_broker import HybridPaperBroker
+from gpt_trader.features.brokerages.paper import HybridPaperBroker
 from gpt_trader.utilities.logging_patterns import get_logger
 
 # Disable standard logging to avoid cluttering rich output

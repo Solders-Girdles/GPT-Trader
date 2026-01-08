@@ -102,7 +102,7 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder.py",  # order event recording and telemetry coverage
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders.py",  # comprehensive REST orders mixin coverage
     "tests/unit/gpt_trader/features/live_trade/test_risk_manager.py",  # LiveRiskManager risk validation, volatility breakers, daily PnL tracking
-    "tests/unit/gpt_trader/orchestration/test_live_execution_engine.py",  # LiveExecutionEngine orchestration, order flow, risk validation
+    "tests/unit/gpt_trader/features/live_trade/execution/test_engine.py",  # LiveExecutionEngine orchestration, order flow, risk validation
     "tests/unit/gpt_trader/orchestration/test_derivatives_discovery.py",  # derivatives eligibility discovery and safety gating
     "tests/unit/gpt_trader/orchestration/test_account_telemetry.py",  # account telemetry collection and publishing
     "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming.py",  # WebSocket streaming telemetry with async/threading patterns
@@ -116,8 +116,9 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/validation/test_composite_validators.py",  # composite validator chain permutations
     "tests/unit/gpt_trader/validation/test_config_validators.py",  # configuration validation matrix
     "tests/unit/gpt_trader/validation/test_data_validators.py",  # data validation edge cases and error handling
-    "tests/unit/gpt_trader/orchestration/strategy_orchestrator/test_orchestrator.py",  # strategy orchestration routing and signal aggregation
-    "tests/unit/gpt_trader/orchestration/trading_bot/test_bot.py",  # trading bot lifecycle and state management scenarios
+    "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator.py",  # strategy orchestration routing and signal aggregation
+    "tests/unit/gpt_trader/features/live_trade/test_bot.py",  # trading bot lifecycle and state management scenarios
+    "tests/unit/gpt_trader/features/live_trade/test_symbols.py",  # symbol normalization coverage across profiles and derivatives
     # Coverage expansion tests (C1 task)
     "tests/unit/gpt_trader/features/live_trade/test_indicators.py",  # indicator calculation coverage
     "tests/unit/gpt_trader/utilities/performance/test_timing.py",  # timing utilities coverage
@@ -152,7 +153,7 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service.py",  # OrderService protocol coverage: place/cancel/list/get orders
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service.py",  # PortfolioService coverage: balances, positions, INTX/CFM ops
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_product_service.py",  # ProductService coverage: products, quotes, candles, tickers
-    "tests/unit/gpt_trader/orchestration/test_hybrid_paper_broker.py",  # HybridPaperBroker paper trading simulation: orders, positions, market data
+    "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker.py",  # HybridPaperBroker paper trading simulation: orders, positions, market data
     # Optimization and CLI test suites
     "tests/unit/gpt_trader/features/optimize/objectives/test_constraints.py",  # constraint objective validation matrix
     "tests/unit/gpt_trader/features/optimize/objectives/test_single.py",  # single objective validation matrix

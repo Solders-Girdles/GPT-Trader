@@ -14,7 +14,7 @@ from pathlib import Path
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from gpt_trader.orchestration.hybrid_paper_broker import HybridPaperBroker
+from gpt_trader.features.brokerages.paper import HybridPaperBroker
 
 
 def load_cdp_key(path: str | None = None) -> tuple[str, str]:

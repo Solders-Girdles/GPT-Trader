@@ -6,8 +6,8 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
+from gpt_trader.features.live_trade.orchestrator.orchestrator import StrategyOrchestrator
 from gpt_trader.features.live_trade.strategies.perps_baseline import Action
-from gpt_trader.orchestration.strategy_orchestrator.orchestrator import StrategyOrchestrator
 
 
 class TestStrategyOrchestratorClassStructure:
@@ -19,12 +19,12 @@ class TestStrategyOrchestratorClassStructure:
 
     def test_inherits_from_mixins(self) -> None:
         """Test that StrategyOrchestrator inherits from expected mixins."""
-        from gpt_trader.orchestration.strategy_orchestrator.context import ContextBuilderMixin
-        from gpt_trader.orchestration.strategy_orchestrator.decision import DecisionEngineMixin
-        from gpt_trader.orchestration.strategy_orchestrator.initialization import (
+        from gpt_trader.features.live_trade.orchestrator.context import ContextBuilderMixin
+        from gpt_trader.features.live_trade.orchestrator.decision import DecisionEngineMixin
+        from gpt_trader.features.live_trade.orchestrator.initialization import (
             StrategyInitializationMixin,
         )
-        from gpt_trader.orchestration.strategy_orchestrator.spot_filters import SpotFiltersMixin
+        from gpt_trader.features.live_trade.orchestrator.spot_filters import SpotFiltersMixin
 
         assert issubclass(StrategyOrchestrator, SpotFiltersMixin)
         assert issubclass(StrategyOrchestrator, DecisionEngineMixin)

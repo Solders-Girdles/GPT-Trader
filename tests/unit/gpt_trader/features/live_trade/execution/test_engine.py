@@ -8,11 +8,11 @@ from unittest.mock import Mock
 import pytest
 
 from gpt_trader.core import OrderSide, OrderType
-from gpt_trader.features.live_trade.risk import ValidationError
-from gpt_trader.orchestration.live_execution import (
+from gpt_trader.features.live_trade.execution.engine import (
     LiveExecutionEngine,
     LiveOrder,
 )
+from gpt_trader.features.live_trade.risk import ValidationError
 
 # ============================================================
 # Test: LiveOrder dataclass

@@ -14,7 +14,7 @@ from gpt_trader.app.container import (
     get_application_container,
     set_application_container,
 )
-from gpt_trader.orchestration.trading_bot.bot import TradingBot
+from gpt_trader.features.live_trade.bot import TradingBot
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="cli_services")

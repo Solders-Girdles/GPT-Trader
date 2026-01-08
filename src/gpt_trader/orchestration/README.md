@@ -25,7 +25,7 @@ via the `ApplicationContainer` in `gpt_trader.app.container`. This enables:
 ## Entry Points
 
 - **Live Trading**: `LiveExecutionEngine` in `live_execution.py`
-- **Strategy Orchestration**: `strategy_orchestrator/` package
+- **Strategy Orchestration**: Moved to `features/live_trade/orchestrator/`
 - **Bot Lifecycle**: `trading_bot/` package
 
 ## Configuration Flow

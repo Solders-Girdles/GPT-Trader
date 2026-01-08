@@ -1,109 +1,19 @@
-"""Decision evaluation helpers for strategy orchestration."""
+"""
+DEPRECATED: decision has moved to gpt_trader.features.live_trade.orchestrator.decision
 
-from __future__ import annotations
+This shim exists for backward compatibility. Update imports to:
+    from gpt_trader.features.live_trade.orchestrator.decision import DecisionEngineMixin
+"""
 
-import time as _time
-from collections.abc import Sequence
-from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Protocol, cast
+import warnings
 
-from gpt_trader.core import Product
-from gpt_trader.features.live_trade.strategies.base import MarketDataContext
-from gpt_trader.features.live_trade.strategies.perps_baseline import (
-    BaselinePerpsStrategy,
-    Decision,
+from gpt_trader.features.live_trade.orchestrator.decision import DecisionEngineMixin
+
+warnings.warn(
+    "gpt_trader.orchestration.strategy_orchestrator.decision is deprecated. "
+    "Import from gpt_trader.features.live_trade.orchestrator.decision instead.",
+    DeprecationWarning,
+    stacklevel=2,
 )
-from gpt_trader.logging import log_strategy_decision
-from gpt_trader.monitoring.system import get_logger as _get_plog
-from gpt_trader.orchestration.configuration import Profile
-
-from .logging_utils import logger  # naming: allow
-from .models import SymbolProcessingContext
-
-if TYPE_CHECKING:
-    from gpt_trader.orchestration.trading_bot import TradingBot
-
-
-class _HasBotAndStrategy(Protocol):
-    """Protocol for mixins that expect _bot and get_strategy."""
-
-    _bot: TradingBot
-
-    def get_strategy(self, symbol: str) -> BaselinePerpsStrategy: ...
-
-
-class DecisionEngineMixin(_HasBotAndStrategy):
-    """Evaluate strategy decisions and record results."""
-
-    async def _resolve_decision(self, symbol_context: SymbolProcessingContext) -> Decision:
-        strategy = self.get_strategy(symbol_context.symbol)
-
-        # Build market data context from symbol context (optional, for advanced strategies)
-        market_data = MarketDataContext(
-            orderbook_snapshot=symbol_context.orderbook_snapshot,
-            trade_volume_stats=symbol_context.trade_volume_stats,
-            spread_bps=symbol_context.spread_bps,
-        )
-
-        decision = self._evaluate_strategy(
-            strategy,
-            symbol_context.symbol,
-            symbol_context.marks,
-            symbol_context.position_state,
-            symbol_context.equity,
-            symbol_context.product,
-            market_data,
-        )
-
-        if self._bot.config.profile == Profile.SPOT:
-            decision = await self._apply_spot_filters(symbol_context, decision)  # type: ignore[attr-defined]
-        return decision
-
-    def _evaluate_strategy(
-        self,
-        strategy: BaselinePerpsStrategy,
-        symbol: str,
-        marks: Sequence[Decimal],
-        position_state: dict[str, Any] | None,
-        equity: Decimal,
-        product: Product | None,
-        market_data: MarketDataContext | None = None,
-    ) -> Decision:
-        _t0 = _time.perf_counter()
-        product_meta = product
-        if product_meta is None and hasattr(strategy, "_build_default_product"):
-            try:
-                product_meta = cast(Product, strategy._build_default_product(symbol))  # type: ignore[attr-defined]
-            except Exception:
-                product_meta = None
-        if product_meta is None:
-            raise ValueError(f"Missing product metadata for {symbol}")
-
-        decision = strategy.decide(
-            symbol=symbol,
-            current_mark=marks[-1],
-            position_state=position_state,
-            recent_marks=list(marks[:-1]) if len(marks) > 1 else [],
-            equity=equity,
-            product=product_meta,
-            market_data=market_data,
-        )
-        _dt_ms = (_time.perf_counter() - _t0) * 1000.0
-        try:
-            _get_plog().log_strategy_duration(strategy=type(strategy).__name__, duration_ms=_dt_ms)
-        except Exception as exc:
-            logger.debug("Failed to log strategy duration: %s", exc, exc_info=True)
-        return decision
-
-    def _record_decision(self, symbol: str, decision: Decision) -> None:
-        self._bot.last_decisions[symbol] = decision  # type: ignore[attr-defined]
-        logger.info(f"{symbol} Decision: {decision.action.value} - {decision.reason}")
-        log_strategy_decision(
-            symbol=symbol,
-            decision=decision.action.value,
-            reason=getattr(decision, "reason", None),
-            confidence=getattr(decision, "confidence", None),
-        )
-
 
 __all__ = ["DecisionEngineMixin"]

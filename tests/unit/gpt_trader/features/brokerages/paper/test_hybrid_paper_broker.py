@@ -13,14 +13,14 @@ from gpt_trader.core import (
     OrderType,
     Position,
 )
-from gpt_trader.orchestration.hybrid_paper_broker import HybridPaperBroker
+from gpt_trader.features.brokerages.paper.hybrid import HybridPaperBroker
 
 
 class TestHybridPaperBrokerInit:
     """Test HybridPaperBroker initialization."""
 
-    @patch("gpt_trader.orchestration.hybrid_paper_broker.CoinbaseClient")
-    @patch("gpt_trader.orchestration.hybrid_paper_broker.SimpleAuth")
+    @patch("gpt_trader.features.brokerages.paper.hybrid.CoinbaseClient")
+    @patch("gpt_trader.features.brokerages.paper.hybrid.SimpleAuth")
     def test_init_creates_client(self, mock_auth, mock_client) -> None:
         """Test initialization creates Coinbase client."""
         broker = HybridPaperBroker(
@@ -34,8 +34,8 @@ class TestHybridPaperBrokerInit:
         assert broker._slippage_bps == 5
         assert broker._commission_bps == Decimal("5")
 
-    @patch("gpt_trader.orchestration.hybrid_paper_broker.CoinbaseClient")
-    @patch("gpt_trader.orchestration.hybrid_paper_broker.SimpleAuth")
+    @patch("gpt_trader.features.brokerages.paper.hybrid.CoinbaseClient")
+    @patch("gpt_trader.features.brokerages.paper.hybrid.SimpleAuth")
     def test_init_with_custom_parameters(self, mock_auth, mock_client) -> None:
         """Test initialization with custom parameters."""
         broker = HybridPaperBroker(
@@ -50,8 +50,8 @@ class TestHybridPaperBrokerInit:
         assert broker._slippage_bps == 10
         assert broker._commission_bps == Decimal("10")
 
-    @patch("gpt_trader.orchestration.hybrid_paper_broker.CoinbaseClient")
-    @patch("gpt_trader.orchestration.hybrid_paper_broker.SimpleAuth")
+    @patch("gpt_trader.features.brokerages.paper.hybrid.CoinbaseClient")
+    @patch("gpt_trader.features.brokerages.paper.hybrid.SimpleAuth")
     def test_init_creates_usd_balance(self, mock_auth, mock_client) -> None:
         """Test initialization creates USD balance."""
         broker = HybridPaperBroker(
@@ -71,8 +71,8 @@ class TestHybridPaperBrokerMarketData:
     @pytest.fixture
     def broker(self):
         """Create broker fixture with mocked client."""
-        with patch("gpt_trader.orchestration.hybrid_paper_broker.CoinbaseClient"):
-            with patch("gpt_trader.orchestration.hybrid_paper_broker.SimpleAuth"):
+        with patch("gpt_trader.features.brokerages.paper.hybrid.CoinbaseClient"):
+            with patch("gpt_trader.features.brokerages.paper.hybrid.SimpleAuth"):
                 broker = HybridPaperBroker(
                     api_key="test_key",
                     private_key="test_private_key",
@@ -258,8 +258,8 @@ class TestHybridPaperBrokerPositionsBalances:
     @pytest.fixture
     def broker(self):
         """Create broker fixture with mocked client."""
-        with patch("gpt_trader.orchestration.hybrid_paper_broker.CoinbaseClient"):
-            with patch("gpt_trader.orchestration.hybrid_paper_broker.SimpleAuth"):
+        with patch("gpt_trader.features.brokerages.paper.hybrid.CoinbaseClient"):
+            with patch("gpt_trader.features.brokerages.paper.hybrid.SimpleAuth"):
                 return HybridPaperBroker(
                     api_key="test_key",
                     private_key="test_private_key",
@@ -378,8 +378,8 @@ class TestHybridPaperBrokerOrderExecution:
     @pytest.fixture
     def broker(self):
         """Create broker fixture with mocked client."""
-        with patch("gpt_trader.orchestration.hybrid_paper_broker.CoinbaseClient"):
-            with patch("gpt_trader.orchestration.hybrid_paper_broker.SimpleAuth"):
+        with patch("gpt_trader.features.brokerages.paper.hybrid.CoinbaseClient"):
+            with patch("gpt_trader.features.brokerages.paper.hybrid.SimpleAuth"):
                 broker = HybridPaperBroker(
                     api_key="test_key",
                     private_key="test_private_key",
@@ -529,8 +529,8 @@ class TestHybridPaperBrokerPositionUpdates:
     @pytest.fixture
     def broker(self):
         """Create broker fixture."""
-        with patch("gpt_trader.orchestration.hybrid_paper_broker.CoinbaseClient"):
-            with patch("gpt_trader.orchestration.hybrid_paper_broker.SimpleAuth"):
+        with patch("gpt_trader.features.brokerages.paper.hybrid.CoinbaseClient"):
+            with patch("gpt_trader.features.brokerages.paper.hybrid.SimpleAuth"):
                 return HybridPaperBroker(
                     api_key="test_key",
                     private_key="test_private_key",
@@ -616,8 +616,8 @@ class TestHybridPaperBrokerStatus:
     @pytest.fixture
     def broker(self):
         """Create broker fixture."""
-        with patch("gpt_trader.orchestration.hybrid_paper_broker.CoinbaseClient"):
-            with patch("gpt_trader.orchestration.hybrid_paper_broker.SimpleAuth"):
+        with patch("gpt_trader.features.brokerages.paper.hybrid.CoinbaseClient"):
+            with patch("gpt_trader.features.brokerages.paper.hybrid.SimpleAuth"):
                 return HybridPaperBroker(
                     api_key="test_key",
                     private_key="test_private_key",

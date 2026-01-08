@@ -45,4 +45,4 @@ class StrategyProtocol(Protocol):
 ## Related Packages
 
 - `features/live_trade/risk/` - Pre-trade validation
-- `orchestration/strategy_orchestrator/` - Strategy lifecycle
+- `features/live_trade/orchestrator/` - Strategy lifecycle

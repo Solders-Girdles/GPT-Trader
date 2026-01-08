@@ -12,7 +12,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
 from gpt_trader.features.live_trade.strategies.base import StatefulStrategyBase
-from gpt_trader.orchestration.symbols import (
+from gpt_trader.features.live_trade.symbols import (
     get_cfm_symbol,
 )
 from gpt_trader.utilities.logging_patterns import get_logger

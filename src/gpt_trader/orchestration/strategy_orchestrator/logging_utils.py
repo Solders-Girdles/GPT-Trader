@@ -1,9 +1,21 @@
-"""Logging helpers for strategy orchestrator."""
+"""
+DEPRECATED: logging helpers have moved to gpt_trader.features.live_trade.orchestrator.
 
-from gpt_trader.logging import get_orchestration_logger
-from gpt_trader.utilities.logging import get_logger
+This shim exists for backward compatibility. Update imports to the new logging helpers.
+"""
 
-logger = get_logger(__name__, component="strategy_orchestrator")
-json_logger = get_orchestration_logger("strategy_orchestrator")
+import warnings
+
+from gpt_trader.features.live_trade.orchestrator.logging_utils import (  # naming: allow
+    json_logger,
+    logger,
+)
+
+warnings.warn(
+    "gpt_trader.orchestration.strategy_orchestrator.logging_utils is deprecated. "  # naming: allow
+    "Import from gpt_trader.features.live_trade.orchestrator.logging_utils instead.",  # naming: allow
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 __all__ = ["logger", "json_logger"]

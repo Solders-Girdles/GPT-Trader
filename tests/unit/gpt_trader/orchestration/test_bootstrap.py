@@ -108,7 +108,7 @@ class TestBuildBot:
     """Tests for build_bot function."""
 
     def test_build_bot_returns_trading_bot(self, mock_config: BotConfig) -> None:
-        from gpt_trader.orchestration.trading_bot import TradingBot
+        from gpt_trader.features.live_trade.bot import TradingBot
 
         bot = build_bot(mock_config)
 

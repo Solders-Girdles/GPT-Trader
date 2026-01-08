@@ -13,7 +13,7 @@ from gpt_trader.features.brokerages.coinbase.client.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.credentials import resolve_coinbase_credentials
 from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
 from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
-from gpt_trader.orchestration.deterministic_broker import DeterministicBroker
+from gpt_trader.features.brokerages.mock import DeterministicBroker
 from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.utilities.logging_patterns import get_logger
 
@@ -33,7 +33,7 @@ def create_brokerage(
     """
     # Check for mock mode FIRST - before credential validation
     if config.mock_broker:
-        from gpt_trader.orchestration.deterministic_broker import DeterministicBroker
+        from gpt_trader.features.brokerages.mock import DeterministicBroker
 
         return DeterministicBroker(), event_store, market_data, product_catalog
 

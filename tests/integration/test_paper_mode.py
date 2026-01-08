@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 if TYPE_CHECKING:
-    from gpt_trader.orchestration.trading_bot import TradingBot
+    from gpt_trader.features.live_trade.bot import TradingBot
 
 
 @pytest.mark.integration

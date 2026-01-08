@@ -1,24 +1,19 @@
-"""Spot-market specific filters for strategy decisions.
+"""
+DEPRECATED: spot_filters has moved to gpt_trader.features.live_trade.orchestrator.spot_filters
 
-Note: The filter implementations have been removed as they were stubs.
-This mixin now provides a pass-through implementation.
+This shim exists for backward compatibility. Update imports to:
+    from gpt_trader.features.live_trade.orchestrator.spot_filters import SpotFiltersMixin
 """
 
-from __future__ import annotations
+import warnings
 
-from gpt_trader.features.live_trade.strategies.perps_baseline import Decision
+from gpt_trader.features.live_trade.orchestrator.spot_filters import SpotFiltersMixin
 
-from .models import SymbolProcessingContext
+warnings.warn(
+    "gpt_trader.orchestration.strategy_orchestrator.spot_filters is deprecated. "
+    "Import from gpt_trader.features.live_trade.orchestrator.spot_filters instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
-
-class SpotFiltersMixin:
-    """Apply spot-specific filters to strategy decisions.
-
-    Currently a no-op pass-through - filter implementations were removed.
-    """
-
-    async def _apply_spot_filters(
-        self, context: SymbolProcessingContext, decision: Decision
-    ) -> Decision:
-        """Pass through decisions unchanged (filter stubs removed)."""
-        return decision
+__all__ = ["SpotFiltersMixin"]

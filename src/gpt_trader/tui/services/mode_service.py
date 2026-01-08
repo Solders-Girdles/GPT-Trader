@@ -20,7 +20,7 @@ from gpt_trader.utilities.logging_patterns import get_logger
 if TYPE_CHECKING:
     from textual.app import App
 
-    from gpt_trader.orchestration.trading_bot.bot import TradingBot
+    from gpt_trader.features.live_trade.bot import TradingBot
 
 logger = get_logger(__name__, component="tui")
 

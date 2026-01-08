@@ -157,7 +157,7 @@ class TestApplicationContainer:
         # Verify create_brokerage was called with correct dependencies
         mock_create_brokerage.assert_called_once()
 
-    @patch("gpt_trader.orchestration.trading_bot.bot.TradingBot")
+    @patch("gpt_trader.features.live_trade.bot.TradingBot")
     def test_create_bot(self, mock_bot_class: MagicMock, mock_config: BotConfig) -> None:
         """Test that TradingBot is created correctly from container."""
         from gpt_trader.app.containers.brokerage import BrokerageContainer
@@ -195,7 +195,7 @@ class TestApplicationContainer:
 
         assert bot == mock_bot
 
-    @patch("gpt_trader.orchestration.trading_bot.bot.TradingBot")
+    @patch("gpt_trader.features.live_trade.bot.TradingBot")
     def test_create_bot_includes_notification_service(
         self, mock_bot_class: MagicMock, mock_config: BotConfig
     ) -> None:
@@ -231,7 +231,7 @@ class TestApplicationContainer:
         assert call_args.kwargs["notification_service"] is not None
         assert call_args.kwargs["notification_service"] == container.notification_service
 
-    @patch("gpt_trader.orchestration.live_execution.LiveExecutionEngine")
+    @patch("gpt_trader.features.live_trade.execution.engine.LiveExecutionEngine")
     def test_create_live_execution_engine(
         self, mock_engine_class: MagicMock, mock_config: BotConfig
     ) -> None:

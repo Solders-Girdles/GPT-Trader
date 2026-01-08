@@ -372,7 +372,7 @@ Example: inject a broker outage after two balance reads.
 
 ```python
 from tests.support.chaos import ChaosBroker, FaultPlan, fault_after
-from gpt_trader.orchestration.deterministic_broker import DeterministicBroker
+from gpt_trader.features.brokerages.mock import DeterministicBroker
 
 plan = FaultPlan().add(
     "list_balances",
@@ -385,7 +385,7 @@ Example: use a scenario preset.
 
 ```python
 from tests.support.chaos import ChaosBroker, api_outage_scenario
-from gpt_trader.orchestration.deterministic_broker import DeterministicBroker
+from gpt_trader.features.brokerages.mock import DeterministicBroker
 
 broker = ChaosBroker(DeterministicBroker(), api_outage_scenario())
 ```

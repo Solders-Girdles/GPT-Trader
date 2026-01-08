@@ -223,7 +223,7 @@ uv run pytest tests/unit/gpt_trader/ --durations=10
 ### Key Testing Helpers
 
 - **Quantization**: `src/gpt_trader/features/quantization.py` - `quantize_size()`, `quantize_price()`
-- **Broker Doubles**: `DeterministicBroker` in `src/gpt_trader/orchestration/deterministic_broker.py`
+- **Broker Doubles**: `DeterministicBroker` in `src/gpt_trader/features/brokerages/mock/deterministic.py`
 
 ### Behavioral Scenarios
 

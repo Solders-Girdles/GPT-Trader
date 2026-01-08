@@ -48,7 +48,7 @@ from gpt_trader.tui.widgets.error_indicator import ErrorIndicatorWidget
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
-    from gpt_trader.orchestration.trading_bot.bot import TradingBot
+    from gpt_trader.features.live_trade.bot import TradingBot
     from gpt_trader.tui.managers import BotLifecycleManager, UICoordinator
     from gpt_trader.tui.services.worker_service import WorkerService
 

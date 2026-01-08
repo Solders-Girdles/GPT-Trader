@@ -3,8 +3,8 @@ from pathlib import Path
 
 import pytest
 
-from gpt_trader.orchestration.configuration.bot_config.bot_config import BotConfig
-from gpt_trader.orchestration.configuration.bot_config.validator import validate_config
+from gpt_trader.app.config import BotConfig
+from gpt_trader.app.config.validation import validate_config
 
 # Path to the actual paper profile
 PAPER_PROFILE_PATH = Path("config/profiles/paper.yaml")

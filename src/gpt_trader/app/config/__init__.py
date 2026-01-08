@@ -54,6 +54,12 @@ from gpt_trader.app.config.profile_loader import (
     get_profile_loader,
     load_profile,
 )
+from gpt_trader.app.config.validation import (
+    ConfigValidationError,
+    ConfigValidationResult,
+    format_validation_errors,
+    validate_config,
+)
 
 __all__ = [
     # Bot configuration
@@ -77,4 +83,9 @@ __all__ = [
     "TradingConfig",
     "get_profile_loader",
     "load_profile",
+    # Validation
+    "ConfigValidationError",
+    "ConfigValidationResult",
+    "format_validation_errors",
+    "validate_config",
 ]

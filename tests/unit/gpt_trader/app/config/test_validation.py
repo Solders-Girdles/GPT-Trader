@@ -1,10 +1,10 @@
-"""Tests for orchestration configuration validation module."""
+"""Tests for app configuration validation module."""
 
 from __future__ import annotations
 
 from pydantic import BaseModel, ValidationError
 
-from gpt_trader.orchestration.configuration.validation import (
+from gpt_trader.app.config.validation import (
     ConfigValidationError,
     ConfigValidationResult,
     format_validation_errors,
@@ -35,6 +35,11 @@ class TestConfigValidationError:
     def test_is_exception_subclass(self) -> None:
         exc = ConfigValidationError(["error"])
         assert isinstance(exc, Exception)
+
+    def test_no_args_default_message(self) -> None:
+        exc = ConfigValidationError()
+        assert str(exc) == "Invalid configuration"
+        assert exc.errors == []
 
 
 class TestConfigValidationResult:

@@ -1,51 +1,23 @@
 """
-Configuration validator for BotConfig.
+DEPRECATED: This module has moved to gpt_trader.app.config.validation
+
+This shim exists for backwards compatibility. Update imports to use:
+    from gpt_trader.app.config.validation import validate_config, ConfigValidationError
+    # or
+    from gpt_trader.app.config import validate_config, ConfigValidationError
 """
 
-from gpt_trader.orchestration.configuration.bot_config.bot_config import BotConfig
+from __future__ import annotations
 
+import warnings
 
-class ConfigValidationError(Exception):
-    """Raised when configuration validation fails."""
+from gpt_trader.app.config.validation import ConfigValidationError, validate_config
 
-    pass
+__all__ = ["ConfigValidationError", "validate_config"]
 
-
-def validate_config(config: BotConfig) -> list[str]:
-    """
-    Validate the configuration and return a list of error messages.
-    Returns an empty list if the configuration is valid.
-    """
-    errors = []
-
-    # Validate Risk Config
-    risk = config.risk
-    if risk.position_fraction <= 0 or risk.position_fraction > 1:
-        errors.append(
-            f"risk.position_fraction must be between 0 and 1, got {risk.position_fraction}"
-        )
-
-    if risk.stop_loss_pct <= 0 or risk.stop_loss_pct >= 1:
-        errors.append(f"risk.stop_loss_pct must be between 0 and 1, got {risk.stop_loss_pct}")
-
-    if risk.take_profit_pct <= 0:
-        errors.append(f"risk.take_profit_pct must be positive, got {risk.take_profit_pct}")
-
-    if risk.max_leverage < 1:
-        errors.append(f"risk.max_leverage must be >= 1, got {risk.max_leverage}")
-
-    # Validate Strategy Config
-    strategy = config.strategy
-    # Check if it's the expected strategy type before accessing fields
-    if hasattr(strategy, "short_ma_period") and hasattr(strategy, "long_ma_period"):
-        if strategy.short_ma_period >= strategy.long_ma_period:
-            errors.append(
-                f"strategy.short_ma_period ({strategy.short_ma_period}) must be less than "
-                f"strategy.long_ma_period ({strategy.long_ma_period})"
-            )
-
-    # Validate Symbols
-    if not config.symbols:
-        errors.append("symbols list cannot be empty")
-
-    return errors
+warnings.warn(
+    "gpt_trader.orchestration.configuration.bot_config.validator is deprecated. "
+    "Import from gpt_trader.app.config.validation instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)

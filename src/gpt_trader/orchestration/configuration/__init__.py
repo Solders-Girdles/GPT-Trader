@@ -24,15 +24,15 @@ from gpt_trader.app.config.profile_loader import (
     ProfileSchema,
     load_profile,
 )
+from gpt_trader.app.config.validation import (
+    ConfigValidationError,
+    ConfigValidationResult,
+)
 from gpt_trader.config.types import Profile
 from gpt_trader.features.live_trade.risk.config import (
     RISK_CONFIG_ENV_ALIASES,
     RISK_CONFIG_ENV_KEYS,
     RiskConfig,
-)
-from gpt_trader.orchestration.configuration.validation import (
-    ConfigValidationError,
-    ConfigValidationResult,
 )
 
 __all__ = [

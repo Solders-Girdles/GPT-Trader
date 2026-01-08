@@ -1,7 +1,13 @@
 # ADR-001: Dual Execution Engine Pattern
 
-**Status:** Accepted
+**Status:** Superseded
 **Date:** 2025-10-06
+**Superseded by:** `TradingEngine.submit_order()` is now the canonical order entry point
+
+> **Note:** This ADR documents historical architecture. As of the execution path
+> consolidation, `LiveExecutionEngine` is deprecated. New code should use
+> `TradingEngine.submit_order()` which provides the canonical pre-trade guard stack.
+> The factory pattern remains for backward compatibility but emits deprecation warnings.
 **Deciders:** System Architecture Team
 **Technical Story:** Execution layer consolidation review (Phase 3 audit)
 

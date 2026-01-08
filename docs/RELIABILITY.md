@@ -17,7 +17,7 @@ Implementation references:
 
 - `src/gpt_trader/orchestration/execution/guards/api_health.py`
 - `src/gpt_trader/preflight/checks/diagnostics.py`
-- `src/gpt_trader/orchestration/execution/degradation.py`
+- `src/gpt_trader/features/live_trade/degradation.py` (canonical location)
 - `tests/support/chaos.py`
 
 ## Decision Matrix
@@ -87,6 +87,12 @@ Preflight Diagnostics:
 | `GPT_TRADER_PREFLIGHT_WARN_ONLY` | `0` | Env alias for warn-only |
 | `COINBASE_PREFLIGHT_SKIP_REMOTE` | unset | Skip remote checks (dev/offline) |
 | `COINBASE_PREFLIGHT_FORCE_REMOTE` | unset | Force remote checks even on dev |
+
+Health Monitoring:
+
+| Env Var | Default | Purpose |
+| --- | --- | --- |
+| `GPT_TRADER_HEALTH_CHECK_INTERVAL` | `30.0` | Seconds between health check runner cycles |
 
 ## Metrics
 

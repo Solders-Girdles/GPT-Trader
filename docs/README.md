@@ -15,6 +15,8 @@ last-updated: 2025-11-24
 | Document | Purpose |
 |----------|---------|
 | [Architecture](ARCHITECTURE.md) | System design and capabilities |
+| [Capability Map](CAPABILITIES.md) | Runtime flow, capability matrix, where to change things |
+| [Feature Flags](FEATURE_FLAGS.md) | Configuration precedence and canonical sources |
 | [Production Guide](guides/production.md) | Deployment, rollout, and emergency procedures |
 | [Reliability Guide](RELIABILITY.md) | Guard stack, degradation responses, chaos testing |
 | [Coinbase Reference](reference/coinbase_complete.md) | Complete API integration docs |
@@ -28,6 +30,8 @@ last-updated: 2025-11-24
 
 ### Architecture & Design
 - [System Architecture](ARCHITECTURE.md) - Component overview and vertical slices
+- [Capability Map](CAPABILITIES.md) - Runtime flow, capability matrix, where to change things
+- [Feature Flags](FEATURE_FLAGS.md) - Configuration precedence and canonical sources
 - [Perpetuals Trading Logic](reference/trading_logic_perps.md) - INTX implementation (future-ready)
 - [ADR Index](adr/README.md) - Architecture Decision Records
 - [Tooling Reference](TOOLING.md) - Internal utilities and patterns

@@ -74,6 +74,16 @@ CLI (coinbase-trader) → Config (BotConfig) → ApplicationContainer → Tradin
 Risk Guards → Coinbase Brokerage Adapter → Metrics + Telemetry
 ```
 
+### Capability Map
+
+For a detailed breakdown of system capabilities, runtime flow diagrams, and "where to change things" guidance, see **[CAPABILITIES.md](CAPABILITIES.md)**.
+
+Key capabilities documented:
+- Configuration + Feature Flags (with [FEATURE_FLAGS.md](FEATURE_FLAGS.md) reference)
+- Trading Decisioning, Pre-trade Validation, Order Execution
+- Runtime Guards vs Pre-trade Guards
+- Risk & Degradation, Streaming, Observability
+
 ### Entry Point & Service Wiring
 
 - `uv run coinbase-trader` invokes `gpt_trader.cli:main`, producing a `BotConfig` from
@@ -119,6 +129,23 @@ def test_fallback_behavior(monkeypatch):
     monkeypatch.delenv("GPT_TRADER_STRICT_CONTAINER", raising=False)
     # ... test fallback path
 ```
+
+#### Deprecated Import Paths
+
+The following modules are **deprecated** (removal target: **v3.0**) and emit a single-shot `DeprecationWarning` on import. Update to the canonical paths:
+
+| Deprecated Path | Canonical Path |
+|-----------------|----------------|
+| `gpt_trader.orchestration.execution.degradation` | `gpt_trader.features.live_trade.degradation` |
+| `gpt_trader.orchestration.configuration.risk.model` | `gpt_trader.features.live_trade.risk.config` |
+| `gpt_trader.orchestration.configuration.bot_config` | `gpt_trader.app.config` |
+| `gpt_trader.orchestration.live_execution.LiveExecutionEngine` | `TradingEngine.submit_order()` |
+
+The deprecated modules remain as thin re-exports for backwards compatibility.
+
+**Order Execution:** Use `TradingEngine.submit_order()` for the canonical guard stack. `LiveExecutionEngine.place_order()` and `OrderRouter.execute()` are deprecated.
+
+> **Full deprecation tracker:** See [DEPRECATIONS.md](DEPRECATIONS.md) for removal timelines and migration checklists.
 
 ### Core Subsystems
 

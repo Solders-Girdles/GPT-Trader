@@ -11,7 +11,7 @@ Use this as a “where do I start?” index when you already know what you’re 
 | Add/modify a trading strategy | `src/gpt_trader/features/live_trade/factory.py` | Strategies in `src/gpt_trader/features/live_trade/strategies/` |
 | Change the trading loop | `src/gpt_trader/features/live_trade/engines/strategy.py` | Runs `create_strategy()` and executes decisions each cycle |
 | Modify order execution (hybrid router) | `src/gpt_trader/features/live_trade/execution/router.py` | Routes spot vs CFM orders; used by hybrid strategies |
-| Modify live execution (guarded engine) | `src/gpt_trader/orchestration/live_execution.py` | Uses `src/gpt_trader/orchestration/execution/` helpers |
+| Modify live execution (guarded engine) | `src/gpt_trader/features/live_trade/engines/strategy.py` | Use `TradingEngine.submit_order()` — `orchestration/live_execution.py` is deprecated |
 | Change risk rules | `src/gpt_trader/features/live_trade/risk/manager/__init__.py` | Also see runtime guards in `src/gpt_trader/orchestration/execution/guards/` |
 | Add monitoring / alerts | `src/gpt_trader/monitoring/` | Heartbeat/status wiring in `src/gpt_trader/features/live_trade/engines/strategy.py` |
 | Add a TUI widget/screen | `src/gpt_trader/tui/widgets/` | Screens in `src/gpt_trader/tui/screens/`; style guide: `docs/TUI_STYLE_GUIDE.md` |

@@ -14,8 +14,8 @@ from gpt_trader.core import (
     Product,
     TimeInForce,
 )
+from gpt_trader.features.live_trade.execution.validation import OrderValidator
 from gpt_trader.features.live_trade.risk import ValidationError
-from gpt_trader.orchestration.execution.validation import OrderValidator
 
 # ============================================================
 # Fixtures
@@ -125,7 +125,7 @@ class TestOrderValidatorInit:
 class TestValidateExchangeRules:
     """Tests for validate_exchange_rules method."""
 
-    @patch("gpt_trader.orchestration.execution.validation.spec_validate_order")
+    @patch("gpt_trader.features.live_trade.execution.validation.spec_validate_order")
     def test_market_order_uses_none_price(
         self,
         mock_spec_validate: MagicMock,
@@ -154,7 +154,7 @@ class TestValidateExchangeRules:
         call_kwargs = mock_spec_validate.call_args.kwargs
         assert call_kwargs["price"] is None
 
-    @patch("gpt_trader.orchestration.execution.validation.spec_validate_order")
+    @patch("gpt_trader.features.live_trade.execution.validation.spec_validate_order")
     def test_limit_order_uses_provided_price(
         self,
         mock_spec_validate: MagicMock,
@@ -183,7 +183,7 @@ class TestValidateExchangeRules:
         call_kwargs = mock_spec_validate.call_args.kwargs
         assert call_kwargs["price"] == Decimal("49000")
 
-    @patch("gpt_trader.orchestration.execution.validation.spec_validate_order")
+    @patch("gpt_trader.features.live_trade.execution.validation.spec_validate_order")
     def test_limit_order_falls_back_to_effective_price(
         self,
         mock_spec_validate: MagicMock,
@@ -212,7 +212,7 @@ class TestValidateExchangeRules:
         call_kwargs = mock_spec_validate.call_args.kwargs
         assert call_kwargs["price"] == Decimal("50000")
 
-    @patch("gpt_trader.orchestration.execution.validation.spec_validate_order")
+    @patch("gpt_trader.features.live_trade.execution.validation.spec_validate_order")
     def test_validation_failure_raises_error(
         self,
         mock_spec_validate: MagicMock,
@@ -241,7 +241,7 @@ class TestValidateExchangeRules:
         # Verify rejection was recorded
         validator._record_rejection.assert_called_once()
 
-    @patch("gpt_trader.orchestration.execution.validation.spec_validate_order")
+    @patch("gpt_trader.features.live_trade.execution.validation.spec_validate_order")
     def test_validation_failure_with_none_reason(
         self,
         mock_spec_validate: MagicMock,
@@ -267,8 +267,8 @@ class TestValidateExchangeRules:
                 product=mock_product,
             )
 
-    @patch("gpt_trader.orchestration.execution.validation.spec_validate_order")
-    @patch("gpt_trader.orchestration.execution.validation.quantize_price_side_aware")
+    @patch("gpt_trader.features.live_trade.execution.validation.spec_validate_order")
+    @patch("gpt_trader.features.live_trade.execution.validation.quantize_price_side_aware")
     def test_limit_order_price_quantization(
         self,
         mock_quantize: MagicMock,
@@ -298,7 +298,7 @@ class TestValidateExchangeRules:
         mock_quantize.assert_called_once()
         assert price == Decimal("49000.50")
 
-    @patch("gpt_trader.orchestration.execution.validation.spec_validate_order")
+    @patch("gpt_trader.features.live_trade.execution.validation.spec_validate_order")
     def test_adjusted_values_from_validation(
         self,
         mock_spec_validate: MagicMock,
@@ -813,7 +813,7 @@ class TestFinalizeReduceOnlyFlag:
 class TestValidationIntegration:
     """Integration tests for validation workflows."""
 
-    @patch("gpt_trader.orchestration.execution.validation.spec_validate_order")
+    @patch("gpt_trader.features.live_trade.execution.validation.spec_validate_order")
     def test_full_validation_flow(
         self,
         mock_spec_validate: MagicMock,
@@ -901,14 +901,14 @@ class TestValidationFailureTracker:
 
     def test_initial_failure_count_is_zero(self) -> None:
         """Test that initial failure count is zero."""
-        from gpt_trader.orchestration.execution.validation import ValidationFailureTracker
+        from gpt_trader.features.live_trade.execution.validation import ValidationFailureTracker
 
         tracker = ValidationFailureTracker()
         assert tracker.get_failure_count("mark_staleness") == 0
 
     def test_record_failure_increments_count(self) -> None:
         """Test that record_failure increments the count."""
-        from gpt_trader.orchestration.execution.validation import ValidationFailureTracker
+        from gpt_trader.features.live_trade.execution.validation import ValidationFailureTracker
 
         tracker = ValidationFailureTracker()
         tracker.record_failure("mark_staleness")
@@ -919,7 +919,7 @@ class TestValidationFailureTracker:
 
     def test_record_success_resets_count(self) -> None:
         """Test that record_success resets the failure count."""
-        from gpt_trader.orchestration.execution.validation import ValidationFailureTracker
+        from gpt_trader.features.live_trade.execution.validation import ValidationFailureTracker
 
         tracker = ValidationFailureTracker()
         tracker.record_failure("mark_staleness")
@@ -931,7 +931,7 @@ class TestValidationFailureTracker:
 
     def test_escalation_triggered_at_threshold(self) -> None:
         """Test that escalation is triggered at threshold."""
-        from gpt_trader.orchestration.execution.validation import ValidationFailureTracker
+        from gpt_trader.features.live_trade.execution.validation import ValidationFailureTracker
 
         escalation_called = []
         tracker = ValidationFailureTracker(
@@ -950,7 +950,7 @@ class TestValidationFailureTracker:
 
     def test_escalation_without_callback(self) -> None:
         """Test that escalation works without callback."""
-        from gpt_trader.orchestration.execution.validation import ValidationFailureTracker
+        from gpt_trader.features.live_trade.execution.validation import ValidationFailureTracker
 
         tracker = ValidationFailureTracker(
             escalation_threshold=2,
@@ -964,7 +964,7 @@ class TestValidationFailureTracker:
 
     def test_separate_tracking_per_check_type(self) -> None:
         """Test that different check types are tracked separately."""
-        from gpt_trader.orchestration.execution.validation import ValidationFailureTracker
+        from gpt_trader.features.live_trade.execution.validation import ValidationFailureTracker
 
         tracker = ValidationFailureTracker()
         tracker.record_failure("mark_staleness")
@@ -983,7 +983,7 @@ class TestValidationFailureTracker:
 class TestMetricsRecording:
     """Tests for metrics recording on validation failures."""
 
-    @patch("gpt_trader.orchestration.execution.validation.record_counter")
+    @patch("gpt_trader.features.live_trade.execution.validation.record_counter")
     def test_mark_staleness_failure_records_metric(
         self,
         mock_record_counter: MagicMock,
@@ -991,7 +991,7 @@ class TestMetricsRecording:
         mock_risk_manager: MagicMock,
     ) -> None:
         """Test that mark staleness check failure records a metric."""
-        from gpt_trader.orchestration.execution.validation import (
+        from gpt_trader.features.live_trade.execution.validation import (
             METRIC_MARK_STALENESS_CHECK_FAILED,
             ValidationFailureTracker,
         )
@@ -1014,7 +1014,7 @@ class TestMetricsRecording:
         # Metric should be recorded
         mock_record_counter.assert_called_with(METRIC_MARK_STALENESS_CHECK_FAILED)
 
-    @patch("gpt_trader.orchestration.execution.validation.record_counter")
+    @patch("gpt_trader.features.live_trade.execution.validation.record_counter")
     def test_slippage_guard_failure_records_metric(
         self,
         mock_record_counter: MagicMock,
@@ -1022,7 +1022,7 @@ class TestMetricsRecording:
         mock_risk_manager: MagicMock,
     ) -> None:
         """Test that slippage guard check failure records a metric."""
-        from gpt_trader.orchestration.execution.validation import (
+        from gpt_trader.features.live_trade.execution.validation import (
             METRIC_SLIPPAGE_GUARD_CHECK_FAILED,
             ValidationFailureTracker,
         )
@@ -1050,14 +1050,14 @@ class TestMetricsRecording:
         # Metric should be recorded
         mock_record_counter.assert_called_with(METRIC_SLIPPAGE_GUARD_CHECK_FAILED)
 
-    @patch("gpt_trader.orchestration.execution.validation.record_counter")
+    @patch("gpt_trader.features.live_trade.execution.validation.record_counter")
     def test_preview_failure_records_metric(
         self,
         mock_record_counter: MagicMock,
         mock_risk_manager: MagicMock,
     ) -> None:
         """Test that preview failure records a metric."""
-        from gpt_trader.orchestration.execution.validation import (
+        from gpt_trader.features.live_trade.execution.validation import (
             METRIC_ORDER_PREVIEW_FAILED,
             ValidationFailureTracker,
         )
@@ -1107,7 +1107,7 @@ class TestFailureTrackerIntegration:
         mock_risk_manager: MagicMock,
     ) -> None:
         """Test that successful mark staleness check resets counter."""
-        from gpt_trader.orchestration.execution.validation import ValidationFailureTracker
+        from gpt_trader.features.live_trade.execution.validation import ValidationFailureTracker
 
         mock_risk_manager.check_mark_staleness.return_value = False
 
@@ -1138,7 +1138,7 @@ class TestFailureTrackerIntegration:
         mock_risk_manager: MagicMock,
     ) -> None:
         """Test that slippage guard failure increments counter."""
-        from gpt_trader.orchestration.execution.validation import ValidationFailureTracker
+        from gpt_trader.features.live_trade.execution.validation import ValidationFailureTracker
 
         mock_broker.get_market_snapshot.side_effect = RuntimeError("API error")
 
@@ -1170,7 +1170,7 @@ class TestFailureTrackerIntegration:
 
         assert tracker.get_failure_count("slippage_guard") == 2
 
-    @patch("gpt_trader.orchestration.execution.validation.record_counter")
+    @patch("gpt_trader.features.live_trade.execution.validation.record_counter")
     def test_escalation_triggered_after_repeated_failures(
         self,
         mock_record_counter: MagicMock,
@@ -1178,7 +1178,7 @@ class TestFailureTrackerIntegration:
         mock_risk_manager: MagicMock,
     ) -> None:
         """Test that escalation is triggered after repeated failures."""
-        from gpt_trader.orchestration.execution.validation import (
+        from gpt_trader.features.live_trade.execution.validation import (
             METRIC_CONSECUTIVE_FAILURES_ESCALATION,
             ValidationFailureTracker,
         )
@@ -1227,8 +1227,8 @@ class TestGetValidationMetrics:
         monkeypatch.delenv("GPT_TRADER_STRICT_CONTAINER", raising=False)
 
         # Reset the fallback tracker for this test
-        import gpt_trader.orchestration.execution.validation as validation_module
-        from gpt_trader.orchestration.execution.validation import (
+        import gpt_trader.features.live_trade.execution.validation as validation_module
+        from gpt_trader.features.live_trade.execution.validation import (
             ValidationFailureTracker,
             get_validation_metrics,
         )
@@ -1252,8 +1252,8 @@ class TestGetValidationMetrics:
         # Disable strict mode for this fallback test
         monkeypatch.delenv("GPT_TRADER_STRICT_CONTAINER", raising=False)
 
-        import gpt_trader.orchestration.execution.validation as validation_module
-        from gpt_trader.orchestration.execution.validation import (
+        import gpt_trader.features.live_trade.execution.validation as validation_module
+        from gpt_trader.features.live_trade.execution.validation import (
             ValidationFailureTracker,
             get_validation_metrics,
         )
@@ -1279,8 +1279,8 @@ class TestGetValidationMetrics:
         # Disable strict mode for this fallback test
         monkeypatch.delenv("GPT_TRADER_STRICT_CONTAINER", raising=False)
 
-        import gpt_trader.orchestration.execution.validation as validation_module
-        from gpt_trader.orchestration.execution.validation import (
+        import gpt_trader.features.live_trade.execution.validation as validation_module
+        from gpt_trader.features.live_trade.execution.validation import (
             ValidationFailureTracker,
             get_validation_metrics,
         )

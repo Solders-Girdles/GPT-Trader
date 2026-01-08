@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from gpt_trader.orchestration.system_monitor_metrics import MetricsPublisher
+from gpt_trader.monitoring.system.metrics import MetricsPublisher
 
 
 class TestMetricsPublisherInit:
@@ -36,7 +36,7 @@ class TestMetricsPublisherPublish:
             base_dir=tmp_path,
         )
 
-        with patch("gpt_trader.orchestration.system_monitor_metrics.emit_metric") as mock_emit:
+        with patch("gpt_trader.monitoring.system.metrics.emit_metric") as mock_emit:
             with patch.object(publisher, "_log_update"):
                 publisher.publish({"cycle": 1, "pnl": 100.0})
 
@@ -55,7 +55,7 @@ class TestMetricsPublisherPublish:
             base_dir=tmp_path,
         )
 
-        with patch("gpt_trader.orchestration.system_monitor_metrics.emit_metric"):
+        with patch("gpt_trader.monitoring.system.metrics.emit_metric"):
             with patch.object(publisher, "_log_update"):
                 publisher.publish({"cycle": 1, "pnl": 100.0})
 
@@ -113,7 +113,7 @@ class TestMetricsPublisherLogUpdate:
             base_dir=tmp_path,
         )
 
-        with patch("gpt_trader.orchestration.system_monitor_metrics._get_plog") as mock_get_plog:
+        with patch("gpt_trader.monitoring.system.get_logger") as mock_get_plog:
             mock_logger = MagicMock()
             mock_get_plog.return_value = mock_logger
 
@@ -130,7 +130,7 @@ class TestMetricsPublisherLogUpdate:
             base_dir=tmp_path,
         )
 
-        with patch("gpt_trader.orchestration.system_monitor_metrics._get_plog") as mock_get_plog:
+        with patch("gpt_trader.monitoring.system.get_logger") as mock_get_plog:
             mock_logger = MagicMock()
             mock_get_plog.return_value = mock_logger
 
@@ -158,7 +158,7 @@ class TestMetricsPublisherLogUpdate:
             base_dir=tmp_path,
         )
 
-        with patch("gpt_trader.orchestration.system_monitor_metrics._get_plog") as mock_get_plog:
+        with patch("gpt_trader.monitoring.system.get_logger") as mock_get_plog:
             mock_logger = MagicMock()
             mock_logger.log_event.side_effect = Exception("Log error")
             mock_get_plog.return_value = mock_logger

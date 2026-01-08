@@ -6,7 +6,7 @@ import signal
 from argparse import Namespace
 
 import gpt_trader.cli.commands.run as run_cmd
-from gpt_trader.orchestration.configuration import ConfigValidationError
+from gpt_trader.app.config.validation import ConfigValidationError
 
 
 def _run_coroutine(coro):

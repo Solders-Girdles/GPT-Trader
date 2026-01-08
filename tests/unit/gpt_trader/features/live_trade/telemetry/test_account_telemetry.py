@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from gpt_trader.orchestration.account_telemetry import AccountTelemetryService
+from gpt_trader.features.live_trade.telemetry.account import AccountTelemetryService
 
 # ============================================================
 # Test: AccountTelemetryService initialization
@@ -284,8 +284,8 @@ class TestCollectSnapshot:
 class TestPublishSnapshot:
     """Tests for _publish_snapshot method."""
 
-    @patch("gpt_trader.orchestration.account_telemetry.emit_metric")
-    @patch("gpt_trader.orchestration.account_telemetry.RUNTIME_DATA_DIR")
+    @patch("gpt_trader.features.live_trade.telemetry.account.emit_metric")
+    @patch("gpt_trader.features.live_trade.telemetry.account.RUNTIME_DATA_DIR")
     def test_publish_snapshot_emits_metric(
         self, mock_runtime_dir: Mock, mock_emit_metric: Mock
     ) -> None:
@@ -317,8 +317,8 @@ class TestPublishSnapshot:
         assert call_args[0][2]["event_type"] == "account_snapshot"
         assert call_args[0][2]["balance"] == "1000"
 
-    @patch("gpt_trader.orchestration.account_telemetry.emit_metric")
-    @patch("gpt_trader.orchestration.account_telemetry.RUNTIME_DATA_DIR")
+    @patch("gpt_trader.features.live_trade.telemetry.account.emit_metric")
+    @patch("gpt_trader.features.live_trade.telemetry.account.RUNTIME_DATA_DIR")
     def test_publish_snapshot_file_write_error(
         self, mock_runtime_dir: Mock, mock_emit_metric: Mock
     ) -> None:

@@ -1,1 +1,1 @@
-# Package marker for monitoring system tests.
+"""Tests for monitoring system components."""

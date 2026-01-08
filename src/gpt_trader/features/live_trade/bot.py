@@ -15,15 +15,15 @@ from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
     from gpt_trader.app.container import ApplicationContainer
-    from gpt_trader.core import Product
-    from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
-    from gpt_trader.features.live_trade.risk.protocols import RiskManagerProtocol
-    from gpt_trader.monitoring.notifications.service import NotificationService
-    from gpt_trader.orchestration.protocols import (
+    from gpt_trader.app.protocols import (
         AccountManagerProtocol,
         EventStoreProtocol,
         RuntimeStateProtocol,
     )
+    from gpt_trader.core import Product
+    from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
+    from gpt_trader.features.live_trade.risk.protocols import RiskManagerProtocol
+    from gpt_trader.monitoring.notifications.service import NotificationService
 
 logger = get_logger(__name__, component="trading_bot")
 

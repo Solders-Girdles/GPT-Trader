@@ -57,6 +57,7 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_accounts.py",  # account snapshot + treasury surface coverage
     "tests/unit/gpt_trader/errors/test_base.py",  # error taxonomy coverage
     "tests/unit/gpt_trader/monitoring/test_configuration_guardian.py",  # guardian behaviour matrix
+    "tests/unit/gpt_trader/orchestration/execution/test_validation.py",  # comprehensive validation coverage matrix
     "tests/unit/gpt_trader/utilities/test_trading_operations_integration.py",  # trading ops integration harness
     "tests/unit/gpt_trader/utilities/test_async_utils_core.py",  # async helper regression suite  # naming: allow
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_trading.py",  # trading API coverage
@@ -103,7 +104,7 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders.py",  # comprehensive REST orders mixin coverage
     "tests/unit/gpt_trader/features/live_trade/test_risk_manager.py",  # LiveRiskManager risk validation, volatility breakers, daily PnL tracking
     "tests/unit/gpt_trader/features/live_trade/execution/test_engine.py",  # LiveExecutionEngine orchestration, order flow, risk validation
-    "tests/unit/gpt_trader/orchestration/test_account_telemetry.py",  # account telemetry collection and publishing
+    "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry.py",  # account telemetry collection and publishing
     "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming.py",  # WebSocket streaming telemetry with async/threading patterns
     "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health.py",  # telemetry health check and mark extraction coverage
     "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine.py",  # strategy engine dynamic sizing, position tracking, risk format validation

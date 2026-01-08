@@ -421,9 +421,9 @@ The orchestration layer provides coordinated control across trading operations t
 
 **Services & Telemetry:**
 - `spot_profile_service.py` - Spot trading profile loading and rule management
-- `account_telemetry.py` - Account metrics tracking and periodic snapshots
-- `system_monitor_metrics.py` - System metrics collection
-- `system_monitor_positions.py` - Position monitoring
+- `features/live_trade/telemetry/account.py` - Account metrics tracking and periodic snapshots
+- `monitoring/system/metrics.py` - System metrics collection
+- `monitoring/system/positions.py` - Position monitoring
 
 **Infrastructure:**
 - `trading_bot/bot.py` - Main orchestrator coordinating all components

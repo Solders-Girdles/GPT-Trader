@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Any
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
-    from gpt_trader.orchestration.protocols import EventStoreProtocol
+    from gpt_trader.app.protocols import EventStoreProtocol
 
 logger = get_logger(__name__, component="price_tick_store")
 

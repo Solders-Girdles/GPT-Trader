@@ -455,7 +455,7 @@ class UICoordinator:
         showing operators when validation checks are failing repeatedly.
         """
         try:
-            from gpt_trader.orchestration.execution import get_validation_metrics
+            from gpt_trader.features.live_trade.execution.validation import get_validation_metrics
 
             metrics = get_validation_metrics()
             self.app.tui_state.update_validation_metrics(metrics)

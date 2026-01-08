@@ -1,103 +1,26 @@
 """
-Protocol definitions for orchestration abstractions.
+DEPRECATED: Protocol definitions have moved to gpt_trader.app.protocols
 
-These protocols define the expected interfaces for runtime state
-and core services, enabling structural typing and better testability.
+This shim exists for backward compatibility. Update imports to:
+    from gpt_trader.app.protocols import EventStoreProtocol
+    from gpt_trader.app.protocols import AccountManagerProtocol
+    from gpt_trader.app.protocols import RuntimeStateProtocol
 """
 
-from __future__ import annotations
+import warnings
 
-from typing import Any, Protocol, runtime_checkable
+from gpt_trader.app.protocols import (
+    AccountManagerProtocol,
+    EventStoreProtocol,
+    RuntimeStateProtocol,
+)
 
-
-@runtime_checkable
-class EventStoreProtocol(Protocol):
-    """Protocol for event storage implementations."""
-
-    def append_metric(self, bot_id: str = "unknown", metrics: dict[str, Any] | None = None) -> None:
-        """Append a metric event."""
-        ...
-
-    def append(self, event_type: str, data: dict[str, Any]) -> None:
-        """Append an event to the store."""
-        ...
-
-    def append_trade(
-        self, bot_id_or_trade: str | dict[str, Any], trade: dict[str, Any] | None = None
-    ) -> None:
-        """Append a trade event."""
-        ...
-
-    def append_error(
-        self,
-        error: str | None = None,
-        details: dict[str, Any] | None = None,
-        *,
-        bot_id: str | None = None,
-        message: str | None = None,
-        context: dict[str, Any] | None = None,
-    ) -> None:
-        """Append an error event."""
-        ...
-
-    def store_event(self, event_type: str, data: dict[str, Any]) -> None:
-        """Store a typed event."""
-        ...
-
-    def store(self, event: Any) -> None:
-        """Store an event."""
-        ...
-
-    def get_recent(self, count: int = 100) -> list[Any]:
-        """Get recent events."""
-        ...
-
-
-@runtime_checkable
-class AccountManagerProtocol(Protocol):
-    """Protocol for account manager implementations.
-
-    Provides account snapshot and treasury operations.
-    """
-
-    def snapshot(self, emit_metric: bool = True) -> dict[str, Any]:
-        """Collect account state snapshot."""
-        ...
-
-
-@runtime_checkable
-class RuntimeStateProtocol(Protocol):
-    """
-    Protocol for runtime state management.
-
-    Tracks active positions, equity, and trading state.
-    """
-
-    equity: Any
-    positions: dict[str, Any]
-    positions_pnl: dict[str, dict[str, Any]]
-    positions_dict: dict[str, dict[str, Any]]
-
-    # Strategy state
-    strategy: Any  # BaselinePerpsStrategy for perps profile
-    symbol_strategies: dict[str, Any]  # Per-symbol strategies for spot profile
-
-    # Mark data state (for telemetry)
-    mark_lock: Any  # threading.Lock
-    mark_windows: dict[str, Any]  # Per-symbol mark price windows
-
-    # Order book data state (for advanced strategies)
-    orderbook_lock: Any  # threading.Lock for orderbook access
-    orderbook_snapshots: dict[str, Any]  # Per-symbol DepthSnapshot
-
-    # Trade flow data state (for volume analysis)
-    trade_lock: Any  # threading.Lock for trade data access
-    trade_aggregators: dict[str, Any]  # Per-symbol TradeTapeAgg
-
-    def update_equity(self, value: Any) -> None:
-        """Update current equity value."""
-        ...
-
+warnings.warn(
+    "gpt_trader.orchestration.protocols is deprecated. "
+    "Import from gpt_trader.app.protocols instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 __all__ = [
     "AccountManagerProtocol",

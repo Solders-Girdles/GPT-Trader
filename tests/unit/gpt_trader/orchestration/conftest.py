@@ -23,10 +23,8 @@ try:
 except ImportError:
     CircuitBreakerOutcome = Mock()
 
-try:
-    from gpt_trader.orchestration.system_monitor_metrics import SystemMonitor
-except ImportError:
-    SystemMonitor = Mock()
+# SystemMonitor is a test-only mock - no actual class exists
+SystemMonitor = Mock()
 
 
 @pytest.fixture

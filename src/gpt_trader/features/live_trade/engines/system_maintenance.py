@@ -15,8 +15,8 @@ from gpt_trader.monitoring.metrics_collector import record_gauge
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
+    from gpt_trader.app.protocols import EventStoreProtocol
     from gpt_trader.monitoring.status_reporter import StatusReporter
-    from gpt_trader.orchestration.protocols import EventStoreProtocol
 
 logger = get_logger(__name__, component="system_maintenance")
 

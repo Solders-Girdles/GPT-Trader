@@ -12,15 +12,15 @@ from gpt_trader.app.config import BotConfig
 
 if TYPE_CHECKING:
     from gpt_trader.app.container import ApplicationContainer
+    from gpt_trader.app.protocols import (
+        EventStoreProtocol,
+        RuntimeStateProtocol,
+    )
     from gpt_trader.features.brokerages.core.protocols import (
         BrokerProtocol,
     )  # Protocol import is OK
     from gpt_trader.features.live_trade.risk.protocols import RiskManagerProtocol
     from gpt_trader.monitoring.notifications.service import NotificationService
-    from gpt_trader.orchestration.protocols import (
-        EventStoreProtocol,
-        RuntimeStateProtocol,
-    )
 
 
 @dataclass

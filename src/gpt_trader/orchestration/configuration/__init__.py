@@ -19,13 +19,13 @@ from gpt_trader.app.config import (
     BotConfig,
     BotRiskConfig,
 )
-from gpt_trader.config.types import Profile
-from gpt_trader.orchestration.configuration.profile_loader import (
+from gpt_trader.app.config.profile_loader import (
     ProfileLoader,
     ProfileSchema,
     load_profile,
 )
-from gpt_trader.orchestration.configuration.risk.model import (
+from gpt_trader.config.types import Profile
+from gpt_trader.features.live_trade.risk.config import (
     RISK_CONFIG_ENV_ALIASES,
     RISK_CONFIG_ENV_KEYS,
     RiskConfig,

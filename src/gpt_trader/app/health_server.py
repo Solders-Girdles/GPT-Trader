@@ -16,11 +16,17 @@ from dataclasses import dataclass, field
 from http import HTTPStatus
 from typing import Any
 
-from gpt_trader.config.constants import HEALTH_CHECK_READ_TIMEOUT_SECONDS
+from gpt_trader.config.constants import (
+    HEALTH_CHECK_READ_TIMEOUT_SECONDS,
+    METRICS_ENDPOINT_ENABLED,
+)
 from gpt_trader.utilities.logging_patterns import get_logger
 from gpt_trader.utilities.performance.health import get_performance_health_check
 
 logger = get_logger(__name__, component="health_server")
+
+# Prometheus content type
+PROMETHEUS_CONTENT_TYPE = "text/plain; version=0.0.4; charset=utf-8"
 
 # Default port for health server
 DEFAULT_HEALTH_PORT = 8080
@@ -96,6 +102,7 @@ def _build_health_response() -> dict[str, Any]:
     state = get_health_state()
     perf_health = get_performance_health_check()
 
+    # Start with basic status
     overall_status = "healthy"
     if not state.live:
         overall_status = "unhealthy"
@@ -105,6 +112,21 @@ def _build_health_response() -> dict[str, Any]:
         overall_status = "degraded"
     elif perf_health.get("status") == "unhealthy":
         overall_status = "unhealthy"
+
+    # Check individual health checks for severity escalation
+    # Only escalate if we're currently healthy/degraded
+    if overall_status in ("healthy", "degraded"):
+        for check_name, check_result in state.checks.items():
+            check_status = check_result.get("status", "pass")
+            check_details = check_result.get("details", {})
+            severity = check_details.get("severity", "warning")
+
+            if check_status == "fail":
+                if severity == "critical":
+                    overall_status = "unhealthy"
+                    break
+                elif severity == "warning" and overall_status == "healthy":
+                    overall_status = "degraded"
 
     return {
         "status": overall_status,
@@ -135,6 +157,19 @@ def _build_readiness_response() -> dict[str, Any]:
         "ready": state.ready,
         "reason": state.reason,
     }
+
+
+def _build_metrics_response() -> str:
+    """Build Prometheus metrics response.
+
+    Returns:
+        Prometheus text format string.
+    """
+    from gpt_trader.monitoring.metrics_collector import get_metrics_collector
+    from gpt_trader.monitoring.metrics_exporter import format_prometheus
+
+    summary = get_metrics_collector().get_metrics_summary()
+    return format_prometheus(summary)
 
 
 class HealthServer:
@@ -212,17 +247,34 @@ class HealthServer:
                     if response["status"] in ("healthy", "degraded")
                     else HTTPStatus.SERVICE_UNAVAILABLE
                 )
+                await self._send_response(writer, status, response)
             elif path == "/live":
                 response = _build_liveness_response()
                 status = HTTPStatus.OK if response["live"] else HTTPStatus.SERVICE_UNAVAILABLE
+                await self._send_response(writer, status, response)
             elif path == "/ready":
                 response = _build_readiness_response()
                 status = HTTPStatus.OK if response["ready"] else HTTPStatus.SERVICE_UNAVAILABLE
+                await self._send_response(writer, status, response)
+            elif path == "/metrics":
+                if METRICS_ENDPOINT_ENABLED:
+                    metrics_text = _build_metrics_response()
+                    await self._send_text_response(
+                        writer, HTTPStatus.OK, metrics_text, PROMETHEUS_CONTENT_TYPE
+                    )
+                else:
+                    await self._send_response(
+                        writer,
+                        HTTPStatus.NOT_FOUND,
+                        {
+                            "error": "Metrics endpoint disabled",
+                            "hint": "Set GPT_TRADER_METRICS_ENDPOINT_ENABLED=1",
+                        },
+                    )
             else:
-                response = {"error": "Not found", "path": path}
-                status = HTTPStatus.NOT_FOUND
-
-            await self._send_response(writer, status, response)
+                await self._send_response(
+                    writer, HTTPStatus.NOT_FOUND, {"error": "Not found", "path": path}
+                )
 
         except TimeoutError:
             logger.debug("Health request timeout", operation="health_request")
@@ -248,11 +300,31 @@ class HealthServer:
         status: HTTPStatus,
         body: dict[str, Any],
     ) -> None:
-        """Send HTTP response."""
+        """Send HTTP JSON response."""
         body_bytes = json.dumps(body, indent=2).encode("utf-8")
         response = (
             f"HTTP/1.1 {status.value} {status.phrase}\r\n"
             f"Content-Type: application/json\r\n"
+            f"Content-Length: {len(body_bytes)}\r\n"
+            f"Connection: close\r\n"
+            f"\r\n"
+        ).encode() + body_bytes
+
+        writer.write(response)
+        await writer.drain()
+
+    async def _send_text_response(
+        self,
+        writer: asyncio.StreamWriter,
+        status: HTTPStatus,
+        body: str,
+        content_type: str = "text/plain",
+    ) -> None:
+        """Send HTTP text response (for Prometheus metrics)."""
+        body_bytes = body.encode("utf-8")
+        response = (
+            f"HTTP/1.1 {status.value} {status.phrase}\r\n"
+            f"Content-Type: {content_type}\r\n"
             f"Content-Length: {len(body_bytes)}\r\n"
             f"Connection: close\r\n"
             f"\r\n"

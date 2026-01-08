@@ -12,6 +12,7 @@ This module has been refactored to delegate to focused helper modules:
 
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import cast
@@ -78,7 +79,9 @@ class LiveExecutionEngine:
         Args:
             broker: Brokerage adapter (must support perpetuals)
             config: Bot configuration
-            risk_manager: Risk manager instance (creates default if None)
+            risk_manager: Risk manager instance. If None, resolves from
+                application container. Falls back to creating a default
+                manager with deprecation warning if no container is set.
             event_store: Event store for metrics
             bot_id: Bot identifier for logging
             slippage_multipliers: Symbol-specific slippage multipliers
@@ -97,6 +100,7 @@ class LiveExecutionEngine:
             store = EventStore()
         self.event_store = store
 
+        # Resolve risk_manager: explicit > container > create (with warning)
         self.risk_manager: LiveRiskManager
         if risk_manager is not None:
             self.risk_manager = risk_manager
@@ -107,7 +111,21 @@ class LiveExecutionEngine:
                 else:  # Fallback for legacy managers without helper
                     setattr(self.risk_manager, "event_store", store)
         else:
-            self.risk_manager = LiveRiskManager(event_store=store)
+            # Try to resolve from container
+            from gpt_trader.app.container import get_application_container
+
+            container = get_application_container()
+            if container is not None:
+                self.risk_manager = container.risk_manager
+            else:
+                # Legacy fallback with deprecation warning
+                warnings.warn(
+                    "Creating LiveRiskManager without container. Use "
+                    "container.create_live_execution_engine() or pass risk_manager explicitly.",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
+                self.risk_manager = LiveRiskManager(event_store=store)
         self.bot_id = bot_id
         self.slippage_multipliers = slippage_multipliers or {}
 

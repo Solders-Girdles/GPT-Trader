@@ -185,6 +185,14 @@ class CoinbaseRestService:
         """Get current mark price for a symbol (ExtendedBrokerProtocol)."""
         return self._product_service.get_mark_price(symbol)
 
+    def get_tickers(self, product_ids: list[str]) -> dict[str, dict[str, Any]]:
+        """Get ticker data for multiple products in a single batch request.
+
+        In Advanced API mode, uses the batch best_bid_ask endpoint.
+        In Exchange API mode, falls back to individual get_ticker calls.
+        """
+        return self._product_service.get_tickers(product_ids)
+
     # =========================================================================
     # Delegated Methods - OrderService
     # =========================================================================

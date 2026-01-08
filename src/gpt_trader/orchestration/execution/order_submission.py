@@ -18,6 +18,7 @@ from gpt_trader.features.brokerages.coinbase.rest_service import CoinbaseRestSer
 from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
 from gpt_trader.logging.correlation import order_context
 from gpt_trader.monitoring.metrics_collector import record_counter
+from gpt_trader.observability.tracing import trace_span
 from gpt_trader.orchestration.execution.broker_executor import BrokerExecutor
 from gpt_trader.orchestration.execution.order_event_recorder import OrderEventRecorder
 from gpt_trader.persistence.event_store import EventStore
@@ -234,21 +235,33 @@ class OrderSubmitter:
         """
         submit_id = self._generate_submit_id(client_order_id)
 
-        # Wrap entire submission in order context for correlation tracing
+        # Wrap entire submission in order context and trace span
         with order_context(order_id=submit_id, symbol=symbol):
-            return self._submit_order_inner(
-                submit_id=submit_id,
-                symbol=symbol,
-                side=side,
-                order_type=order_type,
-                order_quantity=order_quantity,
-                price=price,
-                effective_price=effective_price,
-                stop_price=stop_price,
-                tif=tif,
-                reduce_only=reduce_only,
-                leverage=leverage,
-            )
+            with trace_span(
+                "order_submit",
+                {
+                    "symbol": symbol,
+                    "side": side.value if hasattr(side, "value") else str(side),
+                    "order_type": (
+                        order_type.value if hasattr(order_type, "value") else str(order_type)
+                    ),
+                    "quantity": float(order_quantity),
+                    "reduce_only": reduce_only,
+                },
+            ):
+                return self._submit_order_inner(
+                    submit_id=submit_id,
+                    symbol=symbol,
+                    side=side,
+                    order_type=order_type,
+                    order_quantity=order_quantity,
+                    price=price,
+                    effective_price=effective_price,
+                    stop_price=stop_price,
+                    tif=tif,
+                    reduce_only=reduce_only,
+                    leverage=leverage,
+                )
 
     def _submit_order_inner(
         self,

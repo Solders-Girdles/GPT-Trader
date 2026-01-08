@@ -50,7 +50,7 @@
 .terminal-r16 { fill: #ff0033;font-weight: bold }
 .terminal-r17 { fill: #ffd700;font-weight: bold }
 .terminal-r18 { fill: #101010 }
-.terminal-r19 { fill: #00ff66 }
+.terminal-r19 { fill: #00ff41 }
 .terminal-r20 { fill: #101010;font-weight: bold }
 .terminal-r21 { fill: #b0b0b0 }
     </style>

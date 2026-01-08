@@ -26,9 +26,9 @@ def test_load_paper_profile():
     assert config.risk.position_fraction == Decimal("0.10")
 
     # Verify Strategy mappings
-    # paper.yaml: short_window: 10, long_window: 50
-    assert config.strategy.short_ma_period == 10
-    assert config.strategy.long_ma_period == 50
+    # paper.yaml: short_window: 5, long_window: 20
+    assert config.strategy.short_ma_period == 5
+    assert config.strategy.long_ma_period == 20
 
 
 def test_validate_paper_profile():

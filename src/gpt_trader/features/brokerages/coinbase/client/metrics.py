@@ -15,6 +15,37 @@ from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="api_metrics")
 
+# Endpoint path keywords -> category
+ENDPOINT_CATEGORIES: dict[str, str] = {
+    "orders": "orders",
+    "fills": "orders",
+    "accounts": "accounts",
+    "positions": "positions",
+    "cfm": "cfm",
+    "intx": "intx",
+    "products": "products",
+    "market": "market",
+    "ticker": "market",
+    "candles": "market",
+    "best_bid_ask": "market",
+}
+
+
+def categorize_endpoint(path: str) -> str:
+    """Determine the category for an endpoint path.
+
+    Args:
+        path: The endpoint path (e.g., "/api/v3/brokerage/orders")
+
+    Returns:
+        Category string (e.g., "orders", "accounts", "market", "other")
+    """
+    path_lower = path.lower()
+    for keyword, category in ENDPOINT_CATEGORIES.items():
+        if keyword in path_lower:
+            return category
+    return "other"
+
 
 @dataclass
 class EndpointMetrics:
@@ -84,7 +115,9 @@ class EndpointMetrics:
             "error_rate": round(self.error_rate, 4),
             "avg_latency_ms": round(self.average_latency_ms, 2),
             "last_latency_ms": round(self.last_latency_ms, 2),
-            "min_latency_ms": round(self.min_latency_ms, 2) if self.min_latency_ms != float("inf") else 0.0,
+            "min_latency_ms": (
+                round(self.min_latency_ms, 2) if self.min_latency_ms != float("inf") else 0.0
+            ),
             "max_latency_ms": round(self.max_latency_ms, 2),
             "p50_latency_ms": round(self.p50_latency_ms, 2),
             "p95_latency_ms": round(self.p95_latency_ms, 2),
@@ -115,19 +148,21 @@ class APIMetricsCollector:
     _rate_limit_hits: int = 0
 
     # Endpoint path keywords -> category
-    ENDPOINT_CATEGORIES: dict[str, str] = field(default_factory=lambda: {
-        "orders": "orders",
-        "fills": "orders",
-        "accounts": "accounts",
-        "positions": "positions",
-        "cfm": "cfm",
-        "intx": "intx",
-        "products": "products",
-        "market": "market",
-        "ticker": "market",
-        "candles": "market",
-        "best_bid_ask": "market",
-    })
+    ENDPOINT_CATEGORIES: dict[str, str] = field(
+        default_factory=lambda: {
+            "orders": "orders",
+            "fills": "orders",
+            "accounts": "accounts",
+            "positions": "positions",
+            "cfm": "cfm",
+            "intx": "intx",
+            "products": "products",
+            "market": "market",
+            "ticker": "market",
+            "candles": "market",
+            "best_bid_ask": "market",
+        }
+    )
 
     def _categorize_endpoint(self, path: str) -> str:
         """Determine the category for an endpoint path."""

@@ -6,10 +6,11 @@ Supports:
 - Public channels: ticker, level2, market_trades
 - Private channels: user (order updates, fills) - requires authentication
 - Event dispatching with typed handlers
-- Exponential backoff reconnection
+- Exponential backoff reconnection with jitter
 """
 
 import json
+import random
 import threading
 import time
 from collections.abc import Callable
@@ -22,17 +23,58 @@ except ImportError:
     websocket = None  # type: ignore[assignment]
 
 from gpt_trader.config.constants import (
-    MAX_WS_RECONNECT_ATTEMPTS,
-    MAX_WS_RECONNECT_DELAY_SECONDS,
     WS_JOIN_TIMEOUT,
+    WS_RECONNECT_BACKOFF_BASE_SECONDS,
+    WS_RECONNECT_BACKOFF_MAX_SECONDS,
     WS_RECONNECT_BACKOFF_MULTIPLIER,
-    WS_RECONNECT_DELAY,
+    WS_RECONNECT_JITTER_PCT,
+    WS_RECONNECT_MAX_ATTEMPTS,
+    WS_RECONNECT_PAUSE_SECONDS,
+    WS_RECONNECT_RESET_SECONDS,
 )
 from gpt_trader.features.brokerages.coinbase.client.constants import WS_BASE_URL
 from gpt_trader.features.brokerages.coinbase.ws_events import EventDispatcher
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="coinbase_websocket")
+
+
+def calculate_backoff_with_jitter(
+    attempt: int,
+    base_seconds: float = WS_RECONNECT_BACKOFF_BASE_SECONDS,
+    max_seconds: float = WS_RECONNECT_BACKOFF_MAX_SECONDS,
+    multiplier: float = WS_RECONNECT_BACKOFF_MULTIPLIER,
+    jitter_pct: float = WS_RECONNECT_JITTER_PCT,
+) -> float:
+    """
+    Calculate exponential backoff delay with jitter.
+
+    Uses exponential growth with configurable jitter to prevent
+    thundering herd on reconnection.
+
+    Args:
+        attempt: Current attempt number (0-indexed).
+        base_seconds: Base delay in seconds.
+        max_seconds: Maximum delay cap.
+        multiplier: Exponential growth multiplier.
+        jitter_pct: Jitter as fraction (0.25 = ±25%).
+
+    Returns:
+        Delay in seconds with jitter applied.
+    """
+    # Calculate base exponential delay
+    delay = base_seconds * (multiplier**attempt)
+
+    # Cap at maximum
+    delay = min(delay, max_seconds)
+
+    # Apply jitter (±jitter_pct)
+    if jitter_pct > 0:
+        jitter_range = delay * jitter_pct
+        jitter = random.uniform(-jitter_range, jitter_range)
+        delay = max(0.1, delay + jitter)  # Ensure positive delay
+
+    return delay
 
 
 class SequenceGuard:
@@ -101,6 +143,7 @@ class CoinbaseWebSocket:
         private_key: str | None = None,
         on_message: Callable[[dict], None] | None = None,
         dispatcher: EventDispatcher | None = None,
+        on_max_attempts_exceeded: Callable[[int], None] | None = None,
     ):
         self.url = url
         self.api_key = api_key
@@ -115,9 +158,11 @@ class CoinbaseWebSocket:
         self.subscriptions: list[dict] = []
         self._transport: Any = None
         self._sequence_guard = SequenceGuard()
-        self._reconnect_delay: float = float(WS_RECONNECT_DELAY)
         self._reconnect_count = 0
         self._closed = False
+
+        # Callback when max reconnection attempts exceeded (for degradation)
+        self._on_max_attempts_exceeded = on_max_attempts_exceeded
 
         # Health monitoring state
         self._last_message_ts: float | None = None
@@ -125,6 +170,10 @@ class CoinbaseWebSocket:
         self._last_close_ts: float | None = None
         self._last_error_ts: float | None = None
         self._gap_count: int = 0
+
+        # Connection stability tracking for attempt counter reset
+        self._connected_since: float | None = None
+        self._max_attempts_triggered: bool = False
 
     @property
     def running(self) -> bool:
@@ -272,10 +321,14 @@ class CoinbaseWebSocket:
 
     def _on_open(self, ws: Any) -> None:
         logger.info("WebSocket connected")
-        # Reset reconnect state on successful connection
-        self._reconnect_delay = WS_RECONNECT_DELAY
-        self._reconnect_count = 0
+        # Track when connection was established for stability measurement
+        self._connected_since = time.time()
         self._sequence_guard.reset()
+
+        # Note: We don't reset _reconnect_count here immediately.
+        # Instead, we reset it only after the connection has been stable
+        # for WS_RECONNECT_RESET_SECONDS. This prevents rapid reconnect
+        # loops from resetting the counter prematurely.
 
         # Resubscribe
         for sub in self.subscriptions:
@@ -328,11 +381,29 @@ class CoinbaseWebSocket:
         )
 
     def _on_close(self, ws: Any, close_status_code: int | None, close_msg: str | None) -> None:
-        self._last_close_ts = time.time()
+        close_ts = time.time()
+        self._last_close_ts = close_ts
+
+        # Check if connection was stable long enough to reset attempt counter
+        connection_duration = 0.0
+        if self._connected_since is not None:
+            connection_duration = close_ts - self._connected_since
+            if connection_duration >= WS_RECONNECT_RESET_SECONDS:
+                logger.info(
+                    "Connection was stable, resetting reconnect counter",
+                    stable_seconds=connection_duration,
+                    previous_attempts=self._reconnect_count,
+                )
+                self._reconnect_count = 0
+                self._max_attempts_triggered = False
+
+        self._connected_since = None
+
         logger.info(
             "WebSocket closed",
             status_code=close_status_code,
-            message=close_msg,
+            close_reason=close_msg,
+            connection_duration=round(connection_duration, 1),
         )
 
         # Check if permanent shutdown was requested
@@ -348,30 +419,39 @@ class CoinbaseWebSocket:
 
                 # Check reconnection limit (0 = unlimited)
                 if (
-                    MAX_WS_RECONNECT_ATTEMPTS > 0
-                    and self._reconnect_count > MAX_WS_RECONNECT_ATTEMPTS
+                    WS_RECONNECT_MAX_ATTEMPTS > 0
+                    and self._reconnect_count > WS_RECONNECT_MAX_ATTEMPTS
+                    and not self._max_attempts_triggered
                 ):
                     logger.error(
-                        "Maximum reconnection attempts reached",
-                        max_attempts=MAX_WS_RECONNECT_ATTEMPTS,
+                        "Maximum reconnection attempts exceeded - triggering degradation",
+                        max_attempts=WS_RECONNECT_MAX_ATTEMPTS,
+                        attempts=self._reconnect_count,
+                        pause_seconds=WS_RECONNECT_PAUSE_SECONDS,
                     )
+                    self._max_attempts_triggered = True
                     self._running.clear()
+
+                    # Invoke degradation callback outside lock
+                    if self._on_max_attempts_exceeded:
+                        try:
+                            self._on_max_attempts_exceeded(WS_RECONNECT_PAUSE_SECONDS)
+                        except Exception as e:
+                            logger.error(f"Error in max_attempts_exceeded callback: {e}")
                     return
 
-                delay = min(self._reconnect_delay, MAX_WS_RECONNECT_DELAY_SECONDS)
-                self._reconnect_delay = min(
-                    self._reconnect_delay * WS_RECONNECT_BACKOFF_MULTIPLIER,
-                    MAX_WS_RECONNECT_DELAY_SECONDS,
-                )
+                # Calculate delay with exponential backoff and jitter
+                delay = calculate_backoff_with_jitter(self._reconnect_count - 1)
+
                 # Clear running to allow reconnect
                 self._running.clear()
 
             logger.info(
                 "Attempting reconnect",
-                delay_seconds=delay,
+                delay_seconds=round(delay, 2),
                 attempt=self._reconnect_count,
                 max_attempts=(
-                    MAX_WS_RECONNECT_ATTEMPTS if MAX_WS_RECONNECT_ATTEMPTS > 0 else "unlimited"
+                    WS_RECONNECT_MAX_ATTEMPTS if WS_RECONNECT_MAX_ATTEMPTS > 0 else "unlimited"
                 ),
             )
 
@@ -394,6 +474,8 @@ class CoinbaseWebSocket:
                 - gap_count: Number of sequence gaps detected
                 - reconnect_count: Number of reconnection attempts
                 - connected: Whether WebSocket is currently connected
+                - connected_since: Timestamp when current connection was established
+                - max_attempts_triggered: Whether max reconnect attempts was triggered
         """
         return {
             "last_message_ts": self._last_message_ts,
@@ -403,7 +485,14 @@ class CoinbaseWebSocket:
             "gap_count": self._gap_count,
             "reconnect_count": self._reconnect_count,
             "connected": self.running,
+            "connected_since": self._connected_since,
+            "max_attempts_triggered": self._max_attempts_triggered,
         }
 
 
-__all__ = ["CoinbaseWebSocket", "EventDispatcher", "SequenceGuard"]
+__all__ = [
+    "CoinbaseWebSocket",
+    "EventDispatcher",
+    "SequenceGuard",
+    "calculate_backoff_with_jitter",
+]

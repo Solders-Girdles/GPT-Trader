@@ -10,6 +10,8 @@ from typing import Any
 
 from gpt_trader.app.container import clear_application_container
 from gpt_trader.cli import options, services
+from gpt_trader.config.constants import OTEL_ENABLED, OTEL_EXPORTER_ENDPOINT, OTEL_SERVICE_NAME
+from gpt_trader.observability.tracing import init_tracing, shutdown_tracing
 from gpt_trader.orchestration.configuration import ConfigValidationError
 from gpt_trader.tui.helpers import run_tui_app_with_cleanup
 from gpt_trader.utilities.logging_patterns import get_logger
@@ -74,6 +76,14 @@ def execute(args: Namespace) -> int:
     # Auto-reduce interval for fast development iteration
     if args.dev_fast and getattr(args, "interval", None) is None:
         config.interval = 1  # 1 second instead of default 60
+
+    # Initialize OpenTelemetry tracing if enabled
+    if OTEL_ENABLED:
+        init_tracing(
+            service_name=OTEL_SERVICE_NAME,
+            endpoint=OTEL_EXPORTER_ENDPOINT,
+            enabled=True,
+        )
 
     bot = services.instantiate_bot(config)
 
@@ -157,6 +167,8 @@ def _run_bot(bot: Any, *, single_cycle: bool) -> int:
     except KeyboardInterrupt:  # pragma: no cover - defensive
         logger.info("Shutdown complete.", status="stopped")
     finally:
+        # Flush any pending trace spans
+        shutdown_tracing()
         # Clear container registry to prevent leaks between runs
         clear_application_container()
 

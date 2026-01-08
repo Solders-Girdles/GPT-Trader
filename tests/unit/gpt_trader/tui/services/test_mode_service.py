@@ -253,6 +253,7 @@ class TestModePreferencePersistence:
             saved = json.loads(prefs_file.read_text())
             assert saved["mode"] == mode
 
+    @pytest.mark.uses_real_preferences
     def test_init_sets_default_preferences_path(self):
         """Test init uses default preferences path when not specified."""
         mock_app = MagicMock()

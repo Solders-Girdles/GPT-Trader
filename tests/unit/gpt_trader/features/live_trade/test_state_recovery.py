@@ -6,6 +6,11 @@ from unittest.mock import MagicMock
 import pytest
 
 from gpt_trader.app.config import BotConfig
+from gpt_trader.app.container import (
+    ApplicationContainer,
+    clear_application_container,
+    set_application_container,
+)
 from gpt_trader.features.live_trade.engines.base import CoordinatorContext
 from gpt_trader.features.live_trade.engines.strategy import (
     EVENT_PRICE_TICK,
@@ -54,11 +59,23 @@ def context_without_store(bot_config: BotConfig) -> CoordinatorContext:
     )
 
 
+@pytest.fixture
+def application_container(bot_config: BotConfig):
+    """Set up application container for TradingEngine tests."""
+    container = ApplicationContainer(bot_config)
+    set_application_container(container)
+    yield container
+    clear_application_container()
+
+
 class TestTradingEngineRehydration:
     """Tests for TradingEngine state recovery."""
 
     def test_rehydrate_from_empty_events(
-        self, context_with_store: CoordinatorContext, mock_event_store: MagicMock
+        self,
+        context_with_store: CoordinatorContext,
+        mock_event_store: MagicMock,
+        application_container,
     ) -> None:
         """Test rehydration with no events returns 0."""
         mock_event_store.get_recent.return_value = []
@@ -70,7 +87,10 @@ class TestTradingEngineRehydration:
         assert len(engine.price_history) == 0
 
     def test_rehydrate_from_price_ticks(
-        self, context_with_store: CoordinatorContext, mock_event_store: MagicMock
+        self,
+        context_with_store: CoordinatorContext,
+        mock_event_store: MagicMock,
+        application_container,
     ) -> None:
         """Test rehydration restores price history from price_tick events."""
         mock_event_store.get_recent.return_value = [
@@ -89,7 +109,10 @@ class TestTradingEngineRehydration:
         assert engine.price_history["BTC-PERP"][1] == Decimal("50100.00")
 
     def test_rehydrate_ignores_unknown_symbols(
-        self, context_with_store: CoordinatorContext, mock_event_store: MagicMock
+        self,
+        context_with_store: CoordinatorContext,
+        mock_event_store: MagicMock,
+        application_container,
     ) -> None:
         """Test rehydration ignores events for symbols not in config."""
         mock_event_store.get_recent.return_value = [
@@ -105,7 +128,10 @@ class TestTradingEngineRehydration:
         assert len(engine.price_history["BTC-PERP"]) == 1
 
     def test_rehydrate_ignores_other_event_types(
-        self, context_with_store: CoordinatorContext, mock_event_store: MagicMock
+        self,
+        context_with_store: CoordinatorContext,
+        mock_event_store: MagicMock,
+        application_container,
     ) -> None:
         """Test rehydration ignores non-price_tick events."""
         mock_event_store.get_recent.return_value = [
@@ -121,7 +147,10 @@ class TestTradingEngineRehydration:
         assert len(engine.price_history["BTC-PERP"]) == 1
 
     def test_rehydrate_bounds_history_to_20(
-        self, context_with_store: CoordinatorContext, mock_event_store: MagicMock
+        self,
+        context_with_store: CoordinatorContext,
+        mock_event_store: MagicMock,
+        application_container,
     ) -> None:
         """Test rehydration keeps at most 20 prices per symbol."""
         events = [
@@ -139,7 +168,9 @@ class TestTradingEngineRehydration:
         # First price should be 50010 (30 - 20 = 10, so 50000 + 10)
         assert engine.price_history["BTC-PERP"][0] == Decimal("50010")
 
-    def test_rehydrate_without_event_store(self, context_without_store: CoordinatorContext) -> None:
+    def test_rehydrate_without_event_store(
+        self, context_without_store: CoordinatorContext, application_container
+    ) -> None:
         """Test rehydration with no event store returns 0 gracefully."""
         engine = TradingEngine(context_without_store)
 
@@ -148,7 +179,10 @@ class TestTradingEngineRehydration:
         assert restored == 0
 
     def test_rehydrate_handles_invalid_price(
-        self, context_with_store: CoordinatorContext, mock_event_store: MagicMock
+        self,
+        context_with_store: CoordinatorContext,
+        mock_event_store: MagicMock,
+        application_container,
     ) -> None:
         """Test rehydration handles invalid price values gracefully."""
         mock_event_store.get_recent.return_value = [
@@ -165,7 +199,10 @@ class TestTradingEngineRehydration:
         assert len(engine.price_history["BTC-PERP"]) == 2
 
     def test_rehydrate_handles_missing_fields(
-        self, context_with_store: CoordinatorContext, mock_event_store: MagicMock
+        self,
+        context_with_store: CoordinatorContext,
+        mock_event_store: MagicMock,
+        application_container,
     ) -> None:
         """Test rehydration handles events with missing fields."""
         mock_event_store.get_recent.return_value = [
@@ -186,7 +223,10 @@ class TestTradingEngineRecordPriceTick:
     """Tests for TradingEngine price tick recording."""
 
     def test_record_price_tick_stores_event(
-        self, context_with_store: CoordinatorContext, mock_event_store: MagicMock
+        self,
+        context_with_store: CoordinatorContext,
+        mock_event_store: MagicMock,
+        application_container,
     ) -> None:
         """Test that price ticks are recorded to event store."""
         engine = TradingEngine(context_with_store)
@@ -202,7 +242,7 @@ class TestTradingEngineRecordPriceTick:
         assert "timestamp" in call_args["data"]
 
     def test_record_price_tick_without_store(
-        self, context_without_store: CoordinatorContext
+        self, context_without_store: CoordinatorContext, application_container
     ) -> None:
         """Test that price tick recording is skipped without event store."""
         engine = TradingEngine(context_without_store)

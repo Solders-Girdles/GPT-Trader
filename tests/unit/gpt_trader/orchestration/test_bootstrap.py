@@ -18,6 +18,16 @@ from gpt_trader.orchestration.bootstrap import (
 )
 
 
+@pytest.fixture(autouse=True)
+def clear_container():
+    """Clear the application container before and after each test."""
+    from gpt_trader.app.container import clear_application_container
+
+    clear_application_container()
+    yield
+    clear_application_container()
+
+
 @pytest.fixture
 def mock_config() -> BotConfig:
     """Create a mock BotConfig for testing."""

@@ -57,6 +57,7 @@ import logging
 from typing import Any
 
 from gpt_trader.monitoring.alert_types import AlertSeverity
+from gpt_trader.monitoring.metrics_collector import record_counter as _metrics_record_counter
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger("gpt_trader.features.live_trade.guard_errors", component="guards")
@@ -130,20 +131,25 @@ def _get_alert_system() -> Any:
     return _alert_system
 
 
-def record_counter(name: str, increment: int = 1) -> None:
-    # Placeholder for metrics
-    pass
-
-
 def record_guard_failure(error: GuardError) -> None:
+    """Record a guard failure in metrics, logs, and alerts.
+
+    Records to Prometheus-compatible counter:
+    - gpt_trader_guard_trips_total{guard, category, recoverable}
+    """
     category = getattr(error, "category", "unknown")
     recoverable = getattr(error, "recoverable", False)
     guard_slug = error.guard_name.lower().replace(" ", "_")
 
-    # Metrics
-    metric_type = "recoverable_failures" if recoverable else "critical_failures"
-    record_counter(f"risk.guards.{guard_slug}.{metric_type}", 1)
-    record_counter(f"risk.guards.{guard_slug}.{category}", 1)
+    # Record Prometheus counter with labels
+    _metrics_record_counter(
+        "gpt_trader_guard_trips_total",
+        labels={
+            "guard": guard_slug,
+            "category": category,
+            "recoverable": "true" if recoverable else "false",
+        },
+    )
 
     # Logging
     level = logging.WARNING if recoverable else logging.ERROR
@@ -167,5 +173,13 @@ def record_guard_failure(error: GuardError) -> None:
 
 
 def record_guard_success(guard_name: str) -> None:
+    """Record a successful guard check.
+
+    Records to Prometheus-compatible counter:
+    - gpt_trader_guard_checks_total{guard, result}
+    """
     guard_slug = guard_name.lower().replace(" ", "_")
-    record_counter(f"risk.guards.{guard_slug}.success", 1)
+    _metrics_record_counter(
+        "gpt_trader_guard_checks_total",
+        labels={"guard": guard_slug, "result": "success"},
+    )

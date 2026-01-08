@@ -5,7 +5,11 @@ TradingBot can be created and started using the ApplicationContainer.
 """
 
 from gpt_trader.app.config import BotConfig
-from gpt_trader.app.container import ApplicationContainer
+from gpt_trader.app.container import (
+    ApplicationContainer,
+    clear_application_container,
+    set_application_container,
+)
 
 
 def test_container_bot_boot_roundtrip():
@@ -14,8 +18,9 @@ def test_container_bot_boot_roundtrip():
     # Create a simple configuration for testing
     config = BotConfig.from_profile("dev", symbols=["BTC-USD"], mock_broker=True)
 
-    # Create application container
+    # Create application container and register it globally
     container = ApplicationContainer(config)
+    set_application_container(container)
 
     # Verify container can create core services
     assert container.config is not None
@@ -47,6 +52,8 @@ def test_container_bot_boot_roundtrip():
     assert bot.broker == broker
     assert bot.container == container
 
+    # Cleanup
+    clear_application_container()
     print("Container-based TradingBot integration test passed!")
 
 
@@ -55,8 +62,9 @@ def test_container_services():
 
     config = BotConfig.from_profile("dev", symbols=["ETH-USD"], mock_broker=True)
 
-    # Create container
+    # Create container and register globally
     container = ApplicationContainer(config)
+    set_application_container(container)
 
     # Verify container has all expected services
     assert container.config is not None
@@ -66,6 +74,8 @@ def test_container_services():
     assert container.risk_manager is not None
     assert container.notification_service is not None
 
+    # Cleanup
+    clear_application_container()
     print("Container services test passed!")
 
 

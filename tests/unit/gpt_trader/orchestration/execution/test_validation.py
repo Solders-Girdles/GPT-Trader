@@ -59,7 +59,17 @@ def mock_product() -> Product:
 
 
 @pytest.fixture
-def validator(mock_broker: MagicMock, mock_risk_manager: MagicMock) -> OrderValidator:
+def mock_failure_tracker() -> MagicMock:
+    """Create a mock failure tracker."""
+    return MagicMock()
+
+
+@pytest.fixture
+def validator(
+    mock_broker: MagicMock,
+    mock_risk_manager: MagicMock,
+    mock_failure_tracker: MagicMock,
+) -> OrderValidator:
     """Create an OrderValidator instance."""
     record_preview = MagicMock()
     record_rejection = MagicMock()
@@ -69,6 +79,7 @@ def validator(mock_broker: MagicMock, mock_risk_manager: MagicMock) -> OrderVali
         enable_order_preview=True,
         record_preview_callback=record_preview,
         record_rejection_callback=record_rejection,
+        failure_tracker=mock_failure_tracker,
     )
 
 
@@ -84,6 +95,7 @@ class TestOrderValidatorInit:
         self,
         mock_broker: MagicMock,
         mock_risk_manager: MagicMock,
+        mock_failure_tracker: MagicMock,
     ) -> None:
         """Test that dependencies are stored correctly."""
         record_preview = MagicMock()
@@ -95,6 +107,7 @@ class TestOrderValidatorInit:
             enable_order_preview=True,
             record_preview_callback=record_preview,
             record_rejection_callback=record_rejection,
+            failure_tracker=mock_failure_tracker,
         )
 
         assert validator.broker is mock_broker
@@ -559,6 +572,7 @@ class TestMaybePreviewOrder:
         self,
         mock_broker: MagicMock,
         mock_risk_manager: MagicMock,
+        mock_failure_tracker: MagicMock,
     ) -> None:
         """Test that disabled preview is skipped."""
         validator = OrderValidator(
@@ -567,6 +581,7 @@ class TestMaybePreviewOrder:
             enable_order_preview=False,  # Disabled
             record_preview_callback=MagicMock(),
             record_rejection_callback=MagicMock(),
+            failure_tracker=mock_failure_tracker,
         )
 
         # Should return without calling anything
@@ -588,6 +603,7 @@ class TestMaybePreviewOrder:
     def test_broker_without_preview_skips(
         self,
         mock_risk_manager: MagicMock,
+        mock_failure_tracker: MagicMock,
     ) -> None:
         """Test that broker without preview_order method is skipped."""
         # Broker without preview_order method
@@ -599,6 +615,7 @@ class TestMaybePreviewOrder:
             enable_order_preview=True,
             record_preview_callback=MagicMock(),
             record_rejection_callback=MagicMock(),
+            failure_tracker=mock_failure_tracker,
         )
 
         # Should not raise
@@ -619,6 +636,7 @@ class TestMaybePreviewOrder:
     def test_preview_success_records_result(
         self,
         mock_risk_manager: MagicMock,
+        mock_failure_tracker: MagicMock,
     ) -> None:
         """Test that successful preview is recorded."""
         # Create a broker that implements preview_order and edit_order_preview
@@ -633,6 +651,7 @@ class TestMaybePreviewOrder:
             enable_order_preview=True,
             record_preview_callback=record_preview,
             record_rejection_callback=MagicMock(),
+            failure_tracker=mock_failure_tracker,
         )
 
         validator.maybe_preview_order(
@@ -656,6 +675,7 @@ class TestMaybePreviewOrder:
     def test_preview_validation_error_propagates(
         self,
         mock_risk_manager: MagicMock,
+        mock_failure_tracker: MagicMock,
     ) -> None:
         """Test that ValidationError from preview propagates."""
         broker = MagicMock()
@@ -668,6 +688,7 @@ class TestMaybePreviewOrder:
             enable_order_preview=True,
             record_preview_callback=MagicMock(),
             record_rejection_callback=MagicMock(),
+            failure_tracker=mock_failure_tracker,
         )
 
         with pytest.raises(ValidationError, match="Insufficient margin"):
@@ -686,6 +707,7 @@ class TestMaybePreviewOrder:
     def test_preview_generic_exception_is_suppressed(
         self,
         mock_risk_manager: MagicMock,
+        mock_failure_tracker: MagicMock,
     ) -> None:
         """Test that generic exceptions from preview are suppressed."""
         broker = MagicMock()
@@ -698,6 +720,7 @@ class TestMaybePreviewOrder:
             enable_order_preview=True,
             record_preview_callback=MagicMock(),
             record_rejection_callback=MagicMock(),
+            failure_tracker=mock_failure_tracker,
         )
 
         # Should not raise
@@ -716,6 +739,7 @@ class TestMaybePreviewOrder:
     def test_preview_with_non_tif_value(
         self,
         mock_risk_manager: MagicMock,
+        mock_failure_tracker: MagicMock,
     ) -> None:
         """Test that non-TimeInForce tif values are handled."""
         broker = MagicMock()
@@ -728,6 +752,7 @@ class TestMaybePreviewOrder:
             enable_order_preview=True,
             record_preview_callback=MagicMock(),
             record_rejection_callback=MagicMock(),
+            failure_tracker=mock_failure_tracker,
         )
 
         # Pass None as tif - should default to GTC
@@ -795,6 +820,7 @@ class TestValidationIntegration:
         mock_broker: MagicMock,
         mock_risk_manager: MagicMock,
         mock_product: Product,
+        mock_failure_tracker: MagicMock,
     ) -> None:
         """Test a complete validation flow."""
         # Set up mocks
@@ -818,6 +844,7 @@ class TestValidationIntegration:
             enable_order_preview=False,
             record_preview_callback=MagicMock(),
             record_rejection_callback=MagicMock(),
+            failure_tracker=mock_failure_tracker,
         )
 
         # Step 1: Validate exchange rules
@@ -1194,8 +1221,11 @@ class TestFailureTrackerIntegration:
 class TestGetValidationMetrics:
     """Tests for get_validation_metrics function."""
 
-    def test_returns_empty_failures_initially(self) -> None:
+    def test_returns_empty_failures_initially(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that get_validation_metrics returns empty failures initially."""
+        # Disable strict mode for this fallback test
+        monkeypatch.delenv("GPT_TRADER_STRICT_CONTAINER", raising=False)
+
         # Reset the fallback tracker for this test
         import gpt_trader.orchestration.execution.validation as validation_module
         from gpt_trader.orchestration.execution.validation import (
@@ -1217,8 +1247,11 @@ class TestGetValidationMetrics:
         finally:
             validation_module._FALLBACK_FAILURE_TRACKER = original_tracker
 
-    def test_returns_failure_counts(self) -> None:
+    def test_returns_failure_counts(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that get_validation_metrics returns current failure counts."""
+        # Disable strict mode for this fallback test
+        monkeypatch.delenv("GPT_TRADER_STRICT_CONTAINER", raising=False)
+
         import gpt_trader.orchestration.execution.validation as validation_module
         from gpt_trader.orchestration.execution.validation import (
             ValidationFailureTracker,
@@ -1241,8 +1274,11 @@ class TestGetValidationMetrics:
         finally:
             validation_module._FALLBACK_FAILURE_TRACKER = original_tracker
 
-    def test_reports_escalation_status(self) -> None:
+    def test_reports_escalation_status(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that get_validation_metrics reports escalation status."""
+        # Disable strict mode for this fallback test
+        monkeypatch.delenv("GPT_TRADER_STRICT_CONTAINER", raising=False)
+
         import gpt_trader.orchestration.execution.validation as validation_module
         from gpt_trader.orchestration.execution.validation import (
             ValidationFailureTracker,

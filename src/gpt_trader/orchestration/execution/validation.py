@@ -18,6 +18,8 @@ Error Handling Strategy:
 
 from __future__ import annotations
 
+import os
+import warnings
 from collections import defaultdict
 from dataclasses import dataclass, field
 from decimal import Decimal
@@ -114,23 +116,50 @@ class ValidationFailureTracker:
 
 
 # Fallback failure tracker instance (used when no container is set)
+# NOTE: This fallback is deprecated. Set the application container instead.
 _FALLBACK_FAILURE_TRACKER = ValidationFailureTracker()
+_FALLBACK_WARNED = False
 
 
 def get_failure_tracker() -> ValidationFailureTracker:
     """Get the failure tracker instance.
 
-    Resolves from the application container if set, otherwise returns
-    the module-level fallback instance for backward compatibility.
+    Resolves from the application container if set. Falls back to
+    module-level instance with deprecation warning.
+
+    If GPT_TRADER_STRICT_CONTAINER=1 is set, raises RuntimeError
+    instead of using fallback.
 
     Returns:
         The ValidationFailureTracker instance.
+
+    Raises:
+        RuntimeError: If strict mode is enabled and no container is set.
     """
+    global _FALLBACK_WARNED
     from gpt_trader.app.container import get_application_container
 
     container = get_application_container()
     if container is not None:
         return container.validation_failure_tracker
+
+    # Strict mode for tests/CI
+    if os.environ.get("GPT_TRADER_STRICT_CONTAINER") == "1":
+        raise RuntimeError(
+            "No application container set. Call set_application_container() "
+            "before using get_failure_tracker()."
+        )
+
+    # Soft deprecation - warn once per process
+    if not _FALLBACK_WARNED:
+        warnings.warn(
+            "Using fallback ValidationFailureTracker. Set application container "
+            "via set_application_container() for proper DI.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        _FALLBACK_WARNED = True
+
     logger.debug("No application container set, using fallback failure tracker")
     return _FALLBACK_FAILURE_TRACKER
 

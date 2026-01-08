@@ -9,10 +9,27 @@ from decimal import Decimal
 from pathlib import Path
 from unittest.mock import MagicMock
 
+import pytest
+
 from gpt_trader.app.config import BotConfig
+from gpt_trader.app.container import (
+    ApplicationContainer,
+    clear_application_container,
+    set_application_container,
+)
 from gpt_trader.features.live_trade.engines.base import CoordinatorContext
 from gpt_trader.features.live_trade.engines.strategy import TradingEngine
 from gpt_trader.persistence.event_store import EventStore
+
+
+@pytest.fixture(autouse=True)
+def setup_container():
+    """Set up application container for TradingEngine tests."""
+    config = BotConfig(symbols=["BTC-USD"], interval=1, mock_broker=True)
+    container = ApplicationContainer(config)
+    set_application_container(container)
+    yield
+    clear_application_container()
 
 
 def create_test_config(symbols: list[str] | None = None) -> BotConfig:

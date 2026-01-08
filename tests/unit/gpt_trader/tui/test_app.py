@@ -314,7 +314,7 @@ class TestResourceCleanup:
         from gpt_trader.config.constants import MAX_WS_RECONNECT_ATTEMPTS
 
         # Default is 50
-        assert MAX_WS_RECONNECT_ATTEMPTS == 50
+        assert MAX_WS_RECONNECT_ATTEMPTS == 10
 
         # Can be set to 0 for unlimited (via env var in real usage)
         # Just verify the constant exists and is accessible

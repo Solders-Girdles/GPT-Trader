@@ -39,6 +39,30 @@ from gpt_trader.monitoring.status_reporter import StatusReporter
 from gpt_trader.tui.app import TraderApp
 
 # ============================================================
+# Theme isolation for deterministic tests
+# ============================================================
+
+
+@pytest.fixture(autouse=True)
+def isolate_tui_preferences(tmp_path, monkeypatch, request):
+    """Isolate TUI preferences for all TUI tests.
+
+    This prevents tests from reading/writing to the real preferences file,
+    ensuring consistent theme and mode settings across test runs.
+
+    Tests that need to verify default preferences path behavior should use
+    the 'uses_real_preferences' marker to skip this fixture.
+    """
+    if request.node.get_closest_marker("uses_real_preferences"):
+        # Allow test to use real preferences path
+        return
+
+    prefs_file = tmp_path / "test_preferences.json"
+    prefs_file.write_text('{"theme": "dark"}')
+    monkeypatch.setenv("GPT_TRADER_TUI_PREFERENCES_PATH", str(prefs_file))
+
+
+# ============================================================
 # Singleton cleanup for test isolation
 # ============================================================
 
@@ -212,7 +236,7 @@ def snap_compare(
             app_instance = _import_app_from_path(app_path)
 
         # Capture screenshot using public APIs
-        actual_screenshot = asyncio.get_event_loop().run_until_complete(
+        actual_screenshot = asyncio.run(
             _capture_screenshot(app_instance, press, terminal_size, run_before)
         )
 

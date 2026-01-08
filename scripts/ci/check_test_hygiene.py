@@ -213,6 +213,14 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen.py",  # signal detail formatting, backtest display, delta formatting, entry/exit badges
     "tests/unit/gpt_trader/config/test_bot_config_env.py",  # BotConfig env/profile wiring: RISK_* prefixes, daily loss limit, reduce-only enforcement, mark staleness
     "tests/unit/gpt_trader/monitoring/test_metrics_collector.py",  # metrics collector coverage: counters, gauges, histograms with labels
+    # Architecture migration and observability tests
+    "tests/unit/gpt_trader/tui/test_app.py",  # TUI app lifecycle, mode switching, and refresh scheduling
+    "tests/integration/test_order_flow.py",  # end-to-end order flow validation with risk guards and rejections
+    "tests/integration/test_crash_recovery.py",  # crash recovery scenarios and state restoration
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection.py",  # WebSocket reconnection reliability scenarios
+    "tests/unit/gpt_trader/features/live_trade/test_state_recovery.py",  # state recovery and persistence contract
+    "tests/property/test_validation_invariants.py",  # property-based validation invariants across order parameters
+    "tests/property/test_degradation_invariants.py",  # property-based degradation state invariants and transitions
 }
 
 SLEEP_ALLOWLIST = {

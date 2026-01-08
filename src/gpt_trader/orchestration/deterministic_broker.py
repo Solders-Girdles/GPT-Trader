@@ -123,7 +123,7 @@ class DeterministicBroker:
 
     def place_order(
         self,
-        symbol_or_payload: str | dict[str, Any],
+        symbol_or_payload: str | dict[str, Any] | None = None,
         side: str | OrderSide | None = None,
         order_type: str | OrderType = "market",
         quantity: Decimal | None = None,
@@ -134,10 +134,19 @@ class DeterministicBroker:
 
         Accepts either:
         - Positional args: symbol, side, order_type, quantity, limit_price
+        - Keyword args: symbol=..., side=..., order_type=..., quantity=...
         - Dict payload: {"product_id": ..., "side": ..., "order_configuration": ...}
         """
         self._order_counter += 1
         order_id = f"MOCK_{self._order_counter:06d}"
+
+        # Handle 'symbol' keyword arg (from BrokerExecutor)
+        if symbol_or_payload is None:
+            symbol_or_payload = kwargs.pop("symbol", "")
+
+        # Handle 'price' keyword arg (alias for limit_price)
+        if limit_price is None and "price" in kwargs:
+            limit_price = kwargs.pop("price")
 
         # Handle dict payload from strategy engine
         if isinstance(symbol_or_payload, dict):
@@ -151,7 +160,7 @@ class DeterministicBroker:
                 if quote_size:
                     quantity = Decimal(quote_size) / Decimal("50000")  # Estimate
         else:
-            symbol = symbol_or_payload
+            symbol = symbol_or_payload or ""
 
         # Convert strings to enums
         if isinstance(side, str):

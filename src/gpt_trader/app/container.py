@@ -7,6 +7,7 @@ from gpt_trader.app.containers.brokerage import BrokerageContainer
 from gpt_trader.app.containers.config import ConfigContainer
 from gpt_trader.app.containers.observability import ObservabilityContainer
 from gpt_trader.app.containers.persistence import PersistenceContainer
+from gpt_trader.app.containers.risk_validation import RiskValidationContainer
 from gpt_trader.app.health_server import HealthState
 from gpt_trader.config.types import Profile
 from gpt_trader.features.brokerages.coinbase.client.client import CoinbaseClient
@@ -50,10 +51,6 @@ class ApplicationContainer:
     def __init__(self, config: BotConfig):
         self.config = config
 
-        # Direct dependencies (risk/validation stay here for now)
-        self._risk_manager: LiveRiskManager | None = None
-        self._validation_failure_tracker: ValidationFailureTracker | None = None
-
         # Sub-containers (lazily delegate to these for grouped dependencies)
         self._config_container = ConfigContainer(config=config)
         self._observability = ObservabilityContainer(config=config)
@@ -65,6 +62,10 @@ class ApplicationContainer:
             config=config,
             event_store_provider=lambda: self.event_store,
             broker_factory=create_brokerage,
+        )
+        self._risk_validation = RiskValidationContainer(
+            config=config,
+            event_store_provider=lambda: self.event_store,
         )
 
     @property
@@ -104,32 +105,8 @@ class ApplicationContainer:
 
     @property
     def risk_manager(self) -> LiveRiskManager:
-        """Create or return the risk manager instance."""
-        if self._risk_manager is None:
-            from decimal import Decimal
-
-            from gpt_trader.features.live_trade.risk.manager import LiveRiskManager
-            from gpt_trader.orchestration.configuration.risk.model import RiskConfig
-
-            # Adapt BotConfig.risk (BotRiskConfig) to RiskConfig
-            bot_risk = self.config.risk
-            risk_config = RiskConfig(
-                max_leverage=bot_risk.max_leverage,
-                # daily_loss_limit is absolute dollar amount (legacy)
-                daily_loss_limit=Decimal("100"),
-                # daily_loss_limit_pct is percentage of equity (used by LiveRiskManager)
-                daily_loss_limit_pct=bot_risk.daily_loss_limit_pct,
-                max_position_pct_per_symbol=float(bot_risk.position_fraction),
-                # Map other relevant fields if needed, or rely on defaults
-                kill_switch_enabled=self.config.mean_reversion.kill_switch_enabled,
-                reduce_only_mode=self.config.reduce_only_mode,
-            )
-
-            self._risk_manager = LiveRiskManager(
-                config=risk_config,
-                event_store=self.event_store,
-            )
-        return self._risk_manager
+        """Delegate to RiskValidationContainer."""
+        return self._risk_validation.risk_manager
 
     @property
     def notification_service(self) -> NotificationService:
@@ -138,22 +115,8 @@ class ApplicationContainer:
 
     @property
     def validation_failure_tracker(self) -> ValidationFailureTracker:
-        """Create or return the validation failure tracker instance.
-
-        This tracker monitors consecutive validation failures and can trigger
-        escalation (e.g., reduce-only mode) when thresholds are exceeded.
-
-        Note: Default configuration matches the current global tracker behavior
-        (threshold=5, no escalation callback). Escalation callback can be
-        configured after resolution if needed.
-        """
-        if self._validation_failure_tracker is None:
-            from gpt_trader.orchestration.execution.validation import (
-                ValidationFailureTracker as VFT,
-            )
-
-            self._validation_failure_tracker = VFT()
-        return self._validation_failure_tracker
+        """Delegate to RiskValidationContainer."""
+        return self._risk_validation.validation_failure_tracker
 
     @property
     def profile_loader(self) -> ProfileLoader:
@@ -179,7 +142,12 @@ class ApplicationContainer:
         self._config_container.reset_config()
 
     def reset_risk_manager(self) -> None:
-        self._risk_manager = None
+        """Delegate to RiskValidationContainer."""
+        self._risk_validation.reset_risk_manager()
+
+    def reset_validation_failure_tracker(self) -> None:
+        """Delegate to RiskValidationContainer."""
+        self._risk_validation.reset_validation_failure_tracker()
 
     def create_bot(self) -> TradingBot:
         """

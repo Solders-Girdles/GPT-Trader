@@ -87,6 +87,39 @@ Risk Guards → Coinbase Brokerage Adapter → Metrics + Telemetry
 > compatibility but internally delegates to `ApplicationContainer`. New code should use
 > `ApplicationContainer` directly.
 
+#### Container Sub-Containers
+
+`ApplicationContainer` delegates to specialized sub-containers:
+
+| Sub-Container | Services |
+|---------------|----------|
+| `ConfigContainer` | Config controller, profile loader |
+| `ObservabilityContainer` | Notifications, health state, secrets manager |
+| `PersistenceContainer` | Event store, orders store, runtime paths |
+| `BrokerageContainer` | Broker, market data service, product catalog |
+| `RiskValidationContainer` | Risk manager, validation failure tracker |
+
+#### Strict Container Mode (Testing)
+
+For tests, enable strict container mode to ensure proper DI usage:
+
+```bash
+GPT_TRADER_STRICT_CONTAINER=1 uv run pytest tests/unit
+```
+
+When enabled, `get_failure_tracker()` and similar service locators raise `RuntimeError`
+instead of falling back to module-level singletons. This catches tests that bypass the
+container.
+
+The `tests/conftest.py` enables strict mode automatically via an autouse fixture. Tests
+that intentionally verify fallback behavior can disable it:
+
+```python
+def test_fallback_behavior(monkeypatch):
+    monkeypatch.delenv("GPT_TRADER_STRICT_CONTAINER", raising=False)
+    # ... test fallback path
+```
+
 ### Core Subsystems
 
 | Module | Purpose |

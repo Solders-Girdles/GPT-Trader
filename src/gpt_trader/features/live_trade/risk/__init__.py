@@ -26,8 +26,11 @@ Key config fields:
 
 Example::
 
-    from gpt_trader.features.live_trade.risk import LiveRiskManager, RiskValidationError
-    from gpt_trader.orchestration.configuration.risk import RiskConfig
+    from gpt_trader.features.live_trade.risk import (
+        LiveRiskManager,
+        RiskConfig,
+        RiskValidationError,
+    )
 
     config = RiskConfig(max_leverage=3, daily_loss_limit_pct=0.05)
     risk_manager = LiveRiskManager(config=config)
@@ -39,6 +42,7 @@ Example::
         pass
 """
 
+from .config import RiskConfig
 from .manager import LiveRiskManager, RiskValidationError, ValidationError
 
-__all__ = ["LiveRiskManager", "RiskValidationError", "ValidationError"]
+__all__ = ["LiveRiskManager", "RiskConfig", "RiskValidationError", "ValidationError"]

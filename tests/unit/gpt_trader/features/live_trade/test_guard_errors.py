@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import pytest
 
 from gpt_trader.features.live_trade import guard_errors
+from gpt_trader.monitoring import metrics_collector
 from gpt_trader.monitoring.alert_types import AlertSeverity
 
 
@@ -20,14 +21,29 @@ def reset_alert_system():
         guard_errors._alert_system = original
 
 
+@pytest.fixture(autouse=True)
+def reset_metrics():
+    """Reset metrics collector between tests."""
+    metrics_collector.reset_all()
+    yield
+    metrics_collector.reset_all()
+
+
 @pytest.fixture
 def counter_spy(monkeypatch):
-    calls: list[tuple[str, int]] = []
+    """Spy on the real metrics_record_counter function."""
+    calls: list[tuple[str, dict[str, str] | None]] = []
 
-    def _record_counter(name: str, increment: int = 1) -> None:
-        calls.append((name, increment))
+    original_record_counter = metrics_collector.record_counter
 
-    monkeypatch.setattr(guard_errors, "record_counter", _record_counter)
+    def _record_counter(
+        name: str, increment: int = 1, labels: dict[str, str] | None = None
+    ) -> None:
+        calls.append((name, labels))
+        # Also call original for proper metrics collection
+        original_record_counter(name, increment, labels)
+
+    monkeypatch.setattr(guard_errors, "_metrics_record_counter", _record_counter)
     return calls
 
 
@@ -74,9 +90,12 @@ def test_record_guard_failure_recoverable_emits_warning(
     )
     guard_errors.record_guard_failure(error)
 
+    # Check Prometheus-style counter with labels
     assert counter_spy == [
-        ("risk.guards.latency_guard.recoverable_failures", 1),
-        ("risk.guards.latency_guard.telemetry", 1),
+        (
+            "gpt_trader_guard_trips_total",
+            {"guard": "latency_guard", "category": "telemetry", "recoverable": "true"},
+        ),
     ]
     assert alert_spy.calls == [
         (
@@ -110,9 +129,12 @@ def test_record_guard_failure_critical_emits_error(
     )
     guard_errors.record_guard_failure(error)
 
+    # Check Prometheus-style counter with labels
     assert counter_spy == [
-        ("risk.guards.exposure.critical_failures", 1),
-        ("risk.guards.exposure.action", 1),
+        (
+            "gpt_trader_guard_trips_total",
+            {"guard": "exposure", "category": "action", "recoverable": "false"},
+        ),
     ]
     assert alert_spy.calls == [
         (
@@ -136,4 +158,38 @@ def test_record_guard_failure_critical_emits_error(
 def test_record_guard_success_increments_counter(counter_spy) -> None:
     guard_errors.record_guard_success("Latency Guard")
 
-    assert counter_spy == [("risk.guards.latency_guard.success", 1)]
+    # Check Prometheus-style counter with labels
+    assert counter_spy == [
+        (
+            "gpt_trader_guard_checks_total",
+            {"guard": "latency_guard", "result": "success"},
+        ),
+    ]
+
+
+def test_guard_metrics_stored_in_collector() -> None:
+    """Test that guard metrics are actually stored in the metrics collector."""
+    # Record a failure
+    error = guard_errors.RiskLimitExceeded(
+        "Position Size", "Exceeded max position", details={"max": 100, "requested": 150}
+    )
+    guard_errors.record_guard_failure(error)
+
+    # Record a success
+    guard_errors.record_guard_success("Leverage Check")
+
+    # Check metrics summary
+    summary = metrics_collector.get_metrics_collector().get_metrics_summary()
+
+    # Verify counters include our metrics
+    counters = summary["counters"]
+
+    # Check guard trip counter
+    trip_key = "gpt_trader_guard_trips_total{category=limit,guard=position_size,recoverable=false}"
+    assert trip_key in counters
+    assert counters[trip_key] == 1
+
+    # Check guard success counter
+    success_key = "gpt_trader_guard_checks_total{guard=leverage_check,result=success}"
+    assert success_key in counters
+    assert counters[success_key] == 1

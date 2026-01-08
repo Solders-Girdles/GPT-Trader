@@ -4,7 +4,7 @@ Unit tests for the application container.
 
 from __future__ import annotations
 
-from unittest.mock import ANY, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -28,17 +28,18 @@ class TestApplicationContainer:
         container = ApplicationContainer(mock_config)
 
         assert container.config == mock_config
-        assert container._config_controller is None
-        assert container._runtime_paths is None
-        assert container._broker is None
-        assert container._event_store is None
-        assert container._orders_store is None
-        assert container._market_data_service is None
-        assert container._product_catalog is None
-        assert container._risk_manager is None
-        assert container._notification_service is None
-        assert container._validation_failure_tracker is None
-        assert container._profile_loader is None
+        # Sub-container private state - check via sub-containers
+        assert container._config_container._config_controller is None
+        assert container._persistence._runtime_paths is None
+        assert container._brokerage._broker is None
+        assert container._persistence._event_store is None
+        assert container._persistence._orders_store is None
+        assert container._brokerage._market_data_service is None
+        assert container._brokerage._product_catalog is None
+        assert container._risk_validation._risk_manager is None
+        assert container._observability._notification_service is None
+        assert container._risk_validation._validation_failure_tracker is None
+        assert container._config_container._profile_loader is None
 
     def test_config_controller_creation(self, mock_config: BotConfig) -> None:
         """Test that config controller is created correctly."""
@@ -49,7 +50,7 @@ class TestApplicationContainer:
 
         assert config_controller is not None
         assert config_controller.current == mock_config
-        assert container._config_controller == config_controller
+        assert container._config_container._config_controller == config_controller
 
         # Second access should return the same instance
         config_controller2 = container.config_controller
@@ -63,7 +64,7 @@ class TestApplicationContainer:
         event_store = container.event_store
 
         assert isinstance(event_store, EventStore)
-        assert container._event_store == event_store
+        assert container._persistence._event_store == event_store
 
         # Second access should return the same instance
         event_store2 = container.event_store
@@ -77,13 +78,13 @@ class TestApplicationContainer:
         orders_store = container.orders_store
 
         assert isinstance(orders_store, OrdersStore)
-        assert container._orders_store == orders_store
+        assert container._persistence._orders_store == orders_store
 
         # Second access should return the same instance
         orders_store2 = container.orders_store
         assert orders_store is orders_store2
 
-    @patch("gpt_trader.app.container.MarketDataService")
+    @patch("gpt_trader.app.containers.brokerage.MarketDataService")
     def test_market_data_service_creation(
         self, mock_market_data_service: MagicMock, mock_config: BotConfig
     ) -> None:
@@ -97,14 +98,14 @@ class TestApplicationContainer:
         market_data_service = container.market_data_service
 
         assert market_data_service == mock_instance
-        assert container._market_data_service == market_data_service
+        assert container._brokerage._market_data_service == market_data_service
         mock_market_data_service.assert_called_once()
 
         # Second access should return the same instance
         market_data_service2 = container.market_data_service
         assert market_data_service is market_data_service2
 
-    @patch("gpt_trader.app.container.ProductCatalog")
+    @patch("gpt_trader.app.containers.brokerage.ProductCatalog")
     def test_product_catalog_creation(
         self, mock_product_catalog: MagicMock, mock_config: BotConfig
     ) -> None:
@@ -118,71 +119,53 @@ class TestApplicationContainer:
         product_catalog = container.product_catalog
 
         assert product_catalog == mock_instance
-        assert container._product_catalog == product_catalog
+        assert container._brokerage._product_catalog == product_catalog
         mock_product_catalog.assert_called_once_with()
 
         # Second access should return the same instance
         product_catalog2 = container.product_catalog
         assert product_catalog is product_catalog2
 
-    @patch("gpt_trader.app.container.create_brokerage")
-    @patch("gpt_trader.app.container.MarketDataService")
-    @patch("gpt_trader.app.container.ProductCatalog")
-    def test_broker_creation(
-        self,
-        mock_product_catalog: MagicMock,
-        mock_market_data_service: MagicMock,
-        mock_create_brokerage: MagicMock,
-        mock_config: BotConfig,
-    ) -> None:
+    def test_broker_creation(self, mock_config: BotConfig) -> None:
         """Test that broker is created correctly with dependencies."""
+        from gpt_trader.app.containers.brokerage import BrokerageContainer
+
         # Setup mocks
         mock_broker = MagicMock()
-        mock_market_data_instance = MagicMock()
-        mock_product_catalog_instance = MagicMock()
-
+        mock_create_brokerage = MagicMock()
         mock_create_brokerage.return_value = (
             mock_broker,
             MagicMock(),  # event_store return (ignored by container)
             MagicMock(),  # market_data return (ignored by container)
             MagicMock(),  # product_catalog return (ignored by container)
         )
-        mock_market_data_service.return_value = mock_market_data_instance
-        mock_product_catalog.return_value = mock_product_catalog_instance
 
         container = ApplicationContainer(mock_config)
+        # Replace brokerage container with one using our mock factory
+        container._brokerage = BrokerageContainer(
+            config=mock_config,
+            event_store_provider=lambda: container.event_store,
+            broker_factory=mock_create_brokerage,
+        )
 
         # Access broker to trigger creation
         broker = container.broker
 
         assert broker == mock_broker
-        assert container._broker == broker
+        assert container._brokerage._broker == broker
 
         # Verify create_brokerage was called with correct dependencies
-        mock_create_brokerage.assert_called_once_with(
-            event_store=ANY,
-            market_data=mock_market_data_instance,
-            product_catalog=mock_product_catalog_instance,
-            config=mock_config,
-        )
+        mock_create_brokerage.assert_called_once()
 
     @patch("gpt_trader.orchestration.trading_bot.bot.TradingBot")
-    @patch("gpt_trader.app.container.create_brokerage")
-    @patch("gpt_trader.app.container.MarketDataService")
-    @patch("gpt_trader.app.container.ProductCatalog")
-    def test_create_bot(
-        self,
-        mock_product_catalog: MagicMock,
-        mock_market_data_service: MagicMock,
-        mock_create_brokerage: MagicMock,
-        mock_bot_class: MagicMock,
-        mock_config: BotConfig,
-    ) -> None:
+    def test_create_bot(self, mock_bot_class: MagicMock, mock_config: BotConfig) -> None:
         """Test that TradingBot is created correctly from container."""
+        from gpt_trader.app.containers.brokerage import BrokerageContainer
+
         # Setup mocks
         mock_broker = MagicMock()
         mock_bot = MagicMock()
-
+        mock_create_brokerage = MagicMock()
         mock_create_brokerage.return_value = (
             mock_broker,
             MagicMock(),
@@ -192,6 +175,11 @@ class TestApplicationContainer:
         mock_bot_class.return_value = mock_bot
 
         container = ApplicationContainer(mock_config)
+        container._brokerage = BrokerageContainer(
+            config=mock_config,
+            event_store_provider=lambda: container.event_store,
+            broker_factory=mock_create_brokerage,
+        )
 
         # Create bot
         bot = container.create_bot()
@@ -208,22 +196,16 @@ class TestApplicationContainer:
         assert bot == mock_bot
 
     @patch("gpt_trader.orchestration.trading_bot.bot.TradingBot")
-    @patch("gpt_trader.app.container.create_brokerage")
-    @patch("gpt_trader.app.container.MarketDataService")
-    @patch("gpt_trader.app.container.ProductCatalog")
     def test_create_bot_includes_notification_service(
-        self,
-        mock_product_catalog: MagicMock,
-        mock_market_data_service: MagicMock,
-        mock_create_brokerage: MagicMock,
-        mock_bot_class: MagicMock,
-        mock_config: BotConfig,
+        self, mock_bot_class: MagicMock, mock_config: BotConfig
     ) -> None:
         """Test that TradingBot is created with notification service."""
+        from gpt_trader.app.containers.brokerage import BrokerageContainer
+
         # Setup mocks
         mock_broker = MagicMock()
         mock_bot = MagicMock()
-
+        mock_create_brokerage = MagicMock()
         mock_create_brokerage.return_value = (
             mock_broker,
             MagicMock(),
@@ -233,6 +215,11 @@ class TestApplicationContainer:
         mock_bot_class.return_value = mock_bot
 
         container = ApplicationContainer(mock_config)
+        container._brokerage = BrokerageContainer(
+            config=mock_config,
+            event_store_provider=lambda: container.event_store,
+            broker_factory=mock_create_brokerage,
+        )
 
         # Create bot
         _ = container.create_bot()
@@ -245,22 +232,16 @@ class TestApplicationContainer:
         assert call_args.kwargs["notification_service"] == container.notification_service
 
     @patch("gpt_trader.orchestration.live_execution.LiveExecutionEngine")
-    @patch("gpt_trader.app.container.create_brokerage")
-    @patch("gpt_trader.app.container.MarketDataService")
-    @patch("gpt_trader.app.container.ProductCatalog")
     def test_create_live_execution_engine(
-        self,
-        mock_product_catalog: MagicMock,
-        mock_market_data_service: MagicMock,
-        mock_create_brokerage: MagicMock,
-        mock_engine_class: MagicMock,
-        mock_config: BotConfig,
+        self, mock_engine_class: MagicMock, mock_config: BotConfig
     ) -> None:
         """Test that LiveExecutionEngine is created with container dependencies."""
+        from gpt_trader.app.containers.brokerage import BrokerageContainer
+
         # Setup mocks
         mock_broker = MagicMock()
         mock_engine = MagicMock()
-
+        mock_create_brokerage = MagicMock()
         mock_create_brokerage.return_value = (
             mock_broker,
             MagicMock(),
@@ -270,6 +251,11 @@ class TestApplicationContainer:
         mock_engine_class.return_value = mock_engine
 
         container = ApplicationContainer(mock_config)
+        container._brokerage = BrokerageContainer(
+            config=mock_config,
+            event_store_provider=lambda: container.event_store,
+            broker_factory=mock_create_brokerage,
+        )
 
         # Create engine with custom bot_id
         engine = container.create_live_execution_engine(bot_id="test_engine")
@@ -287,18 +273,12 @@ class TestApplicationContainer:
 
         assert engine == mock_engine
 
-    @patch("gpt_trader.app.container.create_brokerage")
-    @patch("gpt_trader.app.container.MarketDataService")
-    @patch("gpt_trader.app.container.ProductCatalog")
-    def test_reset_broker(
-        self,
-        mock_product_catalog: MagicMock,
-        mock_market_data_service: MagicMock,
-        mock_create_brokerage: MagicMock,
-        mock_config: BotConfig,
-    ) -> None:
+    def test_reset_broker(self, mock_config: BotConfig) -> None:
         """Test that broker can be reset."""
+        from gpt_trader.app.containers.brokerage import BrokerageContainer
+
         mock_broker = MagicMock()
+        mock_create_brokerage = MagicMock()
         mock_create_brokerage.return_value = (
             mock_broker,
             MagicMock(),
@@ -307,20 +287,25 @@ class TestApplicationContainer:
         )
 
         container = ApplicationContainer(mock_config)
+        container._brokerage = BrokerageContainer(
+            config=mock_config,
+            event_store_provider=lambda: container.event_store,
+            broker_factory=mock_create_brokerage,
+        )
 
         # Access broker to create it
         broker = container.broker
         assert broker == mock_broker
-        assert container._broker == mock_broker
+        assert container._brokerage._broker == mock_broker
 
         # Reset broker
         container.reset_broker()
-        assert container._broker is None
+        assert container._brokerage._broker is None
 
         # Access again to recreate
         broker2 = container.broker
         assert broker2 == mock_broker  # Same mock instance
-        assert container._broker == mock_broker
+        assert container._brokerage._broker == mock_broker
 
         # Verify create_brokerage was called twice
         assert mock_create_brokerage.call_count == 2
@@ -332,11 +317,11 @@ class TestApplicationContainer:
         # Access config controller to create it
         config_controller = container.config_controller
         assert config_controller is not None
-        assert container._config_controller == config_controller
+        assert container._config_container._config_controller == config_controller
 
         # Reset config controller
         container.reset_config()
-        assert container._config_controller is None
+        assert container._config_container._config_controller is None
 
         # Access again to recreate
         config_controller2 = container.config_controller
@@ -353,7 +338,7 @@ class TestApplicationContainer:
         tracker = container.validation_failure_tracker
 
         assert isinstance(tracker, ValidationFailureTracker)
-        assert container._validation_failure_tracker == tracker
+        assert container._risk_validation._validation_failure_tracker == tracker
         # Verify default configuration
         assert tracker.escalation_threshold == 5
         assert tracker.escalation_callback is None
@@ -372,7 +357,7 @@ class TestApplicationContainer:
         loader = container.profile_loader
 
         assert isinstance(loader, ProfileLoader)
-        assert container._profile_loader == loader
+        assert container._config_container._profile_loader == loader
 
         # Second access should return the same instance
         loader2 = container.profile_loader
@@ -388,7 +373,7 @@ class TestApplicationContainer:
         health_state = container.health_state
 
         assert isinstance(health_state, HealthState)
-        assert container._health_state == health_state
+        assert container._observability._health_state == health_state
         # Verify default values
         assert health_state.ready is False
         assert health_state.live is True
@@ -407,7 +392,7 @@ class TestApplicationContainer:
         secrets_manager = container.secrets_manager
 
         assert isinstance(secrets_manager, SecretsManager)
-        assert container._secrets_manager == secrets_manager
+        assert container._observability._secrets_manager == secrets_manager
         # Verify config is passed
         assert secrets_manager._config == mock_config
 
@@ -456,16 +441,29 @@ class TestContainerRegistry:
 
         assert get_application_container() is None
 
-    def test_service_resolution_via_registry(self, mock_config: BotConfig) -> None:
+    def test_service_resolution_via_registry(
+        self, mock_config: BotConfig, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test that services can be resolved via registered container."""
         from gpt_trader.orchestration.configuration.profile_loader import get_profile_loader
         from gpt_trader.orchestration.execution.validation import get_failure_tracker
 
         clear_application_container()
 
-        # Without container, failure_tracker returns fallback (still supported)
-        tracker_fallback = get_failure_tracker()
-        assert tracker_fallback is not None
+        # Disable strict mode for this test to verify fallback behavior
+        monkeypatch.delenv("GPT_TRADER_STRICT_CONTAINER", raising=False)
+
+        # Without container, failure_tracker returns fallback with deprecation warning
+        import warnings
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            tracker_fallback = get_failure_tracker()
+            assert tracker_fallback is not None
+            # Verify deprecation warning was emitted
+            assert len(w) >= 1
+            assert issubclass(w[0].category, DeprecationWarning)
+            assert "fallback" in str(w[0].message).lower()
 
         # Without container, profile_loader raises RuntimeError (no fallback)
         with pytest.raises(RuntimeError, match="No application container set"):

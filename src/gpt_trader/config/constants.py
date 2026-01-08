@@ -34,24 +34,46 @@ MAX_HTTP_RETRIES: int = int(os.getenv("GPT_TRADER_MAX_HTTP_RETRIES", "3"))
 # WebSocket Configuration
 # =============================================================================
 
-# WebSocket reconnection delay in seconds
-WS_RECONNECT_DELAY: int = int(os.getenv("GPT_TRADER_WS_RECONNECT_DELAY", "5"))
-
 # WebSocket thread join timeout in seconds
 WS_JOIN_TIMEOUT: float = float(os.getenv("GPT_TRADER_WS_JOIN_TIMEOUT", "2.0"))
 
-# Maximum WebSocket reconnection delay (cap for exponential backoff)
-MAX_WS_RECONNECT_DELAY_SECONDS: float = float(
-    os.getenv("GPT_TRADER_MAX_WS_RECONNECT_DELAY", "60.0")
+# -----------------------------------------------------------------------------
+# WebSocket Reconnection with Exponential Backoff + Jitter
+# -----------------------------------------------------------------------------
+
+# Base delay for exponential backoff (seconds)
+WS_RECONNECT_BACKOFF_BASE_SECONDS: float = float(
+    os.getenv("GPT_TRADER_WS_RECONNECT_BACKOFF_BASE", "2.0")
 )
 
-# WebSocket reconnection backoff multiplier
+# Maximum reconnection delay (caps exponential growth)
+WS_RECONNECT_BACKOFF_MAX_SECONDS: float = float(
+    os.getenv("GPT_TRADER_WS_RECONNECT_BACKOFF_MAX", "60.0")
+)
+
+# Backoff multiplier (delay = base * (multiplier ** attempt))
 WS_RECONNECT_BACKOFF_MULTIPLIER: float = float(
-    os.getenv("GPT_TRADER_WS_RECONNECT_BACKOFF", "1.5")
+    os.getenv("GPT_TRADER_WS_RECONNECT_BACKOFF_MULTIPLIER", "2.0")
 )
 
-# Maximum WebSocket reconnection attempts before giving up (0 = unlimited)
-MAX_WS_RECONNECT_ATTEMPTS: int = int(os.getenv("GPT_TRADER_MAX_WS_RECONNECT_ATTEMPTS", "50"))
+# Jitter percentage (0.25 = ±25% randomization to prevent thundering herd)
+WS_RECONNECT_JITTER_PCT: float = float(os.getenv("GPT_TRADER_WS_RECONNECT_JITTER_PCT", "0.25"))
+
+# Maximum reconnection attempts before triggering degradation (0 = unlimited)
+WS_RECONNECT_MAX_ATTEMPTS: int = int(os.getenv("GPT_TRADER_WS_RECONNECT_MAX_ATTEMPTS", "10"))
+
+# Seconds of stable connection required to reset attempt counter
+WS_RECONNECT_RESET_SECONDS: float = float(
+    os.getenv("GPT_TRADER_WS_RECONNECT_RESET_SECONDS", "60.0")
+)
+
+# Pause duration when max attempts exceeded (triggers DegradationState.pause_all)
+WS_RECONNECT_PAUSE_SECONDS: int = int(os.getenv("GPT_TRADER_WS_RECONNECT_PAUSE_SECONDS", "300"))
+
+# Legacy aliases for backward compatibility
+WS_RECONNECT_DELAY: int = int(WS_RECONNECT_BACKOFF_BASE_SECONDS)
+MAX_WS_RECONNECT_DELAY_SECONDS: float = WS_RECONNECT_BACKOFF_MAX_SECONDS
+MAX_WS_RECONNECT_ATTEMPTS: int = WS_RECONNECT_MAX_ATTEMPTS
 
 # =============================================================================
 # Security / Validation Configuration
@@ -95,16 +117,6 @@ SQLITE_BUSY_TIMEOUT_MS: int = int(os.getenv("GPT_TRADER_SQLITE_BUSY_TIMEOUT", "5
 MAX_INTEGRITY_ISSUES_TO_LOG: int = int(os.getenv("GPT_TRADER_MAX_INTEGRITY_LOG", "5"))
 
 # =============================================================================
-# WebSocket Advanced Configuration
-# =============================================================================
-
-# Maximum WebSocket reconnect delay in seconds (caps exponential backoff)
-MAX_WS_RECONNECT_DELAY_SECONDS: int = int(os.getenv("GPT_TRADER_MAX_WS_RECONNECT_DELAY", "60"))
-
-# WebSocket exponential backoff multiplier
-WS_RECONNECT_BACKOFF_MULTIPLIER: float = float(os.getenv("GPT_TRADER_WS_BACKOFF_MULTIPLIER", "2.0"))
-
-# =============================================================================
 # Health & Monitoring Configuration
 # =============================================================================
 
@@ -121,6 +133,9 @@ HEARTBEAT_HEALTH_MULTIPLIER: int = int(os.getenv("GPT_TRADER_HEARTBEAT_HEALTH_MU
 DEFAULT_GUARD_CACHE_INTERVAL_SECONDS: float = float(
     os.getenv("GPT_TRADER_GUARD_CACHE_INTERVAL", "60.0")
 )
+
+# Health check runner interval in seconds
+HEALTH_CHECK_INTERVAL_SECONDS: float = float(os.getenv("GPT_TRADER_HEALTH_CHECK_INTERVAL", "30.0"))
 
 # =============================================================================
 # Trading Calculation Defaults
@@ -148,7 +163,9 @@ CACHE_DEFAULT_TTL: float = float(os.getenv("GPT_TRADER_CACHE_TTL", "30.0"))
 CACHE_MAX_SIZE: int = int(os.getenv("GPT_TRADER_CACHE_MAX_SIZE", "1000"))
 
 # Circuit breaker - prevents hammering failing endpoints
-CIRCUIT_BREAKER_ENABLED: bool = os.getenv("GPT_TRADER_CIRCUIT_BREAKER_ENABLED", "true").lower() == "true"
+CIRCUIT_BREAKER_ENABLED: bool = (
+    os.getenv("GPT_TRADER_CIRCUIT_BREAKER_ENABLED", "true").lower() == "true"
+)
 CIRCUIT_FAILURE_THRESHOLD: int = int(os.getenv("GPT_TRADER_CIRCUIT_FAILURE_THRESHOLD", "5"))
 CIRCUIT_RECOVERY_TIMEOUT: float = float(os.getenv("GPT_TRADER_CIRCUIT_RECOVERY_TIMEOUT", "30.0"))
 CIRCUIT_SUCCESS_THRESHOLD: int = int(os.getenv("GPT_TRADER_CIRCUIT_SUCCESS_THRESHOLD", "2"))
@@ -160,8 +177,28 @@ METRICS_HISTORY_SIZE: int = int(os.getenv("GPT_TRADER_METRICS_HISTORY", "100"))
 # Request priority - prioritizes critical requests under rate limit pressure
 PRIORITY_ENABLED: bool = os.getenv("GPT_TRADER_PRIORITY_ENABLED", "true").lower() == "true"
 PRIORITY_THRESHOLD_HIGH: float = float(os.getenv("GPT_TRADER_PRIORITY_THRESHOLD_HIGH", "0.70"))
-PRIORITY_THRESHOLD_CRITICAL: float = float(os.getenv("GPT_TRADER_PRIORITY_THRESHOLD_CRITICAL", "0.85"))
+PRIORITY_THRESHOLD_CRITICAL: float = float(
+    os.getenv("GPT_TRADER_PRIORITY_THRESHOLD_CRITICAL", "0.85")
+)
 
 # Adaptive throttling - proactive pacing instead of reactive blocking
-ADAPTIVE_THROTTLE_ENABLED: bool = os.getenv("GPT_TRADER_ADAPTIVE_THROTTLE", "true").lower() == "true"
+ADAPTIVE_THROTTLE_ENABLED: bool = (
+    os.getenv("GPT_TRADER_ADAPTIVE_THROTTLE", "true").lower() == "true"
+)
 THROTTLE_TARGET_UTILIZATION: float = float(os.getenv("GPT_TRADER_THROTTLE_TARGET", "0.7"))
+
+# =============================================================================
+# Observability Configuration
+# =============================================================================
+
+# Prometheus metrics endpoint (served on health server)
+METRICS_ENDPOINT_ENABLED: bool = os.getenv("GPT_TRADER_METRICS_ENDPOINT_ENABLED", "0").lower() in (
+    "1",
+    "true",
+    "yes",
+)
+
+# OpenTelemetry tracing
+OTEL_ENABLED: bool = os.getenv("GPT_TRADER_OTEL_ENABLED", "0").lower() in ("1", "true", "yes")
+OTEL_SERVICE_NAME: str = os.getenv("OTEL_SERVICE_NAME", "gpt-trader")
+OTEL_EXPORTER_ENDPOINT: str | None = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")

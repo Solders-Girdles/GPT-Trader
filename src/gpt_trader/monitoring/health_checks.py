@@ -1,17 +1,457 @@
 """
-Simplified Health Checks.
+Active health check implementations.
+
+Provides concrete health check functions that probe system components
+and return structured results for the health server.
+
+Each check returns (bool, dict) where:
+- bool: True if healthy, False if unhealthy
+- dict: Details including severity, latency, error messages
 """
 
+from __future__ import annotations
+
+import time
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+from gpt_trader.utilities.logging_patterns import get_logger
+
+if TYPE_CHECKING:
+    from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
+    from gpt_trader.features.live_trade.risk.manager import LiveRiskManager
+    from gpt_trader.orchestration.execution.degradation import DegradationState
+
+logger = get_logger(__name__, component="health_checks")
 
 
 @dataclass
 class HealthCheckResult:
+    """Result of a health check."""
+
     healthy: bool
     details: dict[str, Any]
 
 
+def check_broker_ping(broker: BrokerProtocol) -> tuple[bool, dict[str, Any]]:
+    """
+    Check broker connectivity by making a lightweight API call.
+
+    Uses get_time() if available (cheapest), otherwise falls back to
+    list_balances().
+
+    Args:
+        broker: Broker protocol instance.
+
+    Returns:
+        Tuple of (healthy, details) where details includes:
+            - latency_ms: Round-trip time in milliseconds
+            - error: Exception string if failed
+            - method: Which method was used for the check
+    """
+    start = time.perf_counter()
+    details: dict[str, Any] = {"severity": "critical"}
+
+    try:
+        # Prefer get_time() as it's the lightest-weight call
+        if hasattr(broker, "get_time") and callable(broker.get_time):
+            broker.get_time()
+            method = "get_time"
+        else:
+            # Fall back to list_balances
+            broker.list_balances()
+            method = "list_balances"
+
+        latency_ms = (time.perf_counter() - start) * 1000
+        details.update(
+            {
+                "latency_ms": round(latency_ms, 2),
+                "method": method,
+            }
+        )
+
+        # Warn if latency is high (>2s is concerning for trading)
+        if latency_ms > 2000:
+            details["severity"] = "warning"
+            details["warning"] = "High latency detected"
+
+        return True, details
+
+    except Exception as exc:
+        latency_ms = (time.perf_counter() - start) * 1000
+        details.update(
+            {
+                "latency_ms": round(latency_ms, 2),
+                "error": str(exc),
+                "error_type": type(exc).__name__,
+            }
+        )
+        logger.warning(
+            "Broker ping failed",
+            operation="health_check",
+            error=str(exc),
+            latency_ms=latency_ms,
+        )
+        return False, details
+
+
+def check_ws_freshness(
+    broker: BrokerProtocol,
+    message_stale_seconds: float = 60.0,
+    heartbeat_stale_seconds: float = 120.0,
+) -> tuple[bool, dict[str, Any]]:
+    """
+    Check WebSocket connection health and message freshness.
+
+    Args:
+        broker: Broker protocol instance (must have get_ws_health method).
+        message_stale_seconds: Max age of last message before considered stale.
+        heartbeat_stale_seconds: Max age of last heartbeat before considered stale.
+
+    Returns:
+        Tuple of (healthy, details) where details includes:
+            - connected: Whether WS is currently connected
+            - last_message_age_seconds: Age of last message
+            - last_heartbeat_age_seconds: Age of last heartbeat
+            - stale: Whether data is considered stale
+            - max_attempts_triggered: Whether reconnection limit was hit
+    """
+    details: dict[str, Any] = {"severity": "warning"}
+
+    # Check if broker supports WS health
+    if not hasattr(broker, "get_ws_health"):
+        details["error"] = "Broker does not support WebSocket health checks"
+        details["ws_not_supported"] = True
+        # Not having WS is not necessarily unhealthy - it's optional
+        return True, details
+
+    try:
+        health = broker.get_ws_health()
+
+        if not health:
+            # WS not initialized - this is OK, streaming is optional
+            details["ws_not_initialized"] = True
+            return True, details
+
+        now = time.time()
+        connected = health.get("connected", False)
+        last_message_ts = health.get("last_message_ts", 0)
+        last_heartbeat_ts = health.get("last_heartbeat_ts", 0)
+        max_attempts_triggered = health.get("max_attempts_triggered", False)
+
+        # Calculate ages
+        message_age = now - last_message_ts if last_message_ts else float("inf")
+        heartbeat_age = now - last_heartbeat_ts if last_heartbeat_ts else float("inf")
+
+        details.update(
+            {
+                "connected": connected,
+                "last_message_age_seconds": (
+                    round(message_age, 1) if message_age != float("inf") else None
+                ),
+                "last_heartbeat_age_seconds": (
+                    round(heartbeat_age, 1) if heartbeat_age != float("inf") else None
+                ),
+                "gap_count": health.get("gap_count", 0),
+                "reconnect_count": health.get("reconnect_count", 0),
+                "max_attempts_triggered": max_attempts_triggered,
+            }
+        )
+
+        # Determine health status
+        is_stale = False
+        if connected:
+            if last_message_ts and message_age > message_stale_seconds:
+                is_stale = True
+                details["stale_reason"] = "message"
+            elif last_heartbeat_ts and heartbeat_age > heartbeat_stale_seconds:
+                is_stale = True
+                details["stale_reason"] = "heartbeat"
+
+        details["stale"] = is_stale
+
+        # Max attempts triggered is critical
+        if max_attempts_triggered:
+            details["severity"] = "critical"
+            return False, details
+
+        # Disconnected or stale is a failure
+        if not connected or is_stale:
+            return False, details
+
+        return True, details
+
+    except Exception as exc:
+        details["error"] = str(exc)
+        details["error_type"] = type(exc).__name__
+        logger.warning(
+            "WS health check failed",
+            operation="health_check",
+            error=str(exc),
+        )
+        return False, details
+
+
+def check_degradation_state(
+    degradation_state: DegradationState,
+    risk_manager: LiveRiskManager | None = None,
+) -> tuple[bool, dict[str, Any]]:
+    """
+    Check trading degradation state.
+
+    Args:
+        degradation_state: DegradationState instance.
+        risk_manager: Optional LiveRiskManager to check reduce-only mode.
+
+    Returns:
+        Tuple of (healthy, details) where details includes:
+            - global_paused: Whether all trading is paused
+            - global_pause_reason: Reason for global pause
+            - paused_symbol_count: Number of symbols with individual pauses
+            - reduce_only_mode: Whether reduce-only is active
+            - reduce_only_reason: Reason for reduce-only mode
+    """
+    details: dict[str, Any] = {"severity": "warning"}
+
+    try:
+        status = degradation_state.get_status()
+
+        global_paused = status.get("global_paused", False)
+        global_reason = status.get("global_reason")
+        paused_symbols = status.get("paused_symbols", {})
+
+        details.update(
+            {
+                "global_paused": global_paused,
+                "global_pause_reason": global_reason,
+                "global_remaining_seconds": status.get("global_remaining_seconds", 0),
+                "paused_symbol_count": len(paused_symbols),
+            }
+        )
+
+        if paused_symbols:
+            details["paused_symbols"] = list(paused_symbols.keys())
+
+        # Check reduce-only mode from risk manager
+        reduce_only = False
+        reduce_only_reason = None
+
+        if risk_manager is not None:
+            if hasattr(risk_manager, "is_reduce_only_mode"):
+                reduce_only = risk_manager.is_reduce_only_mode()
+            elif hasattr(risk_manager, "_reduce_only_mode"):
+                reduce_only = risk_manager._reduce_only_mode
+
+            if reduce_only and hasattr(risk_manager, "_reduce_only_reason"):
+                reduce_only_reason = risk_manager._reduce_only_reason
+
+            # Also check CFM reduce-only mode
+            cfm_reduce_only = False
+            if hasattr(risk_manager, "is_cfm_reduce_only_mode"):
+                cfm_reduce_only = risk_manager.is_cfm_reduce_only_mode()
+            elif hasattr(risk_manager, "_cfm_reduce_only_mode"):
+                cfm_reduce_only = risk_manager._cfm_reduce_only_mode
+
+            if cfm_reduce_only:
+                reduce_only = True
+                if hasattr(risk_manager, "_cfm_reduce_only_reason"):
+                    reduce_only_reason = risk_manager._cfm_reduce_only_reason
+
+        details["reduce_only_mode"] = reduce_only
+        if reduce_only_reason:
+            details["reduce_only_reason"] = reduce_only_reason
+
+        # Global pause is critical
+        if global_paused:
+            details["severity"] = "critical"
+            return False, details
+
+        # Reduce-only or symbol pauses are warnings but not failures
+        if reduce_only or paused_symbols:
+            details["severity"] = "warning"
+            # Return healthy but with warning details
+            return True, details
+
+        return True, details
+
+    except Exception as exc:
+        details["error"] = str(exc)
+        details["error_type"] = type(exc).__name__
+        details["severity"] = "critical"
+        logger.warning(
+            "Degradation state check failed",
+            operation="health_check",
+            error=str(exc),
+        )
+        return False, details
+
+
+class HealthCheckRunner:
+    """
+    Executes health checks on a configurable cadence.
+
+    Runs checks in a background task and updates the HealthState
+    with results for the health server to expose.
+    """
+
+    def __init__(
+        self,
+        broker: BrokerProtocol | None = None,
+        degradation_state: DegradationState | None = None,
+        risk_manager: LiveRiskManager | None = None,
+        interval_seconds: float = 30.0,
+        message_stale_seconds: float = 60.0,
+        heartbeat_stale_seconds: float = 120.0,
+    ) -> None:
+        """
+        Initialize the health check runner.
+
+        Args:
+            broker: Broker for connectivity checks.
+            degradation_state: DegradationState for pause/reduce-only checks.
+            risk_manager: RiskManager for reduce-only mode checks.
+            interval_seconds: How often to run checks (default 30s).
+            message_stale_seconds: WS message staleness threshold.
+            heartbeat_stale_seconds: WS heartbeat staleness threshold.
+        """
+        self._broker = broker
+        self._degradation_state = degradation_state
+        self._risk_manager = risk_manager
+        self._interval = interval_seconds
+        self._message_stale_seconds = message_stale_seconds
+        self._heartbeat_stale_seconds = heartbeat_stale_seconds
+        self._running = False
+        self._task: Any = None
+
+    def set_broker(self, broker: BrokerProtocol) -> None:
+        """Set the broker for connectivity checks."""
+        self._broker = broker
+
+    def set_degradation_state(self, state: DegradationState) -> None:
+        """Set the degradation state for pause checks."""
+        self._degradation_state = state
+
+    def set_risk_manager(self, manager: LiveRiskManager) -> None:
+        """Set the risk manager for reduce-only checks."""
+        self._risk_manager = manager
+
+    async def start(self) -> None:
+        """Start the health check runner background task."""
+        import asyncio
+
+        if self._running:
+            return
+
+        self._running = True
+        self._task = asyncio.create_task(self._run_loop())
+        logger.info(
+            "Health check runner started",
+            operation="health_check_runner",
+            interval_seconds=self._interval,
+        )
+
+    async def stop(self) -> None:
+        """Stop the health check runner."""
+        import asyncio
+
+        self._running = False
+        if self._task:
+            self._task.cancel()
+            try:
+                await self._task
+            except asyncio.CancelledError:
+                pass  # Expected when cancelling
+            except Exception:
+                pass
+            self._task = None
+        logger.info("Health check runner stopped", operation="health_check_runner")
+
+    async def _run_loop(self) -> None:
+        """Main loop that executes checks periodically."""
+        import asyncio
+
+        while self._running:
+            try:
+                await self._execute_checks()
+            except Exception as exc:
+                logger.warning(
+                    "Health check execution failed",
+                    operation="health_check_runner",
+                    error=str(exc),
+                )
+
+            await asyncio.sleep(self._interval)
+
+    async def _execute_checks(self) -> None:
+        """Execute all configured health checks."""
+        import asyncio
+
+        from gpt_trader.app.health_server import get_health_state
+
+        health_state = get_health_state()
+
+        # Run broker ping in thread pool (blocking I/O)
+        if self._broker is not None:
+            try:
+                healthy, details = await asyncio.to_thread(check_broker_ping, self._broker)
+                health_state.add_check("broker", healthy, details)
+            except Exception as exc:
+                health_state.add_check("broker", False, {"error": str(exc)})
+
+        # Run WS freshness check in thread pool
+        if self._broker is not None:
+            try:
+                healthy, details = await asyncio.to_thread(
+                    check_ws_freshness,
+                    self._broker,
+                    self._message_stale_seconds,
+                    self._heartbeat_stale_seconds,
+                )
+                health_state.add_check("websocket", healthy, details)
+            except Exception as exc:
+                health_state.add_check("websocket", False, {"error": str(exc)})
+
+        # Run degradation state check (fast, no I/O)
+        if self._degradation_state is not None:
+            try:
+                healthy, details = check_degradation_state(
+                    self._degradation_state, self._risk_manager
+                )
+                health_state.add_check("degradation", healthy, details)
+            except Exception as exc:
+                health_state.add_check("degradation", False, {"error": str(exc)})
+
+    def run_checks_sync(self) -> dict[str, tuple[bool, dict[str, Any]]]:
+        """
+        Run all checks synchronously and return results.
+
+        Useful for testing or one-off health checks.
+
+        Returns:
+            Dict mapping check name to (healthy, details) tuple.
+        """
+        results: dict[str, tuple[bool, dict[str, Any]]] = {}
+
+        if self._broker is not None:
+            results["broker"] = check_broker_ping(self._broker)
+            results["websocket"] = check_ws_freshness(
+                self._broker,
+                self._message_stale_seconds,
+                self._heartbeat_stale_seconds,
+            )
+
+        if self._degradation_state is not None:
+            results["degradation"] = check_degradation_state(
+                self._degradation_state, self._risk_manager
+            )
+
+        return results
+
+
 __all__ = [
     "HealthCheckResult",
+    "HealthCheckRunner",
+    "check_broker_ping",
+    "check_ws_freshness",
+    "check_degradation_state",
 ]

@@ -232,3 +232,84 @@ class ProductService:
         except Exception as e:
             logger.error("Unexpected error getting mark price for %s: %s", symbol, e, exc_info=True)
             return None
+
+    def get_tickers(self, product_ids: list[str]) -> dict[str, dict[str, Any]]:
+        """Get ticker data for multiple products in a single batch request.
+
+        In Advanced API mode, uses the batch best_bid_ask endpoint for efficiency.
+        In Exchange API mode, falls back to individual get_ticker calls.
+
+        Args:
+            product_ids: List of product symbols (e.g., ["BTC-USD", "ETH-USD"])
+
+        Returns:
+            Dict mapping product_id to ticker dict with at least a "price" key.
+            Missing products are omitted from the result.
+        """
+        if not product_ids:
+            return {}
+
+        result: dict[str, dict[str, Any]] = {}
+
+        # Try batch API if available (Advanced mode only)
+        if self._client.api_mode == "advanced":
+            try:
+                response = self._client.get_best_bid_ask(product_ids)
+                pricebooks = response.get("pricebooks", [])
+                for book in pricebooks:
+                    product_id = book.get("product_id")
+                    if not product_id:
+                        continue
+
+                    # Extract best bid and ask
+                    bids = book.get("bids", [])
+                    asks = book.get("asks", [])
+
+                    best_bid = Decimal(bids[0].get("price", "0")) if bids else Decimal("0")
+                    best_ask = Decimal(asks[0].get("price", "0")) if asks else Decimal("0")
+
+                    # Calculate mid-price (used as "price" for strategy)
+                    if best_bid > 0 and best_ask > 0:
+                        mid_price = (best_bid + best_ask) / 2
+                    elif best_ask > 0:
+                        mid_price = best_ask
+                    elif best_bid > 0:
+                        mid_price = best_bid
+                    else:
+                        continue  # No valid price data
+
+                    result[product_id] = {
+                        "price": str(mid_price),
+                        "bid": str(best_bid),
+                        "ask": str(best_ask),
+                        "product_id": product_id,
+                    }
+
+                # Log success
+                if result:
+                    logger.debug(
+                        "Batch ticker fetch: %d/%d products via best_bid_ask",
+                        len(result),
+                        len(product_ids),
+                    )
+                return result
+
+            except Exception as e:
+                # Log and fall through to individual fetches
+                logger.warning("Batch ticker fetch failed, falling back to individual: %s", e)
+
+        # Fall back to individual ticker calls (Exchange mode or batch failure)
+        for product_id in product_ids:
+            try:
+                ticker = self._client.get_ticker(product_id)
+                if ticker and ticker.get("price"):
+                    result[product_id] = ticker
+            except Exception as e:
+                logger.debug("Failed to get ticker for %s: %s", product_id, e)
+
+        logger.debug(
+            "Individual ticker fetch: %d/%d products",
+            len(result),
+            len(product_ids),
+        )
+        return result

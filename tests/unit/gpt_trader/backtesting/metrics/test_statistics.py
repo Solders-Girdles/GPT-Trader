@@ -16,9 +16,10 @@ from gpt_trader.backtesting.metrics.statistics import (
     _calculate_timing_metrics,
     calculate_trade_statistics,
 )
+from gpt_trader.core import Order, OrderSide, OrderStatus, OrderType
 
 
-def _create_mock_order(
+def _create_order(
     symbol: str = "BTC-USD",
     side: str = "BUY",
     order_type: str = "MARKET",
@@ -26,19 +27,26 @@ def _create_mock_order(
     avg_fill_price: Decimal | None = Decimal("50000"),
     filled_quantity: Decimal = Decimal("1"),
     submitted_at: datetime | None = None,
-) -> MagicMock:
-    """Create a mock order for testing."""
-    order = MagicMock()
-    order.symbol = symbol
-    order.side = MagicMock()
-    order.side.value = side
-    order.type = MagicMock()
-    order.type.value = order_type
-    order.quantity = quantity
-    order.avg_fill_price = avg_fill_price
-    order.filled_quantity = filled_quantity
-    order.submitted_at = submitted_at or datetime.now()
-    return order
+) -> Order:
+    """Create a real Order instance for testing.
+
+    Uses proper core types instead of MagicMock for better type safety.
+    """
+    return Order(
+        id=f"test-order-{symbol}-{side}",
+        symbol=symbol,
+        side=OrderSide(side),
+        type=OrderType(order_type),
+        quantity=quantity,
+        status=OrderStatus.FILLED,
+        filled_quantity=filled_quantity,
+        avg_fill_price=avg_fill_price,
+        submitted_at=submitted_at or datetime.now(),
+    )
+
+
+# Keep alias for backward compatibility during migration
+_create_mock_order = _create_order
 
 
 class TestCalculatePnlMetrics:

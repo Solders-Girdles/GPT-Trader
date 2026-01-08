@@ -19,6 +19,11 @@ from tests.support.chaos import (
 )
 
 from gpt_trader.app.config import BotConfig, BotRiskConfig
+from gpt_trader.app.container import (
+    ApplicationContainer,
+    clear_application_container,
+    set_application_container,
+)
 from gpt_trader.core import Balance, Position
 from gpt_trader.features.live_trade.engines.base import CoordinatorContext
 from gpt_trader.features.live_trade.engines.strategy import TradingEngine
@@ -83,6 +88,15 @@ def context(mock_broker, mock_risk_config):
 
 
 @pytest.fixture
+def application_container(context):
+    """Set up application container for TradingEngine chaos tests."""
+    container = ApplicationContainer(context.config)
+    set_application_container(container)
+    yield container
+    clear_application_container()
+
+
+@pytest.fixture
 def mock_security_validator():
     v, r = MagicMock(), MagicMock()
     r.is_valid, r.errors = True, []
@@ -92,7 +106,7 @@ def mock_security_validator():
 
 
 @pytest.fixture
-def engine(context, mock_security_validator):
+def engine(context, mock_security_validator, application_container):
     strategy = MagicMock()
     strategy.decide.return_value, strategy.config.position_fraction = Decision(
         Action.HOLD, "test"

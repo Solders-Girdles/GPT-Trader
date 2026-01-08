@@ -3,7 +3,11 @@ from unittest.mock import patch
 import pytest
 
 from gpt_trader.app.config import BotConfig
-from gpt_trader.app.container import ApplicationContainer
+from gpt_trader.app.container import (
+    ApplicationContainer,
+    clear_application_container,
+    set_application_container,
+)
 from gpt_trader.features.live_trade.strategies.perps_baseline import Action, Decision
 
 
@@ -23,26 +27,30 @@ async def test_end_to_end_buy_execution():
         perps_position_fraction=0.04,  # 4% position sizing (must be < 5% security limit)
     )
 
-    # 2. Create container and bot
+    # 2. Create container, register globally, and create bot
     container = ApplicationContainer(config)
-    bot = container.create_bot()
+    set_application_container(container)
+    try:
+        bot = container.create_bot()
 
-    # 3. Mock strategy to return BUY decision on first cycle
-    # This isolates testing of the execution wiring from the strategy logic
-    buy_decision = Decision(action=Action.BUY, reason="Test signal", confidence=0.8)
+        # 3. Mock strategy to return BUY decision on first cycle
+        # This isolates testing of the execution wiring from the strategy logic
+        buy_decision = Decision(action=Action.BUY, reason="Test signal", confidence=0.8)
 
-    # Mock the broker's place_order to verify it gets called
-    with patch.object(
-        bot.broker, "place_order", return_value={"id": "order_123", "status": "filled"}
-    ) as mock_place:
-        with patch.object(bot.engine.strategy, "decide", return_value=buy_decision):
-            await bot.engine._cycle()
+        # Mock the broker's place_order to verify it gets called
+        with patch.object(
+            bot.broker, "place_order", return_value={"id": "order_123", "status": "filled"}
+        ) as mock_place:
+            with patch.object(bot.engine.strategy, "decide", return_value=buy_decision):
+                await bot.engine._cycle()
 
-        # 4. Verify Order Placement
-        mock_place.assert_called_once()
-        call_args = mock_place.call_args
-        # place_order is called with positional args: (symbol, side, order_type, quantity)
-        assert call_args[0][0] == "BTC-USD"  # symbol
-        from gpt_trader.core import OrderSide
+            # 4. Verify Order Placement
+            mock_place.assert_called_once()
+            call_args = mock_place.call_args
+            # place_order is called with positional args: (symbol, side, order_type, quantity)
+            assert call_args[0][0] == "BTC-USD"  # symbol
+            from gpt_trader.core import OrderSide
 
-        assert call_args[0][1] == OrderSide.BUY  # side
+            assert call_args[0][1] == OrderSide.BUY  # side
+    finally:
+        clear_application_container()

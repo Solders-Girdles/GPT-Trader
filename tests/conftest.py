@@ -14,6 +14,43 @@ def anyio_backend():
 
 
 @pytest.fixture(autouse=True)
+def strict_container_mode(monkeypatch):
+    """Enable strict container mode for all tests.
+
+    This ensures tests fail fast if they use get_failure_tracker()
+    without properly setting up an application container.
+
+    To opt-out for specific tests that intentionally test fallback
+    behavior, use:
+        @pytest.mark.usefixtures()  # clears autouse fixtures
+    or:
+        monkeypatch.delenv("GPT_TRADER_STRICT_CONTAINER", raising=False)
+    """
+    monkeypatch.setenv("GPT_TRADER_STRICT_CONTAINER", "1")
+
+
+@pytest.fixture
+def application_container(mock_config):
+    """Provide an ApplicationContainer for tests that need it.
+
+    This fixture sets up a container with the mock_config and registers
+    it globally. It automatically clears the container after the test.
+
+    Requires a mock_config fixture to be defined in the test module.
+    """
+    from gpt_trader.app.container import (
+        ApplicationContainer,
+        clear_application_container,
+        set_application_container,
+    )
+
+    container = ApplicationContainer(mock_config)
+    set_application_container(container)
+    yield container
+    clear_application_container()
+
+
+@pytest.fixture(autouse=True)
 def reset_correlation_context():
     """Reset correlation context before and after each test to prevent pollution."""
     from gpt_trader.logging.correlation import set_correlation_id, set_domain_context

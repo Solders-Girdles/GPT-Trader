@@ -81,7 +81,8 @@ def build_bot(config: BotConfig) -> TradingBot:
     """Build a TradingBot from a BotConfig using ApplicationContainer.
 
     This is the canonical way to create a TradingBot. The container
-    handles all dependency wiring.
+    handles all dependency wiring and is registered globally for
+    service resolution.
 
     Args:
         config: The bot configuration.
@@ -89,9 +90,13 @@ def build_bot(config: BotConfig) -> TradingBot:
     Returns:
         A fully configured TradingBot ready to run.
     """
-    from gpt_trader.app.container import ApplicationContainer
+    from gpt_trader.app.container import (
+        ApplicationContainer,
+        set_application_container,
+    )
 
     container = ApplicationContainer(config)
+    set_application_container(container)
 
     if config.webhook_url:
         logger.info(

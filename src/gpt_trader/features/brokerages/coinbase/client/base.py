@@ -43,13 +43,18 @@ from gpt_trader.features.brokerages.coinbase.client.constants import (
     DEFAULT_API_VERSION,
     ENDPOINT_MAP,
 )
-from gpt_trader.features.brokerages.coinbase.client.metrics import APIMetricsCollector
+from gpt_trader.features.brokerages.coinbase.client.metrics import (
+    APIMetricsCollector,
+    categorize_endpoint,
+)
 from gpt_trader.features.brokerages.coinbase.client.priority import (
     PriorityManager,
     RequestDeferredError,
 )
 from gpt_trader.features.brokerages.coinbase.client.response_cache import ResponseCache
 from gpt_trader.features.brokerages.coinbase.errors import InvalidRequestError, map_http_error
+from gpt_trader.monitoring.metrics_collector import record_counter, record_gauge, record_histogram
+from gpt_trader.observability.tracing import trace_span
 from gpt_trader.utilities.logging_patterns import get_correlation_id, get_logger
 
 # Maximum delay for retry backoff to prevent excessive waits
@@ -322,8 +327,6 @@ class CoinbaseClientBase:
 
     def _request(self, method: str, path: str, payload: dict | None = None) -> dict:
         start_time = time.perf_counter()
-        is_error = False
-        is_rate_limited = False
 
         # Check priority before proceeding (only block lower priority under pressure)
         if self._priority_manager:
@@ -345,6 +348,32 @@ class CoinbaseClientBase:
             cached = self._response_cache.get(path)
             if cached is not None:
                 return cached
+
+        # Wrap HTTP request in trace span for distributed tracing
+        with trace_span(
+            "http_request",
+            {
+                "http.method": method,
+                "http.path": path,
+                "api.mode": self.api_mode,
+            },
+        ) as span:
+            return self._perform_http_request(method, path, payload, start_time, span)
+
+    def _perform_http_request(
+        self,
+        method: str,
+        path: str,
+        payload: dict | None,
+        start_time: float,
+        span: Any | None,
+    ) -> dict:
+        """Execute the HTTP request with retries and error handling.
+
+        This is extracted to work with trace_span context manager.
+        """
+        is_error = False
+        is_rate_limited = False
 
         self._check_rate_limit()
         url = self._make_url(path)
@@ -414,6 +443,12 @@ class CoinbaseClientBase:
 
                     if resp.status_code == 429:
                         is_rate_limited = True
+                        # Record retry metric
+                        category = categorize_endpoint(path)
+                        record_counter(
+                            "gpt_trader_api_retries_total",
+                            labels={"category": category, "reason": "rate_limited"},
+                        )
                         try:
                             retry_after = float(resp.headers.get("retry-after", 1))
                         except ValueError:
@@ -426,6 +461,12 @@ class CoinbaseClientBase:
                     if 500 <= resp.status_code < 600:
                         is_error = True
                         if attempt < max_retries:
+                            # Record retry metric
+                            category = categorize_endpoint(path)
+                            record_counter(
+                                "gpt_trader_api_retries_total",
+                                labels={"category": category, "reason": "server_error"},
+                            )
                             # Exponential backoff with jitter and cap
                             base_delay = RETRY_BASE_DELAY * (RETRY_BACKOFF_MULTIPLIER**attempt)
                             jitter = random.uniform(0, RETRY_JITTER_MAX_SECONDS)
@@ -450,9 +491,11 @@ class CoinbaseClientBase:
 
                     resp.raise_for_status()
 
-                    # Success - record in circuit breaker
+                    # Success - record in circuit breaker and span
                     if self._circuit_breaker:
                         self._circuit_breaker.record_success(path)
+                    if span:
+                        span.set_attribute("http.status_code", resp.status_code)
 
                     if resp.content:
                         try:
@@ -493,6 +536,12 @@ class CoinbaseClientBase:
                 except (requests.ConnectionError, requests.Timeout, ConnectionError):
                     is_error = True
                     if attempt < max_retries:
+                        # Record retry metric
+                        category = categorize_endpoint(path)
+                        record_counter(
+                            "gpt_trader_api_retries_total",
+                            labels={"category": category, "reason": "network_timeout"},
+                        )
                         # Exponential backoff with jitter and cap
                         base_delay = RETRY_BASE_DELAY * (RETRY_BACKOFF_MULTIPLIER**attempt)
                         jitter = random.uniform(0, RETRY_JITTER_MAX_SECONDS)
@@ -512,15 +561,40 @@ class CoinbaseClientBase:
             # Record failure in circuit breaker
             if self._circuit_breaker:
                 self._circuit_breaker.record_failure(path, e)
+            # Mark span as errored
+            if span:
+                span.set_attribute("error", True)
+                span.set_attribute("error.type", type(e).__name__)
             raise
 
         finally:
-            # Record metrics
+            # Calculate latency
+            latency_seconds = time.perf_counter() - start_time
+            latency_ms = latency_seconds * 1000
+
+            # Record internal API metrics
             if self._metrics:
-                latency_ms = (time.perf_counter() - start_time) * 1000
                 self._metrics.record_request(
                     path, latency_ms, error=is_error, rate_limited=is_rate_limited
                 )
+
+            # Record Prometheus metrics
+            category = categorize_endpoint(path)
+            result = "error" if is_error else "success"
+            record_histogram(
+                "gpt_trader_api_latency_seconds",
+                latency_seconds,
+                labels={"category": category, "result": result},
+            )
+            record_counter(
+                "gpt_trader_api_requests_total",
+                labels={"category": category, "result": result},
+            )
+
+            # Add final span attributes
+            if span:
+                span.set_attribute("http.latency_ms", latency_ms)
+                span.set_attribute("http.rate_limited", is_rate_limited)
 
     # === API Resilience Status Methods ===
 
@@ -552,12 +626,36 @@ class CoinbaseClientBase:
         """Get comprehensive API resilience status for monitoring.
 
         Returns a dict suitable for status reporting with all resilience
-        component states.
+        component states. Also records current gauges for Prometheus export.
         """
+        rate_limit_usage = self.get_rate_limit_usage()
+        metrics = self.get_api_metrics()
+        circuit_breakers = self.get_circuit_breaker_status()
+
+        # Record Prometheus gauges for current state
+        record_gauge("gpt_trader_rate_limit_usage_ratio", rate_limit_usage)
+
+        if metrics:
+            error_rate = metrics.get("error_rate", 0.0)
+            record_gauge("gpt_trader_api_error_rate", error_rate)
+
+        # Record circuit breaker state gauges
+        # State values: 0=closed (healthy), 1=half_open (recovering), 2=open (blocking)
+        state_values = {"closed": 0.0, "half_open": 1.0, "open": 2.0}
+        if circuit_breakers:
+            for category, status in circuit_breakers.items():
+                state = status.get("state", "closed")
+                state_value = state_values.get(state, 0.0)
+                record_gauge(
+                    "gpt_trader_circuit_breaker_state",
+                    state_value,
+                    labels={"category": category},
+                )
+
         return {
-            "rate_limit_usage": self.get_rate_limit_usage(),
-            "metrics": self.get_api_metrics(),
-            "circuit_breakers": self.get_circuit_breaker_status(),
+            "rate_limit_usage": rate_limit_usage,
+            "metrics": metrics,
+            "circuit_breakers": circuit_breakers,
             "cache": self.get_cache_stats(),
             "priority": self.get_priority_stats(),
             "adaptive_throttle_enabled": self._adaptive_throttle_enabled,

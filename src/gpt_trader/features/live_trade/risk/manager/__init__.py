@@ -24,7 +24,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from gpt_trader.orchestration.configuration.risk import RiskConfig
+    from gpt_trader.features.live_trade.risk.config import RiskConfig
     from gpt_trader.persistence.event_store import EventStore
 
 

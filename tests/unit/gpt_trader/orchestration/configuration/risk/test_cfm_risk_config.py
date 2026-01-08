@@ -5,7 +5,7 @@ import os
 import tempfile
 from decimal import Decimal
 
-from gpt_trader.orchestration.configuration.risk import RiskConfig
+from gpt_trader.features.live_trade.risk.config import RiskConfig
 
 
 class TestCFMRiskConfigDefaults:

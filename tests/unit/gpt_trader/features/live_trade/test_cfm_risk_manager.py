@@ -4,6 +4,7 @@ from decimal import Decimal
 
 import pytest
 
+from gpt_trader.features.live_trade.risk.config import RiskConfig
 from gpt_trader.features.live_trade.risk.manager import (
     ExposureState,
     LiveRiskManager,
@@ -11,7 +12,6 @@ from gpt_trader.features.live_trade.risk.manager import (
     RiskWarningLevel,
     ValidationError,
 )
-from gpt_trader.orchestration.configuration.risk import RiskConfig
 
 
 class TestExposureState:
@@ -459,9 +459,7 @@ class TestLiveRiskManagerResetWithCFM:
 
         # Set up CFM state
         manager.set_cfm_reduce_only_mode(True, reason="test")
-        manager._risk_warnings.append(
-            RiskWarning(level=RiskWarningLevel.WARNING, message="test")
-        )
+        manager._risk_warnings.append(RiskWarning(level=RiskWarningLevel.WARNING, message="test"))
 
         manager.reset_daily_tracking()
 

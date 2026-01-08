@@ -279,11 +279,6 @@ def log_execution(
     return decorator
 
 
-def get_correlation_id() -> str | None:
-    """Return None for simplified context."""
-    return None
-
-
 # Re-implement UnifiedLogger with emoji fixes and stream writing
 class UnifiedLogger:
     def __init__(
@@ -422,7 +417,6 @@ LOG_FIELDS: dict[str, Any] = {}
 
 __all__ = [
     "get_logger",
-    "get_correlation_id",
     "log_operation",
     "log_trade_event",
     "log_position_update",

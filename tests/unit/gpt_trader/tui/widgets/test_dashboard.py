@@ -67,17 +67,13 @@ class TestCalculatePriceChangePercent:
     def test_crypto_realistic_values(self) -> None:
         """Test with realistic crypto price values."""
         # BTC: $95,000 -> $97,000 = +2.1%
-        result = calculate_price_change_percent(
-            97000.0, [Decimal("95000")]
-        )
+        result = calculate_price_change_percent(97000.0, [Decimal("95000")])
         expected = ((97000 - 95000) / 95000) * 100
         assert result == pytest.approx(expected)
 
     def test_low_price_asset(self) -> None:
         """Test with low-priced assets like DOGE."""
         # DOGE: $0.35 -> $0.38 = +8.57%
-        result = calculate_price_change_percent(
-            0.38, [Decimal("0.35")]
-        )
+        result = calculate_price_change_percent(0.38, [Decimal("0.35")])
         expected = ((0.38 - 0.35) / 0.35) * 100
         assert result == pytest.approx(expected)

@@ -104,4 +104,3 @@ APISetupWizardScreen #cancel-btn {
 APISetupWizardScreen #cancel-btn:hover {
     background: $error;
 }
-

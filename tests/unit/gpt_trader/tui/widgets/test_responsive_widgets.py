@@ -23,4 +23,3 @@ class TestResponsiveWidgets:
         event = ResponsiveStateChanged(state=ResponsiveState.WIDE, width=180)
         slim.on_responsive_state_changed(event)
         assert slim.responsive_state == ResponsiveState.WIDE
-

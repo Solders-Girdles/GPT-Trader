@@ -91,7 +91,9 @@ class PerformanceDashboardWidget(Static):
         with Horizontal(classes="perf-row"):
             yield Label("Latency:", classes="perf-label")
             yield Label("--", id="perf-latency", classes="perf-value")
-            yield Label(f"(<{int(DEFAULT_BUDGET.avg_frame_time_target * 1000)}ms)", classes="perf-target")
+            yield Label(
+                f"(<{int(DEFAULT_BUDGET.avg_frame_time_target * 1000)}ms)", classes="perf-target"
+            )
 
         # Memory row with target
         with Horizontal(classes="perf-row"):
@@ -231,9 +233,7 @@ class PerformanceDashboardWidget(Static):
         try:
             frames_label = self.query_one("#perf-frames", Label)
             uptime_min = snapshot.uptime_seconds / 60
-            frames_label.update(
-                f"{snapshot.total_frames} ({uptime_min:.1f}min)"
-            )
+            frames_label.update(f"{snapshot.total_frames} ({uptime_min:.1f}min)")
         except Exception:
             pass
 
@@ -256,9 +256,7 @@ class PerformanceDashboardWidget(Static):
                     Label(f"{name}: {duration * 1000:.0f}ms", classes="slow-op")
                 )
         else:
-            self._slow_ops_container.mount(
-                Label("None", classes="text-muted")
-            )
+            self._slow_ops_container.mount(Label("None", classes="text-muted"))
 
     @staticmethod
     def _get_fps_class(fps: float) -> str:

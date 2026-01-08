@@ -57,4 +57,3 @@ HelpScreen .help-footer {
     text-align: center;
     margin-top: $spacing-xs;
 }
-

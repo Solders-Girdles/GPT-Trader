@@ -56,9 +56,7 @@ class NullStatusReporter:
         """
         if callback not in self._observers:
             self._observers.append(callback)
-            logger.debug(
-                f"NullStatusReporter: Observer registered (total: {len(self._observers)})"
-            )
+            logger.debug(f"NullStatusReporter: Observer registered (total: {len(self._observers)})")
 
     def remove_observer(self, callback: Callable[[BotStatus], None]) -> None:
         """
@@ -69,9 +67,7 @@ class NullStatusReporter:
         """
         if callback in self._observers:
             self._observers.remove(callback)
-            logger.debug(
-                f"NullStatusReporter: Observer removed (total: {len(self._observers)})"
-            )
+            logger.debug(f"NullStatusReporter: Observer removed (total: {len(self._observers)})")
 
     def get_status(self) -> BotStatus:
         """

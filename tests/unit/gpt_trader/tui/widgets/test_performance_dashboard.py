@@ -280,9 +280,7 @@ class TestPerformanceDashboardThresholds:
             (150, "status-critical"),  # exactly at critical threshold
         ],
     )
-    def test_latency_threshold_boundaries(
-        self, latency_ms: float, expected_class: str
-    ) -> None:
+    def test_latency_threshold_boundaries(self, latency_ms: float, expected_class: str) -> None:
         """Test latency threshold boundaries."""
         assert PerformanceDashboardWidget._get_latency_class(latency_ms) == expected_class
 
@@ -295,13 +293,9 @@ class TestPerformanceDashboardThresholds:
             (80, "status-critical"),  # exactly at critical threshold
         ],
     )
-    def test_memory_threshold_boundaries(
-        self, memory_percent: float, expected_class: str
-    ) -> None:
+    def test_memory_threshold_boundaries(self, memory_percent: float, expected_class: str) -> None:
         """Test memory threshold boundaries."""
-        assert (
-            PerformanceDashboardWidget._get_memory_class(memory_percent) == expected_class
-        )
+        assert PerformanceDashboardWidget._get_memory_class(memory_percent) == expected_class
 
     @pytest.mark.parametrize(
         "cpu_percent,expected_class",
@@ -312,8 +306,6 @@ class TestPerformanceDashboardThresholds:
             (80, "status-critical"),  # exactly at critical threshold
         ],
     )
-    def test_cpu_threshold_boundaries(
-        self, cpu_percent: float, expected_class: str
-    ) -> None:
+    def test_cpu_threshold_boundaries(self, cpu_percent: float, expected_class: str) -> None:
         """Test CPU threshold boundaries."""
         assert PerformanceDashboardWidget._get_cpu_class(cpu_percent) == expected_class

@@ -132,9 +132,7 @@ class CredentialValidationScreen(ModalScreen[bool | str]):
                 status_icon = "✓"
                 header_class = "category-header category-success"
 
-            widgets.append(
-                Label(f"{status_icon} {category_name}", classes=header_class)
-            )
+            widgets.append(Label(f"{status_icon} {category_name}", classes=header_class))
 
             # Individual findings under this category
             for finding in findings:

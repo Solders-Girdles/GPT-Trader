@@ -92,4 +92,3 @@ $interactive-disabled: $bg-secondary;
 $border-default: solid $border-subtle;
 $border-emphasis-style: solid $border-emphasis;
 $border-glow: solid $accent-glow;
-

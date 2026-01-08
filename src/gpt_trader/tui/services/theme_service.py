@@ -87,7 +87,11 @@ class ThemeService:
             source_path = (
                 self.preferences_path
                 if self.preferences_path.exists()
-                else (self._fallback_path if self._fallback_path and self._fallback_path.exists() else None)
+                else (
+                    self._fallback_path
+                    if self._fallback_path and self._fallback_path.exists()
+                    else None
+                )
             )
             if source_path is not None:
                 with open(source_path) as f:

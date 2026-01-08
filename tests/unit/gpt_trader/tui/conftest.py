@@ -53,6 +53,9 @@ def isolate_tui_preferences(tmp_path, monkeypatch, request):
     Tests that need to verify default preferences path behavior should use
     the 'uses_real_preferences' marker to skip this fixture.
     """
+    # Ensure Textual color output isn't suppressed by environment defaults.
+    monkeypatch.delenv("NO_COLOR", raising=False)
+
     if request.node.get_closest_marker("uses_real_preferences"):
         # Allow test to use real preferences path
         return
@@ -113,6 +116,11 @@ def _clear_all_tui_singletons():
 
     prefs_module._preferences_service = None
 
+    # Clear global metrics collector to avoid cross-suite leakage
+    from gpt_trader.monitoring.metrics_collector import reset_all as reset_metrics
+
+    reset_metrics()
+
 
 # Patterns to normalize for stable snapshots
 _TERMINAL_HASH_RE = re.compile(r"terminal-\d+-")
@@ -126,11 +134,17 @@ _BRAILLE_SPINNER_RE = re.compile(r"[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏]")
 
 def _normalize_svg(text: str) -> str:
     """Apply all normalizations to SVG snapshot content."""
+    endswith_newline = text.endswith("\n")
     text = _TERMINAL_HASH_RE.sub("terminal-", text)
     text = _TIMING_RE.sub("(XXms)", text)
     text = _UTC_TIME_RE.sub("XX:XX UTC", text)
     text = _BRAILLE_SPINNER_RE.sub("⠋", text)  # Normalize to first spinner frame
-    return text
+    lines = [line.rstrip() for line in text.splitlines()]
+    lines = ["" if line.strip() == "" else line for line in lines]
+    normalized = "\n".join(lines)
+    if endswith_newline:
+        normalized += "\n"
+    return normalized
 
 
 class NormalizedSVGImageExtension(SingleFileSnapshotExtension):

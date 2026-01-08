@@ -37,6 +37,7 @@ def _build_step_dots(current: int, total: int) -> str:
             dots.append("○")  # Pending
     return " ".join(dots)
 
+
 # Content for each wizard step
 STEP_CONTENT: dict[int, dict[str, str | list[str]]] = {
     1: {
@@ -221,9 +222,7 @@ class APISetupWizardScreen(ModalScreen[str | None]):
         step_data = STEP_CONTENT[self.current_step]
 
         # Update step dots
-        self.query_one("#step-dots", Label).update(
-            _build_step_dots(self.current_step, TOTAL_STEPS)
-        )
+        self.query_one("#step-dots", Label).update(_build_step_dots(self.current_step, TOTAL_STEPS))
 
         # Update step indicator
         self.query_one("#step-indicator", Label).update(

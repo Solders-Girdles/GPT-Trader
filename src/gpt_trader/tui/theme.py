@@ -55,26 +55,26 @@ DARK_PALETTE = ColorPalette(
     background_primary="#101010",  # Deep Obsidian (Deepest)
     background_secondary="#1a1a1a",  # Obsidian (Lighter)
     background_elevated="#252525",  # Obsidian (Elevated)
-    surface="#303030",             # Obsidian (Surface)
+    surface="#303030",  # Obsidian (Surface)
     # Accents
-    accent_primary="#007AFF",      # Electric Blue - Primary
-    accent_secondary="#0056b3",    # Deep Blue - Secondary
+    accent_primary="#007AFF",  # Electric Blue - Primary
+    accent_secondary="#0056b3",  # Deep Blue - Secondary
     # Text
-    text_primary="#FFFFFF",        # Pure White (Brightest)
-    text_secondary="#B0B0B0",      # Light Grey (Bright)
-    text_muted="#606060",          # Dark Grey (Muted)
+    text_primary="#FFFFFF",  # Pure White (Brightest)
+    text_secondary="#B0B0B0",  # Light Grey (Bright)
+    text_muted="#606060",  # Dark Grey (Muted)
     # Semantic
-    success="#00FF41",             # Neon Green
-    warning="#FFD700",             # Gold
-    error="#FF0033",               # Crimson Red
-    info="#007AFF",                # Electric Blue
+    success="#00FF41",  # Neon Green
+    warning="#FFD700",  # Gold
+    error="#FF0033",  # Crimson Red
+    info="#007AFF",  # Electric Blue
     # Interactive
     overlay_hover="rgba(255, 255, 255, 0.05)",
     overlay_focus="rgba(0, 122, 255, 0.2)",
     overlay_disabled="rgba(0, 0, 0, 0.5)",
     # Borders
-    border="#333333",              # Dark Grey
-    border_muted="#1a1a1a",        # Obsidian
+    border="#333333",  # Dark Grey
+    border_muted="#1a1a1a",  # Obsidian
 )
 
 # Light Theme (Claude Code-inspired, inverted)
@@ -154,7 +154,9 @@ class ThemeManager:
         self._themes = {
             ThemeMode.DARK: Theme(mode=ThemeMode.DARK, colors=DARK_PALETTE),
             ThemeMode.LIGHT: Theme(mode=ThemeMode.LIGHT, colors=LIGHT_PALETTE),
-            ThemeMode.HIGH_CONTRAST: Theme(mode=ThemeMode.HIGH_CONTRAST, colors=HIGH_CONTRAST_PALETTE),
+            ThemeMode.HIGH_CONTRAST: Theme(
+                mode=ThemeMode.HIGH_CONTRAST, colors=HIGH_CONTRAST_PALETTE
+            ),
         }
 
     @property

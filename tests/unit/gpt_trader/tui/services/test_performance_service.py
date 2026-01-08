@@ -164,9 +164,7 @@ class TestTuiPerformanceService:
         assert service._total_frames == 1
         assert len(service._frame_metrics) == 1
 
-    def test_record_frame_disabled(
-        self, disabled_service: TuiPerformanceService
-    ) -> None:
+    def test_record_frame_disabled(self, disabled_service: TuiPerformanceService) -> None:
         """Test recording frame metrics when disabled does nothing."""
         metrics = FrameMetrics(timestamp=time.time(), total_duration=0.050)
 
@@ -231,9 +229,7 @@ class TestTuiPerformanceService:
 
         assert len(snapshot.slow_operations) == 0
 
-    def test_slow_operation_disabled(
-        self, disabled_service: TuiPerformanceService
-    ) -> None:
+    def test_slow_operation_disabled(self, disabled_service: TuiPerformanceService) -> None:
         """Test slow operations not recorded when disabled."""
         disabled_service.record_slow_operation("slow_render", 0.100)
 
@@ -253,9 +249,7 @@ class TestTuiPerformanceService:
     def test_reset(self, service: TuiPerformanceService) -> None:
         """Test resetting all metrics."""
         # Record some data
-        service.record_frame(
-            FrameMetrics(timestamp=time.time(), total_duration=0.050)
-        )
+        service.record_frame(FrameMetrics(timestamp=time.time(), total_duration=0.050))
         service.record_slow_operation("slow", 0.100)
 
         assert service._total_frames == 1
@@ -281,9 +275,7 @@ class TestTuiPerformanceService:
         assert snapshot.throttler_batch_size == 2.5
         assert snapshot.throttler_queue_depth == 3
 
-    @patch(
-        "gpt_trader.tui.services.performance_service.get_resource_monitor"
-    )
+    @patch("gpt_trader.tui.services.performance_service.get_resource_monitor")
     def test_snapshot_memory_metrics(self, mock_get_monitor) -> None:
         """Test memory metrics are included in snapshot."""
         mock_monitor = MagicMock()

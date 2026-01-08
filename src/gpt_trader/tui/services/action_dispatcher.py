@@ -455,15 +455,15 @@ class ActionDispatcher:
     async def reset_daily_risk(self) -> None:
         """Reset daily risk tracking (P&L, limits).
 
-        Calls reset_daily_tracking() on the execution engine if available.
+        Calls reset_daily_tracking() on the TradingEngine if available.
         Useful at the start of a new trading day.
         """
         try:
             logger.info("User initiated daily risk reset")
 
-            # Check if bot has execution engine with reset method
-            if self.app.bot and hasattr(self.app.bot, "execution_engine"):
-                engine = self.app.bot.execution_engine
+            # Check if bot has TradingEngine with reset method
+            if self.app.bot and hasattr(self.app.bot, "engine"):
+                engine = self.app.bot.engine
                 if hasattr(engine, "reset_daily_tracking"):
                     engine.reset_daily_tracking()
                     notify_success(self.app, "Daily risk tracking reset", title="Risk Reset")

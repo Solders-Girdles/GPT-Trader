@@ -179,7 +179,11 @@ class PreferencesService:
             source_path = (
                 self.preferences_path
                 if self.preferences_path.exists()
-                else (self._fallback_path if self._fallback_path and self._fallback_path.exists() else None)
+                else (
+                    self._fallback_path
+                    if self._fallback_path and self._fallback_path.exists()
+                    else None
+                )
             )
             if source_path is not None:
                 try:
@@ -516,9 +520,7 @@ class PreferencesService:
         max_age_seconds = max_age_hours * 3600
 
         if age_seconds > max_age_seconds:
-            logger.debug(
-                f"Credential cache expired: {age_seconds/3600:.1f}h > {max_age_hours}h"
-            )
+            logger.debug(f"Credential cache expired: {age_seconds/3600:.1f}h > {max_age_hours}h")
             return False
 
         # Check if this mode was validated
@@ -526,10 +528,7 @@ class PreferencesService:
             logger.debug(f"Credential cache invalid: mode '{mode}' not validated")
             return False
 
-        logger.debug(
-            f"Credential cache valid for '{mode}' "
-            f"(age: {age_seconds/3600:.1f}h)"
-        )
+        logger.debug(f"Credential cache valid for '{mode}' " f"(age: {age_seconds/3600:.1f}h)")
         return True
 
 

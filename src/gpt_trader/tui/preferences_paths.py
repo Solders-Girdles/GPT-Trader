@@ -43,4 +43,3 @@ def resolve_preferences_paths(
         return Path(env_path).expanduser(), None
 
     return default_preferences_path(), legacy_preferences_path()
-

@@ -317,10 +317,11 @@ class HistoricalDataLoader:
                 best_ask = mid
 
             # Create snapshot with minimal depth
-            return DepthSnapshot(
-                bids=[(best_bid, Decimal("1"))],
-                asks=[(best_ask, Decimal("1"))],
-            )
+            levels = [
+                (best_bid, Decimal("1"), "bid"),
+                (best_ask, Decimal("1"), "ask"),
+            ]
+            return DepthSnapshot(levels)
 
         except Exception as e:
             logger.debug(

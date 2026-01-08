@@ -13,7 +13,7 @@ from typing import Any
 from gpt_trader.core import OrderSide, OrderType
 from gpt_trader.monitoring.system import LogLevel
 from gpt_trader.monitoring.system import get_logger as get_monitoring_logger
-from gpt_trader.persistence.event_store import EventStore
+from gpt_trader.orchestration.protocols import EventStoreProtocol
 from gpt_trader.utilities.logging_patterns import get_logger
 from gpt_trader.utilities.telemetry import emit_metric
 
@@ -25,7 +25,7 @@ class OrderEventRecorder:
 
     def __init__(
         self,
-        event_store: EventStore,
+        event_store: EventStoreProtocol,
         bot_id: str,
     ) -> None:
         """

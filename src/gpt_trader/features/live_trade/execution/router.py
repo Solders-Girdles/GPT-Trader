@@ -39,12 +39,28 @@ if TYPE_CHECKING:
 
 logger = get_logger(__name__, component="order_router")
 
-# Type alias for the canonical submitter callable
-# Matches TradingEngine.submit_order signature
-SubmitterCallable = Callable[
-    [str, OrderSide, Decimal, Decimal],  # symbol, side, price, equity
-    Awaitable[None],
-]
+
+def _resolve_order_id(order: Any | None) -> str | None:
+    if order is None:
+        return None
+    return getattr(order, "id", None) or getattr(order, "order_id", None)
+
+
+class SubmitterCallable(Protocol):
+    """Callable protocol matching TradingEngine.submit_order."""
+
+    def __call__(
+        self,
+        symbol: str,
+        side: OrderSide,
+        price: Decimal,
+        equity: Decimal,
+        *,
+        quantity_override: Decimal | None = None,
+        reduce_only: bool = False,
+        reason: str = "external_submission",
+        confidence: float = 1.0,
+    ) -> Awaitable[None]: ...
 
 
 @runtime_checkable
@@ -88,7 +104,7 @@ class OrderResult:
         """Convert to dictionary for serialization."""
         return {
             "success": self.success,
-            "order_id": self.order.order_id if self.order else None,
+            "order_id": _resolve_order_id(self.order),
             "symbol": (
                 self.order.symbol
                 if self.order
@@ -368,7 +384,7 @@ class OrderRouter:
                 decision.symbol,
                 side.value,
                 decision.quantity,
-                order.order_id,
+                _resolve_order_id(order),
             )
 
             return OrderResult(
@@ -441,7 +457,7 @@ class OrderRouter:
                 side.value,
                 decision.quantity,
                 decision.leverage,
-                order.order_id,
+                _resolve_order_id(order),
             )
 
             return OrderResult(

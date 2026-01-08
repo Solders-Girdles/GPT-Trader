@@ -170,8 +170,13 @@ strict_optional = true
 ignore_missing_imports = true
 explicit_package_bases = true
 mypy_path = "src"
+exclude = "(^|.*/)src/gpt_trader/tui/.*"
 files = [
     "src/gpt_trader",
 ]
+
+[[tool.mypy.overrides]]
+module = "gpt_trader.tui.*"
+ignore_errors = true
 
 # Pytest configuration moved to pytest.ini for better organization

@@ -581,15 +581,15 @@ class CoinbaseClientBase:
 
             # Record Prometheus metrics
             category = categorize_endpoint(path)
-            result = "error" if is_error else "success"
+            request_result = "error" if is_error else "success"
             record_histogram(
                 "gpt_trader_api_latency_seconds",
                 latency_seconds,
-                labels={"category": category, "result": result},
+                labels={"category": category, "result": request_result},
             )
             record_counter(
                 "gpt_trader_api_requests_total",
-                labels={"category": category, "result": result},
+                labels={"category": category, "result": request_result},
             )
 
             # Add final span attributes

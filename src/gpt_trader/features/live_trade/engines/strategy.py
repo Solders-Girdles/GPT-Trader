@@ -93,6 +93,7 @@ class TradingEngine(BaseEngine):
         self._current_positions: dict[str, Position] = {}
         self._rehydrated = False
         self._cycle_count = 0
+        self._quantity_override: Decimal | None = None
 
         # Initialize price tick store for state recovery
         self._price_tick_store = PriceTickStore(
@@ -167,6 +168,7 @@ class TradingEngine(BaseEngine):
         """Initialize StateCollector, OrderValidator, OrderSubmitter for pre-trade guards."""
         # Event store fallback
         event_store = self.context.event_store or EventStore()
+        bot_id = str(self.context.bot_id or self.context.config.profile or "live")
 
         # Broker and risk manager must exist
         broker = self.context.broker
@@ -186,7 +188,7 @@ class TradingEngine(BaseEngine):
         self._order_submitter = OrderSubmitter(
             broker=broker,  # type: ignore[arg-type]
             event_store=event_store,
-            bot_id=self.context.bot_id or self.context.config.profile or "live",
+            bot_id=bot_id,
             open_orders=self._open_orders,
             integration_mode=False,
         )
@@ -471,8 +473,8 @@ class TradingEngine(BaseEngine):
         self._order_submitter.record_rejection(
             symbol="*",
             side="*",
-            quantity=0,
-            price=0,
+            quantity=Decimal("0"),
+            price=None,
             reason=f"guard_failure:{err.guard_name}",
         )
 
@@ -710,6 +712,11 @@ class TradingEngine(BaseEngine):
 
         # Report system status at start of cycle
         self._report_system_status()
+        broker = self.context.broker
+        if broker is None:
+            logger.error("Broker not initialized", operation="cycle")
+            self._connection_status = "DISCONNECTED"
+            return
 
         # 1. Fetch positions and audit orders in parallel (independent operations)
         logger.info("Step 1: Fetching positions and auditing orders (parallel)...")
@@ -786,7 +793,7 @@ class TradingEngine(BaseEngine):
         batch_start = time.time()
 
         # Only use batch fetch if broker has get_tickers method (not a mock)
-        get_tickers_method = getattr(self.context.broker, "get_tickers", None)
+        get_tickers_method = getattr(broker, "get_tickers", None)
         if get_tickers_method is not None and callable(get_tickers_method):
             try:
                 async with self._rest_semaphore:
@@ -811,7 +818,7 @@ class TradingEngine(BaseEngine):
             if ticker is None:
                 try:
                     async with self._rest_semaphore:
-                        ticker = await asyncio.to_thread(self.context.broker.get_ticker, symbol)
+                        ticker = await asyncio.to_thread(broker.get_ticker, symbol)
                 except Exception as e:
                     logger.error(f"Failed to fetch ticker for {symbol}: {e}")
                     self._connection_status = "DISCONNECTED"
@@ -826,7 +833,7 @@ class TradingEngine(BaseEngine):
             try:
                 async with self._rest_semaphore:
                     candles_result = await asyncio.to_thread(
-                        self.context.broker.get_candles, symbol, granularity="ONE_MINUTE"
+                        broker.get_candles, symbol, granularity="ONE_MINUTE"
                     )
                 if isinstance(candles_result, Exception):
                     logger.warning(f"Failed to fetch candles for {symbol}: {candles_result}")
@@ -1351,8 +1358,9 @@ class TradingEngine(BaseEngine):
             return
 
         # Run pre-trade validation if risk manager is available
-        if self.context.risk_manager is not None:
-            self.context.risk_manager.pre_trade_validate(
+        risk_manager = self.context.risk_manager
+        if risk_manager is not None:
+            risk_manager.pre_trade_validate(
                 symbol=symbol,
                 side=side.value,
                 quantity=quantity,
@@ -1393,10 +1401,9 @@ class TradingEngine(BaseEngine):
                         )
 
             # In reduce-only mode, clamp quantity to prevent position flips
-            reduce_only_active = (
-                self.context.risk_manager._reduce_only_mode
-                or self.context.risk_manager._daily_pnl_triggered
-            )
+            daily_pnl_triggered = bool(getattr(risk_manager, "_daily_pnl_triggered", False))
+            reduce_only_mode = risk_manager.is_reduce_only_mode()
+            reduce_only_active = reduce_only_mode or daily_pnl_triggered
             if reduce_only_active and is_reducing and current_pos is not None:
                 # Get current position quantity
                 if hasattr(current_pos, "quantity"):
@@ -1427,11 +1434,11 @@ class TradingEngine(BaseEngine):
                 "reduce_only": is_reducing,
             }
 
-            if not self.context.risk_manager.check_order(order_for_check):
+            if not risk_manager.check_order(order_for_check):
                 error_msg = (
                     f"Order blocked by risk manager: "
-                    f"reduce_only_mode={self.context.risk_manager._reduce_only_mode}, "
-                    f"daily_pnl_triggered={self.context.risk_manager._daily_pnl_triggered}"
+                    f"reduce_only_mode={reduce_only_mode}, "
+                    f"daily_pnl_triggered={daily_pnl_triggered}"
                 )
                 logger.warning(error_msg)
                 await self._notify(

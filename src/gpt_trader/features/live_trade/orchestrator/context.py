@@ -165,8 +165,11 @@ class ContextBuilderMixin(_HasBot):
             return None
         if not hasattr(runtime_state, "orderbook_lock"):
             return None
+        from gpt_trader.features.brokerages.coinbase.market_data_features import DepthSnapshot
+
         with runtime_state.orderbook_lock:
-            return runtime_state.orderbook_snapshots.get(symbol)
+            snapshot = runtime_state.orderbook_snapshots.get(symbol)
+        return cast(DepthSnapshot | None, snapshot)
 
     def _get_trade_volume_stats(self, symbol: str) -> dict[str, Any] | None:
         """Get trade volume statistics for symbol."""

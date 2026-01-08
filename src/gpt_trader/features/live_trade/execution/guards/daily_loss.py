@@ -11,7 +11,7 @@ from gpt_trader.features.live_trade.execution.guards.protocol import RuntimeGuar
 from gpt_trader.features.live_trade.guard_errors import RiskGuardActionError
 
 if TYPE_CHECKING:
-    from gpt_trader.features.live_trade.risk import LiveRiskManager
+    from gpt_trader.features.live_trade.risk.protocols import RiskManagerProtocol
 
 
 class DailyLossGuard:
@@ -24,7 +24,7 @@ class DailyLossGuard:
 
     def __init__(
         self,
-        risk_manager: LiveRiskManager,
+        risk_manager: RiskManagerProtocol,
         cancel_all_orders: Callable[[], None],
         invalidate_cache: Callable[[], None],
     ) -> None:

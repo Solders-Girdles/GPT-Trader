@@ -20,7 +20,7 @@ from gpt_trader.utilities.logging_patterns import get_logger
 if TYPE_CHECKING:
     from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
     from gpt_trader.features.live_trade.degradation import DegradationState
-    from gpt_trader.features.live_trade.risk.manager import LiveRiskManager
+from gpt_trader.features.live_trade.risk.protocols import RiskManagerProtocol
 
 logger = get_logger(__name__, component="health_checks")
 
@@ -194,7 +194,7 @@ def check_ws_freshness(
 
 def check_degradation_state(
     degradation_state: DegradationState,
-    risk_manager: LiveRiskManager | None = None,
+    risk_manager: RiskManagerProtocol | None = None,
 ) -> tuple[bool, dict[str, Any]]:
     """
     Check trading degradation state.
@@ -219,6 +219,8 @@ def check_degradation_state(
         global_paused = status.get("global_paused", False)
         global_reason = status.get("global_reason")
         paused_symbols = status.get("paused_symbols", {})
+        if not isinstance(paused_symbols, dict):
+            paused_symbols = {}
 
         details.update(
             {
@@ -298,7 +300,7 @@ class HealthCheckRunner:
         self,
         broker: BrokerProtocol | None = None,
         degradation_state: DegradationState | None = None,
-        risk_manager: LiveRiskManager | None = None,
+        risk_manager: RiskManagerProtocol | None = None,
         interval_seconds: float = 30.0,
         message_stale_seconds: float = 60.0,
         heartbeat_stale_seconds: float = 120.0,
@@ -331,7 +333,7 @@ class HealthCheckRunner:
         """Set the degradation state for pause checks."""
         self._degradation_state = state
 
-    def set_risk_manager(self, manager: LiveRiskManager) -> None:
+    def set_risk_manager(self, manager: RiskManagerProtocol) -> None:
         """Set the risk manager for reduce-only checks."""
         self._risk_manager = manager
 

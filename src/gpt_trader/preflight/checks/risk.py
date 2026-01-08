@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from gpt_trader.preflight.core import PreflightCheck
@@ -20,7 +21,7 @@ def check_risk_configuration(checker: PreflightCheck) -> bool:
         has_pct_limit = config.daily_loss_limit_pct > 0
         has_abs_limit = config.daily_loss_limit > 0
 
-        checks: list[tuple[str, object, object]] = [
+        checks: list[tuple[str, object, Callable[[Any], bool]]] = [
             ("Max leverage", config.max_leverage, lambda x: 1 <= x <= 10),
             ("Liquidation buffer", config.min_liquidation_buffer_pct, lambda x: x >= 0.10),
             ("Position limit", config.max_position_pct_per_symbol, lambda x: 0 < x <= 0.25),

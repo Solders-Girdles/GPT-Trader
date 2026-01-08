@@ -26,9 +26,10 @@ from decimal import Decimal
 from typing import Any, Protocol, cast, runtime_checkable
 
 from gpt_trader.core import OrderSide, OrderType, Product, TimeInForce
-from gpt_trader.features.brokerages.coinbase.rest_service import CoinbaseRestService
 from gpt_trader.features.brokerages.coinbase.specs import validate_order as spec_validate_order
-from gpt_trader.features.live_trade.risk import LiveRiskManager, ValidationError
+from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
+from gpt_trader.features.live_trade.risk import ValidationError
+from gpt_trader.features.live_trade.risk.protocols import RiskManagerProtocol
 from gpt_trader.monitoring.metrics_collector import record_counter
 from gpt_trader.utilities.logging_patterns import get_logger
 from gpt_trader.utilities.quantization import quantize_price_side_aware
@@ -205,8 +206,8 @@ class OrderValidator:
 
     def __init__(
         self,
-        broker: CoinbaseRestService,
-        risk_manager: LiveRiskManager,
+        broker: BrokerProtocol,
+        risk_manager: RiskManagerProtocol,
         enable_order_preview: bool,
         record_preview_callback: Any,
         record_rejection_callback: Any,

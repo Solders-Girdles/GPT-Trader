@@ -7,6 +7,7 @@ and confidence-based voting to produce unified trading decisions.
 
 from __future__ import annotations
 
+import inspect
 from collections.abc import Sequence
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
@@ -23,6 +24,7 @@ from .weighting import DynamicWeightCalculator
 
 if TYPE_CHECKING:
     from gpt_trader.features.live_trade.interfaces import TradingStrategy
+    from gpt_trader.features.live_trade.strategies.base import MarketDataContext
 
 
 class EnsembleOrchestrator:
@@ -125,6 +127,8 @@ class EnsembleOrchestrator:
         recent_marks: Sequence[Decimal],
         equity: Decimal,
         product: Product | None,
+        market_data: MarketDataContext | None = None,
+        candles: Sequence[Any] | None = None,
     ) -> Decision:
         """Generate ensemble decision by aggregating strategy votes.
 
@@ -145,6 +149,8 @@ class EnsembleOrchestrator:
             recent_marks: Historical prices
             equity: Account equity
             product: Product specification
+            market_data: Optional enhanced market data (orderbook depth, trade flow)
+            candles: Historical candles (optional)
 
         Returns:
             Aggregated decision with ensemble metadata
@@ -173,14 +179,18 @@ class EnsembleOrchestrator:
         votes: list[StrategyVote] = []
         for name, strategy in self.strategies.items():
             try:
-                decision = strategy.decide(
+                kwargs = self._build_decide_kwargs(
+                    strategy=strategy,
                     symbol=symbol,
                     current_mark=current_mark,
                     position_state=position_state,
                     recent_marks=recent_marks,
                     equity=equity,
                     product=product,
+                    market_data=market_data,
+                    candles=candles,
                 )
+                decision = strategy.decide(**kwargs)
                 votes.append(
                     StrategyVote(
                         strategy_name=name,
@@ -257,6 +267,48 @@ class EnsembleOrchestrator:
             }
 
         return final_decision
+
+    def _build_decide_kwargs(
+        self,
+        *,
+        strategy: TradingStrategy,
+        symbol: str,
+        current_mark: Decimal,
+        position_state: dict[str, Any] | None,
+        recent_marks: Sequence[Decimal],
+        equity: Decimal,
+        product: Product | None,
+        market_data: MarketDataContext | None,
+        candles: Sequence[Any] | None,
+    ) -> dict[str, Any]:
+        kwargs: dict[str, Any] = {
+            "symbol": symbol,
+            "current_mark": current_mark,
+            "position_state": position_state,
+            "recent_marks": recent_marks,
+            "equity": equity,
+            "product": product,
+        }
+
+        try:
+            signature = inspect.signature(strategy.decide)
+        except (TypeError, ValueError):
+            kwargs["market_data"] = market_data
+            kwargs["candles"] = candles
+            return kwargs
+
+        if any(
+            param.kind == inspect.Parameter.VAR_KEYWORD for param in signature.parameters.values()
+        ):
+            kwargs["market_data"] = market_data
+            kwargs["candles"] = candles
+            return kwargs
+
+        if "market_data" in signature.parameters:
+            kwargs["market_data"] = market_data
+        if "candles" in signature.parameters:
+            kwargs["candles"] = candles
+        return kwargs
 
     def _apply_crisis_adjustment(
         self,

@@ -128,7 +128,7 @@ class HybridStrategyBase(StatefulStrategyBase):
         )
 
         # Create market data from standard inputs
-        market_data = HybridMarketData(
+        hybrid_market_data = HybridMarketData(
             symbol=symbol,
             spot_price=current_mark,
             # Futures price not available in standard interface
@@ -139,7 +139,7 @@ class HybridStrategyBase(StatefulStrategyBase):
             self._update_position_state_from_dict(position_state)
 
         # Get hybrid decisions
-        decisions = self.decide_hybrid(market_data, self._position_state, equity)
+        decisions = self.decide_hybrid(hybrid_market_data, self._position_state, equity)
 
         # Convert first actionable decision to standard Decision
         for decision in decisions:

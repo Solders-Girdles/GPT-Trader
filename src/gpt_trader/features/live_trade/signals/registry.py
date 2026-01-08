@@ -7,18 +7,18 @@ enabling YAML-based configuration of ensemble strategies.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import Any, cast
 
-if TYPE_CHECKING:
-    from gpt_trader.features.live_trade.signals.protocol import SignalGenerator
+from gpt_trader.features.live_trade.signals.protocol import SignalGenerator
 
 
 @dataclass
 class SignalRegistration:
     """Registration entry for a signal type."""
 
-    signal_class: type
+    signal_class: type[Any]
     config_class: type | None
     description: str = ""
 
@@ -76,13 +76,15 @@ def create_signal(name: str, parameters: dict[str, Any] | None = None) -> Signal
         available = ", ".join(_SIGNAL_REGISTRY.keys())
         raise ValueError(f"Unknown signal '{name}'. Available: {available}")
 
+    constructor = cast(Callable[..., SignalGenerator], registration.signal_class)
+
     if registration.config_class is not None and parameters:
         config = registration.config_class(**parameters)
-        return registration.signal_class(config)
+        return constructor(config)
     elif registration.config_class is not None:
-        return registration.signal_class(registration.config_class())
+        return constructor(registration.config_class())
     else:
-        return registration.signal_class()
+        return constructor()
 
 
 def _register_builtin_signals() -> None:

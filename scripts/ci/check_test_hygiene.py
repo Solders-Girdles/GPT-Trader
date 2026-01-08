@@ -92,7 +92,7 @@ ALLOWLIST = {
     "tests/contract/test_coinbase_api_contract.py",  # API contract compliance suite
     "tests/unit/gpt_trader/preflight/test_core.py",  # preflight core validation
     "tests/unit/gpt_trader/features/live_trade/execution/test_guards.py",  # execution guard scenarios
-    "tests/unit/gpt_trader/orchestration/test_symbols.py",  # symbol management coverage
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery.py",  # derivatives eligibility discovery and safety gating
     "tests/property/test_fee_invariants.py",  # property-based fee calculation invariants with comprehensive edge cases
     "tests/property/test_liquidation_invariants.py",  # property-based liquidation safety invariants across margin scenarios
     "tests/property/test_margin_invariants.py",  # property-based margin requirement invariants with leverage permutations
@@ -103,7 +103,6 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders.py",  # comprehensive REST orders mixin coverage
     "tests/unit/gpt_trader/features/live_trade/test_risk_manager.py",  # LiveRiskManager risk validation, volatility breakers, daily PnL tracking
     "tests/unit/gpt_trader/features/live_trade/execution/test_engine.py",  # LiveExecutionEngine orchestration, order flow, risk validation
-    "tests/unit/gpt_trader/orchestration/test_derivatives_discovery.py",  # derivatives eligibility discovery and safety gating
     "tests/unit/gpt_trader/orchestration/test_account_telemetry.py",  # account telemetry collection and publishing
     "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming.py",  # WebSocket streaming telemetry with async/threading patterns
     "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health.py",  # telemetry health check and mark extraction coverage

@@ -1,1 +1,1 @@
-"""Coinbase brokerage unit tests."""
+"""Tests for Coinbase brokerage implementations."""

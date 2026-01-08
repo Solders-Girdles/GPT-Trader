@@ -6,6 +6,7 @@ confidence levels for other signals.
 """
 
 from dataclasses import dataclass
+from decimal import Decimal
 
 from gpt_trader.features.live_trade.signals.protocol import (
     SignalGenerator,
@@ -55,9 +56,12 @@ class SpreadSignal(SignalGenerator):
             # Try to get from orderbook snapshot
             orderbook = context.market_data.orderbook_snapshot
             if orderbook is not None and orderbook.spread_bps is not None:
-                spread_bps = orderbook.spread_bps
+                spread_bps = Decimal(str(orderbook.spread_bps))
             else:
                 return self._no_data_signal("no_spread_data")
+
+        if spread_bps is None:
+            return self._no_data_signal("no_spread_data")
 
         spread_float = float(spread_bps)
 

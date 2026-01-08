@@ -7,10 +7,13 @@ enabling the engine to swap strategies without code changes.
 
 from collections.abc import Sequence
 from decimal import Decimal
-from typing import Any, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 from gpt_trader.core import Product
 from gpt_trader.features.live_trade.strategies.perps_baseline import Decision
+
+if TYPE_CHECKING:
+    from gpt_trader.features.live_trade.strategies.base import MarketDataContext
 
 
 @runtime_checkable
@@ -31,6 +34,7 @@ class TradingStrategy(Protocol):
         recent_marks: Sequence[Decimal],
         equity: Decimal,
         product: Product | None,
+        market_data: "MarketDataContext | None" = None,
         candles: Sequence[Any] | None = None,
     ) -> Decision:
         """Generate a trading decision based on market data.
@@ -42,6 +46,7 @@ class TradingStrategy(Protocol):
             recent_marks: Historical prices (oldest first, typically 20 periods)
             equity: Account equity for position sizing
             product: Product specification (optional)
+            market_data: Optional enhanced market data (orderbook depth, trade flow)
             candles: Historical candles for advanced indicators (optional)
 
         Returns:

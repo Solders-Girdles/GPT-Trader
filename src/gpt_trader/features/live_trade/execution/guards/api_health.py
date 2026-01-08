@@ -17,8 +17,8 @@ from gpt_trader.features.live_trade.guard_errors import (
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
-    from gpt_trader.features.brokerages.coinbase.rest_service import CoinbaseRestService
-    from gpt_trader.features.live_trade.risk import LiveRiskManager
+    from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
+    from gpt_trader.features.live_trade.risk.protocols import RiskManagerProtocol
 
 logger = get_logger(__name__, component="api_health_guard")
 
@@ -39,8 +39,8 @@ class ApiHealthGuard:
 
     def __init__(
         self,
-        broker: CoinbaseRestService,
-        risk_manager: LiveRiskManager,
+        broker: BrokerProtocol,
+        risk_manager: RiskManagerProtocol,
     ) -> None:
         """
         Initialize API health guard.

@@ -12,6 +12,7 @@ Update your imports to use:
 """
 
 import warnings
+from typing import Any
 
 # Re-export everything from the new canonical location
 from gpt_trader.app.config.bot_config import (
@@ -35,7 +36,7 @@ __all__ = [
 ]
 
 
-def __getattr__(name: str):
+def __getattr__(name: str) -> Any:
     """Emit deprecation warning on first access."""
     if name in __all__:
         warnings.warn(

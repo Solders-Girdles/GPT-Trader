@@ -9,7 +9,7 @@ import pytest
 
 from gpt_trader.app.config import BotConfig
 from gpt_trader.config.types import Profile
-from gpt_trader.orchestration import symbols
+from gpt_trader.features.live_trade import symbols
 
 
 @pytest.fixture(autouse=True)

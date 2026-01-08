@@ -10,7 +10,7 @@ from gpt_trader.features.live_trade.execution.guards.protocol import RuntimeGuar
 from gpt_trader.features.live_trade.guard_errors import GuardError, RiskGuardTelemetryError
 
 if TYPE_CHECKING:
-    from gpt_trader.features.live_trade.risk import LiveRiskManager
+    from gpt_trader.features.live_trade.risk.protocols import RiskManagerProtocol
 
 
 class RiskMetricsGuard:
@@ -21,7 +21,7 @@ class RiskMetricsGuard:
     for observability and post-session analysis.
     """
 
-    def __init__(self, risk_manager: LiveRiskManager) -> None:
+    def __init__(self, risk_manager: RiskManagerProtocol) -> None:
         """
         Initialize risk metrics guard.
 

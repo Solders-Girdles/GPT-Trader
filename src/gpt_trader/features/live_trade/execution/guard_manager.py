@@ -36,8 +36,7 @@ from gpt_trader.utilities.logging_patterns import get_logger
 from gpt_trader.utilities.quantities import quantity_from
 
 if TYPE_CHECKING:
-    from gpt_trader.features.brokerages.coinbase.rest_service import CoinbaseRestService
-    from gpt_trader.features.live_trade.risk import LiveRiskManager
+    from gpt_trader.features.live_trade.risk.protocols import RiskManagerProtocol
 
 logger = get_logger(__name__, component="execution_guards")
 
@@ -47,8 +46,8 @@ class GuardManager:
 
     def __init__(
         self,
-        broker: CoinbaseRestService,
-        risk_manager: LiveRiskManager,
+        broker: BrokerProtocol,
+        risk_manager: RiskManagerProtocol,
         equity_calculator: Callable[[list[Balance]], tuple[Decimal, list[Balance], Decimal]],
         open_orders: list[str],
         invalidate_cache_callback: Callable[[], None],

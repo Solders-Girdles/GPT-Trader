@@ -221,6 +221,34 @@ class BotConfig:
 
         return canonical
 
+    @property
+    def short_ma(self) -> int:
+        """Backward-compatible alias for strategy.short_ma_period."""
+        return int(getattr(self.strategy, "short_ma_period", 5))
+
+    @property
+    def long_ma(self) -> int:
+        """Backward-compatible alias for strategy.long_ma_period."""
+        return int(getattr(self.strategy, "long_ma_period", 20))
+
+    @property
+    def target_leverage(self) -> int:
+        """Backward-compatible alias for risk.target_leverage."""
+        return int(self.risk.target_leverage)
+
+    @property
+    def max_leverage(self) -> int:
+        """Backward-compatible alias for risk.max_leverage."""
+        return int(self.risk.max_leverage)
+
+    @property
+    def trailing_stop_pct(self) -> float | None:
+        """Backward-compatible alias for strategy/risk trailing stop."""
+        strategy_value = getattr(self.strategy, "trailing_stop_pct", None)
+        if strategy_value is not None:
+            return float(strategy_value)
+        return float(self.risk.trailing_stop_pct)
+
     @classmethod
     def from_profile(
         cls,

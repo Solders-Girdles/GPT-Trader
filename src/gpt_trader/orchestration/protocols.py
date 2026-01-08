@@ -14,6 +14,36 @@ from typing import Any, Protocol, runtime_checkable
 class EventStoreProtocol(Protocol):
     """Protocol for event storage implementations."""
 
+    def append_metric(self, bot_id: str = "unknown", metrics: dict[str, Any] | None = None) -> None:
+        """Append a metric event."""
+        ...
+
+    def append(self, event_type: str, data: dict[str, Any]) -> None:
+        """Append an event to the store."""
+        ...
+
+    def append_trade(
+        self, bot_id_or_trade: str | dict[str, Any], trade: dict[str, Any] | None = None
+    ) -> None:
+        """Append a trade event."""
+        ...
+
+    def append_error(
+        self,
+        error: str | None = None,
+        details: dict[str, Any] | None = None,
+        *,
+        bot_id: str | None = None,
+        message: str | None = None,
+        context: dict[str, Any] | None = None,
+    ) -> None:
+        """Append an error event."""
+        ...
+
+    def store_event(self, event_type: str, data: dict[str, Any]) -> None:
+        """Store a typed event."""
+        ...
+
     def store(self, event: Any) -> None:
         """Store an event."""
         ...

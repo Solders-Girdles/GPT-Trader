@@ -27,8 +27,7 @@ from typing import cast
 
 from gpt_trader.app.config import BotConfig
 from gpt_trader.core import OrderSide, OrderType, Product, TimeInForce
-from gpt_trader.features.brokerages.coinbase.rest_service import CoinbaseRestService
-from gpt_trader.features.brokerages.core.protocols import ExtendedBrokerProtocol
+from gpt_trader.features.brokerages.core.protocols import BrokerProtocol, ExtendedBrokerProtocol
 from gpt_trader.features.live_trade.execution.guard_manager import GuardManager
 from gpt_trader.features.live_trade.execution.order_submission import OrderSubmitter
 from gpt_trader.features.live_trade.execution.state_collection import StateCollector
@@ -78,7 +77,7 @@ class LiveExecutionEngine:
 
     def __init__(
         self,
-        broker: CoinbaseRestService,
+        broker: BrokerProtocol,
         config: BotConfig,
         risk_manager: LiveRiskManager | None = None,
         event_store: EventStore | None = None,

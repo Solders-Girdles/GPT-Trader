@@ -15,7 +15,7 @@ from gpt_trader.features.live_trade.guard_errors import RiskGuardDataUnavailable
 
 if TYPE_CHECKING:
     from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
-    from gpt_trader.features.live_trade.risk import LiveRiskManager
+    from gpt_trader.features.live_trade.risk.protocols import RiskManagerProtocol
 
 
 class VolatilityGuard:
@@ -29,7 +29,7 @@ class VolatilityGuard:
     def __init__(
         self,
         broker: BrokerProtocol,
-        risk_manager: LiveRiskManager,
+        risk_manager: RiskManagerProtocol,
     ) -> None:
         """
         Initialize volatility guard.

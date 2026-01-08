@@ -12,11 +12,10 @@ from gpt_trader.app.containers.risk_validation import RiskValidationContainer
 from gpt_trader.app.health_server import HealthState
 from gpt_trader.app.runtime import RuntimePaths
 from gpt_trader.config.types import Profile
-from gpt_trader.features.brokerages.coinbase.client.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
 from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
+from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
 from gpt_trader.features.brokerages.factory import create_brokerage
-from gpt_trader.features.brokerages.mock import DeterministicBroker
 from gpt_trader.orchestration.protocols import EventStoreProtocol
 from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.persistence.orders_store import OrdersStore
@@ -99,9 +98,9 @@ class ApplicationContainer:
         return self._brokerage.product_catalog
 
     @property
-    def broker(self) -> CoinbaseClient | DeterministicBroker:
+    def broker(self) -> BrokerProtocol:
         """Delegate to BrokerageContainer."""
-        return self._brokerage.broker
+        return cast(BrokerProtocol, self._brokerage.broker)
 
     @property
     def risk_manager(self) -> LiveRiskManager:

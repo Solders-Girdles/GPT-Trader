@@ -10,7 +10,7 @@ from gpt_trader.features.live_trade.execution.guards.protocol import RuntimeGuar
 from gpt_trader.features.live_trade.guard_errors import RiskGuardDataUnavailable
 
 if TYPE_CHECKING:
-    from gpt_trader.features.live_trade.risk import LiveRiskManager
+    from gpt_trader.features.live_trade.risk.protocols import RiskManagerProtocol
 
 
 class MarkStalenessGuard:
@@ -24,7 +24,7 @@ class MarkStalenessGuard:
     def __init__(
         self,
         broker: Any,  # Uses internal _mark_cache
-        risk_manager: LiveRiskManager,
+        risk_manager: RiskManagerProtocol,
     ) -> None:
         """
         Initialize mark staleness guard.

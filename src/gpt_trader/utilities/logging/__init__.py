@@ -26,6 +26,7 @@ from gpt_trader.logging import (
     configure_logging,
     correlation_context,
     generate_correlation_id,
+    get_correlation_id,
     get_domain_context,
     get_log_context,
     get_orchestration_logger,
@@ -49,7 +50,6 @@ from gpt_trader.utilities.logging_patterns import (
     LOG_FIELDS,
     StructuredLogger,
     UnifiedLogger,
-    get_correlation_id,
     get_logger,
     log_configuration_change,
     log_error_with_context,
@@ -61,11 +61,8 @@ from gpt_trader.utilities.logging_patterns import (
     log_trade_event,
 )
 
-# Note: gpt_trader.logging also exports get_correlation_id, but we prefer
-# the one from logging_patterns for consistency with existing code.
-# The logging_patterns version returns None (simplified), while the
-# gpt_trader.logging version uses contextvars for actual correlation tracking.
-# For production use with correlation IDs, import directly from gpt_trader.logging.
+# Note: gpt_trader.logging exports get_correlation_id, which uses contextvars
+# for actual correlation tracking across async tasks.
 
 __all__ = [
     # Primary interface (from logging_patterns)

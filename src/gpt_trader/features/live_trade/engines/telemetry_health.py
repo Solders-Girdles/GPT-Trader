@@ -216,6 +216,8 @@ def update_orderbook_snapshot(
 
         snapshot = DepthSnapshot.from_orderbook_update(event)
         product_id = getattr(event, "product_id", None)
+        if not isinstance(product_id, str):
+            return
 
         if product_id:
             with runtime_state.orderbook_lock:
@@ -272,7 +274,9 @@ def update_trade_aggregator(
         side = getattr(event, "side", None)
         timestamp = getattr(event, "timestamp", None)
 
-        if not all([product_id, price is not None, size is not None, side]):
+        if not isinstance(product_id, str) or not product_id:
+            return
+        if price is None or size is None or side is None:
             return
 
         with runtime_state.trade_lock:

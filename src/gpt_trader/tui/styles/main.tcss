@@ -4072,6 +4072,114 @@ RiskDetailModal #close-btn {
     width: 100%;
 }
 
+/* Risk Preview Section */
+RiskDetailModal .preview-current {
+    color: $text-secondary;
+    margin-bottom: $spacing-xs;
+}
+
+RiskDetailModal .preview-chips {
+    layout: horizontal;
+    height: auto;
+    margin-bottom: $spacing-xs;
+}
+
+RiskDetailModal .preview-chip {
+    padding: 0 $spacing-xs;
+    margin-right: $spacing-xs;
+    background: $bg-elevated;
+    min-width: 10;
+    text-align: center;
+}
+
+RiskDetailModal .preview-legend {
+    color: $text-muted;
+    text-style: italic;
+    margin-bottom: $spacing-xs;
+}
+
+RiskDetailModal .preview-focused {
+    border: wide $accent;
+    padding: 0 $spacing-xs;
+}
+
+RiskDetailModal .preview-guards {
+    margin-top: $spacing-xs;
+    margin-bottom: $spacing-xs;
+    padding-left: $spacing-xs;
+}
+
+RiskDetailModal .preview-guard-line {
+    color: $text-muted;
+    height: auto;
+}
+
+/* Guard Threshold Explanations */
+RiskDetailModal .guard-explanation {
+    color: $text-secondary;
+    padding-left: $spacing-xs;
+    height: auto;
+}
+
+/* Position Impact Rows */
+RiskDetailModal .position-impact-row {
+    height: auto;
+    padding-left: $spacing-xs;
+}
+
+RiskDetailModal .position-impact-more {
+    height: auto;
+    padding-left: $spacing-xs;
+}
+
+/* === Execution Issues Modal === */
+
+ExecutionIssuesModal {
+    align: center middle;
+    background: $overlay-disabled;
+}
+
+ExecutionIssuesModal #execution-issues-modal {
+    height: auto;
+    max-height: 85%;
+    padding: $spacing-md;
+    background: $bg-secondary;
+    border: none;
+    border-left: wide $accent;
+}
+
+ExecutionIssuesModal #exec-issues-title {
+    text-align: center;
+    text-style: bold;
+    color: $accent;
+    margin-bottom: $spacing-xs;
+}
+
+ExecutionIssuesModal .section-header {
+    color: $text-muted;
+    margin-top: $spacing-xs;
+    margin-bottom: 0;
+}
+
+ExecutionIssuesModal .muted {
+    color: $text-muted;
+}
+
+ExecutionIssuesModal .issue-row {
+    height: auto;
+    padding-left: $spacing-xs;
+}
+
+ExecutionIssuesModal .summary-line {
+    color: $text-secondary;
+    margin-top: $spacing-xs;
+}
+
+ExecutionIssuesModal #close-btn {
+    margin-top: $spacing-sm;
+    width: 100%;
+}
+
 /* === Position Detail Modal === */
 
 PositionDetailModal {
@@ -4115,6 +4223,22 @@ PositionDetailModal #linked-trades-table {
 PositionDetailModal #close-btn {
     margin-top: $spacing-sm;
     width: 100%;
+}
+
+PositionDetailModal .recent-fills-row {
+    padding-left: $spacing-xs;
+    height: auto;
+}
+
+PositionDetailModal .recent-fills-note {
+    color: $text-muted;
+    text-style: italic;
+    height: auto;
+}
+
+PositionDetailModal .fill-quality-row {
+    height: auto;
+    padding-left: $spacing-xs;
 }
 
 
@@ -4316,6 +4440,37 @@ SystemHealthWidget .label {
     color: $text-muted;
 }
 
+/* Execution issues section */
+SystemHealthWidget .execution-issues {
+    margin-top: 1;
+    padding-top: 1;
+    border-top: solid $border;
+}
+
+SystemHealthWidget .execution-issues.hidden {
+    display: none;
+}
+
+SystemHealthWidget .execution-label {
+    color: $warning;
+    text-style: bold;
+}
+
+SystemHealthWidget #exec-rejects {
+    color: $error;
+    padding-left: 2;
+}
+
+SystemHealthWidget #exec-retries {
+    color: $warning;
+    padding-left: 2;
+}
+
+SystemHealthWidget #exec-rejects.hidden,
+SystemHealthWidget #exec-retries.hidden {
+    display: none;
+}
+
 
 /* ---------------------------------------------------------------------------- */
 /* WIDGETS: Risk                                                              */
@@ -4373,6 +4528,27 @@ RiskWidget .risk-grid {
     grid-size: 2;
     grid-gutter: $spacing-md; /* Increased gutter for better spacing */
     padding: $spacing-sm 0; /* Vertical padding */
+}
+
+/* Risk summary row - compact at-a-glance status */
+RiskWidget .risk-summary-row {
+    layout: grid;
+    grid-size: 6;
+    grid-gutter: 1;
+    height: 1;
+    margin-bottom: $spacing-sm;
+    padding: 0 1;
+    background: $surface;
+}
+
+RiskWidget .risk-summary-row .risk-label {
+    margin-bottom: 0;
+    text-style: none;
+}
+
+RiskWidget .risk-summary-row .risk-value {
+    border-left: none;
+    padding: 0;
 }
 
 
@@ -5356,7 +5532,6 @@ HelpScreen .help-footer {
 }
 
 
-
 /* ---------------------------------------------------------------------------- */
 /* SCREENS: Credential Validation                                             */
 /* Source: styles/screens/credential_validation.tcss                           */
@@ -5522,7 +5697,6 @@ CredentialValidationScreen #retry-btn {
 CredentialValidationScreen #retry-btn:hover {
     background: $warning;
 }
-
 
 
 /* ---------------------------------------------------------------------------- */

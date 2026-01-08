@@ -31,6 +31,7 @@ Implementation references:
 | Validation infra failure | ValidationFailureTracker escalation | Reduce-only + global pause | `RISK_VALIDATION_FAILURE_COOLDOWN_SECONDS` |
 | Preview failures | Preview exceptions reach threshold | Disable preview for the session | `RISK_PREVIEW_FAILURE_DISABLE_AFTER` |
 | Broker read failures | Consecutive balance/position read failures | Global pause (reduce-only allowed) | `RISK_BROKER_OUTAGE_MAX_FAILURES`, `RISK_BROKER_OUTAGE_COOLDOWN_SECONDS` |
+| WS max reconnect | WebSocket exceeds max reconnection attempts | Global pause + callback for degradation | `GPT_TRADER_WS_RECONNECT_MAX_ATTEMPTS`, `GPT_TRADER_WS_RECONNECT_PAUSE_SECONDS` |
 
 Notes:
 
@@ -60,6 +61,24 @@ Graceful Degradation:
 | `RISK_BROKER_OUTAGE_MAX_FAILURES` | `3` | Failures before global pause |
 | `RISK_BROKER_OUTAGE_COOLDOWN_SECONDS` | `120` | Global pause duration for broker outage |
 
+WebSocket Reconnection:
+
+| Env Var | Default | Purpose |
+| --- | --- | --- |
+| `GPT_TRADER_WS_RECONNECT_BACKOFF_BASE` | `2.0` | Base delay in seconds for exponential backoff |
+| `GPT_TRADER_WS_RECONNECT_BACKOFF_MAX` | `60.0` | Maximum delay cap (prevents unbounded growth) |
+| `GPT_TRADER_WS_RECONNECT_BACKOFF_MULTIPLIER` | `2.0` | Exponential growth multiplier |
+| `GPT_TRADER_WS_RECONNECT_JITTER_PCT` | `0.25` | Jitter ±25% to prevent thundering herd |
+| `GPT_TRADER_WS_RECONNECT_MAX_ATTEMPTS` | `10` | Max attempts before triggering degradation (0=unlimited) |
+| `GPT_TRADER_WS_RECONNECT_RESET_SECONDS` | `60.0` | Stable connection time to reset attempt counter |
+| `GPT_TRADER_WS_RECONNECT_PAUSE_SECONDS` | `300` | Global pause duration when max attempts exceeded |
+
+The reconnection algorithm uses exponential backoff with jitter:
+- Delay = `base * (multiplier ^ attempt)`, capped at `max`
+- Jitter randomizes ±`jitter_pct` to prevent synchronized reconnection storms
+- Attempt counter resets after connection is stable for `reset_seconds`
+- When max attempts exceeded, triggers `on_max_attempts_exceeded` callback for degradation
+
 Preflight Diagnostics:
 
 | Flag/Env | Default | Purpose |
@@ -71,7 +90,7 @@ Preflight Diagnostics:
 
 ## Metrics
 
-Lightweight in-memory metrics for runtime observability. Exporters (Prometheus, etc.) are future work.
+Lightweight in-memory metrics for runtime observability with optional Prometheus export.
 
 ### Conventions
 
@@ -135,6 +154,201 @@ summary = get_metrics_collector().get_metrics_summary()
 - `result`: `success`, `rejected`, `failed`, `error`, `ok`
 - `reason`: `none`, `rate_limit`, `insufficient_funds`, `invalid_size`, `invalid_price`, `timeout`, `network`, `rejected`, `failed`, `unknown`
 - `side`: `buy`, `sell`
+
+### Prometheus Export
+
+Metrics are exposed on the health server's `/metrics` endpoint in Prometheus text format.
+
+**Enable the endpoint:**
+
+```bash
+export GPT_TRADER_METRICS_ENDPOINT_ENABLED=1
+gpt-trader run --profile prod
+```
+
+**Scrape config (prometheus.yml):**
+
+```yaml
+scrape_configs:
+  - job_name: 'gpt-trader'
+    static_configs:
+      - targets: ['localhost:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+```
+
+**Example output:**
+
+```
+# TYPE gpt_trader_order_submission_total counter
+gpt_trader_order_submission_total{reason="none",result="success",side="buy"} 10
+# TYPE gpt_trader_equity_dollars gauge
+gpt_trader_equity_dollars 10500.5
+# TYPE gpt_trader_cycle_duration_seconds histogram
+gpt_trader_cycle_duration_seconds_bucket{le="0.1",result="ok"} 20
+gpt_trader_cycle_duration_seconds_bucket{le="0.5",result="ok"} 85
+gpt_trader_cycle_duration_seconds_sum{result="ok"} 45.5
+gpt_trader_cycle_duration_seconds_count{result="ok"} 100
+```
+
+| Env Var | Default | Purpose |
+| --- | --- | --- |
+| `GPT_TRADER_METRICS_ENDPOINT_ENABLED` | `0` | Enable `/metrics` endpoint on health server |
+
+## Profiling & Memory
+
+Lightweight profiling hooks for timing critical code paths and tracking memory usage.
+
+### Profile Spans
+
+Use `profile_span` context manager to time code blocks and emit to Prometheus histograms:
+
+```python
+from gpt_trader.monitoring.profiling import profile_span
+
+with profile_span("fetch_positions") as sample:
+    positions = await broker.list_positions()
+# sample.duration_ms contains timing
+```
+
+All profile spans are recorded to the `gpt_trader_profile_duration_seconds` histogram with a `phase` label.
+
+### Instrumented Hot Paths
+
+| Phase | Location | Description |
+| --- | --- | --- |
+| `fetch_positions` | `_cycle_inner()` | Broker position fetch |
+| `equity_computation` | `_cycle_inner()` | Balance fetch and equity calculation |
+| `strategy_decision` | `_cycle_inner()` | Strategy decision logic |
+| `order_placement` | `_cycle_inner()` | Order validation and submission |
+| `pre_trade_validation` | `_validate_and_place_order()` | Full guard stack validation |
+
+### Latency Histograms
+
+Dedicated histograms for key operations:
+
+| Metric | Type | Labels | Description |
+| --- | --- | --- | --- |
+| `gpt_trader_positions_fetch_seconds` | histogram | `result=ok\|error` | Time to fetch positions |
+| `gpt_trader_equity_computation_seconds` | histogram | `result=ok\|error` | Time to calculate equity |
+| `gpt_trader_profile_duration_seconds` | histogram | `phase` | General profiling spans |
+
+### Memory Gauges
+
+| Metric | Type | Description |
+| --- | --- | --- |
+| `gpt_trader_process_memory_mb` | gauge | Process RSS memory in MB |
+| `gpt_trader_event_store_cache_size` | gauge | Events in memory cache |
+| `gpt_trader_deque_cache_fill_ratio` | gauge | Cache fill ratio (0.0-1.0) |
+
+Memory metrics are collected by `SystemMaintenanceService.report_system_status()` each trading cycle.
+
+### Usage
+
+```python
+from gpt_trader.monitoring.profiling import profile_span, record_profile, ProfileSample
+
+# Context manager (recommended)
+with profile_span("custom_operation", {"key": "value"}):
+    do_work()
+
+# Manual timing
+start = time.perf_counter()
+do_work()
+duration_ms = (time.perf_counter() - start) * 1000
+record_profile("custom_operation", duration_ms)
+```
+
+## Distributed Tracing
+
+Optional OpenTelemetry integration for distributed tracing across trading operations.
+
+### Setup
+
+Install the optional observability dependencies:
+
+```bash
+pip install gpt-trader[observability]
+# or with uv
+uv pip install -e ".[observability]"
+```
+
+Enable tracing:
+
+```bash
+export GPT_TRADER_OTEL_ENABLED=1
+export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
+export OTEL_SERVICE_NAME=gpt-trader
+gpt-trader run --profile prod
+```
+
+### Instrumented Operations
+
+| Span Name | Attributes | Location |
+| --- | --- | --- |
+| `cycle` | `cycle`, `result`, `duration_seconds` | `strategy.py` |
+| `order_submit` | `symbol`, `side`, `order_type`, `quantity`, `reduce_only` | `order_submission.py` |
+| `http_request` | `http.method`, `http.path`, `http.status_code`, `http.latency_ms` | `client/base.py` |
+
+### Correlation Context
+
+Spans automatically include correlation context from the logging system:
+- `correlation_id`: Unique ID for request tracing
+- `cycle`: Current trading cycle number
+- `symbol`: Trading symbol (when in symbol context)
+- `order_id`: Order ID (when in order context)
+
+### Configuration
+
+| Env Var | Default | Purpose |
+| --- | --- | --- |
+| `GPT_TRADER_OTEL_ENABLED` | `0` | Enable OpenTelemetry tracing |
+| `OTEL_SERVICE_NAME` | `gpt-trader` | Service name for trace attribution |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | unset | OTLP gRPC endpoint (e.g., `http://localhost:4317`) |
+
+### Usage in Code
+
+```python
+from gpt_trader.observability.tracing import trace_span, init_tracing
+
+# Initialize at startup (done automatically by CLI)
+init_tracing(
+    service_name="gpt-trader",
+    endpoint="http://localhost:4317",
+    enabled=True,
+)
+
+# Create spans in your code
+with trace_span("custom_operation", {"key": "value"}) as span:
+    # ... do work ...
+    if span:
+        span.set_attribute("result", "success")
+```
+
+When tracing is disabled or OTel is not installed, `trace_span` is a no-op context manager that yields `None`.
+
+## Performance Optimizations
+
+### Batched Market Data Fetches
+
+The trading engine uses `get_tickers()` to fetch ticker data for multiple symbols efficiently:
+
+- **Advanced API mode**: Single `get_best_bid_ask()` call for all symbols, returns mid-price
+- **Exchange API mode**: Falls back to sequential `get_ticker()` calls per symbol
+
+The batch method is called once before the per-symbol loop, reducing API calls from N to 1 in Advanced mode. If a symbol is missing from the batch result (e.g., partial failure), it falls back to an individual `get_ticker()` call.
+
+Implementation: `ProductService.get_tickers()` in `src/gpt_trader/features/brokerages/coinbase/rest/product_service.py`
+
+### Concurrent Broker Calls
+
+The strategy engine parallelizes independent broker operations:
+
+- `_fetch_positions()` and `_audit_orders()` run concurrently via `asyncio.create_task()`
+- Per-symbol ticker and candles fetches are bounded by `asyncio.Semaphore` (default 5 concurrent calls)
+- Configurable via `config.max_concurrent_rest_calls` (defaults to 5)
+
+This reduces cycle latency by overlapping I/O-bound operations while preventing API rate limit exhaustion.
 
 ## Chaos Harness (Fault Injection)
 

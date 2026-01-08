@@ -17,6 +17,7 @@ import time
 from decimal import Decimal
 from typing import Any
 
+from gpt_trader.config.constants import HEALTH_CHECK_INTERVAL_SECONDS
 from gpt_trader.core import OrderSide, OrderType, Position, Product
 from gpt_trader.features.live_trade.engines.base import (
     BaseEngine,
@@ -54,9 +55,12 @@ from gpt_trader.features.live_trade.strategies.perps_baseline import (
 )
 from gpt_trader.logging.correlation import correlation_context
 from gpt_trader.monitoring.alert_types import AlertSeverity
+from gpt_trader.monitoring.health_checks import HealthCheckRunner
 from gpt_trader.monitoring.heartbeat import HeartbeatService
 from gpt_trader.monitoring.metrics_collector import record_histogram
+from gpt_trader.monitoring.profiling import profile_span
 from gpt_trader.monitoring.status_reporter import StatusReporter
+from gpt_trader.observability.tracing import trace_span
 from gpt_trader.orchestration.execution.degradation import DegradationState
 from gpt_trader.orchestration.execution.guard_manager import GuardManager
 from gpt_trader.orchestration.execution.order_submission import OrderSubmitter
@@ -128,6 +132,16 @@ class TradingEngine(BaseEngine):
         # Initialize graceful degradation state
         self._degradation = DegradationState()
 
+        # Initialize health check runner for active /health probes
+        self._health_check_runner = HealthCheckRunner(
+            broker=context.broker,
+            degradation_state=self._degradation,
+            risk_manager=context.risk_manager,
+            interval_seconds=HEALTH_CHECK_INTERVAL_SECONDS,
+            message_stale_seconds=getattr(context.config, "ws_message_stale_seconds", 60.0),
+            heartbeat_stale_seconds=getattr(context.config, "ws_heartbeat_stale_seconds", 120.0),
+        )
+
         # Initialize streaming lifecycle attributes
         self._ws_stop: threading.Event | None = None
         self._pending_stream_config: tuple[list[str], int] | None = None
@@ -140,6 +154,11 @@ class TradingEngine(BaseEngine):
         self._ws_reconnect_attempts: int = 0
         self._ws_reconnect_delay: float = 1.0
         self._ws_last_health_check: float = 0.0
+
+        # Concurrency control for REST API calls (prevents burst overload)
+        # Default to 5 concurrent calls; configurable via config if needed
+        max_concurrent_rest = getattr(context.config, "max_concurrent_rest_calls", 5)
+        self._rest_semaphore: asyncio.Semaphore = asyncio.Semaphore(max_concurrent_rest)
 
         # Initialize pre-trade guard stack (Option A: embedded guards)
         self._init_guard_stack()
@@ -337,6 +356,9 @@ class TradingEngine(BaseEngine):
         if status_task:
             self._register_background_task(status_task)
             tasks.append(status_task)
+
+        # Start health check runner for active /health probes
+        await self._health_check_runner.start()
 
         # Start database pruning task via system maintenance service
         prune_task = await self._system_maintenance.start_prune_loop()
@@ -659,22 +681,28 @@ class TradingEngine(BaseEngine):
         assert self.context.broker is not None, "Broker not initialized"
         self._cycle_count += 1
 
-        # Wrap entire cycle in correlation context for tracing
+        # Wrap entire cycle in correlation context and trace span
         start_time = time.perf_counter()
         result = "ok"
         with correlation_context(cycle=self._cycle_count):
-            try:
-                await self._cycle_inner()
-            except Exception:
-                result = "error"
-                raise
-            finally:
-                duration = time.perf_counter() - start_time
-                record_histogram(
-                    "gpt_trader_cycle_duration_seconds",
-                    duration,
-                    labels={"result": result},
-                )
+            with trace_span("cycle", {"cycle": self._cycle_count}) as span:
+                try:
+                    await self._cycle_inner()
+                except Exception:
+                    result = "error"
+                    if span:
+                        span.set_attribute("error", True)
+                    raise
+                finally:
+                    duration = time.perf_counter() - start_time
+                    if span:
+                        span.set_attribute("duration_seconds", duration)
+                        span.set_attribute("result", result)
+                    record_histogram(
+                        "gpt_trader_cycle_duration_seconds",
+                        duration,
+                        labels={"result": result},
+                    )
 
     async def _cycle_inner(self) -> None:
         """Inner cycle logic wrapped in correlation context."""
@@ -683,21 +711,24 @@ class TradingEngine(BaseEngine):
         # Report system status at start of cycle
         self._report_system_status()
 
-        # 1. Fetch positions first (needed for equity calculation)
-        logger.info("Step 1: Fetching positions...")
-        positions = await self._fetch_positions()
+        # 1. Fetch positions and audit orders in parallel (independent operations)
+        logger.info("Step 1: Fetching positions and auditing orders (parallel)...")
+        positions_task = asyncio.create_task(self._fetch_positions())
+        audit_task = asyncio.create_task(self._audit_orders())
+
+        # Await positions first (needed for equity calculation)
+        with profile_span("fetch_positions") as _pos_span:
+            positions = await positions_task
         self._current_positions = positions
         logger.info(f"Fetched {len(positions)} positions")
 
         # Update status reporter with positions (complete data for TUI)
         self._status_reporter.update_positions(self._positions_to_status_format(positions))
 
-        # 1b. Audit open orders (Reconciliation)
-        await self._audit_orders()
-
         # 2. Calculate total equity including unrealized PnL
         logger.info("Step 2: Calculating total equity...")
-        equity = await self._fetch_total_equity(positions)
+        with profile_span("equity_computation") as _eq_span:
+            equity = await self._fetch_total_equity(positions)
         if equity is None:
             logger.error(
                 "Failed to fetch equity - cannot continue cycle. "
@@ -705,7 +736,18 @@ class TradingEngine(BaseEngine):
             )
             # Update status reporter with error state
             self._status_reporter.record_error("Failed to fetch equity")
+            # Ensure audit completes even on equity failure
+            try:
+                await audit_task
+            except Exception as e:
+                logger.warning(f"Order audit failed during equity error path: {e}")
             return
+
+        # Ensure audit task completes (should be done by now, but be explicit)
+        try:
+            await audit_task
+        except Exception as e:
+            logger.warning(f"Order audit failed: {e}")
 
         logger.info(f"Successfully calculated equity: ${equity}")
         # Update status reporter with equity
@@ -738,20 +780,64 @@ class TradingEngine(BaseEngine):
                 reduce_reason=getattr(rm, "_reduce_only_reason", ""),
             )
 
-        # 2. Process Symbols
-        for symbol in self.context.config.symbols:
-            # Offload blocking network call
-            try:
-                start_time = time.time()
-                ticker = await asyncio.to_thread(self.context.broker.get_ticker, symbol)
+        # 3. Batch fetch tickers for all symbols (reduces API calls in Advanced mode)
+        symbols = self.context.config.symbols
+        tickers: dict[str, dict[str, Any]] = {}
+        batch_start = time.time()
 
-                # Update latency and connection status
-                self._last_latency = time.time() - start_time
-                self._connection_status = "CONNECTED"
+        # Only use batch fetch if broker has get_tickers method (not a mock)
+        get_tickers_method = getattr(self.context.broker, "get_tickers", None)
+        if get_tickers_method is not None and callable(get_tickers_method):
+            try:
+                async with self._rest_semaphore:
+                    result = await asyncio.to_thread(get_tickers_method, symbols)
+                # Validate result is a dict (protects against mocks)
+                if isinstance(result, dict):
+                    tickers = result
+                    logger.debug(
+                        f"Batch ticker fetch: {len(tickers)}/{len(symbols)} symbols "
+                        f"in {time.time() - batch_start:.3f}s"
+                    )
             except Exception as e:
-                logger.error(f"Failed to fetch ticker for {symbol}: {e}")
+                logger.warning(f"Batch ticker fetch failed, falling back to individual: {e}")
+
+        # 4. Process Symbols - fetch candles and any missing tickers
+        for symbol in symbols:
+            ticker = tickers.get(symbol)
+            candles: list[Any] = []
+            start_time = time.time()
+
+            # If ticker not in batch result, fetch individually
+            if ticker is None:
+                try:
+                    async with self._rest_semaphore:
+                        ticker = await asyncio.to_thread(self.context.broker.get_ticker, symbol)
+                except Exception as e:
+                    logger.error(f"Failed to fetch ticker for {symbol}: {e}")
+                    self._connection_status = "DISCONNECTED"
+                    continue
+
+            if ticker is None or not ticker.get("price"):
+                logger.error(f"No ticker data for {symbol}")
                 self._connection_status = "DISCONNECTED"
                 continue
+
+            # Fetch candles (always individual per-symbol)
+            try:
+                async with self._rest_semaphore:
+                    candles_result = await asyncio.to_thread(
+                        self.context.broker.get_candles, symbol, granularity="ONE_MINUTE"
+                    )
+                if isinstance(candles_result, Exception):
+                    logger.warning(f"Failed to fetch candles for {symbol}: {candles_result}")
+                else:
+                    candles = candles_result or []
+            except Exception as e:
+                logger.warning(f"Failed to fetch candles for {symbol}: {e}")
+
+            # Update latency and connection status
+            self._last_latency = time.time() - start_time
+            self._connection_status = "CONNECTED"
 
             price = Decimal(str(ticker.get("price", 0)))
             logger.info(f"{symbol} price: {price}")
@@ -768,26 +854,16 @@ class TradingEngine(BaseEngine):
 
             position_state = self._build_position_state(symbol, positions)
 
-            # Fetch candles for advanced strategies (e.g. ADX)
-            candles = []
-            try:
-                # Fetch last 50 candles (enough for ADX 14 + smoothing)
-                # Assuming granularity defaults to ONE_MINUTE or similar
-                candles = await asyncio.to_thread(
-                    self.context.broker.get_candles, symbol, granularity="ONE_MINUTE"
+            with profile_span("strategy_decision", {"symbol": symbol}) as _strat_span:
+                decision = self.strategy.decide(
+                    symbol=symbol,
+                    current_mark=price,
+                    position_state=position_state,
+                    recent_marks=self.price_history[symbol],
+                    equity=equity,
+                    product=None,  # Future: fetch from broker
+                    candles=candles,
                 )
-            except Exception as e:
-                logger.warning(f"Failed to fetch candles for {symbol}: {e}")
-
-            decision = self.strategy.decide(
-                symbol=symbol,
-                current_mark=price,
-                position_state=position_state,
-                recent_marks=self.price_history[symbol],
-                equity=equity,
-                product=None,  # Future: fetch from broker
-                candles=candles,
-            )
 
             logger.info(f"Strategy Decision for {symbol}: {decision.action} ({decision.reason})")
 
@@ -807,12 +883,15 @@ class TradingEngine(BaseEngine):
             if decision.action in (Action.BUY, Action.SELL):
                 logger.info(f"EXECUTING {decision.action} for {symbol}")
                 try:
-                    await self._validate_and_place_order(
-                        symbol=symbol,
-                        decision=decision,
-                        price=price,
-                        equity=equity,
-                    )
+                    with profile_span(
+                        "order_placement", {"symbol": symbol, "action": decision.action.value}
+                    ):
+                        await self._validate_and_place_order(
+                            symbol=symbol,
+                            decision=decision,
+                            price=price,
+                            equity=equity,
+                        )
                 except ValidationError as e:
                     logger.warning(f"Risk validation failed for {symbol}: {e}")
                     await self._notify(
@@ -846,6 +925,8 @@ class TradingEngine(BaseEngine):
     async def _fetch_total_equity(self, positions: dict[str, Position]) -> Decimal | None:
         """Fetch total equity = collateral + unrealized PnL."""
         assert self.context.broker is not None
+        start_time = time.perf_counter()
+        result = "ok"
         try:
             balances = await asyncio.to_thread(self.context.broker.list_balances)
 
@@ -1015,6 +1096,7 @@ class TradingEngine(BaseEngine):
             self._degradation.reset_broker_failures()
             return total_equity
         except Exception as e:
+            result = "error"
             logger.error(
                 f"Failed to fetch balances: {e}",
                 error_type=type(e).__name__,
@@ -1032,22 +1114,39 @@ class TradingEngine(BaseEngine):
             if config is not None:
                 self._degradation.record_broker_failure(config)
             return None
+        finally:
+            duration = time.perf_counter() - start_time
+            record_histogram(
+                "gpt_trader_equity_computation_seconds",
+                duration,
+                labels={"result": result},
+            )
 
     async def _fetch_positions(self) -> dict[str, Position]:
         """Fetch current positions as a lookup dict."""
         assert self.context.broker is not None
+        start_time = time.perf_counter()
+        result = "ok"
         try:
             positions_list = await asyncio.to_thread(self.context.broker.list_positions)
             # Success: reset broker failure counter
             self._degradation.reset_broker_failures()
             return {p.symbol: p for p in positions_list}
         except Exception as e:
+            result = "error"
             logger.error(f"Failed to fetch positions: {e}")
             # Track broker failure for degradation
             config = self.context.risk_manager.config if self.context.risk_manager else None
             if config is not None:
                 self._degradation.record_broker_failure(config)
             return {}
+        finally:
+            duration = time.perf_counter() - start_time
+            record_histogram(
+                "gpt_trader_positions_fetch_seconds",
+                duration,
+                labels={"result": result},
+            )
 
     def _build_position_state(
         self, symbol: str, positions: dict[str, Position]
@@ -1386,90 +1485,97 @@ class TradingEngine(BaseEngine):
         # Pre-trade guards via OrderValidator (exchange rules, slippage, preview)
         if self._order_validator is not None:
             try:
-                # Get product for exchange rules validation
-                product = self._state_collector.require_product(symbol, product=None)
+                with profile_span("pre_trade_validation", {"symbol": symbol}) as _val_span:
+                    # Get product for exchange rules validation
+                    product = self._state_collector.require_product(symbol, product=None)
 
-                # Resolve effective price via StateCollector
-                effective_price = self._state_collector.resolve_effective_price(
-                    symbol, side.value.lower(), price, product
-                )
-
-                # Exchange rules + quantization
-                quantity, _ = self._order_validator.validate_exchange_rules(
-                    symbol=symbol,
-                    side=side,
-                    order_type=OrderType.MARKET,
-                    order_quantity=quantity,
-                    price=None,
-                    effective_price=effective_price,
-                    product=product,
-                )
-
-                # Slippage guard with degradation tracking
-                try:
-                    self._order_validator.enforce_slippage_guard(
-                        symbol, side, quantity, effective_price
+                    # Resolve effective price via StateCollector
+                    effective_price = self._state_collector.resolve_effective_price(
+                        symbol, side.value.lower(), price, product
                     )
-                    # Success: reset slippage failure count
-                    self._degradation.reset_slippage_failures(symbol)
-                except ValidationError as slippage_exc:
-                    # Track slippage failures and potentially pause symbol
+
+                    # Exchange rules + quantization
+                    quantity, _ = self._order_validator.validate_exchange_rules(
+                        symbol=symbol,
+                        side=side,
+                        order_type=OrderType.MARKET,
+                        order_quantity=quantity,
+                        price=None,
+                        effective_price=effective_price,
+                        product=product,
+                    )
+
+                    # Slippage guard with degradation tracking
+                    try:
+                        self._order_validator.enforce_slippage_guard(
+                            symbol, side, quantity, effective_price
+                        )
+                        # Success: reset slippage failure count
+                        self._degradation.reset_slippage_failures(symbol)
+                    except ValidationError as slippage_exc:
+                        # Track slippage failures and potentially pause symbol
+                        config = (
+                            self.context.risk_manager.config if self.context.risk_manager else None
+                        )
+                        if config is not None:
+                            self._degradation.record_slippage_failure(symbol, config)
+                        raise slippage_exc
+
+                    # Mark staleness via OrderValidator
+                    self._order_validator.ensure_mark_is_fresh(symbol)
+
+                    # Pre-trade validation via OrderValidator (leverage/exposure)
+                    current_positions_dict = self._state_collector.build_positions_dict(
+                        list(self._current_positions.values())
+                    )
+                    self._order_validator.run_pre_trade_validation(
+                        symbol=symbol,
+                        side=side,
+                        order_quantity=quantity,
+                        effective_price=effective_price,
+                        product=product,
+                        equity=equity,
+                        current_positions=current_positions_dict,
+                    )
+
+                    # Order preview (if enabled) - with auto-disable on repeated failures
+                    failure_tracker = get_failure_tracker()
                     config = self.context.risk_manager.config if self.context.risk_manager else None
-                    if config is not None:
-                        self._degradation.record_slippage_failure(symbol, config)
-                    raise slippage_exc
-
-                # Mark staleness via OrderValidator
-                self._order_validator.ensure_mark_is_fresh(symbol)
-
-                # Pre-trade validation via OrderValidator (leverage/exposure)
-                current_positions_dict = self._state_collector.build_positions_dict(
-                    list(self._current_positions.values())
-                )
-                self._order_validator.run_pre_trade_validation(
-                    symbol=symbol,
-                    side=side,
-                    order_quantity=quantity,
-                    effective_price=effective_price,
-                    product=product,
-                    equity=equity,
-                    current_positions=current_positions_dict,
-                )
-
-                # Order preview (if enabled) - with auto-disable on repeated failures
-                failure_tracker = get_failure_tracker()
-                config = self.context.risk_manager.config if self.context.risk_manager else None
-                preview_disable_threshold = config.preview_failure_disable_after if config else 5
-
-                # Check if preview should be auto-disabled due to repeated failures
-                if (
-                    self._order_validator.enable_order_preview
-                    and failure_tracker.get_failure_count("order_preview")
-                    >= preview_disable_threshold
-                ):
-                    logger.warning(
-                        "Auto-disabling order preview due to repeated failures",
-                        consecutive_failures=failure_tracker.get_failure_count("order_preview"),
-                        threshold=preview_disable_threshold,
-                        operation="degradation",
-                        stage="preview_disable",
+                    preview_disable_threshold = (
+                        config.preview_failure_disable_after if config else 5
                     )
-                    self._order_validator.enable_order_preview = False
 
-                self._order_validator.maybe_preview_order(
-                    symbol=symbol,
-                    side=side,
-                    order_type=OrderType.MARKET,
-                    order_quantity=quantity,
-                    effective_price=effective_price,
-                    stop_price=None,
-                    tif=self.context.config.time_in_force,
-                    reduce_only=is_reducing,
-                    leverage=None,
-                )
+                    # Check if preview should be auto-disabled due to repeated failures
+                    if (
+                        self._order_validator.enable_order_preview
+                        and failure_tracker.get_failure_count("order_preview")
+                        >= preview_disable_threshold
+                    ):
+                        logger.warning(
+                            "Auto-disabling order preview due to repeated failures",
+                            consecutive_failures=failure_tracker.get_failure_count("order_preview"),
+                            threshold=preview_disable_threshold,
+                            operation="degradation",
+                            stage="preview_disable",
+                        )
+                        self._order_validator.enable_order_preview = False
 
-                # Finalize reduce-only flag (risk manager may have triggered it)
-                is_reducing = self._order_validator.finalize_reduce_only_flag(is_reducing, symbol)
+                    self._order_validator.maybe_preview_order(
+                        symbol=symbol,
+                        side=side,
+                        order_type=OrderType.MARKET,
+                        order_quantity=quantity,
+                        effective_price=effective_price,
+                        stop_price=None,
+                        tif=self.context.config.time_in_force,
+                        reduce_only=is_reducing,
+                        leverage=None,
+                    )
+
+                    # Finalize reduce-only flag (risk manager may have triggered it)
+                    is_reducing = self._order_validator.finalize_reduce_only_flag(
+                        is_reducing, symbol
+                    )
 
             except ValidationError as exc:
                 logger.warning(f"Pre-trade guard rejected order: {exc}")
@@ -1561,6 +1667,9 @@ class TradingEngine(BaseEngine):
             operation="streaming",
             stage="stop",
         )
+
+        # Stop health check runner
+        await self._health_check_runner.stop()
 
         await self._system_maintenance.stop()
         await self._status_reporter.stop()

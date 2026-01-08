@@ -165,6 +165,24 @@ class EventStore:
         events_list = list(self._events)
         return events_list[-count:] if count > 0 else []
 
+    def get_cache_size(self) -> int:
+        """Get current number of events in the in-memory cache."""
+        return len(self._events)
+
+    def get_cache_max_size(self) -> int:
+        """Get maximum size of the in-memory cache."""
+        return self._max_cache_size
+
+    def get_cache_fill_ratio(self) -> float:
+        """Get cache fill ratio (0.0 to 1.0).
+
+        Returns:
+            Ratio of current cache size to max cache size.
+        """
+        if self._max_cache_size == 0:
+            return 0.0
+        return len(self._events) / self._max_cache_size
+
     def prune(self, max_rows: int = 1_000_000) -> int:
         """
         Prune the event store to prevent unbounded growth.

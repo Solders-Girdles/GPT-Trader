@@ -302,8 +302,8 @@ class TestContainerServiceAccess:
 
     def test_service_resolution_functions_handle_missing_container(self) -> None:
         """Test that service resolution functions handle missing container correctly."""
-        from gpt_trader.orchestration.configuration.profile_loader import get_profile_loader
-        from gpt_trader.orchestration.execution.validation import get_failure_tracker
+        from gpt_trader.app.config.profile_loader import get_profile_loader
+        from gpt_trader.features.live_trade.execution.validation import get_failure_tracker
 
         # Ensure no container is set
         clear_application_container()

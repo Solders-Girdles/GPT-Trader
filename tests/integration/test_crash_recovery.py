@@ -73,12 +73,11 @@ class TestCrashRecovery:
                 eth_prices = [Decimal("3000"), Decimal("3050")]
 
                 for price in btc_prices:
+                    # _record_price_tick adds to both EventStore and price_history
                     engine1._record_price_tick("BTC-USD", price)
-                    engine1.price_history["BTC-USD"].append(price)
 
                 for price in eth_prices:
                     engine1._record_price_tick("ETH-USD", price)
-                    engine1.price_history["ETH-USD"].append(price)
 
                 # Verify engine1 has the prices
                 assert len(engine1.price_history["BTC-USD"]) == 3

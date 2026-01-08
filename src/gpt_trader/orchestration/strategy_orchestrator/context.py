@@ -158,7 +158,7 @@ class ContextBuilderMixin(_HasBot):
         raw_marks = self._bot.mark_windows.get(symbol, [])  # type: ignore[attr-defined]
         return [Decimal(str(mark)) for mark in raw_marks]
 
-    def _get_orderbook_snapshot(self, symbol: str) -> "DepthSnapshot | None":
+    def _get_orderbook_snapshot(self, symbol: str) -> DepthSnapshot | None:
         """Get latest orderbook snapshot for symbol."""
         runtime_state = getattr(self._bot, "runtime_state", None)
         if runtime_state is None:

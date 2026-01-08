@@ -11,8 +11,8 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from gpt_trader.app.config import BotConfig
+from gpt_trader.app.runtime import RuntimePaths, resolve_runtime_paths
 from gpt_trader.config.types import Profile
-from gpt_trader.orchestration.runtime_paths import RuntimePaths, resolve_runtime_paths
 from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.persistence.orders_store import OrdersStore
 

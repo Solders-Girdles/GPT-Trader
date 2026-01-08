@@ -33,6 +33,10 @@ async def test_end_to_end_buy_execution():
     try:
         bot = container.create_bot()
 
+        # Ensure clean risk manager state for isolated testing
+        if bot.risk_manager:
+            bot.risk_manager.set_reduce_only_mode(False, reason="test_setup")
+
         # 3. Mock strategy to return BUY decision on first cycle
         # This isolates testing of the execution wiring from the strategy logic
         buy_decision = Decision(action=Action.BUY, reason="Test signal", confidence=0.8)

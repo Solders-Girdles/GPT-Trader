@@ -1,6 +1,14 @@
 """
 Live execution engine with risk management integration.
 
+.. deprecated::
+    This module is legacy. New code should use TradingEngine.submit_order()
+    from features/live_trade/engines/strategy.py which provides the canonical
+    guard stack. LiveExecutionEngine is retained for backward compatibility.
+
+    Removal target: v3.0
+    Tracker: docs/DEPRECATIONS.md
+
 Phase 5: Risk engine integration for perpetuals.
 
 This module has been refactored to delegate to focused helper modules:
@@ -56,11 +64,17 @@ class LiveOrder:
 class LiveExecutionEngine:
     """Live execution with integrated risk controls for perpetuals.
 
+    .. deprecated::
+        Use TradingEngine.submit_order() for the canonical guard stack.
+        This class is retained for backward compatibility only.
+
     Enforces risk checks before order placement and monitors runtime guards.
 
     This class has been refactored to delegate to helper modules while
     maintaining backward compatibility.
     """
+
+    _deprecation_warned: bool = False
 
     def __init__(
         self,
@@ -89,6 +103,15 @@ class LiveExecutionEngine:
             failure_tracker: Optional validation failure tracker. If not provided,
                 creates a per-engine tracker with escalation to reduce-only mode.
         """
+        if not LiveExecutionEngine._deprecation_warned:
+            warnings.warn(
+                "LiveExecutionEngine is deprecated. Use TradingEngine.submit_order() "
+                "for the canonical guard stack.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            LiveExecutionEngine._deprecation_warned = True
+
         self.broker = broker
         self._config = config
 

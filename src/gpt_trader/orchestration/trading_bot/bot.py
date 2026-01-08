@@ -105,9 +105,17 @@ class TradingBot:
         """
         Emergency shutdown: Stop bot and close all open positions.
         Returns a list of messages describing actions taken.
+
+        Note: This path intentionally bypasses the canonical guard stack
+        (TradingEngine.submit_order) because emergency closures must succeed
+        even when guards would block normal trading.
         """
         self.running = False
-        logger.warning("EMERGENCY: Initiating Flatten & Stop")
+        logger.warning(
+            "EMERGENCY: Initiating Flatten & Stop",
+            bypass_reason="emergency_shutdown",
+            operation="flatten_and_stop",
+        )
         messages = ["Bot stopped."]
 
         if not self.broker:
@@ -131,8 +139,16 @@ class TradingBot:
                         # Use absolute quantity for order
                         quantity = abs(pos.quantity)
 
+                        # Direct broker call bypasses guard stack intentionally
                         await asyncio.to_thread(
                             self.broker.place_order, pos.symbol, side, OrderType.MARKET, quantity
+                        )
+                        logger.info(
+                            "Emergency close submitted",
+                            symbol=pos.symbol,
+                            quantity=str(quantity),
+                            bypass_reason="emergency_shutdown",
+                            operation="flatten_and_stop",
                         )
                         messages.append(f"Submitted CLOSE for {pos.symbol} ({quantity})")
                     except Exception as e:

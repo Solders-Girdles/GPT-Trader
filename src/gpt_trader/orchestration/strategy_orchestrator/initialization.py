@@ -77,7 +77,7 @@ class StrategyInitializationMixin:
                 "long_ma_period": bot.config.long_ma,
                 "target_leverage": bot.config.target_leverage if derivatives_enabled else 1,
                 "trailing_stop_pct": bot.config.trailing_stop_pct,
-                "enable_shorts": bot.config.enable_shorts if derivatives_enabled else False,
+                "enable_shorts": bot.config.active_enable_shorts if derivatives_enabled else False,
                 "force_entry_on_trend": True,  # Ignition Phase: Allow trend entry
             }
             fraction_override = bot.config.perps_position_fraction

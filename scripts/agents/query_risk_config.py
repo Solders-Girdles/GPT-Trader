@@ -126,7 +126,7 @@ FIELD_DOCS = {
 
 def load_risk_config(profile: str | None = None) -> dict[str, Any]:
     """Load risk configuration from file or defaults."""
-    from gpt_trader.orchestration.configuration.risk.model import RiskConfig
+    from gpt_trader.features.live_trade.risk.config import RiskConfig
 
     config_path = None
     if profile:
@@ -161,7 +161,7 @@ def enrich_with_docs(config: dict[str, Any]) -> dict[str, Any]:
 
 def generate_schema() -> dict[str, Any]:
     """Generate JSON schema for risk configuration."""
-    from gpt_trader.orchestration.configuration.risk.model import RiskConfig
+    from gpt_trader.features.live_trade.risk.config import RiskConfig
 
     schema = {
         "$schema": "http://json-schema.org/draft-07/schema#",

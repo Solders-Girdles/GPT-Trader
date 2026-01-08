@@ -253,7 +253,7 @@ class TestValidationEscalationWithMetrics:
         """Create a basic bot config."""
         return BotConfig(symbols=["BTC-USD"])
 
-    @patch("gpt_trader.orchestration.execution.validation.record_counter")
+    @patch("gpt_trader.features.live_trade.execution.validation.record_counter")
     def test_metrics_recorded_during_escalation(
         self,
         mock_record_counter: MagicMock,
@@ -261,7 +261,7 @@ class TestValidationEscalationWithMetrics:
         bot_config: BotConfig,
     ) -> None:
         """Test that metrics are recorded during the escalation flow."""
-        from gpt_trader.orchestration.execution.validation import (
+        from gpt_trader.features.live_trade.execution.validation import (
             METRIC_CONSECUTIVE_FAILURES_ESCALATION,
             METRIC_MARK_STALENESS_CHECK_FAILED,
         )

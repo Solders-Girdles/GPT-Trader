@@ -28,7 +28,7 @@ class TestCheckRiskConfiguration:
         mock_config.kill_switch_enabled = False
         mock_config.reduce_only_mode = False
 
-        with patch("gpt_trader.orchestration.configuration.RiskConfig") as mock_risk_config:
+        with patch("gpt_trader.features.live_trade.risk.config.RiskConfig") as mock_risk_config:
             mock_risk_config.from_env.return_value = mock_config
             result = check_risk_configuration(checker)
 
@@ -49,7 +49,7 @@ class TestCheckRiskConfiguration:
         mock_config.kill_switch_enabled = False
         mock_config.reduce_only_mode = False
 
-        with patch("gpt_trader.orchestration.configuration.RiskConfig") as mock_risk_config:
+        with patch("gpt_trader.features.live_trade.risk.config.RiskConfig") as mock_risk_config:
             mock_risk_config.from_env.return_value = mock_config
             result = check_risk_configuration(checker)
 
@@ -69,7 +69,7 @@ class TestCheckRiskConfiguration:
         mock_config.kill_switch_enabled = False
         mock_config.reduce_only_mode = False
 
-        with patch("gpt_trader.orchestration.configuration.RiskConfig") as mock_risk_config:
+        with patch("gpt_trader.features.live_trade.risk.config.RiskConfig") as mock_risk_config:
             mock_risk_config.from_env.return_value = mock_config
             result = check_risk_configuration(checker)
 
@@ -88,7 +88,7 @@ class TestCheckRiskConfiguration:
         mock_config.kill_switch_enabled = False
         mock_config.reduce_only_mode = False
 
-        with patch("gpt_trader.orchestration.configuration.RiskConfig") as mock_risk_config:
+        with patch("gpt_trader.features.live_trade.risk.config.RiskConfig") as mock_risk_config:
             mock_risk_config.from_env.return_value = mock_config
             result = check_risk_configuration(checker)
 
@@ -107,7 +107,7 @@ class TestCheckRiskConfiguration:
         mock_config.kill_switch_enabled = False
         mock_config.reduce_only_mode = False
 
-        with patch("gpt_trader.orchestration.configuration.RiskConfig") as mock_risk_config:
+        with patch("gpt_trader.features.live_trade.risk.config.RiskConfig") as mock_risk_config:
             mock_risk_config.from_env.return_value = mock_config
             result = check_risk_configuration(checker)
 
@@ -126,7 +126,7 @@ class TestCheckRiskConfiguration:
         mock_config.kill_switch_enabled = False
         mock_config.reduce_only_mode = False
 
-        with patch("gpt_trader.orchestration.configuration.RiskConfig") as mock_risk_config:
+        with patch("gpt_trader.features.live_trade.risk.config.RiskConfig") as mock_risk_config:
             mock_risk_config.from_env.return_value = mock_config
             result = check_risk_configuration(checker)
 
@@ -146,7 +146,7 @@ class TestCheckRiskConfiguration:
         mock_config.kill_switch_enabled = True  # Kill switch on
         mock_config.reduce_only_mode = False
 
-        with patch("gpt_trader.orchestration.configuration.RiskConfig") as mock_risk_config:
+        with patch("gpt_trader.features.live_trade.risk.config.RiskConfig") as mock_risk_config:
             mock_risk_config.from_env.return_value = mock_config
             result = check_risk_configuration(checker)
 
@@ -167,7 +167,7 @@ class TestCheckRiskConfiguration:
         mock_config.kill_switch_enabled = False
         mock_config.reduce_only_mode = True  # Reduce-only on
 
-        with patch("gpt_trader.orchestration.configuration.RiskConfig") as mock_risk_config:
+        with patch("gpt_trader.features.live_trade.risk.config.RiskConfig") as mock_risk_config:
             mock_risk_config.from_env.return_value = mock_config
             result = check_risk_configuration(checker)
 
@@ -188,7 +188,7 @@ class TestCheckRiskConfiguration:
         mock_config.kill_switch_enabled = False
         mock_config.reduce_only_mode = False
 
-        with patch("gpt_trader.orchestration.configuration.RiskConfig") as mock_risk_config:
+        with patch("gpt_trader.features.live_trade.risk.config.RiskConfig") as mock_risk_config:
             mock_risk_config.from_env.return_value = mock_config
             result = check_risk_configuration(checker)
 
@@ -209,7 +209,7 @@ class TestCheckRiskConfiguration:
         mock_config.kill_switch_enabled = False
         mock_config.reduce_only_mode = False
 
-        with patch("gpt_trader.orchestration.configuration.RiskConfig") as mock_risk_config:
+        with patch("gpt_trader.features.live_trade.risk.config.RiskConfig") as mock_risk_config:
             mock_risk_config.from_env.return_value = mock_config
             result = check_risk_configuration(checker)
 
@@ -220,7 +220,7 @@ class TestCheckRiskConfiguration:
         """Should fail when config loading throws an exception."""
         checker = PreflightCheck(profile="prod")
 
-        with patch("gpt_trader.orchestration.configuration.RiskConfig") as mock_risk_config:
+        with patch("gpt_trader.features.live_trade.risk.config.RiskConfig") as mock_risk_config:
             mock_risk_config.from_env.side_effect = Exception("Config error")
             result = check_risk_configuration(checker)
 
@@ -231,7 +231,7 @@ class TestCheckRiskConfiguration:
         """Should print section header."""
         checker = PreflightCheck(profile="dev")
 
-        with patch("gpt_trader.orchestration.configuration.RiskConfig") as mock_risk_config:
+        with patch("gpt_trader.features.live_trade.risk.config.RiskConfig") as mock_risk_config:
             mock_risk_config.from_env.side_effect = Exception("Skip")
             check_risk_configuration(checker)
 

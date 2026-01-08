@@ -133,7 +133,7 @@ def _check_api_health(checker: PreflightCheck, client: Any, warn_only: bool) -> 
 
     # Get thresholds from RiskConfig
     try:
-        from gpt_trader.orchestration.configuration import RiskConfig
+        from gpt_trader.features.live_trade.risk.config import RiskConfig
 
         config = RiskConfig.from_env()
         error_rate_threshold = config.api_error_rate_threshold

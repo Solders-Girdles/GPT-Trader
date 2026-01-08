@@ -6,7 +6,9 @@ Update your imports to use:
 
     from gpt_trader.app.config import BotConfig, BotRiskConfig
 
-This shim will be removed in a future release.
+.. deprecated::
+    Removal target: v3.0
+    Tracker: docs/DEPRECATIONS.md
 """
 
 import warnings

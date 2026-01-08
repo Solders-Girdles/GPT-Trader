@@ -11,7 +11,7 @@ def check_risk_configuration(checker: PreflightCheck) -> bool:
     checker.section_header("6. RISK MANAGEMENT VALIDATION")
 
     try:
-        from gpt_trader.orchestration.configuration import RiskConfig
+        from gpt_trader.features.live_trade.risk.config import RiskConfig
 
         config = RiskConfig.from_env()
 

@@ -218,7 +218,7 @@ def generate_bot_config_schema() -> dict[str, Any]:
 
 def generate_risk_config_schema() -> dict[str, Any]:
     """Generate schema for RiskConfig."""
-    from gpt_trader.orchestration.configuration.risk.model import RiskConfig
+    from gpt_trader.features.live_trade.risk.config import RiskConfig
 
     schema = dataclass_to_json_schema(RiskConfig, "RiskConfig")
 

@@ -16,7 +16,7 @@ from unittest.mock import MagicMock
 from hypothesis import given, seed, settings
 from hypothesis import strategies as st
 
-from gpt_trader.orchestration.execution.validation import ValidationFailureTracker
+from gpt_trader.features.live_trade.execution.validation import ValidationFailureTracker
 
 # Strategies for generating valid parameters
 check_type_strategy = st.sampled_from(

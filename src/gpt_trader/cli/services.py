@@ -105,8 +105,8 @@ def build_config_from_args(args: Namespace, **kwargs: Any) -> BotConfig:
     - monitoring: log level, status settings
     - execution: dry_run, mock_broker, time_in_force
     """
+    from gpt_trader.app.config.profile_loader import ProfileLoader
     from gpt_trader.config.types import Profile
-    from gpt_trader.orchestration.configuration.profile_loader import ProfileLoader
 
     # 1. Check for --config flag first (takes precedence over profile)
     config_path = getattr(args, "config", None)

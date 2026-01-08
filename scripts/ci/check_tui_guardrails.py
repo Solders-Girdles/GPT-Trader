@@ -101,22 +101,16 @@ def check_python_files(
 
         # Check for inline CSS
         if rel not in INLINE_CSS_ALLOWLIST and INLINE_CSS_RE.search(text):
-            errors.append(
-                f"{rel}: Contains inline CSS block. Move styles into TCSS modules."
-            )
+            errors.append(f"{rel}: Contains inline CSS block. Move styles into TCSS modules.")
 
         # Check for hard-coded hex colors
         if rel not in HEX_ALLOWLIST and HEX_COLOR_RE.search(text):
-            errors.append(
-                f"{rel}: Contains hard-coded hex colors. Use TCSS variables or THEME."
-            )
+            errors.append(f"{rel}: Contains hard-coded hex colors. Use TCSS variables or THEME.")
 
     return errors, warnings
 
 
-def check_css_files(
-    files: list[pathlib.Path], root: pathlib.Path
-) -> tuple[list[str], list[str]]:
+def check_css_files(files: list[pathlib.Path], root: pathlib.Path) -> tuple[list[str], list[str]]:
     """Check CSS files for unsupported features.
 
     Returns:
@@ -140,7 +134,7 @@ def check_css_files(
             if matches:
                 for match in matches[:3]:  # Limit to first 3 occurrences
                     # Find approximate line number (may be off due to comment removal)
-                    line_num = text_no_comments[:match.start()].count("\n") + 1
+                    line_num = text_no_comments[: match.start()].count("\n") + 1
                     errors.append(f"{rel}:{line_num}: {message}")
 
     return errors, warnings
@@ -173,9 +167,7 @@ def check_performance_budgets() -> tuple[list[str], list[str]]:
     warnings: list[str] = []
 
     if not PERFORMANCE_BUDGET_FILE.exists():
-        warnings.append(
-            f"Performance budget documentation not found: {PERFORMANCE_BUDGET_FILE}"
-        )
+        warnings.append(f"Performance budget documentation not found: {PERFORMANCE_BUDGET_FILE}")
     else:
         content = PERFORMANCE_BUDGET_FILE.read_text(encoding="utf-8")
         required_sections = [

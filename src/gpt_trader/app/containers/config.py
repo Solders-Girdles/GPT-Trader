@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from gpt_trader.app.config import BotConfig
-from gpt_trader.orchestration.config_controller import ConfigController
+from gpt_trader.app.config.controller import ConfigController
 
 if TYPE_CHECKING:
     from gpt_trader.app.config.profile_loader import ProfileLoader

@@ -572,7 +572,6 @@ name = "gpt-trader"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
-    { name = "click" },
     { name = "coinbase-advanced-py" },
     { name = "cryptography" },
     { name = "filelock" },
@@ -659,7 +658,6 @@ dev = [
 requires-dist = [
     { name = "aiohttp", marker = "extra == 'live-trade'", specifier = ">=3.12.15,<4.0.0" },
     { name = "bandit", marker = "extra == 'ci'", specifier = ">=1.7.9,<2.0.0" },
-    { name = "click", specifier = ">=8.1.7,<9.0.0" },
     { name = "coinbase-advanced-py", specifier = ">=1.8.2,<2.0.0" },
     { name = "cryptography", specifier = ">=43.0.0,<47.0.0" },
     { name = "faker", marker = "extra == 'testing-extended'", specifier = ">=37.12.0,<38.0.0" },

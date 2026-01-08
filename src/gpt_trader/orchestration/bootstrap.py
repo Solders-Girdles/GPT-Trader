@@ -22,11 +22,11 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from gpt_trader.app.runtime import RuntimePaths
+from gpt_trader.app.runtime import resolve_runtime_paths as compute_runtime_paths
 from gpt_trader.utilities.logging_patterns import get_logger
 
 from .configuration import TOP_VOLUME_BASES, BotConfig, Profile
-from .runtime_paths import RuntimePaths
-from .runtime_paths import resolve_runtime_paths as compute_runtime_paths
 from .symbols import PERPS_ALLOWLIST, normalize_symbol_list
 
 if TYPE_CHECKING:

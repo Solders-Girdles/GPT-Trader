@@ -3,21 +3,21 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 from gpt_trader.app.config import BotConfig
+from gpt_trader.app.config.controller import ConfigController
 from gpt_trader.app.containers.brokerage import BrokerageContainer
 from gpt_trader.app.containers.config import ConfigContainer
 from gpt_trader.app.containers.observability import ObservabilityContainer
 from gpt_trader.app.containers.persistence import PersistenceContainer
 from gpt_trader.app.containers.risk_validation import RiskValidationContainer
 from gpt_trader.app.health_server import HealthState
+from gpt_trader.app.runtime import RuntimePaths
 from gpt_trader.config.types import Profile
 from gpt_trader.features.brokerages.coinbase.client.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
 from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
 from gpt_trader.features.brokerages.factory import create_brokerage
-from gpt_trader.orchestration.config_controller import ConfigController
 from gpt_trader.orchestration.deterministic_broker import DeterministicBroker
 from gpt_trader.orchestration.protocols import EventStoreProtocol
-from gpt_trader.orchestration.runtime_paths import RuntimePaths
 from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.persistence.orders_store import OrdersStore
 from gpt_trader.utilities.logging_patterns import get_logger

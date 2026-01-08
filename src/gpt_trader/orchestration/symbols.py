@@ -311,9 +311,7 @@ def normalize_symbol_for_mode(
         if cfm_symbol:
             return cfm_symbol
         # If no mapping exists, return original
-        logger.warning(
-            f"No CFM mapping for symbol {symbol}, using original"
-        )
+        logger.warning(f"No CFM mapping for symbol {symbol}, using original")
         return symbol
     else:
         return symbol

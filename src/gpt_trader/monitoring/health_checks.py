@@ -19,8 +19,8 @@ from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
     from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
+    from gpt_trader.features.live_trade.degradation import DegradationState
     from gpt_trader.features.live_trade.risk.manager import LiveRiskManager
-    from gpt_trader.orchestration.execution.degradation import DegradationState
 
 logger = get_logger(__name__, component="health_checks")
 

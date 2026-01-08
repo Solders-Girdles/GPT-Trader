@@ -1,29 +1,23 @@
 """
-Configuration controller for managing bot configuration state.
+DEPRECATED: This module has moved to gpt_trader.app.config.controller
+
+This shim exists for backwards compatibility. Update imports to use:
+    from gpt_trader.app.config.controller import ConfigController
+    # or
+    from gpt_trader.app.config import ConfigController
 """
 
-from typing import Generic, TypeVar
+from __future__ import annotations
 
-from gpt_trader.orchestration.configuration import BotConfig
+import warnings
 
-T = TypeVar("T", bound=BotConfig)
+from gpt_trader.app.config.controller import ConfigController
 
+__all__ = ["ConfigController"]
 
-class ConfigController(Generic[T]):
-    """
-    Manages the active configuration for the bot.
-    Provides a stable interface for accessing the current config
-    even if it changes during runtime (reloading).
-    """
-
-    def __init__(self, initial_config: T):
-        self._current = initial_config
-
-    @property
-    def current(self) -> T:
-        """Get the current active configuration."""
-        return self._current
-
-    def update(self, new_config: T) -> None:
-        """Update the current configuration."""
-        self._current = new_config
+warnings.warn(
+    "gpt_trader.orchestration.config_controller is deprecated. "
+    "Import from gpt_trader.app.config.controller instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)

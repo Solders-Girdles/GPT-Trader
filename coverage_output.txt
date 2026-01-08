@@ -1,0 +1,68 @@
+/Users/rj/PycharmProjects/GPT-Trader/.venv/lib/python3.12/site-packages/_hypothesis_pytestplugin.py:469: UserWarning: Skipping collection of '.hypothesis' directory - this usually means you've explicitly set the `norecursedirs` pytest config option, replacing rather than extending the default ignores.
+  warnings.warn(
+============================= test session starts ==============================
+platform darwin -- Python 3.12.4, pytest-9.0.1, pluggy-1.6.0
+benchmark: 5.2.3 (defaults: timer=time.perf_counter disable_gc=False min_rounds=5 min_time=0.000005 max_time=1.0 calibration_precision=10 warmup=False warmup_iterations=100000)
+rootdir: /Users/rj/PycharmProjects/GPT-Trader
+configfile: pytest.ini
+testpaths: tests
+plugins: benchmark-5.2.3, mock-3.15.1, xdist-3.8.0, asyncio-1.3.0, textual-snapshot-1.0.0, hypothesis-6.148.3, Faker-37.12.0, cov-7.0.0, syrupy-5.0.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 6089 items / 39 deselected / 6050 selected
+
+tests/contract/test_coinbase_api_contract.py ...                         [  0%]
+tests/integration/test_boot_container_perps_bot.py ..                    [  0%]
+tests/integration/test_config_migration.py .                             [  0%]
+tests/integration/test_crash_recovery.py ......                          [  0%]
+tests/integration/test_database_engine.py ....                           [  0%]
+tests/integration/test_end_to_end_buy.py .                               [  0%]
+tests/integration/test_ensemble_strategy.py ...                          [  0%]
+tests/integration/test_funding_pnl_integration.py ........               [  0%]
+tests/integration/test_optimize_feature.py .....                         [  0%]
+tests/integration/test_order_flow.py .....                               [  0%]
+tests/integration/test_persistence.py ..............                     [  0%]
+tests/integration/test_reduce_only_backward_compatibility.py ss          [  0%]
+tests/integration/test_tui_degraded_paths.py ............                [  1%]
+tests/integration/test_validation_escalation.py ......                   [  1%]
+tests/property/test_coinbase_invariants.py ......                        [  1%]
+tests/property/test_degradation_invariants.py .............              [  1%]
+tests/property/test_fee_invariants.py ..............                     [  1%]
+tests/property/test_liquidation_invariants.py .......                    [  1%]
+tests/property/test_margin_invariants.py ............                    [  2%]
+tests/property/test_pnl_invariants.py ..................                 [  2%]
+tests/property/test_validation_invariants.py ............                [  2%]
+tests/system/test_ensemble_execution.py F
+
+=================================== FAILURES ===================================
+____ TestEnsembleSystemExecution.test_ensemble_initialization_and_execution ____
+tests/system/test_ensemble_execution.py:48: in test_ensemble_initialization_and_execution
+    bot = TradingBot(config, mock_container)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/gpt_trader/features/live_trade/bot.py:70: in __init__
+    self.engine = TradingEngine(self.context)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/gpt_trader/features/live_trade/engines/strategy.py:164: in __init__
+    self._init_guard_stack()
+src/gpt_trader/features/live_trade/engines/strategy.py:195: in _init_guard_stack
+    failure_tracker = get_failure_tracker()
+                      ^^^^^^^^^^^^^^^^^^^^^
+src/gpt_trader/features/live_trade/execution/validation.py:148: in get_failure_tracker
+    raise RuntimeError(
+E   RuntimeError: No application container set. Call set_application_container() before using get_failure_tracker().
+------------------------------ Captured log call -------------------------------
+INFO     gpt_trader.features.live_trade.factory:logging_patterns.py:48 Creating EnsembleStrategy (Signal Ensemble Architecture)
+============================= slowest 10 durations =============================
+1.30s call     tests/property/test_margin_invariants.py::test_zero_positions_zero_margin
+1.17s call     tests/property/test_coinbase_invariants.py::test_quantize_size_never_exceeds_input
+0.95s call     tests/integration/test_optimize_feature.py::TestOptimizationEndToEnd::test_optimization_runs_multiple_trials
+0.93s call     tests/property/test_pnl_invariants.py::test_average_win_loss_calculation
+0.79s call     tests/property/test_margin_invariants.py::test_margin_requirements_scale_with_positions
+0.64s call     tests/property/test_margin_invariants.py::test_margin_utilization_bounded
+0.61s call     tests/integration/test_optimize_feature.py::TestOptimizationEndToEnd::test_parameter_space_with_multiple_types
+0.60s call     tests/property/test_margin_invariants.py::test_leverage_calculation_consistency
+0.60s call     tests/property/test_pnl_invariants.py::test_profit_factor_calculation
+0.59s call     tests/property/test_validation_invariants.py::test_escalation_triggers_at_threshold
+=========================== short test summary info ============================
+FAILED tests/system/test_ensemble_execution.py::TestEnsembleSystemExecution::test_ensemble_initialization_and_execution
+!!!!!!!!!!!!!!!!!!!!!!!!!! stopping after 1 failures !!!!!!!!!!!!!!!!!!!!!!!!!!!
+=========== 1 failed, 152 passed, 2 skipped, 39 deselected in 45.82s ===========

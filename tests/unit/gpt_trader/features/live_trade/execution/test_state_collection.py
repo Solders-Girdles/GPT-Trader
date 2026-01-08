@@ -1,4 +1,4 @@
-"""Tests for orchestration/execution/state_collection.py."""
+"""Tests for features/live_trade/execution/state_collection.py."""
 
 from __future__ import annotations
 
@@ -9,8 +9,8 @@ from unittest.mock import MagicMock
 import pytest
 
 from gpt_trader.core import Balance, MarketType, Product
+from gpt_trader.features.live_trade.execution.state_collection import StateCollector
 from gpt_trader.features.live_trade.risk import ValidationError
-from gpt_trader.orchestration.execution.state_collection import StateCollector
 
 # ============================================================
 # Fixtures
@@ -273,13 +273,12 @@ class TestCollectAccountState:
         assert balances == []
         assert equity == Decimal("0")
 
-    def test_handles_balance_exception_in_integration_mode(self, mock_broker: MagicMock) -> None:
+    def test_handles_balance_exception_in_integration_mode(
+        self, mock_broker: MagicMock, mock_config
+    ) -> None:
         """Test that balance exceptions are suppressed in integration mode."""
         mock_broker.list_balances.side_effect = RuntimeError("API error")
         mock_broker.list_positions.return_value = []
-
-        mock_settings = MagicMock()
-        mock_settings.raw_env = {}
 
         collector = StateCollector(mock_broker, mock_config, integration_mode=True)
         balances, equity, _, _, _ = collector.collect_account_state()
@@ -297,28 +296,26 @@ class TestCollectAccountState:
         with pytest.raises(RuntimeError, match="API error"):
             collector.collect_account_state()
 
-    def test_handles_position_exception_in_integration_mode(self, mock_broker: MagicMock) -> None:
+    def test_handles_position_exception_in_integration_mode(
+        self, mock_broker: MagicMock, mock_config
+    ) -> None:
         """Test that position exceptions are suppressed in integration mode."""
         mock_broker.list_balances.return_value = [
             Balance(asset="USD", total=Decimal("1000"), available=Decimal("800"))
         ]
         mock_broker.list_positions.side_effect = RuntimeError("API error")
 
-        mock_settings = MagicMock()
-        mock_settings.raw_env = {}
-
         collector = StateCollector(mock_broker, mock_config, integration_mode=True)
         _, _, _, _, positions = collector.collect_account_state()
 
         assert positions == []
 
-    def test_provides_default_balance_in_integration_mode(self, mock_broker: MagicMock) -> None:
+    def test_provides_default_balance_in_integration_mode(
+        self, mock_broker: MagicMock, mock_config
+    ) -> None:
         """Test that default balance is provided in integration mode."""
         mock_broker.list_balances.return_value = []
         mock_broker.list_positions.return_value = []
-
-        mock_settings = MagicMock()
-        mock_settings.raw_env = {}
 
         collector = StateCollector(mock_broker, mock_config, integration_mode=True)
         balances, equity, _, _, _ = collector.collect_account_state()
@@ -597,12 +594,11 @@ class TestRequireProduct:
         with pytest.raises(ValidationError, match="Product not found"):
             collector.require_product("UNKNOWN-PERP", None)
 
-    def test_provides_synthetic_product_in_integration_mode(self, mock_broker: MagicMock) -> None:
+    def test_provides_synthetic_product_in_integration_mode(
+        self, mock_broker: MagicMock, mock_config
+    ) -> None:
         """Test that synthetic product is provided in integration mode."""
         mock_broker.get_product.return_value = None
-
-        mock_settings = MagicMock()
-        mock_settings.raw_env = {}
 
         collector = StateCollector(mock_broker, mock_config, integration_mode=True)
         result = collector.require_product("BTC-PERP", None)
@@ -612,12 +608,11 @@ class TestRequireProduct:
         assert result.quote_asset == "PERP"
         assert result.market_type == MarketType.PERPETUAL
 
-    def test_synthetic_product_parses_symbol_without_dash(self, mock_broker: MagicMock) -> None:
+    def test_synthetic_product_parses_symbol_without_dash(
+        self, mock_broker: MagicMock, mock_config
+    ) -> None:
         """Test synthetic product parsing when symbol has no dash."""
         mock_broker.get_product.return_value = None
-
-        mock_settings = MagicMock()
-        mock_settings.raw_env = {}
 
         collector = StateCollector(mock_broker, mock_config, integration_mode=True)
         result = collector.require_product("BTCUSD", None)

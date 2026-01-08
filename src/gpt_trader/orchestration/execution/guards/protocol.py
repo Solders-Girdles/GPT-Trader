@@ -1,53 +1,21 @@
 """
-Protocol definitions for runtime guards.
-
-Guards implement a common interface for evaluating account safety conditions.
+DEPRECATED: This module has moved to gpt_trader.features.live_trade.execution.guards.protocol
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
+import warnings
 
-if TYPE_CHECKING:
-    from gpt_trader.core import Balance
-
-
-@dataclass
-class RuntimeGuardState:
-    """Cached snapshot of account risk state used by runtime guards."""
-
-    timestamp: float
-    balances: list[Balance]
-    equity: Decimal
-    positions: list[Any]
-    positions_pnl: dict[str, dict[str, Decimal]]
-    positions_dict: dict[str, dict[str, Decimal]]
-    guard_events: list[dict[str, Any]] = field(default_factory=list)
-
-
-@runtime_checkable
-class Guard(Protocol):
-    """Protocol for runtime safety guards."""
-
-    @property
-    def name(self) -> str:
-        """Unique identifier for this guard."""
-        ...
-
-    def check(self, state: RuntimeGuardState, incremental: bool = False) -> None:
-        """
-        Execute guard logic.
-
-        Args:
-            state: Current account state snapshot
-            incremental: Whether this is an incremental check (may skip expensive operations)
-
-        Raises:
-            GuardError: On guard failure (recoverable or non-recoverable)
-        """
-        ...
-
+from gpt_trader.features.live_trade.execution.guards.protocol import (
+    Guard,
+    RuntimeGuardState,
+)
 
 __all__ = ["Guard", "RuntimeGuardState"]
+
+warnings.warn(
+    "gpt_trader.orchestration.execution.guards.protocol is deprecated. "
+    "Import from gpt_trader.features.live_trade.execution.guards.protocol instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)

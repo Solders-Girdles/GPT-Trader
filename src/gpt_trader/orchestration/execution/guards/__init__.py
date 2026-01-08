@@ -1,23 +1,32 @@
 """
-Guards subpackage - runtime safety checks for live trading.
+DEPRECATED: This package has moved to gpt_trader.features.live_trade.execution.guards
 
-This package contains individual guard implementations that follow the Guard protocol,
-along with the cache and orchestration components.
+This shim re-exports all symbols for backwards compatibility.
+Please update your imports to use the new location:
 
-Note: GuardManager is in guard_manager.py, not this package, to avoid circular imports.
-Import it from gpt_trader.orchestration.execution.guard_manager or
-gpt_trader.orchestration.execution (which re-exports it).
+    # Old (deprecated)
+    from gpt_trader.orchestration.execution.guards import RuntimeGuardState
+
+    # New (preferred)
+    from gpt_trader.features.live_trade.execution.guards import RuntimeGuardState
 """
 
-from gpt_trader.orchestration.execution.guards.api_health import ApiHealthGuard
-from gpt_trader.orchestration.execution.guards.cache import GuardStateCache
-from gpt_trader.orchestration.execution.guards.daily_loss import DailyLossGuard
-from gpt_trader.orchestration.execution.guards.liquidation_buffer import LiquidationBufferGuard
-from gpt_trader.orchestration.execution.guards.mark_staleness import MarkStalenessGuard
-from gpt_trader.orchestration.execution.guards.pnl_telemetry import PnLTelemetryGuard
-from gpt_trader.orchestration.execution.guards.protocol import Guard, RuntimeGuardState
-from gpt_trader.orchestration.execution.guards.risk_metrics import RiskMetricsGuard
-from gpt_trader.orchestration.execution.guards.volatility import VolatilityGuard
+from __future__ import annotations
+
+import warnings
+
+from gpt_trader.features.live_trade.execution.guards import (
+    ApiHealthGuard,
+    DailyLossGuard,
+    Guard,
+    GuardStateCache,
+    LiquidationBufferGuard,
+    MarkStalenessGuard,
+    PnLTelemetryGuard,
+    RiskMetricsGuard,
+    RuntimeGuardState,
+    VolatilityGuard,
+)
 
 __all__ = [
     # Protocol
@@ -39,7 +48,16 @@ __all__ = [
 def __getattr__(name: str) -> type:
     """Lazy import GuardManager for backward compatibility."""
     if name == "GuardManager":
-        from gpt_trader.orchestration.execution.guard_manager import GuardManager
+        from gpt_trader.features.live_trade.execution.guard_manager import GuardManager
 
         return GuardManager
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+# Emit deprecation warning on import
+warnings.warn(
+    "gpt_trader.orchestration.execution.guards is deprecated. "
+    "Import from gpt_trader.features.live_trade.execution.guards instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)

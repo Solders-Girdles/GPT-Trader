@@ -1,4 +1,4 @@
-"""Tests for orchestration/execution/guards.py - GuardManager runtime safety checks."""
+"""Tests for features/live_trade/execution/guards - GuardManager runtime safety checks."""
 
 import time
 from decimal import Decimal
@@ -6,6 +6,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from gpt_trader.features.live_trade.execution.guard_manager import GuardManager
+from gpt_trader.features.live_trade.execution.guards import RuntimeGuardState
 from gpt_trader.features.live_trade.guard_errors import (
     RiskGuardActionError,
     RiskGuardComputationError,
@@ -13,7 +15,6 @@ from gpt_trader.features.live_trade.guard_errors import (
     RiskGuardDataUnavailable,
     RiskGuardTelemetryError,
 )
-from gpt_trader.orchestration.execution.guards import GuardManager, RuntimeGuardState
 
 # =============================================================================
 # Fixtures
@@ -253,7 +254,7 @@ def test_run_guard_step_success(guard_manager):
     func = MagicMock()
 
     with patch(
-        "gpt_trader.orchestration.execution.guard_manager.record_guard_success"
+        "gpt_trader.features.live_trade.execution.guard_manager.record_guard_success"
     ) as mock_success:
         guard_manager.run_guard_step("test_guard", func)
 
@@ -271,7 +272,7 @@ def test_run_guard_step_recoverable_error(guard_manager):
     func = MagicMock(side_effect=error)
 
     with patch(
-        "gpt_trader.orchestration.execution.guard_manager.record_guard_failure"
+        "gpt_trader.features.live_trade.execution.guard_manager.record_guard_failure"
     ) as mock_failure:
         # Should not raise because error is recoverable
         guard_manager.run_guard_step("test_guard", func)
@@ -288,7 +289,7 @@ def test_run_guard_step_unrecoverable_error(guard_manager):
     )
     func = MagicMock(side_effect=error)
 
-    with patch("gpt_trader.orchestration.execution.guard_manager.record_guard_failure"):
+    with patch("gpt_trader.features.live_trade.execution.guard_manager.record_guard_failure"):
         with pytest.raises(RiskGuardActionError):
             guard_manager.run_guard_step("test_guard", func)
 
@@ -298,7 +299,7 @@ def test_run_guard_step_unexpected_error(guard_manager):
     func = MagicMock(side_effect=ValueError("Unexpected"))
 
     with patch(
-        "gpt_trader.orchestration.execution.guard_manager.record_guard_failure"
+        "gpt_trader.features.live_trade.execution.guard_manager.record_guard_failure"
     ) as mock_failure:
         with pytest.raises(RiskGuardComputationError):
             guard_manager.run_guard_step("test_guard", func)
@@ -315,7 +316,7 @@ def test_run_guard_step_unexpected_error(guard_manager):
 def test_log_guard_telemetry_success(guard_manager, sample_guard_state):
     """Test successful telemetry logging."""
     with patch(
-        "gpt_trader.orchestration.execution.guards.pnl_telemetry._get_plog"
+        "gpt_trader.features.live_trade.execution.guards.pnl_telemetry._get_plog"
     ) as mock_get_plog:
         mock_plog = MagicMock()
         mock_get_plog.return_value = mock_plog
@@ -328,7 +329,7 @@ def test_log_guard_telemetry_success(guard_manager, sample_guard_state):
 def test_log_guard_telemetry_failure_raises(guard_manager, sample_guard_state):
     """Test telemetry failure raises RiskGuardTelemetryError."""
     with patch(
-        "gpt_trader.orchestration.execution.guards.pnl_telemetry._get_plog"
+        "gpt_trader.features.live_trade.execution.guards.pnl_telemetry._get_plog"
     ) as mock_get_plog:
         mock_plog = MagicMock()
         mock_plog.log_pnl.side_effect = Exception("Telemetry failed")

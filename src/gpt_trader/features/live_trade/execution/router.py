@@ -2,10 +2,20 @@
 
 Routes orders to appropriate execution venues based on trading mode
 (spot vs CFM futures).
+
+Canonical Execution Path:
+    When a `submitter` is provided, OrderRouter delegates to TradingEngine.submit_order()
+    which applies the full guard stack (degradation, sizing, security, risk, staleness,
+    validation). This is the recommended configuration for production use.
+
+    Without a submitter, OrderRouter falls back to direct order_service.place_order()
+    with minimal guards (reduce-only check only). This path is deprecated.
 """
 
 from __future__ import annotations
 
+import warnings
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
@@ -28,6 +38,13 @@ if TYPE_CHECKING:
     from gpt_trader.features.live_trade.risk.manager import LiveRiskManager
 
 logger = get_logger(__name__, component="order_router")
+
+# Type alias for the canonical submitter callable
+# Matches TradingEngine.submit_order signature
+SubmitterCallable = Callable[
+    [str, OrderSide, Decimal, Decimal],  # symbol, side, price, equity
+    Awaitable[None],
+]
 
 
 @runtime_checkable
@@ -92,28 +109,53 @@ class OrderRouter:
 
     Features:
     - Routes based on TradingMode (spot, CFM, or both)
-    - Applies risk checks before execution
+    - Delegates to TradingEngine.submit_order for full guard stack (when submitter provided)
     - Supports leverage for CFM orders
     - Handles reduce-only mode enforcement
+
+    Canonical Path (recommended):
+        Provide a `submitter` callable (TradingEngine.submit_order) to route through
+        the full guard stack. Use execute_async() for this path.
+
+    Legacy Path (deprecated):
+        Without a submitter, falls back to direct order_service.place_order().
+        This path only applies minimal reduce-only checks.
+
+        Removal target: v3.0
+        Tracker: docs/DEPRECATIONS.md
     """
+
+    # Single-shot deprecation warning
+    _legacy_path_warned: bool = False
 
     def __init__(
         self,
         *,
         order_service: OrderServiceProtocol,
         risk_manager: LiveRiskManager | None = None,
+        submitter: SubmitterCallable | None = None,
+        equity_provider: Callable[[], Decimal] | None = None,
     ) -> None:
         """Initialize order router.
 
         Args:
-            order_service: Service for order execution.
+            order_service: Service for order execution (legacy path).
             risk_manager: Optional risk manager for pre-trade checks.
+            submitter: Async callable for canonical submission (TradingEngine.submit_order).
+                       When provided, orders route through the full guard stack.
+            equity_provider: Callable returning current equity (needed for submitter).
         """
         self._order_service = order_service
         self._risk_manager = risk_manager
+        self._submitter = submitter
+        self._equity_provider = equity_provider
 
     def execute(self, decision: HybridDecision) -> OrderResult:
-        """Execute a single hybrid decision.
+        """Execute a single hybrid decision (legacy path).
+
+        .. deprecated::
+            Use execute_async() with a configured submitter for the canonical
+            guard stack. This sync method bypasses TradingEngine pre-trade guards.
 
         Args:
             decision: The trading decision to execute.
@@ -121,6 +163,15 @@ class OrderRouter:
         Returns:
             OrderResult with execution outcome.
         """
+        if not OrderRouter._legacy_path_warned:
+            warnings.warn(
+                "OrderRouter.execute() is deprecated. Use execute_async() with a "
+                "submitter (TradingEngine.submit_order) for the canonical guard stack.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            OrderRouter._legacy_path_warned = True
+
         if not decision.is_actionable():
             return OrderResult(
                 success=True,
@@ -186,6 +237,102 @@ class OrderRouter:
                 break
 
         return results
+
+    async def execute_async(self, decision: HybridDecision, price: Decimal) -> OrderResult:
+        """Execute a hybrid decision through the canonical guard stack.
+
+        This is the recommended execution path when a submitter is configured.
+        All orders route through TradingEngine.submit_order() which applies
+        the full pre-trade guard stack.
+
+        Args:
+            decision: The trading decision to execute.
+            price: Current market price for the symbol.
+
+        Returns:
+            OrderResult with execution outcome.
+
+        Raises:
+            RuntimeError: If no submitter or equity_provider is configured.
+        """
+        if self._submitter is None:
+            raise RuntimeError(
+                "OrderRouter.execute_async requires a submitter. "
+                "Provide TradingEngine.submit_order via submitter parameter."
+            )
+        if self._equity_provider is None:
+            raise RuntimeError(
+                "OrderRouter.execute_async requires an equity_provider. "
+                "Provide a callable returning current account equity."
+            )
+
+        if not decision.is_actionable():
+            return OrderResult(
+                success=True,
+                decision=decision,
+                error="Decision is not actionable (HOLD)",
+            )
+
+        side = self._action_to_side(decision.action)
+        if side is None:
+            return OrderResult(
+                success=False,
+                decision=decision,
+                error=f"Cannot convert action {decision.action} to order side",
+                error_code="INVALID_ACTION",
+            )
+
+        # Get current equity for the submitter
+        equity = self._equity_provider()
+
+        # Determine reduce_only flag from action
+        reduce_only = decision.action in (Action.CLOSE, Action.CLOSE_LONG, Action.CLOSE_SHORT)
+
+        try:
+            # Delegate to canonical guard stack via submitter
+            # The submitter (TradingEngine.submit_order) handles:
+            # - Degradation gate
+            # - Position sizing (we pass quantity_override)
+            # - Security validation
+            # - Risk manager pre-trade
+            # - Mark staleness
+            # - Order validation + preview
+            await self._submitter(
+                decision.symbol,
+                side,
+                price,
+                equity,
+                quantity_override=decision.quantity,
+                reduce_only=reduce_only,
+                reason=f"hybrid_{decision.mode.value}",
+                confidence=float(decision.confidence) if decision.confidence else 1.0,
+            )
+
+            logger.info(
+                "Executed via canonical path: symbol=%s, side=%s, qty=%s, mode=%s",
+                decision.symbol,
+                side.value,
+                decision.quantity,
+                decision.mode.value,
+            )
+
+            return OrderResult(
+                success=True,
+                decision=decision,
+            )
+
+        except Exception as e:
+            logger.error(
+                "Failed to execute via canonical path: %s - %s",
+                decision.symbol,
+                str(e),
+            )
+            return OrderResult(
+                success=False,
+                decision=decision,
+                error=str(e),
+                error_code="EXECUTION_ERROR",
+            )
 
     def _execute_spot(self, decision: HybridDecision) -> OrderResult:
         """Execute a spot market order.

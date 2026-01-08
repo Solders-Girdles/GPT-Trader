@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from gpt_trader.orchestration.execution.degradation import DegradationState, PauseRecord
+from gpt_trader.features.live_trade.degradation import DegradationState, PauseRecord
 
 
 class TestPauseRecord:

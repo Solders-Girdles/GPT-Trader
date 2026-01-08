@@ -1,4 +1,4 @@
-"""Tests for orchestration/execution/order_submission.py."""
+"""Tests for features/live_trade/execution/order_submission.py."""
 
 from __future__ import annotations
 
@@ -15,8 +15,8 @@ from gpt_trader.core import (
     OrderType,
     TimeInForce,
 )
+from gpt_trader.features.live_trade.execution.order_submission import OrderSubmitter
 from gpt_trader.logging.correlation import correlation_context, get_domain_context
-from gpt_trader.orchestration.execution.order_submission import OrderSubmitter
 
 # ============================================================
 # Fixtures
@@ -136,8 +136,8 @@ class TestOrderSubmitterInit:
 class TestRecordPreview:
     """Tests for record_preview method."""
 
-    @patch("gpt_trader.orchestration.execution.order_event_recorder.emit_metric")
-    @patch("gpt_trader.orchestration.execution.order_event_recorder.get_monitoring_logger")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.emit_metric")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_record_preview_with_preview_data(
         self,
         mock_get_logger: MagicMock,
@@ -162,7 +162,7 @@ class TestRecordPreview:
         assert call_args[1] == "test-bot-123"
         assert call_args[2]["event_type"] == "order_preview"
 
-    @patch("gpt_trader.orchestration.execution.order_event_recorder.emit_metric")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.emit_metric")
     def test_record_preview_with_none_preview_skips(
         self,
         mock_emit_metric: MagicMock,
@@ -180,8 +180,8 @@ class TestRecordPreview:
 
         mock_emit_metric.assert_not_called()
 
-    @patch("gpt_trader.orchestration.execution.order_event_recorder.emit_metric")
-    @patch("gpt_trader.orchestration.execution.order_event_recorder.get_monitoring_logger")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.emit_metric")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_record_preview_market_price(
         self,
         mock_get_logger: MagicMock,
@@ -204,8 +204,8 @@ class TestRecordPreview:
         call_args = mock_emit_metric.call_args[0]
         assert call_args[2]["price"] == "market"
 
-    @patch("gpt_trader.orchestration.execution.order_event_recorder.emit_metric")
-    @patch("gpt_trader.orchestration.execution.order_event_recorder.get_monitoring_logger")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.emit_metric")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_record_preview_handles_logger_exception(
         self,
         mock_get_logger: MagicMock,
@@ -236,8 +236,8 @@ class TestRecordPreview:
 class TestRecordRejection:
     """Tests for record_rejection method."""
 
-    @patch("gpt_trader.orchestration.execution.order_event_recorder.emit_metric")
-    @patch("gpt_trader.orchestration.execution.order_event_recorder.get_monitoring_logger")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.emit_metric")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_record_rejection_logs_and_emits(
         self,
         mock_get_logger: MagicMock,
@@ -261,8 +261,8 @@ class TestRecordRejection:
         assert call_args[2]["event_type"] == "order_rejected"
         assert call_args[2]["reason"] == "insufficient_margin"
 
-    @patch("gpt_trader.orchestration.execution.order_event_recorder.emit_metric")
-    @patch("gpt_trader.orchestration.execution.order_event_recorder.get_monitoring_logger")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.emit_metric")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_record_rejection_with_none_price(
         self,
         mock_get_logger: MagicMock,
@@ -338,7 +338,7 @@ class TestGenerateSubmitId:
 class TestSubmitOrder:
     """Tests for submit_order method."""
 
-    @patch("gpt_trader.orchestration.execution.order_event_recorder.get_monitoring_logger")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_successful_order_submission(
         self,
         mock_get_logger: MagicMock,
@@ -369,8 +369,8 @@ class TestSubmitOrder:
         assert result == "order-123"
         assert "order-123" in open_orders
 
-    @patch("gpt_trader.orchestration.execution.order_event_recorder.emit_metric")
-    @patch("gpt_trader.orchestration.execution.order_event_recorder.get_monitoring_logger")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.emit_metric")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_rejected_order_returns_none(
         self,
         mock_get_logger: MagicMock,
@@ -408,7 +408,7 @@ class TestSubmitOrder:
         # Order should NOT be added to open_orders
         assert "order-rejected" not in open_orders
 
-    @patch("gpt_trader.orchestration.execution.order_event_recorder.get_monitoring_logger")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_broker_exception_returns_none(
         self,
         mock_get_logger: MagicMock,
@@ -436,7 +436,7 @@ class TestSubmitOrder:
 
         assert result is None
 
-    @patch("gpt_trader.orchestration.execution.order_event_recorder.get_monitoring_logger")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_order_with_none_result_returns_none(
         self,
         mock_get_logger: MagicMock,
@@ -529,7 +529,7 @@ class TestExecuteBrokerOrder:
 class TestHandleOrderResult:
     """Tests for _handle_order_result method."""
 
-    @patch("gpt_trader.orchestration.execution.order_event_recorder.get_monitoring_logger")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_successful_order_tracked(
         self,
         mock_get_logger: MagicMock,
@@ -594,8 +594,8 @@ class TestHandleOrderResult:
 
         assert result is None
 
-    @patch("gpt_trader.orchestration.execution.order_event_recorder.emit_metric")
-    @patch("gpt_trader.orchestration.execution.order_event_recorder.get_monitoring_logger")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.emit_metric")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_rejected_status_raises_error(
         self,
         mock_get_logger: MagicMock,
@@ -623,7 +623,7 @@ class TestHandleOrderResult:
                 submit_id="test-id",
             )
 
-    @patch("gpt_trader.orchestration.execution.order_event_recorder.get_monitoring_logger")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_integration_mode_returns_order_object(
         self,
         mock_get_logger: MagicMock,
@@ -705,8 +705,8 @@ class TestProcessRejection:
             },
         )
 
-    @patch("gpt_trader.orchestration.execution.order_event_recorder.emit_metric")
-    @patch("gpt_trader.orchestration.execution.order_event_recorder.get_monitoring_logger")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.emit_metric")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_normal_mode_raises_error(
         self,
         mock_get_logger: MagicMock,
@@ -783,7 +783,7 @@ class TestHandleOrderFailure:
 class TestOrderSubmissionIntegration:
     """Integration tests for order submission workflows."""
 
-    @patch("gpt_trader.orchestration.execution.order_event_recorder.get_monitoring_logger")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_full_order_submission_flow(
         self,
         mock_get_logger: MagicMock,
@@ -830,8 +830,8 @@ class TestOrderSubmissionIntegration:
         # Verify trade recorded
         mock_event_store.append_trade.assert_called_once()
 
-    @patch("gpt_trader.orchestration.execution.order_event_recorder.emit_metric")
-    @patch("gpt_trader.orchestration.execution.order_event_recorder.get_monitoring_logger")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.emit_metric")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_rejection_flow(
         self,
         mock_get_logger: MagicMock,
@@ -891,7 +891,7 @@ class TestClassifyRejectionReason:
 
     def test_rate_limit_detection(self) -> None:
         """Test rate limit detection."""
-        from gpt_trader.orchestration.execution.order_submission import (
+        from gpt_trader.features.live_trade.execution.order_submission import (
             _classify_rejection_reason,
         )
 
@@ -901,7 +901,7 @@ class TestClassifyRejectionReason:
 
     def test_insufficient_funds_detection(self) -> None:
         """Test insufficient funds detection."""
-        from gpt_trader.orchestration.execution.order_submission import (
+        from gpt_trader.features.live_trade.execution.order_submission import (
             _classify_rejection_reason,
         )
 
@@ -911,7 +911,7 @@ class TestClassifyRejectionReason:
 
     def test_invalid_size_detection(self) -> None:
         """Test invalid size detection."""
-        from gpt_trader.orchestration.execution.order_submission import (
+        from gpt_trader.features.live_trade.execution.order_submission import (
             _classify_rejection_reason,
         )
 
@@ -921,7 +921,7 @@ class TestClassifyRejectionReason:
 
     def test_invalid_price_detection(self) -> None:
         """Test invalid price detection."""
-        from gpt_trader.orchestration.execution.order_submission import (
+        from gpt_trader.features.live_trade.execution.order_submission import (
             _classify_rejection_reason,
         )
 
@@ -930,7 +930,7 @@ class TestClassifyRejectionReason:
 
     def test_timeout_detection(self) -> None:
         """Test timeout detection."""
-        from gpt_trader.orchestration.execution.order_submission import (
+        from gpt_trader.features.live_trade.execution.order_submission import (
             _classify_rejection_reason,
         )
 
@@ -940,7 +940,7 @@ class TestClassifyRejectionReason:
 
     def test_network_detection(self) -> None:
         """Test network error detection."""
-        from gpt_trader.orchestration.execution.order_submission import (
+        from gpt_trader.features.live_trade.execution.order_submission import (
             _classify_rejection_reason,
         )
 
@@ -950,7 +950,7 @@ class TestClassifyRejectionReason:
 
     def test_generic_rejection(self) -> None:
         """Test generic rejection detection."""
-        from gpt_trader.orchestration.execution.order_submission import (
+        from gpt_trader.features.live_trade.execution.order_submission import (
             _classify_rejection_reason,
         )
 
@@ -959,7 +959,7 @@ class TestClassifyRejectionReason:
 
     def test_generic_failure(self) -> None:
         """Test generic failure detection."""
-        from gpt_trader.orchestration.execution.order_submission import (
+        from gpt_trader.features.live_trade.execution.order_submission import (
             _classify_rejection_reason,
         )
 
@@ -968,7 +968,7 @@ class TestClassifyRejectionReason:
 
     def test_unknown_fallback(self) -> None:
         """Test unknown fallback."""
-        from gpt_trader.orchestration.execution.order_submission import (
+        from gpt_trader.features.live_trade.execution.order_submission import (
             _classify_rejection_reason,
         )
 
@@ -993,7 +993,7 @@ class TestOrderSubmissionMetrics:
         yield
         reset_all()
 
-    @patch("gpt_trader.orchestration.execution.order_event_recorder.get_monitoring_logger")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_successful_order_records_metric(
         self,
         mock_get_logger: MagicMock,
@@ -1036,7 +1036,7 @@ class TestOrderSubmissionMetrics:
         assert success_key in collector.counters
         assert collector.counters[success_key] == 1
 
-    @patch("gpt_trader.orchestration.execution.order_event_recorder.get_monitoring_logger")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_failed_order_records_metric_with_reason(
         self,
         mock_get_logger: MagicMock,
@@ -1089,7 +1089,7 @@ class TestOrderSubmissionMetrics:
 class TestCorrelationContextPropagation:
     """Tests for correlation context propagation during order submission."""
 
-    @patch("gpt_trader.orchestration.execution.order_event_recorder.get_monitoring_logger")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_order_context_set_during_submission(
         self,
         mock_get_logger: MagicMock,
@@ -1135,7 +1135,7 @@ class TestCorrelationContextPropagation:
         assert captured_context.get("order_id") == "test-order-id"
         assert captured_context.get("symbol") == "BTC-USD"
 
-    @patch("gpt_trader.orchestration.execution.order_event_recorder.get_monitoring_logger")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_correlation_context_preserved_during_submission(
         self,
         mock_get_logger: MagicMock,
@@ -1183,7 +1183,7 @@ class TestCorrelationContextPropagation:
         assert captured_context.get("symbol") == "ETH-USD"
         assert "order_id" in captured_context  # Auto-generated ID
 
-    @patch("gpt_trader.orchestration.execution.order_event_recorder.get_monitoring_logger")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_order_context_cleared_after_submission(
         self,
         mock_get_logger: MagicMock,

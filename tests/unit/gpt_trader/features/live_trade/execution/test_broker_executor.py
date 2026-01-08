@@ -1,4 +1,4 @@
-"""Tests for orchestration/execution/broker_executor.py."""
+"""Tests for features/live_trade/execution/broker_executor.py."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from gpt_trader.core import (
     OrderType,
     TimeInForce,
 )
-from gpt_trader.orchestration.execution.broker_executor import BrokerExecutor
+from gpt_trader.features.live_trade.execution.broker_executor import BrokerExecutor
 
 # ============================================================
 # Fixtures

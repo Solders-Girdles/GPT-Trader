@@ -80,26 +80,26 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/monitoring/test_system_logger.py",  # structured logging sink contract covering emit and fallback paths
     "tests/unit/gpt_trader/orchestration/test_orchestration_async.py",  # async orchestration behaviours with concurrency guard rails
     "tests/unit/gpt_trader/persistence/test_json_file_store_contract.py",  # persistence contract with locking, rotation, and corruption scenarios
-    "tests/unit/gpt_trader/orchestration/execution/test_state_collection.py",  # state collection aggregation matrix
+    "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection.py",  # state collection aggregation matrix
     "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer.py",  # IP allowlist enforcement scenarios
-    "tests/unit/gpt_trader/orchestration/execution/test_order_submission.py",  # order submission flow coverage
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission.py",  # order submission flow coverage
     "tests/unit/gpt_trader/config/test_runtime_settings_utils.py",  # runtime settings validation matrix  # naming: allow
     "tests/unit/gpt_trader/preflight/test_context.py",  # preflight context scenarios
     "tests/unit/gpt_trader/security/test_request_validator.py",  # request validation coverage
-    "tests/unit/gpt_trader/orchestration/execution/test_validation.py",  # execution validation matrix
+    "tests/unit/gpt_trader/features/live_trade/execution/test_validation.py",  # execution validation matrix
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_coverage.py",  # transport layer coverage
     "tests/unit/gpt_trader/security/test_input_sanitizer.py",  # input sanitization edge cases
     "tests/contract/test_coinbase_api_contract.py",  # API contract compliance suite
     "tests/unit/gpt_trader/preflight/test_core.py",  # preflight core validation
-    "tests/unit/gpt_trader/orchestration/execution/test_guards.py",  # execution guard scenarios
+    "tests/unit/gpt_trader/features/live_trade/execution/test_guards.py",  # execution guard scenarios
     "tests/unit/gpt_trader/orchestration/test_symbols.py",  # symbol management coverage
     "tests/property/test_fee_invariants.py",  # property-based fee calculation invariants with comprehensive edge cases
     "tests/property/test_liquidation_invariants.py",  # property-based liquidation safety invariants across margin scenarios
     "tests/property/test_margin_invariants.py",  # property-based margin requirement invariants with leverage permutations
     "tests/property/test_pnl_invariants.py",  # property-based PnL calculation invariants covering all position/entry combinations
     "tests/unit/gpt_trader/preflight/test_checks_connectivity.py",  # comprehensive connectivity check scenarios with retry/timeout coverage
-    "tests/unit/gpt_trader/orchestration/execution/test_broker_executor.py",  # broker communication contract and async handling coverage
-    "tests/unit/gpt_trader/orchestration/execution/test_order_event_recorder.py",  # order event recording and telemetry coverage
+    "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor.py",  # broker communication contract and async handling coverage
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder.py",  # order event recording and telemetry coverage
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders.py",  # comprehensive REST orders mixin coverage
     "tests/unit/gpt_trader/features/live_trade/test_risk_manager.py",  # LiveRiskManager risk validation, volatility breakers, daily PnL tracking
     "tests/unit/gpt_trader/orchestration/test_live_execution_engine.py",  # LiveExecutionEngine orchestration, order flow, risk validation
@@ -221,6 +221,14 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/features/live_trade/test_state_recovery.py",  # state recovery and persistence contract
     "tests/property/test_validation_invariants.py",  # property-based validation invariants across order parameters
     "tests/property/test_degradation_invariants.py",  # property-based degradation state invariants and transitions
+    # Pre-existing TUI and feature test suites
+    "tests/unit/gpt_trader/tui/widgets/test_performance_dashboard.py",  # performance dashboard widget scenarios
+    "tests/unit/gpt_trader/tui/services/test_performance_service.py",  # performance service comprehensive coverage
+    "tests/unit/gpt_trader/tui/test_trade_matcher.py",  # trade matcher FIFO comprehensive scenarios
+    "tests/unit/gpt_trader/tui/widgets/test_cfm_balance.py",  # CFM balance widget scenarios
+    "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_profile.py",  # ensemble profile comprehensive coverage
+    "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager.py",  # CFM risk manager comprehensive scenarios
+    "tests/unit/gpt_trader/features/live_trade/signals/test_vwap.py",  # VWAP signal comprehensive scenarios
 }
 
 SLEEP_ALLOWLIST = {
@@ -231,6 +239,7 @@ SLEEP_ALLOWLIST = {
     "tests/unit/gpt_trader/utilities/performance/test_timing.py",  # timing utility coverage requires real sleep for precision tests
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin.py",  # uses time.sleep for WebSocket thread synchronization
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_response_cache.py",  # TTL-based cache expiration requires real time elapsed
+    "tests/unit/gpt_trader/tui/services/test_performance_service.py",  # uses time.sleep for rate limiting window tests
 }
 
 

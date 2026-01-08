@@ -1,7 +1,10 @@
 """Tests for OrderRouter."""
 
+import warnings
 from decimal import Decimal
-from unittest.mock import MagicMock, Mock
+from unittest.mock import AsyncMock, MagicMock, Mock
+
+import pytest
 
 from gpt_trader.core import Order, OrderSide, OrderType
 from gpt_trader.features.live_trade.execution.router import OrderResult, OrderRouter
@@ -553,3 +556,233 @@ class TestOrderRouterActionMapping:
 
         call_args = order_service.place_order.call_args
         assert call_args.kwargs["side"] == OrderSide.BUY
+
+
+class TestOrderRouterAsyncExecution:
+    """Tests for OrderRouter.execute_async() canonical path."""
+
+    @pytest.fixture(autouse=True)
+    def reset_warnings(self):
+        """Reset the class-level deprecation flag between tests."""
+        OrderRouter._legacy_path_warned = False
+        yield
+        OrderRouter._legacy_path_warned = False
+
+    @pytest.mark.asyncio
+    async def test_execute_async_delegates_to_submitter(self):
+        """execute_async delegates to the submitter callable."""
+        order_service = MagicMock()
+        submitter = AsyncMock()
+        equity_provider = Mock(return_value=Decimal("10000"))
+
+        router = OrderRouter(
+            order_service=order_service,
+            submitter=submitter,
+            equity_provider=equity_provider,
+        )
+
+        decision = HybridDecision(
+            action=Action.BUY,
+            symbol="BTC-USD",
+            mode=TradingMode.SPOT_ONLY,
+            quantity=Decimal("0.1"),
+            confidence=0.85,
+        )
+        price = Decimal("50000")
+
+        result = await router.execute_async(decision, price)
+
+        assert result.success is True
+        submitter.assert_awaited_once()
+        call_args = submitter.call_args
+        assert call_args[0][0] == "BTC-USD"
+        assert call_args[0][1] == OrderSide.BUY
+        assert call_args[0][2] == Decimal("50000")
+        assert call_args[0][3] == Decimal("10000")
+        assert call_args[1]["quantity_override"] == Decimal("0.1")
+        assert call_args[1]["reduce_only"] is False
+
+    @pytest.mark.asyncio
+    async def test_execute_async_passes_reduce_only_for_close(self):
+        """execute_async sets reduce_only for close actions."""
+        order_service = MagicMock()
+        submitter = AsyncMock()
+        equity_provider = Mock(return_value=Decimal("10000"))
+
+        router = OrderRouter(
+            order_service=order_service,
+            submitter=submitter,
+            equity_provider=equity_provider,
+        )
+
+        decision = HybridDecision(
+            action=Action.CLOSE_LONG,
+            symbol="BTC-USD",
+            mode=TradingMode.SPOT_ONLY,
+            quantity=Decimal("0.1"),
+        )
+        price = Decimal("50000")
+
+        result = await router.execute_async(decision, price)
+
+        assert result.success is True
+        call_args = submitter.call_args
+        assert call_args[1]["reduce_only"] is True
+
+    @pytest.mark.asyncio
+    async def test_execute_async_requires_submitter(self):
+        """execute_async raises RuntimeError without submitter."""
+        order_service = MagicMock()
+        router = OrderRouter(order_service=order_service)
+
+        decision = HybridDecision(
+            action=Action.BUY,
+            symbol="BTC-USD",
+            mode=TradingMode.SPOT_ONLY,
+            quantity=Decimal("0.1"),
+        )
+        price = Decimal("50000")
+
+        with pytest.raises(RuntimeError, match="requires a submitter"):
+            await router.execute_async(decision, price)
+
+    @pytest.mark.asyncio
+    async def test_execute_async_requires_equity_provider(self):
+        """execute_async raises RuntimeError without equity_provider."""
+        order_service = MagicMock()
+        submitter = AsyncMock()
+        router = OrderRouter(order_service=order_service, submitter=submitter)
+
+        decision = HybridDecision(
+            action=Action.BUY,
+            symbol="BTC-USD",
+            mode=TradingMode.SPOT_ONLY,
+            quantity=Decimal("0.1"),
+        )
+        price = Decimal("50000")
+
+        with pytest.raises(RuntimeError, match="requires an equity_provider"):
+            await router.execute_async(decision, price)
+
+    @pytest.mark.asyncio
+    async def test_execute_async_handles_submitter_error(self):
+        """execute_async returns failure on submitter exception."""
+        order_service = MagicMock()
+        submitter = AsyncMock(side_effect=Exception("Guard rejected"))
+        equity_provider = Mock(return_value=Decimal("10000"))
+
+        router = OrderRouter(
+            order_service=order_service,
+            submitter=submitter,
+            equity_provider=equity_provider,
+        )
+
+        decision = HybridDecision(
+            action=Action.BUY,
+            symbol="BTC-USD",
+            mode=TradingMode.SPOT_ONLY,
+            quantity=Decimal("0.1"),
+        )
+        price = Decimal("50000")
+
+        result = await router.execute_async(decision, price)
+
+        assert result.success is False
+        assert "Guard rejected" in result.error
+        assert result.error_code == "EXECUTION_ERROR"
+
+    @pytest.mark.asyncio
+    async def test_execute_async_hold_is_not_actionable(self):
+        """execute_async returns success without calling submitter for HOLD."""
+        order_service = MagicMock()
+        submitter = AsyncMock()
+        equity_provider = Mock(return_value=Decimal("10000"))
+
+        router = OrderRouter(
+            order_service=order_service,
+            submitter=submitter,
+            equity_provider=equity_provider,
+        )
+
+        decision = HybridDecision(
+            action=Action.HOLD,
+            symbol="BTC-USD",
+            mode=TradingMode.SPOT_ONLY,
+        )
+        price = Decimal("50000")
+
+        result = await router.execute_async(decision, price)
+
+        assert result.success is True
+        assert "not actionable" in result.error
+        submitter.assert_not_awaited()
+
+
+class TestOrderRouterDeprecationWarnings:
+    """Tests for deprecation warnings on legacy paths."""
+
+    @pytest.fixture(autouse=True)
+    def reset_warnings(self):
+        """Reset the class-level deprecation flag between tests."""
+        OrderRouter._legacy_path_warned = False
+        yield
+        OrderRouter._legacy_path_warned = False
+
+    def test_sync_execute_emits_deprecation_warning(self):
+        """Sync execute() emits deprecation warning."""
+        order_service = MagicMock()
+        order = Mock(spec=Order)
+        order.order_id = "test-123"
+        order_service.place_order.return_value = order
+
+        router = OrderRouter(order_service=order_service)
+
+        decision = HybridDecision(
+            action=Action.BUY,
+            symbol="BTC-USD",
+            mode=TradingMode.SPOT_ONLY,
+            quantity=Decimal("1.0"),
+        )
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always", DeprecationWarning)
+            router.execute(decision)
+
+            # Filter for our specific deprecation warning
+            router_warnings = [
+                x
+                for x in w
+                if issubclass(x.category, DeprecationWarning) and "OrderRouter" in str(x.message)
+            ]
+            assert len(router_warnings) == 1
+            assert "deprecated" in str(router_warnings[0].message).lower()
+            assert "execute_async" in str(router_warnings[0].message)
+
+    def test_sync_execute_warning_only_once(self):
+        """Sync execute() only warns once per session."""
+        order_service = MagicMock()
+        order = Mock(spec=Order)
+        order.order_id = "test-123"
+        order_service.place_order.return_value = order
+
+        router = OrderRouter(order_service=order_service)
+
+        decision = HybridDecision(
+            action=Action.BUY,
+            symbol="BTC-USD",
+            mode=TradingMode.SPOT_ONLY,
+            quantity=Decimal("1.0"),
+        )
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always", DeprecationWarning)
+            router.execute(decision)
+            router.execute(decision)  # Second call
+
+            # Only one warning despite two calls - filter for our specific warning
+            router_warnings = [
+                x
+                for x in w
+                if issubclass(x.category, DeprecationWarning) and "OrderRouter" in str(x.message)
+            ]
+            assert len(router_warnings) == 1

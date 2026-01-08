@@ -229,6 +229,8 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_profile.py",  # ensemble profile comprehensive coverage
     "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager.py",  # CFM risk manager comprehensive scenarios
     "tests/unit/gpt_trader/features/live_trade/signals/test_vwap.py",  # VWAP signal comprehensive scenarios
+    "tests/unit/gpt_trader/app/config/test_profile_loader.py",  # profile loader comprehensive coverage
+    "tests/unit/gpt_trader/app/containers/test_risk_validation.py",  # risk validation container scenarios
 }
 
 SLEEP_ALLOWLIST = {

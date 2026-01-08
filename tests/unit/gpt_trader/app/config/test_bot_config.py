@@ -1,0 +1,171 @@
+"""Tests for BotConfig feature flag canonicalization and precedence."""
+
+from __future__ import annotations
+
+import os
+import warnings
+from unittest.mock import patch
+
+from gpt_trader.app.config import BotConfig
+from gpt_trader.app.config.bot_config import MeanReversionConfig
+from gpt_trader.features.live_trade.strategies.perps_baseline import PerpsStrategyConfig
+
+
+class TestEnableShortsCanonical:
+    """Test enable_shorts derivation from strategy config with sync warning."""
+
+    def test_active_enable_shorts_from_baseline_strategy(self) -> None:
+        """Baseline strategy type derives enable_shorts from strategy config."""
+        config = BotConfig(
+            strategy=PerpsStrategyConfig(enable_shorts=True),
+            strategy_type="baseline",
+        )
+        # Reset warning state for clean test
+        BotConfig._enable_shorts_sync_warned = False
+
+        assert config.active_enable_shorts is True
+
+    def test_active_enable_shorts_from_mean_reversion(self) -> None:
+        """Mean reversion strategy type derives enable_shorts from mean_reversion config."""
+        config = BotConfig(
+            mean_reversion=MeanReversionConfig(enable_shorts=False),
+            strategy_type="mean_reversion",
+        )
+        BotConfig._enable_shorts_sync_warned = False
+
+        assert config.active_enable_shorts is False
+
+    def test_sync_warning_on_mismatch(self) -> None:
+        """Warns when BotConfig.enable_shorts differs from strategy config."""
+        config = BotConfig(
+            enable_shorts=True,  # Top-level says True
+            strategy=PerpsStrategyConfig(enable_shorts=False),  # Strategy says False
+            strategy_type="baseline",
+        )
+        BotConfig._enable_shorts_sync_warned = False
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            result = config.active_enable_shorts
+
+        assert result is False  # Strategy config is canonical
+        assert len(w) == 1
+        assert "differs from strategy config" in str(w[0].message)
+
+    def test_no_warning_when_synced(self) -> None:
+        """No warning when BotConfig.enable_shorts matches strategy config."""
+        config = BotConfig(
+            enable_shorts=True,
+            strategy=PerpsStrategyConfig(enable_shorts=True),
+            strategy_type="baseline",
+        )
+        BotConfig._enable_shorts_sync_warned = False
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            _ = config.active_enable_shorts
+
+        assert len(w) == 0
+
+    def test_warning_only_once_per_process(self) -> None:
+        """Sync warning fires only once per process."""
+        config = BotConfig(
+            enable_shorts=True,
+            strategy=PerpsStrategyConfig(enable_shorts=False),
+            strategy_type="baseline",
+        )
+        BotConfig._enable_shorts_sync_warned = False
+
+        # First access triggers warning
+        with warnings.catch_warnings(record=True) as w1:
+            warnings.simplefilter("always")
+            _ = config.active_enable_shorts
+        assert len(w1) == 1
+
+        # Second access does not
+        with warnings.catch_warnings(record=True) as w2:
+            warnings.simplefilter("always")
+            _ = config.active_enable_shorts
+        assert len(w2) == 0
+
+
+class TestMockBrokerEnvPrecedence:
+    """Test MOCK_BROKER precedence over deprecated PERPS_FORCE_MOCK."""
+
+    def test_mock_broker_env_takes_precedence(self) -> None:
+        """MOCK_BROKER=1 takes precedence over PERPS_FORCE_MOCK=0."""
+        with patch.dict(os.environ, {"MOCK_BROKER": "1", "PERPS_FORCE_MOCK": "0"}):
+            BotConfig._perps_force_mock_warned = False
+            result = BotConfig._parse_mock_broker_env()
+        assert result is True
+
+    def test_perps_force_mock_fallback(self) -> None:
+        """PERPS_FORCE_MOCK is used when MOCK_BROKER is unset."""
+        env = {"PERPS_FORCE_MOCK": "1"}
+        # Ensure MOCK_BROKER is not set
+        with patch.dict(os.environ, env, clear=False):
+            os.environ.pop("MOCK_BROKER", None)
+            BotConfig._perps_force_mock_warned = False
+
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                result = BotConfig._parse_mock_broker_env()
+
+        assert result is True
+        assert len(w) == 1
+        assert "PERPS_FORCE_MOCK is deprecated" in str(w[0].message)
+
+    def test_deprecation_warning_only_once(self) -> None:
+        """PERPS_FORCE_MOCK deprecation warning fires only once."""
+        env = {"PERPS_FORCE_MOCK": "1"}
+        with patch.dict(os.environ, env, clear=False):
+            os.environ.pop("MOCK_BROKER", None)
+            BotConfig._perps_force_mock_warned = False
+
+            # First call warns
+            with warnings.catch_warnings(record=True) as w1:
+                warnings.simplefilter("always")
+                BotConfig._parse_mock_broker_env()
+            assert len(w1) == 1
+
+            # Second call does not warn
+            with warnings.catch_warnings(record=True) as w2:
+                warnings.simplefilter("always")
+                BotConfig._parse_mock_broker_env()
+            assert len(w2) == 0
+
+    def test_default_when_neither_set(self) -> None:
+        """Returns False when neither MOCK_BROKER nor PERPS_FORCE_MOCK is set."""
+        with patch.dict(os.environ, {}, clear=True):
+            result = BotConfig._parse_mock_broker_env()
+        assert result is False
+
+
+class TestReduceOnlyModeEnvParsing:
+    """Test reduce_only_mode env variable parsing with precedence."""
+
+    def test_risk_prefixed_takes_precedence(self) -> None:
+        """RISK_REDUCE_ONLY_MODE takes precedence over REDUCE_ONLY_MODE."""
+        env = {
+            "RISK_REDUCE_ONLY_MODE": "1",
+            "REDUCE_ONLY_MODE": "0",
+        }
+        with patch.dict(os.environ, env, clear=True):
+            # Minimal env for from_env to work
+            with patch.dict(os.environ, {"BROKER": "coinbase"}):
+                config = BotConfig.from_env()
+        assert config.reduce_only_mode is True
+
+    def test_fallback_to_unprefixed(self) -> None:
+        """Falls back to REDUCE_ONLY_MODE when RISK_ prefixed is unset."""
+        env = {"REDUCE_ONLY_MODE": "1"}
+        with patch.dict(os.environ, env, clear=True):
+            with patch.dict(os.environ, {"BROKER": "coinbase"}):
+                config = BotConfig.from_env()
+        assert config.reduce_only_mode is True
+
+    def test_default_false(self) -> None:
+        """Defaults to False when no env vars set."""
+        with patch.dict(os.environ, {"BROKER": "coinbase"}, clear=True):
+            config = BotConfig.from_env()
+        assert config.reduce_only_mode is False

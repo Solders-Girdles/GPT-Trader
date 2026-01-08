@@ -23,10 +23,10 @@ from gpt_trader.persistence.orders_store import OrdersStore
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
+    from gpt_trader.app.config.profile_loader import ProfileLoader
+    from gpt_trader.features.live_trade.execution.validation import ValidationFailureTracker
     from gpt_trader.features.live_trade.risk.manager import LiveRiskManager
     from gpt_trader.monitoring.notifications.service import NotificationService
-    from gpt_trader.orchestration.configuration.profile_loader import ProfileLoader
-    from gpt_trader.orchestration.execution.validation import ValidationFailureTracker
     from gpt_trader.orchestration.live_execution import LiveExecutionEngine
     from gpt_trader.orchestration.trading_bot.bot import TradingBot
     from gpt_trader.security.secrets_manager import SecretsManager
@@ -178,6 +178,11 @@ class ApplicationContainer:
         failure_tracker: ValidationFailureTracker | None = None,
     ) -> LiveExecutionEngine:
         """Create a LiveExecutionEngine wired with container dependencies.
+
+        .. deprecated::
+            LiveExecutionEngine is deprecated. For new code, use
+            TradingEngine.submit_order() which provides the canonical guard stack.
+            This factory is retained for backward compatibility.
 
         This factory method creates a LiveExecutionEngine using the container's
         broker, risk_manager, event_store, and config. The engine will create

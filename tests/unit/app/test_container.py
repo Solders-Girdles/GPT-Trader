@@ -330,7 +330,7 @@ class TestApplicationContainer:
 
     def test_validation_failure_tracker_creation(self, mock_config: BotConfig) -> None:
         """Test that validation failure tracker is created correctly."""
-        from gpt_trader.orchestration.execution.validation import ValidationFailureTracker
+        from gpt_trader.features.live_trade.execution.validation import ValidationFailureTracker
 
         container = ApplicationContainer(mock_config)
 
@@ -349,7 +349,7 @@ class TestApplicationContainer:
 
     def test_profile_loader_creation(self, mock_config: BotConfig) -> None:
         """Test that profile loader is created correctly."""
-        from gpt_trader.orchestration.configuration.profile_loader import ProfileLoader
+        from gpt_trader.app.config.profile_loader import ProfileLoader
 
         container = ApplicationContainer(mock_config)
 
@@ -445,8 +445,8 @@ class TestContainerRegistry:
         self, mock_config: BotConfig, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Test that services can be resolved via registered container."""
-        from gpt_trader.orchestration.configuration.profile_loader import get_profile_loader
-        from gpt_trader.orchestration.execution.validation import get_failure_tracker
+        from gpt_trader.app.config.profile_loader import get_profile_loader
+        from gpt_trader.features.live_trade.execution.validation import get_failure_tracker
 
         clear_application_container()
 

@@ -13,8 +13,8 @@ from typing import TYPE_CHECKING
 from gpt_trader.app.config import BotConfig
 
 if TYPE_CHECKING:
+    from gpt_trader.features.live_trade.execution.validation import ValidationFailureTracker
     from gpt_trader.features.live_trade.risk.manager import LiveRiskManager
-    from gpt_trader.orchestration.execution.validation import ValidationFailureTracker
     from gpt_trader.persistence.event_store import EventStore
 
 
@@ -52,11 +52,19 @@ class RiskValidationContainer:
         if self._risk_manager is None:
             from decimal import Decimal
 
+            from gpt_trader.features.live_trade.risk.config import RiskConfig
             from gpt_trader.features.live_trade.risk.manager import LiveRiskManager
-            from gpt_trader.orchestration.configuration.risk.model import RiskConfig
 
             # Adapt BotConfig.risk (BotRiskConfig) to RiskConfig
             bot_risk = self._config.risk
+
+            # Derive kill_switch_enabled from active strategy config
+            if self._config.strategy_type == "mean_reversion":
+                kill_switch = self._config.mean_reversion.kill_switch_enabled
+            else:
+                # baseline, ensemble, or any other type uses strategy config
+                kill_switch = getattr(self._config.strategy, "kill_switch_enabled", False)
+
             risk_config = RiskConfig(
                 max_leverage=bot_risk.max_leverage,
                 # daily_loss_limit is absolute dollar amount (legacy)
@@ -65,7 +73,7 @@ class RiskValidationContainer:
                 daily_loss_limit_pct=bot_risk.daily_loss_limit_pct,
                 max_position_pct_per_symbol=float(bot_risk.position_fraction),
                 # Map other relevant fields
-                kill_switch_enabled=self._config.mean_reversion.kill_switch_enabled,
+                kill_switch_enabled=kill_switch,
                 reduce_only_mode=self._config.reduce_only_mode,
             )
 
@@ -86,7 +94,7 @@ class RiskValidationContainer:
         by the caller (e.g., LiveExecutionEngine) who knows the escalation target.
         """
         if self._validation_failure_tracker is None:
-            from gpt_trader.orchestration.execution.validation import (
+            from gpt_trader.features.live_trade.execution.validation import (
                 ValidationFailureTracker as VFT,
             )
 

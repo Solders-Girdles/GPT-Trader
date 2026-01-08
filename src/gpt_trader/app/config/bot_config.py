@@ -10,7 +10,7 @@ Supports nested configuration structure for optimization framework compatibility
 import os
 from dataclasses import dataclass, field, fields, replace
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 # Constants expected by core.py shim
 DEFAULT_SPOT_RISK_PATH = "config/risk.json"
@@ -193,6 +193,34 @@ class BotConfig:
         """Check if trading spot only (no CFM)."""
         return "spot" in self.trading_modes and "cfm" not in self.trading_modes
 
+    @property
+    def active_enable_shorts(self) -> bool:
+        """Get enable_shorts from active strategy config (canonical source).
+
+        Derives enable_shorts from the strategy config based on strategy_type.
+        Warns once if top-level enable_shorts differs from strategy config.
+        """
+        import warnings
+
+        # Get canonical value from active strategy
+        if self.strategy_type == "mean_reversion":
+            canonical = self.mean_reversion.enable_shorts
+        else:
+            # baseline, ensemble use strategy config
+            canonical = getattr(self.strategy, "enable_shorts", False)
+
+        # Warn on mismatch (once per process)
+        if self.enable_shorts != canonical and not BotConfig._enable_shorts_sync_warned:
+            warnings.warn(
+                f"BotConfig.enable_shorts={self.enable_shorts} differs from "
+                f"strategy config ({canonical}). Strategy config is canonical.",
+                UserWarning,
+                stacklevel=2,
+            )
+            BotConfig._enable_shorts_sync_warned = True
+
+        return canonical
+
     @classmethod
     def from_profile(
         cls,
@@ -204,6 +232,40 @@ class BotConfig:
         """Create a config from a profile name or enum."""
         # Type ignore: kwargs unpacking is dynamic, but we trust the caller to provide valid fields
         return cls(profile=profile, dry_run=dry_run, mock_broker=mock_broker, **kwargs)  # type: ignore[arg-type]
+
+    # Single-shot deprecation warning for PERPS_FORCE_MOCK
+    _perps_force_mock_warned: ClassVar[bool] = False
+    # Single-shot sync warning for enable_shorts mismatch
+    _enable_shorts_sync_warned: ClassVar[bool] = False
+
+    @classmethod
+    def _parse_mock_broker_env(cls) -> bool:
+        """Parse mock_broker from env with deprecated PERPS_FORCE_MOCK fallback.
+
+        Precedence: MOCK_BROKER > PERPS_FORCE_MOCK (deprecated)
+        """
+        import warnings
+
+        from gpt_trader.config.config_utilities import parse_bool_env
+
+        # Check canonical env var first
+        mock_broker_env = os.getenv("MOCK_BROKER")
+        if mock_broker_env is not None:
+            return parse_bool_env("MOCK_BROKER", default=False)
+
+        # Check deprecated alias
+        perps_force_mock = os.getenv("PERPS_FORCE_MOCK")
+        if perps_force_mock is not None:
+            if not cls._perps_force_mock_warned:
+                warnings.warn(
+                    "PERPS_FORCE_MOCK is deprecated. Use MOCK_BROKER=1 instead.",
+                    DeprecationWarning,
+                    stacklevel=3,
+                )
+                cls._perps_force_mock_warned = True
+            return perps_force_mock.lower() in ("1", "true", "yes")
+
+        return False
 
     @classmethod
     def from_env(cls) -> "BotConfig":
@@ -318,6 +380,13 @@ class BotConfig:
             environment=os.getenv("ENVIRONMENT"),
             spot_force_live=parse_bool_env("SPOT_FORCE_LIVE", default=False),
             enable_order_preview=parse_bool_env("ORDER_PREVIEW_ENABLED", default=False),
+            # Risk modes from env (CLI/profile override these)
+            reduce_only_mode=parse_bool_env(
+                "RISK_REDUCE_ONLY_MODE",
+                default=parse_bool_env("REDUCE_ONLY_MODE", default=False),
+            ),
+            # Mock broker with deprecated PERPS_FORCE_MOCK fallback
+            mock_broker=cls._parse_mock_broker_env(),
         )
 
     @classmethod

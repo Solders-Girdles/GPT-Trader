@@ -13,7 +13,7 @@ from gpt_trader.app.config import BotConfig
 from gpt_trader.orchestration.config_controller import ConfigController
 
 if TYPE_CHECKING:
-    from gpt_trader.orchestration.configuration.profile_loader import ProfileLoader
+    from gpt_trader.app.config.profile_loader import ProfileLoader
 
 
 class ConfigContainer:
@@ -46,9 +46,7 @@ class ConfigContainer:
         configurations from YAML files.
         """
         if self._profile_loader is None:
-            from gpt_trader.orchestration.configuration.profile_loader import (
-                ProfileLoader as PL,
-            )
+            from gpt_trader.app.config.profile_loader import ProfileLoader as PL
 
             self._profile_loader = PL()
         return self._profile_loader

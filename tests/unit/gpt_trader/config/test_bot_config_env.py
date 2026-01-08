@@ -74,8 +74,8 @@ class TestProfileStrategyHydration:
 
     def test_profile_loader_builds_strategy_config(self) -> None:
         """Test ProfileLoader builds PerpsStrategyConfig from schema."""
+        from gpt_trader.app.config.profile_loader import ProfileLoader
         from gpt_trader.config.types import Profile
-        from gpt_trader.orchestration.configuration.profile_loader import ProfileLoader
 
         loader = ProfileLoader()
         schema = loader.load(Profile.DEV)
@@ -95,8 +95,8 @@ class TestProfileStrategyHydration:
     def test_profile_loader_builds_risk_config(self) -> None:
         """Test ProfileLoader builds BotRiskConfig from schema."""
         from gpt_trader.app.config.bot_config import BotRiskConfig
+        from gpt_trader.app.config.profile_loader import ProfileLoader
         from gpt_trader.config.types import Profile
-        from gpt_trader.orchestration.configuration.profile_loader import ProfileLoader
 
         loader = ProfileLoader()
         schema = loader.load(Profile.DEV)
@@ -117,8 +117,8 @@ class TestProfileStrategyHydration:
 
     def test_paper_profile_loads(self) -> None:
         """Test PAPER profile can be loaded."""
+        from gpt_trader.app.config.profile_loader import ProfileLoader
         from gpt_trader.config.types import Profile
-        from gpt_trader.orchestration.configuration.profile_loader import ProfileLoader
 
         loader = ProfileLoader()
         schema = loader.load(Profile.PAPER)
@@ -128,8 +128,8 @@ class TestProfileStrategyHydration:
 
     def test_profile_daily_loss_limit_pct_from_yaml(self) -> None:
         """Test daily_loss_limit_pct is parsed from profile YAML."""
+        from gpt_trader.app.config.profile_loader import ProfileLoader
         from gpt_trader.config.types import Profile
-        from gpt_trader.orchestration.configuration.profile_loader import ProfileLoader
 
         loader = ProfileLoader()
         # PAPER profile has daily_loss_limit_pct=0.05 in defaults
@@ -142,8 +142,8 @@ class TestReduceOnlyEnforcement:
 
     def test_check_order_blocks_new_position_in_reduce_only(self) -> None:
         """Test check_order blocks new positions when in reduce-only mode."""
+        from gpt_trader.features.live_trade.risk.config import RiskConfig
         from gpt_trader.features.live_trade.risk.manager import LiveRiskManager
-        from gpt_trader.orchestration.configuration.risk.model import RiskConfig
 
         config = RiskConfig(daily_loss_limit_pct=0.05)
         manager = LiveRiskManager(config=config, state_file=None)
@@ -157,8 +157,8 @@ class TestReduceOnlyEnforcement:
 
     def test_check_order_allows_reduce_only_order(self) -> None:
         """Test check_order allows reduce-only orders when in reduce-only mode."""
+        from gpt_trader.features.live_trade.risk.config import RiskConfig
         from gpt_trader.features.live_trade.risk.manager import LiveRiskManager
-        from gpt_trader.orchestration.configuration.risk.model import RiskConfig
 
         config = RiskConfig(daily_loss_limit_pct=0.05)
         manager = LiveRiskManager(config=config, state_file=None)
@@ -174,8 +174,8 @@ class TestReduceOnlyEnforcement:
         """Test daily loss limit triggers reduce-only mode."""
         from decimal import Decimal
 
+        from gpt_trader.features.live_trade.risk.config import RiskConfig
         from gpt_trader.features.live_trade.risk.manager import LiveRiskManager
-        from gpt_trader.orchestration.configuration.risk.model import RiskConfig
 
         config = RiskConfig(daily_loss_limit_pct=0.05)
         manager = LiveRiskManager(config=config, state_file=None)
@@ -196,8 +196,8 @@ class TestMarkStalenessGuard:
 
     def test_check_mark_staleness_returns_true_when_no_update(self) -> None:
         """Test check_mark_staleness returns True when no mark update recorded."""
+        from gpt_trader.features.live_trade.risk.config import RiskConfig
         from gpt_trader.features.live_trade.risk.manager import LiveRiskManager
-        from gpt_trader.orchestration.configuration.risk.model import RiskConfig
 
         config = RiskConfig(daily_loss_limit_pct=0.05)
         manager = LiveRiskManager(config=config, state_file=None)
@@ -210,8 +210,8 @@ class TestMarkStalenessGuard:
         """Test check_mark_staleness returns False when mark is fresh."""
         import time
 
+        from gpt_trader.features.live_trade.risk.config import RiskConfig
         from gpt_trader.features.live_trade.risk.manager import LiveRiskManager
-        from gpt_trader.orchestration.configuration.risk.model import RiskConfig
 
         config = RiskConfig(daily_loss_limit_pct=0.05)
         manager = LiveRiskManager(config=config, state_file=None)
@@ -226,8 +226,8 @@ class TestMarkStalenessGuard:
         """Test check_mark_staleness returns True when mark is too old."""
         import time
 
+        from gpt_trader.features.live_trade.risk.config import RiskConfig
         from gpt_trader.features.live_trade.risk.manager import LiveRiskManager
-        from gpt_trader.orchestration.configuration.risk.model import RiskConfig
 
         config = RiskConfig(daily_loss_limit_pct=0.05)
         manager = LiveRiskManager(config=config, state_file=None)

@@ -206,7 +206,7 @@ class EnsembleStrategy(BaseStrategy):
         )
 
     @classmethod
-    def from_profile(cls, profile: "EnsembleProfile") -> "EnsembleStrategy":
+    def from_profile(cls, profile: EnsembleProfile) -> EnsembleStrategy:
         """Create an EnsembleStrategy from a profile configuration.
 
         Args:
@@ -240,7 +240,7 @@ class EnsembleStrategy(BaseStrategy):
         return cls(config=config, signals=signals, combiner=combiner)
 
     @classmethod
-    def from_yaml(cls, path: Path | str) -> "EnsembleStrategy":
+    def from_yaml(cls, path: Path | str) -> EnsembleStrategy:
         """Create an EnsembleStrategy from a YAML profile file.
 
         Args:
@@ -260,7 +260,7 @@ class EnsembleStrategy(BaseStrategy):
         return cls.from_profile(profile)
 
     @classmethod
-    def from_profile_name(cls, name: str) -> "EnsembleStrategy":
+    def from_profile_name(cls, name: str) -> EnsembleStrategy:
         """Create an EnsembleStrategy from a named profile.
 
         Available built-in profiles:

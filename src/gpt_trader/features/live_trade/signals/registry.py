@@ -58,7 +58,7 @@ def list_registered_signals() -> list[str]:
     return list(_SIGNAL_REGISTRY.keys())
 
 
-def create_signal(name: str, parameters: dict[str, Any] | None = None) -> "SignalGenerator":
+def create_signal(name: str, parameters: dict[str, Any] | None = None) -> SignalGenerator:
     """Create a signal instance from registry.
 
     Args:

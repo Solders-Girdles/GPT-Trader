@@ -81,9 +81,7 @@ class TestVWAPSignal:
         self, signal: VWAPSignal, base_context: StrategyContext
     ) -> None:
         """Test that missing vwap returns neutral signal."""
-        base_context.market_data = MarketDataContext(
-            trade_volume_stats={"count": 50}
-        )
+        base_context.market_data = MarketDataContext(trade_volume_stats={"count": 50})
         result = signal.generate(base_context)
 
         assert result.strength == 0.0

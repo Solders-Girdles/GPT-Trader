@@ -37,7 +37,7 @@ class SignalProfileConfig:
     parameters: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "SignalProfileConfig":
+    def from_dict(cls, data: dict[str, Any]) -> SignalProfileConfig:
         """Create from dictionary."""
         return cls(
             name=data["name"],
@@ -67,7 +67,7 @@ class CombinerProfileConfig:
     ranging_weights: dict[str, float] = field(default_factory=dict)
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "CombinerProfileConfig":
+    def from_dict(cls, data: dict[str, Any]) -> CombinerProfileConfig:
         """Create from dictionary."""
         return cls(
             adx_period=data.get("adx_period", 14),
@@ -122,7 +122,7 @@ class DecisionProfileConfig:
     take_profit_pct: float = 0.05
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "DecisionProfileConfig":
+    def from_dict(cls, data: dict[str, Any]) -> DecisionProfileConfig:
         """Create from dictionary."""
         return cls(
             buy_threshold=data.get("buy_threshold", 0.2),
@@ -170,11 +170,9 @@ class EnsembleProfile:
     tags: list[str] = field(default_factory=list)
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "EnsembleProfile":
+    def from_dict(cls, data: dict[str, Any]) -> EnsembleProfile:
         """Create from dictionary."""
-        signals = [
-            SignalProfileConfig.from_dict(s) for s in data.get("signals", [])
-        ]
+        signals = [SignalProfileConfig.from_dict(s) for s in data.get("signals", [])]
 
         return cls(
             name=data.get("name", "unnamed"),
@@ -187,7 +185,7 @@ class EnsembleProfile:
         )
 
     @classmethod
-    def from_yaml(cls, path: Path | str) -> "EnsembleProfile":
+    def from_yaml(cls, path: Path | str) -> EnsembleProfile:
         """Load profile from YAML file."""
         path = Path(path)
         with open(path) as f:

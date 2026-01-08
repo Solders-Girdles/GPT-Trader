@@ -85,7 +85,7 @@ class StatefulStrategy(TradingStrategy, ABC):
         recent_marks: Sequence[Decimal],
         equity: Decimal,
         product: Product | None,
-        market_data: "MarketDataContext | None" = None,
+        market_data: MarketDataContext | None = None,
         candles: Sequence[Any] | None = None,
     ) -> Decision:
         """

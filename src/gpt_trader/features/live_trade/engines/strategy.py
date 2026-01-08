@@ -19,6 +19,7 @@ from typing import Any
 
 from gpt_trader.config.constants import HEALTH_CHECK_INTERVAL_SECONDS
 from gpt_trader.core import OrderSide, OrderType, Position, Product
+from gpt_trader.features.live_trade.degradation import DegradationState
 from gpt_trader.features.live_trade.engines.base import (
     BaseEngine,
     CoordinatorContext,
@@ -46,6 +47,13 @@ from gpt_trader.features.live_trade.engines.telemetry_streaming import (
     start_streaming_background,
     stop_streaming_background,
 )
+from gpt_trader.features.live_trade.execution.guard_manager import GuardManager
+from gpt_trader.features.live_trade.execution.order_submission import OrderSubmitter
+from gpt_trader.features.live_trade.execution.state_collection import StateCollector
+from gpt_trader.features.live_trade.execution.validation import (
+    OrderValidator,
+    get_failure_tracker,
+)
 from gpt_trader.features.live_trade.factory import create_strategy
 from gpt_trader.features.live_trade.guard_errors import GuardError
 from gpt_trader.features.live_trade.risk.manager import ValidationError
@@ -61,14 +69,6 @@ from gpt_trader.monitoring.metrics_collector import record_histogram
 from gpt_trader.monitoring.profiling import profile_span
 from gpt_trader.monitoring.status_reporter import StatusReporter
 from gpt_trader.observability.tracing import trace_span
-from gpt_trader.orchestration.execution.degradation import DegradationState
-from gpt_trader.orchestration.execution.guard_manager import GuardManager
-from gpt_trader.orchestration.execution.order_submission import OrderSubmitter
-from gpt_trader.orchestration.execution.state_collection import StateCollector
-from gpt_trader.orchestration.execution.validation import (
-    OrderValidator,
-    get_failure_tracker,
-)
 from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.utilities.logging_patterns import get_logger
 
@@ -1206,6 +1206,10 @@ class TradingEngine(BaseEngine):
         product: Product | None,
     ) -> Decimal:
         """Calculate order size based on equity and position_fraction."""
+        # Check for external quantity override (set by submit_order)
+        if hasattr(self, "_quantity_override") and self._quantity_override is not None:
+            return self._quantity_override
+
         # 1. Determine fraction
         fraction = Decimal("0.1")  # Default
         if hasattr(self.strategy, "config") and self.strategy.config.position_fraction:
@@ -1642,6 +1646,68 @@ class TradingEngine(BaseEngine):
                 "order_id": "N/A",  # We don't get ID back from place_order in this adapter version easily without refactor
             }
         )
+
+    # =========================================================================
+    # PUBLIC SUBMISSION ENTRYPOINT
+    # =========================================================================
+    # This is the canonical order submission path. All order execution should
+    # route through this method to ensure the full guard stack is applied:
+    # degradation gate → sizing → security → risk → staleness → validator
+    # =========================================================================
+
+    async def submit_order(
+        self,
+        symbol: str,
+        side: OrderSide,
+        price: Decimal,
+        equity: Decimal,
+        *,
+        quantity_override: Decimal | None = None,
+        reduce_only: bool = False,
+        reason: str = "external_submission",
+        confidence: float = 1.0,
+    ) -> None:
+        """Public entrypoint for order submission through the canonical guard stack.
+
+        This method provides external callers (OrderRouter, TUI actions, etc.) access
+        to the full pre-trade validation pipeline. All orders should route through
+        here to ensure consistent guard enforcement.
+
+        Args:
+            symbol: Trading symbol (e.g., "BTC-USD").
+            side: Order side (BUY or SELL).
+            price: Current market price for validation.
+            equity: Current account equity for position sizing.
+            quantity_override: If provided, uses this quantity instead of dynamic sizing.
+            reduce_only: If True, order is reduce-only (affects degradation gate).
+            reason: Reason for the order (for logging/telemetry).
+            confidence: Decision confidence score (0.0-1.0).
+
+        Note:
+            This method delegates to _validate_and_place_order after constructing
+            a Decision object. The full guard stack is applied.
+        """
+        # Construct Decision from inputs
+        action = Action.BUY if side == OrderSide.BUY else Action.SELL
+        decision = Decision(
+            action=action,
+            reason=reason,
+            confidence=confidence,
+        )
+
+        # Store quantity override for use in _calculate_order_quantity if needed
+        # For now, we handle this by checking in the existing flow
+        if quantity_override is not None:
+            # Temporarily store override - will be used by guard stack
+            self._quantity_override = quantity_override
+        else:
+            self._quantity_override = None
+
+        try:
+            await self._validate_and_place_order(symbol, decision, price, equity)
+        finally:
+            # Clear override after use
+            self._quantity_override = None
 
     async def shutdown(self) -> None:
         self.running = False

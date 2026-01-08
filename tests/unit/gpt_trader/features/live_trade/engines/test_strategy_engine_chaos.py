@@ -181,7 +181,7 @@ class TestGuardFailureDegradation:
     async def test_api_outage_scenario_triggers_degradation(
         self, engine, mock_broker, mock_risk_config
     ) -> None:
-        from gpt_trader.orchestration.execution.guard_manager import GuardManager
+        from gpt_trader.features.live_trade.execution.guard_manager import GuardManager
 
         chaos_broker = ChaosBroker(
             mock_broker, api_outage_scenario(error_rate=0.3, open_breakers=["orders"])
@@ -250,7 +250,7 @@ class TestSlippageFailureDegradation:
 class TestPreviewDisableDegradation:
     @pytest.mark.asyncio
     async def test_preview_disabled_after_threshold_failures(self, engine) -> None:
-        from gpt_trader.orchestration.execution.validation import get_failure_tracker
+        from gpt_trader.features.live_trade.execution.validation import get_failure_tracker
 
         tracker = get_failure_tracker()
         for _ in range(3):

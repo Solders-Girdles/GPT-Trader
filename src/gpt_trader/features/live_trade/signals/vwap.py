@@ -114,9 +114,7 @@ class VWAPSignal(SignalGenerator):
             },
         )
 
-    def _no_data_signal(
-        self, reason: str, metadata: dict | None = None
-    ) -> SignalOutput:
+    def _no_data_signal(self, reason: str, metadata: dict | None = None) -> SignalOutput:
         """Return a neutral signal when data is unavailable."""
         meta = {"reason": reason}
         if metadata:

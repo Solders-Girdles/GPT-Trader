@@ -108,9 +108,7 @@ class OrderFlowSignal(SignalGenerator):
             },
         )
 
-    def _no_data_signal(
-        self, reason: str, metadata: dict | None = None
-    ) -> SignalOutput:
+    def _no_data_signal(self, reason: str, metadata: dict | None = None) -> SignalOutput:
         """Return a neutral signal when data is unavailable."""
         meta = {"reason": reason}
         if metadata:
@@ -123,9 +121,7 @@ class OrderFlowSignal(SignalGenerator):
             metadata=meta,
         )
 
-    def _calculate_strength(
-        self, value: float, threshold: float, max_value: float
-    ) -> float:
+    def _calculate_strength(self, value: float, threshold: float, max_value: float) -> float:
         """Calculate signal strength based on how far value exceeds threshold.
 
         Scales linearly from 0 (at threshold) to 1 (at max_value).

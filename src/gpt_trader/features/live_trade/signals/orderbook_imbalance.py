@@ -97,10 +97,14 @@ class OrderbookImbalanceSignal(SignalGenerator):
                 confidence = 0.7
             else:
                 # Scale between 0.3 and 0.7 based on imbalance
-                confidence = 0.3 + (
-                    (abs_imbalance - self.config.imbalance_threshold)
-                    / (self.config.strong_imbalance_threshold - self.config.imbalance_threshold)
-                ) * 0.4
+                confidence = (
+                    0.3
+                    + (
+                        (abs_imbalance - self.config.imbalance_threshold)
+                        / (self.config.strong_imbalance_threshold - self.config.imbalance_threshold)
+                    )
+                    * 0.4
+                )
 
         # Include spread as context (wide spread reduces reliability)
         spread_bps = None

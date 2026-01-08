@@ -40,7 +40,7 @@ class HistoricalDataPoint:
     timestamp: datetime
     symbol: str
     mark_price: Decimal
-    orderbook_snapshot: "DepthSnapshot | None" = None
+    orderbook_snapshot: DepthSnapshot | None = None
     trade_flow_stats: dict[str, Any] | None = None
     spread_bps: float | None = None
 
@@ -97,7 +97,7 @@ class HistoricalDataLoader:
             decision = strategy.decide(point.symbol, point.mark_price, ...)
     """
 
-    def __init__(self, event_store: "EventStore") -> None:
+    def __init__(self, event_store: EventStore) -> None:
         """Initialize loader with an EventStore.
 
         Args:
@@ -253,9 +253,7 @@ class HistoricalDataLoader:
 
         results = {}
         for symbol in symbols:
-            results[symbol] = self.load_symbol(
-                symbol, max_points=max_points_per_symbol
-            )
+            results[symbol] = self.load_symbol(symbol, max_points=max_points_per_symbol)
 
         return results
 
@@ -289,9 +287,7 @@ class HistoricalDataLoader:
             return list(events.values())[-1]
         return fallback
 
-    def _build_depth_snapshot(
-        self, data: dict[str, Any]
-    ) -> "DepthSnapshot | None":
+    def _build_depth_snapshot(self, data: dict[str, Any]) -> DepthSnapshot | None:
         """Build a DepthSnapshot from event data.
 
         The snapshot data stored in EventStore is a summary, not full

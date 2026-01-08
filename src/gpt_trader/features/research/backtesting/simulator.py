@@ -33,7 +33,7 @@ class StrategyProtocol(Protocol):
         equity: Decimal,
         product: Any | None,
         market_data: Any | None,
-    ) -> "Decision":
+    ) -> Decision:
         """Generate a trading decision."""
         ...
 
@@ -187,7 +187,7 @@ class BacktestSimulator:
     def run(
         self,
         strategy: StrategyProtocol,
-        data_points: list["HistoricalDataPoint"],
+        data_points: list[HistoricalDataPoint],
         symbol: str | None = None,
     ) -> BacktestResult:
         """Run backtest simulation.
@@ -282,8 +282,8 @@ class BacktestSimulator:
 
     def _execute_decision(
         self,
-        decision: "Decision",
-        point: "HistoricalDataPoint",
+        decision: Decision,
+        point: HistoricalDataPoint,
     ) -> None:
         """Execute a trading decision.
 
@@ -321,7 +321,7 @@ class BacktestSimulator:
 
     def _open_position(
         self,
-        point: "HistoricalDataPoint",
+        point: HistoricalDataPoint,
         side: str,
         reason: str,
     ) -> None:
@@ -378,7 +378,7 @@ class BacktestSimulator:
 
     def _close_position(
         self,
-        point: "HistoricalDataPoint",
+        point: HistoricalDataPoint,
         reason: str,
     ) -> None:
         """Close the current position.
@@ -434,7 +434,7 @@ class BacktestSimulator:
 
     def _calculate_fill_price(
         self,
-        point: "HistoricalDataPoint",
+        point: HistoricalDataPoint,
         side: str,
     ) -> Decimal:
         """Calculate fill price with slippage.
@@ -475,9 +475,9 @@ class BacktestSimulator:
 
         if self._position.side == "long":
             self._position.unrealized_pnl = (
-                (current_price - self._position.entry_price) * self._position.quantity
-            )
+                current_price - self._position.entry_price
+            ) * self._position.quantity
         elif self._position.side == "short":
             self._position.unrealized_pnl = (
-                (self._position.entry_price - current_price) * self._position.quantity
-            )
+                self._position.entry_price - current_price
+            ) * self._position.quantity

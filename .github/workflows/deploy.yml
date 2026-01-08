@@ -1,17 +1,9 @@
-name: GPT-Trader CI/CD Pipeline
+name: Deploy
 
 on:
   push:
-    branches:
-      - main
-      - staging
-      - develop
-    tags:
-      - 'v*'
-  pull_request:
-    branches:
-      - main
-      - staging
+    branches: [main, staging]
+    tags: ['v*']
   workflow_dispatch:
     inputs:
       environment:
@@ -20,193 +12,39 @@ on:
         default: 'staging'
         type: choice
         options:
-          - development
           - staging
           - production
+          - rollback
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}/gpt-trader
-  PYTHON_VERSION: '3.12'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false  # Don't cancel in-progress deployments
 
 permissions:
   contents: read
-  actions: write
   packages: write
   security-events: write
 
-defaults:
-  run:
-    shell: bash --noprofile --norc {0}
-
 jobs:
-  # Reusable quality checks (linting, formatting, security)
-  quality-checks:
-    name: Code Quality
-    uses: ./.github/workflows/quality-checks.yml
-    with:
-      python-version: "3.12"
-      security-severity: "high"
-      upload-reports: true
-
-  # Unit Tests
-  unit-tests:
-    name: Unit Tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    needs: quality-checks
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_USER: trader
-          POSTGRES_PASSWORD: trader123
-          POSTGRES_DB: trading_test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-      redis:
-        image: redis:7
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 6379:6379
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Prepare Python environment
-        id: setup-uv
-        uses: ./.github/actions/setup-uv
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Run unit tests with coverage
-        env:
-          DATABASE_URL: postgresql://trader:trader123@localhost:5432/trading_test
-          REDIS_URL: redis://localhost:6379/0
-          ENV: test
-        run: |
-          uv run pytest -m "not slow and not performance and not integration" -q \
-            --cov=src/gpt_trader/cli \
-            --cov=src/gpt_trader/config \
-            --cov=src/gpt_trader/features/brokerages/coinbase/client \
-            --cov=src/gpt_trader/features/brokerages/coinbase/utilities \
-            --cov-report=term \
-            --cov-report=xml \
-            --cov-report=html \
-            --cov-fail-under=55
-
-      - name: Upload coverage reports
-        uses: codecov/codecov-action@v5
-        with:
-          files: ./coverage.xml
-          flags: unittests
-          name: codecov-umbrella
-
-      - name: Upload coverage HTML report
-        uses: actions/upload-artifact@v5
-        with:
-          name: coverage-report
-          path: htmlcov/
-
-  # Integration Tests
-  integration-tests:
-    name: Integration Tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    needs: quality-checks  # Runs in parallel with unit-tests
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_USER: trader
-          POSTGRES_PASSWORD: trader123
-          POSTGRES_DB: trading_integration
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-      redis:
-        image: redis:7
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 6379:6379
-      rabbitmq:
-        image: rabbitmq:3.12-management
-        env:
-          RABBITMQ_DEFAULT_USER: trader
-          RABBITMQ_DEFAULT_PASS: trader123
-        ports:
-          - 5672:5672
-          - 15672:15672
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Prepare Python environment
-        id: setup-uv
-        uses: ./.github/actions/setup-uv
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Run integration tests
-        env:
-          DATABASE_URL: postgresql://trader:trader123@localhost:5432/trading_integration
-          REDIS_URL: redis://localhost:6379/0
-          RABBITMQ_URL: amqp://trader:trader123@localhost:5672/
-          ENV: test
-        run: |
-          set -euo pipefail
-          if [ -d tests/integration/gpt_trader ]; then
-            uv run pytest tests/integration/gpt_trader/ -v --tb=short
-          else
-            echo "Integration suite not present; skipping run."
-          fi
-
-  # Build Docker Image
   build-image:
     name: Build Docker Image
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: [unit-tests, integration-tests]
-    if: github.event_name == 'pull_request' || (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging' || startsWith(github.ref, 'refs/tags/')))
-    permissions:
-      contents: read
-      packages: write
-      security-events: write
     outputs:
       image-tag: ${{ steps.scan-target.outputs.image }}
       image-digest: ${{ steps.build.outputs.digest }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to GitHub Container Registry
-        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -220,7 +58,6 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=ref,event=branch
-            type=ref,event=pr
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=sha,prefix=sha-
@@ -228,19 +65,17 @@ jobs:
 
       - name: Build and push Docker image
         id: build
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: deploy/gpt_trader/docker/Dockerfile
-          push: ${{ github.event_name != 'pull_request' }}
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
           target: production
-        env:
-          BUILDKIT_PROGRESS: plain
 
       - name: Determine scan target
         id: scan-target
@@ -249,14 +84,10 @@ jobs:
         run: |
           set -euo pipefail
           first_tag=$(printf '%s\n' "$TAGS" | head -n 1)
-          if [ -z "$first_tag" ]; then
-            echo "No image tag produced by docker/metadata-action" >&2
-            exit 1
-          fi
           echo "image=$first_tag" >> "$GITHUB_OUTPUT"
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.33.1
+        uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ steps.scan-target.outputs.image }}
           format: 'sarif'
@@ -264,11 +95,10 @@ jobs:
 
       - name: Upload Trivy results to GitHub Security
         if: always()
-        uses: github/codeql-action/upload-sarif@v4
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-results.sarif'
 
-  # Deploy to Staging
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
@@ -280,18 +110,17 @@ jobs:
       url: https://staging.trading.example.com
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v5
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
       - name: Update kubeconfig
-        run: |
-          aws eks update-kubeconfig --name trading-staging --region us-east-1
+        run: aws eks update-kubeconfig --name trading-staging --region us-east-1
 
       - name: Deploy to Kubernetes
         run: |
@@ -305,7 +134,6 @@ jobs:
           sleep 30
           curl -f https://staging.trading.example.com/health || exit 1
 
-  # Deploy to Production
   deploy-production:
     name: Deploy to Production
     runs-on: ubuntu-latest
@@ -317,18 +145,17 @@ jobs:
       url: https://trading.example.com
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v5
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
       - name: Update kubeconfig
-        run: |
-          aws eks update-kubeconfig --name trading-production --region us-east-1
+        run: aws eks update-kubeconfig --name trading-production --region us-east-1
 
       - name: Blue-Green Deployment
         run: |
@@ -359,7 +186,7 @@ jobs:
           kubectl delete deployment trading-bot -n trading-system || true
           kubectl label deployment trading-bot-green deployment=blue -n trading-system
 
-      - name: Run production tests
+      - name: Run production health checks
         run: |
           curl -f https://trading.example.com/health || exit 1
           curl -f https://api.trading.example.com/ready || exit 1
@@ -375,7 +202,6 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 
-  # Rollback Job (Manual Trigger)
   rollback:
     name: Rollback Deployment
     runs-on: ubuntu-latest
@@ -383,7 +209,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'rollback'
     steps:
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v5
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}

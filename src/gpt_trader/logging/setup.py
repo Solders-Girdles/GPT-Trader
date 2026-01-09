@@ -153,7 +153,7 @@ def configure_logging(config: Any = None, tui_mode: bool = False) -> None:
 
     if _env_flag("COINBASE_TRADER_DEBUG", "0") or _env_flag("PERPS_DEBUG", "0"):
         logging.getLogger("gpt_trader.features.brokerages.coinbase").setLevel(logging.DEBUG)
-        logging.getLogger("gpt_trader.orchestration").setLevel(logging.DEBUG)
+        logging.getLogger("gpt_trader.features.live_trade").setLevel(logging.DEBUG)
 
     # Attach TUI handler early when in TUI mode to capture startup logs
     if tui_mode:

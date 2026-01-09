@@ -191,7 +191,7 @@ def _ensure_command(argv: Sequence[str]) -> list[str]:
 def _maybe_enable_debug_logging() -> None:
     if _env_flag("COINBASE_TRADER_DEBUG") or _env_flag("PERPS_DEBUG"):
         logging.getLogger("gpt_trader.features.brokerages.coinbase").setLevel(logging.DEBUG)
-        logging.getLogger("gpt_trader.orchestration").setLevel(logging.DEBUG)
+        logging.getLogger("gpt_trader.features.live_trade").setLevel(logging.DEBUG)
 
 
 def _env_flag(name: str) -> bool:

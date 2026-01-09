@@ -254,10 +254,10 @@ class TestConfigureLogging:
 
         # Check that specific loggers are set to DEBUG
         coinbase_logger = logging.getLogger("gpt_trader.features.brokerages.coinbase")
-        orchestration_logger = logging.getLogger("gpt_trader.orchestration")
+        live_trade_logger = logging.getLogger("gpt_trader.features.live_trade")
 
         assert coinbase_logger.level == logging.DEBUG
-        assert orchestration_logger.level == logging.DEBUG
+        assert live_trade_logger.level == logging.DEBUG
 
     @patch("gpt_trader.logging.setup.ensure_directories")
     @patch("pathlib.Path.mkdir")

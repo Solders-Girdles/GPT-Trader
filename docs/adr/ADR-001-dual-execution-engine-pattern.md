@@ -119,35 +119,12 @@ Feature flags (in `RiskConfig`):
 
 ## Implementation Details
 
-### Factory Pattern
+### Factory Pattern (Historical)
 
-> **Deprecation Note:** The `orchestration/` paths below are deprecated shims.
+> **Removal Note:** The `orchestration/` package was removed in v3.0.
 > New code should use `TradingEngine.submit_order()` directly.
 
-`ExecutionEngineFactory.create_engine()` (historical path: `orchestration/execution/engine_factory.py`):
-
-```python
-@classmethod
-def create_engine(cls, broker, risk_manager, event_store, bot_id, enable_preview):
-    use_advanced = cls.should_use_advanced_engine(risk_manager)
-
-    if use_advanced:
-        from gpt_trader.features.live_trade.advanced_execution import AdvancedExecutionEngine
-        engine = AdvancedExecutionEngine(broker=broker, risk_manager=risk_manager)
-        logger.info("Initialized AdvancedExecutionEngine")
-    else:
-        from gpt_trader.orchestration.live_execution import LiveExecutionEngine
-        engine = LiveExecutionEngine(
-            broker=broker,
-            risk_manager=risk_manager,
-            event_store=event_store,
-            bot_id=bot_id,
-            enable_preview=enable_preview,
-        )
-        logger.info("Initialized LiveExecutionEngine")
-
-    return engine
-```
+The factory pattern described below is historical. The `ExecutionEngineFactory` and `LiveExecutionEngine` no longer exist. See `TradingEngine` in `features.live_trade` for the current execution API.
 
 ### Feature Flag Decision Logic
 

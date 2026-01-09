@@ -130,22 +130,20 @@ def test_fallback_behavior(monkeypatch):
     # ... test fallback path
 ```
 
-#### Deprecated Import Paths
+#### Removed Modules (v3.0)
 
-The following modules are **deprecated** (removal target: **v3.0**) and emit a single-shot `DeprecationWarning` on import. Update to the canonical paths:
+The `gpt_trader.orchestration` package was removed in v3.0. Use the canonical paths:
 
-| Deprecated Path | Canonical Path |
-|-----------------|----------------|
+| Removed Path | Canonical Path |
+|--------------|----------------|
 | `gpt_trader.orchestration.execution.degradation` | `gpt_trader.features.live_trade.degradation` |
 | `gpt_trader.orchestration.configuration.risk.model` | `gpt_trader.features.live_trade.risk.config` |
 | `gpt_trader.orchestration.configuration.bot_config` | `gpt_trader.app.config` |
 | `gpt_trader.orchestration.live_execution.LiveExecutionEngine` | `TradingEngine.submit_order()` |
 
-The deprecated modules remain as thin re-exports for backwards compatibility.
+**Order Execution:** Use `TradingEngine.submit_order()` for the canonical guard stack.
 
-**Order Execution:** Use `TradingEngine.submit_order()` for the canonical guard stack. `LiveExecutionEngine.place_order()` and `OrderRouter.execute()` are deprecated.
-
-> **Full deprecation tracker:** See [DEPRECATIONS.md](DEPRECATIONS.md) for removal timelines and migration checklists.
+> **Historical deprecation tracker:** See [DEPRECATIONS.md](DEPRECATIONS.md) for migration history.
 
 ### Core Subsystems
 
@@ -153,8 +151,8 @@ The deprecated modules remain as thin re-exports for backwards compatibility.
 |--------|---------|
 | `gpt_trader/features/live_trade` | Main control loop, position tracking, and order routing |
 | `gpt_trader/features/live_trade/risk/` | Risk management subpackage: position sizing, pre-trade validation, runtime monitoring, state management |
-| `gpt_trader/orchestration/` | Core orchestration layer: config management, execution/runtime/strategy coordination, telemetry, reconciliation |
-| `gpt_trader/orchestration/execution/` | Execution subpackage: guards, validation, order submission, state collection |
+| `gpt_trader/features/live_trade/execution/` | Execution subpackage: guards, validation, order submission, state collection |
+| `gpt_trader/app/` | Application bootstrap, DI container, and configuration management |
 | `gpt_trader/features/brokerages/coinbase` | REST/WS integration for Coinbase Advanced Trade spot markets |
 | `gpt_trader/features/brokerages/coinbase/client/` | Modular client package with mixins (accounts, orders, portfolio, market data) |
 | `gpt_trader/features/brokerages/coinbase/rest/` | REST service layer: orders, portfolio, products, P&L calculation |

@@ -369,9 +369,12 @@ async def test_order_placed_with_dynamic_quantity(engine):
     # Verify
     # Target notional = 10000 * 0.1 = 1000
     # Quantity = 1000 / 50000 = 0.02
-    engine.context.broker.place_order.assert_called_with(
-        "BTC-USD", OrderSide.BUY, OrderType.MARKET, Decimal("0.02")
-    )
+    engine._order_submitter.submit_order.assert_called_once()
+    call_kwargs = engine._order_submitter.submit_order.call_args[1]
+    assert call_kwargs["symbol"] == "BTC-USD"
+    assert call_kwargs["side"] == OrderSide.BUY
+    assert call_kwargs["order_type"] == OrderType.MARKET
+    assert call_kwargs["order_quantity"] == Decimal("0.02")
 
 
 @pytest.mark.asyncio
@@ -447,9 +450,12 @@ async def test_reduce_only_clamps_quantity_to_prevent_position_flip(engine):
         await engine._cycle()
 
     # Verify order was clamped to position size (1.0), not the calculated 2.0
-    engine.context.broker.place_order.assert_called_with(
-        "BTC-USD", OrderSide.SELL, OrderType.MARKET, Decimal("1.0")
-    )
+    engine._order_submitter.submit_order.assert_called_once()
+    call_kwargs = engine._order_submitter.submit_order.call_args[1]
+    assert call_kwargs["symbol"] == "BTC-USD"
+    assert call_kwargs["side"] == OrderSide.SELL
+    assert call_kwargs["order_type"] == OrderType.MARKET
+    assert call_kwargs["order_quantity"] == Decimal("1.0")
 
 
 @pytest.mark.asyncio

@@ -1,13 +1,18 @@
 """
 Broker order execution for live trading.
 
-This module handles the actual communication with the broker API.
+This module handles the actual communication with the broker API,
+including retry/timeout policies for resilient order submission.
 """
 
 from __future__ import annotations
 
+import random
+import time
+from collections.abc import Callable
+from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from gpt_trader.core import OrderSide, OrderType
 from gpt_trader.utilities.logging_patterns import get_logger
@@ -17,25 +22,190 @@ if TYPE_CHECKING:
 
 logger = get_logger(__name__, component="broker_executor")
 
+T = TypeVar("T")
+
+
+@dataclass(frozen=True)
+class RetryPolicy:
+    """Configuration for retry behavior on broker calls.
+
+    Attributes:
+        max_attempts: Maximum number of attempts (1 = no retries).
+        base_delay: Initial delay between retries in seconds.
+        max_delay: Maximum delay between retries in seconds.
+        timeout_seconds: Timeout for each attempt (0 = no timeout).
+        jitter: Random jitter factor (0.0-1.0) added to delays.
+        retryable_exceptions: Exception types that trigger retries.
+    """
+
+    max_attempts: int = 3
+    base_delay: float = 0.5
+    max_delay: float = 5.0
+    timeout_seconds: float = 30.0
+    jitter: float = 0.1
+    retryable_exceptions: tuple[type[Exception], ...] = field(
+        default=(TimeoutError, ConnectionError, OSError)
+    )
+
+    def calculate_delay(self, attempt: int) -> float:
+        """Calculate delay for a given attempt number (1-indexed).
+
+        Uses exponential backoff with jitter.
+        """
+        if attempt <= 1:
+            return 0.0
+
+        # Exponential backoff: base_delay * 2^(attempt-2)
+        delay: float = self.base_delay * (2 ** (attempt - 2))
+        delay = min(delay, self.max_delay)
+
+        # Add jitter
+        if self.jitter > 0:
+            jitter_amount = delay * self.jitter * random.random()
+            delay += jitter_amount
+
+        return delay
+
+
+# Default policy for order submission
+DEFAULT_RETRY_POLICY = RetryPolicy(
+    max_attempts=3,
+    base_delay=0.5,
+    max_delay=5.0,
+    timeout_seconds=30.0,
+    jitter=0.1,
+)
+
+
+def execute_with_retry(
+    func: Callable[[], T],
+    policy: RetryPolicy,
+    *,
+    client_order_id: str,
+    operation: str = "broker_call",
+    sleep_fn: Callable[[float], None] | None = None,
+) -> T:
+    """Execute a function with retry logic.
+
+    Args:
+        func: The function to execute (should be a zero-arg callable).
+        policy: Retry policy configuration.
+        client_order_id: Client order ID for logging (reused across retries).
+        operation: Operation name for logging.
+        sleep_fn: Injectable sleep function (defaults to time.sleep).
+
+    Returns:
+        The result of func() on success.
+
+    Raises:
+        The last exception if all retries are exhausted.
+        TimeoutError if the operation times out.
+    """
+    sleep = sleep_fn or time.sleep
+    last_exception: Exception | None = None
+
+    for attempt in range(1, policy.max_attempts + 1):
+        try:
+            # Calculate and apply delay (no delay on first attempt)
+            delay = policy.calculate_delay(attempt)
+            if delay > 0:
+                logger.info(
+                    "Retrying broker call",
+                    attempt=attempt,
+                    max_attempts=policy.max_attempts,
+                    delay_seconds=round(delay, 3),
+                    client_order_id=client_order_id,
+                    operation=operation,
+                    stage="retry_delay",
+                )
+                sleep(delay)
+
+            # Execute the function
+            # Note: timeout enforcement is expected at the broker/HTTP layer
+            # This wrapper handles retry logic; actual timeouts should be
+            # configured in the HTTP client or broker implementation
+            result = func()
+
+            # Log success after retry
+            if attempt > 1:
+                logger.info(
+                    "Broker call succeeded after retry",
+                    attempt=attempt,
+                    client_order_id=client_order_id,
+                    operation=operation,
+                    stage="retry_success",
+                )
+
+            return result
+
+        except policy.retryable_exceptions as exc:
+            last_exception = exc
+            logger.warning(
+                "Broker call failed (retryable)",
+                attempt=attempt,
+                max_attempts=policy.max_attempts,
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                client_order_id=client_order_id,
+                operation=operation,
+                stage="retry_failed",
+            )
+
+            # Don't sleep after the last attempt
+            if attempt >= policy.max_attempts:
+                break
+
+        except Exception as exc:
+            # Non-retryable exception - re-raise immediately
+            logger.error(
+                "Broker call failed (non-retryable)",
+                attempt=attempt,
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                client_order_id=client_order_id,
+                operation=operation,
+                stage="non_retryable",
+            )
+            raise
+
+    # All retries exhausted
+    logger.error(
+        "Broker call failed after all retries",
+        max_attempts=policy.max_attempts,
+        error_type=type(last_exception).__name__ if last_exception else "Unknown",
+        client_order_id=client_order_id,
+        operation=operation,
+        stage="retries_exhausted",
+    )
+    if last_exception:
+        raise last_exception
+    raise RuntimeError(f"Broker call failed after {policy.max_attempts} attempts")
+
 
 class BrokerExecutor:
-    """Executes orders against the broker."""
+    """Executes orders against the broker with retry support."""
 
     def __init__(
         self,
         broker: BrokerProtocol,
         *,
+        retry_policy: RetryPolicy | None = None,
         integration_mode: bool = False,
+        sleep_fn: Callable[[float], None] | None = None,
     ) -> None:
         """
         Initialize broker executor.
 
         Args:
-            broker: Brokerage adapter for order execution
-            integration_mode: Enable integration test mode (reserved for future use)
+            broker: Brokerage adapter for order execution.
+            retry_policy: Retry policy for broker calls (defaults to DEFAULT_RETRY_POLICY).
+            integration_mode: Enable integration test mode (reserved for future use).
+            sleep_fn: Injectable sleep function for testing (defaults to time.sleep).
         """
         self._broker = broker
+        self._retry_policy = retry_policy or DEFAULT_RETRY_POLICY
         self._integration_mode = integration_mode
+        self._sleep_fn = sleep_fn
 
     def execute_order(
         self,
@@ -49,26 +219,70 @@ class BrokerExecutor:
         tif: Any | None,
         reduce_only: bool,
         leverage: int | None,
+        *,
+        use_retry: bool = False,
     ) -> Any:
         """
         Execute order placement against the broker.
 
         Args:
-            submit_id: Client order ID
-            symbol: Trading symbol
-            side: Order side (BUY/SELL)
-            order_type: Order type (LIMIT/MARKET/etc.)
-            quantity: Order quantity
-            price: Limit price (None for market orders)
-            stop_price: Stop price for stop orders
-            tif: Time in force
-            reduce_only: Whether order is reduce-only
-            leverage: Leverage multiplier
+            submit_id: Client order ID (reused across retries).
+            symbol: Trading symbol.
+            side: Order side (BUY/SELL).
+            order_type: Order type (LIMIT/MARKET/etc.).
+            quantity: Order quantity.
+            price: Limit price (None for market orders).
+            stop_price: Stop price for stop orders.
+            tif: Time in force.
+            reduce_only: Whether order is reduce-only.
+            leverage: Leverage multiplier.
+            use_retry: Whether to use retry logic (default False for backward compat).
 
         Returns:
-            Order object from broker
+            Order object from broker.
         """
-        order = self._broker.place_order(
+        if use_retry:
+            return self._execute_with_retry(
+                submit_id=submit_id,
+                symbol=symbol,
+                side=side,
+                order_type=order_type,
+                quantity=quantity,
+                price=price,
+                stop_price=stop_price,
+                tif=tif,
+                reduce_only=reduce_only,
+                leverage=leverage,
+            )
+
+        return self._execute_broker_order(
+            submit_id=submit_id,
+            symbol=symbol,
+            side=side,
+            order_type=order_type,
+            quantity=quantity,
+            price=price,
+            stop_price=stop_price,
+            tif=tif,
+            reduce_only=reduce_only,
+            leverage=leverage,
+        )
+
+    def _execute_broker_order(
+        self,
+        submit_id: str,
+        symbol: str,
+        side: OrderSide,
+        order_type: OrderType,
+        quantity: Decimal,
+        price: Decimal | None,
+        stop_price: Decimal | None,
+        tif: Any | None,
+        reduce_only: bool,
+        leverage: int | None,
+    ) -> Any:
+        """Execute the actual broker call (no retry)."""
+        return self._broker.place_order(
             symbol=symbol,
             side=side,
             order_type=order_type,
@@ -80,4 +294,52 @@ class BrokerExecutor:
             leverage=leverage,
             client_id=submit_id,
         )
-        return order
+
+    def _execute_with_retry(
+        self,
+        submit_id: str,
+        symbol: str,
+        side: OrderSide,
+        order_type: OrderType,
+        quantity: Decimal,
+        price: Decimal | None,
+        stop_price: Decimal | None,
+        tif: Any | None,
+        reduce_only: bool,
+        leverage: int | None,
+    ) -> Any:
+        """Execute broker call with retry logic.
+
+        The same submit_id (client_order_id) is reused across all retry attempts
+        to ensure idempotency at the broker level.
+        """
+
+        def broker_call() -> Any:
+            return self._execute_broker_order(
+                submit_id=submit_id,
+                symbol=symbol,
+                side=side,
+                order_type=order_type,
+                quantity=quantity,
+                price=price,
+                stop_price=stop_price,
+                tif=tif,
+                reduce_only=reduce_only,
+                leverage=leverage,
+            )
+
+        return execute_with_retry(
+            broker_call,
+            self._retry_policy,
+            client_order_id=submit_id,
+            operation="execute_order",
+            sleep_fn=self._sleep_fn,
+        )
+
+
+__all__ = [
+    "BrokerExecutor",
+    "RetryPolicy",
+    "DEFAULT_RETRY_POLICY",
+    "execute_with_retry",
+]

@@ -85,9 +85,28 @@ class OrderEventRecorder:
             )
 
     def record_rejection(
-        self, symbol: str, side: str, quantity: Decimal, price: Decimal | None, reason: str
+        self,
+        symbol: str,
+        side: str,
+        quantity: Decimal,
+        price: Decimal | None,
+        reason: str,
+        *,
+        client_order_id: str | None = None,
     ) -> None:
-        """Record order rejection for analysis."""
+        """Record order rejection for analysis.
+
+        Args:
+            symbol: Trading symbol.
+            side: Order side (buy/sell).
+            quantity: Order quantity.
+            price: Order price (None for market orders).
+            reason: Rejection reason.
+            client_order_id: Client order ID for tracking (optional).
+        """
+        # Use client_order_id as fallback order_id for logging consistency
+        effective_order_id = client_order_id or ""
+
         logger.warning(
             "Order rejected: %s %s %s @ %s reason=%s",
             symbol,
@@ -100,6 +119,7 @@ class OrderEventRecorder:
             quantity=float(quantity),
             price=float(price) if price is not None else None,
             reason=reason,
+            client_order_id=effective_order_id,
             operation="order_rejected",
             stage="record",
         )
@@ -113,13 +133,14 @@ class OrderEventRecorder:
                 "quantity": str(quantity),
                 "price": str(price) if price is not None else "market",
                 "reason": reason,
+                "client_order_id": effective_order_id,
             },
             logger=get_monitoring_logger(),
         )
         try:
             get_monitoring_logger().log_order_status_change(
-                order_id="",
-                client_order_id="",
+                order_id=effective_order_id,
+                client_order_id=effective_order_id,
                 from_status=None,
                 to_status="REJECTED",
                 reason=reason,

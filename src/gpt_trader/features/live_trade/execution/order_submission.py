@@ -193,10 +193,28 @@ class OrderSubmitter:
         self._event_recorder.record_preview(symbol, side, order_type, quantity, price, preview)
 
     def record_rejection(
-        self, symbol: str, side: str, quantity: Decimal, price: Decimal | None, reason: str
+        self,
+        symbol: str,
+        side: str,
+        quantity: Decimal,
+        price: Decimal | None,
+        reason: str,
+        *,
+        client_order_id: str | None = None,
     ) -> None:
-        """Record order rejection for analysis."""
-        self._event_recorder.record_rejection(symbol, side, quantity, price, reason)
+        """Record order rejection for analysis.
+
+        Args:
+            symbol: Trading symbol.
+            side: Order side (buy/sell).
+            quantity: Order quantity.
+            price: Order price (None for market orders).
+            reason: Rejection reason.
+            client_order_id: Client order ID for tracking (optional).
+        """
+        self._event_recorder.record_rejection(
+            symbol, side, quantity, price, reason, client_order_id=client_order_id
+        )
 
     def submit_order(
         self,

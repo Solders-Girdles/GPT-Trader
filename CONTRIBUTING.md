@@ -178,6 +178,104 @@ The repository follows a standardized organization optimized for both human deve
 - Include examples for complex features
 - Update docs/agents/CLAUDE.md for AI context
 
+## Quality Gate Commands
+
+Before submitting a PR, run these commands to catch issues early:
+
+### Type Checking (mypy)
+
+```bash
+# Full type check
+uv run mypy src/gpt_trader
+
+# Check specific module (faster iteration)
+uv run mypy src/gpt_trader/features/live_trade/execution/
+```
+
+**Common mypy issues:**
+- Pre-existing errors in orchestration shims (loose typing by design) can be ignored
+- New code should pass strict type checking
+
+### Unit Tests
+
+```bash
+# Fast parallel run (recommended)
+uv run pytest tests/unit -n auto -q
+
+# Verbose output for debugging
+uv run pytest tests/unit -v --tb=short
+
+# Run specific test file
+uv run pytest tests/unit/gpt_trader/features/live_trade/execution/test_order_submission.py -v
+
+# Run with coverage
+uv run pytest tests/unit --cov=src/gpt_trader --cov-report=term-missing
+```
+
+### TUI CSS Regeneration
+
+The TUI uses concatenated CSS modules. After editing any `.tcss` file in `src/gpt_trader/tui/styles/`:
+
+```bash
+# Regenerate main.tcss from source modules
+python scripts/build_tui_css.py
+
+# Verify the TUI renders correctly
+uv run gpt-trader tui --mode demo
+```
+
+**Important**: Never edit `styles/main.tcss` directly - it's auto-generated.
+
+### TUI Snapshot Tests
+
+Snapshot tests verify TUI rendering consistency:
+
+```bash
+# Run snapshot tests
+uv run pytest tests/tui -q
+
+# Update snapshots after intentional UI changes
+uv run pytest tests/tui --snapshot-update
+```
+
+### Naming Standards Check
+
+```bash
+# Check for naming convention violations
+uv run agent-naming
+
+# Run the /naming skill in Claude Code
+/naming
+```
+
+## Common CI Failures and Fixes
+
+| Failure | Cause | Fix |
+|---------|-------|-----|
+| `black --check` | Formatting | Run `uv run black .` |
+| `ruff check` | Linting violations | Run `uv run ruff check --fix .` |
+| `mypy` errors | Type issues | Fix type annotations (pre-existing shim errors can be ignored) |
+| Snapshot mismatch | TUI changed | Review changes, run `--snapshot-update` if intentional |
+| CSS out of sync | Edited `.tcss` module | Run `python scripts/build_tui_css.py` |
+| Import error | Wrong module path | Use canonical paths (see `docs/DEPRECATIONS.md`) |
+| Test using deprecated path | Patch targets shim | Update to patch canonical module directly |
+
+### Full Quality Gate
+
+Run everything before PR:
+
+```bash
+# Option 1: Use the /quality skill
+/quality
+
+# Option 2: Manual commands
+uv run ruff check .
+uv run black --check .
+uv run mypy src/gpt_trader
+uv run pytest tests/unit -n auto -q
+pre-commit run --all-files
+```
+
 ## Pre-commit Hook Configuration
 
 Our pre-commit hooks enforce:

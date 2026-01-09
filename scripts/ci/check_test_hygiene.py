@@ -22,6 +22,7 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/features/live_trade/test_pnl_comprehensive.py",
     "tests/unit/gpt_trader/features/live_trade/test_risk_core.py",
     "tests/unit/gpt_trader/features/live_trade/test_risk_runtime.py",  # 343 lines: comprehensive runtime guard tests
+    "tests/unit/gpt_trader/features/live_trade/test_degradation.py",  # 349 lines: monotonicity + guard telemetry coverage
     "tests/unit/gpt_trader/orchestration/test_live_execution.py",
     "tests/unit/gpt_trader/orchestration/test_execution_coordinator.py",  # complex orchestration harness
     "tests/unit/gpt_trader/orchestration/test_runtime_coordinator.py",  # integration-heavy runtime checks

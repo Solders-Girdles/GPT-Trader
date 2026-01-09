@@ -76,6 +76,121 @@ class TestOrderResult:
         assert data["error_code"] == "TEST_ERROR"
 
 
+class TestResolveOrderIdFallback:
+    """Tests for _resolve_order_id fallback behavior."""
+
+    def test_resolve_order_id_with_id_attribute(self):
+        """Test that 'id' attribute is used first."""
+        from gpt_trader.features.live_trade.execution.router import _resolve_order_id
+
+        order = Mock()
+        order.id = "primary-id-123"
+        order.order_id = "fallback-id-456"
+
+        result = _resolve_order_id(order)
+        assert result == "primary-id-123"
+
+    def test_resolve_order_id_fallback_to_order_id(self):
+        """Test fallback to 'order_id' when 'id' is None."""
+        from gpt_trader.features.live_trade.execution.router import _resolve_order_id
+
+        order = Mock()
+        order.id = None
+        order.order_id = "fallback-id-456"
+
+        result = _resolve_order_id(order)
+        assert result == "fallback-id-456"
+
+    def test_resolve_order_id_fallback_when_id_missing(self):
+        """Test fallback to 'order_id' when 'id' attribute doesn't exist."""
+        from gpt_trader.features.live_trade.execution.router import _resolve_order_id
+
+        order = Mock(spec=["order_id"])
+        order.order_id = "fallback-id-789"
+
+        result = _resolve_order_id(order)
+        assert result == "fallback-id-789"
+
+    def test_resolve_order_id_returns_none_for_none_order(self):
+        """Test that None order returns None."""
+        from gpt_trader.features.live_trade.execution.router import _resolve_order_id
+
+        result = _resolve_order_id(None)
+        assert result is None
+
+    def test_resolve_order_id_returns_none_when_both_missing(self):
+        """Test that None is returned when both id and order_id are missing/None."""
+        from gpt_trader.features.live_trade.execution.router import _resolve_order_id
+
+        order = Mock(spec=[])  # No id or order_id attributes
+
+        result = _resolve_order_id(order)
+        assert result is None
+
+
+class TestOrderResultToDictIdFallback:
+    """Tests for OrderResult.to_dict() ID fallback behavior."""
+
+    def test_to_dict_uses_id_attribute(self):
+        """Test to_dict uses order.id when available."""
+        order = Mock(spec=Order)
+        order.id = "order-123"
+        order.symbol = "BTC-USD"
+
+        result = OrderResult(success=True, order=order)
+        data = result.to_dict()
+
+        assert data["order_id"] == "order-123"
+
+    def test_to_dict_fallback_to_order_id(self):
+        """Test to_dict falls back to order.order_id."""
+        order = Mock()
+        order.id = None
+        order.order_id = "order-456"
+        order.symbol = "BTC-USD"
+
+        result = OrderResult(success=True, order=order)
+        data = result.to_dict()
+
+        assert data["order_id"] == "order-456"
+
+    def test_to_dict_none_order_returns_none_id(self):
+        """Test to_dict returns None order_id when no order."""
+        result = OrderResult(success=False, error="No order")
+        data = result.to_dict()
+
+        assert data["order_id"] is None
+
+    def test_to_dict_preserves_all_fields(self):
+        """Test to_dict includes all expected fields."""
+        order = Mock(spec=Order)
+        order.id = "order-789"
+        order.symbol = "ETH-USD"
+
+        decision = HybridDecision(
+            action=Action.SELL,
+            symbol="ETH-USD",
+            mode=TradingMode.SPOT_ONLY,
+        )
+
+        result = OrderResult(
+            success=True,
+            order=order,
+            decision=decision,
+            error=None,
+            error_code=None,
+        )
+        data = result.to_dict()
+
+        assert "success" in data
+        assert "order_id" in data
+        assert "symbol" in data
+        assert "error" in data
+        assert "error_code" in data
+        assert "executed_at" in data
+        assert "mode" in data
+
+
 class TestOrderRouterExecuteSpot:
     """Tests for OrderRouter spot execution."""
 

@@ -14,7 +14,7 @@ While this document describes the **target architecture**, you will encounter "z
 
 ---
 status: transition
-last-updated: 2026-01-05
+last-updated: 2026-01-08
 ---
 
 ## Current State
@@ -394,6 +394,79 @@ python scripts/build_tui_css.py
 2. **Token Awareness**: Documentation highlights slice entry points so agents can load only what they need.
 3. **Type Safety**: Shared interfaces defined in `features/brokerages/core/interfaces.py`.
 4. **Environment Separation**: GPT-Trader normalizes symbols to spot unless INTX derivatives access is detected.
+
+### Order Execution Pipeline
+
+The order execution pipeline ensures reliable order submission with proper ID tracking, telemetry, and error classification.
+
+**Flow Diagram**
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           TradingEngine._cycle()                            │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    TradingEngine._validate_and_place_order()                │
+│                                                                             │
+│  1. Pre-trade validation (risk, exchange rules, slippage)                  │
+│  2. Reduce-only clamping if applicable                                      │
+│  3. Delegates to OrderSubmitter                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       OrderSubmitter.submit_order()                         │
+│                                                                             │
+│  • Generates stable client_order_id (or uses provided)                      │
+│  • Sets correlation context for tracing                                     │
+│  • Delegates to BrokerExecutor                                              │
+│  • Tracks order in open_orders list                                         │
+│  • Records telemetry (success/rejection with classified reason)             │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                     BrokerExecutor._execute_broker_order()                  │
+│                                                                             │
+│  • Calls broker.place_order(client_id=submit_id, ...)                       │
+│  • Passes client_order_id to broker for idempotency                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          Broker (Coinbase/Mock)                             │
+│                                                                             │
+│  • Executes order via REST API                                              │
+│  • Returns Order object with broker-assigned order_id                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Key Implementation Details**
+
+| Component | Location | Responsibility |
+|-----------|----------|----------------|
+| `TradingEngine` | `features/live_trade/engines/strategy.py` | Guard stack, validation, position tracking |
+| `OrderSubmitter` | `features/live_trade/execution/order_submission.py` | ID generation, telemetry, open order tracking |
+| `BrokerExecutor` | `features/live_trade/execution/broker_executor.py` | Broker API abstraction |
+| `OrderEventRecorder` | `features/live_trade/execution/order_event_recorder.py` | Event store persistence |
+
+**client_order_id Flow**
+
+1. **Generation**: `OrderSubmitter._generate_submit_id()` creates `{bot_id}_{uuid}` format
+2. **Propagation**: Passed to `broker.place_order(client_id=...)` for broker-side idempotency
+3. **Tracking**: Used in logs, metrics, and event store for end-to-end tracing
+4. **Retry Safety**: Callers can pass explicit `client_order_id` to ensure retries don't create duplicates
+
+**Error Classification**
+
+`_classify_rejection_reason()` standardizes error messages into categories:
+- `rate_limit`, `insufficient_funds`, `invalid_size`, `invalid_price`
+- `timeout`, `network`, `market_closed`
+- `rejected`, `failed`, `unknown`
+
+These categories feed into metrics labels for consistent telemetry.
 
 ### Orchestration Infrastructure
 

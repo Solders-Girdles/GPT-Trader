@@ -12,9 +12,14 @@ All deprecated modules reference this tracker in their docstrings.
 |-----------------|----------------|--------|--------|
 | `orchestration.live_execution.LiveExecutionEngine` | `TradingEngine.submit_order()` | Shim with warning | [live_execution.py](../src/gpt_trader/orchestration/live_execution.py) |
 | `orchestration.execution.degradation` | `features.live_trade.degradation` | Re-export shim | [degradation.py](../src/gpt_trader/orchestration/execution/degradation.py) |
+| `orchestration.execution.validation` | `features.live_trade.execution.validation` | Re-export shim | [validation.py](../src/gpt_trader/orchestration/execution/validation.py) |
+| `orchestration.symbols` | `features.live_trade.symbols` | Re-export shim | [symbols.py](../src/gpt_trader/orchestration/symbols.py) |
 | `orchestration.configuration.risk.model` | `features.live_trade.risk.config` | Re-export shim | [model.py](../src/gpt_trader/orchestration/configuration/risk/model.py) |
 | `orchestration.configuration.bot_config` | `app.config` | Re-export shim | [bot_config.py](../src/gpt_trader/orchestration/configuration/bot_config/bot_config.py) |
+| `orchestration.configuration` (ConfigValidationError) | `app.config.validation` | Re-export shim | [\_\_init\_\_.py](../src/gpt_trader/orchestration/configuration/__init__.py) |
 | `OrderRouter.execute()` | `OrderRouter.execute_async()` | Method deprecated | [router.py](../src/gpt_trader/features/live_trade/execution/router.py) |
+
+> **Note**: As of 2026-01-08, production code (`src/`) no longer imports from the deprecated `orchestration.execution.validation` or `orchestration.symbols` shims. Tests have been updated to patch canonical module paths directly.
 
 ### Configuration (Remove after v3.0)
 
@@ -52,4 +57,4 @@ Before removing a deprecated item:
 
 ---
 
-*Last updated: 2026-01-07*
+*Last updated: 2026-01-08*

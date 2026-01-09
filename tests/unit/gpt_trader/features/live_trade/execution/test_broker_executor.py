@@ -14,7 +14,11 @@ from gpt_trader.core import (
     OrderType,
     TimeInForce,
 )
-from gpt_trader.features.live_trade.execution.broker_executor import BrokerExecutor
+from gpt_trader.features.live_trade.execution.broker_executor import (
+    BrokerExecutor,
+    RetryPolicy,
+    execute_with_retry,
+)
 
 # ============================================================
 # Fixtures
@@ -313,3 +317,285 @@ class TestBrokerExecutorEdgeCases:
                 reduce_only=False,
                 leverage=None,
             )
+
+
+# ============================================================
+# Test: RetryPolicy
+# ============================================================
+
+
+class TestRetryPolicy:
+    """Tests for RetryPolicy configuration."""
+
+    def test_default_values(self) -> None:
+        """Test default retry policy values."""
+        policy = RetryPolicy()
+        assert policy.max_attempts == 3
+        assert policy.base_delay == 0.5
+        assert policy.max_delay == 5.0
+        assert policy.timeout_seconds == 30.0
+        assert policy.jitter == 0.1
+
+    def test_calculate_delay_first_attempt_is_zero(self) -> None:
+        """Test that first attempt has no delay."""
+        policy = RetryPolicy(jitter=0)
+        assert policy.calculate_delay(1) == 0.0
+
+    def test_calculate_delay_exponential_backoff(self) -> None:
+        """Test exponential backoff calculation."""
+        policy = RetryPolicy(base_delay=1.0, max_delay=10.0, jitter=0)
+        assert policy.calculate_delay(2) == 1.0  # base_delay * 2^0
+        assert policy.calculate_delay(3) == 2.0  # base_delay * 2^1
+        assert policy.calculate_delay(4) == 4.0  # base_delay * 2^2
+
+    def test_calculate_delay_respects_max_delay(self) -> None:
+        """Test that delay is capped at max_delay."""
+        policy = RetryPolicy(base_delay=1.0, max_delay=2.0, jitter=0)
+        assert policy.calculate_delay(10) == 2.0  # Capped at max
+
+
+# ============================================================
+# Test: execute_with_retry
+# ============================================================
+
+
+class TestExecuteWithRetry:
+    """Tests for execute_with_retry function."""
+
+    def test_success_on_first_attempt(self) -> None:
+        """Test successful execution on first attempt."""
+        func = MagicMock(return_value="success")
+        policy = RetryPolicy(max_attempts=3)
+        sleep_calls: list[float] = []
+
+        result = execute_with_retry(
+            func,
+            policy,
+            client_order_id="test-123",
+            sleep_fn=sleep_calls.append,
+        )
+
+        assert result == "success"
+        func.assert_called_once()
+        assert len(sleep_calls) == 0  # No sleep on first attempt
+
+    def test_retry_on_retryable_exception(self) -> None:
+        """Test retry occurs on retryable exception."""
+        func = MagicMock(side_effect=[ConnectionError("failed"), "success"])
+        policy = RetryPolicy(max_attempts=3, jitter=0)
+        sleep_calls: list[float] = []
+
+        result = execute_with_retry(
+            func,
+            policy,
+            client_order_id="test-123",
+            sleep_fn=sleep_calls.append,
+        )
+
+        assert result == "success"
+        assert func.call_count == 2
+        assert len(sleep_calls) == 1  # One delay before retry
+
+    def test_max_attempts_respected(self) -> None:
+        """Test that max_attempts is respected."""
+        func = MagicMock(side_effect=ConnectionError("always fails"))
+        policy = RetryPolicy(max_attempts=3, jitter=0)
+        sleep_calls: list[float] = []
+
+        with pytest.raises(ConnectionError, match="always fails"):
+            execute_with_retry(
+                func,
+                policy,
+                client_order_id="test-123",
+                sleep_fn=sleep_calls.append,
+            )
+
+        assert func.call_count == 3
+        assert len(sleep_calls) == 2  # Delays before attempts 2 and 3
+
+    def test_non_retryable_exception_not_retried(self) -> None:
+        """Test that non-retryable exceptions are not retried."""
+        func = MagicMock(side_effect=ValueError("bad input"))
+        policy = RetryPolicy(max_attempts=3)
+        sleep_calls: list[float] = []
+
+        with pytest.raises(ValueError, match="bad input"):
+            execute_with_retry(
+                func,
+                policy,
+                client_order_id="test-123",
+                sleep_fn=sleep_calls.append,
+            )
+
+        func.assert_called_once()  # No retries
+        assert len(sleep_calls) == 0
+
+    def test_timeout_error_is_retryable(self) -> None:
+        """Test that TimeoutError triggers retry."""
+        func = MagicMock(side_effect=[TimeoutError("timed out"), "success"])
+        policy = RetryPolicy(max_attempts=3, jitter=0)
+        sleep_calls: list[float] = []
+
+        result = execute_with_retry(
+            func,
+            policy,
+            client_order_id="test-123",
+            sleep_fn=sleep_calls.append,
+        )
+
+        assert result == "success"
+        assert func.call_count == 2
+
+    def test_client_order_id_logged_consistently(self) -> None:
+        """Test that the same client_order_id is used for all attempts."""
+        # This test ensures the client_order_id parameter is available
+        # for logging across all attempts (verified by not raising)
+        func = MagicMock(side_effect=[ConnectionError("fail"), "success"])
+        policy = RetryPolicy(max_attempts=3, jitter=0)
+
+        execute_with_retry(
+            func,
+            policy,
+            client_order_id="stable-id-123",
+            operation="test_op",
+            sleep_fn=lambda _: None,
+        )
+
+        # If we get here without exception, the ID was handled correctly
+
+
+# ============================================================
+# Test: BrokerExecutor with retry
+# ============================================================
+
+
+class TestBrokerExecutorWithRetry:
+    """Tests for BrokerExecutor retry functionality."""
+
+    def test_execute_order_without_retry_default(
+        self,
+        mock_broker: MagicMock,
+        sample_order: Order,
+    ) -> None:
+        """Test that retry is disabled by default."""
+        mock_broker.place_order.side_effect = [ConnectionError("fail"), sample_order]
+        executor = BrokerExecutor(broker=mock_broker)
+
+        with pytest.raises(ConnectionError):
+            executor.execute_order(
+                submit_id="client-123",
+                symbol="BTC-USD",
+                side=OrderSide.BUY,
+                order_type=OrderType.MARKET,
+                quantity=Decimal("1.0"),
+                price=None,
+                stop_price=None,
+                tif=None,
+                reduce_only=False,
+                leverage=None,
+            )
+
+        mock_broker.place_order.assert_called_once()
+
+    def test_execute_order_with_retry_enabled(
+        self,
+        mock_broker: MagicMock,
+        sample_order: Order,
+    ) -> None:
+        """Test that retry works when enabled."""
+        mock_broker.place_order.side_effect = [ConnectionError("fail"), sample_order]
+        sleep_calls: list[float] = []
+        executor = BrokerExecutor(
+            broker=mock_broker,
+            retry_policy=RetryPolicy(max_attempts=3, jitter=0),
+            sleep_fn=sleep_calls.append,
+        )
+
+        result = executor.execute_order(
+            submit_id="client-123",
+            symbol="BTC-USD",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("1.0"),
+            price=None,
+            stop_price=None,
+            tif=None,
+            reduce_only=False,
+            leverage=None,
+            use_retry=True,
+        )
+
+        assert result is sample_order
+        assert mock_broker.place_order.call_count == 2
+
+    def test_retry_uses_same_client_order_id(
+        self,
+        mock_broker: MagicMock,
+        sample_order: Order,
+    ) -> None:
+        """Test that the same client_order_id is used across all retry attempts."""
+        captured_client_ids: list[str] = []
+
+        def capture_and_fail(**kwargs):
+            captured_client_ids.append(kwargs.get("client_id", ""))
+            if len(captured_client_ids) < 2:
+                raise ConnectionError("transient failure")
+            return sample_order
+
+        mock_broker.place_order.side_effect = capture_and_fail
+        executor = BrokerExecutor(
+            broker=mock_broker,
+            retry_policy=RetryPolicy(max_attempts=3, jitter=0),
+            sleep_fn=lambda _: None,
+        )
+
+        executor.execute_order(
+            submit_id="idempotent-id-456",
+            symbol="BTC-USD",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("1.0"),
+            price=None,
+            stop_price=None,
+            tif=None,
+            reduce_only=False,
+            leverage=None,
+            use_retry=True,
+        )
+
+        # Verify same client_id used across all attempts
+        assert len(captured_client_ids) == 2
+        assert captured_client_ids[0] == "idempotent-id-456"
+        assert captured_client_ids[1] == "idempotent-id-456"
+        assert captured_client_ids[0] == captured_client_ids[1]
+
+    def test_custom_retry_policy(
+        self,
+        mock_broker: MagicMock,
+    ) -> None:
+        """Test that custom retry policy is used."""
+        mock_broker.place_order.side_effect = ConnectionError("always fails")
+        sleep_calls: list[float] = []
+        custom_policy = RetryPolicy(max_attempts=2, base_delay=0.1, jitter=0)
+        executor = BrokerExecutor(
+            broker=mock_broker,
+            retry_policy=custom_policy,
+            sleep_fn=sleep_calls.append,
+        )
+
+        with pytest.raises(ConnectionError):
+            executor.execute_order(
+                submit_id="client-123",
+                symbol="BTC-USD",
+                side=OrderSide.BUY,
+                order_type=OrderType.MARKET,
+                quantity=Decimal("1.0"),
+                price=None,
+                stop_price=None,
+                tif=None,
+                reduce_only=False,
+                leverage=None,
+                use_retry=True,
+            )
+
+        assert mock_broker.place_order.call_count == 2  # max_attempts=2

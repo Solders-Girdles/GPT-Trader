@@ -203,3 +203,146 @@ class TestClearAllAndStatus:
         status = state.get_status()
         assert status["global_paused"] is False and status["global_reason"] is None
         assert status["global_remaining_seconds"] == 0 and len(status["paused_symbols"]) == 0
+
+
+class TestPauseMonotonicity:
+    """Test that pauses are monotonic (only extend, never shorten)."""
+
+    def test_global_pause_does_not_shorten_existing_pause(self) -> None:
+        """A shorter pause request should not shorten an existing longer pause."""
+        state = DegradationState()
+        # Set a long pause
+        state.pause_all(seconds=300, reason="long_pause")
+        original_until = state._global_pause.until
+
+        # Try to set a shorter pause
+        state.pause_all(seconds=60, reason="short_pause")
+
+        # Original pause should remain unchanged
+        assert state._global_pause.until == original_until
+        assert state._global_pause.reason == "long_pause"
+
+    def test_global_pause_extends_existing_pause(self) -> None:
+        """A longer pause request should extend an existing shorter pause."""
+        state = DegradationState()
+        # Set a short pause
+        state.pause_all(seconds=60, reason="short_pause")
+        original_until = state._global_pause.until
+
+        # Set a longer pause
+        state.pause_all(seconds=300, reason="long_pause")
+
+        # Pause should be extended
+        assert state._global_pause.until > original_until
+        assert state._global_pause.reason == "long_pause"
+
+    def test_symbol_pause_does_not_shorten_existing_pause(self) -> None:
+        """A shorter symbol pause should not shorten an existing longer pause."""
+        state = DegradationState()
+        # Set a long pause for BTC-USD
+        state.pause_symbol(symbol="BTC-USD", seconds=300, reason="long_pause")
+        original_until = state._symbol_pauses["BTC-USD"].until
+
+        # Try to set a shorter pause
+        state.pause_symbol(symbol="BTC-USD", seconds=60, reason="short_pause")
+
+        # Original pause should remain unchanged
+        assert state._symbol_pauses["BTC-USD"].until == original_until
+        assert state._symbol_pauses["BTC-USD"].reason == "long_pause"
+
+    def test_symbol_pause_extends_existing_pause(self) -> None:
+        """A longer symbol pause request should extend an existing shorter pause."""
+        state = DegradationState()
+        # Set a short pause
+        state.pause_symbol(symbol="BTC-USD", seconds=60, reason="short_pause")
+        original_until = state._symbol_pauses["BTC-USD"].until
+
+        # Set a longer pause
+        state.pause_symbol(symbol="BTC-USD", seconds=300, reason="long_pause")
+
+        # Pause should be extended
+        assert state._symbol_pauses["BTC-USD"].until > original_until
+        assert state._symbol_pauses["BTC-USD"].reason == "long_pause"
+
+    def test_symbol_pause_monotonicity_independent_per_symbol(self) -> None:
+        """Monotonicity is enforced independently for each symbol."""
+        state = DegradationState()
+        # Set different pauses for different symbols
+        state.pause_symbol(symbol="BTC-USD", seconds=300, reason="btc_long")
+        state.pause_symbol(symbol="ETH-USD", seconds=60, reason="eth_short")
+
+        btc_original = state._symbol_pauses["BTC-USD"].until
+        eth_original = state._symbol_pauses["ETH-USD"].until
+
+        # Try to shorten BTC but extend ETH
+        state.pause_symbol(symbol="BTC-USD", seconds=60, reason="btc_shorter")
+        state.pause_symbol(symbol="ETH-USD", seconds=300, reason="eth_longer")
+
+        # BTC unchanged, ETH extended
+        assert state._symbol_pauses["BTC-USD"].until == btc_original
+        assert state._symbol_pauses["BTC-USD"].reason == "btc_long"
+        assert state._symbol_pauses["ETH-USD"].until > eth_original
+        assert state._symbol_pauses["ETH-USD"].reason == "eth_longer"
+
+
+class TestGuardFailureTelemetry:
+    """Test that guard failures emit telemetry correctly."""
+
+    @pytest.fixture
+    def mock_config(self) -> MagicMock:
+        config = MagicMock()
+        config.slippage_failure_pause_after = 3
+        config.slippage_pause_seconds = 60
+        config.broker_outage_max_failures = 3
+        config.broker_outage_cooldown_seconds = 120
+        return config
+
+    def test_slippage_failure_increments_once_per_call(self, mock_config: MagicMock) -> None:
+        """Each slippage failure call increments counter exactly once."""
+        state = DegradationState()
+        state.record_slippage_failure("BTC-USD", mock_config)
+        assert state._slippage_failures["BTC-USD"] == 1
+        state.record_slippage_failure("BTC-USD", mock_config)
+        assert state._slippage_failures["BTC-USD"] == 2
+
+    def test_broker_failure_increments_once_per_call(self, mock_config: MagicMock) -> None:
+        """Each broker failure call increments counter exactly once."""
+        state = DegradationState()
+        state.record_broker_failure(mock_config)
+        assert state._broker_failures == 1
+        state.record_broker_failure(mock_config)
+        assert state._broker_failures == 2
+
+    def test_slippage_pause_triggers_exactly_at_threshold(self, mock_config: MagicMock) -> None:
+        """Slippage pause triggers exactly when threshold is reached, not before or after."""
+        state = DegradationState()
+        # First two should not trigger
+        result1 = state.record_slippage_failure("BTC-USD", mock_config)
+        result2 = state.record_slippage_failure("BTC-USD", mock_config)
+        assert result1 is False and result2 is False
+        assert state.is_paused(symbol="BTC-USD") is False
+
+        # Third should trigger exactly once
+        result3 = state.record_slippage_failure("BTC-USD", mock_config)
+        assert result3 is True
+        assert state.is_paused(symbol="BTC-USD") is True
+
+        # Counter should reset after pause trigger
+        assert state._slippage_failures["BTC-USD"] == 0
+
+    def test_broker_pause_triggers_exactly_at_threshold(self, mock_config: MagicMock) -> None:
+        """Broker pause triggers exactly when threshold is reached."""
+        state = DegradationState()
+        # First two should not trigger
+        result1 = state.record_broker_failure(mock_config)
+        result2 = state.record_broker_failure(mock_config)
+        assert result1 is False and result2 is False
+        assert state.is_paused() is False
+
+        # Third should trigger exactly once
+        result3 = state.record_broker_failure(mock_config)
+        assert result3 is True
+        assert state.is_paused() is True
+
+        # Counter should reset after pause trigger
+        assert state._broker_failures == 0

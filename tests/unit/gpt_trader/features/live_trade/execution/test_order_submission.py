@@ -263,6 +263,61 @@ class TestRecordRejection:
 
     @patch("gpt_trader.features.live_trade.execution.order_event_recorder.emit_metric")
     @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
+    def test_record_rejection_includes_client_order_id(
+        self,
+        mock_get_logger: MagicMock,
+        mock_emit_metric: MagicMock,
+        submitter: OrderSubmitter,
+    ) -> None:
+        """Test that client_order_id is included in rejection telemetry."""
+        mock_logger = MagicMock()
+        mock_get_logger.return_value = mock_logger
+
+        submitter.record_rejection(
+            symbol="BTC-PERP",
+            side="BUY",
+            quantity=Decimal("1.0"),
+            price=Decimal("50000"),
+            reason="insufficient_margin",
+            client_order_id="custom-order-123",
+        )
+
+        mock_emit_metric.assert_called_once()
+        call_args = mock_emit_metric.call_args[0]
+        assert call_args[2]["client_order_id"] == "custom-order-123"
+
+        # Also verify it's passed to the monitoring logger
+        mock_logger.log_order_status_change.assert_called_once()
+        log_call_kwargs = mock_logger.log_order_status_change.call_args[1]
+        assert log_call_kwargs["client_order_id"] == "custom-order-123"
+        assert log_call_kwargs["order_id"] == "custom-order-123"
+
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.emit_metric")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
+    def test_record_rejection_without_client_order_id_uses_empty_string(
+        self,
+        mock_get_logger: MagicMock,
+        mock_emit_metric: MagicMock,
+        submitter: OrderSubmitter,
+    ) -> None:
+        """Test that missing client_order_id defaults to empty string."""
+        mock_logger = MagicMock()
+        mock_get_logger.return_value = mock_logger
+
+        submitter.record_rejection(
+            symbol="BTC-PERP",
+            side="BUY",
+            quantity=Decimal("1.0"),
+            price=Decimal("50000"),
+            reason="insufficient_margin",
+        )
+
+        mock_emit_metric.assert_called_once()
+        call_args = mock_emit_metric.call_args[0]
+        assert call_args[2]["client_order_id"] == ""
+
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.emit_metric")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_record_rejection_with_none_price(
         self,
         mock_get_logger: MagicMock,
@@ -1224,3 +1279,302 @@ class TestCorrelationContextPropagation:
             assert context.get("cycle") == 1
             assert "order_id" not in context
             assert "symbol" not in context
+
+
+# ============================================================
+# Test: Retry Path Idempotency
+# ============================================================
+
+
+class TestRetryPathIdempotency:
+    """Tests ensuring retry paths don't create duplicate client_order_ids."""
+
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
+    def test_provided_client_order_id_is_reused_on_retry(
+        self,
+        mock_get_logger: MagicMock,
+        mock_broker: MagicMock,
+        mock_event_store: MagicMock,
+        open_orders: list[str],
+    ) -> None:
+        """Test that a provided client_order_id is reused across retries."""
+        mock_logger = MagicMock()
+        mock_get_logger.return_value = mock_logger
+
+        captured_client_ids: list[str] = []
+
+        def capture_client_id(**kwargs):
+            captured_client_ids.append(kwargs.get("client_id", ""))
+            raise RuntimeError("Simulated transient error")
+
+        mock_broker.place_order.side_effect = capture_client_id
+
+        submitter = OrderSubmitter(
+            broker=mock_broker,
+            event_store=mock_event_store,
+            bot_id="test-bot",
+            open_orders=open_orders,
+        )
+
+        # First attempt with explicit client_order_id
+        submitter.submit_order(
+            symbol="BTC-USD",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            order_quantity=Decimal("1.0"),
+            price=None,
+            effective_price=Decimal("50000"),
+            stop_price=None,
+            tif=None,
+            reduce_only=False,
+            leverage=None,
+            client_order_id="retry-test-123",
+        )
+
+        # Second attempt with same client_order_id (simulating retry)
+        submitter.submit_order(
+            symbol="BTC-USD",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            order_quantity=Decimal("1.0"),
+            price=None,
+            effective_price=Decimal("50000"),
+            stop_price=None,
+            tif=None,
+            reduce_only=False,
+            leverage=None,
+            client_order_id="retry-test-123",
+        )
+
+        # Both calls should use the same client_order_id
+        assert len(captured_client_ids) == 2
+        assert captured_client_ids[0] == "retry-test-123"
+        assert captured_client_ids[1] == "retry-test-123"
+        assert captured_client_ids[0] == captured_client_ids[1]
+
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
+    def test_generated_client_order_id_differs_per_submission(
+        self,
+        mock_get_logger: MagicMock,
+        mock_broker: MagicMock,
+        mock_event_store: MagicMock,
+        open_orders: list[str],
+    ) -> None:
+        """Test that auto-generated client_order_ids are unique per submission."""
+        mock_logger = MagicMock()
+        mock_get_logger.return_value = mock_logger
+
+        captured_client_ids: list[str] = []
+
+        def capture_client_id(**kwargs):
+            captured_client_ids.append(kwargs.get("client_id", ""))
+            raise RuntimeError("Simulated error")
+
+        mock_broker.place_order.side_effect = capture_client_id
+
+        submitter = OrderSubmitter(
+            broker=mock_broker,
+            event_store=mock_event_store,
+            bot_id="test-bot",
+            open_orders=open_orders,
+        )
+
+        # Two separate submissions without explicit client_order_id
+        submitter.submit_order(
+            symbol="BTC-USD",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            order_quantity=Decimal("1.0"),
+            price=None,
+            effective_price=Decimal("50000"),
+            stop_price=None,
+            tif=None,
+            reduce_only=False,
+            leverage=None,
+            client_order_id=None,
+        )
+
+        submitter.submit_order(
+            symbol="BTC-USD",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            order_quantity=Decimal("1.0"),
+            price=None,
+            effective_price=Decimal("50000"),
+            stop_price=None,
+            tif=None,
+            reduce_only=False,
+            leverage=None,
+            client_order_id=None,
+        )
+
+        # Auto-generated IDs should be unique
+        assert len(captured_client_ids) == 2
+        assert captured_client_ids[0] != captured_client_ids[1]
+        assert captured_client_ids[0].startswith("test-bot_")
+        assert captured_client_ids[1].startswith("test-bot_")
+
+
+# ============================================================
+# Test: Broker Status Classification
+# ============================================================
+
+
+class TestBrokerStatusClassification:
+    """Tests for _classify_rejection_reason with broker status strings."""
+
+    def test_broker_rejected_status(self) -> None:
+        """Test classification of broker REJECTED status."""
+        from gpt_trader.features.live_trade.execution.order_submission import (
+            _classify_rejection_reason,
+        )
+
+        assert _classify_rejection_reason("Order rejected by broker: REJECTED") == "rejected"
+        assert _classify_rejection_reason("rejected by exchange") == "rejected"
+
+    def test_broker_cancelled_status(self) -> None:
+        """Test classification of broker CANCELLED status."""
+        from gpt_trader.features.live_trade.execution.order_submission import (
+            _classify_rejection_reason,
+        )
+
+        # CANCELLED status should map to "rejected" category
+        result = _classify_rejection_reason("Order rejected by broker: CANCELLED")
+        assert result == "rejected"
+
+    def test_broker_failed_status(self) -> None:
+        """Test classification of broker FAILED status."""
+        from gpt_trader.features.live_trade.execution.order_submission import (
+            _classify_rejection_reason,
+        )
+
+        # Pure "failed" without "reject" in the message
+        assert _classify_rejection_reason("Order failed") == "failed"
+        assert _classify_rejection_reason("Execution failure") == "failed"
+        assert _classify_rejection_reason("FAILED status") == "failed"
+
+        # Note: "Order rejected by broker: FAILED" returns "rejected" because
+        # "reject" is checked before "fail" in the classification order
+
+    def test_timeout_variations(self) -> None:
+        """Test various timeout error messages."""
+        from gpt_trader.features.live_trade.execution.order_submission import (
+            _classify_rejection_reason,
+        )
+
+        assert _classify_rejection_reason("Request timeout") == "timeout"
+        assert _classify_rejection_reason("Connection timed out") == "timeout"
+        assert _classify_rejection_reason("deadline exceeded") == "timeout"
+        assert _classify_rejection_reason("context deadline exceeded") == "timeout"
+
+    def test_network_variations(self) -> None:
+        """Test various network error messages."""
+        from gpt_trader.features.live_trade.execution.order_submission import (
+            _classify_rejection_reason,
+        )
+
+        assert _classify_rejection_reason("Connection refused") == "network"
+        assert _classify_rejection_reason("Network error") == "network"
+        assert _classify_rejection_reason("socket closed") == "network"
+        assert _classify_rejection_reason("connection reset") == "network"
+        assert _classify_rejection_reason("DNS resolution failed") == "network"
+
+
+# ============================================================
+# Test: Record Rejection Consistency
+# ============================================================
+
+
+class TestRecordRejectionConsistency:
+    """Tests for consistent record_rejection calls with reason and client_order_id."""
+
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.emit_metric")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
+    def test_rejection_from_broker_status_includes_classified_reason(
+        self,
+        mock_get_logger: MagicMock,
+        mock_emit_metric: MagicMock,
+        mock_broker: MagicMock,
+        mock_event_store: MagicMock,
+        open_orders: list[str],
+    ) -> None:
+        """Test that broker rejections use classified reasons in telemetry."""
+        mock_logger = MagicMock()
+        mock_get_logger.return_value = mock_logger
+
+        rejected_order = MagicMock()
+        rejected_order.id = "rejected-order"
+        rejected_order.status = MagicMock()
+        rejected_order.status.value = "REJECTED"
+        mock_broker.place_order.return_value = rejected_order
+
+        submitter = OrderSubmitter(
+            broker=mock_broker,
+            event_store=mock_event_store,
+            bot_id="test-bot",
+            open_orders=open_orders,
+        )
+
+        submitter.submit_order(
+            symbol="BTC-USD",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            order_quantity=Decimal("1.0"),
+            price=None,
+            effective_price=Decimal("50000"),
+            stop_price=None,
+            tif=None,
+            reduce_only=False,
+            leverage=None,
+            client_order_id="test-client-123",
+        )
+
+        # Verify emit_metric was called with rejection event
+        calls = mock_emit_metric.call_args_list
+        rejection_calls = [c for c in calls if c[0][2].get("event_type") == "order_rejected"]
+        assert len(rejection_calls) >= 1
+
+        # Verify reason format includes broker status
+        rejection_data = rejection_calls[0][0][2]
+        assert "broker_status" in rejection_data["reason"]
+
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.emit_metric")
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
+    def test_exception_rejection_uses_classified_reason(
+        self,
+        mock_get_logger: MagicMock,
+        mock_emit_metric: MagicMock,
+        mock_broker: MagicMock,
+        mock_event_store: MagicMock,
+        open_orders: list[str],
+    ) -> None:
+        """Test that exception-based rejections use classified reasons."""
+        mock_logger = MagicMock()
+        mock_get_logger.return_value = mock_logger
+        mock_broker.place_order.side_effect = RuntimeError("Insufficient balance for order")
+
+        submitter = OrderSubmitter(
+            broker=mock_broker,
+            event_store=mock_event_store,
+            bot_id="test-bot",
+            open_orders=open_orders,
+        )
+
+        submitter.submit_order(
+            symbol="BTC-USD",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            order_quantity=Decimal("1.0"),
+            price=None,
+            effective_price=Decimal("50000"),
+            stop_price=None,
+            tif=None,
+            reduce_only=False,
+            leverage=None,
+            client_order_id=None,
+        )
+
+        # Verify error was recorded
+        mock_event_store.append_error.assert_called_once()
+        call_kwargs = mock_event_store.append_error.call_args[1]
+        assert call_kwargs["message"] == "order_placement_failed"

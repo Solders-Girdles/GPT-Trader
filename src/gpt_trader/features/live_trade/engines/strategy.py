@@ -1616,43 +1616,56 @@ class TradingEngine(BaseEngine):
         else:
             effective_price = price
 
-        # Place order only after validation passes
-        assert self.context.broker is not None, "Broker not initialized"
+        # Place order via OrderSubmitter for proper ID tracking and telemetry
         order_id = await asyncio.to_thread(
-            self.context.broker.place_order,
-            symbol,
-            side,
-            OrderType.MARKET,
-            quantity,
+            self._order_submitter.submit_order,
+            symbol=symbol,
+            side=side,
+            order_type=OrderType.MARKET,
+            order_quantity=quantity,
+            price=None,  # Market order
+            effective_price=effective_price,
+            stop_price=None,
+            tif=self.context.config.time_in_force,
+            reduce_only=is_reducing,
+            leverage=None,
+            client_order_id=None,  # Let OrderSubmitter generate stable ID
         )
-
-        # Track order if ID returned
-        if order_id and isinstance(order_id, str):
-            self._open_orders.append(order_id)
 
         # Notify on successful order placement
-        await self._notify(
-            title="Order Executed",
-            message=f"{side.value} {quantity} {symbol} at ~{price}",
-            severity=AlertSeverity.INFO,
-            context={
-                "symbol": symbol,
-                "side": side.value,
-                "quantity": str(quantity),
-                "price": str(price),
-            },
-        )
+        if order_id is not None:
+            await self._notify(
+                title="Order Executed",
+                message=f"{side.value} {quantity} {symbol} at ~{price}",
+                severity=AlertSeverity.INFO,
+                context={
+                    "symbol": symbol,
+                    "side": side.value,
+                    "quantity": str(quantity),
+                    "price": str(price),
+                    "order_id": order_id,
+                },
+            )
 
-        # Record trade in status reporter
-        self._status_reporter.add_trade(
-            {
-                "symbol": symbol,
-                "side": side.value,
-                "quantity": str(quantity),
-                "price": str(price),
-                "order_id": "N/A",  # We don't get ID back from place_order in this adapter version easily without refactor
-            }
-        )
+            # Record trade in status reporter
+            self._status_reporter.add_trade(
+                {
+                    "symbol": symbol,
+                    "side": side.value,
+                    "quantity": str(quantity),
+                    "price": str(price),
+                    "order_id": order_id,
+                }
+            )
+        else:
+            # Order was rejected by broker
+            logger.warning(
+                "Order submission returned None - order may have been rejected",
+                symbol=symbol,
+                side=side.value,
+                operation="order_submit",
+                stage="rejected",
+            )
 
     # =========================================================================
     # PUBLIC SUBMISSION ENTRYPOINT

@@ -226,7 +226,7 @@ class TestMarkStalenessDegradation:
         engine.context.risk_manager.config.mark_staleness_allow_reduce_only = True
         engine._current_positions = {"BTC-USD": _make_position()}
         await self._place_order(engine, Action.SELL)
-        engine.context.broker.place_order.assert_called()
+        engine._order_submitter.submit_order.assert_called()
 
 
 class TestSlippageFailureDegradation:
@@ -299,7 +299,7 @@ class TestPausedOrderRejection:
             price=Decimal("50000"),
             equity=Decimal("10000"),
         )
-        engine.context.broker.place_order.assert_called()
+        engine._order_submitter.submit_order.assert_called()
 
 
 class TestWSHealthDegradation:

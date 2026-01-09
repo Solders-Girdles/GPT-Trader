@@ -70,14 +70,29 @@ class DegradationState:
         """
         Pause all trading for a duration.
 
+        Pauses are monotonic: if already paused, the new pause only extends
+        the window if it would end later. It never shortens an existing pause.
+
         Args:
             seconds: Duration of pause in seconds.
             reason: Human-readable reason for the pause.
             allow_reduce_only: Whether to allow reduce-only orders during pause.
         """
-        until = time.time() + seconds
+        new_until = time.time() + seconds
+
+        # Monotonicity: only extend pause, never shorten
+        if self._global_pause is not None and self._global_pause.until > new_until:
+            logger.info(
+                "Pause extension rejected (existing pause ends later)",
+                existing_reason=self._global_pause.reason,
+                new_reason=reason,
+                operation="degradation",
+                stage="pause_all_rejected",
+            )
+            return
+
         self._global_pause = PauseRecord(
-            until=until,
+            until=new_until,
             reason=reason,
             allow_reduce_only=allow_reduce_only,
         )
@@ -96,15 +111,32 @@ class DegradationState:
         """
         Pause trading for a specific symbol.
 
+        Pauses are monotonic: if already paused, the new pause only extends
+        the window if it would end later. It never shortens an existing pause.
+
         Args:
             symbol: Trading symbol to pause.
             seconds: Duration of pause in seconds.
             reason: Human-readable reason for the pause.
             allow_reduce_only: Whether to allow reduce-only orders during pause.
         """
-        until = time.time() + seconds
+        new_until = time.time() + seconds
+
+        # Monotonicity: only extend pause, never shorten
+        existing = self._symbol_pauses.get(symbol)
+        if existing is not None and existing.until > new_until:
+            logger.info(
+                "Symbol pause extension rejected (existing pause ends later)",
+                symbol=symbol,
+                existing_reason=existing.reason,
+                new_reason=reason,
+                operation="degradation",
+                stage="pause_symbol_rejected",
+            )
+            return
+
         self._symbol_pauses[symbol] = PauseRecord(
-            until=until,
+            until=new_until,
             reason=reason,
             allow_reduce_only=allow_reduce_only,
         )

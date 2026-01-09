@@ -128,6 +128,17 @@ def _build_health_response() -> dict[str, Any]:
                 elif severity == "warning" and overall_status == "healthy":
                     overall_status = "degraded"
 
+    # Compute execution health signals
+    signals_summary = _build_signals_summary()
+
+    # Escalate status based on signals
+    if overall_status in ("healthy", "degraded"):
+        signal_status = signals_summary.get("status", "OK")
+        if signal_status == "CRIT":
+            overall_status = "unhealthy"
+        elif signal_status == "WARN" and overall_status == "healthy":
+            overall_status = "degraded"
+
     return {
         "status": overall_status,
         "live": state.live,
@@ -137,7 +148,32 @@ def _build_health_response() -> dict[str, Any]:
             **state.checks,
             "performance": perf_health,
         },
+        "signals": signals_summary,
     }
+
+
+def _build_signals_summary() -> dict[str, Any]:
+    """Build health signals summary from execution metrics.
+
+    Returns:
+        Dictionary with status, message, and individual signals.
+    """
+    try:
+        from gpt_trader.monitoring.health_checks import compute_execution_health_signals
+
+        summary = compute_execution_health_signals()
+        return summary.to_dict()
+    except Exception as exc:
+        logger.warning(
+            "Failed to compute health signals",
+            operation="health_signals",
+            error=str(exc),
+        )
+        return {
+            "status": "UNKNOWN",
+            "message": f"Error computing signals: {exc}",
+            "signals": [],
+        }
 
 
 def _build_liveness_response() -> dict[str, Any]:

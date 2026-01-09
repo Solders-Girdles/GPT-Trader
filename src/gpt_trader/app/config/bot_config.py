@@ -21,6 +21,53 @@ if TYPE_CHECKING:
     from gpt_trader.features.live_trade.strategies.perps_baseline import (
         PerpsStrategyConfig,
     )
+    from gpt_trader.monitoring.health_signals import HealthThresholds
+
+
+@dataclass
+class HealthThresholdsConfig:
+    """Configurable thresholds for health signals.
+
+    All thresholds use sensible defaults aligned with HealthThresholds model.
+    Set via HEALTH_* env vars or config file.
+    """
+
+    # Order submission error rate (failures / total in window)
+    order_error_rate_warn: float = 0.05  # 5% warning
+    order_error_rate_crit: float = 0.15  # 15% critical
+
+    # Order retry rate (retries / total in window)
+    order_retry_rate_warn: float = 0.10  # 10% warning
+    order_retry_rate_crit: float = 0.25  # 25% critical
+
+    # Broker API latency p95 (milliseconds)
+    broker_latency_ms_warn: float = 1000.0  # 1 second warning
+    broker_latency_ms_crit: float = 3000.0  # 3 seconds critical
+
+    # WebSocket staleness (seconds since last message)
+    ws_staleness_seconds_warn: float = 30.0  # 30 seconds warning
+    ws_staleness_seconds_crit: float = 60.0  # 60 seconds critical
+
+    # Guard trip frequency (trips in window)
+    guard_trip_count_warn: int = 3  # 3 trips warning
+    guard_trip_count_crit: int = 10  # 10 trips critical
+
+    def to_health_thresholds(self) -> "HealthThresholds":
+        """Convert to monitoring.health_signals.HealthThresholds."""
+        from gpt_trader.monitoring.health_signals import HealthThresholds
+
+        return HealthThresholds(
+            order_error_rate_warn=self.order_error_rate_warn,
+            order_error_rate_crit=self.order_error_rate_crit,
+            order_retry_rate_warn=self.order_retry_rate_warn,
+            order_retry_rate_crit=self.order_retry_rate_crit,
+            broker_latency_ms_warn=self.broker_latency_ms_warn,
+            broker_latency_ms_crit=self.broker_latency_ms_crit,
+            ws_staleness_seconds_warn=self.ws_staleness_seconds_warn,
+            ws_staleness_seconds_crit=self.ws_staleness_seconds_crit,
+            guard_trip_count_warn=self.guard_trip_count_warn,
+            guard_trip_count_crit=self.guard_trip_count_crit,
+        )
 
 
 @dataclass
@@ -100,6 +147,7 @@ class BotConfig:
     strategy: Any = field(default_factory=_get_default_strategy_config)
     risk: BotRiskConfig = field(default_factory=BotRiskConfig)
     mean_reversion: MeanReversionConfig = field(default_factory=MeanReversionConfig)
+    health_thresholds: HealthThresholdsConfig = field(default_factory=HealthThresholdsConfig)
 
     # Intelligence feature configurations (optional, for ensemble strategy)
     regime_config: Any = None  # RegimeConfig instance when using ensemble
@@ -357,6 +405,30 @@ class BotConfig:
 
         derivatives_enabled = parse_bool_env("COINBASE_ENABLE_DERIVATIVES", default=False)
 
+        # Build health thresholds config from env (HEALTH_* prefix)
+        def _health_float(key: str, default: float) -> float:
+            """Get health threshold float env var with HEALTH_ prefix."""
+            val = os.getenv(f"HEALTH_{key}")
+            return float(val) if val is not None else default
+
+        def _health_int(key: str, default: int) -> int:
+            """Get health threshold int env var with HEALTH_ prefix."""
+            val = os.getenv(f"HEALTH_{key}")
+            return int(val) if val is not None else default
+
+        health_thresholds = HealthThresholdsConfig(
+            order_error_rate_warn=_health_float("ORDER_ERROR_RATE_WARN", 0.05),
+            order_error_rate_crit=_health_float("ORDER_ERROR_RATE_CRIT", 0.15),
+            order_retry_rate_warn=_health_float("ORDER_RETRY_RATE_WARN", 0.10),
+            order_retry_rate_crit=_health_float("ORDER_RETRY_RATE_CRIT", 0.25),
+            broker_latency_ms_warn=_health_float("BROKER_LATENCY_MS_WARN", 1000.0),
+            broker_latency_ms_crit=_health_float("BROKER_LATENCY_MS_CRIT", 3000.0),
+            ws_staleness_seconds_warn=_health_float("WS_STALENESS_SECONDS_WARN", 30.0),
+            ws_staleness_seconds_crit=_health_float("WS_STALENESS_SECONDS_CRIT", 60.0),
+            guard_trip_count_warn=_health_int("GUARD_TRIP_COUNT_WARN", 3),
+            guard_trip_count_crit=_health_int("GUARD_TRIP_COUNT_CRIT", 10),
+        )
+
         # Support both TRADING_SYMBOLS (canonical) and SYMBOLS (legacy)
         symbols_raw = os.getenv("TRADING_SYMBOLS") or os.getenv("SYMBOLS")
         if symbols_raw:
@@ -367,6 +439,7 @@ class BotConfig:
         return cls(
             strategy=strategy,
             risk=risk,
+            health_thresholds=health_thresholds,
             interval=parse_int_env("INTERVAL", 60) or 60,
             symbols=symbols,
             log_level=os.getenv("LOG_LEVEL", "INFO"),

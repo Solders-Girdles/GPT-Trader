@@ -42,6 +42,7 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/utilities/test_performance_monitoring_advanced.py",  # needs refactor but tracked separately
     "tests/unit/gpt_trader/orchestration/test_partial_fills.py",  # legacy regression suite
     "tests/unit/gpt_trader/monitoring/test_health_checks.py",  # extensive health matrix
+    "tests/unit/gpt_trader/monitoring/test_health_signals.py",  # health signal model contract coverage
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_permissions.py",  # permissions coverage table
     "tests/unit/gpt_trader/persistence/test_config_store.py",  # config persistence contract coverage
     "tests/unit/gpt_trader/utilities/test_datetime_helpers.py",  # datetime edge-case coverage

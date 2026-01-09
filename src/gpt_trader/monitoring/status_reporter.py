@@ -218,6 +218,10 @@ class BotStatus:
     # Overall health
     healthy: bool = True
     health_issues: list[str] = field(default_factory=list)
+    # Signal-based health state (OK/WARN/CRIT/UNKNOWN)
+    health_state: str = "UNKNOWN"
+    # Execution health signals summary
+    execution_signals: dict[str, Any] | None = None
 
     # Reporter interval for TUI connection health tracking
     observer_interval: float = 2.0
@@ -504,6 +508,29 @@ class StatusReporter:
             issues.append("WebSocket heartbeat stale")
         if self._status.websocket.gap_count > 0:
             issues.append(f"WebSocket sequence gaps: {self._status.websocket.gap_count}")
+
+        # Compute execution health signals
+        try:
+            from gpt_trader.monitoring.health_checks import compute_execution_health_signals
+
+            signals_summary = compute_execution_health_signals()
+            self._status.health_state = signals_summary.status.value
+            self._status.execution_signals = signals_summary.to_dict()
+
+            # Add critical/warning signals to issues
+            for signal in signals_summary.signals:
+                if signal.status.value == "CRIT":
+                    issues.append(f"CRIT: {signal.name} = {signal.value:.2f}{signal.unit}")
+                elif signal.status.value == "WARN":
+                    issues.append(f"WARN: {signal.name} = {signal.value:.2f}{signal.unit}")
+        except Exception as exc:
+            logger.warning(
+                "Failed to compute execution health signals",
+                operation="health_assessment",
+                error=str(exc),
+            )
+            self._status.health_state = "UNKNOWN"
+            self._status.execution_signals = None
 
         self._status.healthy = len(issues) == 0
         self._status.health_issues = issues

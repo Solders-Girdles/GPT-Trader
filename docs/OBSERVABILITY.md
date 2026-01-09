@@ -184,6 +184,104 @@ sum(rate(gpt_trader_broker_call_latency_seconds_count{outcome="failure"}[5m]))
 sum(rate(gpt_trader_broker_call_latency_seconds_count[5m]))
 ```
 
+## Health Signals
+
+Health signals provide threshold-based alerting for execution quality. Each signal has OK/WARN/CRIT status levels.
+
+### Signal Definitions
+
+| Signal Name | Unit | WARN Threshold | CRIT Threshold | Description |
+|-------------|------|----------------|----------------|-------------|
+| `order_error_rate` | ratio | 0.05 (5%) | 0.15 (15%) | Order submission failure rate |
+| `order_retry_rate` | ratio | 0.10 (10%) | 0.25 (25%) | Orders requiring retry |
+| `broker_latency_p95` | ms | 1000 | 3000 | 95th percentile broker API latency |
+| `guard_trip_count` | count | 3 | 10 | Guard trips in rolling window |
+| `ws_staleness` | seconds | 30 | 60 | Time since last WebSocket message |
+
+### Status Levels
+
+| Status | Meaning |
+|--------|---------|
+| `OK` | All signals within healthy range |
+| `WARN` | One or more signals above warning threshold |
+| `CRIT` | One or more signals above critical threshold |
+| `UNKNOWN` | Unable to compute signals (e.g., no data) |
+
+### Configuration
+
+Health thresholds are configurable via environment variables:
+
+```bash
+# Order error rate thresholds
+HEALTH_ORDER_ERROR_RATE_WARN=0.05
+HEALTH_ORDER_ERROR_RATE_CRIT=0.15
+
+# Order retry rate thresholds
+HEALTH_ORDER_RETRY_RATE_WARN=0.10
+HEALTH_ORDER_RETRY_RATE_CRIT=0.25
+
+# Broker latency thresholds (milliseconds)
+HEALTH_BROKER_LATENCY_MS_WARN=1000
+HEALTH_BROKER_LATENCY_MS_CRIT=3000
+
+# WebSocket staleness thresholds (seconds)
+HEALTH_WS_STALENESS_SECONDS_WARN=30
+HEALTH_WS_STALENESS_SECONDS_CRIT=60
+
+# Guard trip count thresholds
+HEALTH_GUARD_TRIP_COUNT_WARN=3
+HEALTH_GUARD_TRIP_COUNT_CRIT=10
+```
+
+Or via `BotConfig.health_thresholds` in code.
+
+### Integration Points
+
+**Health Endpoint (`/health`):**
+
+```json
+{
+  "status": "healthy",
+  "live": true,
+  "ready": true,
+  "signals": {
+    "status": "OK",
+    "message": "All signals OK",
+    "signals": [
+      {
+        "name": "order_error_rate",
+        "status": "OK",
+        "value": 0.02,
+        "threshold_warn": 0.05,
+        "threshold_crit": 0.15,
+        "unit": ""
+      }
+    ]
+  }
+}
+```
+
+**Status Reporter (`BotStatus`):**
+
+```python
+status.health_state  # "OK", "WARN", "CRIT", or "UNKNOWN"
+status.execution_signals  # Full signal summary dict
+status.health_issues  # List of issues including WARN/CRIT signals
+```
+
+### Alert Examples
+
+Trigger alerts when overall health degrades:
+
+```promql
+# Alert on CRIT status (unhealthy)
+gpt_trader_health_status{status="CRIT"} == 1
+
+# Alert on sustained WARN status
+gpt_trader_health_status{status="WARN"} == 1
+  for 5m
+```
+
 ---
 
 *Last updated: 2026-01-08*

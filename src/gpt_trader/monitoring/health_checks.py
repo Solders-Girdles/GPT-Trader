@@ -450,10 +450,251 @@ class HealthCheckRunner:
         return results
 
 
+def compute_execution_health_signals(
+    thresholds: HealthThresholds | None = None,
+) -> HealthSummary:
+    """Compute health signals from execution metrics.
+
+    Uses the metrics collector to derive health signals for:
+    - Order submission error rate
+    - Order retry rate
+    - Broker call latency (p95)
+    - Guard trip frequency
+
+    Args:
+        thresholds: Optional custom thresholds. Uses defaults if None.
+
+    Returns:
+        HealthSummary with computed signals.
+    """
+    from gpt_trader.monitoring.health_signals import (
+        HealthSignal,
+        HealthSummary,
+        HealthThresholds,
+    )
+    from gpt_trader.monitoring.metrics_collector import get_metrics_collector
+
+    if thresholds is None:
+        thresholds = HealthThresholds()
+
+    collector = get_metrics_collector()
+    summary = collector.get_metrics_summary()
+    counters_raw = summary.get("counters", {})
+    histograms_raw = summary.get("histograms", {})
+    counters = counters_raw if isinstance(counters_raw, dict) else {}
+    histograms = histograms_raw if isinstance(histograms_raw, dict) else {}
+
+    signals: list[HealthSignal] = []
+
+    # 1. Order submission error rate
+    # Sum up all submission counters by result
+    total_submissions = 0
+    failed_submissions = 0
+    for key, count in counters.items():
+        if key.startswith("gpt_trader_order_submission_total"):
+            total_submissions += count
+            if "result=failed" in key or "result=rejected" in key:
+                failed_submissions += count
+
+    if total_submissions > 0:
+        error_rate = failed_submissions / total_submissions
+    else:
+        error_rate = 0.0
+
+    signals.append(
+        HealthSignal.from_value(
+            name="order_error_rate",
+            value=error_rate,
+            threshold_warn=thresholds.order_error_rate_warn,
+            threshold_crit=thresholds.order_error_rate_crit,
+            unit="ratio",
+            details={
+                "total_submissions": total_submissions,
+                "failed_submissions": failed_submissions,
+            },
+        )
+    )
+
+    # 2. Order retry rate (inferred from broker call metrics)
+    # If broker call count > submission count, retries occurred
+    broker_call_count = 0
+    broker_call_failures = 0
+    for key, hist_data in histograms.items():
+        if key.startswith("gpt_trader_broker_call_latency_seconds"):
+            if isinstance(hist_data, dict):
+                broker_call_count += hist_data.get("count", 0)
+                if "outcome=failure" in key:
+                    broker_call_failures += hist_data.get("count", 0)
+
+    # Retry rate = (broker_calls - submissions) / submissions (if > 0)
+    if total_submissions > 0 and broker_call_count > total_submissions:
+        retry_rate = (broker_call_count - total_submissions) / total_submissions
+    else:
+        retry_rate = 0.0
+
+    signals.append(
+        HealthSignal.from_value(
+            name="order_retry_rate",
+            value=retry_rate,
+            threshold_warn=thresholds.order_retry_rate_warn,
+            threshold_crit=thresholds.order_retry_rate_crit,
+            unit="ratio",
+            details={
+                "broker_call_count": broker_call_count,
+                "submission_count": total_submissions,
+            },
+        )
+    )
+
+    # 3. Broker latency p95 (approximate from histogram)
+    # Find the successful broker call histogram and compute p95
+    latency_p95_ms = 0.0
+    for key, hist_data in histograms.items():
+        if key.startswith("gpt_trader_broker_call_latency_seconds") and "outcome=success" in key:
+            if isinstance(hist_data, dict):
+                # Approximate p95 from histogram buckets
+                # Use the bucket where cumulative count reaches 95%
+                total_count = hist_data.get("count", 0)
+                if total_count > 0:
+                    buckets = hist_data.get("buckets", {})
+                    target = total_count * 0.95
+                    for bucket_str, bucket_count in sorted(
+                        buckets.items(), key=lambda x: float(x[0])
+                    ):
+                        if bucket_count >= target:
+                            latency_p95_ms = float(bucket_str) * 1000  # Convert to ms
+                            break
+                    else:
+                        # If we didn't find it, use the mean as fallback
+                        mean = hist_data.get("mean", 0.0)
+                        latency_p95_ms = mean * 1000 * 1.5  # Rough p95 estimate
+                break
+
+    signals.append(
+        HealthSignal.from_value(
+            name="broker_latency_p95",
+            value=latency_p95_ms,
+            threshold_warn=thresholds.broker_latency_ms_warn,
+            threshold_crit=thresholds.broker_latency_ms_crit,
+            unit="ms",
+            details={},
+        )
+    )
+
+    # 4. Guard trip frequency
+    guard_trip_count = 0
+    for key, count in counters.items():
+        if "guard" in key.lower() and ("failure" in key.lower() or "trip" in key.lower()):
+            guard_trip_count += count
+
+    signals.append(
+        HealthSignal.from_value(
+            name="guard_trip_count",
+            value=float(guard_trip_count),
+            threshold_warn=float(thresholds.guard_trip_count_warn),
+            threshold_crit=float(thresholds.guard_trip_count_crit),
+            unit="count",
+            details={},
+        )
+    )
+
+    return HealthSummary.from_signals(signals)
+
+
+def check_ws_staleness_signal(
+    broker: BrokerProtocol,
+    thresholds: HealthThresholds | None = None,
+) -> HealthSignal:
+    """Check WebSocket staleness as a health signal.
+
+    Args:
+        broker: Broker protocol instance.
+        thresholds: Optional custom thresholds.
+
+    Returns:
+        HealthSignal for WebSocket staleness.
+    """
+    from gpt_trader.monitoring.health_signals import (
+        HealthSignal,
+        HealthStatus,
+        HealthThresholds,
+    )
+
+    if thresholds is None:
+        thresholds = HealthThresholds()
+
+    # Check if broker supports WS health
+    if not hasattr(broker, "get_ws_health"):
+        return HealthSignal(
+            name="ws_staleness",
+            status=HealthStatus.UNKNOWN,
+            value=0.0,
+            threshold_warn=thresholds.ws_staleness_seconds_warn,
+            threshold_crit=thresholds.ws_staleness_seconds_crit,
+            unit="seconds",
+            details={"ws_not_supported": True},
+        )
+
+    try:
+        health = broker.get_ws_health()
+        if not health:
+            return HealthSignal(
+                name="ws_staleness",
+                status=HealthStatus.OK,
+                value=0.0,
+                threshold_warn=thresholds.ws_staleness_seconds_warn,
+                threshold_crit=thresholds.ws_staleness_seconds_crit,
+                unit="seconds",
+                details={"ws_not_initialized": True},
+            )
+
+        now = time.time()
+        last_message_ts = health.get("last_message_ts", 0)
+        staleness = now - last_message_ts if last_message_ts else float("inf")
+
+        # Cap staleness at a reasonable max for display
+        if staleness == float("inf"):
+            staleness = 9999.0
+
+        return HealthSignal.from_value(
+            name="ws_staleness",
+            value=staleness,
+            threshold_warn=thresholds.ws_staleness_seconds_warn,
+            threshold_crit=thresholds.ws_staleness_seconds_crit,
+            unit="seconds",
+            details={
+                "connected": health.get("connected", False),
+                "last_message_ts": last_message_ts,
+            },
+        )
+
+    except Exception as exc:
+        return HealthSignal(
+            name="ws_staleness",
+            status=HealthStatus.UNKNOWN,
+            value=0.0,
+            threshold_warn=thresholds.ws_staleness_seconds_warn,
+            threshold_crit=thresholds.ws_staleness_seconds_crit,
+            unit="seconds",
+            details={"error": str(exc)},
+        )
+
+
+# Import for type hints
+if TYPE_CHECKING:
+    from gpt_trader.monitoring.health_signals import (
+        HealthSignal,
+        HealthSummary,
+        HealthThresholds,
+    )
+
+
 __all__ = [
     "HealthCheckResult",
     "HealthCheckRunner",
     "check_broker_ping",
     "check_ws_freshness",
     "check_degradation_state",
+    "compute_execution_health_signals",
+    "check_ws_staleness_signal",
 ]

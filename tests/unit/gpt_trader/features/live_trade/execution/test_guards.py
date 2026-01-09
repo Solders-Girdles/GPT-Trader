@@ -988,3 +988,357 @@ def test_api_health_guard_passes_when_healthy(
 
     # Should not raise
     gm.guard_api_health(sample_guard_state)
+
+
+# =============================================================================
+# Phase 7: DailyLossGuard Edge Cases
+# =============================================================================
+
+
+class TestDailyLossGuardEdgeCases:
+    """Edge-case tests for DailyLossGuard correctness."""
+
+    def test_cancel_all_orders_raises_triggers_risk_guard_action_error(self, mock_risk_manager):
+        """When cancel_all_orders callback raises, DailyLossGuard raises RiskGuardActionError."""
+        from gpt_trader.features.live_trade.execution.guards.daily_loss import DailyLossGuard
+
+        # Setup: track_daily_pnl returns True (triggered)
+        mock_risk_manager.track_daily_pnl.return_value = True
+
+        # cancel_all_orders raises an exception
+        cancel_callback = MagicMock(side_effect=Exception("Cancel failed"))
+        invalidate_callback = MagicMock()
+
+        guard = DailyLossGuard(
+            risk_manager=mock_risk_manager,
+            cancel_all_orders=cancel_callback,
+            invalidate_cache=invalidate_callback,
+        )
+
+        state = RuntimeGuardState(
+            timestamp=time.time(),
+            balances=[],
+            equity=Decimal("10000"),
+            positions=[],
+            positions_pnl={},
+            positions_dict={},
+            guard_events=[],
+        )
+
+        with pytest.raises(RiskGuardActionError) as exc_info:
+            guard.check(state)
+
+        assert exc_info.value.guard_name == "daily_loss"
+        assert "cancel orders" in str(exc_info.value.message).lower()
+        # invalidate_cache should NOT be called since cancel failed
+        invalidate_callback.assert_not_called()
+
+    def test_successful_trigger_calls_both_callbacks(self, mock_risk_manager):
+        """When triggered, DailyLossGuard calls cancel_all_orders and invalidate_cache."""
+        from gpt_trader.features.live_trade.execution.guards.daily_loss import DailyLossGuard
+
+        mock_risk_manager.track_daily_pnl.return_value = True
+
+        cancel_callback = MagicMock()
+        invalidate_callback = MagicMock()
+
+        guard = DailyLossGuard(
+            risk_manager=mock_risk_manager,
+            cancel_all_orders=cancel_callback,
+            invalidate_cache=invalidate_callback,
+        )
+
+        state = RuntimeGuardState(
+            timestamp=time.time(),
+            balances=[],
+            equity=Decimal("5000"),
+            positions=[],
+            positions_pnl={},
+            positions_dict={},
+            guard_events=[],
+        )
+
+        guard.check(state)
+
+        cancel_callback.assert_called_once()
+        invalidate_callback.assert_called_once()
+
+
+# =============================================================================
+# Phase 7: LiquidationBufferGuard Edge Cases
+# =============================================================================
+
+
+class TestLiquidationBufferGuardEdgeCases:
+    """Edge-case tests for LiquidationBufferGuard correctness."""
+
+    def test_incremental_mode_does_not_call_get_position_risk(
+        self, mock_broker, mock_risk_manager, mock_position
+    ):
+        """In incremental mode, get_position_risk should NOT be called."""
+        from gpt_trader.features.live_trade.execution.guards.liquidation_buffer import (
+            LiquidationBufferGuard,
+        )
+
+        mock_broker.get_position_risk = MagicMock(return_value={"liquidation_price": "45000"})
+
+        guard = LiquidationBufferGuard(broker=mock_broker, risk_manager=mock_risk_manager)
+
+        state = RuntimeGuardState(
+            timestamp=time.time(),
+            balances=[],
+            equity=Decimal("10000"),
+            positions=[mock_position],
+            positions_pnl={},
+            positions_dict={},
+            guard_events=[],
+        )
+
+        guard.check(state, incremental=True)
+
+        # get_position_risk should NOT be called in incremental mode
+        mock_broker.get_position_risk.assert_not_called()
+        # But check_liquidation_buffer should still be called
+        mock_risk_manager.check_liquidation_buffer.assert_called_once()
+
+    def test_check_liquidation_buffer_receives_correct_pos_data(
+        self, mock_broker, mock_risk_manager
+    ):
+        """Verify risk_manager.check_liquidation_buffer receives correct position data."""
+        from gpt_trader.features.live_trade.execution.guards.liquidation_buffer import (
+            LiquidationBufferGuard,
+        )
+
+        # Create position with specific values
+        position = MagicMock()
+        position.symbol = "ETH-PERP"
+        position.quantity = "2.5"
+        position.mark_price = "3000.50"
+
+        mock_broker.get_position_risk.return_value = {"liquidation_price": "2500.00"}
+
+        guard = LiquidationBufferGuard(broker=mock_broker, risk_manager=mock_risk_manager)
+
+        state = RuntimeGuardState(
+            timestamp=time.time(),
+            balances=[],
+            equity=Decimal("50000"),
+            positions=[position],
+            positions_pnl={},
+            positions_dict={},
+            guard_events=[],
+        )
+
+        guard.check(state, incremental=False)
+
+        # Verify check_liquidation_buffer was called with correct args
+        mock_risk_manager.check_liquidation_buffer.assert_called_once()
+        call_args = mock_risk_manager.check_liquidation_buffer.call_args
+        symbol, pos_data, equity = call_args[0]
+
+        assert symbol == "ETH-PERP"
+        assert pos_data["quantity"] == Decimal("2.5")
+        assert pos_data["mark"] == Decimal("3000.50")
+        assert pos_data["liquidation_price"] == "2500.00"
+        assert equity == Decimal("50000")
+
+    def test_invalid_mark_price_raises_data_corrupt(self, mock_broker, mock_risk_manager):
+        """Position with invalid mark_price raises RiskGuardDataCorrupt."""
+        from gpt_trader.features.live_trade.execution.guards.liquidation_buffer import (
+            LiquidationBufferGuard,
+        )
+
+        # Position with mark_price that can't be converted to Decimal
+        position = MagicMock()
+        position.symbol = "BAD-PERP"
+        position.quantity = "1.0"
+        position.mark_price = "not-a-number"  # Invalid - will raise on Decimal conversion
+
+        guard = LiquidationBufferGuard(broker=mock_broker, risk_manager=mock_risk_manager)
+
+        state = RuntimeGuardState(
+            timestamp=time.time(),
+            balances=[],
+            equity=Decimal("10000"),
+            positions=[position],
+            positions_pnl={},
+            positions_dict={},
+            guard_events=[],
+        )
+
+        with pytest.raises(RiskGuardDataCorrupt) as exc_info:
+            guard.check(state, incremental=True)
+
+        assert exc_info.value.guard_name == "liquidation_buffer"
+        assert "BAD" in str(exc_info.value.details.get("symbol", ""))
+
+
+# =============================================================================
+# Phase 7: VolatilityGuard Edge Cases
+# =============================================================================
+
+
+class TestVolatilityGuardEdgeCases:
+    """Edge-case tests for VolatilityGuard correctness."""
+
+    def test_broker_missing_get_candles_skips_without_error(
+        self, mock_risk_manager, sample_guard_state
+    ):
+        """When broker lacks get_candles method, guard skips silently."""
+        from gpt_trader.features.live_trade.execution.guards.volatility import VolatilityGuard
+
+        # Broker without get_candles
+        broker = MagicMock(spec=["list_balances", "list_positions"])
+        mock_risk_manager.last_mark_update = {"BTC-PERP": time.time()}
+        mock_risk_manager.config.volatility_window_periods = 20
+
+        guard = VolatilityGuard(broker=broker, risk_manager=mock_risk_manager)
+
+        # Should not raise - skips gracefully
+        guard.check(sample_guard_state, incremental=False)
+
+        # check_volatility_circuit_breaker should NOT be called
+        mock_risk_manager.check_volatility_circuit_breaker.assert_not_called()
+
+    def test_candles_less_than_window_does_not_call_circuit_breaker(
+        self, mock_broker, mock_risk_manager, sample_guard_state
+    ):
+        """When candles length < window, check_volatility_circuit_breaker is NOT called."""
+        from gpt_trader.features.live_trade.execution.guards.volatility import VolatilityGuard
+
+        mock_risk_manager.last_mark_update = {"BTC-PERP": time.time()}
+        mock_risk_manager.config.volatility_window_periods = 20
+
+        # Return only 10 candles (less than window of 20)
+        mock_candle = MagicMock()
+        mock_candle.close = Decimal("50000")
+        mock_broker.get_candles.return_value = [mock_candle] * 10
+
+        guard = VolatilityGuard(broker=mock_broker, risk_manager=mock_risk_manager)
+
+        guard.check(sample_guard_state, incremental=False)
+
+        # get_candles should be called
+        mock_broker.get_candles.assert_called()
+        # But check_volatility_circuit_breaker should NOT be called due to insufficient data
+        mock_risk_manager.check_volatility_circuit_breaker.assert_not_called()
+
+    def test_multiple_symbols_one_fails_raises_with_failures_list(
+        self, mock_broker, mock_risk_manager
+    ):
+        """When get_candles fails for some symbols, RiskGuardDataUnavailable includes failures."""
+        from gpt_trader.features.live_trade.execution.guards.volatility import VolatilityGuard
+
+        mock_risk_manager.last_mark_update = {
+            "BTC-PERP": time.time(),
+            "ETH-PERP": time.time(),
+        }
+        mock_risk_manager.config.volatility_window_periods = 20
+
+        # BTC succeeds, ETH fails
+        def get_candles_side_effect(symbol, **kwargs):
+            if symbol == "ETH-PERP":
+                raise ConnectionError("Network error")
+            mock_candle = MagicMock()
+            mock_candle.close = Decimal("50000")
+            return [mock_candle] * 20
+
+        mock_broker.get_candles.side_effect = get_candles_side_effect
+        mock_risk_manager.check_volatility_circuit_breaker.return_value = MagicMock(triggered=False)
+
+        guard = VolatilityGuard(broker=mock_broker, risk_manager=mock_risk_manager)
+
+        state = RuntimeGuardState(
+            timestamp=time.time(),
+            balances=[],
+            equity=Decimal("10000"),
+            positions=[],
+            positions_pnl={},
+            positions_dict={},
+            guard_events=[],
+        )
+
+        with pytest.raises(RiskGuardDataUnavailable) as exc_info:
+            guard.check(state, incremental=False)
+
+        assert exc_info.value.guard_name == "volatility_circuit_breaker"
+        failures = exc_info.value.details.get("failures", [])
+        assert len(failures) == 1
+        assert failures[0]["symbol"] == "ETH-PERP"
+
+
+# =============================================================================
+# Phase 7: GuardManager Edge Cases
+# =============================================================================
+
+
+class TestGuardManagerEdgeCases:
+    """Edge-case tests for GuardManager correctness."""
+
+    def test_data_unavailable_is_recorded_and_surfaces(self, guard_manager, sample_guard_state):
+        """When guard raises RiskGuardDataUnavailable, it's recorded and surfaced."""
+        error = RiskGuardDataUnavailable(
+            guard_name="test_guard",
+            message="Data temporarily unavailable",
+            details={"reason": "network"},
+        )
+        func = MagicMock(side_effect=error)
+
+        with patch(
+            "gpt_trader.features.live_trade.execution.guard_manager.record_guard_failure"
+        ) as mock_record:
+            # RiskGuardDataUnavailable is recoverable, so it should NOT raise
+            guard_manager.run_guard_step("test_guard", func)
+
+        # Verify failure was recorded
+        mock_record.assert_called_once()
+        recorded_error = mock_record.call_args[0][0]
+        assert recorded_error.guard_name == "test_guard"
+        assert recorded_error.recoverable is True
+
+    def test_guard_order_is_stable(self, guard_manager):
+        """Verify guards are executed in a stable, predictable order."""
+        expected_order = [
+            "pnl_telemetry",
+            "daily_loss",
+            "liquidation_buffer",
+            "mark_staleness",
+            "risk_metrics",
+            "volatility_circuit_breaker",
+            "api_health",
+        ]
+
+        actual_order = [guard.name for guard in guard_manager._guards]
+        assert actual_order == expected_order
+
+    def test_run_guards_for_state_stops_on_unrecoverable_error(
+        self, guard_manager, sample_guard_state
+    ):
+        """When a guard raises unrecoverable error, subsequent guards are NOT run."""
+        call_order = []
+
+        def make_check(name, should_fail=False):
+            def check(state, incremental=False):
+                call_order.append(name)
+                if should_fail:
+                    raise RiskGuardActionError(
+                        guard_name=name,
+                        message="Fatal",
+                        details={},
+                    )
+
+            return check
+
+        # Replace guards with test stubs - second guard fails
+        guard_manager._guards = []
+        for i, name in enumerate(["guard_a", "guard_b", "guard_c"]):
+            mock_guard = MagicMock()
+            mock_guard.name = name
+            mock_guard.check = make_check(name, should_fail=(i == 1))
+            guard_manager._guards.append(mock_guard)
+
+        with pytest.raises(RiskGuardActionError):
+            guard_manager.run_guards_for_state(sample_guard_state, incremental=False)
+
+        # Only guard_a and guard_b should have been called
+        assert call_order == ["guard_a", "guard_b"]

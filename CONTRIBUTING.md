@@ -320,6 +320,47 @@ uv run pytest tests/unit -n auto -q
 pre-commit run --all-files
 ```
 
+## CI Lanes
+
+The CI workflow (`.github/workflows/ci.yml`) runs checks in parallel lanes for faster feedback and isolated failures.
+
+### Lane Overview
+
+| Lane | Job Name | Command | Purpose |
+|------|----------|---------|---------|
+| **Lint** | `lint` | `uv run ruff check . && uv run black --check .` | Code style |
+| **Type Check** | `typecheck` | `uv run mypy src` | Static typing |
+| **TUI CSS** | `tui-css` | `python scripts/ci/check_tui_css_up_to_date.py` | Generated CSS in sync |
+| **Unit (Core)** | `unit-tests` | `uv run pytest tests/unit -n auto -q --ignore=tests/unit/gpt_trader/tui/test_snapshots.py` | Fast unit tests |
+| **TUI Snapshots** | `tui-snapshots` | `uv run pytest tests/unit/gpt_trader/tui/test_snapshots.py tests/tui -v` | Visual regression |
+| **Property** | `property-tests` | `uv run pytest tests/property -v` | Property-based tests |
+| **Contract** | `contract-tests` | `uv run pytest tests/contract -v` | API contracts |
+
+### Running Lanes Locally
+
+```bash
+# Lint lane
+uv run ruff check . && uv run black --check .
+
+# Type check lane
+uv run mypy src
+
+# TUI CSS lane
+python scripts/ci/check_tui_css_up_to_date.py
+
+# Unit tests (core, excluding TUI snapshots)
+uv run pytest tests/unit -n auto -q --ignore=tests/unit/gpt_trader/tui/test_snapshots.py
+
+# TUI snapshot tests
+uv run pytest tests/unit/gpt_trader/tui/test_snapshots.py tests/tui -v
+
+# Property tests
+uv run pytest tests/property -v
+
+# Contract tests
+uv run pytest tests/contract -v
+```
+
 ## Pre-commit Hook Configuration
 
 Our pre-commit hooks enforce:

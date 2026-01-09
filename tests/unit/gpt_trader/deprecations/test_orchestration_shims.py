@@ -1,7 +1,10 @@
-"""Tests for deprecated import paths.
+"""Tests for orchestration shim deprecation warnings.
 
-These tests verify that importing from deprecated module paths emits
-deprecation warnings and that the warnings point to the canonical locations.
+These tests verify that importing from deprecated orchestration module paths
+emits deprecation warnings pointing to canonical locations. These tests are
+the only authorized location for orchestration imports until v3.0 removal.
+
+See docs/DEPRECATIONS.md for migration guidance.
 """
 
 import sys

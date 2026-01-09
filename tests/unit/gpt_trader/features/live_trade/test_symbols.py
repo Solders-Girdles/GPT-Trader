@@ -1,4 +1,4 @@
-"""Enhanced tests for symbols normalization module to improve coverage."""
+"""Tests for gpt_trader.features.live_trade.symbols module."""
 
 from __future__ import annotations
 

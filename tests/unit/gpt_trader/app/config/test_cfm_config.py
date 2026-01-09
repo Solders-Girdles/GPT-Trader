@@ -1,6 +1,6 @@
-"""Tests for CFM configuration in BotConfig."""
+"""Tests for CFM configuration in gpt_trader.app.config.bot_config module."""
 
-from gpt_trader.orchestration.configuration.bot_config import BotConfig
+from gpt_trader.app.config.bot_config import BotConfig
 
 
 class TestCFMConfigDefaults:

@@ -1,4 +1,4 @@
-"""Tests for CFM-specific risk configuration parameters."""
+"""Tests for CFM-specific risk configuration in gpt_trader.features.live_trade.risk module."""
 
 import json
 import os

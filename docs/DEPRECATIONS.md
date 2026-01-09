@@ -30,6 +30,8 @@ All deprecated modules reference this tracker in their docstrings.
 
 > **Note**: As of 2026-01-09, production code (`src/`) no longer imports from `gpt_trader.orchestration` outside the shim package. All orchestration modules are now pure re-export shims with `DeprecationWarning` on import.
 
+> **Phase 11 Checkpoint** (2026-01-09): Test suite now uses canonical imports only. Orchestration imports are only allowed in `tests/unit/gpt_trader/deprecations/test_orchestration_shims.py` until v3.0 removal. CI guard enforces this constraint.
+
 ### Configuration (Remove after v3.0)
 
 | Deprecated | Canonical | Status |
@@ -120,10 +122,11 @@ src/gpt_trader/orchestration/
 
 ### Post-Removal Tasks
 
-1. Delete `tests/unit/gpt_trader/orchestration/` directory
-2. Remove `orchestration` from any `__all__` exports
-3. Update `docs/ARCHITECTURE.md` to remove orchestration references
-4. Update any CI/CD that references orchestration paths
+1. ~~Delete `tests/unit/gpt_trader/orchestration/` directory~~ ✓ Done in Phase 11
+2. Delete shim tests at `tests/unit/gpt_trader/deprecations/test_orchestration_shims.py`
+3. Remove `orchestration` from any `__all__` exports
+4. Update `docs/ARCHITECTURE.md` to remove orchestration references
+5. Update any CI/CD that references orchestration paths
 
 ## General Removal Checklist
 
@@ -142,4 +145,4 @@ Before removing any deprecated item:
 
 ---
 
-*Last updated: 2026-01-08*
+*Last updated: 2026-01-09*

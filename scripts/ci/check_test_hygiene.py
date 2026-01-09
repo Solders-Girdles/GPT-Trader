@@ -149,7 +149,7 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/persistence/test_orders_store.py",  # comprehensive order persistence contract with lifecycle, recovery, and integrity validation
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events.py",  # WebSocket event dispatcher testing with typed handlers and dispatcher routing
     "tests/unit/gpt_trader/app/test_bootstrap.py",  # comprehensive bootstrap module coverage with profile loading and container initialization
-    "tests/unit/gpt_trader/orchestration/test_deprecated_imports.py",  # deprecation warning coverage for legacy shims
+    "tests/unit/gpt_trader/deprecations/test_orchestration_shims.py",  # deprecation warning coverage for legacy shims
     "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators.py",  # Welford algorithm accuracy, numerical stability, and reset behavior
     "tests/unit/gpt_trader/orchestration/configuration/test_profiles.py",  # YAML-first profile loading with validation and fallback testing
     # Phase 2 pain points remediation: critical service coverage
@@ -203,7 +203,7 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics.py",  # API metrics collection comprehensive scenarios
     "tests/tui/test_state_logic.py",  # TUI state logic comprehensive scenarios
     "tests/unit/gpt_trader/tui/services/test_trading_stats_service.py",  # trading stats FIFO matching comprehensive scenarios
-    "tests/unit/gpt_trader/orchestration/configuration/risk/test_cfm_risk_config.py",  # CFM risk config validation matrix
+    "tests/unit/gpt_trader/features/live_trade/risk/test_cfm_risk_config.py",  # CFM risk config validation matrix
     "tests/unit/gpt_trader/tui/test_snapshots.py",  # TUI snapshot and layout guardrail comprehensive scenarios
     "tests/unit/gpt_trader/tui/widgets/test_system_monitor.py",  # system monitor widget comprehensive state scenarios
     # TUI reliability/fault-injection tests

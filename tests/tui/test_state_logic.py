@@ -4,7 +4,28 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from gpt_trader.monitoring.status_reporter import (
+    AccountStatus,
+    BalanceEntry,
+    BotStatus,
+    DecisionEntry,
+    MarketStatus,
+    OrderStatus,
+    PositionStatus,
+    RiskStatus,
+    StrategyStatus,
+    SystemStatus,
+    TradeStatus,
+)
 from gpt_trader.tui.state import TuiState
+
+
+def make_status(**overrides):
+    """Create a complete BotStatus with optional field overrides."""
+    status = BotStatus()
+    for key, value in overrides.items():
+        setattr(status, key, value)
+    return status
 
 
 @pytest.fixture
@@ -14,11 +35,11 @@ def tui_state():
 
 def test_update_market_data(tui_state):
     # MarketStatus: object with attributes, internal collections are dicts
-    status = SimpleNamespace(
-        market=SimpleNamespace(
-            last_prices={"BTC-USD": "50000.00"},  # Market converts strings
+    status = make_status(
+        market=MarketStatus(
+            last_prices={"BTC-USD": Decimal("50000.00")},
             last_price_update=1234567890.0,
-            price_history={"BTC-USD": ["49000.00", "50000.00"]},  # Market converts strings
+            price_history={"BTC-USD": [Decimal("49000.00"), Decimal("50000.00")]},
         )
     )
     tui_state.update_from_bot_status(status)
@@ -28,8 +49,8 @@ def test_update_market_data(tui_state):
 
 def test_update_position_data_dict(tui_state):
     # PositionStatus: object with .positions (dict of dicts)
-    status = SimpleNamespace(
-        positions=SimpleNamespace(
+    status = make_status(
+        positions=PositionStatus(
             positions={
                 "BTC-USD": {
                     "quantity": "1.0",
@@ -39,8 +60,8 @@ def test_update_position_data_dict(tui_state):
                     "side": "LONG",
                 }
             },
-            total_unrealized_pnl="5000.00",  # Positions converts strings
-            equity="100000.00",
+            total_unrealized_pnl=Decimal("5000.00"),
+            equity=Decimal("100000.00"),
         )
     )
     tui_state.update_from_bot_status(status)
@@ -54,18 +75,18 @@ def test_update_position_data_dict(tui_state):
 
 def test_update_order_data(tui_state):
     # list[OrderStatus] -> list of objects
-    order_obj = SimpleNamespace(
+    order_obj = OrderStatus(
         order_id="1",
         symbol="BTC-USD",
         side="BUY",
-        quantity="0.5",  # Order converts strings
-        price="49000.00",
+        quantity=Decimal("0.5"),
+        price=Decimal("49000.00"),
         status="OPEN",
         order_type="LIMIT",
         time_in_force="GTC",
-        creation_time="2023-01-01T12:00:00Z",
+        creation_time=1672574400.0,
     )
-    status = SimpleNamespace(orders=[order_obj])
+    status = make_status(orders=[order_obj])
     tui_state.update_from_bot_status(status)
     assert len(tui_state.order_data.orders) == 1
     order = tui_state.order_data.orders[0]
@@ -77,17 +98,17 @@ def test_update_order_data(tui_state):
 
 def test_update_trade_data(tui_state):
     # list[TradeStatus] -> list of objects
-    trade_obj = SimpleNamespace(
+    trade_obj = TradeStatus(
         trade_id="t1",
         symbol="BTC-USD",
         side="SELL",
-        quantity="0.1",
-        price="51000.00",  # Trade converts strings
+        quantity=Decimal("0.1"),
+        price=Decimal("51000.00"),
         order_id="o1",
         time="2023-01-01T12:00:00Z",
-        fee="5.00",
+        fee=Decimal("5.00"),
     )
-    status = SimpleNamespace(trades=[trade_obj])
+    status = make_status(trades=[trade_obj])
     tui_state.update_from_bot_status(status)
     assert len(tui_state.trade_data.trades) == 1
     trade = tui_state.trade_data.trades[0]
@@ -98,15 +119,14 @@ def test_update_trade_data(tui_state):
 
 def test_update_account_data(tui_state):
     # AccountStatus: object with .balances (list of objects)
-    # AccountStatus fields are expected to be Decimal already coming from StatusReporter
-    balance_obj = SimpleNamespace(
+    balance_obj = BalanceEntry(
         asset="USD",
         total=Decimal("50000.00"),
         available=Decimal("40000.00"),
         hold=Decimal("10000.00"),
     )
-    status = SimpleNamespace(
-        account=SimpleNamespace(
+    status = make_status(
+        account=AccountStatus(
             volume_30d=Decimal("1000000.00"),
             fees_30d=Decimal("50.00"),
             fee_tier="Taker",
@@ -122,7 +142,7 @@ def test_update_account_data(tui_state):
 
 def test_update_strategy_data(tui_state):
     # StrategyStatus: object with .last_decisions (list of DecisionEntry objects)
-    decision_obj = SimpleNamespace(
+    decision_obj = DecisionEntry(
         symbol="BTC-USD",
         action="BUY",
         reason="Signal",
@@ -130,8 +150,8 @@ def test_update_strategy_data(tui_state):
         indicators={},
         timestamp=1234567890.0,
     )
-    status = SimpleNamespace(
-        strategy=SimpleNamespace(
+    status = make_status(
+        strategy=StrategyStatus(
             active_strategies=["TrendFollowing"],
             last_decisions=[decision_obj],
         )
@@ -145,8 +165,8 @@ def test_update_strategy_data(tui_state):
 
 def test_update_risk_data(tui_state):
     # RiskStatus: object
-    status = SimpleNamespace(
-        risk=SimpleNamespace(
+    status = make_status(
+        risk=RiskStatus(
             max_leverage=5.0,
             daily_loss_limit_pct=0.02,
             current_daily_loss_pct=0.01,
@@ -162,8 +182,8 @@ def test_update_risk_data(tui_state):
 
 def test_update_system_data(tui_state):
     # SystemStatus: object
-    status = SimpleNamespace(
-        system=SimpleNamespace(
+    status = make_status(
+        system=SystemStatus(
             api_latency=0.05,
             connection_status="CONNECTED",
             rate_limit_usage="10%",

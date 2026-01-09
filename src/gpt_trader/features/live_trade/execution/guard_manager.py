@@ -32,6 +32,7 @@ from gpt_trader.features.live_trade.guard_errors import (
     record_guard_failure,
     record_guard_success,
 )
+from gpt_trader.observability.tracing import trace_span
 from gpt_trader.utilities.logging_patterns import get_logger
 from gpt_trader.utilities.quantities import quantity_from
 
@@ -215,23 +216,36 @@ class GuardManager:
 
     def run_guard_step(self, guard_name: str, func: Callable[[], None]) -> None:
         """Execute a guard step and apply unified error handling."""
-        try:
-            func()
-        except GuardError as err:
-            record_guard_failure(err)
-            if err.recoverable:
-                return
-            raise
-        except Exception:
-            fallback_err = RiskGuardComputationError(
-                guard_name=guard_name,
-                message=f"Unexpected failure in guard '{guard_name}'",
-                details={},
-            )
-            record_guard_failure(fallback_err)
-            raise fallback_err
-        else:
-            record_guard_success(guard_name)
+        with trace_span(
+            "guard_check",
+            {"guard_name": guard_name},
+        ) as span:
+            try:
+                func()
+            except GuardError as err:
+                record_guard_failure(err)
+                if span is not None:
+                    span.set_attribute("outcome", "failure")
+                    span.set_attribute("error_type", type(err).__name__)
+                    span.set_attribute("recoverable", err.recoverable)
+                if err.recoverable:
+                    return
+                raise
+            except Exception as exc:
+                fallback_err = RiskGuardComputationError(
+                    guard_name=guard_name,
+                    message=f"Unexpected failure in guard '{guard_name}'",
+                    details={},
+                )
+                record_guard_failure(fallback_err)
+                if span is not None:
+                    span.set_attribute("outcome", "failure")
+                    span.set_attribute("error_type", type(exc).__name__)
+                raise fallback_err
+            else:
+                record_guard_success(guard_name)
+                if span is not None:
+                    span.set_attribute("outcome", "success")
 
     def run_guards_for_state(self, state: RuntimeGuardState, incremental: bool) -> None:
         """Run all guards for the given state."""

@@ -325,11 +325,13 @@ class OrderRouter:
             )
 
             logger.info(
-                "Executed via canonical path: symbol=%s, side=%s, qty=%s, mode=%s",
-                decision.symbol,
-                side.value,
-                decision.quantity,
-                decision.mode.value,
+                "Executed via canonical path",
+                symbol=decision.symbol,
+                side=side.value,
+                quantity=str(decision.quantity),
+                mode=decision.mode.value,
+                operation="order_route",
+                stage="canonical_success",
             )
 
             return OrderResult(
@@ -339,9 +341,12 @@ class OrderRouter:
 
         except Exception as e:
             logger.error(
-                "Failed to execute via canonical path: %s - %s",
-                decision.symbol,
-                str(e),
+                "Failed to execute via canonical path",
+                symbol=decision.symbol,
+                error_message=str(e),
+                mode=decision.mode.value,
+                operation="order_route",
+                stage="canonical_failure",
             )
             return OrderResult(
                 success=False,
@@ -380,11 +385,13 @@ class OrderRouter:
             )
 
             logger.info(
-                "Executed spot order: symbol=%s, side=%s, qty=%s, order_id=%s",
-                decision.symbol,
-                side.value,
-                decision.quantity,
-                _resolve_order_id(order),
+                "Executed spot order",
+                symbol=decision.symbol,
+                side=side.value,
+                quantity=str(decision.quantity),
+                order_id=_resolve_order_id(order),
+                operation="order_route",
+                stage="spot_success",
             )
 
             return OrderResult(
@@ -395,9 +402,11 @@ class OrderRouter:
 
         except Exception as e:
             logger.error(
-                "Failed to execute spot order: %s - %s",
-                decision.symbol,
-                str(e),
+                "Failed to execute spot order",
+                symbol=decision.symbol,
+                error_message=str(e),
+                operation="order_route",
+                stage="spot_failure",
             )
             return OrderResult(
                 success=False,
@@ -452,12 +461,14 @@ class OrderRouter:
             )
 
             logger.info(
-                "Executed CFM order: symbol=%s, side=%s, qty=%s, leverage=%dx, order_id=%s",
-                decision.symbol,
-                side.value,
-                decision.quantity,
-                decision.leverage,
-                _resolve_order_id(order),
+                "Executed CFM order",
+                symbol=decision.symbol,
+                side=side.value,
+                quantity=str(decision.quantity),
+                leverage=decision.leverage,
+                order_id=_resolve_order_id(order),
+                operation="order_route",
+                stage="cfm_success",
             )
 
             return OrderResult(
@@ -468,9 +479,12 @@ class OrderRouter:
 
         except Exception as e:
             logger.error(
-                "Failed to execute CFM order: %s - %s",
-                decision.symbol,
-                str(e),
+                "Failed to execute CFM order",
+                symbol=decision.symbol,
+                error_message=str(e),
+                leverage=decision.leverage,
+                operation="order_route",
+                stage="cfm_failure",
             )
             return OrderResult(
                 success=False,

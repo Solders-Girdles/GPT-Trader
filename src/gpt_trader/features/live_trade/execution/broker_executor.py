@@ -15,6 +15,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any, TypeVar
 
 from gpt_trader.core import OrderSide, OrderType
+from gpt_trader.monitoring.metrics_collector import record_histogram
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -75,6 +76,35 @@ DEFAULT_RETRY_POLICY = RetryPolicy(
     timeout_seconds=30.0,
     jitter=0.1,
 )
+
+
+def _record_broker_call_latency(
+    latency_seconds: float,
+    operation: str,
+    outcome: str,
+    reason: str = "none",
+) -> None:
+    """Record broker API call latency histogram.
+
+    Args:
+        latency_seconds: Call latency in seconds.
+        operation: Operation type (submit, cancel, preview).
+        outcome: "success" or "failure".
+        reason: Failure reason or "none" for success.
+    """
+    try:
+        record_histogram(
+            "gpt_trader_broker_call_latency_seconds",
+            latency_seconds,
+            labels={
+                "operation": operation,
+                "outcome": outcome,
+                "reason": reason,
+            },
+        )
+    except Exception:
+        # Don't let metrics errors affect broker operations
+        pass
 
 
 def execute_with_retry(
@@ -282,18 +312,46 @@ class BrokerExecutor:
         leverage: int | None,
     ) -> Any:
         """Execute the actual broker call (no retry)."""
-        return self._broker.place_order(
-            symbol=symbol,
-            side=side,
-            order_type=order_type,
-            quantity=quantity,
-            price=price,
-            stop_price=stop_price,
-            tif=tif if tif is not None else None,
-            reduce_only=reduce_only,
-            leverage=leverage,
-            client_id=submit_id,
-        )
+        start_time = time.perf_counter()
+        try:
+            result = self._broker.place_order(
+                symbol=symbol,
+                side=side,
+                order_type=order_type,
+                quantity=quantity,
+                price=price,
+                stop_price=stop_price,
+                tif=tif if tif is not None else None,
+                reduce_only=reduce_only,
+                leverage=leverage,
+                client_id=submit_id,
+            )
+            latency_seconds = time.perf_counter() - start_time
+            _record_broker_call_latency(
+                latency_seconds=latency_seconds,
+                operation="submit",
+                outcome="success",
+            )
+            return result
+        except Exception as exc:
+            latency_seconds = time.perf_counter() - start_time
+            # Classify error for metrics
+            error_msg = str(exc).lower()
+            if "timeout" in error_msg:
+                reason = "timeout"
+            elif "connection" in error_msg or "network" in error_msg:
+                reason = "network"
+            elif "rate" in error_msg or "429" in error_msg:
+                reason = "rate_limit"
+            else:
+                reason = "error"
+            _record_broker_call_latency(
+                latency_seconds=latency_seconds,
+                operation="submit",
+                outcome="failure",
+                reason=reason,
+            )
+            raise
 
     def _execute_with_retry(
         self,

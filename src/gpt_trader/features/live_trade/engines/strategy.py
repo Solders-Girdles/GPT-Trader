@@ -888,7 +888,13 @@ class TradingEngine(BaseEngine):
             self._status_reporter.update_strategy(active_strats, [decision_record])
 
             if decision.action in (Action.BUY, Action.SELL):
-                logger.info(f"EXECUTING {decision.action} for {symbol}")
+                logger.info(
+                    "Executing order",
+                    symbol=symbol,
+                    action=decision.action.value,
+                    operation="order_placement",
+                    stage="start",
+                )
                 try:
                     with profile_span(
                         "order_placement", {"symbol": symbol, "action": decision.action.value}
@@ -900,7 +906,14 @@ class TradingEngine(BaseEngine):
                             equity=equity,
                         )
                 except ValidationError as e:
-                    logger.warning(f"Risk validation failed for {symbol}: {e}")
+                    logger.warning(
+                        "Risk validation failed",
+                        symbol=symbol,
+                        action=decision.action.value,
+                        error_message=str(e),
+                        operation="order_placement",
+                        stage="validation_failed",
+                    )
                     await self._notify(
                         title="Risk Validation Failed",
                         message=f"Order blocked by risk manager: {e}",
@@ -912,7 +925,14 @@ class TradingEngine(BaseEngine):
                         },
                     )
                 except Exception as e:
-                    logger.error(f"Order placement failed: {e}")
+                    logger.error(
+                        "Order placement failed",
+                        symbol=symbol,
+                        action=decision.action.value,
+                        error_message=str(e),
+                        operation="order_placement",
+                        stage="failed",
+                    )
                     await self._notify(
                         title="Order Placement Failed",
                         message=f"Failed to execute {decision.action} for {symbol}: {e}",

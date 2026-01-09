@@ -19,7 +19,7 @@ from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
 from gpt_trader.features.live_trade.execution.broker_executor import BrokerExecutor
 from gpt_trader.features.live_trade.execution.order_event_recorder import OrderEventRecorder
 from gpt_trader.logging.correlation import order_context
-from gpt_trader.monitoring.metrics_collector import record_counter
+from gpt_trader.monitoring.metrics_collector import record_counter, record_histogram
 from gpt_trader.observability.tracing import trace_span
 from gpt_trader.utilities.logging_patterns import get_logger
 
@@ -148,6 +148,32 @@ def _record_order_submission_metric(
         pass
 
 
+def _record_order_submission_latency(
+    latency_seconds: float,
+    result: str,
+    side: str,
+) -> None:
+    """Record order submission latency histogram.
+
+    Args:
+        latency_seconds: Total submission latency in seconds.
+        result: "success", "rejected", or "failed"
+        side: "buy" or "sell"
+    """
+    try:
+        record_histogram(
+            "gpt_trader_order_submission_latency_seconds",
+            latency_seconds,
+            labels={
+                "result": result,
+                "side": side.lower(),
+            },
+        )
+    except Exception:
+        # Don't let metrics errors affect order execution
+        pass
+
+
 class OrderSubmitter:
     """Handles order submission and event recording."""
 
@@ -257,6 +283,8 @@ class OrderSubmitter:
             with trace_span(
                 "order_submit",
                 {
+                    "bot_id": self.bot_id,
+                    "client_order_id": submit_id,
                     "symbol": symbol,
                     "side": side.value if hasattr(side, "value") else str(side),
                     "order_type": (
@@ -326,6 +354,9 @@ class OrderSubmitter:
             price_float = float(price) if price is not None else 0.0
             qty_float = float(order_quantity)
 
+            # Convert latency to seconds for histogram
+            latency_seconds = latency_ms / 1000.0
+
             if result is not None:
                 _record_execution_telemetry(
                     latency_ms=latency_ms,
@@ -338,6 +369,11 @@ class OrderSubmitter:
                 _record_order_submission_metric(
                     result="success",
                     reason="none",
+                    side=side_str,
+                )
+                _record_order_submission_latency(
+                    latency_seconds=latency_seconds,
+                    result="success",
                     side=side_str,
                 )
             else:
@@ -355,6 +391,11 @@ class OrderSubmitter:
                 _record_order_submission_metric(
                     result="rejected",
                     reason="rejected",
+                    side=side_str,
+                )
+                _record_order_submission_latency(
+                    latency_seconds=latency_seconds,
+                    result="rejected",
                     side=side_str,
                 )
 
@@ -389,6 +430,11 @@ class OrderSubmitter:
             _record_order_submission_metric(
                 result=metric_result,
                 reason=reason,
+                side=side_str,
+            )
+            _record_order_submission_latency(
+                latency_seconds=latency_ms / 1000.0,
+                result=metric_result,
                 side=side_str,
             )
             # 4. Handle Failure

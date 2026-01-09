@@ -40,6 +40,7 @@ last-updated: 2025-11-24
 - [Production Deployment](guides/production.md) - Deployment, monitoring, rollback, emergencies
 - [Reliability Guide](RELIABILITY.md) - Degradation matrix, config defaults, chaos harness
 - [Monitoring Playbook](MONITORING_PLAYBOOK.md) - Metrics, alerting, and dashboards
+- [Observability Reference](OBSERVABILITY.md) - Metrics, traces, and structured logging
 - [Paper Trading](guides/paper_trading.md) - Safe testing with mock broker
 - [Backtesting](guides/backtesting.md) - Historical strategy validation
 

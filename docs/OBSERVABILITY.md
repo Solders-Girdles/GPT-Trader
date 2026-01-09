@@ -282,6 +282,88 @@ gpt_trader_health_status{status="WARN"} == 1
   for 5m
 ```
 
+## Health Signals Pipeline
+
+Health signals flow through a multi-stage pipeline from raw metrics to actionable status:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         Metric Sources                                       │
+│  • ExecutionTelemetryCollector (order success/retry rates)                  │
+│  • BrokerExecutor (latency histograms)                                       │
+│  • GuardManager (trip counts)                                                │
+│  • WebSocket connection (staleness)                                          │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    health_checks.py                                          │
+│                                                                             │
+│  • compute_execution_signals(collector, thresholds) → HealthSummary        │
+│  • Evaluates each signal against WARN/CRIT thresholds                       │
+│  • Returns worst-case status across all signals                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                        ┌─────────────┴─────────────┐
+                        ▼                           ▼
+┌───────────────────────────────┐   ┌───────────────────────────────┐
+│      /health endpoint          │   │     status_reporter.py         │
+│                                │   │                                │
+│  • health_server.py            │   │  • BotStatus.health_state      │
+│  • Returns JSON with signals   │   │  • BotStatus.execution_signals │
+│  • Used by load balancers      │   │  • Used by TUI and dashboards  │
+└───────────────────────────────┘   └───────────────────────────────┘
+```
+
+**Key Files:**
+
+| File | Purpose |
+|------|---------|
+| `monitoring/health_signals.py` | Signal models (`HealthSignal`, `HealthSummary`, `HealthThresholds`) |
+| `monitoring/health_checks.py` | Signal computation and threshold evaluation |
+| `app/health_server.py` | HTTP `/health` endpoint serving signal summary |
+| `monitoring/status_reporter.py` | `BotStatus` integration for TUI/dashboards |
+
+## Metrics & Tracing Coverage
+
+The execution pipeline is fully instrumented:
+
+### Submission Latency
+
+| Metric | Instrumentation Point |
+|--------|----------------------|
+| `gpt_trader_order_submission_latency_seconds` | `OrderSubmitter.submit_order()` |
+| `gpt_trader_broker_call_latency_seconds` | `BrokerExecutor._execute_broker_order()` |
+
+### Broker Call Histograms
+
+Each broker API call records:
+- Operation type (`submit`, `cancel`, `preview`)
+- Outcome (`success`, `failure`)
+- Failure reason (`timeout`, `network`, `rate_limit`, `error`)
+
+### Guard Trace Spans
+
+Runtime guard checks emit `guard_check` spans with:
+- `guard_name`: Which guard was evaluated
+- `outcome`: `success` or `failure`
+- `error_type`: Exception class on failure
+- `recoverable`: Whether the failure is recoverable
+
+### Correlation Context
+
+The `correlation_context` manager threads trace IDs through:
+- Log records (`trace_id`, `span_id` fields)
+- Metric labels (where applicable)
+- Event store records
+
+Example:
+```python
+with correlation_context(symbol="BTC-USD", order_id="abc123"):
+    # All logs and spans inherit context
+    result = await submitter.submit_order(order)
+```
+
 ---
 
 *Last updated: 2026-01-08*

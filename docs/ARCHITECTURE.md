@@ -583,6 +583,50 @@ monitoring: real-time
 - Liquidity monitoring
 - API error thresholds
 
+### Resilience & Retry Policy
+
+The execution pipeline uses a configurable `RetryPolicy` for transient failures:
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `max_attempts` | 3 | Maximum broker call attempts |
+| `base_delay` | 0.5s | Initial backoff delay |
+| `max_delay` | 30.0s | Maximum backoff delay |
+| `exponential_base` | 2.0 | Backoff multiplier |
+
+**Configuration:**
+- Code: `BrokerExecutor(retry_policy=RetryPolicy(...))`
+- Location: `features/live_trade/execution/broker_executor.py`
+
+**Retry Classification:**
+- **Retryable**: `TimeoutError`, `ConnectionError`, rate limits (429)
+- **Non-retryable**: `ValueError` (rejections), `InvalidOrder`, insufficient funds
+
+The `client_order_id` is preserved across retries for broker-side idempotency.
+
+### Degradation Lifecycle
+
+The `DegradationState` manages trading restrictions with monotonic progression:
+
+```
+NORMAL → REDUCE_ONLY → PAUSED → HALTED
+```
+
+**Pause Types:**
+
+| Method | Scope | Use Case |
+|--------|-------|----------|
+| `pause_all(seconds)` | Global | System-wide issues |
+| `pause_symbol(symbol, seconds)` | Per-symbol | Symbol-specific problems |
+
+**Key Behaviors:**
+- Pauses are time-bounded and auto-expire
+- `allow_reduce_only=True` permits position-closing orders during pause
+- Symbol pauses expire independently
+- Guard failures can trigger automatic pause via `record_broker_failure()`
+
+**Location:** `features/live_trade/degradation.py`
+
 ## Performance & Observability
 
 - **Cycle Metrics**: persisted to `var/data/coinbase_trader/<profile>/metrics.json` and exposed via the

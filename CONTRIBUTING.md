@@ -113,6 +113,50 @@ Before branching, make sure to:
 - Use fixtures for shared setup
 - Mock external dependencies
 
+### Resilience Testing
+
+The `tests/fixtures/failure_injection.py` module provides deterministic failure simulation for testing retry logic, degradation behavior, and error handling without network calls or sleeps.
+
+**Key Components:**
+
+| Component | Purpose |
+|-----------|---------|
+| `FailureScript` | Scripted sequence of failures/successes |
+| `InjectingBroker` | Wraps a broker to inject failures per-method |
+| `no_op_sleep` | Instant sleep for deterministic timing |
+| `counting_sleep` | Records sleep durations for backoff verification |
+
+**Example Usage:**
+
+```python
+from tests.fixtures.failure_injection import FailureScript, InjectingBroker, counting_sleep
+
+# Fail twice, then succeed
+script = FailureScript.fail_then_succeed(failures=2)
+injecting = InjectingBroker(mock_broker, place_order=script)
+
+# Verify exponential backoff
+sleep_fn, get_sleeps = counting_sleep()
+executor = BrokerExecutor(broker=injecting, sleep_fn=sleep_fn)
+executor.execute(order)
+assert get_sleeps() == [0.5, 1.0]  # Exponential delays
+```
+
+**Running Resilience Tests:**
+
+```bash
+# Broker executor resilience tests
+uv run pytest tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor.py::TestBrokerExecutorResilience -v
+
+# Degradation recovery tests
+uv run pytest tests/unit/gpt_trader/features/live_trade/test_degradation.py::TestPauseExpiryRecovery -v
+
+# Order submission idempotency test
+uv run pytest tests/unit/gpt_trader/features/live_trade/execution/test_order_submission.py::TestTransientFailureWithClientOrderIdReuse -v
+```
+
+All resilience tests run deterministically under `pytest -n auto`.
+
 ## Repository Organization
 
 ### Directory Structure Standards

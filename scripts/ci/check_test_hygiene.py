@@ -23,24 +23,16 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/features/live_trade/test_risk_core.py",
     "tests/unit/gpt_trader/features/live_trade/test_risk_runtime.py",  # 343 lines: comprehensive runtime guard tests
     "tests/unit/gpt_trader/features/live_trade/test_degradation.py",  # 349 lines: monotonicity + guard telemetry coverage
-    "tests/unit/gpt_trader/orchestration/test_live_execution.py",
-    "tests/unit/gpt_trader/orchestration/test_execution_coordinator.py",  # complex orchestration harness
-    "tests/unit/gpt_trader/orchestration/test_runtime_coordinator.py",  # integration-heavy runtime checks
-    "tests/unit/gpt_trader/orchestration/test_strategy_orchestrator.py",  # strategy routing contract suite
     "tests/integration/test_composition_root.py",  # composition root integration coverage
     "tests/unit/app/test_container.py",  # exhaustive container unit scenarios
     "tests/integration/test_reduce_only_state_manager_integration.py",  # comprehensive reduce-only state manager integration coverage
-    "tests/unit/gpt_trader/orchestration/test_state_manager.py",  # exhaustive reduce-only state manager unit scenarios
     "tests/integration/gpt_trader/features/live_trade/test_circuit_breaker_integration.py",  # extensive circuit breaker regression suite
-    "tests/unit/gpt_trader/orchestration/configuration/test_core.py",  # configuration validation matrix
     "tests/unit/gpt_trader/logging/test_orchestration_helpers.py",  # structured logging helper coverage
-    "tests/unit/gpt_trader/orchestration/test_system_monitor.py",  # monitoring integration matrix
     "tests/unit/gpt_trader/test_broker_behavioral_contract.py",  # 358 lines: broker contract validation suite
     "tests/unit/gpt_trader/utilities/test_async_utils_advanced.py",  # legacy async helpers coverage  # naming: allow
     "tests/unit/gpt_trader/persistence/test_event_store.py",  # event store contract and normalization coverage
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_helpers.py",  # scenario builder helpers consolidated
     "tests/unit/gpt_trader/utilities/test_performance_monitoring_advanced.py",  # needs refactor but tracked separately
-    "tests/unit/gpt_trader/orchestration/test_partial_fills.py",  # legacy regression suite
     "tests/unit/gpt_trader/monitoring/test_health_checks.py",  # extensive health matrix
     "tests/unit/gpt_trader/monitoring/test_health_signals.py",  # health signal model contract coverage
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_permissions.py",  # permissions coverage table
@@ -48,7 +40,6 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/utilities/test_datetime_helpers.py",  # datetime edge-case coverage
     "tests/unit/gpt_trader/utilities/test_performance_monitoring_core.py",  # performance collector matrix
     "tests/unit/gpt_trader/utilities/test_trading_operations_core.py",  # trading ops regression suite
-    "tests/unit/gpt_trader/orchestration/test_execution_runtime_guards.py",  # guardrail regression suite
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_websocket.py",  # websocket integration matrix
     "tests/unit/gpt_trader/tui/test_risk_preview.py",  # comprehensive risk preview helper coverage
     "tests/unit/gpt_trader/features/live_trade/test_coinbase_pnl.py",  # pnl engine behavioural coverage
@@ -59,7 +50,6 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_accounts.py",  # account snapshot + treasury surface coverage
     "tests/unit/gpt_trader/errors/test_base.py",  # error taxonomy coverage
     "tests/unit/gpt_trader/monitoring/test_configuration_guardian.py",  # guardian behaviour matrix
-    "tests/unit/gpt_trader/orchestration/execution/test_validation.py",  # comprehensive validation coverage matrix
     "tests/unit/gpt_trader/utilities/test_trading_operations_integration.py",  # trading ops integration harness
     "tests/unit/gpt_trader/utilities/test_async_utils_core.py",  # async helper regression suite  # naming: allow
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_trading.py",  # trading API coverage
@@ -81,7 +71,6 @@ ALLOWLIST = {
     "tests/property/test_coinbase_invariants.py",  # property-based coverage for invariants across stochastic market scenarios
     "tests/unit/gpt_trader/monitoring/test_guard_manager_e2e.py",  # end-to-end guard orchestration scenarios spanning async workflows
     "tests/unit/gpt_trader/monitoring/test_system_logger.py",  # structured logging sink contract covering emit and fallback paths
-    "tests/unit/gpt_trader/orchestration/test_orchestration_async.py",  # async orchestration behaviours with concurrency guard rails
     "tests/unit/gpt_trader/persistence/test_json_file_store_contract.py",  # persistence contract with locking, rotation, and corruption scenarios
     "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection.py",  # state collection aggregation matrix
     "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer.py",  # IP allowlist enforcement scenarios
@@ -151,7 +140,6 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/app/test_bootstrap.py",  # comprehensive bootstrap module coverage with profile loading and container initialization
     "tests/unit/gpt_trader/deprecations/test_orchestration_shims.py",  # deprecation warning coverage for legacy shims
     "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators.py",  # Welford algorithm accuracy, numerical stability, and reset behavior
-    "tests/unit/gpt_trader/orchestration/configuration/test_profiles.py",  # YAML-first profile loading with validation and fallback testing
     # Phase 2 pain points remediation: critical service coverage
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service.py",  # OrderService protocol coverage: place/cancel/list/get orders
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service.py",  # PortfolioService coverage: balances, positions, INTX/CFM ops

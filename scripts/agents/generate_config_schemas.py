@@ -182,7 +182,7 @@ def add_field_descriptions(schema: dict[str, Any], descriptions: dict[str, str])
 
 def generate_bot_config_schema() -> dict[str, Any]:
     """Generate schema for BotConfig."""
-    from gpt_trader.orchestration.configuration.bot_config.bot_config import BotConfig
+    from gpt_trader.app.config import BotConfig
 
     schema = dataclass_to_json_schema(BotConfig, "BotConfig")
 

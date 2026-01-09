@@ -256,7 +256,7 @@ def main():
 
     # Load config and container to resolve paths consistently
     from gpt_trader.app.container import create_application_container
-    from gpt_trader.orchestration.configuration import BotConfig
+    from gpt_trader.app.config import BotConfig
 
     config = BotConfig(profile=args.profile)
     container = create_application_container(config)

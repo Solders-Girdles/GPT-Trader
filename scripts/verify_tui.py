@@ -7,7 +7,7 @@ from decimal import Decimal
 sys.path.append("src")
 
 from gpt_trader.cli.services import instantiate_bot
-from gpt_trader.orchestration.configuration import BotConfig
+from gpt_trader.app.config import BotConfig
 from gpt_trader.tui.state import TuiState
 
 # Configure logging to avoid noise

@@ -121,7 +121,10 @@ Feature flags (in `RiskConfig`):
 
 ### Factory Pattern
 
-`ExecutionEngineFactory.create_engine()` in `orchestration/execution/engine_factory.py`:
+> **Deprecation Note:** The `orchestration/` paths below are deprecated shims.
+> New code should use `TradingEngine.submit_order()` directly.
+
+`ExecutionEngineFactory.create_engine()` (historical path: `orchestration/execution/engine_factory.py`):
 
 ```python
 @classmethod
@@ -231,16 +234,19 @@ This ADR follows the same principle: **modular, composable services** with **fea
 
 ## References
 
+> **Note:** Paths under `orchestration/` are deprecated shims retained for backward compatibility.
+> See `DEPRECATIONS.md` for migration guidance.
+
 - **Analysis:** `docs/ops/phase3_execution_layer_analysis.md`
-- **Factory:** `src/gpt_trader/orchestration/execution/engine_factory.py`
-- **LiveExecutionEngine:** `src/gpt_trader/orchestration/live_execution.py`
+- **Factory:** `src/gpt_trader/orchestration/execution/engine_factory.py` *(deprecated shim)*
+- **LiveExecutionEngine:** `src/gpt_trader/orchestration/live_execution.py` *(deprecated shim)*
 - **AdvancedExecutionEngine:** `src/gpt_trader/features/live_trade/advanced_execution.py`
-- **RiskConfig:** `src/gpt_trader/config/live_trade_config.py`
+- **RiskConfig:** `src/gpt_trader/features/live_trade/risk/config.py` *(canonical path)*
+- **BotConfig:** `src/gpt_trader/app/config.py` *(canonical path)*
 - **Production Config:** `config/risk/dev_dynamic.json`
 - **Tests:**
-  - LiveExecutionEngine: `tests/unit/gpt_trader/orchestration/test_live_execution.py` (+9 more)
+  - Deprecation shims: `tests/unit/gpt_trader/deprecations/test_orchestration_shims.py`
   - AdvancedExecutionEngine: `tests/unit/gpt_trader/features/live_trade/test_advanced_execution.py` (+5 more)
-  - Factory: `tests/unit/gpt_trader/orchestration/execution/test_engine_factory.py`
 
 ---
 

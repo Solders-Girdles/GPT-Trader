@@ -5,7 +5,7 @@ from pathlib import Path
 from pprint import pprint
 
 from gpt_trader.app.container import create_application_container
-from gpt_trader.orchestration.configuration import BotConfig
+from gpt_trader.app.config import BotConfig
 
 # Create config from env to pick up API credentials if they are in env
 config = BotConfig.from_env()

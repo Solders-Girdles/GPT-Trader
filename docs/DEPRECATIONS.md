@@ -32,6 +32,8 @@ All deprecated modules reference this tracker in their docstrings.
 
 > **Phase 11 Checkpoint** (2026-01-09): Test suite now uses canonical imports only. Orchestration imports are only allowed in `tests/unit/gpt_trader/deprecations/test_orchestration_shims.py` until v3.0 removal. CI guard enforces this constraint.
 
+> **Phase 12 Checkpoint** (2026-01-09): Scripts and tooling now use canonical imports. CI guard extended to `scripts/`. ADR-001 updated with deprecation notes. Test hygiene ALLOWLIST pruned of orchestration paths. Ready for v3.0 hard removal.
+
 ### Configuration (Remove after v3.0)
 
 | Deprecated | Canonical | Status |

@@ -34,7 +34,7 @@ from rich.text import Text
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from gpt_trader.app.container import create_application_container
-from gpt_trader.orchestration.configuration import BotConfig
+from gpt_trader.app.config import BotConfig
 from gpt_trader.features.brokerages.paper import HybridPaperBroker
 from gpt_trader.utilities.logging_patterns import get_logger
 

@@ -8,7 +8,7 @@ timing critical code paths and recording metrics to Prometheus histograms.
 from __future__ import annotations
 
 import time
-from collections.abc import Generator
+from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -81,7 +81,7 @@ def record_profile(
 def profile_span(
     name: str,
     labels: dict[str, str] | None = None,
-) -> Generator[ProfileSample | None]:
+) -> Iterator[ProfileSample | None]:
     """Context manager for timing a code block and recording metrics.
 
     Automatically records the duration to the Prometheus histogram

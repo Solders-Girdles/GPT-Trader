@@ -14,6 +14,8 @@ Provides:
 - ProfileLoader: YAML-first profile loading with fallbacks
 """
 
+import warnings
+
 from gpt_trader.app.config import (
     TOP_VOLUME_BASES,
     BotConfig,
@@ -49,3 +51,11 @@ __all__ = [
     "TOP_VOLUME_BASES",
     "load_profile",
 ]
+
+# Emit deprecation warning on import
+warnings.warn(
+    "gpt_trader.orchestration.configuration is deprecated. "
+    "Import from gpt_trader.app.config instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)

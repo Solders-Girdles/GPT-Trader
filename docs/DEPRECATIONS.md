@@ -20,7 +20,7 @@ All deprecated modules reference this tracker in their docstrings.
 | `orchestration.account_telemetry` | `features.live_trade.telemetry.account` | Re-export shim | [account_telemetry.py](../src/gpt_trader/orchestration/account_telemetry.py) |
 | `OrderRouter.execute()` | `OrderRouter.execute_async()` | Method deprecated | [router.py](../src/gpt_trader/features/live_trade/execution/router.py) |
 
-> **Note**: As of 2026-01-08, production code (`src/`) no longer imports from the deprecated `orchestration.execution.validation` or `orchestration.symbols` shims. Tests have been updated to patch canonical module paths directly.
+> **Note**: As of 2026-01-08, production code (`src/`) no longer imports from the deprecated `orchestration.execution.validation` or `orchestration.symbols` shims. Tests have been updated to patch canonical module paths directly. All shims now emit `DeprecationWarning` on import.
 
 ### Configuration (Remove after v3.0)
 

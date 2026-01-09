@@ -20,7 +20,7 @@ def check_test_suite(checker: PreflightCheck) -> bool:
                 "poetry",
                 "run",
                 "pytest",
-                "tests/unit/gpt_trader/orchestration",
+                "tests/unit/gpt_trader/app",
                 "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_auth.py",
                 "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_models.py",
                 "-q",

@@ -476,7 +476,7 @@ from gpt_trader.backtesting import (
     ClockedBarRunner,
     GoldenPathValidator,
 )
-from gpt_trader.orchestration.coordinators import StrategyCoordinator
+from gpt_trader.features.live_trade.engines.runtime.coordinator import RuntimeCoordinator
 
 async def run_backtest():
     # 1. Initialize historical data
@@ -513,15 +513,15 @@ async def run_backtest():
     )
 
     # 5. Run backtest
-    strategy_coordinator = StrategyCoordinator()
-    strategy_coordinator.initialize(context)
+    coordinator = RuntimeCoordinator()
+    coordinator.initialize(context)
 
     async for bar_time, bars in runner.run():
         # Update sim broker with current bars
         sim_broker.update_market_data(bar_time, bars)
 
         # Run strategy cycle (identical to live!)
-        await strategy_coordinator.run_cycle()
+        await coordinator.run_cycle()
 
     # 6. Generate report
     report = sim_broker.generate_report()

@@ -12,13 +12,11 @@ Tests cover:
 
 from decimal import Decimal
 
+from gpt_trader.app.config import MeanReversionConfig
 from gpt_trader.features.live_trade.strategies.mean_reversion import (
     MeanReversionStrategy,
 )
 from gpt_trader.features.live_trade.strategies.perps_baseline import Action
-from gpt_trader.orchestration.configuration.bot_config.bot_config import (
-    MeanReversionConfig,
-)
 
 
 class TestZScoreCalculation:

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from gpt_trader.orchestration.intx_portfolio_service import IntxPortfolioService
+from gpt_trader.features.brokerages.coinbase.intx_portfolio_service import IntxPortfolioService
 
 
 class StubAccountManager:

@@ -14,7 +14,7 @@ Key Components
 
 Configuration
 -------------
-Risk parameters are loaded from ``RiskConfig`` (see ``orchestration.configuration.risk``).
+Risk parameters are loaded from ``RiskConfig`` (see ``features.live_trade.risk.config``).
 
 Key config fields:
 

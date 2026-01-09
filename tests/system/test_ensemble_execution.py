@@ -7,9 +7,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from gpt_trader.app.config import BotConfig
 from gpt_trader.features.live_trade.bot import TradingBot
 from gpt_trader.features.live_trade.strategies.ensemble import EnsembleStrategy
-from gpt_trader.orchestration.configuration.bot_config.bot_config import BotConfig
 
 
 class TestEnsembleSystemExecution:

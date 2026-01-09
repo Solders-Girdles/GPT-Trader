@@ -25,7 +25,7 @@ Security Best Practices
 See Also
 --------
 - ``gpt_trader.features.brokerages.coinbase.auth``: Coinbase-specific authentication
-- ``gpt_trader.orchestration.configuration``: Configuration loading
+- ``gpt_trader.app.config``: Configuration loading
 """
 
 # Authentication is handled via SimpleAuth in the brokerages module

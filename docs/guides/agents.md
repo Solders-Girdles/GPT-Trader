@@ -105,18 +105,21 @@ DRY_RUN=1
 
 ## Architecture Patterns
 
-### Coordinator Pattern
+### Bot Pattern
 ```python
-from gpt_trader.orchestration.coordinators import (
-    RuntimeCoordinator,
-    ExecutionCoordinator,
-    StrategyCoordinator,
-    TelemetryCoordinator
-)
+from gpt_trader.app.container import ApplicationContainer
+from gpt_trader.app.bootstrap import build_bot
 
-# Access through TradingBot instance
-bot.runtime_coordinator
-bot.execution_coordinator
+# Create bot via ApplicationContainer
+container = ApplicationContainer(config)
+bot = container.create_bot()
+
+# Or use convenience function
+bot = build_bot(config)
+
+# Access services through container
+bot.container.broker
+bot.container.risk_manager
 ```
 
 ### Feature Imports

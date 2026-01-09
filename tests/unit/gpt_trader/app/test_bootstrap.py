@@ -7,15 +7,15 @@ from unittest.mock import patch
 
 import pytest
 
-from gpt_trader.app.config import BotConfig
-from gpt_trader.config.types import Profile
-from gpt_trader.orchestration.bootstrap import (
+from gpt_trader.app.bootstrap import (
     BootstrapLogRecord,
     bot_from_profile,
     build_bot,
     normalise_symbols,
     resolve_runtime_paths,
 )
+from gpt_trader.app.config import BotConfig
+from gpt_trader.config.types import Profile
 
 
 @pytest.fixture(autouse=True)
@@ -128,7 +128,7 @@ class TestBuildBot:
             webhook_url="https://example.com/webhook",
         )
 
-        with patch("gpt_trader.orchestration.bootstrap.logger") as mock_logger:
+        with patch("gpt_trader.app.bootstrap.logger") as mock_logger:
             build_bot(config)
 
             # Should log webhook enabled

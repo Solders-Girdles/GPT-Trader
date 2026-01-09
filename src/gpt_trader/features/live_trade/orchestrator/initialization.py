@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast
 
 from gpt_trader.config.types import Profile
+from gpt_trader.features.live_trade.orchestrator.spot_profile_service import SpotProfileService
 from gpt_trader.features.live_trade.strategies.perps_baseline import (
     BaselinePerpsStrategy,
     PerpsStrategy,
@@ -12,7 +13,6 @@ from gpt_trader.features.live_trade.strategies.perps_baseline import (
     SpotStrategy,
     SpotStrategyConfig,
 )
-from gpt_trader.orchestration.spot_profile_service import SpotProfileService
 
 from .logging_utils import logger  # naming: allow
 

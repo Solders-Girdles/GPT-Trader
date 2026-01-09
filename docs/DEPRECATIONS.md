@@ -18,6 +18,11 @@ All deprecated modules reference this tracker in their docstrings.
 | `orchestration.configuration.bot_config` | `app.config` | Re-export shim | [bot_config.py](../src/gpt_trader/orchestration/configuration/bot_config/bot_config.py) |
 | `orchestration.configuration` (ConfigValidationError) | `app.config.validation` | Re-export shim | [\_\_init\_\_.py](../src/gpt_trader/orchestration/configuration/__init__.py) |
 | `orchestration.account_telemetry` | `features.live_trade.telemetry.account` | Re-export shim | [account_telemetry.py](../src/gpt_trader/orchestration/account_telemetry.py) |
+| `orchestration.bootstrap` | `app.bootstrap` | Re-export shim | [bootstrap.py](../src/gpt_trader/orchestration/bootstrap.py) |
+| `orchestration.spot_profile_service` | `features.live_trade.orchestrator.spot_profile_service` | Re-export shim | [spot_profile_service.py](../src/gpt_trader/orchestration/spot_profile_service.py) |
+| `orchestration.intx_portfolio_service` | `features.brokerages.coinbase.intx_portfolio_service` | Re-export shim | [intx_portfolio_service.py](../src/gpt_trader/orchestration/intx_portfolio_service.py) |
+| `orchestration.configuration.profiles` | `app.config.profile_loader` | Re-export shim | [profiles.py](../src/gpt_trader/orchestration/configuration/profiles.py) |
+| `orchestration` (package) | `app`, `features` | Re-export shim | [\_\_init\_\_.py](../src/gpt_trader/orchestration/__init__.py) |
 | `OrderRouter.execute()` | `OrderRouter.execute_async()` | Method deprecated | [router.py](../src/gpt_trader/features/live_trade/execution/router.py) |
 
 > **Note**: As of 2026-01-08, production code (`src/`) no longer imports from the deprecated `orchestration.execution.validation` or `orchestration.symbols` shims. Tests have been updated to patch canonical module paths directly. All shims now emit `DeprecationWarning` on import.

@@ -25,15 +25,17 @@ bot = container.create_bot()
 
 These functions use `ApplicationContainer` internally:
 
-- `orchestration/bootstrap.py` → `build_bot(config)` - Canonical way to create a bot
-- `orchestration/bootstrap.py` → `bot_from_profile(profile)` - Create bot from profile name
+- `app/bootstrap.py` → `build_bot(config)` - Canonical way to create a bot
+- `app/bootstrap.py` → `bot_from_profile(profile)` - Create bot from profile name
 
 ```python
-from gpt_trader.orchestration.bootstrap import build_bot, bot_from_profile
+from gpt_trader.app.bootstrap import build_bot, bot_from_profile
 
 bot = build_bot(config)
 bot = bot_from_profile("demo")
 ```
+
+> **Note:** The old `orchestration.bootstrap` path still works via re-export shim but emits a `DeprecationWarning`.
 
 ## v3.0 Changes (Completed)
 

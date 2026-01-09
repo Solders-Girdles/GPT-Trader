@@ -54,6 +54,38 @@ class FailureScript:
         """Reset the script to the beginning."""
         self._index = 0
 
+    @property
+    def call_count(self) -> int:
+        """Return the number of calls made to this script."""
+        return self._index
+
+    @classmethod
+    def from_outcomes(
+        cls,
+        *outcomes: Exception | Callable[[], Any] | None,
+        loop: bool = False,
+    ) -> FailureScript:
+        """Create a script from a sequence of outcomes.
+
+        Args:
+            *outcomes: Variable number of outcomes:
+                - None: success (call underlying)
+                - Exception: raise it
+                - callable: call it
+            loop: Whether to loop the sequence.
+
+        Returns:
+            FailureScript with the specified sequence.
+
+        Example:
+            >>> script = FailureScript.from_outcomes(
+            ...     ConnectionError("fail 1"),
+            ...     TimeoutError("fail 2"),
+            ...     None,  # success
+            ... )
+        """
+        return cls(sequence=list(outcomes), loop=loop)
+
     @classmethod
     def fail_then_succeed(
         cls,

@@ -48,6 +48,13 @@ class RetryPolicy:
         default=(TimeoutError, ConnectionError, OSError)
     )
 
+    def __post_init__(self) -> None:
+        """Validate and clamp jitter to [0.0, 1.0]."""
+        clamped = max(0.0, min(1.0, self.jitter))
+        if clamped != self.jitter:
+            # Frozen dataclass requires object.__setattr__
+            object.__setattr__(self, "jitter", clamped)
+
     def calculate_delay(self, attempt: int) -> float:
         """Calculate delay for a given attempt number (1-indexed).
 

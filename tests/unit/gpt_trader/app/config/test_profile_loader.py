@@ -13,6 +13,7 @@ from gpt_trader.app.config import BotConfig
 from gpt_trader.app.config.profile_loader import (
     ProfileLoader,
     ProfileSchema,
+    build_profile_config,
     load_profile,
 )
 from gpt_trader.app.container import (
@@ -21,9 +22,6 @@ from gpt_trader.app.container import (
     set_application_container,
 )
 from gpt_trader.config.types import Profile
-from gpt_trader.orchestration.configuration.profiles import (
-    build_profile_config,
-)
 
 
 @pytest.fixture(autouse=True)

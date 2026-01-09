@@ -50,6 +50,15 @@ jobs:
           fi
           echo "No legacy orchestration imports found in production code."
 
+          # Fail if any tests/ file imports gpt_trader.orchestration outside the shim test package
+          if grep -rn -E "(from|import)\s+gpt_trader\.orchestration" tests --include="*.py" | grep -v "tests/unit/gpt_trader/orchestration"; then
+            echo "::error::Legacy orchestration imports found in tests/ outside shim tests"
+            echo "Only shim tests may import gpt_trader.orchestration."
+            echo "See docs/DEPRECATIONS.md for migration guidance."
+            exit 1
+          fi
+          echo "No legacy orchestration imports found in tests."
+
   typecheck:
     name: Type Check
     runs-on: ubuntu-latest

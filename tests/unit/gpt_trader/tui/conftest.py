@@ -128,6 +128,10 @@ _TERMINAL_HASH_RE = re.compile(r"terminal-\d+-")
 _TIMING_RE = re.compile(r"\((\d+)ms\)")
 # Normalize UTC time display like "19:22&#160;UTC" to "XX:XX&#160;UTC"
 _UTC_TIME_RE = re.compile(r"\d{2}:\d{2}(&#160;| )UTC")
+# Normalize local timestamps like "01-15 12:30:45"
+_LOCAL_DATETIME_RE = re.compile(r"\b\d{2}-\d{2} \d{2}:\d{2}:\d{2}\b")
+# Normalize local time display like "12:30:45"
+_LOCAL_TIME_RE = re.compile(r"\b\d{2}:\d{2}:\d{2}\b")
 # Normalize braille spinner characters to a fixed state (spinner animation frames)
 _BRAILLE_SPINNER_RE = re.compile(r"[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏]")
 
@@ -138,6 +142,8 @@ def _normalize_svg(text: str) -> str:
     text = _TERMINAL_HASH_RE.sub("terminal-", text)
     text = _TIMING_RE.sub("(XXms)", text)
     text = _UTC_TIME_RE.sub("XX:XX UTC", text)
+    text = _LOCAL_DATETIME_RE.sub("XX-XX XX:XX:XX", text)
+    text = _LOCAL_TIME_RE.sub("XX:XX:XX", text)
     text = _BRAILLE_SPINNER_RE.sub("⠋", text)  # Normalize to first spinner frame
     lines = [line.rstrip() for line in text.splitlines()]
     lines = ["" if line.strip() == "" else line for line in lines]
@@ -157,6 +163,18 @@ class NormalizedSVGImageExtension(SingleFileSnapshotExtension):
         """Normalize volatile content before serializing."""
         text = super().serialize(data, exclude=exclude, include=include, matcher=matcher)
         return _normalize_svg(text)
+
+    def read_snapshot_data_from_location(
+        self, *, snapshot_location: str, snapshot_name: str, session_id: str
+    ):
+        data = super().read_snapshot_data_from_location(
+            snapshot_location=snapshot_location,
+            snapshot_name=snapshot_name,
+            session_id=session_id,
+        )
+        if isinstance(data, str):
+            return _normalize_svg(data)
+        return data
 
 
 def _import_app_from_path(app_path: str) -> App[Any]:

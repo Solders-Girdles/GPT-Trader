@@ -138,7 +138,11 @@ class TestCredentialFingerprint:
 
         with patch.dict(
             "os.environ",
-            {"COINBASE_CDP_API_KEY": "organizations/abc12345/apiKeys/xyz98765"},
+            {
+                "COINBASE_CDP_API_KEY": "organizations/abc12345/apiKeys/xyz98765",
+                "COINBASE_CDP_PRIVATE_KEY": "-----BEGIN EC PRIVATE KEY-----\nKEY\n-----END EC PRIVATE KEY-----",
+            },
+            clear=True,
         ):
             validator = CredentialValidator()
             fp = validator.compute_credential_fingerprint()

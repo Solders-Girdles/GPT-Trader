@@ -12,6 +12,7 @@ from unittest.mock import Mock
 
 import pytest
 
+from gpt_trader.monitoring.metrics_collector import reset_all
 from gpt_trader.monitoring.status_reporter import (
     BotStatus,
     EngineStatus,
@@ -222,6 +223,7 @@ class TestStatusReporterHealth:
             status_file = Path(tmpdir) / "status.json"
             reporter = StatusReporter(status_file=str(status_file))
 
+            reset_all()
             await reporter.start()
             reporter.update_price("BTC-USD", Decimal("50000"))
 

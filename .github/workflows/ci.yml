@@ -38,6 +38,18 @@ jobs:
       - name: Format (Black)
         run: uv run black --check .
 
+      - name: Guard against legacy orchestration imports
+        run: |
+          # Fail if any src/ file imports gpt_trader.orchestration outside the shim package
+          # Match "from gpt_trader.orchestration" or "import gpt_trader.orchestration"
+          if grep -rn -E "(from|import)\s+gpt_trader\.orchestration" src --include="*.py" | grep -v "src/gpt_trader/orchestration"; then
+            echo "::error::Legacy orchestration imports found in src/ outside the shim package"
+            echo "All orchestration imports must use canonical paths (app.*, features.*)."
+            echo "See docs/DEPRECATIONS.md for migration guidance."
+            exit 1
+          fi
+          echo "No legacy orchestration imports found in production code."
+
   typecheck:
     name: Type Check
     runs-on: ubuntu-latest

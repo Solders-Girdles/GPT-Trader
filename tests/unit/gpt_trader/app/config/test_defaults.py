@@ -1,10 +1,10 @@
-"""Tests for bot_config defaults module."""
+"""Tests for app/config/defaults module."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
-from gpt_trader.orchestration.configuration.bot_config.defaults import (
+from gpt_trader.app.config.defaults import (
     DEFAULT_SPOT_RISK_PATH,
     DEFAULT_SPOT_SYMBOLS,
     TOP_VOLUME_BASES,

@@ -33,15 +33,17 @@ Usage:
 """
 
 from gpt_trader.app.config.bot_config import (
-    DEFAULT_SPOT_RISK_PATH,
-    DEFAULT_SPOT_SYMBOLS,
-    TOP_VOLUME_BASES,
     BotConfig,
     BotRiskConfig,
     MeanReversionConfig,
     StrategyType,
 )
 from gpt_trader.app.config.controller import ConfigController
+from gpt_trader.app.config.defaults import (
+    DEFAULT_SPOT_RISK_PATH,
+    DEFAULT_SPOT_SYMBOLS,
+    TOP_VOLUME_BASES,
+)
 from gpt_trader.app.config.profile_loader import (
     ExecutionConfig,
     MonitoringConfig,

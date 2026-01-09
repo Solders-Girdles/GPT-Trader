@@ -1,4 +1,4 @@
-"""Tests for bot_config rules module."""
+"""Tests for app/config/validation_rules module."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from decimal import Decimal
 import pytest
 from pydantic_core import PydanticCustomError
 
-from gpt_trader.orchestration.configuration.bot_config.rules import (
+from gpt_trader.app.config.validation_rules import (
     DECIMAL_RULE,
     FLOAT_RULE,
     INT_RULE,

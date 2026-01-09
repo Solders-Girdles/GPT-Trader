@@ -12,10 +12,7 @@ from dataclasses import dataclass, field, fields, replace
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
-# Constants expected by core.py shim
-DEFAULT_SPOT_RISK_PATH = "config/risk.json"
-DEFAULT_SPOT_SYMBOLS = ["BTC-USD", "ETH-USD"]
-TOP_VOLUME_BASES = ["BTC", "ETH", "SOL"]
+# Import canonical defaults (top-10 symbols + spot_top10.json risk config)
 
 if TYPE_CHECKING:
     from gpt_trader.features.live_trade.strategies.perps_baseline import (

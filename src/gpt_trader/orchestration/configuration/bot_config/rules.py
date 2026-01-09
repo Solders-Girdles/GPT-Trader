@@ -1,61 +1,31 @@
-"""Validation rule helpers shared across BotConfig components."""
+"""
+DEPRECATED: This module has moved to gpt_trader.app.config.validation_rules
+
+This shim re-exports all symbols for backwards compatibility.
+Please update your imports to use the new location:
+
+    # Old (deprecated)
+    from gpt_trader.orchestration.configuration.bot_config.rules import apply_rule
+
+    # New (preferred)
+    from gpt_trader.app.config.validation_rules import apply_rule
+"""
 
 from __future__ import annotations
 
-from typing import Any
+import warnings
 
-from pydantic_core import PydanticCustomError
-
-from gpt_trader.validation import (
-    BaseValidationRule,
-    DecimalRule,
-    FloatRule,
-    IntegerRule,
-    ListRule,
-    RuleError,
-    StripStringRule,
-    SymbolRule,
+# Re-export all symbols from canonical location
+from gpt_trader.app.config.validation_rules import (
+    DECIMAL_RULE,
+    FLOAT_RULE,
+    INT_RULE,
+    STRING_RULE,
+    SYMBOL_LIST_RULE,
+    SYMBOL_RULE,
+    apply_rule,
+    ensure_condition,
 )
-
-# Instantiate shared validation rules once to avoid repeated construction.
-INT_RULE = IntegerRule()
-DECIMAL_RULE = DecimalRule()
-FLOAT_RULE = FloatRule()
-STRING_RULE = StripStringRule()
-SYMBOL_RULE = SymbolRule()
-SYMBOL_LIST_RULE = ListRule(item_rule=SYMBOL_RULE, allow_blank_items=False)
-
-
-def apply_rule(
-    rule: BaseValidationRule,
-    value: Any,
-    *,
-    field_label: str,
-    error_code: str,
-    error_template: str,
-) -> Any:
-    """Apply a configured validation rule and convert RuleError to Pydantic error."""
-    try:
-        return rule(value, field_label)
-    except RuleError as exc:
-        raise PydanticCustomError(
-            error_code,
-            error_template,
-            {"value": value, "error": str(exc)},
-        ) from exc
-
-
-def ensure_condition(
-    condition: bool,
-    *,
-    error_code: str,
-    error_template: str,
-    context: dict[str, Any],
-) -> None:
-    """Raise a Pydantic error when an invalid condition is met."""
-    if condition:
-        raise PydanticCustomError(error_code, error_template, context)
-
 
 __all__ = [
     "apply_rule",
@@ -67,3 +37,11 @@ __all__ = [
     "SYMBOL_RULE",
     "SYMBOL_LIST_RULE",
 ]
+
+# Emit deprecation warning on import
+warnings.warn(
+    "gpt_trader.orchestration.configuration.bot_config.rules is deprecated. "
+    "Import from gpt_trader.app.config.validation_rules instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)

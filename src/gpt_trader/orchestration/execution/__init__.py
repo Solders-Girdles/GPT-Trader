@@ -1,20 +1,19 @@
 """
-Execution engine submodules for live trading.
+DEPRECATED: This module has moved to gpt_trader.features.live_trade.execution
 
-This package breaks down the LiveExecutionEngine into focused components:
-- guards: Runtime safety guards
-- validation: Pre-trade validation logic
-- order_submission: Order placement and recording
-- state_collection: Account state collection helpers
+This shim re-exports all symbols for backwards compatibility.
+Please update your imports to use the new location:
 
-Internal modules (used by order_submission):
-- order_event_recorder: Event recording and telemetry
-- broker_executor: Broker communication and integration mode handling
+    # Old (deprecated)
+    from gpt_trader.orchestration.execution import GuardManager
 
-NOTE: This module re-exports from features/live_trade/execution/ for
-backward compatibility. Import from gpt_trader.features.live_trade.execution
-for the canonical location.
+    # New (preferred)
+    from gpt_trader.features.live_trade.execution import GuardManager
 """
+
+from __future__ import annotations
+
+import warnings
 
 from gpt_trader.features.live_trade.execution.broker_executor import BrokerExecutor
 from gpt_trader.features.live_trade.execution.guard_manager import GuardManager
@@ -39,3 +38,11 @@ __all__ = [
     "ValidationFailureTracker",
     "get_validation_metrics",
 ]
+
+# Emit deprecation warning on import
+warnings.warn(
+    "gpt_trader.orchestration.execution is deprecated. "
+    "Import from gpt_trader.features.live_trade.execution instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)

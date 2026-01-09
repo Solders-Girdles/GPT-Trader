@@ -169,7 +169,7 @@ def normalize_symbol_list(
         fallback = ["BTC-PERP", "ETH-PERP", "BTC-FUTURES", "ETH-FUTURES"]
     else:
         if fallback_bases is None:
-            from gpt_trader.app.config.bot_config import TOP_VOLUME_BASES
+            from gpt_trader.app.config.defaults import TOP_VOLUME_BASES
 
             fallback_bases = TOP_VOLUME_BASES
         fallback = [f"{base}-{quote}" for base in fallback_bases]

@@ -87,21 +87,12 @@ def test_cfm_intraday_current_margin_window():
 
 def test_cfm_intraday_position_refresh_not_implemented():
     """Test cfm_intraday_position_refresh endpoint - currently not implemented."""
-    # This endpoint is not yet implemented in CoinbaseClient
-    # When implemented, it should:
-    # - Send POST to /api/v3/brokerage/cfm/intraday/position_refresh
-    # - Return refresh status
-    assert True  # Placeholder until method is implemented
+    pytest.skip("cfm_intraday_position_refresh not implemented in CoinbaseClient yet")
 
 
 def test_cfm_sweep_not_implemented():
     """Test cfm_sweep endpoint - currently not implemented."""
-    # This endpoint is not yet implemented in CoinbaseClient
-    # When implemented, it should:
-    # - Send POST to /api/v3/brokerage/cfm/sweeps
-    # - Include from_account and to_account in payload
-    # - Return sweep status with sweep_id
-    assert True  # Placeholder until method is implemented
+    pytest.skip("cfm_sweep not implemented in CoinbaseClient yet")
 
 
 def test_cfm_methods_require_advanced_mode():

@@ -165,17 +165,31 @@ class TestIntegration:
 
         gpt_trader.utilities.console_logging._console_logger = None
 
-        # Use global functions
-        console_section("Trading Session")
-        console_success("Connected to broker")
-        console_order("Order placed", symbol="BTC-USD", quantity=1.0)
-        console_position("Position updated", symbol="BTC-USD", quantity=1.0)
-        console_data("Market data received", symbols=["BTC-USD", "ETH-USD"])
+        mock_logger = Mock()
+        with patch(
+            "gpt_trader.utilities.console_logging.ConsoleLogger", return_value=mock_logger
+        ) as mock_console:
+            # Use global functions
+            console_section("Trading Session")
+            console_success("Connected to broker")
+            console_order("Order placed", symbol="BTC-USD", quantity=1.0)
+            console_position("Position updated", symbol="BTC-USD", quantity=1.0)
+            console_data("Market data received", symbols=["BTC-USD", "ETH-USD"])
 
-        # Verify output
-        # Note: Since we can't easily mock the global output stream,
-        # this test mainly verifies no exceptions are raised
-        assert True
+            mock_console.assert_called_once_with(enable_console=True)
+            assert gpt_trader.utilities.console_logging._console_logger is mock_logger
+
+            mock_logger.print_section.assert_called_once_with("Trading Session", "=", 50)
+            mock_logger.success.assert_called_once_with("Connected to broker")
+            mock_logger.order.assert_called_once_with(
+                "Order placed", symbol="BTC-USD", quantity=1.0
+            )
+            mock_logger.position.assert_called_once_with(
+                "Position updated", symbol="BTC-USD", quantity=1.0
+            )
+            mock_logger.data.assert_called_once_with(
+                "Market data received", symbols=["BTC-USD", "ETH-USD"]
+            )
 
     def test_all_context_methods(self):
         """Test all context-specific methods work without errors."""

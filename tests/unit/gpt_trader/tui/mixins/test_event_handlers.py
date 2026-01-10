@@ -319,13 +319,13 @@ class TestUtilityMethods:
 
         widget = TestWidget()
         event = BotStateChanged(running=True)
+        widget.post_message = MagicMock()
 
         # Should not raise error when not mounted (graceful degradation)
-        # The widget just doesn't have post_message available yet
+        # It should still forward to post_message when present.
         widget.post_event(event)
 
-        # If we made it here without exception, test passes
-        assert True
+        widget.post_message.assert_called_once_with(event)
 
     @patch("gpt_trader.tui.mixins.event_handlers.logger")
     def test_log_event_received_utility(self, mock_logger):

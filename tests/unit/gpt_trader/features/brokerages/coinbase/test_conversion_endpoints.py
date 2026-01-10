@@ -37,7 +37,7 @@ def test_convert_quote_posts_payload():
 def test_get_convert_trade_already_covered_in_system_tests():
     # See tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_integration.py::TestCoinbaseSystem
     # This placeholder ensures file cohesion without duplicating tests.
-    assert True
+    pytest.skip("Covered by Coinbase system tests")
 
 
 def test_commit_convert_trade_posts_payload():

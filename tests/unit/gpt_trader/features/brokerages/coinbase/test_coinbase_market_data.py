@@ -155,9 +155,17 @@ class TestCoinbaseMarketData:
 
     def test_list_parameters_comma_separated(self) -> None:
         client = make_client()
-        client.set_transport_for_testing(lambda m, u, h, b, t: (200, {}, json.dumps({"ok": True})))
+        urls: list[str] = []
+
+        def transport(method, url, headers, body, timeout):
+            urls.append(url)
+            return 200, {}, json.dumps({"ok": True})
+
+        client.set_transport_for_testing(transport)
         _ = client.get_best_bid_ask(["BTC-USD", "ETH-USD", "SOL-USD"])
-        assert True
+        parsed = urlparse(urls[0])
+        params = parse_qs(parsed.query)
+        assert params["product_ids"] == ["BTC-USD,ETH-USD,SOL-USD"]
 
     def test_repeated_parameters_not_encoded_as_array(self) -> None:
         client = make_client()

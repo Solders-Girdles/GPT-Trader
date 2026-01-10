@@ -11,7 +11,7 @@ import logging
 import time
 from collections.abc import Callable
 from decimal import Decimal
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from gpt_trader.core import Balance
 from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
@@ -90,6 +90,79 @@ class GuardManager:
             VolatilityGuard(broker=cast(BrokerProtocol, broker), risk_manager=risk_manager),
             ApiHealthGuard(broker=broker, risk_manager=risk_manager),
         ]
+
+    def _extract_order_ids(self, orders: Any) -> list[str]:
+        """Normalize broker list_orders responses into order ID strings."""
+        if orders is None:
+            return []
+
+        items: list[Any]
+        if isinstance(orders, dict):
+            items = list(orders.get("orders", []))
+        elif isinstance(orders, list):
+            items = orders
+        else:
+            return []
+
+        order_ids: list[str] = []
+        seen: set[str] = set()
+        for item in items:
+            if item is None:
+                continue
+            order_id = None
+            if isinstance(item, dict):
+                order_id = item.get("id") or item.get("order_id")
+            else:
+                order_id = getattr(item, "id", None) or getattr(item, "order_id", None)
+            if order_id is None:
+                continue
+            order_id = str(order_id)
+            if order_id in seen:
+                continue
+            seen.add(order_id)
+            order_ids.append(order_id)
+        return order_ids
+
+    def _fetch_open_order_ids(self) -> tuple[list[str], bool]:
+        """Fetch open order IDs from broker if supported, otherwise use tracked IDs."""
+        list_orders = getattr(self.broker, "list_orders", None)
+        if list_orders is None or not callable(list_orders):
+            return list(self.open_orders), False
+
+        try:
+            response = list_orders(status=["OPEN"])
+        except TypeError:
+            try:
+                response = list_orders(order_status=["OPEN"])
+            except Exception as exc:
+                logger.warning(
+                    "Failed to list open orders",
+                    error_type=type(exc).__name__,
+                    error_message=str(exc),
+                    operation="order_cancel",
+                    stage="list_orders",
+                )
+                return list(self.open_orders), False
+        except Exception as exc:
+            logger.warning(
+                "Failed to list open orders",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="order_cancel",
+                stage="list_orders",
+            )
+            return list(self.open_orders), False
+
+        if not isinstance(response, (list, dict)):
+            logger.warning(
+                "Unexpected list_orders response type",
+                response_type=type(response).__name__,
+                operation="order_cancel",
+                stage="list_orders",
+            )
+            return list(self.open_orders), False
+
+        return self._extract_order_ids(response), True
 
     # Backward compatibility properties
     @property
@@ -286,11 +359,16 @@ class GuardManager:
         """
         cancelled = 0
 
-        for order_id in self.open_orders[:]:  # Copy list to avoid modification during iteration
+        order_ids, synced = self._fetch_open_order_ids()
+        if synced:
+            self.open_orders[:] = order_ids
+
+        for order_id in list(order_ids):  # Copy list to avoid modification during iteration
             try:
                 if self.broker.cancel_order(order_id):
                     cancelled += 1
-                    self.open_orders.remove(order_id)
+                    if order_id in self.open_orders:
+                        self.open_orders.remove(order_id)
                     logger.info(
                         "Cancelled order",
                         order_id=order_id,

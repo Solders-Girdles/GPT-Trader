@@ -27,6 +27,7 @@ def mock_broker():
     broker.list_balances.return_value = []
     broker.list_positions.return_value = []
     broker.cancel_order.return_value = True
+    broker.list_orders = None
     return broker
 
 
@@ -736,6 +737,21 @@ def test_cancel_all_orders_empty_list(mock_broker, mock_risk_manager, mock_equit
 
     assert cancelled_count == 0
     mock_broker.cancel_order.assert_not_called()
+
+
+def test_cancel_all_orders_uses_broker_list_orders(guard_manager, mock_broker):
+    """Test cancellation prefers broker list_orders when available."""
+    mock_broker.list_orders = MagicMock(
+        return_value={"orders": [{"id": "order3"}, {"id": "order4"}]}
+    )
+    mock_broker.cancel_order.return_value = True
+
+    cancelled_count = guard_manager.cancel_all_orders()
+
+    assert cancelled_count == 2
+    cancelled_ids = [call_args[0][0] for call_args in mock_broker.cancel_order.call_args_list]
+    assert cancelled_ids == ["order3", "order4"]
+    assert guard_manager.open_orders == []
 
 
 # =============================================================================

@@ -166,8 +166,6 @@ GPT-Trader is a Coinbase trading system supporting spot and CFM futures markets.
 | Add Coinbase API endpoint | `features/brokerages/coinbase/client/` (appropriate mixin) |
 | Update TUI display | `tui/widgets/` or `tui/screens/` |
 
-**Note:** `features/live_trade/execution/engine.py::LiveExecutionEngine` is deprecated. Use the TradingEngine guard stack (live loop `_validate_and_place_order`, external `submit_order`).
-
 ## Intentional Guard-Stack Bypasses
 
 The canonical order path routes through `TradingEngine._validate_and_place_order()` (the live loop), with `TradingEngine.submit_order()` as the external wrapper. The following locations intentionally bypass guards:
@@ -176,7 +174,6 @@ The canonical order path routes through `TradingEngine._validate_and_place_order
 |----------|---------|---------------|
 | `features/live_trade/bot.py::flatten_and_stop()` | Emergency position closure | Must succeed even when guards would block (e.g., during risk trip) |
 | `features/optimize/` (batch_runner, walk_forward) | Backtesting/optimization | Uses simulated broker, not production |
-| `features/live_trade/execution/router.py::execute()` | Legacy sync path | **Deprecated** — emits warning, used in tests only |
 
 All other `broker.place_order` calls are either:
 - **Internal to the canonical path** (TradingEngine → broker)

@@ -94,7 +94,6 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder.py",  # order event recording and telemetry coverage
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders.py",  # comprehensive REST orders mixin coverage
     "tests/unit/gpt_trader/features/live_trade/test_risk_manager.py",  # LiveRiskManager risk validation, volatility breakers, daily PnL tracking
-    "tests/unit/gpt_trader/features/live_trade/execution/test_engine.py",  # LiveExecutionEngine orchestration, order flow, risk validation
     "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry.py",  # account telemetry collection and publishing
     "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming.py",  # WebSocket streaming telemetry with async/threading patterns
     "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health.py",  # telemetry health check and mark extraction coverage

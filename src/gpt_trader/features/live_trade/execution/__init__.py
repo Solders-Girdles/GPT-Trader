@@ -5,7 +5,6 @@ and execution services for multi-venue trading.
 """
 
 from .broker_executor import BrokerExecutor
-from .engine import LiveExecutionEngine, LiveOrder
 from .guard_manager import GuardManager
 from .guards import RuntimeGuardState
 from .order_event_recorder import OrderEventRecorder
@@ -21,9 +20,6 @@ from .validation import (
 )
 
 __all__ = [
-    # Engine (legacy, deprecated)
-    "LiveExecutionEngine",
-    "LiveOrder",
     # Routing
     "OrderRouter",
     "OrderResult",

@@ -545,7 +545,7 @@ class TestExecuteBrokerOrder:
             order_type=OrderType.LIMIT,
             order_quantity=Decimal("1.0"),
             price=Decimal("50000"),
-            stop_price=None,
+            stop_price=Decimal("49000"),
             tif=TimeInForce.GTC,
             reduce_only=False,
             leverage=10,
@@ -553,6 +553,10 @@ class TestExecuteBrokerOrder:
 
         assert result is mock_order
         mock_broker.place_order.assert_called_once()
+        call_kwargs = mock_broker.place_order.call_args.kwargs
+        assert call_kwargs["quantity"] == Decimal("1.0")
+        assert call_kwargs["stop_price"] == Decimal("49000")
+        assert call_kwargs["tif"] == TimeInForce.GTC
 
     def test_type_error_propagates(
         self,

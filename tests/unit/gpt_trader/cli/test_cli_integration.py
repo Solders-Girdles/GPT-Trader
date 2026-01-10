@@ -143,7 +143,7 @@ def test_cli_invalid_tif_rejected():
 def test_cli_symbol_validation(symbols):
     """Symbol inputs should be accepted by DeterministicBroker in mock mode."""
     env = cli_env()
-    env["PERPS_FORCE_MOCK"] = "1"
+    env["MOCK_BROKER"] = "1"
     env["EVENT_STORE_ROOT"] = tempfile.mkdtemp()
 
     cmd = [sys.executable, "-m", "gpt_trader.cli", "--profile", "dev", "--dev-fast"]
@@ -163,7 +163,7 @@ def test_cli_symbol_validation(symbols):
 def test_cli_dev_fast_single_cycle(tmp_path):
     """`--dev-fast` should execute a single cycle using mock broker settings."""
     env = cli_env()
-    env["PERPS_FORCE_MOCK"] = "1"
+    env["MOCK_BROKER"] = "1"
     env["PERPS_SKIP_RECONCILE"] = "1"
     env["EVENT_STORE_ROOT"] = str(tmp_path)
 
@@ -182,7 +182,7 @@ def test_cli_dev_fast_single_cycle(tmp_path):
 def test_cli_handles_missing_env_vars(tmp_path):
     """Missing Coinbase env vars should fall back to mock broker in dev mode."""
     env = cli_env({})
-    env["PERPS_FORCE_MOCK"] = "1"
+    env["MOCK_BROKER"] = "1"
     env["EVENT_STORE_ROOT"] = str(tmp_path)
 
     result = subprocess.run(

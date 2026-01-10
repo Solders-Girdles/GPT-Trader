@@ -24,7 +24,6 @@ from gpt_trader.utilities.logging_patterns import get_logger
 if TYPE_CHECKING:
     from gpt_trader.app.config.profile_loader import ProfileLoader
     from gpt_trader.features.live_trade.bot import TradingBot
-    from gpt_trader.features.live_trade.execution.engine import LiveExecutionEngine
     from gpt_trader.features.live_trade.execution.validation import ValidationFailureTracker
     from gpt_trader.features.live_trade.risk.manager import LiveRiskManager
     from gpt_trader.monitoring.notifications.service import NotificationService
@@ -166,51 +165,6 @@ class ApplicationContainer:
             event_store=cast(EventStoreProtocol, self.event_store),
             orders_store=self.orders_store,
             notification_service=self.notification_service,
-        )
-
-    def create_live_execution_engine(
-        self,
-        *,
-        bot_id: str = "live_execution",
-        slippage_multipliers: dict[str, float] | None = None,
-        enable_preview: bool | None = None,
-        failure_tracker: ValidationFailureTracker | None = None,
-    ) -> LiveExecutionEngine:
-        """Create a LiveExecutionEngine wired with container dependencies.
-
-        .. deprecated::
-            LiveExecutionEngine is deprecated. For new code, use
-            TradingEngine.submit_order() which provides the canonical guard stack.
-            This factory is retained for backward compatibility.
-
-        This factory method creates a LiveExecutionEngine using the container's
-        broker, risk_manager, event_store, and config. The engine will create
-        its own per-instance ValidationFailureTracker with escalation callback
-        unless one is explicitly provided.
-
-        Args:
-            bot_id: Bot identifier for logging.
-            slippage_multipliers: Optional symbol-specific slippage multipliers.
-            enable_preview: Enable order preview (defaults to config setting).
-            failure_tracker: Optional pre-configured failure tracker. If not
-                provided, the engine creates its own with escalation callback.
-
-        Returns:
-            LiveExecutionEngine: A configured execution engine ready for use.
-        """
-        from gpt_trader.features.live_trade.execution.engine import (
-            LiveExecutionEngine as LEE,
-        )
-
-        return LEE(
-            broker=self.broker,
-            config=self.config,
-            risk_manager=self.risk_manager,
-            event_store=self.event_store,
-            bot_id=bot_id,
-            slippage_multipliers=slippage_multipliers,
-            enable_preview=enable_preview,
-            failure_tracker=failure_tracker,
         )
 
 

@@ -88,9 +88,7 @@ These flags are **canonicalized on strategy config** based on `strategy_type`:
 
 ## Deprecated Flags
 
-| Deprecated | Replacement | Notes |
-|------------|-------------|-------|
-| `PERPS_FORCE_MOCK` | `MOCK_BROKER` | Single-shot deprecation warning emitted |
+None.
 
 ## Runtime Derivation
 

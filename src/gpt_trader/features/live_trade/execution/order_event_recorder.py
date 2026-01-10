@@ -69,7 +69,7 @@ class OrderEventRecorder:
                 level=LogLevel.INFO,
                 event_type="order_preview",
                 message="Order preview generated",
-                component="LiveExecutionEngine",
+                component="TradingEngine",
                 symbol=symbol,
                 side=side.value,
                 order_type=order_type.value,

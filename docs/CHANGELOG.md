@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### LiveExecutionEngine Removal
+- **BREAKING**: Removed `LiveExecutionEngine` and its container factory; use `TradingEngine.submit_order()` and guard-stack helpers instead.
+- Migrated execution tests/integration flows to TradingEngine and updated docs to reflect the canonical path.
+
 ### Risk Config Schema Hardening
 - `RiskConfig.from_env` now funnels through a `RiskConfigModel` Pydantic schema, using `RuntimeSettings.snapshot_env` to keep defaults and aliases in lockstep with runtime settings.
 - Environment parsing raises `EnvVarError` with the offending var and logs the failure; JSON inputs emit precise `ValidationError`s when mappings or percentages are malformed.

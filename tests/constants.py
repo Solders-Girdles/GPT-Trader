@@ -131,7 +131,7 @@ TEST_ENV_VARS = {
     "PERPS_ENABLE_STREAMING": "true",
     "PERPS_STREAM_LEVEL": "2",
     "PERPS_PAPER": "false",
-    "PERPS_FORCE_MOCK": "true",
+    "MOCK_BROKER": "true",
     "PERPS_SKIP_RECONCILE": "true",
     "PERPS_POSITION_FRACTION": "0.25",
     "ORDER_PREVIEW_ENABLED": "true",

@@ -89,76 +89,30 @@ class TestEnableShortsCanonical:
         assert len(w2) == 0
 
 
-class TestMockBrokerEnvPrecedence:
-    """Test MOCK_BROKER precedence over deprecated PERPS_FORCE_MOCK."""
+class TestMockBrokerEnvParsing:
+    """Test MOCK_BROKER env parsing."""
 
-    def test_mock_broker_env_takes_precedence(self) -> None:
-        """MOCK_BROKER=1 takes precedence over PERPS_FORCE_MOCK=0."""
-        with patch.dict(os.environ, {"MOCK_BROKER": "1", "PERPS_FORCE_MOCK": "0"}):
-            BotConfig._perps_force_mock_warned = False
-            result = BotConfig._parse_mock_broker_env()
+    def test_mock_broker_env_true(self) -> None:
+        """MOCK_BROKER=1 enables mock broker."""
+        with patch.dict(os.environ, {"MOCK_BROKER": "1"}, clear=True):
+            result = BotConfig.from_env().mock_broker
         assert result is True
 
-    def test_perps_force_mock_fallback(self) -> None:
-        """PERPS_FORCE_MOCK is used when MOCK_BROKER is unset."""
-        env = {"PERPS_FORCE_MOCK": "1"}
-        # Ensure MOCK_BROKER is not set
-        with patch.dict(os.environ, env, clear=False):
-            os.environ.pop("MOCK_BROKER", None)
-            BotConfig._perps_force_mock_warned = False
-
-            with warnings.catch_warnings(record=True) as w:
-                warnings.simplefilter("always")
-                result = BotConfig._parse_mock_broker_env()
-
-        assert result is True
-        assert len(w) == 1
-        assert "PERPS_FORCE_MOCK is deprecated" in str(w[0].message)
-
-    def test_deprecation_warning_only_once(self) -> None:
-        """PERPS_FORCE_MOCK deprecation warning fires only once."""
-        env = {"PERPS_FORCE_MOCK": "1"}
-        with patch.dict(os.environ, env, clear=False):
-            os.environ.pop("MOCK_BROKER", None)
-            BotConfig._perps_force_mock_warned = False
-
-            # First call warns
-            with warnings.catch_warnings(record=True) as w1:
-                warnings.simplefilter("always")
-                BotConfig._parse_mock_broker_env()
-            assert len(w1) == 1
-
-            # Second call does not warn
-            with warnings.catch_warnings(record=True) as w2:
-                warnings.simplefilter("always")
-                BotConfig._parse_mock_broker_env()
-            assert len(w2) == 0
-
-    def test_default_when_neither_set(self) -> None:
-        """Returns False when neither MOCK_BROKER nor PERPS_FORCE_MOCK is set."""
+    def test_mock_broker_env_default_false(self) -> None:
+        """Defaults to False when MOCK_BROKER is unset."""
         with patch.dict(os.environ, {}, clear=True):
-            result = BotConfig._parse_mock_broker_env()
+            result = BotConfig.from_env().mock_broker
         assert result is False
 
 
 class TestReduceOnlyModeEnvParsing:
-    """Test reduce_only_mode env variable parsing with precedence."""
+    """Test reduce_only_mode env variable parsing."""
 
-    def test_risk_prefixed_takes_precedence(self) -> None:
-        """RISK_REDUCE_ONLY_MODE takes precedence over REDUCE_ONLY_MODE."""
+    def test_risk_prefixed_enabled(self) -> None:
+        """RISK_REDUCE_ONLY_MODE enables reduce-only mode."""
         env = {
             "RISK_REDUCE_ONLY_MODE": "1",
-            "REDUCE_ONLY_MODE": "0",
         }
-        with patch.dict(os.environ, env, clear=True):
-            # Minimal env for from_env to work
-            with patch.dict(os.environ, {"BROKER": "coinbase"}):
-                config = BotConfig.from_env()
-        assert config.reduce_only_mode is True
-
-    def test_fallback_to_unprefixed(self) -> None:
-        """Falls back to REDUCE_ONLY_MODE when RISK_ prefixed is unset."""
-        env = {"REDUCE_ONLY_MODE": "1"}
         with patch.dict(os.environ, env, clear=True):
             with patch.dict(os.environ, {"BROKER": "coinbase"}):
                 config = BotConfig.from_env()

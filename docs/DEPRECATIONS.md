@@ -6,12 +6,7 @@ This document tracks deprecated modules, shims, and their planned removal dates.
 
 ### Configuration (Remove after v4.0)
 
-| Deprecated | Canonical | Status |
-|------------|-----------|--------|
-| `PERPS_FORCE_MOCK` env var | `MOCK_BROKER` | Warning emitted |
-| `SYMBOLS` env var | `TRADING_SYMBOLS` | Silent fallback |
-| `POSITION_FRACTION` env var | `RISK_POSITION_FRACTION` | Silent fallback |
-| `OrderRouter.execute()` | `OrderRouter.execute_async()` | Method deprecated |
+No active configuration deprecations.
 
 ### Legacy Backward Compatibility (Keep indefinitely)
 
@@ -37,10 +32,14 @@ Before removing any deprecated item:
 
 | Item | Removed In | Migration Path |
 |------|------------|----------------|
+| `PERPS_FORCE_MOCK` env var | v4.0 | Use `MOCK_BROKER` |
+| `SYMBOLS` env var | v4.0 | Use `TRADING_SYMBOLS` |
+| `POSITION_FRACTION` env var | v4.0 | Use `RISK_MAX_POSITION_PCT_PER_SYMBOL` |
+| `OrderRouter.execute()` | v4.0 | Use `OrderRouter.execute_async()` |
 | `gpt_trader.orchestration` package | v3.0 | Use canonical paths: `app.*`, `features.live_trade.*` |
 | `orchestration.configuration.bot_config` | v3.0 | `gpt_trader.app.config.BotConfig` |
 | `orchestration.configuration.risk.model` | v3.0 | `gpt_trader.features.live_trade.risk.config.RiskConfig` |
-| `orchestration.live_execution.LiveExecutionEngine` | v3.0 | TradingEngine guard stack (`_validate_and_place_order` live loop; `submit_order` external) |
+| `features.live_trade.execution.LiveExecutionEngine` | v4.0 | TradingEngine guard stack (`_validate_and_place_order` live loop; `submit_order` external) |
 | `orchestration.execution.*` | v3.0 | `gpt_trader.features.live_trade.execution.*` |
 | `orchestration.symbols` | v3.0 | `gpt_trader.features.live_trade.symbols` |
 

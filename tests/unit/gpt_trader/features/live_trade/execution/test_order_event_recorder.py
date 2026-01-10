@@ -181,6 +181,7 @@ class TestRecordPreview:
         assert call_kwargs["event_type"] == "order_preview"
         assert call_kwargs["symbol"] == "ETH-USD"
         assert call_kwargs["side"] == "SELL"
+        assert call_kwargs["component"] == "TradingEngine"
 
     @patch("gpt_trader.features.live_trade.execution.order_event_recorder.emit_metric")
     @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")

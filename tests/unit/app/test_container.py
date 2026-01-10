@@ -231,48 +231,6 @@ class TestApplicationContainer:
         assert call_args.kwargs["notification_service"] is not None
         assert call_args.kwargs["notification_service"] == container.notification_service
 
-    @patch("gpt_trader.features.live_trade.execution.engine.LiveExecutionEngine")
-    def test_create_live_execution_engine(
-        self, mock_engine_class: MagicMock, mock_config: BotConfig
-    ) -> None:
-        """Test that LiveExecutionEngine is created with container dependencies."""
-        from gpt_trader.app.containers.brokerage import BrokerageContainer
-
-        # Setup mocks
-        mock_broker = MagicMock()
-        mock_engine = MagicMock()
-        mock_create_brokerage = MagicMock()
-        mock_create_brokerage.return_value = (
-            mock_broker,
-            MagicMock(),
-            MagicMock(),
-            MagicMock(),
-        )
-        mock_engine_class.return_value = mock_engine
-
-        container = ApplicationContainer(mock_config)
-        container._brokerage = BrokerageContainer(
-            config=mock_config,
-            event_store_provider=lambda: container.event_store,
-            broker_factory=mock_create_brokerage,
-        )
-
-        # Create engine with custom bot_id
-        engine = container.create_live_execution_engine(bot_id="test_engine")
-
-        # Verify engine was created with correct dependencies
-        mock_engine_class.assert_called_once()
-        call_args = mock_engine_class.call_args
-
-        assert call_args.kwargs["broker"] == mock_broker
-        assert call_args.kwargs["config"] == mock_config
-        assert call_args.kwargs["risk_manager"] == container.risk_manager
-        assert call_args.kwargs["event_store"] == container.event_store
-        assert call_args.kwargs["bot_id"] == "test_engine"
-        assert call_args.kwargs["failure_tracker"] is None  # Default: engine creates own
-
-        assert engine == mock_engine
-
     def test_reset_broker(self, mock_config: BotConfig) -> None:
         """Test that broker can be reset."""
         from gpt_trader.app.containers.brokerage import BrokerageContainer

@@ -44,7 +44,7 @@ This document captures the architecture and trading flow for the Coinbase Perpet
    - Slippage guard rails based on snapshot depth
    - Optional order preview plumbing
    - Live loop uses `TradingEngine._validate_and_place_order()`; `submit_order()` is the
-     external wrapper. `features/live_trade/execution/engine.py::LiveExecutionEngine` is deprecated.
+     external wrapper.
 
 ## Trading Logic Flow
 

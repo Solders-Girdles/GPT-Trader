@@ -5,7 +5,7 @@
 **Superseded by:** TradingEngine guard stack (`_validate_and_place_order` live loop; `submit_order` external)
 
 > **Note:** This ADR documents historical architecture. `LiveExecutionEngine` and
-> the dual-engine factory were removed in v3.0. New code should use the
+> the dual-engine factory were removed in v4.0. New code should use the
 > TradingEngine guard stack (`_validate_and_place_order` in the live loop,
 > `submit_order` for external callers).
 **Deciders:** System Architecture Team

@@ -154,7 +154,7 @@ from gpt_trader.features.intelligence.sizing import PositionSizer
 ### Common Mistakes
 ```python
 # DON'T: Legacy imports
-from gpt_trader.orchestration.live_execution import LiveExecutionEngine
+from gpt_trader.orchestration import live_execution  # removed
 
 # DO: Active imports
 from gpt_trader.features.live_trade.engines import TradingEngine

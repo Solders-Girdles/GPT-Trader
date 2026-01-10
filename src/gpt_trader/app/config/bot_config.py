@@ -306,39 +306,8 @@ class BotConfig:
         # Type ignore: kwargs unpacking is dynamic, but we trust the caller to provide valid fields
         return cls(profile=profile, dry_run=dry_run, mock_broker=mock_broker, **kwargs)  # type: ignore[arg-type]
 
-    # Single-shot deprecation warning for PERPS_FORCE_MOCK
-    _perps_force_mock_warned: ClassVar[bool] = False
     # Single-shot sync warning for enable_shorts mismatch
     _enable_shorts_sync_warned: ClassVar[bool] = False
-
-    @classmethod
-    def _parse_mock_broker_env(cls) -> bool:
-        """Parse mock_broker from env with deprecated PERPS_FORCE_MOCK fallback.
-
-        Precedence: MOCK_BROKER > PERPS_FORCE_MOCK (deprecated)
-        """
-        import warnings
-
-        from gpt_trader.config.config_utilities import parse_bool_env
-
-        # Check canonical env var first
-        mock_broker_env = os.getenv("MOCK_BROKER")
-        if mock_broker_env is not None:
-            return parse_bool_env("MOCK_BROKER", default=False)
-
-        # Check deprecated alias
-        perps_force_mock = os.getenv("PERPS_FORCE_MOCK")
-        if perps_force_mock is not None:
-            if not cls._perps_force_mock_warned:
-                warnings.warn(
-                    "PERPS_FORCE_MOCK is deprecated. Use MOCK_BROKER=1 instead.",
-                    DeprecationWarning,
-                    stacklevel=3,
-                )
-                cls._perps_force_mock_warned = True
-            return perps_force_mock.lower() in ("1", "true", "yes")
-
-        return False
 
     @classmethod
     def from_env(cls) -> "BotConfig":
@@ -362,14 +331,10 @@ class BotConfig:
             long_ma_period=parse_int_env("LONG_MA", 20) or 20,
         )
 
-        # Build risk config from env (supports RISK_* prefix for all fields)
-        # RISK_* prefixed names take precedence over legacy unprefixed names
+        # Build risk config from env (RISK_* prefixed fields only)
         def _risk_env(key: str, default: str) -> str:
-            """Get risk env var with RISK_ prefix taking precedence."""
-            prefixed = os.getenv(f"RISK_{key}")
-            if prefixed is not None:
-                return prefixed
-            return os.getenv(key, default)
+            """Get risk env var from RISK_ prefixed key."""
+            return os.getenv(f"RISK_{key}", default)
 
         def _risk_int(key: str, default: int) -> int:
             """Get risk int env var with RISK_ prefix taking precedence."""
@@ -384,10 +349,7 @@ class BotConfig:
             return float(_risk_env(key, str(default)))
 
         # Map RISK_MAX_POSITION_PCT_PER_SYMBOL -> position_fraction
-        # Also support legacy POSITION_FRACTION
-        position_fraction_raw = (
-            os.getenv("RISK_MAX_POSITION_PCT_PER_SYMBOL") or os.getenv("POSITION_FRACTION") or "0.1"
-        )
+        position_fraction_raw = os.getenv("RISK_MAX_POSITION_PCT_PER_SYMBOL", "0.1")
 
         risk = BotRiskConfig(
             max_position_size=_risk_decimal("MAX_POSITION_SIZE", "1000"),
@@ -426,8 +388,7 @@ class BotConfig:
             guard_trip_count_crit=_health_int("GUARD_TRIP_COUNT_CRIT", 10),
         )
 
-        # Support both TRADING_SYMBOLS (canonical) and SYMBOLS (legacy)
-        symbols_raw = os.getenv("TRADING_SYMBOLS") or os.getenv("SYMBOLS")
+        symbols_raw = os.getenv("TRADING_SYMBOLS")
         if symbols_raw:
             symbols = [s.strip() for s in symbols_raw.split(",") if s.strip()]
         else:
@@ -479,12 +440,8 @@ class BotConfig:
             spot_force_live=parse_bool_env("SPOT_FORCE_LIVE", default=False),
             enable_order_preview=parse_bool_env("ORDER_PREVIEW_ENABLED", default=False),
             # Risk modes from env (CLI/profile override these)
-            reduce_only_mode=parse_bool_env(
-                "RISK_REDUCE_ONLY_MODE",
-                default=parse_bool_env("REDUCE_ONLY_MODE", default=False),
-            ),
-            # Mock broker with deprecated PERPS_FORCE_MOCK fallback
-            mock_broker=cls._parse_mock_broker_env(),
+            reduce_only_mode=parse_bool_env("RISK_REDUCE_ONLY_MODE", default=False),
+            mock_broker=parse_bool_env("MOCK_BROKER", default=False),
         )
 
     @classmethod

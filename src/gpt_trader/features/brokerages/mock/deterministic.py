@@ -1,7 +1,7 @@
 """
 Deterministic broker for development, testing, and paper trading.
 
-Used when PERPS_FORCE_MOCK=1 to bypass real credentials and API calls.
+Used when MOCK_BROKER=1 to bypass real credentials and API calls.
 """
 
 from __future__ import annotations

@@ -14,10 +14,10 @@ from decimal import Decimal
 from typing import Any
 
 RISK_CONFIG_ENV_KEYS = [
-    "MAX_LEVERAGE",
-    "DAILY_LOSS_LIMIT",
-    "MAX_EXPOSURE_PCT",
-    "MAX_POSITION_PCT_PER_SYMBOL",
+    "RISK_MAX_LEVERAGE",
+    "RISK_DAILY_LOSS_LIMIT",
+    "RISK_MAX_EXPOSURE_PCT",
+    "RISK_MAX_POSITION_PCT_PER_SYMBOL",
     # CFM-specific keys
     "CFM_MAX_LEVERAGE",
     "CFM_MIN_LIQUIDATION_BUFFER_PCT",
@@ -134,18 +134,12 @@ class RiskConfig:
     def from_env(cls) -> "RiskConfig":
         """Load risk configuration from environment variables.
 
-        Supports both legacy names (e.g., MAX_LEVERAGE) and RISK_* prefixed names
-        (e.g., RISK_MAX_LEVERAGE). The RISK_* prefixed names take precedence.
+        Uses RISK_* prefixed names (e.g., RISK_MAX_LEVERAGE).
         """
 
         def _get_env(key: str, default: str) -> str:
-            """Get env var with RISK_ prefix fallback."""
-            # Try RISK_* prefixed version first (canonical)
-            prefixed = os.getenv(f"RISK_{key}")
-            if prefixed is not None:
-                return prefixed
-            # Fall back to legacy non-prefixed version
-            return os.getenv(key, default)
+            """Get env var from RISK_ prefixed key."""
+            return os.getenv(f"RISK_{key}", default)
 
         return cls(
             max_leverage=int(_get_env("MAX_LEVERAGE", "5")),

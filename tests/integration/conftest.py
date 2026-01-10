@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 # Force mock broker for all integration tests
-os.environ.setdefault("PERPS_FORCE_MOCK", "1")
+os.environ.setdefault("MOCK_BROKER", "1")
 
 from gpt_trader.app.bootstrap import bot_from_profile, build_bot
 from gpt_trader.app.config import BotConfig
@@ -44,7 +44,7 @@ def integration_config() -> BotConfig:
     """
     return BotConfig(
         symbols=["BTC-USD"],
-        interval=0.01,  # Fast interval
+        interval=1,  # Fast interval
         mock_broker=True,
         dry_run=True,
         enable_order_preview=False,

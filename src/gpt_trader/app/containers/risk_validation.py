@@ -91,7 +91,7 @@ class RiskValidationContainer:
         escalation (e.g., reduce-only mode) when thresholds are exceeded.
 
         Note: The escalation callback is not set here - it should be configured
-        by the caller (e.g., LiveExecutionEngine) who knows the escalation target.
+        by the caller (e.g., TradingEngine) who knows the escalation target.
         """
         if self._validation_failure_tracker is None:
             from gpt_trader.features.live_trade.execution.validation import (

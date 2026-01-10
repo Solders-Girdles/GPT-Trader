@@ -18,22 +18,6 @@ class TestBotConfigEnvAliasing:
             config = BotConfig.from_env()
             assert config.risk.max_leverage == 7
 
-    def test_risk_max_leverage_legacy_fallback(self) -> None:
-        """Test MAX_LEVERAGE (legacy) is read when RISK_* not set."""
-        env = {"MAX_LEVERAGE": "4"}
-        # Ensure RISK_MAX_LEVERAGE is not set
-        with mock.patch.dict(os.environ, env, clear=True):
-            os.environ.pop("RISK_MAX_LEVERAGE", None)
-
-            # Force reimport to pick up env changes
-            import importlib
-
-            import gpt_trader.app.config.bot_config as bc_module
-
-            importlib.reload(bc_module)
-            config = bc_module.BotConfig.from_env()
-            assert config.risk.max_leverage == 4
-
     def test_risk_position_fraction_from_pct_per_symbol(self) -> None:
         """Test RISK_MAX_POSITION_PCT_PER_SYMBOL maps to position_fraction."""
         with mock.patch.dict(os.environ, {"RISK_MAX_POSITION_PCT_PER_SYMBOL": "0.15"}, clear=False):
@@ -57,16 +41,6 @@ class TestBotConfigEnvAliasing:
 
             config = BotConfig.from_env()
             assert config.symbols == ["BTC-USD", "SOL-USD"]
-
-    def test_symbols_legacy_fallback(self) -> None:
-        """Test SYMBOLS (legacy) works when TRADING_SYMBOLS not set."""
-        env = {"SYMBOLS": "ETH-USD"}
-        with mock.patch.dict(os.environ, env, clear=False):
-            os.environ.pop("TRADING_SYMBOLS", None)
-            from gpt_trader.app.config.bot_config import BotConfig
-
-            config = BotConfig.from_env()
-            assert "ETH-USD" in config.symbols
 
 
 class TestProfileStrategyHydration:

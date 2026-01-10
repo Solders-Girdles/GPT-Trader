@@ -211,20 +211,24 @@ class TradingEngine(BaseEngine):
         # Wire escalation callback: on repeated validation failures, pause + reduce-only
         def _on_validation_escalation() -> None:
             """Handle validation infrastructure failures by pausing and setting reduce-only."""
-            if risk_manager is not None and risk_manager.config is not None:
+            if risk_manager is None:
+                return
+
+            risk_manager.set_reduce_only_mode(True, reason="validation_failures")
+            cooldown = 180
+            if risk_manager.config is not None:
                 cooldown = risk_manager.config.validation_failure_cooldown_seconds
-                risk_manager.set_reduce_only_mode(True, reason="validation_failures")
-                self._degradation.pause_all(
-                    seconds=cooldown,
-                    reason="validation_failures",
-                    allow_reduce_only=True,
-                )
-                logger.warning(
-                    "Validation escalation triggered - pausing trading",
-                    cooldown_seconds=cooldown,
-                    operation="degradation",
-                    stage="validation_escalation",
-                )
+            self._degradation.pause_all(
+                seconds=cooldown,
+                reason="validation_failures",
+                allow_reduce_only=True,
+            )
+            logger.warning(
+                "Validation escalation triggered - pausing trading",
+                cooldown_seconds=cooldown,
+                operation="degradation",
+                stage="validation_escalation",
+            )
 
         failure_tracker.escalation_callback = _on_validation_escalation
 
@@ -1501,6 +1505,41 @@ class TradingEngine(BaseEngine):
                 side=side.value,
                 operation="order_submit",
                 stage="rejected",
+            )
+
+    def reset_daily_tracking(self) -> None:
+        """Reset daily PnL tracking and guard cache (start of trading day)."""
+        try:
+            broker = self.context.broker
+            if broker is None:
+                logger.warning(
+                    "Cannot reset daily tracking without broker",
+                    operation="daily_tracking",
+                    stage="missing_broker",
+                )
+                return
+
+            balances = broker.list_balances()
+            equity, _, _ = self._state_collector.calculate_equity_from_balances(balances)
+
+            if self.context.risk_manager is not None:
+                self.context.risk_manager.reset_daily_tracking()
+
+            if self._guard_manager is not None:
+                self._guard_manager.invalidate_cache()
+
+            logger.info(
+                "Daily tracking reset",
+                operation="daily_tracking",
+                stage="reset",
+                equity=float(equity),
+            )
+        except Exception as exc:
+            logger.error(
+                "Failed to reset daily tracking",
+                error_message=str(exc),
+                operation="daily_tracking",
+                stage="reset",
             )
 
     # =========================================================================

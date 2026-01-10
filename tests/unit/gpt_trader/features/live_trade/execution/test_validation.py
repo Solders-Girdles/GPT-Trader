@@ -238,8 +238,34 @@ class TestValidateExchangeRules:
                 product=mock_product,
             )
 
-        # Verify rejection was recorded
-        validator._record_rejection.assert_called_once()
+    @patch("gpt_trader.features.live_trade.execution.validation.spec_validate_order")
+    def test_validation_uses_adjusted_quantity(
+        self,
+        mock_spec_validate: MagicMock,
+        validator: OrderValidator,
+        mock_product: Product,
+    ) -> None:
+        """Adjusted quantity from spec validation is returned."""
+        mock_spec_validate.return_value = MagicMock(
+            ok=True,
+            reason=None,
+            adjusted_quantity=Decimal("0.5"),
+            adjusted_price=None,
+        )
+
+        adjusted_quantity, _ = validator.validate_exchange_rules(
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_type=OrderType.LIMIT,
+            order_quantity=Decimal("1.0"),
+            price=Decimal("49000"),
+            effective_price=Decimal("50000"),
+            product=mock_product,
+        )
+
+        assert adjusted_quantity == Decimal("0.5")
+
+        validator._record_rejection.assert_not_called()
 
     @patch("gpt_trader.features.live_trade.execution.validation.spec_validate_order")
     def test_validation_failure_with_none_reason(
@@ -660,13 +686,16 @@ class TestMaybePreviewOrder:
             order_type=OrderType.LIMIT,
             order_quantity=Decimal("1.0"),
             effective_price=Decimal("50000"),
-            stop_price=None,
+            stop_price=Decimal("49000"),
             tif=TimeInForce.GTC,
             reduce_only=False,
             leverage=10,
         )
 
         broker.preview_order.assert_called_once()
+        preview_kwargs = broker.preview_order.call_args.kwargs
+        assert preview_kwargs["quantity"] == Decimal("1.0")
+        assert preview_kwargs["stop_price"] == Decimal("49000")
         record_preview.assert_called_once()
         call_args = record_preview.call_args[0]
         assert call_args[0] == "BTC-PERP"

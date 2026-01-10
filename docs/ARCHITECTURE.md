@@ -138,7 +138,8 @@ The `gpt_trader.orchestration` package was removed in v3.0. Use the canonical pa
 | `gpt_trader.orchestration.execution.degradation` | `gpt_trader.features.live_trade.degradation` |
 | `gpt_trader.orchestration.configuration.risk.model` | `gpt_trader.features.live_trade.risk.config` |
 | `gpt_trader.orchestration.configuration.bot_config` | `gpt_trader.app.config` |
-| `gpt_trader.orchestration.live_execution.LiveExecutionEngine` | TradingEngine guard stack (`_validate_and_place_order`; `submit_order` for external callers) |
+
+`LiveExecutionEngine` was removed in v4.0. Use the TradingEngine guard stack (`_validate_and_place_order` in the live loop; `submit_order` for external callers).
 
 **Order Execution:** Use the TradingEngine guard stack (`_validate_and_place_order` in the live loop; `submit_order` for external callers).
 

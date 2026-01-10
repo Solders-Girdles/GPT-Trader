@@ -29,7 +29,7 @@ class EnvironmentMonitor(ConfigurationMonitor):
 
     MONITOR_ENV_VARS = {
         "COINBASE_DEFAULT_QUOTE",
-        "PERPS_FORCE_MOCK",
+        "MOCK_BROKER",
         "PERPS_PAPER",
     }
 

@@ -52,6 +52,7 @@ from gpt_trader.features.live_trade.engines.telemetry_streaming import (
     start_streaming_background,
     stop_streaming_background,
 )
+from gpt_trader.features.live_trade.execution.decision_trace import OrderDecisionTrace
 from gpt_trader.features.live_trade.execution.guard_manager import GuardManager
 from gpt_trader.features.live_trade.execution.order_submission import OrderSubmitter
 from gpt_trader.features.live_trade.execution.state_collection import StateCollector
@@ -1165,6 +1166,40 @@ class TradingEngine(BaseEngine):
 
         return False
 
+    def _record_decision_trace(self, trace: OrderDecisionTrace) -> None:
+        """Persist the decision trace for auditability."""
+        try:
+            self._order_submitter.record_decision_trace(trace)
+        except Exception as exc:
+            logger.error(
+                "Failed to record order decision trace",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="order_decision_trace",
+                symbol=trace.symbol,
+                side=trace.side,
+            )
+
+    def _finalize_decision_trace(
+        self,
+        trace: OrderDecisionTrace,
+        *,
+        status: OrderSubmissionStatus,
+        order_id: str | None = None,
+        reason: str | None = None,
+        error: str | None = None,
+    ) -> OrderSubmissionResult:
+        detail = reason or error
+        trace.record_outcome("result", status.value, detail=detail)
+        self._record_decision_trace(trace)
+        return OrderSubmissionResult(
+            status=status,
+            order_id=order_id,
+            reason=reason,
+            error=error,
+            decision_trace=trace,
+        )
+
     async def _validate_and_place_order(
         self,
         symbol: str,
@@ -1186,6 +1221,17 @@ class TradingEngine(BaseEngine):
         is_reducing = self._is_reduce_only_order(current_pos, side)
         reduce_only_flag = reduce_only_requested or is_reducing
 
+        trace = OrderDecisionTrace(
+            symbol=symbol,
+            side=side.value,
+            price=price,
+            equity=equity,
+            quantity=None,
+            reduce_only=reduce_only_flag,
+            reason=decision.reason,
+            bot_id=str(self.context.bot_id) if self.context.bot_id is not None else None,
+        )
+
         # Gate: Check degradation state before proceeding
         if self._degradation.is_paused(symbol, is_reduce_only=reduce_only_flag):
             pause_reason = self._degradation.get_pause_reason(symbol) or "unknown"
@@ -1206,10 +1252,13 @@ class TradingEngine(BaseEngine):
                 severity=AlertSeverity.WARNING,
                 context={"symbol": symbol, "side": side.value, "reason": pause_reason},
             )
-            return OrderSubmissionResult(
+            trace.record_outcome("degradation_gate", "blocked", detail=pause_reason)
+            return self._finalize_decision_trace(
+                trace,
                 status=OrderSubmissionStatus.BLOCKED,
                 reason=f"paused:{pause_reason}",
             )
+        trace.record_outcome("degradation_gate", "passed")
 
         # Dynamic position sizing
         quantity = self._calculate_order_quantity(
@@ -1219,13 +1268,17 @@ class TradingEngine(BaseEngine):
             product=None,
             quantity_override=quantity_override,
         )
+        trace.quantity = quantity
 
         if quantity <= 0:
             logger.warning(f"Calculated quantity is {quantity}, skipping order")
-            return OrderSubmissionResult(
+            trace.record_outcome("sizing", "blocked", detail="quantity_zero")
+            return self._finalize_decision_trace(
+                trace,
                 status=OrderSubmissionStatus.BLOCKED,
                 reason="quantity_zero",
             )
+        trace.record_outcome("sizing", "passed")
 
         # Security Validation (Hard Limits)
         from gpt_trader.security.security_validator import get_validator
@@ -1261,10 +1314,13 @@ class TradingEngine(BaseEngine):
                 severity=AlertSeverity.ERROR,
                 context=security_order,
             )
-            return OrderSubmissionResult(
+            trace.record_outcome("security_validation", "blocked", detail=error_msg)
+            return self._finalize_decision_trace(
+                trace,
                 status=OrderSubmissionStatus.BLOCKED,
                 reason=error_msg,
             )
+        trace.record_outcome("security_validation", "passed")
 
         # Run pre-trade validation if risk manager is available
         risk_manager = self.context.risk_manager
@@ -1298,7 +1354,9 @@ class TradingEngine(BaseEngine):
                         "reason": str(exc),
                     },
                 )
-                return OrderSubmissionResult(
+                trace.record_outcome("risk_validation", "blocked", detail=str(exc))
+                return self._finalize_decision_trace(
+                    trace,
                     status=OrderSubmissionStatus.BLOCKED,
                     reason=str(exc),
                 )
@@ -1321,17 +1379,21 @@ class TradingEngine(BaseEngine):
                         "error": str(exc),
                     },
                 )
-                return OrderSubmissionResult(
+                trace.record_outcome("risk_validation", "error", detail=str(exc))
+                return self._finalize_decision_trace(
+                    trace,
                     status=OrderSubmissionStatus.FAILED,
                     error=str(exc),
                 )
 
             logger.info(f"Risk validation passed for {symbol} {side.value}")
+            trace.record_outcome("risk_validation", "passed")
 
             # In reduce-only mode, clamp quantity to prevent position flips
             daily_pnl_triggered = bool(getattr(risk_manager, "_daily_pnl_triggered", False))
             reduce_only_mode = risk_manager.is_reduce_only_mode()
             reduce_only_active = reduce_only_mode or daily_pnl_triggered
+            reduce_only_clamped = False
             if reduce_only_active and is_reducing and current_pos is not None:
                 # Get current position quantity
                 if hasattr(current_pos, "quantity"):
@@ -1348,11 +1410,19 @@ class TradingEngine(BaseEngine):
                         f"to prevent position flip for {symbol}"
                     )
                     quantity = current_qty
+                    trace.quantity = quantity
+                    reduce_only_clamped = True
 
                 # If clamped to zero, skip the order
                 if quantity <= 0:
                     logger.info(f"Reduce-only: no position to reduce for {symbol}, skipping order")
-                    return OrderSubmissionResult(
+                    trace.record_outcome(
+                        "reduce_only",
+                        "blocked",
+                        detail="reduce_only_empty_position",
+                    )
+                    return self._finalize_decision_trace(
+                        trace,
                         status=OrderSubmissionStatus.BLOCKED,
                         reason="reduce_only_empty_position",
                     )
@@ -1378,12 +1448,20 @@ class TradingEngine(BaseEngine):
                     severity=AlertSeverity.WARNING,
                     context=order_for_check,
                 )
-                return OrderSubmissionResult(
+                trace.record_outcome("reduce_only", "blocked", detail=error_msg)
+                return self._finalize_decision_trace(
+                    trace,
                     status=OrderSubmissionStatus.BLOCKED,
                     reason=error_msg,
                 )
+            trace.record_outcome(
+                "reduce_only",
+                "passed",
+                detail="clamped" if reduce_only_clamped else None,
+            )
         else:
             logger.warning("No risk manager configured - skipping validation")
+            trace.record_outcome("risk_validation", "skipped")
 
         # Guard: Check mark price staleness before placing order
         if self.context.risk_manager is not None:
@@ -1405,6 +1483,11 @@ class TradingEngine(BaseEngine):
                             f"Mark stale for {symbol} but allowing reduce-only order",
                             operation="degradation",
                         )
+                        trace.record_outcome(
+                            "mark_staleness",
+                            "allowed",
+                            detail="reduce_only",
+                        )
                     else:
                         logger.warning(f"Order blocked: mark price stale for {symbol}")
                         self._order_submitter.record_rejection(
@@ -1416,7 +1499,9 @@ class TradingEngine(BaseEngine):
                             severity=AlertSeverity.WARNING,
                             context={"symbol": symbol, "side": side.value},
                         )
-                        return OrderSubmissionResult(
+                        trace.record_outcome("mark_staleness", "blocked", detail="stale")
+                        return self._finalize_decision_trace(
+                            trace,
                             status=OrderSubmissionStatus.BLOCKED,
                             reason="mark_staleness",
                         )
@@ -1428,10 +1513,16 @@ class TradingEngine(BaseEngine):
                         severity=AlertSeverity.WARNING,
                         context={"symbol": symbol, "side": side.value},
                     )
-                    return OrderSubmissionResult(
+                    trace.record_outcome("mark_staleness", "blocked", detail="stale")
+                    return self._finalize_decision_trace(
+                        trace,
                         status=OrderSubmissionStatus.BLOCKED,
                         reason="mark_staleness",
                     )
+            else:
+                trace.record_outcome("mark_staleness", "passed")
+        else:
+            trace.record_outcome("mark_staleness", "skipped")
 
         # Pre-trade guards via OrderValidator (exchange rules, slippage, preview)
         effective_price = price
@@ -1447,24 +1538,36 @@ class TradingEngine(BaseEngine):
                     )
 
                     # Exchange rules + quantization
-                    quantity, _ = self._order_validator.validate_exchange_rules(
-                        symbol=symbol,
-                        side=side,
-                        order_type=OrderType.MARKET,
-                        order_quantity=quantity,
-                        price=None,
-                        effective_price=effective_price,
-                        product=product,
-                    )
+                    try:
+                        quantity, _ = self._order_validator.validate_exchange_rules(
+                            symbol=symbol,
+                            side=side,
+                            order_type=OrderType.MARKET,
+                            order_quantity=quantity,
+                            price=None,
+                            effective_price=effective_price,
+                            product=product,
+                        )
+                        trace.quantity = quantity
+                        trace.record_outcome("exchange_rules", "passed")
+                    except ValidationError as exc:
+                        trace.record_outcome("exchange_rules", "blocked", detail=str(exc))
+                        raise
 
                     # Slippage guard with degradation tracking
                     try:
                         self._order_validator.enforce_slippage_guard(
                             symbol, side, quantity, effective_price
                         )
+                        trace.record_outcome("slippage_guard", "passed")
                         # Success: reset slippage failure count
                         self._degradation.reset_slippage_failures(symbol)
                     except ValidationError as slippage_exc:
+                        trace.record_outcome(
+                            "slippage_guard",
+                            "blocked",
+                            detail=str(slippage_exc),
+                        )
                         # Track slippage failures and potentially pause symbol
                         config = (
                             self.context.risk_manager.config if self.context.risk_manager else None
@@ -1477,15 +1580,20 @@ class TradingEngine(BaseEngine):
                     current_positions_dict = self._state_collector.build_positions_dict(
                         list(self._current_positions.values())
                     )
-                    self._order_validator.run_pre_trade_validation(
-                        symbol=symbol,
-                        side=side,
-                        order_quantity=quantity,
-                        effective_price=effective_price,
-                        product=product,
-                        equity=equity,
-                        current_positions=current_positions_dict,
-                    )
+                    try:
+                        self._order_validator.run_pre_trade_validation(
+                            symbol=symbol,
+                            side=side,
+                            order_quantity=quantity,
+                            effective_price=effective_price,
+                            product=product,
+                            equity=equity,
+                            current_positions=current_positions_dict,
+                        )
+                        trace.record_outcome("pre_trade_validation", "passed")
+                    except ValidationError as exc:
+                        trace.record_outcome("pre_trade_validation", "blocked", detail=str(exc))
+                        raise
 
                     # Order preview (if enabled) - with auto-disable on repeated failures
                     failure_tracker = get_failure_tracker()
@@ -1509,22 +1617,35 @@ class TradingEngine(BaseEngine):
                         )
                         self._order_validator.enable_order_preview = False
 
-                    self._order_validator.maybe_preview_order(
-                        symbol=symbol,
-                        side=side,
-                        order_type=OrderType.MARKET,
-                        order_quantity=quantity,
-                        effective_price=effective_price,
-                        stop_price=None,
-                        tif=self.context.config.time_in_force,
-                        reduce_only=reduce_only_flag,
-                        leverage=None,
-                    )
+                    if self._order_validator.enable_order_preview:
+                        try:
+                            self._order_validator.maybe_preview_order(
+                                symbol=symbol,
+                                side=side,
+                                order_type=OrderType.MARKET,
+                                order_quantity=quantity,
+                                effective_price=effective_price,
+                                stop_price=None,
+                                tif=self.context.config.time_in_force,
+                                reduce_only=reduce_only_flag,
+                                leverage=None,
+                            )
+                            trace.record_outcome("order_preview", "passed")
+                        except ValidationError as exc:
+                            trace.record_outcome(
+                                "order_preview",
+                                "blocked",
+                                detail=str(exc),
+                            )
+                            raise
+                    else:
+                        trace.record_outcome("order_preview", "skipped")
 
                     # Finalize reduce-only flag (risk manager may have triggered it)
                     reduce_only_flag = self._order_validator.finalize_reduce_only_flag(
                         reduce_only_flag, symbol
                     )
+                    trace.reduce_only = reduce_only_flag
 
             except ValidationError as exc:
                 logger.warning(f"Pre-trade guard rejected order: {exc}")
@@ -1537,7 +1658,9 @@ class TradingEngine(BaseEngine):
                     severity=AlertSeverity.WARNING,
                     context={"symbol": symbol, "side": side.value, "reason": str(exc)},
                 )
-                return OrderSubmissionResult(
+                trace.record_outcome("order_validation", "blocked", detail=str(exc))
+                return self._finalize_decision_trace(
+                    trace,
                     status=OrderSubmissionStatus.BLOCKED,
                     reason=str(exc),
                 )
@@ -1553,10 +1676,14 @@ class TradingEngine(BaseEngine):
                     severity=AlertSeverity.ERROR,
                     context={"symbol": symbol, "side": side.value, "error": str(exc)},
                 )
-                return OrderSubmissionResult(
+                trace.record_outcome("order_validation", "error", detail=str(exc))
+                return self._finalize_decision_trace(
+                    trace,
                     status=OrderSubmissionStatus.FAILED,
                     error=str(exc),
                 )
+        else:
+            trace.record_outcome("order_validation", "skipped")
 
         # Place order via OrderSubmitter for proper ID tracking and telemetry
         order_id = await asyncio.to_thread(
@@ -1599,7 +1726,9 @@ class TradingEngine(BaseEngine):
                     "order_id": order_id,
                 }
             )
-            return OrderSubmissionResult(
+            trace.record_outcome("submit_order", "success", order_id=order_id)
+            return self._finalize_decision_trace(
+                trace,
                 status=OrderSubmissionStatus.SUCCESS,
                 order_id=order_id,
             )
@@ -1612,7 +1741,9 @@ class TradingEngine(BaseEngine):
                 operation="order_submit",
                 stage="rejected",
             )
-            return OrderSubmissionResult(
+            trace.record_outcome("submit_order", "failed", detail="broker_rejected")
+            return self._finalize_decision_trace(
+                trace,
                 status=OrderSubmissionStatus.FAILED,
                 error="broker_rejected",
             )

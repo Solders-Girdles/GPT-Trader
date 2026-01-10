@@ -62,6 +62,12 @@ class TestTradingEngineOrderFlow:
         assert trade_data.get("side") == "BUY"
         assert "order_id" in trade_data
 
+        trace_events = [e for e in events if e["type"] == "order_decision_trace"]
+        assert len(trace_events) >= 1, "Expected at least one decision trace event"
+        trace_data = trace_events[-1]["data"]
+        assert trace_data.get("symbol") == "BTC-USD"
+        assert trace_data.get("side") == "BUY"
+
     @pytest.mark.asyncio
     async def test_multiple_orders_record_multiple_events(self, trading_bot) -> None:
         """Test that multiple successful orders each create trade events."""

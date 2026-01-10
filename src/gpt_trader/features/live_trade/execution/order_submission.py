@@ -17,6 +17,7 @@ from gpt_trader.app.protocols import EventStoreProtocol
 from gpt_trader.core import OrderSide, OrderType
 from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
 from gpt_trader.features.live_trade.execution.broker_executor import BrokerExecutor
+from gpt_trader.features.live_trade.execution.decision_trace import OrderDecisionTrace
 from gpt_trader.features.live_trade.execution.order_event_recorder import OrderEventRecorder
 from gpt_trader.logging.correlation import order_context
 from gpt_trader.monitoring.metrics_collector import record_counter, record_histogram
@@ -241,6 +242,10 @@ class OrderSubmitter:
         self._event_recorder.record_rejection(
             symbol, side, quantity, price, reason, client_order_id=client_order_id
         )
+
+    def record_decision_trace(self, trace: OrderDecisionTrace) -> None:
+        """Record decision trace for later analysis."""
+        self._event_recorder.record_decision_trace(trace)
 
     def submit_order(
         self,

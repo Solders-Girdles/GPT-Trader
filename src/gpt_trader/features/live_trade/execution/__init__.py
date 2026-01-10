@@ -5,6 +5,7 @@ and execution services for multi-venue trading.
 """
 
 from .broker_executor import BrokerExecutor
+from .decision_trace import OrderDecisionTrace
 from .guard_manager import GuardManager
 from .guards import RuntimeGuardState
 from .order_event_recorder import OrderEventRecorder
@@ -24,6 +25,7 @@ __all__ = [
     # Routing
     "OrderRouter",
     "OrderResult",
+    "OrderDecisionTrace",
     # Submission
     "BrokerExecutor",
     "OrderEventRecorder",

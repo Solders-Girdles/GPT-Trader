@@ -12,6 +12,7 @@ from typing import Any
 
 from gpt_trader.app.protocols import EventStoreProtocol
 from gpt_trader.core import OrderSide, OrderType
+from gpt_trader.features.live_trade.execution.decision_trace import OrderDecisionTrace
 from gpt_trader.monitoring.system import LogLevel
 from gpt_trader.monitoring.system import get_logger as get_monitoring_logger
 from gpt_trader.utilities.logging_patterns import get_logger
@@ -153,6 +154,20 @@ class OrderEventRecorder:
                 operation="record_rejection",
                 symbol=symbol,
                 reason=reason,
+            )
+
+    def record_decision_trace(self, trace: OrderDecisionTrace) -> None:
+        """Record order decision trace to the event store."""
+        try:
+            self._event_store.append("order_decision_trace", trace.to_dict())
+        except Exception as exc:
+            logger.error(
+                "Failed to record order decision trace",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="record_decision_trace",
+                symbol=trace.symbol,
+                side=trace.side,
             )
 
     def record_submission_attempt(

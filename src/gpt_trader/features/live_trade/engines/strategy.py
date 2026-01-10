@@ -785,21 +785,49 @@ class TradingEngine(BaseEngine):
             self._connection_status = "DISCONNECTED"
             return
 
-        # 1. Fetch positions and audit orders in parallel (independent operations)
+        positions, audit_task = await self._fetch_positions_and_audit()
+        equity = await self._compute_equity(positions)
+        if equity is None:
+            await self._await_audit_task(audit_task, context="during equity error path")
+            return
+
+        await self._await_audit_task(audit_task, context="post equity")
+        self._update_equity_and_risk(equity)
+
+        symbols = self.context.config.symbols
+        tickers = await self._fetch_batch_tickers(broker, symbols)
+
+        for symbol in symbols:
+            await self._process_symbol(
+                symbol=symbol,
+                broker=broker,
+                ticker=tickers.get(symbol),
+                positions=positions,
+                equity=equity,
+            )
+
+    async def _fetch_positions_and_audit(
+        self,
+    ) -> tuple[dict[str, Position], asyncio.Task[None]]:
         logger.info("Step 1: Fetching positions and auditing orders (parallel)...")
         positions_task = asyncio.create_task(self._fetch_positions())
         audit_task = asyncio.create_task(self._audit_orders())
 
-        # Await positions first (needed for equity calculation)
         with profile_span("fetch_positions") as _pos_span:
             positions = await positions_task
         self._current_positions = positions
         logger.info(f"Fetched {len(positions)} positions")
 
-        # Update status reporter with positions (complete data for TUI)
         self._status_reporter.update_positions(self._positions_to_status_format(positions))
+        return positions, audit_task
 
-        # 2. Calculate total equity including unrealized PnL
+    async def _await_audit_task(self, task: asyncio.Task, *, context: str) -> None:
+        try:
+            await task
+        except Exception as e:
+            logger.warning(f"Order audit failed {context}: {e}")
+
+    async def _compute_equity(self, positions: dict[str, Position]) -> Decimal | None:
         logger.info("Step 2: Calculating total equity...")
         with profile_span("equity_computation") as _eq_span:
             equity = await self._fetch_total_equity(positions)
@@ -808,36 +836,21 @@ class TradingEngine(BaseEngine):
                 "Failed to fetch equity - cannot continue cycle. "
                 "Check logs above for balance fetch errors."
             )
-            # Update status reporter with error state
             self._status_reporter.record_error("Failed to fetch equity")
-            # Ensure audit completes even on equity failure
-            try:
-                await audit_task
-            except Exception as e:
-                logger.warning(f"Order audit failed during equity error path: {e}")
-            return
+            return None
+        return equity
 
-        # Ensure audit task completes (should be done by now, but be explicit)
-        try:
-            await audit_task
-        except Exception as e:
-            logger.warning(f"Order audit failed: {e}")
-
+    def _update_equity_and_risk(self, equity: Decimal) -> None:
         logger.info(f"Successfully calculated equity: ${equity}")
-        # Update status reporter with equity
         self._status_reporter.update_equity(equity)
         logger.info("Equity updated in status reporter")
 
-        # Track daily PnL for risk management
         if self.context.risk_manager:
             triggered = self.context.risk_manager.track_daily_pnl(equity, {})
             if triggered:
                 logger.warning("Daily loss limit triggered! Reduce-only mode activated.")
 
-            # Update status reporter with risk metrics
             rm = self.context.risk_manager
-            # Calculate current daily loss pct if possible
-            # Assuming rm tracks start_of_day_equity
             daily_loss_pct = 0.0
             start_equity = getattr(rm, "_start_of_day_equity", 0)
             if start_equity and start_equity > 0:
@@ -854,18 +867,17 @@ class TradingEngine(BaseEngine):
                 reduce_reason=getattr(rm, "_reduce_only_reason", ""),
             )
 
-        # 3. Batch fetch tickers for all symbols (reduces API calls in Advanced mode)
-        symbols = self.context.config.symbols
+    async def _fetch_batch_tickers(
+        self, broker: Any, symbols: list[str]
+    ) -> dict[str, dict[str, Any]]:
         tickers: dict[str, dict[str, Any]] = {}
         batch_start = time.time()
 
-        # Only use batch fetch if broker has get_tickers method (not a mock)
         get_tickers_method = getattr(broker, "get_tickers", None)
         if get_tickers_method is not None and callable(get_tickers_method):
             try:
                 async with self._rest_semaphore:
                     result = await asyncio.to_thread(get_tickers_method, symbols)
-                # Validate result is a dict (protects against mocks)
                 if isinstance(result, dict):
                     tickers = result
                     logger.debug(
@@ -875,145 +887,158 @@ class TradingEngine(BaseEngine):
             except Exception as e:
                 logger.warning(f"Batch ticker fetch failed, falling back to individual: {e}")
 
-        # 4. Process Symbols - fetch candles and any missing tickers
-        for symbol in symbols:
-            ticker = tickers.get(symbol)
-            candles: list[Any] = []
-            start_time = time.time()
+        return tickers
 
-            # If ticker not in batch result, fetch individually
-            if ticker is None:
-                try:
-                    async with self._rest_semaphore:
-                        ticker = await asyncio.to_thread(broker.get_ticker, symbol)
-                except Exception as e:
-                    logger.error(f"Failed to fetch ticker for {symbol}: {e}")
-                    self._connection_status = "DISCONNECTED"
-                    continue
+    async def _process_symbol(
+        self,
+        *,
+        symbol: str,
+        broker: Any,
+        ticker: dict[str, Any] | None,
+        positions: dict[str, Position],
+        equity: Decimal,
+    ) -> None:
+        candles: list[Any] = []
+        start_time = time.time()
 
-            if ticker is None or not ticker.get("price"):
-                logger.error(f"No ticker data for {symbol}")
-                self._connection_status = "DISCONNECTED"
-                continue
-
-            # Fetch candles (always individual per-symbol)
+        if ticker is None:
             try:
                 async with self._rest_semaphore:
-                    candles_result = await asyncio.to_thread(
-                        broker.get_candles, symbol, granularity="ONE_MINUTE"
-                    )
-                if isinstance(candles_result, Exception):
-                    logger.warning(f"Failed to fetch candles for {symbol}: {candles_result}")
-                else:
-                    candles = candles_result or []
+                    ticker = await asyncio.to_thread(broker.get_ticker, symbol)
             except Exception as e:
-                logger.warning(f"Failed to fetch candles for {symbol}: {e}")
+                logger.error(f"Failed to fetch ticker for {symbol}: {e}")
+                self._connection_status = "DISCONNECTED"
+                return
 
-            # Update latency and connection status
-            self._last_latency = time.time() - start_time
-            self._connection_status = "CONNECTED"
+        if ticker is None or not ticker.get("price"):
+            logger.error(f"No ticker data for {symbol}")
+            self._connection_status = "DISCONNECTED"
+            return
 
-            price = Decimal(str(ticker.get("price", 0)))
-            logger.info(f"{symbol} price: {price}")
-
-            # Seed mark staleness timestamp from REST fetch (prevents deadlock on startup)
-            if self.context.risk_manager is not None:
-                self.context.risk_manager.last_mark_update[symbol] = time.time()
-
-            # Update status reporter with price
-            self._status_reporter.update_price(symbol, price)
-
-            # Record price tick (updates in-memory history + persists for crash recovery)
-            self._record_price_tick(symbol, price)
-
-            position_state = self._build_position_state(symbol, positions)
-
-            with profile_span("strategy_decision", {"symbol": symbol}) as _strat_span:
-                decision = self.strategy.decide(
-                    symbol=symbol,
-                    current_mark=price,
-                    position_state=position_state,
-                    recent_marks=self.price_history[symbol],
-                    equity=equity,
-                    product=None,  # Future: fetch from broker
-                    candles=candles,
+        try:
+            async with self._rest_semaphore:
+                candles_result = await asyncio.to_thread(
+                    broker.get_candles, symbol, granularity="ONE_MINUTE"
                 )
+            if isinstance(candles_result, Exception):
+                logger.warning(f"Failed to fetch candles for {symbol}: {candles_result}")
+            else:
+                candles = candles_result or []
+        except Exception as e:
+            logger.warning(f"Failed to fetch candles for {symbol}: {e}")
 
-            logger.info(f"Strategy Decision for {symbol}: {decision.action} ({decision.reason})")
+        self._last_latency = time.time() - start_time
+        self._connection_status = "CONNECTED"
 
-            # Report strategy decision
-            active_strats = getattr(
-                self.strategy, "active_strategies", [self.strategy.__class__.__name__]
+        price = Decimal(str(ticker.get("price", 0)))
+        logger.info(f"{symbol} price: {price}")
+
+        if self.context.risk_manager is not None:
+            self.context.risk_manager.last_mark_update[symbol] = time.time()
+
+        self._status_reporter.update_price(symbol, price)
+        self._record_price_tick(symbol, price)
+
+        position_state = self._build_position_state(symbol, positions)
+        with profile_span("strategy_decision", {"symbol": symbol}) as _strat_span:
+            decision = self.strategy.decide(
+                symbol=symbol,
+                current_mark=price,
+                position_state=position_state,
+                recent_marks=self.price_history[symbol],
+                equity=equity,
+                product=None,
+                candles=candles,
             )
-            decision_record = {
-                "symbol": symbol,
-                "action": decision.action.value,
-                "reason": decision.reason,
-                "confidence": str(decision.confidence),
-                "timestamp": time.time(),
-            }
-            self._status_reporter.update_strategy(active_strats, [decision_record])
 
-            if decision.action in (Action.BUY, Action.SELL):
-                logger.info(
-                    "Executing order",
-                    symbol=symbol,
-                    action=decision.action.value,
-                    operation="order_placement",
-                    stage="start",
-                )
-                try:
-                    with profile_span(
-                        "order_placement", {"symbol": symbol, "action": decision.action.value}
-                    ):
-                        result = await self._validate_and_place_order(
-                            symbol=symbol,
-                            decision=decision,
-                            price=price,
-                            equity=equity,
-                        )
-                    if result.blocked:
-                        logger.warning(
-                            "Order blocked",
-                            symbol=symbol,
-                            action=decision.action.value,
-                            reason=result.reason,
-                            operation="order_placement",
-                            stage="blocked",
-                        )
-                    elif result.failed:
-                        logger.error(
-                            "Order submission failed",
-                            symbol=symbol,
-                            action=decision.action.value,
-                            error_message=result.error,
-                            operation="order_placement",
-                            stage="failed",
-                        )
-                except Exception as e:
-                    logger.error(
-                        "Order placement failed",
+        logger.info(f"Strategy Decision for {symbol}: {decision.action} ({decision.reason})")
+
+        active_strats = getattr(
+            self.strategy, "active_strategies", [self.strategy.__class__.__name__]
+        )
+        decision_record = {
+            "symbol": symbol,
+            "action": decision.action.value,
+            "reason": decision.reason,
+            "confidence": str(decision.confidence),
+            "timestamp": time.time(),
+        }
+        self._status_reporter.update_strategy(active_strats, [decision_record])
+
+        await self._handle_decision(
+            symbol=symbol,
+            decision=decision,
+            price=price,
+            equity=equity,
+            position_state=position_state,
+        )
+
+    async def _handle_decision(
+        self,
+        *,
+        symbol: str,
+        decision: Decision,
+        price: Decimal,
+        equity: Decimal,
+        position_state: dict[str, Any] | None,
+    ) -> None:
+        if decision.action in (Action.BUY, Action.SELL):
+            logger.info(
+                "Executing order",
+                symbol=symbol,
+                action=decision.action.value,
+                operation="order_placement",
+                stage="start",
+            )
+            try:
+                with profile_span(
+                    "order_placement", {"symbol": symbol, "action": decision.action.value}
+                ):
+                    result = await self._validate_and_place_order(
+                        symbol=symbol,
+                        decision=decision,
+                        price=price,
+                        equity=equity,
+                    )
+                if result.blocked:
+                    logger.warning(
+                        "Order blocked",
                         symbol=symbol,
                         action=decision.action.value,
-                        error_message=str(e),
+                        reason=result.reason,
+                        operation="order_placement",
+                        stage="blocked",
+                    )
+                elif result.failed:
+                    logger.error(
+                        "Order submission failed",
+                        symbol=symbol,
+                        action=decision.action.value,
+                        error_message=result.error,
                         operation="order_placement",
                         stage="failed",
                     )
-                    await self._notify(
-                        title="Order Placement Failed",
-                        message=f"Failed to execute {decision.action} for {symbol}: {e}",
-                        severity=AlertSeverity.ERROR,
-                        context={
-                            "symbol": symbol,
-                            "action": decision.action.value,
-                            "error": str(e),
-                        },
-                    )
-
-            elif decision.action == Action.CLOSE and position_state:
-                # Handle CLOSE action separately if needed, or integrate into place_order
-                # For now, logging it as per original logic, or we can implement close logic here
-                logger.info(f"CLOSE signal for {symbol} - not fully implemented yet")
+            except Exception as e:
+                logger.error(
+                    "Order placement failed",
+                    symbol=symbol,
+                    action=decision.action.value,
+                    error_message=str(e),
+                    operation="order_placement",
+                    stage="failed",
+                )
+                await self._notify(
+                    title="Order Placement Failed",
+                    message=f"Failed to execute {decision.action} for {symbol}: {e}",
+                    severity=AlertSeverity.ERROR,
+                    context={
+                        "symbol": symbol,
+                        "action": decision.action.value,
+                        "error": str(e),
+                    },
+                )
+        elif decision.action == Action.CLOSE and position_state:
+            logger.info(f"CLOSE signal for {symbol} - not fully implemented yet")
 
     async def _fetch_total_equity(self, positions: dict[str, Position]) -> Decimal | None:
         """Fetch total equity = collateral + unrealized PnL."""

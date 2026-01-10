@@ -13,7 +13,7 @@ import asyncio
 import time
 from collections import deque
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING, Any
 
 from gpt_trader.monitoring.metrics_collector import record_histogram
 from gpt_trader.utilities.logging_patterns import get_logger
@@ -23,36 +23,6 @@ if TYPE_CHECKING:
     from gpt_trader.features.live_trade.degradation import DegradationState
 
 logger = get_logger(__name__, component="equity_calculator")
-
-
-class BrokerProtocol(Protocol):
-    """Protocol for broker operations needed by equity calculator."""
-
-    def list_balances(self) -> list[Any]: ...
-    def get_ticker(self, product_id: str) -> dict[str, Any]: ...
-
-
-class EquityCalculatorConfig(Protocol):
-    """Protocol for configuration needed by equity calculator."""
-
-    @property
-    def coinbase_default_quote(self) -> str | None: ...
-
-    @property
-    def read_only(self) -> bool: ...
-
-
-class RiskConfigProtocol(Protocol):
-    """Protocol for risk configuration."""
-
-    pass
-
-
-class RiskManagerProtocol(Protocol):
-    """Protocol for risk manager access."""
-
-    @property
-    def config(self) -> RiskConfigProtocol | None: ...
 
 
 class EquityCalculator:
@@ -72,33 +42,35 @@ class EquityCalculator:
 
     def __init__(
         self,
-        broker: BrokerProtocol,
-        config: EquityCalculatorConfig,
+        config: Any,
         degradation: DegradationState,
-        risk_manager: RiskManagerProtocol | None,
+        risk_manager: Any,
         price_history: dict[str, deque[Decimal]],
     ) -> None:
         """
         Initialize equity calculator.
 
         Args:
-            broker: Broker for balance/ticker fetches
-            config: Configuration for quote currency and read-only mode
+            config: Configuration (must have coinbase_default_quote, read_only attributes)
             degradation: Degradation state for tracking broker failures
-            risk_manager: Risk manager for degradation config
+            risk_manager: Risk manager for degradation config (must have .config)
             price_history: Cached price history by product_id
         """
-        self._broker = broker
         self._config = config
         self._degradation = degradation
         self._risk_manager = risk_manager
         self._price_history = price_history
 
-    async def calculate_total_equity(self, positions: dict[str, Position]) -> Decimal | None:
+    async def calculate_total_equity(
+        self,
+        broker: Any,
+        positions: dict[str, Position],
+    ) -> Decimal | None:
         """
         Calculate total equity = collateral + unrealized PnL.
 
         Args:
+            broker: Broker for balance/ticker fetches
             positions: Current open positions
 
         Returns:
@@ -107,12 +79,12 @@ class EquityCalculator:
         start_time = time.perf_counter()
         result = "ok"
         try:
-            balances = await asyncio.to_thread(self._broker.list_balances)
+            balances = await asyncio.to_thread(broker.list_balances)
 
             self._log_balance_summary(balances)
 
             cash_collateral, converted_collateral, diagnostics = await self._calculate_collateral(
-                balances
+                broker, balances
             )
             collateral = cash_collateral + converted_collateral
 
@@ -188,10 +160,14 @@ class EquityCalculator:
             logger.warning("Received empty balance list from broker - check API configuration")
 
     async def _calculate_collateral(
-        self, balances: list[Any]
+        self, broker: Any, balances: list[Any]
     ) -> tuple[Decimal, Decimal, dict[str, list[str]]]:
         """
         Calculate cash and converted collateral from balances.
+
+        Args:
+            broker: Broker for ticker fetches
+            balances: List of balance objects
 
         Returns:
             Tuple of (cash_collateral, converted_collateral, diagnostics)
@@ -244,7 +220,9 @@ class EquityCalculator:
                 continue
 
             # Convert non-USD assets using ticker prices
-            usd_value = await self._value_asset(asset, amount, valuation_quotes, diagnostics)
+            usd_value = await self._value_asset(
+                broker, asset, amount, valuation_quotes, diagnostics
+            )
             if usd_value is not None:
                 converted_collateral += usd_value
 
@@ -261,6 +239,7 @@ class EquityCalculator:
 
     async def _value_asset(
         self,
+        broker: Any,
         asset: str,
         amount: Decimal,
         valuation_quotes: list[str],
@@ -285,7 +264,7 @@ class EquityCalculator:
 
             try:
                 if last_price is None:
-                    ticker = await asyncio.to_thread(self._broker.get_ticker, product_id)
+                    ticker = await asyncio.to_thread(broker.get_ticker, product_id)
                     last_price = Decimal(str(ticker.get("price", 0)))
                 if last_price and last_price > 0:
                     used_pair = product_id

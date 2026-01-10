@@ -120,12 +120,19 @@ class StateRegistry:
         perf = get_tui_performance_service()
         start_time = time.time()
 
+        def _observer_priority(observer: StateObserver) -> int:
+            """Return a safe integer priority for sorting observers."""
+            try:
+                priority = getattr(observer, "observer_priority", 0)
+            except Exception:
+                return 0
+            try:
+                return int(priority)
+            except (TypeError, ValueError):
+                return 0
+
         # Convert to list and sort by priority (higher priority first)
-        observers = sorted(
-            self._observers,
-            key=lambda o: getattr(o, "observer_priority", 0),
-            reverse=True,
-        )
+        observers = sorted(self._observers, key=_observer_priority, reverse=True)
         notified_count = 0
 
         for observer in observers:

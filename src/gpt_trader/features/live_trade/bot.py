@@ -9,6 +9,7 @@ import asyncio
 from typing import TYPE_CHECKING, Any
 
 from gpt_trader.app.config import BotConfig
+from gpt_trader.app.runtime_ui_adapter import NullUIAdapter, RuntimeUIAdapter
 from gpt_trader.features.live_trade.engines.base import CoordinatorContext
 from gpt_trader.features.live_trade.engines.strategy import TradingEngine
 from gpt_trader.utilities.logging_patterns import get_logger
@@ -36,6 +37,7 @@ class TradingBot:
         event_store: EventStoreProtocol | None = None,
         orders_store: Any = None,
         notification_service: NotificationService | None = None,
+        ui_adapter: RuntimeUIAdapter | None = None,
     ) -> None:
         self.config = config
         self.container = container
@@ -68,6 +70,20 @@ class TradingBot:
         )
 
         self.engine = TradingEngine(self.context)
+        self.ui_adapter: RuntimeUIAdapter = ui_adapter or NullUIAdapter()
+        self.ui_adapter.attach(self)
+
+    def set_ui_adapter(self, adapter: RuntimeUIAdapter | None) -> None:
+        """Attach a runtime UI adapter (no-op when None)."""
+        if adapter is None:
+            adapter = NullUIAdapter()
+
+        if adapter is self.ui_adapter:
+            return
+
+        self.ui_adapter.detach()
+        self.ui_adapter = adapter
+        self.ui_adapter.attach(self)
 
     async def run(self, single_cycle: bool = False) -> None:
         self.running = True

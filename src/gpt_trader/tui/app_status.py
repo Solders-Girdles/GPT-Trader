@@ -95,6 +95,13 @@ class TraderAppStatusMixin:
             logger.debug("Skipping observer connection for NullStatusReporter (degraded mode)")
             return
 
+        if hasattr(self.bot, "set_ui_adapter"):
+            from gpt_trader.tui.adapters.runtime_ui_adapter import TuiRuntimeUIAdapter
+
+            self.bot.set_ui_adapter(TuiRuntimeUIAdapter(self))
+            logger.debug("Connected runtime UI adapter (from MainScreen.on_mount)")
+            return
+
         self.bot.engine.status_reporter.add_observer(self._on_status_update)
         logger.debug("Connected to StatusReporter observer (from MainScreen.on_mount)")
 

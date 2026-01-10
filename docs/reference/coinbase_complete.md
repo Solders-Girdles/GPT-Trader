@@ -48,7 +48,7 @@ COINBASE_ENABLE_DERIVATIVES=0
 # COINBASE_PROD_CDP_API_KEY=organizations/{org_id}/apiKeys/{key_id}
 # COINBASE_PROD_CDP_PRIVATE_KEY="-----BEGIN EC PRIVATE KEY-----\n...\n-----END EC PRIVATE KEY-----"
 
-# Legacy fallback (still supported)
+# Legacy env var names (JWT)
 # COINBASE_API_KEY_NAME=organizations/{org_id}/apiKeys/{key_id}
 # COINBASE_PRIVATE_KEY="-----BEGIN EC PRIVATE KEY-----\n...\n-----END EC PRIVATE KEY-----"
 ```
@@ -81,10 +81,12 @@ cp config/environments/.env.template .env
 **Used for**: Authenticated spot trading and perpetual futures once Coinbase approves INTX access
 
 ```python
+from gpt_trader.features.brokerages.coinbase.auth import CDPJWTAuth
+
 # Automatic detection from key format
 if api_key.startswith("organizations/"):
-    # CDP JWT authentication
-    auth = CDPAuth(api_key, api_secret)
+    # CDP JWT authentication (api_key is the key name)
+    auth = CDPJWTAuth(api_key, private_key)
 ```
 
 **Key format**:
@@ -102,7 +104,7 @@ from gpt_trader.features.brokerages.coinbase.auth import SimpleAuth
 auth = SimpleAuth(key_name=key_name, private_key=private_key)
 ```
 
-> **Note**: `HMACAuth` is not implemented in GPT-Trader. All authentication now uses JWT-based methods. See [coinbase_auth_guide.md](coinbase_auth_guide.md) for historical HMAC reference.
+> **Note**: `HMACAuth` is not implemented in GPT-Trader. All authentication now uses JWT-based methods. See [coinbase_auth_guide.md](coinbase_auth_guide.md) for JWT usage details.
 
 **Important**: Sandbox does NOT support perpetuals. Use production with canary profile for safe perpetuals testing.
 

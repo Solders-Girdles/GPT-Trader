@@ -39,7 +39,7 @@ class APIConfig:
     # CDP (Coinbase Developer Platform) JWT auth fields
     cdp_api_key: str | None = None  # API key name from CDP
     cdp_private_key: str | None = None  # EC private key in PEM format
-    auth_type: str = "HMAC"  # "HMAC" or "JWT"
+    auth_type: str = "JWT"  # JWT only (legacy HMAC removed)
     api_version: str = "2024-10-24"  # CB-VERSION header value (format: YYYY-MM-DD)
     # API mode determines endpoint paths and auth requirements
     api_mode: Literal["advanced", "exchange"] = (

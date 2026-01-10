@@ -46,7 +46,7 @@ last-updated: 2025-11-24
 
 ### Coinbase Integration
 - [Complete Reference](reference/coinbase_complete.md) - Authentication, endpoints, troubleshooting
-- [Authentication Guide](reference/coinbase_auth_guide.md) - JWT details (HMAC reference only)
+- [Authentication Guide](reference/coinbase_auth_guide.md) - JWT-only details
 - [WebSocket Reference](reference/coinbase_websocket_reference.md) - Real-time data channels
 
 ### Development

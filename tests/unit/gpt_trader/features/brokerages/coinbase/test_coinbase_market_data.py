@@ -600,7 +600,7 @@ class TestCoinbaseMarketData:
             sandbox=True,
             enable_derivatives=True,
             api_mode="advanced",
-            auth_type="HMAC",
+            auth_type="JWT",
         )
         adapter = MinimalCoinbaseBrokerage(config)
         symbol = "BTC-PERP"
@@ -619,7 +619,7 @@ class TestCoinbaseMarketData:
             sandbox=True,
             enable_derivatives=True,
             api_mode="advanced",
-            auth_type="HMAC",
+            auth_type="JWT",
         )
         adapter = MinimalCoinbaseBrokerage(config)
         symbol = "ETH-PERP"

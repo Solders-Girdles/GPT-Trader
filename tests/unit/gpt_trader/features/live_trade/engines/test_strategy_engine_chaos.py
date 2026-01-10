@@ -204,6 +204,25 @@ class TestGuardFailureDegradation:
         with patch.object(asyncio, "sleep", stop), pytest.raises(asyncio.CancelledError):
             await engine._runtime_guard_sweep()
         assert engine._degradation.is_paused()
+        events = engine._event_store.events
+        assert any(e.get("type") == "guard_triggered" for e in events)
+
+    @pytest.mark.asyncio
+    async def test_api_health_guard_emits_api_error_event(self, engine) -> None:
+        from gpt_trader.features.live_trade.guard_errors import RiskLimitExceeded
+
+        err = RiskLimitExceeded(
+            guard_name="api_health",
+            message="API health degraded",
+            details={"error_rate": 0.5},
+        )
+        await engine._handle_guard_failure(err)
+        events = engine._event_store.events
+        assert any(
+            e.get("type") == "guard_triggered" and e.get("data", {}).get("guard") == "api_health"
+            for e in events
+        )
+        assert any(e.get("type") == "api_error" for e in events)
 
 
 class TestMarkStalenessDegradation:
@@ -221,6 +240,8 @@ class TestMarkStalenessDegradation:
         await self._place_order(engine)
         assert engine._degradation.is_paused(symbol="BTC-USD")
         assert "mark_staleness" in (engine._degradation.get_pause_reason("BTC-USD") or "")
+        events = engine._event_store.events
+        assert any(e.get("type") == "stale_mark_detected" for e in events)
 
     @pytest.mark.asyncio
     async def test_stale_mark_allows_reduce_only_when_configured(self, engine) -> None:
@@ -459,6 +480,8 @@ class TestWSHealthDegradation:
         assert "ws_reconnect" in (engine._degradation.get_pause_reason() or "")
         # Verify reconnect tracking was reset
         assert engine._ws_reconnect_attempts == 0
+        events = engine._event_store.events
+        assert any(e.get("type") == "websocket_reconnect" for e in events)
 
     @pytest.mark.asyncio
     async def test_ws_disconnect_with_stale_timestamps_triggers_degradation(

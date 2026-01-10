@@ -197,6 +197,7 @@ class TradingEngine(BaseEngine):
         """Initialize StateCollector, OrderValidator, OrderSubmitter for pre-trade guards."""
         # Event store fallback
         event_store = self.context.event_store or EventStore()
+        self._event_store = event_store
         bot_id = str(self.context.bot_id or self.context.config.profile or "live")
 
         # Broker and risk manager must exist
@@ -493,7 +494,8 @@ class TradingEngine(BaseEngine):
             try:
                 if self._guard_manager is not None:
                     # Use run_runtime_guards directly to catch GuardError for degradation
-                    self._guard_manager.run_runtime_guards()
+                    state = self._guard_manager.run_runtime_guards()
+                    self._record_guard_events(state.guard_events)
 
             except GuardError as err:
                 # Trigger graceful degradation on guard failure
@@ -508,6 +510,7 @@ class TradingEngine(BaseEngine):
         """Handle guard failure by triggering graceful degradation."""
         risk_manager = self.context.risk_manager
         config = risk_manager.config if risk_manager else None
+        self._record_guard_failure_event(err)
 
         # Determine cooldown from config
         cooldown_seconds = 300  # Default 5 minutes
@@ -618,6 +621,15 @@ class TradingEngine(BaseEngine):
                         pause_seconds=reconnect_pause,
                         operation="ws_health",
                         stage="reconnect",
+                    )
+                    self._append_event(
+                        "websocket_reconnect",
+                        {
+                            "reconnect_count": reconnect_count,
+                            "gap_count": gap_count,
+                            "connected": connected,
+                            "timestamp": current_time,
+                        },
                     )
                     last_reconnect_count = reconnect_count
 
@@ -1205,6 +1217,56 @@ class TradingEngine(BaseEngine):
                 side=trace.side,
             )
 
+    def _append_event(self, event_type: str, data: dict[str, Any]) -> None:
+        event_store = getattr(self, "_event_store", None)
+        if event_store is None:
+            return
+        payload = dict(data)
+        if "bot_id" not in payload and self.context.bot_id:
+            payload["bot_id"] = self.context.bot_id
+        try:
+            event_store.append(event_type, payload)
+        except Exception as exc:
+            logger.error(
+                "Failed to append event",
+                event_type=event_type,
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="event_store",
+            )
+
+    def _record_guard_events(self, guard_events: list[dict[str, Any]]) -> None:
+        if not guard_events:
+            return
+        for event in guard_events:
+            if not event:
+                continue
+            payload = dict(event)
+            if payload.get("triggered") is False:
+                continue
+            payload.setdefault("guard", "volatility_circuit_breaker")
+            payload.setdefault("timestamp", time.time())
+            self._append_event("guard_triggered", payload)
+
+    def _record_guard_failure_event(self, err: GuardError) -> None:
+        payload = {
+            "guard": err.guard_name,
+            "reason": err.message,
+            "recoverable": err.recoverable,
+            "category": getattr(err, "category", "unknown"),
+            "details": err.details,
+            "timestamp": time.time(),
+            "triggered": True,
+        }
+        self._append_event("guard_triggered", payload)
+        if err.guard_name == "api_health":
+            api_payload = {
+                "reason": err.message,
+                "details": err.details,
+                "timestamp": payload["timestamp"],
+            }
+            self._append_event("api_error", api_payload)
+
     def _finalize_decision_trace(
         self,
         trace: OrderDecisionTrace,
@@ -1492,6 +1554,15 @@ class TradingEngine(BaseEngine):
             if config is not None:
                 allow_reduce = config.mark_staleness_allow_reduce_only
                 cooldown = config.mark_staleness_cooldown_seconds
+                self._append_event(
+                    "stale_mark_detected",
+                    {
+                        "symbol": symbol,
+                        "side": side.value,
+                        "allowed_reduce_only": allow_reduce and reduce_only_flag,
+                        "timestamp": time.time(),
+                    },
+                )
                 self._degradation.pause_symbol(
                     symbol=symbol,
                     seconds=cooldown,
@@ -1528,6 +1599,15 @@ class TradingEngine(BaseEngine):
                 )
 
             logger.warning(f"Order blocked: mark price stale for {symbol}")
+            self._append_event(
+                "stale_mark_detected",
+                {
+                    "symbol": symbol,
+                    "side": side.value,
+                    "allowed_reduce_only": False,
+                    "timestamp": time.time(),
+                },
+            )
             await self._notify(
                 title="Order Blocked - Stale Mark Price",
                 message=f"Cannot place order for {symbol}: mark price data is stale",

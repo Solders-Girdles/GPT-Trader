@@ -32,7 +32,7 @@ GPT-Trader is a Coinbase trading system supporting spot and CFM futures markets.
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                            TRADING BOT                                       │
-│  orchestration/trading_bot/bot.py::TradingBot                               │
+│  features/live_trade/bot.py::TradingBot                                     │
 │  Creates TradingEngine with CoordinatorContext                              │
 └─────────────────────────────────────────────────────────────────────────────┘
                                     │
@@ -46,11 +46,11 @@ GPT-Trader is a Coinbase trading system supporting spot and CFM futures markets.
 │  ├── Heartbeat service                                                       │
 │  ├── Status reporter                 ┌──────────────────────────────────┐   │
 │  ├── Health check runner ───────────▶│      OBSERVABILITY (continuous)  │   │
-│  ├── WS health watchdog              │  monitoring/health_checks.py     │   │
-│  └── System maintenance              │  observability/tracing.py        │   │
-│                                      │  monitoring/metrics_exporter.py  │   │
+│  ├── WS health watchdog              │  src/gpt_trader/monitoring/health_checks.py │   │
+│  └── System maintenance              │  src/gpt_trader/observability/tracing.py   │   │
+│                                      │  src/gpt_trader/monitoring/metrics_exporter.py │   │
 │  ┌─ RUNTIME GUARD SWEEP ──────────┐  │                                  │   │
-│  │  orchestration/execution/      │  │  • Health endpoints (/health)   │   │
+│  │  features/live_trade/execution/│  │  • Health endpoints (/health)   │   │
 │  │    guard_manager.py            │  │  • Prometheus metrics (/metrics)│   │
 │  │  Periodic checks (not per-     │  │  • OpenTelemetry trace spans    │   │
 │  │  order):                       │  │  • Status file updates          │   │
@@ -79,8 +79,8 @@ GPT-Trader is a Coinbase trading system supporting spot and CFM futures markets.
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                      PRE-TRADE GUARD STACK                                   │
-│  Canonical entry: TradingEngine.submit_order()                              │
-│  Internal: _validate_and_place_order()                                      │
+│  Canonical entry (live loop): TradingEngine._validate_and_place_order()     │
+│  External entry: TradingEngine.submit_order()                               │
 │  (executed synchronously before each order)                                 │
 │                                                                              │
 │  ┌─ Degradation Gate ────────────────────────────────────────────────────┐  │
@@ -107,7 +107,7 @@ GPT-Trader is a Coinbase trading system supporting spot and CFM futures markets.
 │  └───────────────────────────────────────────────────────────────────────┘  │
 │                                    │                                         │
 │  ┌─ Order Validator ─────────────────────────────────────────────────────┐  │
-│  │  orchestration/execution/validation.py                                │  │
+│  │  features/live_trade/execution/validation.py                          │  │
 │  │  Exchange rules, slippage guard, order preview                        │  │
 │  └───────────────────────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -116,7 +116,7 @@ GPT-Trader is a Coinbase trading system supporting spot and CFM futures markets.
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                          ORDER EXECUTION                                     │
-│  orchestration/execution/order_submission.py                                │
+│  features/live_trade/execution/order_submission.py                          │
 │                                    │                                         │
 │  broker.place_order(symbol, side, type, quantity)                           │
 │                                    │                                         │
@@ -139,15 +139,15 @@ GPT-Trader is a Coinbase trading system supporting spot and CFM futures markets.
 | Capability | Primary Modules | Key Classes/Functions | Config Flags | Health/Metrics | Degradation Behavior |
 |------------|-----------------|----------------------|--------------|----------------|---------------------|
 | **Configuration + Feature Flags** | `app/config/bot_config.py`, `features/live_trade/risk/config.py` | `BotConfig`, `RiskConfig`, `from_env()` | See [FEATURE_FLAGS.md](FEATURE_FLAGS.md) | Config load success/warnings | Sync warnings on mismatch |
-| **Configuration Guardian** | `orchestration/configuration/`, `monitoring/guards/` | `ProfileLoader`, `GuardManager` | Profile-specific overrides | Drift detection, validation errors | Blocks invalid config at startup |
+| **Configuration Guardian** | `app/config/`, `src/gpt_trader/monitoring/configuration_guardian/` | `ProfileLoader`, `DriftDetector` | Profile-specific overrides | Drift detection, validation errors | Blocks invalid config at startup |
 | **Trading Decisioning** | `features/live_trade/strategies/` | `BaselinePerpsStrategy.decide()`, `MeanReversionStrategy.decide()`, `EnsembleStrategy.decide()` | `strategy_type`, `kill_switch_enabled` | Decision confidence, indicator values | Kill switch stops all decisions |
-| **Pre-trade Validation** | `features/live_trade/engines/strategy.py`, `security/security_validator.py` | `TradingEngine.submit_order()`, `SecurityValidator` | `enable_order_preview`, `ORDER_PREVIEW_FAIL_CLOSED` | Validation pass/fail counts | Escalates to reduce-only after N failures |
-| **Order Execution** | `features/live_trade/engines/strategy.py`, `features/brokerages/coinbase/client/orders.py` | `TradingEngine.submit_order()`, `OrderClientMixin` | `dry_run`, `mock_broker` | Order latency, success rate | Pauses symbol on repeated failures |
+| **Pre-trade Validation** | `features/live_trade/engines/strategy.py`, `security/security_validator.py` | `TradingEngine._validate_and_place_order()`, `OrderValidator`, `SecurityValidator` | `enable_order_preview`, `ORDER_PREVIEW_FAIL_CLOSED` | Validation pass/fail counts | Escalates to reduce-only after N failures |
+| **Order Execution** | `features/live_trade/engines/strategy.py`, `features/live_trade/execution/order_submission.py` | `OrderSubmitter.submit_order()`, `BrokerExecutor.execute_order()` | `dry_run`, `mock_broker` | Order latency, success rate | Pauses symbol on repeated failures |
 | **Risk & Degradation** | `features/live_trade/risk/manager/`, `features/live_trade/degradation.py` | `LiveRiskManager`, `DegradationState` | `reduce_only_mode`, `RISK_DAILY_LOSS_LIMIT_PCT` | Daily PnL %, leverage ratio | Reduce-only mode, symbol pause |
-| **Runtime Guards** | `orchestration/execution/guards/`, `orchestration/execution/guard_manager.py` | `GuardManager`, individual guards | `RISK_*` thresholds | Guard trip counts, cooldowns | Triggers reduce-only or pause |
+| **Runtime Guards** | `features/live_trade/execution/guards/`, `features/live_trade/execution/guard_manager.py` | `GuardManager`, individual guards | `RISK_*` thresholds | Guard trip counts, cooldowns | Triggers reduce-only or pause |
 | **Streaming (WS)** | `features/brokerages/coinbase/ws.py` | `CoinbaseWebSocket`, `WSHealthWatchdog` | `PERPS_ENABLE_STREAMING`, `RISK_WS_*` | Last message age, heartbeat age | Pause on stale data, reconnect backoff |
-| **Observability** | `monitoring/health_checks.py`, `observability/tracing.py`, `monitoring/metrics_exporter.py` | `HealthState`, `init_tracing()`, `MetricsExporter` | `GPT_TRADER_OTEL_ENABLED`, `GPT_TRADER_METRICS_ENDPOINT_ENABLED` | Health endpoints, trace spans | N/A |
-| **Preflight Diagnostics** | `preflight/` | `run_preflight_checks()` | N/A | Check pass/fail | Blocks startup on critical failures |
+| **Observability** | `src/gpt_trader/monitoring/health_checks.py`, `src/gpt_trader/observability/tracing.py`, `src/gpt_trader/monitoring/metrics_exporter.py` | `HealthState`, `init_tracing()`, `MetricsExporter` | `GPT_TRADER_OTEL_ENABLED`, `GPT_TRADER_METRICS_ENDPOINT_ENABLED` | Health endpoints, trace spans | N/A |
+| **Preflight Diagnostics** | `preflight/` | `PreflightCheck`, `preflight.cli.main()` | N/A | Check pass/fail | Blocks startup on critical failures |
 | **TUI Monitoring** | `tui/` | `TraderApp`, screen/widget hierarchy | N/A | Real-time display | Visual degradation indicators |
 | **Testing Harness** | `tests/integration/`, `tests/property/` | Chaos tests, property invariants | N/A | Test coverage | N/A |
 
@@ -156,27 +156,27 @@ GPT-Trader is a Coinbase trading system supporting spot and CFM futures markets.
 | Intent | File(s) to Modify |
 |--------|-------------------|
 | Add a new trading strategy | `features/live_trade/strategies/` + register in `factory.py` |
-| Add a new runtime guard | `orchestration/execution/guards/` + register in `guard_manager.py` |
+| Add a new runtime guard | `features/live_trade/execution/guards/` + register in `guard_manager.py` |
 | Add a new pre-trade check | `features/live_trade/engines/strategy.py::_validate_and_place_order()` |
-| Submit order programmatically | `TradingEngine.submit_order()` — canonical entry point for guard stack |
+| Submit order programmatically | `TradingEngine.submit_order()` — external entry point (wraps `_validate_and_place_order`) |
 | Change order execution flow | `features/live_trade/engines/strategy.py` (canonical path) |
 | Add a new env config flag | `app/config/bot_config.py` + `.env.template` + `docs/FEATURE_FLAGS.md` |
-| Add a new health check | `monitoring/health_checks.py` |
-| Modify degradation behavior | `features/live_trade/degradation.py` + `orchestration/execution/degradation.py` |
+| Add a new health check | `src/gpt_trader/monitoring/health_checks.py` |
+| Modify degradation behavior | `features/live_trade/degradation.py` |
 | Add Coinbase API endpoint | `features/brokerages/coinbase/client/` (appropriate mixin) |
 | Update TUI display | `tui/widgets/` or `tui/screens/` |
 
-**Note:** `orchestration/live_execution.py::LiveExecutionEngine` is deprecated. Use `TradingEngine.submit_order()` for new code.
+**Note:** `features/live_trade/execution/engine.py::LiveExecutionEngine` is deprecated. Use the TradingEngine guard stack (live loop `_validate_and_place_order`, external `submit_order`).
 
 ## Intentional Guard-Stack Bypasses
 
-The canonical order path routes through `TradingEngine.submit_order()` which applies the full pre-trade guard stack. The following locations intentionally bypass guards:
+The canonical order path routes through `TradingEngine._validate_and_place_order()` (the live loop), with `TradingEngine.submit_order()` as the external wrapper. The following locations intentionally bypass guards:
 
 | Location | Purpose | Justification |
 |----------|---------|---------------|
-| `orchestration/trading_bot/bot.py::flatten_and_stop()` | Emergency position closure | Must succeed even when guards would block (e.g., during risk trip) |
+| `features/live_trade/bot.py::flatten_and_stop()` | Emergency position closure | Must succeed even when guards would block (e.g., during risk trip) |
 | `features/optimize/` (batch_runner, walk_forward) | Backtesting/optimization | Uses simulated broker, not production |
-| `features/live_trade/execution/router.py::execute()` | Legacy sync path | **Deprecated** — emits warning, use `execute_async()` |
+| `features/live_trade/execution/router.py::execute()` | Legacy sync path | **Deprecated** — emits warning, used in tests only |
 
 All other `broker.place_order` calls are either:
 - **Internal to the canonical path** (TradingEngine → broker)

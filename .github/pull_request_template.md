@@ -22,7 +22,7 @@ Closes #<issue-id(s)>
 
 ## Complexity & Quality Gates
 - [ ] Mypy/type-check passed
-- [ ] Xenon/radon complexity gate passed (CC ≤ 15 on orchestration)
+- [ ] Xenon/radon complexity gate passed (CC ≤ 15 on live_trade execution)
 - [ ] No `sys.path` hacks in tests
 - [ ] No `MagicMock` on `async def` (use `AsyncMock`)
 - [ ] Import-lint rules respected (no “import up the stack”)

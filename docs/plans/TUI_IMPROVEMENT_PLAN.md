@@ -37,7 +37,7 @@ UICoordinator.apply_observer_update()
 
 #### Step 1: Extend StateObserver Protocol
 
-**File:** [state_registry.py](src/gpt_trader/tui/services/state_registry.py)
+**File:** [state_registry.py](../../src/gpt_trader/tui/services/state_registry.py)
 
 Add a priority attribute to allow screens to register with higher priority:
 
@@ -57,7 +57,7 @@ class StateObserver(Protocol):
 
 #### Step 2: Update StateRegistry Broadcast Order
 
-**File:** [state_registry.py](src/gpt_trader/tui/services/state_registry.py)
+**File:** [state_registry.py](../../src/gpt_trader/tui/services/state_registry.py)
 
 Sort observers by priority before broadcasting:
 
@@ -74,7 +74,7 @@ def broadcast(self, state: TuiState) -> None:
 
 #### Step 3: Make MainScreen a StateObserver
 
-**File:** [main_screen.py](src/gpt_trader/tui/screens/main_screen.py)
+**File:** [main_screen.py](../../src/gpt_trader/tui/screens/main_screen.py)
 
 ```python
 class MainScreen(Screen):
@@ -101,7 +101,7 @@ class MainScreen(Screen):
 
 #### Step 4: Simplify UICoordinator.update_main_screen()
 
-**File:** [ui_coordinator.py](src/gpt_trader/tui/managers/ui_coordinator.py)
+**File:** [ui_coordinator.py](../../src/gpt_trader/tui/managers/ui_coordinator.py)
 
 Replace direct screen queries with pure broadcast:
 
@@ -120,7 +120,7 @@ Remove lines 273-284 (direct MainScreen/SystemDetailsScreen queries).
 
 #### Step 5: Update SystemDetailsScreen
 
-**File:** [system_details_screen.py](src/gpt_trader/tui/screens/system_details_screen.py)
+**File:** [system_details_screen.py](../../src/gpt_trader/tui/screens/system_details_screen.py)
 
 Ensure it registers itself on mount (likely already does based on exploration).
 
@@ -251,7 +251,7 @@ class DataCollectionService:
 
 #### Step 2: Integrate with TraderApp Lifecycle
 
-**File:** [app_lifecycle.py](src/gpt_trader/tui/app_lifecycle.py)
+**File:** [app_lifecycle.py](../../src/gpt_trader/tui/app_lifecycle.py)
 
 ```python
 # In _initialize_with_bot():
@@ -267,7 +267,7 @@ if hasattr(self, "data_collection_service"):
 
 #### Step 3: Simplify Heartbeat Loop
 
-**File:** [ui_coordinator.py](src/gpt_trader/tui/managers/ui_coordinator.py)
+**File:** [ui_coordinator.py](../../src/gpt_trader/tui/managers/ui_coordinator.py)
 
 Remove metric collection from `_heartbeat_loop()` - it now only handles:
 - Heartbeat animation pulse
@@ -317,7 +317,7 @@ async def _heartbeat_loop(self) -> None:
 
 #### Step 1: Add Batch Update Context Manager
 
-**File:** [state.py](src/gpt_trader/tui/state.py)
+**File:** [state.py](../../src/gpt_trader/tui/state.py)
 
 ```python
 from contextlib import contextmanager
@@ -356,7 +356,7 @@ class TuiState(Widget):
 
 #### Step 2: Add Change Detection to Complex Objects
 
-**File:** [types.py](src/gpt_trader/tui/types.py)
+**File:** [types.py](../../src/gpt_trader/tui/types.py)
 
 Add `__eq__` methods to state types for efficient comparison:
 
@@ -385,7 +385,7 @@ class MarketState:
 
 #### Step 3: Use Batch Updates in UICoordinator
 
-**File:** [ui_coordinator.py](src/gpt_trader/tui/managers/ui_coordinator.py)
+**File:** [ui_coordinator.py](../../src/gpt_trader/tui/managers/ui_coordinator.py)
 
 ```python
 def _apply_status_update(self, status: BotStatus) -> None:
@@ -417,7 +417,7 @@ def _apply_status_update(self, status: BotStatus) -> None:
 
 #### Step 1: Define Breakpoints
 
-**File:** [responsive_state.py](src/gpt_trader/tui/responsive_state.py)
+**File:** [responsive_state.py](../../src/gpt_trader/tui/responsive_state.py)
 
 ```python
 class ResponsiveState(Enum):
@@ -473,7 +473,7 @@ class CompactMainScreen(Screen):
 
 #### Step 4: Auto-Switch Layout Based on Size
 
-**File:** [app_lifecycle.py](src/gpt_trader/tui/app_lifecycle.py)
+**File:** [app_lifecycle.py](../../src/gpt_trader/tui/app_lifecycle.py)
 
 ```python
 def on_resize(self, event: events.Resize) -> None:

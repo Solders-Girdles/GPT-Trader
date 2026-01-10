@@ -38,6 +38,6 @@ Strategies implement the `StrategyProtocol` and receive market data via coordina
 
 ## Related Packages
 
-- `orchestration/` - Bot lifecycle and configuration
-- `features/brokerages/` - Exchange connectivity
-- `monitoring/` - Alerts and telemetry
+- `src/gpt_trader/app/` - Application bootstrap and DI container
+- `src/gpt_trader/features/brokerages/` - Exchange connectivity
+- `src/gpt_trader/monitoring/` - Alerts and telemetry

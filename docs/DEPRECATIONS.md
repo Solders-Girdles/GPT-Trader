@@ -40,7 +40,7 @@ Before removing any deprecated item:
 | `gpt_trader.orchestration` package | v3.0 | Use canonical paths: `app.*`, `features.live_trade.*` |
 | `orchestration.configuration.bot_config` | v3.0 | `gpt_trader.app.config.BotConfig` |
 | `orchestration.configuration.risk.model` | v3.0 | `gpt_trader.features.live_trade.risk.config.RiskConfig` |
-| `orchestration.live_execution.LiveExecutionEngine` | v3.0 | `TradingEngine.submit_order()` |
+| `orchestration.live_execution.LiveExecutionEngine` | v3.0 | TradingEngine guard stack (`_validate_and_place_order` live loop; `submit_order` external) |
 | `orchestration.execution.*` | v3.0 | `gpt_trader.features.live_trade.execution.*` |
 | `orchestration.symbols` | v3.0 | `gpt_trader.features.live_trade.symbols` |
 
@@ -50,7 +50,7 @@ The entire `src/gpt_trader/orchestration/` package was removed. Migration phases
 
 - **Phase 9-10**: Converted orchestration modules to pure re-export shims
 - **Phase 11**: Moved tests to canonical locations, created deprecation test bucket
-- **Phase 12**: Updated scripts/tooling, extended CI guards
+- **Phase 12**: Updated scripts/ci tooling, extended CI guards
 - **Phase 13**: Hard removal of orchestration package and shim tests
 - **Phase 14**: Post-removal cleanup (pytest marker, test hygiene allowlist, inventory generator)
 

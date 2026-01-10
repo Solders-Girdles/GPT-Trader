@@ -86,5 +86,5 @@ Kibana, and Jaeger remain available through the infrastructure override for team
 their historical traces and log searches.
 
 ## Migrating from the Legacy Stack
-If you previously relied on `deploy/docker/`, consult
-for migration notes. The legacy assets now live under `docs/archive/legacy-deployment/`.
+If you previously relied on `deploy/docker/`, migrate to `deploy/gpt_trader/docker`.
+The legacy assets were removed in v3.0; use git history if you need the retired compose files.

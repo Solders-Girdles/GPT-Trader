@@ -65,11 +65,11 @@ uv run gpt-trader tui --mode live  # Live trading
 Copy the template and configure your credentials:
 
 ```bash
-cp config/environments/.env.template config/environments/.env
+cp config/environments/.env.template .env
 ```
 
 Key variables:
-- `COINBASE_API_KEY` / `COINBASE_API_SECRET` - API credentials
+- `COINBASE_CREDENTIALS_FILE` or `COINBASE_CDP_API_KEY` + `COINBASE_CDP_PRIVATE_KEY` - JWT credentials
 - `GPT_TRADER_PROFILE` - Trading profile (dev/canary/prod)
 
 See [config/environments/.env.template](config/environments/.env.template) for all options.
@@ -88,7 +88,6 @@ src/gpt_trader/
 │   ├── optimize/         # Parameter optimization
 │   └── strategy_tools/   # Shared strategy helpers
 ├── monitoring/           # Runtime guards, metrics, telemetry
-├── orchestration/        # Legacy service wiring (being migrated)
 ├── security/             # Secrets management, input sanitization
 ├── tui/                  # Terminal User Interface (Textual)
 └── validation/           # Declarative validators
@@ -156,7 +155,7 @@ Full documentation index: [docs/README.md](docs/README.md)
 
 ## Architecture Notes
 
-This project uses a modern **Dependency Injection** pattern via `ApplicationContainer` in `src/gpt_trader/app/`. The legacy `orchestration/` layer is being migrated. When patterns conflict, prefer `app/` and `features/` over `orchestration/`.
+This project uses a modern **Dependency Injection** pattern via `ApplicationContainer` in `src/gpt_trader/app/`. The legacy `orchestration/` layer was removed in v3.0; prefer `app/` and `features/` paths.
 
 See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for details.
 

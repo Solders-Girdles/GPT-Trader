@@ -46,10 +46,10 @@ This document establishes the naming conventions for the GPT-Trader codebase. Ad
 - Document each exception inline (comment) and in the reference docs to avoid accidental renames.
 
 ## 3. Abbreviation Policy
-- Maintain a shared glossary in `docs/agents/glossary.md` (to be created) listing approved abbreviations (`PnL`, `MVP`, `API`).
+- Maintain a shared glossary in `docs/agents/glossary.md` listing approved abbreviations (`PnL`, `MVP`, `API`).
 - Any new abbreviation requires maintainer approval; add to glossary when accepted.
 
 ## 4. Review & Enforcement
-- Incorporate naming checks into `scripts/agents/preflight.py` (planned).
+- Incorporate naming checks into a dedicated agent preflight script (planned; not yet implemented).
 - Require code review to flag deviations; reference this document in feedback.
 - Add a Definition of Done item: "Naming complies with standards or documented exception is provided."

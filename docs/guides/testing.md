@@ -16,10 +16,10 @@ uv run pytest
 uv run pytest --cov --cov-report=html --cov-report=term
 
 # Run specific test file
-uv run pytest tests/unit/gpt_trader/config/test_schemas.py
+uv run pytest tests/unit/gpt_trader/config/test_bot_config_env.py
 
 # Run specific test class or function
-uv run pytest tests/unit/gpt_trader/config/test_schemas.py::TestBotConfig::test_valid_config
+uv run pytest tests/unit/gpt_trader/config/test_bot_config_env.py::TestBotConfigEnvAliasing::test_risk_max_leverage_with_prefix
 
 # Run tests matching a pattern
 uv run pytest -k "test_error"
@@ -59,7 +59,7 @@ tests/
 │   │   ├── features/
 │   │   │   ├── live_trade/
 │   │   │   └── brokerages/
-│   │   └── orchestration/
+│   │   └── app/           # Application container tests
 │   └── coinbase/          # Coinbase-specific utilities
 ├── support/               # Shared fixtures (when co-located insufficient)
 └── fixtures/              # Test fixtures including behavioral scenarios
@@ -69,10 +69,9 @@ tests/
 
 | Suite | Path | Purpose |
 |-------|------|---------|
-| **Live Trade** | `tests/unit/gpt_trader/features/live_trade/` | Order execution, risk management, PnL tracking |
-| **Orchestration** | `tests/unit/gpt_trader/orchestration/` | Bot lifecycle, mock trading, event handling |
+| **Live Trade** | `tests/unit/gpt_trader/features/live_trade/` | Order execution, risk management, PnL tracking, bot lifecycle |
 | **Brokerage** | `tests/unit/gpt_trader/features/brokerages/` | Coinbase API, WebSocket, order management |
-| **Foundation** | `tests/unit/test_foundation.py` | Core system assumptions |
+| **Foundation** | `tests/unit/gpt_trader/core/` | Core system assumptions |
 
 ### Current Metrics
 
@@ -222,48 +221,27 @@ uv run pytest tests/unit/gpt_trader/ --durations=10
 
 ### Key Testing Helpers
 
-- **Quantization**: `src/gpt_trader/features/quantization.py` - `quantize_size()`, `quantize_price()`
+- **Quantization**: `src/gpt_trader/utilities/quantization.py` - `quantize_price_side_aware()`
 - **Broker Doubles**: `DeterministicBroker` in `src/gpt_trader/features/brokerages/mock/deterministic.py`
 
-### Behavioral Scenarios
+### Fixture Data
 
-The `tests/fixtures/behavioral` package provides reusable scenarios for validating PnL calculations, funding flows, and risk-limit enforcement:
+Use fixture data under `tests/fixtures/` for deterministic inputs:
 
-```python
-from tests.fixtures.behavioral import (
-    create_realistic_btc_scenario,
-    run_behavioral_validation,
-)
+- `tests/fixtures/backtesting/bt_20240101_000000_BTC-USD.json` - sample backtest dataset
+- `tests/fixtures/brokerages/mock_products.yaml` - product catalog fixture
 
-scenario = create_realistic_btc_scenario(
-    scenario_type="profit",
-    position_size=Decimal("0.1"),
-    hold_days=1,
-)
-passed, errors = run_behavioral_validation(scenario, actual_results)
-```
+## Change Impact Analysis
 
-Available helpers:
-- `create_realistic_btc_scenario` / `create_realistic_eth_scenario`
-- `create_market_stress_scenario` - Extreme market moves
-- `create_funding_scenario` - Funding cost modeling
-- `create_risk_limit_test_scenario` - Leverage cap testing
-
-## Selective Test Runner
-
-For CI efficiency, the selective runner executes only tests impacted by changes:
+Use the impact analyzer to see which tests map to a change:
 
 ```bash
-# Dry-run selection
-uv run python scripts/testing/selective_runner.py --paths src/gpt_trader/orchestration/trading_bot/bot.py --dry-run
-
-# Execute selected tests
-uv run python scripts/testing/selective_runner.py --paths src/gpt_trader/orchestration/trading_bot/bot.py
+uv run agent-impact --files src/gpt_trader/features/live_trade/bot.py --include-importers
 ```
 
 CI safeguards:
-- Upgrades to full suite if selection exceeds 70% of total tests
-- Push builds to `main` always run full coverage suite
+- `scripts/ci/check_test_hygiene.py` enforces coverage expectations for critical paths
+- Push builds to `main` always run the full suite
 
 ## Common Issues
 

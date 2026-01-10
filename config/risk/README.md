@@ -1,13 +1,15 @@
 Coinbase Perps Risk Config
 
 Overview
-- File `coinbase_perps.prod.yaml` provides production‑oriented risk limits for BTC/ETH/SOL/XRP.
-- The bot loads this file when env var `RISK_CONFIG_PATH` points to it; otherwise it falls back to env defaults.
+- Files in this directory are **legacy/reference templates** for risk limits.
+- The runtime does **not** load `RISK_CONFIG_PATH` by default. Active risk settings come from
+  profile YAML (`config/profiles/*.yaml`) + env (`RISK_*`) via `BotConfig` and
+  `LiveRiskManager`.
 
-How To Use
-- Set env: `RISK_CONFIG_PATH=config/risk/coinbase_perps.prod.yaml`
-- Optionally set symbols via env: `TRADING_SYMBOLS=BTC-PERP,ETH-PERP,SOL-PERP,XRP-PERP`
-- Or pass on CLI: `uv run coinbase-trader --profile prod --symbols BTC-PERP ETH-PERP SOL-PERP XRP-PERP`
+How To Use (Manual Wiring)
+- Parse a template (YAML/JSON) and map the values into `RiskConfig` or `BotRiskConfig`.
+- Provide the mapped config by extending `ApplicationContainer` or
+  `RiskValidationContainer` in your deployment.
 
 Key Settings
 - max_leverage: Global cap; day/night per‑symbol caps override when stricter.
@@ -28,8 +30,9 @@ Suggested First‑Run Values
 
 Notes
 - YAML supports inline comments—capture rationale directly in the file and keep this history updated.
-- Exchange rules (MMR, leverage) can change; these caps are your upper bounds.
-- The loader validates input with a shared Pydantic schema: env errors raise `EnvVarError` with the offending key (e.g. `RISK_MAX_EXPOSURE_PCT`), and JSON parsing enforces percentage bounds plus mapping formats. Legacy aliases like `RISK_MAX_TOTAL_EXPOSURE_PCT` still map to `max_exposure_pct`.
+- Exchange rules (MMR, leverage) can change; treat these caps as upper bounds.
+- There is no built-in Pydantic loader for these templates in v3.0. Use
+  `features/live_trade/risk/config.py` as the canonical model when wiring manually.
 
 Related Env
 - `FEE_BPS_BY_SYMBOL` lets sizing tools use per‑symbol fee bps (e.g., `BTC-PERP:6,ETH-PERP:8`).

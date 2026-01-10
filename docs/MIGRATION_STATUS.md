@@ -35,12 +35,11 @@ bot = build_bot(config)
 bot = bot_from_profile("demo")
 ```
 
-> **Note:** The old `orchestration.bootstrap` path still works via re-export shim but emits a `DeprecationWarning`.
+> **Note:** `orchestration.bootstrap` was removed in v3.0. Update imports to `gpt_trader.app.bootstrap`.
 
 ## v3.0 Changes (Completed)
 
 The following legacy items were removed in v3.0:
-
 | Item | Action Taken |
 |------|--------------|
 | `ServiceRegistry` | Deleted `orchestration/service_registry.py` |
@@ -51,7 +50,7 @@ The following legacy items were removed in v3.0:
 | `BootstrapResult` | Removed from `orchestration/bootstrap.py` |
 | `CoordinatorContext.registry` | Field removed |
 | Legacy test marker | Removed from `pytest.ini` |
-| `features/brokerages/core/interfaces.py` | Deleted (was deprecated re-export shim) |
+| `features/brokerages/core/interfaces.py` | Deleted (use `features/brokerages/core/protocols.py`) |
 | `orchestration/storage.py` | Deleted (StorageBootstrapper was unused) |
 | `orchestration/read_only_broker.py` | Deleted (ReadOnlyBroker was unused) |
 

@@ -8,14 +8,14 @@ rules that referenced the monolithic `src/bot` package have been archived.
 - **Vertical slices**: Add features within `src/gpt_trader/features/<slice>/` and
   keep cross-slice coupling minimal.
 - **Explicit wiring**: Register new dependencies in `ApplicationContainer`
-  (`gpt_trader/app/container.py`) instead of hidden imports. See
+  (`src/gpt_trader/app/container.py`) instead of hidden imports. See
   `docs/DI_POLICY.md` for detailed guidance on when to use container vs
   singletons.
 - **Configuration-first**: Extend `BotConfig` when new runtime options are
   required; expose overrides through the CLI when appropriate.
 - **Modular refactoring**: Extract large modules (>500 lines) into focused
-  subpackages with clear separation of concerns. See `orchestration/execution/`
-  and `features/live_trade/risk/` as examples of successful refactorings.
+  subpackages with clear separation of concerns. See `features/live_trade/execution/`,
+  `src/gpt_trader/monitoring/guards/`, and `features/live_trade/risk/` as examples of successful refactorings.
 
 ## Code Style
 
@@ -28,16 +28,16 @@ rules that referenced the monolithic `src/bot` package have been archived.
 
 ## Error Handling
 
-- Raise domain-specific exceptions from `gpt_trader/features/live_trade/guard_errors`
+- Raise domain-specific exceptions from `src/gpt_trader/features/live_trade/guard_errors.py`
   or define new ones in the relevant slice.
-- Avoid swallowing exceptions; propagate up to the orchestrator so guard rails
+- Avoid swallowing exceptions; propagate up to the trading engine/guard manager so guard rails
   can respond.
 - Provide actionable log messages (symbol, profile, guard name, etc.).
 
 ## Testing
 
 - Place unit tests under `tests/unit/gpt_trader/` mirroring the module path.
-- Use fixtures for Coinbase mocks (`tests/fixtures/coinbase_*` when available).
+- Use fixtures for Coinbase mocks (`tests/fixtures/brokerages/` when available).
 - Run `uv run pytest -q` locally before submitting a pull request.
 - Add regression coverage for new guard conditions, telemetry counters, or CLI
   flags.
@@ -61,12 +61,12 @@ rules that referenced the monolithic `src/bot` package have been archived.
 - Update `docs/ARCHITECTURE.md`, `docs/RISK_INTEGRATION_GUIDE.md`, or other
   relevant guides whenever behaviour changes.
 - Note INTX gating whenever derivatives-resident code paths are touched.
-- Keep agent-facing docs (`docs/agents/Agents.md`, `docs/agents/CLAUDE.md`, `docs/agents/Gemini.md`) aligned with
-  new workflows.
+- Keep agent-facing docs (`docs/guides/agents.md`, `docs/agents/CODEBASE_MAP.md`,
+  `docs/agents/Document_Verification_Matrix.md`) aligned with new workflows.
 
 ## Operational Hygiene
 
-- Validate new behaviour with `uv run coinbase-trader run --profile dev --dev-fast`.
+- Validate new behaviour with `uv run gpt-trader run --profile dev --dev-fast`.
 - Confirm metrics output updates when telemetry changes (`metrics.json`).
 - Coordinate with operations before altering risk guard thresholds or order
   routing.

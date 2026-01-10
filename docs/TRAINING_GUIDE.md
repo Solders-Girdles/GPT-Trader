@@ -8,8 +8,9 @@ its ML workflows.
 
 - **Architecture**: Review `docs/ARCHITECTURE.md` for the vertical slice layout
   under `src/gpt_trader/`.
-- **Execution loop**: `LiveExecutionEngine` (in
-  `features/live_trade/live_trade.py`) coordinates guards, orders, and telemetry.
+- **Execution loop**: `TradingBot` + `TradingEngine` (in
+  `features/live_trade/bot.py` and `features/live_trade/engines/strategy.py`)
+  coordinate guards, orders, and telemetry.
 - **Brokerage**: `features/brokerages/coinbase` contains REST/WS adapters for
   Coinbase Advanced Trade spot markets.
 
@@ -31,18 +32,18 @@ its ML workflows.
 4. Run the dev smoke test:
 
    ```bash
-   uv run coinbase-trader run --profile dev --dev-fast
+   uv run gpt-trader run --profile dev --dev-fast
    ```
 
    This executes one control cycle using the mock broker.
 
 ## Module 3 – Feature Deep Dive
 
-- **Position sizing**: `features/position_sizing/` implements Kelly-style
-  sizing with risk caps.
+- **Position sizing**: `features/intelligence/sizing/position_sizer.py` houses
+  Kelly-style sizing helpers used by research/backtesting.
 - **Risk guards**: See `docs/RISK_INTEGRATION_GUIDE.md` for guard coverage and
   thresholds.
-- **Telemetry**: Metrics persist to `var/data/coinbase_trader/<profile>/metrics.json`; the
+- **Telemetry**: Metrics persist to `runtime_data/<profile>/metrics.json`; the
   exporter in `scripts/monitoring/export_metrics.py` converts them to Prometheus.
 
 ## Module 4 – Development Workflow
@@ -55,15 +56,15 @@ its ML workflows.
 
 ## Module 5 – Operational Awareness
 
-- Study `docs/ops/operations_runbook.md` and `docs/MONITORING_PLAYBOOK.md` for
+- Study `docs/operations/RUNBOOKS.md` and `docs/MONITORING_PLAYBOOK.md` for
   on-call expectations.
 - **Monitoring**: Launch via `uv run gpt-trader tui` (add `--mode live/paper/demo` to skip the selector).
 - Manual tooling:
 
   ```bash
-  uv run coinbase-trader account snapshot
-  uv run coinbase-trader treasury convert --from USD --to USDC --amount 250
-  uv run coinbase-trader treasury move --from-portfolio from_uuid --to-portfolio to_uuid --amount 25
+  uv run gpt-trader account snapshot
+  uv run gpt-trader treasury convert --from USD --to USDC --amount 250
+  uv run gpt-trader treasury move --from-portfolio from_uuid --to-portfolio to_uuid --amount 25
   ```
 
 - Guardrails default to spot-only. Derivatives remain locked behind INTX access
@@ -73,5 +74,4 @@ its ML workflows.
 
 - Historical guides for the previous generation system were removed from the
   tree; refer to git history if you need them.
-- Review agent-specific docs (`docs/guides/agents.md`, `.claude/CLAUDE.md`) for
-  collaboration patterns.
+- Review agent-specific docs (`docs/guides/agents.md`) for collaboration patterns.

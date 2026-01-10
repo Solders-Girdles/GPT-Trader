@@ -14,12 +14,12 @@ from typing import Dict, List
 
 class LogManager:
     def __init__(self):
-        self.log_dir = Path("/tmp/trading_logs")
-        self.archive_dir = Path("docs/ops/preflight/logs")
-        self.summary_dir = Path("docs/ops/preflight/summaries")
+        self.log_dir = Path(os.getenv("COINBASE_TRADER_LOG_DIR", "var/logs"))
+        self.archive_dir = self.log_dir / "archive"
+        self.summary_dir = self.log_dir / "summaries"
 
         # Create directories
-        self.log_dir.mkdir(exist_ok=True)
+        self.log_dir.mkdir(parents=True, exist_ok=True)
         self.archive_dir.mkdir(parents=True, exist_ok=True)
         self.summary_dir.mkdir(parents=True, exist_ok=True)
 

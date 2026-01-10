@@ -5,8 +5,8 @@ status: current
 created: 2025-01-01
 last-updated: 2025-10-07
 consolidates:
-  - docs/QUICK_START.md
-  - docs/guides/api_key_setup.md
+  - README.md
+  - docs/reference/coinbase_auth_guide.md
   - config/environments/.env.template
   - Various scattered setup instructions
 ---
@@ -94,15 +94,18 @@ nano .env  # or vim, code, etc.
 
 ### Step 2: Configure Environment Variables
 
-The `.env` file contains all configuration settings. Start with spot trading credentials, then add the derivatives block only if your account has INTX access.
+The `.env` file contains all configuration settings. Configure JWT credentials first, then add the derivatives block only if your account has INTX access.
 
 ```bash
 # ============================================
-# Coinbase Spot Configuration (Default)
+# Coinbase Credentials (JWT)
 # ============================================
 
-COINBASE_API_KEY=your_hmac_api_key
-COINBASE_API_SECRET=your_hmac_api_secret
+# Preferred: JSON key file
+COINBASE_CREDENTIALS_FILE=/path/to/cdp_key.json
+# Or set both env vars:
+# COINBASE_CDP_API_KEY=organizations/{org_id}/apiKeys/{key_id}
+# COINBASE_CDP_PRIVATE_KEY="-----BEGIN EC PRIVATE KEY-----..."
 COINBASE_ENABLE_DERIVATIVES=0      # remains 0 unless INTX access is granted
 
 # Optional: enable paper/mock mode without real orders
@@ -127,9 +130,9 @@ LOG_LEVEL=INFO                     # DEBUG for verbose output
 
 ## API Key Setup
 
-### Production Setup (Perpetuals / INTX Access)
+### JWT Credentials (Spot + Perpetuals)
 
-Only complete this section if Coinbase has approved your account for INTX derivatives trading. Spot trading does **not** require CDP credentials.
+Spot and perpetual trading both use JWT credentials. INTX access is required only for perpetuals.
 
 1. **Generate CDP API Key**:
    - Log into Coinbase
@@ -139,10 +142,10 @@ Only complete this section if Coinbase has approved your account for INTX deriva
 
 2. **Configure in .env**:
    ```bash
-   COINBASE_API_KEY=organizations/your_org/apiKeys/your_key_id
-   COINBASE_API_SECRET=-----BEGIN EC PRIVATE KEY-----
-   MHcCAQEE...your full private key...
-   -----END EC PRIVATE KEY-----
+   COINBASE_CREDENTIALS_FILE=/path/to/cdp_key.json
+   # or
+   COINBASE_CDP_API_KEY=organizations/your_org/apiKeys/your_key_id
+   COINBASE_CDP_PRIVATE_KEY="-----BEGIN EC PRIVATE KEY-----\n...\n-----END EC PRIVATE KEY-----"
    ```
 
 3. **Important Notes**:
@@ -152,18 +155,9 @@ Only complete this section if Coinbase has approved your account for INTX deriva
 
 ### Sandbox Setup (Testing Only)
 
-1. **Get Sandbox Credentials**:
-   - Visit [sandbox.exchange.coinbase.com](https://sandbox.exchange.coinbase.com)
-   - Create sandbox API key
-   - Note: Sandbox only supports spot trading, not perpetuals
-
-2. **Configure for Sandbox**:
-   ```bash
-   COINBASE_SANDBOX=1
-   COINBASE_API_KEY=your_sandbox_key
-   COINBASE_API_SECRET=your_sandbox_secret
-   COINBASE_PASSPHRASE=your_sandbox_passphrase
-   ```
+Coinbase Advanced Trade does not provide an authenticated sandbox. For testing:
+- Use the mock broker profile: `uv run gpt-trader run --profile dev --dev-fast`
+- Or set `MOCK_BROKER=1` for deterministic fills
 
 ## Profile Configuration
 
@@ -200,7 +194,7 @@ uv run python scripts/production_preflight.py --profile canary
 ### Step 2: Test with Development Profile
 ```bash
 # Run with mock broker (no real trades)
-uv run coinbase-trader run --profile dev --dev-fast
+uv run gpt-trader run --profile dev --dev-fast
 
 # This runs for 60 seconds with simulated data
 ```
@@ -208,7 +202,7 @@ uv run coinbase-trader run --profile dev --dev-fast
 ### Step 3: Test with Dry Run
 ```bash
 # Test with real market data but no trades
-uv run coinbase-trader run --profile canary --dry-run
+uv run gpt-trader run --profile canary --dry-run
 
 # Monitor the output for proper data reception
 ```
@@ -216,7 +210,7 @@ uv run coinbase-trader run --profile canary --dry-run
 ### Step 4: First Live Trade (Canary)
 ```bash
 # When ready for real (tiny) trades
-uv run coinbase-trader run --profile canary
+uv run gpt-trader run --profile canary
 
 # This will trade with minimal position sizes
 ```
@@ -228,14 +222,14 @@ uv run coinbase-trader run --profile canary
 # Discover active tests
 uv run pytest --collect-only -q
 
-# Quick targeted run for spot orchestration
+# Quick targeted run for the spot trading loop
 uv run pytest -q
 ```
 
 ### Check Streaming Health
 ```bash
 # Smoke test the trading loop (mock broker)
-uv run coinbase-trader run --profile dev --dev-fast
+uv run gpt-trader run --profile dev --dev-fast
 
 # Inspect heartbeat metrics and mark timestamps
 uv run python scripts/perps_dashboard.py --profile dev --refresh 5 --window-min 5
@@ -247,7 +241,7 @@ uv run python scripts/perps_dashboard.py --profile dev --refresh 5 --window-min 
 uv run python scripts/production_preflight.py --profile canary
 
 # Export Prometheus-compatible metrics
-uv run python scripts/monitoring/export_metrics.py --metrics-file var/data/coinbase_trader/prod/metrics.json
+uv run python scripts/monitoring/export_metrics.py --metrics-file runtime_data/prod/metrics.json
 ```
 
 ## Troubleshooting
@@ -263,8 +257,8 @@ uv sync  # Install dependencies
 
 #### 2. API Authentication Failures
 **Solutions**:
-- Verify API key format (CDP vs HMAC)
-- Check environment variables are loaded: `echo $COINBASE_API_KEY`
+- Verify CDP API key format (organizations/{org}/apiKeys/{key_id})
+- Check environment variables are loaded: `echo $COINBASE_CDP_API_KEY`
 - Ensure private key includes headers/footers
 - Confirm production vs sandbox settings
 
@@ -291,13 +285,13 @@ uv sync  # Install dependencies
 
 ```bash
 # Check environment variables
-uv run python -c "import os; print(os.getenv('COINBASE_API_KEY')[:20])"
+uv run python -c "import os; print((os.getenv('COINBASE_CDP_API_KEY') or '')[:20])"
 
 # Monitor real-time logs
-tail -f var/logs/coinbase_trader.log
+tail -f ${COINBASE_TRADER_LOG_DIR:-var/logs}/coinbase_trader.log
 
 # Emergency stop
-export RISK_KILL_SWITCH_ENABLED=1 && pkill -f coinbase-trader
+export RISK_KILL_SWITCH_ENABLED=1 && pkill -f gpt-trader
 ```
 
 ### Getting Help
@@ -308,7 +302,7 @@ export RISK_KILL_SWITCH_ENABLED=1 && pkill -f coinbase-trader
    - [Trading Operations](../reference/trading_logic_perps.md)
 
 2. **Review Logs**:
-   - Main log: `var/logs/coinbase_trader.log`
+   - Main log: `${COINBASE_TRADER_LOG_DIR:-var/logs}/coinbase_trader.log`
    - Error details with: `--log-level DEBUG`
 
 3. **Community Support**:
@@ -330,8 +324,8 @@ After successful setup:
    - Gradually increase position sizes once telemetry looks healthy
 
 3. **Monitor Performance**:
-   - Use metrics exporter: `uv run python scripts/monitoring/export_metrics.py --metrics-file var/data/coinbase_trader/prod/metrics.json`
-   - Track logs in `var/logs/coinbase_trader.log`
+   - Use metrics exporter: `uv run python scripts/monitoring/export_metrics.py --metrics-file runtime_data/prod/metrics.json`
+   - Track logs in `${COINBASE_TRADER_LOG_DIR:-var/logs}/coinbase_trader.log`
    - Schedule regular performance and risk reviews
 
 ---

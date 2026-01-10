@@ -2,6 +2,10 @@
 
 Quick reference for endpoint availability by API mode.
 
+> **Note**: GPT-Trader only supports authenticated Advanced Trade (JWT). Exchange mode is limited
+> to public endpoints; the tables below describe Coinbase API capabilities, not guaranteed
+> GPT-Trader support.
+
 ## ✅ Available in Both Modes
 
 | Method | Advanced Trade Path | Exchange Path |
@@ -85,17 +89,15 @@ These endpoints are **not available** in exchange mode and will raise `InvalidRe
 
 ## Authentication
 
-| Auth Type | Advanced Mode | Exchange Mode |
-|-----------|--------------|---------------|
-| HMAC (no passphrase) | ✅ | ❌ |
-| HMAC (with passphrase) | ❌ | ✅ |
-| CDP JWT | ✅ | ❌ |
-| CDP JWT v2 | ✅ | ❌ |
+| Auth Type | GPT-Trader Support |
+|-----------|--------------------|
+| CDP JWT | ✅ Advanced mode |
+| HMAC (any) | ❌ Not implemented |
 
 ## Development Tips
 
-1. **Testing in Exchange Mode**: Use sandbox environment with passphrase
-2. **Production**: Always use Advanced Mode for full features
+1. **Testing**: Use the mock broker for sandbox-style runs
+2. **Production**: Always use Advanced mode for full features
 3. **Error Handling**: Catch `InvalidRequestError` when calling advanced-only methods
 4. **Mode Detection**: Check `client.api_mode` to conditionally use features
 

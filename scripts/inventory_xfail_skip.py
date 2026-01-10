@@ -301,7 +301,8 @@ def main():
         "total": len(all_tests),
     }
 
-    output_file = PROJECT_ROOT / "docs/ops/test_xfail_skip_inventory.json"
+    output_file = PROJECT_ROOT / "docs/operations/test_xfail_skip_inventory.json"
+    output_file.parent.mkdir(parents=True, exist_ok=True)
     with open(output_file, "w") as f:
         json.dump(results, f, indent=2)
 

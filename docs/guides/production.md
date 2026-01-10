@@ -23,7 +23,7 @@ This guide consolidates all production deployment documentation for GPT-Trader w
 - [ ] Environment variables configured (.env)
 
 ### API Configuration
-- [ ] HMAC API key created for spot trading (required)
+- [ ] CDP JWT credentials available for spot trading (required)
 - [ ] INTX/CDP credentials created **only if** derivatives are enabled
 - [ ] WebSocket connectivity verified
 - [ ] Rate limits understood
@@ -56,7 +56,7 @@ cp config/environments/.env.template .env
 uv run python scripts/production_preflight.py --profile canary
 
 # Smoke test the trading loop
-uv run coinbase-trader run --profile dev --dev-fast
+uv run gpt-trader run --profile dev --dev-fast
 
 # Inspect streaming telemetry via TUI
 uv run gpt-trader tui                  # Mode selector
@@ -66,21 +66,21 @@ uv run gpt-trader run --profile dev --tui  # Attach TUI to dev profile (optional
 ### 3. Canary Deployment
 ```bash
 # Start with canary profile (ultra-safe)
-uv run coinbase-trader run --profile canary --dry-run
+uv run gpt-trader run --profile canary --dry-run
 
 # Monitor for 24 hours
-# Check logs: tail -f var/logs/coinbase_trader.log
+# Check logs: tail -f ${COINBASE_TRADER_LOG_DIR:-var/logs}/coinbase_trader.log
 
 # If successful, enable live spot trading
-uv run coinbase-trader run --profile canary
+uv run gpt-trader run --profile canary
 ```
 
 ### 4. Production Rollout
 ```bash
 # Gradual scaling approach (spot)
-uv run coinbase-trader run --profile prod --dry-run             # Validate config under prod settings
-uv run coinbase-trader run --profile prod --reduce-only         # Warm start with exits only
-uv run coinbase-trader run --profile prod                       # Full trading once stable
+uv run gpt-trader run --profile prod --dry-run             # Validate config under prod settings
+uv run gpt-trader run --profile prod --reduce-only         # Warm start with exits only
+uv run gpt-trader run --profile prod                       # Full trading once stable
 ```
 
 ## Phased Rollout Plan
@@ -155,10 +155,10 @@ export RISK_REDUCE_ONLY_MODE=1
 # Submit market exits via Coinbase UI or CLI previews while reduce-only is active.
 
 # 3. Stop the bot
-pkill -f coinbase-trader
+pkill -f gpt-trader
 
 # 4. Review logs and diagnose
-tail -n 1000 var/logs/coinbase_trader.log | grep ERROR
+tail -n 1000 ${COINBASE_TRADER_LOG_DIR:-var/logs}/coinbase_trader.log | grep ERROR
 ```
 
 ## Emergency Procedures
@@ -167,7 +167,7 @@ tail -n 1000 var/logs/coinbase_trader.log | grep ERROR
 ```bash
 # STOP ALL TRADING IMMEDIATELY
 export RISK_KILL_SWITCH_ENABLED=1
-pkill -f coinbase-trader
+pkill -f gpt-trader
 ```
 
 ### Close All Positions
@@ -176,7 +176,7 @@ pkill -f coinbase-trader
 export RISK_REDUCE_ONLY_MODE=1
 
 # Submit market exits via CLI
-uv run coinbase-trader orders preview \
+uv run gpt-trader orders preview \
   --symbol BTC-USD --side sell --type market --quantity CURRENT_SIZE
 ```
 

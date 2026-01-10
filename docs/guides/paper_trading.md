@@ -12,97 +12,67 @@ consolidates:
 
 ## Overview
 
-Paper trading provides risk-free simulation of trading strategies using real market data but simulated execution.
+Paper trading provides risk-free simulation of trading strategies using simulated execution.
+The `paper` and `dev` profiles run with `mock_broker` enabled, so no real orders
+or API calls are made.
 
 ## Implementation
 
 ### Deterministic Broker
-The system uses a deterministic broker stub for paper trading that provides:
+The default paper workflow uses the deterministic broker stub:
 - Deterministic fills for testing
-- Random walk price generation
-- Configurable slippage simulation
-- Order tracking and PnL calculation
+- Synthetic quotes (no external market data calls)
+- Immediate execution with predictable order IDs
+
+Implementation: `src/gpt_trader/features/brokerages/mock/deterministic.py`.
+
+### Hybrid Paper Broker (experimental)
+`src/gpt_trader/features/brokerages/paper/hybrid.py` supports real market data
+with simulated execution. It is **not wired** in the default broker factory.
+Use it only for experiments (custom container/broker factory).
 
 ### Configuration
 ```bash
-# Enable paper trading mode
-uv run coinbase-trader run --profile dev
+# Paper profile (mock broker + dry run)
+uv run gpt-trader run --profile paper
 
-# The dev profile automatically uses:
-# - Deterministic broker with simulated fills
-# - Tiny positions (0.001 BTC)
-# - Extensive logging
-# - No real money at risk
+# TUI paper mode
+uv run gpt-trader tui --mode paper
+
+# Single-cycle smoke test
+uv run gpt-trader run --profile paper --dev-fast
 ```
 
-### Slice Quick Start (Python API)
+### Programmatic Entry (Python)
 
-Run the slice directly from Python when you do not need the full CLI profile:
+```python
+from gpt_trader.app.container import ApplicationContainer
+from gpt_trader.cli.services import load_config_from_yaml
 
-    from features.paper_trade import start_paper_trading, get_status, stop_paper_trading
-
-    start_paper_trading(
-        strategy="SimpleMAStrategy",
-        symbols=["AAPL", "MSFT", "GOOGL"],
-        initial_capital=100_000,
-        fast_period=10,
-        slow_period=30,
-    )
-
-    status = get_status()
-    print(status.summary())
-
-    results = stop_paper_trading()
-    print(results.summary())
-
-The module is completely self-contained: strategies, data adapters, execution, risk controls, and dataclasses all live inside the slice.
+config = load_config_from_yaml("config/profiles/paper.yaml")
+bot = ApplicationContainer(config).create_bot()
+```
 
 ### Module Layout
 
-    paper_trade/
-    ├── paper_trade.py   # Orchestration helpers
-    ├── strategies.py    # Local strategy implementations
-    ├── data.py          # Live/historical data adapters
-    ├── execution.py     # Commission/slippage-aware fills
-    ├── risk.py          # Position limits, drawdown guards
-    └── types.py         # Slice-local dataclasses and responses
+    config/profiles/paper.yaml        # Paper profile settings
+    src/gpt_trader/features/brokerages/mock/deterministic.py
+    src/gpt_trader/features/brokerages/paper/hybrid.py  # Experimental
+    src/gpt_trader/features/live_trade/strategies/      # Strategy implementations
 
 ### Strategy Catalog
 
-Five built-in strategies ship with the slice:
-1. `SimpleMAStrategy` – moving-average crossover
-2. `MomentumStrategy` – momentum signal band
-3. `MeanReversionStrategy` – Bollinger-band mean reversion
-4. `VolatilityStrategy` – low-volatility filter
-5. `BreakoutStrategy` – breakout detector
-
-### Feature Highlights
-
-- Real-time data with configurable polling interval and market-hours awareness
-- Execution simulator supporting commission, slippage, maximum concurrent positions, and trade logging
-- Risk controls for position size, daily loss limits, drawdown guard, and cash reserve enforcement
-- Performance tracking with equity curve, trade log, and summary metrics
-
-### Configuration Example
-
-    start_paper_trading(
-        strategy="MomentumStrategy",
-        symbols=["SPY", "QQQ"],
-        initial_capital=50_000,
-        commission=0.001,
-        slippage=0.0005,
-        position_size=0.95,
-        max_positions=10,
-        update_interval=60,
-    )
+Paper mode uses the same strategies as live trading:
+1. `baseline` – MA + RSI baseline
+2. `mean_reversion` – Z-score mean reversion
+3. `ensemble` – signal ensemble architecture
 
 ## Features
 
 ### Market Simulation
-- Generates realistic price movements
-- Simulates order book depth
-- Includes spread and slippage
-- Provides fill notifications
+- Synthetic quotes from the deterministic broker
+- Immediate fills with predictable IDs
+- No external API calls
 
 ### Risk-Free Testing
 - Test strategies without capital
@@ -115,10 +85,10 @@ Five built-in strategies ship with the slice:
 ### Quick Start
 ```bash
 # Run with deterministic broker
-uv run coinbase-trader run --profile dev --dev-fast
+uv run gpt-trader run --profile paper --dev-fast
 
 # Monitor performance
-tail -f var/logs/coinbase_trader.log | grep "PnL"
+tail -f ${COINBASE_TRADER_LOG_DIR:-var/logs}/coinbase_trader.log | grep "PnL"
 ```
 
 ### Advanced Configuration
@@ -143,13 +113,13 @@ broker.set_mark("BTC-PERP", Decimal("50000"))
 ### Migration Process
 ```bash
 # Step 1: Canary testing (tiny real positions)
-uv run coinbase-trader run --profile canary --dry-run
+uv run gpt-trader run --profile canary --dry-run
 
 # Step 2: Limited live trading
-uv run coinbase-trader run --profile canary
+uv run gpt-trader run --profile canary
 
 # Step 3: Full production
-uv run coinbase-trader run --profile prod
+uv run gpt-trader run --profile prod
 ```
 
 ## Performance Metrics

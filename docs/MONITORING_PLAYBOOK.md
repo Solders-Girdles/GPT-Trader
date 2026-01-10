@@ -1,6 +1,6 @@
 # Monitoring & Operations Guide
 
-This playbook covers the spot-first `coinbase-trader` monitoring stack including metrics export, dashboards, alerting, and incident response.
+This playbook covers the spot-first GPT-Trader monitoring stack including metrics export, dashboards, alerting, and incident response.
 
 ## Quick Start
 
@@ -10,16 +10,29 @@ This playbook covers the spot-first `coinbase-trader` monitoring stack including
 uv sync --extra monitoring
 ```
 
-### 2. Start the Metrics Exporter
+### 2. Expose Metrics
+
+**Option A (recommended): Built-in health server**
+
+- Ensure your runtime starts `gpt_trader.app.health_server.start_health_server`
+  (port 8080 by default).
+- Enable metrics: `GPT_TRADER_METRICS_ENDPOINT_ENABLED=1`
+
+```bash
+curl http://localhost:8080/health
+curl http://localhost:8080/metrics
+```
+
+**Option B (legacy): Exporter script**
 
 ```bash
 uv run python scripts/monitoring/export_metrics.py \
-  --metrics-file var/data/coinbase_trader/prod/metrics.json \
-  --events-file var/data/coinbase_trader/prod/events.jsonl \
+  --metrics-file runtime_data/<profile>/metrics.json \
+  --events-file runtime_data/<profile>/events.jsonl \
   --host 0.0.0.0 --port 9000
 ```
 
-**Endpoints:**
+**Exporter Endpoints:**
 - `/metrics` - Prometheus text format
 - `/metrics.json` - Raw JSON with account snapshots
 
@@ -41,45 +54,32 @@ docker compose --project-directory deploy/gpt_trader/docker \
 
 ## Available Metrics
 
-### Account Metrics
-| Metric | Description |
-|--------|-------------|
-| `coinbase_trader_equity` | Account equity in USD |
-| `coinbase_trader_total_pnl_usd` | Total PnL |
-| `coinbase_trader_realized_pnl_usd` | Realized PnL |
-| `coinbase_trader_unrealized_pnl_usd` | Unrealized PnL |
-| `coinbase_trader_funding_pnl_usd` | Funding PnL |
+Metrics are exposed with the `gpt_trader_` prefix. Common signals (non-exhaustive):
 
-### Performance Metrics
 | Metric | Description |
 |--------|-------------|
-| `coinbase_trader_cycle_duration_seconds` | Control loop wall time |
-| `coinbase_trader_cycle_errors_total` | Exceptions per cycle |
-| `coinbase_trader_cycle_latency_ms` | Trading cycle latency |
-
-### Risk Metrics
-| Metric | Description |
-|--------|-------------|
-| `coinbase_trader_risk_daily_loss` | Running PnL vs guard |
-| `coinbase_trader_circuit_breaker_triggered` | 0=normal, 1=triggered |
-
-### Health Metrics
-| Metric | Description |
-|--------|-------------|
-| `coinbase_trader_market_data_staleness_seconds` | Age of last mark price |
-| `coinbase_trader_telemetry_account_age_seconds` | Age of account snapshot |
-| `coinbase_trader_websocket_reconnects_total` | WebSocket reconnections |
-| `coinbase_trader_stale_marks_total` | Stale mark detections |
+| `gpt_trader_equity_dollars` | Account equity in USD |
+| `gpt_trader_cycle_duration_seconds` | Control loop latency histogram |
+| `gpt_trader_order_submission_total{result,side}` | Order submissions by outcome |
+| `gpt_trader_order_submission_latency_seconds` | Order submission latency histogram |
+| `gpt_trader_broker_call_latency_seconds{operation,outcome}` | Broker call latency histogram |
+| `gpt_trader_guard_trips_total{guard,category,recoverable}` | Guard trip counts |
+| `gpt_trader_guard_checks_total{guard,result}` | Guard evaluation counts |
+| `gpt_trader_api_requests_total{endpoint,method,outcome}` | Coinbase REST request counts |
+| `gpt_trader_api_latency_seconds{endpoint,method}` | Coinbase REST latency histogram |
+| `gpt_trader_rate_limit_usage_ratio` | Coinbase rate-limit usage ratio |
+| `gpt_trader_api_error_rate` | Coinbase API error rate |
+| `gpt_trader_ws_gap_count` | WebSocket gap count |
 
 ## Key Thresholds
 
-| Metric | Warning | Critical |
+| Signal | Warning | Critical |
 |--------|---------|----------|
-| `cycle_duration_seconds` | > 3s | > 6s |
-| `cycle_errors_total` | +1 in 5m | +3 in 5m |
-| `risk_daily_loss` | > 80% of limit | ≥ limit |
-| `market_data_staleness_seconds` | > 10s | > 30s |
-| `telemetry_account_age_seconds` | > 15m | > 30m |
+| `order_error_rate` | > 5% | > 15% |
+| `order_retry_rate` | > 10% | > 25% |
+| `broker_latency_p95_ms` | > 1000 ms | > 3000 ms |
+| `ws_staleness_seconds` | > 30s | > 60s |
+| `guard_trip_count` | > 3 (5m) | > 10 (5m) |
 
 ## Prometheus Configuration
 
@@ -87,11 +87,13 @@ Add to `prometheus.yml`:
 
 ```yaml
 scrape_configs:
-  - job_name: 'coinbase-trader'
+  - job_name: 'gpt-trader'
     scrape_interval: 15s
     static_configs:
-      - targets: ['localhost:9000']
+      - targets: ['localhost:8080']  # health server /metrics
 ```
+
+If you use the legacy exporter script, target port `9000` instead.
 
 ## Alert Rules
 
@@ -99,34 +101,29 @@ scrape_configs:
 groups:
   - name: gpt_trader_alerts
     rules:
-      - alert: CoinbaseTraderExporterDown
-        expr: up{job="coinbase-trader-exporter"} == 0
+      - alert: MetricsEndpointDown
+        expr: up{job="gpt-trader"} == 0
         for: 2m
         labels:
           severity: critical
 
-      - alert: DailyLossGuardWarn
-        expr: coinbase_trader_risk_daily_loss / coinbase_trader_risk_daily_loss_limit > 0.8
-        for: 1m
+      - alert: OrderErrorRateHigh
+        expr: sum(rate(gpt_trader_order_submission_total{result=~"failed|rejected"}[5m])) / sum(rate(gpt_trader_order_submission_total[5m])) > 0.15
+        for: 2m
         labels:
           severity: high
 
-      - alert: MarketDataStale
-        expr: coinbase_trader_market_data_staleness_seconds > 30
-        for: 30s
+      - alert: BrokerLatencyP95High
+        expr: histogram_quantile(0.95, sum(rate(gpt_trader_broker_call_latency_seconds_bucket{operation="submit"}[5m])) by (le)) > 3
+        for: 5m
         labels:
           severity: high
 
-      - alert: CircuitBreakerTriggered
-        expr: coinbase_trader_circuit_breaker_triggered > 0
-        for: 1m
+      - alert: GuardTripSpike
+        expr: increase(gpt_trader_guard_trips_total[5m]) > 10
+        for: 5m
         labels:
-          severity: critical
-
-      - alert: WebSocketReconnectLoop
-        expr: increase(coinbase_trader_websocket_reconnects_total[1m]) >= 5
-        labels:
-          severity: critical
+          severity: high
 ```
 
 ## Daily Reports
@@ -135,30 +132,33 @@ Generate performance reports:
 
 ```bash
 # Generate today's report
-python -m gpt_trader.cli report daily
+uv run gpt-trader report daily
 
 # Specific date
-python -m gpt_trader.cli report daily --date 2025-10-22
+uv run gpt-trader report daily --date 2025-10-22
 
 # JSON format
-python -m gpt_trader.cli report daily --format json
+uv run gpt-trader report daily --report-format json
 
 # Custom lookback
-python -m gpt_trader.cli report daily --lookback-hours 48
+uv run gpt-trader report daily --lookback-hours 48
 ```
 
-Reports saved to: `var/data/coinbase_trader/{profile}/reports/daily_report_{date}.txt`
+Reports saved to: `runtime_data/{profile}/reports/daily_report_{date}.txt`
+
+Note: Daily reports read `runtime_data/<profile>/events.jsonl` (legacy JSONL). If you only
+have `events.db`, export JSONL first or expect empty event-derived sections.
 
 ### Cron Job Setup
 
 ```bash
 # Daily report at 6 AM
-0 6 * * * cd /path/to/GPT-Trader && python -m gpt_trader.cli report daily --profile prod
+0 6 * * * cd /path/to/GPT-Trader && uv run gpt-trader report daily --profile prod
 ```
 
 ## Grafana Dashboard
 
-Import dashboard from `monitoring/grafana_dashboard.json`:
+Import dashboard from `scripts/monitoring/grafana-dashboard.json.example`:
 1. In Grafana: **+ → Import**
 2. Paste JSON content
 3. Select Prometheus data source
@@ -187,7 +187,7 @@ Import dashboard from `monitoring/grafana_dashboard.json`:
 1. Review guard output in logs (`risk.guards.daily_loss.*`)
 2. Flatten positions if needed:
    ```bash
-   uv run coinbase-trader orders preview \
+   uv run gpt-trader orders preview \
      --symbol BTC-USD --side sell --type market \
      --quantity 0.01 --reduce-only
    ```
@@ -203,7 +203,7 @@ Import dashboard from `monitoring/grafana_dashboard.json`:
 
 ### WebSocket Reconnect Loop
 
-1. Check `websocket_reconnects_total` metric
+1. Check `/health` for websocket `reconnect_count` and staleness details
 2. Verify network stability
 3. Check Coinbase status page
 4. Consider backoff or graceful degradation
@@ -211,26 +211,22 @@ Import dashboard from `monitoring/grafana_dashboard.json`:
 ## Post-Incident Checklist
 
 - [ ] Exporter metrics recovered (no alerting)
-- [ ] `cycle_errors_total` stopped incrementing
+- [ ] Order submission failures stopped incrementing
 - [ ] Run `uv run pytest -q` for code-related incidents
 - [ ] Update runbooks if threshold changes needed
 
 ## Health Checks
 
 ```python
-from gpt_trader.monitoring.health.checks import (
-    StaleFillsHealthCheck,
-    StaleMarksHealthCheck,
-    WebSocketReconnectHealthCheck,
+from gpt_trader.monitoring.health_checks import (
+    check_broker_ping,
+    check_degradation_state,
+    check_ws_freshness,
 )
-from gpt_trader.monitoring.health.registry import HealthCheckRegistry
 
-registry = HealthCheckRegistry()
-registry.register(StaleFillsHealthCheck(orders_store, max_age_minutes=10.0))
-registry.register(StaleMarksHealthCheck(market_data, max_age_seconds=30.0))
-registry.register(WebSocketReconnectHealthCheck(ws_handler))
-
-results = await registry.check_all()
+broker_ok, broker_details = check_broker_ping(broker)
+ws_ok, ws_details = check_ws_freshness(broker, message_stale_seconds=30.0)
+degradation_ok, degradation_details = check_degradation_state(degradation_state, risk_manager)
 ```
 
 **Status Conditions:**
@@ -241,16 +237,16 @@ results = await registry.check_all()
 ## Troubleshooting
 
 **No metrics in Prometheus:**
-- Check exporter: `curl http://localhost:9000/metrics`
+- Check endpoint: `curl http://localhost:8080/metrics` (health server) or `http://localhost:9000/metrics` (legacy exporter)
 - Verify Prometheus targets: `http://localhost:9090/targets`
 
 **Daily report has no data:**
-- Verify events file exists
-- Check `metrics.json`
+- Verify `runtime_data/<profile>/events.jsonl` exists (legacy JSONL export)
+- Check `runtime_data/<profile>/metrics.json`
 - Increase `--lookback-hours`
 
 **Exporter returns empty metrics:**
-- Ensure bot has written `metrics.json` (run at least one cycle)
+- Ensure bot has written `runtime_data/<profile>/metrics.json` (run at least one cycle)
 - Check file permissions
 
 ## Docker Compose Bundle

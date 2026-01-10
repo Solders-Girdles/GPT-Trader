@@ -1,19 +1,19 @@
 # System Architecture
 
-## ⚠️ Architecture Transition (Active)
+## ⚠️ Architecture Transition (Complete)
 
 **Important Note for Developers and Agents:**
 
-This project is currently undergoing a major architectural migration from a legacy "Orchestration" pattern (monolithic builders) to a modern **Dependency Injection** pattern using `ApplicationContainer`.
+This project completed a major architectural migration from a legacy "Orchestration" pattern (monolithic builders) to a modern **Dependency Injection** pattern using `ApplicationContainer`.
 
-- **Legacy Core:** `src/gpt_trader/orchestration/` (being phased out/refactored)
+- **Legacy Core:** removed in v3.0 (no longer present)
 - **Modern Core:** `src/gpt_trader/app/` (Composition Root) and `src/gpt_trader/features/` (Vertical Slices)
 - **Migration Guide:** See [MIGRATION_STATUS.md](MIGRATION_STATUS.md) for current migration progress and patterns.
 
-While this document describes the **target architecture**, you will encounter "zombie" files, legacy shims, and competing patterns (e.g., `PerpsBotBuilder` vs `ApplicationContainer`) in the codebase. Always prefer the patterns defined in `src/gpt_trader/app` and `src/gpt_trader/features` over those in `src/gpt_trader/orchestration` where they conflict.
+While this document describes the **current architecture**, you may still encounter legacy references in documentation. Always prefer the patterns defined in `src/gpt_trader/app` and `src/gpt_trader/features`.
 
 ---
-status: transition
+status: current
 last-updated: 2026-01-08
 ---
 
@@ -27,7 +27,7 @@ GPT-Trader V2 is a production-ready Coinbase trading system supporting **spot** 
 
 | Environment | Products | Authentication | API Version | WebSocket | Use Case |
 |------------|----------|----------------|-------------|-----------|----------|
-| **Production (spot)** | Spot (BTC-USD, ETH-USD, …) | HMAC or CDP | Advanced v3 | Real-time | Live spot trading |
+| **Production (spot)** | Spot (BTC-USD, ETH-USD, …) | JWT (CDP key) | Advanced v3 | Real-time | Live spot trading |
 | **Production (CFM)** | US Futures (BTC, ETH, SOL, etc.) | CDP (JWT) | Advanced v3 | Real-time | Regulated US futures |
 | **Production (INTX)** | Perpetuals (international) | CDP (JWT) + `COINBASE_ENABLE_DERIVATIVES=1` | Advanced v3 | Real-time | Requires INTX account |
 | **Paper** | All products | — | — | — | Simulated via `PERPS_PAPER=1` |
@@ -70,7 +70,7 @@ src/gpt_trader/
 ### High-Level Flow
 
 ```
-CLI (coinbase-trader) → Config (BotConfig) → ApplicationContainer → TradingBot →
+CLI (gpt-trader) → Config (BotConfig) → ApplicationContainer → TradingBot →
 Risk Guards → Coinbase Brokerage Adapter → Metrics + Telemetry
 ```
 
@@ -86,16 +86,15 @@ Key capabilities documented:
 
 ### Entry Point & Service Wiring
 
-- `uv run coinbase-trader` invokes `gpt_trader.cli:main`, producing a `BotConfig` from
+- `uv run gpt-trader` (alias: `uv run coinbase-trader`) invokes `gpt_trader.cli:main`, producing a `BotConfig` from
   CLI arguments and environment overrides.
 - `ApplicationContainer` (`gpt_trader/app/container.py`) is the **canonical composition root**.
   It lazily initializes all services (broker, risk manager, event store, etc.) and wires
   them into `TradingBot` via `container.create_bot()`.
 - `TradingBot` receives services directly from the container—no intermediate registry.
 
-> **Note:** Legacy `gpt_trader/orchestration/bootstrap.py` still exists for backwards
-> compatibility but internally delegates to `ApplicationContainer`. New code should use
-> `ApplicationContainer` directly.
+> **Note:** The legacy `gpt_trader/orchestration/` package was removed in v3.0.
+> Use `gpt_trader/app/bootstrap.py` and `ApplicationContainer` for all new code.
 
 #### Container Sub-Containers
 
@@ -139,9 +138,9 @@ The `gpt_trader.orchestration` package was removed in v3.0. Use the canonical pa
 | `gpt_trader.orchestration.execution.degradation` | `gpt_trader.features.live_trade.degradation` |
 | `gpt_trader.orchestration.configuration.risk.model` | `gpt_trader.features.live_trade.risk.config` |
 | `gpt_trader.orchestration.configuration.bot_config` | `gpt_trader.app.config` |
-| `gpt_trader.orchestration.live_execution.LiveExecutionEngine` | `TradingEngine.submit_order()` |
+| `gpt_trader.orchestration.live_execution.LiveExecutionEngine` | TradingEngine guard stack (`_validate_and_place_order`; `submit_order` for external callers) |
 
-**Order Execution:** Use `TradingEngine.submit_order()` for the canonical guard stack.
+**Order Execution:** Use the TradingEngine guard stack (`_validate_and_place_order` in the live loop; `submit_order` for external callers).
 
 > **Historical deprecation tracker:** See [DEPRECATIONS.md](DEPRECATIONS.md) for migration history.
 
@@ -161,50 +160,25 @@ The `gpt_trader.orchestration` package was removed in v3.0. Use the canonical pa
 | `gpt_trader/tui` | Terminal User Interface for monitoring and control |
 | `gpt_trader/validation` | Predicate-based validators and input decorators |
 
-#### Coordinator Pattern (new 2025-10)
+#### Engine Context Pattern (Current)
 
-The orchestration layer now follows a coordinator pattern that centralises lifecycle management and
-dependency injection. See [ADR 002](architecture/decisions/002-coordinator-pattern.md) for the full
-rationale.
+Live trading uses a simplified engine pattern centered on `CoordinatorContext`.
 
 **Key components**
 
-- `CoordinatorContext` – immutable snapshot of broker, risk, stores, and orchestration services
-- `BaseCoordinator` / `Coordinator` protocol – shared lifecycle contract (`initialize`, background
-  tasks, `shutdown`, `health_check`)
-- `CoordinatorRegistry` – registers coordinators, drives initialise/start/shutdown, and pushes
-  updated context snapshots to every coordinator
-
-**Registered coordinators**
-
-- Runtime (`gpt_trader/orchestration/coordinators/runtime.py`) – broker & risk bootstrap, reconciliation
-- Execution (`gpt_trader/orchestration/coordinators/execution.py`) – order placement, guards, locks
-- Strategy (`gpt_trader/orchestration/coordinators/strategy.py`) – trading cycle, mark management,
-  strategy orchestration
-- Telemetry (`gpt_trader/orchestration/coordinators/telemetry.py`) – account telemetry, market monitor,
-  websocket streaming
-
-_TradingBot facade_
-
-```
-TradingBot
-└── CoordinatorRegistry
-    ├── RuntimeCoordinator
-    ├── ExecutionCoordinator
-    ├── StrategyCoordinator
-    └── TelemetryCoordinator
-```
+- `CoordinatorContext` (`src/gpt_trader/features/live_trade/engines/base.py`) - snapshot of broker, risk, stores, and notifications
+- `TradingEngine` (`src/gpt_trader/features/live_trade/engines/strategy.py`) - main trading loop and guard stack
+- Telemetry helpers (`src/gpt_trader/features/live_trade/engines/telemetry_health.py`, `telemetry_streaming.py`) - WS health and streaming
+- Runtime stub (`src/gpt_trader/features/live_trade/engines/runtime/coordinator.py`) - placeholder for future lifecycle splits
+- Strategy orchestration helpers (`src/gpt_trader/features/live_trade/orchestrator/`)
 
 **Lifecycle flow**
 
-1. `TradingBot` constructs a `CoordinatorRegistry` using the initial context from `ApplicationContainer`.
-2. `LifecycleManager.bootstrap()` calls `initialize_all()` so each coordinator can create
-   dependencies and emit context updates.
-3. `LifecycleManager.run()` delegates to `start_all_background_tasks()` to launch async work.
-4. `LifecycleManager.shutdown()` invokes `shutdown_all()` for clean cancellation and teardown.
+1. `TradingBot` builds a `CoordinatorContext` and instantiates `TradingEngine`.
+2. `TradingEngine.start_background_tasks()` launches background tasks (health checks, streaming, status, maintenance).
+3. `TradingEngine.shutdown()` stops background tasks and health checks.
 
-Legacy facades (e.g., `gpt_trader/orchestration/telemetry_coordinator.py`) remain as thin wrappers to
-preserve existing imports while downstream consumers migrate to the new modules.
+Legacy orchestration facades were removed in v3.0. Use `features/live_trade/` and `app/` paths.
 
 #### Coinbase Client Package
 
@@ -225,36 +199,35 @@ This two-layer design separates low-level HTTP concerns (client/) from business 
 
 #### Risk Management Framework
 
-The `features/live_trade/risk/` subpackage provides comprehensive risk controls (refactored from 1,044-line monolith):
+The `features/live_trade/risk/` package defines the live risk manager and config:
 
-- `manager.py` (351 lines) - `LiveRiskManager` facade delegating to specialized components
-- `position_sizing.py` (192 lines) - `PositionSizer` with Kelly Criterion and confidence modifiers
-- `pre_trade_checks.py` (522 lines) - `PreTradeValidator` for synchronous order validation
-- `runtime_monitoring.py` (314 lines) - `RuntimeMonitor` for async/periodic guard checks
-- `state_management.py` (119 lines) - `StateManager` for reduce-only mode and state tracking
+- `risk/config.py` - `RiskConfig` dataclass for risk limits and thresholds (env-driven).
+- `risk/manager/__init__.py` - `LiveRiskManager` handling leverage, daily loss, exposure, reduce-only.
+- `risk/protocols.py` - protocol interfaces for DI and testing.
 
-This modular design achieves 66% file size reduction with clear separation of concerns: sizing, validation, monitoring, and state management are independently testable.
+Runtime guards are orchestrated by `features/live_trade/execution/guard_manager.py` with
+guard implementations under `features/live_trade/execution/guards/`. Pre-trade
+validation lives in `features/live_trade/execution/validation.py` and
+`security/security_validator.py`.
 
 #### Monitoring & Validation Framework
 
 - **Validators** (`gpt_trader/validation`): the base `Validator` now accepts inline predicates and
   optional value coercion, enabling concise one-off validations while keeping legacy subclasses.
-- **Runtime guards** (`gpt_trader/monitoring/runtime_guards.py`): guard evaluation supports rich
-  comparison modes (`gt`, `lt`, `abs_gt`, etc.), warning bands, and contextual messaging to power
-  both orchestration checks and monitoring dashboards.
+- **Runtime guards** (`gpt_trader/features/live_trade/execution/guard_manager.py`): coordinates
+  per-cycle guard checks using implementations under `features/live_trade/execution/guards/`.
 - **Guard alert dispatcher** (`gpt_trader/features/live_trade/guard_errors.py`): wraps the lightweight
-  alert manager to emit guard failures without depending on the retired alert stack. Restore the
-  multi-channel router from the legacy bundle (`docs/archive/legacy_recovery.md`) if you still need
-  email, Slack, or PagerDuty integrations.
-- **Risk metrics aggregation** (`gpt_trader/features/live_trade/risk_metrics.py`): periodic EventStore
-  snapshots feed into the monitoring stack for dashboards and analytics.
+  alert manager to emit guard failures without depending on the retired alert stack. Rebuild
+  multi-channel routing as needed for email, Slack, or PagerDuty integrations.
+- **Risk metrics aggregation** (`gpt_trader/features/live_trade/execution/guards/risk_metrics.py`):
+  runtime guard snapshots feed into the monitoring stack for dashboards and analytics.
 
 #### Filter Pipeline Pattern
 
 The strategy orchestration uses a **Filter Pipeline** pattern to evaluate trade signals.
 
 - **Interface**: `Filter` (abstract base class)
-- **Implementation**: `src/gpt_trader/orchestration/strategy_orchestrator/spot_filters.py`
+- **Implementation**: `src/gpt_trader/features/live_trade/orchestrator/spot_filters.py`
 - **Current Status**: The pipeline is currently a pass-through. Specific filter implementations (Volume, Momentum, Trend) have been removed and will be reintroduced as needed.
 - **Usage**: `SpotFiltersMixin` provides the hook for these checks.
 
@@ -266,8 +239,8 @@ The system now uses a **Signal Ensemble** approach to combine multiple trading s
     - `Signal`: Individual trading signal (e.g., RSI, MACD).
     - `Ensemble`: Collection of signals with weights.
     - `Voter`: Logic to combine signal outputs into a final decision.
-- **Location**: `src/gpt_trader/features/strategy/ensemble/`
-- **Status**: Implemented and integrated into `StrategyEngine`.
+- **Location**: `src/gpt_trader/features/live_trade/strategies/ensemble.py`
+- **Status**: Implemented and wired via the strategy factory + `TradingEngine`.
 
 #### TUI Architecture (`gpt_trader/tui/`)
 
@@ -326,7 +299,7 @@ The main `TraderApp` class uses mixins to organize functionality into focused mo
 
 - `app_mode_flow.py` - Mode selection, credential validation, mode switching
 - `app_lifecycle.py` - Mount/unmount lifecycle, initialization, cleanup
-- `app_bootstrap.py` - Bootstrap snapshot, read-only data feed startup
+- `tui/app_bootstrap.py` - Bootstrap snapshot, read-only data feed startup
 - `app_status.py` - Status updates, observer connections, state sync
 - `app_actions.py` - Action methods and event handlers
 
@@ -390,7 +363,7 @@ python scripts/build_tui_css.py
 
 1. **Slice Isolation**: Production slices limit cross-dependencies; experimental ones stay sandboxed.
 2. **Token Awareness**: Documentation highlights slice entry points so agents can load only what they need.
-3. **Type Safety**: Shared interfaces defined in `features/brokerages/core/interfaces.py`.
+3. **Type Safety**: Shared interfaces defined in `features/brokerages/core/protocols.py`.
 4. **Environment Separation**: GPT-Trader normalizes symbols to spot unless INTX derivatives access is detected.
 
 ### Order Execution Pipeline
@@ -466,18 +439,18 @@ The order execution pipeline ensures reliable order submission with proper ID tr
 
 These categories feed into metrics labels for consistent telemetry.
 
-### Orchestration Infrastructure
+### Live Trade Infrastructure
 
-The orchestration layer provides coordinated control across trading operations through specialized modules:
+The live trade layer provides coordinated control across trading operations through modules in `features/live_trade/` and `app/`.
 
 **Configuration & Symbol Management:**
-- `configuration/` - Profile-aware configuration (`BotConfig`, profiles, validation)
-- `config_controller.py` - Dynamic configuration management and hot-reloading
-- `symbols.py` - Symbol normalization, derivatives gating, and profile-specific defaults
+- `app/config/` - Profile-aware configuration (`BotConfig`, profiles, validation)
+- `app/config/controller.py` - Dynamic configuration management and hot-reloading
+- `features/live_trade/symbols.py` - Symbol normalization, derivatives gating, and defaults
 
 **Execution Coordination:**
-- `live_execution.py` - Main execution engine facade
-- `execution/` subpackage:
+- `features/live_trade/engines/strategy.py` - Main trading loop and guard stack
+- `features/live_trade/execution/` subpackage:
   - `guard_manager.py` - Runtime guard management
   - `validation.py` - Pre-trade validation
   - `order_submission.py` - Order submission and recording
@@ -485,29 +458,29 @@ The orchestration layer provides coordinated control across trading operations t
   - `broker_executor.py` - Broker execution abstraction
 
 **Strategy & Runtime Coordination:**
-- `strategy_orchestrator/` - Strategy lifecycle management and symbol processing
+- `features/live_trade/orchestrator/` - Strategy lifecycle management and symbol processing
   - `orchestrator.py` - Main strategy orchestrator
   - `decision.py` - Trading decision logic
   - `spot_filters.py` - Spot-specific filtering rules
 
 **Services & Telemetry:**
-- `spot_profile_service.py` - Spot trading profile loading and rule management
+- `features/live_trade/orchestrator/spot_profile_service.py` - Spot trading profile loading and rule management
 - `features/live_trade/telemetry/account.py` - Account metrics tracking and periodic snapshots
-- `monitoring/system/metrics.py` - System metrics collection
-- `monitoring/system/positions.py` - Position monitoring
+- `src/gpt_trader/monitoring/system/metrics.py` - System metrics collection
+- `src/gpt_trader/monitoring/system/positions.py` - Position monitoring
 
 **Infrastructure:**
-- `trading_bot/bot.py` - Main orchestrator coordinating all components
-- `deterministic_broker.py` - Deterministic broker for testing
-- `hybrid_paper_broker.py` - Paper trading broker implementation
-- `runtime_paths.py` - Runtime path resolution
-- `bootstrap.py` - Bot creation helpers (`build_bot`, `bot_from_profile`)
+- `features/live_trade/bot.py` - TradingBot facade coordinating all components
+- `features/brokerages/mock/deterministic.py` - Deterministic broker for testing
+- `features/brokerages/paper/hybrid.py` - Paper trading broker implementation
+- `app/runtime/paths.py` - Runtime path resolution
+- `app/bootstrap.py` - Bot creation helpers (`build_bot`, `bot_from_profile`)
 
 ## What's Actually Working
 
 ### ✅ Fully Operational
 - Coinbase spot trading via Advanced Trade (REST/WebSocket); dev profile defaults to the deterministic broker stub and can be pointed at live APIs with `SPOT_FORCE_LIVE=1`
-- Order placement/management through `LiveExecutionEngine`
+- Order placement/management through the `TradingEngine` guard stack (`_validate_and_place_order` -> `OrderSubmitter` -> `BrokerExecutor`)
 - Account telemetry snapshots and cycle metrics persisted for monitoring
 - Runtime safety rails: daily loss guard, liquidation buffer enforcement, mark staleness detection, volatility circuit breaker, correlation checks
 - Active test suite (`uv run pytest --collect-only` to verify)
@@ -627,11 +600,11 @@ NORMAL → REDUCE_ONLY → PAUSED → HALTED
 
 ## Performance & Observability
 
-- **Cycle Metrics**: persisted to `var/data/coinbase_trader/<profile>/metrics.json` and exposed via the
+- **Cycle Metrics**: persisted to `runtime_data/<profile>/metrics.json` and exposed via the
   Prometheus exporter (`scripts/monitoring/export_metrics.py`). The live risk manager now emits
   snapshot events consumed by dashboards and the monitoring stack.
 - **Account Snapshots**: periodic telemetry via `CoinbaseAccountManager` with fee/limit tracking.
-- **System Monitoring**: `gpt_trader/monitoring/system/` provides resource telemetry collectors used by
+- **System Monitoring**: `src/gpt_trader/monitoring/system/` provides resource telemetry collectors used by
   the runtime guard manager and dashboards.
 - **System Footprint**: bot process typically <50 MB RSS with sub-100 ms WebSocket latency in spot
   mode.
@@ -640,8 +613,8 @@ NORMAL → REDUCE_ONLY → PAUSED → HALTED
 ## Verification Path
 
 1. **Regression Suite**: `uv run pytest -q`
-2. **Smoke Test**: `uv run coinbase-trader run --profile dev --dev-fast`
-3. **Validation**: `python scripts/validation/verify_core.py --check all`
+2. **Smoke Test**: `uv run gpt-trader run --profile dev --dev-fast`
+3. **Validation**: `uv run python scripts/production_preflight.py --profile dev --warn-only`
 
 ## Dependencies
 

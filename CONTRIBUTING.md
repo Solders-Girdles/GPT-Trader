@@ -48,7 +48,7 @@ That's it! Now, every time you run `git commit`, the pre-commit hooks will run a
 # Core suites
 uv run pytest tests/unit/gpt_trader -q
 uv run pytest tests/unit/gpt_trader/features/brokerages/coinbase -q
-uv run pytest tests/unit/gpt_trader/orchestration -q
+uv run pytest tests/unit/gpt_trader/features/live_trade -q
 
 # Coverage snapshot
 uv run pytest --cov=gpt_trader --cov-report=term-missing
@@ -60,10 +60,10 @@ uv run pytest --cov=gpt_trader --cov-report=term-missing
 
 ## Running the Bot Locally
 
-To run the spot trading bot for development, use the `coinbase-trader` command (derivatives stay gated behind INTX + `COINBASE_ENABLE_DERIVATIVES=1`):
+To run the spot trading bot for development, use the `gpt-trader` command (derivatives stay gated behind INTX + `COINBASE_ENABLE_DERIVATIVES=1`):
 
 ```bash
-uv run coinbase-trader run --profile dev --dev-fast
+uv run gpt-trader run --profile dev --dev-fast
 ```
 
 Launch the TUI via the CLI entry point to keep uv-locked deps and env/logging setup consistent:
@@ -170,39 +170,40 @@ The repository follows a standardized organization optimized for both human deve
 - `/scripts/` - Operational scripts organized by domain:
   - `agents/` - Automation helpers and inventory tooling
   - `analysis/` - Dependency and repository analysis utilities
+  - `ci/` - Validation and guardrail checks
+  - `maintenance/` - Cleanup and maintenance tasks
   - `monitoring/` - Monitoring and dashboards
-  - `testing/` - Test runners and fixtures
-  - `validation/` - System validation flows
+  - Root `scripts/*.py` - Core runbooks and one-off utilities
 
 #### Documentation Standards
 - `/docs/guides/` - How-to guides and tutorials
 - `/docs/reference/` - Technical reference documentation
-- `/docs/ops/` - Operations and maintenance procedures
-- `/docs/ARCHIVE/` - Historical documentation (read-only)
+- `/docs/operations/` - Operations and maintenance procedures
+- `/docs/adr/` - Architecture decision records
 
 #### Archive Management
-- `/archived/2025/` - Current year development artifacts
-- `/archived/experiments/` - Research and exploration work
-- `/archived/infrastructure/` - Legacy system architectures
-- `/archived/HISTORICAL/` - Long-term preserved data
+- Use git history for retired docs or scripts
+- Record removals in `docs/DEPRECATIONS.md`
 
 ### File Placement Guidelines
 
 #### New Documentation
 - **Tutorials/Guides**: `/docs/guides/`
 - **API Reference**: `/docs/reference/`
-- **Operations**: `/docs/ops/`
+- **Operations**: `/docs/operations/`
 - **Never**: Root directory or legacy locations
 
 #### New Scripts
-- **Core Operations**: `/scripts/core/`
-- **Testing/Validation**: `/scripts/validation/`
+- **Core Operations**: `/scripts/` (root helpers)
+- **Analysis/Benchmarks**: `/scripts/analysis/`
+- **CI/Validation**: `/scripts/ci/`
 - **Monitoring**: `/scripts/monitoring/`
+- **Maintenance**: `/scripts/maintenance/`
 - **Automation/Agents**: `/scripts/agents/`
 
 #### Deprecated Content
-- Move to appropriate `/archived/` subdirectory
-- Create redirect stub if high-traffic
+- Remove from repo and rely on git history
+- Document removals in `docs/DEPRECATIONS.md`
 - Update all internal references
 
 ### Naming Conventions
@@ -220,7 +221,7 @@ The repository follows a standardized organization optimized for both human deve
 - Keep README.md updated with current state
 - Document breaking changes
 - Include examples for complex features
-- Update docs/agents/CLAUDE.md for AI context
+- Update `docs/guides/agents.md` for AI context
 
 ## Quality Gate Commands
 
@@ -237,7 +238,7 @@ uv run mypy src/gpt_trader/features/live_trade/execution/
 ```
 
 **Common mypy issues:**
-- Pre-existing errors in orchestration shims (loose typing by design) can be ignored
+- Resolve new errors or document existing ones in the PR summary
 - New code should pass strict type checking
 
 ### Unit Tests

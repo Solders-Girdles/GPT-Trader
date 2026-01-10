@@ -46,7 +46,7 @@ last-updated: 2025-11-24
 
 ### Coinbase Integration
 - [Complete Reference](reference/coinbase_complete.md) - Authentication, endpoints, troubleshooting
-- [Authentication Guide](reference/coinbase_auth_guide.md) - JWT, HMAC, OAuth2 details
+- [Authentication Guide](reference/coinbase_auth_guide.md) - JWT details (HMAC reference only)
 - [WebSocket Reference](reference/coinbase_websocket_reference.md) - Real-time data channels
 
 ### Development
@@ -66,13 +66,13 @@ last-updated: 2025-11-24
 
 ### Environment Setup
 - [Environment Template](../config/environments/.env.template) - All configuration options
-- Default: Spot trading with HMAC authentication
+- Default: Spot trading with JWT authentication
 - Perpetuals require INTX access + `COINBASE_ENABLE_DERIVATIVES=1`
 
 ## Additional Resources
 
 - [Risk Integration](RISK_INTEGRATION_GUIDE.md) - Risk management configuration
-- [Training Guide](TRAINING_GUIDE.md) - ML model training
+- [Training Guide](TRAINING_GUIDE.md) - Contributor onboarding and system overview
 - [PnL Calculations](PNL_CALCULATION_DIFFERENCES.md) - Profit/loss methodology
 - [Changelog](CHANGELOG.md) - Version history
 
@@ -82,8 +82,8 @@ last-updated: 2025-11-24
 
 | Mode | Products | Authentication | Flag |
 |------|----------|----------------|------|
-| **Spot (default)** | BTC-USD, ETH-USD, etc. | HMAC (API key/secret) | — |
-| **Perpetuals** | BTC-PERP, ETH-PERP | CDP (JWT) | `COINBASE_ENABLE_DERIVATIVES=1` |
+| **Spot (default)** | BTC-USD, ETH-USD, etc. | JWT (CDP key) | — |
+| **Perpetuals** | BTC-PERP, ETH-PERP | JWT (CDP key) | `COINBASE_ENABLE_DERIVATIVES=1` |
 
 **Note:** Sandbox does not support perpetuals. Bot defaults to spot-only trading.
 

@@ -17,10 +17,10 @@ This matrix helps developers and AI agents determine which documentation sources
 | Document | Last Verified | Notes |
 |----------|---------------|-------|
 | `docs/ARCHITECTURE.md` | 2025-12-01 | Core system architecture |
-| `docs/TUI_ROADMAP.md` | 2025-12-01 | TUI development roadmap |
+| `docs/TUI_STYLE_GUIDE.md` | 2025-12-01 | TUI style conventions |
 | `docs/guides/backtesting.md` | 2025-12-01 | Backtesting framework guide |
 | `src/gpt_trader/features/brokerages/coinbase/README.md` | 2025-12-01 | Coinbase integration |
-| `.claude/CLAUDE.md` | Current | Project instructions for AI agents |
+| `docs/guides/agents.md` | Current | Project instructions for AI agents |
 
 ### Medium Trust (Generally Accurate)
 
@@ -59,11 +59,11 @@ This matrix helps developers and AI agents determine which documentation sources
 
 | Topic | Source File |
 |-------|-------------|
-| Broker interface | `src/gpt_trader/features/brokerages/core/interfaces.py` |
+| Broker interface | `src/gpt_trader/features/brokerages/core/protocols.py` |
 | REST service | `src/gpt_trader/features/brokerages/coinbase/rest_service.py` |
-| Risk management | `src/gpt_trader/features/live_trade/risk/manager.py` |
-| Configuration | `src/gpt_trader/orchestration/configuration.py` |
-| Execution engine | `src/gpt_trader/orchestration/live_execution.py` |
+| Risk management | `src/gpt_trader/features/live_trade/risk/manager/__init__.py` |
+| Configuration | `src/gpt_trader/app/config/bot_config.py` |
+| Execution engine | `src/gpt_trader/features/live_trade/engines/strategy.py` |
 
 ---
 

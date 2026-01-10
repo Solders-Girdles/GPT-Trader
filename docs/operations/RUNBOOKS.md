@@ -38,7 +38,7 @@ The trading engine encountered an unhandled exception during a trading cycle. Th
 cat status.json | jq '.engine'
 
 # 2. Check recent logs
-tail -100 /var/log/gpt-trader/bot.log | grep -i error
+tail -100 ${COINBASE_TRADER_LOG_DIR:-var/logs}/coinbase_trader.log | grep -i error
 
 # 3. Verify API connectivity
 curl -s https://api.coinbase.com/api/v3/brokerage/time
@@ -88,7 +88,7 @@ cat status.json | jq '.positions'
 cat status.json | jq '.market'
 
 # 3. Review risk manager config
-grep -A 20 "risk:" config/prod.yaml
+grep -A 20 "risk:" config/profiles/prod.yaml
 ```
 
 #### Resolution
@@ -128,13 +128,13 @@ An order that passed risk validation failed to execute on the broker.
 ```bash
 # 1. Check account balances
 # Via CLI:
-gpt-trader accounts balances
+gpt-trader account snapshot --profile prod
 
 # 2. Check order history
-gpt-trader orders list --status=failed
+sqlite3 runtime_data/prod/orders.db "select status, count(*) from orders group by status;"
 
 # 3. Verify symbol is tradeable
-gpt-trader products info BTC-PERP-USDC
+uv run python scripts/list_products.py
 
 # 4. Check Coinbase status
 curl -s https://status.coinbase.com/api/v2/status.json | jq '.status'
@@ -189,7 +189,7 @@ cat status.json | jq '.timestamp_iso'
 dmesg | grep -i "killed process"
 
 # 5. Check bot logs for errors
-tail -200 /var/log/gpt-trader/bot.log
+tail -200 ${COINBASE_TRADER_LOG_DIR:-var/logs}/coinbase_trader.log
 ```
 
 #### Resolution
@@ -316,7 +316,7 @@ watch -n 5 'cat status.json | jq "{healthy, cycle: .engine.cycle_count, errors: 
 ### Log Monitoring
 ```bash
 # Follow logs with error highlighting
-tail -f /var/log/gpt-trader/bot.log | grep --color=always -E "ERROR|WARNING|$"
+tail -f ${COINBASE_TRADER_LOG_DIR:-var/logs}/coinbase_trader.log | grep --color=always -E "ERROR|WARNING|$"
 ```
 
 ---
@@ -343,7 +343,7 @@ cat status.json | jq '.positions' > positions_at_stop.json
 If the bot crashes with open positions:
 
 1. **Check positions**: `cat status.json | jq '.positions'`
-2. **Verify with broker**: `gpt-trader positions list`
+2. **Verify with broker**: `gpt-trader account snapshot --profile prod`
 3. **Decide action**:
    - If in profit or small loss: Let bot resume management
    - If significant loss or risk: Consider manual closure

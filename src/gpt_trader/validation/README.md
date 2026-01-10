@@ -64,5 +64,5 @@ except RuleError as exc:
 ## Tips
 
 * Use `RuleChain` to build multi-step pipelines: stripping input, defaulting values, then applying numeric/regex checks.
-* For environment parsing, combine rules with helper adapters (see `config/env_utils.py`) to ensure consistent coercion across env vars and Pydantic configs.
+* For environment parsing, combine rules with helper adapters (see `src/gpt_trader/config/env_utils.py`) to ensure consistent coercion across env vars and Pydantic configs.
 * Prefer creating new rule classes rather than bespoke validators when a pattern recurs—this keeps error handling uniform and testable.

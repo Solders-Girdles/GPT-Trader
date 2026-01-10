@@ -15,9 +15,9 @@
 
 ### March 2025 Test Harmonization
 - Removed the legacy `scripts/run_spot_profile.py` and `scripts/sweep_strategies.py` shims; docs now reference the maintained backtest entry points directly.
-- Moved the behavioral utilities walkthrough to `docs/testing/behavioral_scenarios_demo.md` and dropped the broad CI demo test.
+- Removed the behavioral utilities walkthrough; see `docs/guides/testing.md` for current testing guidance.
 - Audited `uses_mock_broker` suites and documented opt-in usage while legacy market-impact hooks remain pending rebuild.
-- Retired `tests/unit/gpt_trader/test_removed_aliases.py`; compatibility status now lives in `tests/fixtures/DEPRECATED.md`.
+- Retired `tests/unit/gpt_trader/test_removed_aliases.py`; compatibility status now lives in `docs/DEPRECATIONS.md`.
 
 ### Module Cleanup & Broker Modernization
 - **BREAKING**: Removed deprecated modules (`execution_v3`, `week2_filters`, `perps_baseline_v2`, legacy Coinbase helper modules).

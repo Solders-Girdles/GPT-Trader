@@ -10,7 +10,7 @@ This is the consolidated reference for AI agents working with the GPT-Trader rep
 ## Current State
 
 **Active System**: Spot trading bot with Coinbase Advanced Trade
-**Primary CLI**: `uv run coinbase-trader`
+**Primary CLI**: `uv run gpt-trader` (alias: `uv run coinbase-trader`)
 **Architecture**: Vertical slices under `src/gpt_trader/`
 **Perpetuals**: Code exists but requires INTX access + `COINBASE_ENABLE_DERIVATIVES=1`
 
@@ -24,13 +24,12 @@ uv run pytest --collect-only  # Verify test discovery
 ### Active Areas
 ```
 src/gpt_trader/                    # Main codebase
+├── app/                           # DI container + runtime wiring
 ├── cli/                           # CLI commands (run, account, orders, treasury)
-├── orchestration/                 # Coordinators and service management
-│   └── trading_bot/bot.py         # Core orchestrator
 ├── features/                      # Vertical feature slices
 │   ├── live_trade/                # Production trading engine
 │   ├── brokerages/coinbase/       # Coinbase adapter
-│   └── intelligence/sizing/       # Position sizing (Kelly criterion)
+│   └── intelligence/sizing/       # Position sizing helpers
 ├── monitoring/                    # Runtime guards and metrics
 └── validation/                    # Input validation framework
 
@@ -39,8 +38,7 @@ tests/unit/gpt_trader/             # Active test suite
 ```
 
 ### Legacy Artifacts
-- `var/legacy/legacy_bundle_*.tar.gz` - Archived experimental slices
-- Do NOT use legacy imports or paths
+- Legacy artifacts are not tracked in the repo; avoid legacy imports or paths.
 
 ## Essential Commands
 
@@ -50,31 +48,31 @@ tests/unit/gpt_trader/             # Active test suite
 uv sync
 
 # Run bot in dev mode (mock broker)
-uv run coinbase-trader run --profile dev --dev-fast
+uv run gpt-trader run --profile dev --dev-fast
 
 # Run tests
 uv run pytest --collect-only  # Check test count
 uv run pytest -q              # Run active suite
 
 # Account verification
-uv run coinbase-trader account snapshot
+uv run gpt-trader account snapshot
 ```
 
 ### Trading Operations
 ```bash
 # Treasury operations
-uv run coinbase-trader treasury convert --from USD --to USDC --amount 1000
-uv run coinbase-trader treasury move --from-portfolio a --to-portfolio b --amount 50
+uv run gpt-trader treasury convert --from USD --to USDC --amount 1000
+uv run gpt-trader treasury move --from-portfolio a --to-portfolio b --amount 50
 
 # Order preview (no execution)
-uv run coinbase-trader orders preview --symbol BTC-USD --side buy --type market --quantity 0.1
+uv run gpt-trader orders preview --symbol BTC-USD --side buy --type market --quantity 0.1
 ```
 
 ### Monitoring
 ```bash
 # Export metrics
 uv run python scripts/monitoring/export_metrics.py \
-  --metrics-file var/data/coinbase_trader/prod/metrics.json
+  --metrics-file runtime_data/prod/metrics.json
 ```
 
 ## Configuration
@@ -88,15 +86,21 @@ uv run python scripts/monitoring/export_metrics.py \
 
 ### Environment Variables
 ```bash
-# Spot trading (default)
-COINBASE_API_KEY=your_hmac_key
-COINBASE_API_SECRET=your_hmac_secret
+# Spot trading (default; JWT)
+COINBASE_CREDENTIALS_FILE=/path/to/cdp_key.json
+# or set both:
+# COINBASE_CDP_API_KEY=organizations/{org}/apiKeys/{key_id}
+# COINBASE_CDP_PRIVATE_KEY="-----BEGIN EC PRIVATE KEY-----..."
 COINBASE_ENABLE_DERIVATIVES=0
 
 # Perpetuals (requires INTX access)
 # COINBASE_ENABLE_DERIVATIVES=1
 # COINBASE_PROD_CDP_API_KEY=organizations/{org}/apiKeys/{key_id}
 # COINBASE_PROD_CDP_PRIVATE_KEY="-----BEGIN EC PRIVATE KEY-----..."
+
+# Legacy fallback (still supported)
+# COINBASE_API_KEY_NAME=organizations/{org}/apiKeys/{key_id}
+# COINBASE_PRIVATE_KEY="-----BEGIN EC PRIVATE KEY-----..."
 
 # Debug flags
 COINBASE_TRADER_DEBUG=1
@@ -150,9 +154,10 @@ from gpt_trader.features.intelligence.sizing import PositionSizer
 ### Common Mistakes
 ```python
 # DON'T: Legacy imports
-from src.bot.paper_trading import ml_paper_trader
+from gpt_trader.orchestration.live_execution import LiveExecutionEngine
 
 # DO: Active imports
+from gpt_trader.features.live_trade.engines import TradingEngine
 from gpt_trader.features.live_trade.risk import LiveRiskManager
 
 # DON'T: Assume perps are enabled
@@ -160,7 +165,7 @@ if config.derivatives_enabled:
     trade_perpetuals()
 
 # DO: Check derivatives gate explicitly
-if config.derivatives_enabled and config.intx_access:
+if config.derivatives_enabled and config.coinbase_intx_perpetuals_enabled:
     trade_perpetuals()
 ```
 
@@ -169,7 +174,7 @@ if config.derivatives_enabled and config.intx_access:
 ### Before Starting
 - [ ] Run `uv sync`
 - [ ] Check test discovery: `uv run pytest --collect-only`
-- [ ] Quick smoke test: `uv run coinbase-trader run --profile dev --dev-fast`
+- [ ] Quick smoke test: `uv run gpt-trader run --profile dev --dev-fast`
 - [ ] Check if task involves spot or perps features
 
 ### During Development
@@ -190,13 +195,13 @@ if config.derivatives_enabled and config.intx_access:
 # Enable debug logging
 export PERPS_DEBUG=1
 export LOG_LEVEL=DEBUG
-uv run coinbase-trader run --profile dev --dev-fast
+uv run gpt-trader run --profile dev --dev-fast
 
 # Check system state
-uv run coinbase-trader account snapshot
+uv run gpt-trader account snapshot
 
 # Tail logs
-tail -f var/logs/coinbase_trader.log
+tail -f ${COINBASE_TRADER_LOG_DIR:-var/logs}/coinbase_trader.log
 ```
 
 ## Agent-Specific Tips

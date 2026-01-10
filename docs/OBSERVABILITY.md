@@ -37,8 +37,8 @@ Guard failures are tracked via the existing guard telemetry system:
 
 | Metric Name | Type | Labels | Description |
 |-------------|------|--------|-------------|
-| `gpt_trader_guard_check_total` | Counter | `guard_name`, `outcome` | Guard check outcomes |
-| `gpt_trader_guard_failure_total` | Counter | `guard_name`, `error_type` | Guard failures by type |
+| `gpt_trader_guard_checks_total` | Counter | `guard`, `result` | Guard check outcomes |
+| `gpt_trader_guard_trips_total` | Counter | `guard`, `category`, `recoverable` | Guard trip counts |
 
 ## Failure Reason Taxonomy
 
@@ -319,10 +319,10 @@ Health signals flow through a multi-stage pipeline from raw metrics to actionabl
 
 | File | Purpose |
 |------|---------|
-| `monitoring/health_signals.py` | Signal models (`HealthSignal`, `HealthSummary`, `HealthThresholds`) |
-| `monitoring/health_checks.py` | Signal computation and threshold evaluation |
-| `app/health_server.py` | HTTP `/health` endpoint serving signal summary |
-| `monitoring/status_reporter.py` | `BotStatus` integration for TUI/dashboards |
+| `src/gpt_trader/monitoring/health_signals.py` | Signal models (`HealthSignal`, `HealthSummary`, `HealthThresholds`) |
+| `src/gpt_trader/monitoring/health_checks.py` | Signal computation and threshold evaluation |
+| `src/gpt_trader/app/health_server.py` | HTTP `/health` endpoint serving signal summary |
+| `src/gpt_trader/monitoring/status_reporter.py` | `BotStatus` integration for TUI/dashboards |
 
 ## Metrics & Tracing Coverage
 

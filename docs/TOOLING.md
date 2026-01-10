@@ -10,16 +10,16 @@ FOUNDATION TIER
 ├── Error Handling (TradingError hierarchy, CircuitBreaker, RecoveryStrategy)
 └── Configuration (LiveTradeConfig, ConfigBaselinePayload)
 
-ORCHESTRATION TIER
+ENGINE TIER
 ├── CoordinatorContext (immutable snapshots)
-├── BaseCoordinator (lifecycle contract)
-├── RuntimeCoordinator, StrategyCoordinator, ExecutionCoordinator
-└── TelemetryCoordinator
+├── BaseEngine (lifecycle contract)
+├── RuntimeEngine, TradingEngine
+└── Telemetry helpers (health + streaming)
 
 MONITORING TIER
 ├── Guards (ConfigurationGuardian, RuntimeGuardManager)
-├── Health (HealthChecker, PerformanceMonitor)
-└── Domain Monitors (LiquidationMonitor, MarginMonitor)
+├── Health (HealthCheckRunner, HealthSignal/HealthSummary)
+└── Domain Monitors (LiquidationMonitor)
 
 LOGGING TIER
 ├── StructuredLogger, ConsoleLogger
@@ -54,12 +54,12 @@ except NetworkError as e:
     result = await handler.recover(e)
 ```
 
-### Coordinator Lifecycle
+### Engine Lifecycle
 ```python
-context = coord.initialize(context)
-tasks = await coord.start_background_tasks()
-health = coord.health_check()
-await coord.shutdown()
+context = engine.initialize(context)
+tasks = await engine.start_background_tasks()
+health = engine.health_check()
+await engine.shutdown()
 ```
 
 ## File Locations
@@ -80,20 +80,24 @@ src/gpt_trader/errors/
 └── handler.py (CircuitBreaker, RecoveryStrategy)
 ```
 
-### Orchestration
+### Engines
 ```
-src/gpt_trader/orchestration/
-├── coordinators/ (base, registry, runtime, strategy, execution, telemetry)
-└── trading_bot/bot.py
+src/gpt_trader/features/live_trade/engines/
+├── base.py (BaseEngine, CoordinatorContext)
+├── runtime/ (RuntimeEngine)
+└── strategy.py (TradingEngine)
+
+src/gpt_trader/features/live_trade/orchestrator/
+└── decision.py (strategy orchestration helpers)
 ```
 
 ### Monitoring
 ```
 src/gpt_trader/monitoring/
-├── configuration_guardian.py
-├── runtime_guards.py
+├── configuration_guardian/ (guardian, drift detection)
 ├── guards/ (base, manager, builtins)
-└── health/ (registry, checks, endpoint)
+├── health_checks.py
+└── health_signals.py
 ```
 
 ### Logging
@@ -111,6 +115,6 @@ src/gpt_trader/utilities/
 | Async Tools | 8/10 | 9/10 | Solid |
 | Error Handling | 8/10 | 9/10 | Solid |
 | Configuration | 8/10 | 9/10 | Solid |
-| Orchestration | 7/10 | 9/10 | Needs composition |
+| Engines | 7/10 | 9/10 | Needs composition |
 | Monitoring | 5/10 | 8/10 | Missing metrics hub |
 | Logging | 5/10 | 8/10 | Needs unification |

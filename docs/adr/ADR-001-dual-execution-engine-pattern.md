@@ -2,12 +2,12 @@
 
 **Status:** Superseded
 **Date:** 2025-10-06
-**Superseded by:** `TradingEngine.submit_order()` is now the canonical order entry point
+**Superseded by:** TradingEngine guard stack (`_validate_and_place_order` live loop; `submit_order` external)
 
-> **Note:** This ADR documents historical architecture. As of the execution path
-> consolidation, `LiveExecutionEngine` is deprecated. New code should use
-> `TradingEngine.submit_order()` which provides the canonical pre-trade guard stack.
-> The factory pattern remains for backward compatibility but emits deprecation warnings.
+> **Note:** This ADR documents historical architecture. `LiveExecutionEngine` and
+> the dual-engine factory were removed in v3.0. New code should use the
+> TradingEngine guard stack (`_validate_and_place_order` in the live loop,
+> `submit_order` for external callers).
 **Deciders:** System Architecture Team
 **Technical Story:** Execution layer consolidation review (Phase 3 audit)
 
@@ -15,7 +15,7 @@
 
 ## Context
 
-GPT-Trader requires flexible execution capabilities to support both baseline trading workflows and advanced features like dynamic position sizing and market impact estimation. Two execution engines currently exist:
+GPT-Trader required flexible execution capabilities to support both baseline trading workflows and advanced features like dynamic position sizing and market impact estimation. Two execution engines historically existed:
 
 1. **LiveExecutionEngine** (`orchestration/live_execution.py`) - 401 lines
    - Baseline execution with risk integration
@@ -122,7 +122,8 @@ Feature flags (in `RiskConfig`):
 ### Factory Pattern (Historical)
 
 > **Removal Note:** The `orchestration/` package was removed in v3.0.
-> New code should use `TradingEngine.submit_order()` directly.
+> New code should use the TradingEngine guard stack (`_validate_and_place_order`
+> for the live loop, `submit_order` for external callers).
 
 The factory pattern described below is historical. The `ExecutionEngineFactory` and `LiveExecutionEngine` no longer exist. See `TradingEngine` in `features.live_trade` for the current execution API.
 
@@ -211,19 +212,19 @@ This ADR follows the same principle: **modular, composable services** with **fea
 
 ## References
 
-> **Note:** Paths under `orchestration/` are deprecated shims retained for backward compatibility.
-> See `DEPRECATIONS.md` for migration guidance.
+> **Note:** Paths under `orchestration/` were removed in v3.0; references below are historical.
+> See `docs/ARCHITECTURE.md` for current paths.
 
-- **Analysis:** `docs/ops/phase3_execution_layer_analysis.md`
-- **Factory:** `src/gpt_trader/orchestration/execution/engine_factory.py` *(deprecated shim)*
-- **LiveExecutionEngine:** `src/gpt_trader/orchestration/live_execution.py` *(deprecated shim)*
-- **AdvancedExecutionEngine:** `src/gpt_trader/features/live_trade/advanced_execution.py`
+- **Analysis:** Archived Phase 3 execution layer analysis (not tracked in repo)
+- **Factory:** `src/gpt_trader/orchestration/execution/engine_factory.py` *(removed)*
+- **LiveExecutionEngine:** `src/gpt_trader/orchestration/live_execution.py` *(removed)*
+- **AdvancedExecutionEngine:** `src/gpt_trader/features/live_trade/advanced_execution.py` *(removed)*
 - **RiskConfig:** `src/gpt_trader/features/live_trade/risk/config.py` *(canonical path)*
-- **BotConfig:** `src/gpt_trader/app/config.py` *(canonical path)*
+- **BotConfig:** `src/gpt_trader/app/config/bot_config.py` *(canonical path)*
 - **Production Config:** `config/risk/dev_dynamic.json`
 - **Tests:**
-  - Deprecation shims: `tests/unit/gpt_trader/deprecations/test_orchestration_shims.py`
-  - AdvancedExecutionEngine: `tests/unit/gpt_trader/features/live_trade/test_advanced_execution.py` (+5 more)
+  - Deprecation shims: `tests/unit/gpt_trader/deprecations/test_orchestration_shims.py` *(removed)*
+  - AdvancedExecutionEngine: `tests/unit/gpt_trader/features/live_trade/test_advanced_execution.py` *(removed)*
 
 ---
 

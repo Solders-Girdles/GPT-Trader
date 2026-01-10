@@ -12,10 +12,10 @@ This document captures the architecture and trading flow for the Coinbase Perpet
 
 ### Core Components
 
-1. **TradingBot** (`src/gpt_trader/orchestration/trading_bot/bot.py`)
-   - Main orchestration layer shared with spot trading
+1. **TradingBot** (`src/gpt_trader/features/live_trade/bot.py`)
+   - Main entry point for live trading (owns the TradingEngine)
    - Detects `COINBASE_ENABLE_DERIVATIVES` + INTX context before enabling perps
-   - Coordinates between strategy, risk, and execution layers via the coordinator pattern
+   - Coordinates strategy, risk, and execution through the TradingEngine guard stack
 
 2. **CoinbaseRestService** (`src/gpt_trader/features/brokerages/coinbase/rest_service.py`)
    - High-level service layer for Coinbase operations
@@ -23,24 +23,28 @@ This document captures the architecture and trading flow for the Coinbase Perpet
    - Manages product discovery and order routing
 
 3. **Strategy Layer**
-   - **Active:** `src/gpt_trader/features/live_trade/strategies/perps_baseline/strategy.py` (instantiated by `StrategyOrchestrator`)
+   - **Default:** `src/gpt_trader/features/live_trade/strategies/perps_baseline/strategy.py`
      - Baseline MA crossover with optional confirmation windows
      - Maintains trailing stops and per-symbol position counters
-     - Delegates all exposure checks to the risk engine
-   - **Experimental:** `src/gpt_trader/features/live_trade/strategies/perps_baseline_enhanced/strategy.py`
-     - Adds liquidity filters, dedicated state management, and additional guards; kept for future iteration but not wired into the bot by default
+     - Instantiated via `create_strategy()` in `features/live_trade/factory.py`
+   - **Alternatives:** `mean_reversion` and `ensemble` strategies under
+     `src/gpt_trader/features/live_trade/strategies/` (select via profile).
 
-4. **Risk Management** (`src/gpt_trader/features/live_trade/risk/`)
-   - `manager.py` orchestrates leverage limits, liquidation buffers, and exposure controls (defaults mirror spot until INTX is approved)
-   - `pre_trade_checks.py` enforces synchronous validation before orders leave the process
-   - `runtime_monitoring.py` and `state_management.py` maintain guardrails and reduce-only transitions
-   - Daily loss limits and kill-switch support remain available regardless of product type
+4. **Risk Management** (`src/gpt_trader/features/live_trade/`)
+   - `risk/manager/__init__.py` provides `LiveRiskManager` for leverage, daily loss, and exposure controls
+   - `risk/config.py` defines `RiskConfig` (env-driven thresholds)
+   - Runtime guards live under `execution/guards/` and are orchestrated by
+     `execution/guard_manager.py`
+   - Pre-trade validation is handled by `execution/validation.py` and
+     `security/security_validator.py`
 
-5. **Execution Engine** (`src/gpt_trader/orchestration/live_execution.py`)
+5. **Execution Engine** (`src/gpt_trader/features/live_trade/engines/strategy.py`)
    - Market and limit order support with side-aware quantization
    - TIF support (GTC, IOC)
    - Slippage guard rails based on snapshot depth
    - Optional order preview plumbing
+   - Live loop uses `TradingEngine._validate_and_place_order()`; `submit_order()` is the
+     external wrapper. `features/live_trade/execution/engine.py::LiveExecutionEngine` is deprecated.
 
 ## Trading Logic Flow
 
@@ -152,56 +156,32 @@ This document captures the architecture and trading flow for the Coinbase Perpet
 
 ## Configuration Profiles
 
-### Development Profile
-```python
-BotConfig(
-    profile=Profile.DEV,
-    mock_broker=True,  # toggles the DeterministicBroker stub
-    mock_fills=True,
-    dry_run=True,
-    max_position_size=Decimal("10000"),
-    target_leverage=1,
-    reduce_only_mode=True,
-)
-```
+Profiles are defined under `config/profiles/*.yaml` and loaded by
+`ProfileLoader` (`app/config/profile_loader.py`). Only the schema fields
+(`trading`, `strategy`, `risk_management`, `execution`, `monitoring`) are
+applied at runtime.
 
-### Demo Profile (spot-only by default)
-```python
-BotConfig(
-    profile=Profile.DEMO,
-    max_position_size=Decimal("100"),
-    max_leverage=1,
-    enable_shorts=False,
-    mock_broker=True,  # toggles the DeterministicBroker stub
-)
-```
+Example perps-oriented profile fragment:
 
-### Production Profile (derivatives enabled only after INTX approval)
-```python
-BotConfig(
-    profile=Profile.PROD,
-    max_position_size=Decimal("5000"),
-    max_leverage=3,
-    enable_shorts=True,
-    reduce_only_mode=False,
-)
-```
-
-Setting `mock_broker=True` in any profile now routes through the
-`DeterministicBroker` safety stub. This keeps development and demo runs free of
-real orders while exercising the same orchestration paths used in production.
-
-### Canary Profile (Ultra-Safe Production)
 ```yaml
 trading:
   symbols: ["BTC-PERP"]
-  mode: reduce_only
-  position_sizing:
-    max_notional_value: 500
+  mode: "reduce_only"
+strategy:
+  type: "baseline"
 risk_management:
   max_leverage: 1
-  daily_loss_limit: 10
+  position_fraction: 0.01
+  daily_loss_limit_pct: 0.01
+  enable_shorts: true
+execution:
+  dry_run: true
+  mock_broker: false
 ```
+
+Set `execution.mock_broker: true` for the deterministic broker and
+`execution.dry_run: true` to avoid live order submission while exercising the
+TradingEngine guard stack.
 
 ## Error Handling & Edge Cases
 
@@ -246,7 +226,7 @@ risk_management:
 # RUN_SANDBOX_VALIDATIONS=1 python scripts/validate_ws_week1.py
 
 # Full cycle test
-uv run coinbase-trader run --profile dev --dry-run --dev-fast
+uv run gpt-trader run --profile dev --dry-run --dev-fast
 ```
 
 ## Performance Metrics
@@ -275,9 +255,9 @@ rejection_counts = {
 ## Security Considerations
 
 ### Authentication
-- HMAC signing for legacy Exchange API
 - JWT for CDP (Coinbase Developer Platform)
 - API key rotation support
+- HMAC is not implemented in GPT-Trader (historical Exchange API reference only)
 - Passphrase protection
 
 ### Data Protection
@@ -299,31 +279,34 @@ rejection_counts = {
 8. ✅ Review position size calculations
 
 ### Monitoring Setup
-`EVENT_STORE_ROOT` should point to the parent runtime directory (for example `/srv/gpt-trader-runtime`). The bot automatically creates `coinbase_trader/{profile}` underneath it (and continues writing to the legacy `trading_bot/{profile}` path during the migration window), so do not append the profile when exporting the variable.
+`EVENT_STORE_ROOT` should point to the parent runtime directory (for example
+`/srv/gpt-trader-runtime`). The bot automatically creates
+`runtime_data/{profile}` underneath it, so do not append the profile when
+exporting the variable.
 ```bash
 # Health status location
-$EVENT_STORE_ROOT/coinbase_trader/{profile}/health.json
+$EVENT_STORE_ROOT/runtime_data/{profile}/health.json
 
-# Event logs
-$EVENT_STORE_ROOT/coinbase_trader/{profile}/events/
+# Event store (SQLite)
+$EVENT_STORE_ROOT/runtime_data/{profile}/events.db
 
-# Order tracking
-$EVENT_STORE_ROOT/coinbase_trader/{profile}/orders/
+# Order tracking (SQLite)
+$EVENT_STORE_ROOT/runtime_data/{profile}/orders.db
 ```
 
 ### Operational Commands
 ```bash
 # Start production trading
-uv run coinbase-trader run --profile prod
+uv run gpt-trader run --profile prod
 
 # Emergency reduce-only mode
-uv run coinbase-trader run --profile prod --reduce-only
+uv run gpt-trader run --profile prod --reduce-only
 
 # Canary deployment
-uv run coinbase-trader run --profile canary
+uv run gpt-trader run --profile canary
 
 # Single cycle validation
-uv run coinbase-trader run --profile prod --dev-fast --dry-run
+uv run gpt-trader run --profile prod --dev-fast --dry-run
 ```
 
 ## Future Enhancements

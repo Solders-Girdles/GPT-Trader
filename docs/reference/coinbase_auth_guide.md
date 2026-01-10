@@ -9,7 +9,7 @@ scope: Advanced Trade API v3 authentication methods
 documentation-venue: docs.cdp.coinbase.com/advanced-trade/docs/rest-api-auth
 ---
 
-> **Status**: This guide covers JWT-based authentication methods: CDP/JWT (production perps) and SimpleAuth/JWT (spot trading), plus OAuth2 (delegated access). HMAC documentation is retained for historical reference only. Verify current status at https://docs.cdp.coinbase.com/coinbase-app/introduction/changelog
+> **Status**: This guide covers JWT-based authentication methods: CDP/JWT (production perps) and SimpleAuth/JWT (spot trading). OAuth2 is not implemented in GPT-Trader, and HMAC documentation is retained for historical reference only. Verify current status at https://docs.cdp.coinbase.com/coinbase-app/introduction/changelog
 
 ## Overview
 
@@ -19,7 +19,7 @@ Coinbase Advanced Trade API authentication in GPT-Trader uses JWT-based methods:
 |--------|----------|-----------|-------------|
 | **CDP (JWT)** | Production perpetuals (INTX) | 30 req/sec private | ✅ Perps |
 | **SimpleAuth (JWT)** | Spot trading | 30 req/sec private | ✅ Spot |
-| **OAuth2** | User-delegated access | 30 req/sec private | Multiuser apps |
+| **OAuth2** | User-delegated access | 30 req/sec private | ❌ Not implemented |
 | **HMAC** | ⚠️ Historical reference only | N/A | ❌ Removed |
 
 ---
@@ -299,6 +299,8 @@ def make_sandbox_request(method: str, path: str, body: dict = None):
 ---
 
 ## 3. OAuth2 Authentication
+
+> **Note**: OAuth2 is not implemented in GPT-Trader. This section is reference-only for external integrations.
 
 **Best for**: Delegated user access and multi-user applications
 

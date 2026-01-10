@@ -1,7 +1,10 @@
 # ADR 002: Coordinator Pattern for the Orchestration Layer
 
 ## Status
-Accepted – Implemented 2025-10-12
+Superseded - Orchestration package removed in v3.0 (Engine Context pattern lives in `features/live_trade/engines/`)
+
+> **Note:** This ADR is historical. The coordinator registry and orchestration
+> paths referenced below were removed in v3.0.
 
 ## Context
 - The original orchestration layer coupled coordinator logic tightly to `TradingBot` (formerly `PerpsBot`), making it difficult to test modules in isolation.
@@ -37,7 +40,7 @@ Accepted – Implemented 2025-10-12
 - Phase 3 (Planned): Document deprecation timeline for facade APIs; evaluate moving remaining orchestration helpers (e.g., `SystemMonitor`) into coordinators once stable.
 
 ## References
-- `src/gpt_trader/orchestration/coordinators/`
-- `src/gpt_trader/orchestration/trading_bot/bot.py`
-- `src/gpt_trader/orchestration/lifecycle_manager.py`
-- Tests under `tests/unit/gpt_trader/orchestration/coordinators/`
+- `src/gpt_trader/features/live_trade/engines/base.py` (CoordinatorContext, BaseEngine)
+- `src/gpt_trader/features/live_trade/engines/runtime/coordinator.py`
+- `src/gpt_trader/features/live_trade/engines/strategy.py`
+- `src/gpt_trader/orchestration/*` *(removed)*

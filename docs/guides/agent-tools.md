@@ -58,7 +58,7 @@ Analyzes changed files and suggests relevant tests to run.
 ```bash
 uv run agent-impact --from-git               # Analyze git changes
 uv run agent-impact --from-git --base main   # Compare to main branch
-uv run agent-impact --files src/gpt_trader/cli/orders.py
+uv run agent-impact --files src/gpt_trader/cli/commands/orders.py
 uv run agent-impact --include-importers      # Show importing modules
 uv run agent-impact --format text            # Human-readable output
 ```

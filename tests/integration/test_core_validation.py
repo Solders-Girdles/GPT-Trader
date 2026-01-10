@@ -1,6 +1,6 @@
 """Core validation integration tests.
 
-Converted from scripts/validation/verify_core.py.
+Converted from legacy validation script (removed).
 Tests the integration of core bot components with DeterministicBroker.
 """
 

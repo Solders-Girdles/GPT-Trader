@@ -11,7 +11,7 @@ documentation-venues:
   - legacy: docs.cloud.coinbase.com (older Coinbase Cloud - for reference only)
 consolidates:
   - docs/reference/coinbase.md (retired)
-  - docs/reference/coinbase_troubleshooting.md
+  - docs/troubleshooting/coinbase_api_balance_guide.md
   - src/gpt_trader/features/brokerages/coinbase/README.md
   - src/gpt_trader/features/brokerages/coinbase/COMPATIBILITY.md
   - 10+ archived Coinbase documentation files
@@ -36,21 +36,21 @@ This is the complete, consolidated reference for Coinbase integration in GPT-Tra
 ### Required Environment Variables
 
 ```bash
-# Spot trading (default) - HMAC Advanced Trade
-COINBASE_API_KEY=your_hmac_api_key
-COINBASE_API_SECRET=your_hmac_api_secret
+# Spot trading (default; JWT)
+COINBASE_CREDENTIALS_FILE=/path/to/cdp_key.json
+# or set both env vars:
+# COINBASE_CDP_API_KEY=organizations/{org_id}/apiKeys/{key_id}
+# COINBASE_CDP_PRIVATE_KEY="-----BEGIN EC PRIVATE KEY-----\n...\n-----END EC PRIVATE KEY-----"
 COINBASE_ENABLE_DERIVATIVES=0
-
-# Sandbox (spot only)
-COINBASE_SANDBOX=1
-COINBASE_API_KEY=your_sandbox_key
-COINBASE_API_SECRET=your_sandbox_secret
-COINBASE_PASSPHRASE=your_sandbox_passphrase
 
 # Derivatives (INTX accounts only)
 # COINBASE_ENABLE_DERIVATIVES=1
 # COINBASE_PROD_CDP_API_KEY=organizations/{org_id}/apiKeys/{key_id}
-# COINBASE_PROD_CDP_PRIVATE_KEY="""-----BEGIN EC PRIVATE KEY-----\n...\n-----END EC PRIVATE KEY-----"""
+# COINBASE_PROD_CDP_PRIVATE_KEY="-----BEGIN EC PRIVATE KEY-----\n...\n-----END EC PRIVATE KEY-----"
+
+# Legacy fallback (still supported)
+# COINBASE_API_KEY_NAME=organizations/{org_id}/apiKeys/{key_id}
+# COINBASE_PRIVATE_KEY="-----BEGIN EC PRIVATE KEY-----\n...\n-----END EC PRIVATE KEY-----"
 ```
 
 ### Environment Setup
@@ -61,10 +61,10 @@ cp config/environments/.env.template .env
 ```
 
 2. **Configure for your environment**:
-   - **Spot Production**: Use HMAC authentication (default)
+   - **Spot Production**: Use JWT credentials (CDP key file or env vars)
    - **Perps Production**: Enable only after INTX approval (set derivatives flag + CDP keys)
-   - **Sandbox**: Use HMAC; sandbox does not support derivatives
-   - **Development**: Use mock broker with `PERPS_FORCE_MOCK=1`
+   - **Sandbox**: Advanced Trade has no authenticated sandbox; use mock broker for testing
+   - **Development**: Use mock broker with `MOCK_BROKER=1`
 
 ### Trading Profiles
 
@@ -76,9 +76,9 @@ cp config/environments/.env.template .env
 
 ## Authentication Methods
 
-### CDP (JWT) Authentication - Production (INTX Accounts)
+### CDP (JWT) Authentication - Production (Spot + INTX Perps)
 
-**Used for**: Perpetual futures trading once Coinbase approves INTX access
+**Used for**: Authenticated spot trading and perpetual futures once Coinbase approves INTX access
 
 ```python
 # Automatic detection from key format
@@ -99,27 +99,20 @@ if api_key.startswith("organizations/"):
 # JWT-based authentication for spot trading
 from gpt_trader.features.brokerages.coinbase.auth import SimpleAuth
 
-auth = SimpleAuth(key_name=api_key, private_key=api_secret)
+auth = SimpleAuth(key_name=key_name, private_key=private_key)
 ```
 
-> **Note**: `HMACAuth` has been removed. All authentication now uses JWT-based methods. See [coinbase_auth_guide.md](coinbase_auth_guide.md) for historical HMAC reference.
+> **Note**: `HMACAuth` is not implemented in GPT-Trader. All authentication now uses JWT-based methods. See [coinbase_auth_guide.md](coinbase_auth_guide.md) for historical HMAC reference.
 
 **Important**: Sandbox does NOT support perpetuals. Use production with canary profile for safe perpetuals testing.
 
 ### OAuth2 Authentication (Sign in with Coinbase)
 
-**Status**: ✅ Supported (as of 2024/2025)
+**Status**: Not implemented in GPT-Trader.
 
-**Used for**: Building applications with user consent flow and delegated access
+If you need OAuth2 for a separate integration, follow the official Coinbase CDP documentation and build a custom client.
 
-**Key characteristics**:
-- Refresh tokens expire after 1.5 years
-- OAuth connections enforce portfolio account-level trade access
-- Requires client credentials in token revocation
-
-**Status**: OAuth2 is officially supported (confirmed in official changelog and docs). Exact launch date is not publicly documented. See changelog at https://docs.cdp.coinbase.com/coinbase-app/introduction/changelog
-
-> For end-to-end authentication walkthroughs (JWT generation, NULL-byte-safe HMAC signatures, OAuth2 token refresh flows), use the dedicated [coinbase_auth_guide.md](coinbase_auth_guide.md).
+> For JWT authentication walkthroughs and credential formats, use [coinbase_auth_guide.md](coinbase_auth_guide.md).
 
 ## API Endpoints & Products
 
@@ -215,14 +208,14 @@ Notes:
 uv run python scripts/production_preflight.py --profile canary
 
 # Smoke test the trading loop (mock broker)
-uv run coinbase-trader run --profile dev --dev-fast
+uv run gpt-trader run --profile dev --dev-fast
 
 # Inspect streaming telemetry via TUI
 uv run gpt-trader tui                  # Mode selector
 uv run gpt-trader run --profile dev --tui  # Attach TUI to dev profile (optional)
 
 # Export Prometheus-compatible metrics
-uv run python scripts/monitoring/export_metrics.py --metrics-file var/data/coinbase_trader/prod/metrics.json
+uv run python scripts/monitoring/export_metrics.py --metrics-file runtime_data/prod/metrics.json
 ```
 
 ## Testing & Development
@@ -232,7 +225,7 @@ uv run python scripts/monitoring/export_metrics.py --metrics-file var/data/coinb
 For development without API calls:
 
 ```bash
-PERPS_FORCE_MOCK=1 uv run coinbase-trader run --profile dev
+MOCK_BROKER=1 uv run gpt-trader run --profile dev
 ```
 
 Features:
@@ -243,23 +236,16 @@ Features:
 
 ### Sandbox Testing
 
-For integration testing with real API:
-
-```bash
-COINBASE_SANDBOX=1 uv run coinbase-trader run --profile dev
-```
-
-**Limitations**:
-- Spot trading only (no perpetuals)
-- Different authentication (HMAC)
-- Limited market data
+Coinbase Advanced Trade does not provide an authenticated sandbox. Use the mock broker
+(`MOCK_BROKER=1` or the `dev` profile) for integration testing, or run a canary profile
+in production with reduce-only settings.
 
 ### Production Testing
 
 For safe production testing:
 
 ```bash
-uv run coinbase-trader run --profile canary --dry-run
+uv run gpt-trader run --profile canary --dry-run
 ```
 
 Features:
@@ -306,7 +292,7 @@ For GPT-Trader operations:
 
 - The adapters cap outbound REST traffic at ~100 req/min, well below Coinbase ceilings.
 - WebSocket clients share a single connection per profile and monitor 30-second heartbeat cadence.
-- On any 429, rely on the retry-after header and log the incident in `var/logs/coinbase_trader.log` for follow-up.
+- On any 429, rely on the retry-after header and log the incident in `${COINBASE_TRADER_LOG_DIR:-var/logs}/coinbase_trader.log` for follow-up.
 
 ## Support Resources
 
@@ -329,8 +315,8 @@ For GPT-Trader operations:
 **Note**: Legacy docs at `docs.cloud.coinbase.com` are outdated; use CDP URLs above for current information.
 
 ### Internal Resources
-- Logs: `var/logs/coinbase_trader.log`
-- EventStore metrics: `var/data/coinbase_trader/<profile>/metrics.json`
+- Logs: `${COINBASE_TRADER_LOG_DIR:-var/logs}/coinbase_trader.log`
+- EventStore metrics: `runtime_data/<profile>/metrics.json`
 - Configuration templates: `config/environments/`
 
 ## Quick Reference
@@ -339,22 +325,22 @@ For GPT-Trader operations:
 
 ```bash
 # Run spot bot in production profile
-uv run coinbase-trader run --profile prod
+uv run gpt-trader run --profile prod
 
 # Check system health
 uv run python scripts/production_preflight.py --profile canary
 
 # Account snapshot (balances, permissions, fee schedule)
-uv run coinbase-trader account snapshot
+uv run gpt-trader account snapshot
 
 # Emergency stop
-export RISK_KILL_SWITCH_ENABLED=1 && pkill -f coinbase-trader
+export RISK_KILL_SWITCH_ENABLED=1 && pkill -f gpt-trader
 ```
 
 ### Key Files
 
 - Main entry: `src/gpt_trader/cli/__init__.py`
-- Coinbase client: `src/gpt_trader/features/brokerages/coinbase/client.py`
+- Coinbase client: `src/gpt_trader/features/brokerages/coinbase/client/client.py`
 - WebSocket handler: `src/gpt_trader/features/brokerages/coinbase/ws.py`
 - Configuration: `config/environments/.env.template`
 

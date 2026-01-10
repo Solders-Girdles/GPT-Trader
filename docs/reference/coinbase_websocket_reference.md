@@ -63,38 +63,22 @@ asyncio.run(connect_websocket())
 For private user account updates (`user` channel), authentication is required:
 
 ```python
-import hmac
-import hashlib
-import base64
-from datetime import datetime
+from gpt_trader.features.brokerages.coinbase.auth import SimpleAuth
 
-def create_signature(timestamp, secret, path="/users/self/verify"):
-    """Create WebSocket authentication signature
-
-    ⚠️ CRITICAL: Message format is timestamp + "GET" + path (same as REST HMAC)
-    NOT "subscribe" + timestamp!
-    """
-    message = f"{timestamp}GET{path}"
-    message = message.encode('utf-8')
-    hmac_key = base64.b64decode(secret)
-    signature = hmac.new(hmac_key, message, hashlib.sha256)
-    return base64.b64encode(signature).decode('utf-8')
+def build_jwt(key_name: str, private_key: str) -> str:
+    auth = SimpleAuth(key_name=key_name, private_key=private_key)
+    return auth.generate_jwt("GET", "/users/self")
 
 async def connect_authenticated():
     uri = "wss://advanced-trade-ws.coinbase.com"
-
-    timestamp = str(int(datetime.now().timestamp()))
-    # ⚠️ Signature uses same pattern as REST: timestamp + "GET" + "/users/self/verify"
-    signature = create_signature(timestamp, api_secret)
+    jwt_token = build_jwt(api_key, private_key)
 
     async with websockets.connect(uri) as websocket:
         await websocket.send(json.dumps({
             "type": "subscribe",
-            "channels": [{"name": "user"}],
-            "signature": signature,
-            "key": api_key,
-            "passphrase": passphrase,
-            "timestamp": timestamp
+            "product_ids": ["BTC-USD"],
+            "channels": ["user"],
+            "jwt": jwt_token
         }))
 ```
 
@@ -267,11 +251,9 @@ Personal account updates including orders, fills, and position changes.
 ```json
 {
   "type": "subscribe",
-  "channels": [{"name": "user"}],
-  "signature": "<computed_signature>",
-  "key": "<api_key>",
-  "passphrase": "<passphrase>",
-  "timestamp": "<timestamp>"
+  "product_ids": ["BTC-USD"],
+  "channels": ["user"],
+  "jwt": "<jwt_token>"
 }
 ```
 

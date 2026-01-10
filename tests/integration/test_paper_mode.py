@@ -1,6 +1,6 @@
 """Paper mode trading integration tests.
 
-Converted from scripts/validation/paper_mode_e2e.py.
+Converted from legacy validation script (removed).
 Tests multi-cycle trading simulation with DeterministicBroker.
 
 This is the most unique test in the integration suite - it validates

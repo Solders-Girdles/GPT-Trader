@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Prometheus - Metrics Collection
   prometheus:
@@ -8,8 +6,8 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-      - ./monitoring/alert_rules.yml:/etc/prometheus/alert_rules.yml
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/alerts.yml:/etc/prometheus/alerts.yml
       - prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -18,6 +16,12 @@ services:
       - '--web.console.templates=/etc/prometheus/consoles'
       - '--storage.tsdb.retention.time=30d'
       - '--web.enable-lifecycle'
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:9090/-/ready"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     networks:
       - monitoring
 
@@ -28,8 +32,14 @@ services:
     ports:
       - "9093:9093"
     volumes:
-      - ./monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml
       - alertmanager_data:/alertmanager
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:9093/-/ready"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     networks:
       - monitoring
 
@@ -44,8 +54,14 @@ services:
       - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
-      - ./monitoring/grafana-dashboard.json:/etc/grafana/dashboards/trading-system.json
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/etc/grafana/dashboards
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
     networks:
       - monitoring
 
@@ -124,9 +140,15 @@ services:
     ports:
       - "9115:9115"
     volumes:
-      - ./monitoring/blackbox.yml:/etc/blackbox_exporter/config.yml
+      - ./blackbox.yml:/etc/blackbox_exporter/config.yml
     command:
       - '--config.file=/etc/blackbox_exporter/config.yml'
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:9115/metrics"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     networks:
       - monitoring
 

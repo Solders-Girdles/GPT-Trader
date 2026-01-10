@@ -15,7 +15,7 @@ Reliability is delivered by four packages that work together:
 
 Implementation references:
 
-- `src/gpt_trader/orchestration/execution/guards/api_health.py`
+- `src/gpt_trader/features/live_trade/execution/guards/api_health.py`
 - `src/gpt_trader/preflight/checks/diagnostics.py`
 - `src/gpt_trader/features/live_trade/degradation.py` (canonical location)
 - `tests/support/chaos.py`
@@ -24,7 +24,7 @@ Implementation references:
 
 | Trigger | Signal | Response | Config |
 | --- | --- | --- | --- |
-| Preflight diagnostics fail | `gpt-trader preflight` errors on API, accounts, or market data | Exit non-zero; block startup unless warn-only | `--warn-only` or `GPT_TRADER_PREFLIGHT_WARN_ONLY=1` |
+| Preflight diagnostics fail | `scripts/production_preflight.py` errors on API, accounts, or market data | Exit non-zero; block startup unless warn-only | `--warn-only` or `GPT_TRADER_PREFLIGHT_WARN_ONLY=1` |
 | API health trip | ApiHealthGuard sees open circuit or thresholds | Cancel open orders, reduce-only, global pause | `RISK_API_HEALTH_COOLDOWN_SECONDS` |
 | Mark staleness | `check_mark_staleness` true | Pause symbol; allow reduce-only if configured | `RISK_MARK_STALENESS_COOLDOWN_SECONDS`, `RISK_MARK_STALENESS_ALLOW_REDUCE_ONLY` |
 | Slippage failures | Repeated slippage guard ValidationError | Pause symbol after threshold | `RISK_SLIPPAGE_FAILURE_PAUSE_AFTER`, `RISK_SLIPPAGE_PAUSE_SECONDS` |
@@ -395,8 +395,8 @@ Tip: patch `time.sleep` in tests if you use delayed faults to keep unit tests fa
 ## Rollout Checklist
 
 1. Run preflight in canary and prod:
-   - `gpt-trader preflight --profile canary`
-   - `gpt-trader preflight --profile prod`
+   - `uv run python scripts/production_preflight.py --profile canary`
+   - `uv run python scripts/production_preflight.py --profile prod`
 2. Confirm reliability defaults in `.env` or exported overrides for RISK_* vars.
 3. Run chaos tests:
    - `pytest tests/unit/support/test_chaos.py`

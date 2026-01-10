@@ -1,6 +1,6 @@
 # Coinbase Brokerage Integration
 
-Complete implementation of Coinbase Advanced Trade API v3 and Legacy Exchange API support.
+Complete implementation of Coinbase Advanced Trade API v3 with limited Legacy Exchange (public endpoints only).
 
 ## Features Implemented
 
@@ -10,7 +10,7 @@ Complete implementation of Coinbase Advanced Trade API v3 and Legacy Exchange AP
 - ✅ **REST Service** (`rest_service.py`): High-level service layer for Coinbase operations
 - ✅ **Data Models** (`models.py`): Type-safe data mappers and helpers
 - ✅ **Error Handling** (`errors.py`): Comprehensive error mapping
-- ✅ **Authentication**: Both HMAC and CDP JWT (v2) authentication supported
+- ✅ **Authentication**: JWT-based CDP keys (SimpleAuth/CDPJWTAuth)
 - ✅ **Endpoint Registry** (`endpoints.py`): Complete endpoint definitions
 - ✅ **Transport Layer** (`transports.py`): Pluggable WebSocket transports for testing
 
@@ -20,16 +20,16 @@ The integration supports both Coinbase API modes:
 1. **Advanced Trade API (v3)** - Production trading with full features
    - Base URL: `https://api.coinbase.com`
    - Endpoints: `/api/v3/brokerage/*`
-   - Auth: HMAC (no passphrase) or CDP JWT
+   - Auth: JWT (CDP key)
    - **Full feature set**: Portfolios, order management, INTX, CFM, etc.
 
 2. **Legacy Exchange API** - Sandbox testing with limited features
    - Base URL: `https://api-public.sandbox.exchange.coinbase.com`
    - Endpoints: `/products`, `/accounts`, `/orders`
-   - Auth: HMAC with passphrase required
-   - **Limited feature set**: Basic trading only (no portfolios, order preview, etc.)
+   - Auth: Public endpoints only (no authenticated trading in GPT-Trader)
+   - **Limited feature set**: Market data only (no portfolios, order preview, etc.)
 
-**Note**: Exchange mode's feature set is intentionally limited. Advanced order management, portfolio operations, and derivatives trading require Advanced Trade API.
+**Note**: Exchange mode's feature set is intentionally limited. Advanced order management, portfolio operations, and derivatives trading require Advanced Trade API with JWT credentials.
 
 3. Spot-First (Recommended If Not INTX-Eligible)
    - Default symbols now use spot pairs (e.g., `BTC-USD`).
@@ -54,15 +54,12 @@ BROKER=coinbase
 # API Mode (auto-detected if not set)
 COINBASE_API_MODE=advanced  # or "exchange"
 
-# Sandbox mode (forces exchange mode)
-COINBASE_SANDBOX=1  # Set to 1 for sandbox
+# Sandbox mode (public endpoints only; no authenticated trading)
+COINBASE_SANDBOX=1  # Set to 1 for public Exchange endpoints
 
-# HMAC Authentication
-COINBASE_API_KEY=your-api-key
-COINBASE_API_SECRET=your-api-secret
-COINBASE_API_PASSPHRASE=your-passphrase  # Required for exchange mode
-
-# OR CDP JWT Authentication
+# JWT Authentication (CDP key)
+COINBASE_CREDENTIALS_FILE=/path/to/cdp_key.json
+# or set both env vars:
 COINBASE_CDP_API_KEY=your-cdp-key-name
 COINBASE_CDP_PRIVATE_KEY=your-ec-private-key-pem
 
@@ -96,14 +93,8 @@ print(f"Available products: {len(products)}")
 
 ### Sandbox Testing
 ```bash
-# Set environment for sandbox
-export COINBASE_SANDBOX=1
-export COINBASE_API_KEY=your-sandbox-key
-export COINBASE_API_SECRET=your-sandbox-secret
-export COINBASE_API_PASSPHRASE=your-sandbox-passphrase
-
-# Run smoke test (spot)
-uv run coinbase-trader --profile dev --symbols BTC-USD --dry-run --dev-fast
+# Advanced Trade has no authenticated sandbox; use the mock broker instead
+MOCK_BROKER=1 uv run gpt-trader run --profile dev --dev-fast
 ```
 
 ### WebSocket Streaming
@@ -124,8 +115,8 @@ for message in ws.stream_messages():
 
 ### Validation Script
 ```bash
-# Run shared validation harness for brokerage safety checks
-python scripts/validation/verify_core.py --check all
+# Run preflight checks (JWT credentials required for remote checks)
+uv run python scripts/production_preflight.py --profile dev --warn-only
 ```
 
 ### Unit Tests
@@ -133,8 +124,8 @@ python scripts/validation/verify_core.py --check all
 # Run Coinbase-specific tests
 pytest tests/unit/gpt_trader/features/brokerages/coinbase/ -v
 
-# Run critical fixes tests
-pytest tests/unit/gpt_trader/features/brokerages/coinbase/test_critical_fixes.py -v
+# Run targeted auth tests
+pytest tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_auth.py -v
 ```
 
 ## Known Limitations
@@ -144,14 +135,13 @@ pytest tests/unit/gpt_trader/features/brokerages/coinbase/test_critical_fixes.py
    - If you are not eligible for INTX, keep `COINBASE_ENABLE_DERIVATIVES=0` and use spot symbols like `BTC-USD`.
 
 2. **Sandbox Limitations**
-   - Advanced Trade API does not have a public sandbox
-   - Sandbox only supports Legacy Exchange API endpoints
-   - Some features (portfolios, converts) not available in sandbox
+   - Advanced Trade API does not have an authenticated sandbox
+   - Exchange mode is limited to public endpoints only
+   - Use the mock broker for integration testing
 
 3. **Authentication Notes**
-   - Exchange mode requires passphrase for HMAC auth
-   - CDP JWT not compatible with Exchange API
-   - Advanced Trade supports both HMAC (no passphrase) and CDP JWT
+   - JWT (CDP) credentials are required for authenticated endpoints
+   - HMAC is not implemented in GPT-Trader
 
 4. **WebSocket Requirements**
    - Install the live trading extras to enable websocket-client support:
@@ -163,16 +153,15 @@ pytest tests/unit/gpt_trader/features/brokerages/coinbase/test_critical_fixes.py
 ### Common Issues
 
 **404 Errors in Sandbox**
-- Ensure `COINBASE_API_MODE=exchange` when using sandbox
-- Check that passphrase is set for HMAC auth
+- `COINBASE_SANDBOX=1` only enables public Exchange endpoints
+- Use the mock broker for authenticated flows
 
 **WebSocket Connection Failures**
 - Ensure the live trade extras are installed (`pip install gpt-trader[live-trade]`)
 - Check WebSocket URL matches API mode
 
 **Authentication Errors**
-- Verify API keys are correct
-- Ensure passphrase is provided for exchange mode
+- Verify CDP key name + private key are correct
 - Check CDP private key format (PEM with EC)
 
 ## Development
@@ -200,7 +189,7 @@ ws = CoinbaseWebSocket("wss://test", transport=transport)
 - WebSocket transport initialization fixed
 - Duplicate code removed
 - Basic endpoint routing for common methods
-- Sandbox mode detection and configuration
+- Sandbox mode detection for public endpoints
 - Environment template updated
 
 ### 🚧 In Progress:

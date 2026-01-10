@@ -73,7 +73,7 @@ The backtesting framework uses concrete broker implementations that share a comm
 **Backtesting:**
 - `SimulatedBroker`: In-memory simulation with order fill model
 
-Both implementations provide the same core methods used by the orchestration layer:
+Both implementations provide the same core methods used by the live trading engine:
 - `list_balances()` - Get account balances
 - `list_positions()` - Get current positions
 - `place_order(...)` - Place a new order

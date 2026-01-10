@@ -67,6 +67,8 @@ class TestTradingEngineOrderFlow:
         trace_data = trace_events[-1]["data"]
         assert trace_data.get("symbol") == "BTC-USD"
         assert trace_data.get("side") == "BUY"
+        assert trace_data.get("client_order_id")
+        assert trace_data.get("order_id") == trade_data.get("order_id")
 
     @pytest.mark.asyncio
     async def test_multiple_orders_record_multiple_events(self, trading_bot) -> None:

@@ -20,6 +20,8 @@ class OrderDecisionTrace:
     reduce_only: bool
     reason: str
     reduce_only_final: bool | None = None
+    client_order_id: str | None = None
+    order_id: str | None = None
     bot_id: str | None = None
     outcomes: dict[str, dict[str, Any]] = field(default_factory=dict)
     timestamp: float = field(default_factory=time.time)
@@ -47,6 +49,8 @@ class OrderDecisionTrace:
             "reduce_only": self.reduce_only,
             "reduce_only_final": self.reduce_only_final,
             "reason": self.reason,
+            "client_order_id": self.client_order_id,
+            "order_id": self.order_id,
             "bot_id": self.bot_id,
             "outcomes": self.outcomes,
             "timestamp": self.timestamp,

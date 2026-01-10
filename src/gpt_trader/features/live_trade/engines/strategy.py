@@ -1998,6 +1998,8 @@ class TradingEngine(BaseEngine):
             return result
 
         # Place order via OrderSubmitter for proper ID tracking and telemetry
+        submit_id = self._order_submitter.generate_client_order_id(None)
+        trace.client_order_id = submit_id
         order_id = await asyncio.to_thread(
             self._order_submitter.submit_order,
             symbol=symbol,
@@ -2010,11 +2012,12 @@ class TradingEngine(BaseEngine):
             tif=self.context.config.time_in_force,
             reduce_only=reduce_only_flag,
             leverage=None,
-            client_order_id=None,  # Let OrderSubmitter generate stable ID
+            client_order_id=submit_id,
         )
 
         # Notify on successful order placement
         if order_id is not None:
+            trace.order_id = order_id
             await self._notify(
                 title="Order Executed",
                 message=f"{side.value} {quantity} {symbol} at ~{price}",

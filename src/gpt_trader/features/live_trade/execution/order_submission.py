@@ -166,6 +166,10 @@ class OrderSubmitter:
             cast(BrokerProtocol, broker), integration_mode=integration_mode
         )
 
+    def generate_client_order_id(self, client_order_id: str | None = None) -> str:
+        """Generate a stable client order ID using submission rules."""
+        return self._generate_submit_id(client_order_id)
+
     def record_preview(
         self,
         symbol: str,

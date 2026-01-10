@@ -1,53 +1,39 @@
-"""Helper functions for orchestration components to use structured logging with correlation context."""
+"""Deprecated orchestration logging helpers.
+
+Use runtime helpers instead.
+"""
 
 from __future__ import annotations
 
+import importlib
 import logging
+import warnings
 from collections.abc import Callable
 from decimal import Decimal
-from functools import wraps
-from typing import Any, TypeVar, cast
+from typing import Any, TypeVar
 
-from gpt_trader.logging.correlation import (
-    add_domain_field,
-    correlation_context,
-    get_log_context,
-    order_context,
-    symbol_context,
-)
-from gpt_trader.logging.json_formatter import StructuredJSONFormatter
-from gpt_trader.utilities.logging_patterns import get_logger
+
+def _runtime_helpers():
+    return importlib.import_module("gpt_trader.logging.runtime_helpers")
+
 
 F = TypeVar("F", bound=Callable[..., Any])
+
+
+def _warn_deprecated() -> None:
+    warnings.warn(
+        "orchestration_helpers is deprecated; use runtime_helpers instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
 
 def get_orchestration_logger(
     name: str, component: str | None = None, enable_json: bool = True
 ) -> logging.Logger:
-    """Get a logger configured for orchestration with correlation support.
-
-    Args:
-        name: Logger name
-        component: Component name for context
-        enable_json: Whether to enable JSON logging with correlation context
-
-    Returns:
-        Logger instance configured for orchestration
-    """
-    if enable_json:
-        # Use the JSON logger for structured logging
-        logger = logging.getLogger(f"gpt_trader.json.{name}")
-
-        # Ensure the logger has our structured formatter
-        if not any(isinstance(h.formatter, StructuredJSONFormatter) for h in logger.handlers):
-            # This logger should inherit handlers from the parent gpt_trader.json logger
-            # which is configured in setup.py with our StructuredJSONFormatter
-            pass
-
-        return logger
-    else:
-        # Fall back to the standard logger
-        return get_logger(name, component=component).logger
+    """Deprecated wrapper for get_runtime_logger."""
+    _warn_deprecated()
+    return _runtime_helpers().get_runtime_logger(name, component=component, enable_json=enable_json)
 
 
 def log_trading_operation(
@@ -56,25 +42,13 @@ def log_trading_operation(
     level: int = logging.INFO,
     **kwargs: Any,
 ) -> None:
-    """Log a trading operation with correlation context.
-
-    Args:
-        operation: Description of the operation
-        symbol: Trading symbol
-        level: Log level
-        **kwargs: Additional context fields
-    """
-    logger = get_orchestration_logger("trading_operations")
-
-    # Add symbol to domain context
-    add_domain_field("symbol", symbol)
-
-    # Get the current log context (includes correlation ID)
-    context = get_log_context()
-    context.update(kwargs)
-    context["operation"] = operation
-
-    logger.log(level, operation, extra=context)
+    _warn_deprecated()
+    _runtime_helpers().log_trading_operation(
+        operation=operation,
+        symbol=symbol,
+        level=level,
+        **kwargs,
+    )
 
 
 def log_order_event(
@@ -87,42 +61,17 @@ def log_order_event(
     level: int = logging.INFO,
     **kwargs: Any,
 ) -> None:
-    """Log an order event with correlation context.
-
-    Args:
-        event_type: Type of order event
-        order_id: Order ID
-        symbol: Trading symbol
-        side: Order side
-        quantity: Order quantity
-        price: Order price
-        level: Log level
-        **kwargs: Additional context fields
-    """
-    logger = get_orchestration_logger("order_events")
-
-    # Add order context
-    context: dict[str, Any] = {
-        "event_type": event_type,
-        "order_id": order_id,
-    }
-
-    if symbol:
-        context["symbol"] = symbol
-    if side:
-        context["side"] = side
-    if quantity is not None:
-        context["quantity"] = float(quantity)
-    if price is not None:
-        context["price"] = float(price)
-
-    context.update(kwargs)
-
-    # Get the current log context (includes correlation ID)
-    log_context = get_log_context()
-    log_context.update(context)
-
-    logger.log(level, f"Order event: {event_type}", extra=log_context)
+    _warn_deprecated()
+    _runtime_helpers().log_order_event(
+        event_type=event_type,
+        order_id=order_id,
+        symbol=symbol,
+        side=side,
+        quantity=quantity,
+        price=price,
+        level=level,
+        **kwargs,
+    )
 
 
 def log_strategy_decision(
@@ -133,36 +82,15 @@ def log_strategy_decision(
     level: int = logging.INFO,
     **kwargs: Any,
 ) -> None:
-    """Log a strategy decision with correlation context.
-
-    Args:
-        symbol: Trading symbol
-        decision: Strategy decision
-        reason: Decision reason
-        confidence: Decision confidence (0-1)
-        level: Log level
-        **kwargs: Additional context fields
-    """
-    logger = get_orchestration_logger("strategy_decisions")
-
-    # Add strategy context
-    context: dict[str, Any] = {
-        "symbol": symbol,
-        "decision": decision,
-    }
-
-    if reason:
-        context["reason"] = reason
-    if confidence is not None:
-        context["confidence"] = confidence
-
-    context.update(kwargs)
-
-    # Get the current log context (includes correlation ID)
-    log_context = get_log_context()
-    log_context.update(context)
-
-    logger.log(level, f"Strategy decision for {symbol}: {decision}", extra=log_context)
+    _warn_deprecated()
+    _runtime_helpers().log_strategy_decision(
+        symbol=symbol,
+        decision=decision,
+        reason=reason,
+        confidence=confidence,
+        level=level,
+        **kwargs,
+    )
 
 
 def log_execution_error(
@@ -173,37 +101,15 @@ def log_execution_error(
     level: int = logging.ERROR,
     **kwargs: Any,
 ) -> None:
-    """Log an execution error with correlation context.
-
-    Args:
-        error: Exception that occurred
-        operation: Operation that failed
-        symbol: Trading symbol
-        order_id: Order ID
-        level: Log level
-        **kwargs: Additional context fields
-    """
-    logger = get_orchestration_logger("execution_errors")
-
-    # Add error context
-    context = {
-        "operation": operation,
-        "error_type": type(error).__name__,
-        "error_message": str(error),
-    }
-
-    if symbol:
-        context["symbol"] = symbol
-    if order_id:
-        context["order_id"] = order_id
-
-    context.update(kwargs)
-
-    # Get the current log context (includes correlation ID)
-    log_context = get_log_context()
-    log_context.update(context)
-
-    logger.log(level, f"Execution error in {operation}: {error}", extra=log_context, exc_info=True)
+    _warn_deprecated()
+    _runtime_helpers().log_execution_error(
+        error=error,
+        operation=operation,
+        symbol=symbol,
+        order_id=order_id,
+        level=level,
+        **kwargs,
+    )
 
 
 def log_risk_event(
@@ -215,40 +121,16 @@ def log_risk_event(
     level: int = logging.WARNING,
     **kwargs: Any,
 ) -> None:
-    """Log a risk management event with correlation context.
-
-    Args:
-        event_type: Type of risk event
-        symbol: Trading symbol
-        trigger_value: Value that triggered the event
-        threshold: Threshold that was exceeded
-        action: Action taken
-        level: Log level
-        **kwargs: Additional context fields
-    """
-    logger = get_orchestration_logger("risk_events")
-
-    # Add risk context
-    context = {
-        "event_type": event_type,
-    }
-
-    if symbol:
-        context["symbol"] = symbol
-    if trigger_value is not None:
-        context["trigger_value"] = f"{trigger_value:.2f}"
-    if threshold is not None:
-        context["threshold"] = f"{threshold:.2f}"
-    if action:
-        context["action"] = action
-
-    context.update(kwargs)
-
-    # Get the current log context (includes correlation ID)
-    log_context = get_log_context()
-    log_context.update(context)
-
-    logger.log(level, f"Risk event: {event_type}", extra=log_context)
+    _warn_deprecated()
+    _runtime_helpers().log_risk_event(
+        event_type=event_type,
+        symbol=symbol,
+        trigger_value=trigger_value,
+        threshold=threshold,
+        action=action,
+        level=level,
+        **kwargs,
+    )
 
 
 def log_market_data_update(
@@ -259,100 +141,41 @@ def log_market_data_update(
     level: int = logging.DEBUG,
     **kwargs: Any,
 ) -> None:
-    """Log a market data update with correlation context.
-
-    Args:
-        symbol: Market symbol
-        price: Current price
-        volume: Current volume
-        timestamp: Update timestamp
-        level: Log level
-        **kwargs: Additional context fields
-    """
-    logger = get_orchestration_logger("market_data")
-
-    # Add market data context
-    context = {
-        "symbol": symbol,
-        "price": float(price),
-    }
-
-    if volume is not None:
-        context["volume"] = float(volume)
-    if timestamp is not None:
-        context["timestamp"] = timestamp
-
-    context.update(kwargs)
-
-    # Get the current log context (includes correlation ID)
-    log_context = get_log_context()
-    log_context.update(context)
-
-    logger.log(level, f"Market data update: {symbol}", extra=log_context)
-
-
-# Context manager decorators for common orchestration patterns
+    _warn_deprecated()
+    _runtime_helpers().log_market_data_update(
+        symbol=symbol,
+        price=price,
+        volume=volume,
+        timestamp=timestamp,
+        level=level,
+        **kwargs,
+    )
 
 
 def with_trading_context(operation: str) -> Callable[[F], F]:
-    """Decorator to add trading context to a function.
-
-    Args:
-        operation: Description of the operation
-
-    Returns:
-        Decorated function with correlation context
-    """
-
-    def decorator(func: F) -> F:
-        @wraps(func)
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
-            with correlation_context(operation=operation):
-                return func(*args, **kwargs)
-
-        return cast(F, wrapper)
-
-    return decorator
+    _warn_deprecated()
+    return _runtime_helpers().with_trading_context(operation)
 
 
 def with_symbol_context(symbol: str) -> Callable[[F], F]:
-    """Decorator to add symbol context to a function.
-
-    Args:
-        symbol: Trading symbol
-
-    Returns:
-        Decorated function with symbol context
-    """
-
-    def decorator(func: F) -> F:
-        @wraps(func)
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
-            with symbol_context(symbol):
-                return func(*args, **kwargs)
-
-        return cast(F, wrapper)
-
-    return decorator
+    _warn_deprecated()
+    return _runtime_helpers().with_symbol_context(symbol)
 
 
 def with_order_context(order_id: str, symbol: str | None = None) -> Callable[[F], F]:
-    """Decorator to add order context to a function.
+    _warn_deprecated()
+    return _runtime_helpers().with_order_context(order_id, symbol)
 
-    Args:
-        order_id: Order ID
-        symbol: Trading symbol
 
-    Returns:
-        Decorated function with order context
-    """
-
-    def decorator(func: F) -> F:
-        @wraps(func)
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
-            with order_context(order_id, symbol):
-                return func(*args, **kwargs)
-
-        return cast(F, wrapper)
-
-    return decorator
+__all__ = [
+    "get_orchestration_logger",
+    "log_trading_operation",
+    "log_order_event",
+    "log_strategy_decision",
+    "log_execution_error",
+    "log_risk_event",
+    "log_market_data_update",
+    "with_trading_context",
+    "with_symbol_context",
+    "with_order_context",
+]

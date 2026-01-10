@@ -1,4 +1,4 @@
-"""Tests for orchestration logging helpers."""
+"""Tests for runtime logging helpers."""
 
 from __future__ import annotations
 
@@ -6,8 +6,8 @@ import logging
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
-from gpt_trader.logging.orchestration_helpers import (
-    get_orchestration_logger,
+from gpt_trader.logging.runtime_helpers import (
+    get_runtime_logger,
     log_execution_error,
     log_market_data_update,
     log_order_event,
@@ -20,23 +20,23 @@ from gpt_trader.logging.orchestration_helpers import (
 )
 
 
-def test_get_orchestration_logger():
-    """Test getting an orchestration logger."""
-    logger = get_orchestration_logger("test_component")
+def test_get_runtime_logger():
+    """Test getting a runtime logger."""
+    logger = get_runtime_logger("test_component")
     assert logger.name == "gpt_trader.json.test_component"
 
     # Test with JSON disabled
-    logger = get_orchestration_logger("test_component", enable_json=False)
+    logger = get_runtime_logger("test_component", enable_json=False)
     assert logger.name == "test_component"
 
 
-@patch("gpt_trader.logging.orchestration_helpers.get_log_context")
+@patch("gpt_trader.logging.runtime_helpers.get_log_context")
 def test_log_trading_operation(mock_get_log_context):
     """Test logging a trading operation."""
     # Mock get_log_context to return correlation_id and the expected symbol
     mock_get_log_context.return_value = {"correlation_id": "test-123", "symbol": "BTC-USD"}
 
-    with patch("gpt_trader.logging.orchestration_helpers.get_orchestration_logger") as mock_logger:
+    with patch("gpt_trader.logging.runtime_helpers.get_runtime_logger") as mock_logger:
         mock_log = MagicMock()
         mock_logger.return_value = mock_log
 
@@ -59,12 +59,12 @@ def test_log_trading_operation(mock_get_log_context):
         assert kwargs["extra"]["correlation_id"] == "test-123"
 
 
-@patch("gpt_trader.logging.orchestration_helpers.get_log_context")
+@patch("gpt_trader.logging.runtime_helpers.get_log_context")
 def test_log_order_event(mock_get_log_context):
     """Test logging an order event."""
     mock_get_log_context.return_value = {"correlation_id": "order-456"}
 
-    with patch("gpt_trader.logging.orchestration_helpers.get_orchestration_logger") as mock_logger:
+    with patch("gpt_trader.logging.runtime_helpers.get_runtime_logger") as mock_logger:
         mock_log = MagicMock()
         mock_logger.return_value = mock_log
 
@@ -93,12 +93,12 @@ def test_log_order_event(mock_get_log_context):
         assert kwargs["extra"]["correlation_id"] == "order-456"
 
 
-@patch("gpt_trader.logging.orchestration_helpers.get_log_context")
+@patch("gpt_trader.logging.runtime_helpers.get_log_context")
 def test_log_strategy_decision(mock_get_log_context):
     """Test logging a strategy decision."""
     mock_get_log_context.return_value = {"correlation_id": "strategy-789"}
 
-    with patch("gpt_trader.logging.orchestration_helpers.get_orchestration_logger") as mock_logger:
+    with patch("gpt_trader.logging.runtime_helpers.get_runtime_logger") as mock_logger:
         mock_log = MagicMock()
         mock_logger.return_value = mock_log
 
@@ -123,12 +123,12 @@ def test_log_strategy_decision(mock_get_log_context):
         assert kwargs["extra"]["correlation_id"] == "strategy-789"
 
 
-@patch("gpt_trader.logging.orchestration_helpers.get_log_context")
+@patch("gpt_trader.logging.runtime_helpers.get_log_context")
 def test_log_execution_error(mock_get_log_context):
     """Test logging an execution error."""
     mock_get_log_context.return_value = {"correlation_id": "error-123"}
 
-    with patch("gpt_trader.logging.orchestration_helpers.get_orchestration_logger") as mock_logger:
+    with patch("gpt_trader.logging.runtime_helpers.get_runtime_logger") as mock_logger:
         mock_log = MagicMock()
         mock_logger.return_value = mock_log
 
@@ -157,12 +157,12 @@ def test_log_execution_error(mock_get_log_context):
         assert kwargs["extra"]["correlation_id"] == "error-123"
 
 
-@patch("gpt_trader.logging.orchestration_helpers.get_log_context")
+@patch("gpt_trader.logging.runtime_helpers.get_log_context")
 def test_log_risk_event(mock_get_log_context):
     """Test logging a risk event."""
     mock_get_log_context.return_value = {"correlation_id": "risk-456"}
 
-    with patch("gpt_trader.logging.orchestration_helpers.get_orchestration_logger") as mock_logger:
+    with patch("gpt_trader.logging.runtime_helpers.get_runtime_logger") as mock_logger:
         mock_log = MagicMock()
         mock_logger.return_value = mock_log
 
@@ -189,12 +189,12 @@ def test_log_risk_event(mock_get_log_context):
         assert kwargs["extra"]["correlation_id"] == "risk-456"
 
 
-@patch("gpt_trader.logging.orchestration_helpers.get_log_context")
+@patch("gpt_trader.logging.runtime_helpers.get_log_context")
 def test_log_market_data_update(mock_get_log_context):
     """Test logging a market data update."""
     mock_get_log_context.return_value = {"correlation_id": "market-789"}
 
-    with patch("gpt_trader.logging.orchestration_helpers.get_orchestration_logger") as mock_logger:
+    with patch("gpt_trader.logging.runtime_helpers.get_runtime_logger") as mock_logger:
         mock_log = MagicMock()
         mock_logger.return_value = mock_log
 

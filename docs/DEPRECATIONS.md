@@ -4,6 +4,12 @@ This document tracks deprecated modules, shims, and their planned removal dates.
 
 ## Active Deprecations
 
+### Logging Helpers (Remove after v4.1)
+
+| Deprecated | Replacement | Notes |
+|------------|-------------|-------|
+| `logging.orchestration_helpers.get_orchestration_logger` | `logging.runtime_helpers.get_runtime_logger` | Shim emits DeprecationWarning |
+
 ### Configuration (Remove after v4.0)
 
 No active configuration deprecations.

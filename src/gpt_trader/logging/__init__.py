@@ -19,8 +19,9 @@ from gpt_trader.logging.json_formatter import (
     StructuredJSONFormatter,
     StructuredJSONFormatterWithTimestamp,
 )
-from gpt_trader.logging.orchestration_helpers import (
-    get_orchestration_logger,
+from gpt_trader.logging.orchestration_helpers import get_orchestration_logger
+from gpt_trader.logging.runtime_helpers import (
+    get_runtime_logger,
     log_execution_error,
     log_market_data_update,
     log_order_event,
@@ -49,6 +50,7 @@ __all__ = [
     "symbol_context",
     "order_context",
     "get_orchestration_logger",
+    "get_runtime_logger",
     "log_trading_operation",
     "log_order_event",
     "log_strategy_decision",

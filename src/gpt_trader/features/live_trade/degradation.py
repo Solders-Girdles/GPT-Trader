@@ -4,8 +4,7 @@ Graceful degradation state management for live trading.
 Tracks pause states (global and per-symbol) to enable controlled
 degradation when guards trip or infrastructure fails.
 
-This is the canonical location for DegradationState. The class is re-exported
-from orchestration.execution.degradation for backward compatibility.
+This is the canonical location for DegradationState.
 """
 
 from __future__ import annotations

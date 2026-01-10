@@ -27,7 +27,7 @@ ALLOWLIST = {
     "tests/unit/app/test_container.py",  # exhaustive container unit scenarios
     "tests/integration/test_reduce_only_state_manager_integration.py",  # comprehensive reduce-only state manager integration coverage
     "tests/integration/gpt_trader/features/live_trade/test_circuit_breaker_integration.py",  # extensive circuit breaker regression suite
-    "tests/unit/gpt_trader/logging/test_orchestration_helpers.py",  # structured logging helper coverage
+    "tests/unit/gpt_trader/logging/test_runtime_helpers.py",  # runtime logging helper coverage
     "tests/unit/gpt_trader/test_broker_behavioral_contract.py",  # 358 lines: broker contract validation suite
     "tests/unit/gpt_trader/utilities/test_async_utils_advanced.py",  # legacy async helpers coverage  # naming: allow
     "tests/unit/gpt_trader/persistence/test_event_store.py",  # event store contract and normalization coverage

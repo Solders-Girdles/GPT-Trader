@@ -3,8 +3,7 @@ Risk configuration for live trading.
 
 Supports both spot and CFM futures risk parameters.
 
-This is the canonical location for RiskConfig. The class is re-exported
-from orchestration.configuration.risk.model for backward compatibility.
+This is the canonical location for RiskConfig.
 """
 
 import json

@@ -23,12 +23,12 @@ from gpt_trader.errors import (
     log_error,
 )
 
-# REMOVED: from gpt_trader.logging import get_log_context, get_orchestration_logger
+# REMOVED: from gpt_trader.logging import get_log_context, get_runtime_logger
 # These are now imported lazily inside functions to break circular import
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="error_handler")
-# json_logger = get_orchestration_logger("error_handler")  # Removed, created lazily
+# json_logger = get_runtime_logger("error_handler")  # Removed, created lazily
 
 P = ParamSpec("P")
 T = TypeVar("T")
@@ -36,10 +36,10 @@ T = TypeVar("T")
 
 # Lazy import helpers to break circular dependency
 def _get_json_logger() -> Any:
-    """Lazily get orchestration logger to avoid circular import."""
-    from gpt_trader.logging import get_orchestration_logger
+    """Lazily get runtime logger to avoid circular import."""
+    from gpt_trader.logging import get_runtime_logger
 
-    return get_orchestration_logger("error_handler")
+    return get_runtime_logger("error_handler")
 
 
 def _get_log_context() -> dict[str, Any]:

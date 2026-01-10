@@ -6,6 +6,10 @@
 - **BREAKING**: Coinbase REST now requires `PositionStateStore` injection; legacy `_positions` fallbacks have been removed.
 - Service/tests now read and write positions exclusively through the shared store.
 
+### Logging Helper Rename
+- Introduced `runtime_helpers.get_runtime_logger` and deprecated `orchestration_helpers.get_orchestration_logger`.
+- Runtime logging helpers now reflect the primary API surface; orchestration helpers remain as a shim for one release.
+
 ### LiveExecutionEngine Removal
 - **BREAKING**: Removed `LiveExecutionEngine` and its container factory; use `TradingEngine.submit_order()` and guard-stack helpers instead.
 - Migrated execution tests/integration flows to TradingEngine and updated docs to reflect the canonical path.

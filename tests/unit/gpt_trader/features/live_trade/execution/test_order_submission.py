@@ -260,7 +260,8 @@ class TestRecordRejection:
         mock_emit_metric.assert_called_once()
         call_args = mock_emit_metric.call_args[0]
         assert call_args[2]["event_type"] == "order_rejected"
-        assert call_args[2]["reason"] == "insufficient_margin"
+        assert call_args[2]["reason"] == "insufficient_funds"
+        assert call_args[2]["reason_detail"] == "insufficient_margin"
 
     @patch("gpt_trader.features.live_trade.execution.order_event_recorder.emit_metric")
     @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
@@ -1539,9 +1540,10 @@ class TestRecordRejectionConsistency:
         rejection_calls = [c for c in calls if c[0][2].get("event_type") == "order_rejected"]
         assert len(rejection_calls) >= 1
 
-        # Verify reason format includes broker status
+        # Verify reason normalized to broker_status with detail
         rejection_data = rejection_calls[0][0][2]
-        assert "broker_status" in rejection_data["reason"]
+        assert rejection_data["reason"] == "broker_status"
+        assert rejection_data["reason_detail"] == "REJECTED"
 
     @patch("gpt_trader.features.live_trade.execution.order_event_recorder.emit_metric")
     @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")

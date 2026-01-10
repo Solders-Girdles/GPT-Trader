@@ -233,7 +233,7 @@ class TestRecordRejection:
             side="BUY",
             quantity=Decimal("1.0"),
             price=Decimal("50000"),
-            reason="insufficient_funds",
+            reason="insufficient_margin",
         )
 
         mock_emit_metric.assert_called_once()
@@ -242,6 +242,7 @@ class TestRecordRejection:
         assert metric_data["event_type"] == "order_rejected"
         assert metric_data["symbol"] == "BTC-USD"
         assert metric_data["reason"] == "insufficient_funds"
+        assert metric_data["reason_detail"] == "insufficient_margin"
 
     @patch("gpt_trader.features.live_trade.execution.order_event_recorder.emit_metric")
     @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
@@ -260,7 +261,7 @@ class TestRecordRejection:
             side="BUY",
             quantity=Decimal("1.0"),
             price=Decimal("50000"),
-            reason="exchange_error",
+            reason="paused:mark_staleness",
         )
 
         mock_logger.log_order_status_change.assert_called_once_with(
@@ -268,7 +269,7 @@ class TestRecordRejection:
             client_order_id="",
             from_status=None,
             to_status="REJECTED",
-            reason="exchange_error",
+            reason="paused",
         )
 
     @patch("gpt_trader.features.live_trade.execution.order_event_recorder.emit_metric")
@@ -288,7 +289,7 @@ class TestRecordRejection:
             side="BUY",
             quantity=Decimal("1.0"),
             price=None,
-            reason="validation_failed",
+            reason="mark_staleness",
         )
 
         call_args = mock_emit_metric.call_args
@@ -658,7 +659,8 @@ class TestRecordBrokerRejection:
         mock_emit_metric.assert_called()
         call_args = mock_emit_metric.call_args
         metric_data = call_args[0][2]
-        assert metric_data["reason"] == "broker_status_REJECTED"
+        assert metric_data["reason"] == "broker_status"
+        assert metric_data["reason_detail"] == "REJECTED"
 
     @patch("gpt_trader.features.live_trade.execution.order_event_recorder.emit_metric")
     @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")

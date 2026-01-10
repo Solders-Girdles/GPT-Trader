@@ -1641,8 +1641,14 @@ class TradingEngine(BaseEngine):
                 trace.reduce_only_final = reduce_only_flag
         except ValidationError as exc:
             logger.warning(f"Pre-trade guard rejected order: {exc}")
+            blocked_stage = None
+            for stage, outcome in trace.outcomes.items():
+                if outcome.get("status") == "blocked":
+                    blocked_stage = stage
+                    break
+            reason_code = blocked_stage or "order_validation"
             self._order_submitter.record_rejection(
-                symbol, side.value, quantity, effective_price, str(exc)
+                symbol, side.value, quantity, effective_price, reason_code
             )
             await self._notify(
                 title="Order Blocked - Guard Rejection",
@@ -1664,7 +1670,7 @@ class TradingEngine(BaseEngine):
         except Exception as exc:
             logger.error(f"Guard check error: {exc}")
             self._order_submitter.record_rejection(
-                symbol, side.value, quantity, price, f"guard_error: {exc}"
+                symbol, side.value, quantity, price, "guard_error"
             )
             await self._notify(
                 title="Order Blocked - Guard Error",

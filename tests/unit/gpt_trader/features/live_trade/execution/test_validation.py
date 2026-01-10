@@ -395,6 +395,7 @@ class TestEnsureMarkIsFresh:
 
         # Should not raise
         validator.ensure_mark_is_fresh("BTC-PERP")
+        mock_risk_manager.check_mark_staleness.assert_called_once_with("BTC-PERP")
 
     def test_validation_error_propagates(
         self,
@@ -431,6 +432,7 @@ class TestEnforceSlippageGuard:
             order_quantity=Decimal("1.0"),
             effective_price=Decimal("50000"),
         )
+        assert not hasattr(mock_broker, "get_market_snapshot")
 
     def test_no_snapshot_passes(
         self,
@@ -447,6 +449,7 @@ class TestEnforceSlippageGuard:
             order_quantity=Decimal("1.0"),
             effective_price=Decimal("50000"),
         )
+        mock_broker.get_market_snapshot.assert_called_once_with("BTC-PERP")
 
     def test_slippage_within_guard_passes(
         self,
@@ -468,6 +471,7 @@ class TestEnforceSlippageGuard:
             order_quantity=Decimal("0.1"),
             effective_price=Decimal("50000"),
         )
+        mock_broker.get_market_snapshot.assert_called_once_with("BTC-PERP")
 
     def test_slippage_exceeds_guard_raises(
         self,
@@ -510,6 +514,7 @@ class TestEnforceSlippageGuard:
             order_quantity=Decimal("0.001"),
             effective_price=Decimal("50000"),
         )
+        mock_broker.get_market_snapshot.assert_called_once_with("BTC-PERP")
 
     def test_exception_in_snapshot_is_suppressed(
         self,
@@ -526,6 +531,7 @@ class TestEnforceSlippageGuard:
             order_quantity=Decimal("1.0"),
             effective_price=Decimal("50000"),
         )
+        mock_broker.get_market_snapshot.assert_called_once_with("BTC-PERP")
 
 
 # ============================================================
@@ -764,6 +770,8 @@ class TestMaybePreviewOrder:
             reduce_only=False,
             leverage=10,
         )
+        broker.preview_order.assert_called_once()
+        mock_failure_tracker.record_failure.assert_called_once_with("order_preview")
 
     def test_preview_with_non_tif_value(
         self,

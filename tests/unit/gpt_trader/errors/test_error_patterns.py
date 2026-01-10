@@ -114,8 +114,11 @@ class TestErrorContextExtended:
                 raise ValueError("match")
 
     def test_reraise_tuple_non_matching(self) -> None:
-        with ErrorContext(operation="test", reraise=(ValueError, TypeError)):
-            raise RuntimeError("no match")
+        try:
+            with ErrorContext(operation="test", reraise=(ValueError, TypeError)):
+                raise RuntimeError("no match")
+        except RuntimeError:
+            pytest.fail("RuntimeError should be suppressed for non-matching reraise tuple")
 
     def test_log_level_below_error(self, caplog: pytest.LogCaptureFixture) -> None:
         with caplog.at_level(logging.WARNING):

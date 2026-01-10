@@ -453,12 +453,15 @@ def test_guard_liquidation_buffers_risk_fetch_failure(
 # =============================================================================
 
 
-def test_guard_mark_staleness_no_cache(guard_manager, sample_guard_state, mock_broker):
+def test_guard_mark_staleness_no_cache(
+    guard_manager, sample_guard_state, mock_broker, mock_risk_manager
+):
     """Test mark staleness guard skips when no mark cache."""
     del mock_broker._mark_cache
 
     # Should not raise
     guard_manager.guard_mark_staleness(sample_guard_state)
+    mock_risk_manager.check_mark_staleness.assert_not_called()
 
 
 def test_guard_mark_staleness_with_cache(
@@ -797,9 +800,12 @@ def test_safe_run_runtime_guards_unrecoverable_error(guard_manager, mock_risk_ma
 
 def test_safe_run_runtime_guards_unexpected_error(guard_manager):
     """Test safe run handles unexpected exceptions."""
-    with patch.object(guard_manager, "run_runtime_guards", side_effect=ValueError("Unexpected")):
+    with patch.object(
+        guard_manager, "run_runtime_guards", side_effect=ValueError("Unexpected")
+    ) as mock_run:
         # Should not raise
         guard_manager.safe_run_runtime_guards()
+    mock_run.assert_called_once_with(force_full=False)
 
 
 def test_safe_run_runtime_guards_reduce_only_failure(guard_manager, mock_risk_manager):
@@ -838,6 +844,8 @@ def test_api_health_guard_skips_without_client(
 
     # Should not raise - skips gracefully
     gm.guard_api_health(sample_guard_state)
+    assert gm._guards[6]._client is None
+    mock_risk_manager.set_reduce_only_mode.assert_not_called()
 
 
 def test_api_health_guard_triggers_on_open_breaker(
@@ -1004,6 +1012,8 @@ def test_api_health_guard_passes_when_healthy(
 
     # Should not raise
     gm.guard_api_health(sample_guard_state)
+    mock_client.get_resilience_status.assert_called_once()
+    mock_risk_manager.set_reduce_only_mode.assert_not_called()
 
 
 # =============================================================================

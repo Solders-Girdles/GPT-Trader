@@ -56,8 +56,8 @@ def test_validate_required_env_raises_when_missing():
 
 def test_validate_required_env_passes_when_present():
     with patch.dict(os.environ, {"PRESENT_VAR": "value"}, clear=True):
-        # Should not raise
-        validate_required_env(["PRESENT_VAR"])
+        result = validate_required_env(["PRESENT_VAR"])
+    assert result is None
 
 
 def test_parse_list_env_with_invalid_cast():

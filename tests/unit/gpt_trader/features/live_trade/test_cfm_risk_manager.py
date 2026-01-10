@@ -342,7 +342,8 @@ class TestLiveRiskManagerCFMLeverageValidation:
         manager = LiveRiskManager(config=config, state_file=None)
 
         # Should not raise
-        manager.validate_cfm_leverage("BTC-20DEC30-CDE", requested_leverage=3)
+        result = manager.validate_cfm_leverage("BTC-20DEC30-CDE", requested_leverage=3)
+        assert result is None
 
     def test_validate_cfm_leverage_at_limit(self):
         """No error when leverage at limit."""
@@ -350,7 +351,8 @@ class TestLiveRiskManagerCFMLeverageValidation:
         manager = LiveRiskManager(config=config, state_file=None)
 
         # Should not raise
-        manager.validate_cfm_leverage("BTC-20DEC30-CDE", requested_leverage=5)
+        result = manager.validate_cfm_leverage("BTC-20DEC30-CDE", requested_leverage=5)
+        assert result is None
 
     def test_validate_cfm_leverage_exceeded(self):
         """Error when leverage exceeds limit."""

@@ -249,6 +249,7 @@ class TestTradingEngineRecordPriceTick:
 
         # Should not raise
         engine._record_price_tick("BTC-PERP", Decimal("50000.00"))
+        assert context_without_store.event_store is None
 
 
 class TestStrategyRehydrate:

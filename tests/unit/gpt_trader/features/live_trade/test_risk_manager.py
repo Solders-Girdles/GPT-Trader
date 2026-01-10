@@ -173,6 +173,7 @@ class TestLiveRiskManagerStubs:
         # Should not raise
         manager.update_position(None)
         manager.update_position({"symbol": "BTC-USD"})
+        assert manager.positions == {}
 
 
 # ============================================================
@@ -349,8 +350,7 @@ class TestPreTradeValidate:
         """Test validation passes when no config."""
         manager = LiveRiskManager()
 
-        # Should not raise
-        manager.pre_trade_validate(
+        result = manager.pre_trade_validate(
             symbol="BTC-USD",
             side="buy",
             quantity=Decimal("1"),
@@ -359,6 +359,7 @@ class TestPreTradeValidate:
             equity=Decimal("10000"),
             current_positions={},
         )
+        assert result is None
 
     def test_leverage_within_limit(self) -> None:
         """Test validation passes when leverage within limit."""
@@ -366,7 +367,7 @@ class TestPreTradeValidate:
         manager = LiveRiskManager(config=config)
 
         # Notional = 1 * 50000 = 50000, Leverage = 50000 / 10000 = 5x
-        manager.pre_trade_validate(
+        result = manager.pre_trade_validate(
             symbol="BTC-USD",
             side="buy",
             quantity=Decimal("1"),
@@ -375,6 +376,7 @@ class TestPreTradeValidate:
             equity=Decimal("10000"),
             current_positions={},
         )
+        assert result is None
 
     def test_leverage_exceeds_limit_raises(self) -> None:
         """Test validation raises when leverage exceeds limit."""
@@ -399,7 +401,7 @@ class TestPreTradeValidate:
         manager = LiveRiskManager(config=config)
 
         # Should not raise even with high notional
-        manager.pre_trade_validate(
+        result = manager.pre_trade_validate(
             symbol="BTC-USD",
             side="buy",
             quantity=Decimal("100"),
@@ -408,6 +410,7 @@ class TestPreTradeValidate:
             equity=Decimal("0"),
             current_positions={},
         )
+        assert result is None
 
     def test_negative_equity_skips_validation(self) -> None:
         """Test validation skipped when equity is negative."""
@@ -415,7 +418,7 @@ class TestPreTradeValidate:
         manager = LiveRiskManager(config=config)
 
         # Negative equity means the condition equity > 0 fails
-        manager.pre_trade_validate(
+        result = manager.pre_trade_validate(
             symbol="BTC-USD",
             side="buy",
             quantity=Decimal("100"),
@@ -424,6 +427,7 @@ class TestPreTradeValidate:
             equity=Decimal("-1000"),
             current_positions={},
         )
+        assert result is None
 
 
 # ============================================================

@@ -205,6 +205,8 @@ class TestRecordPreview:
             price=Decimal("50000"),
             preview={"data": "value"},
         )
+        mock_emit_metric.assert_called_once()
+        mock_logger.log_event.assert_called_once()
 
 
 # ============================================================
@@ -317,6 +319,8 @@ class TestRecordRejection:
             price=Decimal("50000"),
             reason="test_reason",
         )
+        mock_emit_metric.assert_called_once()
+        mock_logger.log_order_status_change.assert_called_once()
 
 
 # ============================================================
@@ -397,6 +401,7 @@ class TestRecordSubmissionAttempt:
             quantity=Decimal("1.0"),
             price=Decimal("50000"),
         )
+        mock_logger.log_order_submission.assert_called_once()
 
 
 # ============================================================
@@ -407,8 +412,10 @@ class TestRecordSubmissionAttempt:
 class TestRecordSuccess:
     """Tests for record_success method."""
 
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.logger")
     def test_record_success_logs_order_info(
         self,
+        mock_logger: MagicMock,
         recorder: OrderEventRecorder,
         mock_order: MagicMock,
     ) -> None:
@@ -423,9 +430,15 @@ class TestRecordSuccess:
             display_price=Decimal("50000"),
             reduce_only=False,
         )
+        mock_logger.info.assert_called_once()
+        call_kwargs = mock_logger.info.call_args.kwargs
+        assert call_kwargs["symbol"] == "BTC-USD"
+        assert call_kwargs["reduce_only"] is False
 
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.logger")
     def test_record_success_handles_reduce_only(
         self,
+        mock_logger: MagicMock,
         recorder: OrderEventRecorder,
         mock_order: MagicMock,
     ) -> None:
@@ -438,9 +451,14 @@ class TestRecordSuccess:
             display_price=Decimal("51000"),
             reduce_only=True,
         )
+        mock_logger.info.assert_called_once()
+        call_kwargs = mock_logger.info.call_args.kwargs
+        assert call_kwargs["reduce_only"] is True
 
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.logger")
     def test_record_success_handles_market_price(
         self,
+        mock_logger: MagicMock,
         recorder: OrderEventRecorder,
         mock_order: MagicMock,
     ) -> None:
@@ -453,6 +471,9 @@ class TestRecordSuccess:
             display_price="market",
             reduce_only=False,
         )
+        mock_logger.info.assert_called_once()
+        call_kwargs = mock_logger.info.call_args.kwargs
+        assert call_kwargs["price"] == "market"
 
 
 # ============================================================
@@ -545,6 +566,7 @@ class TestRecordTradeEvent:
             submit_id="client-123",
         )
 
+        mock_logger.log_order_status_change.assert_called_once()
         mock_event_store.append_trade.assert_called_once()
 
     @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
@@ -570,6 +592,8 @@ class TestRecordTradeEvent:
             effective_price=Decimal("50000"),
             submit_id="client-123",
         )
+        mock_logger.log_order_status_change.assert_called_once()
+        mock_event_store.append_trade.assert_called_once()
 
 
 # ============================================================
@@ -621,6 +645,7 @@ class TestRecordFailure:
             side=OrderSide.BUY,
             quantity=Decimal("1.0"),
         )
+        mock_event_store.append_error.assert_called_once()
 
 
 # ============================================================
@@ -748,6 +773,8 @@ class TestRecordBrokerRejection:
             price=Decimal("50000"),
             effective_price=Decimal("50000"),
         )
+        mock_emit_metric.assert_called_once()
+        mock_event_store.append_error.assert_called_once()
 
 
 # ============================================================

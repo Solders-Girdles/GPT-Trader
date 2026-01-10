@@ -227,6 +227,8 @@ class TestRecordPreview:
             price=Decimal("50000"),
             preview={"estimated_fee": "0.1"},
         )
+        mock_emit_metric.assert_called_once()
+        mock_logger.log_event.assert_called_once()
 
 
 # ============================================================

@@ -469,14 +469,13 @@ class TestExecuteWithRetry:
         assert result == "success"
         assert func.call_count == 2
 
-    def test_client_order_id_logged_consistently(self) -> None:
+    @patch("gpt_trader.features.live_trade.execution.broker_executor.logger")
+    def test_client_order_id_logged_consistently(self, mock_logger: MagicMock) -> None:
         """Test that the same client_order_id is used for all attempts."""
-        # This test ensures the client_order_id parameter is available
-        # for logging across all attempts (verified by not raising)
         func = MagicMock(side_effect=[ConnectionError("fail"), "success"])
         policy = RetryPolicy(max_attempts=3, jitter=0)
 
-        execute_with_retry(
+        result = execute_with_retry(
             func,
             policy,
             client_order_id="stable-id-123",
@@ -484,7 +483,16 @@ class TestExecuteWithRetry:
             sleep_fn=lambda _: None,
         )
 
-        # If we get here without exception, the ID was handled correctly
+        assert result == "success"
+        assert func.call_count == 2
+
+        warning_kwargs = mock_logger.warning.call_args.kwargs
+        assert warning_kwargs["client_order_id"] == "stable-id-123"
+
+        for call in mock_logger.info.call_args_list:
+            call_kwargs = call.kwargs
+            if "client_order_id" in call_kwargs:
+                assert call_kwargs["client_order_id"] == "stable-id-123"
 
 
 # ============================================================

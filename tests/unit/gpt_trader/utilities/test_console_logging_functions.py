@@ -231,15 +231,17 @@ class TestIntegration:
             ["SOL-USD", "123.45", "100.0", "12,345.00", "+567.89", "+4.81%"],
         ]
 
-        # Should not raise any exceptions
-        console_table(headers, rows)
+        mock_logger = Mock()
+        with patch("gpt_trader.utilities.console_logging.ConsoleLogger", return_value=mock_logger):
+            console_table(headers, rows)
+            console_table(headers, [])
+            single_row = [rows[0]]
+            console_table(headers, single_row)
 
-        # Test with empty rows
-        console_table(headers, [])
-
-        # Test with single row
-        single_row = [rows[0]]
-        console_table(headers, single_row)
+        assert mock_logger.print_table.call_count == 3
+        assert mock_logger.print_table.call_args_list[0].args == (headers, rows)
+        assert mock_logger.print_table.call_args_list[1].args == (headers, [])
+        assert mock_logger.print_table.call_args_list[2].args == (headers, single_row)
 
     def test_error_handling_in_global_functions(self):
         """Test error handling in global console functions."""

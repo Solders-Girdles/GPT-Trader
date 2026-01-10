@@ -233,6 +233,7 @@ class TestLogCollateralUpdate:
 
         # Should not raise
         collector.log_collateral_update(collateral, Decimal("100"), Decimal("100"), collateral)
+        collector._production_logger.log_balance_update.assert_called_once()
 
 
 # ============================================================

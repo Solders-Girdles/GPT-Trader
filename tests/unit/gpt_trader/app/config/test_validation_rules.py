@@ -109,13 +109,13 @@ class TestEnsureCondition:
     """Tests for ensure_condition function."""
 
     def test_does_not_raise_when_condition_is_false(self) -> None:
-        # Should not raise
-        ensure_condition(
+        result = ensure_condition(
             False,
             error_code="test_error",
             error_template="This should not be raised",
             context={"value": "test"},
         )
+        assert result is None
 
     def test_raises_when_condition_is_true(self) -> None:
         with pytest.raises(PydanticCustomError):

@@ -5,6 +5,7 @@ This is the consolidated reference for AI agents working with the GPT-Trader rep
 ## Quick Navigation
 
 - Codebase map: `docs/agents/CODEBASE_MAP.md`
+- Agent docs index: `docs/agents/README.md`
 - Migration status (legacy → modern wiring): `docs/MIGRATION_STATUS.md`
 
 ## Current State
@@ -56,6 +57,13 @@ uv run pytest -q              # Run active suite
 
 # Account verification
 uv run gpt-trader account snapshot
+```
+
+### Agent Tooling
+```bash
+make agent-impact
+make agent-map
+make agent-tests
 ```
 
 ### Trading Operations

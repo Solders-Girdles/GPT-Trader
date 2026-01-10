@@ -21,6 +21,8 @@ last-updated: 2025-11-24
 | [Reliability Guide](RELIABILITY.md) | Guard stack, degradation responses, chaos testing |
 | [Coinbase Reference](reference/coinbase_complete.md) | Complete API integration docs |
 | [AI Agent Guide](guides/agents.md) | For AI agents working with this codebase |
+| [Agent Docs Index](agents/README.md) | AI-focused maps and inventories |
+| [Agent Tools](guides/agent-tools.md) | Tooling and helper commands |
 
 ## Core Documentation
 

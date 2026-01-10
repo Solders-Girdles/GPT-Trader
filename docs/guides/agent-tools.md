@@ -16,6 +16,25 @@ This guide documents all agent tools available in GPT-Trader for AI-assisted dev
 
 ---
 
+## Makefile Shortcuts
+
+Use these for quick local runs:
+
+```bash
+make agent-check
+make agent-impact
+make agent-map
+make agent-tests
+make agent-risk
+make agent-naming
+make agent-regenerate
+make agent-docs-links
+```
+
+See `scripts/agents/README.md` for the full list of helpers.
+
+---
+
 ## Detailed Tool Documentation
 
 ### agent-check (Quality Gate)

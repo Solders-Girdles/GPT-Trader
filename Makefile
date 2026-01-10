@@ -1,4 +1,5 @@
-.PHONY: dev-up dev-down lint typecheck test smoke preflight dash cov clean clean-dry-run legacy-bundle
+.PHONY: dev-up dev-down lint typecheck test smoke preflight dash cov clean clean-dry-run legacy-bundle \
+	agent-check agent-impact agent-map agent-tests agent-risk agent-naming agent-regenerate agent-docs-links
 
 COMPOSE_DIR=deploy/gpt_trader/docker
 COMPOSE_FILE=$(COMPOSE_DIR)/docker-compose.yaml
@@ -48,3 +49,27 @@ clean-dry-run:
 
 legacy-bundle:
 	@echo "Legacy bundling helper retired; see docs/archive/legacy_recovery.md for manual recovery steps."
+
+agent-check:
+	uv run agent-check --format text
+
+agent-impact:
+	uv run agent-impact --from-git --format text
+
+agent-map:
+	uv run agent-map --format text
+
+agent-tests:
+	uv run agent-tests --stdout
+
+agent-risk:
+	uv run agent-risk --with-docs
+
+agent-naming:
+	uv run agent-naming
+
+agent-regenerate:
+	uv run agent-regenerate
+
+agent-docs-links:
+	uv run python scripts/maintenance/docs_link_audit.py

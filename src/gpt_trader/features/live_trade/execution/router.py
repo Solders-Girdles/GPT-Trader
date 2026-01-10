@@ -12,6 +12,10 @@ from decimal import Decimal
 from typing import Any, Protocol
 
 from gpt_trader.core import Order, OrderSide
+from gpt_trader.features.live_trade.execution.submission_result import (
+    OrderSubmissionResult,
+    OrderSubmissionStatus,
+)
 from gpt_trader.features.live_trade.strategies.hybrid.types import Action, HybridDecision
 from gpt_trader.utilities.logging_patterns import get_logger
 
@@ -38,7 +42,7 @@ class SubmitterCallable(Protocol):
         reduce_only: bool = False,
         reason: str = "external_submission",
         confidence: float = 1.0,
-    ) -> Awaitable[None]: ...
+    ) -> Awaitable[OrderSubmissionResult]: ...
 
 
 @dataclass
@@ -113,7 +117,7 @@ class OrderRouter:
         reduce_only = decision.action in (Action.CLOSE, Action.CLOSE_LONG, Action.CLOSE_SHORT)
 
         try:
-            await self._submitter(
+            submission = await self._submitter(
                 decision.symbol,
                 side,
                 price,
@@ -124,19 +128,52 @@ class OrderRouter:
                 confidence=float(decision.confidence) if decision.confidence else 1.0,
             )
 
-            logger.info(
-                "Executed via canonical path",
+            if submission.status is OrderSubmissionStatus.SUCCESS:
+                logger.info(
+                    "Executed via canonical path",
+                    symbol=decision.symbol,
+                    side=side.value,
+                    quantity=str(decision.quantity),
+                    mode=decision.mode.value,
+                    operation="order_route",
+                    stage="canonical_success",
+                )
+                return OrderResult(
+                    success=True,
+                    decision=decision,
+                )
+
+            if submission.status is OrderSubmissionStatus.BLOCKED:
+                logger.warning(
+                    "Order blocked via canonical path",
+                    symbol=decision.symbol,
+                    side=side.value,
+                    quantity=str(decision.quantity),
+                    mode=decision.mode.value,
+                    reason=submission.reason,
+                    operation="order_route",
+                    stage="canonical_blocked",
+                )
+                return OrderResult(
+                    success=False,
+                    decision=decision,
+                    error=submission.reason or "Order blocked",
+                    error_code="ORDER_BLOCKED",
+                )
+
+            logger.error(
+                "Order failed via canonical path",
                 symbol=decision.symbol,
-                side=side.value,
-                quantity=str(decision.quantity),
+                error_message=submission.error,
                 mode=decision.mode.value,
                 operation="order_route",
-                stage="canonical_success",
+                stage="canonical_failure",
             )
-
             return OrderResult(
-                success=True,
+                success=False,
                 decision=decision,
+                error=submission.error or "Order submission failed",
+                error_code="EXECUTION_ERROR",
             )
 
         except Exception as e:

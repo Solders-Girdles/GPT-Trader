@@ -43,13 +43,14 @@ class TestTradingEngineOrderFlow:
         """Test that successful order placement creates a trade event."""
         engine = trading_bot.engine
 
-        await engine.submit_order(
+        result = await engine.submit_order(
             symbol="BTC-USD",
             side=OrderSide.BUY,
             price=Decimal("50000"),
             equity=Decimal("100000"),
             quantity_override=Decimal("0.01"),
         )
+        assert result.success is True
 
         events = engine.context.event_store.events
         trade_events = [e for e in events if e["type"] == "trade"]
@@ -66,21 +67,23 @@ class TestTradingEngineOrderFlow:
         """Test that multiple successful orders each create trade events."""
         engine = trading_bot.engine
 
-        await engine.submit_order(
+        first = await engine.submit_order(
             symbol="BTC-USD",
             side=OrderSide.BUY,
             price=Decimal("50000"),
             equity=Decimal("100000"),
             quantity_override=Decimal("0.01"),
         )
+        assert first.success is True
 
-        await engine.submit_order(
+        second = await engine.submit_order(
             symbol="BTC-USD",
             side=OrderSide.SELL,
             price=Decimal("50000"),
             equity=Decimal("100000"),
             quantity_override=Decimal("0.01"),
         )
+        assert second.success is True
 
         events = engine.context.event_store.events
         trade_events = [e for e in events if e["type"] == "trade"]
@@ -111,15 +114,13 @@ class TestTradingEngineGuardStack:
 
         buy_decision = Decision(action=Action.BUY, reason="Test signal", confidence=0.8)
 
-        try:
-            await engine._validate_and_place_order(
-                symbol="BTC-USD",
-                decision=buy_decision,
-                price=Decimal("50000"),
-                equity=Decimal("100000"),
-            )
-        except Exception:
-            pass
+        result = await engine._validate_and_place_order(
+            symbol="BTC-USD",
+            decision=buy_decision,
+            price=Decimal("50000"),
+            equity=Decimal("100000"),
+        )
+        assert result.blocked is True
 
         events = engine.context.event_store.events
         new_events = events[initial_events:]
@@ -141,19 +142,15 @@ class TestTradingEngineGuardStack:
 
         initial_events = len(engine.context.event_store.events)
 
-        validation_failed = False
-        try:
-            await engine._validate_and_place_order(
-                symbol="BTC-USD",
-                decision=buy_decision,
-                price=Decimal("50000"),
-                equity=Decimal("100000"),
-            )
-        except Exception as e:
-            validation_failed = True
-            assert "stale" in str(e).lower() or "Mark" in str(
-                e
-            ), f"Expected staleness error, got: {e}"
+        result = await engine._validate_and_place_order(
+            symbol="BTC-USD",
+            decision=buy_decision,
+            price=Decimal("50000"),
+            equity=Decimal("100000"),
+        )
+        assert result.blocked is True
+        assert result.reason is not None
+        assert "stale" in result.reason.lower() or "mark" in result.reason.lower()
 
         events = engine.context.event_store.events
         new_events = events[initial_events:]
@@ -167,9 +164,7 @@ class TestTradingEngineGuardStack:
             )
         ]
 
-        assert (
-            validation_failed or len(rejection_events) > 0
-        ), "Expected validation failure or rejection event"
+        assert len(rejection_events) > 0, "Expected rejection event"
 
         risk_manager.last_mark_update["BTC-USD"] = time.time()
 
@@ -192,13 +187,14 @@ class TestOrderFlowMetrics:
         initial_summary = cast(dict[str, Any], collector.get_metrics_summary())
         initial_counters = cast(dict[str, int], initial_summary.get("counters", {}))
 
-        await trading_bot.engine.submit_order(
+        result = await trading_bot.engine.submit_order(
             symbol="BTC-USD",
             side=OrderSide.BUY,
             price=Decimal("50000"),
             equity=Decimal("100000"),
             quantity_override=Decimal("0.01"),
         )
+        assert result.success is True
 
         final_summary = cast(dict[str, Any], collector.get_metrics_summary())
         final_counters = cast(dict[str, int], final_summary.get("counters", {}))

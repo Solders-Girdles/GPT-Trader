@@ -11,6 +11,7 @@ from .order_event_recorder import OrderEventRecorder
 from .order_submission import OrderSubmitter
 from .router import OrderResult, OrderRouter
 from .state_collection import StateCollector
+from .submission_result import OrderSubmissionResult, OrderSubmissionStatus
 from .validation import (
     OrderValidator,
     ValidationFailureTracker,
@@ -27,6 +28,8 @@ __all__ = [
     "BrokerExecutor",
     "OrderEventRecorder",
     "OrderSubmitter",
+    "OrderSubmissionResult",
+    "OrderSubmissionStatus",
     "StateCollector",
     # Validation
     "OrderValidator",

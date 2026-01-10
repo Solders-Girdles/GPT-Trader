@@ -55,6 +55,10 @@ from gpt_trader.features.live_trade.engines.telemetry_streaming import (
 from gpt_trader.features.live_trade.execution.guard_manager import GuardManager
 from gpt_trader.features.live_trade.execution.order_submission import OrderSubmitter
 from gpt_trader.features.live_trade.execution.state_collection import StateCollector
+from gpt_trader.features.live_trade.execution.submission_result import (
+    OrderSubmissionResult,
+    OrderSubmissionStatus,
+)
 from gpt_trader.features.live_trade.execution.validation import (
     OrderValidator,
     get_failure_tracker,
@@ -962,31 +966,30 @@ class TradingEngine(BaseEngine):
                     with profile_span(
                         "order_placement", {"symbol": symbol, "action": decision.action.value}
                     ):
-                        await self._validate_and_place_order(
+                        result = await self._validate_and_place_order(
                             symbol=symbol,
                             decision=decision,
                             price=price,
                             equity=equity,
                         )
-                except ValidationError as e:
-                    logger.warning(
-                        "Risk validation failed",
-                        symbol=symbol,
-                        action=decision.action.value,
-                        error_message=str(e),
-                        operation="order_placement",
-                        stage="validation_failed",
-                    )
-                    await self._notify(
-                        title="Risk Validation Failed",
-                        message=f"Order blocked by risk manager: {e}",
-                        severity=AlertSeverity.WARNING,
-                        context={
-                            "symbol": symbol,
-                            "action": decision.action.value,
-                            "reason": str(e),
-                        },
-                    )
+                    if result.blocked:
+                        logger.warning(
+                            "Order blocked",
+                            symbol=symbol,
+                            action=decision.action.value,
+                            reason=result.reason,
+                            operation="order_placement",
+                            stage="blocked",
+                        )
+                    elif result.failed:
+                        logger.error(
+                            "Order submission failed",
+                            symbol=symbol,
+                            action=decision.action.value,
+                            error_message=result.error,
+                            operation="order_placement",
+                            stage="failed",
+                        )
                 except Exception as e:
                     logger.error(
                         "Order placement failed",
@@ -1167,21 +1170,23 @@ class TradingEngine(BaseEngine):
         decision: Decision,
         price: Decimal,
         equity: Decimal,
-    ) -> None:
-        """Validate order with risk manager before execution.
+        reduce_only_requested: bool = False,
+    ) -> OrderSubmissionResult:
+        """Validate and submit an order through the guard stack.
 
-        Raises:
-            ValidationError: If risk validation fails.
+        Returns:
+            OrderSubmissionResult describing success/blocked/failed.
         """
         side = OrderSide.BUY if decision.action == Action.BUY else OrderSide.SELL
 
         # Early check: is this order reduce-only? (needed for degradation check)
         current_pos = self._current_positions.get(symbol)
         is_reducing = self._is_reduce_only_order(current_pos, side)
+        reduce_only_flag = reduce_only_requested or is_reducing
 
         # Gate: Check degradation state before proceeding
-        if self._degradation.is_paused(symbol, is_reduce_only=is_reducing):
-            pause_reason = self._degradation.get_pause_reason(symbol)
+        if self._degradation.is_paused(symbol, is_reduce_only=reduce_only_flag):
+            pause_reason = self._degradation.get_pause_reason(symbol) or "unknown"
             logger.warning(
                 f"Order blocked: trading paused for {symbol}",
                 symbol=symbol,
@@ -1199,14 +1204,20 @@ class TradingEngine(BaseEngine):
                 severity=AlertSeverity.WARNING,
                 context={"symbol": symbol, "side": side.value, "reason": pause_reason},
             )
-            return
+            return OrderSubmissionResult(
+                status=OrderSubmissionStatus.BLOCKED,
+                reason=f"paused:{pause_reason}",
+            )
 
         # Dynamic position sizing
         quantity = self._calculate_order_quantity(symbol, price, equity, product=None)
 
         if quantity <= 0:
             logger.warning(f"Calculated quantity is {quantity}, skipping order")
-            return
+            return OrderSubmissionResult(
+                status=OrderSubmissionStatus.BLOCKED,
+                reason="quantity_zero",
+            )
 
         # Security Validation (Hard Limits)
         from gpt_trader.security.security_validator import get_validator
@@ -1242,50 +1253,72 @@ class TradingEngine(BaseEngine):
                 severity=AlertSeverity.ERROR,
                 context=security_order,
             )
-            return
+            return OrderSubmissionResult(
+                status=OrderSubmissionStatus.BLOCKED,
+                reason=error_msg,
+            )
 
         # Run pre-trade validation if risk manager is available
         risk_manager = self.context.risk_manager
         if risk_manager is not None:
-            risk_manager.pre_trade_validate(
-                symbol=symbol,
-                side=side.value,
-                quantity=quantity,
-                price=price,
-                product=None,
-                equity=equity,
-                current_positions=self._positions_to_risk_format(self._current_positions),
-            )
+            try:
+                risk_manager.pre_trade_validate(
+                    symbol=symbol,
+                    side=side.value,
+                    quantity=quantity,
+                    price=price,
+                    product=None,
+                    equity=equity,
+                    current_positions=self._positions_to_risk_format(self._current_positions),
+                )
+            except ValidationError as exc:
+                logger.warning(
+                    "Risk validation failed",
+                    symbol=symbol,
+                    side=side.value,
+                    error_message=str(exc),
+                    operation="order_validation",
+                    stage="risk_manager",
+                )
+                await self._notify(
+                    title="Risk Validation Failed",
+                    message=f"Order blocked by risk manager: {exc}",
+                    severity=AlertSeverity.WARNING,
+                    context={
+                        "symbol": symbol,
+                        "side": side.value,
+                        "reason": str(exc),
+                    },
+                )
+                return OrderSubmissionResult(
+                    status=OrderSubmissionStatus.BLOCKED,
+                    reason=str(exc),
+                )
+            except Exception as exc:
+                logger.error(
+                    "Risk validation error",
+                    symbol=symbol,
+                    side=side.value,
+                    error_message=str(exc),
+                    operation="order_validation",
+                    stage="risk_manager_error",
+                )
+                await self._notify(
+                    title="Risk Validation Failed",
+                    message=f"Order validation failed for {symbol}: {exc}",
+                    severity=AlertSeverity.ERROR,
+                    context={
+                        "symbol": symbol,
+                        "side": side.value,
+                        "error": str(exc),
+                    },
+                )
+                return OrderSubmissionResult(
+                    status=OrderSubmissionStatus.FAILED,
+                    error=str(exc),
+                )
+
             logger.info(f"Risk validation passed for {symbol} {side.value}")
-
-            # Check reduce-only mode enforcement
-            # Determine if this order would reduce an existing position
-            current_pos = self._current_positions.get(symbol)
-            is_reducing = False
-
-            if current_pos is not None:
-                # Handle both Position objects and dicts
-                if hasattr(current_pos, "side") and hasattr(current_pos, "quantity"):
-                    # Position object: use side attribute
-                    pos_side = current_pos.side.lower() if current_pos.side else ""
-                    pos_qty = current_pos.quantity
-                    # Reducing = LONG + SELL or SHORT + BUY
-                    is_reducing = (
-                        pos_side == "long" and side == OrderSide.SELL and pos_qty > 0
-                    ) or (pos_side == "short" and side == OrderSide.BUY and pos_qty > 0)
-                elif isinstance(current_pos, dict):
-                    # Dict: check for side key, fall back to quantity sign
-                    pos_side = str(current_pos.get("side", "")).lower()
-                    pos_qty = Decimal(str(current_pos.get("quantity", 0)))
-                    if pos_side in ("long", "short"):
-                        is_reducing = (
-                            pos_side == "long" and side == OrderSide.SELL and pos_qty > 0
-                        ) or (pos_side == "short" and side == OrderSide.BUY and pos_qty > 0)
-                    else:
-                        # Legacy: quantity sign indicates direction
-                        is_reducing = (pos_qty > 0 and side == OrderSide.SELL) or (
-                            pos_qty < 0 and side == OrderSide.BUY
-                        )
 
             # In reduce-only mode, clamp quantity to prevent position flips
             daily_pnl_triggered = bool(getattr(risk_manager, "_daily_pnl_triggered", False))
@@ -1311,14 +1344,17 @@ class TradingEngine(BaseEngine):
                 # If clamped to zero, skip the order
                 if quantity <= 0:
                     logger.info(f"Reduce-only: no position to reduce for {symbol}, skipping order")
-                    return
+                    return OrderSubmissionResult(
+                        status=OrderSubmissionStatus.BLOCKED,
+                        reason="reduce_only_empty_position",
+                    )
 
             # Create order dict for check_order
             order_for_check = {
                 "symbol": symbol,
                 "side": side.value,
                 "quantity": float(quantity),
-                "reduce_only": is_reducing,
+                "reduce_only": reduce_only_flag,
             }
 
             if not risk_manager.check_order(order_for_check):
@@ -1334,7 +1370,10 @@ class TradingEngine(BaseEngine):
                     severity=AlertSeverity.WARNING,
                     context=order_for_check,
                 )
-                return
+                return OrderSubmissionResult(
+                    status=OrderSubmissionStatus.BLOCKED,
+                    reason=error_msg,
+                )
         else:
             logger.warning("No risk manager configured - skipping validation")
 
@@ -1353,7 +1392,7 @@ class TradingEngine(BaseEngine):
                         allow_reduce_only=allow_reduce,
                     )
                     # If reduce-only allowed and this is a reduce order, let it through
-                    if allow_reduce and is_reducing:
+                    if allow_reduce and reduce_only_flag:
                         logger.info(
                             f"Mark stale for {symbol} but allowing reduce-only order",
                             operation="degradation",
@@ -1369,7 +1408,10 @@ class TradingEngine(BaseEngine):
                             severity=AlertSeverity.WARNING,
                             context={"symbol": symbol, "side": side.value},
                         )
-                        return
+                        return OrderSubmissionResult(
+                            status=OrderSubmissionStatus.BLOCKED,
+                            reason="mark_staleness",
+                        )
                 else:
                     logger.warning(f"Order blocked: mark price stale for {symbol}")
                     await self._notify(
@@ -1378,9 +1420,13 @@ class TradingEngine(BaseEngine):
                         severity=AlertSeverity.WARNING,
                         context={"symbol": symbol, "side": side.value},
                     )
-                    return
+                    return OrderSubmissionResult(
+                        status=OrderSubmissionStatus.BLOCKED,
+                        reason="mark_staleness",
+                    )
 
         # Pre-trade guards via OrderValidator (exchange rules, slippage, preview)
+        effective_price = price
         if self._order_validator is not None:
             try:
                 with profile_span("pre_trade_validation", {"symbol": symbol}) as _val_span:
@@ -1466,13 +1512,13 @@ class TradingEngine(BaseEngine):
                         effective_price=effective_price,
                         stop_price=None,
                         tif=self.context.config.time_in_force,
-                        reduce_only=is_reducing,
+                        reduce_only=reduce_only_flag,
                         leverage=None,
                     )
 
                     # Finalize reduce-only flag (risk manager may have triggered it)
-                    is_reducing = self._order_validator.finalize_reduce_only_flag(
-                        is_reducing, symbol
+                    reduce_only_flag = self._order_validator.finalize_reduce_only_flag(
+                        reduce_only_flag, symbol
                     )
 
             except ValidationError as exc:
@@ -1486,7 +1532,10 @@ class TradingEngine(BaseEngine):
                     severity=AlertSeverity.WARNING,
                     context={"symbol": symbol, "side": side.value, "reason": str(exc)},
                 )
-                return
+                return OrderSubmissionResult(
+                    status=OrderSubmissionStatus.BLOCKED,
+                    reason=str(exc),
+                )
             except Exception as exc:
                 # Non-validation errors: log + record metrics but still block order (fail-closed)
                 logger.error(f"Guard check error: {exc}")
@@ -1499,9 +1548,10 @@ class TradingEngine(BaseEngine):
                     severity=AlertSeverity.ERROR,
                     context={"symbol": symbol, "side": side.value, "error": str(exc)},
                 )
-                return
-        else:
-            effective_price = price
+                return OrderSubmissionResult(
+                    status=OrderSubmissionStatus.FAILED,
+                    error=str(exc),
+                )
 
         # Place order via OrderSubmitter for proper ID tracking and telemetry
         order_id = await asyncio.to_thread(
@@ -1514,7 +1564,7 @@ class TradingEngine(BaseEngine):
             effective_price=effective_price,
             stop_price=None,
             tif=self.context.config.time_in_force,
-            reduce_only=is_reducing,
+            reduce_only=reduce_only_flag,
             leverage=None,
             client_order_id=None,  # Let OrderSubmitter generate stable ID
         )
@@ -1544,6 +1594,10 @@ class TradingEngine(BaseEngine):
                     "order_id": order_id,
                 }
             )
+            return OrderSubmissionResult(
+                status=OrderSubmissionStatus.SUCCESS,
+                order_id=order_id,
+            )
         else:
             # Order was rejected by broker
             logger.warning(
@@ -1552,6 +1606,10 @@ class TradingEngine(BaseEngine):
                 side=side.value,
                 operation="order_submit",
                 stage="rejected",
+            )
+            return OrderSubmissionResult(
+                status=OrderSubmissionStatus.FAILED,
+                error="broker_rejected",
             )
 
     def reset_daily_tracking(self) -> None:
@@ -1608,7 +1666,7 @@ class TradingEngine(BaseEngine):
         reduce_only: bool = False,
         reason: str = "external_submission",
         confidence: float = 1.0,
-    ) -> None:
+    ) -> OrderSubmissionResult:
         """Public entrypoint for order submission through the canonical guard stack.
 
         This method provides external callers (OrderRouter, TUI actions, etc.) access
@@ -1628,6 +1686,9 @@ class TradingEngine(BaseEngine):
         Note:
             This method delegates to _validate_and_place_order after constructing
             a Decision object. The full guard stack is applied.
+
+        Returns:
+            OrderSubmissionResult describing the outcome.
         """
         # Construct Decision from inputs
         action = Action.BUY if side == OrderSide.BUY else Action.SELL
@@ -1646,7 +1707,13 @@ class TradingEngine(BaseEngine):
             self._quantity_override = None
 
         try:
-            await self._validate_and_place_order(symbol, decision, price, equity)
+            return await self._validate_and_place_order(
+                symbol,
+                decision,
+                price,
+                equity,
+                reduce_only_requested=reduce_only,
+            )
         finally:
             # Clear override after use
             self._quantity_override = None

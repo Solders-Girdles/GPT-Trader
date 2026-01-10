@@ -361,6 +361,175 @@ class CoinbaseClientBase:
         ) as span:
             return self._perform_http_request(method, path, payload, start_time, span)
 
+    def _is_public_market_endpoint(self, path: str) -> bool:
+        normalized_path = self._normalize_path(path)
+        normalized_path = normalized_path.split("?", 1)[0]
+        if normalized_path and not normalized_path.startswith("/"):
+            normalized_path = "/" + normalized_path
+        return self.api_mode == "advanced" and normalized_path.startswith(
+            "/api/v3/brokerage/market/"
+        )
+
+    def _build_auth_path(self, path: str) -> str:
+        auth_path = path if path.startswith("/") else f"/{path}"
+        if path.startswith("http"):
+            auth_path = "/" + path.split("/", 3)[-1]
+        if "?" in auth_path:
+            auth_path = auth_path.split("?", 1)[0]
+        return auth_path
+
+    def _apply_auth_headers(
+        self,
+        headers: dict[str, str],
+        method: str,
+        path: str,
+        payload: dict | None,
+    ) -> None:
+        auth = self.auth
+        if not auth:
+            return
+
+        if hasattr(auth, "get_headers"):
+            auth_path = self._build_auth_path(path)
+            if payload:
+                headers.update(auth.get_headers(method, auth_path, payload))
+            else:
+                headers.update(auth.get_headers(method, auth_path))
+        elif hasattr(auth, "sign"):
+            headers.update(auth.sign(method, path, payload))
+
+    def _build_headers(self, method: str, path: str, payload: dict | None) -> dict[str, str]:
+        headers = {
+            "Content-Type": "application/json",
+            "User-Agent": "gpt-trader/v2",
+            "CB-VERSION": self.api_version,
+        }
+
+        if self.auth and not self._is_public_market_endpoint(path):
+            self._apply_auth_headers(headers, method, path, payload)
+
+        corr_id = get_correlation_id()
+        if corr_id:
+            headers["X-Correlation-Id"] = corr_id
+
+        return headers
+
+    def _perform_request(
+        self,
+        method: str,
+        url: str,
+        headers: dict[str, str],
+        payload: dict | None,
+    ) -> requests.Response:
+        if self._transport:
+            status, resp_headers, text = self._transport(
+                method, url, headers, json.dumps(payload) if payload else None, self.timeout
+            )
+            resp = requests.Response()
+            resp.status_code = status
+            resp._content = text.encode() if text else b""
+            resp.headers = resp_headers
+            return resp
+
+        return self.session.request(
+            method, url, json=payload, headers=headers, timeout=self.timeout
+        )
+
+    def _record_api_retry(self, path: str, reason: str) -> None:
+        category = categorize_endpoint(path)
+        record_counter(
+            "gpt_trader_api_retries_total",
+            labels={"category": category, "reason": reason},
+        )
+
+    def _sleep_retry_after(self, resp: requests.Response) -> None:
+        try:
+            retry_after = float(resp.headers.get("retry-after", 1))
+        except ValueError:
+            retry_after = 1.0
+        retry_after = min(retry_after, MAX_RETRY_AFTER_SECONDS)
+        time.sleep(retry_after)
+
+    def _sleep_backoff(self, attempt: int) -> None:
+        base_delay = RETRY_BASE_DELAY * (RETRY_BACKOFF_MULTIPLIER**attempt)
+        jitter = random.uniform(0, RETRY_JITTER_MAX_SECONDS)
+        delay = min(base_delay + jitter, MAX_RETRY_DELAY_SECONDS)
+        time.sleep(delay)
+
+    def _raise_client_error(self, resp: requests.Response) -> None:
+        try:
+            data = resp.json()
+            msg = data.get("message", "Bad request")
+            code = data.get("error")
+        except (json.JSONDecodeError, ValueError, KeyError):
+            msg = resp.text
+            code = None
+
+        if resp.status_code == 400:
+            raise InvalidRequestError(msg)
+        raise map_http_error(resp.status_code, code, msg)
+
+    def _record_success(self, path: str, resp: requests.Response, span: Any | None) -> None:
+        if self._circuit_breaker:
+            self._circuit_breaker.record_success(path)
+        if span:
+            span.set_attribute("http.status_code", resp.status_code)
+
+    def _parse_response(self, resp: requests.Response) -> dict[str, Any]:
+        if resp.content:
+            try:
+                return cast(dict[Any, Any], resp.json())
+            except ValueError:
+                return {"raw": resp.text}
+        return {}
+
+    def _cache_response(self, method: str, path: str, result: dict[str, Any]) -> None:
+        if method == "GET" and self._response_cache:
+            self._response_cache.set(path, result)
+
+    def _invalidate_cache(self, method: str, path: str) -> None:
+        if method not in ("POST", "DELETE") or not self._response_cache:
+            return
+
+        path_lower = path.lower()
+        if "order" in path_lower:
+            self._response_cache.invalidate("**/orders*")
+            self._response_cache.invalidate("**/fills*")
+        elif "account" in path_lower or "position" in path_lower:
+            self._response_cache.invalidate("**/accounts*")
+            self._response_cache.invalidate("**/positions*")
+
+    def _record_request_metrics(
+        self,
+        path: str,
+        latency_seconds: float,
+        is_error: bool,
+        is_rate_limited: bool,
+        span: Any | None,
+    ) -> None:
+        latency_ms = latency_seconds * 1000
+
+        if self._metrics:
+            self._metrics.record_request(
+                path, latency_ms, error=is_error, rate_limited=is_rate_limited
+            )
+
+        category = categorize_endpoint(path)
+        request_result = "error" if is_error else "success"
+        record_histogram(
+            "gpt_trader_api_latency_seconds",
+            latency_seconds,
+            labels={"category": category, "result": request_result},
+        )
+        record_counter(
+            "gpt_trader_api_requests_total",
+            labels={"category": category, "result": request_result},
+        )
+
+        if span:
+            span.set_attribute("http.latency_ms", latency_ms)
+            span.set_attribute("http.rate_limited", is_rate_limited)
+
     def _perform_http_request(
         self,
         method: str,
@@ -378,147 +547,45 @@ class CoinbaseClientBase:
 
         self._check_rate_limit()
         url = self._make_url(path)
-        headers = {
-            "Content-Type": "application/json",
-            "User-Agent": "gpt-trader/v2",
-            "CB-VERSION": self.api_version,
-        }
-
-        normalized_path = self._normalize_path(path)
-        normalized_path = normalized_path.split("?", 1)[0]
-        if normalized_path and not normalized_path.startswith("/"):
-            normalized_path = "/" + normalized_path
-        is_public_market = self.api_mode == "advanced" and normalized_path.startswith(
-            "/api/v3/brokerage/market/"
-        )
-
-        # Sign request if auth is available
-        if self.auth and not is_public_market:
-            # Check if auth has .get_headers (SimpleAuth) or .sign (Legacy)
-            if hasattr(self.auth, "get_headers"):
-                # SimpleAuth expects (method, path)
-                # path passed to auth should exclude domain but include leading slash
-                auth_path = path if path.startswith("/") else f"/{path}"
-                # normalize path for signing if it's a full url (though _request takes path usually)
-                if path.startswith("http"):
-                    auth_path = "/" + path.split("/", 3)[-1]
-                # Coinbase CDP JWT signing uses the path component (no query string).
-                if "?" in auth_path:
-                    auth_path = auth_path.split("?", 1)[0]
-
-                if payload:
-                    headers.update(self.auth.get_headers(method, auth_path, payload))
-                else:
-                    headers.update(self.auth.get_headers(method, auth_path))
-            elif hasattr(self.auth, "sign"):
-                # Legacy interface
-                headers.update(self.auth.sign(method, path, payload))
-
-        # Add correlation ID if available
-        corr_id = get_correlation_id()
-        if corr_id:
-            headers["X-Correlation-Id"] = corr_id
-
-        def perform_request() -> requests.Response:
-            if self._transport:
-                # Use mock transport
-                status, resp_headers, text = self._transport(
-                    method, url, headers, json.dumps(payload) if payload else None, self.timeout
-                )
-                resp = requests.Response()
-                resp.status_code = status
-                resp._content = text.encode() if text else b""
-                resp.headers = resp_headers
-                return resp
-            else:
-                return self.session.request(
-                    method, url, json=payload, headers=headers, timeout=self.timeout
-                )
+        headers = self._build_headers(method, path, payload)
 
         try:
             # Retry logic with configurable parameters
             max_retries = MAX_HTTP_RETRIES
+            resp: requests.Response | None = None
             for attempt in range(max_retries + 1):
                 try:
-                    resp = perform_request()
+                    resp = self._perform_request(method, url, headers, payload)
 
                     if resp.status_code == 429:
                         is_rate_limited = True
-                        # Record retry metric
-                        category = categorize_endpoint(path)
-                        record_counter(
-                            "gpt_trader_api_retries_total",
-                            labels={"category": category, "reason": "rate_limited"},
-                        )
-                        try:
-                            retry_after = float(resp.headers.get("retry-after", 1))
-                        except ValueError:
-                            retry_after = 1.0
-                        # Cap retry-after to prevent DoS via malicious server response
-                        retry_after = min(retry_after, MAX_RETRY_AFTER_SECONDS)
-                        time.sleep(retry_after)
+                        self._record_api_retry(path, "rate_limited")
+                        self._sleep_retry_after(resp)
                         continue
 
                     if 500 <= resp.status_code < 600:
                         is_error = True
                         if attempt < max_retries:
-                            # Record retry metric
-                            category = categorize_endpoint(path)
-                            record_counter(
-                                "gpt_trader_api_retries_total",
-                                labels={"category": category, "reason": "server_error"},
-                            )
-                            # Exponential backoff with jitter and cap
-                            base_delay = RETRY_BASE_DELAY * (RETRY_BACKOFF_MULTIPLIER**attempt)
-                            jitter = random.uniform(0, RETRY_JITTER_MAX_SECONDS)
-                            delay = min(base_delay + jitter, MAX_RETRY_DELAY_SECONDS)
-                            time.sleep(delay)
+                            self._record_api_retry(path, "server_error")
+                            self._sleep_backoff(attempt)
                             continue
 
                     if 400 <= resp.status_code < 500:
                         is_error = True
-                        # Map 400s to specific errors
-                        try:
-                            data = resp.json()
-                            msg = data.get("message", "Bad request")
-                            code = data.get("error")
-                        except (json.JSONDecodeError, ValueError, KeyError):
-                            msg = resp.text
-                            code = None
-
-                        if resp.status_code == 400:
-                            raise InvalidRequestError(msg)
-                        raise map_http_error(resp.status_code, code, msg)
+                        self._raise_client_error(resp)
 
                     resp.raise_for_status()
 
                     # Success - record in circuit breaker and span
-                    if self._circuit_breaker:
-                        self._circuit_breaker.record_success(path)
-                    if span:
-                        span.set_attribute("http.status_code", resp.status_code)
+                    self._record_success(path, resp, span)
 
-                    if resp.content:
-                        try:
-                            result = cast(dict[Any, Any], resp.json())
-                        except ValueError:
-                            result = {"raw": resp.text}
-                    else:
-                        result = {}
+                    result = self._parse_response(resp)
 
                     # Cache successful GET responses
-                    if method == "GET" and self._response_cache:
-                        self._response_cache.set(path, result)
+                    self._cache_response(method, path, result)
 
                     # Invalidate cache on mutations
-                    if method in ("POST", "DELETE") and self._response_cache:
-                        # Invalidate related endpoints
-                        if "order" in path.lower():
-                            self._response_cache.invalidate("**/orders*")
-                            self._response_cache.invalidate("**/fills*")
-                        elif "account" in path.lower() or "position" in path.lower():
-                            self._response_cache.invalidate("**/accounts*")
-                            self._response_cache.invalidate("**/positions*")
+                    self._invalidate_cache(method, path)
 
                     return result
 
@@ -537,22 +604,13 @@ class CoinbaseClientBase:
                 except (requests.ConnectionError, requests.Timeout, ConnectionError):
                     is_error = True
                     if attempt < max_retries:
-                        # Record retry metric
-                        category = categorize_endpoint(path)
-                        record_counter(
-                            "gpt_trader_api_retries_total",
-                            labels={"category": category, "reason": "network_timeout"},
-                        )
-                        # Exponential backoff with jitter and cap
-                        base_delay = RETRY_BASE_DELAY * (RETRY_BACKOFF_MULTIPLIER**attempt)
-                        jitter = random.uniform(0, RETRY_JITTER_MAX_SECONDS)
-                        delay = min(base_delay + jitter, MAX_RETRY_DELAY_SECONDS)
-                        time.sleep(delay)
+                        self._record_api_retry(path, "network_timeout")
+                        self._sleep_backoff(attempt)
                         continue
                     raise
 
             # If loop finishes without return (e.g. all 429s handled but retries exhausted)
-            if "resp" in locals() and resp is not None and resp.status_code == 429:
+            if resp is not None and resp.status_code == 429:
                 raise map_http_error(429, "rate_limited", "Rate limit exceeded (rate_limited)")
 
             return {}
@@ -571,31 +629,13 @@ class CoinbaseClientBase:
         finally:
             # Calculate latency
             latency_seconds = time.perf_counter() - start_time
-            latency_ms = latency_seconds * 1000
-
-            # Record internal API metrics
-            if self._metrics:
-                self._metrics.record_request(
-                    path, latency_ms, error=is_error, rate_limited=is_rate_limited
-                )
-
-            # Record Prometheus metrics
-            category = categorize_endpoint(path)
-            request_result = "error" if is_error else "success"
-            record_histogram(
-                "gpt_trader_api_latency_seconds",
+            self._record_request_metrics(
+                path,
                 latency_seconds,
-                labels={"category": category, "result": request_result},
+                is_error,
+                is_rate_limited,
+                span,
             )
-            record_counter(
-                "gpt_trader_api_requests_total",
-                labels={"category": category, "result": request_result},
-            )
-
-            # Add final span attributes
-            if span:
-                span.set_attribute("http.latency_ms", latency_ms)
-                span.set_attribute("http.rate_limited", is_rate_limited)
 
     # === API Resilience Status Methods ===
 

@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 
 from gpt_trader.tui.events import ThemeChanged
 from gpt_trader.tui.notification_helpers import notify_success, notify_warning
-from gpt_trader.tui.preferences_paths import resolve_preferences_paths
+from gpt_trader.tui.preferences_paths import resolve_preferences_path
 from gpt_trader.tui.theme import Theme, ThemeMode, get_theme_manager
 from gpt_trader.utilities.logging_patterns import get_logger
 
@@ -48,7 +48,7 @@ class ThemeService:
         """
         self.app = app
         self.theme_manager = get_theme_manager()
-        self.preferences_path, self._fallback_path = resolve_preferences_paths(preferences_path)
+        self.preferences_path = resolve_preferences_path(preferences_path)
 
     def load_preference(self) -> ThemeMode:
         """Load theme preference from config file.
@@ -56,18 +56,21 @@ class ThemeService:
         Returns:
             The loaded theme mode, or DARK as default.
         """
-        for path in filter(None, (self.preferences_path, self._fallback_path)):
-            try:
-                if path.exists():
-                    with open(path) as f:
-                        prefs = json.load(f)
-                        mode_str = prefs.get("theme", "dark")
-                        mode = ThemeMode(mode_str)
-                        self.theme_manager.set_theme(mode)
-                        logger.debug("Loaded theme preference: %s (from %s)", mode_str, path)
-                        return mode
-            except Exception as e:
-                logger.debug("Could not load theme preference from %s: %s", path, e)
+        try:
+            if self.preferences_path.exists():
+                with open(self.preferences_path) as f:
+                    prefs = json.load(f)
+                    mode_str = prefs.get("theme", "dark")
+                    mode = ThemeMode(mode_str)
+                    self.theme_manager.set_theme(mode)
+                    logger.debug(
+                        "Loaded theme preference: %s (from %s)",
+                        mode_str,
+                        self.preferences_path,
+                    )
+                    return mode
+        except Exception as e:
+            logger.debug("Could not load theme preference from %s: %s", self.preferences_path, e)
 
         return ThemeMode.DARK
 
@@ -84,17 +87,8 @@ class ThemeService:
             self.preferences_path.parent.mkdir(parents=True, exist_ok=True)
 
             prefs = {}
-            source_path = (
-                self.preferences_path
-                if self.preferences_path.exists()
-                else (
-                    self._fallback_path
-                    if self._fallback_path and self._fallback_path.exists()
-                    else None
-                )
-            )
-            if source_path is not None:
-                with open(source_path) as f:
+            if self.preferences_path.exists():
+                with open(self.preferences_path) as f:
                     prefs = json.load(f)
 
             prefs["theme"] = mode.value

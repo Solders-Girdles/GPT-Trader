@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from gpt_trader.tui.preferences_paths import resolve_preferences_paths
+from gpt_trader.tui.preferences_paths import resolve_preferences_path
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -132,7 +132,7 @@ class PreferencesService:
             preferences_path: Optional custom path for preferences file.
         """
         self.app = app
-        self.preferences_path, self._fallback_path = resolve_preferences_paths(preferences_path)
+        self.preferences_path = resolve_preferences_path(preferences_path)
         self._preferences: UserPreferences | None = None
 
     @property
@@ -148,16 +148,15 @@ class PreferencesService:
         Returns:
             UserPreferences instance with loaded or default values.
         """
-        for path in filter(None, (self.preferences_path, self._fallback_path)):
-            try:
-                if path.exists():
-                    with open(path) as f:
-                        data = json.load(f)
-                        prefs = UserPreferences.from_dict(data)
-                        logger.debug("Loaded preferences from %s", path)
-                        return prefs
-            except Exception as e:
-                logger.debug("Could not load preferences from %s: %s", path, e)
+        try:
+            if self.preferences_path.exists():
+                with open(self.preferences_path) as f:
+                    data = json.load(f)
+                    prefs = UserPreferences.from_dict(data)
+                    logger.debug("Loaded preferences from %s", self.preferences_path)
+                    return prefs
+        except Exception as e:
+            logger.debug("Could not load preferences from %s: %s", self.preferences_path, e)
 
         return UserPreferences()
 
@@ -176,18 +175,9 @@ class PreferencesService:
             # Preserve unknown keys from any existing file (useful for forward/backward
             # compatibility if older/newer versions store additional fields).
             data: dict[str, Any] = {}
-            source_path = (
-                self.preferences_path
-                if self.preferences_path.exists()
-                else (
-                    self._fallback_path
-                    if self._fallback_path and self._fallback_path.exists()
-                    else None
-                )
-            )
-            if source_path is not None:
+            if self.preferences_path.exists():
                 try:
-                    with open(source_path) as f:
+                    with open(self.preferences_path) as f:
                         loaded = json.load(f)
                         if isinstance(loaded, dict):
                             data = loaded

@@ -93,7 +93,7 @@ class RiskWidget(Static):
 
             # Risk Status
             yield Label("Risk Status:", classes="risk-label")
-            yield Label("LOW", id="risk-status", classes="risk-value risk-status-low")
+            yield Label("LOW", id="risk-status", classes="risk-value status-ok")
 
             # Reduce Only Mode
             yield Label("Reduce Only:", classes="risk-label")
@@ -228,7 +228,6 @@ class RiskWidget(Static):
             status_class = get_status_class(loss_status)
 
             # Remove old classes and add new
-            progress_bar.remove_class("risk-status-high", "risk-status-medium", "risk-status-low")
             progress_bar.remove_class("status-ok", "status-warning", "status-critical")
             progress_bar.add_class(status_class)
         else:
@@ -278,7 +277,6 @@ class RiskWidget(Static):
         status_class = get_status_class(status)
 
         status_label.update(status_text)
-        status_label.remove_class("risk-status-low", "risk-status-medium", "risk-status-high")
         status_label.remove_class("status-ok", "status-warning", "status-critical")
         status_label.add_class(status_class)
 

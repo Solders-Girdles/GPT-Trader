@@ -1368,34 +1368,6 @@ SkeletonLoader {
     color: #FFFFFF;
 }
 
-/* === Legacy aliases for backward compatibility === */
-/* These map old class names to new standardized colors */
-
-.good {
-    color: $success;
-}
-
-.warning {
-    color: $warning;
-}
-
-.bad {
-    color: $error;
-}
-
-/* Risk widget legacy classes */
-.risk-status-low {
-    color: $success;
-}
-
-.risk-status-medium {
-    color: $warning;
-}
-
-.risk-status-high {
-    color: $error;
-}
-
 
 /* ---------------------------------------------------------------------------- */
 /* COMPONENTS: Interaction States                                             */
@@ -3231,15 +3203,6 @@ LogWidget RichLog {
     color: $text-primary;
 }
 
-/* === Log Component (legacy) === */
-
-Log {
-    background: $bg-secondary;
-    color: $text-primary;
-    border: none;
-    padding: 0 1;
-}
-
 /* === Full-Width Logs Styling === */
 
 .full-width-logs {
@@ -3356,10 +3319,6 @@ MarketPulseWidget {
 }
 
 /* Ticker list container - removed, defined in empty state section */
-
-/* Widget Header - NOTE: Use .widget-header from headers.tcss */
-/* This duplicate definition is kept for backwards compatibility but
-   the canonical style is defined in components/headers.tcss */
 
 /* Compact header variant */
 .widget-header-compact {
@@ -3539,14 +3498,37 @@ SystemMonitorWidget {
     text-align: left;
 }
 
-.sys-metric.good { color: $success; background: transparent; }
-.sys-metric.warning { color: $warning; background: transparent; }
-.sys-metric.bad { color: $error; background: transparent; }
+.sys-metric.status-ok {
+    color: $success;
+    background: transparent;
+    text-style: none;
+}
+
+.sys-metric.status-warning {
+    color: $warning;
+    background: transparent;
+    text-style: none;
+}
+
+.sys-metric.status-critical {
+    color: $error;
+    background: transparent;
+    text-style: none;
+}
+
 .sys-metric.stopped { color: $info; background: transparent; }
 
-.sys-metric-value.good { color: $success; }
-.sys-metric-value.warning { color: $warning; }
-.sys-metric-value.bad { color: $error; }
+.sys-metric-value.status-ok { color: $success; }
+
+.sys-metric-value.status-warning {
+    color: $warning;
+    text-style: none;
+}
+
+.sys-metric-value.status-critical {
+    color: $error;
+    text-style: none;
+}
 
 /* Row with inline sparkline */
 .sys-row-with-spark {
@@ -4512,17 +4494,19 @@ RiskWidget .risk-value {
     border-left: wide $accent-muted;
 }
 
-/* Risk status indicators */
-RiskWidget .risk-status-low {
+RiskWidget .risk-value.status-ok {
     color: $success;
+    text-style: bold;
 }
 
-RiskWidget .risk-status-medium {
+RiskWidget .risk-value.status-warning {
     color: $warning;
+    text-style: bold;
 }
 
-RiskWidget .risk-status-high {
+RiskWidget .risk-value.status-critical {
     color: $error;
+    text-style: bold;
 }
 
 /* Risk grid layout */
@@ -4805,6 +4789,21 @@ PerformanceDashboardWidget .perf-value {
     color: $text-primary;
 }
 
+PerformanceDashboardWidget .perf-value.status-ok {
+    color: $success;
+    text-style: bold;
+}
+
+PerformanceDashboardWidget .perf-value.status-warning {
+    color: $warning;
+    text-style: bold;
+}
+
+PerformanceDashboardWidget .perf-value.status-critical {
+    color: $error;
+    text-style: bold;
+}
+
 /* Budget target hints */
 PerformanceDashboardWidget .perf-target {
     width: auto;
@@ -4816,19 +4815,6 @@ PerformanceDashboardWidget .perf-target {
 PerformanceDashboardWidget .budget-summary {
     margin-bottom: 1;
     padding-bottom: 1;
-}
-
-/* Performance status indicators */
-PerformanceDashboardWidget .perf-value.good {
-    color: $success;
-}
-
-PerformanceDashboardWidget .perf-value.warning {
-    color: $warning;
-}
-
-PerformanceDashboardWidget .perf-value.bad {
-    color: $error;
 }
 
 /* Slow operations section */
@@ -5813,4 +5799,3 @@ APISetupWizardScreen #cancel-btn {
 APISetupWizardScreen #cancel-btn:hover {
     background: $error;
 }
-

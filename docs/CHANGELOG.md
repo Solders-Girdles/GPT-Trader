@@ -10,6 +10,11 @@
 - Introduced `runtime_helpers.get_runtime_logger` and deprecated `orchestration_helpers.get_orchestration_logger`.
 - Runtime logging helpers now reflect the primary API surface; orchestration helpers remain as a shim for one release.
 
+### TUI Legacy Fallback Cleanup
+- Removed the legacy `config/tui_preferences.json` fallback; TUI preferences now read/write only the runtime path (or `GPT_TRADER_TUI_PREFERENCES_PATH`).
+- Dropped legacy status class aliases (`good`/`bad`/`risk-status-*`) and Log widget CSS; widgets now use canonical `status-*` classes.
+- TUI validation events now use `FieldValidationError` directly (the `ValidationError` alias was removed).
+
 ### LiveExecutionEngine Removal
 - **BREAKING**: Removed `LiveExecutionEngine` and its container factory; use `TradingEngine.submit_order()` and guard-stack helpers instead.
 - Migrated execution tests/integration flows to TradingEngine and updated docs to reflect the canonical path.

@@ -43,10 +43,6 @@ class FieldValidationError:
     value: Any = None
 
 
-# Transitional alias for backwards compatibility - remove after migration
-ValidationError = FieldValidationError
-
-
 @dataclass
 class ValidationResult:
     """Result of a validation operation.
@@ -58,14 +54,14 @@ class ValidationResult:
     """
 
     valid: bool = True
-    errors: list[ValidationError] = field(default_factory=list)
-    warnings: list[ValidationError] = field(default_factory=list)
+    errors: list[FieldValidationError] = field(default_factory=list)
+    warnings: list[FieldValidationError] = field(default_factory=list)
 
     def add_error(self, field_name: str, message: str, value: Any = None) -> None:
         """Add a validation error."""
         self.valid = False
         self.errors.append(
-            ValidationError(
+            FieldValidationError(
                 field=field_name,
                 message=message,
                 severity="error",
@@ -76,7 +72,7 @@ class ValidationResult:
     def add_warning(self, field_name: str, message: str, value: Any = None) -> None:
         """Add a validation warning (does not fail validation)."""
         self.warnings.append(
-            ValidationError(
+            FieldValidationError(
                 field=field_name,
                 message=message,
                 severity="warning",

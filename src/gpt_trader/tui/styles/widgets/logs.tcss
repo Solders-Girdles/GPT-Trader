@@ -131,15 +131,6 @@ LogWidget RichLog {
     color: $text-primary;
 }
 
-/* === Log Component (legacy) === */
-
-Log {
-    background: $bg-secondary;
-    color: $text-primary;
-    border: none;
-    padding: 0 1;
-}
-
 /* === Full-Width Logs Styling === */
 
 .full-width-logs {

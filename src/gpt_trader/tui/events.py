@@ -157,10 +157,6 @@ class FieldValidationError(Message):
     value: Any = None
 
 
-# Transitional alias for backwards compatibility - remove after migration
-ValidationError = FieldValidationError
-
-
 @dataclass
 class StateValidationFailed(Message):
     """
@@ -174,7 +170,7 @@ class StateValidationFailed(Message):
         component: Component that failed validation (e.g., "market", "positions")
     """
 
-    errors: list[ValidationError]
+    errors: list[FieldValidationError]
     component: str = "unknown"
 
 

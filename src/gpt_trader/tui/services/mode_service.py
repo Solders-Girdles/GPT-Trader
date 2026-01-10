@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from gpt_trader.tui.events import BotModeChanged
-from gpt_trader.tui.preferences_paths import resolve_preferences_paths
+from gpt_trader.tui.preferences_paths import resolve_preferences_path
 from gpt_trader.tui.widgets import LiveWarningModal
 from gpt_trader.utilities.logging_patterns import get_logger
 
@@ -102,7 +102,7 @@ class ModeService:
         """
         self.app = app
         self.demo_scenario = demo_scenario
-        self.preferences_path, self._fallback_path = resolve_preferences_paths(preferences_path)
+        self.preferences_path = resolve_preferences_path(preferences_path)
 
     def load_mode_preference(self) -> str | None:
         """Load mode preference from config file.
@@ -110,19 +110,24 @@ class ModeService:
         Returns:
             The saved mode string, or None if not found or invalid.
         """
-        for path in filter(None, (self.preferences_path, self._fallback_path)):
-            try:
-                if path.exists():
-                    with open(path) as f:
-                        prefs = json.load(f)
-                        mode = prefs.get("mode")
-                        if mode in self.VALID_MODES:
-                            logger.debug("Loaded mode preference: %s (from %s)", mode, path)
-                            return mode
-                        if mode is not None:
-                            logger.debug("Invalid saved mode '%s' in %s, ignoring", mode, path)
-            except Exception as e:
-                logger.debug("Could not load mode preference from %s: %s", path, e)
+        try:
+            if self.preferences_path.exists():
+                with open(self.preferences_path) as f:
+                    prefs = json.load(f)
+                    mode = prefs.get("mode")
+                    if mode in self.VALID_MODES:
+                        logger.debug(
+                            "Loaded mode preference: %s (from %s)", mode, self.preferences_path
+                        )
+                        return mode
+                    if mode is not None:
+                        logger.debug(
+                            "Invalid saved mode '%s' in %s, ignoring",
+                            mode,
+                            self.preferences_path,
+                        )
+        except Exception as e:
+            logger.debug("Could not load mode preference from %s: %s", self.preferences_path, e)
 
         return None
 
@@ -145,17 +150,8 @@ class ModeService:
             self.preferences_path.parent.mkdir(parents=True, exist_ok=True)
 
             prefs = {}
-            source_path = (
-                self.preferences_path
-                if self.preferences_path.exists()
-                else (
-                    self._fallback_path
-                    if self._fallback_path and self._fallback_path.exists()
-                    else None
-                )
-            )
-            if source_path is not None:
-                with open(source_path) as f:
+            if self.preferences_path.exists():
+                with open(self.preferences_path) as f:
                     prefs = json.load(f)
 
             prefs["mode"] = mode

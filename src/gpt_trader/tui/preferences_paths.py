@@ -1,9 +1,4 @@
-"""Helpers for resolving TUI preferences storage locations.
-
-We keep a legacy preferences file under `config/` for backward compatibility,
-but write all runtime preferences (theme, mode, credential cache, etc.) to a
-runtime path to avoid dirtying tracked config files.
-"""
+"""Helpers for resolving TUI preferences storage locations."""
 
 from __future__ import annotations
 
@@ -20,26 +15,19 @@ def default_preferences_path() -> Path:
     return path_registry.RUNTIME_DATA_DIR / "tui_preferences.json"
 
 
-def legacy_preferences_path() -> Path:
-    """Return the legacy tracked preferences path (read-only fallback)."""
-    return path_registry.PROJECT_ROOT / "config" / "tui_preferences.json"
-
-
-def resolve_preferences_paths(
-    preferences_path: Path | None = None,
-) -> tuple[Path, Path | None]:
-    """Resolve the primary preferences path and an optional legacy fallback.
+def resolve_preferences_path(preferences_path: Path | None = None) -> Path:
+    """Resolve the preferences path.
 
     Resolution order:
-    1) Explicit `preferences_path` argument (no fallback)
-    2) `GPT_TRADER_TUI_PREFERENCES_PATH` env var (no fallback)
-    3) Default runtime path + legacy config fallback
+    1) Explicit `preferences_path` argument
+    2) `GPT_TRADER_TUI_PREFERENCES_PATH` env var
+    3) Default runtime path
     """
     if preferences_path is not None:
-        return preferences_path, None
+        return preferences_path
 
     env_path = os.getenv(ENV_TUI_PREFERENCES_PATH)
     if env_path:
-        return Path(env_path).expanduser(), None
+        return Path(env_path).expanduser()
 
-    return default_preferences_path(), legacy_preferences_path()
+    return default_preferences_path()

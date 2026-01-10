@@ -23,7 +23,6 @@ class TraderAppStatusMixin:
 
     Methods:
     - _on_status_update: Callback for StatusReporter updates
-    - _apply_status_update: Backward-compatible alias
     - _bind_state: Bind reactive state to widgets
     - _is_real_status_reporter: Check if real reporter (not null)
     - connect_status_observer: Connect StatusReporter observer
@@ -54,10 +53,6 @@ class TraderAppStatusMixin:
             else:
                 # On background thread - use call_from_thread for thread safety
                 self.call_from_thread(self.ui_coordinator.apply_observer_update, status)
-
-    def _apply_status_update(self: TraderApp, status: BotStatus) -> None:
-        """Backward-compatible alias for tests/legacy callers."""
-        self._on_status_update(status)
 
     def _bind_state(self: TraderApp) -> None:
         """Bind reactive state to widgets."""

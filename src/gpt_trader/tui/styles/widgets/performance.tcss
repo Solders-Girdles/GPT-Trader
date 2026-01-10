@@ -36,6 +36,21 @@ PerformanceDashboardWidget .perf-value {
     color: $text-primary;
 }
 
+PerformanceDashboardWidget .perf-value.status-ok {
+    color: $success;
+    text-style: bold;
+}
+
+PerformanceDashboardWidget .perf-value.status-warning {
+    color: $warning;
+    text-style: bold;
+}
+
+PerformanceDashboardWidget .perf-value.status-critical {
+    color: $error;
+    text-style: bold;
+}
+
 /* Budget target hints */
 PerformanceDashboardWidget .perf-target {
     width: auto;
@@ -47,19 +62,6 @@ PerformanceDashboardWidget .perf-target {
 PerformanceDashboardWidget .budget-summary {
     margin-bottom: 1;
     padding-bottom: 1;
-}
-
-/* Performance status indicators */
-PerformanceDashboardWidget .perf-value.good {
-    color: $success;
-}
-
-PerformanceDashboardWidget .perf-value.warning {
-    color: $warning;
-}
-
-PerformanceDashboardWidget .perf-value.bad {
-    color: $error;
 }
 
 /* Slow operations section */

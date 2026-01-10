@@ -497,15 +497,3 @@ def get_order_status_level(status: str) -> StatusLevel:
 
     # Normal states - green (OPEN, PENDING, FILLED, CANCELLED)
     return StatusLevel.OK
-
-
-# Legacy aliases for backward compatibility
-# These map old class names to new StatusLevel-based classes
-LEGACY_CLASS_MAP = {
-    "good": "status-ok",
-    "warning": "status-warning",
-    "bad": "status-critical",
-    "risk-status-low": "status-ok",
-    "risk-status-medium": "status-warning",
-    "risk-status-high": "status-critical",
-}

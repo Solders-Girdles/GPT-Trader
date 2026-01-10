@@ -180,7 +180,7 @@ class TestSystemMonitorWidget:
             lbl = app.query_one("#lbl-conn", Label)
             rendered = str(lbl.render())
             assert "Connected" in rendered or "green" in rendered.lower()
-            assert lbl.has_class("good")
+            assert lbl.has_class("status-ok")
 
     @pytest.mark.asyncio
     async def test_watch_connection_status_disconnected(self) -> None:
@@ -195,7 +195,7 @@ class TestSystemMonitorWidget:
             lbl = app.query_one("#lbl-conn", Label)
             rendered = str(lbl.render())
             assert "DISCONNECTED" in rendered or "red" in rendered.lower()
-            assert lbl.has_class("bad")
+            assert lbl.has_class("status-critical")
 
     @pytest.mark.asyncio
     async def test_watch_connection_status_connecting(self) -> None:
@@ -208,7 +208,7 @@ class TestSystemMonitorWidget:
             widget.connection_status = "CONNECTING"
 
             lbl = app.query_one("#lbl-conn", Label)
-            assert lbl.has_class("warning")
+            assert lbl.has_class("status-warning")
 
     @pytest.mark.asyncio
     async def test_watch_rate_limit_updates_progress_bar(self) -> None:

@@ -127,15 +127,15 @@ class TestDefaultEventHandlers:
     @patch("gpt_trader.tui.mixins.event_handlers.logger")
     def test_on_state_validation_failed_logs_warnings(self, mock_logger):
         """Test default on_state_validation_failed logs warnings."""
-        from gpt_trader.tui.events import ValidationError
+        from gpt_trader.tui.events import FieldValidationError
 
         class TestWidget(EventHandlerMixin, Static):
             pass
 
         widget = TestWidget()
         errors = [
-            ValidationError(field="field1", message="Error 1", severity="error"),
-            ValidationError(field="field2", message="Error 2", severity="warning"),
+            FieldValidationError(field="field1", message="Error 1", severity="error"),
+            FieldValidationError(field="field2", message="Error 2", severity="warning"),
         ]
         event = StateValidationFailed(errors=errors, component="positions")
 

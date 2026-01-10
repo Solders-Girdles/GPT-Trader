@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-from gpt_trader.tui.events import StateValidationFailed, StateValidationPassed
-from gpt_trader.tui.events import ValidationError as ValidationErrorEvent
+from gpt_trader.tui.events import FieldValidationError, StateValidationFailed, StateValidationPassed
 from gpt_trader.tui.widgets.validation_indicator import ValidationIndicatorWidget
 
 
@@ -25,8 +24,8 @@ class TestValidationIndicatorWidget:
         widget = ValidationIndicatorWidget()
 
         errors = [
-            ValidationErrorEvent(field="field1", message="error1", severity="error"),
-            ValidationErrorEvent(field="field2", message="warning1", severity="warning"),
+            FieldValidationError(field="field1", message="error1", severity="error"),
+            FieldValidationError(field="field2", message="warning1", severity="warning"),
         ]
         event = StateValidationFailed(errors=errors, component="test")
 
@@ -41,7 +40,7 @@ class TestValidationIndicatorWidget:
         widget = ValidationIndicatorWidget()
 
         errors = [
-            ValidationErrorEvent(field="market.price", message="Invalid price"),
+            FieldValidationError(field="market.price", message="Invalid price"),
         ]
         event = StateValidationFailed(errors=errors, component="market")
 

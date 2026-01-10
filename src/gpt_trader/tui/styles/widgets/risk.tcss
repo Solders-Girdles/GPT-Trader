@@ -30,17 +30,19 @@ RiskWidget .risk-value {
     border-left: wide $accent-muted;
 }
 
-/* Risk status indicators */
-RiskWidget .risk-status-low {
+RiskWidget .risk-value.status-ok {
     color: $success;
+    text-style: bold;
 }
 
-RiskWidget .risk-status-medium {
+RiskWidget .risk-value.status-warning {
     color: $warning;
+    text-style: bold;
 }
 
-RiskWidget .risk-status-high {
+RiskWidget .risk-value.status-critical {
     color: $error;
+    text-style: bold;
 }
 
 /* Risk grid layout */

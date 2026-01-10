@@ -38,6 +38,9 @@ Before removing any deprecated item:
 
 | Item | Removed In | Migration Path |
 |------|------------|----------------|
+| TUI legacy preferences fallback (`config/tui_preferences.json`) | Unreleased | Use runtime preferences path or `GPT_TRADER_TUI_PREFERENCES_PATH` |
+| TUI legacy status CSS aliases (`good`/`bad`/`risk-status-*`) | Unreleased | Use `status-ok`, `status-warning`, `status-critical` |
+| TUI validation `ValidationError` alias | Unreleased | Use `FieldValidationError` |
 | Coinbase REST legacy position dict fallback | v4.0 | Require `PositionStateStore` injection |
 | `PERPS_FORCE_MOCK` env var | v4.0 | Use `MOCK_BROKER` |
 | `SYMBOLS` env var | v4.0 | Use `TRADING_SYMBOLS` |

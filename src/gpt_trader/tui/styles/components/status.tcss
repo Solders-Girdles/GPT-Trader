@@ -63,31 +63,3 @@
     background: $error;
     color: #FFFFFF;
 }
-
-/* === Legacy aliases for backward compatibility === */
-/* These map old class names to new standardized colors */
-
-.good {
-    color: $success;
-}
-
-.warning {
-    color: $warning;
-}
-
-.bad {
-    color: $error;
-}
-
-/* Risk widget legacy classes */
-.risk-status-low {
-    color: $success;
-}
-
-.risk-status-medium {
-    color: $warning;
-}
-
-.risk-status-high {
-    color: $error;
-}

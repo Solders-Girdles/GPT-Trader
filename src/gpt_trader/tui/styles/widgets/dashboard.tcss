@@ -72,10 +72,6 @@ MarketPulseWidget {
 
 /* Ticker list container - removed, defined in empty state section */
 
-/* Widget Header - NOTE: Use .widget-header from headers.tcss */
-/* This duplicate definition is kept for backwards compatibility but
-   the canonical style is defined in components/headers.tcss */
-
 /* Compact header variant */
 .widget-header-compact {
     height: 1;
@@ -254,14 +250,37 @@ SystemMonitorWidget {
     text-align: left;
 }
 
-.sys-metric.good { color: $success; background: transparent; }
-.sys-metric.warning { color: $warning; background: transparent; }
-.sys-metric.bad { color: $error; background: transparent; }
+.sys-metric.status-ok {
+    color: $success;
+    background: transparent;
+    text-style: none;
+}
+
+.sys-metric.status-warning {
+    color: $warning;
+    background: transparent;
+    text-style: none;
+}
+
+.sys-metric.status-critical {
+    color: $error;
+    background: transparent;
+    text-style: none;
+}
+
 .sys-metric.stopped { color: $info; background: transparent; }
 
-.sys-metric-value.good { color: $success; }
-.sys-metric-value.warning { color: $warning; }
-.sys-metric-value.bad { color: $error; }
+.sys-metric-value.status-ok { color: $success; }
+
+.sys-metric-value.status-warning {
+    color: $warning;
+    text-style: none;
+}
+
+.sys-metric-value.status-critical {
+    color: $error;
+    text-style: none;
+}
 
 /* Row with inline sparkline */
 .sys-row-with-spark {

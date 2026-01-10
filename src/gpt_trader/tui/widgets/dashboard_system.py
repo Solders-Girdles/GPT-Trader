@@ -264,7 +264,9 @@ class SystemMonitorWidget(Static):
         yield Label("Latency: 0ms", id="lbl-latency", classes="sys-metric")
 
         # Connection status
-        yield Label("[yellow]○ Connecting...[/yellow]", id="lbl-conn", classes="sys-metric warning")
+        yield Label(
+            "[yellow]○ Connecting...[/yellow]", id="lbl-conn", classes="sys-metric status-warning"
+        )
 
         # Rate limit with progress bar
         yield ProgressBarWidget(percentage=0.0, label="Rate", id="pb-rate", classes="sys-row")
@@ -341,22 +343,22 @@ class SystemMonitorWidget(Static):
             status_upper = val.upper()
             if status_upper in ("CONNECTED", "OK", "HEALTHY"):
                 lbl.update("[green]● Connected[/green]")
-                lbl.remove_class("stopped", "warning", "bad")
-                lbl.add_class("good")
+                lbl.remove_class("stopped", "status-warning", "status-critical")
+                lbl.add_class("status-ok")
                 # Flash green when connection is established
                 flash_label(lbl, direction="up", duration=0.6)
             elif status_upper in ("STOPPED", "IDLE"):
                 lbl.update("[cyan]■ Stopped[/cyan]")
-                lbl.remove_class("good", "warning", "bad")
+                lbl.remove_class("status-ok", "status-warning", "status-critical")
                 lbl.add_class("stopped")
             elif status_upper in ("CONNECTING", "RECONNECTING", "SYNCING", "--", "UNKNOWN"):
                 lbl.update("[yellow]○ Connecting...[/yellow]")
-                lbl.remove_class("stopped", "good", "bad")
-                lbl.add_class("warning")
+                lbl.remove_class("stopped", "status-ok", "status-critical")
+                lbl.add_class("status-warning")
             else:
                 lbl.update(f"[red]■ {val}[/red]")
-                lbl.remove_class("stopped", "good", "warning")
-                lbl.add_class("bad")
+                lbl.remove_class("stopped", "status-ok", "status-warning")
+                lbl.add_class("status-critical")
                 # Flash red when connection has issues
                 flash_label(lbl, direction="down", duration=0.6)
         except Exception as e:

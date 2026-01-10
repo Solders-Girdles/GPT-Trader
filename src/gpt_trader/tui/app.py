@@ -30,7 +30,7 @@ from gpt_trader.tui.app_lifecycle import TraderAppLifecycleMixin
 from gpt_trader.tui.app_mode_flow import TraderAppModeFlowMixin
 from gpt_trader.tui.app_status import TraderAppStatusMixin
 from gpt_trader.tui.commands import TraderCommands
-from gpt_trader.tui.preferences_paths import resolve_preferences_paths
+from gpt_trader.tui.preferences_paths import resolve_preferences_path
 from gpt_trader.tui.responsive_state import ResponsiveState
 from gpt_trader.tui.services import (
     ActionDispatcher,
@@ -141,15 +141,13 @@ class TraderApp(
         from gpt_trader.tui.theme import ThemeMode
 
         theme_mode = ThemeMode.DARK
-        preferences_path, fallback_path = resolve_preferences_paths()
-        for path in filter(None, (preferences_path, fallback_path)):
-            try:
-                if path.exists():
-                    prefs = json.loads(path.read_text())
-                    theme_mode = ThemeMode(prefs.get("theme", "dark"))
-                    break
-            except Exception:
-                theme_mode = ThemeMode.DARK
+        preferences_path = resolve_preferences_path()
+        try:
+            if preferences_path.exists():
+                prefs = json.loads(preferences_path.read_text())
+                theme_mode = ThemeMode(prefs.get("theme", "dark"))
+        except Exception:
+            theme_mode = ThemeMode.DARK
 
         styles_dir = self.Path(__file__).parent / "styles"
         css_file = styles_dir / (

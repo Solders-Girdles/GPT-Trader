@@ -26,6 +26,7 @@ from gpt_trader.tui.events import (
     ConfigChanged,
     ConfigReloadRequested,
     ErrorOccurred,
+    FieldValidationError,
     HeartbeatTick,
     NotificationRequested,
     ResponsiveStateChanged,
@@ -39,7 +40,6 @@ from gpt_trader.tui.events import (
     TradeMatcherStateRequest,
     TradeMatcherStateResponse,
     UIRefreshRequested,
-    ValidationError,
 )
 from gpt_trader.tui.responsive_state import ResponsiveState
 
@@ -103,9 +103,9 @@ class TestStateUpdateEvents:
         assert event.status == mock_status
         assert event.runtime_state is None
 
-    def test_validation_error_creation(self):
-        """Test ValidationError event creation."""
-        event = ValidationError(
+    def test_field_validation_error_creation(self):
+        """Test FieldValidationError event creation."""
+        event = FieldValidationError(
             field="market_data", message="Price cannot be negative", severity="error", value=-10.0
         )
         assert isinstance(event, Message)
@@ -114,17 +114,17 @@ class TestStateUpdateEvents:
         assert event.severity == "error"
         assert event.value == -10.0
 
-    def test_validation_error_default_severity(self):
-        """Test ValidationError with default severity."""
-        event = ValidationError(field="test", message="Test error")
+    def test_field_validation_error_default_severity(self):
+        """Test FieldValidationError with default severity."""
+        event = FieldValidationError(field="test", message="Test error")
         assert event.severity == "error"
         assert event.value is None
 
     def test_state_validation_failed_creation(self):
         """Test StateValidationFailed event creation."""
         errors = [
-            ValidationError(field="field1", message="Error 1"),
-            ValidationError(field="field2", message="Error 2"),
+            FieldValidationError(field="field1", message="Error 1"),
+            FieldValidationError(field="field2", message="Error 2"),
         ]
         event = StateValidationFailed(errors=errors, component="positions")
         assert isinstance(event, Message)
@@ -373,7 +373,7 @@ class TestEventDocumentation:
             BotModeChangeRequested,
             BotModeChanged,
             StateUpdateReceived,
-            ValidationError,
+            FieldValidationError,
             StateValidationFailed,
             StateValidationPassed,
             StateDeltaUpdateApplied,

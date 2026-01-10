@@ -17,7 +17,7 @@ from textual.widgets import Static
 from gpt_trader.tui.events import StateValidationFailed, StateValidationPassed
 
 if TYPE_CHECKING:
-    from gpt_trader.tui.state_management.validators import FieldValidationError as ValidationError
+    from gpt_trader.tui.state_management.validators import FieldValidationError
 
 
 class ValidationIndicatorWidget(Static):
@@ -37,7 +37,7 @@ class ValidationIndicatorWidget(Static):
 
     error_count = reactive(0)
     warning_count = reactive(0)
-    last_errors: list[ValidationError] = []
+    last_errors: list[FieldValidationError] = []
     last_update_time: float = 0.0
 
     # Auto-hide after this many seconds of being valid

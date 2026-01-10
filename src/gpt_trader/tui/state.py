@@ -16,12 +16,10 @@ from textual.widget import Widget
 from gpt_trader.core.account import CFMBalance
 from gpt_trader.monitoring.status_reporter import BotStatus
 from gpt_trader.tui.events import (
+    FieldValidationError,
     StateDeltaUpdateApplied,
     StateValidationFailed,
     StateValidationPassed,
-)
-from gpt_trader.tui.events import (
-    ValidationError as ValidationErrorEvent,
 )
 from gpt_trader.tui.formatting import safe_decimal
 from gpt_trader.tui.state_management.delta_updater import StateDeltaUpdater
@@ -207,7 +205,7 @@ class TuiState(Widget):
             if not validation_result.valid or validation_result.warnings:
                 all_issues = validation_result.errors + validation_result.warnings
                 event_errors = [
-                    ValidationErrorEvent(
+                    FieldValidationError(
                         field=e.field,
                         message=e.message,
                         severity=e.severity,

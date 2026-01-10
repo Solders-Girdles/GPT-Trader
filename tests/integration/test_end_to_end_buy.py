@@ -42,19 +42,16 @@ async def test_end_to_end_buy_execution():
         buy_decision = Decision(action=Action.BUY, reason="Test signal", confidence=0.8)
 
         # Mock the broker's place_order to verify it gets called
-        with patch.object(
-            bot.broker, "place_order", return_value={"id": "order_123", "status": "filled"}
-        ) as mock_place:
+        with patch.object(bot.broker, "place_order", wraps=bot.broker.place_order) as mock_place:
             with patch.object(bot.engine.strategy, "decide", return_value=buy_decision):
                 await bot.engine._cycle()
 
             # 4. Verify Order Placement
             mock_place.assert_called_once()
-            call_args = mock_place.call_args
-            # place_order is called with positional args: (symbol, side, order_type, quantity)
-            assert call_args[0][0] == "BTC-USD"  # symbol
+            call_kwargs = mock_place.call_args.kwargs
+            assert call_kwargs["symbol"] == "BTC-USD"
             from gpt_trader.core import OrderSide
 
-            assert call_args[0][1] == OrderSide.BUY  # side
+            assert call_kwargs["side"] == OrderSide.BUY
     finally:
         clear_application_container()

@@ -9,7 +9,7 @@ Extracted from TradingEngine to separate concerns:
 from __future__ import annotations
 
 import time
-from collections import deque
+from collections import defaultdict, deque
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
@@ -54,7 +54,9 @@ class PriceTickStore:
         self._event_store = event_store
         self._symbols = set(symbols)
         self._bot_id = bot_id
-        self._price_history: dict[str, deque[Decimal]] = {}
+        self._price_history: dict[str, deque[Decimal]] = defaultdict(
+            lambda: deque(maxlen=MAX_PRICE_HISTORY)
+        )
 
     @property
     def price_history(self) -> dict[str, deque[Decimal]]:

@@ -12,6 +12,11 @@ from gpt_trader.app.config import BotConfig
 from gpt_trader.app.runtime_ui_adapter import NullUIAdapter, RuntimeUIAdapter
 from gpt_trader.features.live_trade.engines.base import CoordinatorContext
 from gpt_trader.features.live_trade.engines.strategy import TradingEngine
+from gpt_trader.features.live_trade.lifecycle import (
+    TRADING_BOT_TRANSITIONS,
+    LifecycleStateMachine,
+    TradingBotState,
+)
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -41,7 +46,12 @@ class TradingBot:
     ) -> None:
         self.config = config
         self.container = container
-        self.running = False
+        self._lifecycle = LifecycleStateMachine(
+            initial_state=TradingBotState.INIT,
+            entity="trading_bot",
+            transitions=TRADING_BOT_TRANSITIONS,
+            logger=logger,
+        )
 
         # Get services directly from container (no longer using ServiceRegistry)
         self.broker: BrokerProtocol | None = container.broker
@@ -73,6 +83,39 @@ class TradingBot:
         self.ui_adapter: RuntimeUIAdapter = ui_adapter or NullUIAdapter()
         self.ui_adapter.attach(self)
 
+    @property
+    def state(self) -> TradingBotState:
+        return self._lifecycle.state
+
+    @property
+    def running(self) -> bool:
+        return self.state in (TradingBotState.STARTING, TradingBotState.RUNNING)
+
+    @running.setter
+    def running(self, value: bool) -> None:
+        target = TradingBotState.RUNNING if value else TradingBotState.STOPPED
+        self._lifecycle.transition(
+            target,
+            reason="running_override",
+            details={"via": "running_set"},
+            force=True,
+        )
+
+    def _transition_state(
+        self,
+        target: TradingBotState,
+        *,
+        reason: str,
+        details: dict[str, Any] | None = None,
+        force: bool = False,
+    ) -> bool:
+        return self._lifecycle.transition(
+            target,
+            reason=reason,
+            details=details,
+            force=force,
+        )
+
     def set_ui_adapter(self, adapter: RuntimeUIAdapter | None) -> None:
         """Attach a runtime UI adapter (no-op when None)."""
         if adapter is None:
@@ -86,7 +129,11 @@ class TradingBot:
         self.ui_adapter.attach(self)
 
     async def run(self, single_cycle: bool = False) -> None:
-        self.running = True
+        self._transition_state(
+            TradingBotState.STARTING,
+            reason="run_called",
+            details={"single_cycle": single_cycle},
+        )
         logger.info("=" * 60)
         logger.info(f"TradingBot.run() called - Starting with symbols: {self.config.symbols}")
         logger.info(f"Interval: {self.config.interval}s")
@@ -94,6 +141,11 @@ class TradingBot:
         logger.info("=" * 60)
 
         tasks = await self.engine.start_background_tasks()
+        self._transition_state(
+            TradingBotState.RUNNING,
+            reason="background_tasks_started",
+            details={"task_count": len(tasks)},
+        )
         logger.info(f"Started {len(tasks)} background tasks")
 
         try:
@@ -107,15 +159,24 @@ class TradingBot:
                 await asyncio.gather(*tasks)
         except asyncio.CancelledError:
             logger.info("Bot stopped (CancelledError caught).")
+        except Exception as exc:
+            self._transition_state(
+                TradingBotState.ERROR,
+                reason="run_failed",
+                details={"error": str(exc)},
+            )
+            raise
         finally:
             logger.info("Bot shutting down...")
+            self._transition_state(TradingBotState.STOPPING, reason="shutdown_start")
             await self.engine.shutdown()
-            self.running = False
+            self._transition_state(TradingBotState.STOPPED, reason="shutdown_complete")
             logger.info("Bot shutdown complete.")
 
     async def stop(self) -> None:
-        self.running = False
+        self._transition_state(TradingBotState.STOPPING, reason="stop_called")
         await self.engine.shutdown()
+        self._transition_state(TradingBotState.STOPPED, reason="stop_complete")
 
     async def flatten_and_stop(self) -> list[str]:
         """
@@ -126,7 +187,11 @@ class TradingBot:
         (TradingEngine.submit_order) because emergency closures must succeed
         even when guards would block normal trading.
         """
-        self.running = False
+        self._transition_state(
+            TradingBotState.STOPPING,
+            reason="flatten_and_stop",
+            details={"bypass_reason": "emergency_shutdown"},
+        )
         logger.warning(
             "EMERGENCY: Initiating Flatten & Stop",
             bypass_reason="emergency_shutdown",
@@ -176,6 +241,7 @@ class TradingBot:
             messages.append(f"Critical Error during flatten: {e}")
 
         await self.engine.shutdown()
+        self._transition_state(TradingBotState.STOPPED, reason="flatten_and_stop_complete")
         return messages
 
     async def shutdown(self) -> None:

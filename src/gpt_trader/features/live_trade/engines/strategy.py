@@ -61,6 +61,11 @@ from gpt_trader.features.live_trade.execution.validation import (
 )
 from gpt_trader.features.live_trade.factory import create_strategy
 from gpt_trader.features.live_trade.guard_errors import GuardError
+from gpt_trader.features.live_trade.lifecycle import (
+    ENGINE_TRANSITIONS,
+    EngineState,
+    LifecycleStateMachine,
+)
 from gpt_trader.features.live_trade.risk.manager import ValidationError
 from gpt_trader.features.live_trade.strategies.perps_baseline import (
     Action,
@@ -92,7 +97,12 @@ class TradingEngine(BaseEngine):
 
     def __init__(self, context: CoordinatorContext) -> None:
         super().__init__(context)
-        self.running = False
+        self._lifecycle = LifecycleStateMachine(
+            initial_state=EngineState.INIT,
+            entity="trading_engine",
+            transitions=ENGINE_TRANSITIONS,
+            logger=logger,
+        )
         # Create strategy via factory (supports baseline and mean_reversion)
         self.strategy = create_strategy(self.context.config)
         self._current_positions: dict[str, Position] = {}
@@ -347,17 +357,51 @@ class TradingEngine(BaseEngine):
     def name(self) -> str:
         return "strategy"
 
+    @property
+    def state(self) -> EngineState:
+        return self._lifecycle.state
+
+    @property
+    def running(self) -> bool:
+        return self.state in (EngineState.STARTING, EngineState.RUNNING)
+
+    @running.setter
+    def running(self, value: bool) -> None:
+        target = EngineState.RUNNING if value else EngineState.STOPPED
+        self._lifecycle.transition(
+            target,
+            reason="running_override",
+            details={"via": "running_set"},
+            force=True,
+        )
+
+    def _transition_state(
+        self,
+        target: EngineState,
+        *,
+        reason: str,
+        details: dict[str, Any] | None = None,
+        force: bool = False,
+    ) -> bool:
+        return self._lifecycle.transition(
+            target,
+            reason=reason,
+            details=details,
+            force=force,
+        )
+
     async def start_background_tasks(self) -> list[asyncio.Task[Any]]:
         """Start the main trading loop and heartbeat service.
 
         Before starting, attempts to rehydrate state from EventStore.
         """
+        self._transition_state(EngineState.STARTING, reason="start_background_tasks")
         # Rehydrate state from EventStore before starting
         if not self._rehydrated:
             self._rehydrate_from_events()
             self._rehydrated = True
 
-        self.running = True
+        self._transition_state(EngineState.RUNNING, reason="tasks_scheduled")
 
         tasks: list[asyncio.Task[Any]] = []
 
@@ -1608,7 +1652,7 @@ class TradingEngine(BaseEngine):
             self._quantity_override = None
 
     async def shutdown(self) -> None:
-        self.running = False
+        self._transition_state(EngineState.STOPPING, reason="shutdown_called")
 
         # Stop WS health watchdog
         if self._ws_health_task is not None and not self._ws_health_task.done():
@@ -1639,6 +1683,7 @@ class TradingEngine(BaseEngine):
         await self._status_reporter.stop()
         await self._heartbeat.stop()
         await super().shutdown()
+        self._transition_state(EngineState.STOPPED, reason="shutdown_complete")
 
     def health_check(self) -> HealthStatus:
         return HealthStatus(healthy=self.running, component=self.name)

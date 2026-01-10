@@ -96,8 +96,7 @@ class ExecutionTelemetryCollector:
             rejected: Whether broker rejected the order.
             retry_count: Number of retries before this result.
             failure_reason: Reason for failure (if failed).
-            rejection_reason: Categorized reason for rejection (e.g., rate_limit,
-                insufficient_funds, invalid_size, timeout, network, unknown).
+        rejection_reason: Categorized reason for rejection/failure (normalized).
             symbol: Order symbol (if available).
             side: Order side (if available).
             quantity: Order quantity (if available).

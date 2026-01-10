@@ -439,12 +439,9 @@ The order execution pipeline ensures reliable order submission with proper ID tr
 
 **Error Classification**
 
-`_classify_rejection_reason()` standardizes error messages into categories:
-- `rate_limit`, `insufficient_funds`, `invalid_size`, `invalid_price`
-- `timeout`, `network`, `market_closed`
-- `rejected`, `failed`, `unknown`
-
-These categories feed into metrics labels for consistent telemetry.
+Rejection reasons are normalized via `normalize_rejection_reason()` to stable codes
+(see `docs/OBSERVABILITY.md` for the canonical list). These codes feed into metrics
+labels and event payloads for consistent telemetry.
 
 ### Live Trade Infrastructure
 

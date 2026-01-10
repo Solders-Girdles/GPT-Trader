@@ -42,22 +42,34 @@ Guard failures are tracked via the existing guard telemetry system:
 
 ## Order Submission Reason Taxonomy
 
-Order rejections and failures are classified into standardized categories:
+Order rejections and failures are classified into standardized categories using
+`normalize_rejection_reason()` (`features/live_trade/execution/rejection_reason.py`).
 
-| Reason | Description |
-|--------|-------------|
-| `rate_limit` | API rate limit exceeded (429, "rate limit", "too many") |
-| `insufficient_funds` | Insufficient balance, margin, or funds |
-| `invalid_size` | Order size outside allowed bounds |
-| `invalid_price` | Price doesn't meet tick/increment requirements |
-| `timeout` | Request timed out |
-| `network` | Connection, DNS, SSL, or socket errors |
-| `market_closed` | Market is closed or trading halted |
-| `rejected` | Generic broker rejection |
-| `failed` | Generic failure |
-| `unknown` | Unclassified error |
+**Reason codes (normalized):**
 
-Classification logic for submission metrics: `order_submission._classify_rejection_reason()`
+- `broker_rejected`
+- `broker_status`
+- `exchange_rules`
+- `invalid_size`
+- `invalid_price`
+- `invalid_request`
+- `insufficient_funds`
+- `rate_limit`
+- `timeout`
+- `network`
+- `market_closed`
+- `order_preview`
+- `order_validation`
+- `pre_trade_validation`
+- `slippage_guard`
+- `mark_staleness`
+- `reduce_only`
+- `security_validation`
+- `paused`
+- `guard_error`
+- `guard_failure`
+- `quantity_zero`
+- `unknown`
 
 ## Order Rejection Event Reasons
 
@@ -73,14 +85,17 @@ exploding metric cardinality).
 - `security_validation`
 - `mark_staleness`
 - `exchange_rules`
+- `invalid_size`
+- `invalid_price`
+- `invalid_request`
 - `pre_trade_validation`
 - `slippage_guard`
 - `order_preview`
+- `order_validation`
 - `guard_error`
 - `guard_failure`
 - `broker_status`
 - `broker_rejected`
-- `invalid_request`
 - `insufficient_funds`
 - `rate_limit`
 - `timeout`

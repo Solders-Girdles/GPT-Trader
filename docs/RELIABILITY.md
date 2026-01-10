@@ -158,7 +158,7 @@ summary = get_metrics_collector().get_metrics_summary()
 
 **Label values**:
 - `result`: `success`, `rejected`, `failed`, `error`, `ok`
-- `reason`: `none`, `rate_limit`, `insufficient_funds`, `invalid_size`, `invalid_price`, `timeout`, `network`, `rejected`, `failed`, `unknown`
+- `reason`: `none` or a normalized reason code (see `docs/OBSERVABILITY.md`)
 - `side`: `buy`, `sell`
 
 ### Prometheus Export

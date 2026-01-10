@@ -19,6 +19,9 @@ from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
 from gpt_trader.features.live_trade.execution.broker_executor import BrokerExecutor
 from gpt_trader.features.live_trade.execution.decision_trace import OrderDecisionTrace
 from gpt_trader.features.live_trade.execution.order_event_recorder import OrderEventRecorder
+from gpt_trader.features.live_trade.execution.rejection_reason import (
+    normalize_rejection_reason,
+)
 from gpt_trader.logging.correlation import order_context
 from gpt_trader.monitoring.metrics_collector import record_counter, record_histogram
 from gpt_trader.observability.tracing import trace_span
@@ -28,52 +31,8 @@ logger = get_logger(__name__, component="order_submission")
 
 
 def _classify_rejection_reason(status_or_error: str) -> str:
-    """Classify a rejection or error into a standardized reason category.
-
-    Args:
-        status_or_error: The status string or error message.
-
-    Returns:
-        Standardized reason: rate_limit, insufficient_funds, invalid_size,
-        invalid_price, market_closed, timeout, network, rejected, failed, unknown.
-    """
-    text = status_or_error.lower()
-
-    # Rate limiting
-    if any(term in text for term in ["rate_limit", "rate limit", "429", "too many"]):
-        return "rate_limit"
-
-    # Insufficient funds
-    if any(term in text for term in ["insufficient", "balance", "funds", "margin"]):
-        return "insufficient_funds"
-
-    # Invalid size
-    if any(term in text for term in ["size", "quantity", "min_", "max_", "amount"]):
-        return "invalid_size"
-
-    # Invalid price
-    if any(term in text for term in ["price", "tick", "increment"]):
-        return "invalid_price"
-
-    # Timeout
-    if any(term in text for term in ["timeout", "timed out", "deadline"]):
-        return "timeout"
-
-    # Network issues (check before market_closed to avoid "socket closed" matching "closed")
-    if any(term in text for term in ["connection", "network", "socket", "dns", "ssl"]):
-        return "network"
-
-    # Market closed
-    if any(term in text for term in ["market closed", "trading halt", "suspended"]):
-        return "market_closed"
-
-    # Generic rejection/failure
-    if "reject" in text:
-        return "rejected"
-    if "fail" in text or "error" in text:
-        return "failed"
-
-    return "unknown"
+    """Classify a rejection or error into a standardized reason category."""
+    return normalize_rejection_reason(status_or_error)[0]
 
 
 def _record_execution_telemetry(
@@ -97,7 +56,7 @@ def _record_execution_telemetry(
         success: Whether the submission succeeded.
         rejected: Whether broker rejected the order.
         failure_reason: Human-readable failure reason.
-        rejection_reason: Categorized reason for rejection/failure.
+        rejection_reason: Categorized reason for rejection/failure (normalized).
         symbol: Order symbol.
         side: Order side (BUY/SELL).
         quantity: Order quantity.
@@ -132,7 +91,7 @@ def _record_order_submission_metric(
 
     Args:
         result: "success", "rejected", "failed", or "error"
-        reason: Rejection/failure reason or "none" for success
+        reason: Rejection/failure reason or "none" for success (normalized)
         side: "buy" or "sell"
     """
     try:
@@ -387,7 +346,7 @@ class OrderSubmitter:
                     latency_ms=latency_ms,
                     success=False,
                     rejected=True,
-                    rejection_reason="rejected",
+                    rejection_reason="broker_rejected",
                     symbol=symbol,
                     side=side_str,
                     quantity=qty_float,
@@ -395,7 +354,7 @@ class OrderSubmitter:
                 )
                 _record_order_submission_metric(
                     result="rejected",
-                    reason="rejected",
+                    reason="broker_rejected",
                     side=side_str,
                 )
                 _record_order_submission_latency(
@@ -411,7 +370,7 @@ class OrderSubmitter:
             # Classify the error for telemetry
             error_str = str(exc)
             reason = _classify_rejection_reason(error_str)
-            is_rejection = "rejected by broker" in error_str.lower()
+            is_rejection = reason in {"broker_rejected", "broker_status"}
 
             # Compute order context for telemetry
             side_str = side.value if hasattr(side, "value") else str(side)

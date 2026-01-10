@@ -13,102 +13,15 @@ from typing import Any
 from gpt_trader.app.protocols import EventStoreProtocol
 from gpt_trader.core import OrderSide, OrderType
 from gpt_trader.features.live_trade.execution.decision_trace import OrderDecisionTrace
+from gpt_trader.features.live_trade.execution.rejection_reason import (
+    normalize_rejection_reason,
+)
 from gpt_trader.monitoring.system import LogLevel
 from gpt_trader.monitoring.system import get_logger as get_monitoring_logger
 from gpt_trader.utilities.logging_patterns import get_logger
 from gpt_trader.utilities.telemetry import emit_metric
 
 logger = get_logger(__name__, component="order_event_recorder")
-
-
-def _normalize_rejection_reason(reason: str) -> tuple[str, str | None]:
-    """Map raw rejection reasons to stable codes for metrics/logs."""
-    raw = reason.strip() if reason else ""
-    if not raw:
-        return "unknown", None
-    lowered = raw.lower()
-
-    stable_codes = {
-        "broker_rejected",
-        "broker_status",
-        "exchange_rules",
-        "guard_error",
-        "guard_failure",
-        "insufficient_funds",
-        "invalid_request",
-        "mark_staleness",
-        "order_preview",
-        "order_validation",
-        "paused",
-        "pre_trade_validation",
-        "quantity_zero",
-        "rate_limit",
-        "reduce_only",
-        "security_validation",
-        "slippage_guard",
-        "timeout",
-        "network",
-        "market_closed",
-        "unknown",
-    }
-    if lowered in stable_codes:
-        return lowered, None
-
-    if lowered.startswith("paused:"):
-        return "paused", raw.partition(":")[2] or None
-    if lowered.startswith("guard_error:"):
-        return "guard_error", raw.partition(":")[2] or None
-    if lowered.startswith("guard_failure:"):
-        return "guard_failure", raw.partition(":")[2] or None
-    if lowered.startswith("broker_status_"):
-        return "broker_status", raw[len("broker_status_") :] or None
-
-    if lowered in {"quantity_zero"}:
-        return "quantity_zero", None
-    if lowered in {
-        "reduce_only_not_reducing",
-        "reduce_only_empty_position",
-        "reduce_only_mode_blocked",
-    }:
-        return "reduce_only", lowered
-    if "reduce_only" in lowered or "reduce-only" in lowered:
-        return "reduce_only", raw
-
-    if lowered == "security_validation_failed" or "security validation failed" in lowered:
-        return "security_validation", raw if lowered != "security_validation_failed" else None
-
-    if lowered == "mark_staleness" or ("mark" in lowered and "stale" in lowered):
-        return "mark_staleness", raw if lowered != "mark_staleness" else None
-
-    if "slippage" in lowered:
-        return "slippage_guard", raw
-    if "preview" in lowered:
-        return "order_preview", raw
-
-    if any(
-        term in lowered for term in ["exchange", "min_", "minimum", "step", "tick", "increment"]
-    ):
-        return "exchange_rules", raw
-    if any(term in lowered for term in ["leverage", "exposure", "liquidation", "mmr", "risk"]):
-        return "pre_trade_validation", raw
-
-    if any(term in lowered for term in ["insufficient", "margin", "balance", "funds"]):
-        return "insufficient_funds", raw
-    if any(term in lowered for term in ["rate_limit", "rate limit", "429", "too many"]):
-        return "rate_limit", raw
-    if any(term in lowered for term in ["timeout", "timed out", "deadline"]):
-        return "timeout", raw
-    if any(term in lowered for term in ["network", "connection", "socket", "dns", "ssl"]):
-        return "network", raw
-    if any(term in lowered for term in ["market closed", "trading halt", "suspended"]):
-        return "market_closed", raw
-
-    if "invalid" in lowered or "spec" in lowered or "notional" in lowered:
-        return "invalid_request", raw
-    if "rejected" in lowered:
-        return "broker_rejected", raw
-
-    return "unknown", raw
 
 
 class OrderEventRecorder:
@@ -195,7 +108,7 @@ class OrderEventRecorder:
             reason: Rejection reason.
             client_order_id: Client order ID for tracking (optional).
         """
-        normalized_reason, reason_detail = _normalize_rejection_reason(reason)
+        normalized_reason, reason_detail = normalize_rejection_reason(reason)
         # Use client_order_id as fallback order_id for logging consistency
         effective_order_id = client_order_id or ""
 

@@ -1015,8 +1015,8 @@ class TestClassifyRejectionReason:
             _classify_rejection_reason,
         )
 
-        assert _classify_rejection_reason("Order rejected by broker") == "rejected"
-        assert _classify_rejection_reason("Request rejected") == "rejected"
+        assert _classify_rejection_reason("Order rejected by broker") == "broker_rejected"
+        assert _classify_rejection_reason("Request rejected") == "broker_rejected"
 
     def test_generic_failure(self) -> None:
         """Test generic failure detection."""
@@ -1024,8 +1024,8 @@ class TestClassifyRejectionReason:
             _classify_rejection_reason,
         )
 
-        assert _classify_rejection_reason("Order failed") == "failed"
-        assert _classify_rejection_reason("Server error") == "failed"
+        assert _classify_rejection_reason("Order failed") == "unknown"
+        assert _classify_rejection_reason("Server error") == "unknown"
 
     def test_unknown_fallback(self) -> None:
         """Test unknown fallback."""
@@ -1435,8 +1435,8 @@ class TestBrokerStatusClassification:
             _classify_rejection_reason,
         )
 
-        assert _classify_rejection_reason("Order rejected by broker: REJECTED") == "rejected"
-        assert _classify_rejection_reason("rejected by exchange") == "rejected"
+        assert _classify_rejection_reason("Order rejected by broker: REJECTED") == "broker_status"
+        assert _classify_rejection_reason("rejected by exchange") == "broker_rejected"
 
     def test_broker_cancelled_status(self) -> None:
         """Test classification of broker CANCELLED status."""
@@ -1444,9 +1444,9 @@ class TestBrokerStatusClassification:
             _classify_rejection_reason,
         )
 
-        # CANCELLED status should map to "rejected" category
+        # CANCELLED status should map to broker status category
         result = _classify_rejection_reason("Order rejected by broker: CANCELLED")
-        assert result == "rejected"
+        assert result == "broker_status"
 
     def test_broker_failed_status(self) -> None:
         """Test classification of broker FAILED status."""
@@ -1454,13 +1454,10 @@ class TestBrokerStatusClassification:
             _classify_rejection_reason,
         )
 
-        # Pure "failed" without "reject" in the message
-        assert _classify_rejection_reason("Order failed") == "failed"
-        assert _classify_rejection_reason("Execution failure") == "failed"
-        assert _classify_rejection_reason("FAILED status") == "failed"
-
-        # Note: "Order rejected by broker: FAILED" returns "rejected" because
-        # "reject" is checked before "fail" in the classification order
+        # Pure "failed" without a known keyword should fall back to unknown
+        assert _classify_rejection_reason("Order failed") == "unknown"
+        assert _classify_rejection_reason("Execution failure") == "unknown"
+        assert _classify_rejection_reason("FAILED status") == "unknown"
 
     def test_timeout_variations(self) -> None:
         """Test various timeout error messages."""

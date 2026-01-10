@@ -217,12 +217,16 @@ class TestRestartStreamingIfNeeded:
         coordinator = Mock()
         coordinator._should_enable_streaming.return_value = False
         coordinator._stop_streaming.return_value = None
+        coordinator._start_streaming = Mock()
         coordinator._schedule_coroutine.side_effect = RuntimeError(
             "asyncio.run() cannot be called from a running event loop"
         )
 
         # Should not raise - falls back to thread
         restart_streaming_if_needed(coordinator, {"perps_enable_streaming": "false"})
+        coordinator._schedule_coroutine.assert_called_once()
+        coordinator._stop_streaming.assert_called_once()
+        coordinator._start_streaming.assert_not_called()
 
     def test_reraises_other_runtime_errors(self) -> None:
         """Test reraises RuntimeError that's not about asyncio.run."""
@@ -295,7 +299,9 @@ class TestScheduleCoroutine:
         # We can't easily test this in sync context, just verify no crash
         # The function will try running loop first, and since we're not in
         # an async context, it will fall through to the task_handle path
-        _schedule_coroutine(coordinator, test_coro())
+        coro = test_coro()
+        _schedule_coroutine(coordinator, coro)
+        mock_loop.call_soon_threadsafe.assert_called_once_with(asyncio.create_task, coro)
 
 
 # ============================================================
@@ -429,6 +435,8 @@ class TestStopStreaming:
 
         # Should not raise
         await _stop_streaming(coordinator)
+        assert coordinator._stream_task is None
+        assert coordinator._loop_task_handle is None
 
 
 # ============================================================
@@ -531,8 +539,11 @@ class TestRunStreamLoop:
         coordinator = Mock()
         coordinator.context.broker = None
 
-        # Should not raise
-        _run_stream_loop(coordinator, ["BTC-PERP"], 1, None)
+        with patch(
+            "gpt_trader.features.live_trade.engines.telemetry_streaming.logger"
+        ) as mock_logger:
+            _run_stream_loop(coordinator, ["BTC-PERP"], 1, None)
+            mock_logger.error.assert_called_once()
 
     def test_run_stream_loop_processes_messages(self) -> None:
         """Test processes stream messages."""
@@ -573,6 +584,8 @@ class TestRunStreamLoop:
 
         # Should stop quickly
         _run_stream_loop(coordinator, ["BTC-PERP"], 1, stop_signal)
+        broker.stream_orderbook.assert_called_once_with(["BTC-PERP"], level=1, include_trades=True)
+        coordinator._update_mark_and_metrics.assert_not_called()
 
     def test_run_stream_loop_falls_back_to_trades(self) -> None:
         """Test falls back to stream_trades when orderbook fails."""

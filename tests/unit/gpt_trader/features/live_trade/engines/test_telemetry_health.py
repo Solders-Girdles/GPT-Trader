@@ -5,7 +5,7 @@ from __future__ import annotations
 import threading
 from decimal import Decimal
 from typing import Any
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from gpt_trader.features.live_trade.engines.telemetry_health import (
     extract_mark_from_message,
@@ -187,9 +187,7 @@ class TestUpdateMarkAndMetrics:
 
         update_mark_and_metrics(coordinator, ctx, "BTC-PERP", Decimal("50000"))
 
-        # Monitor from extras should NOT be called (only fallback monitor is called)
-        # Based on the code logic, monitor from extras is found but never used
-        # Only coordinator._market_monitor is called
+        monitor.record_update.assert_not_called()
 
     def test_records_market_update_via_coordinator_monitor(self) -> None:
         """Test records update via coordinator._market_monitor."""
@@ -239,8 +237,13 @@ class TestUpdateMarkAndMetrics:
         strategy_coord.update_mark_window.side_effect = RuntimeError("Failed")
         ctx.strategy_coordinator = strategy_coord
 
-        # Should not raise
-        update_mark_and_metrics(coordinator, ctx, "BTC-PERP", Decimal("50000"))
+        with patch("gpt_trader.features.live_trade.engines.telemetry_health.logger") as mock_logger:
+            update_mark_and_metrics(coordinator, ctx, "BTC-PERP", Decimal("50000"))
+
+            assert any(
+                call.kwargs.get("stage") == "mark_window"
+                for call in mock_logger.debug.call_args_list
+            )
 
     def test_handles_market_monitor_error(self) -> None:
         """Test handles error from market_monitor gracefully."""
@@ -250,18 +253,25 @@ class TestUpdateMarkAndMetrics:
         coordinator._market_monitor = monitor
         ctx = self._create_mock_context()
 
-        # Should not raise
-        update_mark_and_metrics(coordinator, ctx, "BTC-PERP", Decimal("50000"))
+        with patch("gpt_trader.features.live_trade.engines.telemetry_health.logger") as mock_logger:
+            update_mark_and_metrics(coordinator, ctx, "BTC-PERP", Decimal("50000"))
+
+            assert any(
+                call.kwargs.get("stage") == "market_monitor"
+                for call in mock_logger.debug.call_args_list
+            )
 
     def test_handles_non_dict_extras(self) -> None:
         """Test handles non-dict extras gracefully."""
         coordinator = Mock()
-        coordinator._market_monitor = None
+        monitor = Mock()
+        coordinator._market_monitor = monitor
         ctx = self._create_mock_context()
         ctx.registry.extras = "not_a_dict"
 
         # Should not raise
         update_mark_and_metrics(coordinator, ctx, "BTC-PERP", Decimal("50000"))
+        monitor.record_update.assert_called_once_with("BTC-PERP")
 
 
 # ============================================================

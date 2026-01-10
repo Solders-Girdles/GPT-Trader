@@ -434,6 +434,7 @@ class TestRunAsync:
             bot_id="test",
             profile="default",
         )
+        service._publish_snapshot = Mock()
 
         # Run briefly then cancel
         task = asyncio.create_task(service.run(interval_seconds=10))
@@ -445,7 +446,8 @@ class TestRunAsync:
         except asyncio.CancelledError:
             pass
 
-        # Should not have crashed
+        account_manager.snapshot.assert_called()
+        service._publish_snapshot.assert_called()
 
 
 # ============================================================

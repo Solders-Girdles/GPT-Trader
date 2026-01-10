@@ -17,6 +17,7 @@ RISK_CONFIG_ENV_KEYS = [
     "RISK_DAILY_LOSS_LIMIT",
     "RISK_MAX_EXPOSURE_PCT",
     "RISK_MAX_POSITION_PCT_PER_SYMBOL",
+    "RISK_UNFILLED_ORDER_ALERT_SECONDS",
     # CFM-specific keys
     "CFM_MAX_LEVERAGE",
     "CFM_MIN_LIQUIDATION_BUFFER_PCT",
@@ -121,6 +122,9 @@ class RiskConfig:
     broker_outage_max_failures: int = 3  # Max consecutive failures before pause
     broker_outage_cooldown_seconds: int = 120  # Pause duration
 
+    # Order audit alerts
+    unfilled_order_alert_seconds: int = 300  # Emit alert for open orders older than this
+
     # ==========================================================================
     # WebSocket Health Monitoring
     # ==========================================================================
@@ -173,6 +177,7 @@ class RiskConfig:
             preview_failure_disable_after=int(_get_env("PREVIEW_FAILURE_DISABLE_AFTER", "5")),
             broker_outage_max_failures=int(_get_env("BROKER_OUTAGE_MAX_FAILURES", "3")),
             broker_outage_cooldown_seconds=int(_get_env("BROKER_OUTAGE_COOLDOWN_SECONDS", "120")),
+            unfilled_order_alert_seconds=int(_get_env("UNFILLED_ORDER_ALERT_SECONDS", "300")),
             # WebSocket health monitoring
             ws_health_interval_seconds=int(_get_env("WS_HEALTH_INTERVAL_SECONDS", "5")),
             ws_message_stale_seconds=int(_get_env("WS_MESSAGE_STALE_SECONDS", "15")),

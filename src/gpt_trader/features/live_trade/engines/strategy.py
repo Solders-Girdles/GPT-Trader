@@ -15,6 +15,7 @@ import asyncio
 import threading
 import time
 from collections import deque
+from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
@@ -151,6 +152,7 @@ class TradingEngine(BaseEngine):
 
         # Initialize graceful degradation state
         self._degradation = DegradationState()
+        self._unfilled_order_alerts: dict[str, float] = {}
 
         # Initialize equity calculator (extracted for reusability)
         self._equity_calculator = EquityCalculator(
@@ -1267,6 +1269,89 @@ class TradingEngine(BaseEngine):
             }
             self._append_event("api_error", api_payload)
 
+    def _get_order_field(self, order: Any, *keys: str) -> Any:
+        if isinstance(order, dict):
+            for key in keys:
+                if key in order and order[key] is not None:
+                    return order[key]
+            return None
+        for key in keys:
+            if hasattr(order, key):
+                value = getattr(order, key)
+                if value is not None:
+                    return value
+        return None
+
+    def _parse_timestamp(self, value: Any) -> float:
+        if value is None:
+            return time.time()
+        if isinstance(value, (int, float)):
+            return float(value)
+        if isinstance(value, datetime):
+            return value.timestamp()
+        if isinstance(value, str):
+            try:
+                clean = value.rstrip("Z")
+                dt = datetime.fromisoformat(clean)
+                return dt.timestamp()
+            except (ValueError, TypeError):
+                return time.time()
+        return time.time()
+
+    def _record_unfilled_order_alerts(self, orders: list[Any]) -> None:
+        risk_manager = self.context.risk_manager
+        config = risk_manager.config if risk_manager else None
+        threshold = getattr(config, "unfilled_order_alert_seconds", 300)
+        if not orders or threshold <= 0:
+            self._unfilled_order_alerts.clear()
+            return
+
+        now = time.time()
+        active_ids: set[str] = set()
+
+        for order in orders:
+            order_id = self._get_order_field(
+                order, "order_id", "id", "client_order_id", "client_id"
+            )
+            if order_id is None:
+                continue
+            order_id_str = str(order_id)
+            active_ids.add(order_id_str)
+            if order_id_str in self._unfilled_order_alerts:
+                continue
+
+            status = self._get_order_field(order, "status")
+            status_str = (status.value if hasattr(status, "value") else str(status or "")).upper()
+            if status_str in {"FILLED", "CANCELLED", "CANCELED", "REJECTED"}:
+                continue
+
+            created_at = self._get_order_field(
+                order, "created_time", "created_at", "submitted_at", "created"
+            )
+            created_ts = self._parse_timestamp(created_at)
+            age_seconds = now - created_ts
+            if age_seconds < threshold:
+                continue
+
+            payload = {
+                "order_id": order_id_str,
+                "symbol": self._get_order_field(order, "product_id", "symbol") or "",
+                "side": self._get_order_field(order, "side") or "",
+                "status": status_str,
+                "created_time": created_ts,
+                "age_seconds": age_seconds,
+                "threshold_seconds": threshold,
+                "timestamp": now,
+            }
+            self._append_event("unfilled_order_alert", payload)
+            self._unfilled_order_alerts[order_id_str] = now
+
+        stale_ids = [
+            order_id for order_id in self._unfilled_order_alerts if order_id not in active_ids
+        ]
+        for order_id in stale_ids:
+            del self._unfilled_order_alerts[order_id]
+
     def _finalize_decision_trace(
         self,
         trace: OrderDecisionTrace,
@@ -2129,6 +2214,8 @@ class TradingEngine(BaseEngine):
                         f"  Order {order.get('order_id')}: {order.get('side')} "
                         f"{order.get('product_id')} {order.get('order_configuration')}"
                     )
+
+            self._record_unfilled_order_alerts(orders)
 
             # Update status reporter
             self._status_reporter.update_orders(orders)

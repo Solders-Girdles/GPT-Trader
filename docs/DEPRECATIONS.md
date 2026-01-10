@@ -52,6 +52,7 @@ The entire `src/gpt_trader/orchestration/` package was removed. Migration phases
 - **Phase 11**: Moved tests to canonical locations, created deprecation test bucket
 - **Phase 12**: Updated scripts/tooling, extended CI guards
 - **Phase 13**: Hard removal of orchestration package and shim tests
+- **Phase 14**: Post-removal cleanup (pytest marker, test hygiene allowlist, inventory generator)
 
 ---
 

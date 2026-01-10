@@ -212,7 +212,6 @@ def generate_test_inventory(
             "risk",
             "execution",
             "backtesting",
-            "orchestration",
             "persistence",
             "security",
             "utilities",

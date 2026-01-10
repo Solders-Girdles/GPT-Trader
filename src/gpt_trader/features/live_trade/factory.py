@@ -66,8 +66,8 @@ def create_strategy(config: "BotConfig") -> TradingStrategy:
                 # Actually, let's try to unpack if it matches fields
                 try:
                     ensemble_config = EnsembleStrategyConfig(**ensemble_config)
-                except Exception:
-                    logger.warning("Failed to parse ensemble_config dict, using default")
+                except (TypeError, ValueError) as e:
+                    logger.warning("Failed to parse ensemble_config dict: %s, using default", e)
                     ensemble_config = EnsembleStrategyConfig()
             else:
                 ensemble_config = EnsembleStrategyConfig()

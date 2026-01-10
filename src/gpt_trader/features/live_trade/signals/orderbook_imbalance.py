@@ -57,7 +57,7 @@ class OrderbookImbalanceSignal(SignalGenerator):
         # Get depth at configured levels
         try:
             bid_depth, ask_depth = orderbook.get_depth(self.config.levels)
-        except Exception:
+        except (TypeError, ValueError, ArithmeticError):
             return self._no_data_signal("depth_calculation_error")
 
         # Validate depths

@@ -67,7 +67,8 @@ class StatefulStrategy(TradingStrategy, ABC):
                         price = Decimal(str(price_str))
                         self.update_stats(symbol, price)
                         processed += 1
-                    except Exception:
+                    except (ValueError, ArithmeticError) as e:
+                        logger.debug("Failed to parse price during rehydration: %s", e)
                         continue
 
         if processed > 0:

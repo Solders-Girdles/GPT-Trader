@@ -138,7 +138,6 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/persistence/test_orders_store.py",  # comprehensive order persistence contract with lifecycle, recovery, and integrity validation
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events.py",  # WebSocket event dispatcher testing with typed handlers and dispatcher routing
     "tests/unit/gpt_trader/app/test_bootstrap.py",  # comprehensive bootstrap module coverage with profile loading and container initialization
-    "tests/unit/gpt_trader/deprecations/test_orchestration_shims.py",  # deprecation warning coverage for legacy shims
     "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators.py",  # Welford algorithm accuracy, numerical stability, and reset behavior
     # Phase 2 pain points remediation: critical service coverage
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service.py",  # OrderService protocol coverage: place/cancel/list/get orders

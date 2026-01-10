@@ -14,6 +14,7 @@ Includes WS health watchdog that monitors staleness and triggers degradation.
 import asyncio
 import threading
 import time
+from collections import deque
 from decimal import Decimal
 from typing import Any
 
@@ -299,7 +300,7 @@ class TradingEngine(BaseEngine):
         return self._status_reporter
 
     @property
-    def price_history(self) -> dict[str, list[Decimal]]:
+    def price_history(self) -> dict[str, deque[Decimal]]:
         """Access price history via PriceTickStore."""
         return self._price_tick_store.price_history
 

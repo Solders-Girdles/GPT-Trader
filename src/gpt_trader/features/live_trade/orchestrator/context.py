@@ -150,7 +150,7 @@ class ContextBuilderMixin(_HasBot):
         }
         try:
             quantity = Decimal(str(quantity_val))
-        except Exception:
+        except (ValueError, ArithmeticError):
             quantity = Decimal("0")
         return state, quantity
 

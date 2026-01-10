@@ -9,7 +9,7 @@ Extracted from TradingEngine to separate concerns:
 from __future__ import annotations
 
 import time
-from collections import defaultdict
+from collections import deque
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
@@ -54,10 +54,10 @@ class PriceTickStore:
         self._event_store = event_store
         self._symbols = set(symbols)
         self._bot_id = bot_id
-        self._price_history: dict[str, list[Decimal]] = defaultdict(list)
+        self._price_history: dict[str, deque[Decimal]] = {}
 
     @property
-    def price_history(self) -> dict[str, list[Decimal]]:
+    def price_history(self) -> dict[str, deque[Decimal]]:
         """Access the price history dictionary."""
         return self._price_history
 
@@ -96,12 +96,12 @@ class PriceTickStore:
 
             try:
                 price = Decimal(str(price_str))
+                # Create deque with maxlen if first price for symbol
+                if symbol not in self._price_history:
+                    self._price_history[symbol] = deque(maxlen=MAX_PRICE_HISTORY)
                 self._price_history[symbol].append(price)
-                # Keep history bounded
-                if len(self._price_history[symbol]) > MAX_PRICE_HISTORY:
-                    self._price_history[symbol].pop(0)
                 restored += 1
-            except Exception as e:
+            except (ValueError, ArithmeticError) as e:
                 logger.warning(f"Failed to parse price from event: {e}")
 
         if restored > 0:
@@ -125,10 +125,10 @@ class PriceTickStore:
             symbol: Trading symbol
             price: Current price
         """
-        # Update in-memory history
+        # Update in-memory history (deque auto-discards oldest when full)
+        if symbol not in self._price_history:
+            self._price_history[symbol] = deque(maxlen=MAX_PRICE_HISTORY)
         self._price_history[symbol].append(price)
-        if len(self._price_history[symbol]) > MAX_PRICE_HISTORY:
-            self._price_history[symbol].pop(0)
 
         # Persist to event store
         if self._event_store is None:

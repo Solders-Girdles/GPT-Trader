@@ -19,6 +19,7 @@ class OrderDecisionTrace:
     quantity: Decimal | None
     reduce_only: bool
     reason: str
+    reduce_only_final: bool | None = None
     bot_id: str | None = None
     outcomes: dict[str, dict[str, Any]] = field(default_factory=dict)
     timestamp: float = field(default_factory=time.time)
@@ -44,6 +45,7 @@ class OrderDecisionTrace:
             "equity": str(self.equity),
             "quantity": str(self.quantity) if self.quantity is not None else None,
             "reduce_only": self.reduce_only,
+            "reduce_only_final": self.reduce_only_final,
             "reason": self.reason,
             "bot_id": self.bot_id,
             "outcomes": self.outcomes,

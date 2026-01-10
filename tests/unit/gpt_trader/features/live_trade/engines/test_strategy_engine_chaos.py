@@ -308,7 +308,7 @@ class TestGuardOutcomeInvariants:
     @pytest.mark.asyncio
     async def test_degradation_blocks_before_validation(self, engine) -> None:
         engine._degradation.pause_all(seconds=60, reason="test_pause")
-        engine.context.risk_manager.pre_trade_validate = MagicMock()
+        engine._order_validator.run_pre_trade_validation = MagicMock()
         engine._order_validator.validate_exchange_rules = MagicMock()
 
         result = await engine._validate_and_place_order(
@@ -319,7 +319,7 @@ class TestGuardOutcomeInvariants:
         )
 
         assert result.status == OrderSubmissionStatus.BLOCKED
-        engine.context.risk_manager.pre_trade_validate.assert_not_called()
+        engine._order_validator.run_pre_trade_validation.assert_not_called()
         engine._order_validator.validate_exchange_rules.assert_not_called()
         engine._order_submitter.submit_order.assert_not_called()
 
@@ -327,7 +327,7 @@ class TestGuardOutcomeInvariants:
     async def test_risk_validation_blocked_vs_failed(self, engine) -> None:
         from gpt_trader.features.live_trade.risk.manager import ValidationError
 
-        engine.context.risk_manager.pre_trade_validate.side_effect = ValidationError("risk")
+        engine._order_validator.run_pre_trade_validation.side_effect = ValidationError("risk")
 
         result = await engine._validate_and_place_order(
             symbol="BTC-USD",
@@ -340,7 +340,7 @@ class TestGuardOutcomeInvariants:
         assert result.reason is not None
         engine._order_submitter.submit_order.assert_not_called()
 
-        engine.context.risk_manager.pre_trade_validate.side_effect = Exception("boom")
+        engine._order_validator.run_pre_trade_validation.side_effect = Exception("boom")
 
         result = await engine._validate_and_place_order(
             symbol="BTC-USD",
@@ -358,10 +358,11 @@ class TestGuardOutcomeInvariants:
         engine.context.risk_manager.config.mark_staleness_allow_reduce_only = True
         engine._order_validator.finalize_reduce_only_flag.return_value = True
         engine._order_submitter.submit_order.return_value = "order-1"
+        engine._current_positions = {"BTC-USD": _make_position()}
 
         result = await engine._validate_and_place_order(
             symbol="BTC-USD",
-            decision=Decision(Action.BUY, "test"),
+            decision=Decision(Action.SELL, "test"),
             price=Decimal("50000"),
             equity=Decimal("10000"),
             reduce_only_requested=True,

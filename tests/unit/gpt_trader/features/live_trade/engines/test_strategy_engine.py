@@ -278,7 +278,10 @@ async def test_risk_manager_receives_dict_format(engine):
     # Setup risk manager
     mock_risk_manager = MagicMock()
     mock_risk_manager._start_of_day_equity = Decimal("1000.0")
-    mock_risk_manager.pre_trade_validate.return_value = MagicMock(is_valid=True)
+    mock_risk_manager.check_mark_staleness.return_value = False
+    mock_risk_manager.track_daily_pnl.return_value = False
+    mock_risk_manager.is_reduce_only_mode.return_value = False
+    mock_risk_manager.check_order.return_value = True
     engine.context.risk_manager = mock_risk_manager
 
     # Setup security validator via patch
@@ -306,13 +309,18 @@ async def test_risk_manager_receives_dict_format(engine):
         engine.context.broker.list_balances.return_value = [
             Balance(asset="USD", total=Decimal("10000"), available=Decimal("10000"))
         ]
+        engine._state_collector.build_positions_dict.side_effect = (
+            lambda positions: engine._positions_to_risk_format(
+                {pos.symbol: pos for pos in positions}
+            )
+        )
 
         # Run cycle
         await engine._cycle()
 
-    # Verify pre_trade_validate call
-    mock_risk_manager.pre_trade_validate.assert_called_once()
-    call_args = mock_risk_manager.pre_trade_validate.call_args
+    # Verify pre-trade validation call uses risk-format positions
+    engine._order_validator.run_pre_trade_validation.assert_called_once()
+    call_args = engine._order_validator.run_pre_trade_validation.call_args
     current_positions = call_args.kwargs["current_positions"]
 
     assert "BTC-USD" in current_positions
@@ -374,9 +382,6 @@ async def test_order_placed_with_dynamic_quantity(engine):
         Balance(asset="USD", total=Decimal("10000"), available=Decimal("10000"))
     ]
     engine.context.broker.list_positions.return_value = []
-
-    # Setup risk manager
-    engine.context.risk_manager.pre_trade_validate.return_value.is_valid = True
 
     # Setup security validator via patch
     with patch("gpt_trader.security.security_validator.get_validator") as mock_get_validator:
@@ -454,7 +459,6 @@ async def test_reduce_only_clamps_quantity_to_prevent_position_flip(engine):
     engine.context.risk_manager._reduce_only_mode = True
     engine.context.risk_manager._daily_pnl_triggered = False
     engine.context.risk_manager.check_order.return_value = True
-    engine.context.risk_manager.pre_trade_validate.return_value.is_valid = True
 
     # Make validate_exchange_rules return the input quantity (preserves clamping)
     engine._order_validator.validate_exchange_rules.side_effect = lambda **kw: (
@@ -495,7 +499,6 @@ async def test_reduce_only_blocks_new_position_on_empty_symbol(engine):
     engine.context.risk_manager._reduce_only_mode = True
     engine.context.risk_manager._daily_pnl_triggered = False
     engine.context.risk_manager.check_order.return_value = False  # Block non-reduce orders
-    engine.context.risk_manager.pre_trade_validate.return_value.is_valid = True
 
     # Setup security validator via patch
     with patch("gpt_trader.security.security_validator.get_validator") as mock_get_validator:
@@ -570,8 +573,6 @@ async def test_exchange_rules_blocks_small_order(engine):
     # Mock submitter
     engine._order_submitter = MagicMock()
 
-    engine.context.risk_manager.pre_trade_validate.return_value.is_valid = True
-
     with patch("gpt_trader.security.security_validator.get_validator") as mock_get_validator:
         mock_validator = MagicMock()
         mock_validator.validate_order_request.return_value.is_valid = True
@@ -627,8 +628,6 @@ async def test_slippage_guard_blocks_order(engine):
 
     # Mock submitter
     engine._order_submitter = MagicMock()
-
-    engine.context.risk_manager.pre_trade_validate.return_value.is_valid = True
 
     with patch("gpt_trader.security.security_validator.get_validator") as mock_get_validator:
         mock_validator = MagicMock()

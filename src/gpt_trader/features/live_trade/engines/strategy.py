@@ -1216,10 +1216,10 @@ class TradingEngine(BaseEngine):
         """
         side = OrderSide.BUY if decision.action == Action.BUY else OrderSide.SELL
 
-        # Early check: is this order reduce-only? (needed for degradation check)
+        # Early check: is this order actually reduce-only? (needed for degradation check)
         current_pos = self._current_positions.get(symbol)
         is_reducing = self._is_reduce_only_order(current_pos, side)
-        reduce_only_flag = reduce_only_requested or is_reducing
+        reduce_only_flag = is_reducing
 
         trace = OrderDecisionTrace(
             symbol=symbol,
@@ -1227,7 +1227,8 @@ class TradingEngine(BaseEngine):
             price=price,
             equity=equity,
             quantity=None,
-            reduce_only=reduce_only_flag,
+            reduce_only=reduce_only_requested,
+            reduce_only_final=reduce_only_flag,
             reason=decision.reason,
             bot_id=str(self.context.bot_id) if self.context.bot_id is not None else None,
         )
@@ -1259,6 +1260,21 @@ class TradingEngine(BaseEngine):
                 reason=f"paused:{pause_reason}",
             )
         trace.record_outcome("degradation_gate", "passed")
+
+        if reduce_only_requested and not is_reducing:
+            logger.warning(
+                "Reduce-only requested without a matching position",
+                symbol=symbol,
+                side=side.value,
+                operation="reduce_only",
+                stage="requested_not_reducing",
+            )
+            trace.record_outcome("reduce_only", "blocked", detail="requested_not_reducing")
+            return self._finalize_decision_trace(
+                trace,
+                status=OrderSubmissionStatus.BLOCKED,
+                reason="reduce_only_not_reducing",
+            )
 
         # Dynamic position sizing
         quantity = self._calculate_order_quantity(
@@ -1322,73 +1338,8 @@ class TradingEngine(BaseEngine):
             )
         trace.record_outcome("security_validation", "passed")
 
-        # Run pre-trade validation if risk manager is available
         risk_manager = self.context.risk_manager
         if risk_manager is not None:
-            try:
-                risk_manager.pre_trade_validate(
-                    symbol=symbol,
-                    side=side.value,
-                    quantity=quantity,
-                    price=price,
-                    product=None,
-                    equity=equity,
-                    current_positions=self._positions_to_risk_format(self._current_positions),
-                )
-            except ValidationError as exc:
-                logger.warning(
-                    "Risk validation failed",
-                    symbol=symbol,
-                    side=side.value,
-                    error_message=str(exc),
-                    operation="order_validation",
-                    stage="risk_manager",
-                )
-                await self._notify(
-                    title="Risk Validation Failed",
-                    message=f"Order blocked by risk manager: {exc}",
-                    severity=AlertSeverity.WARNING,
-                    context={
-                        "symbol": symbol,
-                        "side": side.value,
-                        "reason": str(exc),
-                    },
-                )
-                trace.record_outcome("risk_validation", "blocked", detail=str(exc))
-                return self._finalize_decision_trace(
-                    trace,
-                    status=OrderSubmissionStatus.BLOCKED,
-                    reason=str(exc),
-                )
-            except Exception as exc:
-                logger.error(
-                    "Risk validation error",
-                    symbol=symbol,
-                    side=side.value,
-                    error_message=str(exc),
-                    operation="order_validation",
-                    stage="risk_manager_error",
-                )
-                await self._notify(
-                    title="Risk Validation Failed",
-                    message=f"Order validation failed for {symbol}: {exc}",
-                    severity=AlertSeverity.ERROR,
-                    context={
-                        "symbol": symbol,
-                        "side": side.value,
-                        "error": str(exc),
-                    },
-                )
-                trace.record_outcome("risk_validation", "error", detail=str(exc))
-                return self._finalize_decision_trace(
-                    trace,
-                    status=OrderSubmissionStatus.FAILED,
-                    error=str(exc),
-                )
-
-            logger.info(f"Risk validation passed for {symbol} {side.value}")
-            trace.record_outcome("risk_validation", "passed")
-
             # In reduce-only mode, clamp quantity to prevent position flips
             daily_pnl_triggered = bool(getattr(risk_manager, "_daily_pnl_triggered", False))
             reduce_only_mode = risk_manager.is_reduce_only_mode()
@@ -1460,8 +1411,8 @@ class TradingEngine(BaseEngine):
                 detail="clamped" if reduce_only_clamped else None,
             )
         else:
-            logger.warning("No risk manager configured - skipping validation")
-            trace.record_outcome("risk_validation", "skipped")
+            logger.warning("No risk manager configured - skipping reduce-only checks")
+            trace.record_outcome("reduce_only", "skipped")
 
         # Guard: Check mark price staleness before placing order
         if self.context.risk_manager is not None:
@@ -1524,7 +1475,7 @@ class TradingEngine(BaseEngine):
         else:
             trace.record_outcome("mark_staleness", "skipped")
 
-        # Pre-trade guards via OrderValidator (exchange rules, slippage, preview)
+        # Pre-trade guards via OrderValidator (exchange rules, risk validation, slippage, preview)
         effective_price = price
         if self._order_validator is not None:
             try:
@@ -1554,6 +1505,25 @@ class TradingEngine(BaseEngine):
                         trace.record_outcome("exchange_rules", "blocked", detail=str(exc))
                         raise
 
+                    # Pre-trade validation via OrderValidator (leverage/exposure)
+                    current_positions_dict = self._state_collector.build_positions_dict(
+                        list(self._current_positions.values())
+                    )
+                    try:
+                        self._order_validator.run_pre_trade_validation(
+                            symbol=symbol,
+                            side=side,
+                            order_quantity=quantity,
+                            effective_price=effective_price,
+                            product=product,
+                            equity=equity,
+                            current_positions=current_positions_dict,
+                        )
+                        trace.record_outcome("pre_trade_validation", "passed")
+                    except ValidationError as exc:
+                        trace.record_outcome("pre_trade_validation", "blocked", detail=str(exc))
+                        raise
+
                     # Slippage guard with degradation tracking
                     try:
                         self._order_validator.enforce_slippage_guard(
@@ -1575,25 +1545,6 @@ class TradingEngine(BaseEngine):
                         if config is not None:
                             self._degradation.record_slippage_failure(symbol, config)
                         raise slippage_exc
-
-                    # Pre-trade validation via OrderValidator (leverage/exposure)
-                    current_positions_dict = self._state_collector.build_positions_dict(
-                        list(self._current_positions.values())
-                    )
-                    try:
-                        self._order_validator.run_pre_trade_validation(
-                            symbol=symbol,
-                            side=side,
-                            order_quantity=quantity,
-                            effective_price=effective_price,
-                            product=product,
-                            equity=equity,
-                            current_positions=current_positions_dict,
-                        )
-                        trace.record_outcome("pre_trade_validation", "passed")
-                    except ValidationError as exc:
-                        trace.record_outcome("pre_trade_validation", "blocked", detail=str(exc))
-                        raise
 
                     # Order preview (if enabled) - with auto-disable on repeated failures
                     failure_tracker = get_failure_tracker()
@@ -1645,7 +1596,7 @@ class TradingEngine(BaseEngine):
                     reduce_only_flag = self._order_validator.finalize_reduce_only_flag(
                         reduce_only_flag, symbol
                     )
-                    trace.reduce_only = reduce_only_flag
+                    trace.reduce_only_final = reduce_only_flag
 
             except ValidationError as exc:
                 logger.warning(f"Pre-trade guard rejected order: {exc}")

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Coinbase REST Legacy Mode Removal
+- **BREAKING**: Coinbase REST now requires `PositionStateStore` injection; legacy `_positions` fallbacks have been removed.
+- Service/tests now read and write positions exclusively through the shared store.
+
 ### LiveExecutionEngine Removal
 - **BREAKING**: Removed `LiveExecutionEngine` and its container factory; use `TradingEngine.submit_order()` and guard-stack helpers instead.
 - Migrated execution tests/integration flows to TradingEngine and updated docs to reflect the canonical path.

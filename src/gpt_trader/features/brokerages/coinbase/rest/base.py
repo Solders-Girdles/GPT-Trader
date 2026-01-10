@@ -52,28 +52,9 @@ class CoinbaseRestServiceCore:
 
     Position State Management
     -------------------------
-    This class supports two modes of position state management:
-
-    **Injected Mode** (preferred):
-        Pass a ``PositionStateStore`` instance to share state across services.
-        The ``_position_store`` attribute holds the injected store.
-
-    **Legacy Mode** (backward compatibility):
-        When no store is injected, an internal ``_positions`` dict is created.
-        This mode is deprecated and will be removed in v3.0.
-
-    .. warning::
-        In injected mode, ``_positions`` is a **snapshot reference** to the store's
-        state at construction time. It may become stale if the store is modified
-        externally. Always use the ``positions`` property for current state.
-
-    State Synchronization
-    ---------------------
-    The ``positions`` property always returns fresh data:
-    - Injected mode: calls ``_position_store.all()``
-    - Legacy mode: returns ``_positions`` directly
-
-    Code that caches ``_positions`` may see stale data. Prefer using the property.
+    A shared ``PositionStateStore`` is required to manage position state across
+    the REST services and PnL tracking. Always use the ``positions`` property for
+    current state.
     """
 
     def __init__(
@@ -84,8 +65,8 @@ class CoinbaseRestServiceCore:
         product_catalog: ProductCatalog,
         market_data: MarketDataService,
         event_store: EventStore,
+        position_store: PositionStateStore,
         bot_config: BotConfig | None = None,
-        position_store: PositionStateStore | None = None,
     ) -> None:
         """
         Initialize the Coinbase REST service core.
@@ -97,9 +78,8 @@ class CoinbaseRestServiceCore:
             product_catalog: Product metadata cache
             market_data: Market data service for prices
             event_store: Event persistence for metrics
+            position_store: Shared position state store
             bot_config: Optional bot configuration for order preview
-            position_store: Optional shared position state store (preferred).
-                           If None, creates internal dict (legacy mode).
         """
         self.client = client
         self.endpoints = endpoints
@@ -109,25 +89,15 @@ class CoinbaseRestServiceCore:
         self._event_store = event_store
         self.bot_config = bot_config
 
-        # Position state management - see class docstring for details
-        self._position_store: PositionStateStore | None
-        if position_store is not None:
-            self._position_store = position_store
-            # Snapshot reference for backward compatibility (may become stale)
-            self._positions = position_store.all()
-        else:
-            # Legacy mode: internal dict (deprecated, removal planned for v3.0)
-            self._positions = {}
-            self._position_store = None
+        # Position state management
+        self._position_store = position_store
 
         self._funding_calculator = FundingCalculator()
 
     @property
     def positions(self) -> dict[str, PositionState]:
         """Get position states (backward compatible)."""
-        if self._position_store is not None:
-            return self._position_store.all()
-        return self._positions
+        return self._position_store.all()
 
     def build_order_payload(
         self,
@@ -375,15 +345,9 @@ class CoinbaseRestServiceCore:
 
     def update_position_metrics(self, symbol: str) -> None:
         """Update position metrics for a symbol."""
-        # Check position existence using position store or legacy dict
-        if self._position_store is not None:
-            if not self._position_store.contains(symbol):
-                return
-            position = self._position_store.get(symbol)
-        else:
-            if symbol not in self._positions:
-                return
-            position = self._positions[symbol]
+        if not self._position_store.contains(symbol):
+            return
+        position = self._position_store.get(symbol)
 
         if position is None:
             return

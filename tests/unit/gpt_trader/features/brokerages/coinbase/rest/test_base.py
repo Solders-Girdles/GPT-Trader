@@ -21,6 +21,7 @@ from gpt_trader.features.brokerages.coinbase.endpoints import CoinbaseEndpoints
 from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
 from gpt_trader.features.brokerages.coinbase.models import APIConfig, Product
 from gpt_trader.features.brokerages.coinbase.rest.base import CoinbaseRestServiceBase
+from gpt_trader.features.brokerages.coinbase.rest.position_state_store import PositionStateStore
 from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
 from gpt_trader.persistence.event_store import EventStore
 
@@ -37,6 +38,7 @@ class TestCoinbaseRestServiceBase:
         self.market_data = Mock(spec=MarketDataService)
         self.event_store = Mock(spec=EventStore)
 
+        self.position_store = PositionStateStore()
         self.service = CoinbaseRestServiceBase(
             client=self.client,
             endpoints=self.endpoints,
@@ -44,6 +46,7 @@ class TestCoinbaseRestServiceBase:
             product_catalog=self.product_catalog,
             market_data=self.market_data,
             event_store=self.event_store,
+            position_store=self.position_store,
         )
 
         # Mock product
@@ -519,7 +522,7 @@ class TestCoinbaseRestServiceBase:
         position = PositionState(
             symbol="BTC-USD", side="LONG", quantity=Decimal("0.1"), entry_price=Decimal("50000")
         )
-        self.service._positions["BTC-USD"] = position
+        self.position_store.set("BTC-USD", position)
         self.market_data.get_mark.return_value = None
 
         self.service.update_position_metrics("BTC-USD")
@@ -534,7 +537,7 @@ class TestCoinbaseRestServiceBase:
         position = PositionState(
             symbol="BTC-USD", side="LONG", quantity=Decimal("0.1"), entry_price=Decimal("50000")
         )
-        self.service._positions["BTC-USD"] = position
+        self.position_store.set("BTC-USD", position)
         self.market_data.get_mark.return_value = Decimal("51000")
         self.product_catalog.get_funding.return_value = (
             Decimal("0.01"),
@@ -560,7 +563,7 @@ class TestCoinbaseRestServiceBase:
         position = PositionState(
             symbol="BTC-USD", side="LONG", quantity=Decimal("0.1"), entry_price=Decimal("50000")
         )
-        self.service._positions["BTC-USD"] = position
+        self.position_store.set("BTC-USD", position)
         self.market_data.get_mark.return_value = Decimal("51000")
         self.product_catalog.get_funding.return_value = (
             Decimal("0.01"),
@@ -590,7 +593,7 @@ class TestCoinbaseRestServiceBase:
         position = PositionState(
             symbol="BTC-USD", side="LONG", quantity=Decimal("0.1"), entry_price=Decimal("50000")
         )
-        self.service._positions["BTC-USD"] = position
+        self.position_store.set("BTC-USD", position)
 
         positions = self.service.positions
 
@@ -605,7 +608,7 @@ class TestCoinbaseRestServiceBase:
         position = PositionState(
             symbol="BTC-USD", side="LONG", quantity=Decimal("0.1"), entry_price=Decimal("50000")
         )
-        self.service._positions["BTC-USD"] = position
+        self.position_store.set("BTC-USD", position)
         self.market_data.get_mark.return_value = Decimal("51000")
         self.product_catalog.get_funding.return_value = (Decimal("0"), None)
 

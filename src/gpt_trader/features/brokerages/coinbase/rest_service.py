@@ -132,17 +132,12 @@ class CoinbaseRestService:
         self._core.product_catalog = value
 
     # =========================================================================
-    # Legacy Properties for Backward Compatibility
+    # Position State
     # =========================================================================
 
     @property
     def positions(self) -> dict[str, PositionState]:
         """Get position states (backward compatible)."""
-        return self._position_store.all()
-
-    @property
-    def _positions(self) -> dict[str, PositionState]:
-        """Legacy private property for backward compatibility."""
         return self._position_store.all()
 
     # =========================================================================

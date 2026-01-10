@@ -32,6 +32,7 @@ Before removing any deprecated item:
 
 | Item | Removed In | Migration Path |
 |------|------------|----------------|
+| Coinbase REST legacy position dict fallback | v4.0 | Require `PositionStateStore` injection |
 | `PERPS_FORCE_MOCK` env var | v4.0 | Use `MOCK_BROKER` |
 | `SYMBOLS` env var | v4.0 | Use `TRADING_SYMBOLS` |
 | `POSITION_FRACTION` env var | v4.0 | Use `RISK_MAX_POSITION_PCT_PER_SYMBOL` |

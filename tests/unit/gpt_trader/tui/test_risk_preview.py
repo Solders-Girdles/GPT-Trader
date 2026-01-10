@@ -326,7 +326,7 @@ class TestComputePositionImpacts:
         # But projected P&L should be positive or less negative
         for impact in daily_loss_impacts:
             # With positive shock, projected should improve from current
-            pass  # Just ensure no exception
+            assert impact.projected_pnl_pct >= impact.current_pnl_pct
 
     def test_leverage_guard_triggers_on_excessive_leverage(self):
         """LeverageGuard triggers when position leverage exceeds max."""

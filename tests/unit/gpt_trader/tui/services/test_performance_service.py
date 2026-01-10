@@ -95,8 +95,8 @@ class TestNoOpContext:
         context = _NoOpContext()
 
         for _ in range(3):
-            with context:
-                pass
+            with context as entered:
+                assert entered is context
 
 
 class TestTuiPerformanceService:

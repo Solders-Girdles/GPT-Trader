@@ -86,6 +86,7 @@ class TestResponsiveManager:
 
         # Should not raise
         manager.propagate_to_screen()
+        assert manager.current_state == ResponsiveState.STANDARD
 
     def test_cleanup_stops_timer(self):
         """Test cleanup stops any pending timer."""
@@ -107,3 +108,4 @@ class TestResponsiveManager:
 
         # Should not raise
         manager.cleanup()
+        assert manager._resize_timer is None

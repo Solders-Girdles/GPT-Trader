@@ -45,11 +45,13 @@ class TestKeyboardNavigation:
     async def test_quit_shortcut(self, mock_bot_with_status):
         """Test that pressing 'q' quits the application."""
         app = TraderApp(bot=mock_bot_with_status)
+        app.action_dispatcher.quit_app = AsyncMock()
 
         async with app.run_test() as pilot:
             # Press 'q' to quit
             await pilot.press("q")
-            # App should exit - if we get here without error, the test passes
+            await pilot.pause()
+            app.action_dispatcher.quit_app.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_help_screen_toggle(self, mock_bot_with_status):
@@ -69,14 +71,13 @@ class TestKeyboardNavigation:
     async def test_theme_toggle(self, mock_bot_with_status):
         """Test that pressing 't' toggles the theme."""
         app = TraderApp(bot=mock_bot_with_status)
+        app.action_dispatcher.toggle_theme = AsyncMock()
 
         async with app.run_test() as pilot:
             await pilot.press("t")
             await pilot.pause()
 
-            # Theme toggle was pressed successfully
-            # Note: This depends on the app's theme service implementation
-            # If themes don't change immediately, adjust this assertion
+            app.action_dispatcher.toggle_theme.assert_called_once()
 
 
 class TestBotControlInteractions:
@@ -274,7 +275,7 @@ class TestResponsiveLayout:
 
         async with app.run_test(size=(80, 24)) as pilot:
             await pilot.pause()
-            # App should not crash with small terminal
+            assert app.terminal_width == 80
 
     @pytest.mark.asyncio
     async def test_app_handles_large_terminal(self, mock_bot_with_status):
@@ -283,4 +284,4 @@ class TestResponsiveLayout:
 
         async with app.run_test(size=(200, 60)) as pilot:
             await pilot.pause()
-            # App should not crash with large terminal
+            assert app.terminal_width == 200

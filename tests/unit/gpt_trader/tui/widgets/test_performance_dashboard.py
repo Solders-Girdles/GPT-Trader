@@ -101,8 +101,11 @@ class TestPerformanceDashboardWidget:
     def test_watch_snapshot_none(self) -> None:
         """Test that watch_snapshot does nothing with None."""
         widget = PerformanceDashboardWidget()
-        # Should not raise
+        widget._fps_label = MagicMock()
+        widget._latency_label = MagicMock()
         widget.watch_snapshot(None)
+        widget._fps_label.update.assert_not_called()
+        widget._latency_label.update.assert_not_called()
 
     def test_watch_snapshot_updates_cached_labels(self) -> None:
         """Test that watch_snapshot updates labels when cached references exist."""

@@ -80,16 +80,19 @@ class TestHelpScreenFlow:
         app = TraderApp(bot=mock_bot_for_flows)
 
         async with app.run_test() as pilot:
+            initial_stack_size = len(app.screen_stack)
+
             # Open help
             await pilot.press("?")
             await pilot.pause()
+            assert len(app.screen_stack) > initial_stack_size
 
             # Close with '?' again (toggle behavior)
             await pilot.press("?")
             await pilot.pause()
 
             # Should be back to main screen
-            # Note: Actual behavior depends on implementation
+            assert len(app.screen_stack) == initial_stack_size
 
 
 class TestFullLogsScreenFlow:
@@ -219,29 +222,35 @@ class TestConfigModalFlow:
         app = TraderApp(bot=mock_bot_for_flows)
 
         async with app.run_test() as pilot:
+            initial_stack_size = len(app.screen_stack)
+
             # Press 'c' to open config
             await pilot.press("c")
             await pilot.pause()
 
             # Config modal should be shown
-            # Note: Implementation may vary - could be screen push or modal overlay
+            assert len(app.screen_stack) > initial_stack_size
 
 
 class TestModeInfoFlow:
     """Tests for mode info modal navigation."""
 
     @pytest.mark.asyncio
-    async def test_mode_info_opens_on_m(self, mock_bot_for_flows):
-        """Test that pressing 'm' opens the mode info modal."""
+    async def test_mode_info_opens_on_i(self, mock_bot_for_flows):
+        """Test that pressing 'i' opens the mode info modal."""
         app = TraderApp(bot=mock_bot_for_flows)
 
         async with app.run_test() as pilot:
-            # Press 'm' to open mode info
-            await pilot.press("m")
+            from gpt_trader.tui.widgets import ModeInfoModal
+
+            initial_stack_size = len(app.screen_stack)
+
+            # Press 'i' to open mode info
+            await pilot.press("i")
             await pilot.pause()
 
-            # Mode info should be shown
-            # Note: Implementation may vary
+            assert len(app.screen_stack) > initial_stack_size
+            assert isinstance(app.screen, ModeInfoModal)
 
 
 class TestLogFocusFlow:
@@ -257,8 +266,8 @@ class TestLogFocusFlow:
             await pilot.press("l")
             await pilot.pause()
 
-            # Logs widget should receive focus
-            # Note: Actual focus behavior depends on implementation
+            log_widget = app.query_one("#dash-logs")
+            assert log_widget.has_focus
 
 
 class TestQuickNavigationFlow:
@@ -297,6 +306,8 @@ class TestQuickNavigationFlow:
         app = TraderApp(bot=mock_bot_for_flows)
 
         async with app.run_test() as pilot:
+            initial_stack_size = len(app.screen_stack)
+
             # Rapidly toggle screens
             await pilot.press("?")
             await pilot.press("escape")
@@ -307,6 +318,7 @@ class TestQuickNavigationFlow:
             await pilot.pause()
 
             # App should still be responsive
+            assert len(app.screen_stack) == initial_stack_size
 
 
 class TestScreenStatePreservation:

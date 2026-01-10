@@ -111,6 +111,7 @@ class TestObserverConnectionWithNullReporter:
         # Should not raise
         reporter.add_observer(callback)
         reporter.remove_observer(callback)
+        assert reporter._observers == []
 
     def test_null_reporter_never_calls_observer(self) -> None:
         """NullStatusReporter should never call observer callbacks."""

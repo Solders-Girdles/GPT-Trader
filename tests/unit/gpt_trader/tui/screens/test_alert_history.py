@@ -120,6 +120,7 @@ class TestAlertHistoryScreen:
             # Should not raise
             screen.action_clear_history()
             screen.action_reset_cooldowns()
+            assert mock_app.method_calls == []
 
 
 class TestAlertHistoryFilterActions:

@@ -147,6 +147,7 @@ class TestUICoordinatorDecoupling:
 
         # Should not raise
         coordinator.update_main_screen()
+        mock_app._pulse_heartbeat.assert_called_once()
 
 
 class TestScreenObserverRegistration:

@@ -52,7 +52,9 @@ class TestToggleBot:
     ) -> None:
         """toggle_bot should be a no-op when lifecycle_manager is None."""
         mock_app.lifecycle_manager = None
-        await dispatcher.toggle_bot()  # Should not raise
+        await dispatcher.toggle_bot()
+        assert mock_app.lifecycle_manager is None
+        mock_app.notify.assert_not_called()
 
 
 class TestShowConfig:

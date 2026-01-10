@@ -14,8 +14,9 @@ class TestMarketWatchWidget:
     def test_watch_state_handles_none(self):
         """Test that watch_state handles None state gracefully."""
         widget = MarketWatchWidget()
-        # Should not raise any exceptions
+        widget.update_prices = MagicMock()
         widget.watch_state(None)
+        widget.update_prices.assert_not_called()
 
     def test_watch_state_handles_valid_state(self):
         """Test that watch_state processes valid state without errors."""

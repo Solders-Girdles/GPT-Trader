@@ -59,6 +59,7 @@ class TestNullStatusReporter:
 
         # Should not raise
         reporter.remove_observer(callback)
+        assert reporter._observers == []
 
     def test_get_status_returns_unavailable_status(self) -> None:
         """get_status should return a BotStatus indicating unavailable."""

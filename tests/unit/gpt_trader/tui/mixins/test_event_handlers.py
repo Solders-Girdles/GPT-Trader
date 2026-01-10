@@ -306,10 +306,12 @@ class TestUtilityMethods:
         async with app.run_test() as pilot:
             widget = app.query_one(TestWidget)
             event = BotStateChanged(running=True)
+            widget.post_message = MagicMock()
 
             # Should not raise error when mounted
             widget.post_event(event)
             await pilot.pause()
+            widget.post_message.assert_called_once_with(event)
 
     def test_post_event_when_not_mounted(self):
         """Test post_event when widget not mounted."""

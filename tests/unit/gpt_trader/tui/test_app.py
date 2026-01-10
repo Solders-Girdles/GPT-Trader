@@ -2,7 +2,7 @@ import logging
 from dataclasses import dataclass
 from decimal import Decimal
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -228,6 +228,10 @@ class TestResourceCleanup:
         ws = CoinbaseWebSocket()
         ws.close()
         ws.close()  # Should not raise
+        assert ws._closed is True
+        assert ws._shutdown.is_set() is True
+        assert ws.ws is None
+        assert ws.wst is None
 
     def test_performance_service_cleanup(self):
         """Verify performance service can be cleared."""
@@ -297,6 +301,8 @@ class TestResourceCleanup:
         app = TraderApp(mock_bot)
         # Should not raise
         app._cleanup_bot_resources()
+        assert not hasattr(mock_bot, "client")
+        assert not hasattr(mock_bot, "websocket")
 
     def test_app_cleanup_handles_close_errors(self, mock_bot):
         """Verify _cleanup_bot_resources() handles errors gracefully."""
@@ -306,8 +312,9 @@ class TestResourceCleanup:
         mock_bot.client = mock_client
 
         app = TraderApp(mock_bot)
-        # Should not raise, just log warning
-        app._cleanup_bot_resources()
+        with patch("gpt_trader.tui.app_lifecycle.logger") as mock_logger:
+            app._cleanup_bot_resources()
+            mock_logger.warning.assert_called_once()
 
     def test_websocket_reconnect_limit_configurable(self):
         """Verify WebSocket reconnect limit can be configured via constants."""

@@ -24,7 +24,6 @@ Any abbreviation not listed here should be spelled out in full.
 | `WS` | WebSocket | Networking | Common abbreviation |
 | `CDP` | Coinbase Developer Platform | Coinbase API | Coinbase-specific |
 | `INTX` | Coinbase International Exchange | Coinbase API | Coinbase-specific |
-| `HMAC` | Hash-based Message Authentication Code | Security | Cryptography standard |
 | `JWT` | JSON Web Token | Security | Authentication standard |
 | `MVP` | Minimum Viable Product | Project management | Industry standard |
 | `PR` | Pull Request | Development | Git/GitHub standard |

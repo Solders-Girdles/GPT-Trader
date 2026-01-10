@@ -104,7 +104,7 @@ from gpt_trader.features.brokerages.coinbase.auth import SimpleAuth
 auth = SimpleAuth(key_name=key_name, private_key=private_key)
 ```
 
-> **Note**: `HMACAuth` is not implemented in GPT-Trader. All authentication now uses JWT-based methods. See [coinbase_auth_guide.md](coinbase_auth_guide.md) for JWT usage details.
+> **Note**: Legacy Exchange authentication is not implemented in GPT-Trader. All authentication uses JWT-based methods. See [coinbase_auth_guide.md](coinbase_auth_guide.md) for JWT usage details.
 
 **Important**: Sandbox does NOT support perpetuals. Use production with canary profile for safe perpetuals testing.
 

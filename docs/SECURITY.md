@@ -24,7 +24,7 @@ Advanced Trade / CDP JWT:
 - `COINBASE_PROD_CDP_API_KEY` + `COINBASE_PROD_CDP_PRIVATE_KEY`
 - Legacy fallback: `COINBASE_API_KEY_NAME` + `COINBASE_PRIVATE_KEY`
 
-Legacy Exchange/HMAC keys are not used by the current runtime; use JWT credentials above.
+Legacy Exchange keys are not used by the current runtime; use JWT credentials above.
 
 ### Secrets and encryption
 

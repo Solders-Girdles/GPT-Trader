@@ -257,7 +257,7 @@ rejection_counts = {
 ### Authentication
 - JWT for CDP (Coinbase Developer Platform)
 - API key rotation support
-- HMAC is not implemented in GPT-Trader (historical Exchange API reference only)
+- Legacy Exchange API authentication is not implemented in GPT-Trader
 - Passphrase protection
 
 ### Data Protection

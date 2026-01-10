@@ -9,7 +9,7 @@ scope: Advanced Trade API v3 authentication methods
 documentation-venue: docs.cdp.coinbase.com/advanced-trade/docs/rest-api-auth
 ---
 
-> Status: GPT-Trader uses JWT-only authentication (CDPJWTAuth for INTX perps, SimpleAuth for spot). OAuth2 and HMAC are not implemented.
+> Status: GPT-Trader uses JWT-only authentication (CDPJWTAuth for INTX perps, SimpleAuth for spot). OAuth2 is not implemented.
 
 ## Overview
 
@@ -20,7 +20,7 @@ Coinbase Advanced Trade API authentication in GPT-Trader uses JWT-only methods:
 | CDP (JWT) | Production perpetuals (INTX) | 30 req/sec private | Yes |
 | SimpleAuth (JWT) | Spot trading | 30 req/sec private | Yes |
 
-Note: If you need HMAC or OAuth2 for external integrations, use Coinbase's official docs. GPT-Trader does not implement those flows.
+Note: If you need legacy Exchange authentication or OAuth2 for external integrations, use Coinbase's official docs. GPT-Trader does not implement those flows.
 
 ---
 
@@ -175,7 +175,7 @@ DON'T:
 
 ## 6. Not Supported in GPT-Trader
 
-- HMAC authentication (legacy Exchange keys) is not implemented.
+- Legacy Exchange API key authentication is not implemented.
 - OAuth2 (user-delegated access) is not implemented.
 
 Refer to the official Coinbase docs if you need those flows outside GPT-Trader.

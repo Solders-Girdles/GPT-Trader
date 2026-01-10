@@ -40,7 +40,7 @@ Guard failures are tracked via the existing guard telemetry system:
 | `gpt_trader_guard_checks_total` | Counter | `guard`, `result` | Guard check outcomes |
 | `gpt_trader_guard_trips_total` | Counter | `guard`, `category`, `recoverable` | Guard trip counts |
 
-## Failure Reason Taxonomy
+## Order Submission Reason Taxonomy
 
 Order rejections and failures are classified into standardized categories:
 
@@ -57,7 +57,36 @@ Order rejections and failures are classified into standardized categories:
 | `failed` | Generic failure |
 | `unknown` | Unclassified error |
 
-Classification logic: `order_submission._classify_rejection_reason()`
+Classification logic for submission metrics: `order_submission._classify_rejection_reason()`
+
+## Order Rejection Event Reasons
+
+`event_type=order_rejected` payloads in the event store use normalized reason codes
+plus an optional `reason_detail` with the raw value (for diagnostics without
+exploding metric cardinality).
+
+**Stable `reason` codes:**
+
+- `paused`
+- `quantity_zero`
+- `reduce_only`
+- `security_validation`
+- `mark_staleness`
+- `exchange_rules`
+- `pre_trade_validation`
+- `slippage_guard`
+- `order_preview`
+- `guard_error`
+- `guard_failure`
+- `broker_status`
+- `broker_rejected`
+- `invalid_request`
+- `insufficient_funds`
+- `rate_limit`
+- `timeout`
+- `network`
+- `market_closed`
+- `unknown`
 
 ## Traces
 

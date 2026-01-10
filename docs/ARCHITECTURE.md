@@ -382,9 +382,15 @@ The order execution pipeline ensures reliable order submission with proper ID tr
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                    TradingEngine._validate_and_place_order()                │
 │                                                                             │
-│  1. Pre-trade validation (risk, exchange rules, slippage)                  │
-│  2. Reduce-only clamping if applicable                                      │
-│  3. Delegates to OrderSubmitter                                             │
+│  1. Degradation gate (pause + reduce-only allowance)                        │
+│  2. Position sizing                                                         │
+│  3. Reduce-only request gate (reject if no position)                        │
+│  4. Security validation (hard limits)                                       │
+│  5. Reduce-only mode clamp + check                                          │
+│  6. Mark staleness gate (allow reduce-only if configured)                   │
+│  7. OrderValidator: exchange rules → pre-trade validation                   │
+│     slippage guard → order preview                                          │
+│  8. Delegates to OrderSubmitter                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
                                       │
                                       ▼

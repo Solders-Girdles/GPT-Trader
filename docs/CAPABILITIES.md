@@ -92,23 +92,26 @@ GPT-Trader is a Coinbase trading system supporting spot and CFM futures markets.
 │  │  Kelly criterion + fraction of account                                │  │
 │  └───────────────────────────────────────────────────────────────────────┘  │
 │                                    │                                         │
+│  ┌─ Reduce-Only Request Gate ────────────────────────────────────────────┐  │
+│  │  Reject reduce-only requests with no position to reduce               │  │
+│  └───────────────────────────────────────────────────────────────────────┘  │
+│                                    │                                         │
 │  ┌─ Security Validation ─────────────────────────────────────────────────┐  │
 │  │  security/security_validator.py                                       │  │
 │  │  Hard limits: max position, max leverage, max daily loss              │  │
 │  └───────────────────────────────────────────────────────────────────────┘  │
 │                                    │                                         │
-│  ┌─ Risk Manager Pre-Trade ──────────────────────────────────────────────┐  │
-│  │  features/live_trade/risk/manager/                                    │  │
-│  │  Leverage caps, exposure limits, MMR projection                       │  │
+│  ┌─ Reduce-Only Mode Checks ─────────────────────────────────────────────┐  │
+│  │  Clamp quantities + block new positions in reduce-only mode           │  │
 │  └───────────────────────────────────────────────────────────────────────┘  │
 │                                    │                                         │
 │  ┌─ Mark Staleness Guard ────────────────────────────────────────────────┐  │
-│  │  Reject if price data > 120s old (allow reduce-only if configured)   │  │
+│  │  Reject if price data > 120s old (allow reduce-only if configured)    │  │
 │  └───────────────────────────────────────────────────────────────────────┘  │
 │                                    │                                         │
 │  ┌─ Order Validator ─────────────────────────────────────────────────────┐  │
 │  │  features/live_trade/execution/validation.py                          │  │
-│  │  Exchange rules, slippage guard, order preview                        │  │
+│  │  Exchange rules, pre-trade validation, slippage guard, order preview  │  │
 │  └───────────────────────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────────────────┘
                                     │

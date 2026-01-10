@@ -1261,21 +1261,6 @@ class TradingEngine(BaseEngine):
             )
         trace.record_outcome("degradation_gate", "passed")
 
-        if reduce_only_requested and not is_reducing:
-            logger.warning(
-                "Reduce-only requested without a matching position",
-                symbol=symbol,
-                side=side.value,
-                operation="reduce_only",
-                stage="requested_not_reducing",
-            )
-            trace.record_outcome("reduce_only", "blocked", detail="requested_not_reducing")
-            return self._finalize_decision_trace(
-                trace,
-                status=OrderSubmissionStatus.BLOCKED,
-                reason="reduce_only_not_reducing",
-            )
-
         # Dynamic position sizing
         quantity = self._calculate_order_quantity(
             symbol,
@@ -1289,12 +1274,33 @@ class TradingEngine(BaseEngine):
         if quantity <= 0:
             logger.warning(f"Calculated quantity is {quantity}, skipping order")
             trace.record_outcome("sizing", "blocked", detail="quantity_zero")
+            self._order_submitter.record_rejection(
+                symbol, side.value, quantity, price, "quantity_zero"
+            )
             return self._finalize_decision_trace(
                 trace,
                 status=OrderSubmissionStatus.BLOCKED,
                 reason="quantity_zero",
             )
         trace.record_outcome("sizing", "passed")
+
+        if reduce_only_requested and not is_reducing:
+            logger.warning(
+                "Reduce-only requested without a matching position",
+                symbol=symbol,
+                side=side.value,
+                operation="reduce_only",
+                stage="requested_not_reducing",
+            )
+            trace.record_outcome("reduce_only", "blocked", detail="requested_not_reducing")
+            self._order_submitter.record_rejection(
+                symbol, side.value, quantity, price, "reduce_only_not_reducing"
+            )
+            return self._finalize_decision_trace(
+                trace,
+                status=OrderSubmissionStatus.BLOCKED,
+                reason="reduce_only_not_reducing",
+            )
 
         # Security Validation (Hard Limits)
         from gpt_trader.security.security_validator import get_validator
@@ -1324,6 +1330,13 @@ class TradingEngine(BaseEngine):
         if not security_result.is_valid:
             error_msg = f"Security validation failed: {', '.join(security_result.errors)}"
             logger.error(error_msg)
+            self._order_submitter.record_rejection(
+                symbol,
+                side.value,
+                quantity,
+                price,
+                "security_validation_failed",
+            )
             await self._notify(
                 title="Security Validation Failed",
                 message=error_msg,
@@ -1372,6 +1385,9 @@ class TradingEngine(BaseEngine):
                         "blocked",
                         detail="reduce_only_empty_position",
                     )
+                    self._order_submitter.record_rejection(
+                        symbol, side.value, quantity, price, "reduce_only_empty_position"
+                    )
                     return self._finalize_decision_trace(
                         trace,
                         status=OrderSubmissionStatus.BLOCKED,
@@ -1400,6 +1416,9 @@ class TradingEngine(BaseEngine):
                     context=order_for_check,
                 )
                 trace.record_outcome("reduce_only", "blocked", detail=error_msg)
+                self._order_submitter.record_rejection(
+                    symbol, side.value, quantity, price, "reduce_only_mode_blocked"
+                )
                 return self._finalize_decision_trace(
                     trace,
                     status=OrderSubmissionStatus.BLOCKED,

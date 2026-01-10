@@ -112,7 +112,6 @@ class TradingEngine(BaseEngine):
         self._current_positions: dict[str, Position] = {}
         self._rehydrated = False
         self._cycle_count = 0
-        self._quantity_override: Decimal | None = None
 
         # Initialize price tick store for state recovery
         self._price_tick_store = PriceTickStore(
@@ -1101,11 +1100,13 @@ class TradingEngine(BaseEngine):
         price: Decimal,
         equity: Decimal,
         product: Product | None,
+        *,
+        quantity_override: Decimal | None = None,
     ) -> Decimal:
         """Calculate order size based on equity and position_fraction."""
-        # Check for external quantity override (set by submit_order)
-        if hasattr(self, "_quantity_override") and self._quantity_override is not None:
-            return self._quantity_override
+        # External override (submit_order) bypasses dynamic sizing.
+        if quantity_override is not None:
+            return quantity_override
 
         # 1. Determine fraction
         fraction = Decimal("0.1")  # Default
@@ -1170,6 +1171,7 @@ class TradingEngine(BaseEngine):
         decision: Decision,
         price: Decimal,
         equity: Decimal,
+        quantity_override: Decimal | None = None,
         reduce_only_requested: bool = False,
     ) -> OrderSubmissionResult:
         """Validate and submit an order through the guard stack.
@@ -1210,7 +1212,13 @@ class TradingEngine(BaseEngine):
             )
 
         # Dynamic position sizing
-        quantity = self._calculate_order_quantity(symbol, price, equity, product=None)
+        quantity = self._calculate_order_quantity(
+            symbol,
+            price,
+            equity,
+            product=None,
+            quantity_override=quantity_override,
+        )
 
         if quantity <= 0:
             logger.warning(f"Calculated quantity is {quantity}, skipping order")
@@ -1465,9 +1473,6 @@ class TradingEngine(BaseEngine):
                             self._degradation.record_slippage_failure(symbol, config)
                         raise slippage_exc
 
-                    # Mark staleness via OrderValidator
-                    self._order_validator.ensure_mark_is_fresh(symbol)
-
                     # Pre-trade validation via OrderValidator (leverage/exposure)
                     current_positions_dict = self._state_collector.build_positions_dict(
                         list(self._current_positions.values())
@@ -1698,25 +1703,15 @@ class TradingEngine(BaseEngine):
             confidence=confidence,
         )
 
-        # Store quantity override for use in _calculate_order_quantity if needed
-        # For now, we handle this by checking in the existing flow
-        if quantity_override is not None:
-            # Temporarily store override - will be used by guard stack
-            self._quantity_override = quantity_override
-        else:
-            self._quantity_override = None
-
-        try:
-            return await self._validate_and_place_order(
-                symbol,
-                decision,
-                price,
-                equity,
-                reduce_only_requested=reduce_only,
-            )
-        finally:
-            # Clear override after use
-            self._quantity_override = None
+        # Pass quantity override through to guard stack sizing.
+        return await self._validate_and_place_order(
+            symbol,
+            decision,
+            price,
+            equity,
+            quantity_override=quantity_override,
+            reduce_only_requested=reduce_only,
+        )
 
     async def shutdown(self) -> None:
         self._transition_state(EngineState.STOPPING, reason="shutdown_called")

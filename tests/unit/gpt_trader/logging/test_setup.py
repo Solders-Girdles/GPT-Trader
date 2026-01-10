@@ -430,3 +430,9 @@ class TestLoggingIntegration:
         logger.info("Test message")
         logger.warning("Test warning")
         logger.error("Test error")
+        root_logger = logging.getLogger()
+        file_handlers = [
+            h for h in root_logger.handlers if isinstance(h, logging.handlers.RotatingFileHandler)
+        ]
+        assert len(file_handlers) >= 2
+        assert logging.getLogger("gpt_trader.json").handlers

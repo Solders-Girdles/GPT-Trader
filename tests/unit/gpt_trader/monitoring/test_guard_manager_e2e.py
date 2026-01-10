@@ -430,8 +430,9 @@ class TestAlertHandlers:
         # Should not have created SMTP connection
         mock_smtp_class.assert_not_called()
 
+    @patch("gpt_trader.monitoring.guards.manager.logger")
     @patch("smtplib.SMTP")
-    def test_email_alert_handler_failure(self, mock_smtp_class):
+    def test_email_alert_handler_failure(self, mock_smtp_class, mock_logger):
         """Test email alert handler failure."""
         mock_smtp_class.side_effect = Exception("SMTP error")
 
@@ -451,6 +452,7 @@ class TestAlertHandlers:
 
         # Should not raise exception
         email_alert_handler(alert, smtp_config)
+        mock_logger.error.assert_called_once()
 
 
 class TestGuardStateTransitions:

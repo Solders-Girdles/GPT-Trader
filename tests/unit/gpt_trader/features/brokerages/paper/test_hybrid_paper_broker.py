@@ -647,7 +647,12 @@ class TestHybridPaperBrokerStatus:
 
     def test_stop_market_data_noop(self, broker) -> None:
         """Test stop_market_data is no-op."""
-        broker.stop_market_data()  # Should not raise
+        broker._last_prices["BTC-USD"] = Decimal("50000")
+
+        result = broker.stop_market_data()
+
+        assert result is None
+        assert broker._last_prices["BTC-USD"] == Decimal("50000")
 
     def test_get_status_returns_status(self, broker) -> None:
         """Test get_status returns status dict."""

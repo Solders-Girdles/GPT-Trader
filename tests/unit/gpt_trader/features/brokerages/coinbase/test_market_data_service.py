@@ -270,8 +270,9 @@ class TestCoinbaseTickerService:
         """Test that _run method is a no-op (stub)."""
         service = CoinbaseTickerService()
 
-        # Should not raise
         service._run()
+        assert service._running is False
+        assert service._thread is None
 
 
 # ============================================================

@@ -343,8 +343,8 @@ class TestNoopTransportCoverage:
         transport = NoopTransport()
         message = {"type": "subscribe", "channels": ["ticker"]}
 
-        # Should not raise exception
         transport.subscribe(message)
+        assert transport.connected is False
 
     def test_noop_transport_stream(self):
         """Test NoopTransport streaming (should return empty iterator)."""

@@ -240,6 +240,7 @@ class TestAsyncRateLimiter:
         async with limiter:
             # Should acquire token
             pass
+        assert limiter.tokens == 0.0
 
     @pytest.mark.asyncio
     async def test_rate_limit_decorator(self) -> None:

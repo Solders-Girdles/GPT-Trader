@@ -98,7 +98,9 @@ class TestMetricsPublisherWriteSnapshot:
         # Mock _target_dirs to return an unwritable path
         with patch.object(publisher, "_target_dirs", return_value=[Path("/nonexistent/path")]):
             # Should not raise, just log
-            publisher._write_snapshot({"test": "data"})
+            with patch("gpt_trader.monitoring.system.metrics.logger") as mock_logger:
+                publisher._write_snapshot({"test": "data"})
+                mock_logger.debug.assert_called_once()
 
 
 class TestMetricsPublisherLogUpdate:
@@ -162,9 +164,10 @@ class TestMetricsPublisherLogUpdate:
             mock_logger = MagicMock()
             mock_logger.log_event.side_effect = Exception("Log error")
             mock_get_plog.return_value = mock_logger
-
-            # Should not raise
-            publisher._log_update({"cycle": 1})
+            with patch("gpt_trader.monitoring.system.metrics.logger") as mock_logger_internal:
+                publisher._log_update({"cycle": 1})
+                mock_logger.log_event.assert_called_once()
+                mock_logger_internal.debug.assert_called_once()
 
 
 class TestMetricsPublisherWriteHealthStatus:

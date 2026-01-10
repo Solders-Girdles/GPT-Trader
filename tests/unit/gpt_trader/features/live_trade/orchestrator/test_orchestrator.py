@@ -333,6 +333,8 @@ class TestProcessSymbolErrorHandling:
 
         # Should not raise
         await mock_orchestrator.process_symbol("BTC-PERP-USDC")
+        mock_orchestrator._record_decision.assert_called_once_with("BTC-PERP-USDC", mock_decision)
+        mock_orchestrator._bot.execute_decision.assert_called_once()
 
 
 class TestProcessSymbolActions:

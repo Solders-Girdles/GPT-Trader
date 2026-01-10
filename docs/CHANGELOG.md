@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Global State Cleanup
+- **BREAKING**: Health server helpers now require explicit `HealthState` injection; the module-level fallback was removed.
+- **BREAKING**: Secrets manager no longer exposes module-level accessors; use `ApplicationContainer.secrets_manager` or instantiate `SecretsManager`.
+- Data layer now uses explicit `DataService` instances; `initialize_data_layer` returns a service instead of mutating module globals.
+
 ### Coinbase REST Legacy Mode Removal
 - **BREAKING**: Coinbase REST now requires `PositionStateStore` injection; legacy `_positions` fallbacks have been removed.
 - Service/tests now read and write positions exclusively through the shared store.

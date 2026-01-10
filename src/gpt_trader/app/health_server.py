@@ -58,48 +58,8 @@ class HealthState:
         self.checks[name] = {"status": "pass" if status else "fail", "details": details or {}}
 
 
-# Legacy: Module-level health state for backward compatibility
-# Prefer using container.health_state instead
-_health_state: HealthState | None = None
-
-
-def _get_health_state_from_container() -> HealthState | None:
-    """Attempt to get health state from container."""
-    try:
-        from gpt_trader.app.container import get_application_container
-
-        container = get_application_container()
-        if container is not None:
-            return container.health_state
-    except ImportError:
-        pass
-    return None
-
-
-def get_health_state() -> HealthState:
-    """Get the health state instance.
-
-    Prefers container-based resolution. Falls back to module-level
-    singleton for backward compatibility.
-
-    Note: Prefer using container.health_state directly when container
-    is available.
-    """
-    # Try container first
-    state = _get_health_state_from_container()
-    if state is not None:
-        return state
-
-    # Fallback to module singleton
-    global _health_state
-    if _health_state is None:
-        _health_state = HealthState()
-    return _health_state
-
-
-def _build_health_response() -> dict[str, Any]:
+def _build_health_response(state: HealthState) -> dict[str, Any]:
     """Build comprehensive health response combining all checks."""
-    state = get_health_state()
     perf_health = get_performance_health_check()
 
     # Start with basic status
@@ -176,18 +136,16 @@ def _build_signals_summary() -> dict[str, Any]:
         }
 
 
-def _build_liveness_response() -> dict[str, Any]:
+def _build_liveness_response(state: HealthState) -> dict[str, Any]:
     """Build liveness probe response."""
-    state = get_health_state()
     return {
         "status": "pass" if state.live else "fail",
         "live": state.live,
     }
 
 
-def _build_readiness_response() -> dict[str, Any]:
+def _build_readiness_response(state: HealthState) -> dict[str, Any]:
     """Build readiness probe response."""
-    state = get_health_state()
     return {
         "status": "pass" if state.ready else "fail",
         "ready": state.ready,
@@ -215,9 +173,11 @@ class HealthServer:
         self,
         host: str = "0.0.0.0",  # nosec B104 - Health server must bind to all interfaces for container orchestration
         port: int = DEFAULT_HEALTH_PORT,
+        health_state: HealthState | None = None,
     ) -> None:
         self.host = host
         self.port = port
+        self._health_state = health_state or HealthState()
         self._server: asyncio.Server | None = None
         self._running = False
 
@@ -277,7 +237,7 @@ class HealthServer:
 
             # Route to appropriate handler
             if path == "/health":
-                response = _build_health_response()
+                response = _build_health_response(self._health_state)
                 status = (
                     HTTPStatus.OK
                     if response["status"] in ("healthy", "degraded")
@@ -285,11 +245,11 @@ class HealthServer:
                 )
                 await self._send_response(writer, status, response)
             elif path == "/live":
-                response = _build_liveness_response()
+                response = _build_liveness_response(self._health_state)
                 status = HTTPStatus.OK if response["live"] else HTTPStatus.SERVICE_UNAVAILABLE
                 await self._send_response(writer, status, response)
             elif path == "/ready":
-                response = _build_readiness_response()
+                response = _build_readiness_response(self._health_state)
                 status = HTTPStatus.OK if response["ready"] else HTTPStatus.SERVICE_UNAVAILABLE
                 await self._send_response(writer, status, response)
             elif path == "/metrics":
@@ -381,16 +341,21 @@ class HealthServer:
 async def start_health_server(
     host: str = "0.0.0.0",  # nosec B104 - Health server must bind to all interfaces for container orchestration
     port: int = DEFAULT_HEALTH_PORT,
+    health_state: HealthState | None = None,
 ) -> HealthServer:
     """Start a health server and return the instance."""
-    server = HealthServer(host=host, port=port)
+    server = HealthServer(host=host, port=port, health_state=health_state)
     await server.start()
     return server
 
 
-def mark_ready(ready: bool = True, reason: str = "application_ready") -> None:
+def mark_ready(
+    state: HealthState,
+    ready: bool = True,
+    reason: str = "application_ready",
+) -> None:
     """Mark the application as ready to receive traffic."""
-    get_health_state().set_ready(ready, reason)
+    state.set_ready(ready, reason)
     logger.info(
         "Application readiness changed",
         operation="readiness_update",
@@ -399,19 +364,23 @@ def mark_ready(ready: bool = True, reason: str = "application_ready") -> None:
     )
 
 
-def mark_live(live: bool = True, reason: str = "") -> None:
+def mark_live(state: HealthState, live: bool = True, reason: str = "") -> None:
     """Mark the application as live/alive."""
-    get_health_state().set_live(live, reason)
+    state.set_live(live, reason)
 
 
-def add_health_check(name: str, check_fn: Callable[[], tuple[bool, dict[str, Any]]]) -> None:
+def add_health_check(
+    state: HealthState,
+    name: str,
+    check_fn: Callable[[], tuple[bool, dict[str, Any]]],
+) -> None:
     """Add a custom health check.
 
     Args:
+        state: HealthState instance to update.
         name: Name of the health check
         check_fn: Function that returns (status, details)
     """
-    state = get_health_state()
     try:
         status, details = check_fn()
         state.add_check(name, status, details)
@@ -422,7 +391,6 @@ def add_health_check(name: str, check_fn: Callable[[], tuple[bool, dict[str, Any
 __all__ = [
     "HealthServer",
     "HealthState",
-    "get_health_state",
     "start_health_server",
     "mark_ready",
     "mark_live",

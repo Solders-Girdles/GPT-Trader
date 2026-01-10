@@ -5,8 +5,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 import pytest
 
-import gpt_trader.features.data.data as data_module
-
+from gpt_trader.features.data.data import DataService
 from gpt_trader.features.data.types import DataQuery, DataSource, DataType
 
 
@@ -111,16 +110,12 @@ class QualityStub:
 
 
 @pytest.fixture
-def data_stubs(monkeypatch: pytest.MonkeyPatch):
+def data_service():
     storage = StorageStub()
     cache = CacheStub()
     quality = QualityStub()
-
-    monkeypatch.setattr(data_module, "_storage", storage)
-    monkeypatch.setattr(data_module, "_cache", cache)
-    monkeypatch.setattr(data_module, "_quality_checker", quality)
-
-    return {"storage": storage, "cache": cache, "quality": quality}
+    service = DataService(storage=storage, cache=cache, quality_checker=quality)
+    return {"service": service, "storage": storage, "cache": cache, "quality": quality}
 
 
 def _make_frame(days: int = 3) -> pd.DataFrame:
@@ -137,22 +132,22 @@ def _make_frame(days: int = 3) -> pd.DataFrame:
     )
 
 
-def test_store_data_updates_cache_with_warning(data_stubs) -> None:
-    quality: QualityStub = data_stubs["quality"]
+def test_store_data_updates_cache_with_warning(data_service) -> None:
+    quality: QualityStub = data_service["quality"]
     quality.acceptable = False
 
     frame = _make_frame()
-    assert data_module.store_data("BTC-USD", frame)
+    assert data_service["service"].store_data("BTC-USD", frame)
 
-    storage: StorageStub = data_stubs["storage"]
-    cache: CacheStub = data_stubs["cache"]
+    storage: StorageStub = data_service["storage"]
+    cache: CacheStub = data_service["cache"]
 
     assert storage.store_calls[0]["symbol"] == "BTC-USD"
     assert cache.put_calls, "cache should be updated"
 
 
-def test_fetch_data_returns_cache_hit(data_stubs) -> None:
-    cache: CacheStub = data_stubs["cache"]
+def test_fetch_data_returns_cache_hit(data_service) -> None:
+    cache: CacheStub = data_service["cache"]
     frame = _make_frame()
     query = DataQuery(
         symbols=["ETH-USD"],
@@ -163,14 +158,14 @@ def test_fetch_data_returns_cache_hit(data_stubs) -> None:
     )
     cache.put(query.get_cache_key(), frame)
 
-    result = data_module.fetch_data(query)
+    result = data_service["service"].fetch_data(query)
     assert result is not None
     pd.testing.assert_frame_equal(result, frame)
 
 
-def test_fetch_data_loads_from_storage_and_updates_cache(data_stubs) -> None:
-    storage: StorageStub = data_stubs["storage"]
-    cache: CacheStub = data_stubs["cache"]
+def test_fetch_data_loads_from_storage_and_updates_cache(data_service) -> None:
+    storage: StorageStub = data_service["storage"]
+    cache: CacheStub = data_service["cache"]
 
     frame = _make_frame()
     storage.fetch_return = frame
@@ -181,7 +176,7 @@ def test_fetch_data_loads_from_storage_and_updates_cache(data_stubs) -> None:
         end_date=frame.index.max(),
         data_type=DataType.OHLCV,
     )
-    result = data_module.fetch_data(query)
+    result = data_service["service"].fetch_data(query)
 
     assert result is not None
     pd.testing.assert_frame_equal(result, frame)
@@ -190,9 +185,9 @@ def test_fetch_data_loads_from_storage_and_updates_cache(data_stubs) -> None:
 
 
 def test_fetch_data_downloads_when_storage_misses(
-    data_stubs, monkeypatch: pytest.MonkeyPatch
+    data_service, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    storage: StorageStub = data_stubs["storage"]
+    storage: StorageStub = data_service["storage"]
     storage.fetch_return = None
 
     downloaded_frame = _make_frame()
@@ -200,7 +195,7 @@ def test_fetch_data_downloads_when_storage_misses(
     def _download_stub(symbols, start, end, interval):
         return {symbol: downloaded_frame for symbol in symbols}
 
-    monkeypatch.setattr(data_module, "download_from_yahoo", _download_stub)
+    monkeypatch.setattr(data_service["service"], "download_from_yahoo", _download_stub)
 
     query = DataQuery(
         symbols=["SOL-USD"],
@@ -210,40 +205,40 @@ def test_fetch_data_downloads_when_storage_misses(
         source=DataSource.YAHOO,
     )
 
-    result = data_module.fetch_data(query)
+    result = data_service["service"].fetch_data(query)
 
     assert result is not None
     pd.testing.assert_frame_equal(result, downloaded_frame)
 
 
-def test_cache_data_delegates_to_cache(data_stubs) -> None:
-    cache: CacheStub = data_stubs["cache"]
+def test_cache_data_delegates_to_cache(data_service) -> None:
+    cache: CacheStub = data_service["cache"]
     frame = _make_frame()
-    assert data_module.cache_data("key", frame, ttl_seconds=30)
+    assert data_service["service"].cache_data("key", frame, ttl_seconds=30)
     assert cache.put_calls[0] == ("key", 30)
 
 
-def test_clean_old_data_clears_cache(data_stubs) -> None:
-    storage: StorageStub = data_stubs["storage"]
+def test_clean_old_data_clears_cache(data_service) -> None:
+    storage: StorageStub = data_service["storage"]
     storage.delete_before_return = 7
 
-    deleted = data_module.clean_old_data(days_to_keep=30)
+    deleted = data_service["service"].clean_old_data(days_to_keep=30)
     assert deleted == 7
-    assert data_stubs["cache"]._clear_expired_called
+    assert data_service["cache"]._clear_expired_called
 
 
-def test_get_storage_stats_combines_sources(data_stubs) -> None:
-    stats = data_module.get_storage_stats()
+def test_get_storage_stats_combines_sources(data_service) -> None:
+    stats = data_service["service"].get_storage_stats()
     assert stats.total_records == 10
     assert stats.cache_entries == 0
     assert stats.symbols_count == 3
 
 
-def test_export_data_writes_csv(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_export_data_writes_csv(tmp_path, monkeypatch: pytest.MonkeyPatch, data_service) -> None:
     frame = _make_frame()
 
     monkeypatch.setattr(
-        data_module,
+        data_service["service"],
         "fetch_data",
         lambda query, use_cache=True: frame,
     )
@@ -255,14 +250,16 @@ def test_export_data_writes_csv(tmp_path, monkeypatch: pytest.MonkeyPatch) -> No
     )
 
     export_dir = tmp_path / "exports"
-    success = data_module.export_data(query, format="csv", path=str(export_dir))
+    success = data_service["service"].export_data(query, format="csv", path=str(export_dir))
     assert success
 
     exported_files = list(export_dir.glob("*.csv"))
     assert exported_files, "CSV export should create a file"
 
 
-def test_import_data_roundtrips_csv(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_import_data_roundtrips_csv(
+    tmp_path, monkeypatch: pytest.MonkeyPatch, data_service
+) -> None:
     frame = _make_frame()
     filepath = tmp_path / "input.csv"
     frame.to_csv(filepath)
@@ -273,12 +270,12 @@ def test_import_data_roundtrips_csv(tmp_path, monkeypatch: pytest.MonkeyPatch) -
         store_calls.append(kwargs)
         return True
 
-    monkeypatch.setattr(data_module, "store_data", _store_stub)
+    monkeypatch.setattr(data_service["service"], "store_data", _store_stub)
 
-    assert data_module.import_data(str(filepath), symbol="BTC-USD")
+    assert data_service["service"].import_data(str(filepath), symbol="BTC-USD")
     assert store_calls, "store_data should be called for imported data"
 
 
-def test_import_data_rejects_unknown_format(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(data_module, "store_data", lambda *_, **__: True)
-    assert not data_module.import_data("data.unsupported", symbol="BTC-USD")
+def test_import_data_rejects_unknown_format(monkeypatch: pytest.MonkeyPatch, data_service) -> None:
+    monkeypatch.setattr(data_service["service"], "store_data", lambda *_, **__: True)
+    assert not data_service["service"].import_data("data.unsupported", symbol="BTC-USD")

@@ -18,6 +18,7 @@ from collections import deque
 from decimal import Decimal
 from typing import Any
 
+from gpt_trader.app.health_server import HealthState
 from gpt_trader.config.constants import HEALTH_CHECK_INTERVAL_SECONDS
 from gpt_trader.core import OrderSide, OrderType, Position, Product
 from gpt_trader.features.live_trade.degradation import DegradationState
@@ -146,7 +147,9 @@ class TradingEngine(BaseEngine):
         )
 
         # Initialize health check runner for active /health probes
+        health_state = context.container.health_state if context.container else HealthState()
         self._health_check_runner = HealthCheckRunner(
+            health_state=health_state,
             broker=context.broker,
             degradation_state=self._degradation,
             risk_manager=context.risk_manager,

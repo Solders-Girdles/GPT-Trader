@@ -13,7 +13,6 @@ from gpt_trader.app.health_server import (
     HealthServer,
     HealthState,
     add_health_check,
-    get_health_state,
     mark_live,
     mark_ready,
 )
@@ -66,18 +65,14 @@ class TestHealthServerIntegration:
     """Integration tests for the HealthServer."""
 
     @pytest.fixture
-    def reset_health_state(self) -> None:
-        """Reset global health state before each test."""
-        state = get_health_state()
-        state.ready = False
-        state.live = True
-        state.reason = "initializing"
-        state.checks = {}
+    def health_state(self) -> HealthState:
+        """Fresh health state per test."""
+        return HealthState()
 
     @pytest.mark.asyncio
-    async def test_server_starts_and_stops(self, reset_health_state: None) -> None:
+    async def test_server_starts_and_stops(self, health_state: HealthState) -> None:
         port = find_free_port()
-        server = HealthServer(host="127.0.0.1", port=port)
+        server = HealthServer(host="127.0.0.1", port=port, health_state=health_state)
 
         await server.start()
         assert server._running is True
@@ -88,13 +83,13 @@ class TestHealthServerIntegration:
         assert server._server is None
 
     @pytest.mark.asyncio
-    async def test_health_endpoint_healthy(self, reset_health_state: None) -> None:
+    async def test_health_endpoint_healthy(self, health_state: HealthState) -> None:
         port = find_free_port()
-        server = HealthServer(host="127.0.0.1", port=port)
+        server = HealthServer(host="127.0.0.1", port=port, health_state=health_state)
         await server.start()
 
         try:
-            mark_ready(True)
+            mark_ready(health_state, True)
             response = await _make_request(port, "/health")
             assert response["status"] in ("healthy", "degraded")
             assert response["live"] is True
@@ -103,9 +98,9 @@ class TestHealthServerIntegration:
             await server.stop()
 
     @pytest.mark.asyncio
-    async def test_health_endpoint_not_ready(self, reset_health_state: None) -> None:
+    async def test_health_endpoint_not_ready(self, health_state: HealthState) -> None:
         port = find_free_port()
-        server = HealthServer(host="127.0.0.1", port=port)
+        server = HealthServer(host="127.0.0.1", port=port, health_state=health_state)
         await server.start()
 
         try:
@@ -117,9 +112,9 @@ class TestHealthServerIntegration:
             await server.stop()
 
     @pytest.mark.asyncio
-    async def test_live_endpoint(self, reset_health_state: None) -> None:
+    async def test_live_endpoint(self, health_state: HealthState) -> None:
         port = find_free_port()
-        server = HealthServer(host="127.0.0.1", port=port)
+        server = HealthServer(host="127.0.0.1", port=port, health_state=health_state)
         await server.start()
 
         try:
@@ -130,13 +125,13 @@ class TestHealthServerIntegration:
             await server.stop()
 
     @pytest.mark.asyncio
-    async def test_live_endpoint_not_live(self, reset_health_state: None) -> None:
+    async def test_live_endpoint_not_live(self, health_state: HealthState) -> None:
         port = find_free_port()
-        server = HealthServer(host="127.0.0.1", port=port)
+        server = HealthServer(host="127.0.0.1", port=port, health_state=health_state)
         await server.start()
 
         try:
-            mark_live(False, "shutting_down")
+            mark_live(health_state, False, "shutting_down")
             response = await _make_request(port, "/live")
             assert response["status"] == "fail"
             assert response["live"] is False
@@ -144,13 +139,13 @@ class TestHealthServerIntegration:
             await server.stop()
 
     @pytest.mark.asyncio
-    async def test_ready_endpoint(self, reset_health_state: None) -> None:
+    async def test_ready_endpoint(self, health_state: HealthState) -> None:
         port = find_free_port()
-        server = HealthServer(host="127.0.0.1", port=port)
+        server = HealthServer(host="127.0.0.1", port=port, health_state=health_state)
         await server.start()
 
         try:
-            mark_ready(True, "broker_connected")
+            mark_ready(health_state, True, "broker_connected")
             response = await _make_request(port, "/ready")
             assert response["status"] == "pass"
             assert response["ready"] is True
@@ -159,9 +154,9 @@ class TestHealthServerIntegration:
             await server.stop()
 
     @pytest.mark.asyncio
-    async def test_ready_endpoint_not_ready(self, reset_health_state: None) -> None:
+    async def test_ready_endpoint_not_ready(self, health_state: HealthState) -> None:
         port = find_free_port()
-        server = HealthServer(host="127.0.0.1", port=port)
+        server = HealthServer(host="127.0.0.1", port=port, health_state=health_state)
         await server.start()
 
         try:
@@ -172,9 +167,9 @@ class TestHealthServerIntegration:
             await server.stop()
 
     @pytest.mark.asyncio
-    async def test_not_found_endpoint(self, reset_health_state: None) -> None:
+    async def test_not_found_endpoint(self, health_state: HealthState) -> None:
         port = find_free_port()
-        server = HealthServer(host="127.0.0.1", port=port)
+        server = HealthServer(host="127.0.0.1", port=port, health_state=health_state)
         await server.start()
 
         try:
@@ -189,51 +184,42 @@ class TestHealthCheckFunctions:
     """Tests for health check helper functions."""
 
     @pytest.fixture
-    def reset_health_state(self) -> None:
-        """Reset global health state before each test."""
-        state = get_health_state()
-        state.ready = False
-        state.live = True
-        state.reason = "initializing"
-        state.checks = {}
+    def health_state(self) -> HealthState:
+        """Fresh health state per test."""
+        return HealthState()
 
-    def test_mark_ready(self, reset_health_state: None) -> None:
-        mark_ready(True, "all_systems_go")
-        state = get_health_state()
-        assert state.ready is True
-        assert state.reason == "all_systems_go"
+    def test_mark_ready(self, health_state: HealthState) -> None:
+        mark_ready(health_state, True, "all_systems_go")
+        assert health_state.ready is True
+        assert health_state.reason == "all_systems_go"
 
-    def test_mark_live(self, reset_health_state: None) -> None:
-        mark_live(False, "graceful_shutdown")
-        state = get_health_state()
-        assert state.live is False
-        assert state.reason == "graceful_shutdown"
+    def test_mark_live(self, health_state: HealthState) -> None:
+        mark_live(health_state, False, "graceful_shutdown")
+        assert health_state.live is False
+        assert health_state.reason == "graceful_shutdown"
 
-    def test_add_health_check_success(self, reset_health_state: None) -> None:
+    def test_add_health_check_success(self, health_state: HealthState) -> None:
         def check_broker() -> tuple[bool, dict[str, Any]]:
             return True, {"latency_ms": 25}
 
-        add_health_check("broker", check_broker)
-        state = get_health_state()
-        assert state.checks["broker"]["status"] == "pass"
-        assert state.checks["broker"]["details"]["latency_ms"] == 25
+        add_health_check(health_state, "broker", check_broker)
+        assert health_state.checks["broker"]["status"] == "pass"
+        assert health_state.checks["broker"]["details"]["latency_ms"] == 25
 
-    def test_add_health_check_failure(self, reset_health_state: None) -> None:
+    def test_add_health_check_failure(self, health_state: HealthState) -> None:
         def check_database() -> tuple[bool, dict[str, Any]]:
             return False, {"error": "connection refused"}
 
-        add_health_check("database", check_database)
-        state = get_health_state()
-        assert state.checks["database"]["status"] == "fail"
+        add_health_check(health_state, "database", check_database)
+        assert health_state.checks["database"]["status"] == "fail"
 
-    def test_add_health_check_exception(self, reset_health_state: None) -> None:
+    def test_add_health_check_exception(self, health_state: HealthState) -> None:
         def check_flaky() -> tuple[bool, dict[str, Any]]:
             raise RuntimeError("check failed")
 
-        add_health_check("flaky", check_flaky)
-        state = get_health_state()
-        assert state.checks["flaky"]["status"] == "fail"
-        assert "check failed" in state.checks["flaky"]["details"]["error"]
+        add_health_check(health_state, "flaky", check_flaky)
+        assert health_state.checks["flaky"]["status"] == "fail"
+        assert "check failed" in health_state.checks["flaky"]["details"]["error"]
 
 
 async def _make_request(port: int, path: str) -> dict[str, Any]:

@@ -11,7 +11,6 @@ from .health_server import (
     HealthServer,
     HealthState,
     add_health_check,
-    get_health_state,
     mark_live,
     mark_ready,
     start_health_server,
@@ -23,7 +22,6 @@ __all__ = [
     # Health server exports
     "HealthServer",
     "HealthState",
-    "get_health_state",
     "start_health_server",
     "mark_ready",
     "mark_live",

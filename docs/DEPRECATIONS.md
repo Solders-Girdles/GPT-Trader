@@ -20,8 +20,6 @@ These are kept for external consumer compatibility and are not scheduled for rem
 
 | Item | Location | Purpose |
 |------|----------|---------|
-| Module-level `health_state` | `app.health_server` | Legacy access pattern |
-| Module-level `secrets_manager` | `security.secrets_manager` | Legacy access pattern |
 | Legacy API key detection | `tui.services.credential_validator` | Coinbase legacy key format support |
 | Legacy order payload builders | `features.brokerages.coinbase.rest.base` | `_build_order_payload()`, `_execute_order_payload()` |
 
@@ -38,6 +36,9 @@ Before removing any deprecated item:
 
 | Item | Removed In | Migration Path |
 |------|------------|----------------|
+| Module-level `health_state` | Unreleased | Use `ApplicationContainer.health_state` and pass `HealthState` explicitly to health helpers. |
+| Module-level `secrets_manager` helpers | Unreleased | Use `ApplicationContainer.secrets_manager` or instantiate `SecretsManager`. |
+| Data module singletons (`store_data`/`fetch_data` functions) | Unreleased | Use `DataService` and its instance methods. |
 | TUI legacy preferences fallback (`config/tui_preferences.json`) | Unreleased | Use runtime preferences path or `GPT_TRADER_TUI_PREFERENCES_PATH` |
 | TUI legacy status CSS aliases (`good`/`bad`/`risk-status-*`) | Unreleased | Use `status-ok`, `status-warning`, `status-critical` |
 | TUI validation `ValidationError` alias | Unreleased | Use `FieldValidationError` |

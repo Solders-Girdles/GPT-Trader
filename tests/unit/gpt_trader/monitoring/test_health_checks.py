@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from gpt_trader.app.health_server import HealthState
 from gpt_trader.monitoring.health_checks import (
     HealthCheckResult,
     HealthCheckRunner,
@@ -253,8 +254,10 @@ class TestHealthCheckRunner:
 
     def test_initialization(self) -> None:
         """Test runner initialization with default values."""
-        runner = HealthCheckRunner()
+        health_state = HealthState()
+        runner = HealthCheckRunner(health_state=health_state)
 
+        assert runner._health_state is health_state
         assert runner._broker is None
         assert runner._degradation_state is None
         assert runner._risk_manager is None
@@ -263,7 +266,7 @@ class TestHealthCheckRunner:
 
     def test_set_broker(self) -> None:
         """Test setting broker after initialization."""
-        runner = HealthCheckRunner()
+        runner = HealthCheckRunner(health_state=HealthState())
         broker = MagicMock()
 
         runner.set_broker(broker)
@@ -272,7 +275,7 @@ class TestHealthCheckRunner:
 
     def test_set_degradation_state(self) -> None:
         """Test setting degradation state."""
-        runner = HealthCheckRunner()
+        runner = HealthCheckRunner(health_state=HealthState())
         state = MagicMock()
 
         runner.set_degradation_state(state)
@@ -294,6 +297,7 @@ class TestHealthCheckRunner:
         }
 
         runner = HealthCheckRunner(
+            health_state=HealthState(),
             broker=broker,
             degradation_state=degradation_state,
         )
@@ -311,7 +315,10 @@ class TestHealthCheckRunner:
         """Test async start and stop."""
         import asyncio
 
-        runner = HealthCheckRunner(interval_seconds=60.0)  # Long interval to avoid loop execution
+        runner = HealthCheckRunner(
+            health_state=HealthState(),
+            interval_seconds=60.0,
+        )  # Long interval to avoid loop execution
 
         await runner.start()
         assert runner._running is True
@@ -331,20 +338,20 @@ class TestHealthCheckRunner:
         broker.get_time.return_value = {"epoch": 123}
         broker.get_ws_health.return_value = None
 
-        runner = HealthCheckRunner(broker=broker, interval_seconds=60.0)
+        health_state = MagicMock()
+        runner = HealthCheckRunner(
+            health_state=health_state,
+            broker=broker,
+            interval_seconds=60.0,
+        )
 
-        # Mock the health state by patching where it's imported in health_checks module
-        with patch("gpt_trader.app.health_server.get_health_state") as mock_get_state:
-            mock_state = MagicMock()
-            mock_get_state.return_value = mock_state
+        await runner._execute_checks()
 
-            await runner._execute_checks()
-
-            # Verify checks were added
-            assert mock_state.add_check.call_count >= 2
-            call_args = [call[0][0] for call in mock_state.add_check.call_args_list]
-            assert "broker" in call_args
-            assert "websocket" in call_args
+        # Verify checks were added
+        assert health_state.add_check.call_count >= 2
+        call_args = [call[0][0] for call in health_state.add_check.call_args_list]
+        assert "broker" in call_args
+        assert "websocket" in call_args
 
 
 class TestHealthCheckResult:

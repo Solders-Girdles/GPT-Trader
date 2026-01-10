@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Any
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
+    from gpt_trader.app.health_server import HealthState
     from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
     from gpt_trader.features.live_trade.degradation import DegradationState
 from gpt_trader.features.live_trade.risk.protocols import RiskManagerProtocol
@@ -298,6 +299,7 @@ class HealthCheckRunner:
 
     def __init__(
         self,
+        health_state: HealthState,
         broker: BrokerProtocol | None = None,
         degradation_state: DegradationState | None = None,
         risk_manager: RiskManagerProtocol | None = None,
@@ -309,6 +311,7 @@ class HealthCheckRunner:
         Initialize the health check runner.
 
         Args:
+            health_state: HealthState instance to update with results.
             broker: Broker for connectivity checks.
             degradation_state: DegradationState for pause/reduce-only checks.
             risk_manager: RiskManager for reduce-only mode checks.
@@ -316,6 +319,7 @@ class HealthCheckRunner:
             message_stale_seconds: WS message staleness threshold.
             heartbeat_stale_seconds: WS heartbeat staleness threshold.
         """
+        self._health_state = health_state
         self._broker = broker
         self._degradation_state = degradation_state
         self._risk_manager = risk_manager
@@ -388,9 +392,7 @@ class HealthCheckRunner:
         """Execute all configured health checks."""
         import asyncio
 
-        from gpt_trader.app.health_server import get_health_state
-
-        health_state = get_health_state()
+        health_state = self._health_state
 
         # Run broker ping in thread pool (blocking I/O)
         if self._broker is not None:

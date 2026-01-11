@@ -113,16 +113,24 @@ class TestResponseCache:
         assert cache.get("/api/v3/orders") is None
         assert cache.get("/api/v3/products") is None
 
-    def test_cache_max_size_eviction(self) -> None:
+    def test_cache_max_size_eviction(self, monkeypatch) -> None:
         """Test that oldest entries are evicted when max size is reached."""
+        import gpt_trader.features.brokerages.coinbase.client.response_cache as cache_module
+
+        current_time = [1000.0]
+
+        def fake_time() -> float:
+            return current_time[0]
+
+        monkeypatch.setattr(cache_module.time, "time", fake_time)
         cache = ResponseCache(max_size=3)
 
         cache.set("/api/v3/item1", {"id": 1})
-        time.sleep(0.01)
+        current_time[0] += 1
         cache.set("/api/v3/item2", {"id": 2})
-        time.sleep(0.01)
+        current_time[0] += 1
         cache.set("/api/v3/item3", {"id": 3})
-        time.sleep(0.01)
+        current_time[0] += 1
 
         # Adding fourth item should evict oldest (item1)
         cache.set("/api/v3/item4", {"id": 4})

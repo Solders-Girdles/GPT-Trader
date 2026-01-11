@@ -17,6 +17,13 @@ from gpt_trader.tui.services.performance_service import (
 )
 
 
+def _patch_time(monkeypatch, values: list[float]) -> None:
+    import gpt_trader.utilities.performance.timing as timing_module
+
+    iterator = iter(values)
+    monkeypatch.setattr(timing_module.time, "time", lambda: next(iterator))
+
+
 class TestFrameMetrics:
     """Tests for FrameMetrics dataclass."""
 
@@ -121,10 +128,11 @@ class TestTuiPerformanceService:
         """Test initializing a disabled service."""
         assert disabled_service.enabled is False
 
-    def test_time_operation_enabled(self, service: TuiPerformanceService) -> None:
+    def test_time_operation_enabled(self, service: TuiPerformanceService, monkeypatch) -> None:
         """Test timing context manager when enabled."""
+        _patch_time(monkeypatch, [1000.0, 1000.02])
         with service.time_operation("test_op"):
-            time.sleep(0.01)  # 10ms
+            pass
 
         summary = service.get_summary()
         assert "tui.test_op" in summary
@@ -236,10 +244,11 @@ class TestTuiPerformanceService:
         # Still 0 because disabled
         assert len(disabled_service._slow_operations) == 0
 
-    def test_get_operation_stats(self, service: TuiPerformanceService) -> None:
+    def test_get_operation_stats(self, service: TuiPerformanceService, monkeypatch) -> None:
         """Test getting stats for a specific operation."""
+        _patch_time(monkeypatch, [1000.0, 1000.02])
         with service.time_operation("my_operation"):
-            time.sleep(0.01)
+            pass
 
         stats = service.get_operation_stats("my_operation")
 

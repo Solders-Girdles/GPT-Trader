@@ -507,10 +507,9 @@ class TestRunStreamLoopAsync:
         """Test sets stop signal on cancellation."""
         coordinator = Mock()
 
-        import time
-
-        def slow_sync_executor(*args: Any) -> None:
-            time.sleep(0.5)  # Short sleep for test efficiency
+        def slow_sync_executor(_symbols: Any, _level: Any, stop_signal: Any) -> None:
+            if isinstance(stop_signal, threading.Event):
+                stop_signal.wait(timeout=1.0)
 
         coordinator._run_stream_loop = slow_sync_executor
 

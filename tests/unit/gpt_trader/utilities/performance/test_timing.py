@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import time
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -14,14 +13,22 @@ from gpt_trader.utilities.performance.timing import (
 )
 
 
+def _patch_time(monkeypatch, values: list[float]) -> None:
+    import gpt_trader.utilities.performance.timing as timing_module
+
+    iterator = iter(values)
+    monkeypatch.setattr(timing_module.time, "time", lambda: next(iterator))
+
+
 class TestMeasurePerformance:
     """Tests for measure_performance context manager."""
 
-    def test_records_metric(self) -> None:
+    def test_records_metric(self, monkeypatch) -> None:
         mock_collector = MagicMock()
+        _patch_time(monkeypatch, [1000.0, 1000.02])
 
         with measure_performance("test_op", collector=mock_collector):
-            time.sleep(0.01)
+            pass
 
         mock_collector.record.assert_called_once()
         metric = mock_collector.record.call_args[0][0]
@@ -123,12 +130,12 @@ class TestPerformanceTimer:
         timer.start()
         assert timer.start_time is not None
 
-    def test_stop_records_metric(self) -> None:
+    def test_stop_records_metric(self, monkeypatch) -> None:
         mock_collector = MagicMock()
+        _patch_time(monkeypatch, [1000.0, 1000.02])
         timer = PerformanceTimer("test_op", collector=mock_collector)
 
         timer.start()
-        time.sleep(0.01)
         duration = timer.stop()
 
         assert duration >= 0.01
@@ -148,12 +155,13 @@ class TestPerformanceTimer:
         with timer:
             assert timer.start_time is not None
 
-    def test_context_manager_exit(self) -> None:
+    def test_context_manager_exit(self, monkeypatch) -> None:
         mock_collector = MagicMock()
+        _patch_time(monkeypatch, [1000.0, 1000.02])
         timer = PerformanceTimer("test_op", collector=mock_collector)
 
         with timer:
-            time.sleep(0.01)
+            pass
 
         assert timer.end_time is not None
         mock_collector.record.assert_called_once()

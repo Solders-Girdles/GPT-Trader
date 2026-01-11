@@ -465,7 +465,8 @@ class TestProductService:
 
         result = self.service.get_tradeable_products(["spot"])
 
-        assert len(result) >= 0  # At least doesn't crash
+        assert len(result) == 1
+        assert result[0].symbol == "BTC-USD"
         assert all(p.market_type == "SPOT" for p in result)
 
     def test_get_tradeable_products_cfm_only(self) -> None:

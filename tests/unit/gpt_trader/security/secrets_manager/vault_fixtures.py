@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock
@@ -63,17 +64,21 @@ def hvac_stub(monkeypatch: pytest.MonkeyPatch) -> Any:
     return mock_client
 
 
+@dataclass(frozen=True)
+class VaultFixtureBundle:
+    bot_config: BotConfig
+    secrets_dir: Path
+    hvac_stub: Any
+
+
 @pytest.fixture
-def secrets_manager_with_vault(
+def vault_fixture_bundle(
     secrets_bot_config: BotConfig,
-    patched_require_fernet: None,
     hvac_stub: Any,
     monkeypatch: pytest.MonkeyPatch,
     secrets_dir: Path,
-) -> Any:
-    """SecretsManager instance with mocked vault."""
-    from gpt_trader.security.secrets_manager import SecretsManager
-
+) -> VaultFixtureBundle:
+    """Bundle vault setup dependencies for SecretsManager fixtures."""
     # Set required environment variables for SecretsManager
     monkeypatch.setenv("ENV", "development")
     monkeypatch.setenv("GPT_TRADER_ENCRYPTION_KEY", Fernet.generate_key().decode())
@@ -82,7 +87,26 @@ def secrets_manager_with_vault(
     monkeypatch.setenv("VAULT_TOKEN", "test-token")
     monkeypatch.setenv("VAULT_ADDR", "http://vault.local")
 
-    return SecretsManager(vault_enabled=True, config=secrets_bot_config, secrets_dir=secrets_dir)
+    return VaultFixtureBundle(
+        bot_config=secrets_bot_config,
+        secrets_dir=secrets_dir,
+        hvac_stub=hvac_stub,
+    )
+
+
+@pytest.fixture
+def secrets_manager_with_vault(
+    patched_require_fernet: None,
+    vault_fixture_bundle: VaultFixtureBundle,
+) -> Any:
+    """SecretsManager instance with mocked vault."""
+    from gpt_trader.security.secrets_manager import SecretsManager
+
+    return SecretsManager(
+        vault_enabled=True,
+        config=vault_fixture_bundle.bot_config,
+        secrets_dir=vault_fixture_bundle.secrets_dir,
+    )
 
 
 @pytest.fixture

@@ -366,13 +366,7 @@ class TestRunAsync:
         )
 
         # Should return immediately without looping
-        task = asyncio.create_task(service.run(interval_seconds=1))
-
-        # Give it a moment to run
-        await asyncio.sleep(0.1)
-
-        # Task should complete quickly
-        assert task.done()
+        await asyncio.wait_for(service.run(interval_seconds=1), timeout=0.1)
 
     @pytest.mark.asyncio
     async def test_run_collects_and_publishes(self) -> None:
@@ -397,12 +391,16 @@ class TestRunAsync:
             profile="default",
         )
 
-        # Patch _publish_snapshot to track calls
-        service._publish_snapshot = Mock()
+        published = asyncio.Event()
 
-        # Run briefly then cancel
+        def _publish_snapshot(snapshot: dict) -> None:
+            published.set()
+
+        service._publish_snapshot = Mock(side_effect=_publish_snapshot)
+
+        # Run briefly then cancel after first publish
         task = asyncio.create_task(service.run(interval_seconds=10))
-        await asyncio.sleep(0.1)
+        await asyncio.wait_for(published.wait(), timeout=0.2)
         task.cancel()
 
         try:
@@ -434,11 +432,16 @@ class TestRunAsync:
             bot_id="test",
             profile="default",
         )
-        service._publish_snapshot = Mock()
+        published = asyncio.Event()
+
+        def _publish_snapshot(snapshot: dict) -> None:
+            published.set()
+
+        service._publish_snapshot = Mock(side_effect=_publish_snapshot)
 
         # Run briefly then cancel
         task = asyncio.create_task(service.run(interval_seconds=10))
-        await asyncio.sleep(0.1)
+        await asyncio.wait_for(published.wait(), timeout=0.2)
         task.cancel()
 
         try:

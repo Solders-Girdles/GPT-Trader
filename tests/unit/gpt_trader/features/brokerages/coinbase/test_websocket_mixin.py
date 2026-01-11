@@ -8,7 +8,6 @@ CoinbaseWebSocket with the broker interface.
 from __future__ import annotations
 
 import threading
-import time
 from unittest.mock import MagicMock, patch
 
 from gpt_trader.features.brokerages.coinbase.client.websocket_mixin import (
@@ -124,6 +123,8 @@ class TestStreamOrderbook:
 
         # Start stream in background thread
         stop_event = threading.Event()
+        subscribed = threading.Event()
+        mock_ws.subscribe.side_effect = lambda *args, **kwargs: subscribed.set()
 
         def consume_stream():
             for _ in client.stream_orderbook(
@@ -134,10 +135,10 @@ class TestStreamOrderbook:
         thread = threading.Thread(target=consume_stream)
         thread.start()
 
-        # Give time for subscribe to be called
-        time.sleep(0.1)
+        assert subscribed.wait(timeout=1.0)
         stop_event.set()
         thread.join(timeout=2)
+        assert not thread.is_alive()
 
         mock_ws.connect.assert_called_once()
         mock_ws.subscribe.assert_called_once_with(["BTC-USD", "ETH-USD"], ["level2"])
@@ -151,6 +152,8 @@ class TestStreamOrderbook:
         client = MockWebSocketClient()
 
         stop_event = threading.Event()
+        subscribed = threading.Event()
+        mock_ws.subscribe.side_effect = lambda *args, **kwargs: subscribed.set()
 
         def consume_stream():
             for _ in client.stream_orderbook(["BTC-USD"], level=1, stop_event=stop_event):
@@ -159,9 +162,10 @@ class TestStreamOrderbook:
         thread = threading.Thread(target=consume_stream)
         thread.start()
 
-        time.sleep(0.1)
+        assert subscribed.wait(timeout=1.0)
         stop_event.set()
         thread.join(timeout=2)
+        assert not thread.is_alive()
 
         mock_ws.subscribe.assert_called_once_with(["BTC-USD"], ["ticker"])
 
@@ -201,6 +205,8 @@ class TestStreamTrades:
         client = MockWebSocketClient()
 
         stop_event = threading.Event()
+        subscribed = threading.Event()
+        mock_ws.subscribe.side_effect = lambda *args, **kwargs: subscribed.set()
 
         def consume_stream():
             for _ in client.stream_trades(["BTC-USD", "ETH-USD"], stop_event=stop_event):
@@ -209,9 +215,10 @@ class TestStreamTrades:
         thread = threading.Thread(target=consume_stream)
         thread.start()
 
-        time.sleep(0.1)
+        assert subscribed.wait(timeout=1.0)
         stop_event.set()
         thread.join(timeout=2)
+        assert not thread.is_alive()
 
         mock_ws.connect.assert_called_once()
         mock_ws.subscribe.assert_called_once_with(["BTC-USD", "ETH-USD"], ["market_trades"])
@@ -251,6 +258,8 @@ class TestStreamControl:
 
         # Start a stream
         stop_event = threading.Event()
+        subscribed = threading.Event()
+        mock_ws.subscribe.side_effect = lambda *args, **kwargs: subscribed.set()
 
         def consume_stream():
             for _ in client.stream_orderbook(["BTC-USD"], stop_event=stop_event):
@@ -259,11 +268,12 @@ class TestStreamControl:
         thread = threading.Thread(target=consume_stream)
         thread.start()
 
-        time.sleep(0.1)
+        assert subscribed.wait(timeout=1.0)
 
         # Stop streaming
         client.stop_streaming()
         thread.join(timeout=2)
+        assert not thread.is_alive()
 
         mock_ws.disconnect.assert_called_once()
         assert client._ws is None
@@ -301,24 +311,25 @@ class TestMessageFiltering:
         client = MockWebSocketClient()
         received_messages = []
         stop_event = threading.Event()
+        received_event = threading.Event()
 
         def consume_stream():
             for msg in client.stream_orderbook(["BTC-USD"], stop_event=stop_event):
                 received_messages.append(msg)
+                received_event.set()
 
         thread = threading.Thread(target=consume_stream)
         thread.start()
-
-        time.sleep(0.1)
 
         # Push non-dict messages (these would be filtered by _stream_messages)
         client._message_queue.put("string message")
         client._message_queue.put(123)
         client._message_queue.put({"valid": "message"})
 
-        time.sleep(0.2)
+        assert received_event.wait(timeout=1.0)
         stop_event.set()
         thread.join(timeout=2)
+        assert not thread.is_alive()
 
         # Only dict message should be yielded
         assert len(received_messages) == 1

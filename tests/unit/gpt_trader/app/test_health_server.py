@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import socket
 from typing import Any
 
 import pytest
@@ -16,14 +15,6 @@ from gpt_trader.app.health_server import (
     mark_live,
     mark_ready,
 )
-
-
-def find_free_port() -> int:
-    """Find a free port for testing."""
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind(("", 0))
-        s.listen(1)
-        return s.getsockname()[1]
 
 
 class TestHealthState:
@@ -71,8 +62,7 @@ class TestHealthServerIntegration:
 
     @pytest.mark.asyncio
     async def test_server_starts_and_stops(self, health_state: HealthState) -> None:
-        port = find_free_port()
-        server = HealthServer(host="127.0.0.1", port=port, health_state=health_state)
+        server = HealthServer(host="127.0.0.1", port=0, health_state=health_state)
 
         await server.start()
         assert server._running is True
@@ -84,9 +74,9 @@ class TestHealthServerIntegration:
 
     @pytest.mark.asyncio
     async def test_health_endpoint_healthy(self, health_state: HealthState) -> None:
-        port = find_free_port()
-        server = HealthServer(host="127.0.0.1", port=port, health_state=health_state)
+        server = HealthServer(host="127.0.0.1", port=0, health_state=health_state)
         await server.start()
+        port = server.port
 
         try:
             mark_ready(health_state, True)
@@ -99,9 +89,9 @@ class TestHealthServerIntegration:
 
     @pytest.mark.asyncio
     async def test_health_endpoint_not_ready(self, health_state: HealthState) -> None:
-        port = find_free_port()
-        server = HealthServer(host="127.0.0.1", port=port, health_state=health_state)
+        server = HealthServer(host="127.0.0.1", port=0, health_state=health_state)
         await server.start()
+        port = server.port
 
         try:
             # Not ready by default
@@ -113,9 +103,9 @@ class TestHealthServerIntegration:
 
     @pytest.mark.asyncio
     async def test_live_endpoint(self, health_state: HealthState) -> None:
-        port = find_free_port()
-        server = HealthServer(host="127.0.0.1", port=port, health_state=health_state)
+        server = HealthServer(host="127.0.0.1", port=0, health_state=health_state)
         await server.start()
+        port = server.port
 
         try:
             response = await _make_request(port, "/live")
@@ -126,9 +116,9 @@ class TestHealthServerIntegration:
 
     @pytest.mark.asyncio
     async def test_live_endpoint_not_live(self, health_state: HealthState) -> None:
-        port = find_free_port()
-        server = HealthServer(host="127.0.0.1", port=port, health_state=health_state)
+        server = HealthServer(host="127.0.0.1", port=0, health_state=health_state)
         await server.start()
+        port = server.port
 
         try:
             mark_live(health_state, False, "shutting_down")
@@ -140,9 +130,9 @@ class TestHealthServerIntegration:
 
     @pytest.mark.asyncio
     async def test_ready_endpoint(self, health_state: HealthState) -> None:
-        port = find_free_port()
-        server = HealthServer(host="127.0.0.1", port=port, health_state=health_state)
+        server = HealthServer(host="127.0.0.1", port=0, health_state=health_state)
         await server.start()
+        port = server.port
 
         try:
             mark_ready(health_state, True, "broker_connected")
@@ -155,9 +145,9 @@ class TestHealthServerIntegration:
 
     @pytest.mark.asyncio
     async def test_ready_endpoint_not_ready(self, health_state: HealthState) -> None:
-        port = find_free_port()
-        server = HealthServer(host="127.0.0.1", port=port, health_state=health_state)
+        server = HealthServer(host="127.0.0.1", port=0, health_state=health_state)
         await server.start()
+        port = server.port
 
         try:
             response = await _make_request(port, "/ready")
@@ -168,9 +158,9 @@ class TestHealthServerIntegration:
 
     @pytest.mark.asyncio
     async def test_not_found_endpoint(self, health_state: HealthState) -> None:
-        port = find_free_port()
-        server = HealthServer(host="127.0.0.1", port=port, health_state=health_state)
+        server = HealthServer(host="127.0.0.1", port=0, health_state=health_state)
         await server.start()
+        port = server.port
 
         try:
             response = await _make_request(port, "/unknown")
@@ -226,7 +216,7 @@ async def _make_request(port: int, path: str) -> dict[str, Any]:
     """Make HTTP request to health server and return JSON response."""
     import json
 
-    reader, writer = await asyncio.open_connection("127.0.0.1", port)
+    reader, writer = await _open_connection_with_retry("127.0.0.1", port)
 
     request = f"GET {path} HTTP/1.1\r\nHost: localhost\r\n\r\n"
     writer.write(request.encode())
@@ -243,6 +233,23 @@ async def _make_request(port: int, path: str) -> dict[str, Any]:
         body = response_text[body_start + 4 :]
         return json.loads(body)
     return {}
+
+
+async def _open_connection_with_retry(
+    host: str,
+    port: int,
+    attempts: int = 5,
+    delay_seconds: float = 0.05,
+) -> tuple[asyncio.StreamReader, asyncio.StreamWriter]:
+    for _ in range(attempts):
+        try:
+            return await asyncio.wait_for(
+                asyncio.open_connection(host, port),
+                timeout=1.0,
+            )
+        except (ConnectionRefusedError, OSError, TimeoutError):
+            await asyncio.sleep(delay_seconds)
+    return await asyncio.open_connection(host, port)
 
 
 def test_default_port_is_8080() -> None:

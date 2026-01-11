@@ -189,6 +189,10 @@ class HealthServer:
             self.host,
             self.port,
         )
+        if self._server.sockets:
+            sockname = self._server.sockets[0].getsockname()
+            if isinstance(sockname, tuple) and len(sockname) >= 2:
+                self.port = int(sockname[1])
         logger.info(
             "Health server started",
             operation="health_server_start",

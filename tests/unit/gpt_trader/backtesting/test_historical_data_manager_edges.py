@@ -1,0 +1,127 @@
+"""Edge coverage for HistoricalDataManager cache and coverage behavior."""
+
+from __future__ import annotations
+
+import json
+from datetime import datetime, timedelta
+from decimal import Decimal
+from pathlib import Path
+from unittest.mock import AsyncMock, Mock
+
+import pytest
+
+from gpt_trader.backtesting.data.fetcher import CoinbaseHistoricalFetcher
+from gpt_trader.backtesting.data.manager import HistoricalDataManager
+from gpt_trader.core import Candle
+
+
+def _make_manager(tmp_path: Path, validate_quality: bool = False) -> HistoricalDataManager:
+    fetcher = Mock(spec=CoinbaseHistoricalFetcher)
+    return HistoricalDataManager(
+        fetcher=fetcher,
+        cache_dir=tmp_path,
+        validate_quality=validate_quality,
+    )
+
+
+def test_read_from_cache_invalid_json_returns_empty(tmp_path: Path) -> None:
+    manager = _make_manager(tmp_path)
+    cache_path = manager._get_cache_path("BTC-USD", "ONE_MINUTE")
+    cache_path.write_text("not-json")
+
+    start = datetime(2024, 1, 1, 0, 0, 0)
+    end = start + timedelta(minutes=5)
+
+    assert manager._read_from_cache("BTC-USD", "ONE_MINUTE", start, end) == []
+
+
+def test_write_to_cache_deduplicates_and_sorts(tmp_path: Path) -> None:
+    manager = _make_manager(tmp_path)
+    ts1 = datetime(2024, 1, 1, 0, 0, 0)
+    ts2 = datetime(2024, 1, 1, 0, 1, 0)
+    ts3 = datetime(2024, 1, 1, 0, 2, 0)
+
+    candles_first = [
+        Candle(
+            ts=ts2,
+            open=Decimal("2"),
+            high=Decimal("2"),
+            low=Decimal("2"),
+            close=Decimal("2"),
+            volume=Decimal("2"),
+        ),
+        Candle(
+            ts=ts1,
+            open=Decimal("1"),
+            high=Decimal("1"),
+            low=Decimal("1"),
+            close=Decimal("1"),
+            volume=Decimal("1"),
+        ),
+    ]
+    candles_second = [
+        Candle(
+            ts=ts1,
+            open=Decimal("1"),
+            high=Decimal("1"),
+            low=Decimal("1"),
+            close=Decimal("1"),
+            volume=Decimal("1"),
+        ),
+        Candle(
+            ts=ts3,
+            open=Decimal("3"),
+            high=Decimal("3"),
+            low=Decimal("3"),
+            close=Decimal("3"),
+            volume=Decimal("3"),
+        ),
+    ]
+
+    manager._write_to_cache("BTC-USD", "ONE_MINUTE", candles_first)
+    manager._write_to_cache("BTC-USD", "ONE_MINUTE", candles_second)
+
+    cache_path = manager._get_cache_path("BTC-USD", "ONE_MINUTE")
+    data = json.loads(cache_path.read_text())
+    timestamps = [item["ts"] for item in data.get("candles", [])]
+
+    assert timestamps == [ts1.isoformat(), ts2.isoformat(), ts3.isoformat()]
+
+
+@pytest.mark.asyncio
+async def test_get_candles_returns_cached_without_fetch(tmp_path: Path) -> None:
+    manager = _make_manager(tmp_path, validate_quality=False)
+    manager.fetcher.fetch_candles = AsyncMock(return_value=[])
+
+    start = datetime(2024, 1, 1, 0, 0, 0)
+    end = start + timedelta(minutes=3)
+
+    cached = [
+        Candle(
+            ts=start,
+            open=Decimal("1"),
+            high=Decimal("1"),
+            low=Decimal("1"),
+            close=Decimal("1"),
+            volume=Decimal("1"),
+        ),
+        Candle(
+            ts=start + timedelta(minutes=1),
+            open=Decimal("2"),
+            high=Decimal("2"),
+            low=Decimal("2"),
+            close=Decimal("2"),
+            volume=Decimal("2"),
+        ),
+    ]
+    manager._write_to_cache("BTC-USD", "ONE_MINUTE", cached)
+    manager._coverage_index = {
+        "BTC-USD": {
+            "ONE_MINUTE": [(start, end)],
+        }
+    }
+
+    result = await manager.get_candles("BTC-USD", "ONE_MINUTE", start, end)
+
+    assert [c.ts for c in result] == [c.ts for c in cached]
+    manager.fetcher.fetch_candles.assert_not_called()

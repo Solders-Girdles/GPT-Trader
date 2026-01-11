@@ -8,6 +8,11 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from gpt_trader.app.config import BotConfig
+from gpt_trader.app.container import (
+    ApplicationContainer,
+    clear_application_container,
+    set_application_container,
+)
 from gpt_trader.features.live_trade.bot import TradingBot
 from gpt_trader.features.live_trade.strategies.ensemble import EnsembleStrategy
 
@@ -45,33 +50,38 @@ class TestEnsembleSystemExecution:
         mock_container.notification_service = MagicMock()
 
         # 3. Initialize Bot
-        bot = TradingBot(config, mock_container)
+        app_container = ApplicationContainer(config)
+        set_application_container(app_container)
+        try:
+            bot = TradingBot(config, mock_container)
 
-        # Verify Strategy Type
-        assert isinstance(bot.engine.strategy, EnsembleStrategy)
-        assert len(bot.engine.strategy.signals) == 3
+            # Verify Strategy Type
+            assert isinstance(bot.engine.strategy, EnsembleStrategy)
+            assert len(bot.engine.strategy.signals) == 3
 
-        # 4. Run One Cycle
-        # We call _cycle directly to avoid infinite loop
-        await bot.engine._cycle()
-
-        # 5. Verify Execution
-        # Check that get_ticker was called
-        mock_broker.get_ticker.assert_called_with("BTC-USD")
-
-        # Check that get_candles was called
-        mock_broker.get_candles.assert_called_with("BTC-USD", granularity="ONE_MINUTE")
-
-        # Check that strategy.decide was called
-        with patch.object(
-            bot.engine.strategy, "decide", wraps=bot.engine.strategy.decide
-        ) as mock_decide:
+            # 4. Run One Cycle
+            # We call _cycle directly to avoid infinite loop
             await bot.engine._cycle()
-            mock_decide.assert_called()
 
-            # Check decision
-            call_args = mock_decide.call_args
-            # args: symbol, current_mark, position_state, recent_marks, equity, product, candles
-            assert call_args.kwargs["symbol"] == "BTC-USD"
-            assert call_args.kwargs["current_mark"] == Decimal("50000.00")
-            assert call_args.kwargs["candles"] == []  # We mocked it to return empty list
+            # 5. Verify Execution
+            # Check that get_ticker was called
+            mock_broker.get_ticker.assert_called_with("BTC-USD")
+
+            # Check that get_candles was called
+            mock_broker.get_candles.assert_called_with("BTC-USD", granularity="ONE_MINUTE")
+
+            # Check that strategy.decide was called
+            with patch.object(
+                bot.engine.strategy, "decide", wraps=bot.engine.strategy.decide
+            ) as mock_decide:
+                await bot.engine._cycle()
+                mock_decide.assert_called()
+
+                # Check decision
+                call_args = mock_decide.call_args
+                # args: symbol, current_mark, position_state, recent_marks, equity, product, candles
+                assert call_args.kwargs["symbol"] == "BTC-USD"
+                assert call_args.kwargs["current_mark"] == Decimal("50000.00")
+                assert call_args.kwargs["candles"] == []  # We mocked it to return empty list
+        finally:
+            clear_application_container()

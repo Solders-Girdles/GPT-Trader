@@ -52,6 +52,28 @@ class TestRealTransportCoverage:
             assert transport.ws is mock_ws
             mock_create.assert_called_once_with(url, header=headers)
 
+    def test_connect_with_headers_dict_uses_existing_url(self, mock_bot_config):
+        """Test connection when headers passed as first argument."""
+        transport = RealTransport(config=mock_bot_config)
+        transport.url = "wss://test.example.com"
+
+        with patch("websocket.create_connection") as mock_create:
+            mock_ws = Mock()
+            mock_create.return_value = mock_ws
+            headers = {"Authorization": "Bearer token"}
+
+            transport.connect(headers)
+
+            mock_create.assert_called_once_with("wss://test.example.com", header=headers)
+            assert transport.ws is mock_ws
+
+    def test_connect_headers_without_url_raises(self, mock_bot_config):
+        """Test connection fails when url is missing and headers passed as first argument."""
+        transport = RealTransport(config=mock_bot_config)
+
+        with pytest.raises(ValueError, match="WebSocket URL is required"):
+            transport.connect({"Authorization": "Bearer token"})
+
     def test_connect_with_environment_options(self, mock_bot_config, monkeypatch):
         """Test connection with environment-based options."""
         # Set environment variables via monkeypatch
@@ -196,6 +218,17 @@ class TestRealTransportCoverage:
             {"type": "match", "size": "0.1"},
         ]
         assert result == expected
+
+    def test_stream_handles_stop_iteration(self, mock_bot_config):
+        """Test streaming stops on StopIteration from websocket."""
+        transport = RealTransport(config=mock_bot_config)
+        mock_ws = Mock()
+        transport.ws = mock_ws
+        mock_ws.recv.side_effect = StopIteration
+
+        result = list(transport.stream())
+
+        assert result == []
 
     def test_stream_not_connected(self, mock_bot_config):
         """Test streaming when not connected."""

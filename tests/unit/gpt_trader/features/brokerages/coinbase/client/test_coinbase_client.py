@@ -7,7 +7,11 @@ import pytest
 
 from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.client.market import MarketDataClientMixin
-from gpt_trader.features.brokerages.coinbase.errors import AuthError, PermissionDeniedError
+from gpt_trader.features.brokerages.coinbase.errors import (
+    AuthError,
+    InvalidRequestError,
+    PermissionDeniedError,
+)
 
 
 def _make_client(api_mode: str = "advanced") -> CoinbaseClient:
@@ -68,6 +72,44 @@ def test_list_balances_warns_when_accounts_missing(caplog: pytest.LogCaptureFixt
     assert "API returned response but no accounts" in caplog.text
 
 
+def test_list_balances_maps_totals() -> None:
+    client = _make_client()
+    client.get_accounts = lambda: {  # type: ignore[method-assign]
+        "accounts": [
+            {
+                "currency": "USD",
+                "available_balance": {"value": "100.25"},
+                "hold": {"value": "10.75"},
+            },
+            {
+                "currency": "USDC",
+                "available_balance": {"value": "50"},
+                "hold": {"value": "0"},
+            },
+        ]
+    }
+
+    balances = client.list_balances()
+    data = {balance.asset: balance for balance in balances}
+
+    assert data["USD"].available == Decimal("100.25")
+    assert data["USD"].hold == Decimal("10.75")
+    assert data["USD"].total == Decimal("111.00")
+    assert data["USDC"].total == Decimal("50")
+
+
+def test_warn_public_market_fallback_only_once() -> None:
+    client = _make_client()
+
+    with patch(
+        "gpt_trader.features.brokerages.coinbase.client.client.logger.warning"
+    ) as mock_warning:
+        client._warn_public_market_fallback("ticker", Exception("unauthorized"))
+        client._warn_public_market_fallback("ticker", Exception("unauthorized"))
+
+    assert mock_warning.call_count == 1
+
+
 def test_get_ticker_auth_error_falls_back_to_public(caplog: pytest.LogCaptureFixture) -> None:
     client = _make_client()
 
@@ -85,6 +127,46 @@ def test_get_ticker_auth_error_falls_back_to_public(caplog: pytest.LogCaptureFix
     assert result["price"] == "101"
     assert mock_public.call_count == 2
     assert "Falling back to public market endpoints" in caplog.text
+
+
+def test_get_ticker_invalid_request_falls_back_to_authenticated() -> None:
+    client = _make_client()
+
+    with (
+        patch.object(
+            MarketDataClientMixin,
+            "get_market_product_ticker",
+            side_effect=InvalidRequestError("unsupported"),
+        ) as mock_public,
+        patch.object(
+            MarketDataClientMixin,
+            "get_ticker",
+            return_value={"price": "99", "bid": "98", "ask": "100"},
+        ) as mock_private,
+    ):
+        result = client.get_ticker("BTC-USD")
+
+    assert result["price"] == "99"
+    mock_public.assert_called_once()
+    mock_private.assert_called_once()
+
+
+def test_get_ticker_normalizes_from_trades_and_best_bid_ask() -> None:
+    client = _make_client()
+
+    response = {
+        "trades": [{"price": "101", "time": "2024-01-01T00:00:00Z"}],
+        "best_bid": "100",
+        "best_ask": "102",
+    }
+
+    with patch.object(MarketDataClientMixin, "get_market_product_ticker", return_value=response):
+        result = client.get_ticker("BTC-USD")
+
+    assert result["price"] == "101"
+    assert result["bid"] == "100"
+    assert result["ask"] == "102"
+    assert result["time"] == "2024-01-01T00:00:00Z"
 
 
 def test_get_ticker_auth_error_raises_in_non_advanced() -> None:

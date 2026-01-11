@@ -9,6 +9,7 @@ Extracted from TradingEngine to separate concerns:
 from __future__ import annotations
 
 import asyncio
+import math
 from typing import TYPE_CHECKING, Any
 
 from gpt_trader.monitoring.metrics_collector import record_gauge
@@ -116,22 +117,36 @@ class SystemMaintenanceService:
         Returns:
             Tuple of (memory_usage, cpu_usage) as formatted strings
         """
+
+        def is_valid_metric(value: Any) -> bool:
+            return isinstance(value, (int, float)) and math.isfinite(value) and value >= 0
+
         try:
             import psutil
 
             process = psutil.Process()
+        except ImportError:
+            return "N/A", "N/A"
+        except Exception:
+            return "Unknown", "Unknown"
+
+        memory_usage = "Unknown"
+        cpu_usage = "Unknown"
+
+        try:
             memory_info = process.memory_info()
             memory_mb = memory_info.rss / 1024 / 1024
-            memory_usage = f"{memory_mb:.1f}MB"
-            cpu_usage = f"{process.cpu_percent()}%"
-
-            # Emit Prometheus gauge for process memory
-            record_gauge("gpt_trader_process_memory_mb", memory_mb)
-        except ImportError:
-            memory_usage = "N/A"
-            cpu_usage = "N/A"
+            if is_valid_metric(memory_mb):
+                memory_usage = f"{memory_mb:.1f}MB"
+                record_gauge("gpt_trader_process_memory_mb", memory_mb)
         except Exception:
             memory_usage = "Unknown"
+
+        try:
+            cpu_value = process.cpu_percent()
+            if is_valid_metric(cpu_value):
+                cpu_usage = f"{cpu_value}%"
+        except Exception:
             cpu_usage = "Unknown"
 
         return memory_usage, cpu_usage

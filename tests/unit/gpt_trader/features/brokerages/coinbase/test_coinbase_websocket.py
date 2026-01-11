@@ -57,6 +57,15 @@ class TestSequenceGuard:
         assert result == message
         assert "gap_detected" not in result
 
+    def test_sequence_num_gap_detection(self):
+        """Sequence_num gaps should be detected."""
+        guard = SequenceGuard()
+
+        guard.annotate({"sequence_num": 10})
+        result = guard.annotate({"sequence_num": 12})
+
+        assert result.get("gap_detected") is True
+
     def test_reset_clears_tracking(self):
         """Reset should clear sequence tracking."""
         guard = SequenceGuard()

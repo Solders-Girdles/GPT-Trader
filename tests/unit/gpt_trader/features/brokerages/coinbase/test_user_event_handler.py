@@ -13,7 +13,9 @@ from gpt_trader.features.brokerages.coinbase.ws_events import FillEvent, OrderUp
 from gpt_trader.persistence.orders_store import OrderRecord, OrdersStore, OrderStatus
 
 
-def _make_handler(tmp_path) -> tuple[CoinbaseUserEventHandler, OrdersStore]:
+def _make_handler(
+    tmp_path, *, rest_service: object | None = None
+) -> tuple[CoinbaseUserEventHandler, OrdersStore]:
     store = OrdersStore(tmp_path)
     store.initialize()
     handler = CoinbaseUserEventHandler(
@@ -23,6 +25,7 @@ def _make_handler(tmp_path) -> tuple[CoinbaseUserEventHandler, OrdersStore]:
         bot_id="test-bot",
         market_data_service=None,
         symbols=["BTC-USD"],
+        rest_service=rest_service,
     )
     return handler, store
 
@@ -99,3 +102,38 @@ def test_fill_event_idempotent(tmp_path) -> None:
     handler._process_fill_for_pnl.assert_called_once()
     args, _ = handler._process_fill_for_pnl.call_args
     assert args[0]["size"] == "1"
+
+
+def test_backfill_deduplicates_rest_fills(tmp_path) -> None:
+    rest_service = Mock()
+    rest_service.list_orders.return_value = []
+    rest_service.list_fills.return_value = [
+        {
+            "fill_id": "fill-789",
+            "order_id": "order-789",
+            "client_order_id": "client-789",
+            "product_id": "BTC-USD",
+            "side": "BUY",
+            "price": "50000",
+            "size": "1",
+        },
+        {
+            "fill_id": "fill-789",
+            "order_id": "order-789",
+            "client_order_id": "client-789",
+            "product_id": "BTC-USD",
+            "side": "BUY",
+            "price": "50000",
+            "size": "1",
+        },
+    ]
+
+    handler, store = _make_handler(tmp_path, rest_service=rest_service)
+    handler._process_fill_for_pnl = Mock()
+
+    handler.request_backfill(reason="sequence_gap")
+
+    record = store.get_order("order-789")
+    assert record is not None
+    assert record.filled_quantity == Decimal("1")
+    handler._process_fill_for_pnl.assert_called_once()

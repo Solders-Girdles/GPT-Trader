@@ -100,6 +100,8 @@ class SequenceGuard:
         """
         sequence = message.get("sequence")
         if sequence is None:
+            sequence = message.get("sequence_num")
+        if sequence is None:
             return message
 
         result = dict(message)

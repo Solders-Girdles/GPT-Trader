@@ -311,9 +311,11 @@ class TradingEngine(BaseEngine):
         )
 
         market_data_service = None
+        product_catalog = None
         container = self.context.container
         if container is not None:
             market_data_service = getattr(container, "market_data_service", None)
+            product_catalog = getattr(container, "product_catalog", None)
 
         self._user_event_handler = CoinbaseUserEventHandler(
             broker=broker,
@@ -322,6 +324,7 @@ class TradingEngine(BaseEngine):
             bot_id=str(self.context.bot_id or self.context.config.profile or "live"),
             market_data_service=market_data_service,
             symbols=list(self.context.config.symbols),
+            product_catalog=product_catalog,
         )
 
     def _rehydrate_open_orders(self) -> None:
@@ -721,6 +724,11 @@ class TradingEngine(BaseEngine):
                     # Reset reconnect attempts on successful reconnect
                     self._ws_reconnect_attempts = 0
                     self._ws_reconnect_delay = 1.0
+
+                    if self._user_event_handler is not None:
+                        backfill = getattr(self._user_event_handler, "request_backfill", None)
+                        if callable(backfill):
+                            backfill(reason="ws_reconnect", run_in_thread=True)
 
                     # Pause all symbols briefly after reconnect
                     self._degradation.pause_all(

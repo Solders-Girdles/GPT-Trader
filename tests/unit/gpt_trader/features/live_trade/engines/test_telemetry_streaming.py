@@ -581,6 +581,26 @@ class TestRunStreamLoop:
             {"channel": "user", "events": []}
         )
 
+    def test_run_stream_loop_triggers_backfill_on_gap(self) -> None:
+        """Test gap detection triggers REST backfill."""
+        coordinator = Mock()
+        broker = Mock()
+        broker.stream_orderbook.return_value = [{"channel": "ticker", "gap_detected": True}]
+        coordinator.context.broker = broker
+        coordinator.context.event_store = Mock()
+        coordinator.context.bot_id = "test"
+        coordinator._user_event_handler = Mock()
+        coordinator._extract_mark_from_message.return_value = None
+
+        _run_stream_loop(coordinator, ["BTC-PERP"], 1, None)
+
+        reasons = [
+            call.kwargs.get("reason")
+            for call in coordinator._user_event_handler.request_backfill.call_args_list
+        ]
+        assert "startup" in reasons
+        assert "sequence_gap" in reasons
+
     def test_run_stream_loop_stops_on_signal(self) -> None:
         """Test stops when stop signal is set."""
         coordinator = Mock()

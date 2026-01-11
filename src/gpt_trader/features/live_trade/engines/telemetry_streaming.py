@@ -355,6 +355,10 @@ def _run_stream_loop(
             stream = None
 
     try:
+        if include_user_events:
+            backfill = getattr(user_handler, "request_backfill", None)
+            if callable(backfill):
+                backfill(reason="startup")
         for msg in stream or []:
             should_stop = False
             if stop_signal is not None:
@@ -382,6 +386,11 @@ def _run_stream_loop(
 
             # Route message based on channel type
             channel = msg.get("channel", "")
+
+            if msg.get("gap_detected"):
+                backfill = getattr(user_handler, "request_backfill", None)
+                if callable(backfill):
+                    backfill(reason="sequence_gap")
 
             if channel == "user":
                 handler = getattr(user_handler, "handle_user_message", None)

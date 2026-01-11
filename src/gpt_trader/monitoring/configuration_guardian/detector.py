@@ -2,11 +2,62 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Sequence
 from typing import Any
 
 from .base import ConfigurationMonitor
 from .logging_utils import logger  # naming: allow
-from .models import BaselineSnapshot, DriftEvent
+from .models import BaselineSnapshot, ConfigurationIssue, DriftEvent
+
+
+class ConfigurationGuardianDetector:
+    """Runs configuration validators and aggregates issues."""
+
+    def __init__(
+        self,
+        validators: Sequence[Callable[[], list[ConfigurationIssue]] | Any] | None = None,
+    ) -> None:
+        self._validators: list[Callable[[], list[ConfigurationIssue]] | Any] = list(
+            validators or []
+        )
+
+    def detect(self) -> list[ConfigurationIssue]:
+        """Run validators, returning any issues discovered."""
+        issues: list[ConfigurationIssue] = []
+
+        for validator in self._validators:
+            try:
+                if hasattr(validator, "validate"):
+                    result = validator.validate()
+                else:
+                    result = validator()
+            except Exception as exc:
+                logger.warning(
+                    "Configuration validator failed",
+                    operation="config_guardian",
+                    stage="detect",
+                    validator=self._validator_name(validator),
+                    error=str(exc),
+                    exc_info=True,
+                )
+                continue
+
+            if result:
+                issues.extend(result)
+
+        return issues
+
+    @staticmethod
+    def build_response(issues: list[ConfigurationIssue]) -> dict[str, Any]:
+        """Build response payload for detected issues."""
+        return {"issues": [issue.to_dict() for issue in issues]}
+
+    @staticmethod
+    def _validator_name(validator: Any) -> str:
+        name = getattr(validator, "name", None)
+        if name:
+            return str(name)
+        return getattr(validator, "__name__", validator.__class__.__name__)
 
 
 class DriftDetector(ConfigurationMonitor):
@@ -70,4 +121,4 @@ class DriftDetector(ConfigurationMonitor):
         return "drift_detector"
 
 
-__all__ = ["DriftDetector"]
+__all__ = ["ConfigurationGuardianDetector", "DriftDetector"]

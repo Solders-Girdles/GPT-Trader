@@ -13,7 +13,10 @@ from gpt_trader.features.brokerages.coinbase.client.priority import (
     RequestPriority,
 )
 from gpt_trader.features.brokerages.coinbase.client.response_cache import ResponseCache
-from gpt_trader.features.brokerages.coinbase.errors import InvalidRequestError
+from gpt_trader.features.brokerages.coinbase.errors import (
+    InvalidRequestError,
+    RateLimitError,
+)
 
 
 class TestCoinbaseClientBase:
@@ -514,6 +517,16 @@ class TestCoinbaseClientBase:
         with pytest.raises(InvalidRequestError, match="Bad request"):
             client._request("GET", "/api/v3/test")
 
+    def test_request_4xx_invalid_json_uses_text(self) -> None:
+        """Test 4xx errors fall back to raw response text."""
+        client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
+        mock_transport = Mock()
+        mock_transport.return_value = (400, {}, "not-json")
+        client.set_transport_for_testing(mock_transport)
+
+        with pytest.raises(InvalidRequestError, match="not-json"):
+            client._request("GET", "/api/v3/test")
+
     def test_request_rate_limit_invalid_retry_after(self) -> None:
         """Test rate limit retry-after defaults on invalid header."""
         client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
@@ -529,6 +542,17 @@ class TestCoinbaseClientBase:
 
         assert result == {"success": True}
         mock_sleep.assert_called_once_with(1.0)
+
+    def test_request_rate_limit_exhausts_retries(self) -> None:
+        """Test rate limit errors exhaust retries and raise."""
+        client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
+        mock_transport = Mock()
+        mock_transport.return_value = (429, {"retry-after": "0"}, '{"error": "rate_limited"}')
+        client.set_transport_for_testing(mock_transport)
+
+        with patch("time.sleep"):
+            with pytest.raises(RateLimitError):
+                client._request("GET", "/api/v3/test")
 
     def test_request_5xx_error_with_retry(self) -> None:
         """Test request with 5xx error and retry."""
@@ -624,6 +648,18 @@ class TestCoinbaseClientBase:
         result = client._request("GET", "/api/v3/test")
 
         assert result == {}
+
+    def test_request_caches_get_response(self) -> None:
+        """Test GET responses are cached when cache is enabled."""
+        client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
+        client._response_cache = ResponseCache(enabled=True)
+        mock_transport = Mock()
+        mock_transport.return_value = (200, {}, '{"success": true}')
+        client.set_transport_for_testing(mock_transport)
+
+        client._request("GET", "/api/v3/test")
+
+        assert client._response_cache.get("/api/v3/test") == {"success": True}
 
     def test_invalidate_cache_orders_and_positions(self) -> None:
         """Test cache invalidation targets orders and positions."""

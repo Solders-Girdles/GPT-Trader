@@ -11,6 +11,7 @@ import threading
 from unittest.mock import MagicMock, patch
 
 from gpt_trader.features.brokerages.coinbase.client.websocket_mixin import (
+    _STREAM_STOP,
     WebSocketClientMixin,
 )
 
@@ -170,6 +171,33 @@ class TestStreamOrderbook:
         mock_ws.subscribe.assert_called_once_with(["BTC-USD"], ["ticker"])
 
     @patch("gpt_trader.features.brokerages.coinbase.client.websocket_mixin.CoinbaseWebSocket")
+    def test_include_trades_adds_channel(self, mock_ws_class):
+        """stream_orderbook should include market_trades when requested."""
+        mock_ws = MagicMock()
+        mock_ws_class.return_value = mock_ws
+
+        client = MockWebSocketClient()
+        stop_event = threading.Event()
+        subscribed = threading.Event()
+        mock_ws.subscribe.side_effect = lambda *args, **kwargs: subscribed.set()
+
+        def consume_stream():
+            for _ in client.stream_orderbook(
+                ["BTC-USD"], level=2, stop_event=stop_event, include_trades=True
+            ):
+                pass
+
+        thread = threading.Thread(target=consume_stream)
+        thread.start()
+
+        assert subscribed.wait(timeout=1.0)
+        stop_event.set()
+        thread.join(timeout=2)
+        assert not thread.is_alive()
+
+        mock_ws.subscribe.assert_called_once_with(["BTC-USD"], ["level2", "market_trades"])
+
+    @patch("gpt_trader.features.brokerages.coinbase.client.websocket_mixin.CoinbaseWebSocket")
     def test_yields_messages_from_callback(self, mock_ws_class):
         """Messages pushed via callback should be yielded by stream."""
         mock_ws = MagicMock()
@@ -280,6 +308,21 @@ class TestStreamControl:
         assert client._stream_active is False
 
     @patch("gpt_trader.features.brokerages.coinbase.client.websocket_mixin.CoinbaseWebSocket")
+    def test_stop_streaming_handles_disconnect_error(self, mock_ws_class):
+        """stop_streaming should handle disconnect errors and clear state."""
+        mock_ws = MagicMock()
+        mock_ws.disconnect.side_effect = RuntimeError("disconnect failed")
+        mock_ws_class.return_value = mock_ws
+
+        client = MockWebSocketClient()
+        client._get_websocket()
+
+        client.stop_streaming()
+
+        assert client._ws is None
+        assert client._stream_active is False
+
+    @patch("gpt_trader.features.brokerages.coinbase.client.websocket_mixin.CoinbaseWebSocket")
     def test_is_streaming_returns_correct_state(self, mock_ws_class):
         """is_streaming should reflect _stream_active flag."""
         mock_ws = MagicMock()
@@ -334,6 +377,15 @@ class TestMessageFiltering:
         # Only dict message should be yielded
         assert len(received_messages) == 1
         assert received_messages[0] == {"valid": "message"}
+
+    def test_on_websocket_message_ignored_when_inactive(self):
+        """Messages should be ignored when stream is inactive."""
+        client = MockWebSocketClient()
+
+        client._stream_active = False
+        client._on_websocket_message({"type": "ticker"})
+
+        assert client._message_queue.empty()
 
     @patch("gpt_trader.features.brokerages.coinbase.client.websocket_mixin.CoinbaseWebSocket")
     def test_clears_queue_before_streaming(self, mock_ws_class):
@@ -448,3 +500,30 @@ class TestGetWSHealth:
         # All calls should have succeeded
         assert len(results) == 50
         assert all(r == {"connected": True} for r in results)
+
+
+class TestStreamMessageControl:
+    """Tests for stream message control flow."""
+
+    def test_stream_messages_stop_event_breaks(self):
+        client = MockWebSocketClient()
+        stop_event = threading.Event()
+        stop_event.set()
+        client._stream_active = True
+
+        with patch(
+            "gpt_trader.features.brokerages.coinbase.client.websocket_mixin._QUEUE_TIMEOUT",
+            0.0,
+        ):
+            messages = list(client._stream_messages(stop_event))
+
+        assert messages == []
+
+    def test_stream_messages_stop_sentinel_breaks(self):
+        client = MockWebSocketClient()
+        client._stream_active = True
+        client._message_queue.put(_STREAM_STOP)
+
+        messages = list(client._stream_messages())
+
+        assert messages == []

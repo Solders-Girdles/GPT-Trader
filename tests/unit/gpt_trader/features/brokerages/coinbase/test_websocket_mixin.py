@@ -198,6 +198,33 @@ class TestStreamOrderbook:
         mock_ws.subscribe.assert_called_once_with(["BTC-USD"], ["level2", "market_trades"])
 
     @patch("gpt_trader.features.brokerages.coinbase.client.websocket_mixin.CoinbaseWebSocket")
+    def test_include_user_events_subscribes(self, mock_ws_class):
+        """stream_orderbook should subscribe to user events when requested."""
+        mock_ws = MagicMock()
+        mock_ws_class.return_value = mock_ws
+
+        client = MockWebSocketClient()
+        stop_event = threading.Event()
+        subscribed = threading.Event()
+        mock_ws.subscribe.side_effect = lambda *args, **kwargs: subscribed.set()
+
+        def consume_stream():
+            for _ in client.stream_orderbook(
+                ["BTC-USD"], level=1, stop_event=stop_event, include_user_events=True
+            ):
+                pass
+
+        thread = threading.Thread(target=consume_stream)
+        thread.start()
+
+        assert subscribed.wait(timeout=1.0)
+        stop_event.set()
+        thread.join(timeout=2)
+        assert not thread.is_alive()
+
+        mock_ws.subscribe_user_events.assert_called_once_with(["BTC-USD"])
+
+    @patch("gpt_trader.features.brokerages.coinbase.client.websocket_mixin.CoinbaseWebSocket")
     def test_yields_messages_from_callback(self, mock_ws_class):
         """Messages pushed via callback should be yielded by stream."""
         mock_ws = MagicMock()

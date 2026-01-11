@@ -565,6 +565,22 @@ class TestRunStreamLoop:
 
         assert coordinator._update_mark_and_metrics.call_count >= 1
 
+    def test_run_stream_loop_routes_user_events(self) -> None:
+        """Test user channel messages are routed to the handler."""
+        coordinator = Mock()
+        broker = Mock()
+        broker.stream_orderbook.return_value = [{"channel": "user", "events": []}]
+        coordinator.context.broker = broker
+        coordinator.context.event_store = Mock()
+        coordinator.context.bot_id = "test"
+        coordinator._user_event_handler = Mock()
+
+        _run_stream_loop(coordinator, ["BTC-PERP"], 1, None)
+
+        coordinator._user_event_handler.handle_user_message.assert_called_once_with(
+            {"channel": "user", "events": []}
+        )
+
     def test_run_stream_loop_stops_on_signal(self) -> None:
         """Test stops when stop signal is set."""
         coordinator = Mock()

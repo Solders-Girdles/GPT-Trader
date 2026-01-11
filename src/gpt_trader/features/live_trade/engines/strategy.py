@@ -194,6 +194,8 @@ class TradingEngine(BaseEngine):
 
         # Initialize pre-trade guard stack (Option A: embedded guards)
         self._init_guard_stack()
+        self._user_event_handler: Any | None = None
+        self._init_user_event_handler()
 
     def _init_guard_stack(self) -> None:
         """Initialize StateCollector, OrderValidator, OrderSubmitter for pre-trade guards."""
@@ -293,6 +295,34 @@ class TradingEngine(BaseEngine):
                 open_orders=self._open_orders,
                 invalidate_cache_callback=lambda: None,
             )
+
+    def _init_user_event_handler(self) -> None:
+        """Initialize Coinbase WS user-event handling for live order updates."""
+        broker = self.context.broker
+        if broker is None:
+            return
+
+        module_name = getattr(broker, "__module__", "")
+        if "coinbase" not in module_name:
+            return
+
+        from gpt_trader.features.brokerages.coinbase.user_event_handler import (
+            CoinbaseUserEventHandler,
+        )
+
+        market_data_service = None
+        container = self.context.container
+        if container is not None:
+            market_data_service = getattr(container, "market_data_service", None)
+
+        self._user_event_handler = CoinbaseUserEventHandler(
+            broker=broker,
+            orders_store=self._orders_store,
+            event_store=self.context.event_store,
+            bot_id=str(self.context.bot_id or self.context.config.profile or "live"),
+            market_data_service=market_data_service,
+            symbols=list(self.context.config.symbols),
+        )
 
     def _rehydrate_open_orders(self) -> None:
         """Restore open order IDs from the orders store after a restart."""

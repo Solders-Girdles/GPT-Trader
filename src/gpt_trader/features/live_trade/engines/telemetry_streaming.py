@@ -14,6 +14,14 @@ if TYPE_CHECKING:  # pragma: no cover
 logger = get_logger(__name__, component="telemetry_streaming")
 
 
+def _supports_kwarg(fn: Any, keyword: str) -> bool:
+    try:
+        params = inspect.signature(fn).parameters
+    except (TypeError, ValueError):
+        return False
+    return keyword in params or any(param.kind == param.VAR_KEYWORD for param in params.values())
+
+
 def _emit_metric(event_store: Any, bot_id: str, payload: dict[str, Any]) -> None:
     """Emit a metric event via the telemetry utility."""
     from gpt_trader.utilities.telemetry import emit_metric
@@ -312,9 +320,22 @@ def _run_stream_loop(
         return
 
     stream: Any | None = None
+    user_handler = None
+    handler_state = getattr(coordinator, "__dict__", {})
+    if isinstance(handler_state, dict) and "_user_event_handler" in handler_state:
+        user_handler = handler_state.get("_user_event_handler")
+    include_user_events = user_handler is not None
     try:
         # Enable include_trades=True to get market_trades for volume analysis
-        stream = broker.stream_orderbook(symbols, level=level, include_trades=True)
+        if include_user_events and _supports_kwarg(broker.stream_orderbook, "include_user_events"):
+            stream = broker.stream_orderbook(
+                symbols,
+                level=level,
+                include_trades=True,
+                include_user_events=True,
+            )
+        else:
+            stream = broker.stream_orderbook(symbols, level=level, include_trades=True)
     except Exception as exc:  # pragma: no cover - dependent on broker impl
         logger.warning(
             f"Orderbook stream unavailable, falling back to trades ({exc})",
@@ -361,6 +382,20 @@ def _run_stream_loop(
 
             # Route message based on channel type
             channel = msg.get("channel", "")
+
+            if channel == "user":
+                handler = getattr(user_handler, "handle_user_message", None)
+                if callable(handler):
+                    try:
+                        handler(msg)
+                    except Exception as exc:
+                        logger.debug(
+                            "Failed to handle user event message",
+                            error=str(exc),
+                            operation="telemetry_stream",
+                            stage="user_event_handler",
+                        )
+                continue
 
             if channel == "l2_data":
                 # Level 2 orderbook update

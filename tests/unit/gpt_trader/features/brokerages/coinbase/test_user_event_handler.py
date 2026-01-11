@@ -1,0 +1,101 @@
+"""Tests for Coinbase user-event handler integration."""
+
+from __future__ import annotations
+
+from datetime import datetime, timezone
+from decimal import Decimal
+from unittest.mock import Mock
+
+from gpt_trader.features.brokerages.coinbase.user_event_handler import (
+    CoinbaseUserEventHandler,
+)
+from gpt_trader.features.brokerages.coinbase.ws_events import FillEvent, OrderUpdateEvent
+from gpt_trader.persistence.orders_store import OrderRecord, OrdersStore, OrderStatus
+
+
+def _make_handler(tmp_path) -> tuple[CoinbaseUserEventHandler, OrdersStore]:
+    store = OrdersStore(tmp_path)
+    store.initialize()
+    handler = CoinbaseUserEventHandler(
+        broker=None,
+        orders_store=store,
+        event_store=None,
+        bot_id="test-bot",
+        market_data_service=None,
+        symbols=["BTC-USD"],
+    )
+    return handler, store
+
+
+def test_order_update_upserts_orders_store(tmp_path) -> None:
+    handler, store = _make_handler(tmp_path)
+    now = datetime.now(timezone.utc)
+    event = OrderUpdateEvent(
+        order_id="order-123",
+        client_order_id="client-123",
+        product_id="BTC-USD",
+        status="OPEN",
+        side="BUY",
+        order_type="LIMIT",
+        size=Decimal("1.5"),
+        filled_size=Decimal("0"),
+        price=Decimal("45000"),
+        avg_price=None,
+        timestamp=now,
+    )
+
+    handler.handle_order_update(event)
+
+    record = store.get_order("order-123")
+    assert record is not None
+    assert record.client_order_id == "client-123"
+    assert record.status == OrderStatus.OPEN
+    assert record.symbol == "BTC-USD"
+
+
+def test_fill_event_idempotent(tmp_path) -> None:
+    handler, store = _make_handler(tmp_path)
+    now = datetime.now(timezone.utc)
+    order = OrderRecord(
+        order_id="order-456",
+        client_order_id="client-456",
+        symbol="BTC-USD",
+        side="buy",
+        order_type="limit",
+        quantity=Decimal("2"),
+        price=Decimal("45000"),
+        status=OrderStatus.OPEN,
+        filled_quantity=Decimal("0"),
+        average_fill_price=None,
+        created_at=now,
+        updated_at=now,
+        bot_id="test-bot",
+        time_in_force="GTC",
+        metadata=None,
+    )
+    store.save_order(order)
+
+    event = FillEvent(
+        order_id="order-456",
+        client_order_id="client-456",
+        product_id="BTC-USD",
+        side="BUY",
+        fill_price=Decimal("45010"),
+        fill_size=Decimal("1"),
+        fee=Decimal("0"),
+        commission=Decimal("0"),
+        sequence=123,
+        timestamp=now,
+    )
+
+    handler._process_fill_for_pnl = Mock()
+    handler.handle_fill(event)
+    handler.handle_fill(event)
+
+    record = store.get_order("order-456")
+    assert record is not None
+    assert record.filled_quantity == Decimal("1")
+    assert record.status == OrderStatus.PARTIALLY_FILLED
+    handler._process_fill_for_pnl.assert_called_once()
+    args, _ = handler._process_fill_for_pnl.call_args
+    assert args[0]["size"] == "1"

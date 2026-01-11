@@ -102,6 +102,7 @@ class WebSocketClientMixin:
         level: int = 1,
         stop_event: threading.Event | None = None,
         include_trades: bool = False,
+        include_user_events: bool = False,
     ) -> Iterator[dict]:
         """
         Stream orderbook updates for the given symbols.
@@ -112,6 +113,8 @@ class WebSocketClientMixin:
             stop_event: Optional threading.Event to signal stream termination.
             include_trades: If True, also subscribe to market_trades channel for
                 volume analysis and trade flow data.
+            include_user_events: If True, also subscribe to private user events
+                (order updates, fills). Requires API credentials.
 
         Yields:
             Orderbook update messages as dicts. If include_trades=True, also yields
@@ -141,6 +144,7 @@ class WebSocketClientMixin:
             level=level,
             channels=channels,
             include_trades=include_trades,
+            include_user_events=include_user_events,
         )
 
         self._stream_active = True
@@ -149,6 +153,8 @@ class WebSocketClientMixin:
             # Connect and subscribe
             websocket.connect()
             websocket.subscribe(symbols, channels)
+            if include_user_events:
+                websocket.subscribe_user_events(symbols)
 
             # Yield messages
             yield from self._stream_messages(stop_event)

@@ -931,94 +931,41 @@ class TestOrderSubmissionIntegration:
 # ============================================================
 
 
-class TestClassifyRejectionReason:
-    """Tests for _classify_rejection_reason helper."""
+@pytest.mark.parametrize(
+    ("message", "expected"),
+    [
+        ("rate_limit exceeded", "rate_limit"),
+        ("HTTP 429 Too Many Requests", "rate_limit"),
+        ("too many requests", "rate_limit"),
+        ("Insufficient balance", "insufficient_funds"),
+        ("Not enough funds", "insufficient_funds"),
+        ("insufficient margin", "insufficient_funds"),
+        ("Invalid size", "invalid_size"),
+        ("quantity below min_size", "invalid_size"),
+        ("amount too small", "invalid_size"),
+        ("Invalid price", "invalid_price"),
+        ("price tick increment", "invalid_price"),
+        ("Request timeout", "timeout"),
+        ("Connection timed out", "timeout"),
+        ("deadline exceeded", "timeout"),
+        ("Connection refused", "network"),
+        ("Network error", "network"),
+        ("socket closed", "network"),
+        ("Order rejected by broker", "broker_rejected"),
+        ("Request rejected", "broker_rejected"),
+        ("Order failed", "unknown"),
+        ("Server error", "unknown"),
+        ("Something weird happened", "unknown"),
+        ("", "unknown"),
+    ],
+)
+def test_classify_rejection_reason(message: str, expected: str) -> None:
+    """Test _classify_rejection_reason helper."""
+    from gpt_trader.features.live_trade.execution.order_submission import (
+        _classify_rejection_reason,
+    )
 
-    def test_rate_limit_detection(self) -> None:
-        """Test rate limit detection."""
-        from gpt_trader.features.live_trade.execution.order_submission import (
-            _classify_rejection_reason,
-        )
-
-        assert _classify_rejection_reason("rate_limit exceeded") == "rate_limit"
-        assert _classify_rejection_reason("HTTP 429 Too Many Requests") == "rate_limit"
-        assert _classify_rejection_reason("too many requests") == "rate_limit"
-
-    def test_insufficient_funds_detection(self) -> None:
-        """Test insufficient funds detection."""
-        from gpt_trader.features.live_trade.execution.order_submission import (
-            _classify_rejection_reason,
-        )
-
-        assert _classify_rejection_reason("Insufficient balance") == "insufficient_funds"
-        assert _classify_rejection_reason("Not enough funds") == "insufficient_funds"
-        assert _classify_rejection_reason("insufficient margin") == "insufficient_funds"
-
-    def test_invalid_size_detection(self) -> None:
-        """Test invalid size detection."""
-        from gpt_trader.features.live_trade.execution.order_submission import (
-            _classify_rejection_reason,
-        )
-
-        assert _classify_rejection_reason("Invalid size") == "invalid_size"
-        assert _classify_rejection_reason("quantity below min_size") == "invalid_size"
-        assert _classify_rejection_reason("amount too small") == "invalid_size"
-
-    def test_invalid_price_detection(self) -> None:
-        """Test invalid price detection."""
-        from gpt_trader.features.live_trade.execution.order_submission import (
-            _classify_rejection_reason,
-        )
-
-        assert _classify_rejection_reason("Invalid price") == "invalid_price"
-        assert _classify_rejection_reason("price tick increment") == "invalid_price"
-
-    def test_timeout_detection(self) -> None:
-        """Test timeout detection."""
-        from gpt_trader.features.live_trade.execution.order_submission import (
-            _classify_rejection_reason,
-        )
-
-        assert _classify_rejection_reason("Request timeout") == "timeout"
-        assert _classify_rejection_reason("Connection timed out") == "timeout"
-        assert _classify_rejection_reason("deadline exceeded") == "timeout"
-
-    def test_network_detection(self) -> None:
-        """Test network error detection."""
-        from gpt_trader.features.live_trade.execution.order_submission import (
-            _classify_rejection_reason,
-        )
-
-        assert _classify_rejection_reason("Connection refused") == "network"
-        assert _classify_rejection_reason("Network error") == "network"
-        assert _classify_rejection_reason("socket closed") == "network"
-
-    def test_generic_rejection(self) -> None:
-        """Test generic rejection detection."""
-        from gpt_trader.features.live_trade.execution.order_submission import (
-            _classify_rejection_reason,
-        )
-
-        assert _classify_rejection_reason("Order rejected by broker") == "broker_rejected"
-        assert _classify_rejection_reason("Request rejected") == "broker_rejected"
-
-    def test_generic_failure(self) -> None:
-        """Test generic failure detection."""
-        from gpt_trader.features.live_trade.execution.order_submission import (
-            _classify_rejection_reason,
-        )
-
-        assert _classify_rejection_reason("Order failed") == "unknown"
-        assert _classify_rejection_reason("Server error") == "unknown"
-
-    def test_unknown_fallback(self) -> None:
-        """Test unknown fallback."""
-        from gpt_trader.features.live_trade.execution.order_submission import (
-            _classify_rejection_reason,
-        )
-
-        assert _classify_rejection_reason("Something weird happened") == "unknown"
-        assert _classify_rejection_reason("") == "unknown"
+    assert _classify_rejection_reason(message) == expected
 
 
 # ============================================================

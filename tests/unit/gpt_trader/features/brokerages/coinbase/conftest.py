@@ -18,6 +18,8 @@ from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDa
 from gpt_trader.features.brokerages.coinbase.models import APIConfig
 from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
 
+# Autouse fixtures in this module patch time.sleep and COINBASE_FAST_RETRY for faster retries.
+
 pytest_plugins = [
     "tests.unit.gpt_trader.features.brokerages.coinbase.websocket_fixtures",
     "tests.unit.gpt_trader.features.brokerages.coinbase.transport_fixtures",

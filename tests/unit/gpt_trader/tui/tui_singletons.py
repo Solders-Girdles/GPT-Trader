@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+# Autouse fixtures here isolate preferences, patch Pilot.pause timing, and clear TUI singletons.
 import pytest
 from textual.pilot import Pilot
 

@@ -24,9 +24,9 @@ def get_correlation_id() -> str:
     return correlation_id_var.get("")
 
 
-def set_correlation_id(correlation_id: str) -> None:
+def set_correlation_id(correlation_id: str | None) -> None:
     """Set the correlation ID in the current context."""
-    correlation_id_var.set(correlation_id)
+    correlation_id_var.set(correlation_id or "")
 
 
 def generate_correlation_id() -> str:
@@ -39,9 +39,9 @@ def get_domain_context() -> dict[str, Any]:
     return domain_context_var.get({})
 
 
-def set_domain_context(context: dict[str, Any]) -> None:
+def set_domain_context(context: dict[str, Any] | None) -> None:
     """Set the domain context in the current context."""
-    domain_context_var.set(context)
+    domain_context_var.set(context or {})
 
 
 def update_domain_context(**kwargs: Any) -> None:

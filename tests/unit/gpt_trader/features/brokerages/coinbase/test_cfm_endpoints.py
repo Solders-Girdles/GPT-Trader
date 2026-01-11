@@ -87,12 +87,18 @@ def test_cfm_intraday_current_margin_window():
 
 def test_cfm_intraday_position_refresh_not_implemented():
     """Test cfm_intraday_position_refresh endpoint - currently not implemented."""
-    pytest.skip("cfm_intraday_position_refresh not implemented in CoinbaseClient yet")
+    pytest.xfail(
+        "cfm_intraday_position_refresh not implemented in CoinbaseClient yet (see "
+        "src/gpt_trader/features/brokerages/coinbase/client.py)"
+    )
 
 
 def test_cfm_sweep_not_implemented():
     """Test cfm_sweep endpoint - currently not implemented."""
-    pytest.skip("cfm_sweep not implemented in CoinbaseClient yet")
+    pytest.xfail(
+        "cfm_sweep not implemented in CoinbaseClient yet (see "
+        "src/gpt_trader/features/brokerages/coinbase/client.py)"
+    )
 
 
 def test_cfm_methods_require_advanced_mode():

@@ -1,11 +1,21 @@
 from __future__ import annotations
 
+from datetime import datetime
 from decimal import Decimal
 from unittest.mock import MagicMock
 
 import pytest
 
-from gpt_trader.core import MarketType, Product
+from gpt_trader.core import (
+    MarketType,
+    Order,
+    OrderSide,
+    OrderStatus,
+    OrderType,
+    Product,
+    TimeInForce,
+)
+from gpt_trader.features.live_trade.execution.order_submission import OrderSubmitter
 
 
 @pytest.fixture
@@ -74,3 +84,44 @@ def mock_product() -> Product:
 def mock_failure_tracker() -> MagicMock:
     """Create a mock failure tracker."""
     return MagicMock()
+
+
+@pytest.fixture
+def open_orders() -> list[str]:
+    """Create an open orders list."""
+    return []
+
+
+@pytest.fixture
+def submitter(
+    mock_broker: MagicMock,
+    mock_event_store: MagicMock,
+    open_orders: list[str],
+) -> OrderSubmitter:
+    """Create an OrderSubmitter instance."""
+    return OrderSubmitter(
+        broker=mock_broker,
+        event_store=mock_event_store,
+        bot_id="test-bot-123",
+        open_orders=open_orders,
+        integration_mode=False,
+    )
+
+
+@pytest.fixture
+def mock_order() -> Order:
+    """Create a mock successful order."""
+    return Order(
+        id="order-123",
+        client_id="client-123",
+        symbol="BTC-PERP",
+        side=OrderSide.BUY,
+        type=OrderType.LIMIT,
+        quantity=Decimal("1.0"),
+        price=Decimal("50000"),
+        stop_price=None,
+        tif=TimeInForce.GTC,
+        status=OrderStatus.PENDING,
+        submitted_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
+    )

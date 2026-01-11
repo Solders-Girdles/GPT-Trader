@@ -74,7 +74,9 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/persistence/test_json_file_store_contract.py",  # persistence contract with locking, rotation, and corruption scenarios
     "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection.py",  # state collection aggregation matrix
     "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer.py",  # IP allowlist enforcement scenarios
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission.py",  # order submission flow coverage
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core.py",  # order submission helper coverage
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows.py",  # order submission flow coverage
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability.py",  # order submission telemetry coverage
     "tests/unit/gpt_trader/config/test_runtime_settings_utils.py",  # runtime settings validation matrix  # naming: allow
     "tests/unit/gpt_trader/preflight/test_context.py",  # preflight context scenarios
     "tests/unit/gpt_trader/security/test_request_validator.py",  # request validation coverage

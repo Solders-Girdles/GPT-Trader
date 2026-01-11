@@ -152,7 +152,7 @@ uv run pytest tests/unit/gpt_trader/features/live_trade/execution/test_broker_ex
 uv run pytest tests/unit/gpt_trader/features/live_trade/test_degradation.py::TestPauseExpiryRecovery -v
 
 # Order submission idempotency test
-uv run pytest tests/unit/gpt_trader/features/live_trade/execution/test_order_submission.py::TestTransientFailureWithClientOrderIdReuse -v
+uv run pytest tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows.py::TestTransientFailureWithClientOrderIdReuse -v
 ```
 
 All resilience tests run deterministically under `pytest -n auto`.
@@ -251,7 +251,7 @@ uv run pytest tests/unit -n auto -q
 uv run pytest tests/unit -v --tb=short
 
 # Run specific test file
-uv run pytest tests/unit/gpt_trader/features/live_trade/execution/test_order_submission.py -v
+uv run pytest tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows.py -v
 
 # Run with coverage
 uv run pytest tests/unit --cov=src/gpt_trader --cov-report=term-missing

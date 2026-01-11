@@ -37,7 +37,7 @@ def fast_retry_sleep(fake_clock, monkeypatch):
 @pytest.fixture(autouse=True)
 def fast_retry_env(monkeypatch, request):
     """Ensure Coinbase client retries run with zero delay for faster tests."""
-    if "test_coinbase_system.py" in request.node.nodeid:
+    if request.node.get_closest_marker("e2e"):
         monkeypatch.delenv("COINBASE_FAST_RETRY", raising=False)
         yield
         return

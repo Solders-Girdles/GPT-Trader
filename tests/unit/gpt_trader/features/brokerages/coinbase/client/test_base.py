@@ -1,10 +1,13 @@
 """Tests for Coinbase client base functionality."""
 
 import json
+import time
 from unittest.mock import Mock, patch
 
 import pytest
+import requests
 
+import gpt_trader.features.brokerages.coinbase.client.base as base_module
 from gpt_trader.features.brokerages.coinbase.auth import CDPJWTAuth, SimpleAuth
 from gpt_trader.features.brokerages.coinbase.client.base import CoinbaseClientBase
 from gpt_trader.features.brokerages.coinbase.client.circuit_breaker import CircuitOpenError
@@ -14,7 +17,9 @@ from gpt_trader.features.brokerages.coinbase.client.priority import (
 )
 from gpt_trader.features.brokerages.coinbase.client.response_cache import ResponseCache
 from gpt_trader.features.brokerages.coinbase.errors import (
+    BrokerageError,
     InvalidRequestError,
+    PermissionDeniedError,
     RateLimitError,
 )
 
@@ -75,6 +80,22 @@ class TestCoinbaseClientBase:
         assert client.auth is None
         assert client._is_cdp is False
 
+    def test_client_init_disables_resilience_components(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Test client initialization with resilience flags disabled."""
+        monkeypatch.setattr(base_module, "CACHE_ENABLED", False)
+        monkeypatch.setattr(base_module, "CIRCUIT_BREAKER_ENABLED", False)
+        monkeypatch.setattr(base_module, "METRICS_ENABLED", False)
+        monkeypatch.setattr(base_module, "PRIORITY_ENABLED", False)
+
+        client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
+
+        assert client._response_cache is None
+        assert client._circuit_breaker is None
+        assert client._metrics is None
+        assert client._priority_manager is None
+
     def test_set_transport_for_testing(self) -> None:
         """Test setting custom transport for testing."""
         client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth, enable_keep_alive=False)
@@ -108,6 +129,14 @@ class TestCoinbaseClientBase:
 
         path = client._get_endpoint_path("product", product_id="BTC-USD")
         assert path == "/products/BTC-USD"
+
+    def test_get_endpoint_path_missing_param_returns_template(self) -> None:
+        """Test endpoint path resolution when params are missing."""
+        client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth, api_mode="advanced")
+
+        path = client._get_endpoint_path("product")
+
+        assert "{product_id}" in path
 
     def test_get_endpoint_path_invalid_mode(self) -> None:
         """Test endpoint path resolution with invalid API mode."""
@@ -167,6 +196,9 @@ class TestCoinbaseClientBase:
         result = client._build_path_with_params("/api/v3/test", {})
         assert result == "/api/v3/test"
 
+        result = client._build_path_with_params("/api/v3/test", {"limit": None, "offset": None})
+        assert result == "/api/v3/test"
+
         # Test with params
         result = client._build_path_with_params("/api/v3/test", {"limit": "100", "offset": "0"})
         assert result == "/api/v3/test?limit=100&offset=0"
@@ -219,6 +251,12 @@ class TestCoinbaseClientBase:
 
         assert client._is_public_market_endpoint("/api/v3/brokerage/market/products") is False
 
+    def test_is_public_market_endpoint_normalizes_missing_slash(self) -> None:
+        """Test public endpoint detection normalizes missing leading slash."""
+        client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth, api_mode="advanced")
+
+        assert client._is_public_market_endpoint("api/v3/brokerage/market/products") is True
+
     def test_apply_auth_headers_strips_query(self) -> None:
         """Test auth headers use normalized path without query params."""
         auth = Mock(spec=SimpleAuth)
@@ -250,6 +288,15 @@ class TestCoinbaseClientBase:
         assert headers["Authorization"] == "Signed token"
         assert auth.calls == [("POST", "/api/v3/test", {"x": 1})]
 
+    def test_apply_auth_headers_no_auth(self) -> None:
+        """Test auth header helper no-ops without auth."""
+        client = CoinbaseClientBase(base_url=self.base_url, auth=None)
+        headers = {"X-Test": "1"}
+
+        client._apply_auth_headers(headers, "GET", "/api/v3/test", None)
+
+        assert headers == {"X-Test": "1"}
+
     def test_convenience_methods(self) -> None:
         """Test convenience HTTP methods."""
         client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
@@ -273,6 +320,25 @@ class TestCoinbaseClientBase:
         result = client.delete("/api/v3/test", {"data": "value"})
         client._request.assert_called_once_with("DELETE", "/api/v3/test", {"data": "value"})
         assert result == {"success": True}
+
+    def test_perform_request_uses_session(self) -> None:
+        """Test request goes through session when no transport is set."""
+        client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
+        response = requests.Response()
+        response.status_code = 200
+        client.session.request = Mock(return_value=response)
+
+        headers = {"X-Test": "1"}
+        result = client._perform_request("GET", "https://api.coinbase.com/test", headers, None)
+
+        assert result is response
+        client.session.request.assert_called_once_with(
+            "GET",
+            "https://api.coinbase.com/test",
+            json=None,
+            headers=headers,
+            timeout=client.timeout,
+        )
 
     @patch("gpt_trader.features.brokerages.coinbase.client.base.time.time")
     def test_check_rate_limit_disabled(self, mock_time: Mock) -> None:
@@ -527,6 +593,16 @@ class TestCoinbaseClientBase:
         with pytest.raises(InvalidRequestError, match="not-json"):
             client._request("GET", "/api/v3/test")
 
+    def test_raise_client_error_forbidden(self) -> None:
+        """Test non-400 errors map to appropriate client errors."""
+        client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
+        resp = requests.Response()
+        resp.status_code = 403
+        resp._content = b'{"message": "forbidden", "error": "FORBIDDEN"}'
+
+        with pytest.raises(PermissionDeniedError, match="forbidden"):
+            client._raise_client_error(resp)
+
     def test_request_rate_limit_invalid_retry_after(self) -> None:
         """Test rate limit retry-after defaults on invalid header."""
         client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
@@ -680,6 +756,46 @@ class TestCoinbaseClientBase:
         assert cache.get("/api/v3/brokerage/accounts") is None
         assert cache.get("/api/v3/brokerage/positions") is None
 
+    def test_record_success_sets_span_and_breaker(self) -> None:
+        """Test success recording updates circuit breaker and span."""
+        client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
+        client._circuit_breaker = Mock()
+        resp = requests.Response()
+        resp.status_code = 200
+        span = Mock()
+
+        client._record_success("/api/v3/test", resp, span)
+
+        client._circuit_breaker.record_success.assert_called_once_with("/api/v3/test")
+        span.set_attribute.assert_called_once_with("http.status_code", 200)
+
+    def test_record_request_metrics_records_metrics_and_span(self) -> None:
+        """Test request metrics recording updates metrics and span attributes."""
+        client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
+        client._metrics = Mock()
+        span = Mock()
+
+        with (
+            patch(
+                "gpt_trader.features.brokerages.coinbase.client.base.record_histogram"
+            ) as mock_hist,
+            patch(
+                "gpt_trader.features.brokerages.coinbase.client.base.record_counter"
+            ) as mock_counter,
+        ):
+            client._record_request_metrics("/api/v3/test", 0.25, True, False, span)
+
+        client._metrics.record_request.assert_called_once_with(
+            "/api/v3/test",
+            250.0,
+            error=True,
+            rate_limited=False,
+        )
+        mock_hist.assert_called_once()
+        mock_counter.assert_called_once()
+        span.set_attribute.assert_any_call("http.latency_ms", 250.0)
+        span.set_attribute.assert_any_call("http.rate_limited", False)
+
     def test_paginate_success(self) -> None:
         """Test successful pagination."""
         client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
@@ -724,6 +840,19 @@ class TestCoinbaseClientBase:
         call_args = client._request.call_args
         assert "page_token=next" in call_args[0][1]
 
+    def test_paginate_with_pagination_object(self) -> None:
+        """Test pagination with nested pagination cursor."""
+        client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
+
+        page1 = {"items": [{"id": 1}], "pagination": {"next_cursor": "next"}}
+        page2 = {"items": [], "pagination": {"next_cursor": None}}
+        client._request = Mock(side_effect=[page1, page2])
+
+        list(client.paginate("/api/v3/test", {}, "items"))
+
+        second_call_args = client._request.call_args_list[1]
+        assert "cursor=next" in second_call_args[0][1]
+
     def test_paginate_no_cursor(self) -> None:
         """Test pagination when no cursor is returned."""
         client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
@@ -734,6 +863,26 @@ class TestCoinbaseClientBase:
         results = list(client.paginate("/api/v3/test", {}, "data"))
 
         assert len(results) == 1
+        assert client._request.call_count == 1
+
+    def test_paginate_non_list_item_yields_single(self) -> None:
+        """Test pagination yields single non-list item."""
+        client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
+        client._request = Mock(return_value={"id": 1})
+
+        results = list(client.paginate("/api/v3/test"))
+
+        assert results == [{"id": 1}]
+        assert client._request.call_count == 1
+
+    def test_paginate_non_dict_response_stops(self) -> None:
+        """Test pagination stops when response is not a dict."""
+        client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
+        client._request = Mock(return_value="payload")
+
+        results = list(client.paginate("/api/v3/test"))
+
+        assert results == ["payload"]
         assert client._request.call_count == 1
 
     def test_paginate_empty_items(self) -> None:
@@ -748,3 +897,123 @@ class TestCoinbaseClientBase:
         assert len(results) == 0
         # Should still perform the initial request even with no items
         assert client._request.call_count == 1
+
+    def test_perform_http_request_http_error_invalid_json(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Test HTTPError path when error response is not JSON."""
+        client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
+        response = requests.Response()
+        response.status_code = 500
+        response._content = b"not-json"
+        client._perform_request = Mock(return_value=response)
+        client._check_rate_limit = Mock()
+        monkeypatch.setattr(base_module, "MAX_HTTP_RETRIES", 0)
+
+        with pytest.raises(BrokerageError):
+            client._perform_http_request(
+                "GET",
+                "/api/v3/test",
+                None,
+                time.perf_counter(),
+                None,
+            )
+
+    def test_perform_http_request_network_error_final_attempt(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Test final network error attempt raises without retry."""
+        client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
+        client._perform_request = Mock(side_effect=requests.ConnectionError("boom"))
+        client._check_rate_limit = Mock()
+        monkeypatch.setattr(base_module, "MAX_HTTP_RETRIES", 0)
+
+        with pytest.raises(requests.ConnectionError):
+            client._perform_http_request(
+                "GET",
+                "/api/v3/test",
+                None,
+                time.perf_counter(),
+                None,
+            )
+
+    def test_perform_http_request_records_failure_and_span(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Test failures record circuit breaker and span attributes."""
+        client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
+        client._perform_request = Mock(side_effect=RuntimeError("boom"))
+        client._check_rate_limit = Mock()
+        client._circuit_breaker = Mock()
+        span = Mock()
+        monkeypatch.setattr(base_module, "MAX_HTTP_RETRIES", 0)
+
+        with pytest.raises(RuntimeError):
+            client._perform_http_request(
+                "GET",
+                "/api/v3/test",
+                None,
+                time.perf_counter(),
+                span,
+            )
+
+        client._circuit_breaker.record_failure.assert_called_once()
+        span.set_attribute.assert_any_call("error", True)
+        span.set_attribute.assert_any_call("error.type", "RuntimeError")
+
+    def test_get_resilience_status_records_metrics(self) -> None:
+        """Test resilience status includes metrics and circuit breaker info."""
+        client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
+        client.get_rate_limit_usage = Mock(return_value=0.5)
+        client._metrics = Mock()
+        client._metrics.get_summary.return_value = {"error_rate": 0.2}
+        client._circuit_breaker = Mock()
+        client._circuit_breaker.get_all_status.return_value = {"orders": {"state": "open"}}
+        client._response_cache = Mock()
+        client._response_cache.get_stats.return_value = {"entries": 1}
+        client._priority_manager = Mock()
+        client._priority_manager.get_stats.return_value = {"deferred": 2}
+
+        with patch(
+            "gpt_trader.features.brokerages.coinbase.client.base.record_gauge"
+        ) as mock_gauge:
+            status = client.get_resilience_status()
+
+        assert status["metrics"] == {"error_rate": 0.2}
+        assert status["circuit_breakers"] == {"orders": {"state": "open"}}
+        assert status["cache"] == {"entries": 1}
+        assert status["priority"] == {"deferred": 2}
+        mock_gauge.assert_any_call("gpt_trader_rate_limit_usage_ratio", 0.5)
+        mock_gauge.assert_any_call("gpt_trader_api_error_rate", 0.2)
+        mock_gauge.assert_any_call(
+            "gpt_trader_circuit_breaker_state",
+            2.0,
+            labels={"category": "orders"},
+        )
+
+    def test_context_manager_closes(self) -> None:
+        """Test context manager closes session."""
+        client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
+        client.close = Mock()
+
+        with client as ctx:
+            assert ctx is client
+
+        client.close.assert_called_once()
+
+    def test_close_handles_session_error(self) -> None:
+        """Test close logs warning on session close error."""
+        client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
+        client.session.close = Mock(side_effect=RuntimeError("boom"))
+
+        with patch("gpt_trader.features.brokerages.coinbase.client.base.logger") as mock_logger:
+            client.close()
+
+        mock_logger.warning.assert_called_once()
+
+    def test_del_suppresses_close_errors(self) -> None:
+        """Test destructor suppresses close errors."""
+        client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
+        client.close = Mock(side_effect=RuntimeError("boom"))
+
+        client.__del__()

@@ -25,24 +25,6 @@ from gpt_trader.logging.correlation import correlation_context, get_domain_conte
 
 
 @pytest.fixture
-def mock_broker() -> MagicMock:
-    """Create a mock broker."""
-    broker = MagicMock()
-    broker.place_order = MagicMock()
-    return broker
-
-
-@pytest.fixture
-def mock_event_store() -> MagicMock:
-    """Create a mock event store."""
-    store = MagicMock()
-    store.store_event = MagicMock()
-    store.append_trade = MagicMock()
-    store.append_error = MagicMock()
-    return store
-
-
-@pytest.fixture
 def open_orders() -> list[str]:
     """Create an open orders list."""
     return []

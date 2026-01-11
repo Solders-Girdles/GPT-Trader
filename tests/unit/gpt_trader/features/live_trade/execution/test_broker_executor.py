@@ -26,14 +26,6 @@ from gpt_trader.features.live_trade.execution.broker_executor import (
 
 
 @pytest.fixture
-def mock_broker() -> MagicMock:
-    """Create a mock broker."""
-    broker = MagicMock()
-    broker.place_order = MagicMock()
-    return broker
-
-
-@pytest.fixture
 def executor(mock_broker: MagicMock) -> BrokerExecutor:
     """Create a BrokerExecutor instance."""
     return BrokerExecutor(broker=mock_broker)

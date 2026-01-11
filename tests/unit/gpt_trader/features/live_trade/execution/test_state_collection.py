@@ -18,16 +18,6 @@ from gpt_trader.features.live_trade.risk import ValidationError
 
 
 @pytest.fixture
-def mock_broker() -> MagicMock:
-    """Create a mock broker."""
-    broker = MagicMock()
-    broker.list_balances = MagicMock(return_value=[])
-    broker.list_positions = MagicMock(return_value=[])
-    broker.get_product = MagicMock(return_value=None)
-    return broker
-
-
-@pytest.fixture
 def mock_config(bot_config_factory):
     """Create mock BotConfig for state collection tests."""
     return bot_config_factory()
@@ -38,22 +28,6 @@ def collector(mock_broker: MagicMock, mock_config, monkeypatch) -> StateCollecto
     """Create a StateCollector instance."""
     monkeypatch.setenv("PERPS_COLLATERAL_ASSETS", "USD,USDC")
     return StateCollector(mock_broker, mock_config)
-
-
-@pytest.fixture
-def mock_product() -> Product:
-    """Create a mock product."""
-    return Product(
-        symbol="BTC-PERP",
-        base_asset="BTC",
-        quote_asset="USD",
-        market_type=MarketType.PERPETUAL,
-        min_size=Decimal("0.001"),
-        step_size=Decimal("0.001"),
-        min_notional=Decimal("10"),
-        price_increment=Decimal("0.01"),
-        leverage_max=20,
-    )
 
 
 # ============================================================

@@ -22,31 +22,6 @@ from gpt_trader.features.live_trade.guard_errors import (
 
 
 @pytest.fixture
-def mock_broker():
-    broker = MagicMock()
-    broker.list_balances.return_value = []
-    broker.list_positions.return_value = []
-    broker.cancel_order.return_value = True
-    broker.list_orders = None
-    return broker
-
-
-@pytest.fixture
-def mock_risk_manager():
-    rm = MagicMock()
-    rm.track_daily_pnl.return_value = False
-    rm.last_mark_update = {}
-    rm.config = MagicMock()
-    rm.config.volatility_window_periods = 20
-    return rm
-
-
-@pytest.fixture
-def mock_equity_calculator():
-    return MagicMock(return_value=(Decimal("1000"), [], Decimal("1000")))
-
-
-@pytest.fixture
 def guard_manager(mock_broker, mock_risk_manager, mock_equity_calculator):
     open_orders = ["order1", "order2"]
     invalidate_cache = MagicMock()

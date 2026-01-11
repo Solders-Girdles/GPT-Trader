@@ -7,61 +7,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from gpt_trader.core import (
-    MarketType,
-    OrderSide,
-    OrderType,
-    Product,
-    TimeInForce,
-)
+from gpt_trader.core import OrderSide, OrderType, Product, TimeInForce
 from gpt_trader.features.live_trade.execution.validation import OrderValidator
 from gpt_trader.features.live_trade.risk import ValidationError
 
 # ============================================================
 # Fixtures
 # ============================================================
-
-
-@pytest.fixture
-def mock_broker() -> MagicMock:
-    """Create a mock broker."""
-    broker = MagicMock()
-    broker.get_market_snapshot = MagicMock(return_value=None)
-    return broker
-
-
-@pytest.fixture
-def mock_risk_manager() -> MagicMock:
-    """Create a mock risk manager."""
-    rm = MagicMock()
-    rm.config = MagicMock()
-    rm.config.slippage_guard_bps = 100
-    rm.check_mark_staleness = MagicMock(return_value=False)
-    rm.is_reduce_only_mode = MagicMock(return_value=False)
-    rm.pre_trade_validate = MagicMock()
-    return rm
-
-
-@pytest.fixture
-def mock_product() -> Product:
-    """Create a mock product."""
-    return Product(
-        symbol="BTC-PERP",
-        base_asset="BTC",
-        quote_asset="USD",
-        market_type=MarketType.PERPETUAL,
-        min_size=Decimal("0.001"),
-        step_size=Decimal("0.001"),
-        min_notional=Decimal("10"),
-        price_increment=Decimal("0.01"),
-        leverage_max=20,
-    )
-
-
-@pytest.fixture
-def mock_failure_tracker() -> MagicMock:
-    """Create a mock failure tracker."""
-    return MagicMock()
 
 
 @pytest.fixture

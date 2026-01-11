@@ -19,16 +19,6 @@ from gpt_trader.features.live_trade.execution.order_event_recorder import OrderE
 
 
 @pytest.fixture
-def mock_event_store() -> MagicMock:
-    """Create a mock event store."""
-    store = MagicMock()
-    store.append_trade = MagicMock()
-    store.append_error = MagicMock()
-    store.store_event = MagicMock()
-    return store
-
-
-@pytest.fixture
 def recorder(mock_event_store: MagicMock) -> OrderEventRecorder:
     """Create an OrderEventRecorder instance."""
     return OrderEventRecorder(event_store=mock_event_store, bot_id="test-bot-123")

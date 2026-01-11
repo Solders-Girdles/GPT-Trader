@@ -8,8 +8,8 @@ from gpt_trader.monitoring.status_reporter import StatusReporter
 from gpt_trader.tui.app import TraderApp
 
 
-@pytest.fixture
-def mock_bot():
+@pytest.fixture(name="mock_bot")
+def mock_bot_fixture():
     """
     Creates a mock TradingBot with all necessary components for TUI testing.
     """

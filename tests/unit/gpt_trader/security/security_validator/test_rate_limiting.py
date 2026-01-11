@@ -196,7 +196,8 @@ class TestRateLimiting:
             thread.start()
 
         for thread in threads:
-            thread.join()
+            thread.join(timeout=2)
+            assert not thread.is_alive()
 
         # Should have some allowed and some blocked requests
         allowed_count = sum(1 for allowed, _ in results if allowed)

@@ -29,7 +29,8 @@ class TestConcurrencyErrors:
         for thread in threads:
             thread.start()
         for thread in threads:
-            thread.join()
+            thread.join(timeout=2)
+            assert not thread.is_alive()
 
         assert errors == []
 

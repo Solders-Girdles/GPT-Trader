@@ -43,7 +43,8 @@ class TestKeyRotationIntegrations:
         for thread in threads:
             thread.start()
         for thread in threads:
-            thread.join()
+            thread.join(timeout=2)
+            assert not thread.is_alive()
 
         assert all(results)
         assert "_key" in manager.get_secret(secret_path)

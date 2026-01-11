@@ -31,7 +31,8 @@ class TestCacheConcurrency:
         for thread in threads:
             thread.start()
         for thread in threads:
-            thread.join()
+            thread.join(timeout=2)
+            assert not thread.is_alive()
 
         assert len(results) == 5
         assert all(result == secret_data for result in results)

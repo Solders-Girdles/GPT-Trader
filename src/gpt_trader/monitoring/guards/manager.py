@@ -8,6 +8,7 @@ from typing import Any
 
 from gpt_trader.config.constants import WEBHOOK_TIMEOUT
 from gpt_trader.monitoring.alert_types import AlertSeverity
+from gpt_trader.monitoring.metrics_collector import record_counter
 from gpt_trader.utilities.logging_patterns import get_logger
 
 from .base import Alert, GuardConfig, RuntimeGuard
@@ -49,7 +50,28 @@ class RuntimeGuardManager:
     def check_all(self, context: dict[str, Any]) -> list[Alert]:
         alerts: list[Alert] = []
         for guard in self.guards.values():
-            alert = guard.check(context)
+            if not guard.config.enabled:
+                continue
+            try:
+                alert = guard.check(context)
+            except Exception as exc:
+                logger.error(
+                    "Guard check failed",
+                    operation="guard_manager",
+                    stage="check_guard",
+                    guard_name=guard.config.name,
+                    error=str(exc),
+                    exc_info=True,
+                )
+                record_counter(
+                    "gpt_trader_guard_checks_total",
+                    labels={"guard": guard.config.name, "result": "error"},
+                )
+                continue
+            record_counter(
+                "gpt_trader_guard_checks_total",
+                labels={"guard": guard.config.name, "result": "success"},
+            )
             if alert:
                 alerts.append(alert)
                 self._handle_alert(alert, guard)

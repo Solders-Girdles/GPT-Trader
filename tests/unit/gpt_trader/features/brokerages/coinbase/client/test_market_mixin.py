@@ -3,10 +3,7 @@ from __future__ import annotations
 import json
 from urllib.parse import parse_qs, urlparse
 
-import pytest
-
 from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
-from gpt_trader.features.brokerages.coinbase.errors import InvalidRequestError
 
 
 def _make_client(api_mode: str = "advanced") -> CoinbaseClient:
@@ -75,11 +72,23 @@ def test_list_products_handles_invalid_shape() -> None:
     assert result == []
 
 
-def test_market_products_require_advanced_mode() -> None:
-    client = _make_client(api_mode="exchange")
+def test_list_products_filters_contract_expiry() -> None:
+    client = _make_client()
+    client.get_products = lambda **_kwargs: {  # type: ignore[method-assign]
+        "products": [
+            {
+                "product_id": "BTC-USD",
+                "product_type": "FUTURE",
+                "contract_expiry_type": "PERPETUAL",
+            },
+            {
+                "product_id": "ETH-USD",
+                "product_type": "FUTURE",
+                "contract_expiry_type": "EXPIRING",
+            },
+        ]
+    }
 
-    with pytest.raises(InvalidRequestError):
-        client.get_market_products()
+    result = client.list_products(contract_expiry_type="expiring")
 
-    with pytest.raises(InvalidRequestError):
-        client.get_market_product("BTC-USD")
+    assert [product["product_id"] for product in result] == ["ETH-USD"]

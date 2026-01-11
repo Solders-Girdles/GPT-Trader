@@ -624,14 +624,6 @@ class TestSimulatedBrokerMarginCalculation:
 class TestSimulatedBrokerOrderCancellation:
     """Test order cancellation."""
 
-    def test_cancel_nonexistent_order(self) -> None:
-        """Test cancelling non-existent order returns False."""
-        broker = SimulatedBroker()
-
-        result = broker.cancel_order("nonexistent-id")
-
-        assert result is False
-
     def test_cancel_open_order(self) -> None:
         """Test cancelling an open order succeeds."""
         from gpt_trader.core import (

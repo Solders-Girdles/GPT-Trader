@@ -366,7 +366,8 @@ class TestRunAsync:
         )
 
         # Should return immediately without looping
-        await asyncio.wait_for(service.run(interval_seconds=1), timeout=0.1)
+        result = await asyncio.wait_for(service.run(interval_seconds=1), timeout=0.1)
+        assert result is None
 
     @pytest.mark.asyncio
     async def test_run_collects_and_publishes(self) -> None:

@@ -7,6 +7,12 @@ import pytest
 
 from gpt_trader.features.brokerages.coinbase.auth import CDPJWTAuth, SimpleAuth
 from gpt_trader.features.brokerages.coinbase.client.base import CoinbaseClientBase
+from gpt_trader.features.brokerages.coinbase.client.circuit_breaker import CircuitOpenError
+from gpt_trader.features.brokerages.coinbase.client.priority import (
+    RequestDeferredError,
+    RequestPriority,
+)
+from gpt_trader.features.brokerages.coinbase.client.response_cache import ResponseCache
 from gpt_trader.features.brokerages.coinbase.errors import InvalidRequestError
 
 
@@ -180,6 +186,66 @@ class TestCoinbaseClientBase:
 
         result = client._normalize_path("api/v3/test")
         assert result == "api/v3/test"
+
+    def test_build_auth_path_strips_query(self) -> None:
+        """Test auth path normalization strips queries and full URLs."""
+        client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
+
+        auth_path = client._build_auth_path(
+            "https://api.coinbase.com/api/v3/brokerage/orders?limit=10"
+        )
+        assert auth_path == "/api/v3/brokerage/orders"
+
+        auth_path = client._build_auth_path("api/v3/brokerage/orders?limit=5")
+        assert auth_path == "/api/v3/brokerage/orders"
+
+    def test_public_market_endpoint_skips_auth(self) -> None:
+        """Test public market endpoints do not include auth headers."""
+        auth = Mock(spec=SimpleAuth)
+        auth.get_headers.return_value = {"Authorization": "Bearer token"}
+        client = CoinbaseClientBase(base_url=self.base_url, auth=auth, api_mode="advanced")
+
+        headers = client._build_headers("GET", "/api/v3/brokerage/market/products", None)
+
+        auth.get_headers.assert_not_called()
+        assert "Authorization" not in headers
+
+    def test_is_public_market_endpoint_exchange_mode(self) -> None:
+        """Test public endpoint detection ignores non-advanced mode."""
+        client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth, api_mode="exchange")
+
+        assert client._is_public_market_endpoint("/api/v3/brokerage/market/products") is False
+
+    def test_apply_auth_headers_strips_query(self) -> None:
+        """Test auth headers use normalized path without query params."""
+        auth = Mock(spec=SimpleAuth)
+        auth.get_headers.return_value = {"Authorization": "Bearer token"}
+        client = CoinbaseClientBase(base_url=self.base_url, auth=auth)
+        headers: dict[str, str] = {}
+
+        client._apply_auth_headers(headers, "GET", "/api/v3/test?limit=1", None)
+
+        auth.get_headers.assert_called_once_with("GET", "/api/v3/test")
+
+    def test_apply_auth_headers_uses_sign(self) -> None:
+        """Test auth headers use sign() when available."""
+
+        class SignAuth:
+            def __init__(self) -> None:
+                self.calls: list[tuple[str, str, dict | None]] = []
+
+            def sign(self, method: str, path: str, payload: dict | None) -> dict[str, str]:
+                self.calls.append((method, path, payload))
+                return {"Authorization": "Signed token"}
+
+        auth = SignAuth()
+        client = CoinbaseClientBase(base_url=self.base_url, auth=auth)
+        headers: dict[str, str] = {}
+
+        client._apply_auth_headers(headers, "POST", "/api/v3/test", {"x": 1})
+
+        assert headers["Authorization"] == "Signed token"
+        assert auth.calls == [("POST", "/api/v3/test", {"x": 1})]
 
     def test_convenience_methods(self) -> None:
         """Test convenience HTTP methods."""
@@ -386,6 +452,54 @@ class TestCoinbaseClientBase:
         headers = call_args[0][2]
         assert headers["X-Correlation-Id"] == "test-correlation-123"
 
+    def test_request_uses_cache(self) -> None:
+        """Test request short-circuits when cache hits."""
+        client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
+        client._response_cache = ResponseCache(enabled=True)
+        client._response_cache.set("/api/v3/test", {"cached": True})
+        client._perform_http_request = Mock(return_value={"fresh": True})
+
+        result = client._request("GET", "/api/v3/test")
+
+        assert result == {"cached": True}
+        client._perform_http_request.assert_not_called()
+
+    def test_request_priority_deferred(self) -> None:
+        """Test request defers when priority manager blocks."""
+        client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
+        client._priority_manager = Mock()
+        client._priority_manager.should_allow.return_value = False
+        client._priority_manager.get_priority.return_value = RequestPriority.LOW
+        client.get_rate_limit_usage = Mock(return_value=0.9)
+
+        with pytest.raises(RequestDeferredError):
+            client._request("GET", "/api/v3/products")
+
+    def test_request_circuit_open(self) -> None:
+        """Test circuit breaker blocks requests when open."""
+        client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
+
+        class _Breaker:
+            def get_status(self) -> dict[str, float]:
+                return {"time_until_half_open": 12.0}
+
+        class _Circuit:
+            def can_proceed(self, path: str) -> bool:
+                return False
+
+            def get_breaker(self, path: str) -> _Breaker:
+                return _Breaker()
+
+            def _categorize_endpoint(self, path: str) -> str:
+                return "orders"
+
+        client._circuit_breaker = _Circuit()
+
+        with pytest.raises(CircuitOpenError) as exc:
+            client._request("GET", "/api/v3/orders")
+
+        assert exc.value.category == "orders"
+
     def test_request_4xx_error(self) -> None:
         """Test request with 4xx error."""
         client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
@@ -399,6 +513,22 @@ class TestCoinbaseClientBase:
 
         with pytest.raises(InvalidRequestError, match="Bad request"):
             client._request("GET", "/api/v3/test")
+
+    def test_request_rate_limit_invalid_retry_after(self) -> None:
+        """Test rate limit retry-after defaults on invalid header."""
+        client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
+        mock_transport = Mock()
+        mock_transport.side_effect = [
+            (429, {"retry-after": "nope"}, '{"error": "RATE_LIMITED"}'),
+            (200, {}, '{"success": true}'),
+        ]
+        client.set_transport_for_testing(mock_transport)
+
+        with patch("time.sleep") as mock_sleep:
+            result = client._request("GET", "/api/v3/test")
+
+        assert result == {"success": True}
+        mock_sleep.assert_called_once_with(1.0)
 
     def test_request_5xx_error_with_retry(self) -> None:
         """Test request with 5xx error and retry."""
@@ -494,6 +624,25 @@ class TestCoinbaseClientBase:
         result = client._request("GET", "/api/v3/test")
 
         assert result == {}
+
+    def test_invalidate_cache_orders_and_positions(self) -> None:
+        """Test cache invalidation targets orders and positions."""
+        client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
+        cache = ResponseCache(enabled=True)
+        cache.set("/api/v3/brokerage/orders", {"orders": [{"id": "1"}]})
+        cache.set("/api/v3/brokerage/fills", {"fills": []})
+        cache.set("/api/v3/brokerage/accounts", {"accounts": []})
+        cache.set("/api/v3/brokerage/positions", {"positions": []})
+        client._response_cache = cache
+
+        client._invalidate_cache("POST", "/api/v3/brokerage/orders")
+        assert cache.get("/api/v3/brokerage/orders") is None
+        assert cache.get("/api/v3/brokerage/fills") is None
+        assert cache.get("/api/v3/brokerage/accounts") is not None
+
+        client._invalidate_cache("DELETE", "/api/v3/brokerage/positions")
+        assert cache.get("/api/v3/brokerage/accounts") is None
+        assert cache.get("/api/v3/brokerage/positions") is None
 
     def test_paginate_success(self) -> None:
         """Test successful pagination."""

@@ -3,16 +3,9 @@
 from __future__ import annotations
 
 import json
-import sys
 from datetime import UTC, datetime, timedelta
-from types import SimpleNamespace
 
-sys.modules.setdefault(
-    "gpt_trader.monitoring.two_person_rule.manager",
-    SimpleNamespace(TwoPersonRule=object()),
-)
-
-from gpt_trader.monitoring.two_person_rule.models import (  # noqa: E402
+from gpt_trader.monitoring.two_person_rule.models import (
     ApprovalRequest,
     ApprovalStatus,
     ChangeType,

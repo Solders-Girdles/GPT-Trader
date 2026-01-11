@@ -219,6 +219,34 @@ class DatabaseEngine:
             for row in reversed(rows)
         ]
 
+    def read_recent_events_by_type(self, event_type: str, count: int) -> list[dict[str, Any]]:
+        """
+        Read most recent events for a specific type.
+
+        Args:
+            event_type: Event type filter
+            count: Maximum number of events to return
+
+        Returns:
+            List of recent events in chronological order
+        """
+        if count <= 0:
+            return []
+        connection = self._get_connection()
+        cursor = connection.execute(
+            """
+            SELECT event_type, payload FROM events
+            WHERE event_type = ?
+            ORDER BY id DESC LIMIT ?
+            """,
+            (event_type, count),
+        )
+        rows = list(cursor)
+        return [
+            {"type": row["event_type"], "data": json.loads(row["payload"])}
+            for row in reversed(rows)
+        ]
+
     def read_events_by_bot(self, bot_id: str) -> list[dict[str, Any]]:
         """
         Read events for a specific bot.

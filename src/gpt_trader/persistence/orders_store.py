@@ -240,6 +240,10 @@ class OrdersStore:
                 path=str(self._database_path),
             )
 
+    def _ensure_initialized(self) -> None:
+        if not self._initialized:
+            self.initialize()
+
     def save_order(self, order: OrderRecord, *, raise_on_error: bool = False) -> WriteResult:
         """
         Save or update an order record.
@@ -253,6 +257,7 @@ class OrdersStore:
         Returns:
             WriteResult with success status
         """
+        self._ensure_initialized()
         try:
             connection = self._get_connection()
             checksum = order.compute_checksum()
@@ -301,6 +306,95 @@ class OrdersStore:
                 raise WriteError(error_msg) from e
             return WriteResult.fail(error_msg)
 
+    def upsert_by_client_id(
+        self, order: OrderRecord, *, raise_on_error: bool = False
+    ) -> WriteResult:
+        """
+        Save or update an order record using client_order_id as the match key.
+
+        This allows order_id to transition from client_order_id to broker order_id
+        while keeping a single persistent record for crash recovery.
+        """
+        self._ensure_initialized()
+        try:
+            connection = self._get_connection()
+            checksum = order.compute_checksum()
+            metadata = json.dumps(order.metadata) if order.metadata else None
+
+            cursor = connection.execute(
+                """
+                UPDATE orders
+                SET order_id = ?, symbol = ?, side = ?, order_type = ?,
+                    quantity = ?, price = ?, status = ?, filled_quantity = ?,
+                    average_fill_price = ?, updated_at = ?, bot_id = ?,
+                    time_in_force = ?, metadata = ?, checksum = ?
+                WHERE client_order_id = ?
+                """,
+                (
+                    order.order_id,
+                    order.symbol,
+                    order.side,
+                    order.order_type,
+                    str(order.quantity),
+                    str(order.price) if order.price else None,
+                    order.status.value,
+                    str(order.filled_quantity),
+                    str(order.average_fill_price) if order.average_fill_price else None,
+                    order.updated_at.isoformat(),
+                    order.bot_id,
+                    order.time_in_force,
+                    metadata,
+                    checksum,
+                    order.client_order_id,
+                ),
+            )
+
+            if cursor.rowcount == 0:
+                connection.execute(
+                    """
+                    INSERT OR REPLACE INTO orders (
+                        order_id, client_order_id, symbol, side, order_type,
+                        quantity, price, status, filled_quantity, average_fill_price,
+                        created_at, updated_at, bot_id, time_in_force, metadata, checksum
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        order.order_id,
+                        order.client_order_id,
+                        order.symbol,
+                        order.side,
+                        order.order_type,
+                        str(order.quantity),
+                        str(order.price) if order.price else None,
+                        order.status.value,
+                        str(order.filled_quantity),
+                        str(order.average_fill_price) if order.average_fill_price else None,
+                        order.created_at.isoformat(),
+                        order.updated_at.isoformat(),
+                        order.bot_id,
+                        order.time_in_force,
+                        metadata,
+                        checksum,
+                    ),
+                )
+
+            logger.debug(
+                "Order upserted",
+                operation="upsert_order",
+                order_id=order.order_id,
+                client_order_id=order.client_order_id,
+                status=order.status.value,
+            )
+
+            return WriteResult.ok(checksum=checksum)
+
+        except sqlite3.Error as e:
+            error_msg = f"Failed to upsert order {order.order_id}: {e}"
+            logger.error(error_msg, operation="upsert_order", error=str(e))
+            if raise_on_error:
+                raise WriteError(error_msg) from e
+            return WriteResult.fail(error_msg)
+
     def get_order(self, order_id: str) -> OrderRecord | None:
         """
         Get order by ID.
@@ -311,6 +405,7 @@ class OrdersStore:
         Returns:
             OrderRecord if found, None otherwise
         """
+        self._ensure_initialized()
         connection = self._get_connection()
         cursor = connection.execute(
             "SELECT * FROM orders WHERE order_id = ?",
@@ -334,6 +429,7 @@ class OrdersStore:
         Returns:
             List of pending/open orders
         """
+        self._ensure_initialized()
         connection = self._get_connection()
         non_terminal = (
             OrderStatus.PENDING.value,
@@ -375,6 +471,7 @@ class OrdersStore:
         Returns:
             List of orders
         """
+        self._ensure_initialized()
         connection = self._get_connection()
 
         if include_terminal:
@@ -419,6 +516,7 @@ class OrdersStore:
         Returns:
             WriteResult with success status
         """
+        self._ensure_initialized()
         try:
             connection = self._get_connection()
             now = datetime.now(timezone.utc).isoformat()
@@ -472,6 +570,7 @@ class OrdersStore:
         Returns:
             Tuple of (valid_count, list of invalid order_ids)
         """
+        self._ensure_initialized()
         connection = self._get_connection()
         cursor = connection.execute("SELECT * FROM orders")
 
@@ -506,6 +605,7 @@ class OrdersStore:
         Returns:
             Number of orders deleted
         """
+        self._ensure_initialized()
         connection = self._get_connection()
         terminal_statuses = (
             OrderStatus.FILLED.value,

@@ -162,8 +162,24 @@ class EventStore:
 
         Satisfies EventStoreProtocol.get_recent() interface.
         """
+        if count <= 0:
+            return []
+        if self._database is not None:
+            return self._database.read_recent_events(count)
         events_list = list(self._events)
-        return events_list[-count:] if count > 0 else []
+        return events_list[-count:]
+
+    def get_recent_by_type(self, event_type: str, count: int = 100) -> list[Any]:
+        """Get recent events filtered by type.
+
+        Uses the database when available to avoid missing events outside the cache.
+        """
+        if count <= 0:
+            return []
+        if self._database is not None:
+            return self._database.read_recent_events_by_type(event_type, count)
+        filtered = [event for event in self._events if event.get("type") == event_type]
+        return filtered[-count:]
 
     def get_cache_size(self) -> int:
         """Get current number of events in the in-memory cache."""

@@ -132,6 +132,28 @@ class TestOrdersStore:
                 assert retrieved.status == OrderStatus.FILLED
                 assert retrieved.filled_quantity == order.quantity
 
+    def test_upsert_by_client_id_updates_order_id(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            with OrdersStore(tmpdir) as store:
+                pending = create_test_order(
+                    order_id="client-1",
+                    client_order_id="client-1",
+                    status=OrderStatus.PENDING,
+                )
+                store.upsert_by_client_id(pending)
+
+                final = create_test_order(
+                    order_id="order-123",
+                    client_order_id="client-1",
+                    status=OrderStatus.OPEN,
+                )
+                store.upsert_by_client_id(final)
+
+                retrieved = store.get_order("order-123")
+                assert retrieved is not None
+                assert retrieved.client_order_id == "client-1"
+                assert store.get_order("client-1") is None
+
     def test_get_pending_orders(self) -> None:
         with TemporaryDirectory() as tmpdir:
             with OrdersStore(tmpdir) as store:

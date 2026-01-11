@@ -54,3 +54,27 @@ def test_persistent_mode_extracts_nested_bot_id(tmp_path: Path) -> None:
     assert len(events) == 1
     assert events[0]["type"] == "position"
     store.close()
+
+
+def test_get_recent_by_type_in_memory() -> None:
+    store = EventStore()
+    store.append("price_tick", {"i": 1})
+    store.append("error", {"i": 2})
+    store.append("price_tick", {"i": 3})
+
+    recent = store.get_recent_by_type("price_tick", count=2)
+
+    assert [e["data"]["i"] for e in recent] == [1, 3]
+
+
+def test_get_recent_by_type_persistent(tmp_path: Path) -> None:
+    store = EventStore(root=tmp_path)
+    store.append("price_tick", {"i": 1})
+    store.append("metric", {"i": 2})
+    store.append("price_tick", {"i": 3})
+    store.close()
+
+    reopened = EventStore(root=tmp_path)
+    recent = reopened.get_recent_by_type("price_tick", count=1)
+    assert [e["data"]["i"] for e in recent] == [3]
+    reopened.close()

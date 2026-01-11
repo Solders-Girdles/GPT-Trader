@@ -10,6 +10,7 @@ from __future__ import annotations
 import os
 import time
 import uuid
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any, cast
 
@@ -25,6 +26,13 @@ from gpt_trader.features.live_trade.execution.rejection_reason import (
 from gpt_trader.logging.correlation import order_context
 from gpt_trader.monitoring.metrics_collector import record_counter, record_histogram
 from gpt_trader.observability.tracing import trace_span
+from gpt_trader.persistence.orders_store import (
+    OrderRecord,
+    OrdersStore,
+)
+from gpt_trader.persistence.orders_store import (
+    OrderStatus as StoreOrderStatus,
+)
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="order_submission")
@@ -144,6 +152,7 @@ class OrderSubmitter:
         bot_id: str,
         open_orders: list[str],
         *,
+        orders_store: OrdersStore | None = None,
         integration_mode: bool = False,
     ) -> None:
         """
@@ -161,10 +170,219 @@ class OrderSubmitter:
         self.bot_id = bot_id
         self.open_orders = open_orders
         self.integration_mode = integration_mode
+        self.orders_store = orders_store
         self._event_recorder = OrderEventRecorder(event_store, bot_id)
         self._broker_executor = BrokerExecutor(
             cast(BrokerProtocol, broker), integration_mode=integration_mode
         )
+        if self.orders_store is not None:
+            try:
+                self.orders_store.initialize()
+            except Exception as exc:
+                logger.warning(
+                    "Failed to initialize orders store",
+                    error_type=type(exc).__name__,
+                    error_message=str(exc),
+                    operation="orders_store_init",
+                )
+
+    @staticmethod
+    def _normalize_side(side: OrderSide | str) -> str:
+        value = side.value if hasattr(side, "value") else str(side)
+        return value.lower()
+
+    @staticmethod
+    def _normalize_order_type(order_type: OrderType | str) -> str:
+        value = order_type.value if hasattr(order_type, "value") else str(order_type)
+        return value.lower()
+
+    @staticmethod
+    def _normalize_status(status: Any) -> StoreOrderStatus:
+        value = status.value if hasattr(status, "value") else status
+        normalized = str(value).lower()
+        mapping = {
+            "pending": StoreOrderStatus.PENDING,
+            "submitted": StoreOrderStatus.OPEN,
+            "open": StoreOrderStatus.OPEN,
+            "partially_filled": StoreOrderStatus.PARTIALLY_FILLED,
+            "filled": StoreOrderStatus.FILLED,
+            "cancelled": StoreOrderStatus.CANCELLED,
+            "canceled": StoreOrderStatus.CANCELLED,
+            "rejected": StoreOrderStatus.REJECTED,
+            "expired": StoreOrderStatus.EXPIRED,
+            "failed": StoreOrderStatus.FAILED,
+        }
+        return mapping.get(normalized, StoreOrderStatus.OPEN)
+
+    @staticmethod
+    def _normalize_tif(tif: Any) -> str:
+        if tif is None:
+            return "GTC"
+        value = tif.value if hasattr(tif, "value") else tif
+        return str(value)
+
+    @staticmethod
+    def _normalize_timestamp(value: datetime | None) -> datetime:
+        if value is None:
+            return datetime.now(timezone.utc)
+        if value.tzinfo is None:
+            return value.replace(tzinfo=timezone.utc)
+        return value
+
+    @staticmethod
+    def _ensure_decimal(value: Any, default: Decimal = Decimal("0")) -> Decimal:
+        if value is None:
+            return default
+        if isinstance(value, Decimal):
+            return value
+        return Decimal(str(value))
+
+    def _persist_order(self, record: OrderRecord) -> None:
+        if self.orders_store is None:
+            return
+        try:
+            self.orders_store.upsert_by_client_id(record)
+        except Exception as exc:
+            logger.warning(
+                "Failed to persist order record",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="orders_store_persist",
+                order_id=record.order_id,
+                client_order_id=record.client_order_id,
+            )
+
+    def _build_submission_record(
+        self,
+        *,
+        order_id: str,
+        client_order_id: str,
+        symbol: str,
+        side: OrderSide | str,
+        order_type: OrderType | str,
+        quantity: Decimal,
+        price: Decimal | None,
+        status: StoreOrderStatus,
+        filled_quantity: Decimal | None = None,
+        average_fill_price: Decimal | None = None,
+        tif: Any | None = None,
+        metadata: dict[str, Any] | None = None,
+        created_at: datetime | None = None,
+        updated_at: datetime | None = None,
+    ) -> OrderRecord:
+        created = self._normalize_timestamp(created_at)
+        updated = self._normalize_timestamp(updated_at or created)
+        return OrderRecord(
+            order_id=order_id,
+            client_order_id=client_order_id,
+            symbol=symbol,
+            side=self._normalize_side(side),
+            order_type=self._normalize_order_type(order_type),
+            quantity=quantity,
+            price=price,
+            status=status,
+            filled_quantity=filled_quantity if filled_quantity is not None else Decimal("0"),
+            average_fill_price=average_fill_price,
+            created_at=created,
+            updated_at=updated,
+            bot_id=self.bot_id,
+            time_in_force=self._normalize_tif(tif),
+            metadata=metadata,
+        )
+
+    def _record_pending_submission(
+        self,
+        submit_id: str,
+        symbol: str,
+        side: OrderSide,
+        order_type: OrderType,
+        order_quantity: Decimal,
+        price: Decimal | None,
+        tif: Any | None,
+        reduce_only: bool,
+        leverage: int | None,
+    ) -> None:
+        metadata: dict[str, Any] = {"reduce_only": reduce_only}
+        if leverage is not None:
+            metadata["leverage"] = leverage
+        record = self._build_submission_record(
+            order_id=submit_id,
+            client_order_id=submit_id,
+            symbol=symbol,
+            side=side,
+            order_type=order_type,
+            quantity=order_quantity,
+            price=price,
+            status=StoreOrderStatus.PENDING,
+            tif=tif,
+            metadata=metadata,
+        )
+        self._persist_order(record)
+
+    def _record_final_submission(
+        self,
+        order: Any,
+        submit_id: str,
+        symbol: str,
+        side: OrderSide,
+        order_type: OrderType,
+        order_quantity: Decimal,
+        price: Decimal | None,
+        tif: Any | None,
+        status: StoreOrderStatus,
+        reduce_only: bool,
+        leverage: int | None,
+    ) -> None:
+        metadata: dict[str, Any] = {"reduce_only": reduce_only}
+        if leverage is not None:
+            metadata["leverage"] = leverage
+        record = self._build_submission_record(
+            order_id=str(getattr(order, "id", submit_id)),
+            client_order_id=str(getattr(order, "client_id", submit_id) or submit_id),
+            symbol=str(getattr(order, "symbol", symbol)),
+            side=getattr(order, "side", side),
+            order_type=getattr(order, "type", order_type),
+            quantity=self._ensure_decimal(getattr(order, "quantity", order_quantity)),
+            price=getattr(order, "price", price),
+            status=status,
+            filled_quantity=self._ensure_decimal(getattr(order, "filled_quantity", None)),
+            average_fill_price=getattr(order, "avg_fill_price", None),
+            tif=getattr(order, "tif", tif),
+            metadata=metadata,
+            created_at=getattr(order, "created_at", None) or getattr(order, "submitted_at", None),
+            updated_at=getattr(order, "updated_at", None),
+        )
+        self._persist_order(record)
+
+    def _record_failed_submission(
+        self,
+        submit_id: str,
+        symbol: str,
+        side: OrderSide,
+        order_type: OrderType,
+        order_quantity: Decimal,
+        price: Decimal | None,
+        tif: Any | None,
+        reduce_only: bool,
+        leverage: int | None,
+        status: StoreOrderStatus = StoreOrderStatus.FAILED,
+    ) -> None:
+        metadata: dict[str, Any] = {"reduce_only": reduce_only}
+        if leverage is not None:
+            metadata["leverage"] = leverage
+        record = self._build_submission_record(
+            order_id=submit_id,
+            client_order_id=submit_id,
+            symbol=symbol,
+            side=side,
+            order_type=order_type,
+            quantity=order_quantity,
+            price=price,
+            status=status,
+            tif=tif,
+            metadata=metadata,
+        )
+        self._persist_order(record)
 
     def generate_client_order_id(self, client_order_id: str | None = None) -> str:
         """Generate a stable client order ID using submission rules."""
@@ -294,6 +512,17 @@ class OrderSubmitter:
         """Inner order submission logic wrapped in correlation context."""
         # 1. Log submission attempt
         self._log_submission_attempt(submit_id, symbol, side, order_type, order_quantity, price)
+        self._record_pending_submission(
+            submit_id,
+            symbol,
+            side,
+            order_type,
+            order_quantity,
+            price,
+            tif,
+            reduce_only,
+            leverage,
+        )
 
         start_time = time.perf_counter()
         try:
@@ -314,7 +543,17 @@ class OrderSubmitter:
 
             # 3. Handle Result (Success/Rejection)
             result = self._handle_order_result(
-                order, symbol, side, order_quantity, price, effective_price, reduce_only, submit_id
+                order,
+                symbol,
+                side,
+                order_type,
+                order_quantity,
+                price,
+                effective_price,
+                tif,
+                reduce_only,
+                leverage,
+                submit_id,
             )
 
             # Record telemetry for successful submission
@@ -406,6 +645,17 @@ class OrderSubmitter:
                 side=side_str,
             )
             # 4. Handle Failure
+            self._record_failed_submission(
+                submit_id,
+                symbol,
+                side,
+                order_type,
+                order_quantity,
+                price,
+                tif,
+                reduce_only,
+                leverage,
+            )
             self._handle_order_failure(exc, symbol, side, order_quantity)
             return None
 
@@ -466,15 +716,30 @@ class OrderSubmitter:
         order: Any,
         symbol: str,
         side: OrderSide,
+        order_type: OrderType,
         quantity: Decimal,
         price: Decimal | None,
         effective_price: Decimal,
+        tif: Any | None,
         reduce_only: bool,
+        leverage: int | None,
         submit_id: str,
     ) -> str | None:
         """Process the result from the broker, handling rejections and successes."""
         if not (order and order.id):
             # Should have raised exception if failed, but handle None case just in case
+            self._record_failed_submission(
+                submit_id,
+                symbol,
+                side,
+                order_type,
+                quantity,
+                price,
+                tif,
+                reduce_only,
+                leverage,
+                status=StoreOrderStatus.REJECTED,
+            )
             return None
 
         status_value = getattr(order, "status", None)
@@ -482,13 +747,26 @@ class OrderSubmitter:
             status_name = status_value.value
         else:
             status_name = str(status_value or "")
+        store_status = self._normalize_status(status_value)
 
         # Check for Rejection
         if str(status_name).upper() in {"REJECTED", "CANCELLED", "FAILED"}:
             return cast(
                 str | None,
                 self._process_rejection(
-                    order, status_name, symbol, side, quantity, price, effective_price
+                    order,
+                    status_name,
+                    symbol,
+                    side,
+                    order_type,
+                    quantity,
+                    price,
+                    effective_price,
+                    tif,
+                    reduce_only,
+                    leverage,
+                    submit_id,
+                    store_status,
                 ),
             )
 
@@ -498,6 +776,19 @@ class OrderSubmitter:
 
         self._log_success(order, symbol, side, quantity, display_price, reduce_only)
         self._record_trade_event(order, symbol, side, quantity, price, effective_price, submit_id)
+        self._record_final_submission(
+            order,
+            submit_id,
+            symbol,
+            side,
+            order_type,
+            quantity,
+            price,
+            tif,
+            store_status,
+            reduce_only,
+            leverage,
+        )
 
         return cast(str | None, order if self.integration_mode else order.id)
 
@@ -507,11 +798,30 @@ class OrderSubmitter:
         status_name: str,
         symbol: str,
         side: OrderSide,
+        order_type: OrderType,
         quantity: Decimal,
         price: Decimal | None,
         effective_price: Decimal,
+        tif: Any | None,
+        reduce_only: bool,
+        leverage: int | None,
+        submit_id: str,
+        store_status: StoreOrderStatus,
     ) -> Any:
         """Handle rejected orders."""
+        self._record_final_submission(
+            order,
+            submit_id,
+            symbol,
+            side,
+            order_type,
+            quantity,
+            price,
+            tif,
+            store_status,
+            reduce_only,
+            leverage,
+        )
         if self.integration_mode:
             self._event_recorder.record_integration_rejection(order, symbol, status_name)
             return order

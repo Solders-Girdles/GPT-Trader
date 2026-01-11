@@ -78,7 +78,11 @@ class PriceTickStore:
             logger.debug("No event store configured - skipping rehydration")
             return 0
 
-        events = self._event_store.get_recent(count=1000)
+        get_recent_by_type = getattr(type(self._event_store), "get_recent_by_type", None)
+        if callable(get_recent_by_type):
+            events = self._event_store.get_recent_by_type(EVENT_PRICE_TICK, count=1000)
+        else:
+            events = self._event_store.get_recent(count=1000)
         restored = 0
 
         for event in events:

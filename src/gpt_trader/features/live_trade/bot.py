@@ -65,6 +65,9 @@ class TradingBot:
         # Get event_store from parameter or container
         self._event_store = event_store or container.event_store
 
+        # Get orders_store from parameter or container
+        self._orders_store = orders_store or container.orders_store
+
         # Get notification_service from parameter or container
         self._notification_service = notification_service or container.notification_service
 
@@ -76,6 +79,7 @@ class TradingBot:
             symbols=tuple(config.symbols),
             risk_manager=self.risk_manager,
             event_store=self._event_store,
+            orders_store=self._orders_store,
             notification_service=self._notification_service,
         )
 

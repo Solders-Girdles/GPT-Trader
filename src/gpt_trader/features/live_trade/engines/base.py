@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     )  # Protocol import is OK
     from gpt_trader.features.live_trade.risk.protocols import RiskManagerProtocol
     from gpt_trader.monitoring.notifications.service import NotificationService
+    from gpt_trader.persistence.orders_store import OrdersStore
 
 
 @dataclass
@@ -35,6 +36,7 @@ class CoordinatorContext:
         runtime_state: Runtime state tracking.
         risk_manager: Risk management service.
         event_store: Event persistence.
+        orders_store: Orders persistence for crash recovery.
         notification_service: Notification delivery.
         bot_id: Bot identifier for logging.
     """
@@ -46,6 +48,7 @@ class CoordinatorContext:
     runtime_state: RuntimeStateProtocol | None = None
     risk_manager: RiskManagerProtocol | None = None
     event_store: EventStoreProtocol | None = None
+    orders_store: OrdersStore | None = None
     notification_service: NotificationService | None = None
     bot_id: str = ""
 

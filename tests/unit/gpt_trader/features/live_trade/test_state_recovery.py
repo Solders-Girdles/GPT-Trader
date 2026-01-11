@@ -1,5 +1,6 @@
 """Tests for state recovery in TradingEngine."""
 
+from datetime import datetime, timezone
 from decimal import Decimal
 from unittest.mock import MagicMock
 
@@ -20,6 +21,7 @@ from gpt_trader.features.live_trade.strategies.perps_baseline import (
     BaselinePerpsStrategy,
     PerpsStrategyConfig,
 )
+from gpt_trader.persistence.orders_store import OrderRecord, OrdersStore, OrderStatus
 
 
 @pytest.fixture
@@ -197,6 +199,44 @@ class TestTradingEngineRehydration:
         # Should restore 2 valid prices, skip invalid
         assert restored == 2
         assert len(engine.price_history["BTC-PERP"]) == 2
+
+    def test_rehydrate_open_orders_from_store(
+        self, bot_config: BotConfig, application_container, tmp_path
+    ) -> None:
+        orders_store = OrdersStore(tmp_path)
+        orders_store.initialize()
+        now = datetime.now(timezone.utc)
+        orders_store.save_order(
+            OrderRecord(
+                order_id="order-123",
+                client_order_id="client-123",
+                symbol="BTC-PERP",
+                side="buy",
+                order_type="market",
+                quantity=Decimal("1"),
+                price=None,
+                status=OrderStatus.OPEN,
+                filled_quantity=Decimal("0"),
+                average_fill_price=None,
+                created_at=now,
+                updated_at=now,
+                bot_id="test-bot",
+                time_in_force="GTC",
+                metadata=None,
+            )
+        )
+
+        broker = MagicMock()
+        context = CoordinatorContext(
+            config=bot_config,
+            broker=broker,
+            event_store=MagicMock(),
+            orders_store=orders_store,
+            bot_id="test-bot",
+        )
+        engine = TradingEngine(context)
+
+        assert "order-123" in engine._open_orders
 
     def test_rehydrate_handles_missing_fields(
         self,

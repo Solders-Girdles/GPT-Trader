@@ -15,6 +15,12 @@ from gpt_trader.core import (
     TimeInForce,
 )
 from gpt_trader.features.live_trade.execution.order_submission import OrderSubmitter
+from gpt_trader.persistence.orders_store import (
+    OrdersStore,
+)
+from gpt_trader.persistence.orders_store import (
+    OrderStatus as StoreOrderStatus,
+)
 
 
 class TestSubmitOrder:
@@ -144,6 +150,50 @@ class TestSubmitOrder:
 
         assert result is None
 
+    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
+    def test_order_with_none_result_persists_terminal_status(
+        self,
+        mock_get_logger: MagicMock,
+        mock_broker: MagicMock,
+        mock_event_store: MagicMock,
+        open_orders: list[str],
+        tmp_path,
+    ) -> None:
+        """Test that None order result persists a terminal status."""
+        mock_logger = MagicMock()
+        mock_get_logger.return_value = mock_logger
+        mock_broker.place_order.return_value = None
+
+        orders_store = OrdersStore(tmp_path)
+        orders_store.initialize()
+        submitter = OrderSubmitter(
+            broker=mock_broker,
+            event_store=mock_event_store,
+            bot_id="test-bot",
+            open_orders=open_orders,
+            orders_store=orders_store,
+        )
+
+        result = submitter.submit_order(
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            order_quantity=Decimal("1.0"),
+            price=None,
+            effective_price=Decimal("50000"),
+            stop_price=None,
+            tif=None,
+            reduce_only=True,
+            leverage=None,
+            client_order_id="test-id",
+        )
+
+        assert result is None
+        assert orders_store.get_pending_orders() == []
+        record = orders_store.get_order("test-id")
+        assert record is not None
+        assert record.status in {StoreOrderStatus.REJECTED, StoreOrderStatus.FAILED}
+
 
 class TestOrderSubmissionIntegration:
     """Integration tests for order submission workflows."""
@@ -206,6 +256,8 @@ class TestOrderSubmissionIntegration:
         rejected_order.id = "rejected-order"
         rejected_order.status = MagicMock()
         rejected_order.status.value = "FAILED"
+        rejected_order.quantity = Decimal("1.0")
+        rejected_order.filled_quantity = Decimal("0")
         mock_broker.place_order.return_value = rejected_order
 
         submitter = OrderSubmitter(

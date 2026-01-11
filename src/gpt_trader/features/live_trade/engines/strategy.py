@@ -202,12 +202,30 @@ class TradingEngine(BaseEngine):
         self._event_store = event_store
         bot_id = str(self.context.bot_id or self.context.config.profile or "live")
 
+        # Orders store for durable restart (optional)
+        orders_store = self.context.orders_store
+        if orders_store is None and self.context.container is not None:
+            orders_store = getattr(self.context.container, "orders_store", None)
+        if orders_store is not None:
+            try:
+                orders_store.initialize()
+            except Exception as exc:
+                logger.warning(
+                    "Failed to initialize orders store",
+                    error_type=type(exc).__name__,
+                    error_message=str(exc),
+                    operation="orders_store_init",
+                )
+                orders_store = None
+        self._orders_store = orders_store
+
         # Broker and risk manager must exist
         broker = self.context.broker
         risk_manager = self.context.risk_manager
 
         # Track open orders
         self._open_orders: list[str] = []
+        self._rehydrate_open_orders()
 
         # StateCollector: needs broker, config
         self._state_collector = StateCollector(
@@ -222,6 +240,7 @@ class TradingEngine(BaseEngine):
             event_store=event_store,
             bot_id=bot_id,
             open_orders=self._open_orders,
+            orders_store=self._orders_store,
             integration_mode=False,
         )
 
@@ -274,6 +293,40 @@ class TradingEngine(BaseEngine):
                 open_orders=self._open_orders,
                 invalidate_cache_callback=lambda: None,
             )
+
+    def _rehydrate_open_orders(self) -> None:
+        """Restore open order IDs from the orders store after a restart."""
+        if self._orders_store is None:
+            return
+        bot_id = str(self.context.bot_id or self.context.config.profile or "")
+        try:
+            pending = self._orders_store.get_pending_orders(bot_id=bot_id or None)
+        except Exception as exc:
+            logger.warning(
+                "Failed to rehydrate open orders",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="order_recovery",
+            )
+            return
+
+        if not pending:
+            return
+
+        seen: set[str] = set()
+        order_ids: list[str] = []
+        for order in pending:
+            if order.order_id in seen:
+                continue
+            seen.add(order.order_id)
+            order_ids.append(order.order_id)
+
+        self._open_orders[:] = order_ids
+        logger.info(
+            "Rehydrated open orders from persistence",
+            count=len(order_ids),
+            operation="order_recovery",
+        )
 
     # =========================================================================
     # Streaming Lifecycle Methods

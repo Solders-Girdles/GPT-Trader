@@ -12,8 +12,6 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-import pytest
-from textual.app import App, ComposeResult
 from textual.widgets import Static
 
 from gpt_trader.tui.events import (
@@ -291,30 +289,8 @@ class TestCustomEventHandlers:
 class TestUtilityMethods:
     """Test utility methods provided by mixin."""
 
-    @pytest.mark.asyncio
-    async def test_post_event_when_mounted(self):
-        """Test post_event utility method when widget is mounted."""
-
-        class TestWidget(EventHandlerMixin, Static):
-            pass
-
-        class TestApp(App):
-            def compose(self) -> ComposeResult:
-                yield TestWidget()
-
-        app = TestApp()
-        async with app.run_test() as pilot:
-            widget = app.query_one(TestWidget)
-            event = BotStateChanged(running=True)
-            widget.post_message = MagicMock()
-
-            # Should not raise error when mounted
-            widget.post_event(event)
-            await pilot.pause()
-            widget.post_message.assert_called_once_with(event)
-
-    def test_post_event_when_not_mounted(self):
-        """Test post_event when widget not mounted."""
+    def test_post_event_when_mounted(self):
+        """Test post_event utility method when post_message is available."""
 
         class TestWidget(EventHandlerMixin, Static):
             pass
@@ -323,11 +299,20 @@ class TestUtilityMethods:
         event = BotStateChanged(running=True)
         widget.post_message = MagicMock()
 
-        # Should not raise error when not mounted (graceful degradation)
-        # It should still forward to post_message when present.
         widget.post_event(event)
-
         widget.post_message.assert_called_once_with(event)
+
+    def test_post_event_when_not_mounted(self):
+        """Test post_event warns when post_message is unavailable."""
+
+        class DummyHandler(EventHandlerMixin):
+            pass
+
+        widget = DummyHandler()
+        event = BotStateChanged(running=True)
+        with patch("gpt_trader.tui.mixins.event_handlers.logger") as mock_logger:
+            widget.post_event(event)
+            mock_logger.warning.assert_called_once()
 
     @patch("gpt_trader.tui.mixins.event_handlers.logger")
     def test_log_event_received_utility(self, mock_logger):

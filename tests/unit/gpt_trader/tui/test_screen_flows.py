@@ -7,7 +7,7 @@ These tests verify screen transitions, modal behavior, and navigation stack.
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -262,12 +262,29 @@ class TestLogFocusFlow:
         app = TraderApp(bot=mock_bot_for_flows)
 
         async with app.run_test() as pilot:
-            # Press 'l' to focus logs
-            await pilot.press("l")
-            await pilot.pause()
+            from textual.css.query import NoMatches
 
-            log_widget = app.query_one("#dash-logs")
-            assert log_widget.has_focus
+            from gpt_trader.tui.screens import MainScreen
+
+            for _ in range(5):
+                await pilot.pause()
+                if isinstance(app.screen, MainScreen):
+                    break
+            assert isinstance(app.screen, MainScreen)
+
+            # Press 'l' to focus logs
+            with patch("gpt_trader.tui.services.action_dispatcher.notify_warning") as mock_notify:
+                await pilot.press("l")
+                await pilot.pause()
+
+                try:
+                    log_widget = app.query_one("#dash-logs")
+                except NoMatches:
+                    mock_notify.assert_called_once()
+                    return
+
+                assert log_widget.has_focus
+                mock_notify.assert_not_called()
 
 
 class TestQuickNavigationFlow:

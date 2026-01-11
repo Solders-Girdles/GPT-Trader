@@ -7,6 +7,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast
 
 from gpt_trader.utilities.logging_patterns import get_logger
+from gpt_trader.utilities.telemetry import emit_metric
 
 if TYPE_CHECKING:
     from gpt_trader.features.brokerages.coinbase.test_helpers import CoinbaseBrokerage
@@ -157,9 +158,11 @@ class CoinbaseAccountManager:
                 snapshot_data["intx_positions"] = []
                 snapshot_data["intx_collateral"] = {}
 
-        self._event_store.append_metric(
-            bot_id="account_manager",
-            metrics={"event_type": "account_manager_snapshot", "data": snapshot_data},
+        emit_metric(
+            self._event_store,
+            "account_manager",
+            {"event_type": "account_manager_snapshot", "data": snapshot_data},
+            logger=logger,
         )
 
         return snapshot_data
@@ -168,16 +171,22 @@ class CoinbaseAccountManager:
         quote = self.broker.create_convert_quote(payload)
         if commit:
             result = self.broker.commit_convert_trade(quote["trade_id"], payload)
-            self._event_store.append_metric(
-                bot_id="account_manager", metrics={"event_type": "convert_commit", "data": result}
+            emit_metric(
+                self._event_store,
+                "account_manager",
+                {"event_type": "convert_commit", "data": result},
+                logger=logger,
             )
             return cast(dict[str, Any], result)
         return cast(dict[str, Any], quote)
 
     def move_funds(self, payload: dict[str, Any]) -> dict[str, Any]:
         result = self.broker.move_portfolio_funds(payload)
-        self._event_store.append_metric(
-            bot_id="account_manager", metrics={"event_type": "portfolio_move", "data": result}
+        emit_metric(
+            self._event_store,
+            "account_manager",
+            {"event_type": "portfolio_move", "data": result},
+            logger=logger,
         )
         return cast(dict[str, Any], result)
 

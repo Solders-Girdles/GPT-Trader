@@ -34,11 +34,13 @@ to maintain real-time market state and detect connectivity issues.
 
 from __future__ import annotations
 
+import time
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
 from gpt_trader.utilities import utc_now
 from gpt_trader.utilities.logging_patterns import get_logger
+from gpt_trader.utilities.telemetry import emit_metric
 
 if TYPE_CHECKING:  # pragma: no cover
     from gpt_trader.features.live_trade.engines.base import CoordinatorContext
@@ -147,18 +149,35 @@ def update_mark_and_metrics(
                 exc_info=True,
             )
 
-    # _emit_metric(
-    #     ctx.event_store,
-    #     ctx.bot_id,
-    #     {"event_type": "ws_mark_update", "symbol": symbol, "mark": str(mark)},
-    # )
-    logger.debug(
-        "Emitting metric (placeholder)",
-        event_type="ws_mark_update",
-        symbol=symbol,
-        mark=str(mark),
-        bot_id=ctx.bot_id,
-    )
+    last_emit = getattr(coordinator, "_mark_metric_last_emit", None)
+    if not isinstance(last_emit, dict):
+        last_emit = {}
+        try:
+            setattr(coordinator, "_mark_metric_last_emit", last_emit)
+        except Exception:
+            last_emit = {}
+
+    config = getattr(ctx, "config", None)
+    raw_interval = getattr(config, "status_interval", 60)
+    try:
+        interval = max(int(raw_interval), 1)
+    except (TypeError, ValueError):
+        interval = 60
+
+    now = time.time()
+    if now - last_emit.get(symbol, 0.0) >= interval:
+        last_emit[symbol] = now
+        emit_metric(
+            ctx.event_store,
+            ctx.bot_id,
+            {
+                "event_type": "ws_mark_update",
+                "symbol": symbol,
+                "mark": str(mark),
+                "source": "telemetry_stream",
+            },
+            logger=logger,
+        )
 
 
 def health_check(

@@ -580,7 +580,7 @@ class TestCoinbaseRestServiceBase:
         # First call should be funding, second call is position state
         assert self.event_store.append_metric.call_count >= 1
         funding_call = self.event_store.append_metric.call_args_list[0]
-        assert funding_call.kwargs["metrics"]["type"] == "funding"
+        assert funding_call.kwargs["metrics"]["event_type"] == "funding_accrual"
         assert funding_call.kwargs["metrics"]["funding_amount"] == "5.0"
 
         # Position should have updated realized PnL

@@ -21,6 +21,7 @@ from gpt_trader.features.brokerages.coinbase.endpoints import CoinbaseEndpoints
 from gpt_trader.features.brokerages.coinbase.models import to_position
 from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.utilities.logging_patterns import get_logger
+from gpt_trader.utilities.telemetry import emit_metric
 
 logger = get_logger(__name__, component="coinbase_portfolio")
 
@@ -177,8 +178,11 @@ class PortfolioService:
             if "target_amount" in response:
                 response["target_amount"] = Decimal(str(response["target_amount"]))
 
-            self._event_store.append_metric(
-                metrics={"event_type": "intx_allocation", "response": response}
+            emit_metric(
+                self._event_store,
+                "coinbase_portfolio",
+                {"event_type": "intx_allocation", "response": response},
+                logger=logger,
             )
             return cast(dict[str, Any], response)
         except Exception as e:
@@ -198,11 +202,14 @@ class PortfolioService:
                 if "hold" in b:
                     b["hold"] = Decimal(str(b["hold"]))
 
-            self._event_store.append_metric(
-                metrics={
+            emit_metric(
+                self._event_store,
+                "coinbase_portfolio",
+                {
                     "event_type": "intx_balances",
                     "data": {"portfolio_id": portfolio_id, "count": len(balances)},
-                }
+                },
+                logger=logger,
             )
             return cast(list[dict[str, Any]], balances)
         except Exception as exc:
@@ -280,8 +287,11 @@ class PortfolioService:
             response = self._client.get_intx_multi_asset_collateral()
             if "total_usd_value" in response:
                 response["total_usd_value"] = Decimal(str(response["total_usd_value"]))
-            self._event_store.append_metric(
-                metrics={"event_type": "intx_multi_asset_collateral", "data": response}
+            emit_metric(
+                self._event_store,
+                "coinbase_portfolio",
+                {"event_type": "intx_multi_asset_collateral", "data": response},
+                logger=logger,
             )
             return cast(dict[str, Any], response)
         except Exception as exc:
@@ -306,11 +316,14 @@ class PortfolioService:
             if key in summary:
                 summary[key] = Decimal(str(summary[key]))
 
-        self._event_store.append_metric(
-            metrics={
+        emit_metric(
+            self._event_store,
+            "coinbase_portfolio",
+            {
                 "event_type": "cfm_balance_summary",
                 "summary": {k: str(v) for k, v in summary.items()},
-            }
+            },
+            logger=logger,
         )
         return cast(dict[str, Any], summary)
 
@@ -328,8 +341,11 @@ class PortfolioService:
                 s["amount"] = Decimal(str(s["amount"]))
             processed_sweeps.append(s)
 
-        self._event_store.append_metric(
-            metrics={"event_type": "cfm_sweeps", "count": len(processed_sweeps)}
+        emit_metric(
+            self._event_store,
+            "coinbase_portfolio",
+            {"event_type": "cfm_sweeps", "count": len(processed_sweeps)},
+            logger=logger,
         )
         return processed_sweeps
 
@@ -386,12 +402,15 @@ class PortfolioService:
         if "leverage" in response:
             response["leverage"] = Decimal(str(response["leverage"]))
 
-        self._event_store.append_metric(
-            metrics={
+        emit_metric(
+            self._event_store,
+            "coinbase_portfolio",
+            {
                 "event_type": "cfm_margin_setting",
                 "margin_window": margin_window,
                 "response": {k: str(v) for k, v in response.items()},
-            }
+            },
+            logger=logger,
         )
         return cast(dict[str, Any], response)
 

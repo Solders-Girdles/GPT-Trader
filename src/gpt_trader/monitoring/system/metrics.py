@@ -78,7 +78,7 @@ class MetricsPublisher:
                 level=LogLevel.INFO,
                 event_type="metrics_update",
                 message="Cycle metrics updated",
-                component="CoinbaseTrader",
+                component="SystemMonitor",
                 **summary_fields,
             )
         except Exception as exc:

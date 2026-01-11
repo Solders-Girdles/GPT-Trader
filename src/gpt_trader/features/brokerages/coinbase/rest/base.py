@@ -37,6 +37,7 @@ from gpt_trader.features.brokerages.coinbase.utilities import (
 from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.utilities.logging_patterns import get_logger
 from gpt_trader.utilities.parsing import coerce_enum
+from gpt_trader.utilities.telemetry import emit_metric
 
 if TYPE_CHECKING:
     from gpt_trader.features.brokerages.coinbase.rest.position_state_store import PositionStateStore
@@ -365,19 +366,28 @@ class CoinbaseRestServiceCore:
             )
         if funding_amt:  # naming: allow
             position.realized_pnl += funding_amt  # naming: allow
-            self._event_store.append_metric(
-                bot_id="coinbase_perps",
-                metrics={"type": "funding", "funding_amount": str(funding_amt)},  # naming: allow
+            emit_metric(
+                self._event_store,
+                "coinbase_perps",
+                {
+                    "event_type": "funding_accrual",
+                    "symbol": symbol,
+                    "funding_amount": str(funding_amt),  # naming: allow
+                },
+                logger=logger,
             )
 
         # Append metrics
-        self._event_store.append_metric(
-            bot_id="coinbase_perps",
-            metrics={
+        emit_metric(
+            self._event_store,
+            "coinbase_perps",
+            {
+                "event_type": "position_metrics",
                 "symbol": symbol,
                 "mark_price": str(mark_price),
                 "position_size": str(position.quantity),
             },
+            logger=logger,
         )
 
         self._event_store.append_position(

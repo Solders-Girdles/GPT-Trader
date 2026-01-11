@@ -38,10 +38,10 @@ logger = get_logger(__name__, component="order_validation")
 
 
 # Metric names for validation failures
-METRIC_MARK_STALENESS_CHECK_FAILED = "validation.mark_staleness_check_failed"
-METRIC_SLIPPAGE_GUARD_CHECK_FAILED = "validation.slippage_guard_check_failed"
-METRIC_ORDER_PREVIEW_FAILED = "validation.order_preview_failed"
-METRIC_CONSECUTIVE_FAILURES_ESCALATION = "validation.consecutive_failures_escalation"
+METRIC_MARK_STALENESS_CHECK_FAILED = "gpt_trader_validation_mark_staleness_check_failed_total"
+METRIC_SLIPPAGE_GUARD_CHECK_FAILED = "gpt_trader_validation_slippage_guard_check_failed_total"
+METRIC_ORDER_PREVIEW_FAILED = "gpt_trader_validation_order_preview_failed_total"
+METRIC_CONSECUTIVE_FAILURES_ESCALATION = "gpt_trader_validation_escalations_total"
 
 
 @dataclass

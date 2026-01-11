@@ -405,26 +405,35 @@ class StatusReporter:
 
     async def _write_status_to_file(self) -> None:
         """Write current status to file atomically."""
-        status_dict = asdict(self._status)
+        status_dict = self._serialize_status()
 
         # Atomic write: write to temp file, then rename
         status_path = Path(self.status_file)
-        temp_fd, temp_path = tempfile.mkstemp(
-            dir=status_path.parent,
-            prefix=".status_",
-            suffix=".tmp",
-        )
+        status_path.parent.mkdir(parents=True, exist_ok=True)
+
+        temp_fd: int | None = None
+        temp_path: str | None = None
         try:
+            temp_fd, temp_path = tempfile.mkstemp(
+                dir=status_path.parent,
+                prefix=".status_",
+                suffix=".tmp",
+            )
             with os.fdopen(temp_fd, "w") as f:
                 json.dump(status_dict, f, indent=2, cls=DecimalEncoder)
             os.rename(temp_path, self.status_file)
-        except Exception:
-            # Clean up temp file on error
-            try:
-                os.unlink(temp_path)
-            except OSError:
-                pass
-            raise
+        except Exception as exc:
+            logger.error(
+                "Failed to write status file",
+                operation="status_write",
+                error=str(exc),
+            )
+            if temp_path:
+                try:
+                    os.unlink(temp_path)
+                except OSError:
+                    pass
+            return
 
     def _update_status(self) -> None:
         """Update the status object with current values."""
@@ -475,6 +484,10 @@ class StatusReporter:
 
         # Health assessment
         self._assess_health()
+
+    def _serialize_status(self) -> dict[str, Any]:
+        """Serialize the status dataclass to a JSON-friendly dict."""
+        return asdict(self._status)
 
     def _assess_health(self) -> None:
         """Assess overall health and populate issues list."""

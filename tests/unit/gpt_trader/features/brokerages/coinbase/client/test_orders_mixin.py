@@ -130,3 +130,81 @@ def test_list_orders_batch_builds_query() -> None:
     assert query["order_ids"] == ["order-1", "order-2"]
     assert query["cursor"] == ["c1"]
     assert query["limit"] == ["2"]
+
+
+def test_cancel_orders_dispatches_batch_cancel() -> None:
+    client = _StubOrderClient(responses=[{"result": "ok"}])
+
+    result = client.cancel_orders(["order-1", "order-2"])
+
+    assert result == {"result": "ok"}
+    assert client.calls == [("POST", "/orders_batch_cancel", {"order_ids": ["order-1", "order-2"]})]
+
+
+def test_get_order_historical_calls_order_endpoint() -> None:
+    client = _StubOrderClient(responses=[{"order_id": "order-1"}])
+
+    result = client.get_order_historical("order-1")
+
+    assert result == {"order_id": "order-1"}
+    assert client.calls == [("GET", "/orders/order-1", None)]
+
+
+def test_list_orders_historical_uses_query() -> None:
+    client = _StubOrderClient(responses=[{"orders": []}])
+
+    result = client.list_orders(product_id="BTC-USD", status="open")
+
+    assert result == {"orders": []}
+    path = client.calls[0][1]
+    query = parse_qs(urlparse(path).query)
+    assert query["product_id"] == ["BTC-USD"]
+    assert query["status"] == ["open"]
+
+
+def test_list_orders_fallback_raises_non_method_not_allowed() -> None:
+    client = _StubOrderClient(
+        responses=[
+            NotFoundError("missing"),
+            BrokerageError("bad gateway"),
+        ]
+    )
+
+    with pytest.raises(BrokerageError, match="bad gateway"):
+        client.list_orders(product_id="BTC-USD")
+
+
+def test_list_orders_exchange_mode_includes_query() -> None:
+    client = _StubOrderClient(api_mode="exchange", responses=[{"orders": []}])
+
+    result = client.list_orders(product_id="BTC-USD", limit=2)
+
+    assert result == {"orders": []}
+    path = client.calls[0][1]
+    query = parse_qs(urlparse(path).query)
+    assert query["product_id"] == ["BTC-USD"]
+    assert query["limit"] == ["2"]
+
+
+def test_list_orders_batch_filters_ids_and_limit_zero() -> None:
+    client = _StubOrderClient(responses=[{"orders": []}])
+
+    result = client.list_orders_batch(["", None, "order-1", 123], limit=0)
+
+    assert result == {"orders": []}
+    path = client.calls[0][1]
+    query = parse_qs(urlparse(path).query)
+    assert query["order_ids"] == ["order-1", "123"]
+    assert query["limit"] == ["0"]
+
+
+def test_list_fills_builds_query() -> None:
+    client = _StubOrderClient(responses=[{"fills": []}])
+
+    result = client.list_fills(product_id="BTC-USD", limit=3)
+
+    assert result == {"fills": []}
+    path = client.calls[0][1]
+    query = parse_qs(urlparse(path).query)
+    assert query["product_id"] == ["BTC-USD"]
+    assert query["limit"] == ["3"]

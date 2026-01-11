@@ -14,7 +14,10 @@ from gpt_trader.persistence.orders_store import OrderRecord, OrdersStore, OrderS
 
 
 def _make_handler(
-    tmp_path, *, rest_service: object | None = None
+    tmp_path,
+    *,
+    rest_service: object | None = None,
+    dedupe_limit: int = 1000,
 ) -> tuple[CoinbaseUserEventHandler, OrdersStore]:
     store = OrdersStore(tmp_path)
     store.initialize()
@@ -26,6 +29,7 @@ def _make_handler(
         market_data_service=None,
         symbols=["BTC-USD"],
         rest_service=rest_service,
+        dedupe_limit=dedupe_limit,
     )
     return handler, store
 
@@ -137,3 +141,13 @@ def test_backfill_deduplicates_rest_fills(tmp_path) -> None:
     assert record is not None
     assert record.filled_quantity == Decimal("1")
     handler._process_fill_for_pnl.assert_called_once()
+
+
+def test_dedupe_limit_evicts_oldest_key(tmp_path) -> None:
+    handler, _ = _make_handler(tmp_path, dedupe_limit=2)
+
+    assert handler._record_fill_key("fill-1") is True
+    assert handler._record_fill_key("fill-2") is True
+    assert handler._record_fill_key("fill-3") is True
+
+    assert handler._record_fill_key("fill-1") is True

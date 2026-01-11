@@ -49,6 +49,7 @@ class CoinbaseUserEventHandler:
         self._market_data_service = market_data_service
         self._product_catalog = product_catalog
         self._rest_service = rest_service
+        self._dedupe_limit = max(dedupe_limit, 1)
 
         self._pnl_service: PnLService | None = None
         if market_data_service is not None:
@@ -57,7 +58,7 @@ class CoinbaseUserEventHandler:
                 market_data=market_data_service,
             )
 
-        self._recent_fill_keys: deque[str] = deque(maxlen=max(dedupe_limit, 1))
+        self._recent_fill_keys: deque[str] = deque()
         self._recent_fill_set: set[str] = set()
         self._dedupe_lock = threading.Lock()
         self._backfill_lock = threading.Lock()
@@ -671,7 +672,7 @@ class CoinbaseUserEventHandler:
                 return False
             self._recent_fill_set.add(key)
             self._recent_fill_keys.append(key)
-            while len(self._recent_fill_set) > len(self._recent_fill_keys):
+            while len(self._recent_fill_keys) > self._dedupe_limit:
                 self._recent_fill_set.discard(self._recent_fill_keys.popleft())
         return True
 

@@ -568,6 +568,92 @@ class TestCoinbaseRestContractSuite:
         assert position.quantity == Decimal("0.5")  # Reduced by fill
         assert position.realized_pnl == Decimal("500.00")  # (51000 - 50000) * 0.5
 
+    def test_process_fill_for_pnl_increases_position(self, pnl_service):
+        """Test PnL processing when increasing an existing position."""
+        pnl_service._position_store.set(
+            "BTC-USD",
+            PositionState(
+                symbol="BTC-USD",
+                side="long",
+                quantity=Decimal("1.0"),
+                entry_price=Decimal("50000.00"),
+            ),
+        )
+
+        fill = {
+            "product_id": "BTC-USD",
+            "size": "0.5",
+            "price": "51000.00",
+            "side": "buy",
+        }
+
+        pnl_service.process_fill_for_pnl(fill)
+
+        position = pnl_service._position_store.get("BTC-USD")
+        expected_entry = (Decimal("1.0") * Decimal("50000.00")) + (
+            Decimal("0.5") * Decimal("51000.00")
+        )
+        expected_entry = expected_entry / Decimal("1.5")
+
+        assert position.quantity == Decimal("1.5")
+        assert position.entry_price == expected_entry
+
+    def test_process_fill_for_pnl_handles_missing_position_record(self, mock_market_data):
+        """Test PnL processing exits when store contains symbol but get returns None."""
+
+        class StoreStub:
+            def __init__(self) -> None:
+                self.set_calls: list[tuple[str, PositionState]] = []
+
+            def contains(self, symbol: str) -> bool:
+                return True
+
+            def get(self, symbol: str) -> PositionState | None:
+                return None
+
+            def set(self, symbol: str, position: PositionState) -> None:
+                self.set_calls.append((symbol, position))
+
+        store = StoreStub()
+        pnl = PnLService(position_store=store, market_data=mock_market_data)
+
+        fill = {
+            "product_id": "BTC-USD",
+            "size": "0.5",
+            "price": "51000.00",
+            "side": "sell",
+        }
+
+        pnl.process_fill_for_pnl(fill)
+
+        assert store.set_calls == []
+
+    def test_process_fill_for_pnl_short_position_realized_pnl_sign(self, pnl_service):
+        """Test realized PnL sign for short positions and zeroed quantity."""
+        pnl_service._position_store.set(
+            "ETH-USD",
+            PositionState(
+                symbol="ETH-USD",
+                side="short",
+                quantity=Decimal("2.0"),
+                entry_price=Decimal("100.00"),
+                realized_pnl=Decimal("0"),
+            ),
+        )
+
+        fill = {
+            "product_id": "ETH-USD",
+            "size": "2.0",
+            "price": "90.00",
+            "side": "buy",
+        }
+
+        pnl_service.process_fill_for_pnl(fill)
+
+        position = pnl_service._position_store.get("ETH-USD")
+        assert position.quantity == Decimal("0")
+        assert position.realized_pnl == Decimal("20.00")
+
     def test_process_fill_for_pnl_invalid_data(self, pnl_service):
         """Test PnL processing with invalid fill data."""
         # Missing required fields

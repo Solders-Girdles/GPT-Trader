@@ -15,6 +15,8 @@ from gpt_trader.core import (
 from gpt_trader.errors import ValidationError
 from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.errors import (
+    BrokerageError,
+    NotFoundError,
     OrderCancellationError,
     OrderQueryError,
 )
@@ -211,11 +213,27 @@ class TestOrderService:
         assert len(result) == 2
         assert self.client.list_orders.call_count == 2
 
+    def test_list_orders_passes_status_filter(self) -> None:
+        """Test list_orders passes status filter to client."""
+        self.client.list_orders.return_value = {"orders": [], "cursor": None}
+
+        self.service.list_orders(status=["OPEN", "PENDING"])
+
+        call_kwargs = self.client.list_orders.call_args.kwargs
+        assert call_kwargs["order_status"] == ["OPEN", "PENDING"]
+
     def test_list_orders_exception_raises_query_error(self) -> None:
         """Test list orders raises OrderQueryError on exception."""
         self.client.list_orders.side_effect = Exception("API error")
 
         with pytest.raises(OrderQueryError, match="Failed to list orders"):
+            self.service.list_orders()
+
+    def test_list_orders_brokerage_error_re_raises(self) -> None:
+        """Test list orders re-raises BrokerageError."""
+        self.client.list_orders.side_effect = BrokerageError("rate limited")
+
+        with pytest.raises(BrokerageError, match="rate limited"):
             self.service.list_orders()
 
     def test_get_order_returns_order(self) -> None:
@@ -255,6 +273,21 @@ class TestOrderService:
         with pytest.raises(OrderQueryError, match="Failed to get order"):
             self.service.get_order("test_123")
 
+    def test_get_order_not_found_error_returns_none(self) -> None:
+        """Test get_order returns None on NotFoundError."""
+        self.client.get_order_historical.side_effect = NotFoundError("missing")
+
+        result = self.service.get_order("missing")
+
+        assert result is None
+
+    def test_get_order_brokerage_error_re_raises(self) -> None:
+        """Test get_order re-raises BrokerageError."""
+        self.client.get_order_historical.side_effect = BrokerageError("auth failed")
+
+        with pytest.raises(BrokerageError, match="auth failed"):
+            self.service.get_order("order_123")
+
     def test_list_fills_returns_fills(self) -> None:
         """Test listing fills."""
         self.client.list_fills.return_value = {
@@ -270,6 +303,15 @@ class TestOrderService:
         assert len(result) == 2
         assert result[0]["fill_id"] == "fill_1"
 
+    def test_list_fills_passes_order_id_filter(self) -> None:
+        """Test list_fills passes order_id filter to client."""
+        self.client.list_fills.return_value = {"fills": [], "cursor": None}
+
+        self.service.list_fills(order_id="order_456")
+
+        call_kwargs = self.client.list_fills.call_args.kwargs
+        assert call_kwargs["order_id"] == "order_456"
+
     def test_list_fills_with_pagination(self) -> None:
         """Test listing fills handles pagination."""
         self.client.list_fills.side_effect = [
@@ -281,6 +323,13 @@ class TestOrderService:
 
         assert len(result) == 2
         assert self.client.list_fills.call_count == 2
+
+    def test_list_fills_brokerage_error_re_raises(self) -> None:
+        """Test list fills re-raises BrokerageError."""
+        self.client.list_fills.side_effect = BrokerageError("rate limited")
+
+        with pytest.raises(BrokerageError, match="rate limited"):
+            self.service.list_fills()
 
     def test_close_position_success(self) -> None:
         """Test successful position close."""
@@ -307,6 +356,20 @@ class TestOrderService:
 
         assert result.id == "close_order"
         self.client.close_position.assert_called_once()
+
+    def test_close_position_includes_client_order_id(self) -> None:
+        """Test close_position passes client order id."""
+        mock_position = Mock(spec=Position)
+        mock_position.symbol = "BTC-PERP"
+        mock_position.quantity = Decimal("0.5")
+
+        self.position_provider.list_positions.return_value = [mock_position]
+        self.client.close_position.return_value = {"order": {"order_id": "close_order"}}
+
+        self.service.close_position("BTC-PERP", client_order_id="close-123")
+
+        call_args = self.client.close_position.call_args[0][0]
+        assert call_args["client_order_id"] == "close-123"
 
     def test_close_position_no_position_raises(self) -> None:
         """Test close_position raises when no position exists."""

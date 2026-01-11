@@ -343,6 +343,25 @@ class TestCoinbaseRestServiceBase:
         assert payload["type"] == "LIMIT"
         assert payload["time_in_force"] == "GTC"
 
+    def test_build_order_payload_invalid_side_passthrough(self) -> None:
+        """Test payload preserves side string when enum coercion fails."""
+        self.product_catalog.get.return_value = self.mock_product
+
+        payload = self.service._build_order_payload(
+            symbol="BTC-USD",
+            side="LONG",
+            order_type=OrderType.MARKET,
+            quantity=Decimal("0.1"),
+            price=None,
+            stop_price=None,
+            tif=TimeInForce.GTC,
+            client_id=None,
+            reduce_only=False,
+            leverage=None,
+        )
+
+        assert payload["side"] == "LONG"
+
     def test_build_order_payload_gtd_conversion(self) -> None:
         """Test GTD time in force conversion to GTC."""
         self.product_catalog.get.return_value = self.mock_product
@@ -361,6 +380,25 @@ class TestCoinbaseRestServiceBase:
         )
 
         assert payload["time_in_force"] == "GTC"
+
+    def test_build_order_payload_invalid_tif_passthrough(self) -> None:
+        """Test payload preserves time-in-force string when enum coercion fails."""
+        self.product_catalog.get.return_value = self.mock_product
+
+        payload = self.service._build_order_payload(
+            symbol="BTC-USD",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("0.1"),
+            price=None,
+            stop_price=None,
+            tif="DAY",
+            client_id=None,
+            reduce_only=False,
+            leverage=None,
+        )
+
+        assert payload["time_in_force"] == "DAY"
 
     def test_execute_order_payload_success(self) -> None:
         """Test successful order execution."""
@@ -385,6 +423,26 @@ class TestCoinbaseRestServiceBase:
         self.client.place_order.return_value = {"order_id": "order_123"}
 
         # Enable order preview via bot_config (previously was os.environ["ORDER_PREVIEW_ENABLED"])
+        mock_bot_config = Mock()
+        mock_bot_config.enable_order_preview = True
+        self.service.bot_config = mock_bot_config
+
+        with patch(
+            "gpt_trader.features.brokerages.coinbase.rest.base.to_order", return_value=mock_order
+        ):
+            result = self.service._execute_order_payload("BTC-USD", payload, "client_123")
+
+        assert result == mock_order
+        self.client.preview_order.assert_called_once_with(payload)
+        self.client.place_order.assert_called_once_with(payload)
+
+    def test_execute_order_payload_preview_failure_still_places(self) -> None:
+        """Test order execution continues when preview fails."""
+        payload = {"product_id": "BTC-USD", "side": "BUY"}
+        mock_order = Mock(spec=Order)
+        self.client.preview_order.side_effect = Exception("preview failed")
+        self.client.place_order.return_value = {"order_id": "order_123"}
+
         mock_bot_config = Mock()
         mock_bot_config.enable_order_preview = True
         self.service.bot_config = mock_bot_config
@@ -430,6 +488,30 @@ class TestCoinbaseRestServiceBase:
         self.service._find_existing_order_by_client_id.assert_called_once_with(
             "BTC-USD", "client_123"
         )
+
+    def test_execute_order_payload_duplicate_client_id_retry_failure(self) -> None:
+        """Test duplicate client id retry failure re-raises original error."""
+        payload = {"product_id": "BTC-USD", "side": "BUY"}
+        error = InvalidRequestError("duplicate client_order_id")
+        self.client.place_order.side_effect = [error, Exception("retry failed")]
+        self.service._find_existing_order_by_client_id = Mock(return_value=None)
+
+        with pytest.raises(InvalidRequestError) as exc:
+            self.service._execute_order_payload("BTC-USD", payload, "client_123")
+
+        assert "duplicate client_order_id" in str(exc.value)
+        assert self.client.place_order.call_count == 2
+        self.service._find_existing_order_by_client_id.assert_called_once_with(
+            "BTC-USD", "client_123"
+        )
+
+    def test_execute_order_payload_network_error(self) -> None:
+        """Test order execution with network errors."""
+        payload = {"product_id": "BTC-USD", "side": "BUY"}
+        self.client.place_order.side_effect = ConnectionError("network down")
+
+        with pytest.raises(ConnectionError):
+            self.service._execute_order_payload("BTC-USD", payload, "client_123")
 
     def test_execute_order_payload_unexpected_error(self) -> None:
         """Test order execution with unexpected error."""
@@ -508,6 +590,22 @@ class TestCoinbaseRestServiceBase:
 
         assert result is None
 
+    def test_find_existing_order_by_client_id_network_error(self) -> None:
+        """Test finding existing order when network errors occur."""
+        self.client.list_orders.side_effect = ConnectionError("network down")
+
+        result = self.service._find_existing_order_by_client_id("BTC-USD", "client_123")
+
+        assert result is None
+
+    def test_find_existing_order_by_client_id_value_error(self) -> None:
+        """Test finding existing order when payload parsing fails."""
+        self.client.list_orders.side_effect = ValueError("bad payload")
+
+        result = self.service._find_existing_order_by_client_id("BTC-USD", "client_123")
+
+        assert result is None
+
     def test_update_position_metrics_no_position(self) -> None:
         """Test updating position metrics when no position exists."""
         self.service.update_position_metrics("BTC-USD")
@@ -529,6 +627,20 @@ class TestCoinbaseRestServiceBase:
 
         # Should not raise any errors
         self.event_store.append_position.assert_not_called()
+
+    def test_update_position_metrics_missing_position_entry(self) -> None:
+        """Test updating metrics when store contains missing position entry."""
+        from gpt_trader.features.brokerages.coinbase.utilities import PositionState
+
+        position = PositionState(
+            symbol="BTC-USD", side="LONG", quantity=Decimal("0.1"), entry_price=Decimal("50000")
+        )
+        self.position_store.set("BTC-USD", position)
+
+        with patch.object(self.position_store, "get", return_value=None):
+            self.service.update_position_metrics("BTC-USD")
+
+        self.market_data.get_mark.assert_not_called()
 
     def test_update_position_metrics_success(self) -> None:
         """Test successful position metrics update."""
@@ -585,6 +697,22 @@ class TestCoinbaseRestServiceBase:
 
         # Position should have updated realized PnL
         assert position.realized_pnl == Decimal("5.0")
+
+    def test_update_position_metrics_skips_funding_when_none(self) -> None:
+        """Test position metrics update when funding rate is unavailable."""
+        from gpt_trader.features.brokerages.coinbase.utilities import PositionState
+
+        position = PositionState(
+            symbol="BTC-USD", side="LONG", quantity=Decimal("0.1"), entry_price=Decimal("50000")
+        )
+        self.position_store.set("BTC-USD", position)
+        self.market_data.get_mark.return_value = Decimal("51000")
+        self.product_catalog.get_funding.return_value = (None, None)
+
+        self.service.update_position_metrics("BTC-USD")
+
+        self.event_store.append_metric.assert_called_once()
+        self.event_store.append_position.assert_called_once()
 
     def test_positions_property(self) -> None:
         """Test positions property access."""

@@ -53,3 +53,19 @@ def test_cache_stats_reported_correctly() -> None:
     assert stats["entries"] == 1
     assert stats["total_hits"] == 1
     assert stats["total_misses"] == 1
+
+
+def test_clear_expired_removes_stale_entries() -> None:
+    cache = DataCache()
+    frame = _heavy_frame(5)
+
+    with freeze_time("2024-01-01 00:00:00"):
+        cache.put("fresh", frame, ttl_seconds=30)
+        cache.put("stale", frame, ttl_seconds=5)
+
+    with freeze_time("2024-01-01 00:00:10"):
+        expired = cache.clear_expired()
+
+    assert expired == 1
+    assert "fresh" in cache.cache
+    assert "stale" not in cache.cache

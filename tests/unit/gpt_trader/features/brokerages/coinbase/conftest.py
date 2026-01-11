@@ -16,8 +16,13 @@ except ModuleNotFoundError:  # pragma: no cover - optional dependency
 from gpt_trader.app.config import BotConfig
 from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
 from gpt_trader.features.brokerages.coinbase.models import APIConfig
-from gpt_trader.features.brokerages.coinbase.transports import MockTransport, NoopTransport
 from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
+
+pytest_plugins = [
+    "tests.unit.gpt_trader.features.brokerages.coinbase.websocket_fixtures",
+    "tests.unit.gpt_trader.features.brokerages.coinbase.transport_fixtures",
+    "tests.unit.gpt_trader.features.brokerages.coinbase.message_factories",
+]
 
 
 @dataclass(frozen=True)
@@ -122,201 +127,6 @@ def market_data_service() -> MarketDataService:
     return MarketDataService()
 
 
-# WebSocket Connection Scenarios
-@pytest.fixture
-def mock_websocket_connected():
-    """Mock WebSocket in connected state."""
-    ws = Mock()
-    ws.connected = True
-    ws.ping.return_value = None
-    return ws
-
-
-@pytest.fixture
-def mock_websocket_disconnected():
-    """Mock WebSocket in disconnected state."""
-    ws = Mock()
-    ws.connected = False
-    ws.ping.side_effect = ConnectionError("WebSocket not connected")
-    return ws
-
-
-@pytest.fixture
-def mock_websocket_auth_failure():
-    """Mock WebSocket that fails authentication."""
-    ws = Mock()
-    ws.connect.side_effect = Exception("Authentication failed")
-    return ws
-
-
-@pytest.fixture
-def mock_websocket_with_reconnect_backoff():
-    """Mock WebSocket that triggers reconnection with exponential backoff."""
-    ws = Mock()
-    call_count = 0
-
-    def connect_side_effect(*args, **kwargs):
-        nonlocal call_count
-        call_count += 1
-        if call_count <= 3:
-            raise ConnectionError(f"Connection attempt {call_count} failed")
-        return None
-
-    ws.connect.side_effect = connect_side_effect
-    ws.connected = False
-    return ws
-
-
-# Transport Layer Fixtures
-@pytest.fixture
-def mock_transport():
-    """Create MockTransport with predefined messages."""
-    messages = [
-        {
-            "type": "ticker",
-            "product_id": "BTC-USD",
-            "price": "50000.00",
-            "bid": "49900.00",
-            "ask": "50100.00",
-        },
-        {
-            "type": "match",
-            "product_id": "BTC-USD",
-            "price": "50050.00",
-            "size": "0.1",
-            "side": "buy",
-        },
-        {
-            "type": "l2update",
-            "product_id": "BTC-USD",
-            "changes": [["buy", "49950.00", "0.5"], ["sell", "50100.00", "0.3"]],
-        },
-    ]
-    return MockTransport(messages=messages)
-
-
-@pytest.fixture
-def noop_transport():
-    """Create NoopTransport for testing disabled streaming."""
-    return NoopTransport()
-
-
-@pytest.fixture
-def mock_transport_with_connection_failure():
-    """Mock transport that fails to connect."""
-    transport = MockTransport()
-    transport.connect.side_effect = ConnectionError("Connection failed")
-    return transport
-
-
-# Deterministic Message Generators
-@pytest.fixture
-def ticker_message_factory():
-    """Factory for creating ticker messages with deterministic content."""
-
-    def create_ticker(
-        symbol: str = "BTC-USD",
-        price: str = "50000.00",
-        bid: str = "49900.00",
-        ask: str = "50100.00",
-    ):
-        return {
-            "type": "ticker",
-            "product_id": symbol,
-            "price": price,
-            "best_bid": bid,
-            "best_ask": ask,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "sequence": 12345,
-        }
-
-    return create_ticker
-
-
-@pytest.fixture
-def trade_message_factory():
-    """Factory for creating trade/match messages."""
-
-    def create_trade(
-        symbol: str = "BTC-USD", price: str = "50050.00", size: str = "0.1", side: str = "buy"
-    ):
-        return {
-            "type": "match",
-            "product_id": symbol,
-            "price": price,
-            "size": size,
-            "side": side,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "trade_id": "123456",
-            "sequence": 12346,
-        }
-
-    return create_trade
-
-
-@pytest.fixture
-def orderbook_message_factory():
-    """Factory for creating orderbook update messages."""
-
-    def create_orderbook(symbol: str = "BTC-USD", changes: list | None = None):
-        if changes is None:
-            changes = [
-                ["buy", "49950.00", "0.5"],
-                ["sell", "50100.00", "0.3"],
-            ]
-        return {
-            "type": "l2update",
-            "product_id": symbol,
-            "changes": changes,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "sequence": 12347,
-        }
-
-    return create_orderbook
-
-
-@pytest.fixture
-def heartbeat_message_factory():
-    """Factory for creating heartbeat/status messages."""
-
-    def create_heartbeat(status: str = "ok", message: str = "healthy"):
-        return {
-            "type": "heartbeat",
-            "status": status,
-            "message": message,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        }
-
-    return create_heartbeat
-
-
-# Error Scenario Helpers
-@pytest.fixture
-def connection_error_scenarios():
-    """Dictionary of connection error scenarios for testing."""
-    return {
-        "authentication_failed": Exception("Invalid API credentials"),
-        "rate_limited": Exception("Rate limit exceeded"),
-        "network_timeout": TimeoutError("Connection timeout"),
-        "server_error": ConnectionError("Server unavailable"),
-        "ssl_error": ConnectionError("SSL verification failed"),
-    }
-
-
-@pytest.fixture
-def message_parsing_error_scenarios():
-    """Dictionary of message parsing error scenarios."""
-    return {
-        "invalid_json": '{"invalid": json structure}',
-        "missing_type": {"price": "50000.00", "product_id": "BTC-USD"},
-        "invalid_price": {"type": "ticker", "product_id": "BTC-USD", "price": "invalid_price"},
-        "missing_symbol": {"type": "ticker", "price": "50000.00"},
-        "null_message": None,
-        "empty_dict": {},
-        "wrong_type": 12345,
-    }
-
-
 # Cache and Data Management Helpers
 @pytest.fixture
 def mock_mark_cache():
@@ -350,50 +160,6 @@ def sample_market_data():
     }
 
 
-# Subscription Management Helpers
-@pytest.fixture
-def subscription_factory():
-    """Factory for creating subscription messages."""
-
-    def create_subscription(channels: list[str], product_ids: list[str]):
-        return {
-            "type": "subscribe",
-            "channels": channels,
-            "product_ids": product_ids,
-        }
-
-    return create_subscription
-
-
-@pytest.fixture
-def sample_subscriptions():
-    """Sample subscription configurations."""
-    return {
-        "ticker_only": ["ticker"],
-        "full_market": ["ticker", "matches", "level2"],
-        "user_events": ["user"],
-        "minimal": ["heartbeat"],
-    }
-
-
-# WebSocket Lifecycle Helpers
-@pytest.fixture
-def websocket_lifecycle_states():
-    """Dictionary of WebSocket lifecycle states for testing."""
-    return {
-        "connecting": {"connected": False, "connecting": True, "authenticated": False},
-        "connected": {"connected": True, "connecting": False, "authenticated": False},
-        "authenticated": {"connected": True, "connecting": False, "authenticated": True},
-        "disconnected": {"connected": False, "connecting": False, "authenticated": False},
-        "error": {
-            "connected": False,
-            "connecting": False,
-            "authenticated": False,
-            "error": "Connection failed",
-        },
-    }
-
-
 # Time-based Testing Helpers
 @pytest.fixture
 def time_helpers():
@@ -417,25 +183,3 @@ def time_helpers():
             return (datetime.now(timezone.utc) - timestamp).total_seconds() > staleness_seconds
 
     return TimeHelpers()
-
-
-# Integration Test Helpers
-@pytest.fixture
-def market_data_integration_setup(market_data_service, mock_transport, ticker_message_factory):
-    """Complete setup for market data integration testing."""
-
-    # Initialize symbols
-    symbols = ["BTC-USD", "ETH-USD"]
-    market_data_service.initialise_symbols(symbols)
-
-    # Setup transport with test messages
-    for symbol in symbols:
-        message = ticker_message_factory(symbol=symbol)
-        mock_transport.add_message(message)
-
-    return {
-        "service": market_data_service,
-        "transport": mock_transport,
-        "symbols": symbols,
-        "message_count": len(mock_transport.messages),
-    }

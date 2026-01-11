@@ -184,6 +184,7 @@ class TestRestartStreamingIfNeeded:
         coordinator._should_enable_streaming.return_value = False
         coordinator._stop_streaming.return_value = None
         coordinator._start_streaming.return_value = None
+        coordinator._schedule_coroutine.side_effect = lambda coro: asyncio.run(coro)
 
         restart_streaming_if_needed(coordinator, {"perps_enable_streaming": "true"})
 
@@ -195,6 +196,7 @@ class TestRestartStreamingIfNeeded:
         coordinator._should_enable_streaming.return_value = True
         coordinator._stop_streaming.return_value = None
         coordinator._start_streaming.return_value = None
+        coordinator._schedule_coroutine.side_effect = lambda coro: asyncio.run(coro)
         coordinator.context.symbols = ["BTC-PERP"]
 
         restart_streaming_if_needed(coordinator, {"symbols": ["BTC-PERP"]})
@@ -207,6 +209,7 @@ class TestRestartStreamingIfNeeded:
         coordinator._should_enable_streaming.return_value = True
         coordinator._stop_streaming.return_value = None
         coordinator._start_streaming.return_value = None
+        coordinator._schedule_coroutine.side_effect = lambda coro: asyncio.run(coro)
 
         restart_streaming_if_needed(coordinator, {"perps_stream_level": 2})
 

@@ -38,6 +38,9 @@ from textual.pilot import Pilot
 from gpt_trader.monitoring.status_reporter import StatusReporter
 from gpt_trader.tui.app import TraderApp
 
+# Small pause to let Textual process events in tests without slowing runs too much.
+_DEFAULT_PILOT_PAUSE_SECONDS = 0.01
+
 # ============================================================
 # Theme isolation for deterministic tests
 # ============================================================
@@ -63,6 +66,22 @@ def isolate_tui_preferences(tmp_path, monkeypatch, request):
     prefs_file = tmp_path / "test_preferences.json"
     prefs_file.write_text('{"theme": "dark"}')
     monkeypatch.setenv("GPT_TRADER_TUI_PREFERENCES_PATH", str(prefs_file))
+
+
+# ============================================================
+# Pilot pause stabilization
+# ============================================================
+
+
+@pytest.fixture(autouse=True)
+def stabilize_pilot_pause(monkeypatch):
+    """Ensure pilot.pause always yields at least a short delay."""
+    original_pause = Pilot.pause
+
+    async def _pause(self, delay: float | None = None) -> None:
+        await original_pause(self, _DEFAULT_PILOT_PAUSE_SECONDS if delay is None else delay)
+
+    monkeypatch.setattr(Pilot, "pause", _pause)
 
 
 # ============================================================
@@ -331,6 +350,7 @@ def mock_bot():
     bot.engine.status_reporter = StatusReporter()
     bot.engine.context = MagicMock()
     bot.engine.context.runtime_state = None
+    bot.set_ui_adapter = MagicMock(side_effect=lambda adapter: adapter.attach(bot))
 
     return bot
 

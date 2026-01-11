@@ -1,19 +1,19 @@
+import time
+
 from textual.pilot import Pilot
 from textual.widgets import Label, Static
 
 
 async def wait_for_widget(pilot: Pilot, widget_id: str, timeout: float = 5.0) -> None:
     """
-    Waits for a widget with the given ID to be mounted and visible.
+    Wait for a widget with the given ID to be mounted and visible.
     """
-    await pilot.pause()
-    # Textual's pilot.wait_for_selector is not always reliable in async tests,
-    # but let's try to use the app's query to check existence.
-    # In a real scenario, we might loop with a timeout.
-    # For now, we'll just rely on pilot.pause() allowing the event loop to process.
-
-    # Check if widget exists
-    assert pilot.app.query(f"#{widget_id}"), f"Widget #{widget_id} not found"
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        await pilot.pause()
+        if pilot.app.query(f"#{widget_id}"):
+            return
+    raise AssertionError(f"Widget #{widget_id} not found")
 
 
 def assert_widget_visible(app, widget_id: str) -> None:

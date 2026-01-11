@@ -1,9 +1,24 @@
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from textual.pilot import Pilot
 
 from gpt_trader.monitoring.status_reporter import StatusReporter
 from gpt_trader.tui.app import TraderApp
+
+# Small pause to let Textual process events in tests without slowing runs too much.
+_DEFAULT_PILOT_PAUSE_SECONDS = 0.01
+
+
+@pytest.fixture(autouse=True)
+def stabilize_pilot_pause(monkeypatch):
+    """Ensure pilot.pause always yields at least a short delay."""
+    original_pause = Pilot.pause
+
+    async def _pause(self, delay: float | None = None) -> None:
+        await original_pause(self, _DEFAULT_PILOT_PAUSE_SECONDS if delay is None else delay)
+
+    monkeypatch.setattr(Pilot, "pause", _pause)
 
 
 @pytest.fixture
@@ -22,6 +37,7 @@ def mock_bot():
     bot.engine.status_reporter = StatusReporter()
     bot.engine.context = MagicMock()
     bot.engine.context.runtime_state = None
+    bot.set_ui_adapter = MagicMock(side_effect=lambda adapter: adapter.attach(bot))
 
     return bot
 

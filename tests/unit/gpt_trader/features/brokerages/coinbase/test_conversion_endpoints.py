@@ -7,13 +7,9 @@ import json
 
 import pytest
 
-from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
+from tests.unit.gpt_trader.features.brokerages.coinbase.test_helpers import make_client
 
 pytestmark = pytest.mark.endpoints
-
-
-def make_client() -> CoinbaseClient:
-    return CoinbaseClient(base_url="https://api.coinbase.com", auth=None, api_mode="advanced")
 
 
 def test_convert_quote_posts_payload():

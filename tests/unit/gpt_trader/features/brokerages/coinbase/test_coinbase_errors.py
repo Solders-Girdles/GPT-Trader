@@ -13,11 +13,7 @@ from gpt_trader.core import (
     InvalidRequestError,
     RateLimitError,
 )
-from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
-
-
-def make_client(api_mode: str = "advanced") -> CoinbaseClient:
-    return CoinbaseClient(base_url="https://api.coinbase.com", auth=None, api_mode=api_mode)
+from tests.unit.gpt_trader.features.brokerages.coinbase.test_helpers import make_client
 
 
 def test_401_maps_to_auth_error():

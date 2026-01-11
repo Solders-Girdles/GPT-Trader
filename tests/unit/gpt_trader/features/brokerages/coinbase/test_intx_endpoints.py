@@ -14,13 +14,9 @@ import json
 import pytest
 
 from gpt_trader.core import InvalidRequestError
-from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
+from tests.unit.gpt_trader.features.brokerages.coinbase.test_helpers import make_client
 
 pytestmark = pytest.mark.endpoints
-
-
-def make_client(api_mode: str = "advanced") -> CoinbaseClient:
-    return CoinbaseClient(base_url="https://api.coinbase.com", auth=None, api_mode=api_mode)
 
 
 def test_intx_allocate_posts_payload():

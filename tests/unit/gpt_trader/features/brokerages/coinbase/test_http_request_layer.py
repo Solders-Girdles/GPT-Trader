@@ -4,13 +4,8 @@ from types import SimpleNamespace
 import pytest
 
 from gpt_trader.core import AuthError
-from gpt_trader.features.brokerages.coinbase.client import CoinbaseAuth, CoinbaseClient
-
-
-def make_client():
-    return CoinbaseClient(
-        base_url="https://api.coinbase.com", auth=CoinbaseAuth("k", "s", "p"), timeout=1
-    )
+from gpt_trader.features.brokerages.coinbase.client import CoinbaseAuth
+from tests.unit.gpt_trader.features.brokerages.coinbase.test_helpers import make_client
 
 
 # Advanced Trade product discovery should follow the documented
@@ -21,7 +16,7 @@ def test_request_composes_headers_and_path(monkeypatch):
     # Mock JWT generation to avoid needing a real EC key
     monkeypatch.setattr(SimpleAuth, "generate_jwt", lambda self, method, path: "mock_jwt_token")
 
-    client = make_client()
+    client = make_client(auth=CoinbaseAuth("k", "s", "p"), timeout=1)
     client.auth = SimpleAuth("test_key_name", "mock_private_key")
 
     calls = []
@@ -45,7 +40,7 @@ def test_request_composes_headers_and_path(monkeypatch):
 
 
 def test_retries_on_429_then_succeeds(monkeypatch, fake_clock):
-    client = make_client()
+    client = make_client(auth=CoinbaseAuth("k", "s", "p"), timeout=1)
 
     calls = {"n": 0}
 
@@ -67,7 +62,7 @@ def test_retries_on_429_then_succeeds(monkeypatch, fake_clock):
 
 
 def test_error_mapping_when_non_2xx(monkeypatch):
-    client = make_client()
+    client = make_client(auth=CoinbaseAuth("k", "s", "p"), timeout=1)
 
     def fake_transport(method, url, headers, body, timeout):
         return 401, {}, json.dumps({"code": "invalid_api_key", "message": "bad key"})

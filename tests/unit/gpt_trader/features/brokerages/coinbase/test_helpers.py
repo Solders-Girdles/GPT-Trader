@@ -179,8 +179,23 @@ class CoinbaseBrokerage:
         return self.rest_service.get_intx_multi_asset_collateral()
 
 
-def make_client(api_mode: str = "advanced", auth=None) -> CoinbaseClient:
-    return CoinbaseClient(base_url="https://api.coinbase.com", auth=auth, api_mode=api_mode)
+def make_client(
+    api_mode: str = "advanced",
+    auth=None,
+    base_url: str = "https://api.coinbase.com",
+    timeout: int | None = None,
+    api_version: str | None = None,
+) -> CoinbaseClient:
+    kwargs: dict[str, object] = {
+        "base_url": base_url,
+        "auth": auth,
+        "api_mode": api_mode,
+    }
+    if timeout is not None:
+        kwargs["timeout"] = timeout
+    if api_version is not None:
+        kwargs["api_version"] = api_version
+    return CoinbaseClient(**kwargs)
 
 
 def make_adapter(

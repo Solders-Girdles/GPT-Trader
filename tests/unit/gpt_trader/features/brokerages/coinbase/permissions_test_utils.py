@@ -6,20 +6,25 @@ from typing import Any
 from unittest.mock import Mock
 
 from gpt_trader.features.brokerages.coinbase.auth import CDPJWTAuth
-from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.models import APIConfig
-from tests.unit.gpt_trader.features.brokerages.coinbase.test_helpers import CoinbaseBrokerage
+from tests.unit.gpt_trader.features.brokerages.coinbase.test_helpers import (
+    CoinbaseBrokerage,
+)
+from tests.unit.gpt_trader.features.brokerages.coinbase.test_helpers import (
+    make_client as shared_make_client,
+)
 
 
-def make_client(**overrides: Any) -> CoinbaseClient:
+def make_client(**overrides: Any):
     """Construct a CoinbaseClient with optional overrides for tests."""
     auth = overrides.pop("auth", None)
     if auth is None:
         auth = Mock(spec=CDPJWTAuth)
-    return CoinbaseClient(
-        base_url=overrides.pop("base_url", "https://api.coinbase.com"),
+    return shared_make_client(
         auth=auth,
         api_mode=overrides.pop("api_mode", "advanced"),
+        base_url=overrides.pop("base_url", "https://api.coinbase.com"),
+        timeout=overrides.pop("timeout", None),
         api_version=overrides.pop("api_version", None),
     )
 

@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Any, Protocol
 from gpt_trader.backtesting.simulation.fee_calculator import FeeCalculator
 from gpt_trader.backtesting.simulation.funding_tracker import FundingPnLTracker
 from gpt_trader.backtesting.types import FeeTier
+from gpt_trader.core.trading import OrderStatus
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -116,6 +117,8 @@ class BacktestConfig:
         funding_rates_8h: Funding rates keyed by symbol (8h rate).
         funding_accrual_hours: Funding accrual interval in hours.
         funding_settlement_hours: Funding settlement interval in hours.
+        order_fill_delay_bars: Bars to delay order fills.
+        cancel_pending_on_new_signal: Cancel pending orders on new signal.
     """
 
     initial_equity: Decimal = field(default_factory=lambda: Decimal("10000"))
@@ -130,6 +133,27 @@ class BacktestConfig:
     funding_rates_8h: dict[str, Decimal] | None = None
     funding_accrual_hours: int = 1
     funding_settlement_hours: int = 8
+    order_fill_delay_bars: int = 0
+    cancel_pending_on_new_signal: bool = True
+
+
+@dataclass
+class SimulatedOrder:
+    """Record of a simulated order lifecycle."""
+
+    id: str
+    symbol: str
+    side: str
+    order_type: str
+    quantity: Decimal
+    status: OrderStatus
+    submitted_at: datetime
+    filled_at: datetime | None = None
+    fill_price: Decimal | None = None
+    reason: str = ""
+    intent: str = ""
+    cancel_reason: str | None = None
+    cancelled_at: datetime | None = None
 
 
 @dataclass
@@ -138,6 +162,7 @@ class BacktestResult:
 
     Attributes:
         trades: List of all executed trades.
+        orders: List of all simulated orders.
         final_equity: Ending account balance.
         final_position: Final position state.
         equity_curve: Equity at each data point.
@@ -149,6 +174,7 @@ class BacktestResult:
     trades: list[SimulatedTrade]
     final_equity: Decimal
     final_position: Position
+    orders: list[SimulatedOrder] = field(default_factory=list)
     equity_curve: list[tuple[datetime, Decimal]] = field(default_factory=list)
     start_time: datetime | None = None
     end_time: datetime | None = None
@@ -198,6 +224,10 @@ class BacktestSimulator:
         self._trades: list[SimulatedTrade] = []
         self._equity_curve: list[tuple[datetime, Decimal]] = []
         self._recent_marks: list[Decimal] = []
+        self._orders: list[SimulatedOrder] = []
+        self._pending_orders: list[tuple[SimulatedOrder, int]] = []
+        self._order_counter = 0
+        self._current_index = 0
         self._fee_calculator: FeeCalculator | None = None
         self._funding_tracker: FundingPnLTracker | None = None
 
@@ -220,6 +250,7 @@ class BacktestSimulator:
         if not data_points:
             return BacktestResult(
                 trades=[],
+                orders=[],
                 final_equity=self.config.initial_equity,
                 final_position=Position(symbol=symbol or "UNKNOWN"),
             )
@@ -232,6 +263,10 @@ class BacktestSimulator:
         self._equity = self.config.initial_equity
         self._position = Position(symbol=symbol)
         self._trades = []
+        self._orders = []
+        self._pending_orders = []
+        self._order_counter = 0
+        self._current_index = 0
         self._equity_curve = []
         self._recent_marks = []
         self._fee_calculator = (
@@ -255,10 +290,13 @@ class BacktestSimulator:
 
         # Replay each data point
         for i, point in enumerate(data_points):
+            self._current_index = i
             # Update recent marks for strategy
             self._recent_marks.append(point.mark_price)
             if len(self._recent_marks) > 100:
                 self._recent_marks = self._recent_marks[-100:]
+
+            self._process_pending_orders(point, i)
 
             # Update unrealized P&L
             if self._position and self._position.side != "flat":
@@ -298,10 +336,13 @@ class BacktestSimulator:
         # Final position mark-to-market
         if self._position and self._position.side != "flat" and data_points:
             final_point = data_points[-1]
-            self._close_position(final_point, "end_of_backtest")
+            close_side = "sell" if self._position.side == "long" else "buy"
+            fill_price = self._calculate_fill_price(final_point, close_side)
+            self._apply_close(final_point, fill_price, "end_of_backtest")
 
         return BacktestResult(
             trades=self._trades,
+            orders=self._orders,
             final_equity=self._equity,
             final_position=self._position or Position(symbol=symbol),
             equity_curve=self._equity_curve,
@@ -324,55 +365,175 @@ class BacktestSimulator:
         from gpt_trader.features.live_trade.strategies.perps_baseline import Action
 
         action = decision.action
+        pending = self._has_pending_orders(point.symbol)
 
         if action == Action.HOLD:
             return
 
+        if pending:
+            if action == Action.CLOSE:
+                self._cancel_pending_orders(point.symbol, "close_signal", point.timestamp)
+                return
+            if action in (Action.BUY, Action.SELL):
+                if self.config.cancel_pending_on_new_signal:
+                    self._cancel_pending_orders(point.symbol, "new_signal", point.timestamp)
+                else:
+                    return
+
         if action == Action.CLOSE:
             if self._position and self._position.side != "flat":
-                self._close_position(point, decision.reason)
+                close_side = "sell" if self._position.side == "long" else "buy"
+                intent = "close_long" if self._position.side == "long" else "close_short"
+                self._submit_order(
+                    point=point,
+                    intent=intent,
+                    side=close_side,
+                    quantity=self._position.quantity,
+                    reason=decision.reason,
+                )
             return
 
         if action == Action.BUY:
             if self._position and self._position.side == "short":
                 # Close short first
-                self._close_position(point, "close_before_buy")
+                self._submit_order(
+                    point=point,
+                    intent="close_short",
+                    side="buy",
+                    quantity=self._position.quantity,
+                    reason="close_before_buy",
+                )
+                if self.config.order_fill_delay_bars != 0:
+                    return
             if self._position is None or self._position.side == "flat":
-                self._open_position(point, "long", decision.reason)
+                quantity = self._calculate_order_quantity(point, "long")
+                self._submit_order(
+                    point=point,
+                    intent="open_long",
+                    side="buy",
+                    quantity=quantity,
+                    reason=decision.reason,
+                )
             return
 
         if action == Action.SELL:
             if self._position and self._position.side == "long":
                 # Close long first
-                self._close_position(point, "close_before_sell")
+                self._submit_order(
+                    point=point,
+                    intent="close_long",
+                    side="sell",
+                    quantity=self._position.quantity,
+                    reason="close_before_sell",
+                )
+                if self.config.order_fill_delay_bars != 0:
+                    return
             if self._position is None or self._position.side == "flat":
-                self._open_position(point, "short", decision.reason)
+                quantity = self._calculate_order_quantity(point, "short")
+                self._submit_order(
+                    point=point,
+                    intent="open_short",
+                    side="sell",
+                    quantity=quantity,
+                    reason=decision.reason,
+                )
             return
 
-    def _open_position(
-        self,
-        point: HistoricalDataPoint,
-        side: str,
-        reason: str,
-    ) -> None:
-        """Open a new position.
+    def _has_pending_orders(self, symbol: str) -> bool:
+        return any(order.symbol == symbol for order, _ in self._pending_orders)
 
-        Args:
-            point: Current market data.
-            side: "long" or "short".
-            reason: Trade reason.
-        """
-        # Calculate position size
+    def _calculate_order_quantity(self, point: HistoricalDataPoint, side: str) -> Decimal:
         position_value = self._equity * Decimal(str(self.config.position_size_pct))
         max_value = self._equity * Decimal(str(self.config.max_position_pct))
         position_value = min(position_value, max_value)
-
-        # Calculate fill price with slippage
         fill_price = self._calculate_fill_price(point, side)
-        quantity = position_value / fill_price
+        return position_value / fill_price
 
-        # Calculate fee
-        fee = self.calculate_fee(position_value)
+    def _submit_order(
+        self,
+        point: HistoricalDataPoint,
+        intent: str,
+        side: str,
+        quantity: Decimal,
+        reason: str,
+    ) -> None:
+        self._order_counter += 1
+        order = SimulatedOrder(
+            id=f"order-{self._order_counter}",
+            symbol=point.symbol,
+            side=side,
+            order_type="market",
+            quantity=quantity,
+            status=OrderStatus.PENDING,
+            submitted_at=point.timestamp,
+            reason=reason,
+            intent=intent,
+        )
+        self._orders.append(order)
+
+        if self.config.order_fill_delay_bars <= 0:
+            self._fill_order(order, point)
+        else:
+            fill_index = self._current_index + self.config.order_fill_delay_bars
+            self._pending_orders.append((order, fill_index))
+
+    def _process_pending_orders(self, point: HistoricalDataPoint, index: int) -> None:
+        if not self._pending_orders:
+            return
+
+        remaining: list[tuple[SimulatedOrder, int]] = []
+        for order, fill_index in self._pending_orders:
+            if order.status != OrderStatus.PENDING:
+                continue
+            if index >= fill_index:
+                self._fill_order(order, point)
+            else:
+                remaining.append((order, fill_index))
+
+        self._pending_orders = remaining
+
+    def _cancel_pending_orders(self, symbol: str, reason: str, timestamp: datetime) -> None:
+        if not self._pending_orders:
+            return
+
+        remaining: list[tuple[SimulatedOrder, int]] = []
+        for order, fill_index in self._pending_orders:
+            if order.symbol != symbol:
+                remaining.append((order, fill_index))
+                continue
+            if order.status == OrderStatus.PENDING:
+                order.status = OrderStatus.CANCELLED
+                order.cancel_reason = reason
+                order.cancelled_at = timestamp
+
+        self._pending_orders = remaining
+
+    def _fill_order(self, order: SimulatedOrder, point: HistoricalDataPoint) -> None:
+        if order.status == OrderStatus.CANCELLED:
+            return
+
+        fill_price = self._calculate_fill_price(point, order.side)
+        order.status = OrderStatus.FILLED
+        order.filled_at = point.timestamp
+        order.fill_price = fill_price
+
+        if order.intent == "open_long":
+            self._apply_open(point, "long", order.quantity, fill_price, order.reason)
+        elif order.intent == "open_short":
+            self._apply_open(point, "short", order.quantity, fill_price, order.reason)
+        elif order.intent in ("close_long", "close_short"):
+            self._apply_close(point, fill_price, order.reason)
+
+    def _apply_open(
+        self,
+        point: HistoricalDataPoint,
+        side: str,
+        quantity: Decimal,
+        fill_price: Decimal,
+        reason: str,
+    ) -> None:
+        trade_value = fill_price * quantity
+        fee = self.calculate_fee(trade_value)
 
         # Update equity (deduct fee)
         self._equity -= fee
@@ -422,23 +583,16 @@ class BacktestSimulator:
             fee=str(fee),
         )
 
-    def _close_position(
+    def _apply_close(
         self,
         point: HistoricalDataPoint,
+        fill_price: Decimal,
         reason: str,
     ) -> None:
-        """Close the current position.
-
-        Args:
-            point: Current market data.
-            reason: Close reason.
-        """
         if self._position is None or self._position.side == "flat":
             return
 
-        # Calculate fill price with slippage
         close_side = "sell" if self._position.side == "long" else "buy"
-        fill_price = self._calculate_fill_price(point, close_side)
 
         # Calculate P&L
         if self._position.entry_price:

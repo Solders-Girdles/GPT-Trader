@@ -12,6 +12,9 @@ from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Protocol
 
+from gpt_trader.backtesting.simulation.fee_calculator import FeeCalculator
+from gpt_trader.backtesting.simulation.funding_tracker import FundingPnLTracker
+from gpt_trader.backtesting.types import FeeTier
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -103,18 +106,30 @@ class BacktestConfig:
     Attributes:
         initial_equity: Starting account balance.
         fee_rate_bps: Trading fee in basis points (default 10 = 0.1%).
+        use_tiered_fees: Use tiered taker fees when True.
+        fee_tier: Fee tier for tiered fee calculation.
         slippage_bps: Base slippage in basis points.
         use_spread_slippage: Use orderbook spread for slippage modeling.
         position_size_pct: Default position size as % of equity.
         max_position_pct: Maximum position size as % of equity.
+        enable_funding_pnl: Whether to apply funding payments.
+        funding_rates_8h: Funding rates keyed by symbol (8h rate).
+        funding_accrual_hours: Funding accrual interval in hours.
+        funding_settlement_hours: Funding settlement interval in hours.
     """
 
     initial_equity: Decimal = field(default_factory=lambda: Decimal("10000"))
     fee_rate_bps: float = 10.0  # 10 bps = 0.1%
+    use_tiered_fees: bool = True
+    fee_tier: FeeTier = FeeTier.TIER_2
     slippage_bps: float = 5.0  # 5 bps base slippage
     use_spread_slippage: bool = True
     position_size_pct: float = 0.1  # 10% of equity per trade
     max_position_pct: float = 0.5  # Max 50% of equity in position
+    enable_funding_pnl: bool = True
+    funding_rates_8h: dict[str, Decimal] | None = None
+    funding_accrual_hours: int = 1
+    funding_settlement_hours: int = 8
 
 
 @dataclass
@@ -183,6 +198,8 @@ class BacktestSimulator:
         self._trades: list[SimulatedTrade] = []
         self._equity_curve: list[tuple[datetime, Decimal]] = []
         self._recent_marks: list[Decimal] = []
+        self._fee_calculator: FeeCalculator | None = None
+        self._funding_tracker: FundingPnLTracker | None = None
 
     def run(
         self,
@@ -217,6 +234,17 @@ class BacktestSimulator:
         self._trades = []
         self._equity_curve = []
         self._recent_marks = []
+        self._fee_calculator = (
+            FeeCalculator(tier=self.config.fee_tier) if self.config.use_tiered_fees else None
+        )
+        self._funding_tracker = (
+            FundingPnLTracker(
+                accrual_interval_hours=self.config.funding_accrual_hours,
+                settlement_interval_hours=self.config.funding_settlement_hours,
+            )
+            if self.config.enable_funding_pnl
+            else None
+        )
 
         logger.info(
             "Starting backtest",
@@ -235,6 +263,8 @@ class BacktestSimulator:
             # Update unrealized P&L
             if self._position and self._position.side != "flat":
                 self._update_unrealized_pnl(point.mark_price)
+
+            self._process_funding(point)
 
             # Build market data context
             from gpt_trader.features.live_trade.strategies.base import MarketDataContext
@@ -342,7 +372,7 @@ class BacktestSimulator:
         quantity = position_value / fill_price
 
         # Calculate fee
-        fee = position_value * Decimal(str(self.config.fee_rate_bps)) / Decimal("10000")
+        fee = self.calculate_fee(position_value)
 
         # Update equity (deduct fee)
         self._equity -= fee
@@ -367,6 +397,22 @@ class BacktestSimulator:
             entry_price=fill_price,
             entry_time=point.timestamp,
         )
+
+        if (
+            self.config.enable_funding_pnl
+            and self._funding_tracker
+            and self.config.funding_rates_8h
+        ):
+            funding_rate = self.config.funding_rates_8h.get(point.symbol)
+            if funding_rate is not None:
+                position_size = quantity if side == "long" else -quantity
+                self._funding_tracker.accrue(
+                    symbol=point.symbol,
+                    position_size=position_size,
+                    mark_price=point.mark_price,
+                    funding_rate_8h=funding_rate,
+                    current_time=point.timestamp,
+                )
 
         logger.debug(
             "Opened position",
@@ -405,7 +451,7 @@ class BacktestSimulator:
 
         # Calculate fee
         trade_value = fill_price * self._position.quantity
-        fee = trade_value * Decimal(str(self.config.fee_rate_bps)) / Decimal("10000")
+        fee = self.calculate_fee(trade_value)
 
         # Update equity
         self._equity += pnl - fee
@@ -431,6 +477,42 @@ class BacktestSimulator:
 
         # Reset position
         self._position = Position(symbol=point.symbol)
+
+    def calculate_fee(self, notional: Decimal) -> Decimal:
+        """Calculate trading fee for a notional value."""
+        if self.config.use_tiered_fees and self._fee_calculator:
+            return self._fee_calculator.calculate(notional_usd=notional, is_maker=False)
+        return notional * Decimal(str(self.config.fee_rate_bps)) / Decimal("10000")
+
+    def _process_funding(self, point: HistoricalDataPoint) -> None:
+        """Accrue and settle funding for open positions."""
+        if not self.config.enable_funding_pnl:
+            return
+        if not self.config.funding_rates_8h:
+            return
+        if self._position is None or self._position.side == "flat":
+            return
+        if self._funding_tracker is None:
+            return
+
+        funding_rate = self.config.funding_rates_8h.get(point.symbol)
+        if funding_rate is None:
+            return
+
+        position_size = (
+            self._position.quantity if self._position.side == "long" else -self._position.quantity
+        )
+        self._funding_tracker.accrue(
+            symbol=point.symbol,
+            position_size=position_size,
+            mark_price=point.mark_price,
+            funding_rate_8h=funding_rate,
+            current_time=point.timestamp,
+        )
+
+        if self._funding_tracker.should_settle(point.timestamp, point.symbol):
+            settled = self._funding_tracker.settle(point.symbol, point.timestamp)
+            self._equity -= settled
 
     def _calculate_fill_price(
         self,

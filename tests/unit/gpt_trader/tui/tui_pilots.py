@@ -9,7 +9,7 @@ from gpt_trader.tui.app import TraderApp
 
 
 @pytest.fixture(name="mock_bot")
-def mock_bot_fixture():
+def tui_mock_bot():
     """
     Creates a mock TradingBot with all necessary components for TUI testing.
     """

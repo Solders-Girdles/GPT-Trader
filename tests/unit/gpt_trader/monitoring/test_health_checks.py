@@ -423,8 +423,10 @@ class TestComputeExecutionHealthSignals:
         """Test that with no metrics, signals are OK."""
         from gpt_trader.monitoring.health_checks import compute_execution_health_signals
         from gpt_trader.monitoring.health_signals import HealthStatus
+        from gpt_trader.monitoring.metrics_collector import reset_all
 
         # Fresh collector should have zero metrics
+        reset_all()
         result = compute_execution_health_signals()
 
         # With zero submissions, error rate should be 0 = OK

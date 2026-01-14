@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import shutil
 import subprocess
 from typing import TYPE_CHECKING
 
@@ -14,18 +15,24 @@ def check_test_suite(checker: PreflightCheck) -> bool:
 
     print("Running core test suite...")
 
+    runner = "uv" if shutil.which("uv") else "poetry" if shutil.which("poetry") else None
+    if not runner:
+        checker.log_warning("No test runner found (uv/poetry); skipping test suite")
+        return True
+
+    command = [
+        runner,
+        "run",
+        "pytest",
+        "tests/unit/gpt_trader/app",
+        "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_auth.py",
+        "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_models.py",
+        "-q",
+        "--tb=no",
+    ]
     try:
         result = subprocess.run(
-            [
-                "poetry",
-                "run",
-                "pytest",
-                "tests/unit/gpt_trader/app",
-                "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_auth.py",
-                "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_models.py",
-                "-q",
-                "--tb=no",
-            ],
+            command,
             capture_output=True,
             text=True,
             timeout=30,

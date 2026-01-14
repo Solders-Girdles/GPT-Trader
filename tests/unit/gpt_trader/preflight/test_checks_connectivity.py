@@ -35,7 +35,10 @@ class TestCheckApiConnectivity:
         checker = PreflightCheck(profile="prod")
 
         # Force remote checks but no credentials
-        env = {"COINBASE_PREFLIGHT_FORCE_REMOTE": "1"}
+        env = {
+            "COINBASE_PREFLIGHT_FORCE_REMOTE": "1",
+            "COINBASE_ENABLE_DERIVATIVES": "1",
+        }
         with patch.dict(os.environ, env, clear=True):
             result = check_api_connectivity(checker)
 
@@ -49,7 +52,10 @@ class TestCheckApiConnectivity:
         mock_auth = MagicMock()
         mock_auth.generate_jwt.side_effect = Exception("JWT error")
 
-        env = {"COINBASE_PREFLIGHT_FORCE_REMOTE": "1"}
+        env = {
+            "COINBASE_PREFLIGHT_FORCE_REMOTE": "1",
+            "COINBASE_ENABLE_DERIVATIVES": "1",
+        }
         with (
             patch.dict(os.environ, env, clear=True),
             patch.object(checker, "_build_cdp_client", return_value=(mock_client, mock_auth)),
@@ -69,7 +75,10 @@ class TestCheckApiConnectivity:
         mock_client.get_accounts.return_value = [{"id": "acc1"}]
         mock_client.list_products.return_value = [{"product_id": "BTC-PERP"}]
 
-        env = {"COINBASE_PREFLIGHT_FORCE_REMOTE": "1"}
+        env = {
+            "COINBASE_PREFLIGHT_FORCE_REMOTE": "1",
+            "COINBASE_ENABLE_DERIVATIVES": "1",
+        }
         with (
             patch.dict(os.environ, env, clear=True),
             patch.object(checker, "_build_cdp_client", return_value=(mock_client, mock_auth)),
@@ -91,7 +100,10 @@ class TestCheckApiConnectivity:
         mock_client.get_accounts.return_value = [{"id": "acc1"}]
         mock_client.list_products.return_value = [{"product_id": "BTC-PERP"}]
 
-        env = {"COINBASE_PREFLIGHT_FORCE_REMOTE": "1"}
+        env = {
+            "COINBASE_PREFLIGHT_FORCE_REMOTE": "1",
+            "COINBASE_ENABLE_DERIVATIVES": "1",
+        }
         with (
             patch.dict(os.environ, env, clear=True),
             patch.object(checker, "_build_cdp_client", return_value=(mock_client, mock_auth)),
@@ -132,7 +144,10 @@ class TestCheckApiConnectivity:
             {"product_id": "ETH-USD"},
         ]
 
-        env = {"COINBASE_PREFLIGHT_FORCE_REMOTE": "1"}
+        env = {
+            "COINBASE_PREFLIGHT_FORCE_REMOTE": "1",
+            "COINBASE_ENABLE_DERIVATIVES": "1",
+        }
         with (
             patch.dict(os.environ, env, clear=True),
             patch.object(checker, "_build_cdp_client", return_value=(mock_client, mock_auth)),

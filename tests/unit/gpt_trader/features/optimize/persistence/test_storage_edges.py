@@ -191,10 +191,10 @@ def test_storage_list_runs_sorted_by_started_at(tmp_path: Path) -> None:
         run_dir.mkdir()
         (run_dir / "results.json").write_text(
             f"""{{
-  "run_id": "{payload['run_id']}",
-  "study_name": "{payload['study_name']}",
-  "started_at": "{payload['started_at']}",
-  "best_objective_value": {payload['best_objective_value']}
+  "run_id": "{payload["run_id"]}",
+  "study_name": "{payload["study_name"]}",
+  "started_at": "{payload["started_at"]}",
+  "best_objective_value": {payload["best_objective_value"]}
 }}"""
         )
 

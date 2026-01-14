@@ -225,8 +225,7 @@ class PerformanceDashboardWidget(Static):
         # Update throttler
         if self._throttler_label is not None:
             self._throttler_label.update(
-                f"batch={snapshot.throttler_batch_size:.1f}, "
-                f"queue={snapshot.throttler_queue_depth}"
+                f"batch={snapshot.throttler_batch_size:.1f}, queue={snapshot.throttler_queue_depth}"
             )
 
         # Update frames

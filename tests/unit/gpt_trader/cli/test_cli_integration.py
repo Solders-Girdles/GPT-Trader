@@ -175,7 +175,7 @@ def test_cli_dev_fast_single_cycle(tmp_path):
     )
 
     assert result.returncode == 0
-    assert "TradingBot starting" in (result.stderr + result.stdout)
+    assert "TradingBot.run() called" in (result.stderr + result.stdout)
 
 
 @requires_credentials

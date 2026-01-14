@@ -501,7 +501,7 @@ class StrategyDetailScreen(Screen):
         badge = self.query_one("#regime-badge", Label)
 
         if regime.regime != "UNKNOWN":
-            badge.update(f"[{regime.short_label} {regime.icon}] {regime.confidence*100:.0f}%")
+            badge.update(f"[{regime.short_label} {regime.icon}] {regime.confidence * 100:.0f}%")
             badge.remove_class("bullish", "bearish", "sideways", "crisis")
             if regime.is_crisis:
                 badge.add_class("crisis")

@@ -21,7 +21,7 @@ class TestCalculateBackoffWithJitter:
 
         # Each delay should be greater than the previous (exponential growth)
         for i in range(1, len(delays)):
-            assert delays[i] > delays[i - 1], f"Delay {i} should be > delay {i-1}"
+            assert delays[i] > delays[i - 1], f"Delay {i} should be > delay {i - 1}"
 
     def test_backoff_respects_max(self) -> None:
         """Test that backoff delay is capped at max_seconds."""
@@ -72,9 +72,9 @@ class TestCalculateBackoffWithJitter:
             min_expected = base * (1 - jitter_pct)
             max_expected = base * (1 + jitter_pct)
 
-            assert (
-                min_expected <= delay <= max_expected
-            ), f"Delay {delay} out of bounds [{min_expected}, {max_expected}]"
+            assert min_expected <= delay <= max_expected, (
+                f"Delay {delay} out of bounds [{min_expected}, {max_expected}]"
+            )
 
     def test_jitter_produces_different_values(self) -> None:
         """Test that jitter produces variation across calls."""

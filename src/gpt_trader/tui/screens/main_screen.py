@@ -244,7 +244,8 @@ class MainScreen(Screen):
             logger.debug(f"Could not update responsive class: {e}")
 
     def on_main_screen_refresh_requested(
-        self, event: MainScreenRefreshRequested  # noqa: ARG002
+        self,
+        event: MainScreenRefreshRequested,  # noqa: ARG002
     ) -> None:
         """Handle refresh request from event system."""
         if hasattr(self.app, "tui_state"):

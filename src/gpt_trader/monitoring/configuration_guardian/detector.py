@@ -57,7 +57,7 @@ class ConfigurationGuardianDetector:
         name = getattr(validator, "name", None)
         if name:
             return str(name)
-        return getattr(validator, "__name__", validator.__class__.__name__)
+        return str(getattr(validator, "__name__", validator.__class__.__name__))
 
 
 class DriftDetector(ConfigurationMonitor):

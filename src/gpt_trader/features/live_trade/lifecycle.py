@@ -4,7 +4,7 @@ import time
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
+from typing import Any, Generic, TypeVar
 
 
 class TradingBotState(str, Enum):
@@ -23,6 +23,9 @@ class EngineState(str, Enum):
     STOPPING = "stopping"
     STOPPED = "stopped"
     ERROR = "error"
+
+
+StateType = TypeVar("StateType", bound=Enum)
 
 
 TRADING_BOT_TRANSITIONS: dict[TradingBotState, set[TradingBotState]] = {
@@ -96,23 +99,22 @@ class StateTransition:
     forced: bool = False
 
 
-class LifecycleStateMachine:
+class LifecycleStateMachine(Generic[StateType]):
     def __init__(
         self,
         *,
-        initial_state: Enum,
+        initial_state: StateType,
         entity: str,
-        transitions: Mapping[Enum, set[Enum]],
+        transitions: Mapping[StateType, set[StateType]],
         logger: Any,
     ) -> None:
-        self._state = initial_state
+        self._state: StateType = initial_state
         self._entity = entity
-        self._transitions = transitions
+        self._transitions: Mapping[StateType, set[StateType]] = transitions
         self._logger = logger
-        self._last_transition: StateTransition | None = None
 
     @property
-    def state(self) -> Enum:
+    def state(self) -> StateType:
         return self._state
 
     @property
@@ -121,7 +123,7 @@ class LifecycleStateMachine:
 
     def transition(
         self,
-        target_state: Enum,
+        target_state: StateType,
         *,
         reason: str,
         details: Mapping[str, Any] | None = None,

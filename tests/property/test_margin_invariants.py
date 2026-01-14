@@ -87,9 +87,9 @@ async def test_margin_utilization_bounded(
     )
 
     # Utilization should be bounded
-    assert snapshot.margin_utilization >= Decimal(
-        "0"
-    ), f"Margin utilization {snapshot.margin_utilization} should not be negative"
+    assert snapshot.margin_utilization >= Decimal("0"), (
+        f"Margin utilization {snapshot.margin_utilization} should not be negative"
+    )
 
     # Note: Utilization CAN exceed 1 if over-leveraged (this is a margin call state)
     # But it should never be negative
@@ -138,9 +138,9 @@ async def test_leverage_calculation_consistency(
     expected_leverage = snapshot.positions_notional / total_equity
     tolerance = Decimal("0.0001")
 
-    assert (
-        abs(snapshot.leverage - expected_leverage) < tolerance
-    ), f"Leverage {snapshot.leverage} doesn't match expected {expected_leverage}"
+    assert abs(snapshot.leverage - expected_leverage) < tolerance, (
+        f"Leverage {snapshot.leverage} doesn't match expected {expected_leverage}"
+    )
 
 
 @seed(2003)
@@ -211,15 +211,15 @@ async def test_margin_requirements_scale_with_positions(
     expected_double_notional = notional1 + notional2
 
     tolerance = Decimal("0.01")
-    assert (
-        abs(snapshot_double.positions_notional - expected_double_notional) < tolerance
-    ), f"Combined notional {snapshot_double.positions_notional} doesn't match expected {expected_double_notional}"
+    assert abs(snapshot_double.positions_notional - expected_double_notional) < tolerance, (
+        f"Combined notional {snapshot_double.positions_notional} doesn't match expected {expected_double_notional}"
+    )
 
     # Margin requirements should increase (not necessarily double, depends on window)
     if quantity2 > Decimal("0"):
-        assert (
-            snapshot_double.initial_margin_req >= snapshot_single.initial_margin_req
-        ), "Adding positions should not decrease margin requirements"
+        assert snapshot_double.initial_margin_req >= snapshot_single.initial_margin_req, (
+            "Adding positions should not decrease margin requirements"
+        )
 
 
 @seed(2004)
@@ -335,26 +335,26 @@ def test_margin_requirements_ordering(
     pre_funding_req = policy.get_requirements(MarginWindow.PRE_FUNDING)
 
     # Initial margin rates should be ordered (higher = stricter)
-    assert (
-        normal_req.initial_rate <= intraday_req.initial_rate
-    ), "Normal should have lower initial margin than intraday"
-    assert (
-        intraday_req.initial_rate <= overnight_req.initial_rate
-    ), "Intraday should have lower initial margin than overnight"
-    assert (
-        overnight_req.initial_rate <= pre_funding_req.initial_rate
-    ), "Overnight should have lower initial margin than pre_funding"
+    assert normal_req.initial_rate <= intraday_req.initial_rate, (
+        "Normal should have lower initial margin than intraday"
+    )
+    assert intraday_req.initial_rate <= overnight_req.initial_rate, (
+        "Intraday should have lower initial margin than overnight"
+    )
+    assert overnight_req.initial_rate <= pre_funding_req.initial_rate, (
+        "Overnight should have lower initial margin than pre_funding"
+    )
 
     # Max leverage should be inverse ordered (lower = stricter)
-    assert (
-        normal_req.max_leverage >= intraday_req.max_leverage
-    ), "Normal should allow higher leverage than intraday"
-    assert (
-        intraday_req.max_leverage >= overnight_req.max_leverage
-    ), "Intraday should allow higher leverage than overnight"
-    assert (
-        overnight_req.max_leverage >= pre_funding_req.max_leverage
-    ), "Overnight should allow higher leverage than pre_funding"
+    assert normal_req.max_leverage >= intraday_req.max_leverage, (
+        "Normal should allow higher leverage than intraday"
+    )
+    assert intraday_req.max_leverage >= overnight_req.max_leverage, (
+        "Intraday should allow higher leverage than overnight"
+    )
+    assert overnight_req.max_leverage >= pre_funding_req.max_leverage, (
+        "Overnight should allow higher leverage than pre_funding"
+    )
 
 
 @seed(2008)
@@ -396,15 +396,15 @@ async def test_margin_available_consistency(
     )
 
     # Margin available should never be negative
-    assert snapshot.margin_available >= Decimal(
-        "0"
-    ), f"Margin available {snapshot.margin_available} should not be negative"
+    assert snapshot.margin_available >= Decimal("0"), (
+        f"Margin available {snapshot.margin_available} should not be negative"
+    )
 
     # Verify the formula
     expected_available = max(Decimal("0"), total_equity - snapshot.margin_used)
-    assert (
-        snapshot.margin_available == expected_available
-    ), f"Margin available {snapshot.margin_available} doesn't match expected {expected_available}"
+    assert snapshot.margin_available == expected_available, (
+        f"Margin available {snapshot.margin_available} doesn't match expected {expected_available}"
+    )
 
 
 @seed(2009)
@@ -465,16 +465,16 @@ def test_margin_requirement_consistency(window: MarginWindow) -> None:
     req = policy.get_requirements(window)
 
     # Maintenance should always be less than initial
-    assert (
-        req.maintenance_rate < req.initial_rate
-    ), f"Maintenance rate {req.maintenance_rate} should be less than initial {req.initial_rate}"
+    assert req.maintenance_rate < req.initial_rate, (
+        f"Maintenance rate {req.maintenance_rate} should be less than initial {req.initial_rate}"
+    )
 
     # Max leverage should be consistent with initial margin
     expected_max_leverage = Decimal("1") / req.initial_rate
     tolerance = Decimal("0.1")  # Allow some rounding
-    assert (
-        abs(req.max_leverage - expected_max_leverage) < tolerance
-    ), f"Max leverage {req.max_leverage} inconsistent with initial rate {req.initial_rate}"
+    assert abs(req.max_leverage - expected_max_leverage) < tolerance, (
+        f"Max leverage {req.max_leverage} inconsistent with initial rate {req.initial_rate}"
+    )
 
 
 @pytest.mark.property

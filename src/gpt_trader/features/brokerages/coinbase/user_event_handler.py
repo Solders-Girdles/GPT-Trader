@@ -7,7 +7,7 @@ import time
 from collections import deque
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Any
+from typing import Any, Literal
 
 from gpt_trader.features.brokerages.coinbase.rest.pnl_service import PnLService
 from gpt_trader.features.brokerages.coinbase.rest.position_state_store import PositionStateStore
@@ -235,7 +235,9 @@ class CoinbaseUserEventHandler:
                 if fill_delta <= 0:
                     return Decimal("0")
                 filled_quantity = fill_size
-                avg_price = fill_price if fill_price > 0 else existing.average_fill_price
+                avg_price = (
+                    fill_price if fill_price > 0 else (existing.average_fill_price or fill_price)
+                )
             else:
                 fill_delta = fill_size
                 if fill_delta <= 0:
@@ -567,7 +569,10 @@ class CoinbaseUserEventHandler:
         key_name = getattr(auth, "key_name", None)
         private_key = getattr(auth, "private_key", None)
         base_url = getattr(self._broker, "base_url", "https://api.coinbase.com")
-        api_mode = getattr(self._broker, "api_mode", "advanced")
+        api_mode_raw = getattr(self._broker, "api_mode", "advanced")
+        api_mode: Literal["advanced", "exchange"] = (
+            "exchange" if str(api_mode_raw).lower() == "exchange" else "advanced"
+        )
 
         config = APIConfig(
             api_key=key_name or "",

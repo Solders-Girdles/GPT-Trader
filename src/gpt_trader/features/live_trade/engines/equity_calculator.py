@@ -144,7 +144,7 @@ class EquityCalculator:
 
             logger.info(f"Fetched {len(balances)} balances from broker")
             logger.info(
-                f"All assets in response: " f"{', '.join(all_assets) if all_assets else 'NONE'}"
+                f"All assets in response: {', '.join(all_assets) if all_assets else 'NONE'}"
             )
 
             if non_zero_assets:
@@ -188,8 +188,7 @@ class EquityCalculator:
 
         for balance in balances:
             logger.debug(
-                f"Balance: {balance.asset} = {balance.available} available, "
-                f"{balance.total} total"
+                f"Balance: {balance.asset} = {balance.available} available, {balance.total} total"
             )
             asset = str(balance.asset or "").upper()
             amount = balance.total if use_total_balance else balance.available
@@ -281,7 +280,7 @@ class EquityCalculator:
         if last_price and last_price > 0 and used_pair:
             usd_value = amount * last_price
             diagnostics["priced_assets"].append(
-                f"{asset}={amount} @ {used_pair}≈" f"{usd_value.quantize(Decimal('0.01'))}"
+                f"{asset}={amount} @ {used_pair}≈{usd_value.quantize(Decimal('0.01'))}"
             )
             return usd_value
         else:

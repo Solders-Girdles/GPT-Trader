@@ -46,7 +46,7 @@ class TradingBot:
     ) -> None:
         self.config = config
         self.container = container
-        self._lifecycle = LifecycleStateMachine(
+        self._lifecycle: LifecycleStateMachine[TradingBotState] = LifecycleStateMachine(
             initial_state=TradingBotState.INIT,
             entity="trading_bot",
             transitions=TRADING_BOT_TRANSITIONS,

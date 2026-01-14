@@ -115,7 +115,7 @@ class EventHandlerMixin:
             f"{len(event.errors)} error(s) in component '{event.component}'"
         )
         for error in event.errors:
-            logger.warning(f"  - {error.field}: {error.message} " f"(severity: {error.severity})")
+            logger.warning(f"  - {error.field}: {error.message} (severity: {error.severity})")
 
     def on_state_validation_passed(self, event: StateValidationPassed) -> None:
         """
@@ -170,9 +170,7 @@ class EventHandlerMixin:
         Args:
             event: Contains new theme mode
         """
-        logger.debug(
-            f"{self.__class__.__name__} received ThemeChanged: " f"mode={event.theme_mode}"
-        )
+        logger.debug(f"{self.__class__.__name__} received ThemeChanged: mode={event.theme_mode}")
 
     # ==========================================================================
     # Error Event Handlers

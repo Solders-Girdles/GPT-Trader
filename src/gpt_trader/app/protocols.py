@@ -52,6 +52,10 @@ class EventStoreProtocol(Protocol):
         """Get recent events."""
         ...
 
+    def get_recent_by_type(self, event_type: str, count: int = 100) -> list[Any]:
+        """Get recent events filtered by type."""
+        ...
+
 
 @runtime_checkable
 class AccountManagerProtocol(Protocol):

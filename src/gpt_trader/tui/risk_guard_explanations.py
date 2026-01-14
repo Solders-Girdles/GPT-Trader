@@ -68,7 +68,7 @@ def _explain_daily_loss_guard(state: RiskState) -> str:
 
     # Standard threshold is 75% of limit
     threshold_pct = 75
-    return f"triggers at >= {threshold_pct}% of daily loss limit " f"(current {usage_pct:.0f}%)"
+    return f"triggers at >= {threshold_pct}% of daily loss limit (current {usage_pct:.0f}%)"
 
 
 def _explain_leverage_guard(state: RiskState) -> str:

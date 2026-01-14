@@ -88,7 +88,8 @@ class TradesWidget(TableCopyMixin, Static):
         self._trade_matcher = TradeMatcher()
 
     def on_trade_matcher_reset_requested(
-        self, event: TradeMatcherResetRequested  # noqa: ARG002
+        self,
+        event: TradeMatcherResetRequested,  # noqa: ARG002
     ) -> None:
         """Handle trade matcher reset request from event system.
 

@@ -326,7 +326,9 @@ class PositionCardWidget(Static):
                     color = (
                         "green"
                         if dec.action == "BUY"
-                        else "red" if dec.action == "SELL" else "yellow"
+                        else "red"
+                        if dec.action == "SELL"
+                        else "yellow"
                     )
                     confidence_str = f"{dec.confidence:.0%}" if dec.confidence else "--"
                     strategy_section.compose_add_child(

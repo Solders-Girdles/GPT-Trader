@@ -110,7 +110,7 @@ class ProgressBarWidget(Static):
             color = THEME.colors.error
 
         bar_str = f"[{color}]{'█' * filled_len}[/][{THEME.colors.surface}]{'░' * empty_len}[/]"
-        pct_str = f"{int(value*100):>3}%"
+        pct_str = f"{int(value * 100):>3}%"
 
         return f"{label_padded}{bar_str} {pct_str}"
 

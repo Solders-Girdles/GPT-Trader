@@ -188,12 +188,12 @@ class OrderSubmitter:
 
     @staticmethod
     def _normalize_side(side: OrderSide | str) -> str:
-        value = side.value if hasattr(side, "value") else str(side)
+        value = side.value if isinstance(side, OrderSide) else str(side)
         return value.lower()
 
     @staticmethod
     def _normalize_order_type(order_type: OrderType | str) -> str:
-        value = order_type.value if hasattr(order_type, "value") else str(order_type)
+        value = order_type.value if isinstance(order_type, OrderType) else str(order_type)
         return value.lower()
 
     @staticmethod

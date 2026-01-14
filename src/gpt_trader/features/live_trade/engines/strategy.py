@@ -103,7 +103,7 @@ class TradingEngine(BaseEngine):
 
     def __init__(self, context: CoordinatorContext) -> None:
         super().__init__(context)
-        self._lifecycle = LifecycleStateMachine(
+        self._lifecycle: LifecycleStateMachine[EngineState] = LifecycleStateMachine(
             initial_state=EngineState.INIT,
             entity="trading_engine",
             transitions=ENGINE_TRANSITIONS,
@@ -2074,16 +2074,19 @@ class TradingEngine(BaseEngine):
         if result is not None:
             return result
 
-        quantity, effective_price, reduce_only_flag, result = (
-            await self._run_order_validator_guards(
-                symbol=symbol,
-                side=side,
-                price=price,
-                equity=equity,
-                quantity=quantity,
-                reduce_only_flag=reduce_only_flag,
-                trace=trace,
-            )
+        (
+            quantity,
+            effective_price,
+            reduce_only_flag,
+            result,
+        ) = await self._run_order_validator_guards(
+            symbol=symbol,
+            side=side,
+            price=price,
+            equity=equity,
+            quantity=quantity,
+            reduce_only_flag=reduce_only_flag,
+            trace=trace,
         )
         if result is not None:
             return result

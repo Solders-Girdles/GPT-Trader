@@ -598,7 +598,7 @@ def _approximate_p95_ms(hist_data: dict[str, Any]) -> float:
             return float(bucket_str) * 1000
 
     mean = hist_data.get("mean", 0.0)
-    return mean * 1000 * 1.5
+    return float(mean) * 1000 * 1.5
 
 
 def _count_guard_trips(counters: dict[str, Any]) -> int:

@@ -10,10 +10,10 @@ import logging
 import warnings
 from collections.abc import Callable
 from decimal import Decimal
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 
-def _runtime_helpers():
+def _runtime_helpers() -> Any:
     return importlib.import_module("gpt_trader.logging.runtime_helpers")
 
 
@@ -33,7 +33,10 @@ def get_orchestration_logger(
 ) -> logging.Logger:
     """Deprecated wrapper for get_runtime_logger."""
     _warn_deprecated()
-    return _runtime_helpers().get_runtime_logger(name, component=component, enable_json=enable_json)
+    return cast(
+        logging.Logger,
+        _runtime_helpers().get_runtime_logger(name, component=component, enable_json=enable_json),
+    )
 
 
 def log_trading_operation(
@@ -154,17 +157,17 @@ def log_market_data_update(
 
 def with_trading_context(operation: str) -> Callable[[F], F]:
     _warn_deprecated()
-    return _runtime_helpers().with_trading_context(operation)
+    return cast(Callable[[F], F], _runtime_helpers().with_trading_context(operation))
 
 
 def with_symbol_context(symbol: str) -> Callable[[F], F]:
     _warn_deprecated()
-    return _runtime_helpers().with_symbol_context(symbol)
+    return cast(Callable[[F], F], _runtime_helpers().with_symbol_context(symbol))
 
 
 def with_order_context(order_id: str, symbol: str | None = None) -> Callable[[F], F]:
     _warn_deprecated()
-    return _runtime_helpers().with_order_context(order_id, symbol)
+    return cast(Callable[[F], F], _runtime_helpers().with_order_context(order_id, symbol))
 
 
 __all__ = [

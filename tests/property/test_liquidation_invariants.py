@@ -93,22 +93,22 @@ def test_liquidation_price_invariants(
         # Long positions are liquidated when price drops
         # This should typically give liq < entry, unless mm_rate > 1/leverage
         if maintenance_margin_rate < inv_leverage:
-            assert (
-                liq_price < entry_price
-            ), f"Long liquidation price {liq_price} should be below entry {entry_price}"
+            assert liq_price < entry_price, (
+                f"Long liquidation price {liq_price} should be below entry {entry_price}"
+            )
     else:
         expected = entry_price * (Decimal("1") + inv_leverage - maintenance_margin_rate)
         # Short positions are liquidated when price rises
         # This should typically give liq > entry, unless mm_rate > 1/leverage
         if maintenance_margin_rate < inv_leverage:
-            assert (
-                liq_price > entry_price
-            ), f"Short liquidation price {liq_price} should be above entry {entry_price}"
+            assert liq_price > entry_price, (
+                f"Short liquidation price {liq_price} should be above entry {entry_price}"
+            )
 
     # Verify calculation matches expected formula
-    assert abs(liq_price - expected) < Decimal(
-        "0.0001"
-    ), f"Liquidation price {liq_price} doesn't match expected {expected}"
+    assert abs(liq_price - expected) < Decimal("0.0001"), (
+        f"Liquidation price {liq_price} doesn't match expected {expected}"
+    )
 
 
 @seed(1002)
@@ -140,9 +140,9 @@ def test_distance_calculation_invariants(
     )
 
     # Invariant: bps = pct * 100
-    assert (
-        abs(distance_bps - (distance_pct * 100)) < 0.01
-    ), f"BPS {distance_bps} should equal PCT {distance_pct} * 100"
+    assert abs(distance_bps - (distance_pct * 100)) < 0.01, (
+        f"BPS {distance_bps} should equal PCT {distance_pct} * 100"
+    )
 
     # Verify direction based on position side
     if side == "long":
@@ -161,9 +161,9 @@ def test_distance_calculation_invariants(
             assert distance_pct < 0, "Short with liq < current should have negative distance"
 
     # Verify calculation matches expected
-    assert (
-        abs(distance_pct - expected_pct) < 0.01
-    ), f"Distance PCT {distance_pct} doesn't match expected {expected_pct}"
+    assert abs(distance_pct - expected_pct) < 0.01, (
+        f"Distance PCT {distance_pct} doesn't match expected {expected_pct}"
+    )
 
 
 @seed(1003)
@@ -229,27 +229,27 @@ def test_risk_level_invariants(
         distance = risk.distance_pct
 
         if distance <= 0:
-            assert (
-                risk.risk_level == "liquidated"
-            ), f"Distance {distance} <= 0 should be 'liquidated', got '{risk.risk_level}'"
+            assert risk.risk_level == "liquidated", (
+                f"Distance {distance} <= 0 should be 'liquidated', got '{risk.risk_level}'"
+            )
             assert risk.should_reduce_only is True
             assert risk.should_reject_entry is True
         elif distance <= critical_buffer:
-            assert (
-                risk.risk_level == "critical"
-            ), f"Distance {distance} <= {critical_buffer} should be 'critical', got '{risk.risk_level}'"
+            assert risk.risk_level == "critical", (
+                f"Distance {distance} <= {critical_buffer} should be 'critical', got '{risk.risk_level}'"
+            )
             assert risk.should_reduce_only is True
             assert risk.should_reject_entry is True
         elif distance <= warning_buffer:
-            assert (
-                risk.risk_level == "warning"
-            ), f"Distance {distance} <= {warning_buffer} should be 'warning', got '{risk.risk_level}'"
+            assert risk.risk_level == "warning", (
+                f"Distance {distance} <= {warning_buffer} should be 'warning', got '{risk.risk_level}'"
+            )
             assert risk.should_reduce_only is False
             assert risk.should_reject_entry is True
         else:
-            assert (
-                risk.risk_level == "safe"
-            ), f"Distance {distance} > {warning_buffer} should be 'safe', got '{risk.risk_level}'"
+            assert risk.risk_level == "safe", (
+                f"Distance {distance} > {warning_buffer} should be 'safe', got '{risk.risk_level}'"
+            )
             assert risk.should_reduce_only is False
             assert risk.should_reject_entry is False
 
@@ -347,9 +347,9 @@ def test_liquidation_symmetry(
 
     # The distances should be equal (symmetric)
     tolerance = entry_price * Decimal("0.0001")  # 0.01% tolerance
-    assert (
-        abs(long_distance - short_distance) < tolerance
-    ), f"Liquidation not symmetric: long_dist={long_distance}, short_dist={short_distance}"
+    assert abs(long_distance - short_distance) < tolerance, (
+        f"Liquidation not symmetric: long_dist={long_distance}, short_dist={short_distance}"
+    )
 
 
 @seed(1006)

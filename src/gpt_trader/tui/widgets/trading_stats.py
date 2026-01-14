@@ -274,7 +274,9 @@ class TradingStatsWidget(Static):
                 pf_color = (
                     "green"
                     if stats.profit_factor >= 1.5
-                    else "yellow" if stats.profit_factor >= 1 else "red"
+                    else "yellow"
+                    if stats.profit_factor >= 1
+                    else "red"
                 )
                 pf.update(f"[{pf_color}]{stats.profit_factor:.2f}[/]")
             else:

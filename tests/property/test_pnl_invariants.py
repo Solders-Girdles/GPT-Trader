@@ -85,9 +85,9 @@ def test_total_pnl_is_sum_of_components(
     expected_total = realized + unrealized
     tolerance = 0.01
 
-    assert (
-        abs(metrics["total_pnl"] - expected_total) < tolerance
-    ), f"Total PnL {metrics['total_pnl']} != realized {realized} + unrealized {unrealized}"
+    assert abs(metrics["total_pnl"] - expected_total) < tolerance, (
+        f"Total PnL {metrics['total_pnl']} != realized {realized} + unrealized {unrealized}"
+    )
 
 
 @seed(4002)
@@ -179,9 +179,9 @@ def test_win_rate_calculation(
     expected_win_rate = len(wins) / total
     tolerance = 0.01
 
-    assert (
-        abs(metrics["win_rate"] - expected_win_rate) < tolerance
-    ), f"Win rate {metrics['win_rate']} != expected {expected_win_rate}"
+    assert abs(metrics["win_rate"] - expected_win_rate) < tolerance, (
+        f"Win rate {metrics['win_rate']} != expected {expected_win_rate}"
+    )
 
 
 @seed(4005)
@@ -207,9 +207,9 @@ def test_profit_factor_non_negative(
 
     metrics = calculate_trade_metrics(events)
 
-    assert (
-        metrics["profit_factor"] >= 0
-    ), f"Profit factor {metrics['profit_factor']} should not be negative"
+    assert metrics["profit_factor"] >= 0, (
+        f"Profit factor {metrics['profit_factor']} should not be negative"
+    )
 
 
 @seed(4006)
@@ -240,9 +240,9 @@ def test_profit_factor_calculation(
         expected_pf = gross_profit / gross_loss
         tolerance = 0.01
 
-        assert (
-            abs(metrics["profit_factor"] - expected_pf) < tolerance
-        ), f"Profit factor {metrics['profit_factor']} != expected {expected_pf}"
+        assert abs(metrics["profit_factor"] - expected_pf) < tolerance, (
+            f"Profit factor {metrics['profit_factor']} != expected {expected_pf}"
+        )
 
 
 @seed(4007)
@@ -269,9 +269,9 @@ def test_max_drawdown_non_negative(
 
     metrics = calculate_trade_metrics(events)
 
-    assert (
-        metrics["max_drawdown"] >= 0
-    ), f"Max drawdown {metrics['max_drawdown']} should not be negative"
+    assert metrics["max_drawdown"] >= 0, (
+        f"Max drawdown {metrics['max_drawdown']} should not be negative"
+    )
 
 
 @seed(4008)
@@ -367,12 +367,12 @@ def test_average_win_loss_calculation(
     expected_avg_loss = sum(losses) / len(losses)
     tolerance = 0.01
 
-    assert (
-        abs(metrics["avg_win"] - expected_avg_win) < tolerance
-    ), f"Avg win {metrics['avg_win']} != expected {expected_avg_win}"
-    assert (
-        abs(metrics["avg_loss"] - expected_avg_loss) < tolerance
-    ), f"Avg loss {metrics['avg_loss']} != expected {expected_avg_loss}"
+    assert abs(metrics["avg_win"] - expected_avg_win) < tolerance, (
+        f"Avg win {metrics['avg_win']} != expected {expected_avg_win}"
+    )
+    assert abs(metrics["avg_loss"] - expected_avg_loss) < tolerance, (
+        f"Avg loss {metrics['avg_loss']} != expected {expected_avg_loss}"
+    )
 
 
 @seed(4012)
@@ -400,12 +400,12 @@ def test_largest_win_loss_calculation(
     expected_largest_loss = max(losses)
     tolerance = 0.01
 
-    assert (
-        abs(metrics["largest_win"] - expected_largest_win) < tolerance
-    ), f"Largest win {metrics['largest_win']} != expected {expected_largest_win}"
-    assert (
-        abs(metrics["largest_loss"] - expected_largest_loss) < tolerance
-    ), f"Largest loss {metrics['largest_loss']} != expected {expected_largest_loss}"
+    assert abs(metrics["largest_win"] - expected_largest_win) < tolerance, (
+        f"Largest win {metrics['largest_win']} != expected {expected_largest_win}"
+    )
+    assert abs(metrics["largest_loss"] - expected_largest_loss) < tolerance, (
+        f"Largest loss {metrics['largest_loss']} != expected {expected_largest_loss}"
+    )
 
 
 @seed(4013)
@@ -436,9 +436,9 @@ def test_equity_change_percentage(
         expected_pct = (total_pnl / prev_equity) * 100
         tolerance = 0.1
 
-        assert (
-            abs(metrics["equity_change_pct"] - expected_pct) < tolerance
-        ), f"Equity change % {metrics['equity_change_pct']} != expected {expected_pct}"
+        assert abs(metrics["equity_change_pct"] - expected_pct) < tolerance, (
+            f"Equity change % {metrics['equity_change_pct']} != expected {expected_pct}"
+        )
 
 
 @seed(4014)
@@ -466,9 +466,9 @@ def test_fees_accumulation(
     expected_fees = sum(fees)
     tolerance = 0.01
 
-    assert (
-        abs(metrics["fees_paid"] - expected_fees) < tolerance
-    ), f"Fees paid {metrics['fees_paid']} != expected {expected_fees}"
+    assert abs(metrics["fees_paid"] - expected_fees) < tolerance, (
+        f"Fees paid {metrics['fees_paid']} != expected {expected_fees}"
+    )
 
 
 @pytest.mark.property

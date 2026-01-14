@@ -528,6 +528,8 @@ class TestProcessRejection:
         )
 
         order = _make_rejected_order()
+        order.status = MagicMock()
+        order.status.value = "REJECTED"
 
         result = submitter._process_rejection(
             order=order,
@@ -568,6 +570,8 @@ class TestProcessRejection:
         mock_get_logger.return_value = mock_logger
 
         order = _make_rejected_order()
+        order.status = MagicMock()
+        order.status.value = "CANCELLED"
 
         with pytest.raises(RuntimeError, match="CANCELLED"):
             submitter._process_rejection(

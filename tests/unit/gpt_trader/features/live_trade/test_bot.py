@@ -104,6 +104,7 @@ class TestTradingBotInitialization:
             broker=Mock(),
             risk_manager=Mock(),
             event_store=Mock(),
+            orders_store=None,
             notification_service=Mock(),
             # Optional attributes not set - getattr will return None
         )

@@ -136,6 +136,7 @@ def test_cleanup_old_orders_deletes_terminal(tmp_path: Path) -> None:
 
 def test_save_order_sqlite_error_returns_fail(tmp_path: Path, monkeypatch) -> None:
     store = OrdersStore(tmp_path)
+    store.initialize()
 
     class StubConnection:
         def execute(self, *args, **kwargs):
@@ -150,6 +151,7 @@ def test_save_order_sqlite_error_returns_fail(tmp_path: Path, monkeypatch) -> No
 
 def test_save_order_sqlite_error_raises(tmp_path: Path, monkeypatch) -> None:
     store = OrdersStore(tmp_path)
+    store.initialize()
 
     class StubConnection:
         def execute(self, *args, **kwargs):

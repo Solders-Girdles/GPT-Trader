@@ -85,9 +85,9 @@ def test_fee_proportional_to_notional(
     tolerance = Decimal("0.01")
     expected_double = fee_single * 2
 
-    assert abs(fee_double - expected_double) < tolerance, (
-        f"Fee not proportional: single={fee_single}, double={fee_double}, expected={expected_double}"
-    )
+    assert (
+        abs(fee_double - expected_double) < tolerance
+    ), f"Fee not proportional: single={fee_single}, double={fee_double}, expected={expected_double}"
 
 
 @seed(3003)
@@ -280,9 +280,9 @@ def test_rate_percentage_conversion(
 
     expected_pct = rate_bps / Decimal("100")
 
-    assert rate_pct == expected_pct, (
-        f"Rate PCT {rate_pct} doesn't match expected {expected_pct} (rate_bps={rate_bps})"
-    )
+    assert (
+        rate_pct == expected_pct
+    ), f"Rate PCT {rate_pct} doesn't match expected {expected_pct} (rate_bps={rate_bps})"
 
 
 @seed(3008)
@@ -307,9 +307,9 @@ def test_volume_reset_clears_tracking(
     calculator.reset_volume()
 
     # Volume should be zero
-    assert calculator.current_volume == Decimal("0"), (
-        f"After reset, volume should be 0, got {calculator.current_volume}"
-    )
+    assert calculator.current_volume == Decimal(
+        "0"
+    ), f"After reset, volume should be 0, got {calculator.current_volume}"
 
 
 @seed(3009)
@@ -378,9 +378,9 @@ class TestFeePropertyBased:
             rates = FEE_TIER_RATES[tier]
 
             # Maker should be <= taker
-            assert rates.maker_bps <= rates.taker_bps, (
-                f"Tier {tier.value}: maker {rates.maker_bps} > taker {rates.taker_bps}"
-            )
+            assert (
+                rates.maker_bps <= rates.taker_bps
+            ), f"Tier {tier.value}: maker {rates.maker_bps} > taker {rates.taker_bps}"
 
             # Both should be non-negative
             assert rates.maker_bps >= Decimal("0")

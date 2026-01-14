@@ -386,9 +386,9 @@ class TestConfigureLogging:
         assert len(cli_file_handlers) >= 2, "CLI mode should have file handlers"
 
         # Both modes should have same number of file handlers
-        assert len(tui_file_handlers) == len(cli_file_handlers), (
-            "Both modes should have the same file handlers"
-        )
+        assert len(tui_file_handlers) == len(
+            cli_file_handlers
+        ), "Both modes should have the same file handlers"
 
 
 class TestLoggingIntegration:

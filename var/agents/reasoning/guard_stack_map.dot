@@ -3,23 +3,23 @@ digraph GuardStack {
   subgraph cluster_preflight {
     label="Preflight";
     style=rounded;
-    "preflight_entry" [shape=box, label="Preflight entrypoint\nscripts/production_preflight.py"]; 
-    "preflight_cli" [shape=box, label="Preflight CLI\nsrc/gpt_trader/preflight/cli.py"]; 
-    "preflight_core" [shape=box, label="PreflightCheck\nsrc/gpt_trader/preflight/core.py"]; 
-    "preflight_checks" [shape=box, label="Preflight checks\nsrc/gpt_trader/preflight/checks/"]; 
-    "preflight_report" [shape=box, label="Preflight report\nsrc/gpt_trader/preflight/report.py"]; 
+    "preflight_entry" [shape=box, label="Preflight entrypoint\nscripts/production_preflight.py"];
+    "preflight_cli" [shape=box, label="Preflight CLI\nsrc/gpt_trader/preflight/cli.py"];
+    "preflight_core" [shape=box, label="PreflightCheck\nsrc/gpt_trader/preflight/core.py"];
+    "preflight_checks" [shape=box, label="Preflight checks\nsrc/gpt_trader/preflight/checks/"];
+    "preflight_report" [shape=box, label="Preflight report\nsrc/gpt_trader/preflight/report.py"];
   }
   subgraph cluster_runtime {
     label="Runtime Guards + Monitoring";
     style=rounded;
-    "trading_engine" [shape=box, label="TradingEngine\nsrc/gpt_trader/features/live_trade/engines/strategy.py"]; 
-    "execution_guard_manager" [shape=box, label="GuardManager (execution)\nsrc/gpt_trader/features/live_trade/execution/guard_manager.py"]; 
-    "execution_guards" [shape=box, label="Execution guards\nsrc/gpt_trader/features/live_trade/execution/guards/"]; 
-    "monitoring_guard_manager" [shape=box, label="RuntimeGuardManager\nsrc/gpt_trader/monitoring/guards/manager.py"]; 
-    "monitoring_guards" [shape=box, label="Monitoring guards\nsrc/gpt_trader/monitoring/guards/builtins.py"]; 
-    "health_signals" [shape=box, label="Health signals\nsrc/gpt_trader/monitoring/health_signals.py"]; 
-    "health_checks" [shape=box, label="Health checks\nsrc/gpt_trader/monitoring/health_checks.py"]; 
-    "status_reporter" [shape=box, label="Status reporter\nsrc/gpt_trader/monitoring/status_reporter.py"]; 
+    "trading_engine" [shape=box, label="TradingEngine\nsrc/gpt_trader/features/live_trade/engines/strategy.py"];
+    "execution_guard_manager" [shape=box, label="GuardManager (execution)\nsrc/gpt_trader/features/live_trade/execution/guard_manager.py"];
+    "execution_guards" [shape=box, label="Execution guards\nsrc/gpt_trader/features/live_trade/execution/guards/"];
+    "monitoring_guard_manager" [shape=box, label="RuntimeGuardManager\nsrc/gpt_trader/monitoring/guards/manager.py"];
+    "monitoring_guards" [shape=box, label="Monitoring guards\nsrc/gpt_trader/monitoring/guards/builtins.py"];
+    "health_signals" [shape=box, label="Health signals\nsrc/gpt_trader/monitoring/health_signals.py"];
+    "health_checks" [shape=box, label="Health checks\nsrc/gpt_trader/monitoring/health_checks.py"];
+    "status_reporter" [shape=box, label="Status reporter\nsrc/gpt_trader/monitoring/status_reporter.py"];
   }
   "preflight_entry" -> "preflight_cli" [label="delegate CLI"];
   "preflight_cli" -> "preflight_core" [label="create PreflightCheck"];

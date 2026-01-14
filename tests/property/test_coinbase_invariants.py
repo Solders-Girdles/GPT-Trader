@@ -200,9 +200,9 @@ def test_calculate_safe_position_size_invariants(
     # Size should be quantized to step size (unless zero)
     if safe_size > 0 and step_size > 0:
         steps = safe_size / step_size
-        assert steps == steps.to_integral_value(), (
-            f"Size {safe_size} not quantized to step {step_size}"
-        )
+        assert (
+            steps == steps.to_integral_value()
+        ), f"Size {safe_size} not quantized to step {step_size}"
 
     # Should not exceed max_size
     assert safe_size <= max_size, f"Safe size {safe_size} exceeds max_size {max_size}"
@@ -210,17 +210,17 @@ def test_calculate_safe_position_size_invariants(
     # Should meet minimum size requirements (with buffer consideration)
     if safe_size > 0:
         min_required = min_size * Decimal("1.1")  # 10% buffer
-        assert safe_size >= min_required, (
-            f"Safe size {safe_size} below buffered min_size {min_required}"
-        )
+        assert (
+            safe_size >= min_required
+        ), f"Safe size {safe_size} below buffered min_size {min_required}"
 
     # Notional should meet minimum requirements (with buffer consideration)
     if safe_size > 0:
         notional = safe_size * mark_price
         min_notional_required = min_notional * Decimal("1.1")  # 10% buffer
-        assert notional >= min_notional or safe_size == 0, (
-            f"Notional {notional} below required {min_notional_required}"
-        )
+        assert (
+            notional >= min_notional or safe_size == 0
+        ), f"Notional {notional} below required {min_notional_required}"
 
 
 # Property-based tests for order validation
@@ -287,29 +287,29 @@ def test_validate_order_invariants(
 
     # Invariants that must hold
     assert isinstance(result.ok, bool), "Result should have boolean ok field"
-    assert isinstance(result.adjusted_quantity, Decimal) or result.adjusted_quantity is None, (
-        "Adjusted quantity should be Decimal or None"
-    )
-    assert isinstance(result.adjusted_price, Decimal) or result.adjusted_price is None, (
-        "Adjusted price should be Decimal or None"
-    )
-    assert isinstance(result.reason, str) or result.reason is None, (
-        "Reason should be string or None"
-    )
+    assert (
+        isinstance(result.adjusted_quantity, Decimal) or result.adjusted_quantity is None
+    ), "Adjusted quantity should be Decimal or None"
+    assert (
+        isinstance(result.adjusted_price, Decimal) or result.adjusted_price is None
+    ), "Adjusted price should be Decimal or None"
+    assert (
+        isinstance(result.reason, str) or result.reason is None
+    ), "Reason should be string or None"
 
     # If validation passes, adjusted_quantity should be set and meet constraints
     if result.ok:
         assert result.adjusted_quantity is not None, "Valid orders should have adjusted quantity"
-        assert result.adjusted_quantity >= min_size, (
-            f"Adjusted quantity {result.adjusted_quantity} below min_size {min_size}"
-        )
+        assert (
+            result.adjusted_quantity >= min_size
+        ), f"Adjusted quantity {result.adjusted_quantity} below min_size {min_size}"
 
         # Should be quantized to step size
         if step_size > 0:
             steps = result.adjusted_quantity / step_size
-            assert steps == steps.to_integral_value(), (
-                f"Quantity {result.adjusted_quantity} not quantized to step {step_size}"
-            )
+            assert (
+                steps == steps.to_integral_value()
+            ), f"Quantity {result.adjusted_quantity} not quantized to step {step_size}"
 
         # For limit orders, price should be set and quantized
         if order_type.lower() in ("limit", "stop_limit"):
@@ -318,20 +318,20 @@ def test_validate_order_invariants(
 
             # Price should be quantized
             normalized = result.adjusted_price / price_increment
-            assert normalized == normalized.to_integral_value(), (
-                f"Price {result.adjusted_price} not quantized to increment {price_increment}"
-            )
+            assert (
+                normalized == normalized.to_integral_value()
+            ), f"Price {result.adjusted_price} not quantized to increment {price_increment}"
 
             # Direction should be correct for side
             if price is not None:
                 if side.lower() == "buy":
-                    assert result.adjusted_price <= price, (
-                        "Buy orders should not have price increased"
-                    )
+                    assert (
+                        result.adjusted_price <= price
+                    ), "Buy orders should not have price increased"
                 else:
-                    assert result.adjusted_price >= price, (
-                        "Sell orders should not have price decreased"
-                    )
+                    assert (
+                        result.adjusted_price >= price
+                    ), "Sell orders should not have price decreased"
 
     # If validation fails, there should be a reason
     if not result.ok:
@@ -415,9 +415,9 @@ def test_order_lifecycle_invariants(
         else:
             price_diff = effective_fill_price - validation.adjusted_price
         max_slippage = validation.adjusted_price * Decimal("0.05")  # 5% max slippage
-        assert price_diff <= max_slippage, (
-            f"Fill price {effective_fill_price} exceeds slippage tolerance from {validation.adjusted_price}"
-        )
+        assert (
+            price_diff <= max_slippage
+        ), f"Fill price {effective_fill_price} exceeds slippage tolerance from {validation.adjusted_price}"
 
         # Notional should be reasonable
         fill_notional = validation.adjusted_quantity * effective_fill_price

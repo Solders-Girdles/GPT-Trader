@@ -10,6 +10,7 @@ import pytest
 from gpt_trader.core import Order, OrderSide, OrderType, TimeInForce
 from gpt_trader.features.live_trade.execution.order_submission import OrderSubmitter
 from gpt_trader.logging.correlation import correlation_context, get_domain_context
+from gpt_trader.persistence.orders_store import OrderStatus as StoreOrderStatus
 
 
 @pytest.mark.parametrize(
@@ -354,12 +355,6 @@ class TestRecordRejectionConsistency:
         mock_logger = MagicMock()
         mock_get_logger.return_value = mock_logger
 
-        rejected_order = MagicMock()
-        rejected_order.id = "rejected-order"
-        rejected_order.status = MagicMock()
-        rejected_order.status.value = "REJECTED"
-        mock_broker.place_order.return_value = rejected_order
-
         submitter = OrderSubmitter(
             broker=mock_broker,
             event_store=mock_event_store,
@@ -367,19 +362,31 @@ class TestRecordRejectionConsistency:
             open_orders=open_orders,
         )
 
-        submitter.submit_order(
-            symbol="BTC-USD",
-            side=OrderSide.BUY,
-            order_type=OrderType.MARKET,
-            order_quantity=Decimal("1.0"),
-            price=None,
-            effective_price=Decimal("50000"),
-            stop_price=None,
-            tif=None,
-            reduce_only=False,
-            leverage=None,
-            client_order_id="test-client-123",
-        )
+        order = MagicMock()
+        order.id = "rejected-order"
+        order.quantity = Decimal("1.0")
+        order.filled_quantity = Decimal("0")
+        order.price = Decimal("50000")
+        order.side = OrderSide.BUY
+        order.type = OrderType.MARKET
+        order.tif = None
+
+        with pytest.raises(RuntimeError, match="Order rejected"):
+            submitter._process_rejection(
+                order=order,
+                status_name="REJECTED",
+                symbol="BTC-USD",
+                side=OrderSide.BUY,
+                order_type=OrderType.MARKET,
+                quantity=Decimal("1.0"),
+                price=None,
+                effective_price=Decimal("50000"),
+                tif=None,
+                reduce_only=False,
+                leverage=None,
+                submit_id="test-id",
+                store_status=StoreOrderStatus.REJECTED,
+            )
 
         calls = mock_emit_metric.call_args_list
         rejection_calls = [c for c in calls if c[0][2].get("event_type") == "order_rejected"]

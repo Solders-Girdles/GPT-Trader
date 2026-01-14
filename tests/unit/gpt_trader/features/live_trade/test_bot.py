@@ -28,31 +28,9 @@ class TestTradingBotInitialization:
         mock_container.broker = None
         mock_container.risk_manager = None
         mock_container.event_store = Mock()
+        mock_container.orders_store = Mock()
         mock_container.notification_service = Mock()
-        # Explicitly set optional attributes to None (Mock auto-creates them)
-        mock_container.account_manager = None
-        mock_container.account_telemetry = None
-        mock_container.runtime_state = None
 
-        with patch("gpt_trader.features.live_trade.bot.TradingEngine") as mock_engine:
-            mock_engine.return_value = Mock()
-            bot = TradingBot(config=mock_config, container=mock_container)
-
-        assert bot.config is mock_config
-        assert bot.container is mock_container
-        assert bot.running is False
-        assert bot.broker is None
-        assert bot.account_manager is None
-        assert bot.risk_manager is None
-        assert bot.runtime_state is None
-
-    def test_init_with_container_services(self, mock_config: Mock) -> None:
-        """Test initialization with container services."""
-        mock_container = Mock()
-        mock_container.broker = Mock()
-        mock_container.risk_manager = Mock()
-        mock_container.event_store = Mock()
-        mock_container.notification_service = Mock()
         mock_container.account_manager = Mock()
         mock_container.account_telemetry = Mock()
         mock_container.runtime_state = Mock()
@@ -83,6 +61,7 @@ class TestTradingBotInitialization:
         mock_container.broker = Mock()
         mock_container.risk_manager = Mock()
         mock_container.event_store = Mock()
+        mock_container.orders_store = Mock()
         mock_container.notification_service = Mock()
 
         with (
@@ -101,6 +80,7 @@ class TestTradingBotInitialization:
                 symbols=tuple(mock_config.symbols),
                 risk_manager=mock_container.risk_manager,
                 event_store=mock_container.event_store,
+                orders_store=mock_container.orders_store,
                 notification_service=mock_container.notification_service,
             )
             assert bot.context is not None

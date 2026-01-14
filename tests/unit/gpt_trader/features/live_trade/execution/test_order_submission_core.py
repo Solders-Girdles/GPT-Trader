@@ -9,6 +9,19 @@ import pytest
 
 from gpt_trader.core import Order, OrderSide, OrderType, TimeInForce
 from gpt_trader.features.live_trade.execution.order_submission import OrderSubmitter
+from gpt_trader.persistence.orders_store import OrderStatus as StoreOrderStatus
+
+
+def _make_rejected_order(order_id: str = "rejected-order") -> MagicMock:
+    order = MagicMock()
+    order.id = order_id
+    order.quantity = Decimal("1.0")
+    order.filled_quantity = Decimal("0")
+    order.price = Decimal("50000")
+    order.side = OrderSide.BUY
+    order.type = OrderType.LIMIT
+    order.tif = TimeInForce.GTC
+    return order
 
 
 class TestOrderSubmitterInit:
@@ -369,10 +382,13 @@ class TestHandleOrderResult:
             order=mock_order,
             symbol="BTC-PERP",
             side=OrderSide.BUY,
+            order_type=OrderType.LIMIT,
             quantity=Decimal("1.0"),
             price=Decimal("50000"),
             effective_price=Decimal("50000"),
+            tif=TimeInForce.GTC,
             reduce_only=False,
+            leverage=10,
             submit_id="test-id",
         )
 
@@ -388,10 +404,13 @@ class TestHandleOrderResult:
             order=None,
             symbol="BTC-PERP",
             side=OrderSide.BUY,
+            order_type=OrderType.LIMIT,
             quantity=Decimal("1.0"),
             price=Decimal("50000"),
             effective_price=Decimal("50000"),
+            tif=TimeInForce.GTC,
             reduce_only=False,
+            leverage=None,
             submit_id="test-id",
         )
 
@@ -409,10 +428,13 @@ class TestHandleOrderResult:
             order=order,
             symbol="BTC-PERP",
             side=OrderSide.BUY,
+            order_type=OrderType.LIMIT,
             quantity=Decimal("1.0"),
             price=Decimal("50000"),
             effective_price=Decimal("50000"),
+            tif=TimeInForce.GTC,
             reduce_only=False,
+            leverage=None,
             submit_id="test-id",
         )
 
@@ -430,8 +452,7 @@ class TestHandleOrderResult:
         mock_logger = MagicMock()
         mock_get_logger.return_value = mock_logger
 
-        order = MagicMock()
-        order.id = "rejected-order"
+        order = _make_rejected_order()
         order.status = MagicMock()
         order.status.value = "REJECTED"
 
@@ -440,10 +461,13 @@ class TestHandleOrderResult:
                 order=order,
                 symbol="BTC-PERP",
                 side=OrderSide.BUY,
+                order_type=OrderType.LIMIT,
                 quantity=Decimal("1.0"),
                 price=Decimal("50000"),
                 effective_price=Decimal("50000"),
+                tif=TimeInForce.GTC,
                 reduce_only=False,
+                leverage=None,
                 submit_id="test-id",
             )
 
@@ -472,10 +496,13 @@ class TestHandleOrderResult:
             order=mock_order,
             symbol="BTC-PERP",
             side=OrderSide.BUY,
+            order_type=OrderType.LIMIT,
             quantity=Decimal("1.0"),
             price=Decimal("50000"),
             effective_price=Decimal("50000"),
+            tif=TimeInForce.GTC,
             reduce_only=False,
+            leverage=10,
             submit_id="test-id",
         )
 
@@ -500,17 +527,22 @@ class TestProcessRejection:
             integration_mode=True,
         )
 
-        order = MagicMock()
-        order.id = "rejected-order"
+        order = _make_rejected_order()
 
         result = submitter._process_rejection(
             order=order,
             status_name="REJECTED",
             symbol="BTC-PERP",
             side=OrderSide.BUY,
+            order_type=OrderType.LIMIT,
             quantity=Decimal("1.0"),
             price=Decimal("50000"),
             effective_price=Decimal("50000"),
+            tif=TimeInForce.GTC,
+            reduce_only=False,
+            leverage=None,
+            submit_id="test-id",
+            store_status=StoreOrderStatus.REJECTED,
         )
 
         assert result is order
@@ -535,8 +567,7 @@ class TestProcessRejection:
         mock_logger = MagicMock()
         mock_get_logger.return_value = mock_logger
 
-        order = MagicMock()
-        order.id = "rejected-order"
+        order = _make_rejected_order()
 
         with pytest.raises(RuntimeError, match="CANCELLED"):
             submitter._process_rejection(
@@ -544,9 +575,15 @@ class TestProcessRejection:
                 status_name="CANCELLED",
                 symbol="BTC-PERP",
                 side=OrderSide.BUY,
+                order_type=OrderType.LIMIT,
                 quantity=Decimal("1.0"),
                 price=None,
                 effective_price=Decimal("50000"),
+                tif=TimeInForce.GTC,
+                reduce_only=False,
+                leverage=None,
+                submit_id="test-id",
+                store_status=StoreOrderStatus.CANCELLED,
             )
 
 

@@ -142,8 +142,9 @@ def build_css(
         modules_found += 1
         total_lines += line_count
 
-    # Write output
-    output_file.write_text("".join(output_parts))
+    # Write output with a single trailing newline for stable diffs.
+    output = "".join(output_parts)
+    output_file.write_text(output.rstrip("\n") + "\n")
 
     return modules_found, total_lines, missing_modules
 

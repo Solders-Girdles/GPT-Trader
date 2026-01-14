@@ -38,6 +38,28 @@
       "description": "Broker API reference and examples",
       "files": ["api_reference.json", "examples.json"],
       "generator": "scripts/agents/generate_broker_api_docs.py"
+    },
+    "reasoning": {
+      "path": "reasoning/",
+      "description": "Reasoning artifacts (CLI flow + config linkage)",
+      "files": [
+        "cli_flow_map.json",
+        "cli_flow_map.md",
+        "cli_flow_map.dot",
+        "guard_stack_map.json",
+        "guard_stack_map.md",
+        "guard_stack_map.dot",
+        "config_code_map.json",
+        "config_code_map.md",
+        "config_code_map.dot"
+      ],
+      "generator": "scripts/agents/generate_reasoning_artifacts.py"
+    },
+    "health": {
+      "path": "health/",
+      "description": "Agent health schema and example outputs",
+      "files": ["agent_health_schema.json", "agent_health_example.json"],
+      "generator": "scripts/agents/generate_agent_health_schema.py"
     }
   },
   "tools": {
@@ -67,6 +89,15 @@
         "python scripts/agents/quality_gate.py --files src/gpt_trader/cli/"
       ]
     },
+    "health_report": {
+      "script": "scripts/agents/health_report.py",
+      "description": "Aggregate lint/types/tests/preflight/config validation",
+      "usage": [
+        "python scripts/agents/health_report.py",
+        "python scripts/agents/health_report.py --format json --output var/agents/health/health_report.json",
+        "python scripts/agents/health_report.py --pytest-args -q tests/unit"
+      ]
+    },
     "change_impact": {
       "script": "scripts/agents/change_impact.py",
       "description": "Analyze changed files and suggest relevant tests",
@@ -91,6 +122,8 @@
     "error_handling": "Use models/errors_schema.json for recovery guidance",
     "log_parsing": "Use logging/log_schema.json to parse JSON logs",
     "test_selection": "Use testing/ to select appropriate tests for changes",
-    "api_calls": "Use broker/ for constructing valid API requests"
+    "api_calls": "Use broker/ for constructing valid API requests",
+    "health_report": "Use health/ for agent-health schema and report guidance",
+    "reasoning": "Use reasoning/ for CLI flow and config linkage maps"
   }
 }

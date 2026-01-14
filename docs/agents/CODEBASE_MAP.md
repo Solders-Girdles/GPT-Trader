@@ -6,9 +6,12 @@ Use this as a “where do I start?” index when you already know what you’re 
 
 | Task | Start Here | Key Files / Notes |
 |------|------------|-------------------|
-| Run the bot (CLI) | `src/gpt_trader/cli/__init__.py` | Commands live in `src/gpt_trader/cli/commands/` (start with `run.py`) |
+| Run the bot (CLI) | `src/gpt_trader/cli/__init__.py` | Commands live in `src/gpt_trader/cli/commands/` (start with `run.py`); config build + container wiring in `src/gpt_trader/cli/services.py` |
 | Wire services / composition root | `src/gpt_trader/app/container.py` | `ApplicationContainer` is the canonical DI entry point |
-| Add/modify a trading strategy | `src/gpt_trader/features/live_trade/factory.py` | Strategies in `src/gpt_trader/features/live_trade/strategies/` |
+| Configure profiles / BotConfig | `src/gpt_trader/app/config/bot_config.py` | `ProfileLoader` in `src/gpt_trader/app/config/profile_loader.py`; YAML profiles in `config/profiles/` |
+| Spot/CFM symbols + gating | `src/gpt_trader/features/live_trade/symbols.py` | `trading_modes`, `derivatives_enabled`, `cfm_enabled`, allowlists, `CFM_SYMBOL_MAPPING` |
+| Add/modify a trading strategy | `src/gpt_trader/features/live_trade/factory.py` | Strategies in `src/gpt_trader/features/live_trade/strategies/` (baseline perps in `perps_baseline/`) |
+| Hybrid strategies (spot + CFM) | `src/gpt_trader/features/live_trade/strategies/hybrid/base.py` | Uses `execution/router.py` for hybrid order routing |
 | Change the trading loop | `src/gpt_trader/features/live_trade/engines/strategy.py` | Runs `create_strategy()` and executes decisions each cycle |
 | Modify order execution (hybrid router) | `src/gpt_trader/features/live_trade/execution/router.py` | Routes spot vs CFM orders; used by hybrid strategies |
 | Modify live execution (guarded engine) | `src/gpt_trader/features/live_trade/engines/strategy.py` | Live loop uses `TradingEngine._validate_and_place_order()`; `submit_order()` is external entrypoint |

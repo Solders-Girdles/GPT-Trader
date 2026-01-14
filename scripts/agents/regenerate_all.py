@@ -12,6 +12,7 @@ Usage:
 Entry point:
     uv run agent-regenerate
 """
+
 from __future__ import annotations
 
 import argparse
@@ -32,6 +33,8 @@ GENERATORS: list[tuple[str, str, str]] = [
     ("generate_test_inventory.py", "testing", "Test inventory"),
     ("generate_validator_registry.py", "validation", "Validator registry"),
     ("generate_broker_api_docs.py", "broker", "Broker API docs"),
+    ("generate_reasoning_artifacts.py", "reasoning", "Reasoning artifacts"),
+    ("generate_agent_health_schema.py", "health", "Agent health schema"),
 ]
 
 

@@ -17,6 +17,16 @@ rules that referenced the monolithic `src/bot` package have been archived.
   subpackages with clear separation of concerns. See `features/live_trade/execution/`,
   `src/gpt_trader/monitoring/guards/`, and `features/live_trade/risk/` as examples of successful refactorings.
 
+## Slice Scaffolding
+
+- Use `scripts/maintenance/feature_slice_scaffold.py --name <slice>` to bootstrap new
+  vertical slices under `src/gpt_trader/features/<slice>/`.
+- Add `--with-readme` and `--with-tests` so documentation and unit tests live beside
+  the slice (`tests/unit/gpt_trader/features/<slice>/`).
+- Use `--dry-run` for previews; the scaffold tool refuses overwrites by design.
+- Keep slice names snake_case, prefer explicit imports, and avoid cross-slice
+  dependencies (see `src/gpt_trader/scripts/README.md`).
+
 ## Code Style
 
 - Python 3.12 with Ruff + Black defaults (line length 100).

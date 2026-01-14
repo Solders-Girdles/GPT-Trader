@@ -95,6 +95,18 @@ src/gpt_trader/
 
 ## Development
 
+### Scaffold a New Slice
+
+```bash
+make scaffold-slice name=<slice> flags="--with-tests --with-readme"
+```
+
+Or run directly:
+
+```bash
+uv run python scripts/maintenance/feature_slice_scaffold.py --name <slice> --dry-run
+```
+
 ### Quality Gates
 
 ```bash

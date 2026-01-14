@@ -56,6 +56,7 @@ agent-map = "gpt_trader.agents.cli:map_deps"
 agent-tests = "gpt_trader.agents.cli:tests"
 agent-risk = "gpt_trader.agents.cli:risk"
 agent-naming = "gpt_trader.agents.cli:naming"
+agent-health = "gpt_trader.agents.cli:health"
 agent-regenerate = "gpt_trader.agents.cli:regenerate"
 
 [tool.poetry]

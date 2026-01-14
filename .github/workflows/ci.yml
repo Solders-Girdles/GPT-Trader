@@ -96,6 +96,111 @@ jobs:
       - name: Type Check (MyPy)
         run: uv run mypy src
 
+  agent-health:
+    name: Agent Health
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: ".python-version"
+
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Run agent-health (dev profile)
+        run: |
+          set -u
+          set -o pipefail
+          mkdir -p var/agents/health
+          set +e
+          uv run agent-health --profile dev --format json --output var/agents/health/health_report.json
+          status=$?
+          set -e
+          if [ -f var/agents/health/health_report.json ]; then
+            uv run python - <<'PY' | tee var/agents/health/health_report.txt
+            from scripts.agents.health_report import format_text_report
+            import json
+            with open("var/agents/health/health_report.json") as handle:
+                report = json.load(handle)
+            print(format_text_report(report))
+            PY
+          fi
+          exit $status
+
+      - name: Upload agent-health artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-health-report
+          path: var/agents/health/health_report.json
+          retention-days: 14
+
+      - name: Add agent-health summary
+        if: always()
+        run: |
+          if [ -f var/agents/health/health_report.txt ]; then
+            echo "## Agent Health" >> $GITHUB_STEP_SUMMARY
+            cat var/agents/health/health_report.txt >> $GITHUB_STEP_SUMMARY
+          fi
+
+  agent-freshness:
+    name: Agent Artifacts Freshness
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: ".python-version"
+
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Verify agent artifacts freshness
+        id: verify
+        run: |
+          set +e
+          set -o pipefail
+          mkdir -p var/agents/health
+          uv run agent-regenerate --verify | tee var/agents/health/agent_regenerate_verify.txt
+          status=$?
+          set +o pipefail
+          set -e
+          echo "exit_code=$status" >> $GITHUB_OUTPUT
+          if [ $status -ne 0 ]; then
+            echo "::warning::Agent artifacts are stale; run uv run agent-regenerate"
+          fi
+
+      - name: Add freshness summary
+        if: always()
+        run: |
+          echo "## Agent Artifacts Freshness" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.verify.outputs.exit_code }}" != "0" ]; then
+            echo "Status: STALE (run \`uv run agent-regenerate\`)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "Status: OK" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ -f var/agents/health/agent_regenerate_verify.txt ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            sed -n '1,40p' var/agents/health/agent_regenerate_verify.txt >> $GITHUB_STEP_SUMMARY
+          fi
+
   tui-css:
     name: TUI CSS Check
     runs-on: ubuntu-latest

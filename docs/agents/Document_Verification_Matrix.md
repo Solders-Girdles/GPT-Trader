@@ -16,7 +16,7 @@ This matrix helps developers and AI agents determine which documentation sources
 
 | Document | Last Verified | Notes |
 |----------|---------------|-------|
-| `docs/ARCHITECTURE.md` | 2025-12-01 | Core system architecture |
+| `docs/ARCHITECTURE.md` | 2026-01-13 | Core system architecture; CLI→config→container path verified |
 | `docs/TUI_STYLE_GUIDE.md` | 2025-12-01 | TUI style conventions |
 | `docs/guides/backtesting.md` | 2025-12-01 | Backtesting framework guide |
 | `src/gpt_trader/features/brokerages/coinbase/README.md` | 2025-12-01 | Coinbase integration |
@@ -26,6 +26,8 @@ This matrix helps developers and AI agents determine which documentation sources
 
 | Document | Notes |
 |----------|-------|
+| `docs/agents/CODEBASE_MAP.md` | Quick navigation; verify against agent-map + CLI/services |
+| `docs/agents/reasoning_artifacts.md` | Generated summaries; verified by `agent-regenerate --verify` |
 | `docs/guides/production.md` | 2025-12-01 | Production deployment guide |
 | `docs/guides/testing.md` | 2025-12-01 | Testing conventions |
 | `docs/RISK_INTEGRATION_GUIDE.md` | 2025-12-01 | Risk management integration |
@@ -67,4 +69,4 @@ This matrix helps developers and AI agents determine which documentation sources
 
 ---
 
-*Last updated: 2025-11-25*
+*Last updated: 2026-01-14*

@@ -1,0 +1,22 @@
+digraph CliFlow {
+  rankdir=LR;
+  "cli_entrypoint" [shape=box, label="CLI entrypoint (gpt_trader.cli:main)\nsrc/gpt_trader/cli/__init__.py"]; 
+  "cli_run_command" [shape=box, label="CLI run command\nsrc/gpt_trader/cli/commands/run.py"]; 
+  "cli_services" [shape=box, label="CLI config/services\nsrc/gpt_trader/cli/services.py"]; 
+  "profile_loader" [shape=box, label="ProfileLoader\nsrc/gpt_trader/app/config/profile_loader.py"]; 
+  "bot_config" [shape=box, label="BotConfig\nsrc/gpt_trader/app/config/bot_config.py"]; 
+  "bootstrap" [shape=box, label="build_bot / bot_from_profile\nsrc/gpt_trader/app/bootstrap.py"]; 
+  "container" [shape=box, label="ApplicationContainer\nsrc/gpt_trader/app/container.py"]; 
+  "trading_bot" [shape=box, label="TradingBot\nsrc/gpt_trader/features/live_trade/bot.py"]; 
+  "trading_engine" [shape=box, label="TradingEngine\nsrc/gpt_trader/features/live_trade/engines/strategy.py"]; 
+  "strategy_factory" [shape=box, label="create_strategy\nsrc/gpt_trader/features/live_trade/factory.py"]; 
+  "cli_entrypoint" -> "cli_run_command" [label="dispatch to run command"];
+  "cli_run_command" -> "cli_services" [label="build config + instantiate bot"];
+  "cli_services" -> "profile_loader" [label="load profile schema"];
+  "profile_loader" -> "bot_config" [label="construct BotConfig"];
+  "cli_services" -> "container" [label="create ApplicationContainer"];
+  "bootstrap" -> "container" [label="optional bootstrap path"];
+  "container" -> "trading_bot" [label="create bot"];
+  "trading_bot" -> "trading_engine" [label="instantiate engine"];
+  "trading_engine" -> "strategy_factory" [label="select strategy"];
+}

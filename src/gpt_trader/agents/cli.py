@@ -145,6 +145,19 @@ def naming() -> int:
     return _run_script("naming_inventory.py")
 
 
+def health() -> int:
+    """Aggregate health checks (lint/types/tests/preflight/config).
+
+    Entry point: agent-health
+
+    Examples:
+        uv run agent-health
+        uv run agent-health --format json --output var/agents/health/health_report.json
+        uv run agent-health --pytest-args -q tests/unit
+    """
+    return _run_script("health_report.py")
+
+
 def regenerate() -> int:
     """Regenerate all static context files.
 

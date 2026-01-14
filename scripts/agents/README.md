@@ -11,6 +11,7 @@ make agent-map          # Dependency summary
 make agent-tests        # Test inventory to stdout
 make agent-risk         # Risk config docs
 make agent-naming       # Naming scan
+make agent-health       # Health report
 make agent-regenerate   # Regenerate var/agents context
 make agent-docs-links   # Docs link audit
 ```
@@ -24,6 +25,7 @@ uv run agent-map --format text
 uv run agent-tests --stdout
 uv run agent-risk --with-docs
 uv run agent-naming
+uv run agent-health
 uv run agent-regenerate
 ```
 

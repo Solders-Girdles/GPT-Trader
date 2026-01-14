@@ -61,6 +61,7 @@ uv run gpt-trader account snapshot
 
 ### Agent Tooling
 ```bash
+make agent-health
 make agent-impact
 make agent-map
 make agent-tests
@@ -188,6 +189,7 @@ if config.derivatives_enabled and config.coinbase_intx_perpetuals_enabled:
 ### During Development
 - [ ] Use `src/gpt_trader/` imports only
 - [ ] Test with dev profile first
+- [ ] Scaffold new slices via `scripts/maintenance/feature_slice_scaffold.py --name <slice>`
 - [ ] Add tests to `tests/unit/gpt_trader/`
 - [ ] Run `uv run pytest -q` regularly
 

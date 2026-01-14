@@ -7,6 +7,7 @@ This guide documents all agent tools available in GPT-Trader for AI-assisted dev
 | Command | Purpose | When to Use |
 |---------|---------|-------------|
 | `uv run agent-check` | Quality gate | Before PR/commit |
+| `uv run agent-health` | Health report | Before sprint/CI baselines |
 | `uv run agent-impact` | Change analysis | After making changes |
 | `uv run agent-map` | Dependency graph | Architecture exploration |
 | `uv run agent-tests` | Test inventory | Finding relevant tests |
@@ -22,6 +23,7 @@ Use these for quick local runs:
 
 ```bash
 make agent-check
+make agent-health
 make agent-impact
 make agent-map
 make agent-tests
@@ -29,9 +31,25 @@ make agent-risk
 make agent-naming
 make agent-regenerate
 make agent-docs-links
+make scaffold-slice name=<slice> flags="--with-tests --with-readme"
 ```
 
 See `scripts/agents/README.md` for the full list of helpers.
+
+## Feature Slice Scaffold
+
+Bootstrap new vertical slices for onboarding and growth workflows.
+
+**Script**: `scripts/maintenance/feature_slice_scaffold.py`
+
+**Usage**:
+```bash
+uv run python scripts/maintenance/feature_slice_scaffold.py --name foo --with-tests --with-readme
+uv run python scripts/maintenance/feature_slice_scaffold.py --name foo --dry-run
+```
+
+Outputs land in `src/gpt_trader/features/<slice>/` with optional tests under
+`tests/unit/gpt_trader/features/<slice>/`. The scaffold tool refuses overwrites.
 
 ---
 
@@ -64,6 +82,28 @@ uv run agent-check --full                    # Include slow tests
   "results": [...]
 }
 ```
+
+---
+
+### agent-health (Health Report)
+
+Aggregates lint/format/types plus optional tests, preflight, and config validation.
+
+**Script**: `scripts/agents/health_report.py`
+
+**Usage**:
+```bash
+uv run agent-health
+uv run agent-health --pytest-args -q tests/unit
+uv run agent-health --ci-input var/results/pytest_report.json
+uv run agent-health --ci-input var/results/pytest_report.json --ci-input var/results/junit.xml
+uv run agent-health --format json --output var/agents/health/health_report.json --text-output var/agents/health/health_report.txt
+uv run agent-health --skip-preflight --skip-config
+```
+
+**Schema**: `var/agents/health/agent_health_schema.json`
+
+**Report Fields**: `schema_version`, `tool`, `ci_inputs`, `test_summary`
 
 ---
 
@@ -186,6 +226,8 @@ uv run agent-regenerate --list                # List generators
 | `generate_test_inventory.py` | `var/agents/testing/` |
 | `generate_validator_registry.py` | `var/agents/validation/` |
 | `generate_broker_api_docs.py` | `var/agents/broker/` |
+| `generate_reasoning_artifacts.py` | `var/agents/reasoning/` |
+| `generate_agent_health_schema.py` | `var/agents/health/` |
 
 ---
 
@@ -201,7 +243,9 @@ var/agents/
 ├── logging/                # Event catalog
 ├── testing/                # Test markers and index
 ├── validation/             # Validator registry
-└── broker/                 # Broker API docs
+├── broker/                 # Broker API docs
+├── reasoning/              # CLI flow + config linkage maps
+└── health/                 # Agent health schema/example
 ```
 
 These files are:

@@ -1,0 +1,640 @@
+{
+  "artifact": "config_code_map",
+  "generated_at": "2026-01-14T15:51:14.927690+00:00",
+  "description": "Config field \u2192 code linkage map based on static scan.",
+  "scan_root": "src/gpt_trader",
+  "sections": [
+    {
+      "section": "bot_config",
+      "label": "BotConfig (top-level)",
+      "prefix": "config",
+      "fields": [
+        {
+          "field": "account_telemetry_interval",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "broker_hint",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "cfm_enabled",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "cfm_margin_window",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "cfm_max_leverage",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "cfm_symbols",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "coinbase_api_mode",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "coinbase_default_quote",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "coinbase_derivatives_type",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "coinbase_intx_perpetuals_enabled",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "coinbase_intx_portfolio_uuid",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "coinbase_sandbox_enabled",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "coinbase_us_futures_enabled",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "derivatives_enabled",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "dry_run",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "enable_order_preview",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "enable_shorts",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "environment",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "event_store_root_override",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "interval",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "log_level",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "metadata",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "mock_broker",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "perps_enable_streaming",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "perps_paper_trading",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "perps_position_fraction",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "perps_skip_startup_reconcile",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "perps_stream_level",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "profile",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "reduce_only_mode",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "risk_config_path",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "runtime_root",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "spot_force_live",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "status_enabled",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "status_file",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "status_interval",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "strategy_type",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "symbols",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "time_in_force",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "trading_modes",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "webhook_url",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        }
+      ]
+    },
+    {
+      "section": "risk",
+      "label": "BotRiskConfig",
+      "prefix": "config.risk",
+      "fields": [
+        {
+          "field": "daily_loss_limit_pct",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "max_drawdown_pct",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "max_leverage",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "max_position_size",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "position_fraction",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "reduce_only_threshold",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "stop_loss_pct",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "take_profit_pct",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "target_leverage",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "trailing_stop_pct",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        }
+      ]
+    },
+    {
+      "section": "strategy",
+      "label": "PerpsStrategyConfig",
+      "prefix": "config.strategy",
+      "fields": [
+        {
+          "field": "crossover_weight",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "enable_shorts",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "force_entry_on_trend",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "kill_switch_enabled",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "long_ma_period",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "max_leverage",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "min_confidence",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "position_fraction",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "rsi_overbought",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "rsi_oversold",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "rsi_period",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "rsi_weight",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "short_ma_period",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "stop_loss_pct",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "take_profit_pct",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "target_leverage",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "trailing_stop_pct",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "trend_weight",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        }
+      ]
+    },
+    {
+      "section": "mean_reversion",
+      "label": "MeanReversionConfig",
+      "prefix": "config.mean_reversion",
+      "fields": [
+        {
+          "field": "enable_shorts",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "kill_switch_enabled",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "lookback_window",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "max_position_pct",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "stop_loss_pct",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "take_profit_pct",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "target_daily_volatility",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "z_score_entry_threshold",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "z_score_exit_threshold",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        }
+      ]
+    },
+    {
+      "section": "health_thresholds",
+      "label": "HealthThresholdsConfig",
+      "prefix": "config.health_thresholds",
+      "fields": [
+        {
+          "field": "broker_latency_ms_crit",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "broker_latency_ms_warn",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "guard_trip_count_crit",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "guard_trip_count_warn",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "order_error_rate_crit",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "order_error_rate_warn",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "order_retry_rate_crit",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "order_retry_rate_warn",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "ws_staleness_seconds_crit",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "ws_staleness_seconds_warn",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        }
+      ]
+    }
+  ],
+  "aliases": [
+    {
+      "alias": "active_enable_shorts",
+      "target": "strategy.enable_shorts / mean_reversion.enable_shorts",
+      "usage_count": 0,
+      "files": [],
+      "notes": "No direct usage found"
+    },
+    {
+      "alias": "is_cfm_only",
+      "target": "trading_modes contains only cfm",
+      "usage_count": 0,
+      "files": [],
+      "notes": "No direct usage found"
+    },
+    {
+      "alias": "is_hybrid_mode",
+      "target": "trading_modes contains spot+cfm",
+      "usage_count": 0,
+      "files": [],
+      "notes": "No direct usage found"
+    },
+    {
+      "alias": "is_spot_only",
+      "target": "trading_modes contains only spot",
+      "usage_count": 0,
+      "files": [],
+      "notes": "No direct usage found"
+    },
+    {
+      "alias": "long_ma",
+      "target": "strategy.long_ma_period",
+      "usage_count": 0,
+      "files": [],
+      "notes": "No direct usage found"
+    },
+    {
+      "alias": "max_leverage",
+      "target": "risk.max_leverage",
+      "usage_count": 0,
+      "files": [],
+      "notes": "No direct usage found"
+    },
+    {
+      "alias": "short_ma",
+      "target": "strategy.short_ma_period",
+      "usage_count": 0,
+      "files": [],
+      "notes": "No direct usage found"
+    },
+    {
+      "alias": "target_leverage",
+      "target": "risk.target_leverage",
+      "usage_count": 0,
+      "files": [],
+      "notes": "No direct usage found"
+    },
+    {
+      "alias": "trailing_stop_pct",
+      "target": "strategy.trailing_stop_pct or risk.trailing_stop_pct",
+      "usage_count": 0,
+      "files": [],
+      "notes": "No direct usage found"
+    }
+  ],
+  "notes": [
+    "Scan uses simple regex matching (config.<field>) across src/gpt_trader.",
+    "Dynamic config access or indirect usage may not appear in results."
+  ]
+}

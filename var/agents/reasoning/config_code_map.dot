@@ -1,0 +1,8 @@
+digraph ConfigCode {
+  rankdir=LR;
+  "BotConfig (top-level)" [shape=box];
+  "BotRiskConfig" [shape=box];
+  "PerpsStrategyConfig" [shape=box];
+  "MeanReversionConfig" [shape=box];
+  "HealthThresholdsConfig" [shape=box];
+}

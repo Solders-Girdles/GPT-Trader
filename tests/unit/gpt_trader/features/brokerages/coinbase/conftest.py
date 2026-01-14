@@ -1,3 +1,4 @@
+# ruff: noqa: F403
 from __future__ import annotations
 
 import os
@@ -17,14 +18,11 @@ from gpt_trader.app.config import BotConfig
 from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
 from gpt_trader.features.brokerages.coinbase.models import APIConfig
 from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
+from tests.unit.gpt_trader.features.brokerages.coinbase.message_factories import *
+from tests.unit.gpt_trader.features.brokerages.coinbase.transport_fixtures import *
 
 # Autouse fixtures in this module patch time.sleep and COINBASE_FAST_RETRY for faster retries.
-
-pytest_plugins = [
-    "tests.unit.gpt_trader.features.brokerages.coinbase.websocket_fixtures",
-    "tests.unit.gpt_trader.features.brokerages.coinbase.transport_fixtures",
-    "tests.unit.gpt_trader.features.brokerages.coinbase.message_factories",
-]
+from tests.unit.gpt_trader.features.brokerages.coinbase.websocket_fixtures import *
 
 
 @dataclass(frozen=True)

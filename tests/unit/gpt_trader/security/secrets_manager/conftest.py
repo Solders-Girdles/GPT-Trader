@@ -1,3 +1,4 @@
+# ruff: noqa: F403
 """Shared fixtures for secrets_manager tests."""
 
 from __future__ import annotations
@@ -6,14 +7,11 @@ from typing import Any
 
 import pytest
 from cryptography.fernet import Fernet
+from tests.unit.gpt_trader.security.secrets_manager.crypto_fixtures import *
+from tests.unit.gpt_trader.security.secrets_manager.file_fixtures import *
+from tests.unit.gpt_trader.security.secrets_manager.vault_fixtures import *
 
 from gpt_trader.app.config import BotConfig
-
-pytest_plugins = [
-    "tests.unit.gpt_trader.security.secrets_manager.crypto_fixtures",
-    "tests.unit.gpt_trader.security.secrets_manager.file_fixtures",
-    "tests.unit.gpt_trader.security.secrets_manager.vault_fixtures",
-]
 
 
 @pytest.fixture

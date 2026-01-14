@@ -127,12 +127,12 @@ jobs:
           set -e
           if [ -f var/agents/health/health_report.json ]; then
             uv run python - <<'PY' | tee var/agents/health/health_report.txt
-            from scripts.agents.health_report import format_text_report
-            import json
-            with open("var/agents/health/health_report.json") as handle:
-                report = json.load(handle)
-            print(format_text_report(report))
-            PY
+          from scripts.agents.health_report import format_text_report
+          import json
+          with open("var/agents/health/health_report.json") as handle:
+              report = json.load(handle)
+          print(format_text_report(report))
+          PY
           fi
           exit $status
 

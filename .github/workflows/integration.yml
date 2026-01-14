@@ -17,7 +17,7 @@ jobs:
     name: Coinbase Integration
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    environment: ${{ inputs.environment }}
+    environment: ${{ github.event.inputs.environment }}
 
     steps:
       - uses: actions/checkout@v4
@@ -42,9 +42,9 @@ jobs:
           COINBASE_API_KEY: ${{ secrets.COINBASE_API_KEY }}
           COINBASE_API_SECRET: ${{ secrets.COINBASE_API_SECRET }}
           COINBASE_PASSPHRASE: ${{ secrets.COINBASE_PASSPHRASE }}
-          COINBASE_ENV: ${{ inputs.environment }}
+          COINBASE_ENV: ${{ github.event.inputs.environment }}
         run: |
-          echo "Running integration tests against ${{ inputs.environment }}..."
+          echo "Running integration tests against ${{ github.event.inputs.environment }}..."
           # Running the integration tests that were previously in targeted-suites
           # assuming they are located in tests/integration or similar.
           # Based on targeted-suites.yml, it ran:

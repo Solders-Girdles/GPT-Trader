@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -17,8 +18,15 @@ def check_dependencies(checker: PreflightCheck) -> bool:
         "cryptography",
         "jwt",
         "websockets",
-        "aiohttp",
     ]
+    optional_packages: list[str] = []
+    require_aiohttp = (
+        os.getenv("COINBASE_ENABLE_DERIVATIVES") == "1" or checker.context.profile != "dev"
+    )
+    if require_aiohttp:
+        required_packages.append("aiohttp")
+    else:
+        optional_packages.append("aiohttp")
 
     all_good = True
     for package in required_packages:
@@ -31,6 +39,13 @@ def check_dependencies(checker: PreflightCheck) -> bool:
         except ImportError:
             checker.log_error(f"Missing required package: {package}")
             all_good = False
+
+    for package in optional_packages:
+        try:
+            __import__(package)
+            checker.log_info(f"Optional package {package} found")
+        except ImportError:
+            checker.log_warning(f"Optional package missing: {package}")
 
     if all_good:
         checker.log_success("All required packages installed")

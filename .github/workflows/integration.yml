@@ -37,13 +37,16 @@ jobs:
 
       # Only run if secrets are available
       - name: Run Integration Tests
-        if: ${{ secrets.COINBASE_API_KEY != '' }}
         env:
           COINBASE_API_KEY: ${{ secrets.COINBASE_API_KEY }}
           COINBASE_API_SECRET: ${{ secrets.COINBASE_API_SECRET }}
           COINBASE_PASSPHRASE: ${{ secrets.COINBASE_PASSPHRASE }}
           COINBASE_ENV: ${{ github.event.inputs.environment }}
         run: |
+          if [ -z "${COINBASE_API_KEY}" ] || [ -z "${COINBASE_API_SECRET}" ] || [ -z "${COINBASE_PASSPHRASE}" ]; then
+            echo "Skipping integration tests: Coinbase secrets not set."
+            exit 0
+          fi
           echo "Running integration tests against ${{ github.event.inputs.environment }}..."
           # Running the integration tests that were previously in targeted-suites
           # assuming they are located in tests/integration or similar.

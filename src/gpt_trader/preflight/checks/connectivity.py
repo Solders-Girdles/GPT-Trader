@@ -60,8 +60,12 @@ def check_api_connectivity(checker: PreflightCheck) -> bool:
                 for product in perps[:3]:
                     checker.log_info(f"  - {product.get('product_id')}")
         else:
-            checker.log_error("No perpetual products found")
-            all_good = False
+            derivatives_enabled = os.getenv("COINBASE_ENABLE_DERIVATIVES") == "1"
+            if derivatives_enabled:
+                checker.log_error("No perpetual products found")
+                all_good = False
+            else:
+                checker.log_warning("No perpetual products found (derivatives disabled)")
     except Exception as exc:
         checker.log_error(f"Failed to list products: {exc}")
         all_good = False

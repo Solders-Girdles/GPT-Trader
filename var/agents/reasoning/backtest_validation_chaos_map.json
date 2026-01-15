@@ -342,5 +342,5 @@
     "GoldenPathValidator compares live vs simulated decisions and emits ValidationReport.",
     "ChaosEngine hooks are optional; inject via simulation loops when enabled."
   ],
-  "generated_at": "2026-01-15T06:12:04.434578+00:00"
+  "generated_at": "2026-01-15T13:32:26.240490+00:00"
 }

@@ -1,6 +1,6 @@
 # Market Data Flow Map
 
-Generated: 2026-01-15T06:12:04.395728+00:00
+Generated: 2026-01-15T13:32:26.200679+00:00
 
 ## REST Polling
 | ID | Label | Path |

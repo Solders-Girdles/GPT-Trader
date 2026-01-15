@@ -163,20 +163,6 @@ class TestAlertCreation:
         assert alert.created_at == custom_time
 
 
-class TestAlertProperties:
-    """Tests for Alert properties."""
-
-    def test_id_property_returns_alert_id(self) -> None:
-        alert = Alert(severity=AlertSeverity.INFO, title="Test", message="Test")
-        with pytest.warns(DeprecationWarning, match="Alert.id is deprecated"):
-            assert alert.id == alert.alert_id
-
-    def test_timestamp_property_returns_created_at(self) -> None:
-        alert = Alert(severity=AlertSeverity.INFO, title="Test", message="Test")
-        with pytest.warns(DeprecationWarning, match="Alert.timestamp is deprecated"):
-            assert alert.timestamp == alert.created_at
-
-
 class TestAlertTouch:
     """Tests for Alert.touch method."""
 

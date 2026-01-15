@@ -4,8 +4,6 @@ Core infrastructure for Coinbase REST service.
 This module provides CoinbaseRestServiceCore which implements the
 OrderPayloadBuilder and OrderPayloadExecutor protocols. It is used
 by the composed service classes and the CoinbaseRestService facade.
-
-Note: CoinbaseRestServiceBase is preserved as an alias for backward compatibility.
 """
 
 from __future__ import annotations
@@ -399,9 +397,3 @@ class CoinbaseRestServiceCore:
                 "entry": str(position.entry_price),
             },
         )
-
-
-# Backward compatibility alias
-# .. deprecated:: 2.0
-#     Use CoinbaseRestServiceCore directly. Removal planned for v3.0.
-CoinbaseRestServiceBase = CoinbaseRestServiceCore

@@ -33,6 +33,7 @@
       "tests/unit/gpt_trader/backtesting/validation/test_guarded_execution.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_validation.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy.py",
       "tests/unit/gpt_trader/features/live_trade/test_state_recovery.py",
       "tests/unit/gpt_trader/features/live_trade/test_symbols.py",
@@ -75,6 +76,7 @@
       "tests/unit/gpt_trader/app/test_bootstrap.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_validation.py",
       "tests/unit/gpt_trader/features/live_trade/test_state_recovery.py",
       "tests/unit/gpt_trader/features/live_trade/test_trading_engine.py"
     ],
@@ -2473,6 +2475,8 @@
       "gpt_trader.features.live_trade.risk"
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_validation.py": [
+      "gpt_trader.app.config",
+      "gpt_trader.app.container",
       "gpt_trader.core",
       "gpt_trader.features.live_trade.execution.validation",
       "gpt_trader.features.live_trade.risk"

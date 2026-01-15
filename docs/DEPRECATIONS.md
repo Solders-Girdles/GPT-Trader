@@ -9,10 +9,24 @@ CI enforces this registry for new deprecation shims.
 
 | Deprecated | Replacement | Location | Owner | Removal Date | Notes |
 |------------|-------------|----------|-------|--------------|-------|
-| `gpt_trader.logging.orchestration_helpers` | `gpt_trader.logging.runtime_helpers` | `src/gpt_trader/logging/orchestration_helpers.py` | Core Runtime | 2026-06-30 | Shim emits DeprecationWarning. |
-| `get_failure_tracker()` fallback without container | Set application container; use `container.validation_failure_tracker` | `src/gpt_trader/features/live_trade/execution/validation.py` | Live Trade | 2026-06-30 | DeprecationWarning on fallback usage. |
-| `Alert.id` / `Alert.timestamp` aliases | `alert_id` / `created_at` | `src/gpt_trader/monitoring/alert_types.py` | Monitoring | 2026-06-30 | Property aliases emit DeprecationWarning. |
-| `CoinbaseRestServiceBase` alias | `CoinbaseRestServiceCore` | `src/gpt_trader/features/brokerages/coinbase/rest/base.py` | Brokerage | 2026-03-31 | Deprecated alias. |
+No active deprecations.
+
+## Legacy Inventory (Status)
+
+Classification of legacy shims/fallbacks and compatibility keepers.
+
+| Item | Location | Owner | Status | Notes |
+|------|----------|-------|--------|-------|
+| `gpt_trader.logging.orchestration_helpers` | `src/gpt_trader/logging/orchestration_helpers.py` | Core Runtime | remove now | Drop shim + export. |
+| `get_failure_tracker()` fallback without container | `src/gpt_trader/features/live_trade/execution/validation.py` | Live Trade | remove now | Require container. |
+| `Alert.id` / `Alert.timestamp` aliases | `src/gpt_trader/monitoring/alert_types.py` | Monitoring | remove now | Remove alias properties. |
+| `CoinbaseRestServiceBase` alias | `src/gpt_trader/features/brokerages/coinbase/rest/base.py` | Brokerage | remove now | Remove alias + tests. |
+| Legacy profile mapping in `BotConfig.from_dict` | `src/gpt_trader/app/config/bot_config.py` | Core Config | remove now | Remove legacy key mapping. |
+| `daily_loss_limit` in profile schema | `src/gpt_trader/app/config/profile_loader.py` | Core Config | remove now | Use `daily_loss_limit_pct`. |
+| CLI fallback for unknown profile YAML | `src/gpt_trader/cli/services.py` | CLI | remove now | Require `Profile` enum or `--config`. |
+| Legacy risk template references | `docs/archive/risk_templates/README.md` | Docs | remove now | Archive legacy templates. |
+| Legacy API key detection | `src/gpt_trader/tui/services/credential_validator.py` | TUI | keep indefinitely | Coinbase legacy key format support. |
+| Legacy order payload builders | `src/gpt_trader/features/brokerages/coinbase/rest/base.py` | Brokerage | keep indefinitely | `_build_order_payload`, `_execute_order_payload`. |
 
 ### Configuration (Remove after v4.0)
 
@@ -41,6 +55,14 @@ Before removing any deprecated item:
 
 | Item | Removed In | Migration Path |
 |------|------------|----------------|
+| `gpt_trader.logging.orchestration_helpers` | Unreleased | Use `gpt_trader.logging.runtime_helpers`. |
+| `get_failure_tracker()` fallback without container | Unreleased | Set application container; use `container.validation_failure_tracker`. |
+| `Alert.id` / `Alert.timestamp` aliases | Unreleased | Use `alert_id` / `created_at`. |
+| `CoinbaseRestServiceBase` alias | Unreleased | Use `CoinbaseRestServiceCore`. |
+| Legacy profile mapping in `BotConfig.from_dict` | Unreleased | Use profile schema or BotConfig schema directly. |
+| `daily_loss_limit` in profile schema | Unreleased | Use `daily_loss_limit_pct`. |
+| CLI fallback for unknown profile YAML | Unreleased | Use a `Profile` enum value or `--config`. |
+| Legacy risk templates | Unreleased | Archived under `docs/archive/risk_templates/`. |
 | Module-level `health_state` | Unreleased | Use `ApplicationContainer.health_state` and pass `HealthState` explicitly to health helpers. |
 | Module-level `secrets_manager` helpers | Unreleased | Use `ApplicationContainer.secrets_manager` or instantiate `SecretsManager`. |
 | Data module singletons (`store_data`/`fetch_data` functions) | Unreleased | Use `DataService` and its instance methods. |

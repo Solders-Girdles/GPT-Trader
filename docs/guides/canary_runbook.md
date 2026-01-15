@@ -87,7 +87,7 @@ The live bot uses `config/profiles/canary.yaml` via `ProfileLoader`. Phase A is 
 | `trading.mode` | `reduce_only` | No new positions in Phase A |
 | `risk_management.max_leverage` | `1` | No leverage |
 | `risk_management.position_fraction` | `<= 0.001` | Micro sizing |
-| `risk_management.daily_loss_limit` | `<= 10` | Minimal exposure |
+| `risk_management.daily_loss_limit_pct` | `<= 0.01` | Minimal exposure |
 
 **Phase B (micro-open) targets:**
 
@@ -96,7 +96,7 @@ The live bot uses `config/profiles/canary.yaml` via `ProfileLoader`. Phase A is 
 | `trading.mode` | `normal` |
 | `risk_management.max_leverage` | `1` |
 | `risk_management.position_fraction` | `<= 0.001` |
-| `risk_management.daily_loss_limit` | `<= 10` |
+| `risk_management.daily_loss_limit_pct` | `<= 0.01` |
 
 **Profile check:**
 ```python
@@ -107,7 +107,7 @@ schema = ProfileLoader().load(Profile.CANARY)
 print("mode:", schema.trading.mode)
 print("max_leverage:", schema.risk.max_leverage)
 print("position_fraction:", schema.risk.position_fraction)
-print("daily_loss_limit:", schema.risk.daily_loss_limit)
+print("daily_loss_limit_pct:", schema.risk.daily_loss_limit_pct)
 ```
 
 Note: `ProfileLoader` reads `risk_management.position_fraction`. Fields under `trading.position_sizing` are not mapped into `BotConfig`.

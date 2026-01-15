@@ -448,72 +448,89 @@ class BotConfig:
     def from_dict(cls, data: dict[str, Any]) -> "BotConfig":
         """Create configuration from a dictionary (e.g. loaded from YAML).
 
-        Handles mapping from legacy profile structure to BotConfig structure.
+        Supports both BotConfig-style and profile-style YAML schemas.
         """
+        from dataclasses import fields as dataclass_fields
+
         from gpt_trader.features.live_trade.strategies.perps_baseline import (
             PerpsStrategyConfig,
         )
 
-        # 1. Map top-level fields
-        config_data = {}
+        def _filter_dataclass_fields(
+            source: dict[str, Any], dataclass_type: type
+        ) -> dict[str, Any]:
+            valid_fields = {f.name for f in dataclass_fields(dataclass_type)}
+            return {k: v for k, v in source.items() if k in valid_fields}
 
-        # Direct mappings
-        if "symbols" in data:
-            config_data["symbols"] = data["symbols"]
-        if "paper_mode" in data:
-            config_data["perps_paper_trading"] = data["paper_mode"]
-        if "log_level" in data:
-            config_data["log_level"] = data["log_level"]
+        def _coerce_decimal_fields(source: dict[str, Any], dataclass_type: type) -> dict[str, Any]:
+            result = dict(source)
+            for f in dataclass_fields(dataclass_type):
+                if f.name in result and f.type in (Decimal, "Decimal"):
+                    val = result[f.name]
+                    if val is not None and not isinstance(val, Decimal):
+                        result[f.name] = Decimal(str(val))
+            return result
 
-        # 2. Map Risk Config
-        risk_data: dict[str, Any] = {}
-        source_risk = data.get("risk", {})
+        if any(key in data for key in ("trading", "risk_management", "profile_name")):
+            from gpt_trader.app.config.profile_loader import ProfileSchema
 
-        # Map legacy risk keys to BotRiskConfig keys
-        if "max_position_pct" in source_risk:
-            risk_data["position_fraction"] = Decimal(str(source_risk["max_position_pct"]))
-        if "max_leverage" in source_risk:
-            risk_data["max_leverage"] = int(source_risk["max_leverage"])
-        if "stop_loss_pct" in source_risk:
-            risk_data["stop_loss_pct"] = Decimal(str(source_risk["stop_loss_pct"]))
-        if "take_profit_pct" in source_risk:
-            risk_data["take_profit_pct"] = Decimal(str(source_risk["take_profit_pct"]))
+            schema = ProfileSchema.from_yaml(data, data.get("profile_name", "custom"))
 
-        # Explicit cast to fix mypy assignment error
-        if "max_position_size" in source_risk:
-            risk_data["max_position_size"] = Decimal(str(source_risk["max_position_size"]))
+            risk = BotRiskConfig(
+                max_leverage=schema.risk.max_leverage,
+                max_position_size=schema.risk.max_position_size,
+                position_fraction=schema.risk.position_fraction,
+                stop_loss_pct=schema.risk.stop_loss_pct,
+                take_profit_pct=schema.risk.take_profit_pct,
+                daily_loss_limit_pct=schema.risk.daily_loss_limit_pct,
+            )
 
-        # Filter unexpected keys to avoid TypeError
-        valid_risk_fields = {f.name for f in fields(BotRiskConfig)}
-        filtered_risk_data = {k: v for k, v in risk_data.items() if k in valid_risk_fields}
+            strategy = PerpsStrategyConfig(
+                short_ma_period=schema.strategy.short_ma_period,
+                long_ma_period=schema.strategy.long_ma_period,
+                rsi_period=schema.strategy.rsi_period,
+                rsi_overbought=schema.strategy.rsi_overbought,
+                rsi_oversold=schema.strategy.rsi_oversold,
+            )
 
-        config_data["risk"] = BotRiskConfig(**filtered_risk_data)
+            config_data: dict[str, Any] = {
+                "profile": schema.profile_name or None,
+                "environment": schema.environment,
+                "symbols": schema.trading.symbols,
+                "interval": schema.trading.interval,
+                "risk": risk,
+                "strategy": strategy,
+                "enable_shorts": schema.risk.enable_shorts,
+                "time_in_force": schema.execution.time_in_force,
+                "dry_run": schema.execution.dry_run,
+                "mock_broker": schema.execution.mock_broker,
+                "log_level": schema.monitoring.log_level,
+                "status_interval": schema.monitoring.update_interval,
+                "status_enabled": schema.monitoring.status_enabled,
+                "strategy_type": schema.strategy.type,
+            }
 
-        # 3. Map Execution Config
-        execution = data.get("execution", {})
-        if "mock_broker" in execution:
-            config_data["mock_broker"] = execution["mock_broker"]
-        if "dry_run" in execution:
-            config_data["dry_run"] = execution["dry_run"]
+            if schema.trading.mode == "reduce_only":
+                config_data["reduce_only_mode"] = True
 
-        # 3. Map Strategy Config
-        # Legacy profiles often have strategy nested by symbol (e.g. strategy.btc)
-        # We'll take the first available strategy config or a default
-        source_strategy = data.get("strategy", {})
-        strategy_config_data = {}
+            return cls(**config_data)
 
-        # Flatten symbol-specific strategy if present
-        first_strategy: dict[str, Any] = (
-            next(iter(source_strategy.values()), {}) if source_strategy else {}
-        )
-        if isinstance(first_strategy, dict) and "short_window" in first_strategy:
-            # It's a legacy strategy dict
-            strategy_config_data["short_ma_period"] = first_strategy.get("short_window", 5)
-            strategy_config_data["long_ma_period"] = first_strategy.get("long_window", 20)
+        strategy_data = data.get("strategy", {})
+        if not isinstance(strategy_data, dict):
+            strategy_data = {}
+        strategy_kwargs = _filter_dataclass_fields(strategy_data, PerpsStrategyConfig)
+        strategy = PerpsStrategyConfig(**strategy_kwargs)
 
-            # Map filter configs if needed, or just basic params for now
+        risk_data = data.get("risk", {})
+        if not isinstance(risk_data, dict):
+            risk_data = {}
+        risk_kwargs = _filter_dataclass_fields(risk_data, BotRiskConfig)
+        risk_kwargs = _coerce_decimal_fields(risk_kwargs, BotRiskConfig)
+        risk = BotRiskConfig(**risk_kwargs)
 
-        config_data["strategy"] = PerpsStrategyConfig(**strategy_config_data)
+        valid_bot_fields = {f.name for f in dataclass_fields(cls)}
+        config_data = {k: v for k, v in data.items() if k in valid_bot_fields}
+        config_data.update({"strategy": strategy, "risk": risk})
 
         return cls(**config_data)
 

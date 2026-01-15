@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 11087,
+    "total_tests": 11083,
     "total_files": 411,
     "markers_used": 9
   },
@@ -1855,14 +1855,14 @@
       },
       {
         "name": "TestContainerDebugLogging::test_set_container_logs_debug",
-        "line": 323,
+        "line": 321,
         "markers": [],
         "docstring": "Test that setting container logs debug message.",
         "class": "TestContainerDebugLogging"
       },
       {
         "name": "TestContainerDebugLogging::test_clear_container_logs_debug",
-        "line": 332,
+        "line": 330,
         "markers": [],
         "docstring": "Test that clearing container logs debug message.",
         "class": "TestContainerDebugLogging"
@@ -1917,13 +1917,13 @@
       },
       {
         "name": "test_set_container_logs_debug",
-        "line": 323,
+        "line": 321,
         "markers": [],
         "docstring": "Test that setting container logs debug message."
       },
       {
         "name": "test_clear_container_logs_debug",
-        "line": 332,
+        "line": 330,
         "markers": [],
         "docstring": "Test that clearing container logs debug message."
       }
@@ -16151,113 +16151,99 @@
         "class": "TestAlertCreation"
       },
       {
-        "name": "TestAlertProperties::test_id_property_returns_alert_id",
-        "line": 169,
-        "markers": [],
-        "docstring": "",
-        "class": "TestAlertProperties"
-      },
-      {
-        "name": "TestAlertProperties::test_timestamp_property_returns_created_at",
-        "line": 174,
-        "markers": [],
-        "docstring": "",
-        "class": "TestAlertProperties"
-      },
-      {
         "name": "TestAlertTouch::test_touch_increments_occurrences",
-        "line": 183,
+        "line": 169,
         "markers": [],
         "docstring": "",
         "class": "TestAlertTouch"
       },
       {
         "name": "TestAlertTouch::test_touch_updates_last_seen_at",
-        "line": 191,
+        "line": 177,
         "markers": [],
         "docstring": "",
         "class": "TestAlertTouch"
       },
       {
         "name": "TestAlertTouch::test_touch_with_context_updates_context",
-        "line": 205,
+        "line": 191,
         "markers": [],
         "docstring": "",
         "class": "TestAlertTouch"
       },
       {
         "name": "TestAlertTouch::test_touch_with_metadata_updates_metadata",
-        "line": 210,
+        "line": 196,
         "markers": [],
         "docstring": "",
         "class": "TestAlertTouch"
       },
       {
         "name": "TestAlertTouch::test_touch_merges_context",
-        "line": 215,
+        "line": 201,
         "markers": [],
         "docstring": "",
         "class": "TestAlertTouch"
       },
       {
         "name": "TestAlertToDict::test_returns_dict",
-        "line": 229,
+        "line": 215,
         "markers": [],
         "docstring": "",
         "class": "TestAlertToDict"
       },
       {
         "name": "TestAlertToDict::test_includes_all_fields",
-        "line": 234,
+        "line": 220,
         "markers": [],
         "docstring": "",
         "class": "TestAlertToDict"
       },
       {
         "name": "TestAlertToDict::test_serializes_datetimes_to_iso_format",
-        "line": 253,
+        "line": 239,
         "markers": [],
         "docstring": "",
         "class": "TestAlertToDict"
       },
       {
         "name": "TestAlertMarkResolved::test_sets_resolved_at",
-        "line": 268,
+        "line": 254,
         "markers": [],
         "docstring": "",
         "class": "TestAlertMarkResolved"
       },
       {
         "name": "TestAlertAcknowledge::test_sets_acknowledged_flag",
-        "line": 283,
+        "line": 269,
         "markers": [],
         "docstring": "",
         "class": "TestAlertAcknowledge"
       },
       {
         "name": "TestAlertIsActive::test_active_when_not_resolved",
-        "line": 295,
+        "line": 281,
         "markers": [],
         "docstring": "",
         "class": "TestAlertIsActive"
       },
       {
         "name": "TestAlertIsActive::test_not_active_when_resolved",
-        "line": 299,
+        "line": 285,
         "markers": [],
         "docstring": "",
         "class": "TestAlertIsActive"
       },
       {
         "name": "TestAlertAgeMinutes::test_age_for_unresolved_alert",
-        "line": 308,
+        "line": 294,
         "markers": [],
         "docstring": "",
         "class": "TestAlertAgeMinutes"
       },
       {
         "name": "TestAlertAgeMinutes::test_age_for_resolved_alert",
-        "line": 320,
+        "line": 306,
         "markers": [],
         "docstring": "",
         "class": "TestAlertAgeMinutes"
@@ -16449,98 +16435,86 @@
         "docstring": ""
       },
       {
-        "name": "test_id_property_returns_alert_id",
+        "name": "test_touch_increments_occurrences",
         "line": 169,
         "markers": [],
         "docstring": ""
       },
       {
-        "name": "test_timestamp_property_returns_created_at",
-        "line": 174,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_touch_increments_occurrences",
-        "line": 183,
-        "markers": [],
-        "docstring": ""
-      },
-      {
         "name": "test_touch_updates_last_seen_at",
-        "line": 191,
+        "line": 177,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_touch_with_context_updates_context",
-        "line": 205,
+        "line": 191,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_touch_with_metadata_updates_metadata",
-        "line": 210,
+        "line": 196,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_touch_merges_context",
-        "line": 215,
+        "line": 201,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_returns_dict",
-        "line": 229,
+        "line": 215,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_includes_all_fields",
-        "line": 234,
+        "line": 220,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_serializes_datetimes_to_iso_format",
-        "line": 253,
+        "line": 239,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_sets_resolved_at",
-        "line": 268,
+        "line": 254,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_sets_acknowledged_flag",
-        "line": 283,
+        "line": 269,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_active_when_not_resolved",
-        "line": 295,
+        "line": 281,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_not_active_when_resolved",
-        "line": 299,
+        "line": 285,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_age_for_unresolved_alert",
-        "line": 308,
+        "line": 294,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_age_for_resolved_alert",
-        "line": 320,
+        "line": 306,
         "markers": [],
         "docstring": ""
       }
@@ -30296,13 +30270,13 @@
       },
       {
         "name": "test_validate_paper_profile",
-        "line": 34,
+        "line": 35,
         "markers": [],
         "docstring": "Test validating the loaded paper profile."
       },
       {
         "name": "test_validation_errors",
-        "line": 45,
+        "line": 46,
         "markers": [],
         "docstring": "Test that the validator catches errors."
       }
@@ -59466,305 +59440,305 @@
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base.py": [
       {
-        "name": "TestCoinbaseRestServiceBase::test_service_init",
+        "name": "TestCoinbaseRestServiceCore::test_service_init",
         "line": 60,
         "markers": [],
         "docstring": "Test service initialization.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_build_order_payload_limit_order",
+        "name": "TestCoinbaseRestServiceCore::test_build_order_payload_limit_order",
         "line": 71,
         "markers": [],
         "docstring": "Test building limit order payload.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_build_order_payload_market_order",
+        "name": "TestCoinbaseRestServiceCore::test_build_order_payload_market_order",
         "line": 96,
         "markers": [],
         "docstring": "Test building market order payload.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_build_order_payload_stop_limit",
+        "name": "TestCoinbaseRestServiceCore::test_build_order_payload_stop_limit",
         "line": 121,
         "markers": [],
         "docstring": "Test building stop limit order payload.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_build_order_payload_with_reduce_only",
+        "name": "TestCoinbaseRestServiceCore::test_build_order_payload_with_reduce_only",
         "line": 146,
         "markers": [],
         "docstring": "Test building order payload with reduce_only flag.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_build_order_payload_with_leverage",
+        "name": "TestCoinbaseRestServiceCore::test_build_order_payload_with_leverage",
         "line": 165,
         "markers": [],
         "docstring": "Test building order payload with leverage.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_build_order_payload_post_only",
+        "name": "TestCoinbaseRestServiceCore::test_build_order_payload_post_only",
         "line": 184,
         "markers": [],
         "docstring": "Test building order payload with post_only flag.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_build_order_payload_exclude_client_id",
+        "name": "TestCoinbaseRestServiceCore::test_build_order_payload_exclude_client_id",
         "line": 204,
         "markers": [],
         "docstring": "Test building order payload without client ID.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_build_order_payload_quantize_values",
+        "name": "TestCoinbaseRestServiceCore::test_build_order_payload_quantize_values",
         "line": 224,
         "markers": [],
         "docstring": "Test that values are properly quantized.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_build_order_payload_quantity_below_min_size",
+        "name": "TestCoinbaseRestServiceCore::test_build_order_payload_quantity_below_min_size",
         "line": 245,
         "markers": [],
         "docstring": "Test building order payload with quantity below minimum size.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_build_order_payload_notional_below_min_notional",
+        "name": "TestCoinbaseRestServiceCore::test_build_order_payload_notional_below_min_notional",
         "line": 264,
         "markers": [],
         "docstring": "Test building order payload with notional below minimum.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_build_order_payload_limit_order_requires_price",
+        "name": "TestCoinbaseRestServiceCore::test_build_order_payload_limit_order_requires_price",
         "line": 287,
         "markers": [],
         "docstring": "Test that limit orders require a price.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_build_order_payload_product_not_found",
+        "name": "TestCoinbaseRestServiceCore::test_build_order_payload_product_not_found",
         "line": 305,
         "markers": [],
         "docstring": "Test building order payload when product is not found.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_build_order_payload_enum_coercion",
+        "name": "TestCoinbaseRestServiceCore::test_build_order_payload_enum_coercion",
         "line": 324,
         "markers": [],
         "docstring": "Test enum coercion for order parameters.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_build_order_payload_invalid_side_passthrough",
+        "name": "TestCoinbaseRestServiceCore::test_build_order_payload_invalid_side_passthrough",
         "line": 346,
         "markers": [],
         "docstring": "Test payload preserves side string when enum coercion fails.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_build_order_payload_gtd_conversion",
+        "name": "TestCoinbaseRestServiceCore::test_build_order_payload_gtd_conversion",
         "line": 365,
         "markers": [],
         "docstring": "Test GTD time in force conversion to GTC.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_build_order_payload_invalid_tif_passthrough",
+        "name": "TestCoinbaseRestServiceCore::test_build_order_payload_invalid_tif_passthrough",
         "line": 384,
         "markers": [],
         "docstring": "Test payload preserves time-in-force string when enum coercion fails.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_execute_order_payload_success",
+        "name": "TestCoinbaseRestServiceCore::test_execute_order_payload_success",
         "line": 403,
         "markers": [],
         "docstring": "Test successful order execution.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_execute_order_payload_with_preview",
+        "name": "TestCoinbaseRestServiceCore::test_execute_order_payload_with_preview",
         "line": 418,
         "markers": [],
         "docstring": "Test order execution with preview enabled.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_execute_order_payload_preview_failure_still_places",
+        "name": "TestCoinbaseRestServiceCore::test_execute_order_payload_preview_failure_still_places",
         "line": 439,
         "markers": [],
         "docstring": "Test order execution continues when preview fails.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_execute_order_payload_insufficient_funds",
+        "name": "TestCoinbaseRestServiceCore::test_execute_order_payload_insufficient_funds",
         "line": 459,
         "markers": [],
         "docstring": "Test order execution with insufficient funds.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_execute_order_payload_validation_error",
+        "name": "TestCoinbaseRestServiceCore::test_execute_order_payload_validation_error",
         "line": 467,
         "markers": [],
         "docstring": "Test order execution with validation error.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_execute_order_payload_duplicate_client_id",
+        "name": "TestCoinbaseRestServiceCore::test_execute_order_payload_duplicate_client_id",
         "line": 475,
         "markers": [],
         "docstring": "Test order execution with duplicate client ID.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_execute_order_payload_duplicate_client_id_retry_failure",
+        "name": "TestCoinbaseRestServiceCore::test_execute_order_payload_duplicate_client_id_retry_failure",
         "line": 492,
         "markers": [],
         "docstring": "Test duplicate client id retry failure re-raises original error.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_execute_order_payload_network_error",
+        "name": "TestCoinbaseRestServiceCore::test_execute_order_payload_network_error",
         "line": 508,
         "markers": [],
         "docstring": "Test order execution with network errors.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_execute_order_payload_unexpected_error",
+        "name": "TestCoinbaseRestServiceCore::test_execute_order_payload_unexpected_error",
         "line": 516,
         "markers": [],
         "docstring": "Test order execution with unexpected error.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_find_existing_order_by_client_id_success",
+        "name": "TestCoinbaseRestServiceCore::test_find_existing_order_by_client_id_success",
         "line": 524,
         "markers": [],
         "docstring": "Test finding existing order by client ID.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_find_existing_order_by_client_id_no_client_id",
+        "name": "TestCoinbaseRestServiceCore::test_find_existing_order_by_client_id_no_client_id",
         "line": 545,
         "markers": [],
         "docstring": "Test finding existing order with no client ID.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_find_existing_order_by_client_id_no_matches",
+        "name": "TestCoinbaseRestServiceCore::test_find_existing_order_by_client_id_no_matches",
         "line": 552,
         "markers": [],
         "docstring": "Test finding existing order with no matches.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_find_existing_order_by_client_id_multiple_matches",
+        "name": "TestCoinbaseRestServiceCore::test_find_existing_order_by_client_id_multiple_matches",
         "line": 560,
         "markers": [],
         "docstring": "Test finding existing order with multiple matches (returns newest).",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_find_existing_order_by_client_id_api_error",
+        "name": "TestCoinbaseRestServiceCore::test_find_existing_order_by_client_id_api_error",
         "line": 585,
         "markers": [],
         "docstring": "Test finding existing order when API fails.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_find_existing_order_by_client_id_network_error",
+        "name": "TestCoinbaseRestServiceCore::test_find_existing_order_by_client_id_network_error",
         "line": 593,
         "markers": [],
         "docstring": "Test finding existing order when network errors occur.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_find_existing_order_by_client_id_value_error",
+        "name": "TestCoinbaseRestServiceCore::test_find_existing_order_by_client_id_value_error",
         "line": 601,
         "markers": [],
         "docstring": "Test finding existing order when payload parsing fails.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_update_position_metrics_no_position",
+        "name": "TestCoinbaseRestServiceCore::test_update_position_metrics_no_position",
         "line": 609,
         "markers": [],
         "docstring": "Test updating position metrics when no position exists.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_update_position_metrics_no_mark_price",
+        "name": "TestCoinbaseRestServiceCore::test_update_position_metrics_no_mark_price",
         "line": 616,
         "markers": [],
         "docstring": "Test updating position metrics when no mark price is available.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_update_position_metrics_missing_position_entry",
+        "name": "TestCoinbaseRestServiceCore::test_update_position_metrics_missing_position_entry",
         "line": 631,
         "markers": [],
         "docstring": "Test updating metrics when store contains missing position entry.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_update_position_metrics_success",
+        "name": "TestCoinbaseRestServiceCore::test_update_position_metrics_success",
         "line": 645,
         "markers": [],
         "docstring": "Test successful position metrics update.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_update_position_metrics_with_funding",
+        "name": "TestCoinbaseRestServiceCore::test_update_position_metrics_with_funding",
         "line": 671,
         "markers": [],
         "docstring": "Test position metrics update with funding accrual.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_update_position_metrics_skips_funding_when_none",
+        "name": "TestCoinbaseRestServiceCore::test_update_position_metrics_skips_funding_when_none",
         "line": 701,
         "markers": [],
         "docstring": "Test position metrics update when funding rate is unavailable.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_positions_property",
+        "name": "TestCoinbaseRestServiceCore::test_positions_property",
         "line": 717,
         "markers": [],
         "docstring": "Test positions property access.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_update_position_metrics_public_method",
+        "name": "TestCoinbaseRestServiceCore::test_update_position_metrics_public_method",
         "line": 732,
         "markers": [],
         "docstring": "Test public update_position_metrics method.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_build_order_payload_ioc_fok_limit_orders",
+        "name": "TestCoinbaseRestServiceCore::test_build_order_payload_ioc_fok_limit_orders",
         "line": 747,
         "markers": [],
         "docstring": "Test building limit orders with IOC and FOK time in force.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
-        "name": "TestCoinbaseRestServiceBase::test_build_order_payload_fallback_configuration",
+        "name": "TestCoinbaseRestServiceCore::test_build_order_payload_fallback_configuration",
         "line": 783,
         "markers": [],
         "docstring": "Test building order payload with fallback configuration for unsupported types.",
-        "class": "TestCoinbaseRestServiceBase"
+        "class": "TestCoinbaseRestServiceCore"
       },
       {
         "name": "test_service_init",
@@ -65036,14 +65010,14 @@
       },
       {
         "name": "TestGetValidationMetrics::test_returns_failure_counts",
-        "line": 1246,
+        "line": 1236,
         "markers": [],
         "docstring": "Test that get_validation_metrics returns current failure counts.",
         "class": "TestGetValidationMetrics"
       },
       {
         "name": "TestGetValidationMetrics::test_reports_escalation_status",
-        "line": 1280,
+        "line": 1262,
         "markers": [],
         "docstring": "Test that get_validation_metrics reports escalation status.",
         "class": "TestGetValidationMetrics"
@@ -65308,13 +65282,13 @@
       },
       {
         "name": "test_returns_failure_counts",
-        "line": 1246,
+        "line": 1236,
         "markers": [],
         "docstring": "Test that get_validation_metrics returns current failure counts."
       },
       {
         "name": "test_reports_escalation_status",
-        "line": 1280,
+        "line": 1262,
         "markers": [],
         "docstring": "Test that get_validation_metrics reports escalation status."
       }

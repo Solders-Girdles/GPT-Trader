@@ -12,7 +12,7 @@ class PositionStateStore:
     """Thread-safe storage for position state used in PnL calculations.
 
     This class provides centralized management of the _positions dict
-    that was previously shared between CoinbaseRestServiceBase and PnLRestMixin.
+    that was previously shared between CoinbaseRestServiceCore and PnLRestMixin.
 
     Thread Safety:
         All methods are protected by an RLock to ensure safe concurrent access

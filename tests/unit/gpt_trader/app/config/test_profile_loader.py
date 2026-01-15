@@ -150,7 +150,7 @@ class TestProfileSchema:
                 "max_position_size": 100000,
                 "position_fraction": 0.2,
                 "enable_shorts": True,
-                "daily_loss_limit": 1000,
+                "daily_loss_limit_pct": 0.1,
             },
             "execution": {
                 "time_in_force": "FOK",
@@ -177,7 +177,7 @@ class TestProfileSchema:
         assert schema.strategy.type == "mean_reversion"
         assert schema.strategy.short_ma_period == 10
         assert schema.risk.max_leverage == 5
-        assert schema.risk.daily_loss_limit == Decimal("1000")
+        assert schema.risk.daily_loss_limit_pct == 0.1
         assert schema.execution.time_in_force == "FOK"
         assert schema.session.trading_days == ["monday", "wednesday", "friday"]
         assert schema.monitoring.update_interval == 120

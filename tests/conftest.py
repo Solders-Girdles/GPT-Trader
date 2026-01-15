@@ -19,12 +19,6 @@ def strict_container_mode(monkeypatch):
 
     This ensures tests fail fast if they use get_failure_tracker()
     without properly setting up an application container.
-
-    To opt-out for specific tests that intentionally test fallback
-    behavior, use:
-        @pytest.mark.usefixtures()  # clears autouse fixtures
-    or:
-        monkeypatch.delenv("GPT_TRADER_STRICT_CONTAINER", raising=False)
     """
     monkeypatch.setenv("GPT_TRADER_STRICT_CONTAINER", "1")
 

@@ -308,11 +308,9 @@ class TestContainerServiceAccess:
         # Ensure no container is set
         clear_application_container()
 
-        # Failure tracker still returns fallback (for backward compatibility)
-        tracker = get_failure_tracker()
-        assert tracker is not None
-
-        # Profile loader requires container (no fallback)
+        # Service locators require container (no fallback)
+        with pytest.raises(RuntimeError, match="No application container set"):
+            get_failure_tracker()
         with pytest.raises(RuntimeError, match="No application container set"):
             get_profile_loader()
 

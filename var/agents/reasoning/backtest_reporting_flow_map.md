@@ -1,6 +1,6 @@
 # Backtest Reporting Flow Map
 
-Generated: 2026-01-15T06:12:04.408214+00:00
+Generated: 2026-01-15T13:32:26.213260+00:00
 
 ## Simulation Broker
 | ID | Label | Path |

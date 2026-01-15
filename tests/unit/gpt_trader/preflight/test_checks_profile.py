@@ -21,7 +21,7 @@ class TestCheckProfileConfiguration:
 trading:
   mode: normal
 risk_management:
-  daily_loss_limit: 100
+  daily_loss_limit_pct: 0.1
 """
         with (
             patch("pathlib.Path.exists", return_value=True),
@@ -42,7 +42,7 @@ trading:
   position_sizing:
     max_position_size: 0.01
 risk_management:
-  daily_loss_limit: 10.00
+  daily_loss_limit_pct: 0.01
   max_leverage: 1.0
 """
         with (
@@ -64,7 +64,7 @@ trading:
   position_sizing:
     max_position_size: 1.0
 risk_management:
-  daily_loss_limit: 1000.00
+  daily_loss_limit_pct: 0.2
   max_leverage: 5.0
 """
         with (

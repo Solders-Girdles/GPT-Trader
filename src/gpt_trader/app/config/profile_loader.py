@@ -18,7 +18,7 @@ Schema Structure:
         max_leverage: int
         max_position_size: Decimal
         enable_shorts: bool
-        daily_loss_limit: Decimal
+        daily_loss_limit_pct: float
     execution:
         time_in_force: str
         dry_run: bool
@@ -77,7 +77,6 @@ class RiskConfig:
     max_position_size: Decimal = field(default_factory=lambda: Decimal("10000"))
     position_fraction: Decimal = field(default_factory=lambda: Decimal("0.1"))
     enable_shorts: bool = False
-    daily_loss_limit: Decimal | None = None  # Absolute dollar limit (legacy)
     daily_loss_limit_pct: float = 0.05  # Percentage of equity (0.05 = 5%)
     stop_loss_pct: Decimal = field(default_factory=lambda: Decimal("0.02"))
     take_profit_pct: Decimal = field(default_factory=lambda: Decimal("0.04"))
@@ -167,11 +166,6 @@ class ProfileSchema:
             max_position_size=Decimal(str(risk_data.get("max_position_size", 10000))),
             position_fraction=Decimal(str(risk_data.get("position_fraction", "0.1"))),
             enable_shorts=risk_data.get("enable_shorts", False),
-            daily_loss_limit=(
-                Decimal(str(risk_data["daily_loss_limit"]))
-                if "daily_loss_limit" in risk_data
-                else None
-            ),
             daily_loss_limit_pct=float(risk_data.get("daily_loss_limit_pct", 0.05)),
             stop_loss_pct=Decimal(str(risk_data.get("stop_loss_pct", "0.02"))),
             take_profit_pct=Decimal(str(risk_data.get("take_profit_pct", "0.04"))),
@@ -282,7 +276,7 @@ _PROFILE_DEFAULTS: dict[Profile, ProfileSchema] = {
             max_position_size=Decimal("500"),
             max_leverage=1,
             enable_shorts=True,  # But reduce_only mode
-            daily_loss_limit=Decimal("10"),
+            daily_loss_limit_pct=0.01,
         ),
         execution=ExecutionConfig(
             time_in_force="IOC",
@@ -553,10 +547,6 @@ def _schema_to_bot_config(
         kwargs["trading_window_end"] = schema.session.end_time
     if schema.session.trading_days:
         kwargs["trading_days"] = schema.session.trading_days
-
-    # Optional daily loss limit
-    if schema.risk.daily_loss_limit is not None:
-        kwargs["daily_loss_limit"] = schema.risk.daily_loss_limit
 
     return create_config(**kwargs)
 

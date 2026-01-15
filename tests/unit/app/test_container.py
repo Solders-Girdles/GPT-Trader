@@ -399,31 +399,16 @@ class TestContainerRegistry:
 
         assert get_application_container() is None
 
-    def test_service_resolution_via_registry(
-        self, mock_config: BotConfig, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_service_resolution_via_registry(self, mock_config: BotConfig) -> None:
         """Test that services can be resolved via registered container."""
         from gpt_trader.app.config.profile_loader import get_profile_loader
         from gpt_trader.features.live_trade.execution.validation import get_failure_tracker
 
         clear_application_container()
 
-        # Disable strict mode for this test to verify fallback behavior
-        monkeypatch.delenv("GPT_TRADER_STRICT_CONTAINER", raising=False)
-
-        # Without container, failure_tracker returns fallback with deprecation warning
-        import warnings
-
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            tracker_fallback = get_failure_tracker()
-            assert tracker_fallback is not None
-            # Verify deprecation warning was emitted
-            assert len(w) >= 1
-            assert issubclass(w[0].category, DeprecationWarning)
-            assert "fallback" in str(w[0].message).lower()
-
-        # Without container, profile_loader raises RuntimeError (no fallback)
+        # Without container, service locators raise RuntimeError (no fallback)
+        with pytest.raises(RuntimeError, match="No application container set"):
+            get_failure_tracker()
         with pytest.raises(RuntimeError, match="No application container set"):
             get_profile_loader()
 
@@ -437,9 +422,6 @@ class TestContainerRegistry:
 
         assert tracker_container is container.validation_failure_tracker
         assert loader_container is container.profile_loader
-
-        # Verify tracker is different from fallback (profile_loader had no fallback)
-        assert tracker_container is not tracker_fallback
 
         clear_application_container()
 

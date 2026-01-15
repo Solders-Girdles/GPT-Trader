@@ -18,7 +18,6 @@ from gpt_trader.features.live_trade.execution.submission_result import (
 )
 from gpt_trader.features.live_trade.execution.validation import (
     ValidationFailureTracker,
-    get_failure_tracker,
 )
 from gpt_trader.features.live_trade.risk import ValidationError
 from gpt_trader.features.live_trade.risk.protocols import RiskManagerProtocol
@@ -75,7 +74,7 @@ class BacktestGuardedExecutor:
             orders_store=context.orders_store,
             integration_mode=context.integration_mode,
         )
-        failure_tracker = context.failure_tracker or get_failure_tracker()
+        failure_tracker = context.failure_tracker or ValidationFailureTracker()
         self._order_validator = OrderValidator(
             broker=context.broker,
             risk_manager=context.risk_manager,

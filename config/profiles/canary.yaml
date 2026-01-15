@@ -43,7 +43,7 @@ trading:
 # Risk Management - ULTRA STRICT
 risk_management:
   # Daily Limits
-  daily_loss_limit: 10.00  # $10 maximum daily loss
+  daily_loss_limit_pct: 0.01  # 1% maximum daily loss
   daily_profit_target: 20.00  # Optional: stop if target hit
 
   # Position Limits
@@ -247,7 +247,7 @@ emergency:
 # Deployment Notes
 notes: |
   This canary profile is designed for initial production testing with:
-  - Maximum $10 daily loss limit
+  - 1% daily loss limit
   - Single position of 0.01 BTC maximum
   - Reduce-only mode (cannot increase positions)
   - 1-hour daily trading window

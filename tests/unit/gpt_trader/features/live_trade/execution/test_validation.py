@@ -1210,29 +1210,20 @@ class TestFailureTrackerIntegration:
 class TestGetValidationMetrics:
     """Tests for get_validation_metrics function."""
 
-    def test_returns_empty_failures_initially(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_returns_empty_failures_initially(self) -> None:
         """Test that get_validation_metrics returns empty failures initially."""
-        # Disable strict mode for this fallback test
-        monkeypatch.delenv("GPT_TRADER_STRICT_CONTAINER", raising=False)
-
-        # Reset the fallback tracker for this test
-        import gpt_trader.features.live_trade.execution.validation as validation_module
-        from gpt_trader.features.live_trade.execution.validation import (
-            ValidationFailureTracker,
-            get_validation_metrics,
+        from gpt_trader.app.config import BotConfig
+        from gpt_trader.app.container import (
+            ApplicationContainer,
+            clear_application_container,
+            set_application_container,
         )
+        from gpt_trader.features.live_trade.execution.validation import get_validation_metrics
 
-        original_tracker = validation_module._FALLBACK_FAILURE_TRACKER
-        original_warned = validation_module._FALLBACK_WARNED
-        validation_module._FALLBACK_FAILURE_TRACKER = ValidationFailureTracker()
-        validation_module._FALLBACK_WARNED = False
-
+        container = ApplicationContainer(BotConfig())
+        set_application_container(container)
         try:
-            with pytest.warns(
-                DeprecationWarning,
-                match="Using fallback ValidationFailureTracker",
-            ):
-                metrics = get_validation_metrics()
+            metrics = get_validation_metrics()
 
             assert "failures" in metrics
             assert "escalation_threshold" in metrics
@@ -1240,73 +1231,56 @@ class TestGetValidationMetrics:
             assert metrics["failures"] == {}
             assert metrics["any_escalated"] is False
         finally:
-            validation_module._FALLBACK_FAILURE_TRACKER = original_tracker
-            validation_module._FALLBACK_WARNED = original_warned
+            clear_application_container()
 
-    def test_returns_failure_counts(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_returns_failure_counts(self) -> None:
         """Test that get_validation_metrics returns current failure counts."""
-        # Disable strict mode for this fallback test
-        monkeypatch.delenv("GPT_TRADER_STRICT_CONTAINER", raising=False)
-
-        import gpt_trader.features.live_trade.execution.validation as validation_module
-        from gpt_trader.features.live_trade.execution.validation import (
-            ValidationFailureTracker,
-            get_validation_metrics,
+        from gpt_trader.app.config import BotConfig
+        from gpt_trader.app.container import (
+            ApplicationContainer,
+            clear_application_container,
+            set_application_container,
         )
+        from gpt_trader.features.live_trade.execution.validation import get_validation_metrics
 
-        original_tracker = validation_module._FALLBACK_FAILURE_TRACKER
-        original_warned = validation_module._FALLBACK_WARNED
-        tracker = ValidationFailureTracker()
-        tracker.record_failure("mark_staleness")
-        tracker.record_failure("mark_staleness")
-        tracker.record_failure("slippage_guard")
-        validation_module._FALLBACK_FAILURE_TRACKER = tracker
-        validation_module._FALLBACK_WARNED = False
-
+        container = ApplicationContainer(BotConfig())
+        set_application_container(container)
         try:
-            with pytest.warns(
-                DeprecationWarning,
-                match="Using fallback ValidationFailureTracker",
-            ):
-                metrics = get_validation_metrics()
+            tracker = container.validation_failure_tracker
+            tracker.record_failure("mark_staleness")
+            tracker.record_failure("mark_staleness")
+            tracker.record_failure("slippage_guard")
+
+            metrics = get_validation_metrics()
 
             assert metrics["failures"]["mark_staleness"] == 2
             assert metrics["failures"]["slippage_guard"] == 1
             assert metrics["any_escalated"] is False
         finally:
-            validation_module._FALLBACK_FAILURE_TRACKER = original_tracker
-            validation_module._FALLBACK_WARNED = original_warned
+            clear_application_container()
 
-    def test_reports_escalation_status(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_reports_escalation_status(self) -> None:
         """Test that get_validation_metrics reports escalation status."""
-        # Disable strict mode for this fallback test
-        monkeypatch.delenv("GPT_TRADER_STRICT_CONTAINER", raising=False)
-
-        import gpt_trader.features.live_trade.execution.validation as validation_module
-        from gpt_trader.features.live_trade.execution.validation import (
-            ValidationFailureTracker,
-            get_validation_metrics,
+        from gpt_trader.app.config import BotConfig
+        from gpt_trader.app.container import (
+            ApplicationContainer,
+            clear_application_container,
+            set_application_container,
         )
+        from gpt_trader.features.live_trade.execution.validation import get_validation_metrics
 
-        original_tracker = validation_module._FALLBACK_FAILURE_TRACKER
-        original_warned = validation_module._FALLBACK_WARNED
-        tracker = ValidationFailureTracker(escalation_threshold=3)
-        # Record 3 failures to trigger escalation
-        tracker.record_failure("mark_staleness")
-        tracker.record_failure("mark_staleness")
-        tracker.record_failure("mark_staleness")
-        validation_module._FALLBACK_FAILURE_TRACKER = tracker
-        validation_module._FALLBACK_WARNED = False
-
+        container = ApplicationContainer(BotConfig())
+        set_application_container(container)
         try:
-            with pytest.warns(
-                DeprecationWarning,
-                match="Using fallback ValidationFailureTracker",
-            ):
-                metrics = get_validation_metrics()
+            tracker = container.validation_failure_tracker
+            tracker.escalation_threshold = 3
+            tracker.record_failure("mark_staleness")
+            tracker.record_failure("mark_staleness")
+            tracker.record_failure("mark_staleness")
+
+            metrics = get_validation_metrics()
 
             assert metrics["any_escalated"] is True
             assert metrics["escalation_threshold"] == 3
         finally:
-            validation_module._FALLBACK_FAILURE_TRACKER = original_tracker
-            validation_module._FALLBACK_WARNED = original_warned
+            clear_application_container()

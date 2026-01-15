@@ -10,10 +10,10 @@
 ### Coinbase REST Legacy Mode Removal
 - **BREAKING**: Coinbase REST now requires `PositionStateStore` injection; legacy `_positions` fallbacks have been removed.
 - Service/tests now read and write positions exclusively through the shared store.
+- **BREAKING**: Removed `CoinbaseRestServiceBase`; use `CoinbaseRestServiceCore` directly.
 
 ### Logging Helper Rename
-- Introduced `runtime_helpers.get_runtime_logger` and deprecated `orchestration_helpers.get_orchestration_logger`.
-- Runtime logging helpers now reflect the primary API surface; orchestration helpers remain as a shim for one release.
+- **BREAKING**: Removed `gpt_trader.logging.orchestration_helpers`; use `runtime_helpers.get_runtime_logger`.
 
 ### TUI Legacy Fallback Cleanup
 - Removed the legacy `config/tui_preferences.json` fallback; TUI preferences now read/write only the runtime path (or `GPT_TRADER_TUI_PREFERENCES_PATH`).
@@ -48,3 +48,17 @@
 - **DOCS**: Updated architecture, development guides, and paper trading documentation to reflect current patterns.
 - **TESTS**: Consolidated test structure, removed stale files, and eliminated legacy testing patterns.
 - All active test suites pass with the modernized broker implementation and clean module structure.
+
+### Container Requirements
+- **BREAKING**: `get_failure_tracker()` now requires an application container; fallback tracker has been removed.
+
+### Profile/Config Cleanup
+- **BREAKING**: `BotConfig.from_dict` no longer maps legacy profile keys; use profile schema or BotConfig schema directly.
+- **BREAKING**: CLI no longer falls back to raw profile YAML for unknown profile names; use `--config`.
+- Profile schema removed `daily_loss_limit` (absolute); use `daily_loss_limit_pct`.
+
+### Monitoring Alert Cleanup
+- Removed legacy `Alert.id` and `Alert.timestamp` aliases; use `alert_id` and `created_at`.
+
+### Docs Cleanup
+- Archived legacy risk templates under `docs/archive/risk_templates/`.

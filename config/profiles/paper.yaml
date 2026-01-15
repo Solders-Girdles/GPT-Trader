@@ -41,6 +41,5 @@ monitoring:
   status_enabled: true
 
 # Paper trading metadata
-paper_mode: true
 initial_equity_usd: 10000
 log_simulated_orders: true

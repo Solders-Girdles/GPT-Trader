@@ -108,26 +108,11 @@ Key capabilities documented:
 | `BrokerageContainer` | Broker, market data service, product catalog |
 | `RiskValidationContainer` | Risk manager, validation failure tracker |
 
-#### Strict Container Mode (Testing)
+#### Container Requirement (Testing)
 
-For tests, enable strict container mode to ensure proper DI usage:
-
-```bash
-GPT_TRADER_STRICT_CONTAINER=1 uv run pytest tests/unit
-```
-
-When enabled, `get_failure_tracker()` and similar service locators raise `RuntimeError`
-instead of falling back to module-level singletons. This catches tests that bypass the
-container.
-
-The `tests/conftest.py` enables strict mode automatically via an autouse fixture. Tests
-that intentionally verify fallback behavior can disable it:
-
-```python
-def test_fallback_behavior(monkeypatch):
-    monkeypatch.delenv("GPT_TRADER_STRICT_CONTAINER", raising=False)
-    # ... test fallback path
-```
+Service locators such as `get_failure_tracker()` always require an application
+container. Tests should set up `ApplicationContainer` via fixtures or explicit
+registration before calling container-resolved helpers.
 
 #### Removed Modules (v3.0)
 
@@ -516,7 +501,7 @@ universe: [BTC, ETH, SOL, XRP, LTC, ADA, DOGE, BCH, AVAX, LINK]
 profile: canary
 broker: coinbase
 positions: 0.01 BTC max
-daily_loss_limit: $10
+daily_loss_limit_pct: 1%
 trading_window: 14:00-15:00 UTC
 circuit_breakers: multiple
 ```
@@ -538,7 +523,7 @@ monitoring: real-time
 - Impact cost validation (<50bps)
 - Reduce-only mode enforcement
 
-> Spot risk templates are reference-only; see `docs/reference/risk_templates/spot_top10.yaml`
+> Spot risk templates are archived; see `docs/archive/risk_templates/spot_top10.yaml`
 > for example per-symbol caps and leverage=1 limits across the top-ten USD markets.
 
 ### Runtime Guards

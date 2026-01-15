@@ -25,7 +25,7 @@ def check_profile_configuration(checker: PreflightCheck) -> bool:
                 expected = {
                     "trading.mode": "reduce_only",
                     "trading.position_sizing.max_position_size": 0.01,
-                    "risk_management.daily_loss_limit": 10.00,
+                    "risk_management.daily_loss_limit_pct": 0.01,
                     "risk_management.max_leverage": 1.0,
                 }
 
@@ -49,7 +49,7 @@ def check_profile_configuration(checker: PreflightCheck) -> bool:
 
     checker.log_warning(f"Profile '{checker.profile}' not found, will use defaults")
     if checker.profile == "canary":
-        checker.log_info("Canary defaults: 0.01 BTC max, $10 daily loss, reduce-only")
+        checker.log_info("Canary defaults: 0.01 BTC max, 1% daily loss, reduce-only")
     elif checker.profile == "prod":
         checker.log_warning("Production profile - ensure you've tested with canary first!")
 

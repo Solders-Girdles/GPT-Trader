@@ -2,34 +2,42 @@
 # Fetches real Coinbase data but blocks all order execution
 # Perfect for strategy observation and validation with zero execution risk
 
+profile_name: "observe"
+environment: "development"
+description: "Read-only observation profile (no execution)"
+
+trading:
+  mode: "normal"
+  symbols:
+    - "BTC-USD"
+    - "ETH-USD"
+  interval: 15
+
 strategy:
-  btc:
-    type: ma
-    short_window: 10
-    long_window: 50
-    volatility_filter: null
-    volume_filter:
-      window: 10
-      multiplier: 1.2
-    momentum_filter:
-      window: 14
-      oversold: 35
-      overbought: 70
-    trend_filter: null
-    regime_filter:
-      window: 14
-      adx_threshold: 25
+  type: "baseline"
+  short_ma_period: 10
+  long_ma_period: 50
+  rsi_period: 14
+  rsi_overbought: 70
+  rsi_oversold: 35
 
-risk:
-  max_position_pct: 0.0  # No position sizing in observation mode
+risk_management:
+  max_leverage: 1
+  max_position_size: 0
+  position_fraction: 0.0
+  enable_shorts: false
+  daily_loss_limit_pct: 0.0
+  stop_loss_pct: 0.02
+  take_profit_pct: 0.04
 
-symbols:
-  - BTC-USD
-  - ETH-USD
+execution:
+  time_in_force: "GTC"
+  dry_run: true
+  mock_broker: false
+  mock_fills: false
 
-# Observation mode settings
-read_only: true  # Blocks all order execution
-interval: 15  # More frequent updates for observation (15 seconds)
-status_enabled: true
-status_interval: 10  # TUI updates every 10 seconds
-status_file: /tmp/gpt-trader-observe/status.json
+monitoring:
+  log_level: "INFO"
+  metrics:
+    interval_seconds: 10
+  status_enabled: true

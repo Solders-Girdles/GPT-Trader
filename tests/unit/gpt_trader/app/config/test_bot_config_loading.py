@@ -18,17 +18,18 @@ def test_load_paper_profile():
     config = BotConfig.from_yaml(PAPER_PROFILE_PATH)
 
     # Verify top-level mappings
-    assert config.perps_paper_trading is True
     assert "BTC-USD" in config.symbols
+    assert config.dry_run is True
+    assert config.mock_broker is True
 
     # Verify Risk mappings
-    # paper.yaml: max_position_pct: 0.10
+    # paper.yaml: position_fraction: 0.10
     assert config.risk.position_fraction == Decimal("0.10")
 
     # Verify Strategy mappings
-    # paper.yaml: short_window: 5, long_window: 20
-    assert config.strategy.short_ma_period == 5
-    assert config.strategy.long_ma_period == 20
+    # paper.yaml: short_ma_period: 10, long_ma_period: 50
+    assert config.strategy.short_ma_period == 10
+    assert config.strategy.long_ma_period == 50
 
 
 def test_validate_paper_profile():

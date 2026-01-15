@@ -18,8 +18,6 @@ Error Handling Strategy:
 
 from __future__ import annotations
 
-import os
-import warnings
 from collections import defaultdict
 from dataclasses import dataclass, field
 from decimal import Decimal
@@ -116,53 +114,24 @@ class ValidationFailureTracker:
         return self.consecutive_failures[check_type]
 
 
-# Fallback failure tracker instance (used when no container is set)
-# NOTE: This fallback is deprecated. Set the application container instead.
-_FALLBACK_FAILURE_TRACKER = ValidationFailureTracker()
-_FALLBACK_WARNED = False
-
-
 def get_failure_tracker() -> ValidationFailureTracker:
     """Get the failure tracker instance.
-
-    Resolves from the application container if set. Falls back to
-    module-level instance with deprecation warning.
-
-    If GPT_TRADER_STRICT_CONTAINER=1 is set, raises RuntimeError
-    instead of using fallback.
 
     Returns:
         The ValidationFailureTracker instance.
 
     Raises:
-        RuntimeError: If strict mode is enabled and no container is set.
+        RuntimeError: If no application container is set.
     """
-    global _FALLBACK_WARNED
     from gpt_trader.app.container import get_application_container
 
     container = get_application_container()
-    if container is not None:
-        return container.validation_failure_tracker
-
-    # Strict mode for tests/CI
-    if os.environ.get("GPT_TRADER_STRICT_CONTAINER") == "1":
+    if container is None:
         raise RuntimeError(
             "No application container set. Call set_application_container() "
             "before using get_failure_tracker()."
         )
-
-    # Soft deprecation - warn once per process
-    if not _FALLBACK_WARNED:
-        warnings.warn(
-            "Using fallback ValidationFailureTracker. Set application container "
-            "via set_application_container() for proper DI.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        _FALLBACK_WARNED = True
-
-    logger.debug("No application container set, using fallback failure tracker")
-    return _FALLBACK_FAILURE_TRACKER
+    return container.validation_failure_tracker
 
 
 def configure_failure_tracker(
@@ -170,8 +139,6 @@ def configure_failure_tracker(
     escalation_callback: Any = None,
 ) -> None:
     """Configure the failure tracker.
-
-    Configures the container's tracker if set, otherwise the fallback instance.
 
     Args:
         escalation_threshold: Number of consecutive failures before escalation.

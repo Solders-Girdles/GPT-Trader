@@ -20,14 +20,14 @@ from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.endpoints import CoinbaseEndpoints
 from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
 from gpt_trader.features.brokerages.coinbase.models import APIConfig, Product
-from gpt_trader.features.brokerages.coinbase.rest.base import CoinbaseRestServiceBase
+from gpt_trader.features.brokerages.coinbase.rest.base import CoinbaseRestServiceCore
 from gpt_trader.features.brokerages.coinbase.rest.position_state_store import PositionStateStore
 from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
 from gpt_trader.persistence.event_store import EventStore
 
 
-class TestCoinbaseRestServiceBase:
-    """Test CoinbaseRestServiceBase class."""
+class TestCoinbaseRestServiceCore:
+    """Test CoinbaseRestServiceCore class."""
 
     def setup_method(self) -> None:
         """Set up test fixtures."""
@@ -39,7 +39,7 @@ class TestCoinbaseRestServiceBase:
         self.event_store = Mock(spec=EventStore)
 
         self.position_store = PositionStateStore()
-        self.service = CoinbaseRestServiceBase(
+        self.service = CoinbaseRestServiceCore(
             client=self.client,
             endpoints=self.endpoints,
             config=self.config,

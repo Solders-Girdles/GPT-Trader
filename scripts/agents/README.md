@@ -50,7 +50,10 @@ uv run agent-risk --with-docs
 uv run agent-naming
 uv run agent-health
 uv run agent-regenerate
+uv run agent-regenerate --only testing
 ```
+
+Naming defaults are loaded from `config/agents/naming_patterns.yaml`.
 
 ## Reference Docs
 

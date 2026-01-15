@@ -8,6 +8,8 @@ This document establishes the naming conventions for the GPT-Trader codebase. Ad
 - Preserve compatibility with external APIs while documenting sanctioned exceptions.
 
 ## 2. Naming Categories & Rules
+The automated naming scan loads its banned pattern list from
+`config/agents/naming_patterns.yaml`. Keep that file aligned with this document.
 
 ### 2.1 Modules & Packages
 - **Format:** `snake_case` for Python modules and packages.

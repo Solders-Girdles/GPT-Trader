@@ -261,7 +261,10 @@ uv run agent-naming --strict                  # Fail on violations
 uv run agent-naming --quiet                   # Suppress stdout
 ```
 
-**Banned Patterns**: `cfg`, `svc`, `mgr`, `util`, `utils`, `qty`, `amt`, `calc`, `upd`
+Defaults (patterns, scan paths, skip token) load from `config/agents/naming_patterns.yaml`.
+Use `--patterns` and `--paths` to override per run.
+
+**Banned Patterns**: configured in `config/agents/naming_patterns.yaml` (defaults: `cfg`, `svc`, `mgr`, `util`, `utils`, `amt`, `calc`, `upd`)
 
 **Suppression**: Add `# naming: allow` to suppress specific lines.
 
@@ -278,6 +281,7 @@ Regenerates all static context files in `var/agents/`.
 uv run agent-regenerate                       # Regenerate all
 uv run agent-regenerate --verify              # Check freshness only
 uv run agent-regenerate --list                # List generators
+uv run agent-regenerate --only testing        # Run a subset by key
 ```
 
 **Generators**:
@@ -292,6 +296,9 @@ uv run agent-regenerate --list                # List generators
 | `generate_broker_api_docs.py` | `var/agents/broker/` |
 | `generate_reasoning_artifacts.py` | `var/agents/reasoning/` |
 | `generate_agent_health_schema.py` | `var/agents/health/` |
+
+`--only` keys match the output subdirectory names: `schemas`, `models`, `logging`,
+`testing`, `validation`, `broker`, `reasoning`, `health`.
 
 ---
 
@@ -313,7 +320,7 @@ var/agents/
 ```
 
 These files are:
-- Committed to the repository (except large test_inventory.json)
+- Committed to the repository (including test_inventory.json)
 - Regenerated with `uv run agent-regenerate`
 - Used by AI agents for codebase understanding
 
@@ -349,7 +356,9 @@ git commit -m "chore: regenerate agent context files"
 ```
 
 ### Large Test Inventory
-The `test_inventory.json` file is excluded from git due to size. Regenerate locally:
+`test_inventory.json` is committed (and excluded from the large-file hook). Regenerate as needed:
 ```bash
+uv run agent-regenerate --only testing
+# or
 uv run agent-tests
 ```

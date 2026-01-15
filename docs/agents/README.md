@@ -8,6 +8,7 @@ Use this folder for AI-focused navigation aids and generated inventories.
 - Reasoning artifacts: `docs/agents/reasoning_artifacts.md`
 - Glossary: `docs/agents/glossary.md`
 - Naming inventory: `docs/agents/naming_inventory.md`
+- Naming patterns config: `config/agents/naming_patterns.yaml`
 - Document verification matrix: `docs/agents/Document_Verification_Matrix.md`
 - Source → test map: `var/agents/testing/source_test_map.json`
 
@@ -22,4 +23,5 @@ Most inventories are generated via:
 
 ```bash
 uv run agent-regenerate
+uv run agent-regenerate --only testing
 ```

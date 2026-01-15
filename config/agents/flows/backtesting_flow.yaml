@@ -1,0 +1,92 @@
+artifact: backtesting_flow_map
+description: "Backtesting data flow map (EventStore \u2192 loader \u2192 simulator\
+  \ \u2192 metrics)."
+clusters:
+- id: event_store
+  label: Event Store
+- id: loader
+  label: Historical Loader
+- id: simulation
+  label: Backtest Simulation
+- id: strategy
+  label: Strategy
+- id: metrics
+  label: Metrics + Output
+nodes:
+- id: event_store
+  label: EventStore.events
+  type: source
+  path: src/gpt_trader/persistence/event_store.py
+  cluster: event_store
+- id: data_loader
+  label: HistoricalDataLoader.load_symbol
+  type: loader
+  path: src/gpt_trader/features/research/backtesting/data_loader.py
+  cluster: loader
+- id: data_result
+  label: DataLoadResult
+  type: data
+  path: src/gpt_trader/features/research/backtesting/data_loader.py
+  cluster: loader
+- id: data_point
+  label: HistoricalDataPoint
+  type: data
+  path: src/gpt_trader/features/research/backtesting/data_loader.py
+  cluster: loader
+- id: backtest_simulator
+  label: BacktestSimulator.run
+  type: simulation
+  path: src/gpt_trader/features/research/backtesting/simulator.py
+  cluster: simulation
+- id: market_data_context
+  label: MarketDataContext
+  type: strategy_input
+  path: src/gpt_trader/features/live_trade/strategies/base.py
+  cluster: strategy
+- id: strategy_decide
+  label: Strategy.decide
+  type: strategy
+  path: src/gpt_trader/features/live_trade/strategies/base.py
+  cluster: strategy
+- id: backtest_result
+  label: BacktestResult
+  type: output
+  path: src/gpt_trader/features/research/backtesting/simulator.py
+  cluster: metrics
+- id: performance_metrics
+  label: PerformanceMetrics.from_result
+  type: metrics
+  path: src/gpt_trader/features/research/backtesting/metrics.py
+  cluster: metrics
+edges:
+- from: event_store
+  to: data_loader
+  label: load events
+- from: data_loader
+  to: data_result
+  label: build result
+- from: data_result
+  to: data_point
+  label: points list
+- from: data_point
+  to: backtest_simulator
+  label: data_points
+- from: backtest_simulator
+  to: market_data_context
+  label: build market data
+- from: market_data_context
+  to: strategy_decide
+  label: strategy input
+- from: strategy_decide
+  to: backtest_simulator
+  label: decision
+- from: backtest_simulator
+  to: backtest_result
+  label: result
+- from: backtest_result
+  to: performance_metrics
+  label: compute metrics
+notes:
+- HistoricalDataLoader reconstructs market state from EventStore events.
+- BacktestSimulator replays HistoricalDataPoint sequences into strategy decisions.
+- PerformanceMetrics summarizes outcomes from BacktestResult.

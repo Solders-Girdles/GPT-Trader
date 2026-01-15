@@ -5,7 +5,7 @@
     "version": "2.0.0",
     "script": "scripts/agents/health_report.py"
   },
-  "generated_at": "2026-01-15T05:17:17.351673+00:00",
+  "generated_at": "2026-01-15T06:12:07.062948+00:00",
   "profile": "dev",
   "status": "warning",
   "summary": {

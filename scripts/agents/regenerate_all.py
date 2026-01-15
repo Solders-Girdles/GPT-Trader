@@ -49,7 +49,11 @@ class GeneratorResult(NamedTuple):
     error: str | None = None
 
 
-def run_generator(script_name: str, output_dir: str) -> GeneratorResult:
+def run_generator(
+    script_name: str,
+    output_dir: str,
+    extra_args: Sequence[str] = (),
+) -> GeneratorResult:
     """Run a single generator script.
 
     Args:
@@ -73,8 +77,9 @@ def run_generator(script_name: str, output_dir: str) -> GeneratorResult:
 
     start = time.time()
     try:
+        command = [sys.executable, str(script_path), *extra_args]
         result = subprocess.run(
-            [sys.executable, str(script_path)],
+            command,
             cwd=PROJECT_ROOT,
             capture_output=True,
             text=True,
@@ -120,6 +125,9 @@ def run_generator(script_name: str, output_dir: str) -> GeneratorResult:
 def regenerate_all(
     verbose: bool = True,
     generators: Sequence[tuple[str, str, str]] | None = None,
+    *,
+    reasoning_validate: bool = False,
+    reasoning_strict: bool = False,
 ) -> tuple[list[GeneratorResult], bool]:
     """Run all generators.
 
@@ -141,7 +149,14 @@ def regenerate_all(
         if verbose:
             print(f"Running {script_name}... ", end="", flush=True, file=sys.stderr)
 
-        result = run_generator(script_name, output_dir)
+        extra_args: list[str] = []
+        if script_name == "generate_reasoning_artifacts.py":
+            if reasoning_validate or reasoning_strict:
+                extra_args.append("--validate")
+            if reasoning_strict:
+                extra_args.append("--strict")
+
+        result = run_generator(script_name, output_dir, extra_args)
         results.append(result)
 
         if verbose:
@@ -175,7 +190,12 @@ def verify_freshness(generators: Sequence[tuple[str, str, str]] | None = None) -
         return 1
 
     print("Regenerating context files...", file=sys.stderr)
-    results, success = regenerate_all(verbose=True, generators=generators_to_run)
+    results, success = regenerate_all(
+        verbose=True,
+        generators=generators_to_run,
+        reasoning_validate=True,
+        reasoning_strict=True,
+    )
 
     if not success:
         print("\nSome generators failed. Cannot verify freshness.", file=sys.stderr)
@@ -300,7 +320,11 @@ Examples:
         return verify_freshness(generators=generators_to_run)
 
     # Normal regeneration
-    results, success = regenerate_all(verbose=not args.quiet, generators=generators_to_run)
+    results, success = regenerate_all(
+        verbose=not args.quiet,
+        generators=generators_to_run,
+        reasoning_validate=True,
+    )
 
     # Summary
     passed = len([r for r in results if r.success])

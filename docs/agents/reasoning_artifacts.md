@@ -2,6 +2,10 @@
 
 Curated summaries for generated reasoning maps and health schema outputs.
 
+Flow definitions live in `config/agents/flows/*.yaml`. Run the generator with
+`--validate` to check that node paths still exist; add `--strict` to fail when
+paths are missing.
+
 ## CLI → Config → Container → Engine Flow
 
 - Generated outputs: `var/agents/reasoning/cli_flow_map.json`, `var/agents/reasoning/cli_flow_map.md`, `var/agents/reasoning/cli_flow_map.dot`

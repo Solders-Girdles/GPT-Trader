@@ -10,15 +10,22 @@ import argparse
 import json
 import re
 import sys
-from dataclasses import fields
+from collections import defaultdict
+from collections.abc import Iterable, Sequence
+from dataclasses import dataclass, fields
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
-from collections.abc import Iterable
+from typing import Any, TextIO
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 SRC_ROOT = PROJECT_ROOT / "src"
 OUTPUT_DIR = PROJECT_ROOT / "var" / "agents" / "reasoning"
+FLOW_CONFIG_DIR = PROJECT_ROOT / "config" / "agents" / "flows"
+
+try:
+    import yaml
+except ImportError:  # pragma: no cover - optional for generators
+    yaml = None
 
 sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(SRC_ROOT))
@@ -2119,10 +2126,120 @@ def _write_dot(path: Path, lines: Iterable[str]) -> None:
     path.write_text("\n".join(lines))
 
 
+@dataclass(frozen=True)
+class ValidationIssue:
+    artifact: str
+    node_id: str
+    path: str
+    suggestion: str | None = None
+
+
+def _load_yaml(path: Path) -> dict[str, Any]:
+    if yaml is None:
+        raise RuntimeError("PyYAML is required to load flow configs (pip install pyyaml).")
+    data = yaml.safe_load(path.read_text())
+    if not isinstance(data, dict):
+        raise ValueError(f"Flow config {path} must be a mapping.")
+    return data
+
+
+def load_flow_config(
+    filename: str,
+    *,
+    artifact: str,
+    required_keys: Sequence[str],
+    fallback: dict[str, Any],
+) -> dict[str, Any]:
+    path = FLOW_CONFIG_DIR / filename
+    if not path.exists():
+        return dict(fallback)
+
+    data = _load_yaml(path)
+    missing = [key for key in required_keys if key not in data]
+    if missing:
+        missing_list = ", ".join(missing)
+        raise ValueError(f"Flow config {path} missing required keys: {missing_list}")
+    if data.get("artifact") != artifact:
+        raise ValueError(
+            f"Flow config {path} has artifact '{data.get('artifact')}', expected '{artifact}'."
+        )
+    return data
+
+
+def _build_path_index(roots: Sequence[str]) -> dict[str, list[Path]]:
+    index: dict[str, list[Path]] = defaultdict(list)
+    for root in roots:
+        base = PROJECT_ROOT / root
+        if not base.exists():
+            continue
+        for candidate in base.rglob("*"):
+            if candidate.is_file():
+                index[candidate.name].append(candidate.relative_to(PROJECT_ROOT))
+    return index
+
+
+def validate_flow_map(
+    flow: dict[str, Any],
+    *,
+    artifact: str,
+    path_index: dict[str, list[Path]] | None = None,
+) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    for node in flow.get("nodes", []):
+        path_value = node.get("path")
+        if not path_value:
+            continue
+        path = Path(path_value)
+        resolved = path if path.is_absolute() else PROJECT_ROOT / path
+        if resolved.exists():
+            continue
+        suggestion = None
+        if path_index is not None:
+            matches = path_index.get(path.name)
+            if matches:
+                suggestion = str(matches[0])
+        issues.append(
+            ValidationIssue(
+                artifact=artifact,
+                node_id=str(node.get("id", "<unknown>")),
+                path=str(path_value),
+                suggestion=suggestion,
+            )
+        )
+    return issues
+
+
+def _report_validation(
+    flow_payloads: Sequence[tuple[str, dict[str, Any]]],
+    issues: Sequence[ValidationIssue],
+    *,
+    out: TextIO = sys.stderr,
+) -> None:
+    issues_by_artifact: dict[str, list[ValidationIssue]] = defaultdict(list)
+    for issue in issues:
+        issues_by_artifact[issue.artifact].append(issue)
+
+    print("Validating flow maps...", file=out)
+    for artifact, flow in flow_payloads:
+        artifact_issues = issues_by_artifact.get(artifact, [])
+        node_count = len(flow.get("nodes", []))
+        if artifact_issues:
+            print(
+                f"  {artifact}: {node_count} nodes, {len(artifact_issues)} missing paths",
+                file=out,
+            )
+            for issue in artifact_issues:
+                suggestion = (
+                    f" (did you mean {issue.suggestion}?)" if issue.suggestion else ""
+                )
+                print(f"    - {issue.node_id}: {issue.path}{suggestion}", file=out)
+        else:
+            print(f"  {artifact}: {node_count} nodes, 0 missing paths OK", file=out)
+
+
 def build_cli_flow_map() -> dict[str, Any]:
     return {
         "artifact": "cli_flow_map",
-        "generated_at": _timestamp(),
         "description": "CLI → config → container → engine flow map.",
         "entrypoints": [
             "uv run gpt-trader run --profile dev --dev-fast",
@@ -2131,6 +2248,12 @@ def build_cli_flow_map() -> dict[str, Any]:
         "nodes": CLI_FLOW_NODES,
         "edges": CLI_FLOW_EDGES,
     }
+
+
+def _build_flow_payload(flow_def: dict[str, Any]) -> dict[str, Any]:
+    payload = dict(flow_def)
+    payload["generated_at"] = _timestamp()
+    return payload
 
 
 def build_cli_flow_markdown(flow: dict[str, Any]) -> str:
@@ -2170,7 +2293,6 @@ def build_cli_flow_dot(flow: dict[str, Any]) -> list[str]:
 def build_guard_stack_map() -> dict[str, Any]:
     return {
         "artifact": "guard_stack_map",
-        "generated_at": _timestamp(),
         "description": "Guard stack map (preflight checks vs runtime guards + monitoring).",
         "clusters": GUARD_STACK_CLUSTERS,
         "nodes": GUARD_STACK_NODES,
@@ -2235,7 +2357,6 @@ def build_guard_stack_dot(guard_map: dict[str, Any]) -> list[str]:
 def build_execution_flow_map() -> dict[str, Any]:
     return {
         "artifact": "execution_flow_map",
-        "generated_at": _timestamp(),
         "description": "Execution flow map (decision → guard stack → submission → telemetry/event store).",
         "clusters": EXECUTION_FLOW_CLUSTERS,
         "nodes": EXECUTION_FLOW_NODES,
@@ -2302,7 +2423,6 @@ def build_execution_flow_dot(flow_map: dict[str, Any]) -> list[str]:
 def build_market_data_flow_map() -> dict[str, Any]:
     return {
         "artifact": "market_data_flow_map",
-        "generated_at": _timestamp(),
         "description": "Market data flow map (REST polling + WS streaming).",
         "clusters": MARKET_DATA_FLOW_CLUSTERS,
         "nodes": MARKET_DATA_FLOW_NODES,
@@ -2370,7 +2490,6 @@ def build_market_data_flow_dot(flow_map: dict[str, Any]) -> list[str]:
 def build_backtesting_flow_map() -> dict[str, Any]:
     return {
         "artifact": "backtesting_flow_map",
-        "generated_at": _timestamp(),
         "description": "Backtesting data flow map (EventStore → loader → simulator → metrics).",
         "clusters": BACKTEST_FLOW_CLUSTERS,
         "nodes": BACKTEST_FLOW_NODES,
@@ -2436,7 +2555,6 @@ def build_backtesting_flow_dot(flow_map: dict[str, Any]) -> list[str]:
 def build_backtest_reporting_flow_map() -> dict[str, Any]:
     return {
         "artifact": "backtest_reporting_flow_map",
-        "generated_at": _timestamp(),
         "description": "Backtest reporting flow (broker → metrics → report outputs).",
         "clusters": BACKTEST_REPORTING_FLOW_CLUSTERS,
         "nodes": BACKTEST_REPORTING_FLOW_NODES,
@@ -2501,7 +2619,6 @@ def build_backtest_reporting_flow_dot(flow_map: dict[str, Any]) -> list[str]:
 def build_backtest_entrypoints_map() -> dict[str, Any]:
     return {
         "artifact": "backtest_entrypoints_map",
-        "generated_at": _timestamp(),
         "description": "Backtest entrypoints (CLI, scripts, library) and their core engines.",
         "clusters": BACKTEST_ENTRYPOINTS_CLUSTERS,
         "nodes": BACKTEST_ENTRYPOINTS_NODES,
@@ -2571,7 +2688,6 @@ def build_backtest_entrypoints_dot(flow_map: dict[str, Any]) -> list[str]:
 def build_backtest_validation_chaos_map() -> dict[str, Any]:
     return {
         "artifact": "backtest_validation_chaos_map",
-        "generated_at": _timestamp(),
         "description": "Backtest validation + chaos flow (guarded execution, decision logs, "
         "golden-path validation, chaos injection).",
         "clusters": BACKTEST_VALIDATION_CHAOS_CLUSTERS,
@@ -2866,10 +2982,42 @@ def build_config_code_dot(config_map: dict[str, Any]) -> list[str]:
     return lines
 
 
-def generate(output_dir: Path) -> dict[str, Path]:
-    _ensure_output_dir()
+class FlowValidationError(RuntimeError):
+    """Raised when flow map validation fails in strict mode."""
 
-    cli_flow = build_cli_flow_map()
+
+def generate(
+    output_dir: Path,
+    *,
+    validate: bool = False,
+    strict: bool = False,
+) -> dict[str, Path]:
+    _ensure_output_dir()
+    flow_payloads: list[tuple[str, dict[str, Any]]] = []
+
+    def _load_flow(
+        filename: str,
+        *,
+        artifact: str,
+        required_keys: Sequence[str],
+        fallback: dict[str, Any],
+    ) -> dict[str, Any]:
+        flow_def = load_flow_config(
+            filename,
+            artifact=artifact,
+            required_keys=required_keys,
+            fallback=fallback,
+        )
+        flow_payload = _build_flow_payload(flow_def)
+        flow_payloads.append((artifact, flow_payload))
+        return flow_payload
+
+    cli_flow = _load_flow(
+        "cli_flow.yaml",
+        artifact="cli_flow_map",
+        required_keys=("artifact", "description", "entrypoints", "nodes", "edges"),
+        fallback=build_cli_flow_map(),
+    )
     cli_flow_json = output_dir / "cli_flow_map.json"
     cli_flow_md = output_dir / "cli_flow_map.md"
     cli_flow_dot = output_dir / "cli_flow_map.dot"
@@ -2878,7 +3026,12 @@ def generate(output_dir: Path) -> dict[str, Path]:
     _write_markdown(cli_flow_md, build_cli_flow_markdown(cli_flow))
     _write_dot(cli_flow_dot, build_cli_flow_dot(cli_flow))
 
-    guard_map = build_guard_stack_map()
+    guard_map = _load_flow(
+        "guard_stack.yaml",
+        artifact="guard_stack_map",
+        required_keys=("artifact", "description", "clusters", "nodes", "edges"),
+        fallback=build_guard_stack_map(),
+    )
     guard_json = output_dir / "guard_stack_map.json"
     guard_md = output_dir / "guard_stack_map.md"
     guard_dot = output_dir / "guard_stack_map.dot"
@@ -2887,7 +3040,12 @@ def generate(output_dir: Path) -> dict[str, Path]:
     _write_markdown(guard_md, build_guard_stack_markdown(guard_map))
     _write_dot(guard_dot, build_guard_stack_dot(guard_map))
 
-    execution_map = build_execution_flow_map()
+    execution_map = _load_flow(
+        "execution_flow.yaml",
+        artifact="execution_flow_map",
+        required_keys=("artifact", "description", "clusters", "nodes", "edges"),
+        fallback=build_execution_flow_map(),
+    )
     execution_json = output_dir / "execution_flow_map.json"
     execution_md = output_dir / "execution_flow_map.md"
     execution_dot = output_dir / "execution_flow_map.dot"
@@ -2896,7 +3054,12 @@ def generate(output_dir: Path) -> dict[str, Path]:
     _write_markdown(execution_md, build_execution_flow_markdown(execution_map))
     _write_dot(execution_dot, build_execution_flow_dot(execution_map))
 
-    market_data_map = build_market_data_flow_map()
+    market_data_map = _load_flow(
+        "market_data_flow.yaml",
+        artifact="market_data_flow_map",
+        required_keys=("artifact", "description", "clusters", "nodes", "edges"),
+        fallback=build_market_data_flow_map(),
+    )
     market_data_json = output_dir / "market_data_flow_map.json"
     market_data_md = output_dir / "market_data_flow_map.md"
     market_data_dot = output_dir / "market_data_flow_map.dot"
@@ -2905,7 +3068,12 @@ def generate(output_dir: Path) -> dict[str, Path]:
     _write_markdown(market_data_md, build_market_data_flow_markdown(market_data_map))
     _write_dot(market_data_dot, build_market_data_flow_dot(market_data_map))
 
-    backtest_map = build_backtesting_flow_map()
+    backtest_map = _load_flow(
+        "backtesting_flow.yaml",
+        artifact="backtesting_flow_map",
+        required_keys=("artifact", "description", "clusters", "nodes", "edges"),
+        fallback=build_backtesting_flow_map(),
+    )
     backtest_json = output_dir / "backtesting_flow_map.json"
     backtest_md = output_dir / "backtesting_flow_map.md"
     backtest_dot = output_dir / "backtesting_flow_map.dot"
@@ -2914,7 +3082,12 @@ def generate(output_dir: Path) -> dict[str, Path]:
     _write_markdown(backtest_md, build_backtesting_flow_markdown(backtest_map))
     _write_dot(backtest_dot, build_backtesting_flow_dot(backtest_map))
 
-    backtest_reporting_map = build_backtest_reporting_flow_map()
+    backtest_reporting_map = _load_flow(
+        "backtest_reporting_flow.yaml",
+        artifact="backtest_reporting_flow_map",
+        required_keys=("artifact", "description", "clusters", "nodes", "edges"),
+        fallback=build_backtest_reporting_flow_map(),
+    )
     backtest_reporting_json = output_dir / "backtest_reporting_flow_map.json"
     backtest_reporting_md = output_dir / "backtest_reporting_flow_map.md"
     backtest_reporting_dot = output_dir / "backtest_reporting_flow_map.dot"
@@ -2929,7 +3102,12 @@ def generate(output_dir: Path) -> dict[str, Path]:
         build_backtest_reporting_flow_dot(backtest_reporting_map),
     )
 
-    backtest_entrypoints_map = build_backtest_entrypoints_map()
+    backtest_entrypoints_map = _load_flow(
+        "backtest_entrypoints.yaml",
+        artifact="backtest_entrypoints_map",
+        required_keys=("artifact", "description", "clusters", "nodes", "edges"),
+        fallback=build_backtest_entrypoints_map(),
+    )
     backtest_entrypoints_json = output_dir / "backtest_entrypoints_map.json"
     backtest_entrypoints_md = output_dir / "backtest_entrypoints_map.md"
     backtest_entrypoints_dot = output_dir / "backtest_entrypoints_map.dot"
@@ -2944,7 +3122,12 @@ def generate(output_dir: Path) -> dict[str, Path]:
         build_backtest_entrypoints_dot(backtest_entrypoints_map),
     )
 
-    backtest_validation_map = build_backtest_validation_chaos_map()
+    backtest_validation_map = _load_flow(
+        "backtest_validation_chaos.yaml",
+        artifact="backtest_validation_chaos_map",
+        required_keys=("artifact", "description", "clusters", "nodes", "edges"),
+        fallback=build_backtest_validation_chaos_map(),
+    )
     backtest_validation_json = output_dir / "backtest_validation_chaos_map.json"
     backtest_validation_md = output_dir / "backtest_validation_chaos_map.md"
     backtest_validation_dot = output_dir / "backtest_validation_chaos_map.dot"
@@ -2967,6 +3150,17 @@ def generate(output_dir: Path) -> dict[str, Path]:
     _write_json(config_json, config_map)
     _write_markdown(config_md, build_config_code_markdown(config_map))
     _write_dot(config_dot, build_config_code_dot(config_map))
+
+    if validate:
+        path_index = _build_path_index(("src", "scripts", "config", "tests"))
+        issues: list[ValidationIssue] = []
+        for artifact, flow in flow_payloads:
+            issues.extend(
+                validate_flow_map(flow, artifact=artifact, path_index=path_index)
+            )
+        _report_validation(flow_payloads, issues)
+        if issues and strict:
+            raise FlowValidationError("Flow map validation failed.")
 
     return {
         "cli_flow_map.json": cli_flow_json,
@@ -3012,9 +3206,30 @@ def main() -> int:
         default=OUTPUT_DIR,
         help="Output directory (default: var/agents/reasoning)",
     )
+    parser.add_argument(
+        "--validate",
+        action="store_true",
+        help="Validate flow map node paths against the repository",
+    )
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="Fail if validation finds missing paths (implies --validate)",
+    )
     args = parser.parse_args()
 
-    outputs = generate(args.output_dir)
+    if args.strict:
+        args.validate = True
+
+    try:
+        outputs = generate(
+            args.output_dir,
+            validate=args.validate,
+            strict=args.strict,
+        )
+    except FlowValidationError:
+        return 1
+
     print("Generated reasoning artifacts:")
     for name, path in outputs.items():
         print(f"- {name}: {path}")

@@ -1,6 +1,5 @@
 {
   "artifact": "guard_stack_map",
-  "generated_at": "2026-01-15T05:17:14.751629+00:00",
   "description": "Guard stack map (preflight checks vs runtime guards + monitoring).",
   "clusters": [
     {
@@ -170,5 +169,6 @@
   "notes": [
     "Preflight checks run via the preflight CLI and PreflightCheck facade.",
     "Runtime guard sweep is owned by TradingEngine and GuardManager."
-  ]
+  ],
+  "generated_at": "2026-01-15T06:12:04.372350+00:00"
 }

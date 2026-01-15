@@ -1,6 +1,5 @@
 {
   "artifact": "market_data_flow_map",
-  "generated_at": "2026-01-15T05:17:14.752491+00:00",
   "description": "Market data flow map (REST polling + WS streaming).",
   "clusters": [
     {
@@ -443,5 +442,6 @@
     "Risk mark-staleness checks read LiveRiskManager.last_mark_update timestamps.",
     "EventStore persistence captures mark updates and orderbook/trade summaries.",
     "StrategyOrchestrator consumes runtime_state to build MarketDataContext."
-  ]
+  ],
+  "generated_at": "2026-01-15T06:12:04.395728+00:00"
 }

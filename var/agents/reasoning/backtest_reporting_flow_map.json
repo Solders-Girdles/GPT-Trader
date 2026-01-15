@@ -1,6 +1,5 @@
 {
   "artifact": "backtest_reporting_flow_map",
-  "generated_at": "2026-01-15T05:17:14.753297+00:00",
   "description": "Backtest reporting flow (broker \u2192 metrics \u2192 report outputs).",
   "clusters": [
     {
@@ -174,5 +173,6 @@
   "notes": [
     "BacktestReporter lazily computes TradeStatistics and RiskMetrics from the broker.",
     "generate_backtest_report is a convenience wrapper returning BacktestResult."
-  ]
+  ],
+  "generated_at": "2026-01-15T06:12:04.408214+00:00"
 }

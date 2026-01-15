@@ -1,6 +1,5 @@
 {
   "artifact": "backtesting_flow_map",
-  "generated_at": "2026-01-15T05:17:14.753027+00:00",
   "description": "Backtesting data flow map (EventStore \u2192 loader \u2192 simulator \u2192 metrics).",
   "clusters": [
     {
@@ -140,5 +139,6 @@
     "HistoricalDataLoader reconstructs market state from EventStore events.",
     "BacktestSimulator replays HistoricalDataPoint sequences into strategy decisions.",
     "PerformanceMetrics summarizes outcomes from BacktestResult."
-  ]
+  ],
+  "generated_at": "2026-01-15T06:12:04.399848+00:00"
 }

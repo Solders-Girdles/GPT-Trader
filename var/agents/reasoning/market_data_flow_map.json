@@ -1,6 +1,6 @@
 {
   "artifact": "market_data_flow_map",
-  "generated_at": "2026-01-15T05:11:43.470801+00:00",
+  "generated_at": "2026-01-15T05:17:14.752491+00:00",
   "description": "Market data flow map (REST polling + WS streaming).",
   "clusters": [
     {

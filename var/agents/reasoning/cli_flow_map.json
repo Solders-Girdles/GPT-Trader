@@ -1,6 +1,6 @@
 {
   "artifact": "cli_flow_map",
-  "generated_at": "2026-01-15T05:11:43.468112+00:00",
+  "generated_at": "2026-01-15T05:17:14.750974+00:00",
   "description": "CLI \u2192 config \u2192 container \u2192 engine flow map.",
   "entrypoints": [
     "uv run gpt-trader run --profile dev --dev-fast",

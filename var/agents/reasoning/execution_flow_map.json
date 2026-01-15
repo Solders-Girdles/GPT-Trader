@@ -1,6 +1,6 @@
 {
   "artifact": "execution_flow_map",
-  "generated_at": "2026-01-15T05:11:43.469872+00:00",
+  "generated_at": "2026-01-15T05:17:14.751998+00:00",
   "description": "Execution flow map (decision \u2192 guard stack \u2192 submission \u2192 telemetry/event store).",
   "clusters": [
     {

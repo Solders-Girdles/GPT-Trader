@@ -2,7 +2,7 @@
   "version": "1.0",
   "summary": {
     "tests_scanned": 409,
-    "source_modules": 345,
+    "source_modules": 344,
     "unresolved_modules": 4
   },
   "source_to_tests": {
@@ -19,7 +19,6 @@
       "tests/integration/test_container_lifecycle.py",
       "tests/integration/test_crash_recovery.py",
       "tests/integration/test_end_to_end_buy.py",
-      "tests/integration/test_reduce_only_backward_compatibility.py",
       "tests/integration/test_validation_escalation.py",
       "tests/system/test_ensemble_execution.py",
       "tests/test_simple_start.py",
@@ -45,9 +44,6 @@
       "tests/unit/gpt_trader/app/containers/test_risk_validation.py",
       "tests/unit/gpt_trader/config/test_bot_config_env.py"
     ],
-    "gpt_trader.app.config.controller": [
-      "tests/integration/test_reduce_only_backward_compatibility.py"
-    ],
     "gpt_trader.app.config.defaults": [
       "tests/unit/gpt_trader/app/config/test_defaults.py"
     ],
@@ -70,7 +66,6 @@
       "tests/integration/test_container_lifecycle.py",
       "tests/integration/test_crash_recovery.py",
       "tests/integration/test_end_to_end_buy.py",
-      "tests/integration/test_reduce_only_backward_compatibility.py",
       "tests/integration/test_validation_escalation.py",
       "tests/system/test_ensemble_execution.py",
       "tests/test_simple_start.py",
@@ -93,6 +88,9 @@
       "tests/unit/app/test_container.py",
       "tests/unit/gpt_trader/app/test_health_server.py",
       "tests/unit/gpt_trader/monitoring/test_health_checks.py"
+    ],
+    "gpt_trader.backtesting.chaos.engine": [
+      "tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker.py"
     ],
     "gpt_trader.backtesting.chaos.scenarios": [
       "tests/unit/gpt_trader/backtesting/chaos/test_scenarios.py"
@@ -632,7 +630,6 @@
     ],
     "gpt_trader.features.live_trade.engines.base": [
       "tests/integration/test_crash_recovery.py",
-      "tests/integration/test_reduce_only_backward_compatibility.py",
       "tests/integration/test_validation_escalation.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py",
@@ -640,9 +637,6 @@
     ],
     "gpt_trader.features.live_trade.engines.price_tick_store": [
       "tests/unit/gpt_trader/features/live_trade/engines/test_price_tick_store_edges.py"
-    ],
-    "gpt_trader.features.live_trade.engines.runtime": [
-      "tests/integration/test_reduce_only_backward_compatibility.py"
     ],
     "gpt_trader.features.live_trade.engines.strategy": [
       "tests/integration/test_crash_recovery.py",
@@ -734,6 +728,7 @@
       "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator.py"
     ],
     "gpt_trader.features.live_trade.risk": [
+      "tests/integration/test_reduce_only_backward_compatibility.py",
       "tests/integration/test_validation_escalation.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_validation.py",
@@ -754,6 +749,7 @@
       "tests/unit/gpt_trader/features/live_trade/test_total_exposure_breach.py"
     ],
     "gpt_trader.features.live_trade.risk.manager": [
+      "tests/integration/test_reduce_only_backward_compatibility.py",
       "tests/unit/gpt_trader/app/containers/test_risk_validation.py",
       "tests/unit/gpt_trader/config/test_bot_config_env.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine.py",
@@ -1723,11 +1719,8 @@
       "gpt_trader.persistence.event_store"
     ],
     "tests/integration/test_reduce_only_backward_compatibility.py": [
-      "gpt_trader.app.config",
-      "gpt_trader.app.config.controller",
-      "gpt_trader.app.container",
-      "gpt_trader.features.live_trade.engines.base",
-      "gpt_trader.features.live_trade.engines.runtime"
+      "gpt_trader.features.live_trade.risk",
+      "gpt_trader.features.live_trade.risk.manager"
     ],
     "tests/integration/test_tui_degraded_paths.py": [
       "gpt_trader.tui.services.state_registry",
@@ -1926,6 +1919,7 @@
       "gpt_trader.backtesting.simulation.funding_tracker"
     ],
     "tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker.py": [
+      "gpt_trader.backtesting.chaos.engine",
       "gpt_trader.backtesting.simulation.broker",
       "gpt_trader.backtesting.types",
       "gpt_trader.core"
@@ -3444,8 +3438,8 @@
     "gpt_trader.persistence.database": "src/gpt_trader/persistence/database.py",
     "gpt_trader.features.live_trade.engines.base": "src/gpt_trader/features/live_trade/engines/base.py",
     "gpt_trader.features.live_trade.engines.strategy": "src/gpt_trader/features/live_trade/engines/strategy.py",
-    "gpt_trader.app.config.controller": "src/gpt_trader/app/config/controller.py",
-    "gpt_trader.features.live_trade.engines.runtime": "src/gpt_trader/features/live_trade/engines/runtime/__init__.py",
+    "gpt_trader.features.live_trade.risk": "src/gpt_trader/features/live_trade/risk/__init__.py",
+    "gpt_trader.features.live_trade.risk.manager": "src/gpt_trader/features/live_trade/risk/manager/__init__.py",
     "gpt_trader.backtesting.engine.bar_runner": "src/gpt_trader/backtesting/engine/bar_runner.py",
     "gpt_trader.backtesting.simulation.broker": "src/gpt_trader/backtesting/simulation/broker.py",
     "gpt_trader.features.live_trade.strategies.perps_baseline": "src/gpt_trader/features/live_trade/strategies/perps_baseline/__init__.py",
@@ -3461,7 +3455,6 @@
     "gpt_trader.features.live_trade.signals.mean_reversion": "src/gpt_trader/features/live_trade/signals/mean_reversion.py",
     "gpt_trader.features.live_trade.strategies.ensemble": "src/gpt_trader/features/live_trade/strategies/ensemble.py",
     "gpt_trader.tui.types": "src/gpt_trader/tui/types.py",
-    "gpt_trader.features.live_trade.risk": "src/gpt_trader/features/live_trade/risk/__init__.py",
     "gpt_trader.app.containers.brokerage": "src/gpt_trader/app/containers/brokerage.py",
     "gpt_trader.app.health_server": "src/gpt_trader/app/health_server.py",
     "gpt_trader.persistence.orders_store": "src/gpt_trader/persistence/orders_store.py",
@@ -3478,7 +3471,6 @@
     "gpt_trader.app.bootstrap": "src/gpt_trader/app/bootstrap.py",
     "gpt_trader.config.types": "src/gpt_trader/config/types.py",
     "gpt_trader.app.config.bot_config": "src/gpt_trader/app/config/bot_config.py",
-    "gpt_trader.features.live_trade.risk.manager": "src/gpt_trader/features/live_trade/risk/manager/__init__.py",
     "gpt_trader.config.config_utilities": "src/gpt_trader/config/config_utilities.py",
     "gpt_trader.config.env_utils": "src/gpt_trader/config/env_utils.py",
     "gpt_trader.security.input_sanitizer": "src/gpt_trader/security/input_sanitizer.py",
@@ -3571,6 +3563,7 @@
     "gpt_trader.backtesting.metrics.report": "src/gpt_trader/backtesting/metrics/report.py",
     "gpt_trader.backtesting.metrics.risk": "src/gpt_trader/backtesting/metrics/risk.py",
     "gpt_trader.backtesting.simulation.funding_tracker": "src/gpt_trader/backtesting/simulation/funding_tracker.py",
+    "gpt_trader.backtesting.chaos.engine": "src/gpt_trader/backtesting/chaos/engine.py",
     "gpt_trader.backtesting.simulation.fill_model": "src/gpt_trader/backtesting/simulation/fill_model.py",
     "gpt_trader.backtesting.engine.clock": "src/gpt_trader/backtesting/engine/clock.py",
     "gpt_trader.backtesting.chaos.scenarios": "src/gpt_trader/backtesting/chaos/scenarios.py",

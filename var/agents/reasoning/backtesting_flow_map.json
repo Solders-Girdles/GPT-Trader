@@ -1,6 +1,6 @@
 {
   "artifact": "backtesting_flow_map",
-  "generated_at": "2026-01-15T05:11:43.471829+00:00",
+  "generated_at": "2026-01-15T05:17:14.753027+00:00",
   "description": "Backtesting data flow map (EventStore \u2192 loader \u2192 simulator \u2192 metrics).",
   "clusters": [
     {

@@ -15,13 +15,13 @@ import argparse
 import json
 import re
 from collections import Counter, defaultdict
+from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List
-from collections.abc import Iterable, Iterator, Sequence
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_PATTERNS = (
+FALLBACK_PATTERNS = (
     "cfg",  # naming: allow
     "svc",  # naming: allow
     "mgr",  # naming: allow
@@ -31,8 +31,43 @@ DEFAULT_PATTERNS = (
     "calc",  # naming: allow
     "upd",  # naming: allow
 )
-DEFAULT_PATHS = ("src", "tests", "scripts", "config")
-SKIP_LINE_TOKEN = "# naming: allow"
+FALLBACK_PATHS = ("src", "tests", "scripts", "config")
+FALLBACK_SKIP_LINE_TOKEN = "# naming: allow"
+
+
+def load_config() -> dict[str, Any]:
+    config_path = REPO_ROOT / "config" / "agents" / "naming_patterns.yaml"
+    if not config_path.exists():
+        return {}
+    try:
+        import yaml
+    except ImportError:
+        return {}
+    try:
+        with config_path.open("r", encoding="utf-8") as handle:
+            data = yaml.safe_load(handle) or {}
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def _coerce_sequence(value: Any, fallback: Sequence[str]) -> tuple[str, ...]:
+    if isinstance(value, (list, tuple)):
+        items = [str(item).strip() for item in value if str(item).strip()]
+        return tuple(items) if items else tuple(fallback)
+    return tuple(fallback)
+
+
+def _coerce_token(value: Any, fallback: str) -> str:
+    if isinstance(value, str) and value.strip():
+        return value
+    return fallback
+
+
+_CONFIG = load_config()
+DEFAULT_PATTERNS = _coerce_sequence(_CONFIG.get("banned_patterns"), FALLBACK_PATTERNS)
+DEFAULT_PATHS = _coerce_sequence(_CONFIG.get("scan_paths"), FALLBACK_PATHS)
+SKIP_LINE_TOKEN = _coerce_token(_CONFIG.get("skip_line_token"), FALLBACK_SKIP_LINE_TOKEN)
 
 
 @dataclass(order=True)
@@ -56,12 +91,18 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--patterns",
         default=",".join(DEFAULT_PATTERNS),
-        help="Comma-separated list of patterns to search (defaults to cfg,svc,...).",  # naming: allow
+        help=(
+            "Comma-separated list of patterns to search "
+            "(defaults to config/agents/naming_patterns.yaml)."
+        ),
     )
     parser.add_argument(
         "--paths",
         default=",".join(DEFAULT_PATHS),
-        help="Comma-separated list of paths to scan (defaults to src,tests,scripts,config).",
+        help=(
+            "Comma-separated list of paths to scan "
+            "(defaults to config/agents/naming_patterns.yaml)."
+        ),
     )
     parser.add_argument(
         "--summary",

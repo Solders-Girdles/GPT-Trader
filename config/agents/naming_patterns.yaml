@@ -1,0 +1,21 @@
+# Naming patterns to detect in codebase scans
+# See docs/naming.md for naming standards
+version: "1.0"
+
+banned_patterns:
+  - cfg # naming: allow
+  - svc # naming: allow
+  - mgr # naming: allow
+  - util # naming: allow
+  - utils # naming: allow
+  - amt # naming: allow
+  - calc # naming: allow
+  - upd # naming: allow
+
+scan_paths:
+  - src
+  - tests
+  - scripts
+  - config
+
+skip_line_token: "# naming: allow"

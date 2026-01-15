@@ -19,6 +19,7 @@ import argparse
 import subprocess
 import sys
 import time
+from collections.abc import Sequence
 from pathlib import Path
 from typing import NamedTuple
 
@@ -116,22 +117,27 @@ def run_generator(script_name: str, output_dir: str) -> GeneratorResult:
         )
 
 
-def regenerate_all(verbose: bool = True) -> tuple[list[GeneratorResult], bool]:
+def regenerate_all(
+    verbose: bool = True,
+    generators: Sequence[tuple[str, str, str]] | None = None,
+) -> tuple[list[GeneratorResult], bool]:
     """Run all generators.
 
     Args:
         verbose: Print progress to stderr
+        generators: Optional list of generator tuples to run
 
     Returns:
         Tuple of (results list, overall success)
     """
     results: list[GeneratorResult] = []
     var_agents = PROJECT_ROOT / "var" / "agents"
+    generators_to_run = list(generators) if generators is not None else GENERATORS
 
     # Ensure output directory exists
     var_agents.mkdir(parents=True, exist_ok=True)
 
-    for script_name, output_dir, description in GENERATORS:
+    for script_name, output_dir, description in generators_to_run:
         if verbose:
             print(f"Running {script_name}... ", end="", flush=True, file=sys.stderr)
 
@@ -142,7 +148,7 @@ def regenerate_all(verbose: bool = True) -> tuple[list[GeneratorResult], bool]:
             if result.success:
                 print(f"OK ({result.duration:.1f}s)", file=sys.stderr)
             else:
-                print(f"FAILED", file=sys.stderr)
+                print("FAILED", file=sys.stderr)
                 if result.error:
                     # Print first line of error
                     error_line = result.error.split("\n")[0]
@@ -152,7 +158,7 @@ def regenerate_all(verbose: bool = True) -> tuple[list[GeneratorResult], bool]:
     return results, success
 
 
-def verify_freshness() -> int:
+def verify_freshness(generators: Sequence[tuple[str, str, str]] | None = None) -> int:
     """Verify that generated files are up-to-date.
 
     Runs all generators and checks if there are uncommitted changes
@@ -161,6 +167,7 @@ def verify_freshness() -> int:
     import shutil
 
     var_agents = PROJECT_ROOT / "var" / "agents"
+    generators_to_run = list(generators) if generators is not None else GENERATORS
 
     # Check if git is available
     if shutil.which("git") is None:
@@ -168,15 +175,21 @@ def verify_freshness() -> int:
         return 1
 
     print("Regenerating context files...", file=sys.stderr)
-    results, success = regenerate_all(verbose=True)
+    results, success = regenerate_all(verbose=True, generators=generators_to_run)
 
     if not success:
         print("\nSome generators failed. Cannot verify freshness.", file=sys.stderr)
         return 1
 
+    if not generators_to_run:
+        print("\nNo generators selected; nothing to verify.", file=sys.stderr)
+        return 1
+
+    diff_paths = [str(var_agents / output_dir) for _, output_dir, _ in generators_to_run]
+
     # Check for git changes
     result = subprocess.run(
-        ["git", "diff", "--quiet", str(var_agents)],
+        ["git", "diff", "--quiet", "--", *diff_paths],
         cwd=PROJECT_ROOT,
         capture_output=True,
     )
@@ -189,7 +202,7 @@ def verify_freshness() -> int:
 
         # Show what changed
         diff_result = subprocess.run(
-            ["git", "diff", "--stat", str(var_agents)],
+            ["git", "diff", "--stat", "--", *diff_paths],
             cwd=PROJECT_ROOT,
             capture_output=True,
             text=True,
@@ -207,13 +220,21 @@ def verify_freshness() -> int:
 def list_generators() -> None:
     """List all available generators."""
     print("Available generators:")
-    print("-" * 60)
+    print("-" * 96)
+    print(f"{'Key':<12} {'Script':<35} {'Description':<30} Status")
+    print("-" * 96)
     for script_name, output_dir, description in GENERATORS:
         script_path = PROJECT_ROOT / "scripts" / "agents" / script_name
         status = "OK" if script_path.exists() else "MISSING"
-        print(f"  {script_name:<35} {description:<20} [{status}]")
-    print("-" * 60)
-    print(f"Output directory: var/agents/")
+        print(f"  {output_dir:<12} {script_name:<35} {description:<30} [{status}]")
+    print("-" * 96)
+    print("Keys map to output subdirectories under var/agents/")
+
+
+def parse_only_arg(only_arg: str | None) -> set[str]:
+    if not only_arg:
+        return set()
+    return {item.strip() for item in only_arg.split(",") if item.strip()}
 
 
 def main() -> int:
@@ -226,8 +247,17 @@ Examples:
     %(prog)s                 # Regenerate all context files
     %(prog)s --verify        # Check if files are up-to-date (for CI)
     %(prog)s --list          # List available generators
+    %(prog)s --only testing  # Regenerate one generator
     %(prog)s --quiet         # Suppress progress output
         """,
+    )
+    parser.add_argument(
+        "--only",
+        type=str,
+        help=(
+            "Comma-separated list of generators to run (e.g., 'schemas,testing'). "
+            "Valid values: schemas, models, logging, testing, validation, broker, reasoning, health"
+        ),
     )
     parser.add_argument(
         "--verify",
@@ -251,11 +281,26 @@ Examples:
         list_generators()
         return 0
 
+    requested = parse_only_arg(args.only)
+    if args.only and not requested:
+        print("Error: --only provided but no generator keys found.", file=sys.stderr)
+        list_generators()
+        return 2
+
+    valid_keys = {output_dir for _, output_dir, _ in GENERATORS}
+    invalid = sorted(requested - valid_keys)
+    if invalid:
+        print(f"Error: Unknown generator key(s): {', '.join(invalid)}", file=sys.stderr)
+        list_generators()
+        return 2
+
+    generators_to_run = [g for g in GENERATORS if g[1] in requested] if requested else GENERATORS
+
     if args.verify:
-        return verify_freshness()
+        return verify_freshness(generators=generators_to_run)
 
     # Normal regeneration
-    results, success = regenerate_all(verbose=not args.quiet)
+    results, success = regenerate_all(verbose=not args.quiet, generators=generators_to_run)
 
     # Summary
     passed = len([r for r in results if r.success])

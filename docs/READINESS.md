@@ -43,8 +43,8 @@ Thresholds (default targets):
 - `gpt_trader_ws_gap_count == 0` (or documented tolerance <= 1 per day)
 
 Checklist:
-- [ ] Evidence path(s):
-- [ ] Notes:
+- [ ] Evidence path(s): `runtime_data/canary/reports/daily_report_2026-01-15.json`
+- [ ] Notes: 2026-01-15 report 1/3 collected; stale_marks=0, ws_reconnects=0, api_errors=1 -> NOT GREEN.
 
 ### 2) Strategy validity
 
@@ -64,8 +64,8 @@ Thresholds (adjust per strategy):
 - Walk-forward: >= 3 windows with consistent sign of returns
 
 Checklist:
-- [ ] Evidence path(s):
-- [ ] Notes:
+- [ ] Evidence path(s): `runtime_data/canary/reports/daily_report_2026-01-15.json`, `preflight_report_20260115_214021.json`
+- [ ] Notes: 2026-01-15 report 1/3 collected; guard_triggers.api_health=1 -> NOT GREEN. Preflight readiness failed risk thresholds.
 
 ### 3) Risk management
 
@@ -84,8 +84,8 @@ Thresholds (default targets):
 - No circuit breaker triggers in paper runs
 
 Checklist:
-- [ ] Evidence path(s):
-- [ ] Notes:
+- [ ] Evidence path(s): `runtime_data/canary/reports/daily_report_2026-01-15.json`
+- [ ] Notes: 2026-01-15 report 1/3 collected; unfilled_orders=0, api_errors=1 -> NOT GREEN.
 
 ### 4) Execution correctness
 
@@ -103,8 +103,8 @@ Thresholds (default targets):
 - `health.api_errors == 0`
 
 Checklist:
-- [ ] Evidence path(s):
-- [ ] Notes:
+- [ ] Evidence path(s): `preflight_report_20260115_214038.json`, `preflight_report_20260115_214021.json`
+- [ ] Notes: 2026-01-15 DRY_RUN view-only passed; live-intent preflight failed as expected (can_trade=False).
 
 ### 5) State persistence and recovery
 

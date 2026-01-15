@@ -92,6 +92,47 @@ class PreflightContext:
             "COINBASE_ENABLE_DERIVATIVES": ("1", True),
         }
 
+    def _env_bool(self, key: str, default: bool = False) -> bool:
+        raw = os.getenv(key)
+        if raw is None or raw == "":
+            return default
+        return raw.strip().lower() in {"1", "true", "yes", "y", "on"}
+
+    def trading_modes(self) -> list[str]:
+        raw = os.getenv("TRADING_MODES", "")
+        if not raw:
+            return ["spot"]
+        modes = [mode.strip().lower() for mode in raw.split(",") if mode.strip()]
+        return modes or ["spot"]
+
+    def cfm_enabled(self) -> bool:
+        return self._env_bool("CFM_ENABLED", False)
+
+    def intx_perps_enabled(self) -> bool:
+        raw = os.getenv("COINBASE_ENABLE_INTX_PERPS")
+        if raw is not None and raw != "":
+            return self._env_bool("COINBASE_ENABLE_INTX_PERPS", False)
+        return self._env_bool("COINBASE_ENABLE_DERIVATIVES", False)
+
+    def intends_real_orders(self) -> bool:
+        if self._env_bool("DRY_RUN", False):
+            return False
+        if self._env_bool("PAPER_MODE", False):
+            return False
+        if self._env_bool("PERPS_PAPER", False):
+            return False
+        if os.getenv("COINBASE_SANDBOX", "0") == "1":
+            return False
+        return True
+
+    def requires_trade_permission(self) -> bool:
+        if not self.intends_real_orders():
+            return False
+        modes = set(self.trading_modes())
+        if modes.intersection({"spot", "cfm"}):
+            return True
+        return self.intx_perps_enabled()
+
     # ----- Coinbase connectivity helpers -----------------------------------
     def build_cdp_client(self) -> tuple[Any, Any] | None:
         try:

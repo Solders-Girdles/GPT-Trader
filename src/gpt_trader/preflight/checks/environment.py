@@ -12,8 +12,17 @@ def check_environment_variables(checker: PreflightCheck) -> bool:
     checker.section_header("3. ENVIRONMENT CONFIGURATION")
 
     ctx = checker.context
+    intx_perps_enabled = ctx.intx_perps_enabled()
+    intx_raw = os.getenv("COINBASE_ENABLE_INTX_PERPS")
+    legacy_raw = os.getenv("COINBASE_ENABLE_DERIVATIVES")
+    use_legacy_flag = intx_raw is None or intx_raw == ""
     all_good = True
     for var, (expected, strict) in ctx.expected_env_defaults().items():
+        if var == "COINBASE_ENABLE_DERIVATIVES":
+            if not intx_perps_enabled:
+                continue
+            if not use_legacy_flag:
+                continue
         actual = os.getenv(var)
         if actual == expected:
             checker.log_info(f"{var}={expected}")
@@ -29,6 +38,42 @@ def check_environment_variables(checker: PreflightCheck) -> bool:
             all_good = False
         else:
             checker.log_warning(message)
+
+    if intx_raw and legacy_raw:
+        if ctx._env_bool("COINBASE_ENABLE_INTX_PERPS") != ctx._env_bool(
+            "COINBASE_ENABLE_DERIVATIVES"
+        ):
+            checker.log_warning(
+                "COINBASE_ENABLE_INTX_PERPS overrides legacy COINBASE_ENABLE_DERIVATIVES"
+            )
+
+    modes = ctx.trading_modes()
+    raw_modes = os.getenv("TRADING_MODES", "")
+    if raw_modes:
+        checker.log_info(f"TRADING_MODES={raw_modes}")
+    else:
+        checker.log_info("TRADING_MODES not set; defaulting to spot")
+
+    unknown_modes = sorted({mode for mode in modes if mode not in {"spot", "cfm"}})
+    if unknown_modes:
+        checker.log_warning(f"Unknown TRADING_MODES entries: {', '.join(unknown_modes)}")
+
+    cfm_in_modes = "cfm" in modes
+    cfm_enabled = ctx.cfm_enabled()
+    if cfm_in_modes and not cfm_enabled:
+        message = "TRADING_MODES includes cfm but CFM_ENABLED is not set to 1"
+        if ctx.profile == "dev":
+            checker.log_warning(message)
+        else:
+            checker.log_error(message)
+            all_good = False
+    elif cfm_enabled and not cfm_in_modes:
+        checker.log_warning("CFM_ENABLED=1 but TRADING_MODES does not include cfm")
+
+    if intx_perps_enabled:
+        checker.log_info("INTX perps enabled via COINBASE_ENABLE_INTX_PERPS")
+    else:
+        checker.log_info("INTX perps disabled (spot/CFM only)")
 
     api_key, private_key = ctx.resolve_cdp_credentials()
     if not api_key:

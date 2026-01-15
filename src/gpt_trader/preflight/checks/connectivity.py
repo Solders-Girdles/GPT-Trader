@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import time
 from typing import TYPE_CHECKING
 from urllib.error import HTTPError, URLError
@@ -60,15 +59,15 @@ def check_api_connectivity(checker: PreflightCheck) -> bool:
                 for product in perps[:3]:
                     checker.log_info(f"  - {product.get('product_id')}")
         else:
-            derivatives_enabled = os.getenv("COINBASE_ENABLE_DERIVATIVES") == "1"
-            if derivatives_enabled:
+            intx_perps_enabled = ctx.intx_perps_enabled()
+            if intx_perps_enabled:
                 checker.log_error("No perpetual products found")
                 all_good = False
             else:
                 if checker.context.profile == "dev":
-                    checker.log_info("No perpetual products found (derivatives disabled)")
+                    checker.log_info("No perpetual products found (INTX perps disabled)")
                 else:
-                    checker.log_warning("No perpetual products found (derivatives disabled)")
+                    checker.log_warning("No perpetual products found (INTX perps disabled)")
     except Exception as exc:
         checker.log_error(f"Failed to list products: {exc}")
         all_good = False
@@ -117,7 +116,8 @@ def check_key_permissions(checker: PreflightCheck) -> bool:
     can_view = bool(permissions.get("can_view"))
     portfolio_type = str(permissions.get("portfolio_type") or "").upper()
     portfolio_uuid = permissions.get("portfolio_uuid")
-    derivatives_enabled = os.getenv("COINBASE_ENABLE_DERIVATIVES") == "1"
+    intx_perps_enabled = ctx.intx_perps_enabled()
+    requires_trade_permission = ctx.requires_trade_permission()
 
     all_good = True
 
@@ -128,14 +128,13 @@ def check_key_permissions(checker: PreflightCheck) -> bool:
         checker.log_error("API key missing portfolio view permission (can_view=False)")
         all_good = False
 
-    # Trade permission is only required when derivatives are enabled (live trading)
+    # Trade permission is required when live orders are intended (spot/cfm/perps)
     if can_trade:
         checker.log_success("API key has trade permission")
     else:
-        if derivatives_enabled:
+        if requires_trade_permission:
             checker.log_error(
-                "API key missing trade permission (can_trade=False) - "
-                "required when COINBASE_ENABLE_DERIVATIVES=1"
+                "API key missing trade permission (can_trade=False) - required for live trading"
             )
             all_good = False
         else:
@@ -149,7 +148,7 @@ def check_key_permissions(checker: PreflightCheck) -> bool:
     else:
         checker.log_warning("Portfolio UUID not returned; verify CDP key portfolio access")
 
-    if derivatives_enabled:
+    if intx_perps_enabled:
         if portfolio_type == "INTX":
             checker.log_success("INTX portfolio detected (derivatives can execute)")
         else:

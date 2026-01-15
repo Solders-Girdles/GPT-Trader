@@ -1,0 +1,166 @@
+from __future__ import annotations
+
+import json
+import os
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from gpt_trader.preflight.core import PreflightCheck
+
+
+def _is_warn_only() -> bool:
+    return os.getenv("GPT_TRADER_PREFLIGHT_WARN_ONLY", "0") == "1"
+
+
+def _coerce_int(value: Any) -> int:
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _get_env_int(key: str, default: int) -> int:
+    raw = os.getenv(key)
+    if raw is None or raw == "":
+        return default
+    try:
+        return int(raw)
+    except ValueError:
+        return default
+
+
+def _resolve_report_path(raw_path: str) -> tuple[Path | None, str | None]:
+    path = Path(raw_path).expanduser()
+    if path.is_dir():
+        candidates = sorted(path.glob("daily_report_*.json"))
+        if not candidates:
+            return None, f"No daily_report_*.json files under {path}"
+        return candidates[-1], None
+    if path.exists():
+        return path, None
+    return None, f"Readiness report not found: {path}"
+
+
+def _load_report(path: Path) -> tuple[dict[str, Any] | None, str | None]:
+    try:
+        with path.open("r", encoding="utf-8") as handle:
+            data = json.load(handle)
+        if isinstance(data, dict):
+            return data, None
+        return None, "Report is not a JSON object"
+    except Exception as exc:
+        return None, f"Failed to read report: {exc}"
+
+
+def check_readiness_report(checker: PreflightCheck) -> bool:
+    """Validate readiness report metrics (optional)."""
+    checker.section_header("12. READINESS GATE (OPTIONAL)")
+
+    report_env = os.getenv("GPT_TRADER_READINESS_REPORT")
+    if not report_env:
+        checker.log_info("Readiness gate skipped (set GPT_TRADER_READINESS_REPORT to enable)")
+        return True
+
+    warn_only = _is_warn_only()
+    report_path, path_error = _resolve_report_path(report_env)
+    if path_error:
+        if warn_only:
+            checker.log_warning(path_error)
+            return True
+        checker.log_error(path_error)
+        return False
+
+    report, load_error = _load_report(report_path)
+    if load_error or report is None:
+        message = load_error or "Readiness report is empty"
+        if warn_only:
+            checker.log_warning(message)
+            return True
+        checker.log_error(message)
+        return False
+
+    checker.log_info(f"Using readiness report: {report_path}")
+
+    report_profile = report.get("profile")
+    if report_profile and report_profile != checker.profile:
+        checker.log_warning(
+            f"Readiness report profile '{report_profile}' != preflight profile '{checker.profile}'"
+        )
+
+    health = report.get("health")
+    risk = report.get("risk")
+    if not isinstance(health, dict):
+        message = "Readiness report missing 'health' section"
+        if warn_only:
+            checker.log_warning(message)
+            return True
+        checker.log_error(message)
+        return False
+    if not isinstance(risk, dict):
+        message = "Readiness report missing 'risk' section"
+        if warn_only:
+            checker.log_warning(message)
+            return True
+        checker.log_error(message)
+        return False
+
+    thresholds = {
+        "stale_marks_max": _get_env_int("GPT_TRADER_READINESS_STALE_MARKS_MAX", 0),
+        "ws_reconnects_max": _get_env_int("GPT_TRADER_READINESS_WS_RECONNECTS_MAX", 3),
+        "unfilled_orders_max": _get_env_int("GPT_TRADER_READINESS_UNFILLED_ORDERS_MAX", 0),
+        "api_errors_max": _get_env_int("GPT_TRADER_READINESS_API_ERRORS_MAX", 0),
+        "guard_triggers_max": _get_env_int("GPT_TRADER_READINESS_GUARD_TRIGGERS_MAX", 0),
+    }
+
+    stale_marks = _coerce_int(health.get("stale_marks", health.get("stale_marks_count")))
+    ws_reconnects = _coerce_int(health.get("ws_reconnects"))
+    unfilled_orders = _coerce_int(health.get("unfilled_orders"))
+    api_errors = _coerce_int(health.get("api_errors"))
+
+    guard_triggers = risk.get("guard_triggers", {})
+    guard_triggers_total = 0
+    if isinstance(guard_triggers, dict):
+        guard_triggers_total = sum(_coerce_int(value) for value in guard_triggers.values())
+    else:
+        guard_triggers_total = _coerce_int(guard_triggers)
+
+    circuit_breaker_state = risk.get("circuit_breaker_state", {})
+    circuit_breaker_triggered = False
+    if isinstance(circuit_breaker_state, dict):
+        circuit_breaker_triggered = bool(circuit_breaker_state.get("triggered"))
+
+    checks = [
+        ("stale marks", stale_marks, thresholds["stale_marks_max"]),
+        ("ws reconnects", ws_reconnects, thresholds["ws_reconnects_max"]),
+        ("unfilled orders", unfilled_orders, thresholds["unfilled_orders_max"]),
+        ("api errors", api_errors, thresholds["api_errors_max"]),
+        ("guard triggers", guard_triggers_total, thresholds["guard_triggers_max"]),
+    ]
+
+    all_good = True
+    for label, value, max_allowed in checks:
+        if value <= max_allowed:
+            checker.log_success(f"Readiness {label}: {value} <= {max_allowed}")
+        else:
+            message = f"Readiness {label}: {value} > {max_allowed}"
+            if warn_only:
+                checker.log_warning(message)
+            else:
+                checker.log_error(message)
+            all_good = False
+
+    if circuit_breaker_triggered:
+        message = "Readiness circuit breaker triggered in report"
+        if warn_only:
+            checker.log_warning(message)
+        else:
+            checker.log_error(message)
+        all_good = False
+    else:
+        checker.log_success("Readiness circuit breaker: not triggered")
+
+    return all_good or warn_only
+
+
+__all__ = ["check_readiness_report"]

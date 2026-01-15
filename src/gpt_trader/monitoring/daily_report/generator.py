@@ -14,7 +14,7 @@ from .analytics import (
     calculate_symbol_metrics,
     calculate_trade_metrics,
 )
-from .loaders import load_events_since, load_metrics
+from .loaders import load_events_since, load_metrics, load_unfilled_orders_count
 from .logging_utils import logger  # naming: allow
 from .models import DailyReport
 
@@ -29,6 +29,7 @@ class DailyReportGenerator:
         self.data_dir = Path(data_dir)
         self.events_file = self.data_dir / "events.jsonl"
         self.metrics_file = self.data_dir / "metrics.json"
+        self.orders_file = self.data_dir / "orders.db"
 
     def generate(self, date: datetime | None = None, lookback_hours: int = 24) -> DailyReport:
         if date is None:
@@ -45,6 +46,11 @@ class DailyReportGenerator:
         symbol_metrics = calculate_symbol_metrics(events)
         risk_metrics = calculate_risk_metrics(events)
         health_metrics = calculate_health_metrics(events)
+        orders_unfilled = load_unfilled_orders_count(self.orders_file, as_of=date)
+        if orders_unfilled:
+            current_unfilled = int(health_metrics.get("unfilled_orders", 0) or 0)
+            if orders_unfilled > current_unfilled:
+                health_metrics["unfilled_orders"] = orders_unfilled
 
         return DailyReport(
             date=date.strftime("%Y-%m-%d"),

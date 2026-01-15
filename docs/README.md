@@ -18,6 +18,7 @@ last-updated: 2025-11-24
 | [Capability Map](CAPABILITIES.md) | Runtime flow, capability matrix, where to change things |
 | [Feature Flags](FEATURE_FLAGS.md) | Configuration precedence and canonical sources |
 | [Production Guide](guides/production.md) | Deployment, rollout, and emergency procedures |
+| [Readiness Checklist](READINESS.md) | Gates to move from paper to live trading |
 | [Reliability Guide](RELIABILITY.md) | Guard stack, degradation responses, chaos testing |
 | [Coinbase Reference](reference/coinbase_complete.md) | Complete API integration docs |
 | [AI Agent Guide](guides/agents.md) | For AI agents working with this codebase |
@@ -40,6 +41,7 @@ last-updated: 2025-11-24
 
 ### Trading Operations
 - [Production Deployment](guides/production.md) - Deployment, monitoring, rollback, emergencies
+- [Readiness Checklist](READINESS.md) - Paper/live gate criteria and evidence
 - [Reliability Guide](RELIABILITY.md) - Degradation matrix, config defaults, chaos harness
 - [Monitoring Playbook](MONITORING_PLAYBOOK.md) - Metrics, alerting, and dashboards
 - [Observability Reference](OBSERVABILITY.md) - Metrics, traces, and structured logging

@@ -14,22 +14,31 @@ def simulate_dry_run(checker: PreflightCheck) -> bool:
 
     try:
         from gpt_trader.app.config import BotConfig
-        from gpt_trader.app.container import create_application_container
+        from gpt_trader.app.container import (
+            create_application_container,
+            get_application_container,
+            set_application_container,
+        )
 
         config = BotConfig.from_profile(profile=checker.profile, dry_run=True, mock_broker=True)
         checker.log_info(f"Config: {checker.profile} profile, dry_run=True, deterministic broker")
 
+        previous_container = get_application_container()
         container = create_application_container(config)
-        checker.log_success("Application container initialized")
+        set_application_container(container)
+        try:
+            checker.log_success("Application container initialized")
 
-        bot = container.create_bot()
-        checker.log_success("TradingBot constructed via container")
+            bot = container.create_bot()
+            checker.log_success("TradingBot constructed via container")
 
-        if bot.engine:
-            checker.log_success("Trading engine available")
+            if bot.engine:
+                checker.log_success("Trading engine available")
 
-        checker.log_success("Dry-run simulation passed")
-        return True
+            checker.log_success("Dry-run simulation passed")
+            return True
+        finally:
+            set_application_container(previous_container)
 
     except Exception as exc:
         checker.log_error(f"Dry-run simulation failed: {exc}")

@@ -146,8 +146,10 @@ uv run gpt-trader report daily --lookback-hours 48
 
 Reports saved to: `runtime_data/{profile}/reports/daily_report_{date}.txt`
 
-Note: Daily reports read `runtime_data/<profile>/events.jsonl` (legacy JSONL). If you only
-have `events.db`, export JSONL first or expect empty event-derived sections.
+Note: Daily reports read `runtime_data/<profile>/events.db` (canonical) and fall back to
+`runtime_data/<profile>/events.jsonl` for legacy runs. Metrics come from
+`runtime_data/<profile>/metrics.json` when present (otherwise the latest `cycle_metrics`
+event), and unfilled-order health uses `runtime_data/<profile>/orders.db`.
 
 ### Cron Job Setup
 
@@ -241,8 +243,9 @@ degradation_ok, degradation_details = check_degradation_state(degradation_state,
 - Verify Prometheus targets: `http://localhost:9090/targets`
 
 **Daily report has no data:**
-- Verify `runtime_data/<profile>/events.jsonl` exists (legacy JSONL export)
-- Check `runtime_data/<profile>/metrics.json`
+- Verify `runtime_data/<profile>/events.db` exists (preferred) or `events.jsonl` for legacy runs
+- Check `runtime_data/<profile>/metrics.json` (or ensure `cycle_metrics` events exist)
+- Confirm `runtime_data/<profile>/orders.db` has recent orders for unfilled-order health
 - Increase `--lookback-hours`
 
 **Exporter returns empty metrics:**

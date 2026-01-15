@@ -1,4 +1,4 @@
-.PHONY: dev-up dev-down lint typecheck test smoke preflight dash cov clean clean-dry-run scaffold-slice \
+.PHONY: dev-up dev-down lint typecheck test smoke preflight preflight-readiness dash cov clean clean-dry-run scaffold-slice \
 	legacy-bundle agent-setup agent-check agent-impact agent-impact-full agent-map agent-tests agent-risk \
 	agent-naming agent-health agent-health-fast agent-health-full agent-chaos-smoke agent-chaos-week \
 	agent-regenerate agent-docs-links
@@ -11,6 +11,8 @@ AGENT_CHAOS_SCENARIO?=volatile_market
 AGENT_CHAOS_OUTPUT?=var/agents/health/chaos_smoke.json
 AGENT_CHAOS_MAX_DRAWDOWN_PCT?=10
 AGENT_CHAOS_MAX_FEES_PCT?=4.5
+PREFLIGHT_PROFILE?=canary
+READINESS_REPORT_DIR?=runtime_data/$(PREFLIGHT_PROFILE)/reports
 
 # Start local development stack (bot by default)
 dev-up:
@@ -34,6 +36,10 @@ smoke:
 
 preflight:
 	uv run python scripts/production_preflight.py --profile canary --verbose
+
+preflight-readiness:
+	GPT_TRADER_READINESS_REPORT="$(READINESS_REPORT_DIR)" uv run python scripts/production_preflight.py \
+		--profile $(PREFLIGHT_PROFILE) --verbose
 
 cov:
 	uv run pytest -m "not slow and not performance" -q \

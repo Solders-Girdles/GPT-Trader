@@ -10,6 +10,7 @@ from .dependencies import check_dependencies
 from .diagnostics import check_pretrade_diagnostics
 from .environment import check_environment_variables
 from .profile import check_profile_configuration
+from .readiness import check_readiness_report
 from .risk import check_risk_configuration
 from .simulation import simulate_dry_run
 from .system import (
@@ -29,6 +30,7 @@ __all__ = [
     "check_key_permissions",
     "check_risk_configuration",
     "check_pretrade_diagnostics",
+    "check_readiness_report",
     "check_test_suite",
     "check_profile_configuration",
     "simulate_dry_run",

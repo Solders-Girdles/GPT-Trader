@@ -132,6 +132,7 @@ class TestMain:
             mock_checker.check_system_time.assert_called_once()
             mock_checker.check_disk_space.assert_called_once()
             mock_checker.simulate_dry_run.assert_called_once()
+            mock_checker.check_readiness_report.assert_called_once()
 
     def test_handles_check_exception_gracefully(self) -> None:
         """Should handle exceptions from checks gracefully."""

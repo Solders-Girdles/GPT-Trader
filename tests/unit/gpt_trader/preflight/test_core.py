@@ -218,6 +218,16 @@ class TestPreflightCheckDelegations:
 
             mock.assert_called_once_with(check)
 
+    def test_check_readiness_report_delegates(self) -> None:
+        """check_readiness_report should delegate to module function."""
+        check = PreflightCheck()
+
+        with patch("gpt_trader.preflight.core.check_readiness_report") as mock:
+            mock.return_value = True
+            check.check_readiness_report()
+
+            mock.assert_called_once_with(check)
+
     def test_check_test_suite_delegates(self) -> None:
         """check_test_suite should delegate to module function."""
         check = PreflightCheck()

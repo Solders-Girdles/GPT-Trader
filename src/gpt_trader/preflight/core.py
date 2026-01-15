@@ -12,6 +12,7 @@ from .checks import (
     check_pretrade_diagnostics,
     check_profile_configuration,
     check_python_version,
+    check_readiness_report,
     check_risk_configuration,
     check_system_time,
     check_test_suite,
@@ -102,6 +103,9 @@ class PreflightCheck:
 
     def check_pretrade_diagnostics(self) -> bool:
         return check_pretrade_diagnostics(self)
+
+    def check_readiness_report(self) -> bool:
+        return check_readiness_report(self)
 
     def check_test_suite(self) -> bool:
         return check_test_suite(self)

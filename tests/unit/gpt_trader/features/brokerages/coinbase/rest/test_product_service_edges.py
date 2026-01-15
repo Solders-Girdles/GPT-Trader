@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from unittest.mock import Mock
 
 from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
@@ -100,4 +100,4 @@ def test_get_candles_skips_invalid_time() -> None:
     candles = service.get_candles("BTC-USD")
 
     assert len(candles) == 1
-    assert candles[0].ts == datetime(2024, 1, 1, 0, 0, 0)
+    assert candles[0].ts == datetime(2024, 1, 1, 0, 0, 0, tzinfo=UTC)

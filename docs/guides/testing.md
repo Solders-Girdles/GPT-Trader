@@ -237,6 +237,9 @@ Use the impact analyzer to see which tests map to a change:
 
 ```bash
 uv run agent-impact --files src/gpt_trader/features/live_trade/bot.py --include-importers
+uv run agent-impact --files src/gpt_trader/features/live_trade/bot.py --source-files
+uv run agent-impact --files src/gpt_trader/features/live_trade/bot.py --include-importers --source-files
+uv run agent-impact --files src/gpt_trader/features/live_trade/bot.py --exclude-integration --source-files
 ```
 
 CI safeguards:

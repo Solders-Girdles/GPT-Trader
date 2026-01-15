@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
 from gpt_trader.monitoring.alert_types import Alert, AlertSeverity
+from gpt_trader.utilities.datetime_helpers import utc_now
 
 
 class TestAlertSeverityNumericLevel:
@@ -118,9 +119,9 @@ class TestAlertCreation:
         assert alert1.alert_id != alert2.alert_id
 
     def test_auto_sets_created_at(self) -> None:
-        before = datetime.utcnow()
+        before = utc_now()
         alert = Alert(severity=AlertSeverity.INFO, title="Test", message="Test")
-        after = datetime.utcnow()
+        after = utc_now()
         assert before <= alert.created_at <= after
 
     def test_last_seen_at_defaults_to_created_at(self) -> None:
@@ -152,7 +153,7 @@ class TestAlertCreation:
         assert alert.acknowledged is False
 
     def test_created_at_override(self) -> None:
-        custom_time = datetime(2024, 1, 1, 12, 0, 0)
+        custom_time = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
         alert = Alert(
             severity=AlertSeverity.INFO,
             title="Test",
@@ -167,11 +168,13 @@ class TestAlertProperties:
 
     def test_id_property_returns_alert_id(self) -> None:
         alert = Alert(severity=AlertSeverity.INFO, title="Test", message="Test")
-        assert alert.id == alert.alert_id
+        with pytest.warns(DeprecationWarning, match="Alert.id is deprecated"):
+            assert alert.id == alert.alert_id
 
     def test_timestamp_property_returns_created_at(self) -> None:
         alert = Alert(severity=AlertSeverity.INFO, title="Test", message="Test")
-        assert alert.timestamp == alert.created_at
+        with pytest.warns(DeprecationWarning, match="Alert.timestamp is deprecated"):
+            assert alert.timestamp == alert.created_at
 
 
 class TestAlertTouch:
@@ -186,16 +189,16 @@ class TestAlertTouch:
         assert alert.occurrences == 3
 
     def test_touch_updates_last_seen_at(self) -> None:
-        custom_time = datetime(2024, 1, 1, 12, 0, 0)
+        custom_time = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
         alert = Alert(
             severity=AlertSeverity.INFO,
             title="Test",
             message="Test",
             created_at_override=custom_time,
         )
-        before = datetime.utcnow()
+        before = utc_now()
         alert.touch()
-        after = datetime.utcnow()
+        after = utc_now()
         assert before <= alert.last_seen_at <= after
         assert alert.last_seen_at > custom_time
 
@@ -248,7 +251,7 @@ class TestAlertToDict:
         assert result["component"] == "test_component"
 
     def test_serializes_datetimes_to_iso_format(self) -> None:
-        custom_time = datetime(2024, 6, 15, 10, 30, 0)
+        custom_time = datetime(2024, 6, 15, 10, 30, 0, tzinfo=UTC)
         alert = Alert(
             severity=AlertSeverity.INFO,
             title="Test",
@@ -256,7 +259,7 @@ class TestAlertToDict:
             created_at_override=custom_time,
         )
         result = alert.to_dict()
-        assert result["created_at"] == "2024-06-15T10:30:00"
+        assert result["created_at"] == "2024-06-15T10:30:00+00:00"
 
 
 class TestAlertMarkResolved:
@@ -266,9 +269,9 @@ class TestAlertMarkResolved:
         alert = Alert(severity=AlertSeverity.ERROR, title="Test", message="Test")
         assert alert.resolved_at is None
 
-        before = datetime.utcnow()
+        before = utc_now()
         alert.mark_resolved()
-        after = datetime.utcnow()
+        after = utc_now()
 
         assert alert.resolved_at is not None
         assert before <= alert.resolved_at <= after
@@ -304,7 +307,7 @@ class TestAlertAgeMinutes:
 
     def test_age_for_unresolved_alert(self) -> None:
         # Create alert 60 seconds ago
-        past_time = datetime.utcnow() - timedelta(seconds=60)
+        past_time = utc_now() - timedelta(seconds=60)
         alert = Alert(
             severity=AlertSeverity.INFO,
             title="Test",
@@ -315,8 +318,8 @@ class TestAlertAgeMinutes:
         assert 0.9 < age < 1.1  # Should be about 1 minute
 
     def test_age_for_resolved_alert(self) -> None:
-        past_time = datetime(2024, 1, 1, 12, 0, 0)
-        resolved_time = datetime(2024, 1, 1, 12, 30, 0)
+        past_time = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
+        resolved_time = datetime(2024, 1, 1, 12, 30, 0, tzinfo=UTC)
 
         alert = Alert(
             severity=AlertSeverity.INFO,

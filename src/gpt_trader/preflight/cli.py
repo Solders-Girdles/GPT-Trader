@@ -8,6 +8,14 @@ from datetime import datetime, timezone
 from .context import Colors
 from .core import PreflightCheck
 
+load_dotenv: Callable[..., bool] | None
+try:
+    from dotenv import load_dotenv as _load_dotenv
+except ImportError:  # pragma: no cover - optional dependency for CLI convenience
+    load_dotenv = None
+else:
+    load_dotenv = _load_dotenv
+
 
 def _header(profile: str) -> None:
     print(f"{Colors.BOLD}{Colors.MAGENTA}")
@@ -37,6 +45,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
 
     args = parser.parse_args(argv)
+
+    if load_dotenv is not None:
+        load_dotenv()
 
     # Set warn-only env var if CLI flag is provided
     if args.warn_only:

@@ -12,6 +12,7 @@ from gpt_trader.backtesting.types import ClockSpeed
 from gpt_trader.core import Candle, Quote
 
 if TYPE_CHECKING:
+    from gpt_trader.backtesting.chaos.engine import ChaosEngine
     from gpt_trader.backtesting.simulation.broker import SimulatedBroker
 
 
@@ -146,6 +147,7 @@ class ClockedBarRunner:
         start_date: datetime,
         end_date: datetime,
         clock_speed: ClockSpeed = ClockSpeed.INSTANT,
+        chaos_engine: "ChaosEngine | None" = None,
     ):
         """
         Initialize bar runner.
@@ -157,6 +159,7 @@ class ClockedBarRunner:
             start_date: Start of backtest period
             end_date: End of backtest period
             clock_speed: Replay speed
+            chaos_engine: Optional ChaosEngine for data perturbations
         """
         self.data_provider = data_provider
         self.symbols = symbols
@@ -166,6 +169,9 @@ class ClockedBarRunner:
 
         # Clock
         self.clock = SimulationClock(speed=clock_speed, start_time=start_date)
+
+        # Optional chaos injection
+        self._chaos_engine = chaos_engine
 
         # Granularity to timedelta mapping
         self._granularity_delta = self._parse_granularity(granularity)
@@ -216,17 +222,25 @@ class ClockedBarRunner:
             # Fetch bars for all symbols at current time
             bars = await self._fetch_bars_for_time(current_time)
 
+            # Apply chaos to candles (drops/adjustments)
+            bars = self._apply_chaos_to_bars(current_time, bars)
+
             # Skip if we don't have data for any symbols
             if not bars:
                 current_time += self._granularity_delta
                 continue
 
+            # Apply optional latency to the delivered timestamp
+            effective_time = current_time
+            if self._chaos_engine and self._chaos_engine.is_enabled():
+                effective_time = self._chaos_engine.apply_latency(current_time)
+
             # Generate quotes from bars
-            quotes = self._bars_to_quotes(bars, current_time)
+            quotes = self._bars_to_quotes(bars, effective_time)
 
             # Trigger on_bar_start hooks
             for hook in self._on_bar_start_hooks:
-                hook(current_time, bars)
+                hook(effective_time, bars)
 
             # Advance clock
             await self.clock.advance_async(self._granularity_delta)
@@ -234,11 +248,11 @@ class ClockedBarRunner:
             self._bars_processed += 1
 
             # Yield data to caller
-            yield current_time, bars, quotes
+            yield effective_time, bars, quotes
 
             # Trigger on_bar_end hooks
             for hook in self._on_bar_end_hooks:
-                hook(current_time, bars)
+                hook(effective_time, bars)
 
             # Move to next bar
             current_time += self._granularity_delta
@@ -304,7 +318,7 @@ class ClockedBarRunner:
                 bid=bid,
                 ask=ask,
                 last=bar.close,
-                ts=bar_time,
+                ts=bar.ts or bar_time,
             )
 
         return quotes
@@ -316,6 +330,27 @@ class ClockedBarRunner:
     def on_bar_end(self, callback: Callable[[datetime, dict[str, Candle]], None]) -> None:
         """Register callback to be called at the end of each bar."""
         self._on_bar_end_hooks.append(callback)
+
+    def set_chaos_engine(self, chaos_engine: "ChaosEngine | None") -> None:
+        """Attach or clear the ChaosEngine for this runner."""
+        self._chaos_engine = chaos_engine
+
+    def _apply_chaos_to_bars(
+        self,
+        bar_time: datetime,
+        bars: dict[str, Candle],
+    ) -> dict[str, Candle]:
+        if not self._chaos_engine or not self._chaos_engine.is_enabled():
+            return bars
+
+        adjusted: dict[str, Candle] = {}
+        for symbol, candle in bars.items():
+            processed = self._chaos_engine.process_candle(symbol, candle, bar_time)
+            if processed is None:
+                continue
+            adjusted[symbol] = processed
+
+        return adjusted
 
     @property
     def progress_pct(self) -> float:

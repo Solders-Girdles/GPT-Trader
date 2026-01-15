@@ -26,7 +26,6 @@ def test_config_manager_basic_functionality():
     assert config_with_overrides.dry_run is True
 
     print("✓ ConfigManager basic functionality verified")
-    return True
 
 
 if __name__ == "__main__":

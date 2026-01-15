@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any
 
 from gpt_trader.security.request_validator import RequestValidator
+from gpt_trader.utilities.datetime_helpers import utc_now
 
 # ============================================================
 # Test: validate_request - Success cases
@@ -19,7 +19,7 @@ class TestValidateRequestSuccess:
         """Test valid request with action and timestamp passes."""
         request = {
             "action": "buy",
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": utc_now().isoformat(),
         }
 
         result = RequestValidator.validate_request(request)

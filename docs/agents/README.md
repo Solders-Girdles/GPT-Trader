@@ -9,6 +9,7 @@ Use this folder for AI-focused navigation aids and generated inventories.
 - Glossary: `docs/agents/glossary.md`
 - Naming inventory: `docs/agents/naming_inventory.md`
 - Document verification matrix: `docs/agents/Document_Verification_Matrix.md`
+- Source → test map: `var/agents/testing/source_test_map.json`
 
 ## Tooling
 

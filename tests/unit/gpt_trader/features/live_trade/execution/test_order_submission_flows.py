@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from decimal import Decimal
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -21,6 +20,7 @@ from gpt_trader.persistence.orders_store import (
 from gpt_trader.persistence.orders_store import (
     OrderStatus as StoreOrderStatus,
 )
+from gpt_trader.utilities.datetime_helpers import utc_now
 
 
 class TestSubmitOrder:
@@ -446,8 +446,8 @@ class TestTransientFailureWithClientOrderIdReuse:
                 stop_price=None,
                 tif=TimeInForce.GTC,
                 status=OrderStatus.PENDING,
-                submitted_at=datetime.utcnow(),
-                updated_at=datetime.utcnow(),
+                submitted_at=utc_now(),
+                updated_at=utc_now(),
             )
 
         mock_broker = MagicMock()

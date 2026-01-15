@@ -1,6 +1,6 @@
 # Config → Code Linkage Map
 
-Generated: 2026-01-14T15:51:14.927690+00:00
+Generated: 2026-01-15T05:11:45.778043+00:00
 
 Scan root: `src/gpt_trader`
 

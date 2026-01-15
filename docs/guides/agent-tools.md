@@ -14,6 +14,26 @@ This guide documents all agent tools available in GPT-Trader for AI-assisted dev
 | `uv run agent-risk` | Risk config query | Risk parameter lookup |
 | `uv run agent-naming` | Naming check | Verifying naming standards |
 | `uv run agent-regenerate` | Regenerate context | After schema changes |
+| `make agent-chaos-smoke` | Chaos smoke test | Quick robustness signal (drawdown/fees thresholds) |
+| `make agent-chaos-week` | Chaos week test | 7-day robustness signal (drawdown/fees thresholds) |
+
+---
+
+## Agent Environment Setup
+
+Install optional extras so agent tooling can exercise observability, live-trade, and analytics paths.
+
+```bash
+make agent-setup
+# or
+uv sync --all-extras
+```
+
+If you only need observability coverage (tracing tests), install that extra:
+
+```bash
+uv sync --extra observability
+```
 
 ---
 
@@ -24,7 +44,12 @@ Use these for quick local runs:
 ```bash
 make agent-check
 make agent-health
+make agent-health-fast
+make agent-health-full
+make agent-chaos-smoke
+make agent-chaos-week
 make agent-impact
+make agent-impact-full
 make agent-map
 make agent-tests
 make agent-risk
@@ -33,6 +58,11 @@ make agent-regenerate
 make agent-docs-links
 make scaffold-slice name=<slice> flags="--with-tests --with-readme"
 ```
+
+Note: `make agent-impact` defaults to `--include-importers --source-files --exclude-integration`.
+Use `make agent-impact-full` to include integration tests.
+Chaos smoke defaults cap fees at 4.5% (based on a 7-day baseline of ~4.34%) and drawdown at 10% to keep
+headroom while still flagging regression-level churn. Override with Makefile vars if needed.
 
 See `scripts/agents/README.md` for the full list of helpers.
 
@@ -101,6 +131,26 @@ uv run agent-health --format json --output var/agents/health/health_report.json 
 uv run agent-health --skip-preflight --skip-config
 ```
 
+Fast pre-check (explicit envs, no tests; runs preflight/config):
+
+```bash
+make agent-health-fast
+```
+
+CI note (skip lint/format/types when already covered by CI jobs):
+
+```bash
+make agent-health-fast AGENT_HEALTH_FAST_QUALITY_CHECKS=none
+```
+
+Full baseline (explicit envs, tests + preflight + config, JSON/text output):
+
+```bash
+make agent-health-full
+# or
+make agent-health
+```
+
 **Schema**: `var/agents/health/agent_health_schema.json`
 
 **Report Fields**: `schema_version`, `tool`, `ci_inputs`, `test_summary`
@@ -119,6 +169,8 @@ uv run agent-impact --from-git               # Analyze git changes
 uv run agent-impact --from-git --base main   # Compare to main branch
 uv run agent-impact --files src/gpt_trader/cli/commands/orders.py
 uv run agent-impact --include-importers      # Show importing modules
+uv run agent-impact --source-files           # Prefer file-only test suggestions
+uv run agent-impact --exclude-integration    # Drop integration tests
 uv run agent-impact --format text            # Human-readable output
 ```
 
@@ -127,6 +179,12 @@ uv run agent-impact --format text            # Human-readable output
 - `suggested_tests`: Specific test files to run
 - `pytest_command`: Ready-to-run command
 - `affected_components`: Components touched by changes
+
+If `var/agents/testing/source_test_map.json` is present, suggestions are augmented
+using import-based source/test mapping.
+Use `--source-files` to keep the recommended command to test file paths only.
+`--include-importers` now also expands test suggestions with importer modules.
+`--exclude-integration` removes tests under `tests/integration`.
 
 ---
 
@@ -160,10 +218,16 @@ Generates comprehensive test inventory with marker and path filtering.
 uv run agent-tests                            # Generate full inventory
 uv run agent-tests --by-marker risk           # Tests with risk marker
 uv run agent-tests --by-path tests/unit/gpt_trader/cli
+uv run agent-tests --source gpt_trader.cli
+uv run agent-tests --source gpt_trader.cli --source-files
 uv run agent-tests --stdout                   # Output to stdout
 ```
 
+`--source` matches tests that import the requested `gpt_trader` module (file-level scan).
+Use `--source-files` to output test file paths only.
+
 **Output Location**: `var/agents/testing/`
+**Source/Test Map**: `var/agents/testing/source_test_map.json`
 
 ---
 
@@ -244,7 +308,7 @@ var/agents/
 ├── testing/                # Test markers and index
 ├── validation/             # Validator registry
 ├── broker/                 # Broker API docs
-├── reasoning/              # CLI flow + config linkage maps
+├── reasoning/              # CLI flow + guard/execution + market data + backtesting + reporting + entrypoints + validation/chaos + config linkage
 └── health/                 # Agent health schema/example
 ```
 

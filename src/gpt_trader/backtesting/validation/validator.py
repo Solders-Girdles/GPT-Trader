@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from gpt_trader.backtesting.types import ValidationDivergence, ValidationReport
+from gpt_trader.utilities.datetime_helpers import utc_now
 
 from .decision_logger import StrategyDecision
 
@@ -230,7 +230,7 @@ class GoldenPathValidator:
 
         return ValidationReport(
             cycle_id=cycle_id,
-            timestamp=datetime.utcnow(),
+            timestamp=utc_now(),
             total_decisions=self._total_comparisons,
             matching_decisions=self._matching_comparisons,
             divergences=cycle_divergences,

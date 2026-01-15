@@ -2,10 +2,18 @@ from __future__ import annotations
 
 # Autouse fixtures here isolate preferences, patch Pilot.pause timing, and clear TUI singletons.
 import pytest
-from textual.pilot import Pilot
 
 # Small pause to let Textual process events in tests without slowing runs too much.
 _DEFAULT_PILOT_PAUSE_SECONDS = 0.01
+_TUI_TEST_PATH_FRAGMENT = "tests/unit/gpt_trader/tui"
+
+
+def _is_tui_test(request) -> bool:
+    node_id = getattr(request.node, "nodeid", "")
+    if _TUI_TEST_PATH_FRAGMENT in str(node_id).replace("\\", "/"):
+        return True
+    node_path = getattr(request.node, "path", None) or getattr(request.node, "fspath", "")
+    return _TUI_TEST_PATH_FRAGMENT in str(node_path).replace("\\", "/")
 
 
 # ============================================================
@@ -14,7 +22,7 @@ _DEFAULT_PILOT_PAUSE_SECONDS = 0.01
 
 
 @pytest.fixture(autouse=True)
-def isolate_tui_preferences(tmp_path, monkeypatch, request):
+def isolate_tui_preferences(request):
     """Isolate TUI preferences for all TUI tests.
 
     This prevents tests from reading/writing to the real preferences file,
@@ -23,6 +31,12 @@ def isolate_tui_preferences(tmp_path, monkeypatch, request):
     Tests that need to verify default preferences path behavior should use
     the 'uses_real_preferences' marker to skip this fixture.
     """
+    if not _is_tui_test(request):
+        return
+
+    monkeypatch = request.getfixturevalue("monkeypatch")
+    tmp_path = request.getfixturevalue("tmp_path")
+
     # Ensure Textual color output isn't suppressed by environment defaults.
     monkeypatch.delenv("NO_COLOR", raising=False)
 
@@ -41,8 +55,14 @@ def isolate_tui_preferences(tmp_path, monkeypatch, request):
 
 
 @pytest.fixture(autouse=True)
-def stabilize_pilot_pause(monkeypatch):
+def stabilize_pilot_pause(request):
     """Ensure pilot.pause always yields at least a short delay."""
+    if not _is_tui_test(request):
+        return
+
+    monkeypatch = request.getfixturevalue("monkeypatch")
+    from textual.pilot import Pilot
+
     original_pause = Pilot.pause
 
     async def _pause(self, delay: float | None = None) -> None:
@@ -57,12 +77,16 @@ def stabilize_pilot_pause(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
-def clear_tui_singletons():
+def clear_tui_singletons(request):
     """Clear TUI singleton services before each test for isolation.
 
     This prevents state leakage between tests which can cause flaky
     snapshot comparisons due to accumulated state from prior tests.
     """
+    if not _is_tui_test(request):
+        yield
+        return
+
     # Clear before test
     _clear_all_tui_singletons()
     yield

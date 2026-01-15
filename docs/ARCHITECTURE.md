@@ -538,8 +538,8 @@ monitoring: real-time
 - Impact cost validation (<50bps)
 - Reduce-only mode enforcement
 
-> Spot profiles load `config/risk/spot_top10.yaml` by default, enforcing
-> per-symbol notional caps and leverage=1 across the top-ten USD markets.
+> Spot risk templates are reference-only; see `docs/reference/risk_templates/spot_top10.yaml`
+> for example per-symbol caps and leverage=1 limits across the top-ten USD markets.
 
 ### Runtime Guards
 - Daily loss limits

@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import traceback
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any, Literal
 
@@ -16,6 +16,7 @@ from gpt_trader.core import (
     Product,
 )
 from gpt_trader.features.brokerages.coinbase.models import to_product
+from gpt_trader.utilities.datetime_helpers import utc_now
 
 
 @dataclass
@@ -34,7 +35,7 @@ class ProductCatalog:
         self._cache: dict[str, Product] = {}
         self._funding: dict[str, tuple[Decimal, Any]] = {}
         self.ttl_seconds = ttl_seconds
-        self._last_refresh = datetime.min
+        self._last_refresh = datetime.min.replace(tzinfo=UTC)
 
     def update_products(self, products: list[Product]) -> None:
         for p in products:
@@ -60,7 +61,7 @@ class ProductCatalog:
                     pass
 
             self.update_products(products)
-            self._last_refresh = datetime.utcnow()
+            self._last_refresh = utc_now()
         except Exception:
             traceback.print_exc()
 
@@ -77,9 +78,9 @@ class ProductCatalog:
         # Check staleness first
         is_stale = False
         if self._cache:
-            diff = (datetime.utcnow() - self._last_refresh).total_seconds()
+            diff = (utc_now() - self._last_refresh).total_seconds()
             is_stale = diff > self.ttl_seconds
-            # sys.stderr.write(f"DEBUG: Cache stale check: now={datetime.utcnow()}, last={self._last_refresh}, diff={diff}, ttl={self.ttl_seconds}, stale={is_stale}\n")
+            # sys.stderr.write(f"DEBUG: Cache stale check: now={utc_now()}, last={self._last_refresh}, diff={diff}, ttl={self.ttl_seconds}, stale={is_stale}\n")
             # sys.stderr.flush()
 
         if client and (not self._cache or is_stale):

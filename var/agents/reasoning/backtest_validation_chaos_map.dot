@@ -1,0 +1,78 @@
+digraph BacktestValidationChaos {
+  rankdir=LR;
+  subgraph cluster_simulation {
+    label="Simulation Loop";
+    style=rounded;
+    "clocked_bar_runner" [shape=box, label="ClockedBarRunner.run\nsrc/gpt_trader/backtesting/engine/bar_runner.py"];
+    "simulated_broker_place_order" [shape=box, label="SimulatedBroker.place_order\nsrc/gpt_trader/backtesting/simulation/broker.py"];
+  }
+  subgraph cluster_guarded {
+    label="Guarded Execution";
+    style=rounded;
+    "backtest_execution_context" [shape=box, label="BacktestExecutionContext\nsrc/gpt_trader/backtesting/engine/guarded_execution.py"];
+    "backtest_decision_context" [shape=box, label="BacktestDecisionContext\nsrc/gpt_trader/backtesting/engine/guarded_execution.py"];
+    "backtest_guarded_submit" [shape=box, label="BacktestGuardedExecutor.submit_order\nsrc/gpt_trader/backtesting/engine/guarded_execution.py"];
+    "state_collector" [shape=box, label="StateCollector.collect_account_state\nsrc/gpt_trader/features/live_trade/execution/state_collection.py"];
+    "order_validator" [shape=box, label="OrderValidator.run_pre_trade_validation\nsrc/gpt_trader/features/live_trade/execution/validation.py"];
+    "order_submitter" [shape=box, label="OrderSubmitter.submit_order\nsrc/gpt_trader/features/live_trade/execution/order_submission.py"];
+  }
+  subgraph cluster_logging {
+    label="Decision Logging";
+    style=rounded;
+    "strategy_decision" [shape=box, label="StrategyDecision\nsrc/gpt_trader/backtesting/validation/decision_logger.py"];
+    "decision_logger_log" [shape=box, label="DecisionLogger.log_decision\nsrc/gpt_trader/backtesting/validation/decision_logger.py"];
+    "decision_logger_export" [shape=box, label="DecisionLogger.export_to_json\nsrc/gpt_trader/backtesting/validation/decision_logger.py"];
+  }
+  subgraph cluster_validation {
+    label="Golden-Path Validation";
+    style=rounded;
+    "replay_decisions" [shape=box, label="replay_decisions_through_simulator\nsrc/gpt_trader/backtesting/validation/validator.py"];
+    "golden_validate" [shape=box, label="GoldenPathValidator.validate_decision\nsrc/gpt_trader/backtesting/validation/validator.py"];
+    "golden_report" [shape=box, label="GoldenPathValidator.generate_report\nsrc/gpt_trader/backtesting/validation/validator.py"];
+  }
+  subgraph cluster_chaos {
+    label="Chaos Injection";
+    style=rounded;
+    "chaos_scenario" [shape=box, label="ChaosScenario\nsrc/gpt_trader/backtesting/types.py"];
+    "chaos_scenario_factories" [shape=box, label="create_*_scenario\nsrc/gpt_trader/backtesting/chaos/scenarios.py"];
+    "chaos_engine_add" [shape=box, label="ChaosEngine.add_scenario\nsrc/gpt_trader/backtesting/chaos/engine.py"];
+    "chaos_engine_process_candle" [shape=box, label="ChaosEngine.process_candle\nsrc/gpt_trader/backtesting/chaos/engine.py"];
+    "chaos_engine_process_order" [shape=box, label="ChaosEngine.process_order\nsrc/gpt_trader/backtesting/chaos/engine.py"];
+    "chaos_engine_apply_latency" [shape=box, label="ChaosEngine.apply_latency\nsrc/gpt_trader/backtesting/chaos/engine.py"];
+  }
+  subgraph cluster_output {
+    label="Outputs";
+    style=rounded;
+    "decision_log_json" [shape=box, label="Decision log JSON\nsrc/gpt_trader/backtesting/validation/decision_logger.py"];
+    "validation_report" [shape=box, label="ValidationReport\nsrc/gpt_trader/backtesting/types.py"];
+    "validation_divergence" [shape=box, label="ValidationDivergence\nsrc/gpt_trader/backtesting/types.py"];
+    "chaos_event" [shape=box, label="ChaosEvent\nsrc/gpt_trader/backtesting/chaos/engine.py"];
+    "chaos_stats" [shape=box, label="ChaosEngine.get_statistics\nsrc/gpt_trader/backtesting/chaos/engine.py"];
+  }
+  "backtest_execution_context" -> "backtest_guarded_submit" [label="configure executor"];
+  "backtest_decision_context" -> "backtest_guarded_submit" [label="decision metadata"];
+  "backtest_guarded_submit" -> "state_collector" [label="collect state"];
+  "state_collector" -> "order_validator" [label="equity/positions"];
+  "order_validator" -> "order_submitter" [label="validated order"];
+  "order_submitter" -> "simulated_broker_place_order" [label="broker execution"];
+  "backtest_guarded_submit" -> "strategy_decision" [label="build decision"];
+  "strategy_decision" -> "decision_logger_log" [label="log decision"];
+  "decision_logger_log" -> "decision_logger_export" [label="export JSON"];
+  "decision_logger_export" -> "decision_log_json" [label="write file"];
+  "decision_logger_log" -> "replay_decisions" [label="recorded decisions"];
+  "replay_decisions" -> "golden_validate" [label="validate decisions"];
+  "golden_validate" -> "validation_divergence" [label="divergence"];
+  "golden_validate" -> "golden_report" [label="collect divergences"];
+  "golden_report" -> "validation_report" [label="report"];
+  "chaos_scenario" -> "chaos_engine_add" [label="scenario config"];
+  "chaos_scenario_factories" -> "chaos_engine_add" [label="factory scenario"];
+  "chaos_engine_add" -> "chaos_engine_process_candle" [label="inject candles"];
+  "chaos_engine_add" -> "chaos_engine_process_order" [label="inject orders"];
+  "chaos_engine_add" -> "chaos_engine_apply_latency" [label="inject latency"];
+  "clocked_bar_runner" -> "chaos_engine_process_candle" [label="optional hook"];
+  "simulated_broker_place_order" -> "chaos_engine_process_order" [label="optional hook"];
+  "clocked_bar_runner" -> "chaos_engine_apply_latency" [label="optional hook"];
+  "chaos_engine_process_candle" -> "chaos_event" [label="record event"];
+  "chaos_engine_process_order" -> "chaos_event" [label="record event"];
+  "chaos_event" -> "chaos_stats" [label="aggregate"];
+}

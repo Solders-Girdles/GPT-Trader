@@ -6,7 +6,7 @@
     "log_schema": "log_schema.json"
   },
   "summary": {
-    "total_events": 95,
+    "total_events": 129,
     "categories": [
       "trading",
       "data",
@@ -19,6 +19,8 @@
       "other"
     ],
     "top_operations": [
+      "bot_bootstrap",
+      "health_signals",
       "health_server_start",
       "health_server_stop",
       "health_request",
@@ -26,9 +28,7 @@
       "encryption_init",
       "vault_init",
       "secret_store",
-      "secret_retrieve",
-      "rotate_key",
-      "suspicious_activity"
+      "secret_retrieve"
     ]
   },
   "usage": {

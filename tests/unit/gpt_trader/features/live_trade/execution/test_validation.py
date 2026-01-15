@@ -1223,10 +1223,16 @@ class TestGetValidationMetrics:
         )
 
         original_tracker = validation_module._FALLBACK_FAILURE_TRACKER
+        original_warned = validation_module._FALLBACK_WARNED
         validation_module._FALLBACK_FAILURE_TRACKER = ValidationFailureTracker()
+        validation_module._FALLBACK_WARNED = False
 
         try:
-            metrics = get_validation_metrics()
+            with pytest.warns(
+                DeprecationWarning,
+                match="Using fallback ValidationFailureTracker",
+            ):
+                metrics = get_validation_metrics()
 
             assert "failures" in metrics
             assert "escalation_threshold" in metrics
@@ -1235,6 +1241,7 @@ class TestGetValidationMetrics:
             assert metrics["any_escalated"] is False
         finally:
             validation_module._FALLBACK_FAILURE_TRACKER = original_tracker
+            validation_module._FALLBACK_WARNED = original_warned
 
     def test_returns_failure_counts(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that get_validation_metrics returns current failure counts."""
@@ -1248,20 +1255,27 @@ class TestGetValidationMetrics:
         )
 
         original_tracker = validation_module._FALLBACK_FAILURE_TRACKER
+        original_warned = validation_module._FALLBACK_WARNED
         tracker = ValidationFailureTracker()
         tracker.record_failure("mark_staleness")
         tracker.record_failure("mark_staleness")
         tracker.record_failure("slippage_guard")
         validation_module._FALLBACK_FAILURE_TRACKER = tracker
+        validation_module._FALLBACK_WARNED = False
 
         try:
-            metrics = get_validation_metrics()
+            with pytest.warns(
+                DeprecationWarning,
+                match="Using fallback ValidationFailureTracker",
+            ):
+                metrics = get_validation_metrics()
 
             assert metrics["failures"]["mark_staleness"] == 2
             assert metrics["failures"]["slippage_guard"] == 1
             assert metrics["any_escalated"] is False
         finally:
             validation_module._FALLBACK_FAILURE_TRACKER = original_tracker
+            validation_module._FALLBACK_WARNED = original_warned
 
     def test_reports_escalation_status(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that get_validation_metrics reports escalation status."""
@@ -1275,17 +1289,24 @@ class TestGetValidationMetrics:
         )
 
         original_tracker = validation_module._FALLBACK_FAILURE_TRACKER
+        original_warned = validation_module._FALLBACK_WARNED
         tracker = ValidationFailureTracker(escalation_threshold=3)
         # Record 3 failures to trigger escalation
         tracker.record_failure("mark_staleness")
         tracker.record_failure("mark_staleness")
         tracker.record_failure("mark_staleness")
         validation_module._FALLBACK_FAILURE_TRACKER = tracker
+        validation_module._FALLBACK_WARNED = False
 
         try:
-            metrics = get_validation_metrics()
+            with pytest.warns(
+                DeprecationWarning,
+                match="Using fallback ValidationFailureTracker",
+            ):
+                metrics = get_validation_metrics()
 
             assert metrics["any_escalated"] is True
             assert metrics["escalation_threshold"] == 3
         finally:
             validation_module._FALLBACK_FAILURE_TRACKER = original_tracker
+            validation_module._FALLBACK_WARNED = original_warned

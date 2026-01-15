@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
@@ -9,6 +10,7 @@ import pandas as pd
 from gpt_trader.features.data.cache import DataCache
 from gpt_trader.features.data.quality import DataQualityChecker
 from gpt_trader.features.data.types import DataQuery, DataSource
+from gpt_trader.utilities.datetime_helpers import utc_now
 
 if TYPE_CHECKING:
     from gpt_trader.backtesting.data import HistoricalDataManager
@@ -192,17 +194,18 @@ class DataService:
 
         # Run async fetch in sync context
         try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                # If already in async context, create task
-                import concurrent.futures
-
-                with concurrent.futures.ThreadPoolExecutor() as executor:
-                    future = executor.submit(asyncio.run, fetch_all())
-                    future.result()
-            else:
-                loop.run_until_complete(fetch_all())
+            loop = asyncio.get_running_loop()
         except RuntimeError:
+            loop = None
+
+        if loop is not None:
+            # If already in async context, create task
+            import concurrent.futures
+
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(asyncio.run, fetch_all())
+                future.result()
+        else:
             asyncio.run(fetch_all())
 
         return result if result else None
@@ -221,10 +224,15 @@ class DataService:
 
     def clean_old_data(self, days_to_keep: int) -> int:
         if self._storage:
-            import datetime
-
-            cutoff = datetime.datetime.utcnow() - datetime.timedelta(days=days_to_keep)
-            deleted = self._storage.delete_before(cutoff)
+            cutoff = utc_now() - timedelta(days=days_to_keep)
+            try:
+                deleted = self._storage.delete_before(cutoff)
+            except TypeError as exc:
+                message = str(exc)
+                if "offset-naive" in message or "offset-aware" in message:
+                    deleted = self._storage.delete_before(cutoff.replace(tzinfo=None))
+                else:
+                    raise
             if self._cache:
                 self._cache.clear_expired()
             return int(deleted)

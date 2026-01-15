@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -27,7 +27,7 @@ async def test_start_disabled_does_not_schedule_task() -> None:
 async def test_stop_idempotent_clears_task() -> None:
     service = HeartbeatService()
     service._running = True
-    service._task = AsyncMock()
+    service._task = MagicMock()
     service._task.done.return_value = True
 
     await service.stop()

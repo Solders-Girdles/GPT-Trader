@@ -15,6 +15,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 LINK_PATTERN = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
 EXCLUDED_DIRS = {
     ".git",
+    ".uv-cache",
     ".venv",
     "__pycache__",
     "data",

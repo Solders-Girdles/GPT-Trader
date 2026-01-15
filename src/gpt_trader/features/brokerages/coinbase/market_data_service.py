@@ -2,6 +2,8 @@ import threading
 from dataclasses import dataclass
 from datetime import datetime
 
+from gpt_trader.utilities.datetime_helpers import normalize_to_utc, utc_now
+
 
 @dataclass
 class Ticker:
@@ -27,6 +29,8 @@ class TickerCache:
     def update(self, ticker: Ticker) -> None:
         """Update ticker data (called by WebSocket thread)."""
         with self._lock:
+            if ticker.ts.tzinfo is None:
+                ticker.ts = normalize_to_utc(ticker.ts)
             self._cache[ticker.symbol] = ticker
 
     def get(self, symbol: str) -> Ticker | None:
@@ -40,7 +44,7 @@ class TickerCache:
             ticker = self._cache.get(symbol)
             if not ticker:
                 return True
-            return (datetime.utcnow() - ticker.ts).total_seconds() > self.ttl
+            return (utc_now() - ticker.ts).total_seconds() > self.ttl
 
 
 class CoinbaseTickerService:

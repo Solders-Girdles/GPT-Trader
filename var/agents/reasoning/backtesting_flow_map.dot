@@ -1,0 +1,41 @@
+digraph BacktestingFlow {
+  rankdir=LR;
+  subgraph cluster_event_store {
+    label="Event Store";
+    style=rounded;
+    "event_store" [shape=box, label="EventStore.events\nsrc/gpt_trader/persistence/event_store.py"];
+  }
+  subgraph cluster_loader {
+    label="Historical Loader";
+    style=rounded;
+    "data_loader" [shape=box, label="HistoricalDataLoader.load_symbol\nsrc/gpt_trader/features/research/backtesting/data_loader.py"];
+    "data_result" [shape=box, label="DataLoadResult\nsrc/gpt_trader/features/research/backtesting/data_loader.py"];
+    "data_point" [shape=box, label="HistoricalDataPoint\nsrc/gpt_trader/features/research/backtesting/data_loader.py"];
+  }
+  subgraph cluster_simulation {
+    label="Backtest Simulation";
+    style=rounded;
+    "backtest_simulator" [shape=box, label="BacktestSimulator.run\nsrc/gpt_trader/features/research/backtesting/simulator.py"];
+  }
+  subgraph cluster_strategy {
+    label="Strategy";
+    style=rounded;
+    "market_data_context" [shape=box, label="MarketDataContext\nsrc/gpt_trader/features/live_trade/strategies/base.py"];
+    "strategy_decide" [shape=box, label="Strategy.decide\nsrc/gpt_trader/features/live_trade/strategies/base.py"];
+  }
+  subgraph cluster_metrics {
+    label="Metrics + Output";
+    style=rounded;
+    "backtest_result" [shape=box, label="BacktestResult\nsrc/gpt_trader/features/research/backtesting/simulator.py"];
+    "performance_metrics" [shape=box, label="PerformanceMetrics.from_result\nsrc/gpt_trader/features/research/backtesting/metrics.py"];
+  }
+  "event_store" -> "data_loader" [label="load events"];
+  "data_loader" -> "data_result" [label="build result"];
+  "data_result" -> "data_point" [label="points list"];
+  "data_point" -> "backtest_simulator" [label="data_points"];
+  "backtest_simulator" -> "market_data_context" [label="build market data"];
+  "market_data_context" -> "strategy_decide" [label="strategy input"];
+  "strategy_decide" -> "backtest_simulator" [label="decision"];
+  "backtest_simulator" -> "backtest_result" [label="result"];
+  "backtest_result" -> "performance_metrics" [label="compute metrics"];
+}

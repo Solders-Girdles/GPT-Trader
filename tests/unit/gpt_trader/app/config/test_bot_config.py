@@ -6,6 +6,8 @@ import os
 import warnings
 from unittest.mock import patch
 
+import pytest
+
 from gpt_trader.app.config import BotConfig
 from gpt_trader.app.config.bot_config import MeanReversionConfig
 from gpt_trader.features.live_trade.strategies.perps_baseline import PerpsStrategyConfig
@@ -23,7 +25,8 @@ class TestEnableShortsCanonical:
         # Reset warning state for clean test
         BotConfig._enable_shorts_sync_warned = False
 
-        assert config.active_enable_shorts is True
+        with pytest.warns(UserWarning, match="differs from strategy config"):
+            assert config.active_enable_shorts is True
 
     def test_active_enable_shorts_from_mean_reversion(self) -> None:
         """Mean reversion strategy type derives enable_shorts from mean_reversion config."""

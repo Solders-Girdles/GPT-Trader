@@ -13,7 +13,6 @@
     "risk": "Risk management tests",
     "execution": "Trade execution tests",
     "backtesting": "Backtesting engine tests",
-    "orchestration": "System orchestration tests",
     "persistence": "Data persistence tests",
     "security": "Security validation tests",
     "utilities": "Utility function tests",
@@ -37,7 +36,8 @@
     "regression": "Regression tests for known issues",
     "flaky": "Known flaky tests that may need retries",
     "manual": "Tests requiring manual intervention/verification",
-    "deprecated": "Tests for deprecated functionality"
+    "deprecated": "Tests for deprecated functionality",
+    "uses_real_preferences": "Tests that read or write real TUI preferences"
   },
   "categories": {
     "test_type": [
@@ -56,7 +56,6 @@
       "risk",
       "execution",
       "backtesting",
-      "orchestration",
       "persistence",
       "security",
       "utilities"
@@ -94,12 +93,14 @@
     ]
   },
   "counts": {
-    "parametrize": 63,
+    "parametrize": 92,
+    "skipif": 16,
+    "integration": 14,
     "property": 11,
-    "integration": 11,
-    "skip": 5,
     "perps": 5,
+    "skip": 4,
     "perf": 4,
+    "uses_real_preferences": 2,
     "slow": 2,
     "real_api": 1
   },

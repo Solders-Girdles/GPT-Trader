@@ -76,6 +76,9 @@ def impact() -> int:
         uv run agent-impact --from-git        # Analyze git changes
         uv run agent-impact --from-git --base main
         uv run agent-impact --files src/path/file.py
+        uv run agent-impact --from-git --source-files
+        uv run agent-impact --from-git --exclude-integration
+        uv run agent-impact --include-importers
         uv run agent-impact --format text
     """
     return _run_script("change_impact.py")
@@ -109,6 +112,8 @@ def tests() -> int:
         uv run agent-tests                    # Generate full inventory
         uv run agent-tests --by-marker risk   # Tests with risk marker
         uv run agent-tests --by-path tests/unit/gpt_trader/cli
+        uv run agent-tests --source gpt_trader.cli
+        uv run agent-tests --source gpt_trader.cli --source-files
         uv run agent-tests --stdout           # Output to stdout
     """
     return _run_script("generate_test_inventory.py")

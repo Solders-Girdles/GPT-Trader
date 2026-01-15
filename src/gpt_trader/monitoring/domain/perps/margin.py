@@ -14,6 +14,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any
 
+from gpt_trader.utilities.datetime_helpers import utc_now
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="margin_monitor")
@@ -129,7 +130,7 @@ class MarginWindowPolicy:
         Determine current margin window based on time and conditions.
         """
         if current_time is None:
-            current_time = datetime.utcnow()
+            current_time = utc_now()
 
         current_hour = current_time.hour
         current_minute = current_time.minute
@@ -168,7 +169,7 @@ class MarginWindowPolicy:
     def calculate_next_window_change(self, current_time: datetime | None = None) -> datetime:
         """Calculate when the next margin window change will occur."""
         if current_time is None:
-            current_time = datetime.utcnow()
+            current_time = utc_now()
 
         # Find next significant time boundary
         next_changes = []
@@ -263,7 +264,7 @@ class MarginStateMonitor:
         Returns:
             Current margin snapshot
         """
-        now = datetime.utcnow()
+        now = utc_now()
         current_window = self.policy.determine_current_window(now)
         requirements = self.policy.get_requirements(current_window)
 
@@ -325,7 +326,7 @@ class MarginStateMonitor:
         Returns:
             Dict with transition info if change is imminent, None otherwise
         """
-        current_time = datetime.utcnow()
+        current_time = utc_now()
         current_window = self.policy.determine_current_window(current_time)
 
         # Check 30 minutes ahead
@@ -387,7 +388,7 @@ class MarginStateMonitor:
 
     def get_margin_history(self, hours_back: int = 24) -> list[dict[str, Any]]:
         """Get margin state history."""
-        cutoff_time = datetime.utcnow() - timedelta(hours=hours_back)
+        cutoff_time = utc_now() - timedelta(hours=hours_back)
 
         return [
             snapshot.to_dict()

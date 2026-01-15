@@ -27,6 +27,7 @@ from pathlib import Path
 from typing import Any
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
+SOURCE_TEST_MAP_PATH = PROJECT_ROOT / "var" / "agents" / "testing" / "source_test_map.json"
 
 # Mapping from source paths to test paths
 PATH_TO_TEST_MAPPING = {
@@ -115,6 +116,46 @@ def get_changed_files_from_git(base: str = "main") -> list[str]:
         return []
 
 
+def module_from_path(source_file: str) -> str | None:
+    """Convert a source path to a module name."""
+    if not source_file.startswith("src/"):
+        return None
+    rel_path = source_file[len("src/") :]
+    if not rel_path.endswith(".py"):
+        return None
+    module = rel_path[:-3].replace("/", ".")
+    if module.endswith(".__init__"):
+        module = module[: -len(".__init__")]
+    return module
+
+
+def iter_module_prefixes(module: str) -> list[str]:
+    """Return module and its parent prefixes for lookup."""
+    parts = module.split(".")
+    return [".".join(parts[:i]) for i in range(len(parts), 0, -1)]
+
+
+def build_pytest_command(paths: list[str], markers: list[str]) -> str:
+    """Build a pytest command from paths and optional markers."""
+    if not paths:
+        marker_str = " or ".join(markers) if markers else ""
+        if marker_str:
+            return f"uv run pytest tests/unit -m '{marker_str}'"
+        return "uv run pytest tests/unit -m 'not slow'"
+
+    return f"uv run pytest {' '.join(paths[:5])}"
+
+
+def load_source_test_map() -> dict[str, Any] | None:
+    """Load the source/test map if available."""
+    if not SOURCE_TEST_MAP_PATH.exists():
+        return None
+    try:
+        return json.loads(SOURCE_TEST_MAP_PATH.read_text())
+    except Exception:
+        return None
+
+
 def find_test_file(source_file: str) -> str | None:
     """Find the corresponding test file for a source file."""
     source_path = Path(source_file)
@@ -159,7 +200,10 @@ def get_component(source_file: str) -> str | None:
     return None
 
 
-def analyze_impact(changed_files: list[str]) -> dict[str, Any]:
+def analyze_impact(
+    changed_files: list[str],
+    importer_files: list[str] | None = None,
+) -> dict[str, Any]:
     """Analyze the impact of changed files."""
     result: dict[str, Any] = {
         "changed_files": changed_files,
@@ -181,6 +225,8 @@ def analyze_impact(changed_files: list[str]) -> dict[str, Any]:
     components: set[str] = set()
     is_high_impact = False
     is_critical = False
+    source_test_map = load_source_test_map()
+    source_test_map_used = False
 
     for file in changed_files:
         # Skip test files
@@ -218,6 +264,38 @@ def analyze_impact(changed_files: list[str]) -> dict[str, Any]:
             if component in COMPONENT_MARKERS:
                 markers.update(COMPONENT_MARKERS[component])
 
+        module = module_from_path(file)
+        if module and source_test_map:
+            for prefix in iter_module_prefixes(module):
+                tests = source_test_map.get("source_to_tests", {}).get(prefix)
+                if tests:
+                    test_files.update(tests)
+                    source_test_map_used = True
+
+    if importer_files:
+        for importer in importer_files:
+            if importer.startswith("tests/"):
+                test_files.add(importer)
+                continue
+
+            importer_test = find_test_file(importer)
+            if importer_test:
+                test_files.add(importer_test)
+
+            importer_dir = find_test_directory(importer)
+            if importer_dir:
+                test_dirs.add(importer_dir)
+
+            importer_module = module_from_path(importer)
+            if importer_module and source_test_map:
+                for prefix in iter_module_prefixes(importer_module):
+                    tests = source_test_map.get("source_to_tests", {}).get(prefix)
+                    if tests:
+                        test_files.update(tests)
+                        source_test_map_used = True
+        result["reasons"].append("Added tests for importer modules")
+        result["importer_tests_added"] = True
+
     # Determine impact level
     if is_critical:
         result["impact_level"] = "critical"
@@ -231,22 +309,24 @@ def analyze_impact(changed_files: list[str]) -> dict[str, Any]:
     else:
         result["impact_level"] = "low"
 
-    # Build test suggestions
+    # Build test suggestions (filter out pytest conftest helpers).
+    test_files = {path for path in test_files if not path.endswith("/conftest.py")}
     result["suggested_tests"] = sorted(test_files)
     result["test_directories"] = sorted(test_dirs)
     result["suggested_markers"] = sorted(markers)
     result["affected_components"] = sorted(components)
+    if source_test_map_used:
+        result["reasons"].append("Added tests from source/test import map")
+        result["source_test_map_used"] = True
 
-    # Generate pytest command
-    if test_files or test_dirs:
-        paths = list(test_files) + list(test_dirs)
-        marker_str = " or ".join(markers) if markers else ""
-        if marker_str:
-            result["pytest_command"] = f"pytest {' '.join(paths[:5])} -m '{marker_str}'"
-        else:
-            result["pytest_command"] = f"pytest {' '.join(paths[:5])}"
-    else:
-        result["pytest_command"] = "pytest tests/unit -m 'not slow'"
+    # Generate pytest commands
+    paths = list(test_files) + list(test_dirs)
+    result["pytest_command"] = build_pytest_command(paths, sorted(markers))
+
+    if test_files:
+        result["pytest_command_files_only"] = build_pytest_command(
+            list(test_files), sorted(markers)
+        )
 
     return result
 
@@ -315,7 +395,7 @@ def format_text_report(analysis: dict[str, Any]) -> str:
         lines.append("")
 
     lines.append("Recommended Command:")
-    lines.append(f"  {analysis.get('pytest_command', 'pytest tests/unit')}")
+    lines.append(f"  {analysis.get('pytest_command', 'uv run pytest tests/unit')}")
 
     return "\n".join(lines)
 
@@ -350,6 +430,16 @@ def main() -> int:
         action="store_true",
         help="Include files that import changed modules",
     )
+    parser.add_argument(
+        "--source-files",
+        action="store_true",
+        help="Prefer test file-only suggestions in the recommended command",
+    )
+    parser.add_argument(
+        "--exclude-integration",
+        action="store_true",
+        help="Exclude integration tests from suggestions",
+    )
 
     args = parser.parse_args()
 
@@ -366,17 +456,54 @@ def main() -> int:
             print("No changed files specified. Use --files or --from-git", file=sys.stderr)
             return 1
 
-    # Analyze impact
-    analysis = analyze_impact(changed_files)
-
-    # Optionally find importers
+    importer_files: list[str] = []
     if args.include_importers:
         all_importers: set[str] = set()
         for file in changed_files:
             if file.startswith("src/"):
                 importers = find_importers(file, PROJECT_ROOT / "src")
                 all_importers.update(importers)
-        analysis["importing_files"] = sorted(all_importers)
+        importer_files = sorted(all_importers)
+
+    # Analyze impact
+    analysis = analyze_impact(changed_files, importer_files=importer_files)
+
+    if args.exclude_integration:
+        integration_prefix = "tests/integration"
+        analysis["suggested_tests"] = [
+            test
+            for test in analysis["suggested_tests"]
+            if not test.startswith(f"{integration_prefix}/")
+        ]
+        analysis["test_directories"] = [
+            test_dir
+            for test_dir in analysis["test_directories"]
+            if test_dir != integration_prefix
+        ]
+        analysis["reasons"].append("Excluded integration tests")
+        analysis["excluded_integration"] = True
+        analysis["pytest_command"] = build_pytest_command(
+            analysis.get("suggested_tests", []) + analysis.get("test_directories", []),
+            analysis.get("suggested_markers", []),
+        )
+        if analysis.get("suggested_tests"):
+            analysis["pytest_command_files_only"] = build_pytest_command(
+                analysis.get("suggested_tests", []),
+                analysis.get("suggested_markers", []),
+            )
+            if analysis.get("files_only"):
+                analysis["pytest_command"] = analysis["pytest_command_files_only"]
+
+    if args.source_files:
+        files_only_command = analysis.get("pytest_command_files_only")
+        if files_only_command:
+            analysis["pytest_command"] = files_only_command
+            analysis["test_directories"] = []
+            analysis["reasons"].append("File-only test suggestions requested")
+            analysis["files_only"] = True
+
+    if args.include_importers:
+        analysis["importing_files"] = importer_files
 
     # Output
     if args.format == "text":

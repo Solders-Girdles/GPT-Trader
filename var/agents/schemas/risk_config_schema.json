@@ -14,6 +14,10 @@
       "description": "Maximum daily loss in quote currency",
       "default": "100"
     },
+    "daily_loss_limit_pct": {
+      "type": "number",
+      "default": 0.05
+    },
     "max_exposure_pct": {
       "type": "number",
       "default": 0.8,
@@ -108,7 +112,117 @@
       "type": "boolean",
       "default": false,
       "description": "Enable pre-trade liquidation projection"
+    },
+    "cfm_max_leverage": {
+      "type": "integer",
+      "default": 5
+    },
+    "cfm_min_liquidation_buffer_pct": {
+      "type": "number",
+      "default": 0.15
+    },
+    "cfm_max_exposure_pct": {
+      "type": "number",
+      "default": 0.8
+    },
+    "cfm_max_position_size_pct": {
+      "type": "number",
+      "default": 0.25
+    },
+    "cfm_leverage_max_per_symbol": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "default": {}
+    },
+    "cfm_max_notional_per_symbol": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "format": "decimal",
+        "description": "Decimal number as string"
+      },
+      "default": {}
+    },
+    "cfm_day_leverage_max_per_symbol": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "default": {}
+    },
+    "cfm_night_leverage_max_per_symbol": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "default": {}
+    },
+    "api_error_rate_threshold": {
+      "type": "number",
+      "default": 0.2
+    },
+    "api_rate_limit_usage_threshold": {
+      "type": "number",
+      "default": 0.9
+    },
+    "api_health_cooldown_seconds": {
+      "type": "integer",
+      "default": 300
+    },
+    "mark_staleness_cooldown_seconds": {
+      "type": "integer",
+      "default": 120
+    },
+    "mark_staleness_allow_reduce_only": {
+      "type": "boolean",
+      "default": true
+    },
+    "slippage_failure_pause_after": {
+      "type": "integer",
+      "default": 3
+    },
+    "slippage_pause_seconds": {
+      "type": "integer",
+      "default": 60
+    },
+    "validation_failure_cooldown_seconds": {
+      "type": "integer",
+      "default": 180
+    },
+    "preview_failure_disable_after": {
+      "type": "integer",
+      "default": 5
+    },
+    "broker_outage_max_failures": {
+      "type": "integer",
+      "default": 3
+    },
+    "broker_outage_cooldown_seconds": {
+      "type": "integer",
+      "default": 120
+    },
+    "unfilled_order_alert_seconds": {
+      "type": "integer",
+      "default": 300
+    },
+    "ws_health_interval_seconds": {
+      "type": "integer",
+      "default": 5
+    },
+    "ws_message_stale_seconds": {
+      "type": "integer",
+      "default": 15
+    },
+    "ws_heartbeat_stale_seconds": {
+      "type": "integer",
+      "default": 30
+    },
+    "ws_reconnect_pause_seconds": {
+      "type": "integer",
+      "default": 30
     }
   },
-  "description": "RiskConfig(max_leverage: int = 5, daily_loss_limit: decimal.Decimal = Decimal('100'), max_exposure_pct: float = 0.8, max_position_pct_per_symbol: float = 0.2, min_liquidation_buffer_pct: float = 0.1, leverage_max_per_symbol: dict[str, int] = <factory>, max_notional_per_symbol: dict[str, decimal.Decimal] = <factory>, slippage_guard_bps: int = 50, kill_switch_enabled: bool = False, reduce_only_mode: bool = False, daytime_start_utc: str = '09:00', daytime_end_utc: str = '17:00', day_leverage_max_per_symbol: dict[str, int] = <factory>, night_leverage_max_per_symbol: dict[str, int] = <factory>, day_mmr_per_symbol: dict[str, float] = <factory>, night_mmr_per_symbol: dict[str, float] = <factory>, enable_pre_trade_liq_projection: bool = False)"
+  "description": "Risk configuration for live trading.\n\n    This dataclass holds all risk-related parameters including:\n    - General limits (leverage, loss limits, exposure caps)\n    - Per-symbol limits (position sizes, leverage caps)\n    - CFM futures-specific parameters\n    - API health and degradation thresholds\n    - WebSocket monitoring settings\n\n    Example::\n\n        from gpt_trader.features.live_trade.risk import RiskConfig\n\n        config = RiskConfig(\n            max_leverage=3,\n            daily_loss_limit_pct=0.05,\n            max_position_pct_per_symbol=0.2,\n        )"
 }

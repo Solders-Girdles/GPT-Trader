@@ -1,6 +1,5 @@
 import os
 from collections.abc import Generator
-from datetime import datetime
 from decimal import Decimal
 
 import pytest
@@ -22,6 +21,7 @@ from gpt_trader.features.brokerages.coinbase.models import APIConfig
 from gpt_trader.features.brokerages.coinbase.rest_service import CoinbaseRestService
 from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
 from gpt_trader.persistence.event_store import EventStore
+from gpt_trader.utilities.datetime_helpers import utc_now
 
 
 class MockAsyncBroker:
@@ -78,8 +78,8 @@ class MockAsyncBroker:
             status=OrderStatus.SUBMITTED,
             filled_quantity=Decimal("0"),
             avg_fill_price=None,
-            submitted_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
+            submitted_at=utc_now(),
+            updated_at=utc_now(),
         )
         self.orders[order_id] = order
         return order

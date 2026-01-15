@@ -5,7 +5,6 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
-from tests.unit.gpt_trader.tui import tui_pilots
 
 from gpt_trader.core import Balance
 from gpt_trader.monitoring.status_reporter import (
@@ -26,8 +25,6 @@ from gpt_trader.tui.widgets import (
     BotStatusWidget,
     MarketWatchWidget,
 )
-
-pytest_plugins = [tui_pilots.__name__]
 
 
 class TestBotStatusWidget:

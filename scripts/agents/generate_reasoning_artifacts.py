@@ -297,6 +297,1807 @@ GUARD_STACK_EDGES = [
     },
 ]
 
+EXECUTION_FLOW_CLUSTERS = [
+    {"id": "entry", "label": "Entry + Decision"},
+    {"id": "guards", "label": "Guard + Validation"},
+    {"id": "submission", "label": "Submission + Telemetry"},
+    {"id": "event_store", "label": "Event Store"},
+    {"id": "outcomes", "label": "Outcomes"},
+]
+
+EXECUTION_FLOW_NODES = [
+    {
+        "id": "trading_engine_cycle",
+        "label": "TradingEngine._cycle",
+        "type": "entrypoint",
+        "path": "src/gpt_trader/features/live_trade/engines/strategy.py",
+        "cluster": "entry",
+    },
+    {
+        "id": "strategy_decide",
+        "label": "Strategy.decide",
+        "type": "decision",
+        "path": "src/gpt_trader/features/live_trade/strategies/base.py",
+        "cluster": "entry",
+    },
+    {
+        "id": "order_router",
+        "label": "OrderRouter.execute_async (external)",
+        "type": "entrypoint",
+        "path": "src/gpt_trader/features/live_trade/execution/router.py",
+        "cluster": "entry",
+    },
+    {
+        "id": "engine_submit",
+        "label": "TradingEngine.submit_order",
+        "type": "entrypoint",
+        "path": "src/gpt_trader/features/live_trade/engines/strategy.py",
+        "cluster": "entry",
+    },
+    {
+        "id": "engine_validate",
+        "label": "TradingEngine._validate_and_place_order",
+        "type": "guard_stack",
+        "path": "src/gpt_trader/features/live_trade/engines/strategy.py",
+        "cluster": "guards",
+    },
+    {
+        "id": "degradation_gate",
+        "label": "Degradation gate",
+        "type": "guard",
+        "path": "src/gpt_trader/features/live_trade/degradation.py",
+        "cluster": "guards",
+    },
+    {
+        "id": "security_validator",
+        "label": "Security validator",
+        "type": "guard",
+        "path": "src/gpt_trader/security/security_validator.py",
+        "cluster": "guards",
+    },
+    {
+        "id": "risk_manager",
+        "label": "LiveRiskManager.pre_trade_validate",
+        "type": "guard",
+        "path": "src/gpt_trader/features/live_trade/risk/manager/__init__.py",
+        "cluster": "guards",
+    },
+    {
+        "id": "order_validator",
+        "label": "OrderValidator (exchange/slippage/preview)",
+        "type": "guard",
+        "path": "src/gpt_trader/features/live_trade/execution/validation.py",
+        "cluster": "guards",
+    },
+    {
+        "id": "engine_mark_staleness",
+        "label": "TradingEngine._check_mark_staleness",
+        "type": "guard",
+        "path": "src/gpt_trader/features/live_trade/engines/strategy.py",
+        "cluster": "guards",
+    },
+    {
+        "id": "risk_check_mark_staleness",
+        "label": "LiveRiskManager.check_mark_staleness",
+        "type": "guard",
+        "path": "src/gpt_trader/features/live_trade/risk/manager/__init__.py",
+        "cluster": "guards",
+    },
+    {
+        "id": "order_submitter",
+        "label": "OrderSubmitter.submit_order",
+        "type": "submission",
+        "path": "src/gpt_trader/features/live_trade/execution/order_submission.py",
+        "cluster": "submission",
+    },
+    {
+        "id": "order_rejection",
+        "label": "OrderSubmitter.record_rejection",
+        "type": "telemetry",
+        "path": "src/gpt_trader/features/live_trade/execution/order_submission.py",
+        "cluster": "submission",
+    },
+    {
+        "id": "broker_executor",
+        "label": "BrokerExecutor.execute_order",
+        "type": "submission",
+        "path": "src/gpt_trader/features/live_trade/execution/broker_executor.py",
+        "cluster": "submission",
+    },
+    {
+        "id": "broker_adapter",
+        "label": "BrokerProtocol.place_order",
+        "type": "submission",
+        "path": "src/gpt_trader/features/brokerages/core/protocols.py",
+        "cluster": "submission",
+    },
+    {
+        "id": "order_event_recorder",
+        "label": "OrderEventRecorder",
+        "type": "telemetry",
+        "path": "src/gpt_trader/features/live_trade/execution/order_event_recorder.py",
+        "cluster": "submission",
+    },
+    {
+        "id": "orders_store",
+        "label": "OrdersStore",
+        "type": "telemetry",
+        "path": "src/gpt_trader/persistence/orders_store.py",
+        "cluster": "submission",
+    },
+    {
+        "id": "engine_append_event",
+        "label": "TradingEngine._append_event",
+        "type": "telemetry",
+        "path": "src/gpt_trader/features/live_trade/engines/strategy.py",
+        "cluster": "event_store",
+    },
+    {
+        "id": "emit_metric",
+        "label": "emit_metric",
+        "type": "telemetry",
+        "path": "src/gpt_trader/utilities/telemetry.py",
+        "cluster": "event_store",
+    },
+    {
+        "id": "event_store_append_metric",
+        "label": "EventStoreProtocol.append_metric",
+        "type": "event_store",
+        "path": "src/gpt_trader/app/protocols.py",
+        "cluster": "event_store",
+    },
+    {
+        "id": "event_store_append",
+        "label": "EventStoreProtocol.append",
+        "type": "event_store",
+        "path": "src/gpt_trader/app/protocols.py",
+        "cluster": "event_store",
+    },
+    {
+        "id": "decision_trace",
+        "label": "OrderDecisionTrace",
+        "type": "outcome",
+        "path": "src/gpt_trader/features/live_trade/execution/decision_trace.py",
+        "cluster": "outcomes",
+    },
+    {
+        "id": "submission_result",
+        "label": "OrderSubmissionResult",
+        "type": "outcome",
+        "path": "src/gpt_trader/features/live_trade/execution/submission_result.py",
+        "cluster": "outcomes",
+    },
+]
+
+EXECUTION_FLOW_EDGES = [
+    {
+        "from": "trading_engine_cycle",
+        "to": "strategy_decide",
+        "label": "produce decision",
+    },
+    {
+        "from": "strategy_decide",
+        "to": "engine_validate",
+        "label": "submit decision",
+    },
+    {
+        "from": "order_router",
+        "to": "engine_submit",
+        "label": "external entry",
+    },
+    {
+        "from": "engine_submit",
+        "to": "engine_validate",
+        "label": "delegate to guard stack",
+    },
+    {
+        "from": "engine_validate",
+        "to": "decision_trace",
+        "label": "record outcomes",
+    },
+    {
+        "from": "engine_validate",
+        "to": "degradation_gate",
+        "label": "pause/allow",
+    },
+    {
+        "from": "degradation_gate",
+        "to": "security_validator",
+        "label": "validate request",
+    },
+    {
+        "from": "security_validator",
+        "to": "engine_mark_staleness",
+        "label": "staleness gate",
+    },
+    {
+        "from": "engine_mark_staleness",
+        "to": "risk_check_mark_staleness",
+        "label": "risk check",
+    },
+    {
+        "from": "engine_mark_staleness",
+        "to": "engine_append_event",
+        "label": "stale_mark_detected",
+    },
+    {
+        "from": "engine_append_event",
+        "to": "event_store_append",
+        "label": "append event",
+    },
+    {
+        "from": "engine_mark_staleness",
+        "to": "order_validator",
+        "label": "continue guards",
+    },
+    {
+        "from": "order_validator",
+        "to": "risk_manager",
+        "label": "pre-trade validate",
+    },
+    {
+        "from": "engine_validate",
+        "to": "order_rejection",
+        "label": "guard rejection",
+    },
+    {
+        "from": "order_rejection",
+        "to": "order_event_recorder",
+        "label": "record rejection",
+    },
+    {
+        "from": "order_validator",
+        "to": "order_submitter",
+        "label": "submit order",
+    },
+    {
+        "from": "order_submitter",
+        "to": "broker_executor",
+        "label": "execute broker call",
+    },
+    {
+        "from": "broker_executor",
+        "to": "broker_adapter",
+        "label": "place order",
+    },
+    {
+        "from": "order_submitter",
+        "to": "order_event_recorder",
+        "label": "record events",
+    },
+    {
+        "from": "order_event_recorder",
+        "to": "emit_metric",
+        "label": "emit metrics",
+    },
+    {
+        "from": "emit_metric",
+        "to": "event_store_append_metric",
+        "label": "append_metric",
+    },
+    {
+        "from": "order_event_recorder",
+        "to": "event_store_append",
+        "label": "decision trace",
+    },
+    {
+        "from": "order_submitter",
+        "to": "orders_store",
+        "label": "persist order",
+    },
+    {
+        "from": "engine_validate",
+        "to": "submission_result",
+        "label": "return status",
+    },
+]
+
+MARKET_DATA_FLOW_CLUSTERS = [
+    {"id": "polling", "label": "REST Polling"},
+    {"id": "streaming", "label": "WebSocket Streaming"},
+    {"id": "state", "label": "Runtime State"},
+    {"id": "risk", "label": "Risk + Staleness"},
+    {"id": "event_store", "label": "Event Store"},
+    {"id": "strategy", "label": "Strategy Inputs"},
+]
+
+MARKET_DATA_FLOW_NODES = [
+    {
+        "id": "engine_cycle",
+        "label": "TradingEngine._cycle",
+        "type": "entrypoint",
+        "path": "src/gpt_trader/features/live_trade/engines/strategy.py",
+        "cluster": "polling",
+    },
+    {
+        "id": "fetch_batch_tickers",
+        "label": "TradingEngine._fetch_batch_tickers",
+        "type": "fetch",
+        "path": "src/gpt_trader/features/live_trade/engines/strategy.py",
+        "cluster": "polling",
+    },
+    {
+        "id": "broker_get_tickers",
+        "label": "Broker.get_tickers (optional)",
+        "type": "broker",
+        "path": "src/gpt_trader/features/brokerages/coinbase/rest/product_service.py",
+        "cluster": "polling",
+    },
+    {
+        "id": "broker_get_ticker",
+        "label": "BrokerProtocol.get_ticker",
+        "type": "broker",
+        "path": "src/gpt_trader/features/brokerages/core/protocols.py",
+        "cluster": "polling",
+    },
+    {
+        "id": "broker_get_candles",
+        "label": "BrokerProtocol.get_candles",
+        "type": "broker",
+        "path": "src/gpt_trader/features/brokerages/core/protocols.py",
+        "cluster": "polling",
+    },
+    {
+        "id": "process_symbol",
+        "label": "TradingEngine._process_symbol",
+        "type": "processing",
+        "path": "src/gpt_trader/features/live_trade/engines/strategy.py",
+        "cluster": "polling",
+    },
+    {
+        "id": "start_streaming",
+        "label": "start_streaming_background",
+        "type": "stream",
+        "path": "src/gpt_trader/features/live_trade/engines/telemetry_streaming.py",
+        "cluster": "streaming",
+    },
+    {
+        "id": "run_stream_loop",
+        "label": "telemetry_streaming._run_stream_loop",
+        "type": "stream",
+        "path": "src/gpt_trader/features/live_trade/engines/telemetry_streaming.py",
+        "cluster": "streaming",
+    },
+    {
+        "id": "stream_orderbook",
+        "label": "WebSocketClientMixin.stream_orderbook",
+        "type": "stream",
+        "path": "src/gpt_trader/features/brokerages/coinbase/client/websocket_mixin.py",
+        "cluster": "streaming",
+    },
+    {
+        "id": "stream_trades",
+        "label": "WebSocketClientMixin.stream_trades",
+        "type": "stream",
+        "path": "src/gpt_trader/features/brokerages/coinbase/client/websocket_mixin.py",
+        "cluster": "streaming",
+    },
+    {
+        "id": "ws_events",
+        "label": "ws_events (OrderbookUpdate/TradeEvent)",
+        "type": "parser",
+        "path": "src/gpt_trader/features/brokerages/coinbase/ws_events.py",
+        "cluster": "streaming",
+    },
+    {
+        "id": "update_mark_metrics",
+        "label": "update_mark_and_metrics",
+        "type": "stream_update",
+        "path": "src/gpt_trader/features/live_trade/engines/telemetry_health.py",
+        "cluster": "streaming",
+    },
+    {
+        "id": "update_orderbook_snapshot",
+        "label": "update_orderbook_snapshot",
+        "type": "stream_update",
+        "path": "src/gpt_trader/features/live_trade/engines/telemetry_health.py",
+        "cluster": "streaming",
+    },
+    {
+        "id": "update_trade_aggregator",
+        "label": "update_trade_aggregator",
+        "type": "stream_update",
+        "path": "src/gpt_trader/features/live_trade/engines/telemetry_health.py",
+        "cluster": "streaming",
+    },
+    {
+        "id": "price_tick_store",
+        "label": "PriceTickStore",
+        "type": "state",
+        "path": "src/gpt_trader/features/live_trade/engines/price_tick_store.py",
+        "cluster": "state",
+    },
+    {
+        "id": "runtime_mark_windows",
+        "label": "RuntimeStateProtocol.mark_windows",
+        "type": "state",
+        "path": "src/gpt_trader/app/protocols.py",
+        "cluster": "state",
+    },
+    {
+        "id": "runtime_orderbook_snapshots",
+        "label": "RuntimeStateProtocol.orderbook_snapshots",
+        "type": "state",
+        "path": "src/gpt_trader/app/protocols.py",
+        "cluster": "state",
+    },
+    {
+        "id": "runtime_trade_aggregators",
+        "label": "RuntimeStateProtocol.trade_aggregators",
+        "type": "state",
+        "path": "src/gpt_trader/app/protocols.py",
+        "cluster": "state",
+    },
+    {
+        "id": "risk_last_mark_update",
+        "label": "LiveRiskManager.last_mark_update",
+        "type": "risk_state",
+        "path": "src/gpt_trader/features/live_trade/risk/manager/__init__.py",
+        "cluster": "risk",
+    },
+    {
+        "id": "risk_check_mark_staleness",
+        "label": "LiveRiskManager.check_mark_staleness",
+        "type": "risk_check",
+        "path": "src/gpt_trader/features/live_trade/risk/manager/__init__.py",
+        "cluster": "risk",
+    },
+    {
+        "id": "emit_metric",
+        "label": "emit_metric",
+        "type": "telemetry",
+        "path": "src/gpt_trader/utilities/telemetry.py",
+        "cluster": "event_store",
+    },
+    {
+        "id": "emit_orderbook_snapshot",
+        "label": "emit_orderbook_snapshot",
+        "type": "telemetry",
+        "path": "src/gpt_trader/features/live_trade/engines/telemetry_health.py",
+        "cluster": "event_store",
+    },
+    {
+        "id": "emit_trade_flow_summary",
+        "label": "emit_trade_flow_summary",
+        "type": "telemetry",
+        "path": "src/gpt_trader/features/live_trade/engines/telemetry_health.py",
+        "cluster": "event_store",
+    },
+    {
+        "id": "event_store_append_metric",
+        "label": "EventStoreProtocol.append_metric",
+        "type": "event_store",
+        "path": "src/gpt_trader/app/protocols.py",
+        "cluster": "event_store",
+    },
+    {
+        "id": "event_store_append",
+        "label": "EventStoreProtocol.append",
+        "type": "event_store",
+        "path": "src/gpt_trader/app/protocols.py",
+        "cluster": "event_store",
+    },
+    {
+        "id": "strategy_orchestrator",
+        "label": "StrategyOrchestrator.process_symbol",
+        "type": "entrypoint",
+        "path": "src/gpt_trader/features/live_trade/orchestrator/orchestrator.py",
+        "cluster": "strategy",
+    },
+    {
+        "id": "context_builder",
+        "label": "ContextBuilderMixin._prepare_context",
+        "type": "context",
+        "path": "src/gpt_trader/features/live_trade/orchestrator/context.py",
+        "cluster": "strategy",
+    },
+    {
+        "id": "market_data_context",
+        "label": "MarketDataContext",
+        "type": "context",
+        "path": "src/gpt_trader/features/live_trade/strategies/base.py",
+        "cluster": "strategy",
+    },
+    {
+        "id": "decision_engine",
+        "label": "DecisionEngineMixin._resolve_decision",
+        "type": "decision",
+        "path": "src/gpt_trader/features/live_trade/orchestrator/decision.py",
+        "cluster": "strategy",
+    },
+    {
+        "id": "strategy_decide",
+        "label": "Strategy.decide",
+        "type": "decision",
+        "path": "src/gpt_trader/features/live_trade/strategies/base.py",
+        "cluster": "strategy",
+    },
+]
+
+MARKET_DATA_FLOW_EDGES = [
+    {
+        "from": "engine_cycle",
+        "to": "fetch_batch_tickers",
+        "label": "poll tickers",
+    },
+    {
+        "from": "fetch_batch_tickers",
+        "to": "broker_get_tickers",
+        "label": "batch request",
+    },
+    {
+        "from": "fetch_batch_tickers",
+        "to": "broker_get_ticker",
+        "label": "fallback per symbol",
+    },
+    {
+        "from": "broker_get_tickers",
+        "to": "process_symbol",
+        "label": "ticker map",
+    },
+    {
+        "from": "broker_get_ticker",
+        "to": "process_symbol",
+        "label": "single ticker",
+    },
+    {
+        "from": "process_symbol",
+        "to": "broker_get_candles",
+        "label": "candles request",
+    },
+    {
+        "from": "broker_get_candles",
+        "to": "process_symbol",
+        "label": "candles data",
+    },
+    {
+        "from": "process_symbol",
+        "to": "price_tick_store",
+        "label": "record mark",
+    },
+    {
+        "from": "process_symbol",
+        "to": "risk_last_mark_update",
+        "label": "mark timestamp",
+    },
+    {
+        "from": "price_tick_store",
+        "to": "strategy_decide",
+        "label": "recent_marks",
+    },
+    {
+        "from": "process_symbol",
+        "to": "strategy_decide",
+        "label": "current_mark + candles",
+    },
+    {
+        "from": "start_streaming",
+        "to": "run_stream_loop",
+        "label": "start WS loop",
+    },
+    {
+        "from": "run_stream_loop",
+        "to": "stream_orderbook",
+        "label": "primary stream",
+    },
+    {
+        "from": "run_stream_loop",
+        "to": "stream_trades",
+        "label": "fallback stream",
+    },
+    {
+        "from": "stream_orderbook",
+        "to": "ws_events",
+        "label": "messages",
+    },
+    {
+        "from": "stream_trades",
+        "to": "ws_events",
+        "label": "messages",
+    },
+    {
+        "from": "ws_events",
+        "to": "update_mark_metrics",
+        "label": "mark updates",
+    },
+    {
+        "from": "ws_events",
+        "to": "update_orderbook_snapshot",
+        "label": "orderbook updates",
+    },
+    {
+        "from": "ws_events",
+        "to": "update_trade_aggregator",
+        "label": "trade updates",
+    },
+    {
+        "from": "update_mark_metrics",
+        "to": "runtime_mark_windows",
+        "label": "mark windows",
+    },
+    {
+        "from": "update_mark_metrics",
+        "to": "risk_last_mark_update",
+        "label": "mark timestamp",
+    },
+    {
+        "from": "update_mark_metrics",
+        "to": "emit_metric",
+        "label": "ws_mark_update",
+    },
+    {
+        "from": "update_orderbook_snapshot",
+        "to": "runtime_orderbook_snapshots",
+        "label": "depth snapshot",
+    },
+    {
+        "from": "update_orderbook_snapshot",
+        "to": "emit_orderbook_snapshot",
+        "label": "persist snapshot",
+    },
+    {
+        "from": "update_trade_aggregator",
+        "to": "runtime_trade_aggregators",
+        "label": "trade stats",
+    },
+    {
+        "from": "update_trade_aggregator",
+        "to": "emit_trade_flow_summary",
+        "label": "persist trade flow",
+    },
+    {
+        "from": "run_stream_loop",
+        "to": "emit_metric",
+        "label": "stream health",
+    },
+    {
+        "from": "emit_metric",
+        "to": "event_store_append_metric",
+        "label": "append_metric",
+    },
+    {
+        "from": "emit_orderbook_snapshot",
+        "to": "event_store_append",
+        "label": "append orderbook",
+    },
+    {
+        "from": "emit_trade_flow_summary",
+        "to": "event_store_append",
+        "label": "append trade flow",
+    },
+    {
+        "from": "risk_last_mark_update",
+        "to": "risk_check_mark_staleness",
+        "label": "staleness input",
+    },
+    {
+        "from": "runtime_mark_windows",
+        "to": "context_builder",
+        "label": "marks",
+    },
+    {
+        "from": "runtime_orderbook_snapshots",
+        "to": "context_builder",
+        "label": "orderbook",
+    },
+    {
+        "from": "runtime_trade_aggregators",
+        "to": "context_builder",
+        "label": "trade stats",
+    },
+    {
+        "from": "risk_check_mark_staleness",
+        "to": "context_builder",
+        "label": "risk gate",
+    },
+    {
+        "from": "strategy_orchestrator",
+        "to": "context_builder",
+        "label": "build context",
+    },
+    {
+        "from": "context_builder",
+        "to": "market_data_context",
+        "label": "wrap state",
+    },
+    {
+        "from": "market_data_context",
+        "to": "decision_engine",
+        "label": "market data input",
+    },
+    {
+        "from": "decision_engine",
+        "to": "strategy_decide",
+        "label": "evaluate strategy",
+    },
+]
+
+BACKTEST_FLOW_CLUSTERS = [
+    {"id": "event_store", "label": "Event Store"},
+    {"id": "loader", "label": "Historical Loader"},
+    {"id": "simulation", "label": "Backtest Simulation"},
+    {"id": "strategy", "label": "Strategy"},
+    {"id": "metrics", "label": "Metrics + Output"},
+]
+
+BACKTEST_FLOW_NODES = [
+    {
+        "id": "event_store",
+        "label": "EventStore.events",
+        "type": "source",
+        "path": "src/gpt_trader/persistence/event_store.py",
+        "cluster": "event_store",
+    },
+    {
+        "id": "data_loader",
+        "label": "HistoricalDataLoader.load_symbol",
+        "type": "loader",
+        "path": "src/gpt_trader/features/research/backtesting/data_loader.py",
+        "cluster": "loader",
+    },
+    {
+        "id": "data_result",
+        "label": "DataLoadResult",
+        "type": "data",
+        "path": "src/gpt_trader/features/research/backtesting/data_loader.py",
+        "cluster": "loader",
+    },
+    {
+        "id": "data_point",
+        "label": "HistoricalDataPoint",
+        "type": "data",
+        "path": "src/gpt_trader/features/research/backtesting/data_loader.py",
+        "cluster": "loader",
+    },
+    {
+        "id": "backtest_simulator",
+        "label": "BacktestSimulator.run",
+        "type": "simulation",
+        "path": "src/gpt_trader/features/research/backtesting/simulator.py",
+        "cluster": "simulation",
+    },
+    {
+        "id": "market_data_context",
+        "label": "MarketDataContext",
+        "type": "strategy_input",
+        "path": "src/gpt_trader/features/live_trade/strategies/base.py",
+        "cluster": "strategy",
+    },
+    {
+        "id": "strategy_decide",
+        "label": "Strategy.decide",
+        "type": "strategy",
+        "path": "src/gpt_trader/features/live_trade/strategies/base.py",
+        "cluster": "strategy",
+    },
+    {
+        "id": "backtest_result",
+        "label": "BacktestResult",
+        "type": "output",
+        "path": "src/gpt_trader/features/research/backtesting/simulator.py",
+        "cluster": "metrics",
+    },
+    {
+        "id": "performance_metrics",
+        "label": "PerformanceMetrics.from_result",
+        "type": "metrics",
+        "path": "src/gpt_trader/features/research/backtesting/metrics.py",
+        "cluster": "metrics",
+    },
+]
+
+BACKTEST_FLOW_EDGES = [
+    {
+        "from": "event_store",
+        "to": "data_loader",
+        "label": "load events",
+    },
+    {
+        "from": "data_loader",
+        "to": "data_result",
+        "label": "build result",
+    },
+    {
+        "from": "data_result",
+        "to": "data_point",
+        "label": "points list",
+    },
+    {
+        "from": "data_point",
+        "to": "backtest_simulator",
+        "label": "data_points",
+    },
+    {
+        "from": "backtest_simulator",
+        "to": "market_data_context",
+        "label": "build market data",
+    },
+    {
+        "from": "market_data_context",
+        "to": "strategy_decide",
+        "label": "strategy input",
+    },
+    {
+        "from": "strategy_decide",
+        "to": "backtest_simulator",
+        "label": "decision",
+    },
+    {
+        "from": "backtest_simulator",
+        "to": "backtest_result",
+        "label": "result",
+    },
+    {
+        "from": "backtest_result",
+        "to": "performance_metrics",
+        "label": "compute metrics",
+    },
+]
+
+BACKTEST_REPORTING_FLOW_CLUSTERS = [
+    {"id": "broker", "label": "Simulation Broker"},
+    {"id": "metrics", "label": "Metrics"},
+    {"id": "report", "label": "Reporter"},
+    {"id": "output", "label": "Outputs"},
+]
+
+BACKTEST_REPORTING_FLOW_NODES = [
+    {
+        "id": "simulated_broker",
+        "label": "SimulatedBroker",
+        "type": "source",
+        "path": "src/gpt_trader/backtesting/simulation/broker.py",
+        "cluster": "broker",
+    },
+    {
+        "id": "broker_stats",
+        "label": "SimulatedBroker.get_statistics",
+        "type": "source",
+        "path": "src/gpt_trader/backtesting/simulation/broker.py",
+        "cluster": "broker",
+    },
+    {
+        "id": "trade_stats_compute",
+        "label": "calculate_trade_statistics",
+        "type": "metrics",
+        "path": "src/gpt_trader/backtesting/metrics/statistics.py",
+        "cluster": "metrics",
+    },
+    {
+        "id": "trade_stats",
+        "label": "TradeStatistics",
+        "type": "data",
+        "path": "src/gpt_trader/backtesting/metrics/statistics.py",
+        "cluster": "metrics",
+    },
+    {
+        "id": "risk_metrics_compute",
+        "label": "calculate_risk_metrics",
+        "type": "metrics",
+        "path": "src/gpt_trader/backtesting/metrics/risk.py",
+        "cluster": "metrics",
+    },
+    {
+        "id": "risk_metrics",
+        "label": "RiskMetrics",
+        "type": "data",
+        "path": "src/gpt_trader/backtesting/metrics/risk.py",
+        "cluster": "metrics",
+    },
+    {
+        "id": "backtest_reporter",
+        "label": "BacktestReporter.generate_result",
+        "type": "reporter",
+        "path": "src/gpt_trader/backtesting/metrics/report.py",
+        "cluster": "report",
+    },
+    {
+        "id": "generate_backtest_report",
+        "label": "generate_backtest_report",
+        "type": "reporter",
+        "path": "src/gpt_trader/backtesting/metrics/report.py",
+        "cluster": "report",
+    },
+    {
+        "id": "backtest_result_report",
+        "label": "BacktestResult",
+        "type": "output",
+        "path": "src/gpt_trader/backtesting/types.py",
+        "cluster": "output",
+    },
+    {
+        "id": "report_summary",
+        "label": "BacktestReporter.generate_summary",
+        "type": "output",
+        "path": "src/gpt_trader/backtesting/metrics/report.py",
+        "cluster": "output",
+    },
+    {
+        "id": "report_csv",
+        "label": "BacktestReporter.generate_csv_row",
+        "type": "output",
+        "path": "src/gpt_trader/backtesting/metrics/report.py",
+        "cluster": "output",
+    },
+]
+
+BACKTEST_REPORTING_FLOW_EDGES = [
+    {
+        "from": "simulated_broker",
+        "to": "trade_stats_compute",
+        "label": "trade history",
+    },
+    {
+        "from": "trade_stats_compute",
+        "to": "trade_stats",
+        "label": "build stats",
+    },
+    {
+        "from": "simulated_broker",
+        "to": "risk_metrics_compute",
+        "label": "equity curve",
+    },
+    {
+        "from": "risk_metrics_compute",
+        "to": "risk_metrics",
+        "label": "build metrics",
+    },
+    {
+        "from": "simulated_broker",
+        "to": "broker_stats",
+        "label": "broker stats",
+    },
+    {
+        "from": "trade_stats",
+        "to": "backtest_reporter",
+        "label": "trade statistics",
+    },
+    {
+        "from": "risk_metrics",
+        "to": "backtest_reporter",
+        "label": "risk metrics",
+    },
+    {
+        "from": "broker_stats",
+        "to": "backtest_reporter",
+        "label": "summary stats",
+    },
+    {
+        "from": "backtest_reporter",
+        "to": "backtest_result_report",
+        "label": "BacktestResult",
+    },
+    {
+        "from": "backtest_reporter",
+        "to": "report_summary",
+        "label": "summary text",
+    },
+    {
+        "from": "backtest_reporter",
+        "to": "report_csv",
+        "label": "csv row",
+    },
+    {
+        "from": "simulated_broker",
+        "to": "generate_backtest_report",
+        "label": "input broker",
+    },
+    {
+        "from": "generate_backtest_report",
+        "to": "backtest_reporter",
+        "label": "construct reporter",
+    },
+    {
+        "from": "generate_backtest_report",
+        "to": "backtest_result_report",
+        "label": "return result",
+    },
+]
+
+BACKTEST_ENTRYPOINTS_CLUSTERS = [
+    {"id": "cli", "label": "CLI Entrypoints"},
+    {"id": "scripts", "label": "Script Entrypoints"},
+    {"id": "library", "label": "Library Entrypoints"},
+    {"id": "engine", "label": "Backtesting Engine"},
+    {"id": "research", "label": "Research Backtesting"},
+    {"id": "intelligence", "label": "Intelligence Backtesting"},
+    {"id": "validation", "label": "Validation + Chaos"},
+    {"id": "output", "label": "Outputs"},
+]
+
+BACKTEST_ENTRYPOINTS_NODES = [
+    {
+        "id": "cli_optimize_run",
+        "label": "optimize run",
+        "type": "entrypoint",
+        "path": "src/gpt_trader/cli/commands/optimize/run.py",
+        "cluster": "cli",
+    },
+    {
+        "id": "paper_trade_stress_test",
+        "label": "run_stress_test",
+        "type": "entrypoint",
+        "path": "scripts/analysis/paper_trade_stress_test.py",
+        "cluster": "scripts",
+    },
+    {
+        "id": "golden_path_demo",
+        "label": "golden_path_validation_demo",
+        "type": "entrypoint",
+        "path": "scripts/analysis/golden_path_validation_demo.py",
+        "cluster": "scripts",
+    },
+    {
+        "id": "walk_forward_run",
+        "label": "WalkForwardOptimizer.run",
+        "type": "entrypoint",
+        "path": "src/gpt_trader/features/optimize/walk_forward.py",
+        "cluster": "library",
+    },
+    {
+        "id": "data_provider_factory",
+        "label": "create_coinbase_data_provider",
+        "type": "data",
+        "path": "src/gpt_trader/backtesting/data/manager.py",
+        "cluster": "engine",
+    },
+    {
+        "id": "batch_runner",
+        "label": "BatchBacktestRunner.run_trial",
+        "type": "engine",
+        "path": "src/gpt_trader/features/optimize/runner/batch_runner.py",
+        "cluster": "engine",
+    },
+    {
+        "id": "clocked_bar_runner",
+        "label": "ClockedBarRunner.run",
+        "type": "engine",
+        "path": "src/gpt_trader/backtesting/engine/bar_runner.py",
+        "cluster": "engine",
+    },
+    {
+        "id": "simulated_broker_engine",
+        "label": "SimulatedBroker",
+        "type": "engine",
+        "path": "src/gpt_trader/backtesting/simulation/broker.py",
+        "cluster": "engine",
+    },
+    {
+        "id": "backtest_guarded_executor",
+        "label": "BacktestGuardedExecutor.submit_order",
+        "type": "engine",
+        "path": "src/gpt_trader/backtesting/engine/guarded_execution.py",
+        "cluster": "engine",
+    },
+    {
+        "id": "engine_backtest_result",
+        "label": "BacktestResult",
+        "type": "output",
+        "path": "src/gpt_trader/backtesting/types.py",
+        "cluster": "output",
+    },
+    {
+        "id": "backtest_simulator_run",
+        "label": "BacktestSimulator.run",
+        "type": "entrypoint",
+        "path": "src/gpt_trader/features/research/backtesting/simulator.py",
+        "cluster": "research",
+    },
+    {
+        "id": "historical_loader",
+        "label": "HistoricalDataLoader.load_symbol",
+        "type": "loader",
+        "path": "src/gpt_trader/features/research/backtesting/data_loader.py",
+        "cluster": "research",
+    },
+    {
+        "id": "event_store_events",
+        "label": "EventStore.events",
+        "type": "source",
+        "path": "src/gpt_trader/persistence/event_store.py",
+        "cluster": "research",
+    },
+    {
+        "id": "ensemble_backtest_process",
+        "label": "EnsembleBacktestAdapter.process_bar",
+        "type": "entrypoint",
+        "path": "src/gpt_trader/features/intelligence/backtesting/backtest_adapter.py",
+        "cluster": "intelligence",
+    },
+    {
+        "id": "ensemble_backtest_results",
+        "label": "EnsembleBacktestAdapter.get_results",
+        "type": "entrypoint",
+        "path": "src/gpt_trader/features/intelligence/backtesting/backtest_adapter.py",
+        "cluster": "intelligence",
+    },
+    {
+        "id": "batch_regime_process",
+        "label": "BatchRegimeDetector.process",
+        "type": "entrypoint",
+        "path": "src/gpt_trader/features/intelligence/backtesting/batch_regime.py",
+        "cluster": "intelligence",
+    },
+    {
+        "id": "batch_regime_process_candles",
+        "label": "BatchRegimeDetector.process_candles",
+        "type": "entrypoint",
+        "path": "src/gpt_trader/features/intelligence/backtesting/batch_regime.py",
+        "cluster": "intelligence",
+    },
+    {
+        "id": "decision_logger_log",
+        "label": "DecisionLogger.log_decision",
+        "type": "entrypoint",
+        "path": "src/gpt_trader/backtesting/validation/decision_logger.py",
+        "cluster": "validation",
+    },
+    {
+        "id": "decision_logger_export",
+        "label": "DecisionLogger.export_to_json",
+        "type": "entrypoint",
+        "path": "src/gpt_trader/backtesting/validation/decision_logger.py",
+        "cluster": "validation",
+    },
+    {
+        "id": "golden_path_validate",
+        "label": "GoldenPathValidator.validate_decision",
+        "type": "entrypoint",
+        "path": "src/gpt_trader/backtesting/validation/validator.py",
+        "cluster": "validation",
+    },
+    {
+        "id": "golden_path_report",
+        "label": "GoldenPathValidator.generate_report",
+        "type": "entrypoint",
+        "path": "src/gpt_trader/backtesting/validation/validator.py",
+        "cluster": "validation",
+    },
+    {
+        "id": "replay_decisions",
+        "label": "replay_decisions_through_simulator",
+        "type": "entrypoint",
+        "path": "src/gpt_trader/backtesting/validation/validator.py",
+        "cluster": "validation",
+    },
+    {
+        "id": "chaos_engine_add",
+        "label": "ChaosEngine.add_scenario",
+        "type": "entrypoint",
+        "path": "src/gpt_trader/backtesting/chaos/engine.py",
+        "cluster": "validation",
+    },
+    {
+        "id": "chaos_engine_process_candle",
+        "label": "ChaosEngine.process_candle",
+        "type": "entrypoint",
+        "path": "src/gpt_trader/backtesting/chaos/engine.py",
+        "cluster": "validation",
+    },
+    {
+        "id": "chaos_engine_process_order",
+        "label": "ChaosEngine.process_order",
+        "type": "entrypoint",
+        "path": "src/gpt_trader/backtesting/chaos/engine.py",
+        "cluster": "validation",
+    },
+    {
+        "id": "chaos_engine_apply_latency",
+        "label": "ChaosEngine.apply_latency",
+        "type": "entrypoint",
+        "path": "src/gpt_trader/backtesting/chaos/engine.py",
+        "cluster": "validation",
+    },
+    {
+        "id": "chaos_scenario_factories",
+        "label": "create_*_scenario",
+        "type": "entrypoint",
+        "path": "src/gpt_trader/backtesting/chaos/scenarios.py",
+        "cluster": "validation",
+    },
+    {
+        "id": "research_backtest_result",
+        "label": "BacktestResult",
+        "type": "output",
+        "path": "src/gpt_trader/features/research/backtesting/simulator.py",
+        "cluster": "output",
+    },
+    {
+        "id": "performance_metrics",
+        "label": "PerformanceMetrics.from_result",
+        "type": "metrics",
+        "path": "src/gpt_trader/features/research/backtesting/metrics.py",
+        "cluster": "output",
+    },
+    {
+        "id": "ensemble_backtest_result",
+        "label": "EnsembleBacktestResult",
+        "type": "output",
+        "path": "src/gpt_trader/features/intelligence/backtesting/backtest_adapter.py",
+        "cluster": "output",
+    },
+    {
+        "id": "ensemble_backtest_summary",
+        "label": "EnsembleBacktestResult.summary",
+        "type": "output",
+        "path": "src/gpt_trader/features/intelligence/backtesting/backtest_adapter.py",
+        "cluster": "output",
+    },
+    {
+        "id": "regime_history",
+        "label": "RegimeHistory",
+        "type": "output",
+        "path": "src/gpt_trader/features/intelligence/backtesting/batch_regime.py",
+        "cluster": "output",
+    },
+    {
+        "id": "regime_history_summary",
+        "label": "RegimeHistory.summary",
+        "type": "output",
+        "path": "src/gpt_trader/features/intelligence/backtesting/batch_regime.py",
+        "cluster": "output",
+    },
+    {
+        "id": "validation_report",
+        "label": "ValidationReport",
+        "type": "output",
+        "path": "src/gpt_trader/backtesting/types.py",
+        "cluster": "output",
+    },
+    {
+        "id": "decision_log_json",
+        "label": "Decision log JSON",
+        "type": "output",
+        "path": "src/gpt_trader/backtesting/validation/decision_logger.py",
+        "cluster": "output",
+    },
+    {
+        "id": "chaos_event",
+        "label": "ChaosEvent",
+        "type": "output",
+        "path": "src/gpt_trader/backtesting/chaos/engine.py",
+        "cluster": "output",
+    },
+]
+
+BACKTEST_ENTRYPOINTS_EDGES = [
+    {
+        "from": "cli_optimize_run",
+        "to": "data_provider_factory",
+        "label": "build data provider",
+    },
+    {
+        "from": "data_provider_factory",
+        "to": "batch_runner",
+        "label": "IHistoricalDataProvider",
+    },
+    {
+        "from": "cli_optimize_run",
+        "to": "batch_runner",
+        "label": "start trials",
+    },
+    {
+        "from": "batch_runner",
+        "to": "clocked_bar_runner",
+        "label": "run loop",
+    },
+    {
+        "from": "clocked_bar_runner",
+        "to": "simulated_broker_engine",
+        "label": "bars/quotes",
+    },
+    {
+        "from": "simulated_broker_engine",
+        "to": "backtest_guarded_executor",
+        "label": "broker context",
+    },
+    {
+        "from": "backtest_guarded_executor",
+        "to": "decision_logger_log",
+        "label": "log decisions",
+    },
+    {
+        "from": "clocked_bar_runner",
+        "to": "chaos_engine_process_candle",
+        "label": "optional hook",
+    },
+    {
+        "from": "simulated_broker_engine",
+        "to": "chaos_engine_process_order",
+        "label": "optional hook",
+    },
+    {
+        "from": "simulated_broker_engine",
+        "to": "chaos_engine_apply_latency",
+        "label": "optional hook",
+    },
+    {
+        "from": "simulated_broker_engine",
+        "to": "engine_backtest_result",
+        "label": "summary result",
+    },
+    {
+        "from": "walk_forward_run",
+        "to": "clocked_bar_runner",
+        "label": "backtest window",
+    },
+    {
+        "from": "walk_forward_run",
+        "to": "simulated_broker_engine",
+        "label": "simulate trades",
+    },
+    {
+        "from": "walk_forward_run",
+        "to": "engine_backtest_result",
+        "label": "window result",
+    },
+    {
+        "from": "paper_trade_stress_test",
+        "to": "clocked_bar_runner",
+        "label": "stress loop",
+    },
+    {
+        "from": "paper_trade_stress_test",
+        "to": "simulated_broker_engine",
+        "label": "simulate broker",
+    },
+    {
+        "from": "golden_path_demo",
+        "to": "decision_logger_log",
+        "label": "log decisions",
+    },
+    {
+        "from": "golden_path_demo",
+        "to": "golden_path_validate",
+        "label": "validate decisions",
+    },
+    {
+        "from": "golden_path_demo",
+        "to": "golden_path_report",
+        "label": "generate report",
+    },
+    {
+        "from": "backtest_simulator_run",
+        "to": "historical_loader",
+        "label": "load history",
+    },
+    {
+        "from": "event_store_events",
+        "to": "historical_loader",
+        "label": "source events",
+    },
+    {
+        "from": "historical_loader",
+        "to": "backtest_simulator_run",
+        "label": "data points",
+    },
+    {
+        "from": "backtest_simulator_run",
+        "to": "research_backtest_result",
+        "label": "result",
+    },
+    {
+        "from": "research_backtest_result",
+        "to": "performance_metrics",
+        "label": "compute metrics",
+    },
+    {
+        "from": "ensemble_backtest_process",
+        "to": "ensemble_backtest_results",
+        "label": "record decisions",
+    },
+    {
+        "from": "ensemble_backtest_results",
+        "to": "regime_history",
+        "label": "build histories",
+    },
+    {
+        "from": "ensemble_backtest_results",
+        "to": "ensemble_backtest_result",
+        "label": "summary",
+    },
+    {
+        "from": "batch_regime_process",
+        "to": "regime_history",
+        "label": "batch history",
+    },
+    {
+        "from": "batch_regime_process_candles",
+        "to": "regime_history",
+        "label": "candle history",
+    },
+    {
+        "from": "ensemble_backtest_result",
+        "to": "ensemble_backtest_summary",
+        "label": "summary output",
+    },
+    {
+        "from": "regime_history",
+        "to": "regime_history_summary",
+        "label": "summary output",
+    },
+    {
+        "from": "decision_logger_log",
+        "to": "decision_logger_export",
+        "label": "export decisions",
+    },
+    {
+        "from": "decision_logger_export",
+        "to": "decision_log_json",
+        "label": "write JSON",
+    },
+    {
+        "from": "decision_logger_log",
+        "to": "replay_decisions",
+        "label": "recorded decisions",
+    },
+    {
+        "from": "replay_decisions",
+        "to": "golden_path_validate",
+        "label": "validate decisions",
+    },
+    {
+        "from": "golden_path_validate",
+        "to": "golden_path_report",
+        "label": "collect divergences",
+    },
+    {
+        "from": "golden_path_report",
+        "to": "validation_report",
+        "label": "report",
+    },
+    {
+        "from": "chaos_scenario_factories",
+        "to": "chaos_engine_add",
+        "label": "scenario config",
+    },
+    {
+        "from": "chaos_engine_add",
+        "to": "chaos_engine_process_candle",
+        "label": "inject candles",
+    },
+    {
+        "from": "chaos_engine_add",
+        "to": "chaos_engine_process_order",
+        "label": "inject orders",
+    },
+    {
+        "from": "chaos_engine_add",
+        "to": "chaos_engine_apply_latency",
+        "label": "inject latency",
+    },
+    {
+        "from": "chaos_engine_process_candle",
+        "to": "chaos_event",
+        "label": "record events",
+    },
+    {
+        "from": "chaos_engine_process_order",
+        "to": "chaos_event",
+        "label": "record events",
+    },
+]
+
+BACKTEST_VALIDATION_CHAOS_CLUSTERS = [
+    {"id": "simulation", "label": "Simulation Loop"},
+    {"id": "guarded", "label": "Guarded Execution"},
+    {"id": "logging", "label": "Decision Logging"},
+    {"id": "validation", "label": "Golden-Path Validation"},
+    {"id": "chaos", "label": "Chaos Injection"},
+    {"id": "output", "label": "Outputs"},
+]
+
+BACKTEST_VALIDATION_CHAOS_NODES = [
+    {
+        "id": "clocked_bar_runner",
+        "label": "ClockedBarRunner.run",
+        "type": "simulation",
+        "path": "src/gpt_trader/backtesting/engine/bar_runner.py",
+        "cluster": "simulation",
+    },
+    {
+        "id": "simulated_broker_place_order",
+        "label": "SimulatedBroker.place_order",
+        "type": "simulation",
+        "path": "src/gpt_trader/backtesting/simulation/broker.py",
+        "cluster": "simulation",
+    },
+    {
+        "id": "backtest_execution_context",
+        "label": "BacktestExecutionContext",
+        "type": "guarded",
+        "path": "src/gpt_trader/backtesting/engine/guarded_execution.py",
+        "cluster": "guarded",
+    },
+    {
+        "id": "backtest_decision_context",
+        "label": "BacktestDecisionContext",
+        "type": "guarded",
+        "path": "src/gpt_trader/backtesting/engine/guarded_execution.py",
+        "cluster": "guarded",
+    },
+    {
+        "id": "backtest_guarded_submit",
+        "label": "BacktestGuardedExecutor.submit_order",
+        "type": "guarded",
+        "path": "src/gpt_trader/backtesting/engine/guarded_execution.py",
+        "cluster": "guarded",
+    },
+    {
+        "id": "state_collector",
+        "label": "StateCollector.collect_account_state",
+        "type": "guarded",
+        "path": "src/gpt_trader/features/live_trade/execution/state_collection.py",
+        "cluster": "guarded",
+    },
+    {
+        "id": "order_validator",
+        "label": "OrderValidator.run_pre_trade_validation",
+        "type": "guarded",
+        "path": "src/gpt_trader/features/live_trade/execution/validation.py",
+        "cluster": "guarded",
+    },
+    {
+        "id": "order_submitter",
+        "label": "OrderSubmitter.submit_order",
+        "type": "guarded",
+        "path": "src/gpt_trader/features/live_trade/execution/order_submission.py",
+        "cluster": "guarded",
+    },
+    {
+        "id": "strategy_decision",
+        "label": "StrategyDecision",
+        "type": "logging",
+        "path": "src/gpt_trader/backtesting/validation/decision_logger.py",
+        "cluster": "logging",
+    },
+    {
+        "id": "decision_logger_log",
+        "label": "DecisionLogger.log_decision",
+        "type": "logging",
+        "path": "src/gpt_trader/backtesting/validation/decision_logger.py",
+        "cluster": "logging",
+    },
+    {
+        "id": "decision_logger_export",
+        "label": "DecisionLogger.export_to_json",
+        "type": "logging",
+        "path": "src/gpt_trader/backtesting/validation/decision_logger.py",
+        "cluster": "logging",
+    },
+    {
+        "id": "replay_decisions",
+        "label": "replay_decisions_through_simulator",
+        "type": "validation",
+        "path": "src/gpt_trader/backtesting/validation/validator.py",
+        "cluster": "validation",
+    },
+    {
+        "id": "golden_validate",
+        "label": "GoldenPathValidator.validate_decision",
+        "type": "validation",
+        "path": "src/gpt_trader/backtesting/validation/validator.py",
+        "cluster": "validation",
+    },
+    {
+        "id": "golden_report",
+        "label": "GoldenPathValidator.generate_report",
+        "type": "validation",
+        "path": "src/gpt_trader/backtesting/validation/validator.py",
+        "cluster": "validation",
+    },
+    {
+        "id": "chaos_scenario",
+        "label": "ChaosScenario",
+        "type": "chaos",
+        "path": "src/gpt_trader/backtesting/types.py",
+        "cluster": "chaos",
+    },
+    {
+        "id": "chaos_scenario_factories",
+        "label": "create_*_scenario",
+        "type": "chaos",
+        "path": "src/gpt_trader/backtesting/chaos/scenarios.py",
+        "cluster": "chaos",
+    },
+    {
+        "id": "chaos_engine_add",
+        "label": "ChaosEngine.add_scenario",
+        "type": "chaos",
+        "path": "src/gpt_trader/backtesting/chaos/engine.py",
+        "cluster": "chaos",
+    },
+    {
+        "id": "chaos_engine_process_candle",
+        "label": "ChaosEngine.process_candle",
+        "type": "chaos",
+        "path": "src/gpt_trader/backtesting/chaos/engine.py",
+        "cluster": "chaos",
+    },
+    {
+        "id": "chaos_engine_process_order",
+        "label": "ChaosEngine.process_order",
+        "type": "chaos",
+        "path": "src/gpt_trader/backtesting/chaos/engine.py",
+        "cluster": "chaos",
+    },
+    {
+        "id": "chaos_engine_apply_latency",
+        "label": "ChaosEngine.apply_latency",
+        "type": "chaos",
+        "path": "src/gpt_trader/backtesting/chaos/engine.py",
+        "cluster": "chaos",
+    },
+    {
+        "id": "decision_log_json",
+        "label": "Decision log JSON",
+        "type": "output",
+        "path": "src/gpt_trader/backtesting/validation/decision_logger.py",
+        "cluster": "output",
+    },
+    {
+        "id": "validation_report",
+        "label": "ValidationReport",
+        "type": "output",
+        "path": "src/gpt_trader/backtesting/types.py",
+        "cluster": "output",
+    },
+    {
+        "id": "validation_divergence",
+        "label": "ValidationDivergence",
+        "type": "output",
+        "path": "src/gpt_trader/backtesting/types.py",
+        "cluster": "output",
+    },
+    {
+        "id": "chaos_event",
+        "label": "ChaosEvent",
+        "type": "output",
+        "path": "src/gpt_trader/backtesting/chaos/engine.py",
+        "cluster": "output",
+    },
+    {
+        "id": "chaos_stats",
+        "label": "ChaosEngine.get_statistics",
+        "type": "output",
+        "path": "src/gpt_trader/backtesting/chaos/engine.py",
+        "cluster": "output",
+    },
+]
+
+BACKTEST_VALIDATION_CHAOS_EDGES = [
+    {
+        "from": "backtest_execution_context",
+        "to": "backtest_guarded_submit",
+        "label": "configure executor",
+    },
+    {
+        "from": "backtest_decision_context",
+        "to": "backtest_guarded_submit",
+        "label": "decision metadata",
+    },
+    {
+        "from": "backtest_guarded_submit",
+        "to": "state_collector",
+        "label": "collect state",
+    },
+    {
+        "from": "state_collector",
+        "to": "order_validator",
+        "label": "equity/positions",
+    },
+    {
+        "from": "order_validator",
+        "to": "order_submitter",
+        "label": "validated order",
+    },
+    {
+        "from": "order_submitter",
+        "to": "simulated_broker_place_order",
+        "label": "broker execution",
+    },
+    {
+        "from": "backtest_guarded_submit",
+        "to": "strategy_decision",
+        "label": "build decision",
+    },
+    {
+        "from": "strategy_decision",
+        "to": "decision_logger_log",
+        "label": "log decision",
+    },
+    {
+        "from": "decision_logger_log",
+        "to": "decision_logger_export",
+        "label": "export JSON",
+    },
+    {
+        "from": "decision_logger_export",
+        "to": "decision_log_json",
+        "label": "write file",
+    },
+    {
+        "from": "decision_logger_log",
+        "to": "replay_decisions",
+        "label": "recorded decisions",
+    },
+    {
+        "from": "replay_decisions",
+        "to": "golden_validate",
+        "label": "validate decisions",
+    },
+    {
+        "from": "golden_validate",
+        "to": "validation_divergence",
+        "label": "divergence",
+    },
+    {
+        "from": "golden_validate",
+        "to": "golden_report",
+        "label": "collect divergences",
+    },
+    {
+        "from": "golden_report",
+        "to": "validation_report",
+        "label": "report",
+    },
+    {
+        "from": "chaos_scenario",
+        "to": "chaos_engine_add",
+        "label": "scenario config",
+    },
+    {
+        "from": "chaos_scenario_factories",
+        "to": "chaos_engine_add",
+        "label": "factory scenario",
+    },
+    {
+        "from": "chaos_engine_add",
+        "to": "chaos_engine_process_candle",
+        "label": "inject candles",
+    },
+    {
+        "from": "chaos_engine_add",
+        "to": "chaos_engine_process_order",
+        "label": "inject orders",
+    },
+    {
+        "from": "chaos_engine_add",
+        "to": "chaos_engine_apply_latency",
+        "label": "inject latency",
+    },
+    {
+        "from": "clocked_bar_runner",
+        "to": "chaos_engine_process_candle",
+        "label": "optional hook",
+    },
+    {
+        "from": "simulated_broker_place_order",
+        "to": "chaos_engine_process_order",
+        "label": "optional hook",
+    },
+    {
+        "from": "clocked_bar_runner",
+        "to": "chaos_engine_apply_latency",
+        "label": "optional hook",
+    },
+    {
+        "from": "chaos_engine_process_candle",
+        "to": "chaos_event",
+        "label": "record event",
+    },
+    {
+        "from": "chaos_engine_process_order",
+        "to": "chaos_event",
+        "label": "record event",
+    },
+    {
+        "from": "chaos_event",
+        "to": "chaos_stats",
+        "label": "aggregate",
+    },
+]
+
 
 def _timestamp() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -426,6 +2227,410 @@ def build_guard_stack_dot(guard_map: dict[str, Any]) -> list[str]:
         lines.append("  }")
 
     for edge in guard_map["edges"]:
+        lines.append(f'  "{edge["from"]}" -> "{edge["to"]}" [label="{edge["label"]}"];')
+    lines.append("}")
+    return lines
+
+
+def build_execution_flow_map() -> dict[str, Any]:
+    return {
+        "artifact": "execution_flow_map",
+        "generated_at": _timestamp(),
+        "description": "Execution flow map (decision → guard stack → submission → telemetry/event store).",
+        "clusters": EXECUTION_FLOW_CLUSTERS,
+        "nodes": EXECUTION_FLOW_NODES,
+        "edges": EXECUTION_FLOW_EDGES,
+        "notes": [
+            "TradingEngine._cycle submits strategy decisions directly to the guard stack.",
+            "OrderRouter routes external decisions to TradingEngine.submit_order.",
+            "OrderSubmitter handles broker IO, telemetry, and persistence.",
+            "Guard rejections emit metrics; stale marks append EventStore events.",
+        ],
+    }
+
+
+def build_execution_flow_markdown(flow_map: dict[str, Any]) -> str:
+    lines = [
+        "# Execution Flow Map",
+        "",
+        f"Generated: {flow_map['generated_at']}",
+        "",
+    ]
+
+    cluster_index = {cluster["id"]: cluster for cluster in flow_map["clusters"]}
+    for cluster_id in [cluster["id"] for cluster in flow_map["clusters"]]:
+        cluster = cluster_index[cluster_id]
+        lines.append(f"## {cluster['label']}")
+        lines.append("| ID | Label | Path |")
+        lines.append("|----|-------|------|")
+        for node in flow_map["nodes"]:
+            if node["cluster"] == cluster_id:
+                lines.append(f"| {node['id']} | {node['label']} | `{node['path']}` |")
+        lines.append("")
+
+    lines.extend(["## Edges", "| From | To | Description |", "|------|----|-------------|"])
+    for edge in flow_map["edges"]:
+        lines.append(f"| {edge['from']} | {edge['to']} | {edge['label']} |")
+
+    lines.append("")
+    lines.append("## Notes")
+    for note in flow_map.get("notes", []):
+        lines.append(f"- {note}")
+
+    return "\n".join(lines) + "\n"
+
+
+def build_execution_flow_dot(flow_map: dict[str, Any]) -> list[str]:
+    lines = ["digraph ExecutionFlow {", "  rankdir=LR;"]
+    for cluster in flow_map["clusters"]:
+        lines.append(f"  subgraph cluster_{cluster['id']} {{")
+        lines.append(f'    label="{cluster["label"]}";')
+        lines.append("    style=rounded;")
+        for node in flow_map["nodes"]:
+            if node["cluster"] != cluster["id"]:
+                continue
+            label = f"{node['label']}\\n{node['path']}"
+            lines.append(f'    "{node["id"]}" [shape=box, label="{label}"]; ')
+        lines.append("  }")
+
+    for edge in flow_map["edges"]:
+        lines.append(f'  "{edge["from"]}" -> "{edge["to"]}" [label="{edge["label"]}"];')
+    lines.append("}")
+    return lines
+
+
+def build_market_data_flow_map() -> dict[str, Any]:
+    return {
+        "artifact": "market_data_flow_map",
+        "generated_at": _timestamp(),
+        "description": "Market data flow map (REST polling + WS streaming).",
+        "clusters": MARKET_DATA_FLOW_CLUSTERS,
+        "nodes": MARKET_DATA_FLOW_NODES,
+        "edges": MARKET_DATA_FLOW_EDGES,
+        "notes": [
+            "TradingEngine uses REST tickers/candles and records marks via PriceTickStore.",
+            "WebSocket streaming updates runtime_state for orderbook + trade flow context.",
+            "Risk mark-staleness checks read LiveRiskManager.last_mark_update timestamps.",
+            "EventStore persistence captures mark updates and orderbook/trade summaries.",
+            "StrategyOrchestrator consumes runtime_state to build MarketDataContext.",
+        ],
+    }
+
+
+def build_market_data_flow_markdown(flow_map: dict[str, Any]) -> str:
+    lines = [
+        "# Market Data Flow Map",
+        "",
+        f"Generated: {flow_map['generated_at']}",
+        "",
+    ]
+
+    cluster_index = {cluster["id"]: cluster for cluster in flow_map["clusters"]}
+    for cluster_id in [cluster["id"] for cluster in flow_map["clusters"]]:
+        cluster = cluster_index[cluster_id]
+        lines.append(f"## {cluster['label']}")
+        lines.append("| ID | Label | Path |")
+        lines.append("|----|-------|------|")
+        for node in flow_map["nodes"]:
+            if node["cluster"] == cluster_id:
+                lines.append(f"| {node['id']} | {node['label']} | `{node['path']}` |")
+        lines.append("")
+
+    lines.extend(["## Edges", "| From | To | Description |", "|------|----|-------------|"])
+    for edge in flow_map["edges"]:
+        lines.append(f"| {edge['from']} | {edge['to']} | {edge['label']} |")
+
+    lines.append("")
+    lines.append("## Notes")
+    for note in flow_map.get("notes", []):
+        lines.append(f"- {note}")
+
+    return "\n".join(lines) + "\n"
+
+
+def build_market_data_flow_dot(flow_map: dict[str, Any]) -> list[str]:
+    lines = ["digraph MarketDataFlow {", "  rankdir=LR;"]
+    for cluster in flow_map["clusters"]:
+        lines.append(f"  subgraph cluster_{cluster['id']} {{")
+        lines.append(f'    label="{cluster["label"]}";')
+        lines.append("    style=rounded;")
+        for node in flow_map["nodes"]:
+            if node["cluster"] != cluster["id"]:
+                continue
+            label = f"{node['label']}\\n{node['path']}"
+            lines.append(f'    "{node["id"]}" [shape=box, label="{label}"]; ')
+        lines.append("  }")
+
+    for edge in flow_map["edges"]:
+        lines.append(f'  "{edge["from"]}" -> "{edge["to"]}" [label="{edge["label"]}"];')
+    lines.append("}")
+    return lines
+
+
+def build_backtesting_flow_map() -> dict[str, Any]:
+    return {
+        "artifact": "backtesting_flow_map",
+        "generated_at": _timestamp(),
+        "description": "Backtesting data flow map (EventStore → loader → simulator → metrics).",
+        "clusters": BACKTEST_FLOW_CLUSTERS,
+        "nodes": BACKTEST_FLOW_NODES,
+        "edges": BACKTEST_FLOW_EDGES,
+        "notes": [
+            "HistoricalDataLoader reconstructs market state from EventStore events.",
+            "BacktestSimulator replays HistoricalDataPoint sequences into strategy decisions.",
+            "PerformanceMetrics summarizes outcomes from BacktestResult.",
+        ],
+    }
+
+
+def build_backtesting_flow_markdown(flow_map: dict[str, Any]) -> str:
+    lines = [
+        "# Backtesting Flow Map",
+        "",
+        f"Generated: {flow_map['generated_at']}",
+        "",
+    ]
+
+    cluster_index = {cluster["id"]: cluster for cluster in flow_map["clusters"]}
+    for cluster_id in [cluster["id"] for cluster in flow_map["clusters"]]:
+        cluster = cluster_index[cluster_id]
+        lines.append(f"## {cluster['label']}")
+        lines.append("| ID | Label | Path |")
+        lines.append("|----|-------|------|")
+        for node in flow_map["nodes"]:
+            if node["cluster"] == cluster_id:
+                lines.append(f"| {node['id']} | {node['label']} | `{node['path']}` |")
+        lines.append("")
+
+    lines.extend(["## Edges", "| From | To | Description |", "|------|----|-------------|"])
+    for edge in flow_map["edges"]:
+        lines.append(f"| {edge['from']} | {edge['to']} | {edge['label']} |")
+
+    lines.append("")
+    lines.append("## Notes")
+    for note in flow_map.get("notes", []):
+        lines.append(f"- {note}")
+
+    return "\n".join(lines) + "\n"
+
+
+def build_backtesting_flow_dot(flow_map: dict[str, Any]) -> list[str]:
+    lines = ["digraph BacktestingFlow {", "  rankdir=LR;"]
+    for cluster in flow_map["clusters"]:
+        lines.append(f"  subgraph cluster_{cluster['id']} {{")
+        lines.append(f'    label="{cluster["label"]}";')
+        lines.append("    style=rounded;")
+        for node in flow_map["nodes"]:
+            if node["cluster"] != cluster["id"]:
+                continue
+            label = f"{node['label']}\\n{node['path']}"
+            lines.append(f'    "{node["id"]}" [shape=box, label="{label}"]; ')
+        lines.append("  }")
+
+    for edge in flow_map["edges"]:
+        lines.append(f'  "{edge["from"]}" -> "{edge["to"]}" [label="{edge["label"]}"];')
+    lines.append("}")
+    return lines
+
+
+def build_backtest_reporting_flow_map() -> dict[str, Any]:
+    return {
+        "artifact": "backtest_reporting_flow_map",
+        "generated_at": _timestamp(),
+        "description": "Backtest reporting flow (broker → metrics → report outputs).",
+        "clusters": BACKTEST_REPORTING_FLOW_CLUSTERS,
+        "nodes": BACKTEST_REPORTING_FLOW_NODES,
+        "edges": BACKTEST_REPORTING_FLOW_EDGES,
+        "notes": [
+            "BacktestReporter lazily computes TradeStatistics and RiskMetrics from the broker.",
+            "generate_backtest_report is a convenience wrapper returning BacktestResult.",
+        ],
+    }
+
+
+def build_backtest_reporting_flow_markdown(flow_map: dict[str, Any]) -> str:
+    lines = [
+        "# Backtest Reporting Flow Map",
+        "",
+        f"Generated: {flow_map['generated_at']}",
+        "",
+    ]
+
+    cluster_index = {cluster["id"]: cluster for cluster in flow_map["clusters"]}
+    for cluster_id in [cluster["id"] for cluster in flow_map["clusters"]]:
+        cluster = cluster_index[cluster_id]
+        lines.append(f"## {cluster['label']}")
+        lines.append("| ID | Label | Path |")
+        lines.append("|----|-------|------|")
+        for node in flow_map["nodes"]:
+            if node["cluster"] == cluster_id:
+                lines.append(f"| {node['id']} | {node['label']} | `{node['path']}` |")
+        lines.append("")
+
+    lines.extend(["## Edges", "| From | To | Description |", "|------|----|-------------|"])
+    for edge in flow_map["edges"]:
+        lines.append(f"| {edge['from']} | {edge['to']} | {edge['label']} |")
+
+    lines.append("")
+    lines.append("## Notes")
+    for note in flow_map.get("notes", []):
+        lines.append(f"- {note}")
+
+    return "\n".join(lines) + "\n"
+
+
+def build_backtest_reporting_flow_dot(flow_map: dict[str, Any]) -> list[str]:
+    lines = ["digraph BacktestReportingFlow {", "  rankdir=LR;"]
+    for cluster in flow_map["clusters"]:
+        lines.append(f"  subgraph cluster_{cluster['id']} {{")
+        lines.append(f'    label="{cluster["label"]}";')
+        lines.append("    style=rounded;")
+        for node in flow_map["nodes"]:
+            if node["cluster"] != cluster["id"]:
+                continue
+            label = f"{node['label']}\\n{node['path']}"
+            lines.append(f'    "{node["id"]}" [shape=box, label="{label}"]; ')
+        lines.append("  }")
+
+    for edge in flow_map["edges"]:
+        lines.append(f'  "{edge["from"]}" -> "{edge["to"]}" [label="{edge["label"]}"];')
+    lines.append("}")
+    return lines
+
+
+def build_backtest_entrypoints_map() -> dict[str, Any]:
+    return {
+        "artifact": "backtest_entrypoints_map",
+        "generated_at": _timestamp(),
+        "description": "Backtest entrypoints (CLI, scripts, library) and their core engines.",
+        "clusters": BACKTEST_ENTRYPOINTS_CLUSTERS,
+        "nodes": BACKTEST_ENTRYPOINTS_NODES,
+        "edges": BACKTEST_ENTRYPOINTS_EDGES,
+        "notes": [
+            "CLI optimize run drives BatchBacktestRunner for optimization trials.",
+            "WalkForwardOptimizer and paper_trade_stress_test use ClockedBarRunner + SimulatedBroker.",
+            "Research backtests rely on EventStore → HistoricalDataLoader → BacktestSimulator.",
+            "Intelligence backtests use EnsembleBacktestAdapter and BatchRegimeDetector utilities.",
+            "Golden-path validation and chaos scenarios provide robustness checks and reports.",
+            "EnsembleBacktestResult.summary and RegimeHistory.summary are reporting-friendly outputs.",
+            "ChaosEngine hooks are optional; integrate via ClockedBarRunner/SimulatedBroker if enabled.",
+        ],
+    }
+
+
+def build_backtest_entrypoints_markdown(flow_map: dict[str, Any]) -> str:
+    lines = [
+        "# Backtest Entrypoints Map",
+        "",
+        f"Generated: {flow_map['generated_at']}",
+        "",
+    ]
+
+    cluster_index = {cluster["id"]: cluster for cluster in flow_map["clusters"]}
+    for cluster_id in [cluster["id"] for cluster in flow_map["clusters"]]:
+        cluster = cluster_index[cluster_id]
+        lines.append(f"## {cluster['label']}")
+        lines.append("| ID | Label | Path |")
+        lines.append("|----|-------|------|")
+        for node in flow_map["nodes"]:
+            if node["cluster"] == cluster_id:
+                lines.append(f"| {node['id']} | {node['label']} | `{node['path']}` |")
+        lines.append("")
+
+    lines.extend(["## Edges", "| From | To | Description |", "|------|----|-------------|"])
+    for edge in flow_map["edges"]:
+        lines.append(f"| {edge['from']} | {edge['to']} | {edge['label']} |")
+
+    lines.append("")
+    lines.append("## Notes")
+    for note in flow_map.get("notes", []):
+        lines.append(f"- {note}")
+
+    return "\n".join(lines) + "\n"
+
+
+def build_backtest_entrypoints_dot(flow_map: dict[str, Any]) -> list[str]:
+    lines = ["digraph BacktestEntrypoints {", "  rankdir=LR;"]
+    for cluster in flow_map["clusters"]:
+        lines.append(f"  subgraph cluster_{cluster['id']} {{")
+        lines.append(f'    label="{cluster["label"]}";')
+        lines.append("    style=rounded;")
+        for node in flow_map["nodes"]:
+            if node["cluster"] != cluster["id"]:
+                continue
+            label = f"{node['label']}\\n{node['path']}"
+            lines.append(f'    "{node["id"]}" [shape=box, label="{label}"]; ')
+        lines.append("  }")
+
+    for edge in flow_map["edges"]:
+        lines.append(f'  "{edge["from"]}" -> "{edge["to"]}" [label="{edge["label"]}"];')
+    lines.append("}")
+    return lines
+
+
+def build_backtest_validation_chaos_map() -> dict[str, Any]:
+    return {
+        "artifact": "backtest_validation_chaos_map",
+        "generated_at": _timestamp(),
+        "description": "Backtest validation + chaos flow (guarded execution, decision logs, "
+        "golden-path validation, chaos injection).",
+        "clusters": BACKTEST_VALIDATION_CHAOS_CLUSTERS,
+        "nodes": BACKTEST_VALIDATION_CHAOS_NODES,
+        "edges": BACKTEST_VALIDATION_CHAOS_EDGES,
+        "notes": [
+            "BacktestGuardedExecutor reuses live guard stack components for parity.",
+            "DecisionLogger captures StrategyDecision entries for replay and reporting.",
+            "GoldenPathValidator compares live vs simulated decisions and emits ValidationReport.",
+            "ChaosEngine hooks are optional; inject via simulation loops when enabled.",
+        ],
+    }
+
+
+def build_backtest_validation_chaos_markdown(flow_map: dict[str, Any]) -> str:
+    lines = [
+        "# Backtest Validation + Chaos Flow Map",
+        "",
+        f"Generated: {flow_map['generated_at']}",
+        "",
+    ]
+
+    cluster_index = {cluster["id"]: cluster for cluster in flow_map["clusters"]}
+    for cluster_id in [cluster["id"] for cluster in flow_map["clusters"]]:
+        cluster = cluster_index[cluster_id]
+        lines.append(f"## {cluster['label']}")
+        lines.append("| ID | Label | Path |")
+        lines.append("|----|-------|------|")
+        for node in flow_map["nodes"]:
+            if node["cluster"] == cluster_id:
+                lines.append(f"| {node['id']} | {node['label']} | `{node['path']}` |")
+        lines.append("")
+
+    lines.extend(["## Edges", "| From | To | Description |", "|------|----|-------------|"])
+    for edge in flow_map["edges"]:
+        lines.append(f"| {edge['from']} | {edge['to']} | {edge['label']} |")
+
+    lines.append("")
+    lines.append("## Notes")
+    for note in flow_map.get("notes", []):
+        lines.append(f"- {note}")
+
+    return "\n".join(lines) + "\n"
+
+
+def build_backtest_validation_chaos_dot(flow_map: dict[str, Any]) -> list[str]:
+    lines = ["digraph BacktestValidationChaos {", "  rankdir=LR;"]
+    for cluster in flow_map["clusters"]:
+        lines.append(f"  subgraph cluster_{cluster['id']} {{")
+        lines.append(f'    label="{cluster["label"]}";')
+        lines.append("    style=rounded;")
+        for node in flow_map["nodes"]:
+            if node["cluster"] != cluster["id"]:
+                continue
+            label = f"{node['label']}\\n{node['path']}"
+            lines.append(f'    "{node["id"]}" [shape=box, label="{label}"]; ')
+        lines.append("  }")
+
+    for edge in flow_map["edges"]:
         lines.append(f'  "{edge["from"]}" -> "{edge["to"]}" [label="{edge["label"]}"];')
     lines.append("}")
     return lines
@@ -682,6 +2887,78 @@ def generate(output_dir: Path) -> dict[str, Path]:
     _write_markdown(guard_md, build_guard_stack_markdown(guard_map))
     _write_dot(guard_dot, build_guard_stack_dot(guard_map))
 
+    execution_map = build_execution_flow_map()
+    execution_json = output_dir / "execution_flow_map.json"
+    execution_md = output_dir / "execution_flow_map.md"
+    execution_dot = output_dir / "execution_flow_map.dot"
+
+    _write_json(execution_json, execution_map)
+    _write_markdown(execution_md, build_execution_flow_markdown(execution_map))
+    _write_dot(execution_dot, build_execution_flow_dot(execution_map))
+
+    market_data_map = build_market_data_flow_map()
+    market_data_json = output_dir / "market_data_flow_map.json"
+    market_data_md = output_dir / "market_data_flow_map.md"
+    market_data_dot = output_dir / "market_data_flow_map.dot"
+
+    _write_json(market_data_json, market_data_map)
+    _write_markdown(market_data_md, build_market_data_flow_markdown(market_data_map))
+    _write_dot(market_data_dot, build_market_data_flow_dot(market_data_map))
+
+    backtest_map = build_backtesting_flow_map()
+    backtest_json = output_dir / "backtesting_flow_map.json"
+    backtest_md = output_dir / "backtesting_flow_map.md"
+    backtest_dot = output_dir / "backtesting_flow_map.dot"
+
+    _write_json(backtest_json, backtest_map)
+    _write_markdown(backtest_md, build_backtesting_flow_markdown(backtest_map))
+    _write_dot(backtest_dot, build_backtesting_flow_dot(backtest_map))
+
+    backtest_reporting_map = build_backtest_reporting_flow_map()
+    backtest_reporting_json = output_dir / "backtest_reporting_flow_map.json"
+    backtest_reporting_md = output_dir / "backtest_reporting_flow_map.md"
+    backtest_reporting_dot = output_dir / "backtest_reporting_flow_map.dot"
+
+    _write_json(backtest_reporting_json, backtest_reporting_map)
+    _write_markdown(
+        backtest_reporting_md,
+        build_backtest_reporting_flow_markdown(backtest_reporting_map),
+    )
+    _write_dot(
+        backtest_reporting_dot,
+        build_backtest_reporting_flow_dot(backtest_reporting_map),
+    )
+
+    backtest_entrypoints_map = build_backtest_entrypoints_map()
+    backtest_entrypoints_json = output_dir / "backtest_entrypoints_map.json"
+    backtest_entrypoints_md = output_dir / "backtest_entrypoints_map.md"
+    backtest_entrypoints_dot = output_dir / "backtest_entrypoints_map.dot"
+
+    _write_json(backtest_entrypoints_json, backtest_entrypoints_map)
+    _write_markdown(
+        backtest_entrypoints_md,
+        build_backtest_entrypoints_markdown(backtest_entrypoints_map),
+    )
+    _write_dot(
+        backtest_entrypoints_dot,
+        build_backtest_entrypoints_dot(backtest_entrypoints_map),
+    )
+
+    backtest_validation_map = build_backtest_validation_chaos_map()
+    backtest_validation_json = output_dir / "backtest_validation_chaos_map.json"
+    backtest_validation_md = output_dir / "backtest_validation_chaos_map.md"
+    backtest_validation_dot = output_dir / "backtest_validation_chaos_map.dot"
+
+    _write_json(backtest_validation_json, backtest_validation_map)
+    _write_markdown(
+        backtest_validation_md,
+        build_backtest_validation_chaos_markdown(backtest_validation_map),
+    )
+    _write_dot(
+        backtest_validation_dot,
+        build_backtest_validation_chaos_dot(backtest_validation_map),
+    )
+
     config_map = build_config_code_map()
     config_json = output_dir / "config_code_map.json"
     config_md = output_dir / "config_code_map.md"
@@ -698,6 +2975,24 @@ def generate(output_dir: Path) -> dict[str, Path]:
         "guard_stack_map.json": guard_json,
         "guard_stack_map.md": guard_md,
         "guard_stack_map.dot": guard_dot,
+        "execution_flow_map.json": execution_json,
+        "execution_flow_map.md": execution_md,
+        "execution_flow_map.dot": execution_dot,
+        "market_data_flow_map.json": market_data_json,
+        "market_data_flow_map.md": market_data_md,
+        "market_data_flow_map.dot": market_data_dot,
+        "backtesting_flow_map.json": backtest_json,
+        "backtesting_flow_map.md": backtest_md,
+        "backtesting_flow_map.dot": backtest_dot,
+        "backtest_reporting_flow_map.json": backtest_reporting_json,
+        "backtest_reporting_flow_map.md": backtest_reporting_md,
+        "backtest_reporting_flow_map.dot": backtest_reporting_dot,
+        "backtest_entrypoints_map.json": backtest_entrypoints_json,
+        "backtest_entrypoints_map.md": backtest_entrypoints_md,
+        "backtest_entrypoints_map.dot": backtest_entrypoints_dot,
+        "backtest_validation_chaos_map.json": backtest_validation_json,
+        "backtest_validation_chaos_map.md": backtest_validation_md,
+        "backtest_validation_chaos_map.dot": backtest_validation_dot,
         "config_code_map.json": config_json,
         "config_code_map.md": config_md,
         "config_code_map.dot": config_dot,
@@ -706,7 +3001,10 @@ def generate(output_dir: Path) -> dict[str, Path]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Generate reasoning artifacts (CLI flow + config map)"
+        description=(
+            "Generate reasoning artifacts (CLI flow + guard/execution + market data + "
+            "backtesting + reporting + entrypoints + validation/chaos + config linkage)"
+        )
     )
     parser.add_argument(
         "--output-dir",

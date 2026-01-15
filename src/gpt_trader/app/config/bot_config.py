@@ -12,7 +12,7 @@ from dataclasses import dataclass, field, fields, replace
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
-# Import canonical defaults (top-10 symbols + spot_top10.json risk config)
+# Import canonical defaults (top-10 symbols).
 
 if TYPE_CHECKING:
     from gpt_trader.features.live_trade.strategies.perps_baseline import (

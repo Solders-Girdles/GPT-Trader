@@ -8,6 +8,8 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
+from gpt_trader.utilities.datetime_helpers import normalize_to_utc, utc_now
+
 
 class AlertSeverity(Enum):
     """Normalized alert severity levels shared across monitoring modules."""
@@ -63,7 +65,7 @@ class Alert:
     source: str | None = None
     category: str | None = None
     component: str | None = None
-    created_at: datetime = field(default_factory=datetime.utcnow)
+    created_at: datetime = field(default_factory=utc_now)
     last_seen_at: datetime | None = None
     occurrences: int = 1
     metadata: dict[str, Any] = field(default_factory=dict)
@@ -75,9 +77,13 @@ class Alert:
 
     def __post_init__(self, created_at_override: datetime | None) -> None:
         if created_at_override is not None:
-            self.created_at = created_at_override
+            self.created_at = normalize_to_utc(created_at_override)
+        else:
+            self.created_at = normalize_to_utc(self.created_at)
         if self.last_seen_at is None:
             self.last_seen_at = self.created_at
+        else:
+            self.last_seen_at = normalize_to_utc(self.last_seen_at)
 
     @property
     def id(self) -> str:
@@ -115,7 +121,7 @@ class Alert:
     ) -> None:
         """Increment the occurrence counter and update freshness markers."""
         self.occurrences += 1
-        self.last_seen_at = datetime.utcnow()
+        self.last_seen_at = utc_now()
         if context:
             self.context.update(context)
         if metadata:
@@ -144,7 +150,7 @@ class Alert:
 
     def mark_resolved(self) -> None:
         """Mark the alert as resolved at the current time."""
-        self.resolved_at = datetime.utcnow()
+        self.resolved_at = utc_now()
 
     def acknowledge(self) -> None:
         """Mark the alert as acknowledged without resolving it."""
@@ -156,7 +162,7 @@ class Alert:
 
     def age_minutes(self) -> float:
         """Age of the alert in minutes (resolved or now)."""
-        end_time = self.resolved_at or datetime.utcnow()
+        end_time = self.resolved_at or utc_now()
         return (end_time - self.created_at).total_seconds() / 60
 
 

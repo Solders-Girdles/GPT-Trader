@@ -9,6 +9,7 @@ from typing import Any
 
 from gpt_trader.monitoring.alert_types import Alert, AlertSeverity
 from gpt_trader.monitoring.notifications.protocol import NotificationBackend
+from gpt_trader.utilities.datetime_helpers import utc_now
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="notifications")
@@ -36,7 +37,7 @@ class NotificationService:
     # Internal state
     _recent_alerts: dict[str, datetime] = field(default_factory=dict, repr=False)
     _sent_count_this_minute: int = field(default=0, repr=False)
-    _minute_reset_time: datetime = field(default_factory=datetime.utcnow, repr=False)
+    _minute_reset_time: datetime = field(default_factory=utc_now, repr=False)
 
     def add_backend(self, backend: NotificationBackend) -> None:
         """Add a notification backend."""
@@ -116,7 +117,7 @@ class NotificationService:
         success = await self._dispatch(alert)
 
         # Track for deduplication
-        self._recent_alerts[dedup_key] = datetime.utcnow()
+        self._recent_alerts[dedup_key] = utc_now()
         self._cleanup_old_alerts()
 
         return success
@@ -149,7 +150,7 @@ class NotificationService:
 
         success = await self._dispatch(alert)
 
-        self._recent_alerts[dedup_key] = datetime.utcnow()
+        self._recent_alerts[dedup_key] = utc_now()
         self._cleanup_old_alerts()
 
         return success
@@ -191,7 +192,7 @@ class NotificationService:
 
     def _check_rate_limit(self) -> bool:
         """Check if we're within rate limits."""
-        now = datetime.utcnow()
+        now = utc_now()
 
         # Reset counter each minute
         if now - self._minute_reset_time > timedelta(minutes=1):
@@ -210,11 +211,11 @@ class NotificationService:
             return False
 
         last_sent = self._recent_alerts[key]
-        return datetime.utcnow() - last_sent < timedelta(seconds=self.dedup_window_seconds)
+        return utc_now() - last_sent < timedelta(seconds=self.dedup_window_seconds)
 
     def _cleanup_old_alerts(self) -> None:
         """Remove expired entries from dedup cache."""
-        cutoff = datetime.utcnow() - timedelta(seconds=self.dedup_window_seconds * 2)
+        cutoff = utc_now() - timedelta(seconds=self.dedup_window_seconds * 2)
         expired = [k for k, v in self._recent_alerts.items() if v < cutoff]
         for k in expired:
             del self._recent_alerts[k]

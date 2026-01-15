@@ -14,6 +14,8 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
+from gpt_trader.utilities.datetime_helpers import utc_now
+
 
 @dataclass
 class StrategyDecision:
@@ -78,7 +80,7 @@ class StrategyDecision:
         return cls(
             decision_id=str(uuid.uuid4())[:12],
             cycle_id=cycle_id,
-            timestamp=datetime.utcnow(),
+            timestamp=utc_now(),
             symbol=symbol,
             equity=equity,
             position_quantity=position_quantity,

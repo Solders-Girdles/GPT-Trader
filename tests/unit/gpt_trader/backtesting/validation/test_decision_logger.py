@@ -12,6 +12,7 @@ from gpt_trader.backtesting.validation.decision_logger import (
     DecisionLogger,
     StrategyDecision,
 )
+from gpt_trader.utilities.datetime_helpers import utc_now
 
 
 class TestStrategyDecisionCreate:
@@ -31,7 +32,7 @@ class TestStrategyDecisionCreate:
         assert len(decision.decision_id) == 12
 
     def test_create_sets_timestamp(self) -> None:
-        before = datetime.utcnow()
+        before = utc_now()
         decision = StrategyDecision.create(
             cycle_id="cycle-001",
             symbol="BTC-USD",
@@ -41,7 +42,7 @@ class TestStrategyDecisionCreate:
             mark_price=Decimal("50000"),
             recent_marks=[Decimal("50000")],
         )
-        after = datetime.utcnow()
+        after = utc_now()
         assert before <= decision.timestamp <= after
 
     def test_create_preserves_parameters(self) -> None:

@@ -9,6 +9,7 @@ import pytest
 
 from gpt_trader.backtesting.engine.clock import SimulationClock
 from gpt_trader.backtesting.types import ClockSpeed
+from gpt_trader.utilities.datetime_helpers import utc_now
 
 
 class TestSimulationClockInit:
@@ -23,9 +24,9 @@ class TestSimulationClockInit:
         assert clock.speed == ClockSpeed.FAST_10X
 
     def test_default_start_time_is_now(self) -> None:
-        before = datetime.utcnow()
+        before = utc_now()
         clock = SimulationClock()
-        after = datetime.utcnow()
+        after = utc_now()
         assert before <= clock.now() <= after
 
     def test_custom_start_time(self) -> None:

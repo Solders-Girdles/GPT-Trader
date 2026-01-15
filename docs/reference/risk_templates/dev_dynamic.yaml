@@ -1,0 +1,18 @@
+max_leverage: 3
+min_liquidation_buffer_pct: 0.1
+enable_pre_trade_liq_projection: false
+daily_loss_limit: 1000
+max_exposure_pct: 1.0
+max_position_pct_per_symbol: 1.0
+max_notional_per_symbol:
+  BTC-USD: 100000
+slippage_guard_bps: 80
+kill_switch_enabled: false
+reduce_only_mode: false
+max_mark_staleness_seconds: 60
+enable_volatility_circuit_breaker: false
+enable_market_impact_guard: true
+max_market_impact_bps: 25
+enable_dynamic_position_sizing: true
+position_sizing_method: intelligent
+position_sizing_multiplier: 1.0

@@ -16,6 +16,15 @@ from datetime import datetime, timezone
 from io import StringIO
 from pathlib import Path
 from typing import Any
+from collections.abc import Callable
+
+load_dotenv: Callable[..., bool] | None
+try:
+    from dotenv import load_dotenv as _load_dotenv
+except ImportError:  # pragma: no cover - optional dependency for CLI convenience
+    load_dotenv = None
+else:
+    load_dotenv = _load_dotenv
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 SRC_ROOT = PROJECT_ROOT / "src"
@@ -107,11 +116,14 @@ SUMMARY_DURATION_PATTERN = re.compile(r"in\s+(?P<duration>[0-9.]+)s")
 
 def _extract_pytest_summary(stdout: str, stderr: str) -> str:
     summary = "Tests completed"
-    for line in (stdout + stderr).split("\n"):
-        if "passed" in line or "failed" in line or "error" in line:
-            if "::" not in line:
-                summary = line.strip()
-                break
+    lines = [line.strip() for line in (stdout + stderr).split("\n") if line.strip()]
+    for line in reversed(lines):
+        if SUMMARY_COUNT_PATTERN.search(line):
+            return line
+    for line in lines:
+        if ("passed" in line or "failed" in line or "error" in line) and "::" not in line:
+            summary = line
+            break
     return summary
 
 
@@ -785,6 +797,9 @@ def main() -> int:
     )
 
     args = parser.parse_args()
+
+    if load_dotenv is not None:
+        load_dotenv()
 
     if args.schema:
         output = json.dumps(build_schema(), indent=2)

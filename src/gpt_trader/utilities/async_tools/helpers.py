@@ -55,9 +55,30 @@ async def wait_for_first(
     if not pending:
         raise ValueError("At least one coroutine must be provided")
 
+    tasks: list[asyncio.Future[T]] = []
+    created_tasks: list[asyncio.Future[T]] = []
+    for coro in pending:
+        task = asyncio.ensure_future(coro)
+        tasks.append(task)
+        if task is not coro:
+            created_tasks.append(task)
+
+    if created_tasks:
+
+        def _consume_task_result(task: asyncio.Future[Any]) -> None:
+            try:
+                task.result()
+            except asyncio.CancelledError:
+                pass
+            except Exception:
+                pass
+
+        for created_task in created_tasks:
+            created_task.add_done_callback(_consume_task_result)
+
     async def iterate() -> T:
-        for coro in asyncio.as_completed(pending):
-            return await coro
+        for task in asyncio.as_completed(tasks):
+            return await task
         raise RuntimeError("asyncio.as_completed produced no results")
 
     if timeout is None:

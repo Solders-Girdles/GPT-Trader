@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime
 from decimal import Decimal
 from unittest.mock import MagicMock
 
@@ -16,6 +15,7 @@ from gpt_trader.core import (
     TimeInForce,
 )
 from gpt_trader.features.live_trade.execution.order_submission import OrderSubmitter
+from gpt_trader.utilities.datetime_helpers import utc_now
 
 
 @pytest.fixture
@@ -122,6 +122,6 @@ def mock_order() -> Order:
         stop_price=None,
         tif=TimeInForce.GTC,
         status=OrderStatus.PENDING,
-        submitted_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
+        submitted_at=utc_now(),
+        updated_at=utc_now(),
     )

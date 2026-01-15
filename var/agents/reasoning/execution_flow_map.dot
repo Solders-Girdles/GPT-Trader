@@ -1,0 +1,70 @@
+digraph ExecutionFlow {
+  rankdir=LR;
+  subgraph cluster_entry {
+    label="Entry + Decision";
+    style=rounded;
+    "trading_engine_cycle" [shape=box, label="TradingEngine._cycle\nsrc/gpt_trader/features/live_trade/engines/strategy.py"];
+    "strategy_decide" [shape=box, label="Strategy.decide\nsrc/gpt_trader/features/live_trade/strategies/base.py"];
+    "order_router" [shape=box, label="OrderRouter.execute_async (external)\nsrc/gpt_trader/features/live_trade/execution/router.py"];
+    "engine_submit" [shape=box, label="TradingEngine.submit_order\nsrc/gpt_trader/features/live_trade/engines/strategy.py"];
+  }
+  subgraph cluster_guards {
+    label="Guard + Validation";
+    style=rounded;
+    "engine_validate" [shape=box, label="TradingEngine._validate_and_place_order\nsrc/gpt_trader/features/live_trade/engines/strategy.py"];
+    "degradation_gate" [shape=box, label="Degradation gate\nsrc/gpt_trader/features/live_trade/degradation.py"];
+    "security_validator" [shape=box, label="Security validator\nsrc/gpt_trader/security/security_validator.py"];
+    "risk_manager" [shape=box, label="LiveRiskManager.pre_trade_validate\nsrc/gpt_trader/features/live_trade/risk/manager/__init__.py"];
+    "order_validator" [shape=box, label="OrderValidator (exchange/slippage/preview)\nsrc/gpt_trader/features/live_trade/execution/validation.py"];
+    "engine_mark_staleness" [shape=box, label="TradingEngine._check_mark_staleness\nsrc/gpt_trader/features/live_trade/engines/strategy.py"];
+    "risk_check_mark_staleness" [shape=box, label="LiveRiskManager.check_mark_staleness\nsrc/gpt_trader/features/live_trade/risk/manager/__init__.py"];
+  }
+  subgraph cluster_submission {
+    label="Submission + Telemetry";
+    style=rounded;
+    "order_submitter" [shape=box, label="OrderSubmitter.submit_order\nsrc/gpt_trader/features/live_trade/execution/order_submission.py"];
+    "order_rejection" [shape=box, label="OrderSubmitter.record_rejection\nsrc/gpt_trader/features/live_trade/execution/order_submission.py"];
+    "broker_executor" [shape=box, label="BrokerExecutor.execute_order\nsrc/gpt_trader/features/live_trade/execution/broker_executor.py"];
+    "broker_adapter" [shape=box, label="BrokerProtocol.place_order\nsrc/gpt_trader/features/brokerages/core/protocols.py"];
+    "order_event_recorder" [shape=box, label="OrderEventRecorder\nsrc/gpt_trader/features/live_trade/execution/order_event_recorder.py"];
+    "orders_store" [shape=box, label="OrdersStore\nsrc/gpt_trader/persistence/orders_store.py"];
+  }
+  subgraph cluster_event_store {
+    label="Event Store";
+    style=rounded;
+    "engine_append_event" [shape=box, label="TradingEngine._append_event\nsrc/gpt_trader/features/live_trade/engines/strategy.py"];
+    "emit_metric" [shape=box, label="emit_metric\nsrc/gpt_trader/utilities/telemetry.py"];
+    "event_store_append_metric" [shape=box, label="EventStoreProtocol.append_metric\nsrc/gpt_trader/app/protocols.py"];
+    "event_store_append" [shape=box, label="EventStoreProtocol.append\nsrc/gpt_trader/app/protocols.py"];
+  }
+  subgraph cluster_outcomes {
+    label="Outcomes";
+    style=rounded;
+    "decision_trace" [shape=box, label="OrderDecisionTrace\nsrc/gpt_trader/features/live_trade/execution/decision_trace.py"];
+    "submission_result" [shape=box, label="OrderSubmissionResult\nsrc/gpt_trader/features/live_trade/execution/submission_result.py"];
+  }
+  "trading_engine_cycle" -> "strategy_decide" [label="produce decision"];
+  "strategy_decide" -> "engine_validate" [label="submit decision"];
+  "order_router" -> "engine_submit" [label="external entry"];
+  "engine_submit" -> "engine_validate" [label="delegate to guard stack"];
+  "engine_validate" -> "decision_trace" [label="record outcomes"];
+  "engine_validate" -> "degradation_gate" [label="pause/allow"];
+  "degradation_gate" -> "security_validator" [label="validate request"];
+  "security_validator" -> "engine_mark_staleness" [label="staleness gate"];
+  "engine_mark_staleness" -> "risk_check_mark_staleness" [label="risk check"];
+  "engine_mark_staleness" -> "engine_append_event" [label="stale_mark_detected"];
+  "engine_append_event" -> "event_store_append" [label="append event"];
+  "engine_mark_staleness" -> "order_validator" [label="continue guards"];
+  "order_validator" -> "risk_manager" [label="pre-trade validate"];
+  "engine_validate" -> "order_rejection" [label="guard rejection"];
+  "order_rejection" -> "order_event_recorder" [label="record rejection"];
+  "order_validator" -> "order_submitter" [label="submit order"];
+  "order_submitter" -> "broker_executor" [label="execute broker call"];
+  "broker_executor" -> "broker_adapter" [label="place order"];
+  "order_submitter" -> "order_event_recorder" [label="record events"];
+  "order_event_recorder" -> "emit_metric" [label="emit metrics"];
+  "emit_metric" -> "event_store_append_metric" [label="append_metric"];
+  "order_event_recorder" -> "event_store_append" [label="decision trace"];
+  "order_submitter" -> "orders_store" [label="persist order"];
+  "engine_validate" -> "submission_result" [label="return status"];
+}

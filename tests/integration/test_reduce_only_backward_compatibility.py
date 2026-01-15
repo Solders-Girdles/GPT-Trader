@@ -1,94 +1,39 @@
-"""Tests to verify backward compatibility of the reduce-only state management."""
+"""Tests to verify backward compatibility of reduce-only state persistence."""
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock
+from datetime import UTC, datetime
 
-import pytest
-
-from gpt_trader.app.config import BotConfig
-from gpt_trader.app.config.controller import ConfigController
-from gpt_trader.app.container import ApplicationContainer
-from gpt_trader.features.live_trade.engines.runtime import RuntimeEngine
+from gpt_trader.features.live_trade.risk import manager as risk_manager_module
+from gpt_trader.features.live_trade.risk.manager import LiveRiskManager
 
 
 class TestReduceOnlyBackwardCompatibility:
     """Tests to ensure backward compatibility is maintained."""
 
-    @pytest.mark.skip(
-        reason="Test uses parameters (config_controller) not supported by current API - needs redesign"
-    )
-    def test_runtime_coordinator_without_state_manager(self) -> None:
-        """Test that RuntimeEngine works without StateManager."""
-        config = BotConfig(symbols=["BTC-USD"], mock_broker=True)
-        container = ApplicationContainer(config)
+    def test_reduce_only_in_memory_without_state_file(self) -> None:
+        """Test reduce-only toggles without persisted state."""
+        manager = LiveRiskManager(state_file=None)
 
-        from gpt_trader.features.live_trade.engines.base import CoordinatorContext
+        assert manager.is_reduce_only_mode() is False
+        manager.set_reduce_only_mode(True, reason="test_enable")
+        assert manager.is_reduce_only_mode() is True
+        manager.set_reduce_only_mode(False, reason="test_disable")
+        assert manager.is_reduce_only_mode() is False
 
-        context = CoordinatorContext(
-            config=config,
-            container=container,
-            event_store=container.event_store,
-            symbols=(),
-            bot_id="test",
-        )
+        # Fresh manager should not inherit any state.
+        fresh_manager = LiveRiskManager(state_file=None)
+        assert fresh_manager.is_reduce_only_mode() is False
 
-        runtime_coordinator = RuntimeEngine(
-            context,
-            config_controller=None,
-        )
+    def test_reduce_only_state_persists_across_restart(self, tmp_path, monkeypatch) -> None:
+        """Test reduce-only mode persists via the risk state file."""
+        fixed_time = datetime(2024, 1, 2, tzinfo=UTC)
+        monkeypatch.setattr(risk_manager_module, "utc_now", lambda: fixed_time)
 
-        # Test basic functionality
-        assert runtime_coordinator.is_reduce_only_mode() is False
+        state_file = tmp_path / "risk_state.json"
+        manager = LiveRiskManager(state_file=str(state_file))
+        manager.set_reduce_only_mode(True, reason="persistence_test")
 
-        # Change state
-        runtime_coordinator.set_reduce_only_mode(True, "test")
-        assert runtime_coordinator.is_reduce_only_mode() is True
-
-    @pytest.mark.skip(
-        reason="Test uses parameters (reduce_only_state_manager) not supported by current API - needs redesign"
-    )
-    def test_mixed_environment_compatibility(self) -> None:
-        """Test that components work in a mixed environment with and without StateManager."""
-        config = BotConfig(symbols=["BTC-USD"], mock_broker=True)
-        container = ApplicationContainer(config)
-
-        # Create config controller with StateManager
-        state_manager = MagicMock()  # Mocking StateManager
-        config_controller = ConfigController(
-            config,
-            reduce_only_state_manager=state_manager,
-        )
-
-        from gpt_trader.features.live_trade.engines.base import CoordinatorContext
-
-        context = CoordinatorContext(
-            config=config,
-            container=container,
-            event_store=container.event_store,
-            symbols=(),
-            bot_id="test",
-        )
-
-        runtime_coordinator = RuntimeEngine(
-            context,
-            config_controller=config_controller,
-        )
-
-        # Both should work independently
-        assert config_controller.is_reduce_only_mode() is False
-        assert runtime_coordinator.is_reduce_only_mode() is False
-
-        # Change through config controller
-        config_controller.set_reduce_only_mode(
-            enabled=True,
-            reason="test",
-            risk_manager=None,
-        )
-
-        # Config controller should see the change
-        assert config_controller.is_reduce_only_mode() is True
-
-        # Runtime coordinator should still work (fallback behavior)
-        runtime_coordinator.set_reduce_only_mode(False, "runtime_test")
-        assert runtime_coordinator.is_reduce_only_mode() is False
+        reloaded = LiveRiskManager(state_file=str(state_file))
+        assert reloaded.is_reduce_only_mode() is True
+        assert getattr(reloaded, "_reduce_only_reason") == "persistence_test"

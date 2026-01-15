@@ -23,6 +23,8 @@ from decimal import Decimal
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
+from gpt_trader.utilities.datetime_helpers import utc_now
+
 if TYPE_CHECKING:
     from gpt_trader.features.live_trade.risk.config import RiskConfig
     from gpt_trader.persistence.event_store import EventStore
@@ -153,8 +155,8 @@ class LiveRiskManager:
         self._daily_pnl_triggered: bool = False
         self._risk_metrics: list[dict[str, Any]] = []
         self._start_of_day_equity: Decimal | None = None
-        # Allows time mocking for tests; defaults to real datetime.utcnow
-        self._now_provider: Callable[[], datetime] = datetime.utcnow
+        # Allows time mocking for tests; defaults to real UTC time
+        self._now_provider: Callable[[], datetime] = utc_now
 
         # CFM-specific tracking
         self._exposure_state = ExposureState()

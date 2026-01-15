@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-
 from gpt_trader.app.config.defaults import (
-    DEFAULT_SPOT_RISK_PATH,
     DEFAULT_SPOT_SYMBOLS,
     TOP_VOLUME_BASES,
 )
@@ -57,19 +54,3 @@ class TestDefaultSpotSymbols:
     def test_symbols_match_bases(self) -> None:
         expected = [f"{base}-USD" for base in TOP_VOLUME_BASES]
         assert DEFAULT_SPOT_SYMBOLS == expected
-
-
-class TestDefaultSpotRiskPath:
-    """Tests for DEFAULT_SPOT_RISK_PATH constant."""
-
-    def test_is_path(self) -> None:
-        assert isinstance(DEFAULT_SPOT_RISK_PATH, Path)
-
-    def test_ends_with_spot_top10_json(self) -> None:
-        assert DEFAULT_SPOT_RISK_PATH.name == "spot_top10.json"
-
-    def test_contains_config_in_path(self) -> None:
-        assert "config" in str(DEFAULT_SPOT_RISK_PATH)
-
-    def test_contains_risk_in_path(self) -> None:
-        assert "risk" in str(DEFAULT_SPOT_RISK_PATH)

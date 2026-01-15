@@ -16,7 +16,7 @@ highlights the active components and how they work together.
 - **Preflight validation**: `preflight/checks/risk.py` validates
   `RiskConfig.from_env()` (env-only). Keep env and profile risk settings aligned
   for canary/prod.
-- **Config templates**: `config/risk/*.yaml|json` are reference templates.
+- **Config templates**: `docs/reference/risk_templates/*.yaml` are reference templates.
   `RISK_CONFIG_PATH` is stored on `BotConfig` but is not wired into the runtime
   loader by default.
 

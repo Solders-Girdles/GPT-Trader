@@ -15,7 +15,6 @@ Types:
     SessionConfig, MonitoringConfig: Profile section dataclasses
 
 Constants:
-    DEFAULT_SPOT_RISK_PATH: Default path for spot risk config
     DEFAULT_SPOT_SYMBOLS: Default symbols for spot trading
     TOP_VOLUME_BASES: Top volume base currencies
 
@@ -39,11 +38,7 @@ from gpt_trader.app.config.bot_config import (
     StrategyType,
 )
 from gpt_trader.app.config.controller import ConfigController
-from gpt_trader.app.config.defaults import (
-    DEFAULT_SPOT_RISK_PATH,
-    DEFAULT_SPOT_SYMBOLS,
-    TOP_VOLUME_BASES,
-)
+from gpt_trader.app.config.defaults import DEFAULT_SPOT_SYMBOLS, TOP_VOLUME_BASES
 from gpt_trader.app.config.profile_loader import (
     ExecutionConfig,
     MonitoringConfig,
@@ -69,7 +64,6 @@ __all__ = [
     "BotRiskConfig",
     "MeanReversionConfig",
     "StrategyType",
-    "DEFAULT_SPOT_RISK_PATH",
     "DEFAULT_SPOT_SYMBOLS",
     "TOP_VOLUME_BASES",
     # Config controller

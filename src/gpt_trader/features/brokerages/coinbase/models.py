@@ -21,10 +21,19 @@ from gpt_trader.core import (
     Quote,
     TimeInForce,
 )
+from gpt_trader.utilities.datetime_helpers import normalize_to_utc, utc_now, utc_now_iso
 from gpt_trader.utilities.logging_patterns import get_logger
 from gpt_trader.utilities.quantities import quantity_from
 
 logger = get_logger(__name__, component="coinbase_models")
+
+
+def _parse_timestamp(value: str | datetime | None) -> datetime:
+    if isinstance(value, datetime):
+        return normalize_to_utc(value)
+    if isinstance(value, str) and value:
+        return normalize_to_utc(datetime.fromisoformat(value.replace("Z", "+00:00")))
+    return utc_now()
 
 
 @dataclass
@@ -143,17 +152,15 @@ def to_quote(payload: dict) -> Quote:
                 symbol=symbol,
             )
             ts_raw = None
-    ts = datetime.fromisoformat(
-        ts_raw.replace("Z", "+00:00") if isinstance(ts_raw, str) else datetime.utcnow().isoformat()
-    )
+    ts = _parse_timestamp(ts_raw if isinstance(ts_raw, (str, datetime)) else None)
 
     return Quote(symbol=symbol, bid=bid, ask=ask, last=last, ts=ts)
 
 
 def to_candle(payload: dict) -> Candle:
-    ts_str = payload.get("time") or payload.get("ts") or datetime.utcnow().isoformat()
+    ts_str = payload.get("time") or payload.get("ts") or utc_now_iso()
     return Candle(
-        ts=datetime.fromisoformat(ts_str),
+        ts=_parse_timestamp(ts_str),
         open=Decimal(str(payload.get("open"))),
         high=Decimal(str(payload.get("high"))),
         low=Decimal(str(payload.get("low"))),
@@ -235,8 +242,10 @@ def to_order(payload: dict) -> Order:
             if payload.get("average_filled_price") or payload.get("avg_fill_price")
             else None
         ),
-        submitted_at=datetime.fromisoformat(submitted) if submitted else datetime.utcnow(),
-        updated_at=datetime.fromisoformat(updated) if updated else datetime.utcnow(),
+        submitted_at=_parse_timestamp(
+            submitted if isinstance(submitted, (str, datetime)) else None
+        ),
+        updated_at=_parse_timestamp(updated if isinstance(updated, (str, datetime)) else None),
     )
 
     return order

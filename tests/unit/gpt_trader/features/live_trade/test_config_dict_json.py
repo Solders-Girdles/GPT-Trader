@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from decimal import Decimal
 
+import yaml
+
 from gpt_trader.features.live_trade.risk.config import RiskConfig
 
 
@@ -43,3 +45,31 @@ def test_riskconfig_from_json_type_normalization(tmp_path):
     assert config.leverage_max_per_symbol == {"BTC-PERP": 6}
     assert config.max_notional_per_symbol["ETH-PERP"] == Decimal("5000")
     assert config.slippage_guard_bps == 75
+
+
+def test_riskconfig_from_yaml_type_normalization(tmp_path):
+    p = tmp_path / "risk.yaml"
+    payload = {
+        "max_leverage": 4,
+        "min_liquidation_buffer_pct": 0.15,
+        "daily_loss_limit": 250,
+        "max_exposure_pct": 0.7,
+        "max_position_pct_per_symbol": 0.25,
+        "leverage_max_per_symbol": {"BTC-PERP": 4},
+        "max_notional_per_symbol": {"ETH-PERP": 8000},
+        "slippage_guard_bps": 60,
+        "kill_switch_enabled": False,
+        "reduce_only_mode": False,
+    }
+    p.write_text(yaml.safe_dump(payload))
+
+    config = RiskConfig.from_yaml(str(p))
+    assert config.max_leverage == 4
+    assert config.min_liquidation_buffer_pct == 0.15
+    assert isinstance(config.daily_loss_limit, Decimal)
+    assert config.daily_loss_limit == Decimal("250")
+    assert config.max_exposure_pct == 0.7
+    assert config.max_position_pct_per_symbol == 0.25
+    assert config.leverage_max_per_symbol == {"BTC-PERP": 4}
+    assert config.max_notional_per_symbol["ETH-PERP"] == Decimal("8000")
+    assert config.slippage_guard_bps == 60

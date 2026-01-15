@@ -26,6 +26,7 @@ from gpt_trader.core import (
 )
 from gpt_trader.features.brokerages.coinbase.auth import SimpleAuth
 from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
+from gpt_trader.utilities.datetime_helpers import utc_now
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="paper_broker")
@@ -291,7 +292,7 @@ class HybridPaperBroker:
                 fill_price = limit_price
 
         fill_quantity = quantity or Decimal("0.001")
-        now = datetime.utcnow()
+        now = utc_now()
 
         # Calculate commission
         notional = fill_price * fill_quantity
@@ -498,7 +499,7 @@ class HybridPaperBroker:
         self, order_id: str, symbol: str, side: OrderSide, quantity: Decimal
     ) -> Order:
         """Create a rejected order response."""
-        now = datetime.utcnow()
+        now = utc_now()
         return Order(
             id=order_id,
             client_id=order_id,

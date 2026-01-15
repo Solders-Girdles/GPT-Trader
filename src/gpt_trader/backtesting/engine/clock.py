@@ -6,6 +6,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 
 from gpt_trader.backtesting.types import ClockSpeed
+from gpt_trader.utilities.datetime_helpers import utc_now
 
 
 class SimulationClock:
@@ -32,7 +33,7 @@ class SimulationClock:
             start_time: Starting simulation time (defaults to now)
         """
         self.speed = speed
-        self._sim_time = start_time or datetime.utcnow()
+        self._sim_time = start_time or utc_now()
         self._wall_time_start = time.time()
         self._sim_time_start = self._sim_time
 

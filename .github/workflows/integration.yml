@@ -18,6 +18,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: ${{ github.event.inputs.environment }}
+    env:
+      GPT_TRADER_STRICT_CONTAINER: "1"
+      PYTHONWARNINGS: default
 
     steps:
       - uses: actions/checkout@v4

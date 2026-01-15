@@ -7,6 +7,7 @@ import pytest
 
 from gpt_trader.features.data.data import DataService
 from gpt_trader.features.data.types import DataQuery, DataSource, DataType
+from gpt_trader.utilities.datetime_helpers import utc_now
 
 
 class StorageStub:
@@ -46,7 +47,7 @@ class StorageStub:
         return self.delete_before_return
 
     def get_stats(self) -> dict[str, object]:
-        now = datetime.utcnow()
+        now = utc_now()
         return {
             "total_records": 10,
             "total_size_mb": 1.5,

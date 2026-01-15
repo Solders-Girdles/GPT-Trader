@@ -6,7 +6,6 @@ Used when MOCK_BROKER=1 to bypass real credentials and API calls.
 
 from __future__ import annotations
 
-from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
@@ -23,6 +22,7 @@ from gpt_trader.core import (
     Quote,
     TimeInForce,
 )
+from gpt_trader.utilities.datetime_helpers import utc_now
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="deterministic_broker")
@@ -87,7 +87,7 @@ class DeterministicBroker:
             bid=price - spread / 2,
             ask=price + spread / 2,
             last=price,
-            ts=datetime.now(),
+            ts=utc_now(),
         )
 
     def get_ticker(self, product_id: str) -> dict[str, Any]:
@@ -173,7 +173,7 @@ class DeterministicBroker:
         else:
             type_enum = order_type
 
-        now = datetime.utcnow()
+        now = utc_now()
         fill_price = self._marks.get(symbol, limit_price or Decimal("50000"))
 
         logger.info(

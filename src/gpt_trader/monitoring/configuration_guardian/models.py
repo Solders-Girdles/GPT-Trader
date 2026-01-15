@@ -6,12 +6,14 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
+from gpt_trader.utilities.datetime_helpers import utc_now
+
 
 @dataclass
 class BaselineSnapshot:
     """Baseline configuration snapshot for drift comparisons."""
 
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=utc_now)
     profile: str | None = None
     active_symbols: list[str] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)

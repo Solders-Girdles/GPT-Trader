@@ -309,6 +309,19 @@
         "leverage": {
           "type": "string",
           "description": "Current leverage"
+        },
+        "liquidation_price": {
+          "type": "string",
+          "description": "Type: decimal.Decimal | None"
+        },
+        "product_type": {
+          "type": "string",
+          "description": "Type: Literal",
+          "default": "SPOT"
+        },
+        "contract_expiry": {
+          "type": "string",
+          "description": "Type: datetime.datetime | None"
         }
       },
       "required": [
@@ -320,7 +333,7 @@
         "realized_pnl",
         "side"
       ],
-      "description": "Trading position representation."
+      "description": "Trading position representation.\n\n    Supports both spot and derivatives (CFM futures, INTX perpetuals)."
     },
     "Balance": {
       "title": "Balance",

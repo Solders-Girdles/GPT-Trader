@@ -43,7 +43,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from gpt_trader.backtesting.simulation.fee_calculator import FeeCalculator
 from gpt_trader.backtesting.simulation.fill_model import FillResult, OrderFillModel
@@ -61,6 +61,9 @@ from gpt_trader.core import (
     Product,
     Quote,
 )
+
+if TYPE_CHECKING:
+    from gpt_trader.backtesting.chaos.engine import ChaosEngine
 
 
 class SimulatedBroker:
@@ -83,6 +86,7 @@ class SimulatedBroker:
         initial_equity_usd: Decimal = Decimal("100000"),
         fee_tier: FeeTier = FeeTier.TIER_2,
         config: SimulationConfig | None = None,
+        chaos_engine: ChaosEngine | None = None,
     ):
         """
         Initialize simulated broker.
@@ -95,6 +99,7 @@ class SimulatedBroker:
         self._initial_equity = initial_equity_usd
         self.fee_tier = fee_tier
         self.config = config
+        self._chaos_engine = chaos_engine
 
         # Account state
         self.balances: dict[str, Balance] = {
@@ -157,6 +162,10 @@ class SimulatedBroker:
         # Connection state
         self.connected = False
         self._simulation_time: datetime | None = None
+
+    def set_chaos_engine(self, chaos_engine: ChaosEngine | None) -> None:
+        """Attach or clear the ChaosEngine used for order perturbations."""
+        self._chaos_engine = chaos_engine
 
     # =========================================================================
     # Connection Methods
@@ -353,14 +362,40 @@ class SimulatedBroker:
         if not reduce_only:
             self._validate_margin(order, leverage)
 
+        partial_fill_qty: Decimal | None = None
+        if ord_type == OrderType.MARKET:
+            order, partial_fill_qty = self._apply_chaos_to_order(order, self._simulation_time)
+            if order.status == OrderStatus.REJECTED:
+                order.updated_at = self._simulation_time
+                self._order_history.append(order)
+                return order
+
         # Try immediate fill for market orders
         if ord_type == OrderType.MARKET:
-            return self._execute_market_order(order, leverage)
+            return self._execute_market_order(order, leverage, fill_quantity=partial_fill_qty)
 
         # For limit/stop orders, add to open orders
         self._open_orders[order_id] = order
         order.status = OrderStatus.SUBMITTED
         return order
+
+    def _apply_chaos_to_order(
+        self,
+        order: Order,
+        timestamp: datetime | None = None,
+    ) -> tuple[Order, Decimal | None]:
+        if not self._chaos_engine or not self._chaos_engine.is_enabled():
+            return order, None
+
+        timestamp = timestamp or order.submitted_at or datetime.now()
+        chaos_order = self._chaos_engine.process_order(order, timestamp)
+        partial_fill_qty: Decimal | None = None
+        if chaos_order.status == OrderStatus.PARTIALLY_FILLED and chaos_order.filled_quantity > 0:
+            partial_fill_qty = chaos_order.filled_quantity
+            chaos_order.filled_quantity = Decimal("0")
+            chaos_order.status = OrderStatus.PENDING
+
+        return chaos_order, partial_fill_qty
 
     def cancel_order(self, order_id: str) -> bool:
         """
@@ -409,7 +444,13 @@ class SimulatedBroker:
                 f"Insufficient margin: need {required_margin}, have {available}"
             )
 
-    def _execute_market_order(self, order: Order, leverage: int | None) -> Order:
+    def _execute_market_order(
+        self,
+        order: Order,
+        leverage: int | None,
+        *,
+        fill_quantity: Decimal | None = None,
+    ) -> Order:
         """Execute a market order immediately."""
         bar = self._current_bar.get(order.symbol)
         quote = self._current_quote.get(order.symbol)
@@ -456,7 +497,12 @@ class SimulatedBroker:
             best_bid=best_bid,
             best_ask=best_ask,
         )
-
+        if fill_quantity is not None:
+            if fill_quantity <= 0:
+                fill_result.filled = False
+                fill_result.reason = "chaos_partial_fill_empty"
+            else:
+                fill_result.fill_quantity = min(fill_quantity, order.quantity)
         return self._process_fill(order, fill_result, leverage)
 
     def _process_fill(self, order: Order, fill: FillResult, leverage: int | None) -> Order:
@@ -466,8 +512,12 @@ class SimulatedBroker:
             return order
 
         # Update order
-        order.status = OrderStatus.FILLED
-        order.filled_quantity = fill.fill_quantity or order.quantity
+        fill_quantity = fill.fill_quantity or order.quantity
+        order.filled_quantity = fill_quantity
+        if fill_quantity < order.quantity:
+            order.status = OrderStatus.PARTIALLY_FILLED
+        else:
+            order.status = OrderStatus.FILLED
         order.avg_fill_price = fill.fill_price
         order.updated_at = fill.fill_time
 
@@ -899,6 +949,15 @@ class SimulatedBroker:
 
         for order_id, order in orders_to_process:
             fill_result: FillResult | None = None
+            partial_fill_qty: Decimal | None = None
+
+            if self._chaos_engine and self._chaos_engine.is_enabled():
+                order, partial_fill_qty = self._apply_chaos_to_order(order, bar.ts)
+                if order.status == OrderStatus.REJECTED:
+                    order.updated_at = bar.ts
+                    del self._open_orders[order_id]
+                    self._order_history.append(order)
+                    continue
 
             if order.type == OrderType.LIMIT:
                 fill_result = self._fill_model.try_fill_limit_order(
@@ -916,6 +975,11 @@ class SimulatedBroker:
                 )
 
             if fill_result and fill_result.filled:
+                if partial_fill_qty is not None:
+                    fill_result.fill_quantity = min(
+                        partial_fill_qty,
+                        fill_result.fill_quantity or partial_fill_qty,
+                    )
                 del self._open_orders[order_id]
                 # For pending orders, leverage is not tracked on Order; use None
                 self._process_fill(order, fill_result, None)

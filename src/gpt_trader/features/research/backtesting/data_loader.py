@@ -12,6 +12,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
+from gpt_trader.utilities.datetime_helpers import normalize_to_utc, utc_now
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -260,15 +261,15 @@ class HistoricalDataLoader:
     def _parse_timestamp(self, ts: Any) -> datetime:
         """Parse timestamp from various formats."""
         if isinstance(ts, datetime):
-            return ts
+            return normalize_to_utc(ts)
         if isinstance(ts, str):
             try:
                 # ISO format
-                return datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                return normalize_to_utc(datetime.fromisoformat(ts.replace("Z", "+00:00")))
             except ValueError:
                 pass
         # Default to now if unparseable
-        return datetime.utcnow()
+        return utc_now()
 
     def _find_closest_event(
         self,

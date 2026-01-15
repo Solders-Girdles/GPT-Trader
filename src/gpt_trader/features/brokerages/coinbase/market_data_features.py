@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Any
 
+from gpt_trader.utilities.datetime_helpers import utc_now
 from gpt_trader.utilities.logging_patterns import get_logger
 
 __all__ = [
@@ -31,7 +32,7 @@ class RollingWindow:
     def add(self, value: float, timestamp: datetime | None = None) -> None:
         """Add value to rolling window."""
         if timestamp is None:
-            timestamp = datetime.utcnow()
+            timestamp = utc_now()
 
         self.values.append((value, timestamp))
         self.sum += value
@@ -160,7 +161,7 @@ class TradeTapeAgg:
     ) -> None:
         """Add trade to aggregator."""
         if timestamp is None:
-            timestamp = datetime.utcnow()
+            timestamp = utc_now()
 
         trade = {
             "price": price,

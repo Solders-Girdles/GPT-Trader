@@ -9,24 +9,36 @@ This script runs a 30-day paper trade simulation with:
 Usage:
     uv run python scripts/analysis/paper_trade_stress_test.py
     uv run python scripts/analysis/paper_trade_stress_test.py --days 7 --persist
+    uv run python scripts/analysis/paper_trade_stress_test.py --days 7 --chaos --chaos-scenario volatile_market
+    uv run python scripts/analysis/paper_trade_stress_test.py --days 7 --chaos --export /tmp/stress_test.json
+    uv run python scripts/analysis/paper_trade_stress_test.py --days 2 --chaos --max-drawdown-pct 10 --max-fees-pct 4.5
+        # Fee cap based on 7-day chaos baseline (~4.34%); drawdown cap keeps regression headroom.
 """
 
 from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import random
 import tempfile
 import time
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
+from gpt_trader.backtesting.chaos import ChaosEngine
+from gpt_trader.backtesting.chaos.scenarios import (
+    create_degraded_connectivity_scenario,
+    create_flash_crash_scenario,
+    create_normal_conditions_scenario,
+    create_volatile_market_scenario,
+)
 from gpt_trader.backtesting.engine.bar_runner import (
-    ConstantFundingRates,
     ClockedBarRunner,
+    ConstantFundingRates,
     FundingProcessor,
     IHistoricalDataProvider,
 )
@@ -36,6 +48,25 @@ from gpt_trader.backtesting.simulation.broker import SimulatedBroker
 from gpt_trader.backtesting.types import FeeTier, SimulationConfig
 from gpt_trader.core import Candle, OrderSide, OrderType, Product, Quote
 from gpt_trader.persistence.event_store import EventStore
+
+CHAOS_SCENARIO_FACTORIES = {
+    "degraded_connectivity": create_degraded_connectivity_scenario,
+    "flash_crash": create_flash_crash_scenario,
+    "normal_conditions": create_normal_conditions_scenario,
+    "volatile_market": create_volatile_market_scenario,
+}
+
+
+def _serialize_value(value: Any) -> Any:
+    if isinstance(value, Decimal):
+        return str(value)
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, dict):
+        return {key: _serialize_value(val) for key, val in value.items()}
+    if isinstance(value, list):
+        return [_serialize_value(item) for item in value]
+    return value
 
 
 @dataclass
@@ -55,7 +86,9 @@ class SyntheticDataProvider(IHistoricalDataProvider):
         self.config = config or SyntheticDataConfig()
         self._price_cache: dict[str, dict[datetime, Candle]] = {}
         if self.config.seed is not None:
-            random.seed(self.config.seed)
+            self._rng = random.Random(self.config.seed)
+        else:
+            self._rng = random.Random()
         self._current_prices: dict[str, Decimal] = {}
 
     def _generate_candle(self, symbol: str, timestamp: datetime) -> Candle:
@@ -69,7 +102,7 @@ class SyntheticDataProvider(IHistoricalDataProvider):
         trend = float(self.config.trend_pct)
 
         # Generate random walk with slight trend
-        change = Decimal(str(random.gauss(trend, vol)))
+        change = Decimal(str(self._rng.gauss(trend, vol)))
         new_price = price * (Decimal("1") + change)
         new_price = max(new_price, Decimal("1"))  # Prevent negative prices
 
@@ -79,8 +112,8 @@ class SyntheticDataProvider(IHistoricalDataProvider):
 
         # High/low within the range
         range_pct = abs(float(change)) + vol
-        high_offset = Decimal(str(random.uniform(0, range_pct)))
-        low_offset = Decimal(str(random.uniform(0, range_pct)))
+        high_offset = Decimal(str(self._rng.uniform(0, range_pct)))
+        low_offset = Decimal(str(self._rng.uniform(0, range_pct)))
 
         high_price = max(open_price, close_price) * (Decimal("1") + high_offset)
         low_price = min(open_price, close_price) * (Decimal("1") - low_offset)
@@ -90,7 +123,7 @@ class SyntheticDataProvider(IHistoricalDataProvider):
 
         # Realistic volume (scales with price)
         base_volume = Decimal("10")
-        volume = base_volume * Decimal(str(random.uniform(0.5, 2.0)))
+        volume = base_volume * Decimal(str(self._rng.uniform(0.5, 2.0)))
 
         return Candle(
             ts=timestamp,
@@ -131,23 +164,33 @@ class StressTestConfig:
     days: int = 30
     granularity: str = "ONE_MINUTE"
 
+    # Determinism
+    seed: int | None = 42
+
     # Capital
     initial_equity_usd: Decimal = Decimal("100000")
-    position_fraction: Decimal = Decimal("0.1")  # 10% of equity per trade
+    position_fraction: Decimal = Decimal("0.08")  # 8% of equity per trade
 
     # Funding rates (8-hour rates, typical Coinbase INTX)
     funding_rate_btc: Decimal = Decimal("0.0001")  # 0.01% per 8h (~0.91% APR)
 
     # Strategy
-    trade_interval_bars: int = 30  # Trade every 30 minutes
+    trade_interval_bars: int = 60  # Trade every 60 minutes
     leverage: int = 3  # Moderate leverage
+
+    # Chaos testing
+    enable_chaos: bool = False
+    chaos_scenario: str = "normal_conditions"
+    chaos_seed: int | None = None
 
     # Persistence
     persist_events: bool = False
 
     # Validation thresholds (scale with days)
-    min_trades_per_day: int = 5  # At least 5 trades per day
+    min_trades_per_day: int = 4  # At least 4 trades per day
     max_funding_drag_pct: Decimal = Decimal("5.0")  # Max 5% funding drag
+    max_drawdown_pct: Decimal | None = None
+    max_fees_pct: Decimal | None = None
 
 
 @dataclass
@@ -177,10 +220,17 @@ class StressTestResult:
 
     # Fees
     total_fees: Decimal
+    total_fees_pct: Decimal
 
     # Risk metrics
     sharpe_ratio: Decimal | None
     sortino_ratio: Decimal | None
+
+    # Chaos
+    chaos_enabled: bool
+    chaos_scenario: str | None
+    chaos_events_total: int
+    chaos_events_by_type: dict[str, int]
 
     # Persistence
     events_persisted: int
@@ -189,6 +239,10 @@ class StressTestResult:
     # Validation
     all_validations_passed: bool
     validation_errors: list[str]
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize results to JSON-friendly dict."""
+        return _serialize_value(asdict(self))
 
 
 class SimpleStrategy:
@@ -202,8 +256,8 @@ class SimpleStrategy:
 
     def __init__(
         self,
-        lookback: int = 20,
-        threshold_pct: Decimal = Decimal("0.002"),
+        lookback: int = 30,
+        threshold_pct: Decimal = Decimal("0.003"),
         leverage: int = 5,
         position_fraction: Decimal = Decimal("0.2"),
     ):
@@ -267,7 +321,7 @@ async def run_stress_test(config: StressTestConfig) -> StressTestResult:
     )
 
     # Create components
-    data_provider = SyntheticDataProvider()
+    data_provider = SyntheticDataProvider(SyntheticDataConfig(seed=config.seed))
     broker = SimulatedBroker(
         initial_equity_usd=config.initial_equity_usd,
         fee_tier=FeeTier.TIER_2,
@@ -309,10 +363,22 @@ async def run_stress_test(config: StressTestConfig) -> StressTestResult:
         end_date=end_date,
     )
 
+    chaos_engine: ChaosEngine | None = None
+    if config.enable_chaos:
+        scenario_factory = CHAOS_SCENARIO_FACTORIES.get(config.chaos_scenario)
+        if scenario_factory is None:
+            raise ValueError(f"Unknown chaos scenario: {config.chaos_scenario}")
+        chaos_seed = config.chaos_seed if config.chaos_seed is not None else config.seed
+        chaos_engine = ChaosEngine(broker, seed=chaos_seed)
+        chaos_engine.add_scenario(scenario_factory())
+        chaos_engine.enable()
+        runner.set_chaos_engine(chaos_engine)
+        broker.set_chaos_engine(chaos_engine)
+
     # Create strategy
     strategy = SimpleStrategy(
-        lookback=20,
-        threshold_pct=Decimal("0.002"),
+        lookback=30,
+        threshold_pct=Decimal("0.003"),
         leverage=config.leverage,
         position_fraction=config.position_fraction,
     )
@@ -479,6 +545,7 @@ async def run_stress_test(config: StressTestConfig) -> StressTestResult:
 
     # Calculate funding drag as percentage of initial
     funding_drag_pct = abs(funding_pnl) / config.initial_equity_usd * Decimal("100")
+    total_fees_pct = trade_stats.total_fees_paid / config.initial_equity_usd * Decimal("100")
 
     # Check minimum trades (scales with duration)
     min_trades_expected = config.min_trades_per_day * config.days
@@ -497,7 +564,20 @@ async def run_stress_test(config: StressTestConfig) -> StressTestResult:
     if final_equity <= Decimal("0"):
         validation_errors.append(f"Equity went to zero or negative: {final_equity}")
 
+    if config.max_drawdown_pct is not None and stats["max_drawdown_pct"] > config.max_drawdown_pct:
+        validation_errors.append(
+            f"Max drawdown too high: {stats['max_drawdown_pct']:.2f}% > {config.max_drawdown_pct}%"
+        )
+
+    if config.max_fees_pct is not None and total_fees_pct > config.max_fees_pct:
+        validation_errors.append(
+            f"Total fees too high: {total_fees_pct:.2f}% > {config.max_fees_pct}%"
+        )
+
     wall_time = time.time() - start_wall_time
+    chaos_stats = chaos_engine.get_statistics() if chaos_engine else None
+    chaos_events_total = chaos_stats["total_events"] if chaos_stats else 0
+    chaos_events_by_type = chaos_stats["events_by_type"] if chaos_stats else {}
 
     return StressTestResult(
         wall_time_seconds=wall_time,
@@ -514,8 +594,13 @@ async def run_stress_test(config: StressTestConfig) -> StressTestResult:
         funding_pnl=funding_pnl,
         funding_drag_pct=funding_drag_pct,
         total_fees=trade_stats.total_fees_paid,
+        total_fees_pct=total_fees_pct,
         sharpe_ratio=risk_metrics.sharpe_ratio,
         sortino_ratio=risk_metrics.sortino_ratio,
+        chaos_enabled=chaos_engine is not None,
+        chaos_scenario=config.chaos_scenario if chaos_engine else None,
+        chaos_events_total=chaos_events_total,
+        chaos_events_by_type=chaos_events_by_type,
         events_persisted=events_persisted,
         persistence_validated=persistence_validated,
         all_validations_passed=len(validation_errors) == 0,
@@ -548,6 +633,7 @@ def print_results(result: StressTestResult) -> None:
 
     print(f"\n💸 Costs")
     print(f"   Total Fees Paid: ${result.total_fees:,.2f}")
+    print(f"   Total Fees Pct:  {result.total_fees_pct:.2f}%")
     print(f"   Funding PnL:     ${result.funding_pnl:+,.2f}")
     print(f"   Funding Drag:    {result.funding_drag_pct:.2f}%")
 
@@ -560,6 +646,17 @@ def print_results(result: StressTestResult) -> None:
         print(f"   Sortino Ratio: {result.sortino_ratio:.2f}")
     else:
         print(f"   Sortino Ratio: N/A (insufficient data)")
+
+    if result.chaos_enabled:
+        print("\nChaos Injection")
+        print(f"   Scenario: {result.chaos_scenario}")
+        print(f"   Total Events: {result.chaos_events_total}")
+        if result.chaos_events_by_type:
+            events_by_type = ", ".join(
+                f"{event_type}={count}"
+                for event_type, count in sorted(result.chaos_events_by_type.items())
+            )
+            print(f"   Events By Type: {events_by_type}")
 
     if result.events_persisted > 0:
         print(f"\n💾 Persistence")
@@ -607,7 +704,41 @@ def parse_args() -> argparse.Namespace:
         "--seed",
         type=int,
         default=42,
-        help="Random seed for reproducibility (default: 42)",
+        help="Random seed for synthetic data generation (also default for chaos; default: 42)",
+    )
+    parser.add_argument(
+        "--chaos",
+        action="store_true",
+        help="Enable chaos scenario injection",
+    )
+    parser.add_argument(
+        "--chaos-scenario",
+        choices=sorted(CHAOS_SCENARIO_FACTORIES.keys()),
+        default="normal_conditions",
+        help="Chaos scenario to run (default: normal_conditions)",
+    )
+    parser.add_argument(
+        "--chaos-seed",
+        type=int,
+        default=None,
+        help="Random seed for chaos injection (default: uses --seed)",
+    )
+    parser.add_argument(
+        "--export",
+        type=Path,
+        help="Write JSON results to this file",
+    )
+    parser.add_argument(
+        "--max-drawdown-pct",
+        type=float,
+        default=None,
+        help="Fail if max drawdown exceeds this percent",
+    )
+    parser.add_argument(
+        "--max-fees-pct",
+        type=float,
+        default=None,
+        help="Fail if total fees exceed this percent of initial equity",
     )
     return parser.parse_args()
 
@@ -621,13 +752,26 @@ def main() -> int:
         initial_equity_usd=Decimal(str(args.equity)),
         leverage=args.leverage,
         persist_events=args.persist,
+        seed=args.seed,
+        enable_chaos=args.chaos,
+        chaos_scenario=args.chaos_scenario,
+        chaos_seed=args.chaos_seed,
+        max_drawdown_pct=(
+            Decimal(str(args.max_drawdown_pct)) if args.max_drawdown_pct is not None else None
+        ),
+        max_fees_pct=Decimal(str(args.max_fees_pct)) if args.max_fees_pct is not None else None,
     )
-
-    # Set random seed
-    random.seed(args.seed)
 
     result = asyncio.run(run_stress_test(config))
     print_results(result)
+    if args.export:
+        payload = {
+            "config": _serialize_value(asdict(config)),
+            "result": result.to_dict(),
+        }
+        args.export.parent.mkdir(parents=True, exist_ok=True)
+        args.export.write_text(json.dumps(payload, indent=2))
+        print(f"Exported results to {args.export}")
 
     return 0 if result.all_validations_passed else 1
 

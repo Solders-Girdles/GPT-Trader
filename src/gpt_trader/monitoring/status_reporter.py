@@ -16,7 +16,7 @@ import time
 from collections import deque
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -28,6 +28,10 @@ if TYPE_CHECKING:
     from gpt_trader.monitoring.heartbeat import HeartbeatService
 
 logger = get_logger(__name__, component="status_reporter")
+
+
+def _format_timestamp_iso(timestamp: float) -> str:
+    return datetime.fromtimestamp(timestamp, UTC).isoformat().replace("+00:00", "Z")
 
 
 @dataclass
@@ -228,7 +232,7 @@ class BotStatus:
 
     def __post_init__(self) -> None:
         if not self.timestamp_iso:
-            self.timestamp_iso = datetime.utcfromtimestamp(self.timestamp).isoformat() + "Z"
+            self.timestamp_iso = _format_timestamp_iso(self.timestamp)
 
 
 class DecimalEncoder(json.JSONEncoder):
@@ -439,7 +443,7 @@ class StatusReporter:
         """Update the status object with current values."""
         now = time.time()
         self._status.timestamp = now
-        self._status.timestamp_iso = datetime.utcfromtimestamp(now).isoformat() + "Z"
+        self._status.timestamp_iso = _format_timestamp_iso(now)
         self._status.bot_id = self.bot_id
         self._status.observer_interval = self.observer_interval
 
@@ -733,7 +737,7 @@ class StatusReporter:
 
         # Convert timestamp to ISO string
         timestamp = trade.get("timestamp", time.time())
-        time_str = datetime.utcfromtimestamp(timestamp).isoformat() + "Z"
+        time_str = _format_timestamp_iso(timestamp)
 
         # Parse numeric fields to Decimal
         try:

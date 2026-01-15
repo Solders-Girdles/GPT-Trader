@@ -50,6 +50,9 @@ jobs:
           fi
           echo "No orchestration imports found - package was removed in v3.0."
 
+      - name: Guard deprecation registry
+        run: python scripts/ci/check_deprecation_registry.py
+
   docs-audit:
     name: Docs Link Audit
     runs-on: ubuntu-latest
@@ -116,15 +119,13 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-extras --dev
 
-      - name: Run agent-health (dev profile)
-        env:
-          BROKER: coinbase
+      - name: Run agent-health (fast, dev profile)
         run: |
           set -u
           set -o pipefail
           mkdir -p var/agents/health
           set +e
-          uv run agent-health --profile dev --format json --output var/agents/health/health_report.json
+          make agent-health-fast AGENT_HEALTH_FAST_QUALITY_CHECKS=none
           status=$?
           set -e
           if [ -f var/agents/health/health_report.json ]; then
@@ -230,6 +231,9 @@ jobs:
     name: Unit Tests (Core)
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      GPT_TRADER_STRICT_CONTAINER: "1"
+      PYTHONWARNINGS: default
     steps:
       - uses: actions/checkout@v4
 
@@ -253,6 +257,9 @@ jobs:
     name: TUI Snapshot Tests
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      GPT_TRADER_STRICT_CONTAINER: "1"
+      PYTHONWARNINGS: default
     steps:
       - uses: actions/checkout@v4
 
@@ -276,6 +283,9 @@ jobs:
     name: Property Tests
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      GPT_TRADER_STRICT_CONTAINER: "1"
+      PYTHONWARNINGS: default
     steps:
       - uses: actions/checkout@v4
 
@@ -299,6 +309,9 @@ jobs:
     name: Contract Tests
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    env:
+      GPT_TRADER_STRICT_CONTAINER: "1"
+      PYTHONWARNINGS: default
     steps:
       - uses: actions/checkout@v4
 

@@ -127,3 +127,7 @@ naming_inventory.json
 docs/agents/naming_inventory.md
 status.json
 snapshot_report.html
+preflight_report_*.json
+var/agents/health/health_report.*
+var/agents/health/chaos_smoke.*
+var/agents/health/chaos_week.*

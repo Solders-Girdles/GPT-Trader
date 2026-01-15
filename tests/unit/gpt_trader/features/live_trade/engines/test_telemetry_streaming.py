@@ -305,6 +305,7 @@ class TestScheduleCoroutine:
         coro = test_coro()
         _schedule_coroutine(coordinator, coro)
         mock_loop.call_soon_threadsafe.assert_called_once_with(asyncio.create_task, coro)
+        coro.close()
 
 
 # ============================================================

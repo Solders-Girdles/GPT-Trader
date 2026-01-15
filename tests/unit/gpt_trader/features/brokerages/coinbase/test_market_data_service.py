@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from gpt_trader.features.brokerages.coinbase.market_data_service import (
     CoinbaseTickerService,
@@ -10,6 +10,7 @@ from gpt_trader.features.brokerages.coinbase.market_data_service import (
     Ticker,
     TickerCache,
 )
+from gpt_trader.utilities.datetime_helpers import utc_now
 
 # ============================================================
 # Test: Ticker dataclass
@@ -21,7 +22,7 @@ class TestTicker:
 
     def test_ticker_creation(self) -> None:
         """Test creating a Ticker instance."""
-        now = datetime.utcnow()
+        now = utc_now()
         ticker = Ticker(
             symbol="BTC-USD",
             bid=49900.0,
@@ -38,7 +39,7 @@ class TestTicker:
 
     def test_ticker_equality(self) -> None:
         """Test Ticker equality based on dataclass behavior."""
-        ts = datetime.utcnow()
+        ts = utc_now()
         ticker1 = Ticker(symbol="BTC-USD", bid=100.0, ask=101.0, last=100.5, ts=ts)
         ticker2 = Ticker(symbol="BTC-USD", bid=100.0, ask=101.0, last=100.5, ts=ts)
 
@@ -46,7 +47,7 @@ class TestTicker:
 
     def test_ticker_different_symbols(self) -> None:
         """Test Tickers with different symbols are not equal."""
-        ts = datetime.utcnow()
+        ts = utc_now()
         ticker1 = Ticker(symbol="BTC-USD", bid=100.0, ask=101.0, last=100.5, ts=ts)
         ticker2 = Ticker(symbol="ETH-USD", bid=100.0, ask=101.0, last=100.5, ts=ts)
 
@@ -79,7 +80,7 @@ class TestTickerCache:
             bid=49900.0,
             ask=50100.0,
             last=50000.0,
-            ts=datetime.utcnow(),
+            ts=utc_now(),
         )
 
         cache.update(ticker)
@@ -98,8 +99,8 @@ class TestTickerCache:
     def test_cache_update_overwrites(self) -> None:
         """Test that updating same symbol overwrites."""
         cache = TickerCache()
-        ts1 = datetime.utcnow()
-        ts2 = datetime.utcnow() + timedelta(seconds=1)
+        ts1 = utc_now()
+        ts2 = utc_now() + timedelta(seconds=1)
 
         ticker1 = Ticker(symbol="BTC-USD", bid=49000.0, ask=50000.0, last=49500.0, ts=ts1)
         ticker2 = Ticker(symbol="BTC-USD", bid=50000.0, ask=51000.0, last=50500.0, ts=ts2)
@@ -114,7 +115,7 @@ class TestTickerCache:
     def test_cache_multiple_symbols(self) -> None:
         """Test caching multiple symbols."""
         cache = TickerCache()
-        ts = datetime.utcnow()
+        ts = utc_now()
 
         btc = Ticker(symbol="BTC-USD", bid=49900.0, ask=50100.0, last=50000.0, ts=ts)
         eth = Ticker(symbol="ETH-USD", bid=2990.0, ask=3010.0, last=3000.0, ts=ts)
@@ -139,7 +140,7 @@ class TestTickerCache:
             bid=49900.0,
             ask=50100.0,
             last=50000.0,
-            ts=datetime.utcnow(),
+            ts=utc_now(),
         )
         cache.update(ticker)
 
@@ -148,7 +149,7 @@ class TestTickerCache:
     def test_is_stale_old_ticker(self) -> None:
         """Test that old ticker is considered stale."""
         cache = TickerCache(ttl_seconds=5)
-        old_time = datetime.utcnow() - timedelta(seconds=10)
+        old_time = utc_now() - timedelta(seconds=10)
         ticker = Ticker(
             symbol="BTC-USD",
             bid=49900.0,
@@ -163,7 +164,7 @@ class TestTickerCache:
     def test_is_stale_exactly_at_ttl(self) -> None:
         """Test staleness at exact TTL boundary."""
         cache = TickerCache(ttl_seconds=5)
-        boundary_time = datetime.utcnow() - timedelta(seconds=5)
+        boundary_time = utc_now() - timedelta(seconds=5)
         ticker = Ticker(
             symbol="BTC-USD",
             bid=49900.0,
@@ -310,7 +311,7 @@ class TestMarketDataEdgeCases:
             bid=0.0,
             ask=0.0,
             last=0.0,
-            ts=datetime.utcnow(),
+            ts=utc_now(),
         )
 
         assert ticker.bid == 0.0
@@ -324,7 +325,7 @@ class TestMarketDataEdgeCases:
             bid=-1.0,
             ask=-0.5,
             last=-0.75,
-            ts=datetime.utcnow(),
+            ts=utc_now(),
         )
 
         assert ticker.bid == -1.0
@@ -337,7 +338,7 @@ class TestMarketDataEdgeCases:
             bid=50000.0,
             ask=50100.0,
             last=50050.0,
-            ts=datetime.utcnow(),
+            ts=utc_now(),
         )
         cache.update(ticker)
 
@@ -347,7 +348,7 @@ class TestMarketDataEdgeCases:
     def test_empty_symbol_string(self) -> None:
         """Test handling of empty symbol string."""
         cache = TickerCache()
-        ticker = Ticker(symbol="", bid=100.0, ask=101.0, last=100.5, ts=datetime.utcnow())
+        ticker = Ticker(symbol="", bid=100.0, ask=101.0, last=100.5, ts=utc_now())
 
         cache.update(ticker)
         result = cache.get("")

@@ -10,7 +10,10 @@ import json
 import os
 from dataclasses import asdict, dataclass, field
 from decimal import Decimal
+from pathlib import Path
 from typing import Any
+
+import yaml
 
 RISK_CONFIG_ENV_KEYS = [
     "RISK_MAX_LEVERAGE",
@@ -198,27 +201,49 @@ class RiskConfig:
         return {k: _convert(v) for k, v in asdict(self).items()}
 
     @classmethod
-    def from_json(cls, path: str) -> "RiskConfig":
-        """Load configuration from JSON file."""
-        with open(path) as f:
-            data = json.load(f)
-
+    def _from_mapping(cls, data: dict[str, Any]) -> "RiskConfig":
         # Type conversion for Decimal fields
         if "daily_loss_limit" in data:
             data["daily_loss_limit"] = Decimal(str(data["daily_loss_limit"]))
 
-        if "max_notional_per_symbol" in data:
+        if isinstance(data.get("max_notional_per_symbol"), dict):
             data["max_notional_per_symbol"] = {
                 k: Decimal(str(v)) for k, v in data["max_notional_per_symbol"].items()
             }
 
         # CFM-specific Decimal conversion
-        if "cfm_max_notional_per_symbol" in data:
+        if isinstance(data.get("cfm_max_notional_per_symbol"), dict):
             data["cfm_max_notional_per_symbol"] = {
                 k: Decimal(str(v)) for k, v in data["cfm_max_notional_per_symbol"].items()
             }
 
         return cls(**data)
+
+    @classmethod
+    def from_json(cls, path: str) -> "RiskConfig":
+        """Load configuration from JSON file."""
+        with open(path) as f:
+            data = json.load(f)
+        if not isinstance(data, dict):
+            raise ValueError("Risk config JSON must be an object")
+        return cls._from_mapping(data)
+
+    @classmethod
+    def from_yaml(cls, path: str) -> "RiskConfig":
+        """Load configuration from YAML file."""
+        with open(path) as f:
+            data = yaml.safe_load(f) or {}
+        if not isinstance(data, dict):
+            raise ValueError("Risk config YAML must be a mapping")
+        return cls._from_mapping(data)
+
+    @classmethod
+    def from_file(cls, path: str) -> "RiskConfig":
+        """Load configuration from JSON or YAML based on file extension."""
+        suffix = Path(path).suffix.lower()
+        if suffix in {".yaml", ".yml"}:
+            return cls.from_yaml(path)
+        return cls.from_json(path)
 
 
 __all__ = ["RiskConfig", "RISK_CONFIG_ENV_KEYS", "RISK_CONFIG_ENV_ALIASES"]

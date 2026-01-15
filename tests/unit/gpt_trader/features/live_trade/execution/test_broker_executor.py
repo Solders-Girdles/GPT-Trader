@@ -19,6 +19,7 @@ from gpt_trader.features.live_trade.execution.broker_executor import (
     RetryPolicy,
     execute_with_retry,
 )
+from gpt_trader.utilities.datetime_helpers import utc_now
 
 # ============================================================
 # Fixtures
@@ -34,8 +35,6 @@ def executor(mock_broker: MagicMock) -> BrokerExecutor:
 @pytest.fixture
 def sample_order() -> Order:
     """Create a sample order response."""
-    from datetime import datetime
-
     return Order(
         id="order-123",
         client_id="client-123",
@@ -47,8 +46,8 @@ def sample_order() -> Order:
         stop_price=None,
         tif=TimeInForce.GTC,
         status=OrderStatus.PENDING,
-        submitted_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
+        submitted_at=utc_now(),
+        updated_at=utc_now(),
     )
 
 

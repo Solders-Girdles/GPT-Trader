@@ -1,0 +1,44 @@
+digraph BacktestReportingFlow {
+  rankdir=LR;
+  subgraph cluster_broker {
+    label="Simulation Broker";
+    style=rounded;
+    "simulated_broker" [shape=box, label="SimulatedBroker\nsrc/gpt_trader/backtesting/simulation/broker.py"];
+    "broker_stats" [shape=box, label="SimulatedBroker.get_statistics\nsrc/gpt_trader/backtesting/simulation/broker.py"];
+  }
+  subgraph cluster_metrics {
+    label="Metrics";
+    style=rounded;
+    "trade_stats_compute" [shape=box, label="calculate_trade_statistics\nsrc/gpt_trader/backtesting/metrics/statistics.py"];
+    "trade_stats" [shape=box, label="TradeStatistics\nsrc/gpt_trader/backtesting/metrics/statistics.py"];
+    "risk_metrics_compute" [shape=box, label="calculate_risk_metrics\nsrc/gpt_trader/backtesting/metrics/risk.py"];
+    "risk_metrics" [shape=box, label="RiskMetrics\nsrc/gpt_trader/backtesting/metrics/risk.py"];
+  }
+  subgraph cluster_report {
+    label="Reporter";
+    style=rounded;
+    "backtest_reporter" [shape=box, label="BacktestReporter.generate_result\nsrc/gpt_trader/backtesting/metrics/report.py"];
+    "generate_backtest_report" [shape=box, label="generate_backtest_report\nsrc/gpt_trader/backtesting/metrics/report.py"];
+  }
+  subgraph cluster_output {
+    label="Outputs";
+    style=rounded;
+    "backtest_result_report" [shape=box, label="BacktestResult\nsrc/gpt_trader/backtesting/types.py"];
+    "report_summary" [shape=box, label="BacktestReporter.generate_summary\nsrc/gpt_trader/backtesting/metrics/report.py"];
+    "report_csv" [shape=box, label="BacktestReporter.generate_csv_row\nsrc/gpt_trader/backtesting/metrics/report.py"];
+  }
+  "simulated_broker" -> "trade_stats_compute" [label="trade history"];
+  "trade_stats_compute" -> "trade_stats" [label="build stats"];
+  "simulated_broker" -> "risk_metrics_compute" [label="equity curve"];
+  "risk_metrics_compute" -> "risk_metrics" [label="build metrics"];
+  "simulated_broker" -> "broker_stats" [label="broker stats"];
+  "trade_stats" -> "backtest_reporter" [label="trade statistics"];
+  "risk_metrics" -> "backtest_reporter" [label="risk metrics"];
+  "broker_stats" -> "backtest_reporter" [label="summary stats"];
+  "backtest_reporter" -> "backtest_result_report" [label="BacktestResult"];
+  "backtest_reporter" -> "report_summary" [label="summary text"];
+  "backtest_reporter" -> "report_csv" [label="csv row"];
+  "simulated_broker" -> "generate_backtest_report" [label="input broker"];
+  "generate_backtest_report" -> "backtest_reporter" [label="construct reporter"];
+  "generate_backtest_report" -> "backtest_result_report" [label="return result"];
+}

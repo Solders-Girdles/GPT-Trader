@@ -1,0 +1,114 @@
+digraph BacktestEntrypoints {
+  rankdir=LR;
+  subgraph cluster_cli {
+    label="CLI Entrypoints";
+    style=rounded;
+    "cli_optimize_run" [shape=box, label="optimize run\nsrc/gpt_trader/cli/commands/optimize/run.py"];
+  }
+  subgraph cluster_scripts {
+    label="Script Entrypoints";
+    style=rounded;
+    "paper_trade_stress_test" [shape=box, label="run_stress_test\nscripts/analysis/paper_trade_stress_test.py"];
+    "golden_path_demo" [shape=box, label="golden_path_validation_demo\nscripts/analysis/golden_path_validation_demo.py"];
+  }
+  subgraph cluster_library {
+    label="Library Entrypoints";
+    style=rounded;
+    "walk_forward_run" [shape=box, label="WalkForwardOptimizer.run\nsrc/gpt_trader/features/optimize/walk_forward.py"];
+  }
+  subgraph cluster_engine {
+    label="Backtesting Engine";
+    style=rounded;
+    "data_provider_factory" [shape=box, label="create_coinbase_data_provider\nsrc/gpt_trader/backtesting/data/manager.py"];
+    "batch_runner" [shape=box, label="BatchBacktestRunner.run_trial\nsrc/gpt_trader/features/optimize/runner/batch_runner.py"];
+    "clocked_bar_runner" [shape=box, label="ClockedBarRunner.run\nsrc/gpt_trader/backtesting/engine/bar_runner.py"];
+    "simulated_broker_engine" [shape=box, label="SimulatedBroker\nsrc/gpt_trader/backtesting/simulation/broker.py"];
+    "backtest_guarded_executor" [shape=box, label="BacktestGuardedExecutor.submit_order\nsrc/gpt_trader/backtesting/engine/guarded_execution.py"];
+  }
+  subgraph cluster_research {
+    label="Research Backtesting";
+    style=rounded;
+    "backtest_simulator_run" [shape=box, label="BacktestSimulator.run\nsrc/gpt_trader/features/research/backtesting/simulator.py"];
+    "historical_loader" [shape=box, label="HistoricalDataLoader.load_symbol\nsrc/gpt_trader/features/research/backtesting/data_loader.py"];
+    "event_store_events" [shape=box, label="EventStore.events\nsrc/gpt_trader/persistence/event_store.py"];
+  }
+  subgraph cluster_intelligence {
+    label="Intelligence Backtesting";
+    style=rounded;
+    "ensemble_backtest_process" [shape=box, label="EnsembleBacktestAdapter.process_bar\nsrc/gpt_trader/features/intelligence/backtesting/backtest_adapter.py"];
+    "ensemble_backtest_results" [shape=box, label="EnsembleBacktestAdapter.get_results\nsrc/gpt_trader/features/intelligence/backtesting/backtest_adapter.py"];
+    "batch_regime_process" [shape=box, label="BatchRegimeDetector.process\nsrc/gpt_trader/features/intelligence/backtesting/batch_regime.py"];
+    "batch_regime_process_candles" [shape=box, label="BatchRegimeDetector.process_candles\nsrc/gpt_trader/features/intelligence/backtesting/batch_regime.py"];
+  }
+  subgraph cluster_validation {
+    label="Validation + Chaos";
+    style=rounded;
+    "decision_logger_log" [shape=box, label="DecisionLogger.log_decision\nsrc/gpt_trader/backtesting/validation/decision_logger.py"];
+    "decision_logger_export" [shape=box, label="DecisionLogger.export_to_json\nsrc/gpt_trader/backtesting/validation/decision_logger.py"];
+    "golden_path_validate" [shape=box, label="GoldenPathValidator.validate_decision\nsrc/gpt_trader/backtesting/validation/validator.py"];
+    "golden_path_report" [shape=box, label="GoldenPathValidator.generate_report\nsrc/gpt_trader/backtesting/validation/validator.py"];
+    "replay_decisions" [shape=box, label="replay_decisions_through_simulator\nsrc/gpt_trader/backtesting/validation/validator.py"];
+    "chaos_engine_add" [shape=box, label="ChaosEngine.add_scenario\nsrc/gpt_trader/backtesting/chaos/engine.py"];
+    "chaos_engine_process_candle" [shape=box, label="ChaosEngine.process_candle\nsrc/gpt_trader/backtesting/chaos/engine.py"];
+    "chaos_engine_process_order" [shape=box, label="ChaosEngine.process_order\nsrc/gpt_trader/backtesting/chaos/engine.py"];
+    "chaos_engine_apply_latency" [shape=box, label="ChaosEngine.apply_latency\nsrc/gpt_trader/backtesting/chaos/engine.py"];
+    "chaos_scenario_factories" [shape=box, label="create_*_scenario\nsrc/gpt_trader/backtesting/chaos/scenarios.py"];
+  }
+  subgraph cluster_output {
+    label="Outputs";
+    style=rounded;
+    "engine_backtest_result" [shape=box, label="BacktestResult\nsrc/gpt_trader/backtesting/types.py"];
+    "research_backtest_result" [shape=box, label="BacktestResult\nsrc/gpt_trader/features/research/backtesting/simulator.py"];
+    "performance_metrics" [shape=box, label="PerformanceMetrics.from_result\nsrc/gpt_trader/features/research/backtesting/metrics.py"];
+    "ensemble_backtest_result" [shape=box, label="EnsembleBacktestResult\nsrc/gpt_trader/features/intelligence/backtesting/backtest_adapter.py"];
+    "ensemble_backtest_summary" [shape=box, label="EnsembleBacktestResult.summary\nsrc/gpt_trader/features/intelligence/backtesting/backtest_adapter.py"];
+    "regime_history" [shape=box, label="RegimeHistory\nsrc/gpt_trader/features/intelligence/backtesting/batch_regime.py"];
+    "regime_history_summary" [shape=box, label="RegimeHistory.summary\nsrc/gpt_trader/features/intelligence/backtesting/batch_regime.py"];
+    "validation_report" [shape=box, label="ValidationReport\nsrc/gpt_trader/backtesting/types.py"];
+    "decision_log_json" [shape=box, label="Decision log JSON\nsrc/gpt_trader/backtesting/validation/decision_logger.py"];
+    "chaos_event" [shape=box, label="ChaosEvent\nsrc/gpt_trader/backtesting/chaos/engine.py"];
+  }
+  "cli_optimize_run" -> "data_provider_factory" [label="build data provider"];
+  "data_provider_factory" -> "batch_runner" [label="IHistoricalDataProvider"];
+  "cli_optimize_run" -> "batch_runner" [label="start trials"];
+  "batch_runner" -> "clocked_bar_runner" [label="run loop"];
+  "clocked_bar_runner" -> "simulated_broker_engine" [label="bars/quotes"];
+  "simulated_broker_engine" -> "backtest_guarded_executor" [label="broker context"];
+  "backtest_guarded_executor" -> "decision_logger_log" [label="log decisions"];
+  "clocked_bar_runner" -> "chaos_engine_process_candle" [label="optional hook"];
+  "simulated_broker_engine" -> "chaos_engine_process_order" [label="optional hook"];
+  "simulated_broker_engine" -> "chaos_engine_apply_latency" [label="optional hook"];
+  "simulated_broker_engine" -> "engine_backtest_result" [label="summary result"];
+  "walk_forward_run" -> "clocked_bar_runner" [label="backtest window"];
+  "walk_forward_run" -> "simulated_broker_engine" [label="simulate trades"];
+  "walk_forward_run" -> "engine_backtest_result" [label="window result"];
+  "paper_trade_stress_test" -> "clocked_bar_runner" [label="stress loop"];
+  "paper_trade_stress_test" -> "simulated_broker_engine" [label="simulate broker"];
+  "golden_path_demo" -> "decision_logger_log" [label="log decisions"];
+  "golden_path_demo" -> "golden_path_validate" [label="validate decisions"];
+  "golden_path_demo" -> "golden_path_report" [label="generate report"];
+  "backtest_simulator_run" -> "historical_loader" [label="load history"];
+  "event_store_events" -> "historical_loader" [label="source events"];
+  "historical_loader" -> "backtest_simulator_run" [label="data points"];
+  "backtest_simulator_run" -> "research_backtest_result" [label="result"];
+  "research_backtest_result" -> "performance_metrics" [label="compute metrics"];
+  "ensemble_backtest_process" -> "ensemble_backtest_results" [label="record decisions"];
+  "ensemble_backtest_results" -> "regime_history" [label="build histories"];
+  "ensemble_backtest_results" -> "ensemble_backtest_result" [label="summary"];
+  "batch_regime_process" -> "regime_history" [label="batch history"];
+  "batch_regime_process_candles" -> "regime_history" [label="candle history"];
+  "ensemble_backtest_result" -> "ensemble_backtest_summary" [label="summary output"];
+  "regime_history" -> "regime_history_summary" [label="summary output"];
+  "decision_logger_log" -> "decision_logger_export" [label="export decisions"];
+  "decision_logger_export" -> "decision_log_json" [label="write JSON"];
+  "decision_logger_log" -> "replay_decisions" [label="recorded decisions"];
+  "replay_decisions" -> "golden_path_validate" [label="validate decisions"];
+  "golden_path_validate" -> "golden_path_report" [label="collect divergences"];
+  "golden_path_report" -> "validation_report" [label="report"];
+  "chaos_scenario_factories" -> "chaos_engine_add" [label="scenario config"];
+  "chaos_engine_add" -> "chaos_engine_process_candle" [label="inject candles"];
+  "chaos_engine_add" -> "chaos_engine_process_order" [label="inject orders"];
+  "chaos_engine_add" -> "chaos_engine_apply_latency" [label="inject latency"];
+  "chaos_engine_process_candle" -> "chaos_event" [label="record events"];
+  "chaos_engine_process_order" -> "chaos_event" [label="record events"];
+}

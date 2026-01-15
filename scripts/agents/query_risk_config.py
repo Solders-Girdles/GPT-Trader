@@ -132,7 +132,12 @@ def load_risk_config(profile: str | None = None) -> dict[str, Any]:
     if profile:
         # Look for profile-specific risk config
         possible_paths = [
-            Path(f"config/risk/{profile}.json"),
+            Path(f"docs/reference/risk_templates/{profile}.yaml"),
+            Path(f"docs/reference/risk_templates/{profile}.yml"),
+            Path(f"config/risk/{profile}.yaml"),  # legacy path
+            Path(f"config/risk/{profile}.yml"),  # legacy path
+            Path(f"config/risk/{profile}.json"),  # legacy path
+            Path(f"var/profiles/{profile}/risk.yaml"),
             Path(f"var/profiles/{profile}/risk.json"),
         ]
         for path in possible_paths:
@@ -141,7 +146,7 @@ def load_risk_config(profile: str | None = None) -> dict[str, Any]:
                 break
 
     if config_path:
-        config = RiskConfig.from_json(config_path)
+        config = RiskConfig.from_file(config_path)
     else:
         config = RiskConfig.from_env()
 

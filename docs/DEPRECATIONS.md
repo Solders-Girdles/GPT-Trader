@@ -4,11 +4,15 @@ This document tracks deprecated modules, shims, and their planned removal dates.
 
 ## Active Deprecations
 
-### Logging Helpers (Remove after v4.1)
+All active deprecations must be listed here with an owner and a removal date.
+CI enforces this registry for new deprecation shims.
 
-| Deprecated | Replacement | Notes |
-|------------|-------------|-------|
-| `logging.orchestration_helpers.get_orchestration_logger` | `logging.runtime_helpers.get_runtime_logger` | Shim emits DeprecationWarning |
+| Deprecated | Replacement | Location | Owner | Removal Date | Notes |
+|------------|-------------|----------|-------|--------------|-------|
+| `gpt_trader.logging.orchestration_helpers` | `gpt_trader.logging.runtime_helpers` | `src/gpt_trader/logging/orchestration_helpers.py` | Core Runtime | 2026-06-30 | Shim emits DeprecationWarning. |
+| `get_failure_tracker()` fallback without container | Set application container; use `container.validation_failure_tracker` | `src/gpt_trader/features/live_trade/execution/validation.py` | Live Trade | 2026-06-30 | DeprecationWarning on fallback usage. |
+| `Alert.id` / `Alert.timestamp` aliases | `alert_id` / `created_at` | `src/gpt_trader/monitoring/alert_types.py` | Monitoring | 2026-06-30 | Property aliases emit DeprecationWarning. |
+| `CoinbaseRestServiceBase` alias | `CoinbaseRestServiceCore` | `src/gpt_trader/features/brokerages/coinbase/rest/base.py` | Brokerage | 2026-03-31 | Deprecated alias. |
 
 ### Configuration (Remove after v4.0)
 
@@ -18,10 +22,10 @@ No active configuration deprecations.
 
 These are kept for external consumer compatibility and are not scheduled for removal:
 
-| Item | Location | Purpose |
-|------|----------|---------|
-| Legacy API key detection | `tui.services.credential_validator` | Coinbase legacy key format support |
-| Legacy order payload builders | `features.brokerages.coinbase.rest.base` | `_build_order_payload()`, `_execute_order_payload()` |
+| Item | Location | Owner | Purpose |
+|------|----------|-------|---------|
+| Legacy API key detection | `src/gpt_trader/tui/services/credential_validator.py` | TUI | Coinbase legacy key format support |
+| Legacy order payload builders | `src/gpt_trader/features/brokerages/coinbase/rest/base.py` | Brokerage | `_build_order_payload()`, `_execute_order_payload()` |
 
 ## General Removal Checklist
 
@@ -29,8 +33,9 @@ Before removing any deprecated item:
 
 1. Search for internal usage: `grep -r "deprecated_name" src/ tests/`
 2. Check dynamic imports: Review `importlib` and entry points
-3. Update docs that reference the deprecated path
-4. Add migration notes to CHANGELOG.md
+3. Update this registry with owner + removal date
+4. Update docs that reference the deprecated path
+5. Add migration notes to CHANGELOG.md
 
 ## Recently Removed
 

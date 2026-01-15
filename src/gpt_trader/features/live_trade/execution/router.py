@@ -17,6 +17,7 @@ from gpt_trader.features.live_trade.execution.submission_result import (
     OrderSubmissionStatus,
 )
 from gpt_trader.features.live_trade.strategies.hybrid.types import Action, HybridDecision
+from gpt_trader.utilities.datetime_helpers import utc_now
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="order_router")
@@ -54,7 +55,7 @@ class OrderResult:
     error: str | None = None
     error_code: str | None = None
     decision: HybridDecision | None = None
-    executed_at: datetime = field(default_factory=datetime.utcnow)
+    executed_at: datetime = field(default_factory=utc_now)
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""

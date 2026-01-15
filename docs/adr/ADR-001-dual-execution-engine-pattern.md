@@ -77,7 +77,7 @@ Feature flags (in `RiskConfig`):
    - Would violate Single Responsibility Principle
 
 6. **Production Reality**
-   - Current production config (`dev_dynamic.json`) enables both flags
+- Current production config (`dev_dynamic.yaml`) enables both flags
    - AdvancedExecutionEngine is the active production engine
    - LiveExecutionEngine serves as fallback + test baseline
    - Both engines are actively maintained and tested
@@ -146,12 +146,10 @@ def should_use_advanced_engine(risk_manager: LiveRiskManager) -> bool:
 
 ### Production Configuration
 
-`config/risk/dev_dynamic.json`:
-```json
-{
-  "enable_market_impact_guard": true,
-  "enable_dynamic_position_sizing": true
-}
+`docs/reference/risk_templates/dev_dynamic.yaml`:
+```yaml
+enable_market_impact_guard: true
+enable_dynamic_position_sizing: true
 ```
 
 **Result:** Production uses `AdvancedExecutionEngine`
@@ -221,7 +219,7 @@ This ADR follows the same principle: **modular, composable services** with **fea
 - **AdvancedExecutionEngine:** `src/gpt_trader/features/live_trade/advanced_execution.py` *(removed)*
 - **RiskConfig:** `src/gpt_trader/features/live_trade/risk/config.py` *(canonical path)*
 - **BotConfig:** `src/gpt_trader/app/config/bot_config.py` *(canonical path)*
-- **Production Config:** `config/risk/dev_dynamic.json`
+- **Production Config:** `docs/reference/risk_templates/dev_dynamic.yaml`
 - **Tests:**
   - Deprecation shims: `tests/unit/gpt_trader/deprecations/test_orchestration_shims.py` *(removed)*
   - AdvancedExecutionEngine: `tests/unit/gpt_trader/features/live_trade/test_advanced_execution.py` *(removed)*

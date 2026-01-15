@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import Mock
 
 import pytest
@@ -15,24 +15,28 @@ from gpt_trader.features.brokerages.coinbase.market_data_service import (
 
 def test_ticker_cache_stale_boundary(monkeypatch: pytest.MonkeyPatch) -> None:
     cache = TickerCache(ttl_seconds=5)
-    base_time = datetime(2024, 1, 1, 0, 0, 0)
+    base_time = datetime(2024, 1, 1, 0, 0, 0, tzinfo=UTC)
     cache.update(Ticker(symbol="BTC-USD", bid=1.0, ask=2.0, last=1.5, ts=base_time))
 
-    fake_datetime = Mock()
-    fake_datetime.utcnow.return_value = base_time + timedelta(seconds=5)
-    monkeypatch.setattr(market_data_service, "datetime", fake_datetime)
+    monkeypatch.setattr(
+        market_data_service,
+        "utc_now",
+        lambda: base_time + timedelta(seconds=5),
+    )
 
     assert cache.is_stale("BTC-USD") is False
 
 
 def test_ticker_cache_stale_after_ttl(monkeypatch: pytest.MonkeyPatch) -> None:
     cache = TickerCache(ttl_seconds=5)
-    base_time = datetime(2024, 1, 1, 0, 0, 0)
+    base_time = datetime(2024, 1, 1, 0, 0, 0, tzinfo=UTC)
     cache.update(Ticker(symbol="BTC-USD", bid=1.0, ask=2.0, last=1.5, ts=base_time))
 
-    fake_datetime = Mock()
-    fake_datetime.utcnow.return_value = base_time + timedelta(seconds=6)
-    monkeypatch.setattr(market_data_service, "datetime", fake_datetime)
+    monkeypatch.setattr(
+        market_data_service,
+        "utc_now",
+        lambda: base_time + timedelta(seconds=6),
+    )
 
     assert cache.is_stale("BTC-USD") is True
 

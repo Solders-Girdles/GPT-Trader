@@ -41,7 +41,7 @@
     },
     "reasoning": {
       "path": "reasoning/",
-      "description": "Reasoning artifacts (CLI flow + config linkage)",
+      "description": "Reasoning artifacts (CLI flow + guard/execution + market data + backtesting + reporting + entrypoints + validation/chaos + config linkage)",
       "files": [
         "cli_flow_map.json",
         "cli_flow_map.md",
@@ -49,6 +49,24 @@
         "guard_stack_map.json",
         "guard_stack_map.md",
         "guard_stack_map.dot",
+        "execution_flow_map.json",
+        "execution_flow_map.md",
+        "execution_flow_map.dot",
+        "market_data_flow_map.json",
+        "market_data_flow_map.md",
+        "market_data_flow_map.dot",
+        "backtesting_flow_map.json",
+        "backtesting_flow_map.md",
+        "backtesting_flow_map.dot",
+        "backtest_reporting_flow_map.json",
+        "backtest_reporting_flow_map.md",
+        "backtest_reporting_flow_map.dot",
+        "backtest_entrypoints_map.json",
+        "backtest_entrypoints_map.md",
+        "backtest_entrypoints_map.dot",
+        "backtest_validation_chaos_map.json",
+        "backtest_validation_chaos_map.md",
+        "backtest_validation_chaos_map.dot",
         "config_code_map.json",
         "config_code_map.md",
         "config_code_map.dot"
@@ -124,6 +142,6 @@
     "test_selection": "Use testing/ to select appropriate tests for changes",
     "api_calls": "Use broker/ for constructing valid API requests",
     "health_report": "Use health/ for agent-health schema and report guidance",
-    "reasoning": "Use reasoning/ for CLI flow and config linkage maps"
+    "reasoning": "Use reasoning/ for CLI flow, guard/execution, market data, backtesting, reporting, entrypoints, validation/chaos, and config linkage maps"
   }
 }

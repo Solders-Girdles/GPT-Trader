@@ -15,6 +15,7 @@ import gpt_trader.features.brokerages.coinbase.client as client_mod
 from gpt_trader.core import InvalidRequestError, MarketType, Product
 from gpt_trader.features.brokerages.coinbase.account_manager import CoinbaseAccountManager
 from gpt_trader.features.brokerages.coinbase.models import APIConfig
+from gpt_trader.utilities.datetime_helpers import utc_now
 from tests.unit.gpt_trader.features.brokerages.coinbase.test_helpers import (
     ACCOUNT_ENDPOINT_CASES,
     CoinbaseBrokerage,
@@ -115,7 +116,7 @@ class TestCoinbaseAccounts:
                 )
 
             def get_funding(self, client, symbol):
-                return Decimal("0.0005"), datetime.utcnow() + timedelta(hours=8)
+                return Decimal("0.0005"), utc_now() + timedelta(hours=8)
 
         adapter.product_catalog = Catalog()
         adapter.client.get_product = lambda pid: {

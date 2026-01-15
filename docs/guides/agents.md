@@ -61,8 +61,11 @@ uv run gpt-trader account snapshot
 
 ### Agent Tooling
 ```bash
-make agent-health
-make agent-impact
+make agent-health  # Alias for agent-health-full
+make agent-health-fast
+make agent-health-fast AGENT_HEALTH_FAST_QUALITY_CHECKS=none  # CI: skip lint/format/types
+make agent-impact  # Uses importer + file-only suggestions (no integration)
+make agent-impact-full  # Includes integration tests
 make agent-map
 make agent-tests
 ```

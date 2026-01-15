@@ -928,6 +928,87 @@ class TestSimulatedBrokerPlaceOrder:
         assert order.quantity == Decimal("0.1")
 
 
+class TestSimulatedBrokerChaos:
+    """Tests for ChaosEngine integration in SimulatedBroker."""
+
+    def test_market_order_rejected_by_chaos(self) -> None:
+        from datetime import datetime
+
+        from gpt_trader.backtesting.chaos.engine import ChaosEngine
+        from gpt_trader.backtesting.types import ChaosScenario
+        from gpt_trader.core import OrderSide, OrderStatus, OrderType, Quote
+
+        broker = SimulatedBroker()
+        broker._simulation_time = datetime(2024, 1, 1, 12, 0, 0)
+        broker._current_quote["BTC-USD"] = Quote(
+            symbol="BTC-USD",
+            bid=Decimal("49900"),
+            ask=Decimal("50100"),
+            last=Decimal("50000"),
+            ts=broker._simulation_time,
+        )
+
+        chaos = ChaosEngine(broker, seed=1)
+        chaos.add_scenario(
+            ChaosScenario(
+                name="reject_all",
+                enabled=True,
+                order_error_probability=Decimal("1"),
+            )
+        )
+        chaos.enable()
+        broker.set_chaos_engine(chaos)
+
+        order = broker.place_order(
+            symbol="BTC-USD",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("0.1"),
+        )
+
+        assert order.status == OrderStatus.REJECTED
+        assert order.updated_at == broker._simulation_time
+
+    def test_market_order_partial_fill_by_chaos(self) -> None:
+        from datetime import datetime
+
+        from gpt_trader.backtesting.chaos.engine import ChaosEngine
+        from gpt_trader.backtesting.types import ChaosScenario
+        from gpt_trader.core import OrderSide, OrderStatus, OrderType, Quote
+
+        broker = SimulatedBroker()
+        broker._simulation_time = datetime(2024, 1, 1, 12, 0, 0)
+        broker._current_quote["BTC-USD"] = Quote(
+            symbol="BTC-USD",
+            bid=Decimal("49900"),
+            ask=Decimal("50100"),
+            last=Decimal("50000"),
+            ts=broker._simulation_time,
+        )
+
+        chaos = ChaosEngine(broker, seed=2)
+        chaos.add_scenario(
+            ChaosScenario(
+                name="partial_fill",
+                enabled=True,
+                partial_fill_probability=Decimal("1"),
+                partial_fill_pct=Decimal("50"),
+            )
+        )
+        chaos.enable()
+        broker.set_chaos_engine(chaos)
+
+        order = broker.place_order(
+            symbol="BTC-USD",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("1.0"),
+        )
+
+        assert order.status == OrderStatus.PARTIALLY_FILLED
+        assert order.filled_quantity == Decimal("0.5")
+
+
 class TestSimulatedBrokerCancelOrder:
     """Tests for cancel_order method."""
 

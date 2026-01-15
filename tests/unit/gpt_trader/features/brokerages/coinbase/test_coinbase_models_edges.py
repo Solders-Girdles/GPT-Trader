@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import UTC
 from datetime import datetime as real_datetime
 from decimal import Decimal
 from unittest.mock import patch
@@ -59,20 +60,12 @@ def test_to_quote_uses_trade_fallback() -> None:
 
     assert quote.symbol == "BTC-USD"
     assert quote.last == Decimal("3")
-    assert quote.ts == real_datetime(2024, 1, 1, 0, 0, 0)
+    assert quote.ts == real_datetime(2024, 1, 1, 0, 0, 0, tzinfo=UTC)
 
 
 def test_to_quote_logs_bad_trade_payload(monkeypatch: pytest.MonkeyPatch) -> None:
-    class _FixedDatetime:
-        @staticmethod
-        def fromisoformat(value: str):
-            return real_datetime.fromisoformat(value)
-
-        @staticmethod
-        def utcnow():
-            return real_datetime(2024, 1, 1, 12, 0, 0)
-
-    monkeypatch.setattr(models, "datetime", _FixedDatetime)
+    fixed_time = real_datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
+    monkeypatch.setattr(models, "utc_now", lambda: fixed_time)
 
     payload = {"product_id": "BTC-USD", "trades": ["bad"]}
 
@@ -80,7 +73,7 @@ def test_to_quote_logs_bad_trade_payload(monkeypatch: pytest.MonkeyPatch) -> Non
         quote = to_quote(payload)
 
     assert quote.last == Decimal("0")
-    assert quote.ts == real_datetime(2024, 1, 1, 12, 0, 0)
+    assert quote.ts == fixed_time
     assert mock_logger.error.call_count >= 1
 
 
@@ -178,4 +171,4 @@ def test_to_candle_uses_ts_field() -> None:
         }
     )
 
-    assert candle.ts == real_datetime(2024, 1, 2, 0, 0, 0)
+    assert candle.ts == real_datetime(2024, 1, 2, 0, 0, 0, tzinfo=UTC)

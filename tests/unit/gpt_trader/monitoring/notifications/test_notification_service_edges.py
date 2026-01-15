@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from unittest.mock import AsyncMock, Mock
 
 import pytest
 
 from gpt_trader.monitoring.notifications.service import NotificationService
+from gpt_trader.utilities.datetime_helpers import utc_now
 
 
 @pytest.mark.asyncio
@@ -61,7 +62,7 @@ async def test_notify_rate_limit_resets_after_minute() -> None:
     service = NotificationService(rate_limit_per_minute=1)
     service.add_backend(backend)
     service._sent_count_this_minute = service.rate_limit_per_minute
-    service._minute_reset_time = datetime.utcnow() - timedelta(minutes=2)
+    service._minute_reset_time = utc_now() - timedelta(minutes=2)
 
     result = await service.notify(title="Test", message="Rate reset")
 
@@ -71,7 +72,7 @@ async def test_notify_rate_limit_resets_after_minute() -> None:
 
 def test_cleanup_old_alerts_prunes_expired_entries() -> None:
     service = NotificationService(dedup_window_seconds=10)
-    now = datetime.utcnow()
+    now = utc_now()
 
     service._recent_alerts = {
         "expired": now - timedelta(seconds=21),

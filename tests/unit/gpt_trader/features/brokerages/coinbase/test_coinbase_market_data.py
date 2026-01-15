@@ -30,6 +30,7 @@ from gpt_trader.features.brokerages.coinbase.utilities import (
     enforce_perp_rules,
     quantize_to_increment,
 )
+from gpt_trader.utilities.datetime_helpers import utc_now
 from tests.unit.gpt_trader.features.brokerages.coinbase.minimal_brokerage import (
     MinimalCoinbaseBrokerage,
 )
@@ -437,7 +438,7 @@ class TestCoinbaseMarketData:
         product = catalog.get(mock_client, "BTC-PERP")
         assert mock_client.get_products.call_count == 1
 
-        catalog._last_refresh = datetime.utcnow() - timedelta(seconds=2)
+        catalog._last_refresh = utc_now() - timedelta(seconds=2)
         catalog.get(mock_client, "BTC-PERP")
         assert mock_client.get_products.call_count == 2
 

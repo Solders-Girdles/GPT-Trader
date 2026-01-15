@@ -1,7 +1,7 @@
 max_leverage: 3
 min_liquidation_buffer_pct: 0.1
 enable_pre_trade_liq_projection: false
-daily_loss_limit: 1000
+daily_loss_limit_pct: 0.05
 max_exposure_pct: 1.0
 max_position_pct_per_symbol: 1.0
 max_notional_per_symbol:

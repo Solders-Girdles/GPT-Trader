@@ -362,7 +362,11 @@ class BotConfig:
             daily_loss_limit_pct=_risk_float("DAILY_LOSS_LIMIT_PCT", 0.05),
         )
 
-        derivatives_enabled = parse_bool_env("COINBASE_ENABLE_DERIVATIVES", default=False)
+        intx_perps_raw = os.getenv("COINBASE_ENABLE_INTX_PERPS")
+        if intx_perps_raw is not None and intx_perps_raw != "":
+            derivatives_enabled = parse_bool_env("COINBASE_ENABLE_INTX_PERPS", default=False)
+        else:
+            derivatives_enabled = parse_bool_env("COINBASE_ENABLE_DERIVATIVES", default=False)
 
         # Build health thresholds config from env (HEALTH_* prefix)
         def _health_float(key: str, default: float) -> float:

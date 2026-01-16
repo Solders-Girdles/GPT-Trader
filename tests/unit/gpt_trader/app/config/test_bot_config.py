@@ -126,3 +126,36 @@ class TestReduceOnlyModeEnvParsing:
         with patch.dict(os.environ, {"BROKER": "coinbase"}, clear=True):
             config = BotConfig.from_env()
         assert config.reduce_only_mode is False
+
+
+class TestDerivativesEnvParsing:
+    """Test derivatives/perps environment flag parsing."""
+
+    def test_derivatives_enabled_prefers_intx_perps_flag(self) -> None:
+        """COINBASE_ENABLE_INTX_PERPS overrides legacy COINBASE_ENABLE_DERIVATIVES."""
+        env = {
+            "COINBASE_ENABLE_INTX_PERPS": "1",
+            "COINBASE_ENABLE_DERIVATIVES": "0",
+        }
+        with patch.dict(os.environ, env, clear=True):
+            config = BotConfig.from_env()
+        assert config.derivatives_enabled is True
+
+    def test_derivatives_enabled_intx_perps_can_disable_legacy(self) -> None:
+        """COINBASE_ENABLE_INTX_PERPS=0 disables derivatives even if legacy is 1."""
+        env = {
+            "COINBASE_ENABLE_INTX_PERPS": "0",
+            "COINBASE_ENABLE_DERIVATIVES": "1",
+        }
+        with patch.dict(os.environ, env, clear=True):
+            config = BotConfig.from_env()
+        assert config.derivatives_enabled is False
+
+    def test_derivatives_enabled_falls_back_to_legacy(self) -> None:
+        """When COINBASE_ENABLE_INTX_PERPS is unset, legacy flag still works."""
+        env = {
+            "COINBASE_ENABLE_DERIVATIVES": "1",
+        }
+        with patch.dict(os.environ, env, clear=True):
+            config = BotConfig.from_env()
+        assert config.derivatives_enabled is True

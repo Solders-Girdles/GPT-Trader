@@ -87,7 +87,7 @@ responses = "^0.23.0"
 coverage = "^7.0.0"
 pip-audit = "^2.9.0"
 bandit = "^1.7.9"
-diff-cover = "^9.0.0"
+diff-cover = "^10.2.0"
 
 [build-system]
 requires = ["poetry-core"]

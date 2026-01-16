@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2026-01-15
+last-updated: 2026-01-16
 ---
 
 ## Purpose
@@ -213,4 +213,6 @@ Notes:
   - `GPT_TRADER_READINESS_UNFILLED_ORDERS_MAX` (default: 0)
   - `GPT_TRADER_READINESS_API_ERRORS_MAX` (default: 0)
   - `GPT_TRADER_READINESS_GUARD_TRIGGERS_MAX` (default: 0)
+  - `GPT_TRADER_READINESS_LIVENESS_MAX_AGE_SECONDS` (default: 300)
+- Readiness also checks event-stream liveness via the latest `events.db` entry.
 - Use `GPT_TRADER_PREFLIGHT_WARN_ONLY=1` to downgrade failures to warnings.

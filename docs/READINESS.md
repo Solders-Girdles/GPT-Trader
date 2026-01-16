@@ -44,7 +44,7 @@ Thresholds (default targets):
 
 Checklist:
 - [ ] Evidence path(s): `runtime_data/canary/reports/daily_report_2026-01-15.json`
-- [ ] Notes: 2026-01-15 report 1/3 collected; stale_marks=0, ws_reconnects=0, api_errors=1 -> NOT GREEN.
+- [ ] Notes: 2026-01-15 report 2/3 collected; stale_marks=0, ws_reconnects=0, api_errors=31 -> NOT GREEN (api_health guard_triggers=31 from earlier runs; latest run avoided product endpoint errors; unpriced assets BOND/CLV/ERN/GAL).
 
 ### 2) Strategy validity
 
@@ -64,8 +64,8 @@ Thresholds (adjust per strategy):
 - Walk-forward: >= 3 windows with consistent sign of returns
 
 Checklist:
-- [ ] Evidence path(s): `runtime_data/canary/reports/daily_report_2026-01-15.json`, `preflight_report_20260115_214021.json`
-- [ ] Notes: 2026-01-15 report 1/3 collected; guard_triggers.api_health=1 -> NOT GREEN. Preflight readiness failed risk thresholds.
+- [ ] Evidence path(s): `runtime_data/canary/reports/daily_report_2026-01-15.json`, `preflight_report_20260116_000708.json`
+- [ ] Notes: 2026-01-15 report 2/3 collected; guard_triggers.api_health=31 -> NOT GREEN. Preflight readiness failed api_errors/guard_triggers; can_trade still false.
 
 ### 3) Risk management
 
@@ -85,7 +85,7 @@ Thresholds (default targets):
 
 Checklist:
 - [ ] Evidence path(s): `runtime_data/canary/reports/daily_report_2026-01-15.json`
-- [ ] Notes: 2026-01-15 report 1/3 collected; unfilled_orders=0, api_errors=1 -> NOT GREEN.
+- [ ] Notes: 2026-01-15 report 2/3 collected; unfilled_orders=0, api_errors=31 -> NOT GREEN.
 
 ### 4) Execution correctness
 
@@ -103,8 +103,8 @@ Thresholds (default targets):
 - `health.api_errors == 0`
 
 Checklist:
-- [ ] Evidence path(s): `preflight_report_20260115_214038.json`, `preflight_report_20260115_214021.json`
-- [ ] Notes: 2026-01-15 DRY_RUN view-only passed; live-intent preflight failed as expected (can_trade=False).
+- [ ] Evidence path(s): `preflight_report_20260115_214038.json`, `preflight_report_20260116_000708.json`
+- [ ] Notes: 2026-01-15 DRY_RUN view-only passed; live-intent preflight still fails as expected (can_trade=False).
 
 ### 5) State persistence and recovery
 

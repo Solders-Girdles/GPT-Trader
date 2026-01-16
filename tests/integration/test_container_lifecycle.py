@@ -81,8 +81,7 @@ class TestContainerLifecycleCLI:
         assert get_application_container() is existing_container
         assert bot is not None
 
-    @pytest.mark.asyncio
-    async def test_run_bot_clears_container_on_success(self, mock_config: BotConfig) -> None:
+    def test_run_bot_clears_container_on_success(self, mock_config: BotConfig) -> None:
         """Test that _run_bot clears container after successful run."""
         from gpt_trader.cli.commands.run import _run_bot
         from gpt_trader.cli.services import instantiate_bot
@@ -92,19 +91,17 @@ class TestContainerLifecycleCLI:
         # Verify container is set
         assert get_application_container() is not None
 
-        # Mock bot.run to complete immediately
-        bot.run = AsyncMock()
+        # Mock bot.run to complete immediately and allow asyncio.run to drive it.
+        bot.run = AsyncMock(return_value=None)
 
         # Run bot (single_cycle=True for quick exit)
-        with patch("gpt_trader.cli.commands.run.asyncio.run") as mock_asyncio_run:
-            mock_asyncio_run.return_value = None
-            _run_bot(bot, single_cycle=True)
+        _run_bot(bot, single_cycle=True)
+        bot.run.assert_awaited_once_with(single_cycle=True)
 
         # Container should be cleared after run
         assert get_application_container() is None
 
-    @pytest.mark.asyncio
-    async def test_run_bot_clears_container_on_exception(self, mock_config: BotConfig) -> None:
+    def test_run_bot_clears_container_on_exception(self, mock_config: BotConfig) -> None:
         """Test that _run_bot clears container even when exception occurs."""
         from gpt_trader.cli.commands.run import _run_bot
         from gpt_trader.cli.services import instantiate_bot
@@ -114,24 +111,15 @@ class TestContainerLifecycleCLI:
         # Verify container is set
         assert get_application_container() is not None
 
-        # Mock bot.run to raise an exception
-        with patch("gpt_trader.cli.commands.run.asyncio.run") as mock_asyncio_run:
-            mock_asyncio_run.side_effect = RuntimeError("Test error")
-
-            # Run should not propagate the error (it's caught)
-            # but container should still be cleared
-            try:
-                _run_bot(bot, single_cycle=True)
-            except RuntimeError:
-                pass  # Expected
+        # Mock bot.run to raise an exception so asyncio.run propagates it.
+        bot.run = AsyncMock(side_effect=RuntimeError("Test error"))
+        with pytest.raises(RuntimeError, match="Test error"):
+            _run_bot(bot, single_cycle=True)
 
         # Container should be cleared even after exception
         assert get_application_container() is None
 
-    @pytest.mark.asyncio
-    async def test_run_bot_clears_container_on_keyboard_interrupt(
-        self, mock_config: BotConfig
-    ) -> None:
+    def test_run_bot_clears_container_on_keyboard_interrupt(self, mock_config: BotConfig) -> None:
         """Test that _run_bot clears container on KeyboardInterrupt."""
         from gpt_trader.cli.commands.run import _run_bot
         from gpt_trader.cli.services import instantiate_bot
@@ -141,11 +129,9 @@ class TestContainerLifecycleCLI:
         # Verify container is set
         assert get_application_container() is not None
 
-        # Mock bot.run to raise KeyboardInterrupt
-        with patch("gpt_trader.cli.commands.run.asyncio.run") as mock_asyncio_run:
-            mock_asyncio_run.side_effect = KeyboardInterrupt()
-
-            _run_bot(bot, single_cycle=True)
+        # Mock bot.run to raise KeyboardInterrupt; _run_bot should swallow it.
+        bot.run = AsyncMock(side_effect=KeyboardInterrupt())
+        _run_bot(bot, single_cycle=True)
 
         # Container should be cleared after interrupt
         assert get_application_container() is None

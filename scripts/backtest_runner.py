@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+from collections import deque
 from dataclasses import asdict, is_dataclass
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -97,6 +98,17 @@ def _select_strategy(config: BotConfig) -> Any:
         return SpotStrategy(config=config.strategy)
 
     return strategy
+
+
+def _lookback_bars(strategy: Any) -> int:
+    config = getattr(strategy, "config", None)
+    if config is None:
+        return 64
+
+    long_ma = getattr(config, "long_ma_period", getattr(config, "long_ma", 20))
+    rsi_period = getattr(config, "rsi_period", 14)
+    required = max(int(long_ma), int(rsi_period) + 1) + 10
+    return max(required, 64)
 
 
 def _execute_decision(
@@ -196,32 +208,42 @@ async def run_backtest(
 
     strategy = _select_strategy(config)
     leverage = max(1, min(max_leverage, int(getattr(config.risk, "target_leverage", 1))))
+    mark_history: deque[Decimal] = deque(maxlen=_lookback_bars(strategy))
 
-    for candle in candles:
+    for idx, candle in enumerate(candles, start=1):
         broker.update_bar(symbol, candle)
         broker.update_equity_curve()
 
-        recent_marks = [c.close for c in broker.get_candles(symbol, limit=1000)]
+        mark_history.append(candle.close)
+        recent_marks = list(mark_history)
         current_mark = candle.close
+        equity = broker.equity
         decision = strategy.decide(
             symbol=symbol,
             current_mark=current_mark,
             position_state=_build_position_state(broker.get_position(symbol)),
             recent_marks=recent_marks,
-            equity=broker.equity,
+            equity=equity,
             product=None,
-            candles=broker.get_candles(symbol, limit=200),
         )
 
         _execute_decision(
             broker=broker,
             symbol=symbol,
             action=decision.action,
-            equity=broker.equity,
+            equity=equity,
             price=current_mark,
             leverage=leverage,
             position_fraction=position_fraction,
         )
+
+        if idx % 5000 == 0:
+            logger.info(
+                "Backtest progress",
+                processed=idx,
+                total=len(candles),
+                progress_pct=f"{(idx / len(candles)) * 100:.1f}",
+            )
 
     # Force-close open position to realize PnL for reporting.
     if broker.get_position(symbol) is not None:

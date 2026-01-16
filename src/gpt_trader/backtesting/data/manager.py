@@ -359,17 +359,42 @@ class HistoricalDataManager(IHistoricalDataProvider):
 
         covered_ranges = self._coverage_index[symbol][granularity]
 
-        # Simple gap detection: if no coverage overlaps [start, end], it's a gap
-        # This is simplified; a production version would do proper interval merging
-        has_coverage = any(
-            cov_start <= start < cov_end or cov_start < end <= cov_end
-            for cov_start, cov_end in covered_ranges
-        )
+        # Identify uncovered segments by merging coverage and subtracting from the request window.
+        clamped: list[tuple[datetime, datetime]] = []
+        for cov_start, cov_end in covered_ranges:
+            if cov_start >= cov_end:
+                continue
+            if cov_end <= start or cov_start >= end:
+                continue
+            clamped.append((max(cov_start, start), min(cov_end, end)))
 
-        if has_coverage:
-            return []  # Assume complete coverage for simplicity
-        else:
+        if not clamped:
             return [(start, end)]
+
+        clamped.sort(key=lambda r: r[0])
+        merged: list[tuple[datetime, datetime]] = []
+        for cov_start, cov_end in clamped:
+            if not merged:
+                merged.append((cov_start, cov_end))
+                continue
+
+            last_start, last_end = merged[-1]
+            if cov_start <= last_end:
+                merged[-1] = (last_start, max(last_end, cov_end))
+            else:
+                merged.append((cov_start, cov_end))
+
+        gaps: list[tuple[datetime, datetime]] = []
+        cursor = start
+        for cov_start, cov_end in merged:
+            if cov_start > cursor:
+                gaps.append((cursor, cov_start))
+            cursor = max(cursor, cov_end)
+
+        if cursor < end:
+            gaps.append((cursor, end))
+
+        return gaps
 
     def _update_coverage(
         self,

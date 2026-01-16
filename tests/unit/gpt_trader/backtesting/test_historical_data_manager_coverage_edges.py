@@ -39,6 +39,21 @@ def test_identify_gaps_returns_empty_when_range_covered(tmp_path: Path) -> None:
     assert manager._identify_gaps("BTC-USD", "ONE_HOUR", start, end) == []
 
 
+def test_identify_gaps_returns_missing_segments_for_partial_overlap(tmp_path: Path) -> None:
+    manager = _make_manager(tmp_path)
+    start = datetime(2024, 1, 1, 0, 0, 0)
+    end = start + timedelta(hours=3)
+
+    # Only the last hour is covered.
+    manager._coverage_index = {
+        "BTC-USD": {"ONE_HOUR": [(start + timedelta(hours=2), end)]},
+    }
+
+    assert manager._identify_gaps("BTC-USD", "ONE_HOUR", start, end) == [
+        (start, start + timedelta(hours=2))
+    ]
+
+
 def test_load_coverage_index_invalid_json(tmp_path: Path) -> None:
     index_path = tmp_path / "_coverage_index.json"
     index_path.write_text("not-json")

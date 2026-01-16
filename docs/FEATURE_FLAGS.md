@@ -34,7 +34,7 @@ Configuration values follow this precedence (highest to lowest):
 
 | Flag | Canonical Source | Env Var | CLI | Default | Notes |
 |------|------------------|---------|-----|---------|-------|
-| `derivatives_enabled` | `BotConfig` | `COINBASE_ENABLE_DERIVATIVES` | - | `False` | Enable derivatives trading |
+| `derivatives_enabled` | `BotConfig` | `COINBASE_ENABLE_INTX_PERPS` (legacy: `COINBASE_ENABLE_DERIVATIVES`) | - | `False` | Enable INTX perpetuals (international) |
 | `cfm_enabled` | `BotConfig` | `CFM_ENABLED` | - | `False` | Enable CFM futures |
 | `trading_modes` | `BotConfig` | `TRADING_MODES` | - | `["spot"]` | Markets to trade: spot, cfm |
 

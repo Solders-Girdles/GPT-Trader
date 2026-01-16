@@ -1,6 +1,6 @@
 # Coinbase Perpetuals Trading Logic (Future-Ready)
 
-> **Status:** Coinbase currently gates perpetual futures behind the INTX program. GPT-Trader ships with spot trading enabled by default and keeps the perps logic described here in a **dormant, future-ready** state. Enable it only after your account is approved for INTX and `COINBASE_ENABLE_DERIVATIVES=1` is set.
+> **Status:** Coinbase currently gates perpetual futures behind the INTX program. GPT-Trader ships with spot trading enabled by default and keeps the perps logic described here in a **dormant, future-ready** state. Enable it only after your account is approved for INTX and `COINBASE_ENABLE_INTX_PERPS=1` (legacy: `COINBASE_ENABLE_DERIVATIVES=1`) is set.
 >
 > 📘 **Trust reminder:** Confirm module references against `docs/agents/Document_Verification_Matrix.md` and `docs/ARCHITECTURE.md` before acting on this guide.
 
@@ -14,7 +14,7 @@ This document captures the architecture and trading flow for the Coinbase Perpet
 
 1. **TradingBot** (`src/gpt_trader/features/live_trade/bot.py`)
    - Main entry point for live trading (owns the TradingEngine)
-   - Detects `COINBASE_ENABLE_DERIVATIVES` + INTX context before enabling perps
+   - Detects `COINBASE_ENABLE_INTX_PERPS` (legacy: `COINBASE_ENABLE_DERIVATIVES`) + INTX context before enabling perps
    - Coordinates strategy, risk, and execution through the TradingEngine guard stack
 
 2. **CoinbaseRestService** (`src/gpt_trader/features/brokerages/coinbase/rest_service.py`)

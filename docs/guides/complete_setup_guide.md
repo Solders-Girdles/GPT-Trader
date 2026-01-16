@@ -94,7 +94,7 @@ nano .env  # or vim, code, etc.
 
 ### Step 2: Configure Environment Variables
 
-The `.env` file contains all configuration settings. Configure JWT credentials first, then add the derivatives block only if your account has INTX access.
+The `.env` file contains all configuration settings. Configure JWT credentials first, then enable the market modes that match your Coinbase access level.
 
 ```bash
 # ============================================
@@ -106,16 +106,23 @@ COINBASE_CREDENTIALS_FILE=/path/to/cdp_key.json
 # Or set both env vars:
 # COINBASE_CDP_API_KEY=organizations/{org_id}/apiKeys/{key_id}
 # COINBASE_CDP_PRIVATE_KEY="-----BEGIN EC PRIVATE KEY-----..."
-COINBASE_ENABLE_DERIVATIVES=0      # remains 0 unless INTX access is granted
+
+# Trading modes
+TRADING_MODES=spot      # spot only by default
+CFM_ENABLED=0           # enable CFM futures (US) when approved
+
+# INTX perps (international) - only if Coinbase approves INTX access
+COINBASE_ENABLE_INTX_PERPS=0
+# Legacy alias (still supported): COINBASE_ENABLE_DERIVATIVES=0
 
 # Optional: enable paper/mock mode without real orders
 # PERPS_PAPER=1
 
 # ============================================
-# Coinbase Derivatives (INTX Accounts Only)
+# Coinbase INTX Perpetuals (INTX Accounts Only)
 # ============================================
 # Uncomment once Coinbase approves INTX access
-# COINBASE_ENABLE_DERIVATIVES=1
+# COINBASE_ENABLE_INTX_PERPS=1
 # COINBASE_PROD_CDP_API_KEY=organizations/{org_id}/apiKeys/{key_id}
 # COINBASE_PROD_CDP_PRIVATE_KEY="""-----BEGIN EC PRIVATE KEY-----\n...\n-----END EC PRIVATE KEY-----"""
 

@@ -67,8 +67,7 @@ its ML workflows.
   uv run gpt-trader treasury move --from-portfolio from_uuid --to-portfolio to_uuid --amount 25
   ```
 
-- Guardrails default to spot-only. Derivatives remain locked behind INTX access
-  and `COINBASE_ENABLE_DERIVATIVES=1`.
+- Guardrails default to spot-only. CFM futures (US) are opt-in via `TRADING_MODES=cfm` + `CFM_ENABLED=1`. INTX perps remain locked behind INTX access and `COINBASE_ENABLE_INTX_PERPS=1` (legacy: `COINBASE_ENABLE_DERIVATIVES=1`).
 
 ## Module 6 – Further Reading
 

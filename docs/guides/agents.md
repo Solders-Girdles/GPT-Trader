@@ -13,7 +13,7 @@ This is the consolidated reference for AI agents working with the GPT-Trader rep
 **Active System**: Spot trading bot with Coinbase Advanced Trade
 **Primary CLI**: `uv run gpt-trader` (alias: `uv run coinbase-trader`)
 **Architecture**: Vertical slices under `src/gpt_trader/`
-**Perpetuals**: Code exists but requires INTX access + `COINBASE_ENABLE_DERIVATIVES=1`
+**Perpetuals**: INTX perps require INTX access + `COINBASE_ENABLE_INTX_PERPS=1` (legacy: `COINBASE_ENABLE_DERIVATIVES=1`)
 
 ### Test Status
 ```bash
@@ -103,14 +103,17 @@ COINBASE_CREDENTIALS_FILE=/path/to/cdp_key.json
 # or set both:
 # COINBASE_CDP_API_KEY=organizations/{org}/apiKeys/{key_id}
 # COINBASE_CDP_PRIVATE_KEY="-----BEGIN EC PRIVATE KEY-----..."
-COINBASE_ENABLE_DERIVATIVES=0
+TRADING_MODES=spot
+CFM_ENABLED=0
+COINBASE_ENABLE_INTX_PERPS=0  # legacy: COINBASE_ENABLE_DERIVATIVES
 
-# Perpetuals (requires INTX access)
-# COINBASE_ENABLE_DERIVATIVES=1
+# INTX perps (requires INTX access)
+# COINBASE_ENABLE_INTX_PERPS=1
 # COINBASE_PROD_CDP_API_KEY=organizations/{org}/apiKeys/{key_id}
 # COINBASE_PROD_CDP_PRIVATE_KEY="-----BEGIN EC PRIVATE KEY-----..."
 
 # Legacy fallback (still supported)
+# COINBASE_ENABLE_DERIVATIVES=1
 # COINBASE_API_KEY_NAME=organizations/{org}/apiKeys/{key_id}
 # COINBASE_PRIVATE_KEY="-----BEGIN EC PRIVATE KEY-----..."
 
@@ -150,7 +153,8 @@ from gpt_trader.features.intelligence.sizing import PositionSizer
 
 ### 1. Spot vs Perpetuals
 - **Spot trading**: Active (BTC-USD, ETH-USD)
-- **Perpetuals**: Requires INTX access + `COINBASE_ENABLE_DERIVATIVES=1`
+- **CFM futures (US)**: Opt-in via `TRADING_MODES=cfm` + `CFM_ENABLED=1`
+- **INTX perps**: Requires INTX access + `COINBASE_ENABLE_INTX_PERPS=1` (legacy: `COINBASE_ENABLE_DERIVATIVES=1`)
 - Default behavior is spot-only
 
 ### 2. Legacy vs Active Code

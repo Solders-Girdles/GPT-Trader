@@ -72,7 +72,8 @@ last-updated: 2025-11-24
 ### Environment Setup
 - [Environment Template](../config/environments/.env.template) - All configuration options
 - Default: Spot trading with JWT authentication
-- Perpetuals require INTX access + `COINBASE_ENABLE_DERIVATIVES=1`
+- CFM futures (US) require `TRADING_MODES=cfm` + `CFM_ENABLED=1`
+- INTX perps require `COINBASE_ENABLE_INTX_PERPS=1` (legacy alias `COINBASE_ENABLE_DERIVATIVES`)
 
 ## Additional Resources
 
@@ -87,10 +88,11 @@ last-updated: 2025-11-24
 
 | Mode | Products | Authentication | Flag |
 |------|----------|----------------|------|
-| **Spot (default)** | BTC-USD, ETH-USD, etc. | JWT (CDP key) | — |
-| **Perpetuals** | BTC-PERP, ETH-PERP | JWT (CDP key) | `COINBASE_ENABLE_DERIVATIVES=1` |
+| **Spot (default)** | BTC-USD, ETH-USD, etc. | JWT (CDP key) | `TRADING_MODES=spot` |
+| **CFM futures (US)** | US futures contracts (expiry-coded symbols) | JWT (CDP key) | `TRADING_MODES=cfm` + `CFM_ENABLED=1` |
+| **INTX perps** | BTC-PERP, ETH-PERP | JWT (CDP key) | `COINBASE_ENABLE_INTX_PERPS=1` |
 
-**Note:** Sandbox does not support perpetuals. Bot defaults to spot-only trading.
+**Note:** Sandbox does not support futures/perps. Bot defaults to spot-only trading.
 
 ### Current Focus
 - **Primary**: Coinbase spot trading (perps code future-ready)

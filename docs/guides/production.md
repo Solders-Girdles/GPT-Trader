@@ -12,7 +12,7 @@ consolidates:
 
 ## Overview
 
-This guide consolidates all production deployment documentation for GPT-Trader with a **spot-first** posture. Perpetual futures support remains dormant until Coinbase grants INTX access and `COINBASE_ENABLE_DERIVATIVES=1` is set.
+This guide consolidates all production deployment documentation for GPT-Trader with a **spot-first** posture. CFM futures (US) are opt-in via `TRADING_MODES=cfm` + `CFM_ENABLED=1`. INTX perpetuals remain dormant until Coinbase grants INTX access and `COINBASE_ENABLE_INTX_PERPS=1` (legacy: `COINBASE_ENABLE_DERIVATIVES=1`) is set.
 
 ## Pre-Launch Checklist
 
@@ -47,7 +47,7 @@ uv sync
 
 # Configure environment
 cp config/environments/.env.template .env
-# Edit `.env` with production spot values (set COINBASE_ENABLE_DERIVATIVES=0 unless INTX approved)
+# Edit `.env` with production spot values (set COINBASE_ENABLE_INTX_PERPS=0 unless INTX approved)
 ```
 
 ### 2. Pre-flight Validation
@@ -101,9 +101,9 @@ uv run gpt-trader run --profile prod                       # Full trading once s
 - 24/7 operation
 - All strategies enabled
 
-### Optional: Enabling Derivatives
+### Optional: Enabling INTX Perpetuals
 - Confirm Coinbase has approved INTX access for the account
-- Set `COINBASE_ENABLE_DERIVATIVES=1` and configure CDP keys in `.env`
+- Set `COINBASE_ENABLE_INTX_PERPS=1` (legacy: `COINBASE_ENABLE_DERIVATIVES=1`) and configure CDP keys in `.env`
 - Re-run pre-flight checks to validate derivatives connectivity
 - Increase leverage caps and risk tolerances cautiously
 

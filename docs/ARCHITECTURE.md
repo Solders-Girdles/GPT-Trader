@@ -29,7 +29,7 @@ GPT-Trader V2 is a production-ready Coinbase trading system supporting **spot** 
 |------------|----------|----------------|-------------|-----------|----------|
 | **Production (spot)** | Spot (BTC-USD, ETH-USD, …) | JWT (CDP key) | Advanced v3 | Real-time | Live spot trading |
 | **Production (CFM)** | US Futures (BTC, ETH, SOL, etc.) | CDP (JWT) | Advanced v3 | Real-time | Regulated US futures |
-| **Production (INTX)** | Perpetuals (international) | CDP (JWT) + `COINBASE_ENABLE_DERIVATIVES=1` | Advanced v3 | Real-time | Requires INTX account |
+| **Production (INTX)** | Perpetuals (international) | CDP (JWT) + `COINBASE_ENABLE_INTX_PERPS=1` (legacy: `COINBASE_ENABLE_DERIVATIVES=1`) | Advanced v3 | Real-time | Requires INTX account |
 | **Paper** | All products | — | — | — | Simulated via `PERPS_PAPER=1` |
 
 ### Derivatives Access Summary
@@ -322,9 +322,9 @@ python scripts/build_tui_css.py
 
 ### Derivatives Gate
 
-**CFM Futures** (US-regulated): Available now. No special gate required - use CDP authentication and CFM endpoints (`cfm_balance_summary`, `cfm_positions`, etc.).
+**CFM Futures** (US-regulated): Available for approved US futures accounts. Enable via `TRADING_MODES=cfm` (or `spot,cfm`) and `CFM_ENABLED=1`; uses CDP authentication and CFM endpoints (`cfm_balance_summary`, `cfm_positions`, etc.).
 
-**INTX Perpetuals**: Remain behind `COINBASE_ENABLE_DERIVATIVES` flag and require international INTX account access. Code paths stay compiled for future use.
+**INTX Perpetuals**: Require international INTX account access. Enable via `COINBASE_ENABLE_INTX_PERPS=1` (legacy: `COINBASE_ENABLE_DERIVATIVES=1`). Code paths stay compiled for future use.
 
 ### Feature Slice Reference
 

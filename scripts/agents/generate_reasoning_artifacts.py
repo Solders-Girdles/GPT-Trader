@@ -2229,9 +2229,7 @@ def _report_validation(
                 file=out,
             )
             for issue in artifact_issues:
-                suggestion = (
-                    f" (did you mean {issue.suggestion}?)" if issue.suggestion else ""
-                )
+                suggestion = f" (did you mean {issue.suggestion}?)" if issue.suggestion else ""
                 print(f"    - {issue.node_id}: {issue.path}{suggestion}", file=out)
         else:
             print(f"  {artifact}: {node_count} nodes, 0 missing paths OK", file=out)
@@ -3155,9 +3153,7 @@ def generate(
         path_index = _build_path_index(("src", "scripts", "config", "tests"))
         issues: list[ValidationIssue] = []
         for artifact, flow in flow_payloads:
-            issues.extend(
-                validate_flow_map(flow, artifact=artifact, path_index=path_index)
-            )
+            issues.extend(validate_flow_map(flow, artifact=artifact, path_index=path_index))
         _report_validation(flow_payloads, issues)
         if issues and strict:
             raise FlowValidationError("Flow map validation failed.")

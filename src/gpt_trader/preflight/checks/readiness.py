@@ -71,6 +71,7 @@ def check_readiness_report(checker: PreflightCheck) -> bool:
         checker.log_error(path_error)
         return False
 
+    assert report_path is not None
     report, load_error = _load_report(report_path)
     if load_error or report is None:
         message = load_error or "Readiness report is empty"

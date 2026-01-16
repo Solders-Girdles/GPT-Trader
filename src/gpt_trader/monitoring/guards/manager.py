@@ -235,12 +235,12 @@ def slack_alert_handler(alert: Alert, webhook_url: str) -> None:  # pragma: no c
                     {"title": "Severity", "value": alert.severity.value, "short": True},
                     {
                         "title": "Time",
-                        "value": alert.created_at.strftime("%H:%M:%S"),
+                        "value": alert.timestamp.strftime("%H:%M:%S"),
                         "short": True,
                     },
                 ],
                 "footer": "Trading Bot Alert System",
-                "ts": int(alert.created_at.timestamp()),
+                "ts": int(alert.timestamp.timestamp()),
             }
         ]
     }
@@ -280,7 +280,7 @@ Trading Bot Alert
 
 Guard: {alert.guard_name}
 Severity: {alert.severity.value}
-Time: {alert.created_at}
+Time: {alert.timestamp}
 
 Message:
 {alert.message}

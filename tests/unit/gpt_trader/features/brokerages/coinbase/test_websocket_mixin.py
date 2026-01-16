@@ -111,6 +111,41 @@ class TestWebSocketClientMixinGetWebSocket:
         assert call_kwargs["private_key"] is None
 
 
+class _NonCooperativeBase:
+    """Base class that does not call super().__init__()."""
+
+    def __init__(self, auth: MagicMock | None = None) -> None:
+        self.auth = auth
+
+
+class _NonCooperativeClient(_NonCooperativeBase, WebSocketClientMixin):
+    """Client where WebSocketClientMixin.__init__ is not invoked."""
+
+
+class TestWebSocketClientMixinNonCooperativeInit:
+    def test_lazy_initializes_state_when_mixin_init_not_called(self) -> None:
+        client = _NonCooperativeClient()
+        assert not hasattr(client, "_ws_lock")
+        assert not hasattr(client, "_message_queue")
+
+        with patch(
+            "gpt_trader.features.brokerages.coinbase.client.websocket_mixin.CoinbaseWebSocket"
+        ) as mock_ws_class:
+            mock_ws_instance = MagicMock()
+            mock_ws_class.return_value = mock_ws_instance
+
+            result = client._get_websocket()
+
+        assert result is mock_ws_instance
+        assert client._ws is mock_ws_instance
+        assert client._ws_lock is not None
+        assert client._message_queue is not None
+
+    def test_stop_streaming_safe_when_mixin_init_not_called(self) -> None:
+        client = _NonCooperativeClient()
+        client.stop_streaming()
+
+
 class TestStreamOrderbook:
     """Tests for stream_orderbook method."""
 

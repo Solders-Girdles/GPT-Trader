@@ -1,5 +1,5 @@
 .PHONY: dev-up dev-down lint typecheck test smoke preflight preflight-readiness dash cov clean clean-dry-run scaffold-slice \
-	legacy-bundle agent-setup agent-check agent-impact agent-impact-full agent-map agent-tests agent-risk \
+	readiness-window legacy-bundle agent-setup agent-check agent-impact agent-impact-full agent-map agent-tests agent-risk \
 	agent-naming agent-health agent-health-fast agent-health-full agent-chaos-smoke agent-chaos-week \
 	agent-regenerate agent-docs-links
 
@@ -13,6 +13,7 @@ AGENT_CHAOS_MAX_DRAWDOWN_PCT?=10
 AGENT_CHAOS_MAX_FEES_PCT?=4.5
 PREFLIGHT_PROFILE?=canary
 READINESS_REPORT_DIR?=runtime_data/$(PREFLIGHT_PROFILE)/reports
+READINESS_WINDOW_HOURS?=24
 
 # Start local development stack (bot by default)
 dev-up:
@@ -40,6 +41,9 @@ preflight:
 preflight-readiness:
 	GPT_TRADER_READINESS_REPORT="$(READINESS_REPORT_DIR)" uv run python scripts/production_preflight.py \
 		--profile $(PREFLIGHT_PROFILE) --verbose
+
+readiness-window:
+	uv run python scripts/readiness_window.py --profile $(PREFLIGHT_PROFILE) --hours $(READINESS_WINDOW_HOURS)
 
 cov:
 	uv run pytest -m "not slow and not performance" -q \

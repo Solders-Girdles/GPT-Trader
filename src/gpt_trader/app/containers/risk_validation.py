@@ -8,6 +8,7 @@ This container manages risk and validation-related dependencies:
 from __future__ import annotations
 
 from collections.abc import Callable
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from gpt_trader.app.config import BotConfig
@@ -77,9 +78,22 @@ class RiskValidationContainer:
                 reduce_only_mode=self._config.reduce_only_mode,
             )
 
+            profile = getattr(self._config, "profile", None)
+            profile_value = (
+                profile.value if profile is not None and hasattr(profile, "value") else profile
+            )
+            state_file = None
+            if profile_value:
+                runtime_root = Path(getattr(self._config, "runtime_root", "."))
+                state_file_path = (
+                    runtime_root / "runtime_data" / str(profile_value) / "risk_state.json"
+                )
+                state_file = str(state_file_path)
+
             self._risk_manager = LiveRiskManager(
                 config=risk_config,
                 event_store=self._event_store_provider(),
+                state_file=state_file,
             )
         return self._risk_manager
 

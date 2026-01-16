@@ -576,6 +576,10 @@ class CoinbaseClientBase:
 
                     resp.raise_for_status()
 
+                    # Request ultimately succeeded; keep error metrics aligned with the final
+                    # outcome (retries are tracked separately via _record_api_retry).
+                    is_error = False
+
                     # Success - record in circuit breaker and span
                     self._record_success(path, resp, span)
 

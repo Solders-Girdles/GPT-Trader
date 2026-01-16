@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
@@ -160,6 +161,23 @@ class TestRiskValidationContainer:
         assert risk_manager.config.max_leverage == 5
         assert risk_manager.config.daily_loss_limit_pct == 0.10
         assert risk_manager.config.max_position_pct_per_symbol == 0.25
+        assert risk_manager.state_file is None
+
+    def test_risk_manager_scopes_state_file_by_profile(self, mock_event_store: MagicMock) -> None:
+        from gpt_trader.config.types import Profile
+
+        config = BotConfig(
+            symbols=["BTC-USD"],
+            profile=Profile.CANARY,
+        )
+        container = RiskValidationContainer(
+            config=config,
+            event_store_provider=lambda: mock_event_store,
+        )
+
+        risk_manager = container.risk_manager
+        expected = str(Path(config.runtime_root) / "runtime_data" / "canary" / "risk_state.json")
+        assert risk_manager.state_file == expected
 
 
 class TestKillSwitchDerivation:

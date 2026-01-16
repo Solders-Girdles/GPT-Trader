@@ -11,6 +11,7 @@ import gpt_trader.features.brokerages.coinbase.client.base as base_module
 from gpt_trader.features.brokerages.coinbase.auth import CDPJWTAuth, SimpleAuth
 from gpt_trader.features.brokerages.coinbase.client.base import CoinbaseClientBase
 from gpt_trader.features.brokerages.coinbase.client.circuit_breaker import CircuitOpenError
+from gpt_trader.features.brokerages.coinbase.client.metrics import APIMetricsCollector
 from gpt_trader.features.brokerages.coinbase.client.priority import (
     RequestDeferredError,
     RequestPriority,
@@ -633,6 +634,7 @@ class TestCoinbaseClientBase:
     def test_request_5xx_error_with_retry(self) -> None:
         """Test request with 5xx error and retry."""
         client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
+        client._metrics = APIMetricsCollector(max_history=10)
         mock_transport = Mock()
         # First call fails, second succeeds
         mock_transport.side_effect = [
@@ -647,6 +649,7 @@ class TestCoinbaseClientBase:
         assert result == {"success": True}
         assert mock_transport.call_count == 2
         mock_sleep.assert_called_once()
+        assert client.get_api_metrics()["total_errors"] == 0
 
     def test_request_rate_limit_error_with_retry_after(self) -> None:
         """Test request with rate limit error and retry-after header."""
@@ -667,6 +670,7 @@ class TestCoinbaseClientBase:
     def test_request_network_error_with_retry(self) -> None:
         """Test request with network error and retry."""
         client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
+        client._metrics = APIMetricsCollector(max_history=10)
         mock_transport = Mock()
 
         # Requests logic catches requests.ConnectionError.
@@ -688,6 +692,7 @@ class TestCoinbaseClientBase:
         assert result == {"success": True}
         assert mock_transport.call_count == 2
         mock_sleep.assert_called_once()
+        assert client.get_api_metrics()["total_errors"] == 0
 
     def test_request_max_retries_exceeded(self) -> None:
         """Test request with max retries exceeded."""

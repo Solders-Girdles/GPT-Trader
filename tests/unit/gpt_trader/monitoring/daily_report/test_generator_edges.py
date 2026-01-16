@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import patch
 
 from gpt_trader.monitoring.daily_report.generator import DailyReportGenerator
@@ -11,7 +11,7 @@ from gpt_trader.monitoring.daily_report.models import DailyReport
 
 
 def test_generate_uses_expected_files_and_cutoff(tmp_path) -> None:
-    date = datetime(2024, 2, 2, 12, 30, 0)
+    date = datetime(2024, 2, 2, 12, 30, 0, tzinfo=UTC)
     generator = DailyReportGenerator(profile="alpha", data_dir=tmp_path)
     expected_cutoff = date - timedelta(hours=6)
 

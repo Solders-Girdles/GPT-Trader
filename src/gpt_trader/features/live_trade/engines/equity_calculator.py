@@ -60,6 +60,11 @@ class EquityCalculator:
         self._degradation = degradation
         self._risk_manager = risk_manager
         self._price_history = price_history
+        self._known_products: set[str] | None = None
+        self._known_products_last_refresh: float | None = None
+        self._known_products_ttl_seconds = int(
+            getattr(self._config, "product_catalog_ttl_seconds", 3600)
+        )
 
     async def calculate_total_equity(
         self,
@@ -185,6 +190,8 @@ class EquityCalculator:
         quote = str(getattr(self._config, "coinbase_default_quote", None) or "USD").upper()
         use_total_balance = bool(getattr(self._config, "read_only", False))
         valuation_quotes = self._build_valuation_quotes(quote)
+        known_products: set[str] | None = None
+        known_products_checked = False
 
         for balance in balances:
             logger.debug(
@@ -219,8 +226,16 @@ class EquityCalculator:
                 continue
 
             # Convert non-USD assets using ticker prices
+            if not known_products_checked:
+                known_products = await self._get_known_products(broker)
+                known_products_checked = True
             usd_value = await self._value_asset(
-                broker, asset, amount, valuation_quotes, diagnostics
+                broker,
+                asset,
+                amount,
+                valuation_quotes,
+                diagnostics,
+                known_products,
             )
             if usd_value is not None:
                 converted_collateral += usd_value
@@ -236,6 +251,43 @@ class EquityCalculator:
                 valuation_quotes.append(stable)
         return valuation_quotes
 
+    async def _get_known_products(self, broker: Any) -> set[str] | None:
+        """Fetch and cache known product ids to avoid invalid ticker requests."""
+        now = time.time()
+        if self._known_products and self._known_products_last_refresh is not None:
+            if now - self._known_products_last_refresh < self._known_products_ttl_seconds:
+                return self._known_products
+
+        product_catalog = getattr(broker, "product_catalog", None)
+        cache = getattr(product_catalog, "_cache", None)
+        if isinstance(cache, dict) and cache:
+            self._known_products = {str(key).upper() for key in cache.keys()}
+            self._known_products_last_refresh = now
+            return self._known_products
+
+        list_products = getattr(broker, "list_products", None)
+        if callable(list_products):
+            try:
+                products = await asyncio.to_thread(list_products)
+            except Exception as exc:
+                logger.debug("Failed to list products for valuation: %s", exc)
+                return None
+            product_ids: set[str] = set()
+            for product in products:
+                symbol = None
+                if isinstance(product, dict):
+                    symbol = product.get("product_id") or product.get("id")
+                else:
+                    symbol = getattr(product, "symbol", None)
+                if symbol:
+                    product_ids.add(str(symbol).upper())
+            if product_ids:
+                self._known_products = product_ids
+                self._known_products_last_refresh = now
+                return self._known_products
+
+        return None
+
     async def _value_asset(
         self,
         broker: Any,
@@ -243,6 +295,7 @@ class EquityCalculator:
         amount: Decimal,
         valuation_quotes: list[str],
         diagnostics: dict[str, list[str]],
+        known_products: set[str] | None,
     ) -> Decimal | None:
         """
         Value a non-USD asset using ticker prices.
@@ -263,6 +316,8 @@ class EquityCalculator:
 
             try:
                 if last_price is None:
+                    if known_products is not None and product_id.upper() not in known_products:
+                        continue
                     ticker = await asyncio.to_thread(broker.get_ticker, product_id)
                     last_price = Decimal(str(ticker.get("price", 0)))
                 if last_price and last_price > 0:

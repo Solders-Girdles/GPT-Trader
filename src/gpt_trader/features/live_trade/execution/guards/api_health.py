@@ -111,6 +111,19 @@ class ApiHealthGuard:
         # Parse metrics
         metrics = (status or {}).get("metrics") or {}
         error_rate = float(metrics.get("error_rate", 0.0))
+        endpoint_metrics = metrics.get("endpoints") if isinstance(metrics, dict) else None
+        endpoint_errors: dict[str, int] = {}
+        if isinstance(endpoint_metrics, dict):
+            for category, entry in endpoint_metrics.items():
+                if not isinstance(entry, dict):
+                    continue
+                total_errors = entry.get("total_errors")
+                try:
+                    total_errors_int = int(total_errors) if total_errors is not None else 0
+                except (TypeError, ValueError):
+                    total_errors_int = 0
+                if total_errors_int > 0:
+                    endpoint_errors[str(category)] = total_errors_int
 
         # Parse rate limit usage (may be string like "45%" or float)
         rate_limit_usage = (status or {}).get("rate_limit_usage", 0.0)
@@ -141,6 +154,11 @@ class ApiHealthGuard:
             "rate_limit_usage": rate_limit_usage,
             "rate_limit_threshold": rate_limit_threshold,
         }
+        if isinstance(metrics, dict):
+            details["total_requests"] = metrics.get("total_requests", 0)
+            details["total_errors"] = metrics.get("total_errors", 0)
+        if endpoint_errors:
+            details["endpoint_errors"] = endpoint_errors
 
         if open_breakers:
             trip_reasons.append(f"circuit breakers open: {', '.join(open_breakers)}")

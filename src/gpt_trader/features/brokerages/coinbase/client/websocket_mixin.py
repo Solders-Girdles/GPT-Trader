@@ -47,8 +47,25 @@ class WebSocketClientMixin:
         self._message_queue: queue.Queue[dict | object] = queue.Queue()
         self._stream_active = False
 
+    def _ensure_ws_state(self) -> None:
+        """Ensure required WebSocket attributes exist.
+
+        Some client classes use non-cooperative multiple inheritance and may not
+        call this mixin's ``__init__``. This guard keeps streaming safe by
+        lazily initialising the expected attributes.
+        """
+        if not hasattr(self, "_ws"):
+            self._ws = None
+        if not hasattr(self, "_ws_lock"):
+            self._ws_lock = threading.Lock()
+        if not hasattr(self, "_message_queue"):
+            self._message_queue = queue.Queue()
+        if not hasattr(self, "_stream_active"):
+            self._stream_active = False
+
     def _get_websocket(self) -> CoinbaseWebSocket:
         """Get or create the singleton WebSocket instance."""
+        self._ensure_ws_state()
         with self._ws_lock:
             if self._ws is None:
                 api_key = None
@@ -70,6 +87,7 @@ class WebSocketClientMixin:
 
     def _on_websocket_message(self, message: dict) -> None:
         """Callback for WebSocket messages - routes to the queue."""
+        self._ensure_ws_state()
         if self._stream_active:
             self._message_queue.put(message)
 
@@ -83,6 +101,7 @@ class WebSocketClientMixin:
         Yields:
             Message dicts from the WebSocket.
         """
+        self._ensure_ws_state()
         while self._stream_active:
             try:
                 msg = self._message_queue.get(timeout=_QUEUE_TIMEOUT)
@@ -182,6 +201,7 @@ class WebSocketClientMixin:
             >>> for msg in client.stream_trades(["BTC-USD"]):
             ...     print(msg["type"], msg.get("price"))
         """
+        self._ensure_ws_state()
         websocket = self._get_websocket()
 
         # Clear any stale messages
@@ -205,6 +225,7 @@ class WebSocketClientMixin:
 
     def _clear_queue(self) -> None:
         """Clear any pending messages from the queue."""
+        self._ensure_ws_state()
         while True:
             try:
                 self._message_queue.get_nowait()
@@ -213,6 +234,7 @@ class WebSocketClientMixin:
 
     def stop_streaming(self) -> None:
         """Stop any active stream and disconnect the WebSocket."""
+        self._ensure_ws_state()
         self._stream_active = False
         self._message_queue.put(_STREAM_STOP)
 
@@ -226,6 +248,7 @@ class WebSocketClientMixin:
 
     def is_streaming(self) -> bool:
         """Check if a stream is currently active."""
+        self._ensure_ws_state()
         return self._stream_active
 
     def get_ws_health(self) -> dict:
@@ -236,6 +259,7 @@ class WebSocketClientMixin:
             Dict with health metrics from the underlying WebSocket,
             or empty dict if no WebSocket is active.
         """
+        self._ensure_ws_state()
         with self._ws_lock:
             if self._ws is not None:
                 return self._ws.get_health()

@@ -476,9 +476,7 @@ def main() -> int:
             if not test.startswith(f"{integration_prefix}/")
         ]
         analysis["test_directories"] = [
-            test_dir
-            for test_dir in analysis["test_directories"]
-            if test_dir != integration_prefix
+            test_dir for test_dir in analysis["test_directories"] if test_dir != integration_prefix
         ]
         analysis["reasons"].append("Excluded integration tests")
         analysis["excluded_integration"] = True

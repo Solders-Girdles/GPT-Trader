@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from gpt_trader.config.path_registry import RUNTIME_DATA_DIR
@@ -33,7 +33,11 @@ class DailyReportGenerator:
 
     def generate(self, date: datetime | None = None, lookback_hours: int = 24) -> DailyReport:
         if date is None:
-            date = datetime.now()
+            date = datetime.now(UTC)
+        elif date.tzinfo is None:
+            date = date.replace(tzinfo=UTC)
+        else:
+            date = date.astimezone(UTC)
 
         logger.info(f"Generating daily report for {date.date()} (profile={self.profile})")
 
@@ -55,7 +59,7 @@ class DailyReportGenerator:
         return DailyReport(
             date=date.strftime("%Y-%m-%d"),
             profile=self.profile,
-            generated_at=datetime.now().isoformat(),
+            generated_at=datetime.now(UTC).isoformat(),
             symbol_performance=symbol_metrics,
             **pnl_metrics,  # type: ignore[arg-type]
             **trade_metrics,  # type: ignore[arg-type]

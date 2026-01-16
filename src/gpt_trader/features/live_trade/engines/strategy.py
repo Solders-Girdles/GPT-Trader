@@ -298,6 +298,14 @@ class TradingEngine(BaseEngine):
 
     def _init_user_event_handler(self) -> None:
         """Initialize Coinbase WS user-event handling for live order updates."""
+        if getattr(self.context.config, "dry_run", False):
+            logger.info(
+                "Dry-run enabled; skipping Coinbase user-event handling",
+                operation="user_events",
+                stage="skip",
+            )
+            return
+
         broker = self.context.broker
         if broker is None:
             return
@@ -916,7 +924,15 @@ class TradingEngine(BaseEngine):
     ) -> tuple[dict[str, Position], asyncio.Task[None]]:
         logger.info("Step 1: Fetching positions and auditing orders (parallel)...")
         positions_task = asyncio.create_task(self._fetch_positions())
-        audit_task = asyncio.create_task(self._audit_orders())
+        if getattr(self.context.config, "dry_run", False):
+            logger.info(
+                "Dry-run enabled; skipping order audit",
+                operation="order_audit",
+                stage="skip",
+            )
+            audit_task = asyncio.create_task(asyncio.sleep(0))
+        else:
+            audit_task = asyncio.create_task(self._audit_orders())
 
         with profile_span("fetch_positions") as _pos_span:
             positions = await positions_task

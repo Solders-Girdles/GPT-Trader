@@ -1,11 +1,11 @@
 """Historical data fetcher for Coinbase API."""
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
-from gpt_trader.features.brokerages.coinbase.client.client import CoinbaseClient
 from gpt_trader.core import Candle
+from gpt_trader.features.brokerages.coinbase.client.client import CoinbaseClient
 
 
 class CoinbaseHistoricalFetcher:
@@ -103,40 +103,46 @@ class CoinbaseHistoricalFetcher:
         Returns:
             List of candles for this chunk
         """
-        # Convert to Unix timestamps
-        start_unix = int(start.timestamp())
-        end_unix = int(end.timestamp())
-
-        # Build request
-        params = {
-            "start": str(start_unix),
-            "end": str(end_unix),
-            "granularity": granularity,
-        }
-
-        # Call API
-        response = await self.client.get(
-            f"/api/v3/brokerage/products/{symbol}/candles",
-            params=params,
+        # CoinbaseClient is synchronous; run in a worker thread to avoid blocking the event loop.
+        response = await asyncio.to_thread(
+            self.client.get_candles,
+            symbol,
+            granularity,
+            300,
+            start=start,
+            end=end,
         )
 
         # Parse response
         candles = []
-        if "candles" in response:
-            for candle_data in response["candles"]:
-                candles.append(self._parse_candle(candle_data))
+        if isinstance(response, dict) and "candles" in response:
+            for candle_data in response.get("candles", []):
+                if isinstance(candle_data, dict):
+                    candles.append(self._parse_candle(candle_data))
 
         return candles
 
     def _parse_candle(self, data: dict) -> Candle:
         """Parse API response into Candle object."""
+        ts_raw = data.get("start")
+        if ts_raw is None:
+            raise KeyError("Missing candle start timestamp")
+
+        if isinstance(ts_raw, (int, float)) or (isinstance(ts_raw, str) and ts_raw.isdigit()):
+            ts = datetime.fromtimestamp(int(ts_raw), tz=UTC)
+        else:
+            ts_str = str(ts_raw).replace("Z", "+00:00")
+            ts = datetime.fromisoformat(ts_str)
+            if ts.tzinfo is None:
+                ts = ts.replace(tzinfo=UTC)
+
         return Candle(
-            ts=datetime.fromtimestamp(int(data["start"])),
-            open=Decimal(data["open"]),
-            high=Decimal(data["high"]),
-            low=Decimal(data["low"]),
-            close=Decimal(data["close"]),
-            volume=Decimal(data["volume"]),
+            ts=ts,
+            open=Decimal(str(data["open"])),
+            high=Decimal(str(data["high"])),
+            low=Decimal(str(data["low"])),
+            close=Decimal(str(data["close"])),
+            volume=Decimal(str(data["volume"])),
         )
 
     def _granularity_to_seconds(self, granularity: str) -> int:
@@ -200,10 +206,10 @@ class CoinbaseHistoricalFetcher:
 
     async def _rate_limit(self) -> None:
         """Apply rate limiting delay."""
-        current_time = asyncio.get_event_loop().time()
+        current_time = asyncio.get_running_loop().time()
         time_since_last = current_time - self._last_request_time
 
         if time_since_last < self._rate_limit_delay:
             await asyncio.sleep(self._rate_limit_delay - time_since_last)
 
-        self._last_request_time = asyncio.get_event_loop().time()
+        self._last_request_time = asyncio.get_running_loop().time()

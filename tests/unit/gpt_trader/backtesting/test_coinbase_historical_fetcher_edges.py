@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from unittest.mock import AsyncMock, Mock
 
@@ -104,3 +104,52 @@ def test_granularity_to_seconds_unknown_defaults() -> None:
     fetcher = CoinbaseHistoricalFetcher(client=Mock())
 
     assert fetcher._granularity_to_seconds("UNKNOWN") == 60
+
+
+@pytest.mark.asyncio
+async def test_fetch_chunk_calls_client_get_candles_and_parses_timestamps() -> None:
+    start = datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    end = start + timedelta(minutes=2)
+    epoch_start = int(start.timestamp())
+
+    client = Mock()
+    client.get_candles = Mock(
+        return_value={
+            "candles": [
+                {
+                    "start": "2024-01-01T00:00:00Z",
+                    "open": "1",
+                    "high": "1.5",
+                    "low": "0.5",
+                    "close": "1.2",
+                    "volume": "10",
+                },
+                {
+                    "start": epoch_start + 60,
+                    "open": "2",
+                    "high": "2.5",
+                    "low": "1.5",
+                    "close": "2.2",
+                    "volume": "20",
+                },
+            ]
+        }
+    )
+
+    fetcher = CoinbaseHistoricalFetcher(client=client)
+    candles = await fetcher._fetch_chunk(
+        symbol="BTC-USD",
+        granularity="ONE_MINUTE",
+        start=start,
+        end=end,
+    )
+
+    args, kwargs = client.get_candles.call_args
+    assert args == ("BTC-USD", "ONE_MINUTE", 300)
+    assert kwargs["start"] == start
+    assert kwargs["end"] == end
+
+    assert [c.ts.isoformat() for c in candles] == [
+        start.isoformat(),
+        (start + timedelta(minutes=1)).isoformat(),
+    ]

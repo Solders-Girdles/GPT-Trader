@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import os
+import sqlite3
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -51,6 +53,74 @@ def _load_report(path: Path) -> tuple[dict[str, Any] | None, str | None]:
         return None, "Report is not a JSON object"
     except Exception as exc:
         return None, f"Failed to read report: {exc}"
+
+
+def _parse_timestamp(raw: str | None) -> datetime | None:
+    if raw is None:
+        return None
+    text = raw.strip()
+    if not text:
+        return None
+    if text.endswith("Z"):
+        text = f"{text[:-1]}+00:00"
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        try:
+            parsed = datetime.strptime(text, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def _fetch_last_event(path: Path) -> tuple[dict[str, Any] | None, str | None]:
+    try:
+        uri = f"file:{path.as_posix()}?mode=ro"
+        with sqlite3.connect(uri, uri=True, timeout=5.0) as connection:
+            connection.row_factory = sqlite3.Row
+            row = connection.execute(
+                """
+                SELECT id, timestamp, event_type
+                FROM events
+                ORDER BY datetime(timestamp) DESC, id DESC
+                LIMIT 1
+                """
+            ).fetchone()
+    except sqlite3.Error as exc:
+        return None, f"Failed to read events DB: {exc}"
+
+    if row is None or row["timestamp"] is None:
+        return None, None
+
+    timestamp = _parse_timestamp(str(row["timestamp"]))
+    if timestamp is None:
+        return None, None
+
+    age_seconds = max(0.0, (datetime.now(timezone.utc) - timestamp).total_seconds())
+    return {
+        "id": int(row["id"]),
+        "timestamp": timestamp.isoformat().replace("+00:00", "Z"),
+        "event_type": str(row["event_type"]),
+        "age_seconds": age_seconds,
+    }, None
+
+
+def _resolve_event_store_path(profile: str, report_path: Path) -> Path:
+    override_root = os.getenv("EVENT_STORE_ROOT")
+    if override_root:
+        override_path = Path(override_root).expanduser()
+        if "runtime_data" not in set(override_path.parts):
+            override_path = override_path / "runtime_data" / profile
+        return override_path / "events.db"
+
+    candidate = report_path.parent.parent / "events.db"
+    if candidate.exists():
+        return candidate
+
+    runtime_root = Path(os.getenv("GPT_TRADER_RUNTIME_ROOT", ".")).expanduser()
+    return runtime_root / "runtime_data" / profile / "events.db"
 
 
 def check_readiness_report(checker: PreflightCheck) -> bool:
@@ -112,6 +182,9 @@ def check_readiness_report(checker: PreflightCheck) -> bool:
         "unfilled_orders_max": _get_env_int("GPT_TRADER_READINESS_UNFILLED_ORDERS_MAX", 0),
         "api_errors_max": _get_env_int("GPT_TRADER_READINESS_API_ERRORS_MAX", 0),
         "guard_triggers_max": _get_env_int("GPT_TRADER_READINESS_GUARD_TRIGGERS_MAX", 0),
+        "liveness_max_age_seconds": _get_env_int(
+            "GPT_TRADER_READINESS_LIVENESS_MAX_AGE_SECONDS", 300
+        ),
     }
 
     stale_marks = _coerce_int(health.get("stale_marks", health.get("stale_marks_count")))
@@ -145,6 +218,36 @@ def check_readiness_report(checker: PreflightCheck) -> bool:
             checker.log_success(f"Readiness {label}: {value} <= {max_allowed}")
         else:
             message = f"Readiness {label}: {value} > {max_allowed}"
+            if warn_only:
+                checker.log_warning(message)
+            else:
+                checker.log_error(message)
+            all_good = False
+
+    event_store_path = _resolve_event_store_path(checker.profile, report_path)
+    last_event, last_event_error = (None, None)
+    if event_store_path.exists():
+        last_event, last_event_error = _fetch_last_event(event_store_path)
+    if last_event_error:
+        if warn_only:
+            checker.log_warning(last_event_error)
+        else:
+            checker.log_error(last_event_error)
+            all_good = False
+    if last_event is None:
+        message = f"Readiness liveness: no events in {event_store_path}"
+        if warn_only:
+            checker.log_warning(message)
+        else:
+            checker.log_error(message)
+            all_good = False
+    else:
+        max_age = thresholds["liveness_max_age_seconds"]
+        age_seconds = float(last_event.get("age_seconds", 0.0) or 0.0)
+        if age_seconds <= max_age:
+            checker.log_success(f"Readiness liveness: {int(age_seconds)}s <= {max_age}s")
+        else:
+            message = f"Readiness liveness: {int(age_seconds)}s > {max_age}s"
             if warn_only:
                 checker.log_warning(message)
             else:

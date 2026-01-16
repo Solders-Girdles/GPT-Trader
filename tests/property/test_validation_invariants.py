@@ -51,9 +51,9 @@ def test_failure_counter_increments(
         tracker.record_failure(check_type)
         expected_count = i + 1
         actual_count = tracker.get_failure_count(check_type)
-        assert actual_count == expected_count, (
-            f"After {i + 1} failures, expected count {expected_count}, got {actual_count}"
-        )
+        assert (
+            actual_count == expected_count
+        ), f"After {i + 1} failures, expected count {expected_count}, got {actual_count}"
 
 
 @seed(4002)
@@ -190,9 +190,9 @@ def test_check_types_are_independent(
 
     # Other types should have zero
     for other_type in other_types:
-        assert tracker.get_failure_count(other_type) == 0, (
-            f"Check type {other_type} should not be affected by {first_type} failures"
-        )
+        assert (
+            tracker.get_failure_count(other_type) == 0
+        ), f"Check type {other_type} should not be affected by {first_type} failures"
 
 
 @seed(4006)
@@ -218,9 +218,9 @@ def test_get_failure_count_is_readonly(
     count2 = tracker.get_failure_count(check_type)
     count3 = tracker.get_failure_count(check_type)
 
-    assert count1 == count2 == count3 == failure_count, (
-        "get_failure_count should return consistent values"
-    )
+    assert (
+        count1 == count2 == count3 == failure_count
+    ), "get_failure_count should return consistent values"
 
 
 @seed(4007)
@@ -288,9 +288,9 @@ def test_escalation_does_not_trigger_below_threshold(
 
     for i in range(threshold - 1):
         escalated = tracker.record_failure("test_check")
-        assert escalated is False, (
-            f"Escalation should not trigger at failure {i + 1} (threshold {threshold})"
-        )
+        assert (
+            escalated is False
+        ), f"Escalation should not trigger at failure {i + 1} (threshold {threshold})"
 
 
 @seed(4010)

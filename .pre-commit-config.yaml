@@ -15,7 +15,6 @@ repos:
     hooks:
     -   id: ruff
         args: [--fix, --exit-non-zero-on-fix]
-    -   id: ruff-format
 
 -   repo: https://github.com/asottile/pyupgrade
     rev: v3.21.0
@@ -28,6 +27,11 @@ repos:
 
 -   repo: local
     hooks:
+    -   id: black
+        name: black
+        entry: uv run black
+        language: system
+        types: [python]
     -   id: test-hygiene
         name: test-hygiene
         entry: scripts/ci/check_test_hygiene.py

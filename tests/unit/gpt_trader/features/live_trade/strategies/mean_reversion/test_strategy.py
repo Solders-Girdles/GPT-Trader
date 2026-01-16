@@ -155,9 +155,9 @@ class TestSignalGeneration:
             product=None,
         )
 
-        assert decision.action == Action.HOLD, (
-            f"Expected HOLD (shorts disabled), got {decision.action}"
-        )
+        assert (
+            decision.action == Action.HOLD
+        ), f"Expected HOLD (shorts disabled), got {decision.action}"
 
     def test_hold_in_neutral_zone(self):
         """Should HOLD when Z-Score is within neutral zone."""
@@ -265,9 +265,9 @@ class TestExitLogic:
             product=None,
         )
 
-        assert decision.action == Action.CLOSE, (
-            f"Expected CLOSE on stop loss, got {decision.action}"
-        )
+        assert (
+            decision.action == Action.CLOSE
+        ), f"Expected CLOSE on stop loss, got {decision.action}"
         assert "stop loss" in decision.reason.lower()
 
     def test_take_profit_triggered(self):
@@ -296,9 +296,9 @@ class TestExitLogic:
             product=None,
         )
 
-        assert decision.action == Action.CLOSE, (
-            f"Expected CLOSE on take profit, got {decision.action}"
-        )
+        assert (
+            decision.action == Action.CLOSE
+        ), f"Expected CLOSE on take profit, got {decision.action}"
         assert "take profit" in decision.reason.lower()
 
 
@@ -321,9 +321,9 @@ class TestVolatilityTargeting:
         # Low volatility (1%) should increase position size
         low_vol_size = strategy.calculate_position_size(equity, current_volatility=0.01)
 
-        assert high_vol_size < low_vol_size, (
-            f"High vol size ({high_vol_size}) should be less than low vol size ({low_vol_size})"
-        )
+        assert (
+            high_vol_size < low_vol_size
+        ), f"High vol size ({high_vol_size}) should be less than low vol size ({low_vol_size})"
 
     def test_position_capped_at_max_pct(self):
         """Position size should never exceed max_position_pct of equity."""

@@ -30,9 +30,9 @@ def assert_widget_content(app, widget_id: str, expected_content: str) -> None:
     """
     widget = app.query_one(f"#{widget_id}")
     if isinstance(widget, (Label, Static)):
-        assert expected_content in str(widget.render()), (
-            f"Expected '{expected_content}' in widget #{widget_id}"
-        )
+        assert expected_content in str(
+            widget.render()
+        ), f"Expected '{expected_content}' in widget #{widget_id}"
     else:
         # Fallback for other widgets if needed, or raise error
         pass

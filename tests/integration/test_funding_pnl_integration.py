@@ -143,9 +143,9 @@ class TestFundingPnLIntegration:
         # funding_pnl tracks "funding paid" - positive means paid out (cost)
         # Long position + positive rate = pays funding = positive funding_pnl
         # After ~12 hours, we should have 1 settlement with accumulated funding
-        assert funding_pnl > Decimal("0"), (
-            f"Expected positive funding PnL (paid), got {funding_pnl}"
-        )
+        assert funding_pnl > Decimal(
+            "0"
+        ), f"Expected positive funding PnL (paid), got {funding_pnl}"
 
     def test_short_position_receives_positive_funding(
         self,
@@ -204,9 +204,9 @@ class TestFundingPnLIntegration:
 
         # funding_pnl tracks "funding paid" - negative means received (profit)
         # Short position + positive rate = receives funding = negative funding_pnl
-        assert funding_pnl < Decimal("0"), (
-            f"Expected negative funding PnL (received), got {funding_pnl}"
-        )
+        assert funding_pnl < Decimal(
+            "0"
+        ), f"Expected negative funding PnL (received), got {funding_pnl}"
 
     def test_funding_accumulates_over_time(
         self,
@@ -263,9 +263,9 @@ class TestFundingPnLIntegration:
 
         # After settlement, funding_pnl should show accumulated settled funding
         # First real settlement at hour 9, second at hour 17
-        assert funding_values[8] > Decimal("0"), (
-            "Settlement at hour 9 should show funding"
-        )  # Index 8 = hour 9
+        assert funding_values[8] > Decimal(
+            "0"
+        ), "Settlement at hour 9 should show funding"  # Index 8 = hour 9
         assert final_funding > funding_values[8], "Funding should continue accumulating"
 
     def test_no_position_no_funding(

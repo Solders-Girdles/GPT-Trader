@@ -48,15 +48,11 @@ preflight-readiness:
 		--profile $(PREFLIGHT_PROFILE) --verbose
 
 canary-liveness:
-	@age=$$(sqlite3 runtime_data/canary/events.db "select coalesce(cast(round((julianday('now') - julianday(max(timestamp)))*86400) as integer), 999999) as last_event_age_seconds from events;"); \
-	echo "last_event_age_seconds=$$age"; \
-	if [ "$$age" -gt 300 ]; then echo "liveness_status=RED"; else echo "liveness_status=GREEN"; fi
+	@-uv run python scripts/ops/liveness_check.py --profile canary --event-type heartbeat --event-type price_tick --max-age-seconds 300
 	@sqlite3 runtime_data/canary/events.db "select event_type, max(timestamp) as last_ts from events group by event_type order by last_ts desc limit 5;"
 
 canary-liveness-check:
-	@age=$$(sqlite3 runtime_data/canary/events.db "select coalesce(cast(round((julianday('now') - julianday(max(timestamp)))*86400) as integer), 999999) as last_event_age_seconds from events;"); \
-	echo "last_event_age_seconds=$$age"; \
-	if [ "$$age" -gt 300 ]; then echo "liveness_status=RED"; exit 1; else echo "liveness_status=GREEN"; fi
+	uv run python scripts/ops/liveness_check.py --profile canary --event-type heartbeat --event-type price_tick --max-age-seconds 300
 
 canary-daily:
 	@$(MAKE) canary-liveness-check

@@ -17,6 +17,7 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, cast
+from collections.abc import Sequence
 
 from gpt_trader.app.config import StrategyType
 from gpt_trader.app.config.bot_config import BotConfig
@@ -50,6 +51,32 @@ def _parse_dt(value: str) -> datetime:
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=UTC)
     return dt.astimezone(UTC)
+
+
+def _anchor_end(args_end: str | None) -> datetime:
+    if args_end:
+        return _parse_dt(args_end)
+    now_utc = datetime.now(tz=UTC)
+    return datetime(now_utc.year, now_utc.month, now_utc.day, tzinfo=UTC)
+
+
+def _window_ranges(
+    *,
+    anchor_end: datetime,
+    window_days: int,
+    step_days: int,
+    windows: int,
+) -> list[tuple[datetime, datetime]]:
+    if step_days <= 0 or window_days <= 0:
+        raise ValueError("window_days and step_days must be positive")
+    if step_days > window_days:
+        raise ValueError("step_days must be <= window_days")
+    ranges: list[tuple[datetime, datetime]] = []
+    for idx in range(windows):
+        window_end = anchor_end - timedelta(days=idx * step_days)
+        window_start = window_end - timedelta(days=window_days)
+        ranges.append((window_start, window_end))
+    return ranges
 
 
 def _serialize(value: Any) -> Any:
@@ -316,6 +343,8 @@ async def run_backtest(
     mean_reversion_trend_window: int | None = None,
     mean_reversion_trend_threshold: float | None = None,
     mean_reversion_trend_override_z: float | None = None,
+    candles_override: Sequence[Any] | None = None,
+    quality_report_override: Any | None = None,
 ) -> tuple[dict[str, Any], str]:
     config = _load_profile_config(profile)
     config.symbols = [symbol]
@@ -352,12 +381,15 @@ async def run_backtest(
         volume_anomaly_std=volume_anomaly_std,
     )
 
-    candles = await data_provider.get_candles(
-        symbol=symbol,
-        granularity=granularity,
-        start=start,
-        end=end,
-    )
+    if candles_override is None:
+        candles = await data_provider.get_candles(
+            symbol=symbol,
+            granularity=granularity,
+            start=start,
+            end=end,
+        )
+    else:
+        candles = list(candles_override)
     candles = sorted(candles, key=lambda c: c.ts)
     if not candles:
         raise RuntimeError(f"No candles returned for {symbol} {granularity} {start}..{end}")
@@ -438,7 +470,11 @@ async def run_backtest(
     stats = calculate_trade_statistics(broker)
     broker_stats = broker.get_statistics()
 
-    quality_report = data_provider.get_quality_report(symbol, granularity)
+    quality_report = (
+        quality_report_override
+        if quality_report_override is not None
+        else data_provider.get_quality_report(symbol, granularity)
+    )
 
     gate_results = _evaluate_pillar_2_gates(
         risk_metrics=risk,
@@ -647,6 +683,34 @@ def _parse_args() -> argparse.Namespace:
         default=None,
         help="Allow counter-trend entries when abs(z-score) >= this value",
     )
+    parser.add_argument(
+        "--walk-forward",
+        action="store_true",
+        help="Run walk-forward evaluation with rolling windows",
+    )
+    parser.add_argument(
+        "--wf-windows",
+        type=int,
+        default=6,
+        help="Number of walk-forward windows (default: 6)",
+    )
+    parser.add_argument(
+        "--wf-window-days",
+        type=int,
+        default=90,
+        help="Window size in days (default: 90)",
+    )
+    parser.add_argument(
+        "--wf-step-days",
+        type=int,
+        default=30,
+        help="Step size in days (default: 30)",
+    )
+    parser.add_argument(
+        "--wf-require-all-pass",
+        action="store_true",
+        help="Exit non-zero if any walk-forward window fails",
+    )
     return parser.parse_args()
 
 
@@ -659,6 +723,7 @@ def main() -> int:
     symbol = args.symbol or (config.symbols[0] if config.symbols else "BTC-USD")
     granularity = args.granularity
 
+    anchor_end = _anchor_end(args.end)
     end = _parse_dt(args.end) if args.end else datetime.now(tz=UTC)
     start = _parse_dt(args.start) if args.start else end - timedelta(days=int(args.days))
 
@@ -677,6 +742,236 @@ def main() -> int:
         enable_shorts = True
     elif args.disable_shorts:
         enable_shorts = False
+
+    if args.walk_forward:
+        windows = _window_ranges(
+            anchor_end=anchor_end,
+            window_days=args.wf_window_days,
+            step_days=args.wf_step_days,
+            windows=args.wf_windows,
+        )
+        full_start = min(window_start for window_start, _ in windows)
+        full_end = max(window_end for _, window_end in windows)
+
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        run_stamp = datetime.now(tz=UTC).strftime("%Y%m%d_%H%M%S")
+        wf_dir = output_dir / f"walk_forward_{run_stamp}"
+        wf_dir.mkdir(parents=True, exist_ok=True)
+
+        config.symbols = [symbol]
+        if args.strategy_type is not None:
+            config.strategy_type = cast(StrategyType, args.strategy_type)
+        if enable_shorts is not None:
+            config.enable_shorts = enable_shorts
+            config.mean_reversion.enable_shorts = enable_shorts
+
+        if args.mean_reversion_entry is not None:
+            config.mean_reversion.z_score_entry_threshold = args.mean_reversion_entry
+        if args.mean_reversion_exit is not None:
+            config.mean_reversion.z_score_exit_threshold = args.mean_reversion_exit
+        if args.mean_reversion_window is not None:
+            config.mean_reversion.lookback_window = args.mean_reversion_window
+        if args.mean_reversion_cooldown is not None:
+            config.mean_reversion.cooldown_bars = args.mean_reversion_cooldown
+        if args.mean_reversion_trend_filter:
+            config.mean_reversion.trend_filter_enabled = True
+        if args.mean_reversion_trend_window is not None:
+            config.mean_reversion.trend_window = args.mean_reversion_trend_window
+        if args.mean_reversion_trend_threshold is not None:
+            config.mean_reversion.trend_threshold_pct = args.mean_reversion_trend_threshold
+        if args.mean_reversion_trend_override_z is not None:
+            config.mean_reversion.trend_override_z_score = args.mean_reversion_trend_override_z
+
+        client = CoinbaseClient(api_mode=config.coinbase_api_mode)
+        data_provider = create_coinbase_data_provider(
+            client=client,
+            cache_dir=cache_dir,
+            validate_quality=True,
+            spike_threshold_pct=float(args.spike_threshold_pct),
+            volume_anomaly_std=float(args.volume_anomaly_std),
+        )
+
+        candles = asyncio.run(
+            data_provider.get_candles(
+                symbol=symbol,
+                granularity=granularity,
+                start=full_start,
+                end=full_end,
+            )
+        )
+        candles = sorted(candles, key=lambda c: c.ts)
+        if not candles:
+            raise SystemExit("No candles returned for walk-forward range")
+
+        quality_report = data_provider.get_quality_report(symbol, granularity)
+
+        summary_rows: list[dict[str, Any]] = []
+        pass_count = 0
+
+        config_overrides = {
+            "strategy_type": args.strategy_type,
+            "ensemble_profile": args.ensemble_profile,
+            "enable_shorts": enable_shorts,
+            "risk_free_rate": Decimal(str(args.risk_free_rate)),
+            "spike_threshold_pct": float(args.spike_threshold_pct),
+            "volume_anomaly_std": float(args.volume_anomaly_std),
+            "mean_reversion_entry": args.mean_reversion_entry,
+            "mean_reversion_exit": args.mean_reversion_exit,
+            "mean_reversion_window": args.mean_reversion_window,
+            "mean_reversion_cooldown": args.mean_reversion_cooldown,
+            "mean_reversion_trend_filter": args.mean_reversion_trend_filter,
+            "mean_reversion_trend_window": args.mean_reversion_trend_window,
+            "mean_reversion_trend_threshold": args.mean_reversion_trend_threshold,
+            "mean_reversion_trend_override_z": args.mean_reversion_trend_override_z,
+            "quality_report_override": quality_report,
+        }
+
+        summary_payload = {
+            "generated_at": _iso_utc(datetime.now(tz=UTC)),
+            "profile": profile,
+            "symbol": symbol,
+            "granularity": granularity,
+            "anchor_end": _iso_utc(anchor_end),
+            "window_days": args.wf_window_days,
+            "step_days": args.wf_step_days,
+            "windows": args.wf_windows,
+            "pass_count": 0,
+            "total_windows": 0,
+            "pass_rate": 0.0,
+            "rows": [],
+            "strategy": {
+                "strategy_type": args.strategy_type,
+                "ensemble_profile": args.ensemble_profile,
+                "mean_reversion_entry": args.mean_reversion_entry,
+                "mean_reversion_exit": args.mean_reversion_exit,
+                "mean_reversion_window": args.mean_reversion_window,
+                "mean_reversion_cooldown": args.mean_reversion_cooldown,
+                "mean_reversion_trend_filter": args.mean_reversion_trend_filter,
+                "mean_reversion_trend_window": args.mean_reversion_trend_window,
+                "mean_reversion_trend_threshold": args.mean_reversion_trend_threshold,
+                "mean_reversion_trend_override_z": args.mean_reversion_trend_override_z,
+            },
+        }
+
+        for idx, (window_start, window_end) in enumerate(windows):
+            window_candles = [
+                candle for candle in candles if window_start <= candle.ts < window_end
+            ]
+            if not window_candles:
+                raise SystemExit(f"No candles for window {idx}")
+
+            payload, summary = asyncio.run(
+                run_backtest(
+                    profile=profile,
+                    symbol=symbol,
+                    granularity=granularity,
+                    start=window_start,
+                    end=window_end,
+                    initial_equity_usd=initial_equity,
+                    fee_tier=fee_tier,
+                    position_fraction=position_fraction,
+                    max_leverage=int(args.max_leverage),
+                    cache_dir=cache_dir,
+                    candles_override=window_candles,
+                    **config_overrides,
+                )
+            )
+
+            run_id = payload["run_id"]
+            window_dir = wf_dir / (f"window_{idx:02d}_{window_start:%Y%m%d}_{window_end:%Y%m%d}")
+            window_dir.mkdir(parents=True, exist_ok=True)
+
+            json_path = window_dir / f"{run_id}.json"
+            txt_path = window_dir / f"{run_id}.txt"
+            json_path.write_text(json.dumps(payload, indent=2, sort_keys=True))
+            txt_path.write_text(summary)
+
+            gates = payload.get("pillar_2_gates", {})
+            failed_gates = [
+                gate_id
+                for gate_id, gate_value in gates.items()
+                if isinstance(gate_value, dict) and not gate_value.get("pass", False)
+            ]
+
+            row = {
+                "window_start": _iso_utc(window_start),
+                "window_end": _iso_utc(window_end),
+                "candles_loaded": payload.get("candles_loaded", 0),
+                "total_trades": payload.get("trade_statistics", {}).get("total_trades"),
+                "trades_per_100_bars": gates.get("trades_per_100_bars", {}).get("value"),
+                "profit_factor": payload.get("trade_statistics", {}).get("profit_factor"),
+                "net_profit_factor": payload.get("trade_statistics", {}).get("net_profit_factor"),
+                "fee_drag_per_trade": payload.get("trade_statistics", {}).get("fee_drag_per_trade"),
+                "sharpe_ratio": payload.get("risk_metrics", {}).get("sharpe_ratio"),
+                "max_drawdown_pct": payload.get("risk_metrics", {}).get("max_drawdown_pct"),
+                "overall_pass": gates.get("overall_pass", False),
+                "failed_gates": failed_gates,
+                "run_id": run_id,
+                "artifact_json": str(json_path.relative_to(wf_dir)),
+                "artifact_txt": str(txt_path.relative_to(wf_dir)),
+            }
+            summary_rows.append(row)
+            if gates.get("overall_pass", False):
+                pass_count += 1
+
+        summary_payload.update(
+            {
+                "pass_count": pass_count,
+                "total_windows": len(summary_rows),
+                "pass_rate": round(pass_count / len(summary_rows), 3) if summary_rows else 0.0,
+                "rows": summary_rows,
+            }
+        )
+
+        summary_json_path = wf_dir / "summary.json"
+        summary_md_path = wf_dir / "summary.md"
+        summary_json_path.write_text(json.dumps(summary_payload, indent=2, sort_keys=True))
+
+        header = (
+            "| Window Start | Window End | Candles | Trades | Trades/100 | Net PF | PF | "
+            "Fee Drag | Sharpe | Max DD | Pass | Failed Gates |\n"
+            "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n"
+        )
+        rows_md = []
+        for row in summary_rows:
+            rows_md.append(
+                "| {window_start} | {window_end} | {candles_loaded} | {total_trades} | "
+                "{trades_per_100_bars} | {net_profit_factor} | {profit_factor} | "
+                "{fee_drag_per_trade} | {sharpe_ratio} | {max_drawdown_pct} | {overall_pass} | "
+                "{failed_gates} |".format(
+                    window_start=row["window_start"],
+                    window_end=row["window_end"],
+                    candles_loaded=row["candles_loaded"],
+                    total_trades=row["total_trades"],
+                    trades_per_100_bars=row["trades_per_100_bars"],
+                    net_profit_factor=row["net_profit_factor"],
+                    profit_factor=row["profit_factor"],
+                    fee_drag_per_trade=row["fee_drag_per_trade"],
+                    sharpe_ratio=row["sharpe_ratio"],
+                    max_drawdown_pct=row["max_drawdown_pct"],
+                    overall_pass="yes" if row["overall_pass"] else "no",
+                    failed_gates=", ".join(row["failed_gates"]) if row["failed_gates"] else "-",
+                )
+            )
+
+        summary_md_path.write_text(
+            "\n".join(
+                [
+                    f"Walk-forward pass count: {pass_count}/{len(summary_rows)}",
+                    f"Pass rate: {summary_payload['pass_rate']}",
+                    "",
+                    header,
+                    *rows_md,
+                ]
+            )
+        )
+
+        print(f"Walk-forward summary saved: {summary_json_path}")
+        print(f"Walk-forward summary saved: {summary_md_path}")
+
+        if args.wf_require_all_pass and pass_count != len(summary_rows):
+            return 1
+        return 0
 
     payload, summary = asyncio.run(
         run_backtest(

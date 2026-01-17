@@ -589,9 +589,10 @@ NORMAL → REDUCE_ONLY → PAUSED → HALTED
 
 ## Performance & Observability
 
-- **Cycle Metrics**: persisted to `runtime_data/<profile>/metrics.json` and exposed via the
-  Prometheus exporter (`scripts/monitoring/export_metrics.py`). The live risk manager now emits
-  snapshot events consumed by dashboards and the monitoring stack.
+- **Cycle Metrics**: persisted to `runtime_data/<profile>/metrics.json` and `runtime_data/<profile>/events.db`,
+  exposed via the Prometheus exporter (`scripts/monitoring/export_metrics.py`) which reads events.db first,
+  falling back to metrics.json/events.jsonl when needed. The live risk manager emits snapshot events
+  consumed by dashboards and the monitoring stack.
 - **Account Snapshots**: periodic telemetry via `CoinbaseAccountManager` with fee/limit tracking.
 - **System Monitoring**: `src/gpt_trader/monitoring/system/` provides resource telemetry collectors used by
   the runtime guard manager and dashboards.

@@ -84,7 +84,7 @@ uv run gpt-trader orders preview --symbol BTC-USD --side buy --type market --qua
 ```bash
 # Export metrics
 uv run python scripts/monitoring/export_metrics.py \
-  --metrics-file runtime_data/prod/metrics.json
+  --profile prod --runtime-root .
 ```
 
 ## Configuration

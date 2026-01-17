@@ -43,8 +43,9 @@ its ML workflows.
   Kelly-style sizing helpers used by research/backtesting.
 - **Risk guards**: See `docs/RISK_INTEGRATION_GUIDE.md` for guard coverage and
   thresholds.
-- **Telemetry**: Metrics persist to `runtime_data/<profile>/metrics.json`; the
-  exporter in `scripts/monitoring/export_metrics.py` converts them to Prometheus.
+- **Telemetry**: Metrics persist to `runtime_data/<profile>/metrics.json` and
+  `runtime_data/<profile>/events.db`; the exporter in `scripts/monitoring/export_metrics.py`
+  reads events.db first and converts them to Prometheus.
 
 ## Module 4 – Development Workflow
 

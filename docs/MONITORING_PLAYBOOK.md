@@ -23,14 +23,17 @@ curl http://localhost:8080/health
 curl http://localhost:8080/metrics
 ```
 
-**Option B (legacy): Exporter script**
+**Option B (exporter script, events.db-first):**
 
 ```bash
 uv run python scripts/monitoring/export_metrics.py \
-  --metrics-file runtime_data/<profile>/metrics.json \
-  --events-file runtime_data/<profile>/events.jsonl \
+  --profile <profile> \
+  --runtime-root . \
   --host 0.0.0.0 --port 9000
 ```
+
+The exporter reads `runtime_data/<profile>/events.db` first and falls back to
+`runtime_data/<profile>/events.jsonl` if the DB is unavailable.
 
 **Exporter Endpoints:**
 - `/metrics` - Prometheus text format
@@ -93,7 +96,7 @@ scrape_configs:
       - targets: ['localhost:8080']  # health server /metrics
 ```
 
-If you use the legacy exporter script, target port `9000` instead.
+If you use the exporter script, target port `9000` instead.
 
 ## Alert Rules
 
@@ -149,7 +152,8 @@ Reports saved to: `runtime_data/{profile}/reports/daily_report_{date}.txt`
 Note: Daily reports read `runtime_data/<profile>/events.db` (canonical) and fall back to
 `runtime_data/<profile>/events.jsonl` for legacy runs. Metrics come from
 `runtime_data/<profile>/metrics.json` when present (otherwise the latest `cycle_metrics`
-event), and unfilled-order health uses `runtime_data/<profile>/orders.db`.
+event), and unfilled-order health uses `runtime_data/<profile>/orders.db`. The exporter
+prefers `events.db` and uses `events.jsonl` only as a fallback.
 
 ### Cron Job Setup
 
@@ -239,11 +243,12 @@ degradation_ok, degradation_details = check_degradation_state(degradation_state,
 ## Troubleshooting
 
 **No metrics in Prometheus:**
-- Check endpoint: `curl http://localhost:8080/metrics` (health server) or `http://localhost:9000/metrics` (legacy exporter)
+- Check endpoint: `curl http://localhost:8080/metrics` (health server) or `http://localhost:9000/metrics` (exporter)
+- Verify `runtime_data/<profile>/events.db` exists and is updating (JSONL is legacy fallback)
 - Verify Prometheus targets: `http://localhost:9090/targets`
 
 **Daily report has no data:**
-- Verify `runtime_data/<profile>/events.db` exists (preferred) or `events.jsonl` for legacy runs
+- Verify `runtime_data/<profile>/events.db` exists (canonical) or `events.jsonl` for legacy runs
 - Check `runtime_data/<profile>/metrics.json` (or ensure `cycle_metrics` events exist)
 - Confirm `runtime_data/<profile>/orders.db` has recent orders for unfilled-order health
 - Increase `--lookback-hours`

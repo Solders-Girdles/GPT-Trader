@@ -248,7 +248,7 @@ uv run python scripts/perps_dashboard.py --profile dev --refresh 5 --window-min 
 uv run python scripts/production_preflight.py --profile canary
 
 # Export Prometheus-compatible metrics
-uv run python scripts/monitoring/export_metrics.py --metrics-file runtime_data/prod/metrics.json
+uv run python scripts/monitoring/export_metrics.py --profile prod --runtime-root .
 ```
 
 ## Troubleshooting
@@ -331,7 +331,7 @@ After successful setup:
    - Gradually increase position sizes once telemetry looks healthy
 
 3. **Monitor Performance**:
-   - Use metrics exporter: `uv run python scripts/monitoring/export_metrics.py --metrics-file runtime_data/prod/metrics.json`
+   - Use metrics exporter: `uv run python scripts/monitoring/export_metrics.py --profile prod --runtime-root .`
    - Track logs in `${COINBASE_TRADER_LOG_DIR:-var/logs}/coinbase_trader.log`
    - Schedule regular performance and risk reviews
 

@@ -2,19 +2,19 @@
 
 ---
 status: draft
-last-updated: 2026-01-15
+last-updated: 2026-01-17
 ---
 
 ## Highest priority (right now)
 
-Make the readiness evidence loop real and automated:
-- Daily reports must be generated from canonical persistence (`runtime_data/<profile>/events.db`, `orders.db`) and include meaningful `health` + `risk` sections.
-- The preflight readiness gate must run against the latest daily report and fail loudly when thresholds are breached.
+Maintain the readiness evidence loop and keep liveness green:
+- Run canary sessions that write to `runtime_data/<profile>/events.db` and keep last_event_age_seconds <= 300.
+- Generate daily reports and preflight readiness from the canonical DB-backed telemetry.
 
 ## Current blockers
 
-- `uv run gpt-trader report daily` currently reads `runtime_data/<profile>/events.jsonl` + `metrics.json` (legacy) which are not produced in current runs, so reports are empty.
-- `make preflight-readiness` fails because `runtime_data/<profile>/reports/daily_report_*.json` does not exist yet.
+- Daily reports and readiness preflight now read from `runtime_data/<profile>/events.db` (with JSONL fallback), so the legacy JSONL/metrics pipeline is no longer blocking readiness signals.
+- Remaining blockers are operational (canary liveness, environment vars for preflight readiness, and clean guard runs).
 
 ## Next milestone: “Readiness Gate Operational” (P0)
 
@@ -23,17 +23,18 @@ Definition of done:
 - `make preflight-readiness PREFLIGHT_PROFILE=canary` passes when thresholds are met and fails when they’re exceeded.
 - Docs reflect the canonical runtime sources (`runtime_data/…`) and don’t depend on legacy `var/data/…` paths.
 
+Status: ✅ Achieved (2026-01-17). Remaining work is operational evidence collection.
+
 ## Work plan (two-week sprint)
+
+(Updated 2026-01-17: readiness gate is operational; focus on ops cadence.)
 
 ### Workstream A — Reporting & data plumbing (Backend)
 
 P0 tasks:
-- Update the daily report loaders to support SQLite (`events.db`) when JSONL is absent.
-  - Source of truth: `runtime_data/<profile>/events.db` (`events.timestamp`, `events.event_type`, `events.payload`).
-  - Normalize timestamps to ISO-8601 UTC for consistent filtering and sorting.
-  - Keep JSONL support for backwards compatibility.
-- Add unit tests covering DB-backed loads and timestamp normalization.
-- (Optional but recommended) If `metrics.json` is absent, derive equity/account snapshot from the newest “cycle metrics” event (or document the limitation clearly in the report output).
+- Daily report loaders now use SQLite (`events.db`) first with JSONL fallback, and metrics fall back to the latest `cycle_metrics` event when `metrics.json` is absent.
+- Unit tests cover DB-backed loads and timestamp normalization (kept for regression).
+- Monitoring exporter and dashboard now read from `runtime_data/<profile>/events.db` first.
 
 Acceptance checks:
 - `uv run gpt-trader report daily --profile dev --report-format json --output-format json --no-save` no longer prints “Events file not found” when `runtime_data/dev/events.db` exists.
@@ -42,10 +43,11 @@ Acceptance checks:
 ### Workstream B — Canary ops & evidence collection (Ops)
 
 Daily checklist:
-1. Run canary (dry-run OK): `uv run gpt-trader run --profile canary --dry-run`
-2. Generate report: `uv run gpt-trader report daily --profile canary --report-format both`
-3. Gate: `make preflight-readiness PREFLIGHT_PROFILE=canary`
-4. Record evidence path(s) in `docs/READINESS.md` (reference local paths; do not commit secrets or account data).
+1. Verify liveness: `make canary-liveness` (RED if last_event_age_seconds > 300)
+2. Run canary (dry-run OK): `uv run gpt-trader run --profile canary --dry-run`
+3. Generate report: `uv run gpt-trader report daily --profile canary --report-format both`
+4. Gate: `make preflight-readiness PREFLIGHT_PROFILE=canary`
+5. Record evidence path(s) in `docs/READINESS.md` (reference local paths; do not commit secrets or account data).
 
 Targets (from `docs/READINESS.md`, default thresholds):
 - `health.stale_marks == 0`

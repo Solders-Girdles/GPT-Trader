@@ -220,7 +220,7 @@ uv run gpt-trader tui                  # Mode selector
 uv run gpt-trader run --profile dev --tui  # Attach TUI to dev profile (optional)
 
 # Export Prometheus-compatible metrics
-uv run python scripts/monitoring/export_metrics.py --metrics-file runtime_data/prod/metrics.json
+uv run python scripts/monitoring/export_metrics.py --profile prod --runtime-root .
 ```
 
 ## Testing & Development

@@ -76,6 +76,7 @@ def mock_risk_config():
     c.ws_message_stale_seconds = 15
     c.ws_heartbeat_stale_seconds = 30
     c.ws_reconnect_pause_seconds = 10
+    c.kill_switch_enabled = False
     return c
 
 

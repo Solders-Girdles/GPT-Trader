@@ -25,6 +25,14 @@ Each pillar has measurable evidence so the decision is objective, repeatable, an
 - Event store: `runtime_data/<profile>/events.db` and `runtime_data/<profile>/orders.db`
 - Health endpoint: `http://localhost:8080/health` (if enabled)
 
+## 3-day GREEN streak log
+
+| Date (UTC) | Daily report path | Preflight path | Green? | Notes |
+| --- | --- | --- | --- | --- |
+| 2026-01-15 | `runtime_data/canary/reports/daily_report_2026-01-15.json` | `preflight_report_20260115_214038.json` | No | Preflight not green (view-only, env not set). |
+| 2026-01-16 | N/A | `preflight_report_20260116_000708.json` | No | Missing daily report; preflight still not green (can_trade=False). |
+| 2026-01-17 | `runtime_data/canary/reports/daily_report_2026-01-17.json` | `preflight_report_20260117_044647.json` | No | COINBASE_SANDBOX/COINBASE_API_MODE missing; readiness status NOT READY. |
+
 ## Readiness pillars (must-have)
 
 ### 1) Market data integrity

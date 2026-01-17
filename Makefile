@@ -50,6 +50,21 @@ canary-liveness:
 	if [ "$$age" -gt 300 ]; then echo "liveness_status=RED"; else echo "liveness_status=GREEN"; fi
 	@sqlite3 runtime_data/canary/events.db "select event_type, max(timestamp) as last_ts from events group by event_type order by last_ts desc limit 5;"
 
+canary-liveness-check:
+	@age=$$(sqlite3 runtime_data/canary/events.db "select coalesce(cast(round((julianday('now') - julianday(max(timestamp)))*86400) as integer), 999999) as last_event_age_seconds from events;"); \
+	echo "last_event_age_seconds=$$age"; \
+	if [ "$$age" -gt 300 ]; then echo "liveness_status=RED"; exit 1; else echo "liveness_status=GREEN"; fi
+
+canary-daily:
+	@$(MAKE) canary-liveness-check
+	uv run gpt-trader report daily --profile canary --report-format both
+	DRY_RUN=1 $(MAKE) preflight-readiness PREFLIGHT_PROFILE=canary
+	$(MAKE) readiness-window PREFLIGHT_PROFILE=canary READINESS_WINDOW_HOURS=24
+	@echo "daily_report_path=runtime_data/canary/reports/daily_report_$$(date -u +%F).json"
+	@latest_preflight=$$(ls -t preflight_report_*.json 2>/dev/null | head -1 || true); \
+	if [ -n "$$latest_preflight" ]; then echo "preflight_report_path=$$latest_preflight"; fi
+	@echo "Next: append/update docs/READINESS.md 3-day streak log entry."
+
 readiness-window:
 	uv run python scripts/readiness_window.py --profile $(PREFLIGHT_PROFILE) --hours $(READINESS_WINDOW_HOURS)
 

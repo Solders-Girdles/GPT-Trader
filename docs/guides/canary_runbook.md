@@ -44,6 +44,8 @@ Use these Make targets for day-to-day canary ops:
 - `make canary-liveness-check`
 - `make canary-runtime-info`
 - `make canary-decision-traces`
+- `make canary-watchdog` (auto-restart on sustained RED liveness; cooldown enforced to avoid loops)
+- `make canary-watchdog-once` (single poll; exit 0 when GREEN, 1 when RED)
 
 Key guarantees:
 - Liveness is based only on `heartbeat`/`price_tick`; status is RED when age > 300s.

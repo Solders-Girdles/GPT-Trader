@@ -3,7 +3,7 @@
 	agent-naming agent-health agent-health-fast agent-health-full agent-chaos-smoke agent-chaos-week \
 	agent-regenerate agent-docs-links canary-liveness canary-liveness-check canary-daily canary-decision-traces \
 	canary-decision-trace-probe canary-runtime-info canary-stop canary-start \
-	canary-restart canary-status ops-controls-smoke
+	canary-restart canary-status canary-watchdog canary-watchdog-once ops-controls-smoke
 
 COMPOSE_DIR=deploy/gpt_trader/docker
 COMPOSE_FILE=$(COMPOSE_DIR)/docker-compose.yaml
@@ -85,6 +85,12 @@ canary-start:
 
 canary-restart:
 	uv run python scripts/ops/canary_process.py --profile canary restart
+
+canary-watchdog:
+	uv run python scripts/ops/canary_watchdog.py --profile canary --auto-restart
+
+canary-watchdog-once:
+	uv run python scripts/ops/canary_watchdog.py --profile canary --once
 
 ops-controls-smoke:
 	uv run python scripts/ops/controls_smoke.py

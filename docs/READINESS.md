@@ -146,8 +146,8 @@ Thresholds:
 - Alerts include actionable remediation notes
 
 Checklist:
-- [ ] Evidence path(s):
-- [ ] Notes:
+- [ ] Evidence path(s): `runtime_data/canary/events.db`
+- [ ] Notes: 2026-01-17T09:38:24+00:00 ops probe (row id 805) reason="ops: decision_id probe (quantity_override=0)" recorded decision_id=Profile.CANARY_1768642704649_29ef84; blocked at quantity_zero (no order placed).
 
 ### 7) Operational controls
 

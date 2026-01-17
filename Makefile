@@ -36,9 +36,11 @@ smoke:
 	uv run python scripts/production_preflight.py --profile dev --verbose
 
 preflight:
+	BROKER="$${BROKER:-coinbase}" COINBASE_SANDBOX="$${COINBASE_SANDBOX:-0}" COINBASE_API_MODE="$${COINBASE_API_MODE:-advanced}" \
 	uv run python scripts/production_preflight.py --profile canary --verbose
 
 preflight-readiness:
+	BROKER="$${BROKER:-coinbase}" COINBASE_SANDBOX="$${COINBASE_SANDBOX:-0}" COINBASE_API_MODE="$${COINBASE_API_MODE:-advanced}" \
 	GPT_TRADER_READINESS_REPORT="$(READINESS_REPORT_DIR)" uv run python scripts/production_preflight.py \
 		--profile $(PREFLIGHT_PROFILE) --verbose
 

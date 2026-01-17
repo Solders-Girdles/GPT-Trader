@@ -2,7 +2,8 @@
 	readiness-window legacy-bundle agent-setup agent-check agent-impact agent-impact-full agent-map agent-tests agent-risk \
 	agent-naming agent-health agent-health-fast agent-health-full agent-chaos-smoke agent-chaos-week \
 	agent-regenerate agent-docs-links canary-liveness canary-liveness-check canary-daily canary-decision-traces \
-	canary-decision-trace-probe canary-runtime-info
+	canary-decision-trace-probe canary-runtime-info canary-stop canary-start \
+	canary-restart canary-status
 
 COMPOSE_DIR=deploy/gpt_trader/docker
 COMPOSE_FILE=$(COMPOSE_DIR)/docker-compose.yaml
@@ -72,6 +73,18 @@ canary-decision-trace-probe:
 
 canary-runtime-info:
 	uv run python scripts/ops/runtime_fingerprint.py --profile canary
+
+canary-status:
+	uv run python scripts/ops/canary_process.py --profile canary status
+
+canary-stop:
+	uv run python scripts/ops/canary_process.py --profile canary stop
+
+canary-start:
+	uv run python scripts/ops/canary_process.py --profile canary start
+
+canary-restart:
+	uv run python scripts/ops/canary_process.py --profile canary restart
 
 readiness-window:
 	uv run python scripts/readiness_window.py --profile $(PREFLIGHT_PROFILE) --hours $(READINESS_WINDOW_HOURS)

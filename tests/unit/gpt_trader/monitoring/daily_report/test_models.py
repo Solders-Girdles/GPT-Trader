@@ -32,15 +32,17 @@ def _create_daily_report(
     symbol_performance: list[SymbolPerformance] | None = None,
     guard_triggers: dict[str, int] | None = None,
     circuit_breaker_state: dict | None = None,
+    equity: float | None = 100000.0,
+    equity_change_pct: float | None = 0.5,
 ) -> DailyReport:
     """Create a test DailyReport instance."""
     return DailyReport(
         date="2024-01-15",
         profile="PROD",
         generated_at="2024-01-15T12:00:00",
-        equity=100000.0,
+        equity=equity,
         equity_change=500.0,
-        equity_change_pct=0.5,
+        equity_change_pct=equity_change_pct,
         realized_pnl=400.0,
         unrealized_pnl=100.0,
         funding_pnl=-25.0,
@@ -157,6 +159,13 @@ class TestDailyReportToDict:
         assert result["account"]["equity_change"] == 500.0
         assert result["account"]["equity_change_pct"] == 0.5
 
+    def test_account_section_with_missing_equity(self) -> None:
+        report = _create_daily_report(equity=None, equity_change_pct=None)
+        result = report.to_dict()
+        assert result["account"]["equity"] is None
+        assert result["account"]["equity_change"] == 500.0
+        assert result["account"]["equity_change_pct"] is None
+
     def test_pnl_section(self) -> None:
         report = _create_daily_report()
         result = report.to_dict()
@@ -251,6 +260,12 @@ class TestDailyReportToText:
         result = report.to_text()
         assert "ACCOUNT SUMMARY" in result
         assert "Equity:" in result
+
+    def test_account_summary_handles_missing_equity(self) -> None:
+        report = _create_daily_report(equity=None, equity_change_pct=None)
+        result = report.to_text()
+        assert "Equity:          N/A" in result
+        assert "Change (24h):    $+500.00 (N/A)" in result
 
     def test_contains_pnl_breakdown(self) -> None:
         report = _create_daily_report()

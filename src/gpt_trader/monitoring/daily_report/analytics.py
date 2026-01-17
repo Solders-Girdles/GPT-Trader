@@ -10,8 +10,17 @@ from .models import SymbolPerformance
 def calculate_pnl_metrics(
     events: list[dict[str, Any]],
     current_metrics: dict[str, Any],
-) -> dict[str, float]:
-    equity = float(current_metrics.get("account", {}).get("equity", 0))
+) -> dict[str, float | None]:
+    equity: float | None
+    account = current_metrics.get("account")
+    if isinstance(account, dict) and "equity" in account:
+        try:
+            equity = float(account["equity"])
+        except (TypeError, ValueError):
+            equity = None
+    else:
+        equity = None
+
     realized = 0.0
     unrealized = 0.0
     funding = 0.0
@@ -28,9 +37,13 @@ def calculate_pnl_metrics(
             fees += float(event.get("fee", 0))
 
     total_pnl = realized + unrealized
-    prev_equity = equity - total_pnl
     equity_change = total_pnl
-    equity_change_pct = (equity_change / prev_equity * 100) if prev_equity > 0 else 0
+
+    if equity is None:
+        equity_change_pct = None
+    else:
+        prev_equity = equity - total_pnl
+        equity_change_pct = (equity_change / prev_equity * 100) if prev_equity > 0 else 0
 
     return {
         "equity": equity,

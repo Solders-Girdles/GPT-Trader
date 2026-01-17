@@ -31,9 +31,9 @@ class DailyReport:
     date: str
     profile: str
     generated_at: str
-    equity: float
+    equity: float | None
     equity_change: float
-    equity_change_pct: float
+    equity_change_pct: float | None
     realized_pnl: float
     unrealized_pnl: float
     funding_pnl: float
@@ -124,6 +124,10 @@ class DailyReport:
 
     def to_text(self) -> str:
         """Format as human-readable text report."""
+        equity_text = "N/A" if self.equity is None else f"${self.equity:,.2f}"
+        change_pct_text = (
+            "N/A" if self.equity_change_pct is None else f"{self.equity_change_pct:+.2f}%"
+        )
         lines = [
             "=" * 80,
             f"Daily Trading Report - {self.date}",
@@ -133,8 +137,8 @@ class DailyReport:
             "",
             "ACCOUNT SUMMARY",
             "-" * 80,
-            f"  Equity:          ${self.equity:,.2f}",
-            f"  Change (24h):    ${self.equity_change:+,.2f} ({self.equity_change_pct:+.2f}%)",
+            f"  Equity:          {equity_text}",
+            f"  Change (24h):    ${self.equity_change:+,.2f} ({change_pct_text})",
             "",
             "PnL BREAKDOWN",
             "-" * 80,

@@ -9,7 +9,10 @@ from pathlib import Path
 
 import pytest
 
-from gpt_trader.preflight.checks.readiness import check_readiness_report
+from gpt_trader.preflight.checks.readiness import (
+    DEFAULT_LIVENESS_EVENT_TYPES,
+    check_readiness_report,
+)
 from gpt_trader.preflight.core import PreflightCheck
 
 
@@ -37,20 +40,28 @@ def _write_report(report_dir: Path, *, profile: str = "dev") -> Path:
     return report_path
 
 
-def _write_events_db(events_db_path: Path, *, last_timestamp: datetime | None) -> None:
+def _write_events_db(
+    events_db_path: Path,
+    *,
+    events: list[tuple[str, datetime]] | None = None,
+) -> None:
     events_db_path.parent.mkdir(parents=True, exist_ok=True)
     with sqlite3.connect(events_db_path) as connection:
         connection.execute(
             "CREATE TABLE events (id INTEGER PRIMARY KEY, timestamp TEXT, event_type TEXT)"
         )
-        if last_timestamp is not None:
-            connection.execute(
-                "INSERT INTO events (timestamp, event_type) VALUES (?, ?)",
+        if not events:
+            return
+        connection.executemany(
+            "INSERT INTO events (timestamp, event_type) VALUES (?, ?)",
+            [
                 (
-                    last_timestamp.strftime("%Y-%m-%d %H:%M:%S"),
-                    "heartbeat",
-                ),
-            )
+                    timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+                    event_type,
+                )
+                for event_type, timestamp in events
+            ],
+        )
 
 
 def test_readiness_liveness_passes_when_recent(
@@ -62,7 +73,9 @@ def test_readiness_liveness_passes_when_recent(
 
     _write_events_db(
         runtime_root / "events.db",
-        last_timestamp=datetime.now(timezone.utc) - timedelta(seconds=1),
+        events=[
+            ("heartbeat", datetime.now(timezone.utc) - timedelta(seconds=1)),
+        ],
     )
 
     monkeypatch.delenv("EVENT_STORE_ROOT", raising=False)
@@ -83,7 +96,9 @@ def test_readiness_liveness_fails_when_stale(
 
     _write_events_db(
         runtime_root / "events.db",
-        last_timestamp=datetime.now(timezone.utc) - timedelta(seconds=120),
+        events=[
+            ("heartbeat", datetime.now(timezone.utc) - timedelta(seconds=120)),
+        ],
     )
 
     monkeypatch.delenv("EVENT_STORE_ROOT", raising=False)
@@ -109,7 +124,7 @@ def test_readiness_liveness_fails_when_events_db_missing(
 
     checker = PreflightCheck(profile="dev")
     assert check_readiness_report(checker) is False
-    assert any("no events in" in message for message in checker.errors)
+    assert any("no heartbeat/price_tick events" in message for message in checker.errors)
 
 
 def test_readiness_liveness_warn_only_allows_stale(
@@ -121,7 +136,9 @@ def test_readiness_liveness_warn_only_allows_stale(
 
     _write_events_db(
         runtime_root / "events.db",
-        last_timestamp=datetime.now(timezone.utc) - timedelta(seconds=120),
+        events=[
+            ("heartbeat", datetime.now(timezone.utc) - timedelta(seconds=120)),
+        ],
     )
 
     monkeypatch.delenv("EVENT_STORE_ROOT", raising=False)
@@ -133,3 +150,59 @@ def test_readiness_liveness_warn_only_allows_stale(
     checker = PreflightCheck(profile="dev")
     assert check_readiness_report(checker) is True
     assert any("Readiness liveness" in message for message in checker.warnings)
+
+
+def test_readiness_liveness_ignores_decision_trace(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    runtime_root = tmp_path / "runtime_data" / "dev"
+    report_dir = runtime_root / "reports"
+    _write_report(report_dir, profile="dev")
+
+    now = datetime.now(timezone.utc)
+    _write_events_db(
+        runtime_root / "events.db",
+        events=[
+            ("order_decision_trace", now - timedelta(seconds=1)),
+            ("heartbeat", now - timedelta(seconds=600)),
+            ("price_tick", now - timedelta(seconds=600)),
+        ],
+    )
+
+    monkeypatch.delenv("EVENT_STORE_ROOT", raising=False)
+    monkeypatch.setenv("GPT_TRADER_RUNTIME_ROOT", str(tmp_path))
+    monkeypatch.setenv("GPT_TRADER_READINESS_REPORT", str(report_dir))
+    monkeypatch.setenv("GPT_TRADER_READINESS_LIVENESS_MAX_AGE_SECONDS", "300")
+
+    checker = PreflightCheck(profile="dev")
+    assert check_readiness_report(checker) is False
+    assert any("Readiness liveness" in message for message in checker.errors)
+
+
+def test_readiness_liveness_passes_with_price_tick_only(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    runtime_root = tmp_path / "runtime_data" / "dev"
+    report_dir = runtime_root / "reports"
+    _write_report(report_dir, profile="dev")
+
+    now = datetime.now(timezone.utc)
+    _write_events_db(
+        runtime_root / "events.db",
+        events=[
+            ("price_tick", now - timedelta(seconds=20)),
+        ],
+    )
+
+    monkeypatch.delenv("EVENT_STORE_ROOT", raising=False)
+    monkeypatch.setenv("GPT_TRADER_RUNTIME_ROOT", str(tmp_path))
+    monkeypatch.setenv("GPT_TRADER_READINESS_REPORT", str(report_dir))
+    monkeypatch.setenv("GPT_TRADER_READINESS_LIVENESS_MAX_AGE_SECONDS", "300")
+
+    checker = PreflightCheck(profile="dev")
+    assert check_readiness_report(checker) is True
+    assert any("Readiness liveness" in message for message in checker.successes)
+
+
+def test_readiness_liveness_default_event_types_include_price_tick() -> None:
+    assert DEFAULT_LIVENESS_EVENT_TYPES == ("heartbeat", "price_tick")

@@ -75,18 +75,27 @@ def _parse_timestamp(raw: str | None) -> datetime | None:
     return parsed.astimezone(timezone.utc)
 
 
-def _fetch_last_event(path: Path) -> tuple[dict[str, Any] | None, str | None]:
+DEFAULT_LIVENESS_EVENT_TYPES = ("heartbeat", "price_tick")
+
+
+def _fetch_last_liveness_event(
+    path: Path,
+    event_types: tuple[str, ...] = DEFAULT_LIVENESS_EVENT_TYPES,
+) -> tuple[dict[str, Any] | None, str | None]:
     try:
         uri = f"file:{path.as_posix()}?mode=ro"
         with sqlite3.connect(uri, uri=True, timeout=5.0) as connection:
             connection.row_factory = sqlite3.Row
+            placeholders = ",".join("?" for _ in event_types)
             row = connection.execute(
-                """
+                f"""
                 SELECT id, timestamp, event_type
                 FROM events
+                WHERE event_type IN ({placeholders})
                 ORDER BY datetime(timestamp) DESC, id DESC
                 LIMIT 1
-                """
+                """,
+                event_types,
             ).fetchone()
     except sqlite3.Error as exc:
         return None, f"Failed to read events DB: {exc}"
@@ -99,12 +108,15 @@ def _fetch_last_event(path: Path) -> tuple[dict[str, Any] | None, str | None]:
         return None, None
 
     age_seconds = max(0.0, (datetime.now(timezone.utc) - timestamp).total_seconds())
-    return {
-        "id": int(row["id"]),
-        "timestamp": timestamp.isoformat().replace("+00:00", "Z"),
-        "event_type": str(row["event_type"]),
-        "age_seconds": age_seconds,
-    }, None
+    return (
+        {
+            "id": int(row["id"]),
+            "timestamp": timestamp.isoformat().replace("+00:00", "Z"),
+            "event_type": str(row["event_type"]),
+            "age_seconds": age_seconds,
+        },
+        None,
+    )
 
 
 def _resolve_event_store_path(profile: str, report_path: Path) -> Path:
@@ -227,7 +239,7 @@ def check_readiness_report(checker: PreflightCheck) -> bool:
     event_store_path = _resolve_event_store_path(checker.profile, report_path)
     last_event, last_event_error = (None, None)
     if event_store_path.exists():
-        last_event, last_event_error = _fetch_last_event(event_store_path)
+        last_event, last_event_error = _fetch_last_liveness_event(event_store_path)
     if last_event_error:
         if warn_only:
             checker.log_warning(last_event_error)
@@ -235,7 +247,7 @@ def check_readiness_report(checker: PreflightCheck) -> bool:
             checker.log_error(last_event_error)
             all_good = False
     if last_event is None:
-        message = f"Readiness liveness: no events in {event_store_path}"
+        message = "Readiness liveness: no heartbeat/price_tick events in " f"{event_store_path}"
         if warn_only:
             checker.log_warning(message)
         else:
@@ -244,10 +256,13 @@ def check_readiness_report(checker: PreflightCheck) -> bool:
     else:
         max_age = thresholds["liveness_max_age_seconds"]
         age_seconds = float(last_event.get("age_seconds", 0.0) or 0.0)
+        event_type = last_event.get("event_type", "event")
         if age_seconds <= max_age:
-            checker.log_success(f"Readiness liveness: {int(age_seconds)}s <= {max_age}s")
+            checker.log_success(
+                f"Readiness liveness ({event_type}): {int(age_seconds)}s <= {max_age}s"
+            )
         else:
-            message = f"Readiness liveness: {int(age_seconds)}s > {max_age}s"
+            message = f"Readiness liveness ({event_type}): {int(age_seconds)}s > {max_age}s"
             if warn_only:
                 checker.log_warning(message)
             else:

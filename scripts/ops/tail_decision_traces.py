@@ -14,7 +14,7 @@ from typing import Any
 class DecisionTraceRow:
     timestamp: str
     symbol: str | None
-    action: str | None
+    side: str | None
     reason: str | None
     decision_id: str | None
 
@@ -40,6 +40,13 @@ def _coerce_str(value: Any) -> str | None:
     if isinstance(value, str):
         return value
     return str(value)
+
+
+def _resolve_decision_id(payload: dict[str, Any]) -> str | None:
+    decision_id = _coerce_str(payload.get("decision_id"))
+    if decision_id:
+        return decision_id
+    return _coerce_str(payload.get("client_order_id"))
 
 
 def _parse_timestamp(value: str) -> str:
@@ -85,9 +92,9 @@ def _read_traces(events_db: Path, limit: int) -> list[DecisionTraceRow]:
                 DecisionTraceRow(
                     timestamp=timestamp,
                     symbol=_coerce_str(payload.get("symbol")),
-                    action=_coerce_str(payload.get("action")),
+                    side=_coerce_str(payload.get("side")),
                     reason=_coerce_str(payload.get("reason")),
-                    decision_id=_coerce_str(payload.get("decision_id")),
+                    decision_id=_resolve_decision_id(payload),
                 )
             )
         return rows
@@ -110,10 +117,10 @@ def main() -> int:
     print(f"rows={len(rows)}")
     for row in rows:
         symbol = row.symbol or "-"
-        action = row.action or "-"
+        side = row.side or "-"
         decision_id = row.decision_id or "-"
         reason = (row.reason or "-").replace("\n", " ").strip()
-        print(f"{row.timestamp} | {symbol} | {action} | {decision_id} | {reason}")
+        print(f"{row.timestamp} | {symbol} | {side} | {decision_id} | {reason}")
     return 0
 
 

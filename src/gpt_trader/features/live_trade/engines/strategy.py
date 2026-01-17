@@ -2010,6 +2010,7 @@ class TradingEngine(BaseEngine):
         is_reducing = self._is_reduce_only_order(current_pos, side)
         reduce_only_flag = is_reducing
 
+        decision_id = self._order_submitter.generate_client_order_id(None)
         trace = OrderDecisionTrace(
             symbol=symbol,
             side=side.value,
@@ -2019,6 +2020,7 @@ class TradingEngine(BaseEngine):
             reduce_only=reduce_only_requested,
             reduce_only_final=reduce_only_flag,
             reason=decision.reason,
+            decision_id=decision_id,
             bot_id=str(self.context.bot_id) if self.context.bot_id is not None else None,
         )
 
@@ -2108,8 +2110,6 @@ class TradingEngine(BaseEngine):
             return result
 
         # Place order via OrderSubmitter for proper ID tracking and telemetry
-        submit_id = self._order_submitter.generate_client_order_id(None)
-        trace.client_order_id = submit_id
         order_id = await asyncio.to_thread(
             self._order_submitter.submit_order,
             symbol=symbol,
@@ -2122,7 +2122,7 @@ class TradingEngine(BaseEngine):
             tif=self.context.config.time_in_force,
             reduce_only=reduce_only_flag,
             leverage=None,
-            client_order_id=submit_id,
+            client_order_id=decision_id,
         )
 
         # Notify on successful order placement

@@ -78,8 +78,9 @@ class StructuredJSONFormatter(logging.Formatter):
             log_entry["stack_trace"] = record.stack_info
 
         # Extract extra fields, including those from StructuredLogger
-        if hasattr(record, "extra"):  # StructuredLogger passes extra fields here
-            for key, value in record.extra.items():
+        extra = getattr(record, "extra", None)
+        if isinstance(extra, dict):
+            for key, value in extra.items():
                 if key not in log_entry:  # Avoid overwriting standard fields
                     log_entry[key] = value
 
@@ -139,17 +140,20 @@ class StructuredJSONFormatter(logging.Formatter):
         return data
 
     SENSITIVE_KEYS = {
-        "api_key",
-        "private_key",
-        "secret",
-        "password",
-        "token",
         "access_token",
+        "api_key",
+        "apikey",
         "authorization",
         "cookie",
         "credentials",
         "key_name",
         "passphrase",
+        "password",
+        "private_key",
+        "privatekey",
+        "privatekeypem",
+        "secret",
+        "token",
     }
 
     def _format_timestamp(self, created: float) -> str:
@@ -236,22 +240,22 @@ class StructuredJSONFormatter(logging.Formatter):
 class DecimalEncoder(json.JSONEncoder):
     """JSON encoder that handles Decimal objects."""
 
-    def default(self, obj: Any) -> Any:
+    def default(self, o: Any) -> Any:
         """Handle Decimal objects by converting them to float or string.
 
         Args:
-            obj: Object to encode
+            o: Object to encode
 
         Returns:
             JSON-serializable representation of the object
         """
-        if isinstance(obj, Decimal):
+        if isinstance(o, Decimal):
             # For very large or very small decimals, use string representation
             # to avoid precision loss
-            if obj.adjusted() > 15 or obj.adjusted() < -15:
-                return str(obj)
-            return float(obj)
-        return super().default(obj)
+            if o.adjusted() > 15 or o.adjusted() < -15:
+                return str(o)
+            return float(o)
+        return super().default(o)
 
 
 class StructuredJSONFormatterWithTimestamp(StructuredJSONFormatter):

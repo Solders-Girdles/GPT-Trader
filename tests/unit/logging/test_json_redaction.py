@@ -21,6 +21,8 @@ class TestJSONRedaction(unittest.TestCase):
         # Add sensitive data to extra fields
         record.extra = {
             "api_key": "secret_key_value",
+            "apiKey": "camel_key",
+            "privateKey": "camel_private",
             "nested": {"private_key": "secret_private_key", "public_data": "visible"},
             "list_data": [{"token": "secret_token"}, {"other": "visible"}],
         }
@@ -30,6 +32,8 @@ class TestJSONRedaction(unittest.TestCase):
 
         # Verify redaction
         self.assertEqual(data["api_key"], "[REDACTED]")
+        self.assertEqual(data["apiKey"], "[REDACTED]")
+        self.assertEqual(data["privateKey"], "[REDACTED]")
         self.assertEqual(data["nested"]["private_key"], "[REDACTED]")
         self.assertEqual(data["nested"]["public_data"], "visible")
         self.assertEqual(data["list_data"][0]["token"], "[REDACTED]")

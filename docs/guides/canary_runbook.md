@@ -33,6 +33,23 @@ If `/health` or `/metrics` are unavailable, you may run Phase A but promotion is
 
 ## 1. Preflight Checks
 
+### 1.0 Make Targets (Preferred)
+
+Use these Make targets for day-to-day canary ops:
+
+- `make canary-status`
+- `make canary-restart`
+- `make canary-stop`
+- `make canary-start`
+- `make canary-liveness-check`
+- `make canary-runtime-info`
+- `make canary-decision-traces`
+
+Key guarantees:
+- Liveness is based only on `heartbeat`/`price_tick`; status is RED when age > 300s.
+- `make canary-restart` blocks until it observes new `heartbeat`/`price_tick` events and a new
+  `runtime_start` with `build_sha == $(git rev-parse HEAD)` (set via `GPT_TRADER_BUILD_SHA`).
+
 ### 1.1 Run Preflight Command
 
 ```bash

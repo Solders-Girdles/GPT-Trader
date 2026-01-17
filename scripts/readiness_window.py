@@ -8,7 +8,6 @@ from collections.abc import Sequence
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-
 DEFAULT_EVENT_TYPES = ("api_error", "guard_triggered")
 
 

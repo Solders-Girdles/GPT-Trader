@@ -8,7 +8,7 @@ individual validation steps and CLI orchestration.
 
 from __future__ import annotations
 
-from gpt_trader.preflight import PreflightCheck, run_preflight_cli
+from gpt_trader.preflight import run_preflight_cli
 
 
 def main() -> int:

@@ -8,7 +8,9 @@ from datetime import datetime, timezone
 
 from gpt_trader.monitoring.daily_report.loaders import (
     load_events_since,
+    load_liveness_snapshot,
     load_metrics,
+    load_runtime_fingerprint,
     load_unfilled_orders_count,
 )
 
@@ -173,3 +175,15 @@ def test_load_unfilled_orders_count_uses_threshold(tmp_path) -> None:
     )
 
     assert count == 1
+
+
+def test_load_liveness_snapshot_missing_db(tmp_path) -> None:
+    snapshot = load_liveness_snapshot(tmp_path / "missing.db")
+
+    assert snapshot is None
+
+
+def test_load_runtime_fingerprint_missing_db(tmp_path) -> None:
+    runtime = load_runtime_fingerprint(tmp_path / "missing.db")
+
+    assert runtime is None

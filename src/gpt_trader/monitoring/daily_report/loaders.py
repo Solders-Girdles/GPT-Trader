@@ -22,6 +22,9 @@ _TERMINAL_ORDER_STATUSES = {
     "failed",
 }
 
+_DEFAULT_LIVENESS_EVENT_TYPES = ("heartbeat", "price_tick")
+_DEFAULT_LIVENESS_MAX_AGE_SECONDS = 300
+
 
 def _parse_timestamp(value: Any) -> datetime | None:
     if value is None:
@@ -255,4 +258,130 @@ def load_unfilled_orders_count(
     return count
 
 
-__all__ = ["load_metrics", "load_events_since", "load_unfilled_orders_count"]
+def _fetch_latest_event(
+    event_type: str,
+    connection: sqlite3.Connection,
+) -> tuple[int | None, str | None, dict[str, Any] | None]:
+    row = connection.execute(
+        """
+        SELECT id, timestamp, payload
+        FROM events
+        WHERE event_type = ?
+        ORDER BY id DESC
+        LIMIT 1
+        """,
+        (event_type,),
+    ).fetchone()
+    if row is None:
+        return None, None, None
+    payload_raw = row["payload"]
+    payload = None
+    if isinstance(payload_raw, str):
+        try:
+            payload = json.loads(payload_raw)
+        except Exception:
+            payload = None
+    return row["id"], row["timestamp"], payload
+
+
+def load_liveness_snapshot(
+    events_db: Path,
+    *,
+    now: datetime | None = None,
+    max_age_seconds: int = _DEFAULT_LIVENESS_MAX_AGE_SECONDS,
+    event_types: tuple[str, ...] = _DEFAULT_LIVENESS_EVENT_TYPES,
+) -> dict[str, Any] | None:
+    if not events_db.exists():
+        return None
+    if now is None:
+        now = datetime.now(UTC)
+
+    latest: dict[str, dict[str, Any]] = {}
+    connection: sqlite3.Connection | None = None
+    try:
+        connection = sqlite3.connect(str(events_db))
+        connection.row_factory = sqlite3.Row
+        for event_type in event_types:
+            event_id, timestamp, _payload = _fetch_latest_event(
+                event_type,
+                connection,
+            )
+            ts = _parse_timestamp(timestamp)
+            if ts is None:
+                latest[event_type] = {
+                    "event_id": event_id,
+                    "timestamp": None,
+                    "age_seconds": None,
+                }
+                continue
+            age_seconds = max(int((now - ts).total_seconds()), 0)
+            latest[event_type] = {
+                "event_id": event_id,
+                "timestamp": to_iso_utc(ts),
+                "age_seconds": age_seconds,
+            }
+    except Exception as exc:
+        logger.error(f"Failed to load liveness snapshot: {exc}")
+        return None
+    finally:
+        if connection is not None:
+            connection.close()
+
+    age_values = [
+        details["age_seconds"]
+        for details in latest.values()
+        if isinstance(details.get("age_seconds"), int)
+    ]
+    if not age_values:
+        status = "UNKNOWN"
+    elif all(age <= max_age_seconds for age in age_values):
+        status = "GREEN"
+    else:
+        status = "RED"
+
+    return {
+        "status": status,
+        "max_age_seconds": max_age_seconds,
+        "event_types": list(event_types),
+        "events": latest,
+    }
+
+
+def load_runtime_fingerprint(events_db: Path) -> dict[str, Any] | None:
+    if not events_db.exists():
+        return None
+    connection: sqlite3.Connection | None = None
+    try:
+        connection = sqlite3.connect(str(events_db))
+        connection.row_factory = sqlite3.Row
+        event_id, timestamp, payload = _fetch_latest_event(
+            "runtime_start",
+            connection,
+        )
+    except Exception as exc:
+        logger.error(f"Failed to load runtime fingerprint: {exc}")
+        return None
+    finally:
+        if connection is not None:
+            connection.close()
+    if event_id is None:
+        return None
+    payload = payload if isinstance(payload, dict) else {}
+    runtime: dict[str, Any] = dict(payload)
+    runtime["event_id"] = event_id
+    runtime_ts = _parse_timestamp(timestamp) or _parse_timestamp(runtime.get("timestamp"))
+    runtime["timestamp"] = to_iso_utc(runtime_ts) if runtime_ts else None
+    if "private_key" in runtime:
+        runtime["private_key"] = "[REDACTED]"
+    if "privateKey" in runtime:
+        runtime["privateKey"] = "[REDACTED]"
+    return runtime
+
+
+__all__ = [
+    "load_metrics",
+    "load_events_since",
+    "load_unfilled_orders_count",
+    "load_liveness_snapshot",
+    "load_runtime_fingerprint",
+]

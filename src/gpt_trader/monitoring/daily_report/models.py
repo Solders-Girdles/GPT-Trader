@@ -58,10 +58,12 @@ class DailyReport:
     ws_reconnects: int
     unfilled_orders: int
     api_errors: int
+    liveness: dict[str, Any] | None = None
+    runtime: dict[str, Any] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
-        return {
+        payload = {
             "date": self.date,
             "profile": self.profile,
             "generated_at": self.generated_at,
@@ -121,6 +123,11 @@ class DailyReport:
                 "api_errors": self.api_errors,
             },
         }
+        if self.liveness is not None:
+            payload["health"]["liveness"] = self.liveness
+        if self.runtime is not None:
+            payload["runtime"] = self.runtime
+        return payload
 
     def to_text(self) -> str:
         """Format as human-readable text report."""

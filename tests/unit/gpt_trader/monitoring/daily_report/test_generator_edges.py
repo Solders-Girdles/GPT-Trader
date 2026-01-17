@@ -51,6 +51,14 @@ def test_generate_uses_expected_files_and_cutoff(tmp_path) -> None:
         patch("gpt_trader.monitoring.daily_report.generator.load_metrics") as mock_metrics,
         patch("gpt_trader.monitoring.daily_report.generator.load_events_since") as mock_events,
         patch(
+            "gpt_trader.monitoring.daily_report.generator.load_liveness_snapshot",
+            return_value=None,
+        ) as mock_liveness,
+        patch(
+            "gpt_trader.monitoring.daily_report.generator.load_runtime_fingerprint",
+            return_value=None,
+        ) as mock_runtime,
+        patch(
             "gpt_trader.monitoring.daily_report.generator.calculate_pnl_metrics",
             return_value=pnl_metrics,
         ),
@@ -78,6 +86,10 @@ def test_generate_uses_expected_files_and_cutoff(tmp_path) -> None:
 
     mock_metrics.assert_called_once_with(generator.metrics_file)
     mock_events.assert_called_once_with(generator.events_file, expected_cutoff)
+    assert mock_liveness.call_count == 0
+    assert mock_runtime.call_count == 0
+    assert report.liveness is None
+    assert report.runtime is None
     assert report.date == "2024-02-02"
     assert report.profile == "alpha"
 
@@ -115,6 +127,8 @@ def test_save_report_writes_json_and_text(tmp_path) -> None:
         ws_reconnects=0,
         unfilled_orders=0,
         api_errors=0,
+        liveness=None,
+        runtime=None,
     )
 
     output_dir = tmp_path / "reports"

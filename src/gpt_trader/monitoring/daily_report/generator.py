@@ -14,7 +14,13 @@ from .analytics import (
     calculate_symbol_metrics,
     calculate_trade_metrics,
 )
-from .loaders import load_events_since, load_metrics, load_unfilled_orders_count
+from .loaders import (
+    load_events_since,
+    load_liveness_snapshot,
+    load_metrics,
+    load_runtime_fingerprint,
+    load_unfilled_orders_count,
+)
 from .logging_utils import logger  # naming: allow
 from .models import DailyReport
 
@@ -56,11 +62,20 @@ class DailyReportGenerator:
             if orders_unfilled > current_unfilled:
                 health_metrics["unfilled_orders"] = orders_unfilled
 
+        liveness_snapshot = None
+        runtime_fingerprint = None
+        events_db = self.events_file.with_name("events.db")
+        if events_db.exists():
+            liveness_snapshot = load_liveness_snapshot(events_db, now=date)
+            runtime_fingerprint = load_runtime_fingerprint(events_db)
+
         return DailyReport(
             date=date.strftime("%Y-%m-%d"),
             profile=self.profile,
             generated_at=datetime.now(UTC).isoformat(),
             symbol_performance=symbol_metrics,
+            liveness=liveness_snapshot,
+            runtime=runtime_fingerprint,
             **pnl_metrics,  # type: ignore[arg-type]
             **trade_metrics,  # type: ignore[arg-type]
             **risk_metrics,

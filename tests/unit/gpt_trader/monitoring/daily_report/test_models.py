@@ -240,6 +240,15 @@ class TestDailyReportToDict:
         assert result["health"]["unfilled_orders"] == 0
         assert result["health"]["api_errors"] == 3
 
+    def test_health_liveness_and_runtime_fields(self) -> None:
+        report = _create_daily_report()
+        report.liveness = {"status": "GREEN"}
+        report.runtime = {"event_id": 123}
+        result = report.to_dict()
+
+        assert result["health"]["liveness"] == {"status": "GREEN"}
+        assert result["runtime"] == {"event_id": 123}
+
 
 class TestDailyReportToText:
     """Tests for DailyReport.to_text method."""

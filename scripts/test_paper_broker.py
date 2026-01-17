@@ -6,7 +6,9 @@ Verifies real market data fetching and simulated order execution.
 
 from __future__ import annotations
 
+import argparse
 import json
+import os
 import sys
 from decimal import Decimal
 from pathlib import Path
@@ -14,35 +16,66 @@ from pathlib import Path
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
+from gpt_trader.features.brokerages.coinbase.auth import create_cdp_jwt_auth
+from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
+from gpt_trader.features.brokerages.coinbase.credentials import (
+    ResolvedCoinbaseCredentials,
+    mask_key_name,
+    resolve_coinbase_credentials,
+)
 from gpt_trader.features.brokerages.paper import HybridPaperBroker
 
 
-def load_cdp_key(path: str | None = None) -> tuple[str, str]:
-    """Load CDP API key from secrets file."""
-    if path is None:
-        project_root = Path(__file__).parent.parent
-        path = str(project_root / "secrets" / "November2025APIKey.json")
-    with open(path) as f:
-        data = json.load(f)
-    return data["name"], data["privateKey"]
+def _parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="HybridPaperBroker connectivity test.",
+    )
+    parser.add_argument(
+        "--credentials-file",
+        default=os.getenv("COINBASE_CREDENTIALS_FILE"),
+        help="Path to Coinbase CDP JSON key file (default: $COINBASE_CREDENTIALS_FILE).",
+    )
+    return parser.parse_args()
+
+
+def _resolve_credentials(
+    credentials_file: str | None,
+) -> ResolvedCoinbaseCredentials:
+    if credentials_file:
+        os.environ["COINBASE_CREDENTIALS_FILE"] = credentials_file
+    creds = resolve_coinbase_credentials()
+    if not creds:
+        print("      ERROR: Coinbase credentials not found.")
+        print(
+            "      Provide --credentials-file or set COINBASE_CREDENTIALS_FILE "
+            "or COINBASE_CDP_API_KEY + COINBASE_CDP_PRIVATE_KEY."
+        )
+        sys.exit(1)
+    return creds
 
 
 def test_paper_broker() -> None:
     """Test the HybridPaperBroker with real market data."""
+    args = _parse_args()
     print("=" * 60)
     print("HybridPaperBroker Test")
     print("=" * 60)
 
     # 1. Load credentials
     print("\n[1/6] Loading CDP credentials...")
-    api_key, private_key = load_cdp_key()
-    print("      Credentials loaded")
+    creds = _resolve_credentials(args.credentials_file)
+    print(f"      Key name: {mask_key_name(creds.key_name)}")
+    print(f"      Credential source: {creds.source}")
+    for warning in creds.warnings:
+        print(f"      Warning: {warning}")
 
     # 2. Create paper broker
     print("\n[2/6] Creating HybridPaperBroker...")
+    auth = create_cdp_jwt_auth(api_key=creds.key_name, private_key=creds.private_key)
+    client = CoinbaseClient(auth=auth)
+    client.api_mode = "advanced"
     broker = HybridPaperBroker(
-        api_key=api_key,
-        private_key=private_key,
+        client=client,
         initial_equity=Decimal("10000"),
         slippage_bps=5,
         commission_bps=Decimal("5"),

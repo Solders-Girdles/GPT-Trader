@@ -1,58 +1,76 @@
 #!/usr/bin/env python3
 """
 API Connectivity Test Script.
-Tests connection to Coinbase API using the CDP key from /secrets/November2025APIKey.json.
+Tests connection to Coinbase API using resolved CDP credentials.
 """
 
 from __future__ import annotations
 
-import json
+import argparse
+import os
 import sys
 from pathlib import Path
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from gpt_trader.features.brokerages.coinbase.auth import SimpleAuth
+from gpt_trader.features.brokerages.coinbase.auth import create_cdp_jwt_auth
 from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
+from gpt_trader.features.brokerages.coinbase.credentials import (
+    ResolvedCoinbaseCredentials,
+    mask_key_name,
+    resolve_coinbase_credentials,
+)
 
 
-def load_cdp_key(path: str | None = None) -> tuple[str, str]:
-    """Load CDP API key from secrets file."""
-    if path is None:
-        # Default to project-relative path
-        project_root = Path(__file__).parent.parent
-        path = str(project_root / "secrets" / "November2025APIKey.json")
-    with open(path) as f:
-        data = json.load(f)
-    return data["name"], data["privateKey"]
+def _parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="GPT-Trader Coinbase API connectivity test.",
+    )
+    parser.add_argument(
+        "--credentials-file",
+        default=os.getenv("COINBASE_CREDENTIALS_FILE"),
+        help="Path to Coinbase CDP JSON key file (default: $COINBASE_CREDENTIALS_FILE).",
+    )
+    return parser.parse_args()
+
+
+def _resolve_credentials(
+    credentials_file: str | None,
+) -> ResolvedCoinbaseCredentials:
+    if credentials_file:
+        os.environ["COINBASE_CREDENTIALS_FILE"] = credentials_file
+    creds = resolve_coinbase_credentials()
+    if not creds:
+        print("      ERROR: Coinbase credentials not found.")
+        print(
+            "      Provide --credentials-file or set COINBASE_CREDENTIALS_FILE "
+            "or COINBASE_CDP_API_KEY + COINBASE_CDP_PRIVATE_KEY."
+        )
+        sys.exit(1)
+    return creds
 
 
 def test_connectivity() -> None:
     """Test API connectivity with the CDP key."""
+    args = _parse_args()
     print("=" * 60)
     print("GPT-Trader API Connectivity Test")
     print("=" * 60)
 
     # 1. Load credentials
     print("\n[1/5] Loading CDP credentials...")
-    try:
-        key_name, private_key = load_cdp_key()
-        # Mask the key for display
-        masked_name = key_name[:30] + "..." if len(key_name) > 30 else key_name
-        print(f"      Key name: {masked_name}")
-        print("      Private key: [LOADED]")
-    except FileNotFoundError:
-        print("      ERROR: Secrets file not found at /secrets/November2025APIKey.json")
-        sys.exit(1)
-    except Exception as e:
-        print(f"      ERROR: Failed to load credentials: {e}")
-        sys.exit(1)
+    creds = _resolve_credentials(args.credentials_file)
+    print(f"      Key name: {mask_key_name(creds.key_name)}")
+    print(f"      Credential source: {creds.source}")
+    for warning in creds.warnings:
+        print(f"      Warning: {warning}")
 
     # 2. Create auth and client
     print("\n[2/5] Creating authenticated client...")
-    auth = SimpleAuth(key_name=key_name, private_key=private_key)
+    auth = create_cdp_jwt_auth(api_key=creds.key_name, private_key=creds.private_key)
     client = CoinbaseClient(auth=auth)
+    client.api_mode = "advanced"
     print("      Client created successfully")
 
     # 3. Test: Get server time (no auth needed, good baseline)

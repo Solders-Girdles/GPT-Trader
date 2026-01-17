@@ -32,6 +32,7 @@ class TestCheckEnvironmentVariables:
 
         assert result is True
         assert any("CDP API key format valid" in s for s in checker.successes)
+        assert any("source=" in s for s in checker.successes)
         assert any("CDP private key found" in s for s in checker.successes)
 
     def test_fails_with_wrong_broker(self, capsys: pytest.CaptureFixture) -> None:

@@ -4,6 +4,11 @@ import os
 from dataclasses import dataclass, field
 from typing import Any
 
+from gpt_trader.features.brokerages.coinbase.credentials import (
+    ResolvedCoinbaseCredentials,
+    resolve_coinbase_credentials,
+)
+
 
 class Colors:
     RED = "\033[91m"
@@ -52,11 +57,13 @@ class PreflightContext:
 
     # ----- Environment helpers ---------------------------------------------
     def resolve_cdp_credentials(self) -> tuple[str | None, str | None]:
-        api_key = os.getenv("COINBASE_PROD_CDP_API_KEY") or os.getenv("COINBASE_CDP_API_KEY")
-        private_key = os.getenv("COINBASE_PROD_CDP_PRIVATE_KEY") or os.getenv(
-            "COINBASE_CDP_PRIVATE_KEY"
-        )
-        return api_key, private_key
+        creds = resolve_coinbase_credentials()
+        if not creds:
+            return None, None
+        return creds.key_name, creds.private_key
+
+    def resolve_cdp_credentials_info(self) -> ResolvedCoinbaseCredentials | None:
+        return resolve_coinbase_credentials()
 
     def has_real_cdp_credentials(self) -> bool:
         api_key, private_key = self.resolve_cdp_credentials()

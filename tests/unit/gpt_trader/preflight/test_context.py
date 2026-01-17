@@ -138,9 +138,13 @@ class TestPreflightContextCredentials:
         ):
             ctx = PreflightContext()
             api_key, private_key = ctx.resolve_cdp_credentials()
+            resolved = ctx.resolve_cdp_credentials_info()
 
             assert api_key == "prod_key"
             assert private_key == "prod_private"
+            assert resolved is not None
+            assert resolved.key_name == "prod_key"
+            assert resolved.private_key == "prod_private"
 
     def test_resolve_cdp_credentials_fallback(self) -> None:
         """Should fall back to non-PROD env vars."""
@@ -154,18 +158,24 @@ class TestPreflightContextCredentials:
         ):
             ctx = PreflightContext()
             api_key, private_key = ctx.resolve_cdp_credentials()
+            resolved = ctx.resolve_cdp_credentials_info()
 
             assert api_key == "fallback_key"
             assert private_key == "fallback_private"
+            assert resolved is not None
+            assert resolved.key_name == "fallback_key"
+            assert resolved.private_key == "fallback_private"
 
     def test_resolve_cdp_credentials_returns_none_when_missing(self) -> None:
         """Should return None when credentials not set."""
         with patch.dict(os.environ, {}, clear=True):
             ctx = PreflightContext()
             api_key, private_key = ctx.resolve_cdp_credentials()
+            resolved = ctx.resolve_cdp_credentials_info()
 
             assert api_key is None
             assert private_key is None
+            assert resolved is None
 
     def test_has_real_cdp_credentials_valid(self) -> None:
         """Should return True for valid CDP credentials."""

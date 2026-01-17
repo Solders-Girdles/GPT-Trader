@@ -3,6 +3,8 @@ from __future__ import annotations
 import os
 from typing import TYPE_CHECKING
 
+from gpt_trader.features.brokerages.coinbase.credentials import mask_key_name
+
 if TYPE_CHECKING:
     from gpt_trader.preflight.core import PreflightCheck
 
@@ -75,18 +77,32 @@ def check_environment_variables(checker: PreflightCheck) -> bool:
     else:
         checker.log_info("INTX perps disabled (spot/CFM only)")
 
-    api_key, private_key = ctx.resolve_cdp_credentials()
-    if not api_key:
+    creds = ctx.resolve_cdp_credentials_info()
+    if not creds:
+        api_key = None
+        private_key = None
         if ctx.should_skip_remote_checks():
             checker.log_warning(
-                "CDP API key not configured; remote connectivity checks will be skipped"
+                "CDP credentials not configured; remote connectivity checks will be skipped"
             )
         else:
-            checker.log_error("CDP API key not found (COINBASE_PROD_CDP_API_KEY)")
+            checker.log_error(
+                "CDP credentials not found (set COINBASE_CREDENTIALS_FILE or CDP env vars)"
+            )
             all_good = False
     else:
+        api_key = creds.key_name
+        private_key = creds.private_key
+        masked_name = mask_key_name(creds.key_name)
+        checker.log_info("CDP credentials resolved from " f"{creds.source} ({masked_name})")
+        for warning in creds.warnings:
+            checker.log_warning(f"CDP credential warning: {warning}")
+
+    if api_key:
         if api_key.startswith("organizations/") and "/apiKeys/" in api_key:
-            checker.log_success(f"CDP API key format valid: {api_key[:30]}...")
+            source = creds.source if creds else "unknown"
+            masked_name = mask_key_name(api_key)
+            checker.log_success(f"CDP API key format valid ({masked_name}, source={source})")
         else:
             message = "Invalid CDP API key format. Expected: organizations/.../apiKeys/..."
             if ctx.should_skip_remote_checks():
@@ -95,15 +111,7 @@ def check_environment_variables(checker: PreflightCheck) -> bool:
                 checker.log_error(message)
                 all_good = False
 
-    if not private_key:
-        if ctx.should_skip_remote_checks():
-            checker.log_warning(
-                "CDP private key not configured; remote connectivity checks will be skipped"
-            )
-        else:
-            checker.log_error("CDP private key not found (COINBASE_PROD_CDP_PRIVATE_KEY)")
-            all_good = False
-    else:
+    if private_key:
         if "BEGIN EC PRIVATE KEY" in private_key:
             checker.log_success("CDP private key found (EC format)")
         else:

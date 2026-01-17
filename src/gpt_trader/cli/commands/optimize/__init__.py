@@ -41,7 +41,7 @@ def register(subparsers: Any) -> None:
 
 def _default_handler(args: Any) -> int:
     """Default handler when no subcommand is specified."""
-    print("Usage: coinbase-trader optimize <subcommand>")
+    print("Usage: gpt-trader optimize <subcommand>")
     print()
     print("Available subcommands:")
     print("  run      - Run an optimization study")
@@ -52,5 +52,5 @@ def _default_handler(args: Any) -> int:
     print("  resume   - Resume an interrupted study")
     print("  apply    - Apply optimized params to a config file")
     print()
-    print("Use 'coinbase-trader optimize <subcommand> --help' for more information.")
+    print("Use 'gpt-trader optimize <subcommand> --help' for more information.")
     return 0

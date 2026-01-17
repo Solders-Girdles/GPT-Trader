@@ -43,9 +43,9 @@ def generate_report(checker: PreflightCheck) -> tuple[bool, str]:
 
     print(f"\n{Colors.BOLD}Recommendations:{Colors.RESET}")
     if status == "READY":
-        print(f"1. Start with: uv run coinbase-trader --profile {checker.profile} --dry-run")
+        print("1. Start with: uv run gpt-trader run --profile " f"{checker.profile} --dry-run")
         print("2. Monitor for 1 hour in dry-run mode")
-        print(f"3. Begin live with: uv run coinbase-trader --profile {checker.profile}")
+        print(f"3. Begin live with: uv run gpt-trader run --profile {checker.profile}")
         print("4. Use tiny positions (0.001 BTC) initially")
         print("5. Monitor closely for first 24 hours")
     elif status == "REVIEW":

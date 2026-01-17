@@ -2,7 +2,6 @@ artifact: cli_flow_map
 description: "CLI \u2192 config \u2192 container \u2192 engine flow map."
 entrypoints:
 - uv run gpt-trader run --profile dev --dev-fast
-- uv run coinbase-trader run --profile dev --dev-fast
 nodes:
 - id: cli_entrypoint
   label: CLI entrypoint (gpt_trader.cli:main)

@@ -84,7 +84,7 @@ def execute(args: Namespace) -> CliResponse | int:
         else:
             print("No optimization runs found.")
             print()
-            print("Run 'coinbase-trader optimize run' to start a new optimization study.")
+            print("Run 'gpt-trader optimize run' to start a new optimization study.")
     else:
         print(format_run_list_text(runs))
         for warning in warnings:

@@ -2241,7 +2241,6 @@ def build_cli_flow_map() -> dict[str, Any]:
         "description": "CLI → config → container → engine flow map.",
         "entrypoints": [
             "uv run gpt-trader run --profile dev --dev-fast",
-            "uv run coinbase-trader run --profile dev --dev-fast",
         ],
         "nodes": CLI_FLOW_NODES,
         "edges": CLI_FLOW_EDGES,

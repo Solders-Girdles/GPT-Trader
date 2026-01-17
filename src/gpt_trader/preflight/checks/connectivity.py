@@ -64,10 +64,7 @@ def check_api_connectivity(checker: PreflightCheck) -> bool:
                 checker.log_error("No perpetual products found")
                 all_good = False
             else:
-                if checker.context.profile == "dev":
-                    checker.log_info("No perpetual products found (INTX perps disabled)")
-                else:
-                    checker.log_warning("No perpetual products found (INTX perps disabled)")
+                checker.log_info("No perpetual products found (INTX perps disabled)")
     except Exception as exc:
         checker.log_error(f"Failed to list products: {exc}")
         all_good = False

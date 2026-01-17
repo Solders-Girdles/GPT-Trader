@@ -16,40 +16,56 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 import time
 from datetime import datetime
 
+from gpt_trader.features.brokerages.coinbase.auth import create_cdp_jwt_auth
+from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
+from gpt_trader.features.brokerages.coinbase.credentials import (
+    ResolvedCoinbaseCredentials,
+    mask_key_name,
+    resolve_coinbase_credentials,
+)
 
-def main() -> int:
+
+def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Reduce-Only Canary Smoke Test")
     parser.add_argument("--symbol", default="BTC-PERP", help="Perpetual symbol, e.g., BTC-PERP")
     parser.add_argument("--price", type=float, default=10.0, help="Limit price (far from market)")
     parser.add_argument("--quantity", type=float, default=0.001, help="Order quantity")
     parser.add_argument("--live", action="store_true", help="Place live order (otherwise preview)")
-    args = parser.parse_args()
-
-    from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient, create_cdp_jwt_auth
-
-    # Build CDP auth from env (prod)
-    import os
-
-    api_key_name = os.getenv("COINBASE_PROD_CDP_API_KEY") or os.getenv("COINBASE_CDP_API_KEY")
-    private_key_pem = os.getenv("COINBASE_PROD_CDP_PRIVATE_KEY") or os.getenv(
-        "COINBASE_CDP_PRIVATE_KEY"
+    parser.add_argument(
+        "--credentials-file",
+        default=os.getenv("COINBASE_CREDENTIALS_FILE"),
+        help="Path to Coinbase CDP JSON key file (default: $COINBASE_CREDENTIALS_FILE)",
     )
-    if not api_key_name or not private_key_pem:
-        print("❌ Missing CDP credentials in environment")
-        return 1
+    return parser.parse_args()
 
-    auth = create_cdp_jwt_auth(
-        api_key_name=api_key_name,
-        private_key_pem=private_key_pem,
-        base_url="https://api.coinbase.com",
-    )
-    client = CoinbaseClient(base_url="https://api.coinbase.com", auth=auth, api_mode="advanced")
+
+def _resolve_credentials(
+    credentials_file: str | None,
+) -> ResolvedCoinbaseCredentials:
+    if credentials_file:
+        os.environ["COINBASE_CREDENTIALS_FILE"] = credentials_file
+    creds = resolve_coinbase_credentials()
+    if not creds:
+        print("❌ Missing CDP credentials (set COINBASE_CREDENTIALS_FILE or env vars)")
+        sys.exit(1)
+    return creds
+
+
+def main() -> int:
+    args = _parse_args()
+    creds = _resolve_credentials(args.credentials_file)
+
+    auth = create_cdp_jwt_auth(api_key=creds.key_name, private_key=creds.private_key)
+    client = CoinbaseClient(auth=auth)
+    client.api_mode = "advanced"
 
     print("\n=== CANARY REDUCE-ONLY TEST ===")
+    print(f"Credential: {mask_key_name(creds.key_name)} ({creds.source})")
     print(f"Symbol: {args.symbol}")
     print(f"Quantity: {args.quantity}")
     print(f"Price: {args.price}")

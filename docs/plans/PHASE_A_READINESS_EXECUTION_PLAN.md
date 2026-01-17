@@ -8,7 +8,7 @@ last-updated: 2026-01-17
 ## Highest priority (right now)
 
 Maintain the readiness evidence loop and keep liveness green:
-- Run canary sessions that write to `runtime_data/<profile>/events.db` and keep last_event_age_seconds <= 300.
+- Run canary sessions that write to `runtime_data/<profile>/events.db` and keep heartbeat/price_tick age_seconds <= 300.
 - Generate daily reports and preflight readiness from the canonical DB-backed telemetry.
 
 ## Current blockers
@@ -43,11 +43,12 @@ Acceptance checks:
 ### Workstream B — Canary ops & evidence collection (Ops)
 
 Daily checklist:
-1. Verify liveness: `make canary-liveness` (RED if last_event_age_seconds > 300)
-2. Run canary (dry-run OK): `uv run gpt-trader run --profile canary --dry-run`
-3. Generate report: `uv run gpt-trader report daily --profile canary --report-format both`
-4. Gate: `make preflight-readiness PREFLIGHT_PROFILE=canary`
-5. Record evidence path(s) in `docs/READINESS.md` (reference local paths; do not commit secrets or account data).
+1. Verify liveness: `make canary-liveness-check` (RED if heartbeat/price_tick age_seconds > 300)
+2. Optional: `make canary-watchdog-once` (single poll) or `make canary-watchdog` (auto-restart on sustained RED)
+3. Run canary (dry-run OK): `uv run gpt-trader run --profile canary --dry-run`
+4. Generate report: `uv run gpt-trader report daily --profile canary --report-format both`
+5. Gate: `make preflight-readiness PREFLIGHT_PROFILE=canary`
+6. Record evidence path(s) in `docs/READINESS.md` (reference local paths; do not commit secrets or account data).
 
 Targets (from `docs/READINESS.md`, default thresholds):
 - `health.stale_marks == 0`

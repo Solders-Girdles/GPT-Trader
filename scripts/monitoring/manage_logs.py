@@ -3,17 +3,17 @@
 Log management and rotation for trading system.
 """
 
-import os
-import json
+import argparse
 import gzip
+import json
+import os
 import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List
 
 
 class LogManager:
-    def __init__(self):
+    def __init__(self) -> None:
         self.log_dir = Path(os.getenv("COINBASE_TRADER_LOG_DIR", "var/logs"))
         self.archive_dir = self.log_dir / "archive"
         self.summary_dir = self.log_dir / "summaries"
@@ -23,10 +23,10 @@ class LogManager:
         self.archive_dir.mkdir(parents=True, exist_ok=True)
         self.summary_dir.mkdir(parents=True, exist_ok=True)
 
-    def rotate_logs(self, max_size_mb: int = 10, max_age_hours: int = 24):
+    def rotate_logs(self, max_size_mb: int = 10, max_age_hours: int = 24) -> list[str]:
         """Rotate logs based on size and age."""
 
-        rotated = []
+        rotated: list[str] = []
         max_size_bytes = max_size_mb * 1024 * 1024
         max_age = datetime.now() - timedelta(hours=max_age_hours)
 
@@ -56,7 +56,7 @@ class LogManager:
 
         return rotated
 
-    def compress_log(self, log_path: Path):
+    def compress_log(self, log_path: Path) -> Path:
         """Compress a log file."""
         compressed_path = log_path.with_suffix(".log.gz")
 
@@ -68,10 +68,10 @@ class LogManager:
         log_path.unlink()
         return compressed_path
 
-    def generate_summary(self, log_path: Path) -> dict:
+    def generate_summary(self, log_path: Path) -> dict[str, int | str]:
         """Generate summary of a log file."""
 
-        summary = {
+        summary: dict[str, int | str] = {
             "file": str(log_path),
             "timestamp": datetime.now().isoformat(),
             "size_bytes": 0,
@@ -80,6 +80,7 @@ class LogManager:
             "warnings": 0,
             "orders": 0,
             "trades": 0,
+            "error": "",
         }
 
         try:
@@ -91,19 +92,20 @@ class LogManager:
                 open_func = open
                 mode = "r"
 
-            with open_func(log_path, mode) as f:
-                for line in f:
-                    summary["lines"] += 1
+            with open_func(log_path, mode, encoding="utf-8", errors="ignore") as handle:
+                for line in handle:
+                    text_line = str(line)
+                    summary["lines"] = int(summary["lines"]) + 1
 
                     # Count message types
-                    if "ERROR" in line:
-                        summary["errors"] += 1
-                    if "WARNING" in line:
-                        summary["warnings"] += 1
-                    if "order" in line.lower():
-                        summary["orders"] += 1
-                    if "trade" in line.lower() or "fill" in line.lower():
-                        summary["trades"] += 1
+                    if "ERROR" in text_line:
+                        summary["errors"] = int(summary["errors"]) + 1
+                    if "WARNING" in text_line:
+                        summary["warnings"] = int(summary["warnings"]) + 1
+                    if "order" in text_line.lower():
+                        summary["orders"] = int(summary["orders"]) + 1
+                    if "trade" in text_line.lower() or "fill" in text_line.lower():
+                        summary["trades"] = int(summary["trades"]) + 1
 
             summary["size_bytes"] = log_path.stat().st_size
 
@@ -112,11 +114,11 @@ class LogManager:
 
         return summary
 
-    def cleanup_old_logs(self, keep_days: int = 7):
+    def cleanup_old_logs(self, keep_days: int = 7) -> list[str]:
         """Clean up old archived logs."""
 
         cutoff = datetime.now() - timedelta(days=keep_days)
-        removed = []
+        removed: list[str] = []
 
         for archive in self.archive_dir.glob("*.gz"):
             if datetime.fromtimestamp(archive.stat().st_mtime) < cutoff:
@@ -125,10 +127,10 @@ class LogManager:
 
         return removed
 
-    def get_active_logs(self) -> list[dict]:
+    def get_active_logs(self) -> list[dict[str, float | str | int]]:
         """Get list of active log files."""
 
-        logs = []
+        logs: list[dict[str, float | str | int]] = []
         for log_file in self.log_dir.glob("*.log"):
             stat = log_file.stat()
             logs.append(
@@ -137,7 +139,9 @@ class LogManager:
                     "size_mb": stat.st_size / (1024 * 1024),
                     "modified": datetime.fromtimestamp(stat.st_mtime).isoformat(),
                     "lines": (
-                        sum(1 for _ in open(log_file)) if stat.st_size < 1024 * 1024 else "large"
+                        sum(1 for _ in log_file.open(encoding="utf-8", errors="ignore"))
+                        if stat.st_size < 1024 * 1024
+                        else "large"
                     ),
                 }
             )
@@ -145,9 +149,8 @@ class LogManager:
         return sorted(logs, key=lambda x: x["name"])
 
 
-def main():
+def main() -> None:
     """Run log management tasks."""
-    import argparse
 
     parser = argparse.ArgumentParser(description="Log Management")
     parser.add_argument("--rotate", action="store_true", help="Rotate logs")

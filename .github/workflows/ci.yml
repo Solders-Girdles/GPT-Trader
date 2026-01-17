@@ -36,7 +36,7 @@ jobs:
         run: uv run ruff check .
 
       - name: Lint (Ruff - critical scripts)
-        run: uv run ruff check scripts/ops scripts/backtest_runner.py scripts/perps_dashboard.py scripts/monitoring/export_metrics.py scripts/production_preflight.py scripts/readiness_window.py scripts/test_api_connectivity.py scripts/test_paper_broker.py
+        run: uv run ruff check scripts/ops scripts/backtest_runner.py scripts/perps_dashboard.py scripts/monitoring/export_metrics.py scripts/monitoring/canary_reduce_only_test.py scripts/monitoring/manage_logs.py scripts/production_preflight.py scripts/readiness_window.py scripts/test_api_connectivity.py scripts/test_paper_broker.py
 
       - name: Format (Black)
         run: uv run black --check .

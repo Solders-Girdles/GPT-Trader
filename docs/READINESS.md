@@ -31,7 +31,7 @@ Each pillar has measurable evidence so the decision is objective, repeatable, an
 | --- | --- | --- | --- | --- |
 | 2026-01-15 | `runtime_data/canary/reports/daily_report_2026-01-15.json` | `preflight_report_20260115_214038.json` | No | Preflight not green (view-only, env not set). |
 | 2026-01-16 | N/A | `preflight_report_20260116_000708.json` | No | Missing daily report; preflight still not green (can_trade=False). |
-| 2026-01-17 | `runtime_data/canary/reports/daily_report_2026-01-17.json` | `preflight_report_20260117_062455.json` | No | COINBASE_SANDBOX/COINBASE_API_MODE missing; readiness status NOT READY. |
+| 2026-01-17 | `runtime_data/canary/reports/daily_report_2026-01-17.json` | `preflight_report_20260117_082055.json` | Yes | `make canary-daily` is GREEN (liveness <= 300s, readiness window cleared, preflight STATUS: READY). |
 
 ## Readiness pillars (must-have)
 
@@ -93,7 +93,7 @@ Thresholds (default targets):
 
 Checklist:
 - [ ] Evidence path(s): `runtime_data/canary/reports/daily_report_2026-01-15.json`, `runtime_data/canary/reports/daily_report_2026-01-17.json`, `preflight_report_20260117_044647.json`
-- [ ] Notes: 2026-01-15 report 2/3 collected; unfilled_orders=0, api_errors=31 -> NOT GREEN. 2026-01-17 daily report shows unfilled_orders=0, api_errors=0, guard_triggers=0; preflight readiness run (dry-run) confirms risk checks pass but env vars COINBASE_SANDBOX and COINBASE_API_MODE still missing.
+- [ ] Notes: 2026-01-15 report 2/3 collected; unfilled_orders=0, api_errors=31 -> NOT GREEN. 2026-01-17 daily report shows unfilled_orders=0, api_errors=0, guard_triggers=0; preflight readiness run (dry-run) is STATUS: READY.
 
 ### 4) Execution correctness
 
@@ -112,7 +112,7 @@ Thresholds (default targets):
 
 Checklist:
 - [ ] Evidence path(s): `preflight_report_20260115_214038.json`, `preflight_report_20260116_000708.json`, `preflight_report_20260117_044647.json`, `runtime_data/canary/reports/phase-a-tests-2026-01-16.log`
-- [ ] Notes: 2026-01-15 DRY_RUN view-only passed; live-intent preflight still fails as expected (can_trade=False). 2026-01-17 dry-run preflight shows readiness liveness OK but COINBASE_SANDBOX/COINBASE_API_MODE still missing. Phase A execution tests collected 2026-01-16.
+- [ ] Notes: 2026-01-15 DRY_RUN view-only passed; live-intent preflight still fails as expected (can_trade=False). 2026-01-17 dry-run preflight is STATUS: READY. Phase A execution tests collected 2026-01-16.
 
 ### 5) State persistence and recovery
 

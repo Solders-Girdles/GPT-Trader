@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
@@ -72,16 +72,26 @@ def calculate_risk_metrics(
     timestamps = [t for t, _ in equity_curve]
     equities = [float(e) for _, e in equity_curve]
 
-    # Calculate daily returns
-    daily_returns = _calculate_returns(equities)
-
-    if not daily_returns:
-        return _empty_risk_metrics()
-
     # Duration calculations
     start_time = timestamps[0]
     end_time = timestamps[-1]
     duration_days = max(1, (end_time - start_time).days)
+
+    # Aggregate to daily closes and calculate daily returns
+    daily_equities = _daily_equity_series(equity_curve)
+    daily_returns = _calculate_returns(daily_equities)
+
+    period_returns = daily_returns
+    periods_per_year = float(trading_days_per_year)
+    if not period_returns:
+        period_returns = _calculate_returns(equities)
+        if not period_returns:
+            return _empty_risk_metrics()
+        periods_per_year = (
+            float(len(period_returns))
+            / max(1.0, float(duration_days))
+            * float(trading_days_per_year)
+        )
 
     # Return calculations
     initial_equity = float(broker._initial_equity)
@@ -95,30 +105,30 @@ def calculate_risk_metrics(
     else:
         annualized_return = total_return
 
-    # Daily statistics
-    daily_avg = sum(daily_returns) / len(daily_returns)
-    daily_std = _std_dev(daily_returns)
+    # Period statistics
+    period_avg = sum(period_returns) / len(period_returns)
+    period_std = _std_dev(period_returns)
 
     # Downside deviation (only negative returns)
-    negative_returns = [r for r in daily_returns if r < 0]
+    negative_returns = [r for r in period_returns if r < 0]
     downside_std = _std_dev(negative_returns) if negative_returns else 0.0
 
     # Annualized volatility
-    volatility_annual = daily_std * math.sqrt(trading_days_per_year)
-    downside_vol = downside_std * math.sqrt(trading_days_per_year)
+    volatility_annual = period_std * math.sqrt(periods_per_year)
+    downside_vol = downside_std * math.sqrt(periods_per_year)
 
-    # Sharpe ratio
-    daily_risk_free = float(risk_free_rate) / trading_days_per_year
-    excess_return = daily_avg - daily_risk_free
+    # Sharpe ratio (period risk-free, annualized)
+    period_risk_free = float(risk_free_rate) / periods_per_year
+    excess_return = period_avg - period_risk_free
     sharpe = (
-        Decimal(str(excess_return / daily_std * math.sqrt(trading_days_per_year)))
-        if daily_std > 0
+        Decimal(str(excess_return / period_std * math.sqrt(periods_per_year)))
+        if period_std > 0
         else None
     )
 
-    # Sortino ratio
+    # Sortino ratio (period risk-free, annualized)
     sortino = (
-        Decimal(str(excess_return / downside_std * math.sqrt(trading_days_per_year)))
+        Decimal(str(excess_return / downside_std * math.sqrt(periods_per_year)))
         if downside_std > 0
         else None
     )
@@ -131,8 +141,8 @@ def calculate_risk_metrics(
     drawdown_data = _calculate_drawdown_metrics(equities, timestamps)
 
     # VaR calculations (parametric, assuming normal distribution)
-    var_95 = _calculate_var(daily_returns, 0.95)
-    var_99 = _calculate_var(daily_returns, 0.99)
+    var_95 = _calculate_var(period_returns, 0.95)
+    var_99 = _calculate_var(period_returns, 0.99)
 
     # Leverage and time in market
     max_leverage = Decimal("1")  # Default
@@ -148,8 +158,8 @@ def calculate_risk_metrics(
         drawdown_duration_days=int(max_dur),
         total_return_pct=Decimal(str(total_return * 100)),
         annualized_return_pct=Decimal(str(annualized_return * 100)),
-        daily_return_avg=Decimal(str(daily_avg * 100)),
-        daily_return_std=Decimal(str(daily_std * 100)),
+        daily_return_avg=Decimal(str(period_avg * 100)),
+        daily_return_std=Decimal(str(period_std * 100)),
         sharpe_ratio=sharpe,
         sortino_ratio=sortino,
         calmar_ratio=calmar,
@@ -199,6 +209,18 @@ def _calculate_returns(equities: list[float]) -> list[float]:
             returns.append(ret)
 
     return returns
+
+
+def _daily_equity_series(equity_curve: list[tuple[datetime, Decimal]]) -> list[float]:
+    """Aggregate intraday equity curve to daily closing values."""
+    if not equity_curve:
+        return []
+
+    daily_closes: dict[date, float] = {}  # date -> equity close
+    for timestamp, equity in equity_curve:
+        daily_closes[timestamp.date()] = float(equity)
+
+    return [daily_closes[day] for day in sorted(daily_closes.keys())]
 
 
 def _std_dev(values: list[float]) -> float:

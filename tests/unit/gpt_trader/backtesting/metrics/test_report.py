@@ -63,6 +63,8 @@ def _create_mock_trade_stats() -> TradeStatistics:
         win_rate=Decimal("60"),
         loss_rate=Decimal("40"),
         profit_factor=Decimal("3.0"),
+        net_profit_factor=Decimal("2.0"),
+        fee_drag_per_trade=Decimal("10"),
         total_pnl=Decimal("10000"),
         gross_profit=Decimal("15000"),
         gross_loss=Decimal("-5000"),

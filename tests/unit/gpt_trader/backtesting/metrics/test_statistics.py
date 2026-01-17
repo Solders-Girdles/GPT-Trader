@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from decimal import Decimal
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -16,6 +17,7 @@ from gpt_trader.backtesting.metrics.statistics import (
     _calculate_timing_metrics,
     calculate_trade_statistics,
 )
+from gpt_trader.backtesting.types import CompletedTrade, TradeOutcome, TradeSide
 from gpt_trader.core import Order, OrderSide, OrderStatus, OrderType
 
 
@@ -249,8 +251,8 @@ class TestCalculateTradeStatistics:
 
     def _create_mock_broker(
         self,
-        filled_orders: list[MagicMock] | None = None,
-        cancelled_orders: list[MagicMock] | None = None,
+        filled_orders: list[Any] | None = None,
+        cancelled_orders: list[Any] | None = None,
         total_trades: int = 10,
         winning_trades: int = 6,
         losing_trades: int = 3,
@@ -298,6 +300,7 @@ class TestCalculateTradeStatistics:
         assert result.win_rate == Decimal("0")
         assert result.loss_rate == Decimal("0")
         assert result.avg_profit_per_trade == Decimal("0")
+        assert result.net_profit_factor == Decimal("0")
 
     def test_profit_factor_capped_when_no_losses(self) -> None:
         # When gross_loss is 0, profit_factor should be capped
@@ -308,6 +311,50 @@ class TestCalculateTradeStatistics:
         )
         result = calculate_trade_statistics(broker)
         assert result.profit_factor == Decimal("999.99")
+
+    def test_net_profit_factor_accounts_for_fees(self) -> None:
+        now = datetime.now()
+        trades = [
+            CompletedTrade(
+                trade_id="t1",
+                symbol="BTC-USD",
+                side=TradeSide.LONG,
+                entry_time=now,
+                entry_price=Decimal("100"),
+                exit_time=now + timedelta(minutes=5),
+                exit_price=Decimal("110"),
+                quantity=Decimal("1"),
+                realized_pnl=Decimal("100"),
+                fees_paid=Decimal("20"),
+                net_pnl=Decimal("80"),
+                outcome=TradeOutcome.WIN,
+                hold_time_seconds=300,
+            ),
+            CompletedTrade(
+                trade_id="t2",
+                symbol="BTC-USD",
+                side=TradeSide.LONG,
+                entry_time=now + timedelta(minutes=10),
+                entry_price=Decimal("100"),
+                exit_time=now + timedelta(minutes=20),
+                exit_price=Decimal("95"),
+                quantity=Decimal("1"),
+                realized_pnl=Decimal("-50"),
+                fees_paid=Decimal("10"),
+                net_pnl=Decimal("-60"),
+                outcome=TradeOutcome.LOSS,
+                hold_time_seconds=600,
+            ),
+        ]
+        broker = self._create_mock_broker()
+        broker.get_completed_trades.return_value = trades
+        broker._total_fees_paid = Decimal("30")
+
+        result = calculate_trade_statistics(broker)
+        assert result.total_trades == 2
+        assert result.profit_factor == Decimal("2")
+        assert float(result.net_profit_factor) == pytest.approx(1.25, rel=1e-6)
+        assert float(result.fee_drag_per_trade) == pytest.approx(15.0, rel=1e-6)
 
     def test_counts_limit_orders(self) -> None:
         filled = [
@@ -363,6 +410,8 @@ class TestTradeStatisticsDataclass:
             win_rate=Decimal("60"),
             loss_rate=Decimal("30"),
             profit_factor=Decimal("2.0"),
+            net_profit_factor=Decimal("1.5"),
+            fee_drag_per_trade=Decimal("1.5"),
             total_pnl=Decimal("5000"),
             gross_profit=Decimal("8000"),
             gross_loss=Decimal("-3000"),
@@ -400,6 +449,8 @@ class TestTradeStatisticsDataclass:
             win_rate=Decimal("30"),
             loss_rate=Decimal("70"),
             profit_factor=Decimal("0.5"),
+            net_profit_factor=Decimal("0.3"),
+            fee_drag_per_trade=Decimal("5"),
             total_pnl=Decimal("-1000"),
             gross_profit=Decimal("500"),
             gross_loss=Decimal("-1500"),

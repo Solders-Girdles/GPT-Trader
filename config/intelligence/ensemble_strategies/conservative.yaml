@@ -9,18 +9,15 @@ signals:
   - name: trend
     enabled: true
     parameters:
-      short_period: 12
-      long_period: 26
-      adx_period: 14
-      adx_threshold: 30  # Require stronger trend confirmation
+      fast_period: 12
+      slow_period: 26
 
   - name: mean_reversion
     enabled: true
     parameters:
-      bb_period: 20
-      bb_std_dev: 2.5  # Wider bands = fewer signals
-      oversold_threshold: 0.85
-      overbought_threshold: 0.15
+      window: 20
+      z_entry_threshold: 2.5
+      z_exit_threshold: 0.6
 
   - name: spread
     enabled: true

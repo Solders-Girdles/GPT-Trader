@@ -210,6 +210,34 @@ class TestSignalGeneration:
 class TestExitLogic:
     """Test exit conditions."""
 
+    def test_exit_sets_cooldown(self):
+        """Exit should apply cooldown when configured."""
+        config = MeanReversionConfig(
+            z_score_exit_threshold=0.5,
+            lookback_window=20,
+            cooldown_bars=3,
+        )
+        strategy = MeanReversionStrategy(config)
+
+        prices = [Decimal("100")] * 20
+        position_state = {
+            "quantity": Decimal("0.1"),
+            "side": "long",
+            "entry_price": Decimal("95"),
+        }
+
+        decision = strategy.decide(
+            symbol="BTC-USD",
+            current_mark=Decimal("100"),
+            position_state=position_state,
+            recent_marks=prices,
+            equity=Decimal("10000"),
+            product=None,
+        )
+
+        assert decision.action == Action.CLOSE
+        assert decision.indicators.get("cooldown_remaining") == 3
+
     def test_exit_when_z_score_returns_to_mean(self):
         """Should CLOSE position when Z-Score returns near zero."""
         config = MeanReversionConfig(
@@ -423,3 +451,185 @@ class TestInsufficientData:
         assert "insufficient data" in decision.reason.lower()
         assert decision.indicators["data_points"] == 5
         assert decision.indicators["required"] == 20
+
+
+class TestCooldown:
+    """Test cooldown enforcement."""
+
+    def test_cooldown_blocks_entry(self):
+        """Cooldown prevents new entries until it expires."""
+        config = MeanReversionConfig(
+            z_score_entry_threshold=2.0,
+            z_score_exit_threshold=0.5,
+            lookback_window=20,
+            cooldown_bars=2,
+        )
+        strategy = MeanReversionStrategy(config)
+
+        prices = [Decimal("100")] * 20
+        position_state = {
+            "quantity": Decimal("0.1"),
+            "side": "long",
+            "entry_price": Decimal("95"),
+        }
+
+        decision = strategy.decide(
+            symbol="BTC-USD",
+            current_mark=Decimal("100"),
+            position_state=position_state,
+            recent_marks=prices,
+            equity=Decimal("10000"),
+            product=None,
+        )
+
+        assert decision.action == Action.CLOSE
+        assert decision.indicators.get("cooldown_remaining") == 2
+
+        long_prices = [Decimal("100")] * 19 + [Decimal("85")]
+        hold_decision = strategy.decide(
+            symbol="BTC-USD",
+            current_mark=Decimal("85"),
+            position_state=None,
+            recent_marks=long_prices,
+            equity=Decimal("10000"),
+            product=None,
+        )
+
+        assert hold_decision.action == Action.HOLD
+        assert "cooldown" in hold_decision.reason.lower()
+        assert hold_decision.indicators.get("cooldown_remaining") == 1
+
+        second_hold = strategy.decide(
+            symbol="BTC-USD",
+            current_mark=Decimal("85"),
+            position_state=None,
+            recent_marks=long_prices,
+            equity=Decimal("10000"),
+            product=None,
+        )
+
+        assert second_hold.action == Action.HOLD
+        assert second_hold.indicators.get("cooldown_remaining") == 0
+
+        entry_decision = strategy.decide(
+            symbol="BTC-USD",
+            current_mark=Decimal("85"),
+            position_state=None,
+            recent_marks=long_prices,
+            equity=Decimal("10000"),
+            product=None,
+        )
+
+        assert entry_decision.action == Action.BUY
+
+
+class TestTrendFilter:
+    """Test trend filter behavior."""
+
+    def test_blocks_counter_trend_long(self):
+        """Blocks longs when price is below trend MA."""
+        config = MeanReversionConfig(
+            z_score_entry_threshold=2.0,
+            lookback_window=20,
+            trend_filter_enabled=True,
+            trend_window=10,
+            trend_threshold_pct=0.01,
+        )
+        strategy = MeanReversionStrategy(config)
+
+        # Construct a strong long signal (very negative Z-score) while trend MA remains
+        # well above current price (bearish trend), so the trend filter blocks entry.
+        prices = [Decimal("200")] * 19 + [Decimal("100")]
+        decision = strategy.decide(
+            symbol="BTC-USD",
+            current_mark=Decimal("100"),
+            position_state=None,
+            recent_marks=prices,
+            equity=Decimal("10000"),
+            product=None,
+        )
+
+        assert decision.action == Action.HOLD
+        assert "trend filter" in decision.reason.lower()
+        assert decision.indicators.get("trend_signal") == "bearish"
+
+    def test_allows_counter_trend_long_with_override(self):
+        """Allows counter-trend longs when Z-score is extreme enough."""
+        config = MeanReversionConfig(
+            z_score_entry_threshold=2.0,
+            lookback_window=20,
+            trend_filter_enabled=True,
+            trend_window=10,
+            trend_threshold_pct=0.01,
+            trend_override_z_score=3.0,
+        )
+        strategy = MeanReversionStrategy(config)
+
+        prices = [Decimal("200")] * 19 + [Decimal("100")]
+        decision = strategy.decide(
+            symbol="BTC-USD",
+            current_mark=Decimal("100"),
+            position_state=None,
+            recent_marks=prices,
+            equity=Decimal("10000"),
+            product=None,
+        )
+
+        assert decision.action == Action.BUY
+        assert decision.indicators.get("trend_signal") == "bearish"
+        assert decision.indicators.get("trend_override_used") is True
+
+    def test_blocks_counter_trend_short(self):
+        """Blocks shorts when price is above trend MA."""
+        config = MeanReversionConfig(
+            z_score_entry_threshold=2.0,
+            lookback_window=20,
+            trend_filter_enabled=True,
+            trend_window=10,
+            trend_threshold_pct=0.01,
+            enable_shorts=True,
+        )
+        strategy = MeanReversionStrategy(config)
+
+        # Construct a strong short signal (very positive Z-score) while trend MA remains
+        # well below current price (bullish trend), so the trend filter blocks entry.
+        prices = [Decimal("100")] * 19 + [Decimal("200")]
+        decision = strategy.decide(
+            symbol="BTC-USD",
+            current_mark=Decimal("200"),
+            position_state=None,
+            recent_marks=prices,
+            equity=Decimal("10000"),
+            product=None,
+        )
+
+        assert decision.action == Action.HOLD
+        assert "trend filter" in decision.reason.lower()
+        assert decision.indicators.get("trend_signal") == "bullish"
+
+    def test_allows_counter_trend_short_with_override(self):
+        """Allows counter-trend shorts when Z-score is extreme enough."""
+        config = MeanReversionConfig(
+            z_score_entry_threshold=2.0,
+            lookback_window=20,
+            trend_filter_enabled=True,
+            trend_window=10,
+            trend_threshold_pct=0.01,
+            enable_shorts=True,
+            trend_override_z_score=3.0,
+        )
+        strategy = MeanReversionStrategy(config)
+
+        prices = [Decimal("100")] * 19 + [Decimal("200")]
+        decision = strategy.decide(
+            symbol="BTC-USD",
+            current_mark=Decimal("200"),
+            position_state=None,
+            recent_marks=prices,
+            equity=Decimal("10000"),
+            product=None,
+        )
+
+        assert decision.action == Action.SELL
+        assert decision.indicators.get("trend_signal") == "bullish"
+        assert decision.indicators.get("trend_override_used") is True

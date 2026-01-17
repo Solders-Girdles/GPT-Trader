@@ -9,15 +9,13 @@ signals:
   - name: trend
     enabled: true
     parameters:
-      short_period: 8     # Faster response
-      long_period: 21
-      adx_period: 10
-      adx_threshold: 20
+      fast_period: 8     # Faster response
+      slow_period: 21
 
   - name: momentum
     enabled: true
     parameters:
-      rsi_period: 10      # Faster RSI
+      period: 10      # Faster RSI
       oversold: 35
       overbought: 65
 

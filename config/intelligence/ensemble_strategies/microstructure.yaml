@@ -9,10 +9,8 @@ signals:
   - name: trend
     enabled: true
     parameters:
-      short_period: 12
-      long_period: 26
-      adx_period: 14
-      adx_threshold: 25
+      fast_period: 12
+      slow_period: 26
 
   - name: order_flow
     enabled: true

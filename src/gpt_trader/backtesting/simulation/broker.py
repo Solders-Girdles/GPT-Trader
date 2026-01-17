@@ -60,6 +60,7 @@ from gpt_trader.core import (
     Position,
     Product,
     Quote,
+    TimeInForce,
 )
 
 if TYPE_CHECKING:
@@ -339,6 +340,16 @@ class SimulatedBroker:
         client_id = kwargs.get("client_id")
         reduce_only = kwargs.get("reduce_only", False)
         leverage = kwargs.get("leverage")
+        time_in_force = kwargs.get("tif")
+        if isinstance(time_in_force, TimeInForce):
+            order_tif = time_in_force
+        elif isinstance(time_in_force, str):
+            try:
+                order_tif = TimeInForce(time_in_force)
+            except ValueError:
+                order_tif = TimeInForce.GTC
+        else:
+            order_tif = TimeInForce.GTC
 
         # Generate order ID
         order_id = str(uuid.uuid4())[:12]
@@ -353,6 +364,7 @@ class SimulatedBroker:
             status=OrderStatus.PENDING,
             price=Decimal(str(price)) if price else None,
             stop_price=Decimal(str(stop_price)) if stop_price else None,
+            tif=order_tif,
             client_id=client_id,
             submitted_at=self._simulation_time,
             created_at=self._simulation_time,
@@ -374,10 +386,63 @@ class SimulatedBroker:
         if ord_type == OrderType.MARKET:
             return self._execute_market_order(order, leverage, fill_quantity=partial_fill_qty)
 
+        if ord_type == OrderType.LIMIT and order.tif == TimeInForce.IOC:
+            return self._execute_ioc_limit_order(order, leverage)
+
         # For limit/stop orders, add to open orders
         self._open_orders[order_id] = order
         order.status = OrderStatus.SUBMITTED
         return order
+
+    def _execute_ioc_limit_order(self, order: Order, leverage: int | None) -> Order:
+        """Fill IOC limit orders immediately or cancel."""
+        bar = self._current_bar.get(order.symbol)
+        quote = self._current_quote.get(order.symbol)
+        if not bar and not quote:
+            order.status = OrderStatus.REJECTED
+            return order
+
+        if quote:
+            best_bid, best_ask = quote.bid, quote.ask
+        elif bar:
+            spread = bar.high - bar.low
+            mid = bar.close
+            best_bid = mid - spread / Decimal("4")
+            best_ask = mid + spread / Decimal("4")
+        else:
+            order.status = OrderStatus.REJECTED
+            return order
+
+        fill_bar = bar
+        if fill_bar is None and quote:
+            mid = (quote.bid + quote.ask) / 2
+            fill_bar = Candle(
+                ts=quote.ts,
+                open=mid,
+                high=quote.ask,
+                low=quote.bid,
+                close=mid,
+                volume=Decimal("0"),
+            )
+
+        if fill_bar is None:
+            order.status = OrderStatus.REJECTED
+            return order
+
+        fill_result = self._fill_model.try_fill_limit_order(
+            order=order,
+            current_bar=fill_bar,
+            best_bid=best_bid,
+            best_ask=best_ask,
+        )
+        if not fill_result.filled:
+            order.status = OrderStatus.CANCELLED
+            order.updated_at = self._simulation_time
+            self._cancelled_orders[order.id] = order
+            self._order_history.append(order)
+            return order
+
+        return self._process_fill(order, fill_result, leverage)
 
     def _apply_chaos_to_order(
         self,

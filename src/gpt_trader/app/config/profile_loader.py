@@ -90,6 +90,8 @@ class ExecutionConfig:
     dry_run: bool = False
     mock_broker: bool = False
     mock_fills: bool = False
+    use_limit_orders: bool = False
+    market_order_fallback: bool = True
 
 
 @dataclass
@@ -140,6 +142,8 @@ class ProfileSchema:
         strategy_data = data.get("strategy", {})
         risk_data = data.get("risk_management", {})
         execution_data = data.get("execution", {})
+        if not execution_data:
+            execution_data = trading_data.get("execution", {})
         session_data = data.get("session", {})
         monitoring_data = data.get("monitoring", {})
 
@@ -177,6 +181,8 @@ class ProfileSchema:
             dry_run=execution_data.get("dry_run", False),
             mock_broker=execution_data.get("mock_broker", False),
             mock_fills=execution_data.get("mock_fills", False),
+            use_limit_orders=execution_data.get("use_limit_orders", False),
+            market_order_fallback=execution_data.get("market_order_fallback", True),
         )
 
         # Parse session config
@@ -231,7 +237,13 @@ _PROFILE_DEFAULTS: dict[Profile, ProfileSchema] = {
         description="Development profile with mock broker",
         trading=TradingConfig(symbols=["BTC-USD", "ETH-USD"], mode="normal"),
         risk=RiskConfig(max_position_size=Decimal("10000"), enable_shorts=True),
-        execution=ExecutionConfig(dry_run=True, mock_broker=True, mock_fills=True),
+        execution=ExecutionConfig(
+            dry_run=True,
+            mock_broker=True,
+            mock_fills=True,
+            use_limit_orders=False,
+            market_order_fallback=True,
+        ),
         monitoring=MonitoringConfig(log_level="DEBUG"),
     ),
     Profile.TEST: ProfileSchema(
@@ -240,7 +252,13 @@ _PROFILE_DEFAULTS: dict[Profile, ProfileSchema] = {
         description="Test profile for unit/integration tests",
         trading=TradingConfig(symbols=["BTC-USD"], mode="normal"),
         risk=RiskConfig(max_position_size=Decimal("1000")),
-        execution=ExecutionConfig(dry_run=True, mock_broker=True, mock_fills=True),
+        execution=ExecutionConfig(
+            dry_run=True,
+            mock_broker=True,
+            mock_fills=True,
+            use_limit_orders=False,
+            market_order_fallback=True,
+        ),
         monitoring=MonitoringConfig(log_level="DEBUG"),
     ),
     Profile.DEMO: ProfileSchema(
@@ -253,7 +271,12 @@ _PROFILE_DEFAULTS: dict[Profile, ProfileSchema] = {
             max_leverage=1,
             enable_shorts=False,
         ),
-        execution=ExecutionConfig(dry_run=False, mock_broker=False),
+        execution=ExecutionConfig(
+            dry_run=False,
+            mock_broker=False,
+            use_limit_orders=False,
+            market_order_fallback=True,
+        ),
     ),
     Profile.SPOT: ProfileSchema(
         profile_name="spot",
@@ -265,7 +288,12 @@ _PROFILE_DEFAULTS: dict[Profile, ProfileSchema] = {
             max_leverage=1,
             enable_shorts=False,
         ),
-        execution=ExecutionConfig(dry_run=False, mock_broker=False),
+        execution=ExecutionConfig(
+            dry_run=False,
+            mock_broker=False,
+            use_limit_orders=False,
+            market_order_fallback=True,
+        ),
     ),
     Profile.CANARY: ProfileSchema(
         profile_name="canary",
@@ -282,6 +310,8 @@ _PROFILE_DEFAULTS: dict[Profile, ProfileSchema] = {
             time_in_force="IOC",
             dry_run=False,
             mock_broker=False,
+            use_limit_orders=True,
+            market_order_fallback=False,
         ),
         session=SessionConfig(
             start_time=time(14, 0),  # 2 PM UTC
@@ -299,7 +329,12 @@ _PROFILE_DEFAULTS: dict[Profile, ProfileSchema] = {
             max_leverage=3,
             enable_shorts=True,
         ),
-        execution=ExecutionConfig(dry_run=False, mock_broker=False),
+        execution=ExecutionConfig(
+            dry_run=False,
+            mock_broker=False,
+            use_limit_orders=False,
+            market_order_fallback=True,
+        ),
     ),
     Profile.PAPER: ProfileSchema(
         profile_name="paper",
@@ -312,7 +347,13 @@ _PROFILE_DEFAULTS: dict[Profile, ProfileSchema] = {
             enable_shorts=True,
             daily_loss_limit_pct=0.05,
         ),
-        execution=ExecutionConfig(dry_run=False, mock_broker=True, mock_fills=True),
+        execution=ExecutionConfig(
+            dry_run=True,
+            mock_broker=True,
+            mock_fills=True,
+            use_limit_orders=False,
+            market_order_fallback=True,
+        ),
         monitoring=MonitoringConfig(log_level="INFO"),
     ),
 }
@@ -423,6 +464,8 @@ class ProfileLoader:
             "time_in_force": schema.execution.time_in_force,
             "dry_run": schema.execution.dry_run,
             "mock_broker": schema.execution.mock_broker,
+            "use_limit_orders": schema.execution.use_limit_orders,
+            "market_order_fallback": schema.execution.market_order_fallback,
             # Monitoring
             "log_level": schema.monitoring.log_level,
             "status_interval": schema.monitoring.update_interval,

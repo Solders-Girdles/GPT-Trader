@@ -117,6 +117,15 @@ class MeanReversionConfig:
     enable_shorts: bool = True
     kill_switch_enabled: bool = False
 
+    # Cooldown controls
+    cooldown_bars: int = 0
+
+    # Trend filter controls
+    trend_filter_enabled: bool = False
+    trend_window: int = 50
+    trend_threshold_pct: float = 0.01
+    trend_override_z_score: float | None = None
+
 
 # Strategy type literal for type safety
 StrategyType = Literal["baseline", "mean_reversion", "ensemble"]
@@ -161,6 +170,8 @@ class BotConfig:
     reduce_only_mode: bool = False
     time_in_force: str = "GTC"
     enable_order_preview: bool = False
+    use_limit_orders: bool = False
+    market_order_fallback: bool = True
     account_telemetry_interval: int | None = None
 
     # System

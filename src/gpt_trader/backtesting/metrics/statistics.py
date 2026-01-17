@@ -28,6 +28,8 @@ class TradeStatistics:
     win_rate: Decimal  # percentage
     loss_rate: Decimal  # percentage
     profit_factor: Decimal  # gross profit / gross loss
+    net_profit_factor: Decimal  # gross profit / (gross loss + fees)
+    fee_drag_per_trade: Decimal  # total fees / total trades
 
     # PnL metrics
     total_pnl: Decimal
@@ -107,12 +109,26 @@ def calculate_trade_statistics(broker: SimulatedBroker) -> TradeStatistics:
     else:
         pnl_data = _calculate_pnl_metrics(filled_orders)
 
-    # Profit factor
+    # Profit factor (gross)
     profit_factor = (
         abs(pnl_data["gross_profit"] / pnl_data["gross_loss"])
         if pnl_data["gross_loss"] != 0
         else Decimal("999.99")  # Cap at 999.99 for display
     )
+
+    # Net profit factor (net-of-fees profit factor).
+    #
+    # Defined as: gross_profit / (abs(gross_loss) + total_fees_paid)
+    # so values >= 1 imply gross profits cover losses + fees.
+    gross_loss_abs = abs(pnl_data["gross_loss"])
+    total_fees_paid = broker._total_fees_paid
+    net_profit_denom = gross_loss_abs + total_fees_paid
+    if total_trades == 0:
+        net_profit_factor = Decimal("0")
+    elif net_profit_denom != 0:
+        net_profit_factor = pnl_data["gross_profit"] / net_profit_denom
+    else:
+        net_profit_factor = Decimal("999.99")
 
     # Average metrics
     avg_profit = pnl_data["total_pnl"] / Decimal(total_trades) if total_trades > 0 else Decimal("0")
@@ -121,6 +137,9 @@ def calculate_trade_statistics(broker: SimulatedBroker) -> TradeStatistics:
     )
     avg_loss = (
         pnl_data["gross_loss"] / Decimal(losing_trades) if losing_trades > 0 else Decimal("0")
+    )
+    fee_drag_per_trade = (
+        broker._total_fees_paid / Decimal(total_trades) if total_trades > 0 else Decimal("0")
     )
 
     # Position metrics from completed trades or fallback to legacy
@@ -165,6 +184,8 @@ def calculate_trade_statistics(broker: SimulatedBroker) -> TradeStatistics:
         win_rate=win_rate,
         loss_rate=loss_rate,
         profit_factor=profit_factor,
+        net_profit_factor=net_profit_factor,
+        fee_drag_per_trade=fee_drag_per_trade,
         total_pnl=pnl_data["total_pnl"],
         gross_profit=pnl_data["gross_profit"],
         gross_loss=pnl_data["gross_loss"],

@@ -34,6 +34,9 @@ class ZScoreState:
     rolling_std: float | None = None
     z_score: float | None = None
     daily_volatility: float | None = None
+    trend_ma: float | None = None
+    trend_pct: float | None = None
+    trend_signal: str = "neutral"
     signal: str = "neutral"  # "long", "short", "exit_long", "exit_short", "neutral"
 
 
@@ -53,11 +56,13 @@ class MeanReversionStrategy:
 
     def __init__(self, config: MeanReversionConfig) -> None:
         self.config = config
+        self._cooldown_remaining = 0
         logger.info(
             f"MeanReversionStrategy initialized: "
             f"z_entry={config.z_score_entry_threshold}, "
             f"z_exit={config.z_score_exit_threshold}, "
-            f"window={config.lookback_window}"
+            f"window={config.lookback_window}, "
+            f"cooldown_bars={config.cooldown_bars}"
         )
 
     def decide(
@@ -117,8 +122,7 @@ class MeanReversionStrategy:
             return self._decide_with_position(
                 symbol, current_mark, position_side, state, position_state, equity
             )
-        else:
-            return self._decide_entry(symbol, current_mark, state, equity)
+        return self._decide_entry(symbol, current_mark, state, equity)
 
     def _calculate_z_score(self, recent_marks: Sequence[Decimal]) -> ZScoreState:
         """Calculate Z-Score and volatility from price history."""
@@ -152,6 +156,21 @@ class MeanReversionStrategy:
             else:
                 state.daily_volatility = abs(returns[0]) if returns else 0.01
 
+        # Calculate trend filter inputs
+        if self.config.trend_filter_enabled:
+            trend_window = min(self.config.trend_window, len(prices))
+            if trend_window >= 2:
+                trend_prices = prices[-trend_window:]
+                state.trend_ma = statistics.mean(trend_prices)
+                if state.trend_ma:
+                    state.trend_pct = (current_price - state.trend_ma) / state.trend_ma
+                    if state.trend_pct > self.config.trend_threshold_pct:
+                        state.trend_signal = "bullish"
+                    elif state.trend_pct < -self.config.trend_threshold_pct:
+                        state.trend_signal = "bearish"
+                    else:
+                        state.trend_signal = "neutral"
+
         # Determine signal
         z = state.z_score or 0.0
         entry_threshold = self.config.z_score_entry_threshold
@@ -178,7 +197,27 @@ class MeanReversionStrategy:
         """Decide on entry when no position exists."""
         indicators = self._build_indicators(state)
 
+        if self._cooldown_remaining > 0:
+            self._cooldown_remaining -= 1
+            indicators["cooldown_remaining"] = self._cooldown_remaining
+            return Decision(
+                Action.HOLD,
+                f"Cooldown active ({self._cooldown_remaining} bars remaining)",
+                confidence=0.0,
+                indicators=indicators,
+            )
+
         if state.signal == "long":
+            if self._is_counter_trend(state, "long"):
+                override_z = self.config.trend_override_z_score
+                if override_z is None or abs(state.z_score or 0.0) < override_z:
+                    return Decision(
+                        Action.HOLD,
+                        "Blocked long entry (trend filter)",
+                        confidence=0.0,
+                        indicators=indicators,
+                    )
+                indicators["trend_override_used"] = True
             confidence = self._calculate_confidence(state, "long")
             return Decision(
                 Action.BUY,
@@ -187,7 +226,17 @@ class MeanReversionStrategy:
                 indicators=indicators,
             )
 
-        elif state.signal == "short" and self.config.enable_shorts:
+        if state.signal == "short" and self.config.enable_shorts:
+            if self._is_counter_trend(state, "short"):
+                override_z = self.config.trend_override_z_score
+                if override_z is None or abs(state.z_score or 0.0) < override_z:
+                    return Decision(
+                        Action.HOLD,
+                        "Blocked short entry (trend filter)",
+                        confidence=0.0,
+                        indicators=indicators,
+                    )
+                indicators["trend_override_used"] = True
             confidence = self._calculate_confidence(state, "short")
             return Decision(
                 Action.SELL,
@@ -218,6 +267,9 @@ class MeanReversionStrategy:
 
         # Check for mean reversion exit (price returned to fair value)
         if state.signal == "exit":
+            if self.config.cooldown_bars > 0:
+                self._cooldown_remaining = max(self._cooldown_remaining, self.config.cooldown_bars)
+                indicators["cooldown_remaining"] = self._cooldown_remaining
             return Decision(
                 Action.CLOSE,
                 f"Z-Score={z:.2f} near zero (mean reversion complete)",
@@ -239,6 +291,11 @@ class MeanReversionStrategy:
 
                 # Stop loss
                 if pnl_pct < -self.config.stop_loss_pct:
+                    if self.config.cooldown_bars > 0:
+                        self._cooldown_remaining = max(
+                            self._cooldown_remaining, self.config.cooldown_bars
+                        )
+                        indicators["cooldown_remaining"] = self._cooldown_remaining
                     return Decision(
                         Action.CLOSE,
                         f"Stop loss triggered: {pnl_pct:.2%} loss",
@@ -248,6 +305,11 @@ class MeanReversionStrategy:
 
                 # Take profit
                 if pnl_pct > self.config.take_profit_pct:
+                    if self.config.cooldown_bars > 0:
+                        self._cooldown_remaining = max(
+                            self._cooldown_remaining, self.config.cooldown_bars
+                        )
+                        indicators["cooldown_remaining"] = self._cooldown_remaining
                     return Decision(
                         Action.CLOSE,
                         f"Take profit triggered: {pnl_pct:.2%} gain",
@@ -257,13 +319,19 @@ class MeanReversionStrategy:
 
         # Check for signal reversal (optional: close on opposite signal)
         if position_side == "long" and state.signal == "short":
+            if self.config.cooldown_bars > 0:
+                self._cooldown_remaining = max(self._cooldown_remaining, self.config.cooldown_bars)
+                indicators["cooldown_remaining"] = self._cooldown_remaining
             return Decision(
                 Action.CLOSE,
                 f"Signal reversal: Z-Score={z:.2f} now indicates short",
                 confidence=0.7,
                 indicators=indicators,
             )
-        elif position_side == "short" and state.signal == "long":
+        if position_side == "short" and state.signal == "long":
+            if self.config.cooldown_bars > 0:
+                self._cooldown_remaining = max(self._cooldown_remaining, self.config.cooldown_bars)
+                indicators["cooldown_remaining"] = self._cooldown_remaining
             return Decision(
                 Action.CLOSE,
                 f"Signal reversal: Z-Score={z:.2f} now indicates long",
@@ -292,9 +360,21 @@ class MeanReversionStrategy:
             return min(confidence, 0.95)
         return 0.0
 
+    def _is_counter_trend(self, state: ZScoreState, direction: str) -> bool:
+        """Return True when entries fight the dominant trend."""
+        if not self.config.trend_filter_enabled:
+            return False
+        if state.trend_signal == "neutral":
+            return False
+        if direction == "long":
+            return state.trend_signal == "bearish"
+        if direction == "short":
+            return state.trend_signal == "bullish"
+        return False
+
     def _build_indicators(self, state: ZScoreState) -> dict[str, Any]:
         """Build indicator dictionary for decision."""
-        return {
+        indicators = {
             "z_score": round(state.z_score or 0.0, 4),
             "rolling_mean": round(state.rolling_mean or 0.0, 2),
             "rolling_std": round(state.rolling_std or 0.0, 4),
@@ -302,6 +382,15 @@ class MeanReversionStrategy:
             "signal": state.signal,
             "strategy": "mean_reversion",
         }
+        if self.config.trend_filter_enabled:
+            indicators.update(
+                {
+                    "trend_ma": round(state.trend_ma or 0.0, 4),
+                    "trend_pct": round(state.trend_pct or 0.0, 4),
+                    "trend_signal": state.trend_signal,
+                }
+            )
+        return indicators
 
     def calculate_position_size(
         self,

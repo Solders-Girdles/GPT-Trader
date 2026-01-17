@@ -128,7 +128,7 @@ class MeanReversionConfig:
 
 
 # Strategy type literal for type safety
-StrategyType = Literal["baseline", "mean_reversion", "ensemble"]
+StrategyType = Literal["baseline", "mean_reversion", "ensemble", "regime_switcher"]
 
 
 def _get_default_strategy_config() -> "PerpsStrategyConfig":
@@ -159,7 +159,11 @@ class BotConfig:
     regime_config: Any = None  # RegimeConfig instance when using ensemble
     ensemble_config: Any = None  # EnsembleConfig instance when using ensemble
 
-    # Strategy selection (baseline = RSI+MA, mean_reversion = Z-Score, ensemble = multi-strategy)
+    # Strategy selection
+    # - baseline = RSI+MA crossover
+    # - mean_reversion = Z-Score
+    # - ensemble = multi-signal architecture
+    # - regime_switcher = switch between trend and mean reversion by regime
     strategy_type: StrategyType = "baseline"
 
     # General config (not nested)

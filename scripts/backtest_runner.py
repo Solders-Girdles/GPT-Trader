@@ -12,12 +12,12 @@ import argparse
 import asyncio
 import json
 from collections import deque
+from collections.abc import Sequence
 from dataclasses import asdict, is_dataclass
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, cast
-from collections.abc import Sequence
 
 from gpt_trader.app.config import StrategyType
 from gpt_trader.app.config.bot_config import BotConfig
@@ -137,6 +137,13 @@ def _select_strategy(config: BotConfig, *, ensemble_profile: str | None = None) 
 
 
 def _lookback_bars(strategy: Any) -> int:
+    hint = getattr(strategy, "required_lookback_bars", None)
+    if hint is not None:
+        try:
+            return int(hint() if callable(hint) else hint)
+        except (TypeError, ValueError):
+            pass
+
     config = getattr(strategy, "config", None)
     if config is None:
         return 64
@@ -623,7 +630,7 @@ def _parse_args() -> argparse.Namespace:
         "--strategy-type",
         type=str,
         default=None,
-        choices=["baseline", "mean_reversion", "ensemble"],
+        choices=["baseline", "mean_reversion", "ensemble", "regime_switcher"],
         help="Override strategy type for the run",
     )
     parser.add_argument(

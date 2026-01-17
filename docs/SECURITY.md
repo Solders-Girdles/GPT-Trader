@@ -48,6 +48,17 @@ Preflight checks live in `src/gpt_trader/preflight/checks/` and verify JWT gener
 permissions, and portfolio readiness before live trading. Use `--warn-only` or
 `GPT_TRADER_PREFLIGHT_WARN_ONLY=1` to downgrade failures to warnings.
 
+### Event store redaction scan
+
+Preflight scans `runtime_data/<profile>/events.db` for unredacted secrets and fails if any
+payload includes sensitive keys, PEM markers, or bearer tokens. It reports only event_id,
+event_type, and key path (no values). Tune scan scope with:
+
+- `GPT_TRADER_EVENT_STORE_REDACTION_MIN_EVENT_ID`
+- `GPT_TRADER_EVENT_STORE_REDACTION_SCAN_ALL=1`
+- `GPT_TRADER_EVENT_STORE_REDACTION_MAX_ROWS`
+- `GPT_TRADER_PREFLIGHT_WARN_ONLY=1`
+
 ## Sensitive Data Handling
 
 - JSON logs redact keys like `api_key`, `private_key`, `token`, and `password`.

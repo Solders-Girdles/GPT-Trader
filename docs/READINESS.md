@@ -43,8 +43,8 @@ Thresholds (default targets):
 - `gpt_trader_ws_gap_count == 0` (or documented tolerance <= 1 per day)
 
 Checklist:
-- [ ] Evidence path(s): `runtime_data/canary/reports/daily_report_2026-01-15.json`
-- [ ] Notes: 2026-01-15 report 2/3 collected; stale_marks=0, ws_reconnects=0, api_errors=31 -> NOT GREEN (api_health guard_triggers=31 from earlier runs; latest run avoided product endpoint errors; unpriced assets BOND/CLV/ERN/GAL).
+- [ ] Evidence path(s): `runtime_data/canary/reports/daily_report_2026-01-15.json`, `runtime_data/canary/reports/daily_report_2026-01-17.json`
+- [ ] Notes: 2026-01-15 report 2/3 collected; stale_marks=0, ws_reconnects=0, api_errors=31 -> NOT GREEN (api_health guard_triggers=31 from earlier runs; latest run avoided product endpoint errors; unpriced assets BOND/CLV/ERN/GAL). 2026-01-17 report shows stale_marks=0, ws_reconnects=0, api_errors=0, guard_triggers=0.
 
 ### 2) Strategy validity
 
@@ -84,8 +84,8 @@ Thresholds (default targets):
 - No circuit breaker triggers in paper runs
 
 Checklist:
-- [ ] Evidence path(s): `runtime_data/canary/reports/daily_report_2026-01-15.json`
-- [ ] Notes: 2026-01-15 report 2/3 collected; unfilled_orders=0, api_errors=31 -> NOT GREEN.
+- [ ] Evidence path(s): `runtime_data/canary/reports/daily_report_2026-01-15.json`, `runtime_data/canary/reports/daily_report_2026-01-17.json`, `preflight_report_20260117_044647.json`
+- [ ] Notes: 2026-01-15 report 2/3 collected; unfilled_orders=0, api_errors=31 -> NOT GREEN. 2026-01-17 daily report shows unfilled_orders=0, api_errors=0, guard_triggers=0; preflight readiness run (dry-run) confirms risk checks pass but env vars COINBASE_SANDBOX and COINBASE_API_MODE still missing.
 
 ### 4) Execution correctness
 
@@ -103,8 +103,8 @@ Thresholds (default targets):
 - `health.api_errors == 0`
 
 Checklist:
-- [ ] Evidence path(s): `preflight_report_20260115_214038.json`, `preflight_report_20260116_000708.json`, `runtime_data/canary/reports/phase-a-tests-2026-01-16.log`
-- [ ] Notes: 2026-01-15 DRY_RUN view-only passed; live-intent preflight still fails as expected (can_trade=False). Phase A execution tests collected 2026-01-16.
+- [ ] Evidence path(s): `preflight_report_20260115_214038.json`, `preflight_report_20260116_000708.json`, `preflight_report_20260117_044647.json`, `runtime_data/canary/reports/phase-a-tests-2026-01-16.log`
+- [ ] Notes: 2026-01-15 DRY_RUN view-only passed; live-intent preflight still fails as expected (can_trade=False). 2026-01-17 dry-run preflight shows readiness liveness OK but COINBASE_SANDBOX/COINBASE_API_MODE still missing. Phase A execution tests collected 2026-01-16.
 
 ### 5) State persistence and recovery
 

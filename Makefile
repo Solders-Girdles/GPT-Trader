@@ -43,7 +43,7 @@ preflight-readiness:
 		--profile $(PREFLIGHT_PROFILE) --verbose
 
 canary-liveness:
-	@age=$$(sqlite3 runtime_data/canary/events.db "select round((julianday('now') - julianday(max(timestamp)))*86400) as last_event_age_seconds from events;"); \
+	@age=$$(sqlite3 runtime_data/canary/events.db "select coalesce(cast(round((julianday('now') - julianday(max(timestamp)))*86400) as integer), 999999) as last_event_age_seconds from events;"); \
 	echo "last_event_age_seconds=$$age"; \
 	if [ "$$age" -gt 300 ]; then echo "liveness_status=RED"; else echo "liveness_status=GREEN"; fi
 	@sqlite3 runtime_data/canary/events.db "select event_type, max(timestamp) as last_ts from events group by event_type order by last_ts desc limit 5;"

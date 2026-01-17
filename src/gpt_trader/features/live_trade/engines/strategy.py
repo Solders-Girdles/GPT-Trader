@@ -2053,6 +2053,28 @@ class TradingEngine(BaseEngine):
             bot_id=str(self.context.bot_id) if self.context.bot_id is not None else None,
         )
 
+        config = getattr(self.context.risk_manager, "config", None)
+        kill_switch_enabled = getattr(config, "kill_switch_enabled", False) is True
+        if kill_switch_enabled:
+            trace.record_outcome(
+                "kill_switch",
+                "blocked",
+                detail="kill_switch_enabled",
+            )
+            self._order_submitter.record_rejection(
+                symbol,
+                side.value,
+                Decimal("0"),
+                price,
+                "kill_switch",
+                client_order_id=decision_id,
+            )
+            return self._finalize_decision_trace(
+                trace,
+                status=OrderSubmissionStatus.BLOCKED,
+                reason="kill_switch",
+            )
+
         result = await self._check_degradation_gate(
             symbol=symbol,
             side=side,

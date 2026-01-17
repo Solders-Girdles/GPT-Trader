@@ -226,6 +226,38 @@ class TestGuardFailureDegradation:
         assert any(e.get("type") == "api_error" for e in events)
 
 
+@pytest.mark.asyncio
+async def test_kill_switch_blocks_submission(engine) -> None:
+    engine.context.risk_manager.config.kill_switch_enabled = True
+
+    engine._order_submitter.submit_order = MagicMock(return_value="order-123")
+
+    decision = Decision(Action.BUY, "kill switch test")
+    result = await engine._validate_and_place_order(
+        symbol="BTC-USD",
+        decision=decision,
+        price=Decimal("50000"),
+        equity=Decimal("10000"),
+        quantity_override=Decimal("1"),
+        reduce_only_requested=False,
+    )
+
+    assert result.status == OrderSubmissionStatus.BLOCKED
+    assert result.reason == "kill_switch"
+    assert result.decision_trace is not None
+    assert result.decision_trace.decision_id
+    assert result.decision_trace.outcomes["kill_switch"]["status"] == "blocked"
+    engine._order_submitter.submit_order.assert_not_called()
+    engine._order_submitter.record_rejection.assert_called_with(
+        "BTC-USD",
+        "BUY",
+        Decimal("0"),
+        Decimal("50000"),
+        "kill_switch",
+        client_order_id=result.decision_trace.decision_id,
+    )
+
+
 class TestMarkStalenessDegradation:
     async def _place_order(self, engine, action=Action.BUY):
         await engine._validate_and_place_order(

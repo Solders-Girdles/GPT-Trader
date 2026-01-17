@@ -42,6 +42,12 @@ preflight-readiness:
 	GPT_TRADER_READINESS_REPORT="$(READINESS_REPORT_DIR)" uv run python scripts/production_preflight.py \
 		--profile $(PREFLIGHT_PROFILE) --verbose
 
+canary-liveness:
+	@age=$$(sqlite3 runtime_data/canary/events.db "select round((julianday('now') - julianday(max(timestamp)))*86400) as last_event_age_seconds from events;"); \
+	echo "last_event_age_seconds=$$age"; \
+	if [ "$$age" -gt 300 ]; then echo "liveness_status=RED"; else echo "liveness_status=GREEN"; fi
+	@sqlite3 runtime_data/canary/events.db "select event_type, max(timestamp) as last_ts from events group by event_type order by last_ts desc limit 5;"
+
 readiness-window:
 	uv run python scripts/readiness_window.py --profile $(PREFLIGHT_PROFILE) --hours $(READINESS_WINDOW_HOURS)
 

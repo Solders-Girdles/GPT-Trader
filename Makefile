@@ -1,7 +1,8 @@
 .PHONY: dev-up dev-down lint typecheck test smoke preflight preflight-readiness dash cov clean clean-dry-run scaffold-slice \
 	readiness-window legacy-bundle agent-setup agent-check agent-impact agent-impact-full agent-map agent-tests agent-risk \
 	agent-naming agent-health agent-health-fast agent-health-full agent-chaos-smoke agent-chaos-week \
-	agent-regenerate agent-docs-links canary-liveness canary-liveness-check canary-daily canary-decision-traces
+	agent-regenerate agent-docs-links canary-liveness canary-liveness-check canary-daily canary-decision-traces \
+	canary-decision-trace-probe
 
 COMPOSE_DIR=deploy/gpt_trader/docker
 COMPOSE_FILE=$(COMPOSE_DIR)/docker-compose.yaml
@@ -69,6 +70,9 @@ canary-daily:
 
 canary-decision-traces:
 	uv run python scripts/ops/tail_decision_traces.py --profile canary --limit 10
+
+canary-decision-trace-probe:
+	uv run python scripts/ops/decision_trace_probe.py --profile canary --symbol BTC-USD --side buy
 
 readiness-window:
 	uv run python scripts/readiness_window.py --profile $(PREFLIGHT_PROFILE) --hours $(READINESS_WINDOW_HOURS)

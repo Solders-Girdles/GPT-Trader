@@ -162,8 +162,8 @@ Thresholds:
 - Reduce-only mode blocks new positions but allows exits
 
 Checklist:
-- [ ] Evidence path(s):
-- [ ] Notes:
+- [ ] Evidence path(s): `var/ops/controls_smoke_20260117_123003.json`
+- [ ] Notes: 2026-01-17 ops controls smoke run. kill_switch blocked (decision_id=decision-1). reduce_only_mode blocked new entries and allowed exit (order_id=order-1).
 
 ### 8) Security and credential hygiene
 

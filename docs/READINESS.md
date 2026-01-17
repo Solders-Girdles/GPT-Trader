@@ -147,7 +147,7 @@ Thresholds:
 
 Checklist:
 - [ ] Evidence path(s): `runtime_data/canary/events.db`
-- [ ] Notes: 2026-01-17T09:38:24+00:00 ops probe (row id 805) reason="ops: decision_id probe (quantity_override=0)" recorded decision_id=Profile.CANARY_1768642704649_29ef84; blocked at quantity_zero (no order placed).
+- [ ] Notes: 2026-01-17T09:38:24+00:00 ops probe (row id 805) reason="ops: decision_id probe (quantity_override=0)" recorded decision_id=Profile.CANARY_1768642704649_29ef84; blocked at quantity_zero (no order placed). Runtime fingerprint: runtime_start event_id=933 build_sha=5b30a89b15bf456768f0617d65bf96065145598f pid=60629 (see `make canary-runtime-info`).
 
 ### 7) Operational controls
 

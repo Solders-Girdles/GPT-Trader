@@ -62,7 +62,8 @@ cov:
 
 dash:
 	uv run python scripts/monitoring/export_metrics.py \
-		--metrics-file var/data/coinbase_trader/prod/metrics.json \
+		--profile canary \
+		--runtime-root . \
 		--port 9102
 
 clean:

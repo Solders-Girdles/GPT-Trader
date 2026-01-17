@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
+import sqlite3
 import sys
 import time
 from collections import deque
@@ -26,25 +26,57 @@ from rich.live import Live
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
-from rich.console import Console
-from rich import box
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SRC_PATH = REPO_ROOT / "src"
 if str(SRC_PATH) not in sys.path:
     sys.path.append(str(SRC_PATH))
 
-from gpt_trader.config.path_registry import RUNTIME_DATA_DIR
 
-console = Console()
-
-
-def load_events(path: Path, max_lines: int = 5000) -> Deque[dict]:
+def load_events(
+    jsonl_path: Path,
+    events_db: Path | None = None,
+    max_lines: int = 5000,
+) -> Deque[dict]:
     events: Deque[dict] = deque(maxlen=max_lines)
-    if not path.exists():
+    if events_db is not None and events_db.exists():
+        connection: sqlite3.Connection | None = None
+        try:
+            connection = sqlite3.connect(str(events_db))
+            connection.row_factory = sqlite3.Row
+            cursor = connection.execute(
+                """
+                SELECT timestamp, event_type, payload
+                FROM events
+                ORDER BY id DESC
+                LIMIT ?
+                """,
+                (max_lines,),
+            )
+            rows = list(cursor)
+            for row in reversed(rows):
+                try:
+                    payload = json.loads(row["payload"])
+                except Exception:
+                    continue
+                if not isinstance(payload, dict):
+                    continue
+                event_type = str(row["event_type"] or "")
+                event = dict(payload)
+                event["type"] = event_type
+                event["timestamp"] = row["timestamp"]
+                events.append(event)
+            if events:
+                return events
+        except Exception:
+            events.clear()
+        finally:
+            if connection is not None:
+                connection.close()
+    if not jsonl_path.exists():
         return events
     try:
-        with path.open("r") as f:
+        with jsonl_path.open("r") as f:
             for line in f:
                 line = line.strip()
                 if not line:
@@ -59,13 +91,24 @@ def load_events(path: Path, max_lines: int = 5000) -> Deque[dict]:
     return events
 
 
-def parse_time(s: str | None) -> datetime | None:
-    if not s:
+def parse_time(value: str | None) -> datetime | None:
+    if not value:
         return None
+    text = value.strip()
+    if not text:
+        return None
+    if text.endswith("Z"):
+        text = f"{text[:-1]}+00:00"
     try:
-        return datetime.fromisoformat(s.replace("Z", "+00:00"))
-    except Exception:
-        return None
+        parsed = datetime.fromisoformat(text)
+    except ValueError:
+        try:
+            parsed = datetime.strptime(text, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=datetime.now().astimezone().tzinfo)
+    return parsed.astimezone()
 
 
 def summarize(events: Deque[dict], window: timedelta) -> dict:
@@ -76,14 +119,12 @@ def summarize(events: Deque[dict], window: timedelta) -> dict:
     drift = 0
     pos_drift = 0
 
-    recent_events = []
-
     for evt in events:
-        ts = parse_time(evt.get("time"))
+        ts = parse_time(evt.get("timestamp") or evt.get("time"))
         if ts is None or ts < cutoff:
             continue
 
-        etype = str(evt.get("type", "")).lower()
+        etype = str(evt.get("type") or evt.get("event_type") or "").lower()
         if etype == "order_success":
             success += 1
         elif etype == "order_failed":
@@ -92,8 +133,6 @@ def summarize(events: Deque[dict], window: timedelta) -> dict:
             drift += 1
         elif etype == "position_drift":
             pos_drift += 1
-
-        recent_events.append(evt)
 
     total = success + failed
     acceptance = (success / total * 100.0) if total > 0 else 0.0
@@ -121,14 +160,49 @@ def load_health(health_path: Path) -> dict:
         return {"ok": False, "message": f"error reading health: {e}"}
 
 
-def load_metrics(metrics_path: Path) -> dict:
-    if not metrics_path.exists():
+def load_metrics(metrics_path: Path, events_db: Path | None = None) -> dict:
+    if metrics_path.exists():
+        try:
+            with metrics_path.open("r") as f:
+                return json.load(f)
+        except Exception:
+            return {}
+    if events_db is None or not events_db.exists():
         return {}
+    connection: sqlite3.Connection | None = None
     try:
-        with metrics_path.open("r") as f:
-            return json.load(f)
+        connection = sqlite3.connect(str(events_db))
+        connection.row_factory = sqlite3.Row
+        cursor = connection.execute(
+            """
+            SELECT payload FROM events
+            WHERE event_type = ?
+            ORDER BY id DESC
+            LIMIT 250
+            """,
+            ("metric",),
+        )
+        fallback: dict | None = None
+        for row in cursor:
+            try:
+                payload = json.loads(row["payload"])
+            except Exception:
+                continue
+            if not isinstance(payload, dict):
+                continue
+            metrics = payload.get("metrics")
+            if not isinstance(metrics, dict):
+                continue
+            if fallback is None:
+                fallback = metrics
+            if metrics.get("event_type") in (None, "cycle_metrics"):
+                return metrics
+        return fallback or {}
     except Exception:
         return {}
+    finally:
+        if connection is not None:
+            connection.close()
 
 
 def make_header(profile: str, window_min: int) -> Panel:
@@ -136,7 +210,7 @@ def make_header(profile: str, window_min: int) -> Panel:
     grid.add_column(justify="left")
     grid.add_column(justify="right")
     grid.add_row(
-        f"[b]🚀 Coinbase Trader Dashboard[/b]",
+        "[b]🚀 Coinbase Trader Dashboard[/b]",
         f"[dim]Profile:[/dim] [cyan]{profile}[/cyan] | [dim]Window:[/dim] [cyan]{window_min}m[/cyan] | [dim]{datetime.now().strftime('%H:%M:%S')}[/dim]",
     )
     return Panel(grid, style="white on blue")
@@ -216,7 +290,7 @@ def make_events_panel(events: list[dict]) -> Panel:
     table.add_column("Details")
 
     for e in reversed(events):  # Show newest first
-        t = parse_time(e.get("time"))
+        t = parse_time(e.get("time") or e.get("timestamp"))
         t_str = t.strftime("%H:%M:%S") if t else ""
 
         etype = e.get("type", "")
@@ -247,7 +321,7 @@ def make_events_panel(events: list[dict]) -> Panel:
     return Panel(table, title="Recent Events", border_style="blue")
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Coinbase Trader Metrics Dashboard")
     parser.add_argument("--profile", choices=["dev", "demo", "prod", "canary"], default="dev")
     parser.add_argument("--refresh", type=int, default=1, help="Refresh interval seconds")
@@ -255,14 +329,15 @@ def main():
     args = parser.parse_args()
 
     # Load config and container to resolve paths consistently
-    from gpt_trader.app.container import create_application_container
     from gpt_trader.app.config import BotConfig
+    from gpt_trader.app.container import create_application_container
 
     config = BotConfig(profile=args.profile)
     container = create_application_container(config)
 
     # Use container's runtime paths
     base_dir = container.runtime_paths.event_store_root
+    events_db = base_dir / "events.db"
     events_path = base_dir / "events.jsonl"
     health_path = base_dir / "health.json"
     metrics_path = base_dir / "metrics.json"
@@ -273,13 +348,13 @@ def main():
     layout.split(Layout(name="header", size=3), Layout(name="body"), Layout(name="footer", size=15))
     layout["body"].split_row(Layout(name="left"), Layout(name="right"))
 
-    with Live(layout, refresh_per_second=1) as live:
+    with Live(layout, refresh_per_second=1):
         try:
             while True:
-                events = load_events(events_path)
+                events = load_events(events_path, events_db)
                 summary = summarize(events, window)
                 health = load_health(health_path)
-                metrics = load_metrics(metrics_path)
+                metrics = load_metrics(metrics_path, events_db)
 
                 layout["header"].update(make_header(args.profile, args.window_min))
                 layout["left"].update(make_health_panel(health, metrics))

@@ -8,8 +8,8 @@ services:
     working_dir: /app
     command: >
       sh -c "pip install flask && python scripts/monitoring/export_metrics.py \
-      --metrics-file var/data/coinbase_trader/prod/metrics.json \
-      --events-file var/data/coinbase_trader/prod/events.jsonl \
+      --profile prod \
+      --runtime-root /app \
       --host 0.0.0.0 --port 9000"
     volumes:
       - ../../:/app
@@ -59,7 +59,7 @@ services:
     command: ["-config.file=/etc/promtail/config.yml"]
     volumes:
       - ./promtail-config.yml.example:/etc/promtail/config.yml:ro
-      - ../../var/data/coinbase_trader/prod:/data/events:ro
+      - ../../runtime_data/prod:/data/events:ro
     depends_on:
       - loki
 

@@ -14,7 +14,8 @@ scrape_configs:
       - targets: [localhost]
         labels:
           job: coinbase_trader
-          __path__: /path/to/repo/var/data/coinbase_trader/prod/events.jsonl
+          __path__: /path/to/repo/runtime_data/prod/events.jsonl
+          # events.db is canonical; JSONL is legacy fallback
     pipeline_stages:
       - json:
           expressions:

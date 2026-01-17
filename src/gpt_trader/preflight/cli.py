@@ -68,6 +68,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         checker.check_system_time,
         checker.check_disk_space,
         checker.simulate_dry_run,
+        checker.check_event_store_redaction,
         checker.check_readiness_report,
     ]
 

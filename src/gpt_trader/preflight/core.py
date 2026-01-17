@@ -8,6 +8,7 @@ from .checks import (
     check_dependencies,
     check_disk_space,
     check_environment_variables,
+    check_event_store_redaction,
     check_key_permissions,
     check_pretrade_diagnostics,
     check_profile_configuration,
@@ -106,6 +107,9 @@ class PreflightCheck:
 
     def check_readiness_report(self) -> bool:
         return check_readiness_report(self)
+
+    def check_event_store_redaction(self) -> bool:
+        return check_event_store_redaction(self)
 
     def check_test_suite(self) -> bool:
         return check_test_suite(self)

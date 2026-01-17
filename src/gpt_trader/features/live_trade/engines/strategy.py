@@ -12,11 +12,14 @@ Includes WS health watchdog that monitors staleness and triggers degradation.
 """
 
 import asyncio
+import os
+import sys
 import threading
 import time
 from collections import deque
 from datetime import datetime
 from decimal import Decimal
+from importlib import metadata
 from typing import Any
 
 from gpt_trader.app.health_server import HealthState
@@ -502,6 +505,8 @@ class TradingEngine(BaseEngine):
             self._rehydrate_from_events()
             self._rehydrated = True
 
+        self._record_runtime_start()
+
         self._transition_state(EngineState.RUNNING, reason="tasks_scheduled")
 
         tasks: list[asyncio.Task[Any]] = []
@@ -576,6 +581,30 @@ class TradingEngine(BaseEngine):
             strategy_callback = self.strategy.rehydrate
 
         return self._price_tick_store.rehydrate(strategy_rehydrate_callback=strategy_callback)
+
+    def _record_runtime_start(self) -> None:
+        event_store = getattr(self, "_event_store", None)
+        if event_store is None:
+            return
+
+        try:
+            package_version = metadata.version("gpt-trader")
+        except metadata.PackageNotFoundError:
+            package_version = None
+
+        payload = {
+            "timestamp": time.time(),
+            "profile": str(self.context.config.profile or ""),
+            "bot_id": self.context.bot_id or None,
+            "build_sha": os.getenv("GPT_TRADER_BUILD_SHA"),
+            "package_version": package_version,
+            "python_version": sys.version.split()[0],
+            "pid": os.getpid(),
+        }
+        try:
+            event_store.append("runtime_start", payload)
+        except Exception:
+            logger.exception("Failed to record runtime_start", operation="runtime_start")
 
     async def _runtime_guard_sweep(self) -> None:
         """Periodically run runtime guards to check risk limits.

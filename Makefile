@@ -2,7 +2,7 @@
 	readiness-window legacy-bundle agent-setup agent-check agent-impact agent-impact-full agent-map agent-tests agent-risk \
 	agent-naming agent-health agent-health-fast agent-health-full agent-chaos-smoke agent-chaos-week \
 	agent-regenerate agent-docs-links canary-liveness canary-liveness-check canary-daily canary-decision-traces \
-	canary-decision-trace-probe
+	canary-decision-trace-probe canary-runtime-info
 
 COMPOSE_DIR=deploy/gpt_trader/docker
 COMPOSE_FILE=$(COMPOSE_DIR)/docker-compose.yaml
@@ -69,6 +69,9 @@ canary-decision-traces:
 
 canary-decision-trace-probe:
 	uv run python scripts/ops/decision_trace_probe.py --profile canary --symbol BTC-USD --side buy
+
+canary-runtime-info:
+	uv run python scripts/ops/runtime_fingerprint.py --profile canary
 
 readiness-window:
 	uv run python scripts/readiness_window.py --profile $(PREFLIGHT_PROFILE) --hours $(READINESS_WINDOW_HOURS)

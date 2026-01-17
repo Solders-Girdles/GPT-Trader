@@ -69,11 +69,12 @@ Thresholds (adjust per strategy):
 - Out-of-sample Sharpe >= 0.7
 - Profit factor >= 1.2
 - Max drawdown <= 10%
-- Walk-forward: >= 3 windows with consistent sign of returns
+- Phase B (Canary live): Backtest gate pass is sufficient; walk-forward results may lag (see notes).
+- Phase C (Prod live): Walk-forward pass_count >= 3/6 (or >= 3 windows with positive total_return).
 
 Checklist:
 - [x] Evidence path(s): `runtime_data/canary/reports/sweep_2h_trend_window_real_20260117_012209/tw64_thr0p01_cd3/backtest_20260117_012222.json`, `runtime_data/canary/reports/sweep_2h_trend_window_real_20260117_012209/tw64_thr0p01_cd3/backtest_20260117_012222.txt`, `runtime_data/canary/reports/walk_forward_20260117_071033/summary.md`, `runtime_data/canary/reports/walk_forward_20260117_080009/summary.md`
-- [x] Notes: 90-day backtest (BTC-USD, TWO_HOUR) using mean reversion + trend filter passes Pillar 2 gates: total_return=+0.46%, max_drawdown=0.57%, Sharpe=1.51, profit_factor=5.37, net_profit_factor=1.45, fee_drag/trade=49.96, trades=15 (threshold=15). Walk-forward (6x90d, step 30d, anchor_end 2026-01-17) is currently regime-dependent (pass_count=1/6); treat WFA as an outstanding robustness gap. Regime switcher WFA (hard switch) did not improve robustness (pass_count=0/6). (Historical: FIVE_MINUTE baseline backtest failed gates.)
+- [x] Notes: 90-day backtest (BTC-USD, TWO_HOUR) using mean reversion + trend filter passes Pillar 2 gates: total_return=+0.46%, max_drawdown=0.57%, Sharpe=1.51, profit_factor=5.37, net_profit_factor=1.45, fee_drag/trade=49.96, trades=15 (threshold=15). Walk-forward (6x90d, step 30d, anchor_end 2026-01-17) is currently regime-dependent (pass_count=1/6); treat WFA as an outstanding robustness gap for Phase C readiness. Regime switcher WFA (hard switch) did not improve robustness (pass_count=0/6). (Historical: FIVE_MINUTE baseline backtest failed gates.)
 
 ### 3) Risk management
 

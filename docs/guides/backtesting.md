@@ -336,6 +336,30 @@ class HistoricalDataManager:
         ]).fetchall()
 ```
 
+## CLI quickstart
+
+Use the backtest runner to execute single runs or walk-forward sweeps from the CLI.
+
+```bash
+uv run python scripts/backtest_runner.py --profile canary --symbol BTC-USD --granularity TWO_HOUR \
+  --strategy mr --trend-filter --shorts --start 2025-10-01 --end 2026-01-17
+```
+
+Walk-forward flags:
+
+- `--walk-forward`: enable walk-forward mode (default is a single backtest).
+- `--wf-windows`: number of walk-forward windows.
+- `--wf-window-days`: window length in days.
+- `--wf-step-days`: step size in days.
+- `--wf-require-all-pass`: require every window to pass the strategy gates.
+- `--end`: anchor_end for the walk-forward schedule; defaults to UTC midnight today.
+
+Outputs:
+
+- `runtime_data/<profile>/reports/walk_forward_<timestamp>/summary.md`
+- `runtime_data/<profile>/reports/walk_forward_<timestamp>/summary.json`
+- Per-window subdirectories for each walk-forward slice
+
 ## Validation Framework
 
 ### Golden-Path Replays

@@ -334,7 +334,7 @@ def load_liveness_snapshot(
     ]
     if not age_values:
         status = "UNKNOWN"
-    elif all(age <= max_age_seconds for age in age_values):
+    elif any(age <= max_age_seconds for age in age_values):
         status = "GREEN"
     else:
         status = "RED"

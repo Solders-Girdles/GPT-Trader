@@ -260,9 +260,20 @@ class TestDailyReportToText:
 
     def test_contains_header(self) -> None:
         report = _create_daily_report()
+        report.liveness = {
+            "status": "GREEN",
+            "events": {
+                "heartbeat": {"age_seconds": 10},
+                "price_tick": {"age_seconds": 20},
+            },
+        }
+        report.runtime = {"build_sha": "abc123"}
         result = report.to_text()
         assert "Daily Trading Report - 2024-01-15" in result
         assert "Profile: PROD" in result
+        assert "RUNTIME" in result
+        assert "Liveness:" in result
+        assert "Build SHA" in result
 
     def test_contains_account_summary(self) -> None:
         report = _create_daily_report()

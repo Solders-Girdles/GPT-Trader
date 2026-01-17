@@ -45,6 +45,7 @@ class DailyReportGenerator:
         else:
             date = date.astimezone(UTC)
 
+        generated_at_dt = datetime.now(UTC)
         logger.info(f"Generating daily report for {date.date()} (profile={self.profile})")
 
         current_metrics = load_metrics(self.metrics_file)
@@ -66,13 +67,13 @@ class DailyReportGenerator:
         runtime_fingerprint = None
         events_db = self.events_file.with_name("events.db")
         if events_db.exists():
-            liveness_snapshot = load_liveness_snapshot(events_db, now=date)
+            liveness_snapshot = load_liveness_snapshot(events_db, now=generated_at_dt)
             runtime_fingerprint = load_runtime_fingerprint(events_db)
 
         return DailyReport(
             date=date.strftime("%Y-%m-%d"),
             profile=self.profile,
-            generated_at=datetime.now(UTC).isoformat(),
+            generated_at=generated_at_dt.isoformat(),
             symbol_performance=symbol_metrics,
             liveness=liveness_snapshot,
             runtime=runtime_fingerprint,

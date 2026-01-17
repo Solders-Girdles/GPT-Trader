@@ -142,37 +142,64 @@ class DailyReport:
             f"Generated: {self.generated_at}",
             "=" * 80,
             "",
-            "ACCOUNT SUMMARY",
-            "-" * 80,
-            f"  Equity:          {equity_text}",
-            f"  Change (24h):    ${self.equity_change:+,.2f} ({change_pct_text})",
-            "",
-            "PnL BREAKDOWN",
-            "-" * 80,
-            f"  Realized PnL:    ${self.realized_pnl:+,.2f}",
-            f"  Unrealized PnL:  ${self.unrealized_pnl:+,.2f}",
-            f"  Funding PnL:     ${self.funding_pnl:+,.2f}",
-            f"  Fees Paid:       ${self.fees_paid:,.2f}",
-            f"  Total PnL:       ${self.total_pnl:+,.2f}",
-            "",
-            "PERFORMANCE METRICS",
-            "-" * 80,
-            f"  Win Rate:        {self.win_rate:.2%}",
-            f"  Profit Factor:   {self.profit_factor:.2f}",
-            f"  Sharpe Ratio:    {self.sharpe_ratio:.2f}",
-            f"  Max Drawdown:    ${self.max_drawdown:,.2f} ({self.max_drawdown_pct:.2f}%)",
-            "",
-            "TRADE STATISTICS",
-            "-" * 80,
-            f"  Total Trades:    {self.total_trades}",
-            f"  Winning:         {self.winning_trades}",
-            f"  Losing:          {self.losing_trades}",
-            f"  Avg Win:         ${self.avg_win:,.2f}",
-            f"  Avg Loss:        ${self.avg_loss:,.2f}",
-            f"  Largest Win:     ${self.largest_win:,.2f}",
-            f"  Largest Loss:    ${self.largest_loss:,.2f}",
-            "",
         ]
+
+        if self.liveness or self.runtime:
+            lines.extend(
+                [
+                    "RUNTIME",
+                    "-" * 80,
+                ]
+            )
+            if self.liveness:
+                status = self.liveness.get("status", "UNKNOWN")
+                events = self.liveness.get("events", {})
+                heartbeat_age = events.get("heartbeat", {}).get("age_seconds")
+                price_tick_age = events.get("price_tick", {}).get("age_seconds")
+                lines.append(
+                    "  Liveness:        "
+                    f"{status} (heartbeat_age={heartbeat_age}, price_tick_age={price_tick_age})"
+                )
+            if self.runtime:
+                build_sha = self.runtime.get("build_sha") or self.runtime.get("buildSha")
+                if build_sha:
+                    lines.append(f"  Build SHA:       {build_sha}")
+            lines.append("")
+
+        lines.extend(
+            [
+                "ACCOUNT SUMMARY",
+                "-" * 80,
+                f"  Equity:          {equity_text}",
+                f"  Change (24h):    ${self.equity_change:+,.2f} ({change_pct_text})",
+                "",
+                "PnL BREAKDOWN",
+                "-" * 80,
+                f"  Realized PnL:    ${self.realized_pnl:+,.2f}",
+                f"  Unrealized PnL:  ${self.unrealized_pnl:+,.2f}",
+                f"  Funding PnL:     ${self.funding_pnl:+,.2f}",
+                f"  Fees Paid:       ${self.fees_paid:,.2f}",
+                f"  Total PnL:       ${self.total_pnl:+,.2f}",
+                "",
+                "PERFORMANCE METRICS",
+                "-" * 80,
+                f"  Win Rate:        {self.win_rate:.2%}",
+                f"  Profit Factor:   {self.profit_factor:.2f}",
+                f"  Sharpe Ratio:    {self.sharpe_ratio:.2f}",
+                f"  Max Drawdown:    ${self.max_drawdown:,.2f} ({self.max_drawdown_pct:.2f}%)",
+                "",
+                "TRADE STATISTICS",
+                "-" * 80,
+                f"  Total Trades:    {self.total_trades}",
+                f"  Winning:         {self.winning_trades}",
+                f"  Losing:          {self.losing_trades}",
+                f"  Avg Win:         ${self.avg_win:,.2f}",
+                f"  Avg Loss:        ${self.avg_loss:,.2f}",
+                f"  Largest Win:     ${self.largest_win:,.2f}",
+                f"  Largest Loss:    ${self.largest_loss:,.2f}",
+                "",
+            ]
+        )
 
         if self.symbol_performance:
             lines.extend(

@@ -70,6 +70,31 @@ def test_liveness_green(tmp_path: Path) -> None:
     assert snapshot["events"]["price_tick"]["age_seconds"] == 20
 
 
+def test_liveness_green_with_one_fresh_event(tmp_path: Path) -> None:
+    now = datetime(2024, 1, 1, 12, 0, tzinfo=UTC)
+    db_path = tmp_path / "liveness_partial_green.db"
+    _create_events_db(db_path)
+    _insert_event(
+        db_path,
+        timestamp="2024-01-01 11:50:00",
+        event_type="heartbeat",
+        payload={"timestamp": "2024-01-01T11:50:00Z"},
+    )
+    _insert_event(
+        db_path,
+        timestamp="2024-01-01 11:59:30",
+        event_type="price_tick",
+        payload={"timestamp": "2024-01-01T11:59:30Z"},
+    )
+
+    snapshot = load_liveness_snapshot(db_path, now=now, max_age_seconds=300)
+
+    assert snapshot is not None
+    assert snapshot["status"] == "GREEN"
+    assert snapshot["events"]["heartbeat"]["age_seconds"] == 600
+    assert snapshot["events"]["price_tick"]["age_seconds"] == 30
+
+
 def test_liveness_red(tmp_path: Path) -> None:
     now = datetime(2024, 1, 1, 12, 0, tzinfo=UTC)
     db_path = tmp_path / "liveness_red.db"

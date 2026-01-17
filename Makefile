@@ -1,7 +1,7 @@
 .PHONY: dev-up dev-down lint typecheck test smoke preflight preflight-readiness dash cov clean clean-dry-run scaffold-slice \
 	readiness-window legacy-bundle agent-setup agent-check agent-impact agent-impact-full agent-map agent-tests agent-risk \
 	agent-naming agent-health agent-health-fast agent-health-full agent-chaos-smoke agent-chaos-week \
-	agent-regenerate agent-docs-links
+	agent-regenerate agent-docs-links canary-liveness canary-liveness-check canary-daily canary-decision-traces
 
 COMPOSE_DIR=deploy/gpt_trader/docker
 COMPOSE_FILE=$(COMPOSE_DIR)/docker-compose.yaml
@@ -66,6 +66,9 @@ canary-daily:
 	@latest_preflight=$$(ls -t preflight_report_*.json 2>/dev/null | head -1 || true); \
 	if [ -n "$$latest_preflight" ]; then echo "preflight_report_path=$$latest_preflight"; fi
 	@echo "Next: append/update docs/READINESS.md 3-day streak log entry."
+
+canary-decision-traces:
+	uv run python scripts/ops/tail_decision_traces.py --profile canary --limit 10
 
 readiness-window:
 	uv run python scripts/readiness_window.py --profile $(PREFLIGHT_PROFILE) --hours $(READINESS_WINDOW_HOURS)

@@ -108,3 +108,34 @@ def test_both_stale_is_red(tmp_path: Path) -> None:
 
     assert is_green is False
     assert {row.event_type for row in rows} == {"heartbeat", "price_tick"}
+
+
+def test_liveness_min_event_id_requires_newer_event(tmp_path: Path) -> None:
+    db_path = tmp_path / "events.db"
+    _create_events_db(db_path)
+    now = datetime.now(timezone.utc)
+    _write_event(db_path, "heartbeat", now)
+
+    rows, is_green = liveness_check.check_liveness(
+        db_path,
+        ["heartbeat"],
+        max_age_seconds=300,
+        min_event_id=1,
+        now=now,
+    )
+
+    assert rows[0].event_id == 1
+    assert is_green is False
+
+    _write_event(db_path, "heartbeat", now)
+
+    rows, is_green = liveness_check.check_liveness(
+        db_path,
+        ["heartbeat"],
+        max_age_seconds=300,
+        min_event_id=1,
+        now=now,
+    )
+
+    assert rows[0].event_id == 2
+    assert is_green is True

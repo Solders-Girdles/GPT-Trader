@@ -56,3 +56,39 @@ def test_read_latest_runtime_start_missing_returns_none(tmp_path: Path) -> None:
 
     result = runtime_fingerprint._read_latest_runtime_start(db_path)
     assert result is None
+
+
+def test_validate_runtime_start_fails_on_event_id() -> None:
+    payload = {"event_id": 1, "build_sha": "abc"}
+    is_valid, reason = runtime_fingerprint._validate_runtime_start(
+        payload,
+        min_event_id=2,
+        expected_build_sha=None,
+    )
+
+    assert is_valid is False
+    assert "event_id" in reason
+
+
+def test_validate_runtime_start_fails_on_build_sha() -> None:
+    payload = {"event_id": 5, "build_sha": "abc"}
+    is_valid, reason = runtime_fingerprint._validate_runtime_start(
+        payload,
+        min_event_id=1,
+        expected_build_sha="def",
+    )
+
+    assert is_valid is False
+    assert "build_sha" in reason
+
+
+def test_validate_runtime_start_passes_when_matching() -> None:
+    payload = {"event_id": 5, "build_sha": "abc"}
+    is_valid, reason = runtime_fingerprint._validate_runtime_start(
+        payload,
+        min_event_id=1,
+        expected_build_sha="abc",
+    )
+
+    assert is_valid is True
+    assert reason == "ok"

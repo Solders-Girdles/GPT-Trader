@@ -5,11 +5,12 @@ import argparse
 import os
 import shlex
 import signal
+import sqlite3
 import subprocess
 import time
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from collections.abc import Iterable
 
 DEFAULT_PROFILE = "canary"
 DEFAULT_STOP_TIMEOUT = 10
@@ -195,6 +196,29 @@ def _resolve_build_sha(runtime_root: Path) -> str:
     return sha
 
 
+def _fetch_latest_event_id(
+    runtime_root: Path,
+    profile: str,
+    event_types: tuple[str, ...],
+) -> int:
+    events_db = runtime_root / "runtime_data" / profile / "events.db"
+    if not events_db.exists():
+        return 0
+
+    placeholders = ",".join("?" for _ in event_types)
+    query = f"SELECT max(id) FROM events WHERE event_type IN ({placeholders})"
+    try:
+        with sqlite3.connect(str(events_db)) as connection:
+            cursor = connection.execute(query, event_types)
+            row = cursor.fetchone()
+    except sqlite3.Error:
+        return 0
+
+    if row is None or row[0] is None:
+        return 0
+    return int(row[0])
+
+
 def _spawn_canary(
     *,
     runtime_root: Path,
@@ -309,7 +333,13 @@ def start_canary(
         print(f"pids={_format_pid_list(proc.pid for proc in running)}")
         return 1
     if running and force:
-        stop_canary(runtime_root=runtime_root, profile=profile, timeout_seconds=stop_timeout)
+        stop_result = stop_canary(
+            runtime_root=runtime_root,
+            profile=profile,
+            timeout_seconds=stop_timeout,
+        )
+        if stop_result != 0:
+            return stop_result
 
     try:
         build_sha = _resolve_build_sha(runtime_root)
@@ -386,7 +416,25 @@ def restart_canary(
     wait_seconds: int,
     wait_interval: int,
 ) -> int:
-    stop_canary(runtime_root=runtime_root, profile=profile, timeout_seconds=stop_timeout)
+    baseline_liveness_id = _fetch_latest_event_id(
+        runtime_root,
+        profile,
+        ("heartbeat", "price_tick"),
+    )
+    baseline_runtime_id = _fetch_latest_event_id(
+        runtime_root,
+        profile,
+        ("runtime_start",),
+    )
+
+    stop_result = stop_canary(
+        runtime_root=runtime_root,
+        profile=profile,
+        timeout_seconds=stop_timeout,
+    )
+    if stop_result != 0:
+        return stop_result
+
     start_result = start_canary(
         runtime_root=runtime_root,
         profile=profile,
@@ -395,6 +443,12 @@ def restart_canary(
     )
     if start_result != 0:
         return start_result
+
+    try:
+        expected_build_sha = _resolve_build_sha(runtime_root)
+    except RuntimeError as exc:
+        print(f"error={exc}")
+        return 2
 
     liveness_ok = _wait_for_success(
         command=[
@@ -410,6 +464,8 @@ def restart_canary(
             "price_tick",
             "--max-age-seconds",
             "300",
+            "--min-event-id",
+            str(baseline_liveness_id),
         ],
         runtime_root=runtime_root,
         wait_seconds=wait_seconds,
@@ -425,6 +481,10 @@ def restart_canary(
             "scripts/ops/runtime_fingerprint.py",
             "--profile",
             profile,
+            "--min-event-id",
+            str(baseline_runtime_id),
+            "--expected-build-sha",
+            expected_build_sha,
         ],
         runtime_root=runtime_root,
         wait_seconds=wait_seconds,

@@ -19,6 +19,18 @@ def _parse_args() -> argparse.Namespace:
         default=Path("."),
         help="Repo/runtime root (default: .)",
     )
+    parser.add_argument(
+        "--min-event-id",
+        type=int,
+        default=None,
+        help="Minimum runtime_start event id required",
+    )
+    parser.add_argument(
+        "--expected-build-sha",
+        type=str,
+        default=None,
+        help="Expected build SHA for runtime_start payload",
+    )
     return parser.parse_args()
 
 
@@ -56,6 +68,25 @@ def _read_latest_runtime_start(events_db: Path) -> dict[str, Any] | None:
     return payload
 
 
+def _validate_runtime_start(
+    payload: dict[str, Any],
+    *,
+    min_event_id: int | None,
+    expected_build_sha: str | None,
+) -> tuple[bool, str]:
+    event_id = payload.get("event_id")
+    if min_event_id is not None:
+        if event_id is None or event_id <= min_event_id:
+            return False, "runtime_start event_id is not newer than baseline"
+
+    if expected_build_sha is not None:
+        payload_sha = payload.get("build_sha")
+        if payload_sha != expected_build_sha:
+            return False, "runtime_start build_sha does not match expected"
+
+    return True, "ok"
+
+
 def _print_payload(payload: dict[str, Any]) -> None:
     fields = [
         "event_id",
@@ -90,6 +121,15 @@ def main() -> int:
     if payload is None:
         print("error=no runtime_start events")
         return 3
+
+    is_valid, reason = _validate_runtime_start(
+        payload,
+        min_event_id=args.min_event_id,
+        expected_build_sha=args.expected_build_sha,
+    )
+    if not is_valid:
+        print(f"error={reason}")
+        return 4
 
     _print_payload(payload)
     return 0

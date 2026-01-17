@@ -3,10 +3,10 @@ from __future__ import annotations
 
 import argparse
 import sqlite3
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from collections.abc import Iterable
 
 DEFAULT_EVENT_TYPES = ("heartbeat", "price_tick")
 DEFAULT_MAX_AGE_SECONDS = 300
@@ -18,6 +18,7 @@ class EventAge:
     event_type: str
     last_ts: str
     age_seconds: int
+    event_id: int | None
 
 
 def _parse_args() -> argparse.Namespace:
@@ -43,6 +44,12 @@ def _parse_args() -> argparse.Namespace:
         default=None,
         help="Event type to consider (repeatable)",
     )
+    parser.add_argument(
+        "--min-event-id",
+        type=int,
+        default=None,
+        help="Minimum event id required for liveness",
+    )
     return parser.parse_args()
 
 
@@ -67,14 +74,23 @@ def _format_timestamp(value: datetime | None) -> str:
     return value.isoformat()
 
 
-def _fetch_latest_timestamp(connection: sqlite3.Connection, event_type: str) -> str | None:
+def _fetch_latest_event(
+    connection: sqlite3.Connection, event_type: str
+) -> tuple[int | None, str | None]:
     cursor = connection.execute(
-        "SELECT max(timestamp) FROM events WHERE event_type = ?", (event_type,)
+        """
+        SELECT id, timestamp
+        FROM events
+        WHERE event_type = ?
+        ORDER BY id DESC
+        LIMIT 1
+        """,
+        (event_type,),
     )
     row = cursor.fetchone()
     if row is None:
-        return None
-    return row[0]
+        return None, None
+    return row[0], row[1]
 
 
 def check_liveness(
@@ -82,6 +98,7 @@ def check_liveness(
     event_types: Iterable[str],
     max_age_seconds: int,
     *,
+    min_event_id: int | None = None,
     now: datetime | None = None,
 ) -> tuple[list[EventAge], bool]:
     if not events_db.exists():
@@ -92,7 +109,7 @@ def check_liveness(
         rows: list[EventAge] = []
         now_ts = now or datetime.now(timezone.utc)
         for event_type in event_types:
-            raw_ts = _fetch_latest_timestamp(connection, event_type)
+            event_id, raw_ts = _fetch_latest_event(connection, event_type)
             parsed = _parse_timestamp(raw_ts)
             if parsed is None:
                 rows.append(
@@ -100,6 +117,7 @@ def check_liveness(
                         event_type=event_type,
                         last_ts="-",
                         age_seconds=STALE_AGE_SECONDS,
+                        event_id=None,
                     )
                 )
                 continue
@@ -109,9 +127,14 @@ def check_liveness(
                     event_type=event_type,
                     last_ts=_format_timestamp(parsed),
                     age_seconds=age_seconds,
+                    event_id=event_id,
                 )
             )
-        is_green = any(row.age_seconds <= max_age_seconds for row in rows)
+        is_green = any(
+            row.age_seconds <= max_age_seconds
+            and (min_event_id is None or (row.event_id or 0) > min_event_id)
+            for row in rows
+        )
         return rows, is_green
     finally:
         connection.close()
@@ -129,6 +152,7 @@ def main() -> int:
             events_db,
             event_types,
             args.max_age_seconds,
+            min_event_id=args.min_event_id,
         )
     except (sqlite3.Error, FileNotFoundError) as exc:
         print("liveness_status=ERROR")
@@ -136,7 +160,11 @@ def main() -> int:
         return 2
 
     for row in rows:
-        print(f"{row.event_type} last_ts={row.last_ts} age_seconds={row.age_seconds}")
+        event_id = row.event_id if row.event_id is not None else "-"
+        print(
+            f"{row.event_type} last_ts={row.last_ts} age_seconds={row.age_seconds} "
+            f"event_id={event_id}"
+        )
 
     status = "GREEN" if is_green else "RED"
     print(f"liveness_status={status}")

@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2026-01-16
+last-updated: 2026-01-17
 ---
 
 ## Purpose
@@ -64,8 +64,8 @@ Thresholds (adjust per strategy):
 - Walk-forward: >= 3 windows with consistent sign of returns
 
 Checklist:
-- [ ] Evidence path(s): `runtime_data/canary/reports/daily_report_2026-01-15.json`, `preflight_report_20260116_000708.json`
-- [ ] Notes: 2026-01-15 report 2/3 collected; guard_triggers.api_health=31 -> NOT GREEN. Preflight readiness failed api_errors/guard_triggers; can_trade still false.
+- [x] Evidence path(s): `runtime_data/canary/reports/sweep_2h_trend_window_real_20260117_012209/tw64_thr0p01_cd3/backtest_20260117_012222.json`, `runtime_data/canary/reports/sweep_2h_trend_window_real_20260117_012209/tw64_thr0p01_cd3/backtest_20260117_012222.txt`
+- [x] Notes: 90-day backtest (BTC-USD, TWO_HOUR) using mean reversion + trend filter passes Pillar 2 gates: total_return=+0.46%, max_drawdown=0.57%, Sharpe=1.51, profit_factor=5.37, net_profit_factor=1.45, fee_drag/trade=49.96, trades=15 (threshold=15). (Historical: FIVE_MINUTE baseline backtest failed gates.)
 
 ### 3) Risk management
 
@@ -103,8 +103,8 @@ Thresholds (default targets):
 - `health.api_errors == 0`
 
 Checklist:
-- [ ] Evidence path(s): `preflight_report_20260115_214038.json`, `preflight_report_20260116_000708.json`
-- [ ] Notes: 2026-01-15 DRY_RUN view-only passed; live-intent preflight still fails as expected (can_trade=False).
+- [ ] Evidence path(s): `preflight_report_20260115_214038.json`, `preflight_report_20260116_000708.json`, `runtime_data/canary/reports/phase-a-tests-2026-01-16.log`
+- [ ] Notes: 2026-01-15 DRY_RUN view-only passed; live-intent preflight still fails as expected (can_trade=False). Phase A execution tests collected 2026-01-16.
 
 ### 5) State persistence and recovery
 
@@ -120,8 +120,8 @@ Thresholds:
 - Manual replay shows zero duplicate orders and zero orphan positions
 
 Checklist:
-- [ ] Evidence path(s):
-- [ ] Notes:
+- [ ] Evidence path(s): `runtime_data/canary/reports/phase-a-tests-2026-01-16.log`
+- [ ] Notes: Phase A crash recovery + order flow integration tests passed 2026-01-16.
 
 ### 6) Observability and explainability
 

@@ -21,7 +21,7 @@ UICoordinator.apply_observer_update()
 ### Key Files
 | File | Lines | Purpose |
 |------|-------|---------|
-| `tui/managers/ui_coordinator.py` | ~555 | Update orchestration, heartbeat loop |
+| `tui/managers/ui_coordinator.py` | ~555 | Update coordination, heartbeat loop |
 | `tui/services/state_registry.py` | ~154 | Observer broadcast pattern |
 | `tui/state.py` | ~400+ | Reactive state container (Widget) |
 | `tui/screens/main_screen.py` | ~337 | Main dashboard layout |

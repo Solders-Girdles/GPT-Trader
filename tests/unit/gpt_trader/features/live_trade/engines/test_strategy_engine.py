@@ -116,6 +116,9 @@ def engine(context, mock_strategy, application_container):
         engine._order_validator.enforce_slippage_guard.return_value = None
         engine._order_validator.ensure_mark_is_fresh.return_value = None
         engine._order_validator.run_pre_trade_validation.return_value = None
+        # Mock maybe_preview_order_async as an async mock
+        from unittest.mock import AsyncMock
+        engine._order_validator.maybe_preview_order_async = AsyncMock(return_value=None)
         engine._order_validator.maybe_preview_order.return_value = None
         engine._order_validator.finalize_reduce_only_flag.return_value = False
 

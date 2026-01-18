@@ -132,6 +132,9 @@ def engine(context, mock_security_validator, application_container):
             "maybe_preview_order",
         ]:
             setattr(eng._order_validator, attr, MagicMock(return_value=None))
+        from unittest.mock import AsyncMock
+
+        eng._order_validator.maybe_preview_order_async = AsyncMock(return_value=None)
         eng._order_validator.finalize_reduce_only_flag.return_value = False
         eng._order_validator.enable_order_preview = True
         eng._order_submitter = MagicMock()

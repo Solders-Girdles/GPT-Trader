@@ -355,7 +355,7 @@ export RISK_KILL_SWITCH_ENABLED=1 && pkill -f gpt-trader
 
 ### Python & Dependencies
 - **Python**: 3.12+ required
-- **Poetry**: 1.0+ for dependency management
+- **uv**: latest for dependency management
 - **websockets**: >=13.0,<14.0 (Coinbase SDK compatibility)
 
 ### Network Requirements

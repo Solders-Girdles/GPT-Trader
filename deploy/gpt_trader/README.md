@@ -1,7 +1,7 @@
 # gpt_trader Docker Deployment
 
 This directory hosts the active Docker assets for the gpt_trader trading system. The
-multi-stage Dockerfile builds Poetry-managed dependencies and exposes
+multi-stage Dockerfile builds uv-managed dependencies and exposes
 separate targets for development, testing, production, and optional security scanning. The base
 compose file (`docker/docker-compose.yaml`) now focuses on the essentials: the trading bot and
 opt-in Prometheus/Grafana metrics via the `observability` profile. Heavier infrastructure blocks

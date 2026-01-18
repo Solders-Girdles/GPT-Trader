@@ -185,7 +185,10 @@ class SystemMaintenanceService:
             try:
                 # Check if the event store supports pruning
                 if hasattr(self._event_store, "prune"):
-                    pruned = self._event_store.prune(max_rows=self._prune_max_rows)
+                    # Run pruning in a separate thread to avoid blocking the event loop
+                    pruned = await asyncio.to_thread(
+                        self._event_store.prune, max_rows=self._prune_max_rows
+                    )
                     if pruned > 0:
                         logger.info("Pruned old events from database", count=pruned)
             except Exception as e:

@@ -1,7 +1,7 @@
 .PHONY: dev-up dev-down lint typecheck test smoke preflight preflight-readiness dash cov clean clean-dry-run scaffold-slice \
 	readiness-window legacy-bundle agent-setup agent-check agent-impact agent-impact-full agent-map agent-tests agent-risk \
 	agent-naming agent-health agent-health-fast agent-health-full agent-chaos-smoke agent-chaos-week \
-	agent-regenerate agent-docs-links canary-liveness canary-liveness-check canary-daily canary-decision-traces \
+	agent-regenerate agent-verify agent-docs-links canary-liveness canary-liveness-check canary-daily canary-decision-traces \
 	canary-decision-trace-probe canary-runtime-info canary-stop canary-start \
 	canary-restart canary-status canary-watchdog canary-watchdog-once ops-controls-smoke
 
@@ -179,6 +179,9 @@ agent-chaos-week:
 
 agent-regenerate:
 	uv run agent-regenerate
+
+agent-verify:
+	uv run agent-regenerate --verify
 
 agent-docs-links:
 	uv run python scripts/maintenance/docs_link_audit.py

@@ -7,15 +7,11 @@ for testing integration paths without external API calls.
 from __future__ import annotations
 
 import asyncio
-import os
 from collections.abc import Generator
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
 import pytest
-
-# Force mock broker for all integration tests
-os.environ.setdefault("MOCK_BROKER", "1")
 
 from gpt_trader.app.bootstrap import bot_from_profile, build_bot
 from gpt_trader.app.config import BotConfig
@@ -30,6 +26,12 @@ from gpt_trader.persistence.event_store import EventStore
 
 if TYPE_CHECKING:
     from gpt_trader.features.live_trade.bot import TradingBot
+
+
+@pytest.fixture(autouse=True)
+def _integration_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Ensure integration tests run with the deterministic broker."""
+    monkeypatch.setenv("MOCK_BROKER", "1")
 
 
 @pytest.fixture
@@ -89,7 +91,7 @@ def fresh_event_store() -> EventStore:
 
 
 @pytest.fixture
-def dev_bot() -> Generator[TradingBot]:
+def dev_bot(_integration_env) -> Generator[TradingBot]:
     """Create a TradingBot with dev profile (DeterministicBroker).
 
     Yields:
@@ -118,7 +120,7 @@ def dev_bot() -> Generator[TradingBot]:
 
 
 @pytest.fixture
-def fast_signal_bot() -> Generator[TradingBot]:
+def fast_signal_bot(_integration_env) -> Generator[TradingBot]:
     """Create a TradingBot with fast MA crossover settings for signal testing.
 
     Uses short_ma_period=3, long_ma_period=5 and interval=1 for rapid signal generation.

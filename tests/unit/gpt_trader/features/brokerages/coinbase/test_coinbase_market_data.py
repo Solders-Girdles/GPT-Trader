@@ -31,14 +31,14 @@ from gpt_trader.features.brokerages.coinbase.utilities import (
     quantize_to_increment,
 )
 from gpt_trader.utilities.datetime_helpers import utc_now
-from tests.unit.gpt_trader.features.brokerages.coinbase.minimal_brokerage import (
-    MinimalCoinbaseBrokerage,
-)
-from tests.unit.gpt_trader.features.brokerages.coinbase.test_helpers import (
+from tests.unit.gpt_trader.features.brokerages.coinbase.helpers import (
     MARKET_DATA_ENDPOINT_CASES,
     _decode_body,
     make_client,
     url_has_param,
+)
+from tests.unit.gpt_trader.features.brokerages.coinbase.minimal_brokerage import (
+    MinimalCoinbaseBrokerage,
 )
 
 pytestmark = pytest.mark.endpoints

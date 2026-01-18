@@ -4,7 +4,11 @@ import tempfile
 import threading
 from pathlib import Path
 
+import pytest
+
 from gpt_trader.persistence.event_store import EventStore
+
+pytestmark = pytest.mark.integration
 
 
 class TestEventStorePersistence:

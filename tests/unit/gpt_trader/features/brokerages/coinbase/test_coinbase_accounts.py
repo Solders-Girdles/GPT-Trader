@@ -16,7 +16,7 @@ from gpt_trader.core import InvalidRequestError, MarketType, Product
 from gpt_trader.features.brokerages.coinbase.account_manager import CoinbaseAccountManager
 from gpt_trader.features.brokerages.coinbase.models import APIConfig
 from gpt_trader.utilities.datetime_helpers import utc_now
-from tests.unit.gpt_trader.features.brokerages.coinbase.test_helpers import (
+from tests.unit.gpt_trader.features.brokerages.coinbase.helpers import (
     ACCOUNT_ENDPOINT_CASES,
     CoinbaseBrokerage,
     StubBroker,

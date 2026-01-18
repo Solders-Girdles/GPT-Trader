@@ -662,7 +662,3 @@ class TestEnforcePerpsRules:
         # Small quantity with valid rounding but too small notional fails
         with pytest.raises(InvalidRequestError):
             enforce_perp_rules(p, quantity=Decimal("0.001"), price=Decimal("1000.00"))
-
-
-if __name__ == "__main__":
-    pytest.main([__file__, "-v"])

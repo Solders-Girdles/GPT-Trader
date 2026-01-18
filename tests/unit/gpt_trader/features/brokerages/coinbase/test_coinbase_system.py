@@ -14,7 +14,7 @@ import pytest
 from gpt_trader.core import Order, OrderSide, OrderType
 from gpt_trader.features.brokerages.coinbase.errors import InsufficientFunds
 from gpt_trader.features.brokerages.coinbase.models import APIConfig
-from tests.unit.gpt_trader.features.brokerages.coinbase.test_helpers import (
+from tests.unit.gpt_trader.features.brokerages.coinbase.helpers import (
     SYSTEM_ENDPOINT_CASES,
     CoinbaseBrokerage,
     make_client,

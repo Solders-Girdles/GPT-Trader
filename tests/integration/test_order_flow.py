@@ -14,6 +14,8 @@ import pytest
 
 from gpt_trader.core import OrderSide
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def trading_bot(integration_container):

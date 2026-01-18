@@ -1,6 +1,5 @@
 """Core validation integration tests.
 
-Converted from legacy validation script (removed).
 Tests the integration of core bot components with DeterministicBroker.
 """
 

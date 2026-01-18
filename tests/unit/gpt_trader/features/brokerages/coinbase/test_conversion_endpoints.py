@@ -7,7 +7,7 @@ import json
 
 import pytest
 
-from tests.unit.gpt_trader.features.brokerages.coinbase.test_helpers import make_client
+from tests.unit.gpt_trader.features.brokerages.coinbase.helpers import make_client
 
 pytestmark = pytest.mark.endpoints
 

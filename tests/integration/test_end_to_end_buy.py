@@ -10,6 +10,8 @@ from gpt_trader.app.container import (
 )
 from gpt_trader.features.live_trade.strategies.perps_baseline import Action, Decision
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.mark.asyncio
 async def test_end_to_end_buy_execution():

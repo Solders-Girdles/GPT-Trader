@@ -25,6 +25,8 @@ from gpt_trader.features.live_trade.engines.base import CoordinatorContext
 from gpt_trader.features.live_trade.engines.strategy import TradingEngine
 from gpt_trader.features.live_trade.risk import LiveRiskManager
 
+pytestmark = pytest.mark.integration
+
 
 class TestValidationEscalationFlow:
     """Integration tests for validation failure escalation."""

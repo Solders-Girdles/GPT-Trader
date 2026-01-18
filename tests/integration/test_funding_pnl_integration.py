@@ -21,6 +21,8 @@ from gpt_trader.backtesting.simulation.broker import SimulatedBroker
 from gpt_trader.backtesting.types import FeeTier, SimulationConfig
 from gpt_trader.core import OrderSide, OrderType
 
+pytestmark = pytest.mark.integration
+
 
 class TestFundingPnLIntegration:
     """Integration tests for funding PnL calculation."""

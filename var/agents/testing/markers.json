@@ -37,7 +37,9 @@
     "flaky": "Known flaky tests that may need retries",
     "manual": "Tests requiring manual intervention/verification",
     "deprecated": "Tests for deprecated functionality",
-    "uses_real_preferences": "Tests that read or write real TUI preferences"
+    "uses_real_preferences": "Tests that read or write real TUI preferences",
+    "legacy_delete": "Tests slated for deletion (see tests/_triage/legacy_tests.yaml)",
+    "legacy_modernize": "Tests to modernize/refactor (see tests/_triage/legacy_tests.yaml)"
   },
   "categories": {
     "test_type": [
@@ -95,8 +97,8 @@
   "counts": {
     "parametrize": 94,
     "skipif": 16,
-    "integration": 14,
     "property": 11,
+    "integration": 11,
     "perps": 5,
     "perf": 4,
     "uses_real_preferences": 2,

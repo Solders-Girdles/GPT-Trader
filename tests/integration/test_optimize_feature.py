@@ -24,6 +24,8 @@ from gpt_trader.features.optimize.types import (
     ParameterType,
 )
 
+pytestmark = pytest.mark.integration
+
 
 class SyntheticDataProvider(IHistoricalDataProvider):
     """

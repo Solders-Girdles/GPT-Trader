@@ -13,7 +13,7 @@ from gpt_trader.core import (
     InvalidRequestError,
     RateLimitError,
 )
-from tests.unit.gpt_trader.features.brokerages.coinbase.test_helpers import make_client
+from tests.unit.gpt_trader.features.brokerages.coinbase.helpers import make_client
 
 
 def test_401_maps_to_auth_error():

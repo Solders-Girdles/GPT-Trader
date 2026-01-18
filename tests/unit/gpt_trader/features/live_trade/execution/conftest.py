@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from decimal import Decimal
 from unittest.mock import MagicMock
 
@@ -14,7 +15,12 @@ from gpt_trader.core import (
     Product,
     TimeInForce,
 )
+from gpt_trader.features.live_trade.execution.broker_executor import BrokerExecutor
+from gpt_trader.features.live_trade.execution.guard_manager import GuardManager
+from gpt_trader.features.live_trade.execution.guards import RuntimeGuardState
+from gpt_trader.features.live_trade.execution.order_event_recorder import OrderEventRecorder
 from gpt_trader.features.live_trade.execution.order_submission import OrderSubmitter
+from gpt_trader.features.live_trade.execution.validation import OrderValidator
 from gpt_trader.utilities.datetime_helpers import utc_now
 
 
@@ -30,6 +36,49 @@ def mock_broker() -> MagicMock:
     broker.get_market_snapshot.return_value = None
     broker.get_product.return_value = None
     return broker
+
+
+@pytest.fixture
+def executor(mock_broker: MagicMock) -> BrokerExecutor:
+    """Create a BrokerExecutor instance."""
+    return BrokerExecutor(broker=mock_broker)
+
+
+@pytest.fixture
+def sample_order() -> Order:
+    """Create a sample order response."""
+    return Order(
+        id="order-123",
+        client_id="client-123",
+        symbol="BTC-USD",
+        side=OrderSide.BUY,
+        type=OrderType.LIMIT,
+        quantity=Decimal("1.0"),
+        price=Decimal("50000"),
+        stop_price=None,
+        tif=TimeInForce.GTC,
+        status=OrderStatus.PENDING,
+        submitted_at=utc_now(),
+        updated_at=utc_now(),
+    )
+
+
+@pytest.fixture
+def order_event_recorder(mock_event_store: MagicMock) -> OrderEventRecorder:
+    """Create an OrderEventRecorder instance."""
+    return OrderEventRecorder(event_store=mock_event_store, bot_id="test-bot-123")
+
+
+@pytest.fixture
+def order_event_mock_order() -> MagicMock:
+    """Create a mock order object for OrderEventRecorder tests."""
+    order = MagicMock()
+    order.id = "order-123"
+    order.client_order_id = "client-123"
+    order.quantity = Decimal("1.0")
+    order.price = Decimal("50000")
+    order.status = "SUBMITTED"
+    return order
 
 
 @pytest.fixture
@@ -65,6 +114,53 @@ def mock_equity_calculator() -> MagicMock:
 
 
 @pytest.fixture
+def guard_manager(
+    mock_broker: MagicMock, mock_risk_manager: MagicMock, mock_equity_calculator: MagicMock
+) -> GuardManager:
+    open_orders = ["order1", "order2"]
+    invalidate_cache = MagicMock()
+    return GuardManager(
+        broker=mock_broker,
+        risk_manager=mock_risk_manager,
+        equity_calculator=mock_equity_calculator,
+        open_orders=open_orders,
+        invalidate_cache_callback=invalidate_cache,
+    )
+
+
+@pytest.fixture
+def mock_position() -> MagicMock:
+    pos = MagicMock()
+    pos.symbol = "BTC-PERP"
+    pos.entry_price = "50000"
+    pos.mark_price = "51000"
+    pos.quantity = "0.1"
+    pos.side = "long"
+    return pos
+
+
+@pytest.fixture
+def sample_guard_state(mock_position: MagicMock) -> RuntimeGuardState:
+    return RuntimeGuardState(
+        timestamp=time.time(),
+        balances=[],
+        equity=Decimal("10000"),
+        positions=[mock_position],
+        positions_pnl={
+            "BTC-PERP": {"realized_pnl": Decimal("0"), "unrealized_pnl": Decimal("100")}
+        },
+        positions_dict={
+            "BTC-PERP": {
+                "quantity": Decimal("0.1"),
+                "mark": Decimal("51000"),
+                "entry": Decimal("50000"),
+            }
+        },
+        guard_events=[],
+    )
+
+
+@pytest.fixture
 def mock_product() -> Product:
     """Create a mock product."""
     return Product(
@@ -84,6 +180,24 @@ def mock_product() -> Product:
 def mock_failure_tracker() -> MagicMock:
     """Create a mock failure tracker."""
     return MagicMock()
+
+
+@pytest.fixture
+def validator(
+    mock_broker: MagicMock,
+    mock_risk_manager: MagicMock,
+    mock_failure_tracker: MagicMock,
+) -> OrderValidator:
+    record_preview = MagicMock()
+    record_rejection = MagicMock()
+    return OrderValidator(
+        broker=mock_broker,
+        risk_manager=mock_risk_manager,
+        enable_order_preview=True,
+        record_preview_callback=record_preview,
+        record_rejection_callback=record_rejection,
+        failure_tracker=mock_failure_tracker,
+    )
 
 
 @pytest.fixture

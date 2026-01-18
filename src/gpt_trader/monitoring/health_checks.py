@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from gpt_trader.app.health_server import HealthState
     from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
     from gpt_trader.features.live_trade.degradation import DegradationState
+    from gpt_trader.utilities.async_tools.bounded_to_thread import BoundedToThread
 from gpt_trader.features.live_trade.risk.protocols import RiskManagerProtocol
 
 logger = get_logger(__name__, component="health_checks")
@@ -306,6 +307,7 @@ class HealthCheckRunner:
         interval_seconds: float = 30.0,
         message_stale_seconds: float = 60.0,
         heartbeat_stale_seconds: float = 120.0,
+        broker_calls: BoundedToThread | None = None,
     ) -> None:
         """
         Initialize the health check runner.
@@ -326,6 +328,7 @@ class HealthCheckRunner:
         self._interval = interval_seconds
         self._message_stale_seconds = message_stale_seconds
         self._heartbeat_stale_seconds = heartbeat_stale_seconds
+        self._broker_calls = broker_calls
         self._running = False
         self._task: Any = None
 
@@ -393,11 +396,21 @@ class HealthCheckRunner:
         import asyncio
 
         health_state = self._health_state
+        broker_calls = self._broker_calls
+        if broker_calls is not None and not asyncio.iscoroutinefunction(
+            getattr(broker_calls, "__call__", None)
+        ):
+            broker_calls = None
+
+        async def run_blocking(func: Any, *args: Any, **kwargs: Any) -> Any:
+            if broker_calls is None:
+                return await asyncio.to_thread(func, *args, **kwargs)
+            return await broker_calls(func, *args, **kwargs)
 
         # Run broker ping in thread pool (blocking I/O)
         if self._broker is not None:
             try:
-                healthy, details = await asyncio.to_thread(check_broker_ping, self._broker)
+                healthy, details = await run_blocking(check_broker_ping, self._broker)
                 health_state.add_check("broker", healthy, details)
             except Exception as exc:
                 health_state.add_check("broker", False, {"error": str(exc)})
@@ -405,7 +418,7 @@ class HealthCheckRunner:
         # Run WS freshness check in thread pool
         if self._broker is not None:
             try:
-                healthy, details = await asyncio.to_thread(
+                healthy, details = await run_blocking(
                     check_ws_freshness,
                     self._broker,
                     self._message_stale_seconds,

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .bounded_to_thread import BoundedToThread
 from .cache import AsyncCache, async_cache
 from .context import AsyncContextManager, async_timeout
 from .helpers import (
@@ -27,6 +28,7 @@ __all__ = [
     "SyncToAsyncWrapper",
     "AsyncBatchProcessor",
     "AsyncRateLimiter",
+    "BoundedToThread",
     "AsyncContextManager",
     "AsyncCache",
     "async_to_sync",

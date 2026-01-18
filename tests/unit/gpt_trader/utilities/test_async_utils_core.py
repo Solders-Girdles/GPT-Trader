@@ -15,6 +15,7 @@ from gpt_trader.utilities.async_tools import (  # naming: allow
     AsyncRateLimiter,
     AsyncRetry,
     AsyncToSyncWrapper,
+    BoundedToThread,
     SyncToAsyncWrapper,
     async_cache,
     async_rate_limit,
@@ -120,6 +121,48 @@ class TestSyncToAsyncWrapper:
 
         result = await sync_func(7)
         assert result == 21
+
+
+class TestBoundedToThread:
+    """Test BoundedToThread concurrency limiting."""
+
+    def test_invalid_concurrency(self) -> None:
+        with pytest.raises(ValueError, match="max_concurrency"):
+            BoundedToThread(max_concurrency=0)
+
+    @pytest.mark.asyncio
+    async def test_concurrency_is_bounded(self) -> None:
+        limit = 3
+        limiter = BoundedToThread(max_concurrency=limit)
+
+        lock = threading.Lock()
+        started = threading.Event()
+        release = threading.Event()
+        state = {"current": 0, "max": 0}
+
+        def work(value: int) -> int:
+            with lock:
+                state["current"] += 1
+                state["max"] = max(state["max"], state["current"])
+                if state["current"] == limit:
+                    started.set()
+
+            # Keep threads busy until the test releases them.
+            release.wait(timeout=2)
+
+            with lock:
+                state["current"] -= 1
+            return value
+
+        tasks = [asyncio.create_task(limiter.run(work, idx)) for idx in range(10)]
+
+        # Wait until we observe the concurrency peak.
+        await asyncio.wait_for(asyncio.to_thread(started.wait, 2), timeout=2.5)
+        release.set()
+        results = await asyncio.gather(*tasks)
+
+        assert results == list(range(10))
+        assert state["max"] == limit
 
 
 class TestAsyncContextManager:

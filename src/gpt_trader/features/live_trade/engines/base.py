@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from gpt_trader.features.live_trade.risk.protocols import RiskManagerProtocol
     from gpt_trader.monitoring.notifications.service import NotificationService
     from gpt_trader.persistence.orders_store import OrdersStore
+    from gpt_trader.utilities.async_tools.bounded_to_thread import BoundedToThread
 
 
 @dataclass
@@ -44,6 +45,7 @@ class CoordinatorContext:
     config: BotConfig
     container: ApplicationContainer | None = None
     broker: BrokerProtocol | None = None
+    broker_calls: BoundedToThread | None = None
     symbols: tuple[str, ...] = ()
     runtime_state: RuntimeStateProtocol | None = None
     risk_manager: RiskManagerProtocol | None = None

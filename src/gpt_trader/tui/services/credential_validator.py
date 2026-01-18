@@ -430,7 +430,7 @@ class CredentialValidator:
         for attempt in range(1, max_attempts + 1):
             try:
                 start = time.perf_counter()
-                self._client.get_time()
+                await asyncio.to_thread(self._client.get_time)
                 result.api_latency_ms = (time.perf_counter() - start) * 1000
                 result.connectivity_ok = True
                 result.add_success(
@@ -475,7 +475,7 @@ class CredentialValidator:
 
         for attempt in range(1, max_attempts + 1):
             try:
-                permissions = self._client.get_key_permissions() or {}
+                permissions = await asyncio.to_thread(self._client.get_key_permissions) or {}
                 break
             except (HTTPError, URLError, TimeoutError, ConnectionError) as exc:
                 if attempt == max_attempts:

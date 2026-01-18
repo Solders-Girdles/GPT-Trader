@@ -7,6 +7,7 @@ Extracted from TraderApp to reduce app.py complexity and improve testability.
 
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING
 
 from gpt_trader.tui.notification_helpers import (
@@ -464,7 +465,13 @@ class ActionDispatcher:
             if self.app.bot and hasattr(self.app.bot, "engine"):
                 engine = self.app.bot.engine
                 if hasattr(engine, "reset_daily_tracking"):
-                    engine.reset_daily_tracking()
+                    broker_calls = getattr(engine, "_broker_calls", None)
+                    if broker_calls is not None and asyncio.iscoroutinefunction(
+                        getattr(broker_calls, "__call__", None)
+                    ):
+                        await broker_calls(engine.reset_daily_tracking)
+                    else:
+                        await asyncio.to_thread(engine.reset_daily_tracking)
                     notify_success(self.app, "Daily risk tracking reset", title="Risk Reset")
                     logger.info("Daily risk tracking reset completed")
                     return

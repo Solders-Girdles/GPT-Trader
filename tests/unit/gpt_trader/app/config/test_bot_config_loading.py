@@ -15,7 +15,8 @@ def test_load_paper_profile():
     if not PAPER_PROFILE_PATH.exists():
         pytest.skip(f"Profile not found at {PAPER_PROFILE_PATH}")
 
-    config = BotConfig.from_yaml(PAPER_PROFILE_PATH)
+    with pytest.warns(DeprecationWarning, match=r"Legacy profile-style YAML mapping"):
+        config = BotConfig.from_yaml(PAPER_PROFILE_PATH)
 
     # Verify top-level mappings
     assert "BTC-USD" in config.symbols
@@ -37,7 +38,8 @@ def test_validate_paper_profile():
     if not PAPER_PROFILE_PATH.exists():
         pytest.skip(f"Profile not found at {PAPER_PROFILE_PATH}")
 
-    config = BotConfig.from_yaml(PAPER_PROFILE_PATH)
+    with pytest.warns(DeprecationWarning, match=r"Legacy profile-style YAML mapping"):
+        config = BotConfig.from_yaml(PAPER_PROFILE_PATH)
     errors = validate_config(config)
 
     assert not errors, f"Validation failed with errors: {errors}"

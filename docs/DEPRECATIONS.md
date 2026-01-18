@@ -18,6 +18,7 @@ Classification of legacy shims/fallbacks and compatibility keepers.
 | Item | Location | Owner | Status | Notes |
 |------|----------|-------|--------|-------|
 | `BotConfig` flat compat accessors (`short_ma`, `long_ma`, etc.) | `src/gpt_trader/app/config/bot_config.py` | Core Config | evaluate | Internal code uses nested config; keep for external compatibility until safe to remove. |
+| `BotConfig.from_dict` legacy profile-style YAML mapping | `src/gpt_trader/app/config/bot_config.py` | Core Config | deprecate | Emits `DeprecationWarning`; target removal in v4.0. |
 | Perps strategy compat aliases (`short_ma`/`long_ma` props, `StrategyConfig`) | `src/gpt_trader/features/live_trade/strategies/perps_baseline/strategy.py` | Live Trade | evaluate | Internal strategy uses `*_ma_period`; aliases kept for compatibility. |
 | `DataSource.YAHOO` legacy alias | `src/gpt_trader/features/data/types.py` | Data | evaluate | Routed to Coinbase; decide to implement `yfinance` or drop the Yahoo path. |
 | `download_from_yahoo()` legacy stub | `src/gpt_trader/features/data/data.py` | Data | evaluate | Retained for legacy callers; `DataService.fetch_data()` routes through Coinbase. |
@@ -58,7 +59,6 @@ Before removing any deprecated item:
 | `get_failure_tracker()` fallback without container | Unreleased | Set application container; use `container.validation_failure_tracker`. |
 | `Alert.id` / `Alert.timestamp` aliases | Unreleased | Use `alert_id` / `created_at`. |
 | `CoinbaseRestServiceBase` alias | Unreleased | Use `CoinbaseRestServiceCore`. |
-| Legacy profile mapping in `BotConfig.from_dict` | Unreleased | Use profile schema or BotConfig schema directly. |
 | `daily_loss_limit` in profile schema | Unreleased | Use `daily_loss_limit_pct`. |
 | CLI fallback for unknown profile YAML | Unreleased | Use a `Profile` enum value or `--config`. |
 | Legacy risk templates | Unreleased | Archived under `docs/archive/risk_templates/`. |

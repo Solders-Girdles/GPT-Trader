@@ -504,6 +504,14 @@ class BotConfig:
         if any(key in data for key in ("trading", "risk_management", "profile_name")):
             from gpt_trader.app.config.profile_loader import ProfileSchema
 
+            warnings.warn(
+                "Legacy profile-style YAML mapping via BotConfig.from_dict() is deprecated and will "
+                "be removed in v4.0. Load profiles via ProfileSchema (or use BotConfig schema "
+                "directly).",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
             schema = ProfileSchema.from_yaml(data, data.get("profile_name", "custom"))
 
             risk = BotRiskConfig(

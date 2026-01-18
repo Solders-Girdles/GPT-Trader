@@ -59,9 +59,7 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/errors/test_error_patterns.py",  # error pattern decorator coverage
     "tests/unit/gpt_trader/monitoring/test_alert_types.py",  # alert type coverage
     "tests/unit/gpt_trader/app/test_health_server.py",  # health server endpoint coverage
-    "tests/unit/gpt_trader/validation/test_rules.py",  # validation rule matrix
     "tests/unit/gpt_trader/monitoring/daily_report/test_analytics.py",  # daily report analytics
-    "tests/unit/gpt_trader/backtesting/metrics/test_statistics.py",  # trade statistics coverage
     "tests/unit/gpt_trader/backtesting/engine/test_clock.py",  # simulation clock scenarios
     "tests/unit/gpt_trader/monitoring/daily_report/test_models.py",  # daily report model coverage
     "tests/unit/gpt_trader/backtesting/validation/test_validator.py",  # validation scenarios

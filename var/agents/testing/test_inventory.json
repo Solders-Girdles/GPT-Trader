@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 11103,
-    "total_files": 655,
+    "total_files": 668,
     "markers_used": 9
   },
   "marker_definitions": {
@@ -150,13 +150,18 @@
       "tests/unit/gpt_trader/backtesting/test_historical_data_manager_edges.py",
       "tests/unit/gpt_trader/backtesting/test_coinbase_historical_fetcher_edges.py",
       "tests/unit/gpt_trader/backtesting/test_types.py",
-      "tests/unit/gpt_trader/backtesting/metrics/test_statistics.py",
+      "tests/unit/gpt_trader/backtesting/metrics/test_statistics_trade_statistics_dataclass.py",
+      "tests/unit/gpt_trader/backtesting/metrics/test_statistics_streak_metrics.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_backtest_report.py",
+      "tests/unit/gpt_trader/backtesting/metrics/test_statistics_timing_metrics.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_csv_row.py",
+      "tests/unit/gpt_trader/backtesting/metrics/test_statistics_position_metrics.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_risk.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_summary.py",
+      "tests/unit/gpt_trader/backtesting/metrics/test_statistics_calculate_trade_statistics.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_result.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_report_reporter_basics.py",
+      "tests/unit/gpt_trader/backtesting/metrics/test_statistics_pnl_metrics.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_should_settle.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_market_orders.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_multi_symbol.py",
@@ -488,9 +493,13 @@
       "tests/unit/gpt_trader/validation/test_composite_validators.py",
       "tests/unit/gpt_trader/validation/test_type_validators.py",
       "tests/unit/gpt_trader/validation/test_calculation_validator.py",
+      "tests/unit/gpt_trader/validation/test_rules_collection_rules.py",
+      "tests/unit/gpt_trader/validation/test_rules_boolean_rule.py",
+      "tests/unit/gpt_trader/validation/test_rules_infrastructure.py",
+      "tests/unit/gpt_trader/validation/test_rules_numeric_rules.py",
       "tests/unit/gpt_trader/validation/test_data_validators.py",
-      "tests/unit/gpt_trader/validation/test_temporal_validators.py",
-      "tests/unit/gpt_trader/validation/test_rules.py"
+      "tests/unit/gpt_trader/validation/test_rules_string_time_and_symbol_rules.py",
+      "tests/unit/gpt_trader/validation/test_temporal_validators.py"
     ],
     "preflight": [
       "tests/unit/gpt_trader/preflight/test_checks_diagnostics.py",
@@ -586,7 +595,9 @@
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_edges.py",
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_order_execution.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_real_transport_edge_cases.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_accounts.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_real_transport.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_service_loading.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_auth.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service_edges.py",
@@ -596,8 +607,10 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_retry_behaviour.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery_discovery_data.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_user_event_handler.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_environment_options.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_credentials_resolution.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_features_edges.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_mock_transport.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_cfm_endpoints.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_validation_and_safe_sizing.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_system.py",
@@ -608,12 +621,12 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_product_spec.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_fallback.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_http_request_layer.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_coverage.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery_intx.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_intx_portfolio_service.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_permissions.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_errors.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_ws_health.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_noop_transport.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_conversion_endpoints.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_websocket.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_websocket_edges.py",
@@ -19200,6 +19213,781 @@
         "docstring": "Test buy & hold comparison logic."
       }
     ],
+    "tests/unit/gpt_trader/validation/test_rules_collection_rules.py": [
+      {
+        "name": "TestMappingRule::test_parses_mapping_from_string",
+        "line": 7,
+        "markers": [],
+        "docstring": "",
+        "class": "TestMappingRule"
+      },
+      {
+        "name": "TestMappingRule::test_invalid_entry_raises",
+        "line": 12,
+        "markers": [],
+        "docstring": "",
+        "class": "TestMappingRule"
+      },
+      {
+        "name": "TestMappingRule::test_disallows_blank_entries_when_requested",
+        "line": 17,
+        "markers": [],
+        "docstring": "",
+        "class": "TestMappingRule"
+      },
+      {
+        "name": "TestListRule::test_parses_string_list",
+        "line": 24,
+        "markers": [],
+        "docstring": "",
+        "class": "TestListRule"
+      },
+      {
+        "name": "TestListRule::test_disallows_empty_entries",
+        "line": 28,
+        "markers": [],
+        "docstring": "",
+        "class": "TestListRule"
+      },
+      {
+        "name": "TestListRule::test_cast_failure_surfaces",
+        "line": 33,
+        "markers": [],
+        "docstring": "",
+        "class": "TestListRule"
+      },
+      {
+        "name": "test_parses_mapping_from_string",
+        "line": 7,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_invalid_entry_raises",
+        "line": 12,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_disallows_blank_entries_when_requested",
+        "line": 17,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_parses_string_list",
+        "line": 24,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_disallows_empty_entries",
+        "line": 28,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_cast_failure_surfaces",
+        "line": 33,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/validation/test_rules_boolean_rule.py": [
+      {
+        "name": "TestBooleanRule::test_parses_tokens_and_numbers",
+        "line": 7,
+        "markers": [],
+        "docstring": "",
+        "class": "TestBooleanRule"
+      },
+      {
+        "name": "TestBooleanRule::test_invalid_boolean_raises",
+        "line": 15,
+        "markers": [],
+        "docstring": "",
+        "class": "TestBooleanRule"
+      },
+      {
+        "name": "TestBooleanRuleExtended::test_none_with_no_default_raises",
+        "line": 24,
+        "markers": [],
+        "docstring": "",
+        "class": "TestBooleanRuleExtended"
+      },
+      {
+        "name": "TestBooleanRuleExtended::test_none_with_default_returns_default",
+        "line": 29,
+        "markers": [],
+        "docstring": "",
+        "class": "TestBooleanRuleExtended"
+      },
+      {
+        "name": "TestBooleanRuleExtended::test_custom_true_tokens",
+        "line": 33,
+        "markers": [],
+        "docstring": "",
+        "class": "TestBooleanRuleExtended"
+      },
+      {
+        "name": "TestBooleanRuleExtended::test_custom_false_tokens",
+        "line": 37,
+        "markers": [],
+        "docstring": "",
+        "class": "TestBooleanRuleExtended"
+      },
+      {
+        "name": "TestBooleanRuleExtended::test_float_1_converts_to_true",
+        "line": 41,
+        "markers": [],
+        "docstring": "",
+        "class": "TestBooleanRuleExtended"
+      },
+      {
+        "name": "TestBooleanRuleExtended::test_float_0_converts_to_false",
+        "line": 45,
+        "markers": [],
+        "docstring": "",
+        "class": "TestBooleanRuleExtended"
+      },
+      {
+        "name": "TestBooleanRuleExtended::test_string_true_false",
+        "line": 49,
+        "markers": [],
+        "docstring": "",
+        "class": "TestBooleanRuleExtended"
+      },
+      {
+        "name": "test_parses_tokens_and_numbers",
+        "line": 7,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_invalid_boolean_raises",
+        "line": 15,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_none_with_no_default_raises",
+        "line": 24,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_none_with_default_returns_default",
+        "line": 29,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_custom_true_tokens",
+        "line": 33,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_custom_false_tokens",
+        "line": 37,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_float_1_converts_to_true",
+        "line": 41,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_float_0_converts_to_false",
+        "line": 45,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_string_true_false",
+        "line": 49,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/validation/test_rules_infrastructure.py": [
+      {
+        "name": "TestRuleChain::test_composes_rules",
+        "line": 18,
+        "markers": [],
+        "docstring": "",
+        "class": "TestRuleChain"
+      },
+      {
+        "name": "TestRuleChainExtended::test_empty_chain_raises",
+        "line": 26,
+        "markers": [],
+        "docstring": "",
+        "class": "TestRuleChainExtended"
+      },
+      {
+        "name": "TestRuleChainExtended::test_callable_conversion",
+        "line": 30,
+        "markers": [],
+        "docstring": "",
+        "class": "TestRuleChainExtended"
+      },
+      {
+        "name": "TestFunctionRule::test_wraps_function",
+        "line": 41,
+        "markers": [],
+        "docstring": "",
+        "class": "TestFunctionRule"
+      },
+      {
+        "name": "TestFunctionRule::test_apply_calls_function",
+        "line": 48,
+        "markers": [],
+        "docstring": "",
+        "class": "TestFunctionRule"
+      },
+      {
+        "name": "TestFunctionRule::test_passes_field_name",
+        "line": 55,
+        "markers": [],
+        "docstring": "",
+        "class": "TestFunctionRule"
+      },
+      {
+        "name": "TestNormalizeRule::test_returns_base_rule_unchanged",
+        "line": 66,
+        "markers": [],
+        "docstring": "",
+        "class": "TestNormalizeRule"
+      },
+      {
+        "name": "TestNormalizeRule::test_wraps_callable",
+        "line": 71,
+        "markers": [],
+        "docstring": "",
+        "class": "TestNormalizeRule"
+      },
+      {
+        "name": "TestNormalizeRule::test_raises_for_invalid_type",
+        "line": 79,
+        "markers": [],
+        "docstring": "",
+        "class": "TestNormalizeRule"
+      },
+      {
+        "name": "TestBaseValidationRule::test_call_invokes_apply",
+        "line": 87,
+        "markers": [],
+        "docstring": "",
+        "class": "TestBaseValidationRule"
+      },
+      {
+        "name": "TestBaseValidationRule::test_call_passes_field_name",
+        "line": 95,
+        "markers": [],
+        "docstring": "",
+        "class": "TestBaseValidationRule"
+      },
+      {
+        "name": "TestRuleError::test_message_stored",
+        "line": 107,
+        "markers": [],
+        "docstring": "",
+        "class": "TestRuleError"
+      },
+      {
+        "name": "TestRuleError::test_value_stored",
+        "line": 111,
+        "markers": [],
+        "docstring": "",
+        "class": "TestRuleError"
+      },
+      {
+        "name": "TestRuleError::test_value_defaults_to_none",
+        "line": 115,
+        "markers": [],
+        "docstring": "",
+        "class": "TestRuleError"
+      },
+      {
+        "name": "TestRuleError::test_is_value_error_subclass",
+        "line": 119,
+        "markers": [],
+        "docstring": "",
+        "class": "TestRuleError"
+      },
+      {
+        "name": "test_composes_rules",
+        "line": 18,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_empty_chain_raises",
+        "line": 26,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_callable_conversion",
+        "line": 30,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_wraps_function",
+        "line": 41,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_apply_calls_function",
+        "line": 48,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_passes_field_name",
+        "line": 55,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_returns_base_rule_unchanged",
+        "line": 66,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_wraps_callable",
+        "line": 71,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_raises_for_invalid_type",
+        "line": 79,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_call_invokes_apply",
+        "line": 87,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_call_passes_field_name",
+        "line": 95,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_message_stored",
+        "line": 107,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_value_stored",
+        "line": 111,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_value_defaults_to_none",
+        "line": 115,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_is_value_error_subclass",
+        "line": 119,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/validation/test_rules_numeric_rules.py": [
+      {
+        "name": "TestDecimalRule::test_coerces_str_and_numbers",
+        "line": 15,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDecimalRule"
+      },
+      {
+        "name": "TestDecimalRule::test_empty_string_returns_default",
+        "line": 20,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDecimalRule"
+      },
+      {
+        "name": "TestDecimalRuleExtended::test_none_with_default_returns_default",
+        "line": 28,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDecimalRuleExtended"
+      },
+      {
+        "name": "TestDecimalRuleExtended::test_none_allowed",
+        "line": 32,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDecimalRuleExtended"
+      },
+      {
+        "name": "TestDecimalRuleExtended::test_none_not_allowed_raises",
+        "line": 36,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDecimalRuleExtended"
+      },
+      {
+        "name": "TestDecimalRuleExtended::test_decimal_passthrough",
+        "line": 41,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDecimalRuleExtended"
+      },
+      {
+        "name": "TestDecimalRuleExtended::test_float_conversion",
+        "line": 46,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDecimalRuleExtended"
+      },
+      {
+        "name": "TestDecimalRuleExtended::test_empty_with_allow_none",
+        "line": 51,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDecimalRuleExtended"
+      },
+      {
+        "name": "TestDecimalRuleExtended::test_empty_no_default_no_allow_none_raises",
+        "line": 55,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDecimalRuleExtended"
+      },
+      {
+        "name": "TestDecimalRuleExtended::test_unsupported_type_raises",
+        "line": 60,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDecimalRuleExtended"
+      },
+      {
+        "name": "TestFloatRule::test_uses_default_for_none",
+        "line": 67,
+        "markers": [],
+        "docstring": "",
+        "class": "TestFloatRule"
+      },
+      {
+        "name": "TestFloatRule::test_blank_string_errors_when_no_default",
+        "line": 71,
+        "markers": [],
+        "docstring": "",
+        "class": "TestFloatRule"
+      },
+      {
+        "name": "TestFloatRuleExtended::test_allow_none",
+        "line": 80,
+        "markers": [],
+        "docstring": "",
+        "class": "TestFloatRuleExtended"
+      },
+      {
+        "name": "TestFloatRuleExtended::test_none_no_default_no_allow_raises",
+        "line": 84,
+        "markers": [],
+        "docstring": "",
+        "class": "TestFloatRuleExtended"
+      },
+      {
+        "name": "TestFloatRuleExtended::test_string_conversion",
+        "line": 89,
+        "markers": [],
+        "docstring": "",
+        "class": "TestFloatRuleExtended"
+      },
+      {
+        "name": "TestFloatRuleExtended::test_blank_with_default",
+        "line": 93,
+        "markers": [],
+        "docstring": "",
+        "class": "TestFloatRuleExtended"
+      },
+      {
+        "name": "TestFloatRuleExtended::test_blank_with_allow_none",
+        "line": 97,
+        "markers": [],
+        "docstring": "",
+        "class": "TestFloatRuleExtended"
+      },
+      {
+        "name": "TestIntegerRule::test_parses_integers",
+        "line": 103,
+        "markers": [],
+        "docstring": "",
+        "class": "TestIntegerRule"
+      },
+      {
+        "name": "TestIntegerRule::test_invalid_integer_raises",
+        "line": 108,
+        "markers": [],
+        "docstring": "",
+        "class": "TestIntegerRule"
+      },
+      {
+        "name": "TestIntegerRuleExtended::test_none_allowed",
+        "line": 117,
+        "markers": [],
+        "docstring": "",
+        "class": "TestIntegerRuleExtended"
+      },
+      {
+        "name": "TestIntegerRuleExtended::test_none_not_allowed_raises",
+        "line": 121,
+        "markers": [],
+        "docstring": "",
+        "class": "TestIntegerRuleExtended"
+      },
+      {
+        "name": "TestPercentageRule::test_accepts_fractional_range",
+        "line": 128,
+        "markers": [],
+        "docstring": "",
+        "class": "TestPercentageRule"
+      },
+      {
+        "name": "TestPercentageRule::test_out_of_range_raises",
+        "line": 132,
+        "markers": [],
+        "docstring": "",
+        "class": "TestPercentageRule"
+      },
+      {
+        "name": "TestPercentageRuleExtended::test_none_allowed",
+        "line": 141,
+        "markers": [],
+        "docstring": "",
+        "class": "TestPercentageRuleExtended"
+      },
+      {
+        "name": "TestPercentageRuleExtended::test_none_not_allowed_raises",
+        "line": 145,
+        "markers": [],
+        "docstring": "",
+        "class": "TestPercentageRuleExtended"
+      },
+      {
+        "name": "TestPercentageRuleExtended::test_auto_converts_integer_percentage",
+        "line": 150,
+        "markers": [],
+        "docstring": "",
+        "class": "TestPercentageRuleExtended"
+      },
+      {
+        "name": "TestPercentageRuleExtended::test_boundary_values",
+        "line": 154,
+        "markers": [],
+        "docstring": "",
+        "class": "TestPercentageRuleExtended"
+      },
+      {
+        "name": "TestPercentageRuleExtended::test_negative_raises",
+        "line": 159,
+        "markers": [],
+        "docstring": "",
+        "class": "TestPercentageRuleExtended"
+      },
+      {
+        "name": "TestPercentageRuleExtended::test_non_integer_over_1_raises",
+        "line": 164,
+        "markers": [],
+        "docstring": "",
+        "class": "TestPercentageRuleExtended"
+      },
+      {
+        "name": "test_coerces_str_and_numbers",
+        "line": 15,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_empty_string_returns_default",
+        "line": 20,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_none_with_default_returns_default",
+        "line": 28,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_none_allowed",
+        "line": 32,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_none_not_allowed_raises",
+        "line": 36,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_decimal_passthrough",
+        "line": 41,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_float_conversion",
+        "line": 46,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_empty_with_allow_none",
+        "line": 51,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_empty_no_default_no_allow_none_raises",
+        "line": 55,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_unsupported_type_raises",
+        "line": 60,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_uses_default_for_none",
+        "line": 67,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_blank_string_errors_when_no_default",
+        "line": 71,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_allow_none",
+        "line": 80,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_none_no_default_no_allow_raises",
+        "line": 84,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_string_conversion",
+        "line": 89,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_blank_with_default",
+        "line": 93,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_blank_with_allow_none",
+        "line": 97,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_parses_integers",
+        "line": 103,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_invalid_integer_raises",
+        "line": 108,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_none_allowed",
+        "line": 117,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_none_not_allowed_raises",
+        "line": 121,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_accepts_fractional_range",
+        "line": 128,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_out_of_range_raises",
+        "line": 132,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_none_allowed",
+        "line": 141,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_none_not_allowed_raises",
+        "line": 145,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_auto_converts_integer_percentage",
+        "line": 150,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_boundary_values",
+        "line": 154,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_negative_raises",
+        "line": 159,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_non_integer_over_1_raises",
+        "line": 164,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/validation/test_data_validators.py": [
       {
         "name": "TestDataFrameValidator::test_validates_empty_dataframe",
@@ -19579,6 +20367,268 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/validation/test_rules_string_time_and_symbol_rules.py": [
+      {
+        "name": "TestTimeOfDayRule::test_valid_time_passes",
+        "line": 12,
+        "markers": [],
+        "docstring": "",
+        "class": "TestTimeOfDayRule"
+      },
+      {
+        "name": "TestTimeOfDayRule::test_invalid_format_raises",
+        "line": 16,
+        "markers": [],
+        "docstring": "",
+        "class": "TestTimeOfDayRule"
+      },
+      {
+        "name": "TestTimeOfDayRuleExtended::test_none_allowed",
+        "line": 25,
+        "markers": [],
+        "docstring": "",
+        "class": "TestTimeOfDayRuleExtended"
+      },
+      {
+        "name": "TestTimeOfDayRuleExtended::test_none_not_allowed",
+        "line": 29,
+        "markers": [],
+        "docstring": "",
+        "class": "TestTimeOfDayRuleExtended"
+      },
+      {
+        "name": "TestTimeOfDayRuleExtended::test_non_string_raises",
+        "line": 34,
+        "markers": [],
+        "docstring": "",
+        "class": "TestTimeOfDayRuleExtended"
+      },
+      {
+        "name": "TestTimeOfDayRuleExtended::test_empty_string_allowed",
+        "line": 39,
+        "markers": [],
+        "docstring": "",
+        "class": "TestTimeOfDayRuleExtended"
+      },
+      {
+        "name": "TestTimeOfDayRuleExtended::test_empty_string_not_allowed",
+        "line": 43,
+        "markers": [],
+        "docstring": "",
+        "class": "TestTimeOfDayRuleExtended"
+      },
+      {
+        "name": "TestTimeOfDayRuleExtended::test_strips_whitespace",
+        "line": 48,
+        "markers": [],
+        "docstring": "",
+        "class": "TestTimeOfDayRuleExtended"
+      },
+      {
+        "name": "TestTimeOfDayRuleExtended::test_boundary_times",
+        "line": 52,
+        "markers": [],
+        "docstring": "",
+        "class": "TestTimeOfDayRuleExtended"
+      },
+      {
+        "name": "TestStripStringRuleExtended::test_none_with_no_default_raises",
+        "line": 61,
+        "markers": [],
+        "docstring": "",
+        "class": "TestStripStringRuleExtended"
+      },
+      {
+        "name": "TestStripStringRuleExtended::test_none_with_default",
+        "line": 66,
+        "markers": [],
+        "docstring": "",
+        "class": "TestStripStringRuleExtended"
+      },
+      {
+        "name": "TestStripStringRuleExtended::test_empty_with_default",
+        "line": 70,
+        "markers": [],
+        "docstring": "",
+        "class": "TestStripStringRuleExtended"
+      },
+      {
+        "name": "TestStripStringRuleExtended::test_whitespace_with_default",
+        "line": 74,
+        "markers": [],
+        "docstring": "",
+        "class": "TestStripStringRuleExtended"
+      },
+      {
+        "name": "TestStripStringRuleExtended::test_empty_without_default_raises",
+        "line": 78,
+        "markers": [],
+        "docstring": "",
+        "class": "TestStripStringRuleExtended"
+      },
+      {
+        "name": "TestStripStringRuleExtended::test_converts_non_string_to_string",
+        "line": 83,
+        "markers": [],
+        "docstring": "",
+        "class": "TestStripStringRuleExtended"
+      },
+      {
+        "name": "TestSymbolRule::test_normalizes_and_validates",
+        "line": 89,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSymbolRule"
+      },
+      {
+        "name": "TestSymbolRule::test_invalid_symbol_raises",
+        "line": 93,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSymbolRule"
+      },
+      {
+        "name": "TestSymbolRule::test_empty_string_raises",
+        "line": 98,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSymbolRule"
+      },
+      {
+        "name": "TestSymbolRule::test_non_string_raises",
+        "line": 103,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSymbolRule"
+      },
+      {
+        "name": "TestSymbolRule::test_lowercase_option",
+        "line": 108,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSymbolRule"
+      },
+      {
+        "name": "test_valid_time_passes",
+        "line": 12,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_invalid_format_raises",
+        "line": 16,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_none_allowed",
+        "line": 25,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_none_not_allowed",
+        "line": 29,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_non_string_raises",
+        "line": 34,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_empty_string_allowed",
+        "line": 39,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_empty_string_not_allowed",
+        "line": 43,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_strips_whitespace",
+        "line": 48,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_boundary_times",
+        "line": 52,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_none_with_no_default_raises",
+        "line": 61,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_none_with_default",
+        "line": 66,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_empty_with_default",
+        "line": 70,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_whitespace_with_default",
+        "line": 74,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_empty_without_default_raises",
+        "line": 78,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_converts_non_string_to_string",
+        "line": 83,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_normalizes_and_validates",
+        "line": 89,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_invalid_symbol_raises",
+        "line": 93,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_empty_string_raises",
+        "line": 98,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_non_string_raises",
+        "line": 103,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_lowercase_option",
+        "line": 108,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/validation/test_temporal_validators.py": [
       {
         "name": "TestDateValidator::test_validates_date_object",
@@ -19785,1035 +20835,6 @@
       {
         "name": "test_datetime_comparison_with_datetime_bounds",
         "line": 104,
-        "markers": [],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/validation/test_rules.py": [
-      {
-        "name": "TestBooleanRule::test_parses_tokens_and_numbers",
-        "line": 27,
-        "markers": [],
-        "docstring": "",
-        "class": "TestBooleanRule"
-      },
-      {
-        "name": "TestBooleanRule::test_invalid_boolean_raises",
-        "line": 35,
-        "markers": [],
-        "docstring": "",
-        "class": "TestBooleanRule"
-      },
-      {
-        "name": "TestMappingRule::test_parses_mapping_from_string",
-        "line": 42,
-        "markers": [],
-        "docstring": "",
-        "class": "TestMappingRule"
-      },
-      {
-        "name": "TestMappingRule::test_invalid_entry_raises",
-        "line": 47,
-        "markers": [],
-        "docstring": "",
-        "class": "TestMappingRule"
-      },
-      {
-        "name": "TestMappingRule::test_disallows_blank_entries_when_requested",
-        "line": 52,
-        "markers": [],
-        "docstring": "",
-        "class": "TestMappingRule"
-      },
-      {
-        "name": "TestDecimalRule::test_coerces_str_and_numbers",
-        "line": 59,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDecimalRule"
-      },
-      {
-        "name": "TestDecimalRule::test_empty_string_returns_default",
-        "line": 64,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDecimalRule"
-      },
-      {
-        "name": "TestFloatRule::test_uses_default_for_none",
-        "line": 70,
-        "markers": [],
-        "docstring": "",
-        "class": "TestFloatRule"
-      },
-      {
-        "name": "TestFloatRule::test_blank_string_errors_when_no_default",
-        "line": 74,
-        "markers": [],
-        "docstring": "",
-        "class": "TestFloatRule"
-      },
-      {
-        "name": "TestPercentageRule::test_accepts_fractional_range",
-        "line": 81,
-        "markers": [],
-        "docstring": "",
-        "class": "TestPercentageRule"
-      },
-      {
-        "name": "TestPercentageRule::test_out_of_range_raises",
-        "line": 85,
-        "markers": [],
-        "docstring": "",
-        "class": "TestPercentageRule"
-      },
-      {
-        "name": "TestTimeOfDayRule::test_valid_time_passes",
-        "line": 92,
-        "markers": [],
-        "docstring": "",
-        "class": "TestTimeOfDayRule"
-      },
-      {
-        "name": "TestTimeOfDayRule::test_invalid_format_raises",
-        "line": 96,
-        "markers": [],
-        "docstring": "",
-        "class": "TestTimeOfDayRule"
-      },
-      {
-        "name": "TestRuleChain::test_composes_rules",
-        "line": 103,
-        "markers": [],
-        "docstring": "",
-        "class": "TestRuleChain"
-      },
-      {
-        "name": "TestListRule::test_parses_string_list",
-        "line": 109,
-        "markers": [],
-        "docstring": "",
-        "class": "TestListRule"
-      },
-      {
-        "name": "TestListRule::test_disallows_empty_entries",
-        "line": 113,
-        "markers": [],
-        "docstring": "",
-        "class": "TestListRule"
-      },
-      {
-        "name": "TestListRule::test_cast_failure_surfaces",
-        "line": 118,
-        "markers": [],
-        "docstring": "",
-        "class": "TestListRule"
-      },
-      {
-        "name": "TestIntegerRule::test_parses_integers",
-        "line": 125,
-        "markers": [],
-        "docstring": "",
-        "class": "TestIntegerRule"
-      },
-      {
-        "name": "TestIntegerRule::test_invalid_integer_raises",
-        "line": 130,
-        "markers": [],
-        "docstring": "",
-        "class": "TestIntegerRule"
-      },
-      {
-        "name": "TestSymbolRule::test_normalizes_and_validates",
-        "line": 137,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSymbolRule"
-      },
-      {
-        "name": "TestSymbolRule::test_invalid_symbol_raises",
-        "line": 141,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSymbolRule"
-      },
-      {
-        "name": "TestSymbolRule::test_empty_string_raises",
-        "line": 146,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSymbolRule"
-      },
-      {
-        "name": "TestSymbolRule::test_non_string_raises",
-        "line": 151,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSymbolRule"
-      },
-      {
-        "name": "TestSymbolRule::test_lowercase_option",
-        "line": 156,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSymbolRule"
-      },
-      {
-        "name": "TestBooleanRuleExtended::test_none_with_no_default_raises",
-        "line": 166,
-        "markers": [],
-        "docstring": "",
-        "class": "TestBooleanRuleExtended"
-      },
-      {
-        "name": "TestBooleanRuleExtended::test_none_with_default_returns_default",
-        "line": 171,
-        "markers": [],
-        "docstring": "",
-        "class": "TestBooleanRuleExtended"
-      },
-      {
-        "name": "TestBooleanRuleExtended::test_custom_true_tokens",
-        "line": 175,
-        "markers": [],
-        "docstring": "",
-        "class": "TestBooleanRuleExtended"
-      },
-      {
-        "name": "TestBooleanRuleExtended::test_custom_false_tokens",
-        "line": 179,
-        "markers": [],
-        "docstring": "",
-        "class": "TestBooleanRuleExtended"
-      },
-      {
-        "name": "TestBooleanRuleExtended::test_float_1_converts_to_true",
-        "line": 183,
-        "markers": [],
-        "docstring": "",
-        "class": "TestBooleanRuleExtended"
-      },
-      {
-        "name": "TestBooleanRuleExtended::test_float_0_converts_to_false",
-        "line": 187,
-        "markers": [],
-        "docstring": "",
-        "class": "TestBooleanRuleExtended"
-      },
-      {
-        "name": "TestBooleanRuleExtended::test_string_true_false",
-        "line": 191,
-        "markers": [],
-        "docstring": "",
-        "class": "TestBooleanRuleExtended"
-      },
-      {
-        "name": "TestTimeOfDayRuleExtended::test_none_allowed",
-        "line": 202,
-        "markers": [],
-        "docstring": "",
-        "class": "TestTimeOfDayRuleExtended"
-      },
-      {
-        "name": "TestTimeOfDayRuleExtended::test_none_not_allowed",
-        "line": 206,
-        "markers": [],
-        "docstring": "",
-        "class": "TestTimeOfDayRuleExtended"
-      },
-      {
-        "name": "TestTimeOfDayRuleExtended::test_non_string_raises",
-        "line": 211,
-        "markers": [],
-        "docstring": "",
-        "class": "TestTimeOfDayRuleExtended"
-      },
-      {
-        "name": "TestTimeOfDayRuleExtended::test_empty_string_allowed",
-        "line": 216,
-        "markers": [],
-        "docstring": "",
-        "class": "TestTimeOfDayRuleExtended"
-      },
-      {
-        "name": "TestTimeOfDayRuleExtended::test_empty_string_not_allowed",
-        "line": 220,
-        "markers": [],
-        "docstring": "",
-        "class": "TestTimeOfDayRuleExtended"
-      },
-      {
-        "name": "TestTimeOfDayRuleExtended::test_strips_whitespace",
-        "line": 225,
-        "markers": [],
-        "docstring": "",
-        "class": "TestTimeOfDayRuleExtended"
-      },
-      {
-        "name": "TestTimeOfDayRuleExtended::test_boundary_times",
-        "line": 229,
-        "markers": [],
-        "docstring": "",
-        "class": "TestTimeOfDayRuleExtended"
-      },
-      {
-        "name": "TestStripStringRuleExtended::test_none_with_no_default_raises",
-        "line": 238,
-        "markers": [],
-        "docstring": "",
-        "class": "TestStripStringRuleExtended"
-      },
-      {
-        "name": "TestStripStringRuleExtended::test_none_with_default",
-        "line": 243,
-        "markers": [],
-        "docstring": "",
-        "class": "TestStripStringRuleExtended"
-      },
-      {
-        "name": "TestStripStringRuleExtended::test_empty_with_default",
-        "line": 247,
-        "markers": [],
-        "docstring": "",
-        "class": "TestStripStringRuleExtended"
-      },
-      {
-        "name": "TestStripStringRuleExtended::test_whitespace_with_default",
-        "line": 251,
-        "markers": [],
-        "docstring": "",
-        "class": "TestStripStringRuleExtended"
-      },
-      {
-        "name": "TestStripStringRuleExtended::test_empty_without_default_raises",
-        "line": 255,
-        "markers": [],
-        "docstring": "",
-        "class": "TestStripStringRuleExtended"
-      },
-      {
-        "name": "TestStripStringRuleExtended::test_converts_non_string_to_string",
-        "line": 260,
-        "markers": [],
-        "docstring": "",
-        "class": "TestStripStringRuleExtended"
-      },
-      {
-        "name": "TestDecimalRuleExtended::test_none_with_default_returns_default",
-        "line": 268,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDecimalRuleExtended"
-      },
-      {
-        "name": "TestDecimalRuleExtended::test_none_allowed",
-        "line": 272,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDecimalRuleExtended"
-      },
-      {
-        "name": "TestDecimalRuleExtended::test_none_not_allowed_raises",
-        "line": 276,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDecimalRuleExtended"
-      },
-      {
-        "name": "TestDecimalRuleExtended::test_decimal_passthrough",
-        "line": 281,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDecimalRuleExtended"
-      },
-      {
-        "name": "TestDecimalRuleExtended::test_float_conversion",
-        "line": 286,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDecimalRuleExtended"
-      },
-      {
-        "name": "TestDecimalRuleExtended::test_empty_with_allow_none",
-        "line": 291,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDecimalRuleExtended"
-      },
-      {
-        "name": "TestDecimalRuleExtended::test_empty_no_default_no_allow_none_raises",
-        "line": 295,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDecimalRuleExtended"
-      },
-      {
-        "name": "TestDecimalRuleExtended::test_unsupported_type_raises",
-        "line": 300,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDecimalRuleExtended"
-      },
-      {
-        "name": "TestFloatRuleExtended::test_allow_none",
-        "line": 309,
-        "markers": [],
-        "docstring": "",
-        "class": "TestFloatRuleExtended"
-      },
-      {
-        "name": "TestFloatRuleExtended::test_none_no_default_no_allow_raises",
-        "line": 313,
-        "markers": [],
-        "docstring": "",
-        "class": "TestFloatRuleExtended"
-      },
-      {
-        "name": "TestFloatRuleExtended::test_string_conversion",
-        "line": 318,
-        "markers": [],
-        "docstring": "",
-        "class": "TestFloatRuleExtended"
-      },
-      {
-        "name": "TestFloatRuleExtended::test_blank_with_default",
-        "line": 322,
-        "markers": [],
-        "docstring": "",
-        "class": "TestFloatRuleExtended"
-      },
-      {
-        "name": "TestFloatRuleExtended::test_blank_with_allow_none",
-        "line": 326,
-        "markers": [],
-        "docstring": "",
-        "class": "TestFloatRuleExtended"
-      },
-      {
-        "name": "TestIntegerRuleExtended::test_none_allowed",
-        "line": 334,
-        "markers": [],
-        "docstring": "",
-        "class": "TestIntegerRuleExtended"
-      },
-      {
-        "name": "TestIntegerRuleExtended::test_none_not_allowed_raises",
-        "line": 338,
-        "markers": [],
-        "docstring": "",
-        "class": "TestIntegerRuleExtended"
-      },
-      {
-        "name": "TestPercentageRuleExtended::test_none_allowed",
-        "line": 347,
-        "markers": [],
-        "docstring": "",
-        "class": "TestPercentageRuleExtended"
-      },
-      {
-        "name": "TestPercentageRuleExtended::test_none_not_allowed_raises",
-        "line": 351,
-        "markers": [],
-        "docstring": "",
-        "class": "TestPercentageRuleExtended"
-      },
-      {
-        "name": "TestPercentageRuleExtended::test_auto_converts_integer_percentage",
-        "line": 356,
-        "markers": [],
-        "docstring": "",
-        "class": "TestPercentageRuleExtended"
-      },
-      {
-        "name": "TestPercentageRuleExtended::test_boundary_values",
-        "line": 360,
-        "markers": [],
-        "docstring": "",
-        "class": "TestPercentageRuleExtended"
-      },
-      {
-        "name": "TestPercentageRuleExtended::test_negative_raises",
-        "line": 365,
-        "markers": [],
-        "docstring": "",
-        "class": "TestPercentageRuleExtended"
-      },
-      {
-        "name": "TestPercentageRuleExtended::test_non_integer_over_1_raises",
-        "line": 370,
-        "markers": [],
-        "docstring": "",
-        "class": "TestPercentageRuleExtended"
-      },
-      {
-        "name": "TestRuleChainExtended::test_empty_chain_raises",
-        "line": 379,
-        "markers": [],
-        "docstring": "",
-        "class": "TestRuleChainExtended"
-      },
-      {
-        "name": "TestRuleChainExtended::test_callable_conversion",
-        "line": 383,
-        "markers": [],
-        "docstring": "",
-        "class": "TestRuleChainExtended"
-      },
-      {
-        "name": "TestFunctionRule::test_wraps_function",
-        "line": 396,
-        "markers": [],
-        "docstring": "",
-        "class": "TestFunctionRule"
-      },
-      {
-        "name": "TestFunctionRule::test_apply_calls_function",
-        "line": 403,
-        "markers": [],
-        "docstring": "",
-        "class": "TestFunctionRule"
-      },
-      {
-        "name": "TestFunctionRule::test_passes_field_name",
-        "line": 410,
-        "markers": [],
-        "docstring": "",
-        "class": "TestFunctionRule"
-      },
-      {
-        "name": "TestNormalizeRule::test_returns_base_rule_unchanged",
-        "line": 421,
-        "markers": [],
-        "docstring": "",
-        "class": "TestNormalizeRule"
-      },
-      {
-        "name": "TestNormalizeRule::test_wraps_callable",
-        "line": 426,
-        "markers": [],
-        "docstring": "",
-        "class": "TestNormalizeRule"
-      },
-      {
-        "name": "TestNormalizeRule::test_raises_for_invalid_type",
-        "line": 434,
-        "markers": [],
-        "docstring": "",
-        "class": "TestNormalizeRule"
-      },
-      {
-        "name": "TestBaseValidationRule::test_call_invokes_apply",
-        "line": 442,
-        "markers": [],
-        "docstring": "",
-        "class": "TestBaseValidationRule"
-      },
-      {
-        "name": "TestBaseValidationRule::test_call_passes_field_name",
-        "line": 450,
-        "markers": [],
-        "docstring": "",
-        "class": "TestBaseValidationRule"
-      },
-      {
-        "name": "TestRuleError::test_message_stored",
-        "line": 462,
-        "markers": [],
-        "docstring": "",
-        "class": "TestRuleError"
-      },
-      {
-        "name": "TestRuleError::test_value_stored",
-        "line": 466,
-        "markers": [],
-        "docstring": "",
-        "class": "TestRuleError"
-      },
-      {
-        "name": "TestRuleError::test_value_defaults_to_none",
-        "line": 470,
-        "markers": [],
-        "docstring": "",
-        "class": "TestRuleError"
-      },
-      {
-        "name": "TestRuleError::test_is_value_error_subclass",
-        "line": 474,
-        "markers": [],
-        "docstring": "",
-        "class": "TestRuleError"
-      },
-      {
-        "name": "test_parses_tokens_and_numbers",
-        "line": 27,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_invalid_boolean_raises",
-        "line": 35,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_parses_mapping_from_string",
-        "line": 42,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_invalid_entry_raises",
-        "line": 47,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_disallows_blank_entries_when_requested",
-        "line": 52,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_coerces_str_and_numbers",
-        "line": 59,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_empty_string_returns_default",
-        "line": 64,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_uses_default_for_none",
-        "line": 70,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_blank_string_errors_when_no_default",
-        "line": 74,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_accepts_fractional_range",
-        "line": 81,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_out_of_range_raises",
-        "line": 85,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_valid_time_passes",
-        "line": 92,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_invalid_format_raises",
-        "line": 96,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_composes_rules",
-        "line": 103,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_parses_string_list",
-        "line": 109,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_disallows_empty_entries",
-        "line": 113,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_cast_failure_surfaces",
-        "line": 118,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_parses_integers",
-        "line": 125,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_invalid_integer_raises",
-        "line": 130,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_normalizes_and_validates",
-        "line": 137,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_invalid_symbol_raises",
-        "line": 141,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_empty_string_raises",
-        "line": 146,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_non_string_raises",
-        "line": 151,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_lowercase_option",
-        "line": 156,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_none_with_no_default_raises",
-        "line": 166,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_none_with_default_returns_default",
-        "line": 171,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_custom_true_tokens",
-        "line": 175,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_custom_false_tokens",
-        "line": 179,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_float_1_converts_to_true",
-        "line": 183,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_float_0_converts_to_false",
-        "line": 187,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_string_true_false",
-        "line": 191,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_none_allowed",
-        "line": 202,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_none_not_allowed",
-        "line": 206,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_non_string_raises",
-        "line": 211,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_empty_string_allowed",
-        "line": 216,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_empty_string_not_allowed",
-        "line": 220,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_strips_whitespace",
-        "line": 225,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_boundary_times",
-        "line": 229,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_none_with_no_default_raises",
-        "line": 238,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_none_with_default",
-        "line": 243,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_empty_with_default",
-        "line": 247,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_whitespace_with_default",
-        "line": 251,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_empty_without_default_raises",
-        "line": 255,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_converts_non_string_to_string",
-        "line": 260,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_none_with_default_returns_default",
-        "line": 268,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_none_allowed",
-        "line": 272,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_none_not_allowed_raises",
-        "line": 276,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_decimal_passthrough",
-        "line": 281,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_float_conversion",
-        "line": 286,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_empty_with_allow_none",
-        "line": 291,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_empty_no_default_no_allow_none_raises",
-        "line": 295,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_unsupported_type_raises",
-        "line": 300,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_allow_none",
-        "line": 309,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_none_no_default_no_allow_raises",
-        "line": 313,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_string_conversion",
-        "line": 318,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_blank_with_default",
-        "line": 322,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_blank_with_allow_none",
-        "line": 326,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_none_allowed",
-        "line": 334,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_none_not_allowed_raises",
-        "line": 338,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_none_allowed",
-        "line": 347,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_none_not_allowed_raises",
-        "line": 351,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_auto_converts_integer_percentage",
-        "line": 356,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_boundary_values",
-        "line": 360,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_negative_raises",
-        "line": 365,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_non_integer_over_1_raises",
-        "line": 370,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_empty_chain_raises",
-        "line": 379,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_callable_conversion",
-        "line": 383,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_wraps_function",
-        "line": 396,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_apply_calls_function",
-        "line": 403,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_passes_field_name",
-        "line": 410,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_returns_base_rule_unchanged",
-        "line": 421,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_wraps_callable",
-        "line": 426,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_raises_for_invalid_type",
-        "line": 434,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_call_invokes_apply",
-        "line": 442,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_call_passes_field_name",
-        "line": 450,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_message_stored",
-        "line": 462,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_value_stored",
-        "line": 466,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_value_defaults_to_none",
-        "line": 470,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_is_value_error_subclass",
-        "line": 474,
         "markers": [],
         "docstring": ""
       }
@@ -23536,355 +23557,58 @@
         "docstring": "Should handle 'passed' keyword without extractable count."
       }
     ],
-    "tests/unit/gpt_trader/backtesting/metrics/test_statistics.py": [
-      {
-        "name": "TestCalculatePnlMetrics::test_empty_orders_returns_zeros",
-        "line": 57,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculatePnlMetrics"
-      },
-      {
-        "name": "TestCalculatePnlMetrics::test_orders_without_fill_price_skipped",
-        "line": 65,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculatePnlMetrics"
-      },
-      {
-        "name": "TestCalculatePnlMetrics::test_returns_structure_correct",
-        "line": 71,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculatePnlMetrics"
-      },
-      {
-        "name": "TestCalculatePositionMetrics::test_empty_orders_returns_defaults",
-        "line": 84,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculatePositionMetrics"
-      },
-      {
-        "name": "TestCalculatePositionMetrics::test_calculates_average_position_size",
-        "line": 92,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculatePositionMetrics"
-      },
-      {
-        "name": "TestCalculatePositionMetrics::test_extracts_leverage_from_position",
-        "line": 112,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculatePositionMetrics"
-      },
-      {
-        "name": "TestCalculatePositionMetrics::test_multiple_orders_different_leverage",
-        "line": 122,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculatePositionMetrics"
-      },
-      {
-        "name": "TestCalculatePositionMetrics::test_orders_without_fill_price_skipped",
-        "line": 137,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculatePositionMetrics"
-      },
-      {
-        "name": "TestCalculateTimingMetrics::test_empty_orders_returns_zeros",
-        "line": 155,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateTimingMetrics"
-      },
-      {
-        "name": "TestCalculateTimingMetrics::test_orders_without_submitted_at_skipped",
-        "line": 160,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateTimingMetrics"
-      },
-      {
-        "name": "TestCalculateTimingMetrics::test_order_with_none_submitted_at_explicitly_skipped",
-        "line": 165,
-        "markers": [],
-        "docstring": "Test that orders with submitted_at=None are skipped in timing calculation.",
-        "class": "TestCalculateTimingMetrics"
-      },
-      {
-        "name": "TestCalculateTimingMetrics::test_calculates_hold_time_for_round_trip",
-        "line": 175,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateTimingMetrics"
-      },
-      {
-        "name": "TestCalculateTimingMetrics::test_multiple_round_trips",
-        "line": 190,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateTimingMetrics"
-      },
-      {
-        "name": "TestCalculateTimingMetrics::test_different_symbols_tracked_separately",
-        "line": 211,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateTimingMetrics"
-      },
-      {
-        "name": "TestCalculateStreakMetrics::test_returns_zeros_placeholder",
-        "line": 233,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateStreakMetrics"
-      },
-      {
-        "name": "TestCalculateStreakMetrics::test_with_orders_returns_zeros",
-        "line": 240,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateStreakMetrics"
-      },
-      {
-        "name": "TestCalculateTradeStatistics::test_calculates_win_rate",
-        "line": 273,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateTradeStatistics"
-      },
-      {
-        "name": "TestCalculateTradeStatistics::test_calculates_breakeven_trades",
-        "line": 283,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateTradeStatistics"
-      },
-      {
-        "name": "TestCalculateTradeStatistics::test_zero_trades_returns_zeros",
-        "line": 293,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateTradeStatistics"
-      },
-      {
-        "name": "TestCalculateTradeStatistics::test_profit_factor_capped_when_no_losses",
-        "line": 305,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateTradeStatistics"
-      },
-      {
-        "name": "TestCalculateTradeStatistics::test_net_profit_factor_accounts_for_fees",
-        "line": 315,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateTradeStatistics"
-      },
-      {
-        "name": "TestCalculateTradeStatistics::test_counts_limit_orders",
-        "line": 359,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateTradeStatistics"
-      },
-      {
-        "name": "TestCalculateTradeStatistics::test_limit_fill_rate_100_when_no_limit_orders",
-        "line": 378,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateTradeStatistics"
-      },
-      {
-        "name": "TestCalculateTradeStatistics::test_calculates_avg_slippage",
-        "line": 387,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateTradeStatistics"
-      },
-      {
-        "name": "TestCalculateTradeStatistics::test_includes_total_fees",
-        "line": 394,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateTradeStatistics"
-      },
+    "tests/unit/gpt_trader/backtesting/metrics/test_statistics_trade_statistics_dataclass.py": [
       {
         "name": "TestTradeStatisticsDataclass::test_all_fields_accessible",
-        "line": 404,
+        "line": 13,
         "markers": [],
         "docstring": "",
         "class": "TestTradeStatisticsDataclass"
       },
       {
         "name": "TestTradeStatisticsDataclass::test_streak_can_be_negative",
-        "line": 443,
+        "line": 52,
         "markers": [],
         "docstring": "",
         "class": "TestTradeStatisticsDataclass"
       },
       {
-        "name": "test_empty_orders_returns_zeros",
-        "line": 57,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_orders_without_fill_price_skipped",
-        "line": 65,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_returns_structure_correct",
-        "line": 71,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_empty_orders_returns_defaults",
-        "line": 84,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_calculates_average_position_size",
-        "line": 92,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_extracts_leverage_from_position",
-        "line": 112,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_multiple_orders_different_leverage",
-        "line": 122,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_orders_without_fill_price_skipped",
-        "line": 137,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_empty_orders_returns_zeros",
-        "line": 155,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_orders_without_submitted_at_skipped",
-        "line": 160,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_order_with_none_submitted_at_explicitly_skipped",
-        "line": 165,
-        "markers": [],
-        "docstring": "Test that orders with submitted_at=None are skipped in timing calculation."
-      },
-      {
-        "name": "test_calculates_hold_time_for_round_trip",
-        "line": 175,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_multiple_round_trips",
-        "line": 190,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_different_symbols_tracked_separately",
-        "line": 211,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_returns_zeros_placeholder",
-        "line": 233,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_with_orders_returns_zeros",
-        "line": 240,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_calculates_win_rate",
-        "line": 273,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_calculates_breakeven_trades",
-        "line": 283,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_zero_trades_returns_zeros",
-        "line": 293,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_profit_factor_capped_when_no_losses",
-        "line": 305,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_net_profit_factor_accounts_for_fees",
-        "line": 315,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_counts_limit_orders",
-        "line": 359,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_limit_fill_rate_100_when_no_limit_orders",
-        "line": 378,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_calculates_avg_slippage",
-        "line": 387,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_includes_total_fees",
-        "line": 394,
-        "markers": [],
-        "docstring": ""
-      },
-      {
         "name": "test_all_fields_accessible",
-        "line": 404,
+        "line": 13,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_streak_can_be_negative",
-        "line": 443,
+        "line": 52,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/backtesting/metrics/test_statistics_streak_metrics.py": [
+      {
+        "name": "TestCalculateStreakMetrics::test_returns_zeros_placeholder",
+        "line": 12,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateStreakMetrics"
+      },
+      {
+        "name": "TestCalculateStreakMetrics::test_with_orders_returns_zeros",
+        "line": 18,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateStreakMetrics"
+      },
+      {
+        "name": "test_returns_zeros_placeholder",
+        "line": 12,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_with_orders_returns_zeros",
+        "line": 18,
         "markers": [],
         "docstring": ""
       }
@@ -23900,6 +23624,86 @@
       {
         "name": "test_returns_backtest_result",
         "line": 20,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/backtesting/metrics/test_statistics_timing_metrics.py": [
+      {
+        "name": "TestCalculateTimingMetrics::test_empty_orders_returns_zeros",
+        "line": 17,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateTimingMetrics"
+      },
+      {
+        "name": "TestCalculateTimingMetrics::test_orders_without_submitted_at_skipped",
+        "line": 22,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateTimingMetrics"
+      },
+      {
+        "name": "TestCalculateTimingMetrics::test_order_with_none_submitted_at_explicitly_skipped",
+        "line": 27,
+        "markers": [],
+        "docstring": "Test that orders with submitted_at=None are skipped in timing calculation.",
+        "class": "TestCalculateTimingMetrics"
+      },
+      {
+        "name": "TestCalculateTimingMetrics::test_calculates_hold_time_for_round_trip",
+        "line": 36,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateTimingMetrics"
+      },
+      {
+        "name": "TestCalculateTimingMetrics::test_multiple_round_trips",
+        "line": 50,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateTimingMetrics"
+      },
+      {
+        "name": "TestCalculateTimingMetrics::test_different_symbols_tracked_separately",
+        "line": 68,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateTimingMetrics"
+      },
+      {
+        "name": "test_empty_orders_returns_zeros",
+        "line": 17,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_orders_without_submitted_at_skipped",
+        "line": 22,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_order_with_none_submitted_at_explicitly_skipped",
+        "line": 27,
+        "markers": [],
+        "docstring": "Test that orders with submitted_at=None are skipped in timing calculation."
+      },
+      {
+        "name": "test_calculates_hold_time_for_round_trip",
+        "line": 36,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_multiple_round_trips",
+        "line": 50,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_different_symbols_tracked_separately",
+        "line": 68,
         "markers": [],
         "docstring": ""
       }
@@ -23954,6 +23758,73 @@
       {
         "name": "test_generate_csv_row_handles_none_sharpe",
         "line": 104,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/backtesting/metrics/test_statistics_position_metrics.py": [
+      {
+        "name": "TestCalculatePositionMetrics::test_empty_orders_returns_defaults",
+        "line": 17,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculatePositionMetrics"
+      },
+      {
+        "name": "TestCalculatePositionMetrics::test_calculates_average_position_size",
+        "line": 25,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculatePositionMetrics"
+      },
+      {
+        "name": "TestCalculatePositionMetrics::test_extracts_leverage_from_position",
+        "line": 42,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculatePositionMetrics"
+      },
+      {
+        "name": "TestCalculatePositionMetrics::test_multiple_orders_different_leverage",
+        "line": 52,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculatePositionMetrics"
+      },
+      {
+        "name": "TestCalculatePositionMetrics::test_orders_without_fill_price_skipped",
+        "line": 67,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculatePositionMetrics"
+      },
+      {
+        "name": "test_empty_orders_returns_defaults",
+        "line": 17,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_calculates_average_position_size",
+        "line": 25,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_extracts_leverage_from_position",
+        "line": 42,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_multiple_orders_different_leverage",
+        "line": 52,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_orders_without_fill_price_skipped",
+        "line": 67,
         "markers": [],
         "docstring": ""
       }
@@ -24599,6 +24470,125 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/backtesting/metrics/test_statistics_calculate_trade_statistics.py": [
+      {
+        "name": "TestCalculateTradeStatistics::test_calculates_win_rate",
+        "line": 40,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateTradeStatistics"
+      },
+      {
+        "name": "TestCalculateTradeStatistics::test_calculates_breakeven_trades",
+        "line": 50,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateTradeStatistics"
+      },
+      {
+        "name": "TestCalculateTradeStatistics::test_zero_trades_returns_zeros",
+        "line": 59,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateTradeStatistics"
+      },
+      {
+        "name": "TestCalculateTradeStatistics::test_profit_factor_capped_when_no_losses",
+        "line": 71,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateTradeStatistics"
+      },
+      {
+        "name": "TestCalculateTradeStatistics::test_net_profit_factor_accounts_for_fees",
+        "line": 80,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateTradeStatistics"
+      },
+      {
+        "name": "TestCalculateTradeStatistics::test_counts_limit_orders",
+        "line": 124,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateTradeStatistics"
+      },
+      {
+        "name": "TestCalculateTradeStatistics::test_limit_fill_rate_100_when_no_limit_orders",
+        "line": 142,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateTradeStatistics"
+      },
+      {
+        "name": "TestCalculateTradeStatistics::test_calculates_avg_slippage",
+        "line": 150,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateTradeStatistics"
+      },
+      {
+        "name": "TestCalculateTradeStatistics::test_includes_total_fees",
+        "line": 156,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateTradeStatistics"
+      },
+      {
+        "name": "test_calculates_win_rate",
+        "line": 40,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_calculates_breakeven_trades",
+        "line": 50,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_zero_trades_returns_zeros",
+        "line": 59,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_profit_factor_capped_when_no_losses",
+        "line": 71,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_net_profit_factor_accounts_for_fees",
+        "line": 80,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_counts_limit_orders",
+        "line": 124,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_limit_fill_rate_100_when_no_limit_orders",
+        "line": 142,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_calculates_avg_slippage",
+        "line": 150,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_includes_total_fees",
+        "line": 156,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_result.py": [
       {
         "name": "TestBacktestReporterGenerateResult::test_generate_result_returns_backtest_result",
@@ -24742,6 +24732,47 @@
       {
         "name": "test_risk_metrics_caches_result",
         "line": 84,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/backtesting/metrics/test_statistics_pnl_metrics.py": [
+      {
+        "name": "TestCalculatePnlMetrics::test_empty_orders_returns_zeros",
+        "line": 14,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculatePnlMetrics"
+      },
+      {
+        "name": "TestCalculatePnlMetrics::test_orders_without_fill_price_skipped",
+        "line": 22,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculatePnlMetrics"
+      },
+      {
+        "name": "TestCalculatePnlMetrics::test_returns_structure_correct",
+        "line": 27,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculatePnlMetrics"
+      },
+      {
+        "name": "test_empty_orders_returns_zeros",
+        "line": 14,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_orders_without_fill_price_skipped",
+        "line": 22,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_returns_structure_correct",
+        "line": 27,
         "markers": [],
         "docstring": ""
       }
@@ -51625,6 +51656,47 @@
         "docstring": "Test that health dict includes max_attempts_triggered field."
       }
     ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_real_transport_edge_cases.py": [
+      {
+        "name": "TestRealTransportEdgeCases::test_real_transport_malformed_json_stream",
+        "line": 16,
+        "markers": [],
+        "docstring": "Test streaming malformed JSON messages.",
+        "class": "TestRealTransportEdgeCases"
+      },
+      {
+        "name": "TestRealTransportEdgeCases::test_real_transport_empty_message_stream",
+        "line": 27,
+        "markers": [],
+        "docstring": "Test streaming empty messages.",
+        "class": "TestRealTransportEdgeCases"
+      },
+      {
+        "name": "TestRealTransportEdgeCases::test_real_transport_none_message_stream",
+        "line": 38,
+        "markers": [],
+        "docstring": "Test streaming None messages.",
+        "class": "TestRealTransportEdgeCases"
+      },
+      {
+        "name": "test_real_transport_malformed_json_stream",
+        "line": 16,
+        "markers": [],
+        "docstring": "Test streaming malformed JSON messages."
+      },
+      {
+        "name": "test_real_transport_empty_message_stream",
+        "line": 27,
+        "markers": [],
+        "docstring": "Test streaming empty messages."
+      },
+      {
+        "name": "test_real_transport_none_message_stream",
+        "line": 38,
+        "markers": [],
+        "docstring": "Test streaming None messages."
+      }
+    ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_accounts.py": [
       {
         "name": "TestCoinbaseAccounts::test_client_account_endpoints",
@@ -51811,6 +51883,242 @@
         "line": 352,
         "markers": [],
         "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_real_transport.py": [
+      {
+        "name": "TestRealTransportCoverage::test_real_transport_initialization_default",
+        "line": 16,
+        "markers": [],
+        "docstring": "Test RealTransport initialization with default settings.",
+        "class": "TestRealTransportCoverage"
+      },
+      {
+        "name": "TestRealTransportCoverage::test_real_transport_initialization_with_config",
+        "line": 24,
+        "markers": [],
+        "docstring": "Test RealTransport initialization with custom config.",
+        "class": "TestRealTransportCoverage"
+      },
+      {
+        "name": "TestRealTransportCoverage::test_connect_success",
+        "line": 30,
+        "markers": [],
+        "docstring": "Test successful WebSocket connection.",
+        "class": "TestRealTransportCoverage"
+      },
+      {
+        "name": "TestRealTransportCoverage::test_connect_with_headers_dict_uses_existing_url",
+        "line": 46,
+        "markers": [],
+        "docstring": "Test connection when headers passed as first argument.",
+        "class": "TestRealTransportCoverage"
+      },
+      {
+        "name": "TestRealTransportCoverage::test_connect_headers_without_url_raises",
+        "line": 61,
+        "markers": [],
+        "docstring": "Test connection fails when url is missing and headers passed as first argument.",
+        "class": "TestRealTransportCoverage"
+      },
+      {
+        "name": "TestRealTransportCoverage::test_connect_with_environment_options",
+        "line": 68,
+        "markers": [],
+        "docstring": "Test connection with environment-based options.",
+        "class": "TestRealTransportCoverage"
+      },
+      {
+        "name": "TestRealTransportCoverage::test_connect_invalid_timeout",
+        "line": 93,
+        "markers": [],
+        "docstring": "Test connection with invalid timeout value.",
+        "class": "TestRealTransportCoverage"
+      },
+      {
+        "name": "TestRealTransportCoverage::test_connect_missing_websocket_client",
+        "line": 109,
+        "markers": [],
+        "docstring": "Test connection when websocket-client is not installed.",
+        "class": "TestRealTransportCoverage"
+      },
+      {
+        "name": "TestRealTransportCoverage::test_connect_trace_enable_failure",
+        "line": 120,
+        "markers": [],
+        "docstring": "Test connection when trace enable fails.",
+        "class": "TestRealTransportCoverage"
+      },
+      {
+        "name": "TestRealTransportCoverage::test_disconnect_success",
+        "line": 137,
+        "markers": [],
+        "docstring": "Test successful WebSocket disconnection.",
+        "class": "TestRealTransportCoverage"
+      },
+      {
+        "name": "TestRealTransportCoverage::test_disconnect_with_error",
+        "line": 148,
+        "markers": [],
+        "docstring": "Test disconnection when close raises an error.",
+        "class": "TestRealTransportCoverage"
+      },
+      {
+        "name": "TestRealTransportCoverage::test_disconnect_no_websocket",
+        "line": 160,
+        "markers": [],
+        "docstring": "Test disconnection when no WebSocket is connected.",
+        "class": "TestRealTransportCoverage"
+      },
+      {
+        "name": "TestRealTransportCoverage::test_subscribe_success",
+        "line": 168,
+        "markers": [],
+        "docstring": "Test successful subscription message sending.",
+        "class": "TestRealTransportCoverage"
+      },
+      {
+        "name": "TestRealTransportCoverage::test_subscribe_not_connected",
+        "line": 179,
+        "markers": [],
+        "docstring": "Test subscription when not connected.",
+        "class": "TestRealTransportCoverage"
+      },
+      {
+        "name": "TestRealTransportCoverage::test_stream_success",
+        "line": 188,
+        "markers": [],
+        "docstring": "Test successful message streaming.",
+        "class": "TestRealTransportCoverage"
+      },
+      {
+        "name": "TestRealTransportCoverage::test_stream_handles_stop_iteration",
+        "line": 206,
+        "markers": [],
+        "docstring": "Test streaming stops on StopIteration from websocket.",
+        "class": "TestRealTransportCoverage"
+      },
+      {
+        "name": "TestRealTransportCoverage::test_stream_not_connected",
+        "line": 217,
+        "markers": [],
+        "docstring": "Test streaming when not connected.",
+        "class": "TestRealTransportCoverage"
+      },
+      {
+        "name": "TestRealTransportCoverage::test_stream_with_error",
+        "line": 224,
+        "markers": [],
+        "docstring": "Test streaming when WebSocket recv raises an error.",
+        "class": "TestRealTransportCoverage"
+      },
+      {
+        "name": "test_real_transport_initialization_default",
+        "line": 16,
+        "markers": [],
+        "docstring": "Test RealTransport initialization with default settings."
+      },
+      {
+        "name": "test_real_transport_initialization_with_config",
+        "line": 24,
+        "markers": [],
+        "docstring": "Test RealTransport initialization with custom config."
+      },
+      {
+        "name": "test_connect_success",
+        "line": 30,
+        "markers": [],
+        "docstring": "Test successful WebSocket connection."
+      },
+      {
+        "name": "test_connect_with_headers_dict_uses_existing_url",
+        "line": 46,
+        "markers": [],
+        "docstring": "Test connection when headers passed as first argument."
+      },
+      {
+        "name": "test_connect_headers_without_url_raises",
+        "line": 61,
+        "markers": [],
+        "docstring": "Test connection fails when url is missing and headers passed as first argument."
+      },
+      {
+        "name": "test_connect_with_environment_options",
+        "line": 68,
+        "markers": [],
+        "docstring": "Test connection with environment-based options."
+      },
+      {
+        "name": "test_connect_invalid_timeout",
+        "line": 93,
+        "markers": [],
+        "docstring": "Test connection with invalid timeout value."
+      },
+      {
+        "name": "test_connect_missing_websocket_client",
+        "line": 109,
+        "markers": [],
+        "docstring": "Test connection when websocket-client is not installed."
+      },
+      {
+        "name": "test_connect_trace_enable_failure",
+        "line": 120,
+        "markers": [],
+        "docstring": "Test connection when trace enable fails."
+      },
+      {
+        "name": "test_disconnect_success",
+        "line": 137,
+        "markers": [],
+        "docstring": "Test successful WebSocket disconnection."
+      },
+      {
+        "name": "test_disconnect_with_error",
+        "line": 148,
+        "markers": [],
+        "docstring": "Test disconnection when close raises an error."
+      },
+      {
+        "name": "test_disconnect_no_websocket",
+        "line": 160,
+        "markers": [],
+        "docstring": "Test disconnection when no WebSocket is connected."
+      },
+      {
+        "name": "test_subscribe_success",
+        "line": 168,
+        "markers": [],
+        "docstring": "Test successful subscription message sending."
+      },
+      {
+        "name": "test_subscribe_not_connected",
+        "line": 179,
+        "markers": [],
+        "docstring": "Test subscription when not connected."
+      },
+      {
+        "name": "test_stream_success",
+        "line": 188,
+        "markers": [],
+        "docstring": "Test successful message streaming."
+      },
+      {
+        "name": "test_stream_handles_stop_iteration",
+        "line": 206,
+        "markers": [],
+        "docstring": "Test streaming stops on StopIteration from websocket."
+      },
+      {
+        "name": "test_stream_not_connected",
+        "line": 217,
+        "markers": [],
+        "docstring": "Test streaming when not connected."
+      },
+      {
+        "name": "test_stream_with_error",
+        "line": 224,
+        "markers": [],
+        "docstring": "Test streaming when WebSocket recv raises an error."
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_service_loading.py": [
@@ -52246,6 +52554,47 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_environment_options.py": [
+      {
+        "name": "TestTransportEnvironmentOptions::test_transport_environment_variable_parsing",
+        "line": 13,
+        "markers": [],
+        "docstring": "Test various environment variable parsing scenarios.",
+        "class": "TestTransportEnvironmentOptions"
+      },
+      {
+        "name": "TestTransportEnvironmentOptions::test_transport_empty_subprotocols",
+        "line": 30,
+        "markers": [],
+        "docstring": "Test empty subprotocols configuration.",
+        "class": "TestTransportEnvironmentOptions"
+      },
+      {
+        "name": "TestTransportEnvironmentOptions::test_transport_mixed_whitespace_subprotocols",
+        "line": 45,
+        "markers": [],
+        "docstring": "Test subprotocols with mixed whitespace.",
+        "class": "TestTransportEnvironmentOptions"
+      },
+      {
+        "name": "test_transport_environment_variable_parsing",
+        "line": 13,
+        "markers": [],
+        "docstring": "Test various environment variable parsing scenarios."
+      },
+      {
+        "name": "test_transport_empty_subprotocols",
+        "line": 30,
+        "markers": [],
+        "docstring": "Test empty subprotocols configuration."
+      },
+      {
+        "name": "test_transport_mixed_whitespace_subprotocols",
+        "line": 45,
+        "markers": [],
+        "docstring": "Test subprotocols with mixed whitespace."
+      }
+    ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_credentials_resolution.py": [
       {
         "name": "test_resolve_prefers_prod_cdp_env_vars",
@@ -52344,6 +52693,125 @@
         "line": 107,
         "markers": [],
         "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_mock_transport.py": [
+      {
+        "name": "TestMockTransportCoverage::test_mock_transport_initialization_default",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test MockTransport initialization with default empty messages.",
+        "class": "TestMockTransportCoverage"
+      },
+      {
+        "name": "TestMockTransportCoverage::test_mock_transport_initialization_with_messages",
+        "line": 19,
+        "markers": [],
+        "docstring": "Test MockTransport initialization with predefined messages.",
+        "class": "TestMockTransportCoverage"
+      },
+      {
+        "name": "TestMockTransportCoverage::test_mock_transport_connect",
+        "line": 28,
+        "markers": [],
+        "docstring": "Test MockTransport connection.",
+        "class": "TestMockTransportCoverage"
+      },
+      {
+        "name": "TestMockTransportCoverage::test_mock_transport_connect_without_headers",
+        "line": 38,
+        "markers": [],
+        "docstring": "Test MockTransport connection without headers.",
+        "class": "TestMockTransportCoverage"
+      },
+      {
+        "name": "TestMockTransportCoverage::test_mock_transport_disconnect",
+        "line": 47,
+        "markers": [],
+        "docstring": "Test MockTransport disconnection.",
+        "class": "TestMockTransportCoverage"
+      },
+      {
+        "name": "TestMockTransportCoverage::test_mock_transport_subscribe",
+        "line": 56,
+        "markers": [],
+        "docstring": "Test MockTransport subscription recording.",
+        "class": "TestMockTransportCoverage"
+      },
+      {
+        "name": "TestMockTransportCoverage::test_mock_transport_stream",
+        "line": 66,
+        "markers": [],
+        "docstring": "Test MockTransport message streaming.",
+        "class": "TestMockTransportCoverage"
+      },
+      {
+        "name": "TestMockTransportCoverage::test_mock_transport_add_message",
+        "line": 75,
+        "markers": [],
+        "docstring": "Test adding messages to MockTransport.",
+        "class": "TestMockTransportCoverage"
+      },
+      {
+        "name": "TestMockTransportEdgeCases::test_mock_transport_multiple_subscriptions",
+        "line": 89,
+        "markers": [],
+        "docstring": "Test MockTransport with multiple subscriptions.",
+        "class": "TestMockTransportEdgeCases"
+      },
+      {
+        "name": "test_mock_transport_initialization_default",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test MockTransport initialization with default empty messages."
+      },
+      {
+        "name": "test_mock_transport_initialization_with_messages",
+        "line": 19,
+        "markers": [],
+        "docstring": "Test MockTransport initialization with predefined messages."
+      },
+      {
+        "name": "test_mock_transport_connect",
+        "line": 28,
+        "markers": [],
+        "docstring": "Test MockTransport connection."
+      },
+      {
+        "name": "test_mock_transport_connect_without_headers",
+        "line": 38,
+        "markers": [],
+        "docstring": "Test MockTransport connection without headers."
+      },
+      {
+        "name": "test_mock_transport_disconnect",
+        "line": 47,
+        "markers": [],
+        "docstring": "Test MockTransport disconnection."
+      },
+      {
+        "name": "test_mock_transport_subscribe",
+        "line": 56,
+        "markers": [],
+        "docstring": "Test MockTransport subscription recording."
+      },
+      {
+        "name": "test_mock_transport_stream",
+        "line": 66,
+        "markers": [],
+        "docstring": "Test MockTransport message streaming."
+      },
+      {
+        "name": "test_mock_transport_add_message",
+        "line": 75,
+        "markers": [],
+        "docstring": "Test adding messages to MockTransport."
+      },
+      {
+        "name": "test_mock_transport_multiple_subscriptions",
+        "line": 89,
+        "markers": [],
+        "docstring": "Test MockTransport with multiple subscriptions."
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_cfm_endpoints.py": [
@@ -52918,528 +53386,6 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_coverage.py": [
-      {
-        "name": "TestRealTransportCoverage::test_real_transport_initialization_default",
-        "line": 25,
-        "markers": [],
-        "docstring": "Test RealTransport initialization with default settings.",
-        "class": "TestRealTransportCoverage"
-      },
-      {
-        "name": "TestRealTransportCoverage::test_real_transport_initialization_with_config",
-        "line": 33,
-        "markers": [],
-        "docstring": "Test RealTransport initialization with custom config.",
-        "class": "TestRealTransportCoverage"
-      },
-      {
-        "name": "TestRealTransportCoverage::test_connect_success",
-        "line": 39,
-        "markers": [],
-        "docstring": "Test successful WebSocket connection.",
-        "class": "TestRealTransportCoverage"
-      },
-      {
-        "name": "TestRealTransportCoverage::test_connect_with_headers_dict_uses_existing_url",
-        "line": 55,
-        "markers": [],
-        "docstring": "Test connection when headers passed as first argument.",
-        "class": "TestRealTransportCoverage"
-      },
-      {
-        "name": "TestRealTransportCoverage::test_connect_headers_without_url_raises",
-        "line": 70,
-        "markers": [],
-        "docstring": "Test connection fails when url is missing and headers passed as first argument.",
-        "class": "TestRealTransportCoverage"
-      },
-      {
-        "name": "TestRealTransportCoverage::test_connect_with_environment_options",
-        "line": 77,
-        "markers": [],
-        "docstring": "Test connection with environment-based options.",
-        "class": "TestRealTransportCoverage"
-      },
-      {
-        "name": "TestRealTransportCoverage::test_connect_invalid_timeout",
-        "line": 103,
-        "markers": [],
-        "docstring": "Test connection with invalid timeout value.",
-        "class": "TestRealTransportCoverage"
-      },
-      {
-        "name": "TestRealTransportCoverage::test_connect_missing_websocket_client",
-        "line": 120,
-        "markers": [],
-        "docstring": "Test connection when websocket-client is not installed.",
-        "class": "TestRealTransportCoverage"
-      },
-      {
-        "name": "TestRealTransportCoverage::test_connect_trace_enable_failure",
-        "line": 133,
-        "markers": [],
-        "docstring": "Test connection when trace enable fails.",
-        "class": "TestRealTransportCoverage"
-      },
-      {
-        "name": "TestRealTransportCoverage::test_disconnect_success",
-        "line": 151,
-        "markers": [],
-        "docstring": "Test successful WebSocket disconnection.",
-        "class": "TestRealTransportCoverage"
-      },
-      {
-        "name": "TestRealTransportCoverage::test_disconnect_with_error",
-        "line": 162,
-        "markers": [],
-        "docstring": "Test disconnection when close raises an error.",
-        "class": "TestRealTransportCoverage"
-      },
-      {
-        "name": "TestRealTransportCoverage::test_disconnect_no_websocket",
-        "line": 175,
-        "markers": [],
-        "docstring": "Test disconnection when no WebSocket is connected.",
-        "class": "TestRealTransportCoverage"
-      },
-      {
-        "name": "TestRealTransportCoverage::test_subscribe_success",
-        "line": 184,
-        "markers": [],
-        "docstring": "Test successful subscription message sending.",
-        "class": "TestRealTransportCoverage"
-      },
-      {
-        "name": "TestRealTransportCoverage::test_subscribe_not_connected",
-        "line": 195,
-        "markers": [],
-        "docstring": "Test subscription when not connected.",
-        "class": "TestRealTransportCoverage"
-      },
-      {
-        "name": "TestRealTransportCoverage::test_stream_success",
-        "line": 204,
-        "markers": [],
-        "docstring": "Test successful message streaming.",
-        "class": "TestRealTransportCoverage"
-      },
-      {
-        "name": "TestRealTransportCoverage::test_stream_handles_stop_iteration",
-        "line": 222,
-        "markers": [],
-        "docstring": "Test streaming stops on StopIteration from websocket.",
-        "class": "TestRealTransportCoverage"
-      },
-      {
-        "name": "TestRealTransportCoverage::test_stream_not_connected",
-        "line": 233,
-        "markers": [],
-        "docstring": "Test streaming when not connected.",
-        "class": "TestRealTransportCoverage"
-      },
-      {
-        "name": "TestRealTransportCoverage::test_stream_with_error",
-        "line": 240,
-        "markers": [],
-        "docstring": "Test streaming when WebSocket recv raises an error.",
-        "class": "TestRealTransportCoverage"
-      },
-      {
-        "name": "TestMockTransportCoverage::test_mock_transport_initialization_default",
-        "line": 256,
-        "markers": [],
-        "docstring": "Test MockTransport initialization with default empty messages.",
-        "class": "TestMockTransportCoverage"
-      },
-      {
-        "name": "TestMockTransportCoverage::test_mock_transport_initialization_with_messages",
-        "line": 264,
-        "markers": [],
-        "docstring": "Test MockTransport initialization with predefined messages.",
-        "class": "TestMockTransportCoverage"
-      },
-      {
-        "name": "TestMockTransportCoverage::test_mock_transport_connect",
-        "line": 273,
-        "markers": [],
-        "docstring": "Test MockTransport connection.",
-        "class": "TestMockTransportCoverage"
-      },
-      {
-        "name": "TestMockTransportCoverage::test_mock_transport_connect_without_headers",
-        "line": 283,
-        "markers": [],
-        "docstring": "Test MockTransport connection without headers.",
-        "class": "TestMockTransportCoverage"
-      },
-      {
-        "name": "TestMockTransportCoverage::test_mock_transport_disconnect",
-        "line": 293,
-        "markers": [],
-        "docstring": "Test MockTransport disconnection.",
-        "class": "TestMockTransportCoverage"
-      },
-      {
-        "name": "TestMockTransportCoverage::test_mock_transport_subscribe",
-        "line": 302,
-        "markers": [],
-        "docstring": "Test MockTransport subscription recording.",
-        "class": "TestMockTransportCoverage"
-      },
-      {
-        "name": "TestMockTransportCoverage::test_mock_transport_stream",
-        "line": 312,
-        "markers": [],
-        "docstring": "Test MockTransport message streaming.",
-        "class": "TestMockTransportCoverage"
-      },
-      {
-        "name": "TestMockTransportCoverage::test_mock_transport_add_message",
-        "line": 321,
-        "markers": [],
-        "docstring": "Test adding messages to MockTransport.",
-        "class": "TestMockTransportCoverage"
-      },
-      {
-        "name": "TestNoopTransportCoverage::test_noop_transport_initialization_default",
-        "line": 335,
-        "markers": [],
-        "docstring": "Test NoopTransport initialization with default settings.",
-        "class": "TestNoopTransportCoverage"
-      },
-      {
-        "name": "TestNoopTransportCoverage::test_noop_transport_initialization_with_config",
-        "line": 342,
-        "markers": [],
-        "docstring": "Test NoopTransport initialization with custom config.",
-        "class": "TestNoopTransportCoverage"
-      },
-      {
-        "name": "TestNoopTransportCoverage::test_noop_transport_connect",
-        "line": 348,
-        "markers": [],
-        "docstring": "Test NoopTransport connection.",
-        "class": "TestNoopTransportCoverage"
-      },
-      {
-        "name": "TestNoopTransportCoverage::test_noop_transport_connect_with_headers",
-        "line": 356,
-        "markers": [],
-        "docstring": "Test NoopTransport connection with headers (should be ignored).",
-        "class": "TestNoopTransportCoverage"
-      },
-      {
-        "name": "TestNoopTransportCoverage::test_noop_transport_disconnect",
-        "line": 365,
-        "markers": [],
-        "docstring": "Test NoopTransport disconnection.",
-        "class": "TestNoopTransportCoverage"
-      },
-      {
-        "name": "TestNoopTransportCoverage::test_noop_transport_subscribe",
-        "line": 374,
-        "markers": [],
-        "docstring": "Test NoopTransport subscription (should be ignored).",
-        "class": "TestNoopTransportCoverage"
-      },
-      {
-        "name": "TestNoopTransportCoverage::test_noop_transport_stream",
-        "line": 382,
-        "markers": [],
-        "docstring": "Test NoopTransport streaming (should return empty iterator).",
-        "class": "TestNoopTransportCoverage"
-      },
-      {
-        "name": "TestTransportEdgeCases::test_real_transport_malformed_json_stream",
-        "line": 394,
-        "markers": [],
-        "docstring": "Test streaming malformed JSON messages.",
-        "class": "TestTransportEdgeCases"
-      },
-      {
-        "name": "TestTransportEdgeCases::test_real_transport_empty_message_stream",
-        "line": 405,
-        "markers": [],
-        "docstring": "Test streaming empty messages.",
-        "class": "TestTransportEdgeCases"
-      },
-      {
-        "name": "TestTransportEdgeCases::test_real_transport_none_message_stream",
-        "line": 417,
-        "markers": [],
-        "docstring": "Test streaming None messages.",
-        "class": "TestTransportEdgeCases"
-      },
-      {
-        "name": "TestTransportEdgeCases::test_mock_transport_multiple_subscriptions",
-        "line": 429,
-        "markers": [],
-        "docstring": "Test MockTransport with multiple subscriptions.",
-        "class": "TestTransportEdgeCases"
-      },
-      {
-        "name": "TestTransportEdgeCases::test_transport_environment_variable_parsing",
-        "line": 444,
-        "markers": [],
-        "docstring": "Test various environment variable parsing scenarios.",
-        "class": "TestTransportEdgeCases"
-      },
-      {
-        "name": "TestTransportEdgeCases::test_transport_empty_subprotocols",
-        "line": 462,
-        "markers": [],
-        "docstring": "Test empty subprotocols configuration.",
-        "class": "TestTransportEdgeCases"
-      },
-      {
-        "name": "TestTransportEdgeCases::test_transport_mixed_whitespace_subprotocols",
-        "line": 478,
-        "markers": [],
-        "docstring": "Test subprotocols with mixed whitespace.",
-        "class": "TestTransportEdgeCases"
-      },
-      {
-        "name": "test_real_transport_initialization_default",
-        "line": 25,
-        "markers": [],
-        "docstring": "Test RealTransport initialization with default settings."
-      },
-      {
-        "name": "test_real_transport_initialization_with_config",
-        "line": 33,
-        "markers": [],
-        "docstring": "Test RealTransport initialization with custom config."
-      },
-      {
-        "name": "test_connect_success",
-        "line": 39,
-        "markers": [],
-        "docstring": "Test successful WebSocket connection."
-      },
-      {
-        "name": "test_connect_with_headers_dict_uses_existing_url",
-        "line": 55,
-        "markers": [],
-        "docstring": "Test connection when headers passed as first argument."
-      },
-      {
-        "name": "test_connect_headers_without_url_raises",
-        "line": 70,
-        "markers": [],
-        "docstring": "Test connection fails when url is missing and headers passed as first argument."
-      },
-      {
-        "name": "test_connect_with_environment_options",
-        "line": 77,
-        "markers": [],
-        "docstring": "Test connection with environment-based options."
-      },
-      {
-        "name": "test_connect_invalid_timeout",
-        "line": 103,
-        "markers": [],
-        "docstring": "Test connection with invalid timeout value."
-      },
-      {
-        "name": "test_connect_missing_websocket_client",
-        "line": 120,
-        "markers": [],
-        "docstring": "Test connection when websocket-client is not installed."
-      },
-      {
-        "name": "test_connect_trace_enable_failure",
-        "line": 133,
-        "markers": [],
-        "docstring": "Test connection when trace enable fails."
-      },
-      {
-        "name": "test_disconnect_success",
-        "line": 151,
-        "markers": [],
-        "docstring": "Test successful WebSocket disconnection."
-      },
-      {
-        "name": "test_disconnect_with_error",
-        "line": 162,
-        "markers": [],
-        "docstring": "Test disconnection when close raises an error."
-      },
-      {
-        "name": "test_disconnect_no_websocket",
-        "line": 175,
-        "markers": [],
-        "docstring": "Test disconnection when no WebSocket is connected."
-      },
-      {
-        "name": "test_subscribe_success",
-        "line": 184,
-        "markers": [],
-        "docstring": "Test successful subscription message sending."
-      },
-      {
-        "name": "test_subscribe_not_connected",
-        "line": 195,
-        "markers": [],
-        "docstring": "Test subscription when not connected."
-      },
-      {
-        "name": "test_stream_success",
-        "line": 204,
-        "markers": [],
-        "docstring": "Test successful message streaming."
-      },
-      {
-        "name": "test_stream_handles_stop_iteration",
-        "line": 222,
-        "markers": [],
-        "docstring": "Test streaming stops on StopIteration from websocket."
-      },
-      {
-        "name": "test_stream_not_connected",
-        "line": 233,
-        "markers": [],
-        "docstring": "Test streaming when not connected."
-      },
-      {
-        "name": "test_stream_with_error",
-        "line": 240,
-        "markers": [],
-        "docstring": "Test streaming when WebSocket recv raises an error."
-      },
-      {
-        "name": "test_mock_transport_initialization_default",
-        "line": 256,
-        "markers": [],
-        "docstring": "Test MockTransport initialization with default empty messages."
-      },
-      {
-        "name": "test_mock_transport_initialization_with_messages",
-        "line": 264,
-        "markers": [],
-        "docstring": "Test MockTransport initialization with predefined messages."
-      },
-      {
-        "name": "test_mock_transport_connect",
-        "line": 273,
-        "markers": [],
-        "docstring": "Test MockTransport connection."
-      },
-      {
-        "name": "test_mock_transport_connect_without_headers",
-        "line": 283,
-        "markers": [],
-        "docstring": "Test MockTransport connection without headers."
-      },
-      {
-        "name": "test_mock_transport_disconnect",
-        "line": 293,
-        "markers": [],
-        "docstring": "Test MockTransport disconnection."
-      },
-      {
-        "name": "test_mock_transport_subscribe",
-        "line": 302,
-        "markers": [],
-        "docstring": "Test MockTransport subscription recording."
-      },
-      {
-        "name": "test_mock_transport_stream",
-        "line": 312,
-        "markers": [],
-        "docstring": "Test MockTransport message streaming."
-      },
-      {
-        "name": "test_mock_transport_add_message",
-        "line": 321,
-        "markers": [],
-        "docstring": "Test adding messages to MockTransport."
-      },
-      {
-        "name": "test_noop_transport_initialization_default",
-        "line": 335,
-        "markers": [],
-        "docstring": "Test NoopTransport initialization with default settings."
-      },
-      {
-        "name": "test_noop_transport_initialization_with_config",
-        "line": 342,
-        "markers": [],
-        "docstring": "Test NoopTransport initialization with custom config."
-      },
-      {
-        "name": "test_noop_transport_connect",
-        "line": 348,
-        "markers": [],
-        "docstring": "Test NoopTransport connection."
-      },
-      {
-        "name": "test_noop_transport_connect_with_headers",
-        "line": 356,
-        "markers": [],
-        "docstring": "Test NoopTransport connection with headers (should be ignored)."
-      },
-      {
-        "name": "test_noop_transport_disconnect",
-        "line": 365,
-        "markers": [],
-        "docstring": "Test NoopTransport disconnection."
-      },
-      {
-        "name": "test_noop_transport_subscribe",
-        "line": 374,
-        "markers": [],
-        "docstring": "Test NoopTransport subscription (should be ignored)."
-      },
-      {
-        "name": "test_noop_transport_stream",
-        "line": 382,
-        "markers": [],
-        "docstring": "Test NoopTransport streaming (should return empty iterator)."
-      },
-      {
-        "name": "test_real_transport_malformed_json_stream",
-        "line": 394,
-        "markers": [],
-        "docstring": "Test streaming malformed JSON messages."
-      },
-      {
-        "name": "test_real_transport_empty_message_stream",
-        "line": 405,
-        "markers": [],
-        "docstring": "Test streaming empty messages."
-      },
-      {
-        "name": "test_real_transport_none_message_stream",
-        "line": 417,
-        "markers": [],
-        "docstring": "Test streaming None messages."
-      },
-      {
-        "name": "test_mock_transport_multiple_subscriptions",
-        "line": 429,
-        "markers": [],
-        "docstring": "Test MockTransport with multiple subscriptions."
-      },
-      {
-        "name": "test_transport_environment_variable_parsing",
-        "line": 444,
-        "markers": [],
-        "docstring": "Test various environment variable parsing scenarios."
-      },
-      {
-        "name": "test_transport_empty_subprotocols",
-        "line": 462,
-        "markers": [],
-        "docstring": "Test empty subprotocols configuration."
-      },
-      {
-        "name": "test_transport_mixed_whitespace_subprotocols",
-        "line": 478,
-        "markers": [],
-        "docstring": "Test subprotocols with mixed whitespace."
-      }
-    ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery_intx.py": [
       {
         "name": "TestDiscoverDerivativesINTX::test_intx_market_accessible",
@@ -53842,6 +53788,99 @@
         "line": 72,
         "markers": [],
         "docstring": "get_ws_health should be thread-safe using the lock."
+      }
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_noop_transport.py": [
+      {
+        "name": "TestNoopTransportCoverage::test_noop_transport_initialization_default",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test NoopTransport initialization with default settings.",
+        "class": "TestNoopTransportCoverage"
+      },
+      {
+        "name": "TestNoopTransportCoverage::test_noop_transport_initialization_with_config",
+        "line": 18,
+        "markers": [],
+        "docstring": "Test NoopTransport initialization with custom config.",
+        "class": "TestNoopTransportCoverage"
+      },
+      {
+        "name": "TestNoopTransportCoverage::test_noop_transport_connect",
+        "line": 24,
+        "markers": [],
+        "docstring": "Test NoopTransport connection.",
+        "class": "TestNoopTransportCoverage"
+      },
+      {
+        "name": "TestNoopTransportCoverage::test_noop_transport_connect_with_headers",
+        "line": 32,
+        "markers": [],
+        "docstring": "Test NoopTransport connection with headers (should be ignored).",
+        "class": "TestNoopTransportCoverage"
+      },
+      {
+        "name": "TestNoopTransportCoverage::test_noop_transport_disconnect",
+        "line": 41,
+        "markers": [],
+        "docstring": "Test NoopTransport disconnection.",
+        "class": "TestNoopTransportCoverage"
+      },
+      {
+        "name": "TestNoopTransportCoverage::test_noop_transport_subscribe",
+        "line": 50,
+        "markers": [],
+        "docstring": "Test NoopTransport subscription (should be ignored).",
+        "class": "TestNoopTransportCoverage"
+      },
+      {
+        "name": "TestNoopTransportCoverage::test_noop_transport_stream",
+        "line": 58,
+        "markers": [],
+        "docstring": "Test NoopTransport streaming (should return empty iterator).",
+        "class": "TestNoopTransportCoverage"
+      },
+      {
+        "name": "test_noop_transport_initialization_default",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test NoopTransport initialization with default settings."
+      },
+      {
+        "name": "test_noop_transport_initialization_with_config",
+        "line": 18,
+        "markers": [],
+        "docstring": "Test NoopTransport initialization with custom config."
+      },
+      {
+        "name": "test_noop_transport_connect",
+        "line": 24,
+        "markers": [],
+        "docstring": "Test NoopTransport connection."
+      },
+      {
+        "name": "test_noop_transport_connect_with_headers",
+        "line": 32,
+        "markers": [],
+        "docstring": "Test NoopTransport connection with headers (should be ignored)."
+      },
+      {
+        "name": "test_noop_transport_disconnect",
+        "line": 41,
+        "markers": [],
+        "docstring": "Test NoopTransport disconnection."
+      },
+      {
+        "name": "test_noop_transport_subscribe",
+        "line": 50,
+        "markers": [],
+        "docstring": "Test NoopTransport subscription (should be ignored)."
+      },
+      {
+        "name": "test_noop_transport_stream",
+        "line": 58,
+        "markers": [],
+        "docstring": "Test NoopTransport streaming (should return empty iterator)."
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_conversion_endpoints.py": [

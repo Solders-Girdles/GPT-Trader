@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 520,
-    "source_modules": 349,
+    "tests_scanned": 585,
+    "source_modules": 348,
     "unresolved_modules": 3
   },
   "source_to_tests": {
@@ -33,8 +33,6 @@
       "tests/unit/gpt_trader/backtesting/validation/test_guarded_execution.py",
       "tests/unit/gpt_trader/cli/test_services.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_runtime_start_event.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_get_validation_metrics.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot.py",
@@ -83,8 +81,6 @@
       "tests/unit/gpt_trader/app/test_bootstrap.py",
       "tests/unit/gpt_trader/cli/test_services.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_runtime_start_event.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_get_validation_metrics.py",
       "tests/unit/gpt_trader/features/live_trade/test_state_recovery.py",
       "tests/unit/gpt_trader/features/live_trade/test_trading_engine.py"
@@ -122,7 +118,12 @@
     "gpt_trader.backtesting.engine.bar_runner": [
       "tests/integration/test_funding_pnl_integration.py",
       "tests/integration/test_optimize_feature.py",
-      "tests/unit/gpt_trader/backtesting/engine/test_bar_runner.py",
+      "tests/unit/gpt_trader/backtesting/engine/test_bar_runner_chaos.py",
+      "tests/unit/gpt_trader/backtesting/engine/test_bar_runner_funding.py",
+      "tests/unit/gpt_trader/backtesting/engine/test_bar_runner_granularity_and_quotes.py",
+      "tests/unit/gpt_trader/backtesting/engine/test_bar_runner_hooks_and_progress.py",
+      "tests/unit/gpt_trader/backtesting/engine/test_bar_runner_init.py",
+      "tests/unit/gpt_trader/backtesting/engine/test_bar_runner_run.py",
       "tests/unit/gpt_trader/features/optimize/runner/test_batch_runner.py"
     ],
     "gpt_trader.backtesting.engine.clock": [
@@ -133,17 +134,21 @@
       "tests/unit/gpt_trader/backtesting/validation/test_guarded_execution.py"
     ],
     "gpt_trader.backtesting.metrics.report": [
-      "tests/unit/gpt_trader/backtesting/metrics/test_report.py"
+      "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_backtest_report.py",
+      "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_csv_row.py",
+      "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_result.py",
+      "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_summary.py",
+      "tests/unit/gpt_trader/backtesting/metrics/test_report_reporter_basics.py"
     ],
     "gpt_trader.backtesting.metrics.risk": [
-      "tests/unit/gpt_trader/backtesting/metrics/test_report.py",
+      "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_csv_row.py",
+      "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_summary.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_risk.py",
       "tests/unit/gpt_trader/features/optimize/objectives/test_constraints.py",
       "tests/unit/gpt_trader/features/optimize/objectives/test_perpetuals.py",
       "tests/unit/gpt_trader/features/optimize/objectives/test_single.py"
     ],
     "gpt_trader.backtesting.metrics.statistics": [
-      "tests/unit/gpt_trader/backtesting/metrics/test_report.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_statistics.py",
       "tests/unit/gpt_trader/features/optimize/objectives/test_constraints.py",
       "tests/unit/gpt_trader/features/optimize/objectives/test_perpetuals.py",
@@ -197,7 +202,7 @@
     "gpt_trader.backtesting.types": [
       "tests/integration/test_funding_pnl_integration.py",
       "tests/property/test_fee_invariants.py",
-      "tests/unit/gpt_trader/backtesting/engine/test_bar_runner.py",
+      "tests/unit/gpt_trader/backtesting/engine/test_bar_runner_init.py",
       "tests/unit/gpt_trader/backtesting/engine/test_clock.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_statistics.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fee_calculator.py",
@@ -212,7 +217,12 @@
     ],
     "gpt_trader.backtesting.validation.decision_logger": [
       "tests/unit/gpt_trader/backtesting/test_guarded_backtest_flow.py",
-      "tests/unit/gpt_trader/backtesting/validation/test_decision_logger.py",
+      "tests/unit/gpt_trader/backtesting/validation/test_decision_logger_clear_export_and_properties.py",
+      "tests/unit/gpt_trader/backtesting/validation/test_decision_logger_init_and_cycles.py",
+      "tests/unit/gpt_trader/backtesting/validation/test_decision_logger_logging_and_retrieval.py",
+      "tests/unit/gpt_trader/backtesting/validation/test_decision_logger_strategy_decision_builder_methods.py",
+      "tests/unit/gpt_trader/backtesting/validation/test_decision_logger_strategy_decision_create.py",
+      "tests/unit/gpt_trader/backtesting/validation/test_decision_logger_strategy_decision_serialization.py",
       "tests/unit/gpt_trader/backtesting/validation/test_guarded_execution.py",
       "tests/unit/gpt_trader/backtesting/validation/test_validator.py"
     ],
@@ -277,7 +287,6 @@
       "tests/integration/test_optimize_feature.py",
       "tests/integration/test_order_flow.py",
       "tests/integration/test_validation_escalation.py",
-      "tests/unit/gpt_trader/backtesting/engine/test_bar_runner.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_statistics.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit_order_queue_priority.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit_orders.py",
@@ -298,16 +307,28 @@
       "tests/unit/gpt_trader/backtesting/test_simulation_basics.py",
       "tests/unit/gpt_trader/backtesting/validation/test_guarded_execution.py",
       "tests/unit/gpt_trader/core/test_core_types.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_configurations.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_flags_and_coercion.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_validation.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_execute_order_payload.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_find_existing_order_by_client_id.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_cfm_portfolio.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_close_position.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_place_and_cancel.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_queries_and_fills.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_portfolio_service.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_retry_and_telemetry.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_intx_portfolio.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_close_position.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_edge_cases.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_get_order.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_list_orders.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_place_order.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_unified_edges.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_product_service.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_product_service_listing_and_get_product.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_accounts.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_errors.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_data.py",
@@ -318,16 +339,25 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_http_request_layer.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_intx_endpoints.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_retry_behaviour.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_quantization.py",
-      "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_enforce_perps_rules.py",
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_edges.py",
+      "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_market_data.py",
+      "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_order_execution.py",
+      "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_position_updates.py",
+      "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_positions_and_balances.py",
       "tests/unit/gpt_trader/features/data/test_data_coinbase_edges.py",
       "tests/unit/gpt_trader/features/data/test_data_coinbase_runtime_edges.py",
       "tests/unit/gpt_trader/features/data/test_quality_candles.py",
       "tests/unit/gpt_trader/features/intelligence/ensemble/test_orchestrator.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_equity_calculator.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_daily_tracking.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_equity_and_positions.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_order_flow.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_order_guards.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_order_quantity.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_position_state.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_reduce_only.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_risk_format.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_order_edge_cases.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_order_normal.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_metrics.py",
@@ -380,10 +410,12 @@
       "tests/unit/gpt_trader/errors/test_base.py",
       "tests/unit/gpt_trader/errors/test_error_patterns.py",
       "tests/unit/gpt_trader/errors/test_handler.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_validation.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_execute_order_payload.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_close_position.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_place_and_cancel.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_close_position.py",
       "tests/unit/gpt_trader/validation/test_base_validator.py",
       "tests/unit/gpt_trader/validation/test_composite_validators.py",
       "tests/unit/gpt_trader/validation/test_config_validators.py",
@@ -425,8 +457,6 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_coinbase_client.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_market_mixin.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_portfolio_mixin.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_rest_service_edges.py",
@@ -501,8 +531,6 @@
     ],
     "gpt_trader.features.brokerages.coinbase.endpoints": [
       "tests/contract/test_coinbase_api_contract.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_unified_edges.py",
@@ -518,10 +546,15 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_market_mixin_requests.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_orders_mixin.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_portfolio_mixin.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_place_and_cancel.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_queries_and_fills.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_edges.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_cancel_order.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_edge_cases.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_get_order.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_list_fills.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_list_orders.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_cfm_endpoints.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_permissions.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_system.py"
@@ -537,10 +570,7 @@
     ],
     "gpt_trader.features.brokerages.coinbase.market_data_service": [
       "tests/contract/test_coinbase_api_contract.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_pnl_service_edges.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_product_service.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_product_service_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_rest_service_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service.py",
@@ -548,8 +578,6 @@
     ],
     "gpt_trader.features.brokerages.coinbase.models": [
       "tests/contract/test_coinbase_api_contract.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_rest_service_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_accounts.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_auth.py",
@@ -558,36 +586,33 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_models_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_system.py"
     ],
-    "gpt_trader.features.brokerages.coinbase.rest.base": [
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite.py"
-    ],
     "gpt_trader.features.brokerages.coinbase.rest.order_service": [
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_edges.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders.py"
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_cancel_order.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_close_position.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_edge_cases.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_get_order.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_list_fills.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_list_orders.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_place_order.py"
     ],
     "gpt_trader.features.brokerages.coinbase.rest.pnl_service": [
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_pnl_service.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_pnl_service_edges.py"
     ],
     "gpt_trader.features.brokerages.coinbase.rest.portfolio_service": [
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_cfm_portfolio.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_intx_portfolio.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_unified_edges.py"
     ],
     "gpt_trader.features.brokerages.coinbase.rest.position_state_store": [
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_pnl_service_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_position_state_store_edges.py"
     ],
     "gpt_trader.features.brokerages.coinbase.rest.product_service": [
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_product_service.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_product_service_edges.py"
     ],
     "gpt_trader.features.brokerages.coinbase.rest.protocols": [
@@ -601,7 +626,11 @@
     "gpt_trader.features.brokerages.coinbase.specs": [
       "tests/property/test_coinbase_invariants.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_exchange_specs.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_quantization.py"
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_product_spec.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_quantization_core.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_service_loading.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_service_order_and_size_methods.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_validation_and_safe_sizing.py"
     ],
     "gpt_trader.features.brokerages.coinbase.transports": [
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_coverage.py"
@@ -611,13 +640,13 @@
     ],
     "gpt_trader.features.brokerages.coinbase.utilities": [
       "tests/contract/test_coinbase_api_contract.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_position_metrics.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_pnl_service.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_pnl_service_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_position_state_store_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_rest_service_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_data.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_quantization.py"
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_enforce_perps_rules.py"
     ],
     "gpt_trader.features.brokerages.coinbase.ws": [
       "tests/integration/test_core_validation.py",
@@ -633,8 +662,13 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_edges.py"
     ],
     "gpt_trader.features.brokerages.paper.hybrid": [
-      "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker.py",
-      "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_edges.py"
+      "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_edges.py",
+      "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_init.py",
+      "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_market_data.py",
+      "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_order_execution.py",
+      "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_position_updates.py",
+      "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_positions_and_balances.py",
+      "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_status.py"
     ],
     "gpt_trader.features.data.cache": [
       "tests/unit/gpt_trader/features/data/test_cache.py"
@@ -719,8 +753,6 @@
       "tests/integration/test_crash_recovery.py",
       "tests/integration/test_validation_escalation.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_runtime_start_event.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py",
       "tests/unit/gpt_trader/features/live_trade/test_state_recovery.py"
     ],
     "gpt_trader.features.live_trade.engines.equity_calculator": [
@@ -733,8 +765,6 @@
       "tests/integration/test_crash_recovery.py",
       "tests/integration/test_validation_escalation.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_runtime_start_event.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py",
       "tests/unit/gpt_trader/features/live_trade/test_state_recovery.py",
       "tests/unit/gpt_trader/features/live_trade/test_trading_engine.py"
     ],
@@ -746,7 +776,11 @@
       "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health.py"
     ],
     "gpt_trader.features.live_trade.engines.telemetry_streaming": [
-      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming.py"
+      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_background_restart.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_emit_and_enable.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_run_loop.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_schedule_and_start_stop.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_task_completion_and_async_loop.py"
     ],
     "gpt_trader.features.live_trade.execution.broker_executor": [
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_order_edge_cases.py",
@@ -763,7 +797,7 @@
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_decision_trace.py"
     ],
     "gpt_trader.features.live_trade.execution.guard_manager": [
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_guard_failures.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_api_health_guard.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_cache.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_cancel_and_safe_run.py"
@@ -808,7 +842,9 @@
       "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection.py"
     ],
     "gpt_trader.features.live_trade.execution.submission_result": [
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_guard_failures.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_mark_slippage_preview.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_pause_rejection_and_invariants.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_router.py"
     ],
     "gpt_trader.features.live_trade.execution.validation": [
@@ -817,7 +853,7 @@
       "tests/unit/gpt_trader/app/containers/test_risk_validation.py",
       "tests/unit/gpt_trader/app/test_application_container_registry.py",
       "tests/unit/gpt_trader/app/test_application_container_reset_and_services.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_mark_slippage_preview.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_get_validation_metrics.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_validation_async.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_validation_exchange_rules.py",
@@ -832,7 +868,7 @@
       "tests/unit/gpt_trader/features/live_trade/test_strategy_factory.py"
     ],
     "gpt_trader.features.live_trade.guard_errors": [
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_guard_failures.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_api_health_guard.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_daily_loss_guard.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_cancel_and_safe_run.py",
@@ -892,11 +928,23 @@
     "gpt_trader.features.live_trade.risk.manager": [
       "tests/unit/gpt_trader/app/containers/test_risk_validation.py",
       "tests/unit/gpt_trader/config/test_bot_config_env.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_mark_slippage_preview.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_pause_rejection_and_invariants.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_order_guards.py",
       "tests/unit/gpt_trader/features/live_trade/risk/test_reduce_only_backward_compatibility.py",
       "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager.py",
-      "tests/unit/gpt_trader/features/live_trade/test_risk_manager.py"
+      "tests/unit/gpt_trader/features/live_trade/test_risk_manager_daily_pnl.py",
+      "tests/unit/gpt_trader/features/live_trade/test_risk_manager_init_and_stubs.py",
+      "tests/unit/gpt_trader/features/live_trade/test_risk_manager_integration.py",
+      "tests/unit/gpt_trader/features/live_trade/test_risk_manager_liquidation_buffer.py",
+      "tests/unit/gpt_trader/features/live_trade/test_risk_manager_mark_staleness.py",
+      "tests/unit/gpt_trader/features/live_trade/test_risk_manager_pre_trade_validate.py",
+      "tests/unit/gpt_trader/features/live_trade/test_risk_manager_reduce_only_mode.py",
+      "tests/unit/gpt_trader/features/live_trade/test_risk_manager_reset_daily_tracking.py",
+      "tests/unit/gpt_trader/features/live_trade/test_risk_manager_risk_metrics.py",
+      "tests/unit/gpt_trader/features/live_trade/test_risk_manager_validation_error.py",
+      "tests/unit/gpt_trader/features/live_trade/test_risk_manager_volatility_breaker.py",
+      "tests/unit/gpt_trader/features/live_trade/test_risk_manager_volatility_check_outcome.py"
     ],
     "gpt_trader.features.live_trade.signals.mean_reversion": [
       "tests/unit/gpt_trader/features/live_trade/signals/test_mean_reversion_signal_edges.py",
@@ -989,8 +1037,13 @@
       "tests/unit/gpt_trader/config/test_bot_config_env.py",
       "tests/unit/gpt_trader/features/intelligence/ensemble/test_orchestrator.py",
       "tests/unit/gpt_trader/features/intelligence/ensemble/test_voting.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_guard_failures.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_mark_slippage_preview.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_pause_rejection_and_invariants.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_order_flow.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_order_guards.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_reduce_only.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_risk_format.py",
       "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_strategy_edges.py",
@@ -1215,7 +1268,7 @@
       "tests/unit/gpt_trader/monitoring/test_guard_manager_edges.py"
     ],
     "gpt_trader.monitoring.health_checks": [
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_health_checks.py",
       "tests/unit/gpt_trader/monitoring/test_health_checks.py"
     ],
     "gpt_trader.monitoring.health_signals": [
@@ -1289,8 +1342,6 @@
       "tests/integration/test_crash_recovery.py",
       "tests/integration/test_persistence.py",
       "tests/unit/gpt_trader/app/test_application_container_resources.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_unified_edges.py",
@@ -1747,7 +1798,7 @@
     "gpt_trader.utilities.datetime_helpers": [
       "tests/contract/test_coinbase_api_contract.py",
       "tests/unit/gpt_trader/backtesting/engine/test_clock.py",
-      "tests/unit/gpt_trader/backtesting/validation/test_decision_logger.py",
+      "tests/unit/gpt_trader/backtesting/validation/test_decision_logger_strategy_decision_create.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_accounts.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_data.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service.py",
@@ -2014,20 +2065,46 @@
     "tests/unit/gpt_trader/backtesting/chaos/test_scenarios.py": [
       "gpt_trader.backtesting.chaos.scenarios"
     ],
-    "tests/unit/gpt_trader/backtesting/engine/test_bar_runner.py": [
+    "tests/unit/gpt_trader/backtesting/engine/test_bar_runner_chaos.py": [
+      "gpt_trader.backtesting.engine.bar_runner"
+    ],
+    "tests/unit/gpt_trader/backtesting/engine/test_bar_runner_funding.py": [
+      "gpt_trader.backtesting.engine.bar_runner"
+    ],
+    "tests/unit/gpt_trader/backtesting/engine/test_bar_runner_granularity_and_quotes.py": [
+      "gpt_trader.backtesting.engine.bar_runner"
+    ],
+    "tests/unit/gpt_trader/backtesting/engine/test_bar_runner_hooks_and_progress.py": [
+      "gpt_trader.backtesting.engine.bar_runner"
+    ],
+    "tests/unit/gpt_trader/backtesting/engine/test_bar_runner_init.py": [
       "gpt_trader.backtesting.engine.bar_runner",
-      "gpt_trader.backtesting.types",
-      "gpt_trader.core"
+      "gpt_trader.backtesting.types"
+    ],
+    "tests/unit/gpt_trader/backtesting/engine/test_bar_runner_run.py": [
+      "gpt_trader.backtesting.engine.bar_runner"
     ],
     "tests/unit/gpt_trader/backtesting/engine/test_clock.py": [
       "gpt_trader.backtesting.engine.clock",
       "gpt_trader.backtesting.types",
       "gpt_trader.utilities.datetime_helpers"
     ],
-    "tests/unit/gpt_trader/backtesting/metrics/test_report.py": [
+    "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_backtest_report.py": [
+      "gpt_trader.backtesting.metrics.report"
+    ],
+    "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_csv_row.py": [
       "gpt_trader.backtesting.metrics.report",
-      "gpt_trader.backtesting.metrics.risk",
-      "gpt_trader.backtesting.metrics.statistics"
+      "gpt_trader.backtesting.metrics.risk"
+    ],
+    "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_result.py": [
+      "gpt_trader.backtesting.metrics.report"
+    ],
+    "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_summary.py": [
+      "gpt_trader.backtesting.metrics.report",
+      "gpt_trader.backtesting.metrics.risk"
+    ],
+    "tests/unit/gpt_trader/backtesting/metrics/test_report_reporter_basics.py": [
+      "gpt_trader.backtesting.metrics.report"
     ],
     "tests/unit/gpt_trader/backtesting/metrics/test_risk.py": [
       "gpt_trader.backtesting.metrics.risk"
@@ -2174,9 +2251,24 @@
     "tests/unit/gpt_trader/backtesting/test_types.py": [
       "gpt_trader.backtesting.types"
     ],
-    "tests/unit/gpt_trader/backtesting/validation/test_decision_logger.py": [
+    "tests/unit/gpt_trader/backtesting/validation/test_decision_logger_clear_export_and_properties.py": [
+      "gpt_trader.backtesting.validation.decision_logger"
+    ],
+    "tests/unit/gpt_trader/backtesting/validation/test_decision_logger_init_and_cycles.py": [
+      "gpt_trader.backtesting.validation.decision_logger"
+    ],
+    "tests/unit/gpt_trader/backtesting/validation/test_decision_logger_logging_and_retrieval.py": [
+      "gpt_trader.backtesting.validation.decision_logger"
+    ],
+    "tests/unit/gpt_trader/backtesting/validation/test_decision_logger_strategy_decision_builder_methods.py": [
+      "gpt_trader.backtesting.validation.decision_logger"
+    ],
+    "tests/unit/gpt_trader/backtesting/validation/test_decision_logger_strategy_decision_create.py": [
       "gpt_trader.backtesting.validation.decision_logger",
       "gpt_trader.utilities.datetime_helpers"
+    ],
+    "tests/unit/gpt_trader/backtesting/validation/test_decision_logger_strategy_decision_serialization.py": [
+      "gpt_trader.backtesting.validation.decision_logger"
     ],
     "tests/unit/gpt_trader/backtesting/validation/test_guarded_execution.py": [
       "gpt_trader.app.config",
@@ -2365,37 +2457,52 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_response_cache.py": [
       "gpt_trader.features.brokerages.coinbase.client.response_cache"
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base.py": [
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_configurations.py": [
+      "gpt_trader.core"
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_flags_and_coercion.py": [
+      "gpt_trader.core"
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_validation.py": [
       "gpt_trader.core",
-      "gpt_trader.errors",
-      "gpt_trader.features.brokerages.coinbase.client",
-      "gpt_trader.features.brokerages.coinbase.endpoints",
-      "gpt_trader.features.brokerages.coinbase.market_data_service",
-      "gpt_trader.features.brokerages.coinbase.models",
-      "gpt_trader.features.brokerages.coinbase.rest.base",
-      "gpt_trader.features.brokerages.coinbase.rest.position_state_store",
-      "gpt_trader.features.brokerages.coinbase.utilities",
-      "gpt_trader.persistence.event_store"
+      "gpt_trader.errors"
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_execute_order_payload.py": [
+      "gpt_trader.core",
+      "gpt_trader.errors"
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_find_existing_order_by_client_id.py": [
+      "gpt_trader.core"
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_position_metrics.py": [
+      "gpt_trader.features.brokerages.coinbase.utilities"
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_cfm_portfolio.py": [
       "gpt_trader.core",
       "gpt_trader.features.brokerages.coinbase.rest.portfolio_service"
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite.py": [
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_close_position.py": [
+      "gpt_trader.core",
+      "gpt_trader.errors"
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_place_and_cancel.py": [
       "gpt_trader.core",
       "gpt_trader.errors",
-      "gpt_trader.features.brokerages.coinbase.client",
-      "gpt_trader.features.brokerages.coinbase.endpoints",
-      "gpt_trader.features.brokerages.coinbase.errors",
-      "gpt_trader.features.brokerages.coinbase.market_data_service",
-      "gpt_trader.features.brokerages.coinbase.models",
-      "gpt_trader.features.brokerages.coinbase.rest.base",
-      "gpt_trader.features.brokerages.coinbase.rest.order_service",
+      "gpt_trader.features.brokerages.coinbase.errors"
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_queries_and_fills.py": [
+      "gpt_trader.core",
+      "gpt_trader.features.brokerages.coinbase.errors"
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_pnl_service.py": [
       "gpt_trader.features.brokerages.coinbase.rest.pnl_service",
-      "gpt_trader.features.brokerages.coinbase.rest.portfolio_service",
-      "gpt_trader.features.brokerages.coinbase.rest.position_state_store",
-      "gpt_trader.features.brokerages.coinbase.utilities",
-      "gpt_trader.persistence.event_store"
+      "gpt_trader.features.brokerages.coinbase.utilities"
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_portfolio_service.py": [
+      "gpt_trader.core"
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_retry_and_telemetry.py": [
+      "gpt_trader.core"
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_intx_portfolio.py": [
       "gpt_trader.core",
@@ -2415,10 +2522,36 @@
       "gpt_trader.features.brokerages.coinbase.rest.order_service",
       "gpt_trader.features.brokerages.coinbase.rest.protocols"
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders.py": [
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_cancel_order.py": [
+      "gpt_trader.features.brokerages.coinbase.errors",
+      "gpt_trader.features.brokerages.coinbase.rest.order_service"
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_close_position.py": [
       "gpt_trader.core",
       "gpt_trader.errors",
+      "gpt_trader.features.brokerages.coinbase.rest.order_service"
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_edge_cases.py": [
+      "gpt_trader.core",
       "gpt_trader.features.brokerages.coinbase.errors",
+      "gpt_trader.features.brokerages.coinbase.rest.order_service"
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_get_order.py": [
+      "gpt_trader.core",
+      "gpt_trader.features.brokerages.coinbase.errors",
+      "gpt_trader.features.brokerages.coinbase.rest.order_service"
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_list_fills.py": [
+      "gpt_trader.features.brokerages.coinbase.errors",
+      "gpt_trader.features.brokerages.coinbase.rest.order_service"
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_list_orders.py": [
+      "gpt_trader.core",
+      "gpt_trader.features.brokerages.coinbase.errors",
+      "gpt_trader.features.brokerages.coinbase.rest.order_service"
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_place_order.py": [
+      "gpt_trader.core",
       "gpt_trader.features.brokerages.coinbase.rest.order_service"
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_pnl_service_edges.py": [
@@ -2451,14 +2584,12 @@
       "gpt_trader.features.brokerages.coinbase.rest.position_state_store",
       "gpt_trader.features.brokerages.coinbase.utilities"
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_product_service.py": [
-      "gpt_trader.core",
-      "gpt_trader.features.brokerages.coinbase.market_data_service",
-      "gpt_trader.features.brokerages.coinbase.rest.product_service"
-    ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_product_service_edges.py": [
       "gpt_trader.features.brokerages.coinbase.market_data_service",
       "gpt_trader.features.brokerages.coinbase.rest.product_service"
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_product_service_listing_and_get_product.py": [
+      "gpt_trader.core"
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_rest_service_edges.py": [
       "gpt_trader.features.brokerages.coinbase.client",
@@ -2555,10 +2686,24 @@
       "gpt_trader.core",
       "gpt_trader.features.brokerages.coinbase.client"
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_quantization.py": [
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_enforce_perps_rules.py": [
       "gpt_trader.core",
-      "gpt_trader.features.brokerages.coinbase.specs",
       "gpt_trader.features.brokerages.coinbase.utilities"
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_product_spec.py": [
+      "gpt_trader.features.brokerages.coinbase.specs"
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_quantization_core.py": [
+      "gpt_trader.features.brokerages.coinbase.specs"
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_service_loading.py": [
+      "gpt_trader.features.brokerages.coinbase.specs"
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_service_order_and_size_methods.py": [
+      "gpt_trader.features.brokerages.coinbase.specs"
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_validation_and_safe_sizing.py": [
+      "gpt_trader.features.brokerages.coinbase.specs"
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_coverage.py": [
       "gpt_trader.features.brokerages.coinbase.transports"
@@ -2581,12 +2726,30 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection.py": [
       "gpt_trader.features.brokerages.coinbase.ws"
     ],
-    "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker.py": [
+    "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_edges.py": [
       "gpt_trader.core",
       "gpt_trader.features.brokerages.paper.hybrid"
     ],
-    "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_edges.py": [
+    "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_init.py": [
+      "gpt_trader.features.brokerages.paper.hybrid"
+    ],
+    "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_market_data.py": [
       "gpt_trader.core",
+      "gpt_trader.features.brokerages.paper.hybrid"
+    ],
+    "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_order_execution.py": [
+      "gpt_trader.core",
+      "gpt_trader.features.brokerages.paper.hybrid"
+    ],
+    "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_position_updates.py": [
+      "gpt_trader.core",
+      "gpt_trader.features.brokerages.paper.hybrid"
+    ],
+    "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_positions_and_balances.py": [
+      "gpt_trader.core",
+      "gpt_trader.features.brokerages.paper.hybrid"
+    ],
+    "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_status.py": [
       "gpt_trader.features.brokerages.paper.hybrid"
     ],
     "tests/unit/gpt_trader/features/data/test_cache.py": [
@@ -2674,27 +2837,53 @@
       "gpt_trader.features.live_trade.engines.base",
       "gpt_trader.features.live_trade.engines.strategy"
     ],
-    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine.py": [
-      "gpt_trader.app.config",
-      "gpt_trader.app.container",
-      "gpt_trader.core",
-      "gpt_trader.features.live_trade.engines.base",
-      "gpt_trader.features.live_trade.engines.strategy",
-      "gpt_trader.features.live_trade.risk.manager",
-      "gpt_trader.features.live_trade.strategies.perps_baseline",
-      "gpt_trader.monitoring.health_checks"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py": [
-      "gpt_trader.app.config",
-      "gpt_trader.app.container",
-      "gpt_trader.core",
-      "gpt_trader.features.live_trade.engines.base",
-      "gpt_trader.features.live_trade.engines.strategy",
+    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_guard_failures.py": [
       "gpt_trader.features.live_trade.execution.guard_manager",
       "gpt_trader.features.live_trade.execution.submission_result",
-      "gpt_trader.features.live_trade.execution.validation",
       "gpt_trader.features.live_trade.guard_errors",
+      "gpt_trader.features.live_trade.strategies.perps_baseline"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_mark_slippage_preview.py": [
+      "gpt_trader.features.live_trade.execution.submission_result",
+      "gpt_trader.features.live_trade.execution.validation",
       "gpt_trader.features.live_trade.risk.manager",
+      "gpt_trader.features.live_trade.strategies.perps_baseline"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_pause_rejection_and_invariants.py": [
+      "gpt_trader.features.live_trade.execution.submission_result",
+      "gpt_trader.features.live_trade.risk.manager",
+      "gpt_trader.features.live_trade.strategies.perps_baseline"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_daily_tracking.py": [
+      "gpt_trader.core"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_equity_and_positions.py": [
+      "gpt_trader.core"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_health_checks.py": [
+      "gpt_trader.monitoring.health_checks"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_order_flow.py": [
+      "gpt_trader.core",
+      "gpt_trader.features.live_trade.strategies.perps_baseline"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_order_guards.py": [
+      "gpt_trader.core",
+      "gpt_trader.features.live_trade.risk.manager",
+      "gpt_trader.features.live_trade.strategies.perps_baseline"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_order_quantity.py": [
+      "gpt_trader.core"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_position_state.py": [
+      "gpt_trader.core"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_reduce_only.py": [
+      "gpt_trader.core",
+      "gpt_trader.features.live_trade.strategies.perps_baseline"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_risk_format.py": [
+      "gpt_trader.core",
       "gpt_trader.features.live_trade.strategies.perps_baseline"
     ],
     "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health.py": [
@@ -2704,7 +2893,19 @@
       "gpt_trader.features.brokerages.coinbase.market_data_features",
       "gpt_trader.features.live_trade.engines"
     ],
-    "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming.py": [
+    "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_background_restart.py": [
+      "gpt_trader.features.live_trade.engines.telemetry_streaming"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_emit_and_enable.py": [
+      "gpt_trader.features.live_trade.engines.telemetry_streaming"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_run_loop.py": [
+      "gpt_trader.features.live_trade.engines.telemetry_streaming"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_schedule_and_start_stop.py": [
+      "gpt_trader.features.live_trade.engines.telemetry_streaming"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_task_completion_and_async_loop.py": [
       "gpt_trader.features.live_trade.engines.telemetry_streaming"
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_api_health_guard.py": [
@@ -3040,7 +3241,40 @@
       "gpt_trader.features.live_trade.risk",
       "gpt_trader.features.live_trade.risk.config"
     ],
-    "tests/unit/gpt_trader/features/live_trade/test_risk_manager.py": [
+    "tests/unit/gpt_trader/features/live_trade/test_risk_manager_daily_pnl.py": [
+      "gpt_trader.features.live_trade.risk.manager"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/test_risk_manager_init_and_stubs.py": [
+      "gpt_trader.features.live_trade.risk.manager"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/test_risk_manager_integration.py": [
+      "gpt_trader.features.live_trade.risk.manager"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/test_risk_manager_liquidation_buffer.py": [
+      "gpt_trader.features.live_trade.risk.manager"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/test_risk_manager_mark_staleness.py": [
+      "gpt_trader.features.live_trade.risk.manager"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/test_risk_manager_pre_trade_validate.py": [
+      "gpt_trader.features.live_trade.risk.manager"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/test_risk_manager_reduce_only_mode.py": [
+      "gpt_trader.features.live_trade.risk.manager"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/test_risk_manager_reset_daily_tracking.py": [
+      "gpt_trader.features.live_trade.risk.manager"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/test_risk_manager_risk_metrics.py": [
+      "gpt_trader.features.live_trade.risk.manager"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/test_risk_manager_validation_error.py": [
+      "gpt_trader.features.live_trade.risk.manager"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/test_risk_manager_volatility_breaker.py": [
+      "gpt_trader.features.live_trade.risk.manager"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/test_risk_manager_volatility_check_outcome.py": [
       "gpt_trader.features.live_trade.risk.manager"
     ],
     "tests/unit/gpt_trader/features/live_trade/test_state_recovery.py": [
@@ -4263,11 +4497,10 @@
     "gpt_trader.features.brokerages.coinbase.client.portfolio": "src/gpt_trader/features/brokerages/coinbase/client/portfolio.py",
     "gpt_trader.features.brokerages.coinbase.client.orders": "src/gpt_trader/features/brokerages/coinbase/client/orders.py",
     "gpt_trader.features.brokerages.coinbase.client.accounts": "src/gpt_trader/features/brokerages/coinbase/client/accounts.py",
-    "gpt_trader.features.brokerages.coinbase.rest.portfolio_service": "src/gpt_trader/features/brokerages/coinbase/rest/portfolio_service.py",
     "gpt_trader.features.brokerages.coinbase.rest.order_service": "src/gpt_trader/features/brokerages/coinbase/rest/order_service.py",
+    "gpt_trader.features.brokerages.coinbase.rest.portfolio_service": "src/gpt_trader/features/brokerages/coinbase/rest/portfolio_service.py",
     "gpt_trader.features.brokerages.coinbase.rest.protocols": "src/gpt_trader/features/brokerages/coinbase/rest/protocols.py",
     "gpt_trader.features.brokerages.coinbase.rest.product_service": "src/gpt_trader/features/brokerages/coinbase/rest/product_service.py",
-    "gpt_trader.features.brokerages.coinbase.rest.base": "src/gpt_trader/features/brokerages/coinbase/rest/base.py",
     "gpt_trader.features.brokerages.coinbase.rest.pnl_service": "src/gpt_trader/features/brokerages/coinbase/rest/pnl_service.py",
     "gpt_trader.features.brokerages.coinbase.rest.position_state_store": "src/gpt_trader/features/brokerages/coinbase/rest/position_state_store.py",
     "gpt_trader.features.strategy_dev.monitor.metrics": "src/gpt_trader/features/strategy_dev/monitor/metrics.py",
@@ -4294,12 +4527,12 @@
     "gpt_trader.features.live_trade.combiners.regime": "src/gpt_trader/features/live_trade/combiners/regime.py",
     "gpt_trader.features.live_trade.engines.price_tick_store": "src/gpt_trader/features/live_trade/engines/price_tick_store.py",
     "gpt_trader.features.live_trade.engines.telemetry_health": "src/gpt_trader/features/live_trade/engines/telemetry_health.py",
-    "gpt_trader.features.live_trade.execution.guard_manager": "src/gpt_trader/features/live_trade/execution/guard_manager.py",
     "gpt_trader.features.live_trade.execution.submission_result": "src/gpt_trader/features/live_trade/execution/submission_result.py",
+    "gpt_trader.features.live_trade.execution.guard_manager": "src/gpt_trader/features/live_trade/execution/guard_manager.py",
     "gpt_trader.features.live_trade.guard_errors": "src/gpt_trader/features/live_trade/guard_errors.py",
+    "gpt_trader.features.live_trade.engines.telemetry_streaming": "src/gpt_trader/features/live_trade/engines/telemetry_streaming.py",
     "gpt_trader.features.live_trade.engines": "src/gpt_trader/features/live_trade/engines/__init__.py",
     "gpt_trader.features.live_trade.engines.equity_calculator": "src/gpt_trader/features/live_trade/engines/equity_calculator.py",
-    "gpt_trader.features.live_trade.engines.telemetry_streaming": "src/gpt_trader/features/live_trade/engines/telemetry_streaming.py",
     "gpt_trader.features.live_trade.execution.order_event_recorder": "src/gpt_trader/features/live_trade/execution/order_event_recorder.py",
     "gpt_trader.features.live_trade.execution.guards": "src/gpt_trader/features/live_trade/execution/guards/__init__.py",
     "gpt_trader.features.live_trade.execution.guards.daily_loss": "src/gpt_trader/features/live_trade/execution/guards/daily_loss.py",

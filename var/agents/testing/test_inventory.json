@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 11103,
-    "total_files": 587,
+    "total_files": 610,
     "markers_used": 9
   },
   "marker_definitions": {
@@ -271,22 +271,26 @@
       "tests/unit/gpt_trader/tui/test_risk_guard_explanations.py",
       "tests/unit/gpt_trader/tui/test_state_update_from_bot_status.py",
       "tests/unit/gpt_trader/tui/test_indicator_contributions.py",
+      "tests/unit/gpt_trader/tui/test_staleness_helpers_banners_and_empty_state.py",
       "tests/unit/gpt_trader/tui/test_snapshots_system_indicators.py",
       "tests/unit/gpt_trader/tui/test_snapshots_main_screen.py",
       "tests/unit/gpt_trader/tui/test_trade_matcher.py",
       "tests/unit/gpt_trader/tui/test_log_manager_formatters_compact.py",
-      "tests/unit/gpt_trader/tui/test_staleness_helpers.py",
       "tests/unit/gpt_trader/tui/test_log_manager_entries.py",
       "tests/unit/gpt_trader/tui/test_log_manager_handler_widget_controls.py",
       "tests/unit/gpt_trader/tui/test_formatting.py",
+      "tests/unit/gpt_trader/tui/test_staleness_helpers_freshness_label_and_display.py",
       "tests/unit/gpt_trader/tui/test_degraded_mode.py",
       "tests/unit/gpt_trader/tui/test_log_manager_formatters_structured.py",
       "tests/unit/gpt_trader/tui/test_log_manager_handler_message_safety.py",
       "tests/unit/gpt_trader/tui/test_helpers.py",
+      "tests/unit/gpt_trader/tui/test_staleness_helpers_data_age_and_severity.py",
       "tests/unit/gpt_trader/tui/test_events.py",
       "tests/unit/gpt_trader/tui/test_credential_cache.py",
       "tests/unit/gpt_trader/tui/test_snapshots_execution_issues_modal.py",
+      "tests/unit/gpt_trader/tui/test_staleness_helpers_execution_health.py",
       "tests/unit/gpt_trader/tui/test_risk_preview.py",
+      "tests/unit/gpt_trader/tui/test_staleness_helpers_edge_cases.py",
       "tests/unit/gpt_trader/tui/test_thresholds.py",
       "tests/unit/gpt_trader/tui/test_screens.py",
       "tests/unit/gpt_trader/tui/test_app.py",
@@ -576,7 +580,6 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_fallback.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_http_request_layer.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_coverage.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_data.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_intx_portfolio_service.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_permissions.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_errors.py",
@@ -584,12 +587,17 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_websocket.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_websocket_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_edges.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_data_endpoints.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_data_staleness.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_endpoint_chains.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_perp_rules_and_quantize.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_exchange_specs.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_service_order_and_size_methods.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_product_catalog.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_data_models.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_perform_http_request_and_lifecycle.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_request_retries.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_metrics_and_resilience_status.py",
@@ -694,42 +702,54 @@
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_failure.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_init.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_trade_event.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_init.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_success.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_validation_order_validator_basic.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_process_rejection.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_rejection.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_daily_loss_guard.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_with_retry.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_validation_exchange_rules.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_edge_cases.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_validation_integration_flow.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_positions_dict.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_api_health_guard.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_resilience_backoff.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_router.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_runtime_and_orchestration.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_cache.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_resilience_retry.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_collect_account_state.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_order_normal.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_validation_order_preview.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_liquidation_buffer_guard.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_decision_trace.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_handle_order_result.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_require_product_and_integration.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_state_collection.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_get_validation_metrics.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_broker_rejection.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_metrics.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_equity_and_logging.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_preview.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_retry_policy.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_execute_broker_order.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_submission_attempt.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_generate_submit_id.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_integration_rejection.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_record_rejection.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_cancel_and_safe_run.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_resolve_effective_price.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_init.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_record_preview.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_volatility_guard.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_handle_order_failure.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_mark_staleness_and_risk_metrics_guard.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_validation_failure_tracker.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_validation_mark_staleness_and_slippage.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_init.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_with_retry.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_validation_metrics_and_escalation.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_order_edge_cases.py",
@@ -738,7 +758,10 @@
       "tests/unit/gpt_trader/features/live_trade/risk/test_reduce_only_backward_compatibility.py",
       "tests/unit/gpt_trader/features/live_trade/risk/test_cfm_risk_config.py",
       "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator.py",
-      "tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy.py",
+      "tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy_safety_and_recovery.py",
+      "tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy_zscore_and_signals.py",
+      "tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy_sizing_and_trend_filter.py",
+      "tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy_exit_logic_and_cooldown.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/hybrid/test_base.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/hybrid/test_types.py"
     ]
@@ -5809,6 +5832,190 @@
         "docstring": "Test methods work with empty contributions."
       }
     ],
+    "tests/unit/gpt_trader/tui/test_staleness_helpers_banners_and_empty_state.py": [
+      {
+        "name": "TestGetStalenessBanner::test_returns_reconnecting_when_fetching",
+        "line": 18,
+        "markers": [],
+        "docstring": "Should return reconnecting banner when data_fetching is True.",
+        "class": "TestGetStalenessBanner"
+      },
+      {
+        "name": "TestGetStalenessBanner::test_returns_degraded_banner",
+        "line": 29,
+        "markers": [],
+        "docstring": "Should return degraded banner when in degraded mode.",
+        "class": "TestGetStalenessBanner"
+      },
+      {
+        "name": "TestGetStalenessBanner::test_returns_none_when_fresh",
+        "line": 43,
+        "markers": [],
+        "docstring": "Should return None when data is fresh.",
+        "class": "TestGetStalenessBanner"
+      },
+      {
+        "name": "TestGetStalenessBanner::test_returns_warning_when_stale",
+        "line": 57,
+        "markers": [],
+        "docstring": "Should return warning when data is stale.",
+        "class": "TestGetStalenessBanner"
+      },
+      {
+        "name": "TestGetStalenessBanner::test_returns_error_when_critical",
+        "line": 75,
+        "markers": [],
+        "docstring": "Should return error with reconnect hint when critical.",
+        "class": "TestGetStalenessBanner"
+      },
+      {
+        "name": "TestGetConnectionBanner::test_returns_none_when_stopped",
+        "line": 98,
+        "markers": [],
+        "docstring": "Should return None when bot is stopped.",
+        "class": "TestGetConnectionBanner"
+      },
+      {
+        "name": "TestGetConnectionBanner::test_returns_none_for_transitional_states",
+        "line": 107,
+        "markers": [],
+        "docstring": "Should return None for connecting/unknown states.",
+        "class": "TestGetConnectionBanner"
+      },
+      {
+        "name": "TestGetConnectionBanner::test_returns_none_for_healthy_states",
+        "line": 117,
+        "markers": [],
+        "docstring": "Should return None for healthy connection states.",
+        "class": "TestGetConnectionBanner"
+      },
+      {
+        "name": "TestGetConnectionBanner::test_returns_error_for_disconnected",
+        "line": 127,
+        "markers": [],
+        "docstring": "Should return error banner for disconnected state.",
+        "class": "TestGetConnectionBanner"
+      },
+      {
+        "name": "TestGetEmptyStateConfig::test_returns_stopped_config_when_not_running",
+        "line": 143,
+        "markers": [],
+        "docstring": "Should return stopped config when bot is not running.",
+        "class": "TestGetEmptyStateConfig"
+      },
+      {
+        "name": "TestGetEmptyStateConfig::test_returns_read_only_config",
+        "line": 154,
+        "markers": [],
+        "docstring": "Should return read-only config for read_only mode.",
+        "class": "TestGetEmptyStateConfig"
+      },
+      {
+        "name": "TestGetEmptyStateConfig::test_returns_connection_failed_config",
+        "line": 165,
+        "markers": [],
+        "docstring": "Should return connection failed config for error states.",
+        "class": "TestGetEmptyStateConfig"
+      },
+      {
+        "name": "TestGetEmptyStateConfig::test_returns_connecting_config",
+        "line": 176,
+        "markers": [],
+        "docstring": "Should return connecting config for transitional states.",
+        "class": "TestGetEmptyStateConfig"
+      },
+      {
+        "name": "TestGetEmptyStateConfig::test_returns_no_data_config",
+        "line": 187,
+        "markers": [],
+        "docstring": "Should return no data config when running but no data.",
+        "class": "TestGetEmptyStateConfig"
+      },
+      {
+        "name": "test_returns_reconnecting_when_fetching",
+        "line": 18,
+        "markers": [],
+        "docstring": "Should return reconnecting banner when data_fetching is True."
+      },
+      {
+        "name": "test_returns_degraded_banner",
+        "line": 29,
+        "markers": [],
+        "docstring": "Should return degraded banner when in degraded mode."
+      },
+      {
+        "name": "test_returns_none_when_fresh",
+        "line": 43,
+        "markers": [],
+        "docstring": "Should return None when data is fresh."
+      },
+      {
+        "name": "test_returns_warning_when_stale",
+        "line": 57,
+        "markers": [],
+        "docstring": "Should return warning when data is stale."
+      },
+      {
+        "name": "test_returns_error_when_critical",
+        "line": 75,
+        "markers": [],
+        "docstring": "Should return error with reconnect hint when critical."
+      },
+      {
+        "name": "test_returns_none_when_stopped",
+        "line": 98,
+        "markers": [],
+        "docstring": "Should return None when bot is stopped."
+      },
+      {
+        "name": "test_returns_none_for_transitional_states",
+        "line": 107,
+        "markers": [],
+        "docstring": "Should return None for connecting/unknown states."
+      },
+      {
+        "name": "test_returns_none_for_healthy_states",
+        "line": 117,
+        "markers": [],
+        "docstring": "Should return None for healthy connection states."
+      },
+      {
+        "name": "test_returns_error_for_disconnected",
+        "line": 127,
+        "markers": [],
+        "docstring": "Should return error banner for disconnected state."
+      },
+      {
+        "name": "test_returns_stopped_config_when_not_running",
+        "line": 143,
+        "markers": [],
+        "docstring": "Should return stopped config when bot is not running."
+      },
+      {
+        "name": "test_returns_read_only_config",
+        "line": 154,
+        "markers": [],
+        "docstring": "Should return read-only config for read_only mode."
+      },
+      {
+        "name": "test_returns_connection_failed_config",
+        "line": 165,
+        "markers": [],
+        "docstring": "Should return connection failed config for error states."
+      },
+      {
+        "name": "test_returns_connecting_config",
+        "line": 176,
+        "markers": [],
+        "docstring": "Should return connecting config for transitional states."
+      },
+      {
+        "name": "test_returns_no_data_config",
+        "line": 187,
+        "markers": [],
+        "docstring": "Should return no data config when running but no data."
+      }
+    ],
     "tests/unit/gpt_trader/tui/test_snapshots_system_indicators.py": [
       {
         "name": "TestValidationDisplaySnapshots::test_validation_failures_warning",
@@ -6168,658 +6375,6 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/tui/test_staleness_helpers.py": [
-      {
-        "name": "TestGetDataAgeSeconds::test_returns_none_when_no_data_available",
-        "line": 23,
-        "markers": [],
-        "docstring": "Should return None when data_available is False.",
-        "class": "TestGetDataAgeSeconds"
-      },
-      {
-        "name": "TestGetDataAgeSeconds::test_returns_none_when_last_fetch_zero",
-        "line": 31,
-        "markers": [],
-        "docstring": "Should return None when last_data_fetch is 0.",
-        "class": "TestGetDataAgeSeconds"
-      },
-      {
-        "name": "TestGetDataAgeSeconds::test_returns_age_when_data_available",
-        "line": 39,
-        "markers": [],
-        "docstring": "Should return age in seconds when data is available.",
-        "class": "TestGetDataAgeSeconds"
-      },
-      {
-        "name": "TestGetStalenessSeverity::test_returns_critical_when_connection_unhealthy",
-        "line": 53,
-        "markers": [],
-        "docstring": "Should return critical when connection_healthy is False.",
-        "class": "TestGetStalenessSeverity"
-      },
-      {
-        "name": "TestGetStalenessSeverity::test_returns_fresh_when_no_data_yet",
-        "line": 62,
-        "markers": [],
-        "docstring": "Should return fresh when no data has been fetched.",
-        "class": "TestGetStalenessSeverity"
-      },
-      {
-        "name": "TestGetStalenessSeverity::test_returns_fresh_for_recent_data",
-        "line": 71,
-        "markers": [],
-        "docstring": "Should return fresh when data is less than 10s old.",
-        "class": "TestGetStalenessSeverity"
-      },
-      {
-        "name": "TestGetStalenessSeverity::test_returns_stale_for_aging_data",
-        "line": 80,
-        "markers": [],
-        "docstring": "Should return stale when data is 10-30s old.",
-        "class": "TestGetStalenessSeverity"
-      },
-      {
-        "name": "TestGetStalenessSeverity::test_returns_critical_for_old_data",
-        "line": 89,
-        "markers": [],
-        "docstring": "Should return critical when data is >30s old.",
-        "class": "TestGetStalenessSeverity"
-      },
-      {
-        "name": "TestFormatFreshnessLabel::test_formats_seconds",
-        "line": 102,
-        "markers": [],
-        "docstring": "Should format as seconds for age < 60.",
-        "class": "TestFormatFreshnessLabel"
-      },
-      {
-        "name": "TestFormatFreshnessLabel::test_formats_minutes",
-        "line": 107,
-        "markers": [],
-        "docstring": "Should format as minutes for age 60-3600.",
-        "class": "TestFormatFreshnessLabel"
-      },
-      {
-        "name": "TestFormatFreshnessLabel::test_formats_hours",
-        "line": 112,
-        "markers": [],
-        "docstring": "Should format as hours for age >= 3600.",
-        "class": "TestFormatFreshnessLabel"
-      },
-      {
-        "name": "TestGetFreshnessDisplay::test_returns_syncing_when_fetching",
-        "line": 121,
-        "markers": [],
-        "docstring": "Should return syncing when data_fetching is True.",
-        "class": "TestGetFreshnessDisplay"
-      },
-      {
-        "name": "TestGetFreshnessDisplay::test_returns_none_when_no_data",
-        "line": 132,
-        "markers": [],
-        "docstring": "Should return None when no data has been fetched.",
-        "class": "TestGetFreshnessDisplay"
-      },
-      {
-        "name": "TestGetFreshnessDisplay::test_returns_dim_for_fresh_data",
-        "line": 141,
-        "markers": [],
-        "docstring": "Should return dim styling for fresh data.",
-        "class": "TestGetFreshnessDisplay"
-      },
-      {
-        "name": "TestGetFreshnessDisplay::test_returns_yellow_for_stale_data",
-        "line": 155,
-        "markers": [],
-        "docstring": "Should return yellow styling for stale data.",
-        "class": "TestGetFreshnessDisplay"
-      },
-      {
-        "name": "TestGetFreshnessDisplay::test_returns_red_for_critical_data",
-        "line": 169,
-        "markers": [],
-        "docstring": "Should return red styling for critical data.",
-        "class": "TestGetFreshnessDisplay"
-      },
-      {
-        "name": "TestGetStalenessBanner::test_returns_reconnecting_when_fetching",
-        "line": 187,
-        "markers": [],
-        "docstring": "Should return reconnecting banner when data_fetching is True.",
-        "class": "TestGetStalenessBanner"
-      },
-      {
-        "name": "TestGetStalenessBanner::test_returns_degraded_banner",
-        "line": 198,
-        "markers": [],
-        "docstring": "Should return degraded banner when in degraded mode.",
-        "class": "TestGetStalenessBanner"
-      },
-      {
-        "name": "TestGetStalenessBanner::test_returns_none_when_fresh",
-        "line": 212,
-        "markers": [],
-        "docstring": "Should return None when data is fresh.",
-        "class": "TestGetStalenessBanner"
-      },
-      {
-        "name": "TestGetStalenessBanner::test_returns_warning_when_stale",
-        "line": 226,
-        "markers": [],
-        "docstring": "Should return warning when data is stale.",
-        "class": "TestGetStalenessBanner"
-      },
-      {
-        "name": "TestGetStalenessBanner::test_returns_error_when_critical",
-        "line": 244,
-        "markers": [],
-        "docstring": "Should return error with reconnect hint when critical.",
-        "class": "TestGetStalenessBanner"
-      },
-      {
-        "name": "TestGetConnectionBanner::test_returns_none_when_stopped",
-        "line": 267,
-        "markers": [],
-        "docstring": "Should return None when bot is stopped.",
-        "class": "TestGetConnectionBanner"
-      },
-      {
-        "name": "TestGetConnectionBanner::test_returns_none_for_transitional_states",
-        "line": 276,
-        "markers": [],
-        "docstring": "Should return None for connecting/unknown states.",
-        "class": "TestGetConnectionBanner"
-      },
-      {
-        "name": "TestGetConnectionBanner::test_returns_none_for_healthy_states",
-        "line": 286,
-        "markers": [],
-        "docstring": "Should return None for healthy connection states.",
-        "class": "TestGetConnectionBanner"
-      },
-      {
-        "name": "TestGetConnectionBanner::test_returns_error_for_disconnected",
-        "line": 296,
-        "markers": [],
-        "docstring": "Should return error banner for disconnected state.",
-        "class": "TestGetConnectionBanner"
-      },
-      {
-        "name": "TestGetEmptyStateConfig::test_returns_stopped_config_when_not_running",
-        "line": 312,
-        "markers": [],
-        "docstring": "Should return stopped config when bot is not running.",
-        "class": "TestGetEmptyStateConfig"
-      },
-      {
-        "name": "TestGetEmptyStateConfig::test_returns_read_only_config",
-        "line": 323,
-        "markers": [],
-        "docstring": "Should return read-only config for read_only mode.",
-        "class": "TestGetEmptyStateConfig"
-      },
-      {
-        "name": "TestGetEmptyStateConfig::test_returns_connection_failed_config",
-        "line": 334,
-        "markers": [],
-        "docstring": "Should return connection failed config for error states.",
-        "class": "TestGetEmptyStateConfig"
-      },
-      {
-        "name": "TestGetEmptyStateConfig::test_returns_connecting_config",
-        "line": 345,
-        "markers": [],
-        "docstring": "Should return connecting config for transitional states.",
-        "class": "TestGetEmptyStateConfig"
-      },
-      {
-        "name": "TestGetEmptyStateConfig::test_returns_no_data_config",
-        "line": 356,
-        "markers": [],
-        "docstring": "Should return no data config when running but no data.",
-        "class": "TestGetEmptyStateConfig"
-      },
-      {
-        "name": "TestGetExecutionHealthBanner::test_returns_none_when_healthy",
-        "line": 371,
-        "markers": [],
-        "docstring": "Should return None when execution is healthy.",
-        "class": "TestGetExecutionHealthBanner"
-      },
-      {
-        "name": "TestGetExecutionHealthBanner::test_returns_none_when_no_executions",
-        "line": 381,
-        "markers": [],
-        "docstring": "Should return None when no executions have occurred.",
-        "class": "TestGetExecutionHealthBanner"
-      },
-      {
-        "name": "TestGetExecutionHealthBanner::test_returns_error_when_circuit_open",
-        "line": 389,
-        "markers": [],
-        "docstring": "Should return error banner when circuit breaker is open.",
-        "class": "TestGetExecutionHealthBanner"
-      },
-      {
-        "name": "TestGetExecutionHealthBanner::test_returns_error_when_success_rate_critical",
-        "line": 400,
-        "markers": [],
-        "docstring": "Should return error banner when success rate below critical threshold.",
-        "class": "TestGetExecutionHealthBanner"
-      },
-      {
-        "name": "TestGetExecutionHealthBanner::test_returns_warning_when_success_rate_low",
-        "line": 414,
-        "markers": [],
-        "docstring": "Should return warning banner when success rate below warning threshold.",
-        "class": "TestGetExecutionHealthBanner"
-      },
-      {
-        "name": "TestGetExecutionHealthBanner::test_returns_warning_when_retry_rate_high",
-        "line": 429,
-        "markers": [],
-        "docstring": "Should return warning banner when retry rate exceeds threshold.",
-        "class": "TestGetExecutionHealthBanner"
-      },
-      {
-        "name": "TestGetExecutionHealthBanner::test_handles_missing_execution_data",
-        "line": 443,
-        "markers": [],
-        "docstring": "Should return None when execution_data is not available.",
-        "class": "TestGetExecutionHealthBanner"
-      },
-      {
-        "name": "TestGetExecutionHealthBanner::test_handles_missing_resilience_data",
-        "line": 452,
-        "markers": [],
-        "docstring": "Should return None when resilience_data is not available.",
-        "class": "TestGetExecutionHealthBanner"
-      },
-      {
-        "name": "TestExecutionHealthBannerIntegration::test_execution_health_takes_priority_over_staleness",
-        "line": 464,
-        "markers": [],
-        "docstring": "Execution health issues should show before data staleness warnings.",
-        "class": "TestExecutionHealthBannerIntegration"
-      },
-      {
-        "name": "TestExecutionHealthBannerIntegration::test_degraded_mode_takes_priority_over_execution",
-        "line": 482,
-        "markers": [],
-        "docstring": "Degraded mode should take priority over execution health.",
-        "class": "TestExecutionHealthBannerIntegration"
-      },
-      {
-        "name": "TestExecutionHealthBannerIntegration::test_execution_critical_shows_over_stale_warning",
-        "line": 498,
-        "markers": [],
-        "docstring": "Critical execution should show instead of stale warning.",
-        "class": "TestExecutionHealthBannerIntegration"
-      },
-      {
-        "name": "TestStalenessEdgeCases::test_get_data_age_with_negative_last_fetch",
-        "line": 522,
-        "markers": [],
-        "docstring": "Test that negative last_data_fetch is treated as no data.",
-        "class": "TestStalenessEdgeCases"
-      },
-      {
-        "name": "TestStalenessEdgeCases::test_connection_unhealthy_overrides_to_critical",
-        "line": 530,
-        "markers": [],
-        "docstring": "Test that connection_healthy=False always returns critical severity.",
-        "class": "TestStalenessEdgeCases"
-      },
-      {
-        "name": "TestStalenessEdgeCases::test_staleness_banner_with_connection_unhealthy_and_fresh_data",
-        "line": 540,
-        "markers": [],
-        "docstring": "Test banner includes reconnect hint when connection unhealthy.",
-        "class": "TestStalenessEdgeCases"
-      },
-      {
-        "name": "TestStalenessEdgeCases::test_freshness_display_with_connection_unhealthy",
-        "line": 559,
-        "markers": [],
-        "docstring": "Test freshness display returns critical when connection unhealthy.",
-        "class": "TestStalenessEdgeCases"
-      },
-      {
-        "name": "TestStalenessEdgeCases::test_staleness_banner_with_none_degraded_reason",
-        "line": 573,
-        "markers": [],
-        "docstring": "Test banner handles None degraded_reason gracefully.",
-        "class": "TestStalenessEdgeCases"
-      },
-      {
-        "name": "TestStalenessEdgeCases::test_get_empty_state_config_handles_none_connection_status",
-        "line": 587,
-        "markers": [],
-        "docstring": "Test empty state config handles None connection status.",
-        "class": "TestStalenessEdgeCases"
-      },
-      {
-        "name": "TestStalenessEdgeCases::test_get_connection_banner_case_insensitive",
-        "line": 598,
-        "markers": [],
-        "docstring": "Test connection banner handles lowercase status.",
-        "class": "TestStalenessEdgeCases"
-      },
-      {
-        "name": "TestStalenessEdgeCases::test_staleness_banner_returns_none_no_data_yet",
-        "line": 610,
-        "markers": [],
-        "docstring": "Test banner returns None when no data has been fetched yet.",
-        "class": "TestStalenessEdgeCases"
-      },
-      {
-        "name": "TestStalenessEdgeCases::test_get_data_age_at_boundary_threshold",
-        "line": 625,
-        "markers": [],
-        "docstring": "Test staleness exactly at threshold boundaries.",
-        "class": "TestStalenessEdgeCases"
-      },
-      {
-        "name": "test_returns_none_when_no_data_available",
-        "line": 23,
-        "markers": [],
-        "docstring": "Should return None when data_available is False."
-      },
-      {
-        "name": "test_returns_none_when_last_fetch_zero",
-        "line": 31,
-        "markers": [],
-        "docstring": "Should return None when last_data_fetch is 0."
-      },
-      {
-        "name": "test_returns_age_when_data_available",
-        "line": 39,
-        "markers": [],
-        "docstring": "Should return age in seconds when data is available."
-      },
-      {
-        "name": "test_returns_critical_when_connection_unhealthy",
-        "line": 53,
-        "markers": [],
-        "docstring": "Should return critical when connection_healthy is False."
-      },
-      {
-        "name": "test_returns_fresh_when_no_data_yet",
-        "line": 62,
-        "markers": [],
-        "docstring": "Should return fresh when no data has been fetched."
-      },
-      {
-        "name": "test_returns_fresh_for_recent_data",
-        "line": 71,
-        "markers": [],
-        "docstring": "Should return fresh when data is less than 10s old."
-      },
-      {
-        "name": "test_returns_stale_for_aging_data",
-        "line": 80,
-        "markers": [],
-        "docstring": "Should return stale when data is 10-30s old."
-      },
-      {
-        "name": "test_returns_critical_for_old_data",
-        "line": 89,
-        "markers": [],
-        "docstring": "Should return critical when data is >30s old."
-      },
-      {
-        "name": "test_formats_seconds",
-        "line": 102,
-        "markers": [],
-        "docstring": "Should format as seconds for age < 60."
-      },
-      {
-        "name": "test_formats_minutes",
-        "line": 107,
-        "markers": [],
-        "docstring": "Should format as minutes for age 60-3600."
-      },
-      {
-        "name": "test_formats_hours",
-        "line": 112,
-        "markers": [],
-        "docstring": "Should format as hours for age >= 3600."
-      },
-      {
-        "name": "test_returns_syncing_when_fetching",
-        "line": 121,
-        "markers": [],
-        "docstring": "Should return syncing when data_fetching is True."
-      },
-      {
-        "name": "test_returns_none_when_no_data",
-        "line": 132,
-        "markers": [],
-        "docstring": "Should return None when no data has been fetched."
-      },
-      {
-        "name": "test_returns_dim_for_fresh_data",
-        "line": 141,
-        "markers": [],
-        "docstring": "Should return dim styling for fresh data."
-      },
-      {
-        "name": "test_returns_yellow_for_stale_data",
-        "line": 155,
-        "markers": [],
-        "docstring": "Should return yellow styling for stale data."
-      },
-      {
-        "name": "test_returns_red_for_critical_data",
-        "line": 169,
-        "markers": [],
-        "docstring": "Should return red styling for critical data."
-      },
-      {
-        "name": "test_returns_reconnecting_when_fetching",
-        "line": 187,
-        "markers": [],
-        "docstring": "Should return reconnecting banner when data_fetching is True."
-      },
-      {
-        "name": "test_returns_degraded_banner",
-        "line": 198,
-        "markers": [],
-        "docstring": "Should return degraded banner when in degraded mode."
-      },
-      {
-        "name": "test_returns_none_when_fresh",
-        "line": 212,
-        "markers": [],
-        "docstring": "Should return None when data is fresh."
-      },
-      {
-        "name": "test_returns_warning_when_stale",
-        "line": 226,
-        "markers": [],
-        "docstring": "Should return warning when data is stale."
-      },
-      {
-        "name": "test_returns_error_when_critical",
-        "line": 244,
-        "markers": [],
-        "docstring": "Should return error with reconnect hint when critical."
-      },
-      {
-        "name": "test_returns_none_when_stopped",
-        "line": 267,
-        "markers": [],
-        "docstring": "Should return None when bot is stopped."
-      },
-      {
-        "name": "test_returns_none_for_transitional_states",
-        "line": 276,
-        "markers": [],
-        "docstring": "Should return None for connecting/unknown states."
-      },
-      {
-        "name": "test_returns_none_for_healthy_states",
-        "line": 286,
-        "markers": [],
-        "docstring": "Should return None for healthy connection states."
-      },
-      {
-        "name": "test_returns_error_for_disconnected",
-        "line": 296,
-        "markers": [],
-        "docstring": "Should return error banner for disconnected state."
-      },
-      {
-        "name": "test_returns_stopped_config_when_not_running",
-        "line": 312,
-        "markers": [],
-        "docstring": "Should return stopped config when bot is not running."
-      },
-      {
-        "name": "test_returns_read_only_config",
-        "line": 323,
-        "markers": [],
-        "docstring": "Should return read-only config for read_only mode."
-      },
-      {
-        "name": "test_returns_connection_failed_config",
-        "line": 334,
-        "markers": [],
-        "docstring": "Should return connection failed config for error states."
-      },
-      {
-        "name": "test_returns_connecting_config",
-        "line": 345,
-        "markers": [],
-        "docstring": "Should return connecting config for transitional states."
-      },
-      {
-        "name": "test_returns_no_data_config",
-        "line": 356,
-        "markers": [],
-        "docstring": "Should return no data config when running but no data."
-      },
-      {
-        "name": "test_returns_none_when_healthy",
-        "line": 371,
-        "markers": [],
-        "docstring": "Should return None when execution is healthy."
-      },
-      {
-        "name": "test_returns_none_when_no_executions",
-        "line": 381,
-        "markers": [],
-        "docstring": "Should return None when no executions have occurred."
-      },
-      {
-        "name": "test_returns_error_when_circuit_open",
-        "line": 389,
-        "markers": [],
-        "docstring": "Should return error banner when circuit breaker is open."
-      },
-      {
-        "name": "test_returns_error_when_success_rate_critical",
-        "line": 400,
-        "markers": [],
-        "docstring": "Should return error banner when success rate below critical threshold."
-      },
-      {
-        "name": "test_returns_warning_when_success_rate_low",
-        "line": 414,
-        "markers": [],
-        "docstring": "Should return warning banner when success rate below warning threshold."
-      },
-      {
-        "name": "test_returns_warning_when_retry_rate_high",
-        "line": 429,
-        "markers": [],
-        "docstring": "Should return warning banner when retry rate exceeds threshold."
-      },
-      {
-        "name": "test_handles_missing_execution_data",
-        "line": 443,
-        "markers": [],
-        "docstring": "Should return None when execution_data is not available."
-      },
-      {
-        "name": "test_handles_missing_resilience_data",
-        "line": 452,
-        "markers": [],
-        "docstring": "Should return None when resilience_data is not available."
-      },
-      {
-        "name": "test_execution_health_takes_priority_over_staleness",
-        "line": 464,
-        "markers": [],
-        "docstring": "Execution health issues should show before data staleness warnings."
-      },
-      {
-        "name": "test_degraded_mode_takes_priority_over_execution",
-        "line": 482,
-        "markers": [],
-        "docstring": "Degraded mode should take priority over execution health."
-      },
-      {
-        "name": "test_execution_critical_shows_over_stale_warning",
-        "line": 498,
-        "markers": [],
-        "docstring": "Critical execution should show instead of stale warning."
-      },
-      {
-        "name": "test_get_data_age_with_negative_last_fetch",
-        "line": 522,
-        "markers": [],
-        "docstring": "Test that negative last_data_fetch is treated as no data."
-      },
-      {
-        "name": "test_connection_unhealthy_overrides_to_critical",
-        "line": 530,
-        "markers": [],
-        "docstring": "Test that connection_healthy=False always returns critical severity."
-      },
-      {
-        "name": "test_staleness_banner_with_connection_unhealthy_and_fresh_data",
-        "line": 540,
-        "markers": [],
-        "docstring": "Test banner includes reconnect hint when connection unhealthy."
-      },
-      {
-        "name": "test_freshness_display_with_connection_unhealthy",
-        "line": 559,
-        "markers": [],
-        "docstring": "Test freshness display returns critical when connection unhealthy."
-      },
-      {
-        "name": "test_staleness_banner_with_none_degraded_reason",
-        "line": 573,
-        "markers": [],
-        "docstring": "Test banner handles None degraded_reason gracefully."
-      },
-      {
-        "name": "test_get_empty_state_config_handles_none_connection_status",
-        "line": 587,
-        "markers": [],
-        "docstring": "Test empty state config handles None connection status."
-      },
-      {
-        "name": "test_get_connection_banner_case_insensitive",
-        "line": 598,
-        "markers": [],
-        "docstring": "Test connection banner handles lowercase status."
-      },
-      {
-        "name": "test_staleness_banner_returns_none_no_data_yet",
-        "line": 610,
-        "markers": [],
-        "docstring": "Test banner returns None when no data has been fetched yet."
-      },
-      {
-        "name": "test_get_data_age_at_boundary_threshold",
-        "line": 625,
-        "markers": [],
-        "docstring": "Test staleness exactly at threshold boundaries."
-      }
-    ],
     "tests/unit/gpt_trader/tui/test_log_manager_entries.py": [
       {
         "name": "TestTuiLogManagerEntries::test_error_tracking_counts_errors",
@@ -6993,6 +6548,112 @@
         "line": 13,
         "markers": [],
         "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/tui/test_staleness_helpers_freshness_label_and_display.py": [
+      {
+        "name": "TestFormatFreshnessLabel::test_formats_seconds",
+        "line": 17,
+        "markers": [],
+        "docstring": "Should format as seconds for age < 60.",
+        "class": "TestFormatFreshnessLabel"
+      },
+      {
+        "name": "TestFormatFreshnessLabel::test_formats_minutes",
+        "line": 22,
+        "markers": [],
+        "docstring": "Should format as minutes for age 60-3600.",
+        "class": "TestFormatFreshnessLabel"
+      },
+      {
+        "name": "TestFormatFreshnessLabel::test_formats_hours",
+        "line": 27,
+        "markers": [],
+        "docstring": "Should format as hours for age >= 3600.",
+        "class": "TestFormatFreshnessLabel"
+      },
+      {
+        "name": "TestGetFreshnessDisplay::test_returns_syncing_when_fetching",
+        "line": 36,
+        "markers": [],
+        "docstring": "Should return syncing when data_fetching is True.",
+        "class": "TestGetFreshnessDisplay"
+      },
+      {
+        "name": "TestGetFreshnessDisplay::test_returns_none_when_no_data",
+        "line": 47,
+        "markers": [],
+        "docstring": "Should return None when no data has been fetched.",
+        "class": "TestGetFreshnessDisplay"
+      },
+      {
+        "name": "TestGetFreshnessDisplay::test_returns_dim_for_fresh_data",
+        "line": 56,
+        "markers": [],
+        "docstring": "Should return dim styling for fresh data.",
+        "class": "TestGetFreshnessDisplay"
+      },
+      {
+        "name": "TestGetFreshnessDisplay::test_returns_yellow_for_stale_data",
+        "line": 70,
+        "markers": [],
+        "docstring": "Should return yellow styling for stale data.",
+        "class": "TestGetFreshnessDisplay"
+      },
+      {
+        "name": "TestGetFreshnessDisplay::test_returns_red_for_critical_data",
+        "line": 84,
+        "markers": [],
+        "docstring": "Should return red styling for critical data.",
+        "class": "TestGetFreshnessDisplay"
+      },
+      {
+        "name": "test_formats_seconds",
+        "line": 17,
+        "markers": [],
+        "docstring": "Should format as seconds for age < 60."
+      },
+      {
+        "name": "test_formats_minutes",
+        "line": 22,
+        "markers": [],
+        "docstring": "Should format as minutes for age 60-3600."
+      },
+      {
+        "name": "test_formats_hours",
+        "line": 27,
+        "markers": [],
+        "docstring": "Should format as hours for age >= 3600."
+      },
+      {
+        "name": "test_returns_syncing_when_fetching",
+        "line": 36,
+        "markers": [],
+        "docstring": "Should return syncing when data_fetching is True."
+      },
+      {
+        "name": "test_returns_none_when_no_data",
+        "line": 47,
+        "markers": [],
+        "docstring": "Should return None when no data has been fetched."
+      },
+      {
+        "name": "test_returns_dim_for_fresh_data",
+        "line": 56,
+        "markers": [],
+        "docstring": "Should return dim styling for fresh data."
+      },
+      {
+        "name": "test_returns_yellow_for_stale_data",
+        "line": 70,
+        "markers": [],
+        "docstring": "Should return yellow styling for stale data."
+      },
+      {
+        "name": "test_returns_red_for_critical_data",
+        "line": 84,
+        "markers": [],
+        "docstring": "Should return red styling for critical data."
       }
     ],
     "tests/unit/gpt_trader/tui/test_degraded_mode.py": [
@@ -7359,6 +7020,112 @@
         "line": 214,
         "markers": [],
         "docstring": "Test @safe_update handles tracker failures gracefully."
+      }
+    ],
+    "tests/unit/gpt_trader/tui/test_staleness_helpers_data_age_and_severity.py": [
+      {
+        "name": "TestGetDataAgeSeconds::test_returns_none_when_no_data_available",
+        "line": 17,
+        "markers": [],
+        "docstring": "Should return None when data_available is False.",
+        "class": "TestGetDataAgeSeconds"
+      },
+      {
+        "name": "TestGetDataAgeSeconds::test_returns_none_when_last_fetch_zero",
+        "line": 25,
+        "markers": [],
+        "docstring": "Should return None when last_data_fetch is 0.",
+        "class": "TestGetDataAgeSeconds"
+      },
+      {
+        "name": "TestGetDataAgeSeconds::test_returns_age_when_data_available",
+        "line": 33,
+        "markers": [],
+        "docstring": "Should return age in seconds when data is available.",
+        "class": "TestGetDataAgeSeconds"
+      },
+      {
+        "name": "TestGetStalenessSeverity::test_returns_critical_when_connection_unhealthy",
+        "line": 47,
+        "markers": [],
+        "docstring": "Should return critical when connection_healthy is False.",
+        "class": "TestGetStalenessSeverity"
+      },
+      {
+        "name": "TestGetStalenessSeverity::test_returns_fresh_when_no_data_yet",
+        "line": 56,
+        "markers": [],
+        "docstring": "Should return fresh when no data has been fetched.",
+        "class": "TestGetStalenessSeverity"
+      },
+      {
+        "name": "TestGetStalenessSeverity::test_returns_fresh_for_recent_data",
+        "line": 65,
+        "markers": [],
+        "docstring": "Should return fresh when data is less than 10s old.",
+        "class": "TestGetStalenessSeverity"
+      },
+      {
+        "name": "TestGetStalenessSeverity::test_returns_stale_for_aging_data",
+        "line": 74,
+        "markers": [],
+        "docstring": "Should return stale when data is 10-30s old.",
+        "class": "TestGetStalenessSeverity"
+      },
+      {
+        "name": "TestGetStalenessSeverity::test_returns_critical_for_old_data",
+        "line": 83,
+        "markers": [],
+        "docstring": "Should return critical when data is >30s old.",
+        "class": "TestGetStalenessSeverity"
+      },
+      {
+        "name": "test_returns_none_when_no_data_available",
+        "line": 17,
+        "markers": [],
+        "docstring": "Should return None when data_available is False."
+      },
+      {
+        "name": "test_returns_none_when_last_fetch_zero",
+        "line": 25,
+        "markers": [],
+        "docstring": "Should return None when last_data_fetch is 0."
+      },
+      {
+        "name": "test_returns_age_when_data_available",
+        "line": 33,
+        "markers": [],
+        "docstring": "Should return age in seconds when data is available."
+      },
+      {
+        "name": "test_returns_critical_when_connection_unhealthy",
+        "line": 47,
+        "markers": [],
+        "docstring": "Should return critical when connection_healthy is False."
+      },
+      {
+        "name": "test_returns_fresh_when_no_data_yet",
+        "line": 56,
+        "markers": [],
+        "docstring": "Should return fresh when no data has been fetched."
+      },
+      {
+        "name": "test_returns_fresh_for_recent_data",
+        "line": 65,
+        "markers": [],
+        "docstring": "Should return fresh when data is less than 10s old."
+      },
+      {
+        "name": "test_returns_stale_for_aging_data",
+        "line": 74,
+        "markers": [],
+        "docstring": "Should return stale when data is 10-30s old."
+      },
+      {
+        "name": "test_returns_critical_for_old_data",
+        "line": 83,
+        "markers": [],
+        "docstring": "Should return critical when data is >30s old."
       }
     ],
     "tests/unit/gpt_trader/tui/test_events.py": [
@@ -7965,6 +7732,151 @@
         "docstring": "Snapshot test for ExecutionIssuesModal with no issues."
       }
     ],
+    "tests/unit/gpt_trader/tui/test_staleness_helpers_execution_health.py": [
+      {
+        "name": "TestGetExecutionHealthBanner::test_returns_none_when_healthy",
+        "line": 17,
+        "markers": [],
+        "docstring": "Should return None when execution is healthy.",
+        "class": "TestGetExecutionHealthBanner"
+      },
+      {
+        "name": "TestGetExecutionHealthBanner::test_returns_none_when_no_executions",
+        "line": 27,
+        "markers": [],
+        "docstring": "Should return None when no executions have occurred.",
+        "class": "TestGetExecutionHealthBanner"
+      },
+      {
+        "name": "TestGetExecutionHealthBanner::test_returns_error_when_circuit_open",
+        "line": 35,
+        "markers": [],
+        "docstring": "Should return error banner when circuit breaker is open.",
+        "class": "TestGetExecutionHealthBanner"
+      },
+      {
+        "name": "TestGetExecutionHealthBanner::test_returns_error_when_success_rate_critical",
+        "line": 46,
+        "markers": [],
+        "docstring": "Should return error banner when success rate below critical threshold.",
+        "class": "TestGetExecutionHealthBanner"
+      },
+      {
+        "name": "TestGetExecutionHealthBanner::test_returns_warning_when_success_rate_low",
+        "line": 60,
+        "markers": [],
+        "docstring": "Should return warning banner when success rate below warning threshold.",
+        "class": "TestGetExecutionHealthBanner"
+      },
+      {
+        "name": "TestGetExecutionHealthBanner::test_returns_warning_when_retry_rate_high",
+        "line": 75,
+        "markers": [],
+        "docstring": "Should return warning banner when retry rate exceeds threshold.",
+        "class": "TestGetExecutionHealthBanner"
+      },
+      {
+        "name": "TestGetExecutionHealthBanner::test_handles_missing_execution_data",
+        "line": 89,
+        "markers": [],
+        "docstring": "Should return None when execution_data is not available.",
+        "class": "TestGetExecutionHealthBanner"
+      },
+      {
+        "name": "TestGetExecutionHealthBanner::test_handles_missing_resilience_data",
+        "line": 98,
+        "markers": [],
+        "docstring": "Should return None when resilience_data is not available.",
+        "class": "TestGetExecutionHealthBanner"
+      },
+      {
+        "name": "TestExecutionHealthBannerIntegration::test_execution_health_takes_priority_over_staleness",
+        "line": 110,
+        "markers": [],
+        "docstring": "Execution health issues should show before data staleness warnings.",
+        "class": "TestExecutionHealthBannerIntegration"
+      },
+      {
+        "name": "TestExecutionHealthBannerIntegration::test_degraded_mode_takes_priority_over_execution",
+        "line": 128,
+        "markers": [],
+        "docstring": "Degraded mode should take priority over execution health.",
+        "class": "TestExecutionHealthBannerIntegration"
+      },
+      {
+        "name": "TestExecutionHealthBannerIntegration::test_execution_critical_shows_over_stale_warning",
+        "line": 144,
+        "markers": [],
+        "docstring": "Critical execution should show instead of stale warning.",
+        "class": "TestExecutionHealthBannerIntegration"
+      },
+      {
+        "name": "test_returns_none_when_healthy",
+        "line": 17,
+        "markers": [],
+        "docstring": "Should return None when execution is healthy."
+      },
+      {
+        "name": "test_returns_none_when_no_executions",
+        "line": 27,
+        "markers": [],
+        "docstring": "Should return None when no executions have occurred."
+      },
+      {
+        "name": "test_returns_error_when_circuit_open",
+        "line": 35,
+        "markers": [],
+        "docstring": "Should return error banner when circuit breaker is open."
+      },
+      {
+        "name": "test_returns_error_when_success_rate_critical",
+        "line": 46,
+        "markers": [],
+        "docstring": "Should return error banner when success rate below critical threshold."
+      },
+      {
+        "name": "test_returns_warning_when_success_rate_low",
+        "line": 60,
+        "markers": [],
+        "docstring": "Should return warning banner when success rate below warning threshold."
+      },
+      {
+        "name": "test_returns_warning_when_retry_rate_high",
+        "line": 75,
+        "markers": [],
+        "docstring": "Should return warning banner when retry rate exceeds threshold."
+      },
+      {
+        "name": "test_handles_missing_execution_data",
+        "line": 89,
+        "markers": [],
+        "docstring": "Should return None when execution_data is not available."
+      },
+      {
+        "name": "test_handles_missing_resilience_data",
+        "line": 98,
+        "markers": [],
+        "docstring": "Should return None when resilience_data is not available."
+      },
+      {
+        "name": "test_execution_health_takes_priority_over_staleness",
+        "line": 110,
+        "markers": [],
+        "docstring": "Execution health issues should show before data staleness warnings."
+      },
+      {
+        "name": "test_degraded_mode_takes_priority_over_execution",
+        "line": 128,
+        "markers": [],
+        "docstring": "Degraded mode should take priority over execution health."
+      },
+      {
+        "name": "test_execution_critical_shows_over_stale_warning",
+        "line": 144,
+        "markers": [],
+        "docstring": "Critical execution should show instead of stale warning."
+      }
+    ],
     "tests/unit/gpt_trader/tui/test_risk_preview.py": [
       {
         "name": "TestRiskPreviewScenario::test_scenario_creation_and_immutability",
@@ -8251,6 +8163,125 @@
         "line": 422,
         "markers": [],
         "docstring": "No daily limit configured returns empty position impacts."
+      }
+    ],
+    "tests/unit/gpt_trader/tui/test_staleness_helpers_edge_cases.py": [
+      {
+        "name": "TestStalenessEdgeCases::test_get_data_age_with_negative_last_fetch",
+        "line": 21,
+        "markers": [],
+        "docstring": "Test that negative last_data_fetch is treated as no data.",
+        "class": "TestStalenessEdgeCases"
+      },
+      {
+        "name": "TestStalenessEdgeCases::test_connection_unhealthy_overrides_to_critical",
+        "line": 29,
+        "markers": [],
+        "docstring": "Test that connection_healthy=False always returns critical severity.",
+        "class": "TestStalenessEdgeCases"
+      },
+      {
+        "name": "TestStalenessEdgeCases::test_staleness_banner_with_connection_unhealthy_and_fresh_data",
+        "line": 39,
+        "markers": [],
+        "docstring": "Test banner includes reconnect hint when connection unhealthy.",
+        "class": "TestStalenessEdgeCases"
+      },
+      {
+        "name": "TestStalenessEdgeCases::test_freshness_display_with_connection_unhealthy",
+        "line": 58,
+        "markers": [],
+        "docstring": "Test freshness display returns critical when connection unhealthy.",
+        "class": "TestStalenessEdgeCases"
+      },
+      {
+        "name": "TestStalenessEdgeCases::test_staleness_banner_with_none_degraded_reason",
+        "line": 72,
+        "markers": [],
+        "docstring": "Test banner handles None degraded_reason gracefully.",
+        "class": "TestStalenessEdgeCases"
+      },
+      {
+        "name": "TestStalenessEdgeCases::test_get_empty_state_config_handles_none_connection_status",
+        "line": 86,
+        "markers": [],
+        "docstring": "Test empty state config handles None connection status.",
+        "class": "TestStalenessEdgeCases"
+      },
+      {
+        "name": "TestStalenessEdgeCases::test_get_connection_banner_case_insensitive",
+        "line": 97,
+        "markers": [],
+        "docstring": "Test connection banner handles lowercase status.",
+        "class": "TestStalenessEdgeCases"
+      },
+      {
+        "name": "TestStalenessEdgeCases::test_staleness_banner_returns_none_no_data_yet",
+        "line": 109,
+        "markers": [],
+        "docstring": "Test banner returns None when no data has been fetched yet.",
+        "class": "TestStalenessEdgeCases"
+      },
+      {
+        "name": "TestStalenessEdgeCases::test_get_data_age_at_boundary_threshold",
+        "line": 124,
+        "markers": [],
+        "docstring": "Test staleness exactly at threshold boundaries.",
+        "class": "TestStalenessEdgeCases"
+      },
+      {
+        "name": "test_get_data_age_with_negative_last_fetch",
+        "line": 21,
+        "markers": [],
+        "docstring": "Test that negative last_data_fetch is treated as no data."
+      },
+      {
+        "name": "test_connection_unhealthy_overrides_to_critical",
+        "line": 29,
+        "markers": [],
+        "docstring": "Test that connection_healthy=False always returns critical severity."
+      },
+      {
+        "name": "test_staleness_banner_with_connection_unhealthy_and_fresh_data",
+        "line": 39,
+        "markers": [],
+        "docstring": "Test banner includes reconnect hint when connection unhealthy."
+      },
+      {
+        "name": "test_freshness_display_with_connection_unhealthy",
+        "line": 58,
+        "markers": [],
+        "docstring": "Test freshness display returns critical when connection unhealthy."
+      },
+      {
+        "name": "test_staleness_banner_with_none_degraded_reason",
+        "line": 72,
+        "markers": [],
+        "docstring": "Test banner handles None degraded_reason gracefully."
+      },
+      {
+        "name": "test_get_empty_state_config_handles_none_connection_status",
+        "line": 86,
+        "markers": [],
+        "docstring": "Test empty state config handles None connection status."
+      },
+      {
+        "name": "test_get_connection_banner_case_insensitive",
+        "line": 97,
+        "markers": [],
+        "docstring": "Test connection banner handles lowercase status."
+      },
+      {
+        "name": "test_staleness_banner_returns_none_no_data_yet",
+        "line": 109,
+        "markers": [],
+        "docstring": "Test banner returns None when no data has been fetched yet."
+      },
+      {
+        "name": "test_get_data_age_at_boundary_threshold",
+        "line": 124,
+        "markers": [],
+        "docstring": "Test staleness exactly at threshold boundaries."
       }
     ],
     "tests/unit/gpt_trader/tui/test_thresholds.py": [
@@ -53423,532 +53454,6 @@
         "docstring": "Test subprotocols with mixed whitespace."
       }
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_data.py": [
-      {
-        "name": "TestCoinbaseMarketData::test_client_market_data_endpoints",
-        "line": 49,
-        "markers": [
-          "parametrize"
-        ],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_get_product_formats_path",
-        "line": 90,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_products_path_differs_by_mode",
-        "line": 104,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_get_product_book_path_mapping_by_mode",
-        "line": 125,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_advanced_only_endpoints_raise_in_exchange",
-        "line": 150,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_list_parameters_comma_separated",
-        "line": 157,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_repeated_parameters_not_encoded_as_array",
-        "line": 171,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_unicode_emoji_in_params",
-        "line": 185,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_empty_values_are_included",
-        "line": 198,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_special_characters_plus_slash_at",
-        "line": 210,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_depth_snapshot_l1_l10_depth_correctness",
-        "line": 225,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_depth_snapshot_spread_bps",
-        "line": 238,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_depth_snapshot_mid_price",
-        "line": 246,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_rolling_window_cleanup_and_stats",
-        "line": 254,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_trade_tape_vwap_calculation",
-        "line": 271,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_trade_tape_aggressor_ratio",
-        "line": 280,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_to_product_spot_market",
-        "line": 288,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_to_product_perpetual_full",
-        "line": 306,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_to_product_perpetual_partial",
-        "line": 329,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_to_product_future_market",
-        "line": 347,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_to_product_invalid_funding_time",
-        "line": 365,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_catalog_refresh_with_perps",
-        "line": 382,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_catalog_get_with_expiry",
-        "line": 418,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_catalog_get_not_found",
-        "line": 445,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_catalog_get_funding_for_perpetual",
-        "line": 454,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_catalog_get_funding_for_spot",
-        "line": 476,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_catalog_handles_alternative_response_format",
-        "line": 495,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_enforce_quantizes_quantity",
-        "line": 529,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_enforce_quantizes_price",
-        "line": 535,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_enforce_rejects_below_min_size",
-        "line": 541,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_enforce_rejects_below_min_notional",
-        "line": 547,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_enforce_accepts_valid_notional",
-        "line": 553,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_enforce_handles_no_min_notional",
-        "line": 559,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_enforce_complex_quantization",
-        "line": 566,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_quantize_basic",
-        "line": 583,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_quantize_floors_not_rounds",
-        "line": 587,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_quantize_handles_zero_increment",
-        "line": 591,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_quantize_arbitrary_increments",
-        "line": 597,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_staleness_detection_fresh_vs_stale_toggles",
-        "line": 603,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "TestCoinbaseMarketData::test_staleness_behavior_matches_validator",
-        "line": 622,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseMarketData"
-      },
-      {
-        "name": "test_client_market_data_endpoints",
-        "line": 49,
-        "markers": [
-          "parametrize"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_get_product_formats_path",
-        "line": 90,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_products_path_differs_by_mode",
-        "line": 104,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_get_product_book_path_mapping_by_mode",
-        "line": 125,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_advanced_only_endpoints_raise_in_exchange",
-        "line": 150,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_list_parameters_comma_separated",
-        "line": 157,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_repeated_parameters_not_encoded_as_array",
-        "line": 171,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_unicode_emoji_in_params",
-        "line": 185,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_empty_values_are_included",
-        "line": 198,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_special_characters_plus_slash_at",
-        "line": 210,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_depth_snapshot_l1_l10_depth_correctness",
-        "line": 225,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_depth_snapshot_spread_bps",
-        "line": 238,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_depth_snapshot_mid_price",
-        "line": 246,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_rolling_window_cleanup_and_stats",
-        "line": 254,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_trade_tape_vwap_calculation",
-        "line": 271,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_trade_tape_aggressor_ratio",
-        "line": 280,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_to_product_spot_market",
-        "line": 288,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_to_product_perpetual_full",
-        "line": 306,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_to_product_perpetual_partial",
-        "line": 329,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_to_product_future_market",
-        "line": 347,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_to_product_invalid_funding_time",
-        "line": 365,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_catalog_refresh_with_perps",
-        "line": 382,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_catalog_get_with_expiry",
-        "line": 418,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_catalog_get_not_found",
-        "line": 445,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_catalog_get_funding_for_perpetual",
-        "line": 454,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_catalog_get_funding_for_spot",
-        "line": 476,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_catalog_handles_alternative_response_format",
-        "line": 495,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_enforce_quantizes_quantity",
-        "line": 529,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_enforce_quantizes_price",
-        "line": 535,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_enforce_rejects_below_min_size",
-        "line": 541,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_enforce_rejects_below_min_notional",
-        "line": 547,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_enforce_accepts_valid_notional",
-        "line": 553,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_enforce_handles_no_min_notional",
-        "line": 559,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_enforce_complex_quantization",
-        "line": 566,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_quantize_basic",
-        "line": 583,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_quantize_floors_not_rounds",
-        "line": 587,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_quantize_handles_zero_increment",
-        "line": 591,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_quantize_arbitrary_increments",
-        "line": 597,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_staleness_detection_fresh_vs_stale_toggles",
-        "line": 603,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_staleness_behavior_matches_validator",
-        "line": 622,
-        "markers": [],
-        "docstring": ""
-      }
-    ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_intx_portfolio_service.py": [
       {
         "name": "test_service_honours_config_override",
@@ -54350,6 +53855,170 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_data_endpoints.py": [
+      {
+        "name": "TestCoinbaseMarketDataEndpoints::test_client_market_data_endpoints",
+        "line": 25,
+        "markers": [
+          "parametrize"
+        ],
+        "docstring": "",
+        "class": "TestCoinbaseMarketDataEndpoints"
+      },
+      {
+        "name": "TestCoinbaseMarketDataEndpoints::test_get_product_formats_path",
+        "line": 66,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbaseMarketDataEndpoints"
+      },
+      {
+        "name": "TestCoinbaseMarketDataEndpoints::test_products_path_differs_by_mode",
+        "line": 80,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbaseMarketDataEndpoints"
+      },
+      {
+        "name": "TestCoinbaseMarketDataEndpoints::test_get_product_book_path_mapping_by_mode",
+        "line": 101,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbaseMarketDataEndpoints"
+      },
+      {
+        "name": "TestCoinbaseMarketDataEndpoints::test_advanced_only_endpoints_raise_in_exchange",
+        "line": 126,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbaseMarketDataEndpoints"
+      },
+      {
+        "name": "TestCoinbaseMarketDataEndpoints::test_list_parameters_comma_separated",
+        "line": 133,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbaseMarketDataEndpoints"
+      },
+      {
+        "name": "TestCoinbaseMarketDataEndpoints::test_repeated_parameters_not_encoded_as_array",
+        "line": 147,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbaseMarketDataEndpoints"
+      },
+      {
+        "name": "TestCoinbaseMarketDataEndpoints::test_unicode_emoji_in_params",
+        "line": 161,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbaseMarketDataEndpoints"
+      },
+      {
+        "name": "TestCoinbaseMarketDataEndpoints::test_empty_values_are_included",
+        "line": 174,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbaseMarketDataEndpoints"
+      },
+      {
+        "name": "TestCoinbaseMarketDataEndpoints::test_special_characters_plus_slash_at",
+        "line": 186,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbaseMarketDataEndpoints"
+      },
+      {
+        "name": "test_client_market_data_endpoints",
+        "line": 25,
+        "markers": [
+          "parametrize"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_get_product_formats_path",
+        "line": 66,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_products_path_differs_by_mode",
+        "line": 80,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_get_product_book_path_mapping_by_mode",
+        "line": 101,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_advanced_only_endpoints_raise_in_exchange",
+        "line": 126,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_list_parameters_comma_separated",
+        "line": 133,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_repeated_parameters_not_encoded_as_array",
+        "line": 147,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_unicode_emoji_in_params",
+        "line": 161,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_empty_values_are_included",
+        "line": 174,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_special_characters_plus_slash_at",
+        "line": 186,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_data_staleness.py": [
+      {
+        "name": "TestCoinbaseMarketDataStaleness::test_staleness_detection_fresh_vs_stale_toggles",
+        "line": 16,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbaseMarketDataStaleness"
+      },
+      {
+        "name": "TestCoinbaseMarketDataStaleness::test_staleness_behavior_matches_validator",
+        "line": 35,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbaseMarketDataStaleness"
+      },
+      {
+        "name": "test_staleness_detection_fresh_vs_stale_toggles",
+        "line": 16,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_staleness_behavior_matches_validator",
+        "line": 35,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_endpoint_chains.py": [
       {
         "name": "test_trading_flow_place_get_cancel",
@@ -54366,6 +54035,151 @@
       {
         "name": "test_position_flow_cfm_positions_then_detail",
         "line": 82,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_perp_rules_and_quantize.py": [
+      {
+        "name": "TestCoinbasePerpRulesAndQuantize::test_enforce_quantizes_quantity",
+        "line": 34,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbasePerpRulesAndQuantize"
+      },
+      {
+        "name": "TestCoinbasePerpRulesAndQuantize::test_enforce_quantizes_price",
+        "line": 40,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbasePerpRulesAndQuantize"
+      },
+      {
+        "name": "TestCoinbasePerpRulesAndQuantize::test_enforce_rejects_below_min_size",
+        "line": 46,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbasePerpRulesAndQuantize"
+      },
+      {
+        "name": "TestCoinbasePerpRulesAndQuantize::test_enforce_rejects_below_min_notional",
+        "line": 52,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbasePerpRulesAndQuantize"
+      },
+      {
+        "name": "TestCoinbasePerpRulesAndQuantize::test_enforce_accepts_valid_notional",
+        "line": 58,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbasePerpRulesAndQuantize"
+      },
+      {
+        "name": "TestCoinbasePerpRulesAndQuantize::test_enforce_handles_no_min_notional",
+        "line": 64,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbasePerpRulesAndQuantize"
+      },
+      {
+        "name": "TestCoinbasePerpRulesAndQuantize::test_enforce_complex_quantization",
+        "line": 71,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbasePerpRulesAndQuantize"
+      },
+      {
+        "name": "TestCoinbasePerpRulesAndQuantize::test_quantize_basic",
+        "line": 88,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbasePerpRulesAndQuantize"
+      },
+      {
+        "name": "TestCoinbasePerpRulesAndQuantize::test_quantize_floors_not_rounds",
+        "line": 92,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbasePerpRulesAndQuantize"
+      },
+      {
+        "name": "TestCoinbasePerpRulesAndQuantize::test_quantize_handles_zero_increment",
+        "line": 96,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbasePerpRulesAndQuantize"
+      },
+      {
+        "name": "TestCoinbasePerpRulesAndQuantize::test_quantize_arbitrary_increments",
+        "line": 102,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbasePerpRulesAndQuantize"
+      },
+      {
+        "name": "test_enforce_quantizes_quantity",
+        "line": 34,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_enforce_quantizes_price",
+        "line": 40,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_enforce_rejects_below_min_size",
+        "line": 46,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_enforce_rejects_below_min_notional",
+        "line": 52,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_enforce_accepts_valid_notional",
+        "line": 58,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_enforce_handles_no_min_notional",
+        "line": 64,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_enforce_complex_quantization",
+        "line": 71,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_quantize_basic",
+        "line": 88,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_quantize_floors_not_rounds",
+        "line": 92,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_quantize_handles_zero_increment",
+        "line": 96,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_quantize_arbitrary_increments",
+        "line": 102,
         "markers": [],
         "docstring": ""
       }
@@ -55715,6 +55529,231 @@
         "line": 531,
         "markers": [],
         "docstring": "Test finding portfolio with 'intx' in name."
+      }
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_product_catalog.py": [
+      {
+        "name": "TestProductCatalog::test_catalog_refresh_with_perps",
+        "line": 22,
+        "markers": [],
+        "docstring": "",
+        "class": "TestProductCatalog"
+      },
+      {
+        "name": "TestProductCatalog::test_catalog_get_with_expiry",
+        "line": 58,
+        "markers": [],
+        "docstring": "",
+        "class": "TestProductCatalog"
+      },
+      {
+        "name": "TestProductCatalog::test_catalog_get_not_found",
+        "line": 85,
+        "markers": [],
+        "docstring": "",
+        "class": "TestProductCatalog"
+      },
+      {
+        "name": "TestProductCatalog::test_catalog_get_funding_for_perpetual",
+        "line": 94,
+        "markers": [],
+        "docstring": "",
+        "class": "TestProductCatalog"
+      },
+      {
+        "name": "TestProductCatalog::test_catalog_get_funding_for_spot",
+        "line": 116,
+        "markers": [],
+        "docstring": "",
+        "class": "TestProductCatalog"
+      },
+      {
+        "name": "TestProductCatalog::test_catalog_handles_alternative_response_format",
+        "line": 135,
+        "markers": [],
+        "docstring": "",
+        "class": "TestProductCatalog"
+      },
+      {
+        "name": "test_catalog_refresh_with_perps",
+        "line": 22,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_catalog_get_with_expiry",
+        "line": 58,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_catalog_get_not_found",
+        "line": 85,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_catalog_get_funding_for_perpetual",
+        "line": 94,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_catalog_get_funding_for_spot",
+        "line": 116,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_catalog_handles_alternative_response_format",
+        "line": 135,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_data_models.py": [
+      {
+        "name": "TestCoinbaseMarketDataModels::test_depth_snapshot_l1_l10_depth_correctness",
+        "line": 22,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbaseMarketDataModels"
+      },
+      {
+        "name": "TestCoinbaseMarketDataModels::test_depth_snapshot_spread_bps",
+        "line": 35,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbaseMarketDataModels"
+      },
+      {
+        "name": "TestCoinbaseMarketDataModels::test_depth_snapshot_mid_price",
+        "line": 43,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbaseMarketDataModels"
+      },
+      {
+        "name": "TestCoinbaseMarketDataModels::test_rolling_window_cleanup_and_stats",
+        "line": 51,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbaseMarketDataModels"
+      },
+      {
+        "name": "TestCoinbaseMarketDataModels::test_trade_tape_vwap_calculation",
+        "line": 68,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbaseMarketDataModels"
+      },
+      {
+        "name": "TestCoinbaseMarketDataModels::test_trade_tape_aggressor_ratio",
+        "line": 77,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbaseMarketDataModels"
+      },
+      {
+        "name": "TestCoinbaseMarketDataModels::test_to_product_spot_market",
+        "line": 85,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbaseMarketDataModels"
+      },
+      {
+        "name": "TestCoinbaseMarketDataModels::test_to_product_perpetual_full",
+        "line": 103,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbaseMarketDataModels"
+      },
+      {
+        "name": "TestCoinbaseMarketDataModels::test_to_product_perpetual_partial",
+        "line": 126,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbaseMarketDataModels"
+      },
+      {
+        "name": "TestCoinbaseMarketDataModels::test_to_product_future_market",
+        "line": 144,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbaseMarketDataModels"
+      },
+      {
+        "name": "TestCoinbaseMarketDataModels::test_to_product_invalid_funding_time",
+        "line": 162,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbaseMarketDataModels"
+      },
+      {
+        "name": "test_depth_snapshot_l1_l10_depth_correctness",
+        "line": 22,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_depth_snapshot_spread_bps",
+        "line": 35,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_depth_snapshot_mid_price",
+        "line": 43,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_rolling_window_cleanup_and_stats",
+        "line": 51,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_trade_tape_vwap_calculation",
+        "line": 68,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_trade_tape_aggressor_ratio",
+        "line": 77,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_to_product_spot_market",
+        "line": 85,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_to_product_perpetual_full",
+        "line": 103,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_to_product_perpetual_partial",
+        "line": 126,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_to_product_future_market",
+        "line": 144,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_to_product_invalid_funding_time",
+        "line": 162,
+        "markers": [],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_perform_http_request_and_lifecycle.py": [
@@ -65489,6 +65528,112 @@
         "docstring": "Test that trade event handles event store exceptions."
       }
     ],
+    "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_init.py": [
+      {
+        "name": "TestStateCollectorInit::test_init_stores_broker",
+        "line": 15,
+        "markers": [],
+        "docstring": "Test that broker is stored correctly.",
+        "class": "TestStateCollectorInit"
+      },
+      {
+        "name": "TestStateCollectorInit::test_init_resolves_collateral_assets",
+        "line": 20,
+        "markers": [],
+        "docstring": "Test that collateral assets are resolved from environment.",
+        "class": "TestStateCollectorInit"
+      },
+      {
+        "name": "TestStateCollectorInit::test_init_uses_defaults_when_no_env",
+        "line": 28,
+        "markers": [],
+        "docstring": "Test that default collateral assets are used when env is empty.",
+        "class": "TestStateCollectorInit"
+      },
+      {
+        "name": "TestStateCollectorInit::test_init_integration_mode_explicit_parameter",
+        "line": 36,
+        "markers": [],
+        "docstring": "Test integration mode can be set via explicit parameter.",
+        "class": "TestStateCollectorInit"
+      },
+      {
+        "name": "TestStateCollectorInit::test_init_integration_mode_defaults_false",
+        "line": 43,
+        "markers": [],
+        "docstring": "Test integration_mode defaults to False.",
+        "class": "TestStateCollectorInit"
+      },
+      {
+        "name": "TestResolveCollateralAssets::test_parses_comma_separated_values",
+        "line": 54,
+        "markers": [],
+        "docstring": "Test parsing comma-separated collateral assets.",
+        "class": "TestResolveCollateralAssets"
+      },
+      {
+        "name": "TestResolveCollateralAssets::test_uppercase_normalization",
+        "line": 62,
+        "markers": [],
+        "docstring": "Test that asset names are uppercased.",
+        "class": "TestResolveCollateralAssets"
+      },
+      {
+        "name": "TestResolveCollateralAssets::test_empty_returns_defaults",
+        "line": 70,
+        "markers": [],
+        "docstring": "Test that empty env returns defaults.",
+        "class": "TestResolveCollateralAssets"
+      },
+      {
+        "name": "test_init_stores_broker",
+        "line": 15,
+        "markers": [],
+        "docstring": "Test that broker is stored correctly."
+      },
+      {
+        "name": "test_init_resolves_collateral_assets",
+        "line": 20,
+        "markers": [],
+        "docstring": "Test that collateral assets are resolved from environment."
+      },
+      {
+        "name": "test_init_uses_defaults_when_no_env",
+        "line": 28,
+        "markers": [],
+        "docstring": "Test that default collateral assets are used when env is empty."
+      },
+      {
+        "name": "test_init_integration_mode_explicit_parameter",
+        "line": 36,
+        "markers": [],
+        "docstring": "Test integration mode can be set via explicit parameter."
+      },
+      {
+        "name": "test_init_integration_mode_defaults_false",
+        "line": 43,
+        "markers": [],
+        "docstring": "Test integration_mode defaults to False."
+      },
+      {
+        "name": "test_parses_comma_separated_values",
+        "line": 54,
+        "markers": [],
+        "docstring": "Test parsing comma-separated collateral assets."
+      },
+      {
+        "name": "test_uppercase_normalization",
+        "line": 62,
+        "markers": [],
+        "docstring": "Test that asset names are uppercased."
+      },
+      {
+        "name": "test_empty_returns_defaults",
+        "line": 70,
+        "markers": [],
+        "docstring": "Test that empty env returns defaults."
+      }
+    ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_success.py": [
       {
         "name": "TestRecordSuccess::test_record_success_logs_order_info",
@@ -65595,6 +65740,34 @@
         "line": 101,
         "markers": [],
         "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_process_rejection.py": [
+      {
+        "name": "TestProcessRejection::test_integration_mode_stores_event",
+        "line": 18,
+        "markers": [],
+        "docstring": "Test that integration mode stores rejection event.",
+        "class": "TestProcessRejection"
+      },
+      {
+        "name": "TestProcessRejection::test_normal_mode_raises_error",
+        "line": 65,
+        "markers": [],
+        "docstring": "Test that normal mode raises RuntimeError.",
+        "class": "TestProcessRejection"
+      },
+      {
+        "name": "test_integration_mode_stores_event",
+        "line": 18,
+        "markers": [],
+        "docstring": "Test that integration mode stores rejection event."
+      },
+      {
+        "name": "test_normal_mode_raises_error",
+        "line": 65,
+        "markers": [],
+        "docstring": "Test that normal mode raises RuntimeError."
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_rejection.py": [
@@ -65939,526 +66112,58 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection.py": [
-      {
-        "name": "TestStateCollectorInit::test_init_stores_broker",
-        "line": 41,
-        "markers": [],
-        "docstring": "Test that broker is stored correctly.",
-        "class": "TestStateCollectorInit"
-      },
-      {
-        "name": "TestStateCollectorInit::test_init_resolves_collateral_assets",
-        "line": 46,
-        "markers": [],
-        "docstring": "Test that collateral assets are resolved from environment.",
-        "class": "TestStateCollectorInit"
-      },
-      {
-        "name": "TestStateCollectorInit::test_init_uses_defaults_when_no_env",
-        "line": 54,
-        "markers": [],
-        "docstring": "Test that default collateral assets are used when env is empty.",
-        "class": "TestStateCollectorInit"
-      },
-      {
-        "name": "TestStateCollectorInit::test_init_integration_mode_explicit_parameter",
-        "line": 62,
-        "markers": [],
-        "docstring": "Test integration mode can be set via explicit parameter.",
-        "class": "TestStateCollectorInit"
-      },
-      {
-        "name": "TestStateCollectorInit::test_init_integration_mode_defaults_false",
-        "line": 69,
-        "markers": [],
-        "docstring": "Test integration_mode defaults to False.",
-        "class": "TestStateCollectorInit"
-      },
-      {
-        "name": "TestResolveCollateralAssets::test_parses_comma_separated_values",
-        "line": 85,
-        "markers": [],
-        "docstring": "Test parsing comma-separated collateral assets.",
-        "class": "TestResolveCollateralAssets"
-      },
-      {
-        "name": "TestResolveCollateralAssets::test_uppercase_normalization",
-        "line": 93,
-        "markers": [],
-        "docstring": "Test that asset names are uppercased.",
-        "class": "TestResolveCollateralAssets"
-      },
-      {
-        "name": "TestResolveCollateralAssets::test_empty_returns_defaults",
-        "line": 101,
-        "markers": [],
-        "docstring": "Test that empty env returns defaults.",
-        "class": "TestResolveCollateralAssets"
-      },
-      {
-        "name": "TestCalculateEquityFromBalances::test_sums_collateral_balances",
-        "line": 116,
-        "markers": [],
-        "docstring": "Test that collateral balances are summed correctly.",
-        "class": "TestCalculateEquityFromBalances"
-      },
-      {
-        "name": "TestCalculateEquityFromBalances::test_falls_back_to_usd_balance",
-        "line": 130,
-        "markers": [],
-        "docstring": "Test fallback to USD balance when no collateral matches.",
-        "class": "TestCalculateEquityFromBalances"
-      },
-      {
-        "name": "TestCalculateEquityFromBalances::test_returns_zeros_when_no_balances_match",
-        "line": 145,
-        "markers": [],
-        "docstring": "Test returns zeros when no balances match.",
-        "class": "TestCalculateEquityFromBalances"
-      },
-      {
-        "name": "TestCalculateEquityFromBalances::test_handles_empty_balances",
-        "line": 158,
-        "markers": [],
-        "docstring": "Test handling of empty balance list.",
-        "class": "TestCalculateEquityFromBalances"
-      },
-      {
-        "name": "TestLogCollateralUpdate::test_skips_empty_collateral_list",
-        "line": 175,
-        "markers": [],
-        "docstring": "Test that empty collateral list is skipped.",
-        "class": "TestLogCollateralUpdate"
-      },
-      {
-        "name": "TestLogCollateralUpdate::test_sets_initial_collateral_value",
-        "line": 183,
-        "markers": [],
-        "docstring": "Test that initial collateral value is set.",
-        "class": "TestLogCollateralUpdate"
-      },
-      {
-        "name": "TestLogCollateralUpdate::test_logs_significant_change",
-        "line": 192,
-        "markers": [],
-        "docstring": "Test that significant changes are logged.",
-        "class": "TestLogCollateralUpdate"
-      },
-      {
-        "name": "TestLogCollateralUpdate::test_handles_logger_exception",
-        "line": 202,
-        "markers": [],
-        "docstring": "Test that logger exceptions are suppressed.",
-        "class": "TestLogCollateralUpdate"
-      },
-      {
-        "name": "TestCollectAccountState::test_collects_balances_and_positions",
-        "line": 221,
-        "markers": [],
-        "docstring": "Test collecting balances and positions.",
-        "class": "TestCollectAccountState"
-      },
-      {
-        "name": "TestCollectAccountState::test_handles_broker_without_list_balances",
-        "line": 238,
-        "markers": [],
-        "docstring": "Test handling broker without list_balances method.",
-        "class": "TestCollectAccountState"
-      },
-      {
-        "name": "TestCollectAccountState::test_handles_balance_exception_in_integration_mode",
-        "line": 251,
-        "markers": [],
-        "docstring": "Test that balance exceptions are suppressed in integration mode.",
-        "class": "TestCollectAccountState"
-      },
-      {
-        "name": "TestCollectAccountState::test_raises_balance_exception_in_normal_mode",
-        "line": 265,
-        "markers": [],
-        "docstring": "Test that balance exceptions are raised in normal mode.",
-        "class": "TestCollectAccountState"
-      },
-      {
-        "name": "TestCollectAccountState::test_handles_position_exception_in_integration_mode",
-        "line": 274,
-        "markers": [],
-        "docstring": "Test that position exceptions are suppressed in integration mode.",
-        "class": "TestCollectAccountState"
-      },
-      {
-        "name": "TestCollectAccountState::test_provides_default_balance_in_integration_mode",
-        "line": 288,
-        "markers": [],
-        "docstring": "Test that default balance is provided in integration mode.",
-        "class": "TestCollectAccountState"
-      },
+    "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_positions_dict.py": [
       {
         "name": "TestBuildPositionsDict::test_builds_dict_from_positions",
-        "line": 310,
+        "line": 14,
         "markers": [],
         "docstring": "Test building position dictionary.",
         "class": "TestBuildPositionsDict"
       },
       {
         "name": "TestBuildPositionsDict::test_skips_zero_quantity_positions",
-        "line": 330,
+        "line": 34,
         "markers": [],
         "docstring": "Test that zero quantity positions are skipped.",
         "class": "TestBuildPositionsDict"
       },
       {
         "name": "TestBuildPositionsDict::test_handles_parse_errors",
-        "line": 346,
+        "line": 50,
         "markers": [],
         "docstring": "Test that parse errors are handled gracefully.",
         "class": "TestBuildPositionsDict"
       },
       {
         "name": "TestBuildPositionsDict::test_defaults_side_to_long",
-        "line": 362,
+        "line": 66,
         "markers": [],
         "docstring": "Test that side defaults to 'long'.",
         "class": "TestBuildPositionsDict"
       },
       {
-        "name": "TestResolveEffectivePrice::test_returns_provided_price",
-        "line": 387,
-        "markers": [],
-        "docstring": "Test that provided price is returned directly.",
-        "class": "TestResolveEffectivePrice"
-      },
-      {
-        "name": "TestResolveEffectivePrice::test_uses_mark_price_for_market_orders",
-        "line": 398,
-        "markers": [],
-        "docstring": "Test that mark price is used for market orders.",
-        "class": "TestResolveEffectivePrice"
-      },
-      {
-        "name": "TestResolveEffectivePrice::test_uses_mid_price_fallback",
-        "line": 413,
-        "markers": [],
-        "docstring": "Test fallback to bid/ask mid-price.",
-        "class": "TestResolveEffectivePrice"
-      },
-      {
-        "name": "TestResolveEffectivePrice::test_uses_broker_quote_fallback",
-        "line": 436,
-        "markers": [],
-        "docstring": "Test fallback to broker quote.",
-        "class": "TestResolveEffectivePrice"
-      },
-      {
-        "name": "TestResolveEffectivePrice::test_uses_product_price_fallback",
-        "line": 452,
-        "markers": [],
-        "docstring": "Test fallback to product price.",
-        "class": "TestResolveEffectivePrice"
-      },
-      {
-        "name": "TestResolveEffectivePrice::test_uses_quote_increment_as_last_resort",
-        "line": 475,
-        "markers": [],
-        "docstring": "Test last resort uses quote_increment * 100.",
-        "class": "TestResolveEffectivePrice"
-      },
-      {
-        "name": "TestResolveEffectivePrice::test_handles_zero_price_as_none",
-        "line": 497,
-        "markers": [],
-        "docstring": "Test that zero price is treated as None.",
-        "class": "TestResolveEffectivePrice"
-      },
-      {
-        "name": "TestResolveEffectivePrice::test_handles_mark_price_exception",
-        "line": 513,
-        "markers": [],
-        "docstring": "Test that mark price exceptions are handled.",
-        "class": "TestResolveEffectivePrice"
-      },
-      {
-        "name": "TestRequireProduct::test_returns_provided_product",
-        "line": 544,
-        "markers": [],
-        "docstring": "Test that provided product is returned directly.",
-        "class": "TestRequireProduct"
-      },
-      {
-        "name": "TestRequireProduct::test_fetches_from_broker_when_none",
-        "line": 552,
-        "markers": [],
-        "docstring": "Test that product is fetched from broker when None.",
-        "class": "TestRequireProduct"
-      },
-      {
-        "name": "TestRequireProduct::test_raises_validation_error_when_not_found",
-        "line": 563,
-        "markers": [],
-        "docstring": "Test that ValidationError is raised when product not found.",
-        "class": "TestRequireProduct"
-      },
-      {
-        "name": "TestRequireProduct::test_provides_synthetic_product_in_integration_mode",
-        "line": 572,
-        "markers": [],
-        "docstring": "Test that synthetic product is provided in integration mode.",
-        "class": "TestRequireProduct"
-      },
-      {
-        "name": "TestRequireProduct::test_synthetic_product_parses_symbol_without_dash",
-        "line": 586,
-        "markers": [],
-        "docstring": "Test synthetic product parsing when symbol has no dash.",
-        "class": "TestRequireProduct"
-      },
-      {
-        "name": "TestStateCollectionIntegration::test_full_state_collection_flow",
-        "line": 608,
-        "markers": [],
-        "docstring": "Test complete state collection flow.",
-        "class": "TestStateCollectionIntegration"
-      },
-      {
-        "name": "test_init_stores_broker",
-        "line": 41,
-        "markers": [],
-        "docstring": "Test that broker is stored correctly."
-      },
-      {
-        "name": "test_init_resolves_collateral_assets",
-        "line": 46,
-        "markers": [],
-        "docstring": "Test that collateral assets are resolved from environment."
-      },
-      {
-        "name": "test_init_uses_defaults_when_no_env",
-        "line": 54,
-        "markers": [],
-        "docstring": "Test that default collateral assets are used when env is empty."
-      },
-      {
-        "name": "test_init_integration_mode_explicit_parameter",
-        "line": 62,
-        "markers": [],
-        "docstring": "Test integration mode can be set via explicit parameter."
-      },
-      {
-        "name": "test_init_integration_mode_defaults_false",
-        "line": 69,
-        "markers": [],
-        "docstring": "Test integration_mode defaults to False."
-      },
-      {
-        "name": "test_parses_comma_separated_values",
-        "line": 85,
-        "markers": [],
-        "docstring": "Test parsing comma-separated collateral assets."
-      },
-      {
-        "name": "test_uppercase_normalization",
-        "line": 93,
-        "markers": [],
-        "docstring": "Test that asset names are uppercased."
-      },
-      {
-        "name": "test_empty_returns_defaults",
-        "line": 101,
-        "markers": [],
-        "docstring": "Test that empty env returns defaults."
-      },
-      {
-        "name": "test_sums_collateral_balances",
-        "line": 116,
-        "markers": [],
-        "docstring": "Test that collateral balances are summed correctly."
-      },
-      {
-        "name": "test_falls_back_to_usd_balance",
-        "line": 130,
-        "markers": [],
-        "docstring": "Test fallback to USD balance when no collateral matches."
-      },
-      {
-        "name": "test_returns_zeros_when_no_balances_match",
-        "line": 145,
-        "markers": [],
-        "docstring": "Test returns zeros when no balances match."
-      },
-      {
-        "name": "test_handles_empty_balances",
-        "line": 158,
-        "markers": [],
-        "docstring": "Test handling of empty balance list."
-      },
-      {
-        "name": "test_skips_empty_collateral_list",
-        "line": 175,
-        "markers": [],
-        "docstring": "Test that empty collateral list is skipped."
-      },
-      {
-        "name": "test_sets_initial_collateral_value",
-        "line": 183,
-        "markers": [],
-        "docstring": "Test that initial collateral value is set."
-      },
-      {
-        "name": "test_logs_significant_change",
-        "line": 192,
-        "markers": [],
-        "docstring": "Test that significant changes are logged."
-      },
-      {
-        "name": "test_handles_logger_exception",
-        "line": 202,
-        "markers": [],
-        "docstring": "Test that logger exceptions are suppressed."
-      },
-      {
-        "name": "test_collects_balances_and_positions",
-        "line": 221,
-        "markers": [],
-        "docstring": "Test collecting balances and positions."
-      },
-      {
-        "name": "test_handles_broker_without_list_balances",
-        "line": 238,
-        "markers": [],
-        "docstring": "Test handling broker without list_balances method."
-      },
-      {
-        "name": "test_handles_balance_exception_in_integration_mode",
-        "line": 251,
-        "markers": [],
-        "docstring": "Test that balance exceptions are suppressed in integration mode."
-      },
-      {
-        "name": "test_raises_balance_exception_in_normal_mode",
-        "line": 265,
-        "markers": [],
-        "docstring": "Test that balance exceptions are raised in normal mode."
-      },
-      {
-        "name": "test_handles_position_exception_in_integration_mode",
-        "line": 274,
-        "markers": [],
-        "docstring": "Test that position exceptions are suppressed in integration mode."
-      },
-      {
-        "name": "test_provides_default_balance_in_integration_mode",
-        "line": 288,
-        "markers": [],
-        "docstring": "Test that default balance is provided in integration mode."
-      },
-      {
         "name": "test_builds_dict_from_positions",
-        "line": 310,
+        "line": 14,
         "markers": [],
         "docstring": "Test building position dictionary."
       },
       {
         "name": "test_skips_zero_quantity_positions",
-        "line": 330,
+        "line": 34,
         "markers": [],
         "docstring": "Test that zero quantity positions are skipped."
       },
       {
         "name": "test_handles_parse_errors",
-        "line": 346,
+        "line": 50,
         "markers": [],
         "docstring": "Test that parse errors are handled gracefully."
       },
       {
         "name": "test_defaults_side_to_long",
-        "line": 362,
+        "line": 66,
         "markers": [],
         "docstring": "Test that side defaults to 'long'."
-      },
-      {
-        "name": "test_returns_provided_price",
-        "line": 387,
-        "markers": [],
-        "docstring": "Test that provided price is returned directly."
-      },
-      {
-        "name": "test_uses_mark_price_for_market_orders",
-        "line": 398,
-        "markers": [],
-        "docstring": "Test that mark price is used for market orders."
-      },
-      {
-        "name": "test_uses_mid_price_fallback",
-        "line": 413,
-        "markers": [],
-        "docstring": "Test fallback to bid/ask mid-price."
-      },
-      {
-        "name": "test_uses_broker_quote_fallback",
-        "line": 436,
-        "markers": [],
-        "docstring": "Test fallback to broker quote."
-      },
-      {
-        "name": "test_uses_product_price_fallback",
-        "line": 452,
-        "markers": [],
-        "docstring": "Test fallback to product price."
-      },
-      {
-        "name": "test_uses_quote_increment_as_last_resort",
-        "line": 475,
-        "markers": [],
-        "docstring": "Test last resort uses quote_increment * 100."
-      },
-      {
-        "name": "test_handles_zero_price_as_none",
-        "line": 497,
-        "markers": [],
-        "docstring": "Test that zero price is treated as None."
-      },
-      {
-        "name": "test_handles_mark_price_exception",
-        "line": 513,
-        "markers": [],
-        "docstring": "Test that mark price exceptions are handled."
-      },
-      {
-        "name": "test_returns_provided_product",
-        "line": 544,
-        "markers": [],
-        "docstring": "Test that provided product is returned directly."
-      },
-      {
-        "name": "test_fetches_from_broker_when_none",
-        "line": 552,
-        "markers": [],
-        "docstring": "Test that product is fetched from broker when None."
-      },
-      {
-        "name": "test_raises_validation_error_when_not_found",
-        "line": 563,
-        "markers": [],
-        "docstring": "Test that ValidationError is raised when product not found."
-      },
-      {
-        "name": "test_provides_synthetic_product_in_integration_mode",
-        "line": 572,
-        "markers": [],
-        "docstring": "Test that synthetic product is provided in integration mode."
-      },
-      {
-        "name": "test_synthetic_product_parses_symbol_without_dash",
-        "line": 586,
-        "markers": [],
-        "docstring": "Test synthetic product parsing when symbol has no dash."
-      },
-      {
-        "name": "test_full_state_collection_flow",
-        "line": 608,
-        "markers": [],
-        "docstring": "Test complete state collection flow."
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_api_health_guard.py": [
@@ -66803,6 +66508,86 @@
         "docstring": "Test that exhausting all retries raises the last exception."
       }
     ],
+    "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_collect_account_state.py": [
+      {
+        "name": "TestCollectAccountState::test_collects_balances_and_positions",
+        "line": 17,
+        "markers": [],
+        "docstring": "Test collecting balances and positions.",
+        "class": "TestCollectAccountState"
+      },
+      {
+        "name": "TestCollectAccountState::test_handles_broker_without_list_balances",
+        "line": 34,
+        "markers": [],
+        "docstring": "Test handling broker without list_balances method.",
+        "class": "TestCollectAccountState"
+      },
+      {
+        "name": "TestCollectAccountState::test_handles_balance_exception_in_integration_mode",
+        "line": 50,
+        "markers": [],
+        "docstring": "Test that balance exceptions are suppressed in integration mode.",
+        "class": "TestCollectAccountState"
+      },
+      {
+        "name": "TestCollectAccountState::test_raises_balance_exception_in_normal_mode",
+        "line": 64,
+        "markers": [],
+        "docstring": "Test that balance exceptions are raised in normal mode.",
+        "class": "TestCollectAccountState"
+      },
+      {
+        "name": "TestCollectAccountState::test_handles_position_exception_in_integration_mode",
+        "line": 73,
+        "markers": [],
+        "docstring": "Test that position exceptions are suppressed in integration mode.",
+        "class": "TestCollectAccountState"
+      },
+      {
+        "name": "TestCollectAccountState::test_provides_default_balance_in_integration_mode",
+        "line": 87,
+        "markers": [],
+        "docstring": "Test that default balance is provided in integration mode.",
+        "class": "TestCollectAccountState"
+      },
+      {
+        "name": "test_collects_balances_and_positions",
+        "line": 17,
+        "markers": [],
+        "docstring": "Test collecting balances and positions."
+      },
+      {
+        "name": "test_handles_broker_without_list_balances",
+        "line": 34,
+        "markers": [],
+        "docstring": "Test handling broker without list_balances method."
+      },
+      {
+        "name": "test_handles_balance_exception_in_integration_mode",
+        "line": 50,
+        "markers": [],
+        "docstring": "Test that balance exceptions are suppressed in integration mode."
+      },
+      {
+        "name": "test_raises_balance_exception_in_normal_mode",
+        "line": 64,
+        "markers": [],
+        "docstring": "Test that balance exceptions are raised in normal mode."
+      },
+      {
+        "name": "test_handles_position_exception_in_integration_mode",
+        "line": 73,
+        "markers": [],
+        "docstring": "Test that position exceptions are suppressed in integration mode."
+      },
+      {
+        "name": "test_provides_default_balance_in_integration_mode",
+        "line": 87,
+        "markers": [],
+        "docstring": "Test that default balance is provided in integration mode."
+      }
+    ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_order_normal.py": [
       {
         "name": "TestExecuteOrderNormal::test_execute_order_calls_broker_with_correct_args",
@@ -67030,6 +66815,153 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_handle_order_result.py": [
+      {
+        "name": "TestHandleOrderResult::test_successful_order_tracked",
+        "line": 18,
+        "markers": [],
+        "docstring": "Test that successful orders are tracked.",
+        "class": "TestHandleOrderResult"
+      },
+      {
+        "name": "TestHandleOrderResult::test_none_order_returns_none",
+        "line": 46,
+        "markers": [],
+        "docstring": "Test that None order returns None.",
+        "class": "TestHandleOrderResult"
+      },
+      {
+        "name": "TestHandleOrderResult::test_order_without_id_returns_none",
+        "line": 67,
+        "markers": [],
+        "docstring": "Test that order without ID returns None.",
+        "class": "TestHandleOrderResult"
+      },
+      {
+        "name": "TestHandleOrderResult::test_rejected_status_raises_error",
+        "line": 93,
+        "markers": [],
+        "docstring": "Test that rejected status raises RuntimeError.",
+        "class": "TestHandleOrderResult"
+      },
+      {
+        "name": "TestHandleOrderResult::test_integration_mode_returns_order_object",
+        "line": 123,
+        "markers": [],
+        "docstring": "Test that integration mode returns the order object.",
+        "class": "TestHandleOrderResult"
+      },
+      {
+        "name": "test_successful_order_tracked",
+        "line": 18,
+        "markers": [],
+        "docstring": "Test that successful orders are tracked."
+      },
+      {
+        "name": "test_none_order_returns_none",
+        "line": 46,
+        "markers": [],
+        "docstring": "Test that None order returns None."
+      },
+      {
+        "name": "test_order_without_id_returns_none",
+        "line": 67,
+        "markers": [],
+        "docstring": "Test that order without ID returns None."
+      },
+      {
+        "name": "test_rejected_status_raises_error",
+        "line": 93,
+        "markers": [],
+        "docstring": "Test that rejected status raises RuntimeError."
+      },
+      {
+        "name": "test_integration_mode_returns_order_object",
+        "line": 123,
+        "markers": [],
+        "docstring": "Test that integration mode returns the order object."
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_require_product_and_integration.py": [
+      {
+        "name": "TestRequireProduct::test_returns_provided_product",
+        "line": 19,
+        "markers": [],
+        "docstring": "Test that provided product is returned directly.",
+        "class": "TestRequireProduct"
+      },
+      {
+        "name": "TestRequireProduct::test_fetches_from_broker_when_none",
+        "line": 25,
+        "markers": [],
+        "docstring": "Test that product is fetched from broker when None.",
+        "class": "TestRequireProduct"
+      },
+      {
+        "name": "TestRequireProduct::test_raises_validation_error_when_not_found",
+        "line": 36,
+        "markers": [],
+        "docstring": "Test that ValidationError is raised when product not found.",
+        "class": "TestRequireProduct"
+      },
+      {
+        "name": "TestRequireProduct::test_provides_synthetic_product_in_integration_mode",
+        "line": 45,
+        "markers": [],
+        "docstring": "Test that synthetic product is provided in integration mode.",
+        "class": "TestRequireProduct"
+      },
+      {
+        "name": "TestRequireProduct::test_synthetic_product_parses_symbol_without_dash",
+        "line": 59,
+        "markers": [],
+        "docstring": "Test synthetic product parsing when symbol has no dash.",
+        "class": "TestRequireProduct"
+      },
+      {
+        "name": "TestStateCollectionIntegration::test_full_state_collection_flow",
+        "line": 76,
+        "markers": [],
+        "docstring": "Test complete state collection flow.",
+        "class": "TestStateCollectionIntegration"
+      },
+      {
+        "name": "test_returns_provided_product",
+        "line": 19,
+        "markers": [],
+        "docstring": "Test that provided product is returned directly."
+      },
+      {
+        "name": "test_fetches_from_broker_when_none",
+        "line": 25,
+        "markers": [],
+        "docstring": "Test that product is fetched from broker when None."
+      },
+      {
+        "name": "test_raises_validation_error_when_not_found",
+        "line": 36,
+        "markers": [],
+        "docstring": "Test that ValidationError is raised when product not found."
+      },
+      {
+        "name": "test_provides_synthetic_product_in_integration_mode",
+        "line": 45,
+        "markers": [],
+        "docstring": "Test that synthetic product is provided in integration mode."
+      },
+      {
+        "name": "test_synthetic_product_parses_symbol_without_dash",
+        "line": 59,
+        "markers": [],
+        "docstring": "Test synthetic product parsing when symbol has no dash."
+      },
+      {
+        "name": "test_full_state_collection_flow",
+        "line": 76,
+        "markers": [],
+        "docstring": "Test complete state collection flow."
+      }
+    ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_state_collection.py": [
       {
         "name": "test_collect_runtime_guard_state_basic",
@@ -67224,6 +67156,112 @@
         "docstring": "Test that network errors are classified correctly in metrics."
       }
     ],
+    "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_equity_and_logging.py": [
+      {
+        "name": "TestCalculateEquityFromBalances::test_sums_collateral_balances",
+        "line": 15,
+        "markers": [],
+        "docstring": "Test that collateral balances are summed correctly.",
+        "class": "TestCalculateEquityFromBalances"
+      },
+      {
+        "name": "TestCalculateEquityFromBalances::test_falls_back_to_usd_balance",
+        "line": 29,
+        "markers": [],
+        "docstring": "Test fallback to USD balance when no collateral matches.",
+        "class": "TestCalculateEquityFromBalances"
+      },
+      {
+        "name": "TestCalculateEquityFromBalances::test_returns_zeros_when_no_balances_match",
+        "line": 44,
+        "markers": [],
+        "docstring": "Test returns zeros when no balances match.",
+        "class": "TestCalculateEquityFromBalances"
+      },
+      {
+        "name": "TestCalculateEquityFromBalances::test_handles_empty_balances",
+        "line": 57,
+        "markers": [],
+        "docstring": "Test handling of empty balance list.",
+        "class": "TestCalculateEquityFromBalances"
+      },
+      {
+        "name": "TestLogCollateralUpdate::test_skips_empty_collateral_list",
+        "line": 69,
+        "markers": [],
+        "docstring": "Test that empty collateral list is skipped.",
+        "class": "TestLogCollateralUpdate"
+      },
+      {
+        "name": "TestLogCollateralUpdate::test_sets_initial_collateral_value",
+        "line": 77,
+        "markers": [],
+        "docstring": "Test that initial collateral value is set.",
+        "class": "TestLogCollateralUpdate"
+      },
+      {
+        "name": "TestLogCollateralUpdate::test_logs_significant_change",
+        "line": 86,
+        "markers": [],
+        "docstring": "Test that significant changes are logged.",
+        "class": "TestLogCollateralUpdate"
+      },
+      {
+        "name": "TestLogCollateralUpdate::test_handles_logger_exception",
+        "line": 96,
+        "markers": [],
+        "docstring": "Test that logger exceptions are suppressed.",
+        "class": "TestLogCollateralUpdate"
+      },
+      {
+        "name": "test_sums_collateral_balances",
+        "line": 15,
+        "markers": [],
+        "docstring": "Test that collateral balances are summed correctly."
+      },
+      {
+        "name": "test_falls_back_to_usd_balance",
+        "line": 29,
+        "markers": [],
+        "docstring": "Test fallback to USD balance when no collateral matches."
+      },
+      {
+        "name": "test_returns_zeros_when_no_balances_match",
+        "line": 44,
+        "markers": [],
+        "docstring": "Test returns zeros when no balances match."
+      },
+      {
+        "name": "test_handles_empty_balances",
+        "line": 57,
+        "markers": [],
+        "docstring": "Test handling of empty balance list."
+      },
+      {
+        "name": "test_skips_empty_collateral_list",
+        "line": 69,
+        "markers": [],
+        "docstring": "Test that empty collateral list is skipped."
+      },
+      {
+        "name": "test_sets_initial_collateral_value",
+        "line": 77,
+        "markers": [],
+        "docstring": "Test that initial collateral value is set."
+      },
+      {
+        "name": "test_logs_significant_change",
+        "line": 86,
+        "markers": [],
+        "docstring": "Test that significant changes are logged."
+      },
+      {
+        "name": "test_handles_logger_exception",
+        "line": 96,
+        "markers": [],
+        "docstring": "Test that logger exceptions are suppressed."
+      }
+    ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_preview.py": [
       {
         "name": "TestRecordPreview::test_record_preview_skips_when_preview_is_none",
@@ -67397,318 +67435,32 @@
         "docstring": "Test jitter at exact boundaries."
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core.py": [
-      {
-        "name": "TestOrderSubmitterInit::test_init_stores_dependencies",
-        "line": 30,
-        "markers": [],
-        "docstring": "Test that dependencies are stored correctly.",
-        "class": "TestOrderSubmitterInit"
-      },
-      {
-        "name": "TestOrderSubmitterInit::test_init_defaults_integration_mode_to_false",
-        "line": 51,
-        "markers": [],
-        "docstring": "Test that integration_mode defaults to False.",
-        "class": "TestOrderSubmitterInit"
-      },
-      {
-        "name": "TestRecordPreview::test_record_preview_with_preview_data",
-        "line": 73,
-        "markers": [],
-        "docstring": "Test recording a preview with data.",
-        "class": "TestRecordPreview"
-      },
-      {
-        "name": "TestRecordPreview::test_record_preview_with_none_preview_skips",
-        "line": 98,
-        "markers": [],
-        "docstring": "Test that None preview is skipped.",
-        "class": "TestRecordPreview"
-      },
-      {
-        "name": "TestRecordPreview::test_record_preview_market_price",
-        "line": 117,
-        "markers": [],
-        "docstring": "Test recording a preview with market price.",
-        "class": "TestRecordPreview"
-      },
-      {
-        "name": "TestRecordPreview::test_record_preview_handles_logger_exception",
-        "line": 141,
-        "markers": [],
-        "docstring": "Test that logger exceptions are suppressed.",
-        "class": "TestRecordPreview"
-      },
-      {
-        "name": "TestRecordRejection::test_record_rejection_logs_and_emits",
-        "line": 169,
-        "markers": [],
-        "docstring": "Test that rejection is logged and metric emitted.",
-        "class": "TestRecordRejection"
-      },
-      {
-        "name": "TestRecordRejection::test_record_rejection_includes_client_order_id",
-        "line": 195,
-        "markers": [],
-        "docstring": "Test that client_order_id is included in rejection telemetry.",
-        "class": "TestRecordRejection"
-      },
-      {
-        "name": "TestRecordRejection::test_record_rejection_without_client_order_id_uses_empty_string",
-        "line": 225,
-        "markers": [],
-        "docstring": "Test that missing client_order_id defaults to empty string.",
-        "class": "TestRecordRejection"
-      },
-      {
-        "name": "TestRecordRejection::test_record_rejection_with_none_price",
-        "line": 249,
-        "markers": [],
-        "docstring": "Test recording rejection with None price.",
-        "class": "TestRecordRejection"
-      },
-      {
-        "name": "TestGenerateSubmitId::test_uses_provided_client_order_id",
-        "line": 274,
-        "markers": [],
-        "docstring": "Test that provided client order ID is used.",
-        "class": "TestGenerateSubmitId"
-      },
-      {
-        "name": "TestGenerateSubmitId::test_generates_id_when_none",
-        "line": 282,
-        "markers": [],
-        "docstring": "Test that ID is generated when None provided.",
-        "class": "TestGenerateSubmitId"
-      },
-      {
-        "name": "TestGenerateSubmitId::test_integration_mode_uses_env_override",
-        "line": 292,
-        "markers": [],
-        "docstring": "Test that integration mode uses environment override.",
-        "class": "TestGenerateSubmitId"
-      },
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_execute_broker_order.py": [
       {
         "name": "TestExecuteBrokerOrder::test_normal_order_execution",
-        "line": 314,
+        "line": 17,
         "markers": [],
         "docstring": "Test normal order execution.",
         "class": "TestExecuteBrokerOrder"
       },
       {
         "name": "TestExecuteBrokerOrder::test_type_error_propagates",
-        "line": 343,
+        "line": 46,
         "markers": [],
         "docstring": "Test that TypeError from broker is propagated.",
         "class": "TestExecuteBrokerOrder"
       },
       {
-        "name": "TestHandleOrderResult::test_successful_order_tracked",
-        "line": 370,
-        "markers": [],
-        "docstring": "Test that successful orders are tracked.",
-        "class": "TestHandleOrderResult"
-      },
-      {
-        "name": "TestHandleOrderResult::test_none_order_returns_none",
-        "line": 398,
-        "markers": [],
-        "docstring": "Test that None order returns None.",
-        "class": "TestHandleOrderResult"
-      },
-      {
-        "name": "TestHandleOrderResult::test_order_without_id_returns_none",
-        "line": 419,
-        "markers": [],
-        "docstring": "Test that order without ID returns None.",
-        "class": "TestHandleOrderResult"
-      },
-      {
-        "name": "TestHandleOrderResult::test_rejected_status_raises_error",
-        "line": 445,
-        "markers": [],
-        "docstring": "Test that rejected status raises RuntimeError.",
-        "class": "TestHandleOrderResult"
-      },
-      {
-        "name": "TestHandleOrderResult::test_integration_mode_returns_order_object",
-        "line": 475,
-        "markers": [],
-        "docstring": "Test that integration mode returns the order object.",
-        "class": "TestHandleOrderResult"
-      },
-      {
-        "name": "TestProcessRejection::test_integration_mode_stores_event",
-        "line": 515,
-        "markers": [],
-        "docstring": "Test that integration mode stores rejection event.",
-        "class": "TestProcessRejection"
-      },
-      {
-        "name": "TestProcessRejection::test_normal_mode_raises_error",
-        "line": 562,
-        "markers": [],
-        "docstring": "Test that normal mode raises RuntimeError.",
-        "class": "TestProcessRejection"
-      },
-      {
-        "name": "TestHandleOrderFailure::test_logs_error_and_returns_none",
-        "line": 597,
-        "markers": [],
-        "docstring": "Test that failure is logged and None returned.",
-        "class": "TestHandleOrderFailure"
-      },
-      {
-        "name": "TestHandleOrderFailure::test_handles_event_store_exception",
-        "line": 613,
-        "markers": [],
-        "docstring": "Test that event store exceptions are suppressed.",
-        "class": "TestHandleOrderFailure"
-      },
-      {
-        "name": "test_init_stores_dependencies",
-        "line": 30,
-        "markers": [],
-        "docstring": "Test that dependencies are stored correctly."
-      },
-      {
-        "name": "test_init_defaults_integration_mode_to_false",
-        "line": 51,
-        "markers": [],
-        "docstring": "Test that integration_mode defaults to False."
-      },
-      {
-        "name": "test_record_preview_with_preview_data",
-        "line": 73,
-        "markers": [],
-        "docstring": "Test recording a preview with data."
-      },
-      {
-        "name": "test_record_preview_with_none_preview_skips",
-        "line": 98,
-        "markers": [],
-        "docstring": "Test that None preview is skipped."
-      },
-      {
-        "name": "test_record_preview_market_price",
-        "line": 117,
-        "markers": [],
-        "docstring": "Test recording a preview with market price."
-      },
-      {
-        "name": "test_record_preview_handles_logger_exception",
-        "line": 141,
-        "markers": [],
-        "docstring": "Test that logger exceptions are suppressed."
-      },
-      {
-        "name": "test_record_rejection_logs_and_emits",
-        "line": 169,
-        "markers": [],
-        "docstring": "Test that rejection is logged and metric emitted."
-      },
-      {
-        "name": "test_record_rejection_includes_client_order_id",
-        "line": 195,
-        "markers": [],
-        "docstring": "Test that client_order_id is included in rejection telemetry."
-      },
-      {
-        "name": "test_record_rejection_without_client_order_id_uses_empty_string",
-        "line": 225,
-        "markers": [],
-        "docstring": "Test that missing client_order_id defaults to empty string."
-      },
-      {
-        "name": "test_record_rejection_with_none_price",
-        "line": 249,
-        "markers": [],
-        "docstring": "Test recording rejection with None price."
-      },
-      {
-        "name": "test_uses_provided_client_order_id",
-        "line": 274,
-        "markers": [],
-        "docstring": "Test that provided client order ID is used."
-      },
-      {
-        "name": "test_generates_id_when_none",
-        "line": 282,
-        "markers": [],
-        "docstring": "Test that ID is generated when None provided."
-      },
-      {
-        "name": "test_integration_mode_uses_env_override",
-        "line": 292,
-        "markers": [],
-        "docstring": "Test that integration mode uses environment override."
-      },
-      {
         "name": "test_normal_order_execution",
-        "line": 314,
+        "line": 17,
         "markers": [],
         "docstring": "Test normal order execution."
       },
       {
         "name": "test_type_error_propagates",
-        "line": 343,
+        "line": 46,
         "markers": [],
         "docstring": "Test that TypeError from broker is propagated."
-      },
-      {
-        "name": "test_successful_order_tracked",
-        "line": 370,
-        "markers": [],
-        "docstring": "Test that successful orders are tracked."
-      },
-      {
-        "name": "test_none_order_returns_none",
-        "line": 398,
-        "markers": [],
-        "docstring": "Test that None order returns None."
-      },
-      {
-        "name": "test_order_without_id_returns_none",
-        "line": 419,
-        "markers": [],
-        "docstring": "Test that order without ID returns None."
-      },
-      {
-        "name": "test_rejected_status_raises_error",
-        "line": 445,
-        "markers": [],
-        "docstring": "Test that rejected status raises RuntimeError."
-      },
-      {
-        "name": "test_integration_mode_returns_order_object",
-        "line": 475,
-        "markers": [],
-        "docstring": "Test that integration mode returns the order object."
-      },
-      {
-        "name": "test_integration_mode_stores_event",
-        "line": 515,
-        "markers": [],
-        "docstring": "Test that integration mode stores rejection event."
-      },
-      {
-        "name": "test_normal_mode_raises_error",
-        "line": 562,
-        "markers": [],
-        "docstring": "Test that normal mode raises RuntimeError."
-      },
-      {
-        "name": "test_logs_error_and_returns_none",
-        "line": 597,
-        "markers": [],
-        "docstring": "Test that failure is logged and None returned."
-      },
-      {
-        "name": "test_handles_event_store_exception",
-        "line": 613,
-        "markers": [],
-        "docstring": "Test that event store exceptions are suppressed."
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_submission_attempt.py": [
@@ -67884,6 +67636,47 @@
         "docstring": "Test that transient failure followed by success reuses client_order_id."
       }
     ],
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_generate_submit_id.py": [
+      {
+        "name": "TestGenerateSubmitId::test_uses_provided_client_order_id",
+        "line": 13,
+        "markers": [],
+        "docstring": "Test that provided client order ID is used.",
+        "class": "TestGenerateSubmitId"
+      },
+      {
+        "name": "TestGenerateSubmitId::test_generates_id_when_none",
+        "line": 21,
+        "markers": [],
+        "docstring": "Test that ID is generated when None provided.",
+        "class": "TestGenerateSubmitId"
+      },
+      {
+        "name": "TestGenerateSubmitId::test_integration_mode_uses_env_override",
+        "line": 31,
+        "markers": [],
+        "docstring": "Test that integration mode uses environment override.",
+        "class": "TestGenerateSubmitId"
+      },
+      {
+        "name": "test_uses_provided_client_order_id",
+        "line": 13,
+        "markers": [],
+        "docstring": "Test that provided client order ID is used."
+      },
+      {
+        "name": "test_generates_id_when_none",
+        "line": 21,
+        "markers": [],
+        "docstring": "Test that ID is generated when None provided."
+      },
+      {
+        "name": "test_integration_mode_uses_env_override",
+        "line": 31,
+        "markers": [],
+        "docstring": "Test that integration mode uses environment override."
+      }
+    ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_integration_rejection.py": [
       {
         "name": "TestRecordIntegrationRejection::test_record_integration_rejection_stores_event",
@@ -67910,6 +67703,60 @@
         "line": 35,
         "markers": [],
         "docstring": "Test that different status names are handled."
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_record_rejection.py": [
+      {
+        "name": "TestRecordRejection::test_record_rejection_logs_and_emits",
+        "line": 16,
+        "markers": [],
+        "docstring": "Test that rejection is logged and metric emitted.",
+        "class": "TestRecordRejection"
+      },
+      {
+        "name": "TestRecordRejection::test_record_rejection_includes_client_order_id",
+        "line": 42,
+        "markers": [],
+        "docstring": "Test that client_order_id is included in rejection telemetry.",
+        "class": "TestRecordRejection"
+      },
+      {
+        "name": "TestRecordRejection::test_record_rejection_without_client_order_id_uses_empty_string",
+        "line": 72,
+        "markers": [],
+        "docstring": "Test that missing client_order_id defaults to empty string.",
+        "class": "TestRecordRejection"
+      },
+      {
+        "name": "TestRecordRejection::test_record_rejection_with_none_price",
+        "line": 96,
+        "markers": [],
+        "docstring": "Test recording rejection with None price.",
+        "class": "TestRecordRejection"
+      },
+      {
+        "name": "test_record_rejection_logs_and_emits",
+        "line": 16,
+        "markers": [],
+        "docstring": "Test that rejection is logged and metric emitted."
+      },
+      {
+        "name": "test_record_rejection_includes_client_order_id",
+        "line": 42,
+        "markers": [],
+        "docstring": "Test that client_order_id is included in rejection telemetry."
+      },
+      {
+        "name": "test_record_rejection_without_client_order_id_uses_empty_string",
+        "line": 72,
+        "markers": [],
+        "docstring": "Test that missing client_order_id defaults to empty string."
+      },
+      {
+        "name": "test_record_rejection_with_none_price",
+        "line": 96,
+        "markers": [],
+        "docstring": "Test recording rejection with None price."
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_cancel_and_safe_run.py": [
@@ -67980,6 +67827,112 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_resolve_effective_price.py": [
+      {
+        "name": "TestResolveEffectivePrice::test_returns_provided_price",
+        "line": 16,
+        "markers": [],
+        "docstring": "Test that provided price is returned directly.",
+        "class": "TestResolveEffectivePrice"
+      },
+      {
+        "name": "TestResolveEffectivePrice::test_uses_mark_price_for_market_orders",
+        "line": 27,
+        "markers": [],
+        "docstring": "Test that mark price is used for market orders.",
+        "class": "TestResolveEffectivePrice"
+      },
+      {
+        "name": "TestResolveEffectivePrice::test_uses_mid_price_fallback",
+        "line": 42,
+        "markers": [],
+        "docstring": "Test fallback to bid/ask mid-price.",
+        "class": "TestResolveEffectivePrice"
+      },
+      {
+        "name": "TestResolveEffectivePrice::test_uses_broker_quote_fallback",
+        "line": 65,
+        "markers": [],
+        "docstring": "Test fallback to broker quote.",
+        "class": "TestResolveEffectivePrice"
+      },
+      {
+        "name": "TestResolveEffectivePrice::test_uses_product_price_fallback",
+        "line": 81,
+        "markers": [],
+        "docstring": "Test fallback to product price.",
+        "class": "TestResolveEffectivePrice"
+      },
+      {
+        "name": "TestResolveEffectivePrice::test_uses_quote_increment_as_last_resort",
+        "line": 104,
+        "markers": [],
+        "docstring": "Test last resort uses quote_increment * 100.",
+        "class": "TestResolveEffectivePrice"
+      },
+      {
+        "name": "TestResolveEffectivePrice::test_handles_zero_price_as_none",
+        "line": 126,
+        "markers": [],
+        "docstring": "Test that zero price is treated as None.",
+        "class": "TestResolveEffectivePrice"
+      },
+      {
+        "name": "TestResolveEffectivePrice::test_handles_mark_price_exception",
+        "line": 142,
+        "markers": [],
+        "docstring": "Test that mark price exceptions are handled.",
+        "class": "TestResolveEffectivePrice"
+      },
+      {
+        "name": "test_returns_provided_price",
+        "line": 16,
+        "markers": [],
+        "docstring": "Test that provided price is returned directly."
+      },
+      {
+        "name": "test_uses_mark_price_for_market_orders",
+        "line": 27,
+        "markers": [],
+        "docstring": "Test that mark price is used for market orders."
+      },
+      {
+        "name": "test_uses_mid_price_fallback",
+        "line": 42,
+        "markers": [],
+        "docstring": "Test fallback to bid/ask mid-price."
+      },
+      {
+        "name": "test_uses_broker_quote_fallback",
+        "line": 65,
+        "markers": [],
+        "docstring": "Test fallback to broker quote."
+      },
+      {
+        "name": "test_uses_product_price_fallback",
+        "line": 81,
+        "markers": [],
+        "docstring": "Test fallback to product price."
+      },
+      {
+        "name": "test_uses_quote_increment_as_last_resort",
+        "line": 104,
+        "markers": [],
+        "docstring": "Test last resort uses quote_increment * 100."
+      },
+      {
+        "name": "test_handles_zero_price_as_none",
+        "line": 126,
+        "markers": [],
+        "docstring": "Test that zero price is treated as None."
+      },
+      {
+        "name": "test_handles_mark_price_exception",
+        "line": 142,
+        "markers": [],
+        "docstring": "Test that mark price exceptions are handled."
+      }
+    ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_init.py": [
       {
         "name": "TestBrokerExecutorInit::test_init_stores_broker",
@@ -68019,6 +67972,60 @@
         "line": 23,
         "markers": [],
         "docstring": "Test that integration_mode can be set to True."
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_record_preview.py": [
+      {
+        "name": "TestRecordPreview::test_record_preview_with_preview_data",
+        "line": 17,
+        "markers": [],
+        "docstring": "Test recording a preview with data.",
+        "class": "TestRecordPreview"
+      },
+      {
+        "name": "TestRecordPreview::test_record_preview_with_none_preview_skips",
+        "line": 42,
+        "markers": [],
+        "docstring": "Test that None preview is skipped.",
+        "class": "TestRecordPreview"
+      },
+      {
+        "name": "TestRecordPreview::test_record_preview_market_price",
+        "line": 61,
+        "markers": [],
+        "docstring": "Test recording a preview with market price.",
+        "class": "TestRecordPreview"
+      },
+      {
+        "name": "TestRecordPreview::test_record_preview_handles_logger_exception",
+        "line": 85,
+        "markers": [],
+        "docstring": "Test that logger exceptions are suppressed.",
+        "class": "TestRecordPreview"
+      },
+      {
+        "name": "test_record_preview_with_preview_data",
+        "line": 17,
+        "markers": [],
+        "docstring": "Test recording a preview with data."
+      },
+      {
+        "name": "test_record_preview_with_none_preview_skips",
+        "line": 42,
+        "markers": [],
+        "docstring": "Test that None preview is skipped."
+      },
+      {
+        "name": "test_record_preview_market_price",
+        "line": 61,
+        "markers": [],
+        "docstring": "Test recording a preview with market price."
+      },
+      {
+        "name": "test_record_preview_handles_logger_exception",
+        "line": 85,
+        "markers": [],
+        "docstring": "Test that logger exceptions are suppressed."
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_volatility_guard.py": [
@@ -68297,6 +68304,34 @@
         "docstring": "Test that failure reason classification is used in metrics."
       }
     ],
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_handle_order_failure.py": [
+      {
+        "name": "TestHandleOrderFailure::test_logs_error_and_returns_none",
+        "line": 15,
+        "markers": [],
+        "docstring": "Test that failure is logged and None returned.",
+        "class": "TestHandleOrderFailure"
+      },
+      {
+        "name": "TestHandleOrderFailure::test_handles_event_store_exception",
+        "line": 31,
+        "markers": [],
+        "docstring": "Test that event store exceptions are suppressed.",
+        "class": "TestHandleOrderFailure"
+      },
+      {
+        "name": "test_logs_error_and_returns_none",
+        "line": 15,
+        "markers": [],
+        "docstring": "Test that failure is logged and None returned."
+      },
+      {
+        "name": "test_handles_event_store_exception",
+        "line": 31,
+        "markers": [],
+        "docstring": "Test that event store exceptions are suppressed."
+      }
+    ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_mark_staleness_and_risk_metrics_guard.py": [
       {
         "name": "test_guard_mark_staleness_no_cache",
@@ -68545,6 +68580,34 @@
         "line": 135,
         "markers": [],
         "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_init.py": [
+      {
+        "name": "TestOrderSubmitterInit::test_init_stores_dependencies",
+        "line": 13,
+        "markers": [],
+        "docstring": "Test that dependencies are stored correctly.",
+        "class": "TestOrderSubmitterInit"
+      },
+      {
+        "name": "TestOrderSubmitterInit::test_init_defaults_integration_mode_to_false",
+        "line": 34,
+        "markers": [],
+        "docstring": "Test that integration_mode defaults to False.",
+        "class": "TestOrderSubmitterInit"
+      },
+      {
+        "name": "test_init_stores_dependencies",
+        "line": 13,
+        "markers": [],
+        "docstring": "Test that dependencies are stored correctly."
+      },
+      {
+        "name": "test_init_defaults_integration_mode_to_false",
+        "line": 34,
+        "markers": [],
+        "docstring": "Test that integration_mode defaults to False."
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_with_retry.py": [
@@ -69352,292 +69415,298 @@
         "docstring": "Test that StrategyOrchestrator inherits from expected mixins."
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy.py": [
-      {
-        "name": "TestZScoreCalculation::test_z_score_at_mean_is_zero",
-        "line": 25,
-        "markers": [],
-        "docstring": "Z-Score should be ~0 when price equals the rolling mean.",
-        "class": "TestZScoreCalculation"
-      },
-      {
-        "name": "TestZScoreCalculation::test_z_score_positive_when_above_mean",
-        "line": 46,
-        "markers": [],
-        "docstring": "Z-Score should be positive when price is above the mean.",
-        "class": "TestZScoreCalculation"
-      },
-      {
-        "name": "TestZScoreCalculation::test_z_score_negative_when_below_mean",
-        "line": 67,
-        "markers": [],
-        "docstring": "Z-Score should be negative when price is below the mean.",
-        "class": "TestZScoreCalculation"
-      },
-      {
-        "name": "TestSignalGeneration::test_long_signal_below_negative_threshold",
-        "line": 91,
-        "markers": [],
-        "docstring": "Should generate BUY signal when Z-Score < -threshold.",
-        "class": "TestSignalGeneration"
-      },
-      {
-        "name": "TestSignalGeneration::test_short_signal_above_positive_threshold",
-        "line": 114,
-        "markers": [],
-        "docstring": "Should generate SELL signal when Z-Score > +threshold.",
-        "class": "TestSignalGeneration"
-      },
-      {
-        "name": "TestSignalGeneration::test_no_short_when_disabled",
-        "line": 138,
-        "markers": [],
-        "docstring": "Should not generate SELL when shorts are disabled.",
-        "class": "TestSignalGeneration"
-      },
-      {
-        "name": "TestSignalGeneration::test_hold_in_neutral_zone",
-        "line": 162,
-        "markers": [],
-        "docstring": "Should HOLD when Z-Score is within neutral zone.",
-        "class": "TestSignalGeneration"
-      },
-      {
-        "name": "TestExitLogic::test_exit_sets_cooldown",
-        "line": 213,
-        "markers": [],
-        "docstring": "Exit should apply cooldown when configured.",
-        "class": "TestExitLogic"
-      },
-      {
-        "name": "TestExitLogic::test_exit_when_z_score_returns_to_mean",
-        "line": 241,
-        "markers": [],
-        "docstring": "Should CLOSE position when Z-Score returns near zero.",
-        "class": "TestExitLogic"
-      },
-      {
-        "name": "TestExitLogic::test_stop_loss_triggered",
-        "line": 270,
-        "markers": [],
-        "docstring": "Should CLOSE position when stop loss is hit.",
-        "class": "TestExitLogic"
-      },
-      {
-        "name": "TestExitLogic::test_take_profit_triggered",
-        "line": 301,
-        "markers": [],
-        "docstring": "Should CLOSE position when take profit is hit.",
-        "class": "TestExitLogic"
-      },
-      {
-        "name": "TestVolatilityTargeting::test_high_volatility_reduces_position",
-        "line": 336,
-        "markers": [],
-        "docstring": "Position size should decrease when volatility is high.",
-        "class": "TestVolatilityTargeting"
-      },
-      {
-        "name": "TestVolatilityTargeting::test_position_capped_at_max_pct",
-        "line": 356,
-        "markers": [],
-        "docstring": "Position size should never exceed max_position_pct of equity.",
-        "class": "TestVolatilityTargeting"
-      },
-      {
-        "name": "TestVolatilityTargeting::test_zero_volatility_uses_default",
-        "line": 372,
-        "markers": [],
-        "docstring": "Should handle zero volatility gracefully.",
-        "class": "TestVolatilityTargeting"
-      },
+    "tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy_safety_and_recovery.py": [
       {
         "name": "TestKillSwitch::test_kill_switch_prevents_all_actions",
-        "line": 388,
+        "line": 13,
         "markers": [],
         "docstring": "When kill switch is on, should always HOLD.",
         "class": "TestKillSwitch"
       },
       {
         "name": "TestRehydration::test_rehydrate_returns_zero_for_stateless_strategy",
-        "line": 415,
+        "line": 40,
         "markers": [],
         "docstring": "Stateless strategy should return 0 from rehydrate.",
         "class": "TestRehydration"
       },
       {
         "name": "TestInsufficientData::test_hold_when_insufficient_data",
-        "line": 433,
+        "line": 58,
         "markers": [],
         "docstring": "Should HOLD when not enough price history.",
         "class": "TestInsufficientData"
       },
       {
-        "name": "TestCooldown::test_cooldown_blocks_entry",
-        "line": 459,
+        "name": "test_kill_switch_prevents_all_actions",
+        "line": 13,
         "markers": [],
-        "docstring": "Cooldown prevents new entries until it expires.",
-        "class": "TestCooldown"
+        "docstring": "When kill switch is on, should always HOLD."
+      },
+      {
+        "name": "test_rehydrate_returns_zero_for_stateless_strategy",
+        "line": 40,
+        "markers": [],
+        "docstring": "Stateless strategy should return 0 from rehydrate."
+      },
+      {
+        "name": "test_hold_when_insufficient_data",
+        "line": 58,
+        "markers": [],
+        "docstring": "Should HOLD when not enough price history."
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy_zscore_and_signals.py": [
+      {
+        "name": "TestZScoreCalculation::test_z_score_at_mean_is_zero",
+        "line": 15,
+        "markers": [],
+        "docstring": "Z-Score should be ~0 when price equals the rolling mean.",
+        "class": "TestZScoreCalculation"
+      },
+      {
+        "name": "TestZScoreCalculation::test_z_score_positive_when_above_mean",
+        "line": 36,
+        "markers": [],
+        "docstring": "Z-Score should be positive when price is above the mean.",
+        "class": "TestZScoreCalculation"
+      },
+      {
+        "name": "TestZScoreCalculation::test_z_score_negative_when_below_mean",
+        "line": 57,
+        "markers": [],
+        "docstring": "Z-Score should be negative when price is below the mean.",
+        "class": "TestZScoreCalculation"
+      },
+      {
+        "name": "TestSignalGeneration::test_long_signal_below_negative_threshold",
+        "line": 81,
+        "markers": [],
+        "docstring": "Should generate BUY signal when Z-Score < -threshold.",
+        "class": "TestSignalGeneration"
+      },
+      {
+        "name": "TestSignalGeneration::test_short_signal_above_positive_threshold",
+        "line": 104,
+        "markers": [],
+        "docstring": "Should generate SELL signal when Z-Score > +threshold.",
+        "class": "TestSignalGeneration"
+      },
+      {
+        "name": "TestSignalGeneration::test_no_short_when_disabled",
+        "line": 128,
+        "markers": [],
+        "docstring": "Should not generate SELL when shorts are disabled.",
+        "class": "TestSignalGeneration"
+      },
+      {
+        "name": "TestSignalGeneration::test_hold_in_neutral_zone",
+        "line": 152,
+        "markers": [],
+        "docstring": "Should HOLD when Z-Score is within neutral zone.",
+        "class": "TestSignalGeneration"
+      },
+      {
+        "name": "test_z_score_at_mean_is_zero",
+        "line": 15,
+        "markers": [],
+        "docstring": "Z-Score should be ~0 when price equals the rolling mean."
+      },
+      {
+        "name": "test_z_score_positive_when_above_mean",
+        "line": 36,
+        "markers": [],
+        "docstring": "Z-Score should be positive when price is above the mean."
+      },
+      {
+        "name": "test_z_score_negative_when_below_mean",
+        "line": 57,
+        "markers": [],
+        "docstring": "Z-Score should be negative when price is below the mean."
+      },
+      {
+        "name": "test_long_signal_below_negative_threshold",
+        "line": 81,
+        "markers": [],
+        "docstring": "Should generate BUY signal when Z-Score < -threshold."
+      },
+      {
+        "name": "test_short_signal_above_positive_threshold",
+        "line": 104,
+        "markers": [],
+        "docstring": "Should generate SELL signal when Z-Score > +threshold."
+      },
+      {
+        "name": "test_no_short_when_disabled",
+        "line": 128,
+        "markers": [],
+        "docstring": "Should not generate SELL when shorts are disabled."
+      },
+      {
+        "name": "test_hold_in_neutral_zone",
+        "line": 152,
+        "markers": [],
+        "docstring": "Should HOLD when Z-Score is within neutral zone."
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy_sizing_and_trend_filter.py": [
+      {
+        "name": "TestVolatilityTargeting::test_high_volatility_reduces_position",
+        "line": 13,
+        "markers": [],
+        "docstring": "Position size should decrease when volatility is high.",
+        "class": "TestVolatilityTargeting"
+      },
+      {
+        "name": "TestVolatilityTargeting::test_position_capped_at_max_pct",
+        "line": 33,
+        "markers": [],
+        "docstring": "Position size should never exceed max_position_pct of equity.",
+        "class": "TestVolatilityTargeting"
+      },
+      {
+        "name": "TestVolatilityTargeting::test_zero_volatility_uses_default",
+        "line": 49,
+        "markers": [],
+        "docstring": "Should handle zero volatility gracefully.",
+        "class": "TestVolatilityTargeting"
       },
       {
         "name": "TestTrendFilter::test_blocks_counter_trend_long",
-        "line": 529,
+        "line": 65,
         "markers": [],
         "docstring": "Blocks longs when price is below trend MA.",
         "class": "TestTrendFilter"
       },
       {
         "name": "TestTrendFilter::test_allows_counter_trend_long_with_override",
-        "line": 556,
+        "line": 92,
         "markers": [],
         "docstring": "Allows counter-trend longs when Z-score is extreme enough.",
         "class": "TestTrendFilter"
       },
       {
         "name": "TestTrendFilter::test_blocks_counter_trend_short",
-        "line": 582,
+        "line": 118,
         "markers": [],
         "docstring": "Blocks shorts when price is above trend MA.",
         "class": "TestTrendFilter"
       },
       {
         "name": "TestTrendFilter::test_allows_counter_trend_short_with_override",
-        "line": 610,
+        "line": 146,
         "markers": [],
         "docstring": "Allows counter-trend shorts when Z-score is extreme enough.",
         "class": "TestTrendFilter"
       },
       {
-        "name": "test_z_score_at_mean_is_zero",
-        "line": 25,
-        "markers": [],
-        "docstring": "Z-Score should be ~0 when price equals the rolling mean."
-      },
-      {
-        "name": "test_z_score_positive_when_above_mean",
-        "line": 46,
-        "markers": [],
-        "docstring": "Z-Score should be positive when price is above the mean."
-      },
-      {
-        "name": "test_z_score_negative_when_below_mean",
-        "line": 67,
-        "markers": [],
-        "docstring": "Z-Score should be negative when price is below the mean."
-      },
-      {
-        "name": "test_long_signal_below_negative_threshold",
-        "line": 91,
-        "markers": [],
-        "docstring": "Should generate BUY signal when Z-Score < -threshold."
-      },
-      {
-        "name": "test_short_signal_above_positive_threshold",
-        "line": 114,
-        "markers": [],
-        "docstring": "Should generate SELL signal when Z-Score > +threshold."
-      },
-      {
-        "name": "test_no_short_when_disabled",
-        "line": 138,
-        "markers": [],
-        "docstring": "Should not generate SELL when shorts are disabled."
-      },
-      {
-        "name": "test_hold_in_neutral_zone",
-        "line": 162,
-        "markers": [],
-        "docstring": "Should HOLD when Z-Score is within neutral zone."
-      },
-      {
-        "name": "test_exit_sets_cooldown",
-        "line": 213,
-        "markers": [],
-        "docstring": "Exit should apply cooldown when configured."
-      },
-      {
-        "name": "test_exit_when_z_score_returns_to_mean",
-        "line": 241,
-        "markers": [],
-        "docstring": "Should CLOSE position when Z-Score returns near zero."
-      },
-      {
-        "name": "test_stop_loss_triggered",
-        "line": 270,
-        "markers": [],
-        "docstring": "Should CLOSE position when stop loss is hit."
-      },
-      {
-        "name": "test_take_profit_triggered",
-        "line": 301,
-        "markers": [],
-        "docstring": "Should CLOSE position when take profit is hit."
-      },
-      {
         "name": "test_high_volatility_reduces_position",
-        "line": 336,
+        "line": 13,
         "markers": [],
         "docstring": "Position size should decrease when volatility is high."
       },
       {
         "name": "test_position_capped_at_max_pct",
-        "line": 356,
+        "line": 33,
         "markers": [],
         "docstring": "Position size should never exceed max_position_pct of equity."
       },
       {
         "name": "test_zero_volatility_uses_default",
-        "line": 372,
+        "line": 49,
         "markers": [],
         "docstring": "Should handle zero volatility gracefully."
       },
       {
-        "name": "test_kill_switch_prevents_all_actions",
-        "line": 388,
-        "markers": [],
-        "docstring": "When kill switch is on, should always HOLD."
-      },
-      {
-        "name": "test_rehydrate_returns_zero_for_stateless_strategy",
-        "line": 415,
-        "markers": [],
-        "docstring": "Stateless strategy should return 0 from rehydrate."
-      },
-      {
-        "name": "test_hold_when_insufficient_data",
-        "line": 433,
-        "markers": [],
-        "docstring": "Should HOLD when not enough price history."
-      },
-      {
-        "name": "test_cooldown_blocks_entry",
-        "line": 459,
-        "markers": [],
-        "docstring": "Cooldown prevents new entries until it expires."
-      },
-      {
         "name": "test_blocks_counter_trend_long",
-        "line": 529,
+        "line": 65,
         "markers": [],
         "docstring": "Blocks longs when price is below trend MA."
       },
       {
         "name": "test_allows_counter_trend_long_with_override",
-        "line": 556,
+        "line": 92,
         "markers": [],
         "docstring": "Allows counter-trend longs when Z-score is extreme enough."
       },
       {
         "name": "test_blocks_counter_trend_short",
-        "line": 582,
+        "line": 118,
         "markers": [],
         "docstring": "Blocks shorts when price is above trend MA."
       },
       {
         "name": "test_allows_counter_trend_short_with_override",
-        "line": 610,
+        "line": 146,
         "markers": [],
         "docstring": "Allows counter-trend shorts when Z-score is extreme enough."
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy_exit_logic_and_cooldown.py": [
+      {
+        "name": "TestExitLogic::test_exit_sets_cooldown",
+        "line": 13,
+        "markers": [],
+        "docstring": "Exit should apply cooldown when configured.",
+        "class": "TestExitLogic"
+      },
+      {
+        "name": "TestExitLogic::test_exit_when_z_score_returns_to_mean",
+        "line": 41,
+        "markers": [],
+        "docstring": "Should CLOSE position when Z-Score returns near zero.",
+        "class": "TestExitLogic"
+      },
+      {
+        "name": "TestExitLogic::test_stop_loss_triggered",
+        "line": 70,
+        "markers": [],
+        "docstring": "Should CLOSE position when stop loss is hit.",
+        "class": "TestExitLogic"
+      },
+      {
+        "name": "TestExitLogic::test_take_profit_triggered",
+        "line": 101,
+        "markers": [],
+        "docstring": "Should CLOSE position when take profit is hit.",
+        "class": "TestExitLogic"
+      },
+      {
+        "name": "TestCooldown::test_cooldown_blocks_entry",
+        "line": 136,
+        "markers": [],
+        "docstring": "Cooldown prevents new entries until it expires.",
+        "class": "TestCooldown"
+      },
+      {
+        "name": "test_exit_sets_cooldown",
+        "line": 13,
+        "markers": [],
+        "docstring": "Exit should apply cooldown when configured."
+      },
+      {
+        "name": "test_exit_when_z_score_returns_to_mean",
+        "line": 41,
+        "markers": [],
+        "docstring": "Should CLOSE position when Z-Score returns near zero."
+      },
+      {
+        "name": "test_stop_loss_triggered",
+        "line": 70,
+        "markers": [],
+        "docstring": "Should CLOSE position when stop loss is hit."
+      },
+      {
+        "name": "test_take_profit_triggered",
+        "line": 101,
+        "markers": [],
+        "docstring": "Should CLOSE position when take profit is hit."
+      },
+      {
+        "name": "test_cooldown_blocks_entry",
+        "line": 136,
+        "markers": [],
+        "docstring": "Cooldown prevents new entries until it expires."
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/strategies/hybrid/test_base.py": [

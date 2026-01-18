@@ -23,7 +23,6 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/utilities/test_datetime_helpers.py",  # datetime edge-case coverage
     "tests/unit/gpt_trader/tui/test_risk_preview.py",  # comprehensive risk preview helper coverage
     "tests/unit/gpt_trader/utilities/test_console_logging_functions.py",  # logging formatting matrix
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_data.py",  # market data coverage
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_accounts.py",  # account snapshot + treasury surface coverage
     "tests/unit/gpt_trader/errors/test_base.py",  # error taxonomy coverage
     "tests/unit/gpt_trader/utilities/test_async_utils_core.py",  # async helper regression suite  # naming: allow
@@ -40,9 +39,7 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/utilities/test_logging_patterns.py",  # 494 lines: extensive structured logging patterns and decorator coverage
     "tests/property/test_coinbase_invariants.py",  # property-based coverage for invariants across stochastic market scenarios
     "tests/unit/gpt_trader/monitoring/test_guard_manager_e2e.py",  # end-to-end guard orchestration scenarios spanning async workflows
-    "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection.py",  # state collection aggregation matrix
     "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer.py",  # IP allowlist enforcement scenarios
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core.py",  # order submission helper coverage
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows.py",  # order submission flow coverage
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability.py",  # order submission telemetry coverage
     "tests/unit/gpt_trader/preflight/test_context.py",  # preflight context scenarios
@@ -86,7 +83,6 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/monitoring/test_heartbeat.py",  # heartbeat monitoring scenarios
     "tests/unit/gpt_trader/monitoring/test_status_reporter.py",  # status reporting coverage
     "tests/integration/test_funding_pnl_integration.py",  # funding and PnL calculation scenarios
-    "tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy.py",  # comprehensive Z-Score, volatility targeting, and exit logic coverage
     "tests/unit/gpt_trader/persistence/test_orders_store.py",  # comprehensive order persistence contract with lifecycle, recovery, and integrity validation
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events.py",  # WebSocket event dispatcher testing with typed handlers and dispatcher routing
     "tests/unit/gpt_trader/app/test_bootstrap.py",  # comprehensive bootstrap module coverage with profile loading and container initialization
@@ -119,7 +115,6 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/tui/services/test_mode_service.py",  # mode service state transitions
     "tests/unit/gpt_trader/tui/test_thresholds.py",  # unified threshold system test coverage (status levels, risk, confidence)
     "tests/unit/gpt_trader/tui/utilities/test_table_formatting.py",  # table formatting utilities with timestamp parsing, sorting, clipboard, and cell formatting
-    "tests/unit/gpt_trader/tui/test_staleness_helpers.py",  # staleness and execution health banner comprehensive testing
     "tests/unit/gpt_trader/tui/services/test_execution_telemetry.py",  # execution telemetry metrics collection coverage
     "tests/unit/gpt_trader/tui/services/test_onboarding_service.py",  # onboarding service state machine and persistence
     "tests/unit/gpt_trader/tui/widgets/test_strategy.py",  # strategy widget comprehensive display scenarios

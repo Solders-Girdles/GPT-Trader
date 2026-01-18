@@ -107,7 +107,6 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics.py",  # API metrics collection comprehensive scenarios
     "tests/unit/gpt_trader/tui/services/test_trading_stats_service.py",  # trading stats FIFO matching comprehensive scenarios
     "tests/unit/gpt_trader/features/live_trade/risk/test_cfm_risk_config.py",  # CFM risk config validation matrix
-    "tests/unit/gpt_trader/tui/widgets/test_system_monitor.py",  # system monitor widget comprehensive state scenarios
     # TUI reliability/fault-injection tests
     "tests/unit/gpt_trader/tui/widgets/test_account.py",  # account widget partial state and signature caching tests
     "tests/unit/gpt_trader/tui/widgets/test_position_card.py",  # position card widget resilience with missing data

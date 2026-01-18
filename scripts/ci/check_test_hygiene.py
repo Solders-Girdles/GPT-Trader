@@ -41,7 +41,6 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/monitoring/test_guard_manager_e2e.py",  # end-to-end guard orchestration scenarios spanning async workflows
     "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer.py",  # IP allowlist enforcement scenarios
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows.py",  # order submission flow coverage
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability.py",  # order submission telemetry coverage
     "tests/unit/gpt_trader/preflight/test_context.py",  # preflight context scenarios
     "tests/unit/gpt_trader/security/test_request_validator.py",  # request validation coverage
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_coverage.py",  # transport layer coverage

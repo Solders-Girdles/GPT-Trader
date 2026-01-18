@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 608,
+    "tests_scanned": 612,
     "source_modules": 348,
     "unresolved_modules": 3
   },
@@ -383,7 +383,10 @@
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_process_rejection.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_record_preview.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_correlation_context.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_latency_metrics.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_rejection_recording.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_submission_metrics.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_router.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_collect_account_state.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_equity_and_logging.py",
@@ -855,7 +858,11 @@
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_record_preview.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_record_rejection.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability.py"
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_classification.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_correlation_context.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_latency_metrics.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_rejection_recording.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_submission_metrics.py"
     ],
     "gpt_trader.features.live_trade.execution.router": [
       "tests/unit/gpt_trader/features/live_trade/execution/test_router.py"
@@ -1200,7 +1207,7 @@
       "tests/unit/gpt_trader/features/strategy_tools/test_risk_guards_edges.py"
     ],
     "gpt_trader.logging.correlation": [
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_correlation_context.py",
       "tests/unit/gpt_trader/logging/test_correlation.py",
       "tests/unit/gpt_trader/logging/test_correlation_edges.py",
       "tests/unit/gpt_trader/logging/test_json_formatter.py",
@@ -1314,7 +1321,7 @@
     ],
     "gpt_trader.monitoring.metrics_collector": [
       "tests/integration/test_order_flow.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_submission_metrics.py",
       "tests/unit/gpt_trader/monitoring/test_health_checks.py",
       "tests/unit/gpt_trader/monitoring/test_metrics_collector.py",
       "tests/unit/gpt_trader/monitoring/test_metrics_collector_edges.py",
@@ -1388,7 +1395,7 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_user_event_handler.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_process_rejection.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_rejection_recording.py",
       "tests/unit/gpt_trader/features/live_trade/test_state_recovery.py",
       "tests/unit/gpt_trader/persistence/test_orders_store.py",
       "tests/unit/gpt_trader/persistence/test_orders_store_edges.py"
@@ -3106,12 +3113,27 @@
       "gpt_trader.persistence.orders_store",
       "gpt_trader.utilities.datetime_helpers"
     ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability.py": [
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_classification.py": [
+      "gpt_trader.features.live_trade.execution.order_submission"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_correlation_context.py": [
       "gpt_trader.core",
       "gpt_trader.features.live_trade.execution.order_submission",
-      "gpt_trader.logging.correlation",
-      "gpt_trader.monitoring.metrics_collector",
+      "gpt_trader.logging.correlation"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_latency_metrics.py": [
+      "gpt_trader.core",
+      "gpt_trader.features.live_trade.execution.order_submission"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_rejection_recording.py": [
+      "gpt_trader.core",
+      "gpt_trader.features.live_trade.execution.order_submission",
       "gpt_trader.persistence.orders_store"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_submission_metrics.py": [
+      "gpt_trader.core",
+      "gpt_trader.features.live_trade.execution.order_submission",
+      "gpt_trader.monitoring.metrics_collector"
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_router.py": [
       "gpt_trader.core",

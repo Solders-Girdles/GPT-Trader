@@ -1,10 +1,9 @@
 # CLI → Config → Container → Engine Flow
 
-Generated: 2026-01-15T13:32:26.175858+00:00
+Generated: 2026-01-18T01:50:49.698562+00:00
 
 ## Entrypoints
 - `uv run gpt-trader run --profile dev --dev-fast`
-- `uv run coinbase-trader run --profile dev --dev-fast`
 
 ## Nodes
 | ID | Label | Path |

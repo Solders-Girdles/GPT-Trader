@@ -14,7 +14,7 @@
     "mean_reversion": {
       "type": "string",
       "description": "Type: <class 'gpt_trader.app.config.bot_config.MeanReversionConfig'>",
-      "default": "MeanReversionConfig(z_score_entry_threshold=2.0, z_score_exit_threshold=0.5, lookback_window=20, target_daily_volatility=0.02, max_position_pct=0.25, stop_loss_pct=0.03, take_profit_pct=0.06, enable_shorts=True, kill_switch_enabled=False)"
+      "default": "MeanReversionConfig(z_score_entry_threshold=2.0, z_score_exit_threshold=0.5, lookback_window=20, target_daily_volatility=0.02, max_position_pct=0.25, stop_loss_pct=0.03, take_profit_pct=0.06, enable_shorts=True, kill_switch_enabled=False, cooldown_bars=0, trend_filter_enabled=False, trend_window=50, trend_threshold_pct=0.01, trend_override_z_score=None)"
     },
     "health_thresholds": {
       "type": "string",
@@ -25,8 +25,13 @@
     "ensemble_config": {},
     "strategy_type": {
       "type": "string",
-      "description": "Type: typing.Literal['baseline', 'mean_reversion', 'ensemble']",
+      "description": "Type: typing.Literal['baseline', 'mean_reversion', 'ensemble', 'regime_switcher']",
       "default": "baseline"
+    },
+    "regime_switcher_trend_mode": {
+      "type": "string",
+      "description": "Type: typing.Literal['delegate', 'regime_follow']",
+      "default": "delegate"
     },
     "symbols": {
       "type": "array",
@@ -68,6 +73,14 @@
       "type": "boolean",
       "default": false,
       "description": "Enable order preview before submission"
+    },
+    "use_limit_orders": {
+      "type": "boolean",
+      "default": false
+    },
+    "market_order_fallback": {
+      "type": "boolean",
+      "default": true
     },
     "account_telemetry_interval": {
       "type": "integer",

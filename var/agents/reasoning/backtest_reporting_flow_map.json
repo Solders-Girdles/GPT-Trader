@@ -174,5 +174,5 @@
     "BacktestReporter lazily computes TradeStatistics and RiskMetrics from the broker.",
     "generate_backtest_report is a convenience wrapper returning BacktestResult."
   ],
-  "generated_at": "2026-01-15T13:32:26.213260+00:00"
+  "generated_at": "2026-01-18T01:50:49.746236+00:00"
 }

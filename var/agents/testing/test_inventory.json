@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 11083,
-    "total_files": 411,
+    "total_tests": 11192,
+    "total_files": 421,
     "markers_used": 9
   },
   "marker_definitions": {
@@ -100,7 +100,7 @@
     ]
   },
   "marker_counts": {
-    "parametrize": 92,
+    "parametrize": 94,
     "skipif": 16,
     "integration": 14,
     "property": 11,
@@ -120,14 +120,32 @@
     "test_chaos.py": [
       "tests/unit/support/test_chaos.py"
     ],
+    "test_liveness_check.py": [
+      "tests/unit/scripts/test_liveness_check.py"
+    ],
+    "test_canary_process.py": [
+      "tests/unit/scripts/test_canary_process.py"
+    ],
     "test_agent_health_ci_input.py": [
       "tests/unit/scripts/test_agent_health_ci_input.py"
+    ],
+    "test_runtime_fingerprint.py": [
+      "tests/unit/scripts/test_runtime_fingerprint.py"
+    ],
+    "test_backtest_runner_pillar2_gates.py": [
+      "tests/unit/scripts/test_backtest_runner_pillar2_gates.py"
     ],
     "test_reasoning_artifacts_guard_stack.py": [
       "tests/unit/scripts/test_reasoning_artifacts_guard_stack.py"
     ],
+    "test_canary_watchdog.py": [
+      "tests/unit/scripts/test_canary_watchdog.py"
+    ],
     "test_feature_slice_scaffold.py": [
       "tests/unit/scripts/test_feature_slice_scaffold.py"
+    ],
+    "test_tail_decision_traces.py": [
+      "tests/unit/scripts/test_tail_decision_traces.py"
     ],
     "test_json_redaction.py": [
       "tests/unit/logging/test_json_redaction.py"
@@ -346,6 +364,7 @@
       "tests/unit/gpt_trader/monitoring/daily_report/test_analytics.py",
       "tests/unit/gpt_trader/monitoring/daily_report/test_generator_edges.py",
       "tests/unit/gpt_trader/monitoring/daily_report/test_models.py",
+      "tests/unit/gpt_trader/monitoring/daily_report/test_liveness_runtime.py",
       "tests/unit/gpt_trader/monitoring/system/test_metrics.py",
       "tests/unit/gpt_trader/monitoring/system/test_positions_reconciler_edges.py",
       "tests/unit/gpt_trader/monitoring/two_person_rule/test_manager_edges.py",
@@ -391,6 +410,8 @@
       "tests/unit/gpt_trader/preflight/test_validation_result.py",
       "tests/unit/gpt_trader/preflight/test_context.py",
       "tests/unit/gpt_trader/preflight/test_checks_system.py",
+      "tests/unit/gpt_trader/preflight/test_checks_readiness.py",
+      "tests/unit/gpt_trader/preflight/test_checks_event_store.py",
       "tests/unit/gpt_trader/preflight/test_cli.py",
       "tests/unit/gpt_trader/preflight/test_checks_environment.py",
       "tests/unit/gpt_trader/preflight/test_checks_test_suite.py"
@@ -518,6 +539,7 @@
       "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_strategy_edges.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_profile_edges.py",
+      "tests/unit/gpt_trader/features/live_trade/strategies/test_regime_switcher.py",
       "tests/unit/gpt_trader/features/live_trade/signals/test_registry.py",
       "tests/unit/gpt_trader/features/live_trade/signals/test_vwap.py",
       "tests/unit/gpt_trader/features/live_trade/signals/test_spread.py",
@@ -1812,57 +1834,78 @@
         "class": "TestContainerLifecycleCLI"
       },
       {
+        "name": "TestContainerLifecycleCLI::test_run_bot_clears_container_on_success",
+        "line": 84,
+        "markers": [],
+        "docstring": "Test that _run_bot clears container after successful run.",
+        "class": "TestContainerLifecycleCLI"
+      },
+      {
+        "name": "TestContainerLifecycleCLI::test_run_bot_clears_container_on_exception",
+        "line": 104,
+        "markers": [],
+        "docstring": "Test that _run_bot clears container even when exception occurs.",
+        "class": "TestContainerLifecycleCLI"
+      },
+      {
+        "name": "TestContainerLifecycleCLI::test_run_bot_clears_container_on_keyboard_interrupt",
+        "line": 122,
+        "markers": [],
+        "docstring": "Test that _run_bot clears container on KeyboardInterrupt.",
+        "class": "TestContainerLifecycleCLI"
+      },
+      {
         "name": "TestContainerLifecycleMultipleCycles::test_multiple_bot_cycles_no_leak",
-        "line": 199,
+        "line": 185,
         "markers": [],
         "docstring": "Test that multiple bot instantiation cycles don't leak containers.",
         "class": "TestContainerLifecycleMultipleCycles"
       },
       {
         "name": "TestContainerLifecycleMultipleCycles::test_container_services_are_fresh_each_cycle",
-        "line": 215,
+        "line": 201,
         "markers": [],
         "docstring": "Test that services are recreated for each container.",
         "class": "TestContainerLifecycleMultipleCycles"
       },
       {
         "name": "TestContainerLifecycleErrorPaths::test_container_cleared_when_bot_creation_fails",
-        "line": 240,
+        "line": 226,
         "markers": [],
         "docstring": "Test container is not left dangling when bot creation fails.",
         "class": "TestContainerLifecycleErrorPaths"
       },
       {
         "name": "TestContainerServiceAccess::test_services_accessible_after_registration",
-        "line": 279,
+        "line": 265,
         "markers": [],
         "docstring": "Test that services are accessible after container registration.",
         "class": "TestContainerServiceAccess"
       },
       {
         "name": "TestContainerServiceAccess::test_services_not_accessible_after_clear",
-        "line": 292,
+        "line": 278,
         "markers": [],
         "docstring": "Test that services are not accessible after container is cleared.",
         "class": "TestContainerServiceAccess"
       },
       {
         "name": "TestContainerServiceAccess::test_service_resolution_functions_handle_missing_container",
-        "line": 303,
+        "line": 289,
         "markers": [],
         "docstring": "Test that service resolution functions handle missing container correctly.",
         "class": "TestContainerServiceAccess"
       },
       {
         "name": "TestContainerDebugLogging::test_set_container_logs_debug",
-        "line": 321,
+        "line": 307,
         "markers": [],
         "docstring": "Test that setting container logs debug message.",
         "class": "TestContainerDebugLogging"
       },
       {
         "name": "TestContainerDebugLogging::test_clear_container_logs_debug",
-        "line": 330,
+        "line": 316,
         "markers": [],
         "docstring": "Test that clearing container logs debug message.",
         "class": "TestContainerDebugLogging"
@@ -1880,50 +1923,68 @@
         "docstring": "Test that instantiate_bot reuses an existing container."
       },
       {
+        "name": "test_run_bot_clears_container_on_success",
+        "line": 84,
+        "markers": [],
+        "docstring": "Test that _run_bot clears container after successful run."
+      },
+      {
+        "name": "test_run_bot_clears_container_on_exception",
+        "line": 104,
+        "markers": [],
+        "docstring": "Test that _run_bot clears container even when exception occurs."
+      },
+      {
+        "name": "test_run_bot_clears_container_on_keyboard_interrupt",
+        "line": 122,
+        "markers": [],
+        "docstring": "Test that _run_bot clears container on KeyboardInterrupt."
+      },
+      {
         "name": "test_multiple_bot_cycles_no_leak",
-        "line": 199,
+        "line": 185,
         "markers": [],
         "docstring": "Test that multiple bot instantiation cycles don't leak containers."
       },
       {
         "name": "test_container_services_are_fresh_each_cycle",
-        "line": 215,
+        "line": 201,
         "markers": [],
         "docstring": "Test that services are recreated for each container."
       },
       {
         "name": "test_container_cleared_when_bot_creation_fails",
-        "line": 240,
+        "line": 226,
         "markers": [],
         "docstring": "Test container is not left dangling when bot creation fails."
       },
       {
         "name": "test_services_accessible_after_registration",
-        "line": 279,
+        "line": 265,
         "markers": [],
         "docstring": "Test that services are accessible after container registration."
       },
       {
         "name": "test_services_not_accessible_after_clear",
-        "line": 292,
+        "line": 278,
         "markers": [],
         "docstring": "Test that services are not accessible after container is cleared."
       },
       {
         "name": "test_service_resolution_functions_handle_missing_container",
-        "line": 303,
+        "line": 289,
         "markers": [],
         "docstring": "Test that service resolution functions handle missing container correctly."
       },
       {
         "name": "test_set_container_logs_debug",
-        "line": 321,
+        "line": 307,
         "markers": [],
         "docstring": "Test that setting container logs debug message."
       },
       {
         "name": "test_clear_container_logs_debug",
-        "line": 330,
+        "line": 316,
         "markers": [],
         "docstring": "Test that clearing container logs debug message."
       }
@@ -3015,10 +3076,140 @@
         "docstring": ""
       }
     ],
+    "tests/unit/scripts/test_liveness_check.py": [
+      {
+        "name": "test_only_decision_trace_is_red",
+        "line": 41,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_fresh_heartbeat_is_green",
+        "line": 59,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_fresh_price_tick_is_green",
+        "line": 77,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_both_stale_is_red",
+        "line": 95,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_liveness_min_event_id_requires_newer_event",
+        "line": 113,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/scripts/test_canary_process.py": [
+      {
+        "name": "test_parse_ps_output_filters_canary_profile",
+        "line": 9,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_stop_removes_stale_pid_file",
+        "line": 22,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_start_refuses_when_running_without_force",
+        "line": 39,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_start_force_aborts_when_stop_fails",
+        "line": 60,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_restart_aborts_when_stop_fails",
+        "line": 87,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_restart_passes_baselines_to_wait",
+        "line": 102,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_is_canary_command_excludes_canary_open",
+        "line": 131,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
     "tests/unit/scripts/test_agent_health_ci_input.py": [
       {
         "name": "test_ci_input_parsing_and_merge",
         "line": 13,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/scripts/test_runtime_fingerprint.py": [
+      {
+        "name": "test_read_latest_runtime_start_payload",
+        "line": 26,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_read_latest_runtime_start_missing_returns_none",
+        "line": 53,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_validate_runtime_start_fails_on_event_id",
+        "line": 61,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_validate_runtime_start_fails_on_build_sha",
+        "line": 73,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_validate_runtime_start_passes_when_matching",
+        "line": 85,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/scripts/test_backtest_runner_pillar2_gates.py": [
+      {
+        "name": "test_pillar_2_trade_gate_scales_with_candles",
+        "line": 30,
+        "markers": [
+          "parametrize"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_cli_defaults_include_pillar_2_assumptions",
+        "line": 62,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_lookback_bars_respects_mean_reversion_trend_window",
+        "line": 71,
         "markers": [],
         "docstring": ""
       }
@@ -3033,6 +3224,32 @@
       {
         "name": "test_guard_stack_dot_includes_clusters",
         "line": 18,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/scripts/test_canary_watchdog.py": [
+      {
+        "name": "test_green_does_not_restart",
+        "line": 19,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_red_twice_triggers_restart",
+        "line": 52,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_cooldown_prevents_restart",
+        "line": 96,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_once_exit_codes",
+        "line": 131,
         "markers": [],
         "docstring": ""
       }
@@ -3053,6 +3270,20 @@
       {
         "name": "test_refuses_overwrite",
         "line": 46,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/scripts/test_tail_decision_traces.py": [
+      {
+        "name": "test_resolve_decision_id_prefers_decision_id",
+        "line": 6,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_resolve_decision_id_falls_back_to_client_order_id",
+        "line": 11,
         "markers": [],
         "docstring": ""
       }
@@ -3467,14 +3698,20 @@
         "docstring": ""
       },
       {
-        "name": "test_load_coverage_index_invalid_json",
+        "name": "test_identify_gaps_returns_missing_segments_for_partial_overlap",
         "line": 42,
         "markers": [],
         "docstring": ""
       },
       {
+        "name": "test_load_coverage_index_invalid_json",
+        "line": 57,
+        "markers": [],
+        "docstring": ""
+      },
+      {
         "name": "test_update_coverage_writes_index_file",
-        "line": 51,
+        "line": 66,
         "markers": [],
         "docstring": ""
       }
@@ -21524,43 +21761,50 @@
         "class": "TestPreflightCheckDelegations"
       },
       {
-        "name": "TestPreflightCheckDelegations::test_check_test_suite_delegates",
+        "name": "TestPreflightCheckDelegations::test_check_readiness_report_delegates",
         "line": 221,
+        "markers": [],
+        "docstring": "check_readiness_report should delegate to module function.",
+        "class": "TestPreflightCheckDelegations"
+      },
+      {
+        "name": "TestPreflightCheckDelegations::test_check_test_suite_delegates",
+        "line": 231,
         "markers": [],
         "docstring": "check_test_suite should delegate to module function.",
         "class": "TestPreflightCheckDelegations"
       },
       {
         "name": "TestPreflightCheckDelegations::test_check_profile_configuration_delegates",
-        "line": 231,
+        "line": 241,
         "markers": [],
         "docstring": "check_profile_configuration should delegate to module function.",
         "class": "TestPreflightCheckDelegations"
       },
       {
         "name": "TestPreflightCheckDelegations::test_check_system_time_delegates",
-        "line": 241,
+        "line": 251,
         "markers": [],
         "docstring": "check_system_time should delegate to module function.",
         "class": "TestPreflightCheckDelegations"
       },
       {
         "name": "TestPreflightCheckDelegations::test_check_disk_space_delegates",
-        "line": 251,
+        "line": 261,
         "markers": [],
         "docstring": "check_disk_space should delegate to module function.",
         "class": "TestPreflightCheckDelegations"
       },
       {
         "name": "TestPreflightCheckDelegations::test_simulate_dry_run_delegates",
-        "line": 261,
+        "line": 271,
         "markers": [],
         "docstring": "simulate_dry_run should delegate to module function.",
         "class": "TestPreflightCheckDelegations"
       },
       {
         "name": "TestPreflightCheckDelegations::test_generate_report_delegates",
-        "line": 271,
+        "line": 281,
         "markers": [],
         "docstring": "generate_report should delegate to module function.",
         "class": "TestPreflightCheckDelegations"
@@ -21692,38 +21936,44 @@
         "docstring": "check_risk_configuration should delegate to module function."
       },
       {
-        "name": "test_check_test_suite_delegates",
+        "name": "test_check_readiness_report_delegates",
         "line": 221,
+        "markers": [],
+        "docstring": "check_readiness_report should delegate to module function."
+      },
+      {
+        "name": "test_check_test_suite_delegates",
+        "line": 231,
         "markers": [],
         "docstring": "check_test_suite should delegate to module function."
       },
       {
         "name": "test_check_profile_configuration_delegates",
-        "line": 231,
+        "line": 241,
         "markers": [],
         "docstring": "check_profile_configuration should delegate to module function."
       },
       {
         "name": "test_check_system_time_delegates",
-        "line": 241,
+        "line": 251,
         "markers": [],
         "docstring": "check_system_time should delegate to module function."
       },
       {
         "name": "test_check_disk_space_delegates",
-        "line": 251,
+        "line": 261,
         "markers": [],
         "docstring": "check_disk_space should delegate to module function."
       },
       {
         "name": "test_simulate_dry_run_delegates",
-        "line": 261,
+        "line": 271,
         "markers": [],
         "docstring": "simulate_dry_run should delegate to module function."
       },
       {
         "name": "test_generate_report_delegates",
-        "line": 271,
+        "line": 281,
         "markers": [],
         "docstring": "generate_report should delegate to module function."
       }
@@ -21835,71 +22085,78 @@
         "class": "TestCheckKeyPermissions"
       },
       {
-        "name": "TestCheckKeyPermissions::test_passes_with_view_only_key_when_derivatives_disabled",
+        "name": "TestCheckKeyPermissions::test_passes_with_view_only_key_when_live_orders_not_intended",
         "line": 312,
         "markers": [],
-        "docstring": "Should pass with view-only key when derivatives are not enabled.",
+        "docstring": "Should pass with view-only key when no live orders are intended.",
+        "class": "TestCheckKeyPermissions"
+      },
+      {
+        "name": "TestCheckKeyPermissions::test_fails_with_view_only_key_when_live_spot_orders_intended",
+        "line": 343,
+        "markers": [],
+        "docstring": "Should fail with view-only key when live spot orders are intended.",
         "class": "TestCheckKeyPermissions"
       },
       {
         "name": "TestCheckKeyPermissions::test_warns_when_portfolio_uuid_missing",
-        "line": 342,
+        "line": 368,
         "markers": [],
         "docstring": "Should warn when portfolio UUID is not returned.",
         "class": "TestCheckKeyPermissions"
       },
       {
         "name": "TestCheckKeyPermissions::test_passes_intx_check_when_derivatives_enabled",
-        "line": 364,
+        "line": 390,
         "markers": [],
         "docstring": "Should pass INTX check when derivatives enabled and portfolio is INTX.",
         "class": "TestCheckKeyPermissions"
       },
       {
         "name": "TestCheckKeyPermissions::test_fails_intx_check_when_wrong_portfolio_type",
-        "line": 389,
+        "line": 415,
         "markers": [],
         "docstring": "Should fail when derivatives enabled but not INTX portfolio.",
         "class": "TestCheckKeyPermissions"
       },
       {
         "name": "TestCheckKeyPermissions::test_logs_intx_available_when_disabled",
-        "line": 414,
+        "line": 440,
         "markers": [],
         "docstring": "Should log INTX available when derivatives disabled but INTX portfolio.",
         "class": "TestCheckKeyPermissions"
       },
       {
         "name": "TestCheckKeyPermissions::test_retries_on_transient_errors",
-        "line": 440,
+        "line": 466,
         "markers": [],
         "docstring": "Should retry on transient network errors.",
         "class": "TestCheckKeyPermissions"
       },
       {
         "name": "TestCheckKeyPermissions::test_fails_after_max_retries",
-        "line": 464,
+        "line": 490,
         "markers": [],
         "docstring": "Should fail after max retry attempts.",
         "class": "TestCheckKeyPermissions"
       },
       {
         "name": "TestCheckKeyPermissions::test_fails_on_non_transient_error",
-        "line": 483,
+        "line": 509,
         "markers": [],
         "docstring": "Should fail immediately on non-transient errors.",
         "class": "TestCheckKeyPermissions"
       },
       {
         "name": "TestCheckKeyPermissions::test_fails_on_empty_permissions_response",
-        "line": 503,
+        "line": 529,
         "markers": [],
         "docstring": "Should fail when permissions response is empty/None.",
         "class": "TestCheckKeyPermissions"
       },
       {
         "name": "TestCheckKeyPermissions::test_prints_section_header",
-        "line": 524,
+        "line": 550,
         "markers": [],
         "docstring": "Should print section header.",
         "class": "TestCheckKeyPermissions"
@@ -21995,62 +22252,68 @@
         "docstring": "Should fail when key lacks view permission."
       },
       {
-        "name": "test_passes_with_view_only_key_when_derivatives_disabled",
+        "name": "test_passes_with_view_only_key_when_live_orders_not_intended",
         "line": 312,
         "markers": [],
-        "docstring": "Should pass with view-only key when derivatives are not enabled."
+        "docstring": "Should pass with view-only key when no live orders are intended."
+      },
+      {
+        "name": "test_fails_with_view_only_key_when_live_spot_orders_intended",
+        "line": 343,
+        "markers": [],
+        "docstring": "Should fail with view-only key when live spot orders are intended."
       },
       {
         "name": "test_warns_when_portfolio_uuid_missing",
-        "line": 342,
+        "line": 368,
         "markers": [],
         "docstring": "Should warn when portfolio UUID is not returned."
       },
       {
         "name": "test_passes_intx_check_when_derivatives_enabled",
-        "line": 364,
+        "line": 390,
         "markers": [],
         "docstring": "Should pass INTX check when derivatives enabled and portfolio is INTX."
       },
       {
         "name": "test_fails_intx_check_when_wrong_portfolio_type",
-        "line": 389,
+        "line": 415,
         "markers": [],
         "docstring": "Should fail when derivatives enabled but not INTX portfolio."
       },
       {
         "name": "test_logs_intx_available_when_disabled",
-        "line": 414,
+        "line": 440,
         "markers": [],
         "docstring": "Should log INTX available when derivatives disabled but INTX portfolio."
       },
       {
         "name": "test_retries_on_transient_errors",
-        "line": 440,
+        "line": 466,
         "markers": [],
         "docstring": "Should retry on transient network errors."
       },
       {
         "name": "test_fails_after_max_retries",
-        "line": 464,
+        "line": 490,
         "markers": [],
         "docstring": "Should fail after max retry attempts."
       },
       {
         "name": "test_fails_on_non_transient_error",
-        "line": 483,
+        "line": 509,
         "markers": [],
         "docstring": "Should fail immediately on non-transient errors."
       },
       {
         "name": "test_fails_on_empty_permissions_response",
-        "line": 503,
+        "line": 529,
         "markers": [],
         "docstring": "Should fail when permissions response is empty/None."
       },
       {
         "name": "test_prints_section_header",
-        "line": 524,
+        "line": 550,
         "markers": [],
         "docstring": "Should print section header."
       }
@@ -22699,91 +22962,91 @@
       },
       {
         "name": "TestPreflightContextCredentials::test_resolve_cdp_credentials_fallback",
-        "line": 145,
+        "line": 149,
         "markers": [],
         "docstring": "Should fall back to non-PROD env vars.",
         "class": "TestPreflightContextCredentials"
       },
       {
         "name": "TestPreflightContextCredentials::test_resolve_cdp_credentials_returns_none_when_missing",
-        "line": 161,
+        "line": 169,
         "markers": [],
         "docstring": "Should return None when credentials not set.",
         "class": "TestPreflightContextCredentials"
       },
       {
         "name": "TestPreflightContextCredentials::test_has_real_cdp_credentials_valid",
-        "line": 170,
+        "line": 180,
         "markers": [],
         "docstring": "Should return True for valid CDP credentials.",
         "class": "TestPreflightContextCredentials"
       },
       {
         "name": "TestPreflightContextCredentials::test_has_real_cdp_credentials_invalid_key_format",
-        "line": 183,
+        "line": 193,
         "markers": [],
         "docstring": "Should return False for invalid key format.",
         "class": "TestPreflightContextCredentials"
       },
       {
         "name": "TestPreflightContextCredentials::test_has_real_cdp_credentials_invalid_private_key_format",
-        "line": 196,
+        "line": 206,
         "markers": [],
         "docstring": "Should return False for invalid private key format.",
         "class": "TestPreflightContextCredentials"
       },
       {
         "name": "TestPreflightContextCredentials::test_has_real_cdp_credentials_missing",
-        "line": 209,
+        "line": 219,
         "markers": [],
         "docstring": "Should return False when credentials missing.",
         "class": "TestPreflightContextCredentials"
       },
       {
         "name": "TestPreflightContextSkipRemoteChecks::test_force_remote_overrides_skip",
-        "line": 219,
+        "line": 229,
         "markers": [],
         "docstring": "COINBASE_PREFLIGHT_FORCE_REMOTE=1 should force remote checks.",
         "class": "TestPreflightContextSkipRemoteChecks"
       },
       {
         "name": "TestPreflightContextSkipRemoteChecks::test_skip_remote_env_var",
-        "line": 229,
+        "line": 239,
         "markers": [],
         "docstring": "COINBASE_PREFLIGHT_SKIP_REMOTE=1 should skip remote checks.",
         "class": "TestPreflightContextSkipRemoteChecks"
       },
       {
         "name": "TestPreflightContextSkipRemoteChecks::test_dev_profile_without_credentials_skips",
-        "line": 239,
+        "line": 249,
         "markers": [],
         "docstring": "Dev profile without real credentials should skip remote checks.",
         "class": "TestPreflightContextSkipRemoteChecks"
       },
       {
         "name": "TestPreflightContextSkipRemoteChecks::test_prod_profile_without_credentials_does_not_skip",
-        "line": 245,
+        "line": 255,
         "markers": [],
         "docstring": "Prod profile without credentials should NOT skip (will fail later).",
         "class": "TestPreflightContextSkipRemoteChecks"
       },
       {
         "name": "TestPreflightContextEnvDefaults::test_dev_profile_defaults",
-        "line": 255,
+        "line": 265,
         "markers": [],
         "docstring": "Dev profile should have relaxed defaults.",
         "class": "TestPreflightContextEnvDefaults"
       },
       {
         "name": "TestPreflightContextEnvDefaults::test_prod_profile_defaults",
-        "line": 264,
+        "line": 274,
         "markers": [],
         "docstring": "Prod profile should have strict defaults.",
         "class": "TestPreflightContextEnvDefaults"
       },
       {
         "name": "TestPreflightContextEnvDefaults::test_canary_profile_uses_prod_defaults",
-        "line": 273,
+        "line": 283,
         "markers": [],
         "docstring": "Canary profile should use prod-like defaults.",
         "class": "TestPreflightContextEnvDefaults"
@@ -22856,79 +23119,79 @@
       },
       {
         "name": "test_resolve_cdp_credentials_fallback",
-        "line": 145,
+        "line": 149,
         "markers": [],
         "docstring": "Should fall back to non-PROD env vars."
       },
       {
         "name": "test_resolve_cdp_credentials_returns_none_when_missing",
-        "line": 161,
+        "line": 169,
         "markers": [],
         "docstring": "Should return None when credentials not set."
       },
       {
         "name": "test_has_real_cdp_credentials_valid",
-        "line": 170,
+        "line": 180,
         "markers": [],
         "docstring": "Should return True for valid CDP credentials."
       },
       {
         "name": "test_has_real_cdp_credentials_invalid_key_format",
-        "line": 183,
+        "line": 193,
         "markers": [],
         "docstring": "Should return False for invalid key format."
       },
       {
         "name": "test_has_real_cdp_credentials_invalid_private_key_format",
-        "line": 196,
+        "line": 206,
         "markers": [],
         "docstring": "Should return False for invalid private key format."
       },
       {
         "name": "test_has_real_cdp_credentials_missing",
-        "line": 209,
+        "line": 219,
         "markers": [],
         "docstring": "Should return False when credentials missing."
       },
       {
         "name": "test_force_remote_overrides_skip",
-        "line": 219,
+        "line": 229,
         "markers": [],
         "docstring": "COINBASE_PREFLIGHT_FORCE_REMOTE=1 should force remote checks."
       },
       {
         "name": "test_skip_remote_env_var",
-        "line": 229,
+        "line": 239,
         "markers": [],
         "docstring": "COINBASE_PREFLIGHT_SKIP_REMOTE=1 should skip remote checks."
       },
       {
         "name": "test_dev_profile_without_credentials_skips",
-        "line": 239,
+        "line": 249,
         "markers": [],
         "docstring": "Dev profile without real credentials should skip remote checks."
       },
       {
         "name": "test_prod_profile_without_credentials_does_not_skip",
-        "line": 245,
+        "line": 255,
         "markers": [],
         "docstring": "Prod profile without credentials should NOT skip (will fail later)."
       },
       {
         "name": "test_dev_profile_defaults",
-        "line": 255,
+        "line": 265,
         "markers": [],
         "docstring": "Dev profile should have relaxed defaults."
       },
       {
         "name": "test_prod_profile_defaults",
-        "line": 264,
+        "line": 274,
         "markers": [],
         "docstring": "Prod profile should have strict defaults."
       },
       {
         "name": "test_canary_profile_uses_prod_defaults",
-        "line": 273,
+        "line": 283,
         "markers": [],
         "docstring": "Canary profile should use prod-like defaults."
       }
@@ -23104,6 +23367,94 @@
         "docstring": "Should print section header."
       }
     ],
+    "tests/unit/gpt_trader/preflight/test_checks_readiness.py": [
+      {
+        "name": "test_readiness_liveness_passes_when_recent",
+        "line": 67,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_readiness_liveness_fails_when_stale",
+        "line": 90,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_readiness_liveness_fails_when_events_db_missing",
+        "line": 114,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_readiness_liveness_warn_only_allows_stale",
+        "line": 130,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_readiness_liveness_ignores_decision_trace",
+        "line": 155,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_readiness_liveness_passes_with_price_tick_only",
+        "line": 182,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_readiness_liveness_default_event_types_include_price_tick",
+        "line": 207,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/preflight/test_checks_event_store.py": [
+      {
+        "name": "test_passes_when_no_sensitive_keys",
+        "line": 27,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_passes_when_redacted_values_present",
+        "line": 40,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_fails_on_pem_private_key",
+        "line": 55,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_fails_on_unredacted_authorization",
+        "line": 71,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_missing_events_db_warns_in_dev",
+        "line": 86,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_missing_events_db_errors_in_prod",
+        "line": 94,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_missing_events_db_warn_only_in_prod",
+        "line": 102,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/preflight/test_cli.py": [
       {
         "name": "TestHeader::test_prints_header_with_profile",
@@ -23170,21 +23521,21 @@
       },
       {
         "name": "TestMain::test_handles_check_exception_gracefully",
-        "line": 136,
+        "line": 137,
         "markers": [],
         "docstring": "Should handle exceptions from checks gracefully.",
         "class": "TestMain"
       },
       {
         "name": "TestMain::test_calls_header_with_profile",
-        "line": 152,
+        "line": 153,
         "markers": [],
         "docstring": "Should call header with correct profile.",
         "class": "TestMain"
       },
       {
         "name": "TestMain::test_short_flags_work",
-        "line": 165,
+        "line": 166,
         "markers": [],
         "docstring": "Should accept short flag versions.",
         "class": "TestMain"
@@ -23245,19 +23596,19 @@
       },
       {
         "name": "test_handles_check_exception_gracefully",
-        "line": 136,
+        "line": 137,
         "markers": [],
         "docstring": "Should handle exceptions from checks gracefully."
       },
       {
         "name": "test_calls_header_with_profile",
-        "line": 152,
+        "line": 153,
         "markers": [],
         "docstring": "Should call header with correct profile."
       },
       {
         "name": "test_short_flags_work",
-        "line": 165,
+        "line": 166,
         "markers": [],
         "docstring": "Should accept short flag versions."
       }
@@ -23272,77 +23623,77 @@
       },
       {
         "name": "TestCheckEnvironmentVariables::test_fails_with_wrong_broker",
-        "line": 37,
+        "line": 38,
         "markers": [],
         "docstring": "Should fail when BROKER is not coinbase.",
         "class": "TestCheckEnvironmentVariables"
       },
       {
         "name": "TestCheckEnvironmentVariables::test_fails_with_sandbox_in_prod",
-        "line": 54,
+        "line": 55,
         "markers": [],
         "docstring": "Should fail when sandbox enabled in prod profile.",
         "class": "TestCheckEnvironmentVariables"
       },
       {
         "name": "TestCheckEnvironmentVariables::test_warns_with_wrong_config_in_dev",
-        "line": 71,
+        "line": 72,
         "markers": [],
         "docstring": "Should warn (not fail) for non-strict vars in dev profile.",
         "class": "TestCheckEnvironmentVariables"
       },
       {
         "name": "TestCheckEnvironmentVariables::test_validates_cdp_api_key_format",
-        "line": 88,
+        "line": 89,
         "markers": [],
         "docstring": "Should validate CDP API key format.",
         "class": "TestCheckEnvironmentVariables"
       },
       {
         "name": "TestCheckEnvironmentVariables::test_validates_private_key_format",
-        "line": 107,
+        "line": 108,
         "markers": [],
         "docstring": "Should validate CDP private key format.",
         "class": "TestCheckEnvironmentVariables"
       },
       {
         "name": "TestCheckEnvironmentVariables::test_warns_about_missing_credentials_in_dev",
-        "line": 126,
+        "line": 127,
         "markers": [],
         "docstring": "Should warn (not fail) about missing credentials in dev profile.",
         "class": "TestCheckEnvironmentVariables"
       },
       {
         "name": "TestCheckEnvironmentVariables::test_validates_risk_variables_in_range",
-        "line": 141,
+        "line": 142,
         "markers": [],
         "docstring": "Should validate risk variables are in acceptable range.",
         "class": "TestCheckEnvironmentVariables"
       },
       {
         "name": "TestCheckEnvironmentVariables::test_warns_about_out_of_range_risk_variables",
-        "line": 158,
+        "line": 159,
         "markers": [],
         "docstring": "Should warn about risk variables outside recommended range.",
         "class": "TestCheckEnvironmentVariables"
       },
       {
         "name": "TestCheckEnvironmentVariables::test_fails_on_invalid_risk_variable_format",
-        "line": 172,
+        "line": 173,
         "markers": [],
         "docstring": "Should fail on non-numeric risk variable.",
         "class": "TestCheckEnvironmentVariables"
       },
       {
         "name": "TestCheckEnvironmentVariables::test_warns_about_missing_risk_variables",
-        "line": 187,
+        "line": 188,
         "markers": [],
         "docstring": "Should warn about missing risk variables.",
         "class": "TestCheckEnvironmentVariables"
       },
       {
         "name": "TestCheckEnvironmentVariables::test_prints_section_header",
-        "line": 201,
+        "line": 202,
         "markers": [],
         "docstring": "Should print section header.",
         "class": "TestCheckEnvironmentVariables"
@@ -23355,67 +23706,67 @@
       },
       {
         "name": "test_fails_with_wrong_broker",
-        "line": 37,
+        "line": 38,
         "markers": [],
         "docstring": "Should fail when BROKER is not coinbase."
       },
       {
         "name": "test_fails_with_sandbox_in_prod",
-        "line": 54,
+        "line": 55,
         "markers": [],
         "docstring": "Should fail when sandbox enabled in prod profile."
       },
       {
         "name": "test_warns_with_wrong_config_in_dev",
-        "line": 71,
+        "line": 72,
         "markers": [],
         "docstring": "Should warn (not fail) for non-strict vars in dev profile."
       },
       {
         "name": "test_validates_cdp_api_key_format",
-        "line": 88,
+        "line": 89,
         "markers": [],
         "docstring": "Should validate CDP API key format."
       },
       {
         "name": "test_validates_private_key_format",
-        "line": 107,
+        "line": 108,
         "markers": [],
         "docstring": "Should validate CDP private key format."
       },
       {
         "name": "test_warns_about_missing_credentials_in_dev",
-        "line": 126,
+        "line": 127,
         "markers": [],
         "docstring": "Should warn (not fail) about missing credentials in dev profile."
       },
       {
         "name": "test_validates_risk_variables_in_range",
-        "line": 141,
+        "line": 142,
         "markers": [],
         "docstring": "Should validate risk variables are in acceptable range."
       },
       {
         "name": "test_warns_about_out_of_range_risk_variables",
-        "line": 158,
+        "line": 159,
         "markers": [],
         "docstring": "Should warn about risk variables outside recommended range."
       },
       {
         "name": "test_fails_on_invalid_risk_variable_format",
-        "line": 172,
+        "line": 173,
         "markers": [],
         "docstring": "Should fail on non-numeric risk variable."
       },
       {
         "name": "test_warns_about_missing_risk_variables",
-        "line": 187,
+        "line": 188,
         "markers": [],
         "docstring": "Should warn about missing risk variables."
       },
       {
         "name": "test_prints_section_header",
-        "line": 201,
+        "line": 202,
         "markers": [],
         "docstring": "Should print section header."
       }
@@ -23542,339 +23893,352 @@
     "tests/unit/gpt_trader/backtesting/metrics/test_statistics.py": [
       {
         "name": "TestCalculatePnlMetrics::test_empty_orders_returns_zeros",
-        "line": 55,
+        "line": 57,
         "markers": [],
         "docstring": "",
         "class": "TestCalculatePnlMetrics"
       },
       {
         "name": "TestCalculatePnlMetrics::test_orders_without_fill_price_skipped",
-        "line": 63,
+        "line": 65,
         "markers": [],
         "docstring": "",
         "class": "TestCalculatePnlMetrics"
       },
       {
         "name": "TestCalculatePnlMetrics::test_returns_structure_correct",
-        "line": 69,
+        "line": 71,
         "markers": [],
         "docstring": "",
         "class": "TestCalculatePnlMetrics"
       },
       {
         "name": "TestCalculatePositionMetrics::test_empty_orders_returns_defaults",
-        "line": 82,
+        "line": 84,
         "markers": [],
         "docstring": "",
         "class": "TestCalculatePositionMetrics"
       },
       {
         "name": "TestCalculatePositionMetrics::test_calculates_average_position_size",
-        "line": 90,
+        "line": 92,
         "markers": [],
         "docstring": "",
         "class": "TestCalculatePositionMetrics"
       },
       {
         "name": "TestCalculatePositionMetrics::test_extracts_leverage_from_position",
-        "line": 110,
+        "line": 112,
         "markers": [],
         "docstring": "",
         "class": "TestCalculatePositionMetrics"
       },
       {
         "name": "TestCalculatePositionMetrics::test_multiple_orders_different_leverage",
-        "line": 120,
+        "line": 122,
         "markers": [],
         "docstring": "",
         "class": "TestCalculatePositionMetrics"
       },
       {
         "name": "TestCalculatePositionMetrics::test_orders_without_fill_price_skipped",
-        "line": 135,
+        "line": 137,
         "markers": [],
         "docstring": "",
         "class": "TestCalculatePositionMetrics"
       },
       {
         "name": "TestCalculateTimingMetrics::test_empty_orders_returns_zeros",
-        "line": 153,
+        "line": 155,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTimingMetrics"
       },
       {
         "name": "TestCalculateTimingMetrics::test_orders_without_submitted_at_skipped",
-        "line": 158,
+        "line": 160,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTimingMetrics"
       },
       {
         "name": "TestCalculateTimingMetrics::test_order_with_none_submitted_at_explicitly_skipped",
-        "line": 163,
+        "line": 165,
         "markers": [],
         "docstring": "Test that orders with submitted_at=None are skipped in timing calculation.",
         "class": "TestCalculateTimingMetrics"
       },
       {
         "name": "TestCalculateTimingMetrics::test_calculates_hold_time_for_round_trip",
-        "line": 173,
+        "line": 175,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTimingMetrics"
       },
       {
         "name": "TestCalculateTimingMetrics::test_multiple_round_trips",
-        "line": 188,
+        "line": 190,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTimingMetrics"
       },
       {
         "name": "TestCalculateTimingMetrics::test_different_symbols_tracked_separately",
-        "line": 209,
+        "line": 211,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTimingMetrics"
       },
       {
         "name": "TestCalculateStreakMetrics::test_returns_zeros_placeholder",
-        "line": 231,
+        "line": 233,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateStreakMetrics"
       },
       {
         "name": "TestCalculateStreakMetrics::test_with_orders_returns_zeros",
-        "line": 238,
+        "line": 240,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateStreakMetrics"
       },
       {
         "name": "TestCalculateTradeStatistics::test_calculates_win_rate",
-        "line": 271,
+        "line": 273,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTradeStatistics"
       },
       {
         "name": "TestCalculateTradeStatistics::test_calculates_breakeven_trades",
-        "line": 281,
+        "line": 283,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTradeStatistics"
       },
       {
         "name": "TestCalculateTradeStatistics::test_zero_trades_returns_zeros",
-        "line": 291,
+        "line": 293,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTradeStatistics"
       },
       {
         "name": "TestCalculateTradeStatistics::test_profit_factor_capped_when_no_losses",
-        "line": 302,
+        "line": 305,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateTradeStatistics"
+      },
+      {
+        "name": "TestCalculateTradeStatistics::test_net_profit_factor_accounts_for_fees",
+        "line": 315,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTradeStatistics"
       },
       {
         "name": "TestCalculateTradeStatistics::test_counts_limit_orders",
-        "line": 312,
+        "line": 359,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTradeStatistics"
       },
       {
         "name": "TestCalculateTradeStatistics::test_limit_fill_rate_100_when_no_limit_orders",
-        "line": 331,
+        "line": 378,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTradeStatistics"
       },
       {
         "name": "TestCalculateTradeStatistics::test_calculates_avg_slippage",
-        "line": 340,
+        "line": 387,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTradeStatistics"
       },
       {
         "name": "TestCalculateTradeStatistics::test_includes_total_fees",
-        "line": 347,
+        "line": 394,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTradeStatistics"
       },
       {
         "name": "TestTradeStatisticsDataclass::test_all_fields_accessible",
-        "line": 357,
+        "line": 404,
         "markers": [],
         "docstring": "",
         "class": "TestTradeStatisticsDataclass"
       },
       {
         "name": "TestTradeStatisticsDataclass::test_streak_can_be_negative",
-        "line": 394,
+        "line": 443,
         "markers": [],
         "docstring": "",
         "class": "TestTradeStatisticsDataclass"
       },
       {
         "name": "test_empty_orders_returns_zeros",
-        "line": 55,
+        "line": 57,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_orders_without_fill_price_skipped",
-        "line": 63,
+        "line": 65,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_returns_structure_correct",
-        "line": 69,
+        "line": 71,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_empty_orders_returns_defaults",
-        "line": 82,
+        "line": 84,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_calculates_average_position_size",
-        "line": 90,
+        "line": 92,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_extracts_leverage_from_position",
-        "line": 110,
+        "line": 112,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_multiple_orders_different_leverage",
-        "line": 120,
+        "line": 122,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_orders_without_fill_price_skipped",
-        "line": 135,
+        "line": 137,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_empty_orders_returns_zeros",
-        "line": 153,
+        "line": 155,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_orders_without_submitted_at_skipped",
-        "line": 158,
+        "line": 160,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_order_with_none_submitted_at_explicitly_skipped",
-        "line": 163,
+        "line": 165,
         "markers": [],
         "docstring": "Test that orders with submitted_at=None are skipped in timing calculation."
       },
       {
         "name": "test_calculates_hold_time_for_round_trip",
-        "line": 173,
+        "line": 175,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_multiple_round_trips",
-        "line": 188,
+        "line": 190,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_different_symbols_tracked_separately",
-        "line": 209,
+        "line": 211,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_returns_zeros_placeholder",
-        "line": 231,
+        "line": 233,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_with_orders_returns_zeros",
-        "line": 238,
+        "line": 240,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_calculates_win_rate",
-        "line": 271,
+        "line": 273,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_calculates_breakeven_trades",
-        "line": 281,
+        "line": 283,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_zero_trades_returns_zeros",
-        "line": 291,
+        "line": 293,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_profit_factor_capped_when_no_losses",
-        "line": 302,
+        "line": 305,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_net_profit_factor_accounts_for_fees",
+        "line": 315,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_counts_limit_orders",
-        "line": 312,
+        "line": 359,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_limit_fill_rate_100_when_no_limit_orders",
-        "line": 331,
+        "line": 378,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_calculates_avg_slippage",
-        "line": 340,
+        "line": 387,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_includes_total_fees",
-        "line": 347,
+        "line": 394,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_all_fields_accessible",
-        "line": 357,
+        "line": 404,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_streak_can_be_negative",
-        "line": 394,
+        "line": 443,
         "markers": [],
         "docstring": ""
       }
@@ -23882,287 +24246,287 @@
     "tests/unit/gpt_trader/backtesting/metrics/test_report.py": [
       {
         "name": "TestBacktestReporterInit::test_init_stores_broker",
-        "line": 118,
+        "line": 120,
         "markers": [],
         "docstring": "",
         "class": "TestBacktestReporterInit"
       },
       {
         "name": "TestBacktestReporterInit::test_init_stats_are_none",
-        "line": 124,
+        "line": 126,
         "markers": [],
         "docstring": "",
         "class": "TestBacktestReporterInit"
       },
       {
         "name": "TestBacktestReporterTradeStatistics::test_trade_statistics_lazy_loads",
-        "line": 135,
+        "line": 137,
         "markers": [],
         "docstring": "",
         "class": "TestBacktestReporterTradeStatistics"
       },
       {
         "name": "TestBacktestReporterTradeStatistics::test_trade_statistics_caches_result",
-        "line": 149,
+        "line": 151,
         "markers": [],
         "docstring": "",
         "class": "TestBacktestReporterTradeStatistics"
       },
       {
         "name": "TestBacktestReporterRiskMetrics::test_risk_metrics_lazy_loads",
-        "line": 169,
+        "line": 171,
         "markers": [],
         "docstring": "",
         "class": "TestBacktestReporterRiskMetrics"
       },
       {
         "name": "TestBacktestReporterRiskMetrics::test_risk_metrics_caches_result",
-        "line": 183,
+        "line": 185,
         "markers": [],
         "docstring": "",
         "class": "TestBacktestReporterRiskMetrics"
       },
       {
         "name": "TestBacktestReporterGenerateResult::test_generate_result_returns_backtest_result",
-        "line": 202,
+        "line": 204,
         "markers": [],
         "docstring": "",
         "class": "TestBacktestReporterGenerateResult"
       },
       {
         "name": "TestBacktestReporterGenerateResult::test_generate_result_populates_performance",
-        "line": 227,
+        "line": 229,
         "markers": [],
         "docstring": "",
         "class": "TestBacktestReporterGenerateResult"
       },
       {
         "name": "TestBacktestReporterGenerateResult::test_generate_result_populates_trade_stats",
-        "line": 258,
+        "line": 260,
         "markers": [],
         "docstring": "",
         "class": "TestBacktestReporterGenerateResult"
       },
       {
         "name": "TestBacktestReporterGenerateResult::test_generate_result_populates_risk_metrics",
-        "line": 284,
+        "line": 286,
         "markers": [],
         "docstring": "",
         "class": "TestBacktestReporterGenerateResult"
       },
       {
         "name": "TestBacktestReporterGenerateResult::test_generate_result_calculates_unrealized_pnl",
-        "line": 310,
+        "line": 312,
         "markers": [],
         "docstring": "",
         "class": "TestBacktestReporterGenerateResult"
       },
       {
         "name": "TestBacktestReporterGenerateSummary::test_generate_summary_returns_string",
-        "line": 344,
+        "line": 346,
         "markers": [],
         "docstring": "",
         "class": "TestBacktestReporterGenerateSummary"
       },
       {
         "name": "TestBacktestReporterGenerateSummary::test_generate_summary_includes_performance_section",
-        "line": 365,
+        "line": 367,
         "markers": [],
         "docstring": "",
         "class": "TestBacktestReporterGenerateSummary"
       },
       {
         "name": "TestBacktestReporterGenerateSummary::test_generate_summary_includes_risk_metrics_section",
-        "line": 388,
+        "line": 390,
         "markers": [],
         "docstring": "",
         "class": "TestBacktestReporterGenerateSummary"
       },
       {
         "name": "TestBacktestReporterGenerateSummary::test_generate_summary_includes_trade_statistics_section",
-        "line": 411,
+        "line": 413,
         "markers": [],
         "docstring": "",
         "class": "TestBacktestReporterGenerateSummary"
       },
       {
         "name": "TestBacktestReporterGenerateSummary::test_generate_summary_includes_costs_section",
-        "line": 434,
+        "line": 436,
         "markers": [],
         "docstring": "",
         "class": "TestBacktestReporterGenerateSummary"
       },
       {
         "name": "TestBacktestReporterGenerateSummary::test_generate_summary_handles_none_sharpe",
-        "line": 457,
+        "line": 459,
         "markers": [],
         "docstring": "",
         "class": "TestBacktestReporterGenerateSummary"
       },
       {
         "name": "TestBacktestReporterGenerateCsvRow::test_generate_csv_row_returns_dict",
-        "line": 501,
+        "line": 503,
         "markers": [],
         "docstring": "",
         "class": "TestBacktestReporterGenerateCsvRow"
       },
       {
         "name": "TestBacktestReporterGenerateCsvRow::test_generate_csv_row_includes_all_keys",
-        "line": 521,
+        "line": 523,
         "markers": [],
         "docstring": "",
         "class": "TestBacktestReporterGenerateCsvRow"
       },
       {
         "name": "TestBacktestReporterGenerateCsvRow::test_generate_csv_row_values_are_numeric",
-        "line": 561,
+        "line": 563,
         "markers": [],
         "docstring": "",
         "class": "TestBacktestReporterGenerateCsvRow"
       },
       {
         "name": "TestBacktestReporterGenerateCsvRow::test_generate_csv_row_handles_none_sharpe",
-        "line": 584,
+        "line": 586,
         "markers": [],
         "docstring": "",
         "class": "TestBacktestReporterGenerateCsvRow"
       },
       {
         "name": "TestGenerateBacktestReportFunction::test_returns_backtest_result",
-        "line": 628,
+        "line": 630,
         "markers": [],
         "docstring": "",
         "class": "TestGenerateBacktestReportFunction"
       },
       {
         "name": "test_init_stores_broker",
-        "line": 118,
+        "line": 120,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_init_stats_are_none",
-        "line": 124,
+        "line": 126,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_trade_statistics_lazy_loads",
-        "line": 135,
+        "line": 137,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_trade_statistics_caches_result",
-        "line": 149,
+        "line": 151,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_risk_metrics_lazy_loads",
-        "line": 169,
+        "line": 171,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_risk_metrics_caches_result",
-        "line": 183,
+        "line": 185,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_generate_result_returns_backtest_result",
-        "line": 202,
+        "line": 204,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_generate_result_populates_performance",
-        "line": 227,
+        "line": 229,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_generate_result_populates_trade_stats",
-        "line": 258,
+        "line": 260,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_generate_result_populates_risk_metrics",
-        "line": 284,
+        "line": 286,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_generate_result_calculates_unrealized_pnl",
-        "line": 310,
+        "line": 312,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_generate_summary_returns_string",
-        "line": 344,
+        "line": 346,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_generate_summary_includes_performance_section",
-        "line": 365,
+        "line": 367,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_generate_summary_includes_risk_metrics_section",
-        "line": 388,
+        "line": 390,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_generate_summary_includes_trade_statistics_section",
-        "line": 411,
+        "line": 413,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_generate_summary_includes_costs_section",
-        "line": 434,
+        "line": 436,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_generate_summary_handles_none_sharpe",
-        "line": 457,
+        "line": 459,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_generate_csv_row_returns_dict",
-        "line": 501,
+        "line": 503,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_generate_csv_row_includes_all_keys",
-        "line": 521,
+        "line": 523,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_generate_csv_row_values_are_numeric",
-        "line": 561,
+        "line": 563,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_generate_csv_row_handles_none_sharpe",
-        "line": 584,
+        "line": 586,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_returns_backtest_result",
-        "line": 628,
+        "line": 630,
         "markers": [],
         "docstring": ""
       }
@@ -29792,6 +30156,27 @@
         "class": "TestReduceOnlyModeEnvParsing"
       },
       {
+        "name": "TestDerivativesEnvParsing::test_derivatives_enabled_prefers_intx_perps_flag",
+        "line": 134,
+        "markers": [],
+        "docstring": "COINBASE_ENABLE_INTX_PERPS overrides legacy COINBASE_ENABLE_DERIVATIVES.",
+        "class": "TestDerivativesEnvParsing"
+      },
+      {
+        "name": "TestDerivativesEnvParsing::test_derivatives_enabled_intx_perps_can_disable_legacy",
+        "line": 144,
+        "markers": [],
+        "docstring": "COINBASE_ENABLE_INTX_PERPS=0 disables derivatives even if legacy is 1.",
+        "class": "TestDerivativesEnvParsing"
+      },
+      {
+        "name": "TestDerivativesEnvParsing::test_derivatives_enabled_falls_back_to_legacy",
+        "line": 154,
+        "markers": [],
+        "docstring": "When COINBASE_ENABLE_INTX_PERPS is unset, legacy flag still works.",
+        "class": "TestDerivativesEnvParsing"
+      },
+      {
         "name": "test_active_enable_shorts_from_baseline_strategy",
         "line": 19,
         "markers": [],
@@ -29844,6 +30229,24 @@
         "line": 124,
         "markers": [],
         "docstring": "Defaults to False when no env vars set."
+      },
+      {
+        "name": "test_derivatives_enabled_prefers_intx_perps_flag",
+        "line": 134,
+        "markers": [],
+        "docstring": "COINBASE_ENABLE_INTX_PERPS overrides legacy COINBASE_ENABLE_DERIVATIVES."
+      },
+      {
+        "name": "test_derivatives_enabled_intx_perps_can_disable_legacy",
+        "line": 144,
+        "markers": [],
+        "docstring": "COINBASE_ENABLE_INTX_PERPS=0 disables derivatives even if legacy is 1."
+      },
+      {
+        "name": "test_derivatives_enabled_falls_back_to_legacy",
+        "line": 154,
+        "markers": [],
+        "docstring": "When COINBASE_ENABLE_INTX_PERPS is unset, legacy flag still works."
       }
     ],
     "tests/unit/gpt_trader/app/config/test_profile_loader.py": [
@@ -30442,131 +30845,144 @@
     "tests/unit/gpt_trader/app/containers/test_risk_validation.py": [
       {
         "name": "TestRiskValidationContainer::test_initialization",
-        "line": 31,
+        "line": 32,
         "markers": [],
         "docstring": "Test that container initializes correctly.",
         "class": "TestRiskValidationContainer"
       },
       {
         "name": "TestRiskValidationContainer::test_risk_manager_lazy_creation",
-        "line": 42,
+        "line": 43,
         "markers": [],
         "docstring": "Test that risk manager is created lazily on first access.",
         "class": "TestRiskValidationContainer"
       },
       {
         "name": "TestRiskValidationContainer::test_validation_failure_tracker_lazy_creation",
-        "line": 67,
+        "line": 68,
         "markers": [],
         "docstring": "Test that validation tracker is created lazily on first access.",
         "class": "TestRiskValidationContainer"
       },
       {
         "name": "TestRiskValidationContainer::test_reset_risk_manager",
-        "line": 96,
+        "line": 97,
         "markers": [],
         "docstring": "Test that risk manager can be reset.",
         "class": "TestRiskValidationContainer"
       },
       {
         "name": "TestRiskValidationContainer::test_reset_validation_failure_tracker",
-        "line": 116,
+        "line": 117,
         "markers": [],
         "docstring": "Test that validation tracker can be reset.",
         "class": "TestRiskValidationContainer"
       },
       {
         "name": "TestRiskValidationContainer::test_risk_manager_uses_config_values",
-        "line": 138,
+        "line": 139,
         "markers": [],
         "docstring": "Test that risk manager is created with config values.",
         "class": "TestRiskValidationContainer"
       },
       {
+        "name": "TestRiskValidationContainer::test_risk_manager_scopes_state_file_by_profile",
+        "line": 166,
+        "markers": [],
+        "docstring": "",
+        "class": "TestRiskValidationContainer"
+      },
+      {
         "name": "TestKillSwitchDerivation::test_baseline_strategy_uses_strategy_config",
-        "line": 168,
+        "line": 186,
         "markers": [],
         "docstring": "Baseline strategy type derives kill_switch from strategy config.",
         "class": "TestKillSwitchDerivation"
       },
       {
         "name": "TestKillSwitchDerivation::test_mean_reversion_strategy_uses_mean_reversion_config",
-        "line": 188,
+        "line": 206,
         "markers": [],
         "docstring": "Mean reversion strategy type derives kill_switch from mean_reversion config.",
         "class": "TestKillSwitchDerivation"
       },
       {
         "name": "TestKillSwitchDerivation::test_ensemble_strategy_uses_strategy_config",
-        "line": 208,
+        "line": 226,
         "markers": [],
         "docstring": "Ensemble strategy type falls back to strategy config.",
         "class": "TestKillSwitchDerivation"
       },
       {
         "name": "TestKillSwitchDerivation::test_reduce_only_mode_from_config",
-        "line": 228,
+        "line": 246,
         "markers": [],
         "docstring": "Test reduce_only_mode is passed through to RiskConfig.",
         "class": "TestKillSwitchDerivation"
       },
       {
         "name": "test_initialization",
-        "line": 31,
+        "line": 32,
         "markers": [],
         "docstring": "Test that container initializes correctly."
       },
       {
         "name": "test_risk_manager_lazy_creation",
-        "line": 42,
+        "line": 43,
         "markers": [],
         "docstring": "Test that risk manager is created lazily on first access."
       },
       {
         "name": "test_validation_failure_tracker_lazy_creation",
-        "line": 67,
+        "line": 68,
         "markers": [],
         "docstring": "Test that validation tracker is created lazily on first access."
       },
       {
         "name": "test_reset_risk_manager",
-        "line": 96,
+        "line": 97,
         "markers": [],
         "docstring": "Test that risk manager can be reset."
       },
       {
         "name": "test_reset_validation_failure_tracker",
-        "line": 116,
+        "line": 117,
         "markers": [],
         "docstring": "Test that validation tracker can be reset."
       },
       {
         "name": "test_risk_manager_uses_config_values",
-        "line": 138,
+        "line": 139,
         "markers": [],
         "docstring": "Test that risk manager is created with config values."
       },
       {
+        "name": "test_risk_manager_scopes_state_file_by_profile",
+        "line": 166,
+        "markers": [],
+        "docstring": ""
+      },
+      {
         "name": "test_baseline_strategy_uses_strategy_config",
-        "line": 168,
+        "line": 186,
         "markers": [],
         "docstring": "Baseline strategy type derives kill_switch from strategy config."
       },
       {
         "name": "test_mean_reversion_strategy_uses_mean_reversion_config",
-        "line": 188,
+        "line": 206,
         "markers": [],
         "docstring": "Mean reversion strategy type derives kill_switch from mean_reversion config."
       },
       {
         "name": "test_ensemble_strategy_uses_strategy_config",
-        "line": 208,
+        "line": 226,
         "markers": [],
         "docstring": "Ensemble strategy type falls back to strategy config."
       },
       {
         "name": "test_reduce_only_mode_from_config",
-        "line": 228,
+        "line": 246,
         "markers": [],
         "docstring": "Test reduce_only_mode is passed through to RiskConfig."
       }
@@ -50951,134 +51367,148 @@
         "class": "TestWebSocketClientMixinGetWebSocket"
       },
       {
+        "name": "TestWebSocketClientMixinNonCooperativeInit::test_lazy_initializes_state_when_mixin_init_not_called",
+        "line": 126,
+        "markers": [],
+        "docstring": "",
+        "class": "TestWebSocketClientMixinNonCooperativeInit"
+      },
+      {
+        "name": "TestWebSocketClientMixinNonCooperativeInit::test_stop_streaming_safe_when_mixin_init_not_called",
+        "line": 144,
+        "markers": [],
+        "docstring": "",
+        "class": "TestWebSocketClientMixinNonCooperativeInit"
+      },
+      {
         "name": "TestStreamOrderbook::test_connects_and_subscribes_to_level2",
-        "line": 118,
+        "line": 153,
         "markers": [],
         "docstring": "stream_orderbook with level>=2 should subscribe to level2 channel.",
         "class": "TestStreamOrderbook"
       },
       {
         "name": "TestStreamOrderbook::test_subscribes_to_ticker_for_level1",
-        "line": 148,
+        "line": 183,
         "markers": [],
         "docstring": "stream_orderbook with level=1 should subscribe to ticker channel.",
         "class": "TestStreamOrderbook"
       },
       {
         "name": "TestStreamOrderbook::test_include_trades_adds_channel",
-        "line": 174,
+        "line": 209,
         "markers": [],
         "docstring": "stream_orderbook should include market_trades when requested.",
         "class": "TestStreamOrderbook"
       },
       {
         "name": "TestStreamOrderbook::test_include_user_events_subscribes",
-        "line": 201,
+        "line": 236,
         "markers": [],
         "docstring": "stream_orderbook should subscribe to user events when requested.",
         "class": "TestStreamOrderbook"
       },
       {
         "name": "TestStreamOrderbook::test_yields_messages_from_callback",
-        "line": 228,
+        "line": 263,
         "markers": [],
         "docstring": "Messages pushed via callback should be yielded by stream.",
         "class": "TestStreamOrderbook"
       },
       {
         "name": "TestStreamTrades::test_connects_and_subscribes_to_market_trades",
-        "line": 255,
+        "line": 290,
         "markers": [],
         "docstring": "stream_trades should subscribe to market_trades channel.",
         "class": "TestStreamTrades"
       },
       {
         "name": "TestStreamTrades::test_yields_trade_messages",
-        "line": 282,
+        "line": 317,
         "markers": [],
         "docstring": "Trade messages should be yielded via the queue mechanism.",
         "class": "TestStreamTrades"
       },
       {
         "name": "TestStreamControl::test_stop_streaming_disconnects_websocket",
-        "line": 307,
+        "line": 342,
         "markers": [],
         "docstring": "stop_streaming should disconnect WebSocket and reset state.",
         "class": "TestStreamControl"
       },
       {
         "name": "TestStreamControl::test_stop_streaming_handles_disconnect_error",
-        "line": 338,
+        "line": 373,
         "markers": [],
         "docstring": "stop_streaming should handle disconnect errors and clear state.",
         "class": "TestStreamControl"
       },
       {
         "name": "TestStreamControl::test_is_streaming_returns_correct_state",
-        "line": 353,
+        "line": 388,
         "markers": [],
         "docstring": "is_streaming should reflect _stream_active flag.",
         "class": "TestStreamControl"
       },
       {
         "name": "TestMessageFiltering::test_ignores_non_dict_messages",
-        "line": 376,
+        "line": 411,
         "markers": [],
         "docstring": "Non-dict messages should be ignored.",
         "class": "TestMessageFiltering"
       },
       {
         "name": "TestMessageFiltering::test_on_websocket_message_ignored_when_inactive",
-        "line": 408,
+        "line": 443,
         "markers": [],
         "docstring": "Messages should be ignored when stream is inactive.",
         "class": "TestMessageFiltering"
       },
       {
         "name": "TestMessageFiltering::test_clears_queue_before_streaming",
-        "line": 418,
+        "line": 453,
         "markers": [],
         "docstring": "_clear_queue should remove all pending messages.",
         "class": "TestMessageFiltering"
       },
       {
         "name": "TestGetWSHealth::test_returns_empty_dict_when_no_ws",
-        "line": 450,
+        "line": 485,
         "markers": [],
         "docstring": "get_ws_health should return empty dict when no WebSocket exists.",
         "class": "TestGetWSHealth"
       },
       {
         "name": "TestGetWSHealth::test_returns_health_dict_from_ws",
-        "line": 461,
+        "line": 496,
         "markers": [],
         "docstring": "get_ws_health should return health dict from underlying WebSocket.",
         "class": "TestGetWSHealth"
       },
       {
         "name": "TestGetWSHealth::test_returns_empty_dict_after_stop_streaming",
-        "line": 487,
+        "line": 522,
         "markers": [],
         "docstring": "get_ws_health should return empty dict after WebSocket is cleaned up.",
         "class": "TestGetWSHealth"
       },
       {
         "name": "TestGetWSHealth::test_is_thread_safe",
-        "line": 505,
+        "line": 540,
         "markers": [],
         "docstring": "get_ws_health should be thread-safe using the lock.",
         "class": "TestGetWSHealth"
       },
       {
         "name": "TestStreamMessageControl::test_stream_messages_stop_event_breaks",
-        "line": 535,
+        "line": 570,
         "markers": [],
         "docstring": "",
         "class": "TestStreamMessageControl"
       },
       {
         "name": "TestStreamMessageControl::test_stream_messages_stop_sentinel_breaks",
-        "line": 549,
+        "line": 584,
         "markers": [],
         "docstring": "",
         "class": "TestStreamMessageControl"
@@ -51120,116 +51550,128 @@
         "docstring": "WebSocket should work without auth credentials."
       },
       {
+        "name": "test_lazy_initializes_state_when_mixin_init_not_called",
+        "line": 126,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_stop_streaming_safe_when_mixin_init_not_called",
+        "line": 144,
+        "markers": [],
+        "docstring": ""
+      },
+      {
         "name": "test_connects_and_subscribes_to_level2",
-        "line": 118,
+        "line": 153,
         "markers": [],
         "docstring": "stream_orderbook with level>=2 should subscribe to level2 channel."
       },
       {
         "name": "test_subscribes_to_ticker_for_level1",
-        "line": 148,
+        "line": 183,
         "markers": [],
         "docstring": "stream_orderbook with level=1 should subscribe to ticker channel."
       },
       {
         "name": "test_include_trades_adds_channel",
-        "line": 174,
+        "line": 209,
         "markers": [],
         "docstring": "stream_orderbook should include market_trades when requested."
       },
       {
         "name": "test_include_user_events_subscribes",
-        "line": 201,
+        "line": 236,
         "markers": [],
         "docstring": "stream_orderbook should subscribe to user events when requested."
       },
       {
         "name": "test_yields_messages_from_callback",
-        "line": 228,
+        "line": 263,
         "markers": [],
         "docstring": "Messages pushed via callback should be yielded by stream."
       },
       {
         "name": "test_connects_and_subscribes_to_market_trades",
-        "line": 255,
+        "line": 290,
         "markers": [],
         "docstring": "stream_trades should subscribe to market_trades channel."
       },
       {
         "name": "test_yields_trade_messages",
-        "line": 282,
+        "line": 317,
         "markers": [],
         "docstring": "Trade messages should be yielded via the queue mechanism."
       },
       {
         "name": "test_stop_streaming_disconnects_websocket",
-        "line": 307,
+        "line": 342,
         "markers": [],
         "docstring": "stop_streaming should disconnect WebSocket and reset state."
       },
       {
         "name": "test_stop_streaming_handles_disconnect_error",
-        "line": 338,
+        "line": 373,
         "markers": [],
         "docstring": "stop_streaming should handle disconnect errors and clear state."
       },
       {
         "name": "test_is_streaming_returns_correct_state",
-        "line": 353,
+        "line": 388,
         "markers": [],
         "docstring": "is_streaming should reflect _stream_active flag."
       },
       {
         "name": "test_ignores_non_dict_messages",
-        "line": 376,
+        "line": 411,
         "markers": [],
         "docstring": "Non-dict messages should be ignored."
       },
       {
         "name": "test_on_websocket_message_ignored_when_inactive",
-        "line": 408,
+        "line": 443,
         "markers": [],
         "docstring": "Messages should be ignored when stream is inactive."
       },
       {
         "name": "test_clears_queue_before_streaming",
-        "line": 418,
+        "line": 453,
         "markers": [],
         "docstring": "_clear_queue should remove all pending messages."
       },
       {
         "name": "test_returns_empty_dict_when_no_ws",
-        "line": 450,
+        "line": 485,
         "markers": [],
         "docstring": "get_ws_health should return empty dict when no WebSocket exists."
       },
       {
         "name": "test_returns_health_dict_from_ws",
-        "line": 461,
+        "line": 496,
         "markers": [],
         "docstring": "get_ws_health should return health dict from underlying WebSocket."
       },
       {
         "name": "test_returns_empty_dict_after_stop_streaming",
-        "line": 487,
+        "line": 522,
         "markers": [],
         "docstring": "get_ws_health should return empty dict after WebSocket is cleaned up."
       },
       {
         "name": "test_is_thread_safe",
-        "line": 505,
+        "line": 540,
         "markers": [],
         "docstring": "get_ws_health should be thread-safe using the lock."
       },
       {
         "name": "test_stream_messages_stop_event_breaks",
-        "line": 535,
+        "line": 570,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_stream_messages_stop_sentinel_breaks",
-        "line": 549,
+        "line": 584,
         "markers": [],
         "docstring": ""
       }
@@ -56255,61 +56697,61 @@
       },
       {
         "name": "test_get_product_builds_path",
-        "line": 82,
+        "line": 87,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_get_product_book_advanced_mode",
-        "line": 93,
+        "line": 98,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_get_product_book_exchange_mode",
-        "line": 104,
+        "line": 109,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_get_market_products_advanced_calls_request",
-        "line": 115,
+        "line": 120,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_get_market_product_advanced_calls_request",
-        "line": 126,
+        "line": 131,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_get_market_product_ticker_builds_path",
-        "line": 137,
+        "line": 142,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_get_market_product_candles_formats_time_range",
-        "line": 148,
+        "line": 153,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_get_market_product_book_aliases_product_book",
-        "line": 177,
+        "line": 187,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_get_best_bid_ask_builds_query",
-        "line": 186,
+        "line": 196,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_get_best_bid_ask_exchange_mode_raises",
-        "line": 197,
+        "line": 207,
         "markers": [],
         "docstring": ""
       }
@@ -56423,846 +56865,846 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base.py": [
       {
         "name": "TestCoinbaseClientBase::test_client_init_default_params",
-        "line": 36,
+        "line": 37,
         "markers": [],
         "docstring": "Test client initialization with default parameters.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_client_init_custom_params",
-        "line": 53,
+        "line": 54,
         "markers": [],
         "docstring": "Test client initialization with custom parameters.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_client_init_no_auth",
-        "line": 76,
+        "line": 77,
         "markers": [],
         "docstring": "Test client initialization without authentication.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_client_init_disables_resilience_components",
-        "line": 83,
+        "line": 84,
         "markers": [],
         "docstring": "Test client initialization with resilience flags disabled.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_set_transport_for_testing",
-        "line": 99,
+        "line": 100,
         "markers": [],
         "docstring": "Test setting custom transport for testing.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_get_endpoint_path_advanced_mode",
-        "line": 108,
+        "line": 109,
         "markers": [],
         "docstring": "Test endpoint path resolution for advanced API mode.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_get_endpoint_path_exchange_mode",
-        "line": 123,
+        "line": 124,
         "markers": [],
         "docstring": "Test endpoint path resolution for exchange API mode.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_get_endpoint_path_missing_param_returns_template",
-        "line": 133,
+        "line": 134,
         "markers": [],
         "docstring": "Test endpoint path resolution when params are missing.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_get_endpoint_path_invalid_mode",
-        "line": 141,
+        "line": 142,
         "markers": [],
         "docstring": "Test endpoint path resolution with invalid API mode.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_get_endpoint_path_unknown_endpoint",
-        "line": 148,
+        "line": 149,
         "markers": [],
         "docstring": "Test endpoint path resolution with unknown endpoint.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_get_endpoint_path_wrong_mode",
-        "line": 155,
+        "line": 156,
         "markers": [],
         "docstring": "Test endpoint path resolution when endpoint not available in current mode.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_make_url_with_full_url",
-        "line": 167,
+        "line": 168,
         "markers": [],
         "docstring": "Test URL making with full URL.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_make_url_with_path",
-        "line": 176,
+        "line": 177,
         "markers": [],
         "docstring": "Test URL making with path.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_build_path_with_params",
-        "line": 188,
+        "line": 189,
         "markers": [],
         "docstring": "Test building path with query parameters.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_normalize_path",
-        "line": 210,
+        "line": 211,
         "markers": [],
         "docstring": "Test path normalization.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_build_auth_path_strips_query",
-        "line": 225,
+        "line": 226,
         "markers": [],
         "docstring": "Test auth path normalization strips queries and full URLs.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_public_market_endpoint_skips_auth",
-        "line": 237,
+        "line": 238,
         "markers": [],
         "docstring": "Test public market endpoints do not include auth headers.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_is_public_market_endpoint_exchange_mode",
-        "line": 248,
+        "line": 249,
         "markers": [],
         "docstring": "Test public endpoint detection ignores non-advanced mode.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_is_public_market_endpoint_normalizes_missing_slash",
-        "line": 254,
+        "line": 255,
         "markers": [],
         "docstring": "Test public endpoint detection normalizes missing leading slash.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_apply_auth_headers_strips_query",
-        "line": 260,
+        "line": 261,
         "markers": [],
         "docstring": "Test auth headers use normalized path without query params.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_apply_auth_headers_uses_sign",
-        "line": 271,
+        "line": 272,
         "markers": [],
         "docstring": "Test auth headers use sign() when available.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_apply_auth_headers_no_auth",
-        "line": 291,
+        "line": 292,
         "markers": [],
         "docstring": "Test auth header helper no-ops without auth.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_convenience_methods",
-        "line": 300,
+        "line": 301,
         "markers": [],
         "docstring": "Test convenience HTTP methods.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_perform_request_uses_session",
-        "line": 324,
+        "line": 325,
         "markers": [],
         "docstring": "Test request goes through session when no transport is set.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_check_rate_limit_disabled",
-        "line": 344,
+        "line": 345,
         "markers": [],
         "docstring": "Test rate limit checking when disabled.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_check_rate_limit_normal_usage",
-        "line": 357,
+        "line": 358,
         "markers": [],
         "docstring": "Test rate limit checking with normal usage.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_check_rate_limit_warning_threshold",
-        "line": 376,
+        "line": 377,
         "markers": [],
         "docstring": "Test rate limit warning threshold.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_check_rate_limit_exceeded",
-        "line": 405,
+        "line": 406,
         "markers": [],
         "docstring": "Test rate limit exceeded behavior.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_check_rate_limit_window_cleanup",
-        "line": 431,
+        "line": 432,
         "markers": [],
         "docstring": "Test rate limit window cleanup.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_request_success",
-        "line": 452,
+        "line": 453,
         "markers": [],
         "docstring": "Test successful request.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_request_with_body",
-        "line": 474,
+        "line": 475,
         "markers": [],
         "docstring": "Test request with body.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_request_no_auth",
-        "line": 495,
+        "line": 496,
         "markers": [],
         "docstring": "Test request without authentication.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_request_with_correlation_id",
-        "line": 510,
+        "line": 511,
         "markers": [],
         "docstring": "Test request with correlation ID.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_request_uses_cache",
-        "line": 524,
+        "line": 525,
         "markers": [],
         "docstring": "Test request short-circuits when cache hits.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_request_priority_deferred",
-        "line": 536,
+        "line": 537,
         "markers": [],
         "docstring": "Test request defers when priority manager blocks.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_request_circuit_open",
-        "line": 547,
+        "line": 548,
         "markers": [],
         "docstring": "Test circuit breaker blocks requests when open.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_request_4xx_error",
-        "line": 572,
+        "line": 573,
         "markers": [],
         "docstring": "Test request with 4xx error.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_request_4xx_invalid_json_uses_text",
-        "line": 586,
+        "line": 587,
         "markers": [],
         "docstring": "Test 4xx errors fall back to raw response text.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_raise_client_error_forbidden",
-        "line": 596,
+        "line": 597,
         "markers": [],
         "docstring": "Test non-400 errors map to appropriate client errors.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_request_rate_limit_invalid_retry_after",
-        "line": 606,
+        "line": 607,
         "markers": [],
         "docstring": "Test rate limit retry-after defaults on invalid header.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_request_rate_limit_exhausts_retries",
-        "line": 622,
+        "line": 623,
         "markers": [],
         "docstring": "Test rate limit errors exhaust retries and raise.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_request_5xx_error_with_retry",
-        "line": 633,
+        "line": 634,
         "markers": [],
         "docstring": "Test request with 5xx error and retry.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_request_rate_limit_error_with_retry_after",
-        "line": 651,
+        "line": 654,
         "markers": [],
         "docstring": "Test request with rate limit error and retry-after header.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_request_network_error_with_retry",
-        "line": 667,
+        "line": 670,
         "markers": [],
         "docstring": "Test request with network error and retry.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_request_max_retries_exceeded",
-        "line": 692,
+        "line": 697,
         "markers": [],
         "docstring": "Test request with max retries exceeded.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_request_invalid_json_response",
-        "line": 706,
+        "line": 711,
         "markers": [],
         "docstring": "Test request with invalid JSON response.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_request_empty_response",
-        "line": 717,
+        "line": 722,
         "markers": [],
         "docstring": "Test request with empty response.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_request_caches_get_response",
-        "line": 728,
+        "line": 733,
         "markers": [],
         "docstring": "Test GET responses are cached when cache is enabled.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_invalidate_cache_orders_and_positions",
-        "line": 740,
+        "line": 745,
         "markers": [],
         "docstring": "Test cache invalidation targets orders and positions.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_record_success_sets_span_and_breaker",
-        "line": 759,
+        "line": 764,
         "markers": [],
         "docstring": "Test success recording updates circuit breaker and span.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_record_request_metrics_records_metrics_and_span",
-        "line": 772,
+        "line": 777,
         "markers": [],
         "docstring": "Test request metrics recording updates metrics and span attributes.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_paginate_success",
-        "line": 799,
+        "line": 804,
         "markers": [],
         "docstring": "Test successful pagination.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_paginate_custom_cursor_params",
-        "line": 819,
+        "line": 824,
         "markers": [],
         "docstring": "Test pagination with custom cursor parameters.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_paginate_with_pagination_object",
-        "line": 843,
+        "line": 848,
         "markers": [],
         "docstring": "Test pagination with nested pagination cursor.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_paginate_no_cursor",
-        "line": 856,
+        "line": 861,
         "markers": [],
         "docstring": "Test pagination when no cursor is returned.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_paginate_non_list_item_yields_single",
-        "line": 868,
+        "line": 873,
         "markers": [],
         "docstring": "Test pagination yields single non-list item.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_paginate_non_dict_response_stops",
-        "line": 878,
+        "line": 883,
         "markers": [],
         "docstring": "Test pagination stops when response is not a dict.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_paginate_empty_items",
-        "line": 888,
+        "line": 893,
         "markers": [],
         "docstring": "Test pagination when items are empty.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_perform_http_request_http_error_invalid_json",
-        "line": 901,
+        "line": 906,
         "markers": [],
         "docstring": "Test HTTPError path when error response is not JSON.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_perform_http_request_network_error_final_attempt",
-        "line": 922,
+        "line": 927,
         "markers": [],
         "docstring": "Test final network error attempt raises without retry.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_perform_http_request_records_failure_and_span",
-        "line": 940,
+        "line": 945,
         "markers": [],
         "docstring": "Test failures record circuit breaker and span attributes.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_get_resilience_status_records_metrics",
-        "line": 964,
+        "line": 969,
         "markers": [],
         "docstring": "Test resilience status includes metrics and circuit breaker info.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_context_manager_closes",
-        "line": 994,
+        "line": 999,
         "markers": [],
         "docstring": "Test context manager closes session.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_close_handles_session_error",
-        "line": 1004,
+        "line": 1009,
         "markers": [],
         "docstring": "Test close logs warning on session close error.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "TestCoinbaseClientBase::test_del_suppresses_close_errors",
-        "line": 1014,
+        "line": 1019,
         "markers": [],
         "docstring": "Test destructor suppresses close errors.",
         "class": "TestCoinbaseClientBase"
       },
       {
         "name": "test_client_init_default_params",
-        "line": 36,
+        "line": 37,
         "markers": [],
         "docstring": "Test client initialization with default parameters."
       },
       {
         "name": "test_client_init_custom_params",
-        "line": 53,
+        "line": 54,
         "markers": [],
         "docstring": "Test client initialization with custom parameters."
       },
       {
         "name": "test_client_init_no_auth",
-        "line": 76,
+        "line": 77,
         "markers": [],
         "docstring": "Test client initialization without authentication."
       },
       {
         "name": "test_client_init_disables_resilience_components",
-        "line": 83,
+        "line": 84,
         "markers": [],
         "docstring": "Test client initialization with resilience flags disabled."
       },
       {
         "name": "test_set_transport_for_testing",
-        "line": 99,
+        "line": 100,
         "markers": [],
         "docstring": "Test setting custom transport for testing."
       },
       {
         "name": "test_get_endpoint_path_advanced_mode",
-        "line": 108,
+        "line": 109,
         "markers": [],
         "docstring": "Test endpoint path resolution for advanced API mode."
       },
       {
         "name": "test_get_endpoint_path_exchange_mode",
-        "line": 123,
+        "line": 124,
         "markers": [],
         "docstring": "Test endpoint path resolution for exchange API mode."
       },
       {
         "name": "test_get_endpoint_path_missing_param_returns_template",
-        "line": 133,
+        "line": 134,
         "markers": [],
         "docstring": "Test endpoint path resolution when params are missing."
       },
       {
         "name": "test_get_endpoint_path_invalid_mode",
-        "line": 141,
+        "line": 142,
         "markers": [],
         "docstring": "Test endpoint path resolution with invalid API mode."
       },
       {
         "name": "test_get_endpoint_path_unknown_endpoint",
-        "line": 148,
+        "line": 149,
         "markers": [],
         "docstring": "Test endpoint path resolution with unknown endpoint."
       },
       {
         "name": "test_get_endpoint_path_wrong_mode",
-        "line": 155,
+        "line": 156,
         "markers": [],
         "docstring": "Test endpoint path resolution when endpoint not available in current mode."
       },
       {
         "name": "test_make_url_with_full_url",
-        "line": 167,
+        "line": 168,
         "markers": [],
         "docstring": "Test URL making with full URL."
       },
       {
         "name": "test_make_url_with_path",
-        "line": 176,
+        "line": 177,
         "markers": [],
         "docstring": "Test URL making with path."
       },
       {
         "name": "test_build_path_with_params",
-        "line": 188,
+        "line": 189,
         "markers": [],
         "docstring": "Test building path with query parameters."
       },
       {
         "name": "test_normalize_path",
-        "line": 210,
+        "line": 211,
         "markers": [],
         "docstring": "Test path normalization."
       },
       {
         "name": "test_build_auth_path_strips_query",
-        "line": 225,
+        "line": 226,
         "markers": [],
         "docstring": "Test auth path normalization strips queries and full URLs."
       },
       {
         "name": "test_public_market_endpoint_skips_auth",
-        "line": 237,
+        "line": 238,
         "markers": [],
         "docstring": "Test public market endpoints do not include auth headers."
       },
       {
         "name": "test_is_public_market_endpoint_exchange_mode",
-        "line": 248,
+        "line": 249,
         "markers": [],
         "docstring": "Test public endpoint detection ignores non-advanced mode."
       },
       {
         "name": "test_is_public_market_endpoint_normalizes_missing_slash",
-        "line": 254,
+        "line": 255,
         "markers": [],
         "docstring": "Test public endpoint detection normalizes missing leading slash."
       },
       {
         "name": "test_apply_auth_headers_strips_query",
-        "line": 260,
+        "line": 261,
         "markers": [],
         "docstring": "Test auth headers use normalized path without query params."
       },
       {
         "name": "test_apply_auth_headers_uses_sign",
-        "line": 271,
+        "line": 272,
         "markers": [],
         "docstring": "Test auth headers use sign() when available."
       },
       {
         "name": "test_apply_auth_headers_no_auth",
-        "line": 291,
+        "line": 292,
         "markers": [],
         "docstring": "Test auth header helper no-ops without auth."
       },
       {
         "name": "test_convenience_methods",
-        "line": 300,
+        "line": 301,
         "markers": [],
         "docstring": "Test convenience HTTP methods."
       },
       {
         "name": "test_perform_request_uses_session",
-        "line": 324,
+        "line": 325,
         "markers": [],
         "docstring": "Test request goes through session when no transport is set."
       },
       {
         "name": "test_check_rate_limit_disabled",
-        "line": 344,
+        "line": 345,
         "markers": [],
         "docstring": "Test rate limit checking when disabled."
       },
       {
         "name": "test_check_rate_limit_normal_usage",
-        "line": 357,
+        "line": 358,
         "markers": [],
         "docstring": "Test rate limit checking with normal usage."
       },
       {
         "name": "test_check_rate_limit_warning_threshold",
-        "line": 376,
+        "line": 377,
         "markers": [],
         "docstring": "Test rate limit warning threshold."
       },
       {
         "name": "test_check_rate_limit_exceeded",
-        "line": 405,
+        "line": 406,
         "markers": [],
         "docstring": "Test rate limit exceeded behavior."
       },
       {
         "name": "test_check_rate_limit_window_cleanup",
-        "line": 431,
+        "line": 432,
         "markers": [],
         "docstring": "Test rate limit window cleanup."
       },
       {
         "name": "test_request_success",
-        "line": 452,
+        "line": 453,
         "markers": [],
         "docstring": "Test successful request."
       },
       {
         "name": "test_request_with_body",
-        "line": 474,
+        "line": 475,
         "markers": [],
         "docstring": "Test request with body."
       },
       {
         "name": "test_request_no_auth",
-        "line": 495,
+        "line": 496,
         "markers": [],
         "docstring": "Test request without authentication."
       },
       {
         "name": "test_request_with_correlation_id",
-        "line": 510,
+        "line": 511,
         "markers": [],
         "docstring": "Test request with correlation ID."
       },
       {
         "name": "test_request_uses_cache",
-        "line": 524,
+        "line": 525,
         "markers": [],
         "docstring": "Test request short-circuits when cache hits."
       },
       {
         "name": "test_request_priority_deferred",
-        "line": 536,
+        "line": 537,
         "markers": [],
         "docstring": "Test request defers when priority manager blocks."
       },
       {
         "name": "test_request_circuit_open",
-        "line": 547,
+        "line": 548,
         "markers": [],
         "docstring": "Test circuit breaker blocks requests when open."
       },
       {
         "name": "test_request_4xx_error",
-        "line": 572,
+        "line": 573,
         "markers": [],
         "docstring": "Test request with 4xx error."
       },
       {
         "name": "test_request_4xx_invalid_json_uses_text",
-        "line": 586,
+        "line": 587,
         "markers": [],
         "docstring": "Test 4xx errors fall back to raw response text."
       },
       {
         "name": "test_raise_client_error_forbidden",
-        "line": 596,
+        "line": 597,
         "markers": [],
         "docstring": "Test non-400 errors map to appropriate client errors."
       },
       {
         "name": "test_request_rate_limit_invalid_retry_after",
-        "line": 606,
+        "line": 607,
         "markers": [],
         "docstring": "Test rate limit retry-after defaults on invalid header."
       },
       {
         "name": "test_request_rate_limit_exhausts_retries",
-        "line": 622,
+        "line": 623,
         "markers": [],
         "docstring": "Test rate limit errors exhaust retries and raise."
       },
       {
         "name": "test_request_5xx_error_with_retry",
-        "line": 633,
+        "line": 634,
         "markers": [],
         "docstring": "Test request with 5xx error and retry."
       },
       {
         "name": "test_request_rate_limit_error_with_retry_after",
-        "line": 651,
+        "line": 654,
         "markers": [],
         "docstring": "Test request with rate limit error and retry-after header."
       },
       {
         "name": "test_request_network_error_with_retry",
-        "line": 667,
+        "line": 670,
         "markers": [],
         "docstring": "Test request with network error and retry."
       },
       {
         "name": "test_request_max_retries_exceeded",
-        "line": 692,
+        "line": 697,
         "markers": [],
         "docstring": "Test request with max retries exceeded."
       },
       {
         "name": "test_request_invalid_json_response",
-        "line": 706,
+        "line": 711,
         "markers": [],
         "docstring": "Test request with invalid JSON response."
       },
       {
         "name": "test_request_empty_response",
-        "line": 717,
+        "line": 722,
         "markers": [],
         "docstring": "Test request with empty response."
       },
       {
         "name": "test_request_caches_get_response",
-        "line": 728,
+        "line": 733,
         "markers": [],
         "docstring": "Test GET responses are cached when cache is enabled."
       },
       {
         "name": "test_invalidate_cache_orders_and_positions",
-        "line": 740,
+        "line": 745,
         "markers": [],
         "docstring": "Test cache invalidation targets orders and positions."
       },
       {
         "name": "test_record_success_sets_span_and_breaker",
-        "line": 759,
+        "line": 764,
         "markers": [],
         "docstring": "Test success recording updates circuit breaker and span."
       },
       {
         "name": "test_record_request_metrics_records_metrics_and_span",
-        "line": 772,
+        "line": 777,
         "markers": [],
         "docstring": "Test request metrics recording updates metrics and span attributes."
       },
       {
         "name": "test_paginate_success",
-        "line": 799,
+        "line": 804,
         "markers": [],
         "docstring": "Test successful pagination."
       },
       {
         "name": "test_paginate_custom_cursor_params",
-        "line": 819,
+        "line": 824,
         "markers": [],
         "docstring": "Test pagination with custom cursor parameters."
       },
       {
         "name": "test_paginate_with_pagination_object",
-        "line": 843,
+        "line": 848,
         "markers": [],
         "docstring": "Test pagination with nested pagination cursor."
       },
       {
         "name": "test_paginate_no_cursor",
-        "line": 856,
+        "line": 861,
         "markers": [],
         "docstring": "Test pagination when no cursor is returned."
       },
       {
         "name": "test_paginate_non_list_item_yields_single",
-        "line": 868,
+        "line": 873,
         "markers": [],
         "docstring": "Test pagination yields single non-list item."
       },
       {
         "name": "test_paginate_non_dict_response_stops",
-        "line": 878,
+        "line": 883,
         "markers": [],
         "docstring": "Test pagination stops when response is not a dict."
       },
       {
         "name": "test_paginate_empty_items",
-        "line": 888,
+        "line": 893,
         "markers": [],
         "docstring": "Test pagination when items are empty."
       },
       {
         "name": "test_perform_http_request_http_error_invalid_json",
-        "line": 901,
+        "line": 906,
         "markers": [],
         "docstring": "Test HTTPError path when error response is not JSON."
       },
       {
         "name": "test_perform_http_request_network_error_final_attempt",
-        "line": 922,
+        "line": 927,
         "markers": [],
         "docstring": "Test final network error attempt raises without retry."
       },
       {
         "name": "test_perform_http_request_records_failure_and_span",
-        "line": 940,
+        "line": 945,
         "markers": [],
         "docstring": "Test failures record circuit breaker and span attributes."
       },
       {
         "name": "test_get_resilience_status_records_metrics",
-        "line": 964,
+        "line": 969,
         "markers": [],
         "docstring": "Test resilience status includes metrics and circuit breaker info."
       },
       {
         "name": "test_context_manager_closes",
-        "line": 994,
+        "line": 999,
         "markers": [],
         "docstring": "Test context manager closes session."
       },
       {
         "name": "test_close_handles_session_error",
-        "line": 1004,
+        "line": 1009,
         "markers": [],
         "docstring": "Test close logs warning on session close error."
       },
       {
         "name": "test_del_suppresses_close_errors",
-        "line": 1014,
+        "line": 1019,
         "markers": [],
         "docstring": "Test destructor suppresses close errors."
       }
@@ -62790,6 +63232,55 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/features/live_trade/strategies/test_regime_switcher.py": [
+      {
+        "name": "test_regime_follow_actions",
+        "line": 101,
+        "markers": [
+          "parametrize"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "TestRegimeSwitchingStrategy::test_delegates_by_regime_when_flat",
+        "line": 124,
+        "markers": [],
+        "docstring": "",
+        "class": "TestRegimeSwitchingStrategy"
+      },
+      {
+        "name": "TestRegimeSwitchingStrategy::test_sticky_strategy_controls_position_until_close",
+        "line": 149,
+        "markers": [],
+        "docstring": "",
+        "class": "TestRegimeSwitchingStrategy"
+      },
+      {
+        "name": "TestRegimeSwitchingStrategy::test_crisis_closes_position",
+        "line": 204,
+        "markers": [],
+        "docstring": "",
+        "class": "TestRegimeSwitchingStrategy"
+      },
+      {
+        "name": "test_delegates_by_regime_when_flat",
+        "line": 124,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_sticky_strategy_controls_position_until_close",
+        "line": 149,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_crisis_closes_position",
+        "line": 204,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/features/live_trade/signals/test_registry.py": [
       {
         "name": "TestSignalRegistry::test_list_registered_signals_returns_all_builtin",
@@ -67386,417 +67877,430 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder.py": [
       {
         "name": "TestOrderEventRecorderInit::test_init_stores_event_store",
-        "line": 47,
+        "line": 48,
         "markers": [],
         "docstring": "Test that event_store is stored correctly.",
         "class": "TestOrderEventRecorderInit"
       },
       {
         "name": "TestOrderEventRecorderInit::test_init_stores_bot_id",
-        "line": 52,
+        "line": 53,
         "markers": [],
         "docstring": "Test that bot_id is stored correctly.",
         "class": "TestOrderEventRecorderInit"
       },
       {
         "name": "TestRecordPreview::test_record_preview_skips_when_preview_is_none",
-        "line": 68,
+        "line": 69,
         "markers": [],
         "docstring": "Test that record_preview does nothing when preview is None.",
         "class": "TestRecordPreview"
       },
       {
         "name": "TestRecordPreview::test_record_preview_emits_metric",
-        "line": 89,
+        "line": 90,
         "markers": [],
         "docstring": "Test that record_preview emits metric with correct data.",
         "class": "TestRecordPreview"
       },
       {
         "name": "TestRecordPreview::test_record_preview_uses_market_for_none_price",
-        "line": 125,
+        "line": 126,
         "markers": [],
         "docstring": "Test that 'market' is used when price is None.",
         "class": "TestRecordPreview"
       },
       {
         "name": "TestRecordPreview::test_record_preview_logs_event",
-        "line": 150,
+        "line": 151,
         "markers": [],
         "docstring": "Test that record_preview logs to monitoring logger.",
         "class": "TestRecordPreview"
       },
       {
         "name": "TestRecordPreview::test_record_preview_handles_log_exception",
-        "line": 178,
+        "line": 179,
         "markers": [],
         "docstring": "Test that record_preview handles logging exceptions gracefully.",
         "class": "TestRecordPreview"
       },
       {
         "name": "TestRecordRejection::test_record_rejection_emits_metric",
-        "line": 212,
+        "line": 213,
         "markers": [],
         "docstring": "Test that record_rejection emits metric with correct data.",
         "class": "TestRecordRejection"
       },
       {
         "name": "TestRecordRejection::test_record_rejection_logs_status_change",
-        "line": 241,
+        "line": 242,
         "markers": [],
         "docstring": "Test that record_rejection logs order status change.",
         "class": "TestRecordRejection"
       },
       {
         "name": "TestRecordRejection::test_record_rejection_handles_none_price",
-        "line": 269,
+        "line": 270,
         "markers": [],
         "docstring": "Test that record_rejection handles None price.",
         "class": "TestRecordRejection"
       },
       {
         "name": "TestRecordRejection::test_record_rejection_handles_log_exception",
-        "line": 293,
+        "line": 294,
         "markers": [],
         "docstring": "Test that record_rejection handles logging exceptions.",
         "class": "TestRecordRejection"
       },
       {
         "name": "TestRecordSubmissionAttempt::test_record_submission_attempt_logs_correctly",
-        "line": 325,
+        "line": 326,
         "markers": [],
         "docstring": "Test that submission attempt is logged correctly.",
         "class": "TestRecordSubmissionAttempt"
       },
       {
         "name": "TestRecordSubmissionAttempt::test_record_submission_attempt_handles_none_price",
-        "line": 353,
+        "line": 354,
         "markers": [],
         "docstring": "Test that submission attempt handles None price.",
         "class": "TestRecordSubmissionAttempt"
       },
       {
         "name": "TestRecordSubmissionAttempt::test_record_submission_attempt_handles_exception",
-        "line": 375,
+        "line": 376,
         "markers": [],
         "docstring": "Test that submission attempt handles exceptions gracefully.",
         "class": "TestRecordSubmissionAttempt"
       },
       {
-        "name": "TestRecordSuccess::test_record_success_logs_order_info",
+        "name": "TestRecordDecisionTrace::test_record_decision_trace_includes_decision_id",
         "line": 406,
+        "markers": [],
+        "docstring": "",
+        "class": "TestRecordDecisionTrace"
+      },
+      {
+        "name": "TestRecordSuccess::test_record_success_logs_order_info",
+        "line": 435,
         "markers": [],
         "docstring": "Test that successful order is logged.",
         "class": "TestRecordSuccess"
       },
       {
         "name": "TestRecordSuccess::test_record_success_handles_reduce_only",
-        "line": 429,
+        "line": 458,
         "markers": [],
         "docstring": "Test that reduce_only flag is handled.",
         "class": "TestRecordSuccess"
       },
       {
         "name": "TestRecordSuccess::test_record_success_handles_market_price",
-        "line": 449,
+        "line": 478,
         "markers": [],
         "docstring": "Test that 'market' as display_price is handled.",
         "class": "TestRecordSuccess"
       },
       {
         "name": "TestRecordTradeEvent::test_record_trade_event_logs_status_change",
-        "line": 478,
+        "line": 507,
         "markers": [],
         "docstring": "Test that trade event logs status change.",
         "class": "TestRecordTradeEvent"
       },
       {
         "name": "TestRecordTradeEvent::test_record_trade_event_appends_to_event_store",
-        "line": 506,
+        "line": 535,
         "markers": [],
         "docstring": "Test that trade event is appended to event store.",
         "class": "TestRecordTradeEvent"
       },
       {
         "name": "TestRecordTradeEvent::test_record_trade_event_handles_log_exception",
-        "line": 536,
+        "line": 565,
         "markers": [],
         "docstring": "Test that trade event handles log exceptions.",
         "class": "TestRecordTradeEvent"
       },
       {
         "name": "TestRecordTradeEvent::test_record_trade_event_handles_store_exception",
-        "line": 563,
+        "line": 592,
         "markers": [],
         "docstring": "Test that trade event handles event store exceptions.",
         "class": "TestRecordTradeEvent"
       },
       {
         "name": "TestRecordFailure::test_record_failure_appends_error_to_event_store",
-        "line": 597,
+        "line": 626,
         "markers": [],
         "docstring": "Test that failure is recorded to event store.",
         "class": "TestRecordFailure"
       },
       {
         "name": "TestRecordFailure::test_record_failure_handles_store_exception",
-        "line": 622,
+        "line": 651,
         "markers": [],
         "docstring": "Test that record_failure handles store exceptions.",
         "class": "TestRecordFailure"
       },
       {
         "name": "TestRecordBrokerRejection::test_record_broker_rejection_calls_record_rejection",
-        "line": 651,
+        "line": 680,
         "markers": [],
         "docstring": "Test that broker rejection calls record_rejection.",
         "class": "TestRecordBrokerRejection"
       },
       {
         "name": "TestRecordBrokerRejection::test_record_broker_rejection_appends_error",
-        "line": 682,
+        "line": 711,
         "markers": [],
         "docstring": "Test that broker rejection appends error to event store.",
         "class": "TestRecordBrokerRejection"
       },
       {
         "name": "TestRecordBrokerRejection::test_record_broker_rejection_uses_effective_price_when_price_none",
-        "line": 716,
+        "line": 745,
         "markers": [],
         "docstring": "Test that effective_price is used when price is None.",
         "class": "TestRecordBrokerRejection"
       },
       {
         "name": "TestRecordBrokerRejection::test_record_broker_rejection_handles_store_exception",
-        "line": 743,
+        "line": 772,
         "markers": [],
         "docstring": "Test that broker rejection handles store exceptions.",
         "class": "TestRecordBrokerRejection"
       },
       {
         "name": "TestRecordIntegrationRejection::test_record_integration_rejection_stores_event",
-        "line": 778,
+        "line": 807,
         "markers": [],
         "docstring": "Test that integration rejection stores event.",
         "class": "TestRecordIntegrationRejection"
       },
       {
         "name": "TestRecordIntegrationRejection::test_record_integration_rejection_with_different_status",
-        "line": 800,
+        "line": 829,
         "markers": [],
         "docstring": "Test that different status names are handled.",
         "class": "TestRecordIntegrationRejection"
       },
       {
         "name": "TestOrderEventRecorderEdgeCases::test_recorder_with_empty_bot_id",
-        "line": 833,
+        "line": 862,
         "markers": [],
         "docstring": "Test recorder with empty bot_id.",
         "class": "TestOrderEventRecorderEdgeCases"
       },
       {
         "name": "TestOrderEventRecorderEdgeCases::test_record_rejection_with_decimal_quantity",
-        "line": 840,
+        "line": 869,
         "markers": [],
         "docstring": "Test rejection with high precision decimal quantity.",
         "class": "TestOrderEventRecorderEdgeCases"
       },
       {
         "name": "TestOrderEventRecorderEdgeCases::test_record_trade_event_uses_order_quantity_when_available",
-        "line": 863,
+        "line": 892,
         "markers": [],
         "docstring": "Test that order.quantity is used when available.",
         "class": "TestOrderEventRecorderEdgeCases"
       },
       {
         "name": "test_init_stores_event_store",
-        "line": 47,
+        "line": 48,
         "markers": [],
         "docstring": "Test that event_store is stored correctly."
       },
       {
         "name": "test_init_stores_bot_id",
-        "line": 52,
+        "line": 53,
         "markers": [],
         "docstring": "Test that bot_id is stored correctly."
       },
       {
         "name": "test_record_preview_skips_when_preview_is_none",
-        "line": 68,
+        "line": 69,
         "markers": [],
         "docstring": "Test that record_preview does nothing when preview is None."
       },
       {
         "name": "test_record_preview_emits_metric",
-        "line": 89,
+        "line": 90,
         "markers": [],
         "docstring": "Test that record_preview emits metric with correct data."
       },
       {
         "name": "test_record_preview_uses_market_for_none_price",
-        "line": 125,
+        "line": 126,
         "markers": [],
         "docstring": "Test that 'market' is used when price is None."
       },
       {
         "name": "test_record_preview_logs_event",
-        "line": 150,
+        "line": 151,
         "markers": [],
         "docstring": "Test that record_preview logs to monitoring logger."
       },
       {
         "name": "test_record_preview_handles_log_exception",
-        "line": 178,
+        "line": 179,
         "markers": [],
         "docstring": "Test that record_preview handles logging exceptions gracefully."
       },
       {
         "name": "test_record_rejection_emits_metric",
-        "line": 212,
+        "line": 213,
         "markers": [],
         "docstring": "Test that record_rejection emits metric with correct data."
       },
       {
         "name": "test_record_rejection_logs_status_change",
-        "line": 241,
+        "line": 242,
         "markers": [],
         "docstring": "Test that record_rejection logs order status change."
       },
       {
         "name": "test_record_rejection_handles_none_price",
-        "line": 269,
+        "line": 270,
         "markers": [],
         "docstring": "Test that record_rejection handles None price."
       },
       {
         "name": "test_record_rejection_handles_log_exception",
-        "line": 293,
+        "line": 294,
         "markers": [],
         "docstring": "Test that record_rejection handles logging exceptions."
       },
       {
         "name": "test_record_submission_attempt_logs_correctly",
-        "line": 325,
+        "line": 326,
         "markers": [],
         "docstring": "Test that submission attempt is logged correctly."
       },
       {
         "name": "test_record_submission_attempt_handles_none_price",
-        "line": 353,
+        "line": 354,
         "markers": [],
         "docstring": "Test that submission attempt handles None price."
       },
       {
         "name": "test_record_submission_attempt_handles_exception",
-        "line": 375,
+        "line": 376,
         "markers": [],
         "docstring": "Test that submission attempt handles exceptions gracefully."
       },
       {
-        "name": "test_record_success_logs_order_info",
+        "name": "test_record_decision_trace_includes_decision_id",
         "line": 406,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_record_success_logs_order_info",
+        "line": 435,
         "markers": [],
         "docstring": "Test that successful order is logged."
       },
       {
         "name": "test_record_success_handles_reduce_only",
-        "line": 429,
+        "line": 458,
         "markers": [],
         "docstring": "Test that reduce_only flag is handled."
       },
       {
         "name": "test_record_success_handles_market_price",
-        "line": 449,
+        "line": 478,
         "markers": [],
         "docstring": "Test that 'market' as display_price is handled."
       },
       {
         "name": "test_record_trade_event_logs_status_change",
-        "line": 478,
+        "line": 507,
         "markers": [],
         "docstring": "Test that trade event logs status change."
       },
       {
         "name": "test_record_trade_event_appends_to_event_store",
-        "line": 506,
+        "line": 535,
         "markers": [],
         "docstring": "Test that trade event is appended to event store."
       },
       {
         "name": "test_record_trade_event_handles_log_exception",
-        "line": 536,
+        "line": 565,
         "markers": [],
         "docstring": "Test that trade event handles log exceptions."
       },
       {
         "name": "test_record_trade_event_handles_store_exception",
-        "line": 563,
+        "line": 592,
         "markers": [],
         "docstring": "Test that trade event handles event store exceptions."
       },
       {
         "name": "test_record_failure_appends_error_to_event_store",
-        "line": 597,
+        "line": 626,
         "markers": [],
         "docstring": "Test that failure is recorded to event store."
       },
       {
         "name": "test_record_failure_handles_store_exception",
-        "line": 622,
+        "line": 651,
         "markers": [],
         "docstring": "Test that record_failure handles store exceptions."
       },
       {
         "name": "test_record_broker_rejection_calls_record_rejection",
-        "line": 651,
+        "line": 680,
         "markers": [],
         "docstring": "Test that broker rejection calls record_rejection."
       },
       {
         "name": "test_record_broker_rejection_appends_error",
-        "line": 682,
+        "line": 711,
         "markers": [],
         "docstring": "Test that broker rejection appends error to event store."
       },
       {
         "name": "test_record_broker_rejection_uses_effective_price_when_price_none",
-        "line": 716,
+        "line": 745,
         "markers": [],
         "docstring": "Test that effective_price is used when price is None."
       },
       {
         "name": "test_record_broker_rejection_handles_store_exception",
-        "line": 743,
+        "line": 772,
         "markers": [],
         "docstring": "Test that broker rejection handles store exceptions."
       },
       {
         "name": "test_record_integration_rejection_stores_event",
-        "line": 778,
+        "line": 807,
         "markers": [],
         "docstring": "Test that integration rejection stores event."
       },
       {
         "name": "test_record_integration_rejection_with_different_status",
-        "line": 800,
+        "line": 829,
         "markers": [],
         "docstring": "Test that different status names are handled."
       },
       {
         "name": "test_recorder_with_empty_bot_id",
-        "line": 833,
+        "line": 862,
         "markers": [],
         "docstring": "Test recorder with empty bot_id."
       },
       {
         "name": "test_record_rejection_with_decimal_quantity",
-        "line": 840,
+        "line": 869,
         "markers": [],
         "docstring": "Test rejection with high precision decimal quantity."
       },
       {
         "name": "test_record_trade_event_uses_order_quantity_when_available",
-        "line": 863,
+        "line": 892,
         "markers": [],
         "docstring": "Test that order.quantity is used when available."
       }
@@ -68635,67 +69139,109 @@
         "class": "TestSignalGeneration"
       },
       {
-        "name": "TestExitLogic::test_exit_when_z_score_returns_to_mean",
+        "name": "TestExitLogic::test_exit_sets_cooldown",
         "line": 213,
+        "markers": [],
+        "docstring": "Exit should apply cooldown when configured.",
+        "class": "TestExitLogic"
+      },
+      {
+        "name": "TestExitLogic::test_exit_when_z_score_returns_to_mean",
+        "line": 241,
         "markers": [],
         "docstring": "Should CLOSE position when Z-Score returns near zero.",
         "class": "TestExitLogic"
       },
       {
         "name": "TestExitLogic::test_stop_loss_triggered",
-        "line": 242,
+        "line": 270,
         "markers": [],
         "docstring": "Should CLOSE position when stop loss is hit.",
         "class": "TestExitLogic"
       },
       {
         "name": "TestExitLogic::test_take_profit_triggered",
-        "line": 273,
+        "line": 301,
         "markers": [],
         "docstring": "Should CLOSE position when take profit is hit.",
         "class": "TestExitLogic"
       },
       {
         "name": "TestVolatilityTargeting::test_high_volatility_reduces_position",
-        "line": 308,
+        "line": 336,
         "markers": [],
         "docstring": "Position size should decrease when volatility is high.",
         "class": "TestVolatilityTargeting"
       },
       {
         "name": "TestVolatilityTargeting::test_position_capped_at_max_pct",
-        "line": 328,
+        "line": 356,
         "markers": [],
         "docstring": "Position size should never exceed max_position_pct of equity.",
         "class": "TestVolatilityTargeting"
       },
       {
         "name": "TestVolatilityTargeting::test_zero_volatility_uses_default",
-        "line": 344,
+        "line": 372,
         "markers": [],
         "docstring": "Should handle zero volatility gracefully.",
         "class": "TestVolatilityTargeting"
       },
       {
         "name": "TestKillSwitch::test_kill_switch_prevents_all_actions",
-        "line": 360,
+        "line": 388,
         "markers": [],
         "docstring": "When kill switch is on, should always HOLD.",
         "class": "TestKillSwitch"
       },
       {
         "name": "TestRehydration::test_rehydrate_returns_zero_for_stateless_strategy",
-        "line": 387,
+        "line": 415,
         "markers": [],
         "docstring": "Stateless strategy should return 0 from rehydrate.",
         "class": "TestRehydration"
       },
       {
         "name": "TestInsufficientData::test_hold_when_insufficient_data",
-        "line": 405,
+        "line": 433,
         "markers": [],
         "docstring": "Should HOLD when not enough price history.",
         "class": "TestInsufficientData"
+      },
+      {
+        "name": "TestCooldown::test_cooldown_blocks_entry",
+        "line": 459,
+        "markers": [],
+        "docstring": "Cooldown prevents new entries until it expires.",
+        "class": "TestCooldown"
+      },
+      {
+        "name": "TestTrendFilter::test_blocks_counter_trend_long",
+        "line": 529,
+        "markers": [],
+        "docstring": "Blocks longs when price is below trend MA.",
+        "class": "TestTrendFilter"
+      },
+      {
+        "name": "TestTrendFilter::test_allows_counter_trend_long_with_override",
+        "line": 556,
+        "markers": [],
+        "docstring": "Allows counter-trend longs when Z-score is extreme enough.",
+        "class": "TestTrendFilter"
+      },
+      {
+        "name": "TestTrendFilter::test_blocks_counter_trend_short",
+        "line": 582,
+        "markers": [],
+        "docstring": "Blocks shorts when price is above trend MA.",
+        "class": "TestTrendFilter"
+      },
+      {
+        "name": "TestTrendFilter::test_allows_counter_trend_short_with_override",
+        "line": 610,
+        "markers": [],
+        "docstring": "Allows counter-trend shorts when Z-score is extreme enough.",
+        "class": "TestTrendFilter"
       },
       {
         "name": "test_z_score_at_mean_is_zero",
@@ -68740,58 +69286,94 @@
         "docstring": "Should HOLD when Z-Score is within neutral zone."
       },
       {
-        "name": "test_exit_when_z_score_returns_to_mean",
+        "name": "test_exit_sets_cooldown",
         "line": 213,
+        "markers": [],
+        "docstring": "Exit should apply cooldown when configured."
+      },
+      {
+        "name": "test_exit_when_z_score_returns_to_mean",
+        "line": 241,
         "markers": [],
         "docstring": "Should CLOSE position when Z-Score returns near zero."
       },
       {
         "name": "test_stop_loss_triggered",
-        "line": 242,
+        "line": 270,
         "markers": [],
         "docstring": "Should CLOSE position when stop loss is hit."
       },
       {
         "name": "test_take_profit_triggered",
-        "line": 273,
+        "line": 301,
         "markers": [],
         "docstring": "Should CLOSE position when take profit is hit."
       },
       {
         "name": "test_high_volatility_reduces_position",
-        "line": 308,
+        "line": 336,
         "markers": [],
         "docstring": "Position size should decrease when volatility is high."
       },
       {
         "name": "test_position_capped_at_max_pct",
-        "line": 328,
+        "line": 356,
         "markers": [],
         "docstring": "Position size should never exceed max_position_pct of equity."
       },
       {
         "name": "test_zero_volatility_uses_default",
-        "line": 344,
+        "line": 372,
         "markers": [],
         "docstring": "Should handle zero volatility gracefully."
       },
       {
         "name": "test_kill_switch_prevents_all_actions",
-        "line": 360,
+        "line": 388,
         "markers": [],
         "docstring": "When kill switch is on, should always HOLD."
       },
       {
         "name": "test_rehydrate_returns_zero_for_stateless_strategy",
-        "line": 387,
+        "line": 415,
         "markers": [],
         "docstring": "Stateless strategy should return 0 from rehydrate."
       },
       {
         "name": "test_hold_when_insufficient_data",
-        "line": 405,
+        "line": 433,
         "markers": [],
         "docstring": "Should HOLD when not enough price history."
+      },
+      {
+        "name": "test_cooldown_blocks_entry",
+        "line": 459,
+        "markers": [],
+        "docstring": "Cooldown prevents new entries until it expires."
+      },
+      {
+        "name": "test_blocks_counter_trend_long",
+        "line": 529,
+        "markers": [],
+        "docstring": "Blocks longs when price is below trend MA."
+      },
+      {
+        "name": "test_allows_counter_trend_long_with_override",
+        "line": 556,
+        "markers": [],
+        "docstring": "Allows counter-trend longs when Z-score is extreme enough."
+      },
+      {
+        "name": "test_blocks_counter_trend_short",
+        "line": 582,
+        "markers": [],
+        "docstring": "Blocks shorts when price is above trend MA."
+      },
+      {
+        "name": "test_allows_counter_trend_short_with_override",
+        "line": 610,
+        "markers": [],
+        "docstring": "Allows counter-trend shorts when Z-score is extreme enough."
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/strategies/hybrid/test_base.py": [
@@ -71052,32 +71634,68 @@
     "tests/unit/gpt_trader/monitoring/daily_report/test_loaders_edges.py": [
       {
         "name": "test_load_metrics_missing_file_returns_empty",
-        "line": 11,
+        "line": 18,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_load_metrics_invalid_json_returns_empty",
-        "line": 17,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_load_events_since_skips_invalid_entries",
         "line": 24,
         "markers": [],
         "docstring": ""
       },
       {
+        "name": "test_load_events_since_skips_invalid_entries",
+        "line": 31,
+        "markers": [],
+        "docstring": ""
+      },
+      {
         "name": "test_load_events_since_filters_by_cutoff",
-        "line": 42,
+        "line": 51,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_load_events_since_falls_back_to_db",
+        "line": 66,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_load_events_since_normalizes_timestamp",
+        "line": 98,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_load_metrics_falls_back_to_db",
+        "line": 114,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_load_unfilled_orders_count_uses_threshold",
+        "line": 143,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_load_liveness_snapshot_missing_db",
+        "line": 180,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_load_runtime_fingerprint_missing_db",
+        "line": 186,
         "markers": [],
         "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/monitoring/daily_report/test_analytics.py": [
       {
-        "name": "TestCalculatePnlMetrics::test_returns_zero_equity_when_missing",
+        "name": "TestCalculatePnlMetrics::test_returns_none_equity_when_missing",
         "line": 17,
         "markers": [],
         "docstring": "",
@@ -71140,259 +71758,273 @@
         "class": "TestCalculatePnlMetrics"
       },
       {
-        "name": "TestCalculatePnlMetrics::test_equity_change_pct_zero_when_no_prev_equity",
+        "name": "TestCalculatePnlMetrics::test_equity_change_pct_none_when_equity_missing",
         "line": 81,
         "markers": [],
         "docstring": "",
         "class": "TestCalculatePnlMetrics"
       },
       {
+        "name": "TestCalculatePnlMetrics::test_equity_change_pct_zero_when_no_prev_equity",
+        "line": 88,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculatePnlMetrics"
+      },
+      {
+        "name": "TestCalculatePnlMetrics::test_equity_none_when_not_parseable",
+        "line": 95,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculatePnlMetrics"
+      },
+      {
         "name": "TestCalculateTradeMetrics::test_empty_events",
-        "line": 92,
+        "line": 103,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTradeMetrics"
       },
       {
         "name": "TestCalculateTradeMetrics::test_counts_winning_trades",
-        "line": 98,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateTradeMetrics"
-      },
-      {
-        "name": "TestCalculateTradeMetrics::test_calculates_win_rate",
         "line": 109,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTradeMetrics"
       },
       {
+        "name": "TestCalculateTradeMetrics::test_calculates_win_rate",
+        "line": 120,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateTradeMetrics"
+      },
+      {
         "name": "TestCalculateTradeMetrics::test_calculates_avg_win_loss",
-        "line": 117,
+        "line": 128,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTradeMetrics"
       },
       {
         "name": "TestCalculateTradeMetrics::test_calculates_largest_win_loss",
-        "line": 127,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateTradeMetrics"
-      },
-      {
-        "name": "TestCalculateTradeMetrics::test_calculates_profit_factor",
         "line": 138,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTradeMetrics"
       },
       {
+        "name": "TestCalculateTradeMetrics::test_calculates_profit_factor",
+        "line": 149,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateTradeMetrics"
+      },
+      {
         "name": "TestCalculateTradeMetrics::test_profit_factor_zero_when_no_losses",
-        "line": 146,
+        "line": 157,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTradeMetrics"
       },
       {
         "name": "TestCalculateTradeMetrics::test_calculates_sharpe_ratio",
-        "line": 153,
+        "line": 164,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTradeMetrics"
       },
       {
         "name": "TestCalculateTradeMetrics::test_sharpe_ratio_zero_with_single_trade",
-        "line": 162,
+        "line": 173,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTradeMetrics"
       },
       {
         "name": "TestCalculateTradeMetrics::test_calculates_max_drawdown",
-        "line": 167,
+        "line": 178,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTradeMetrics"
       },
       {
         "name": "TestCalculateTradeMetrics::test_calculates_max_drawdown_pct",
-        "line": 176,
+        "line": 187,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTradeMetrics"
       },
       {
         "name": "TestCalculateTradeMetrics::test_ignores_non_fill_events",
-        "line": 184,
+        "line": 195,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTradeMetrics"
       },
       {
         "name": "TestCalculateSymbolMetrics::test_empty_events",
-        "line": 197,
+        "line": 208,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateSymbolMetrics"
       },
       {
         "name": "TestCalculateSymbolMetrics::test_skips_events_without_symbol",
-        "line": 201,
+        "line": 212,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateSymbolMetrics"
       },
       {
         "name": "TestCalculateSymbolMetrics::test_groups_by_symbol",
-        "line": 206,
+        "line": 217,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateSymbolMetrics"
       },
       {
         "name": "TestCalculateSymbolMetrics::test_calculates_symbol_realized_pnl",
-        "line": 216,
+        "line": 227,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateSymbolMetrics"
       },
       {
         "name": "TestCalculateSymbolMetrics::test_tracks_unrealized_pnl",
-        "line": 225,
+        "line": 236,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateSymbolMetrics"
       },
       {
         "name": "TestCalculateSymbolMetrics::test_accumulates_funding_pnl",
-        "line": 232,
+        "line": 243,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateSymbolMetrics"
       },
       {
         "name": "TestCalculateSymbolMetrics::test_calculates_total_pnl",
-        "line": 240,
+        "line": 251,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateSymbolMetrics"
       },
       {
         "name": "TestCalculateSymbolMetrics::test_counts_trades",
-        "line": 249,
+        "line": 260,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateSymbolMetrics"
       },
       {
         "name": "TestCalculateSymbolMetrics::test_calculates_win_rate",
-        "line": 258,
+        "line": 269,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateSymbolMetrics"
       },
       {
         "name": "TestCalculateSymbolMetrics::test_calculates_avg_win_loss",
-        "line": 266,
+        "line": 277,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateSymbolMetrics"
       },
       {
         "name": "TestCalculateSymbolMetrics::test_calculates_profit_factor",
-        "line": 276,
+        "line": 287,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateSymbolMetrics"
       },
       {
         "name": "TestCalculateSymbolMetrics::test_tracks_regime",
-        "line": 284,
+        "line": 295,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateSymbolMetrics"
       },
       {
         "name": "TestCalculateSymbolMetrics::test_tracks_exposure_from_position_update",
-        "line": 291,
+        "line": 302,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateSymbolMetrics"
       },
       {
         "name": "TestCalculateRiskMetrics::test_empty_events",
-        "line": 307,
+        "line": 318,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateRiskMetrics"
       },
       {
         "name": "TestCalculateRiskMetrics::test_counts_guard_triggers",
-        "line": 312,
+        "line": 323,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateRiskMetrics"
       },
       {
         "name": "TestCalculateRiskMetrics::test_handles_unknown_guard",
-        "line": 322,
+        "line": 333,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateRiskMetrics"
       },
       {
         "name": "TestCalculateRiskMetrics::test_tracks_circuit_breaker_state",
-        "line": 327,
+        "line": 338,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateRiskMetrics"
       },
       {
         "name": "TestCalculateHealthMetrics::test_empty_events",
-        "line": 345,
+        "line": 356,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateHealthMetrics"
       },
       {
         "name": "TestCalculateHealthMetrics::test_counts_stale_marks",
-        "line": 352,
+        "line": 363,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateHealthMetrics"
       },
       {
         "name": "TestCalculateHealthMetrics::test_counts_ws_reconnects",
-        "line": 360,
+        "line": 371,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateHealthMetrics"
       },
       {
         "name": "TestCalculateHealthMetrics::test_counts_unfilled_orders",
-        "line": 369,
+        "line": 380,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateHealthMetrics"
       },
       {
         "name": "TestCalculateHealthMetrics::test_counts_api_errors",
-        "line": 374,
+        "line": 385,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateHealthMetrics"
       },
       {
         "name": "TestCalculateHealthMetrics::test_counts_all_types",
-        "line": 382,
+        "line": 393,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateHealthMetrics"
       },
       {
-        "name": "test_returns_zero_equity_when_missing",
+        "name": "test_returns_none_equity_when_missing",
         "line": 17,
         "markers": [],
         "docstring": ""
@@ -71446,218 +72078,230 @@
         "docstring": ""
       },
       {
-        "name": "test_equity_change_pct_zero_when_no_prev_equity",
+        "name": "test_equity_change_pct_none_when_equity_missing",
         "line": 81,
         "markers": [],
         "docstring": ""
       },
       {
+        "name": "test_equity_change_pct_zero_when_no_prev_equity",
+        "line": 88,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_equity_none_when_not_parseable",
+        "line": 95,
+        "markers": [],
+        "docstring": ""
+      },
+      {
         "name": "test_empty_events",
-        "line": 92,
+        "line": 103,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_counts_winning_trades",
-        "line": 98,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_calculates_win_rate",
         "line": 109,
         "markers": [],
         "docstring": ""
       },
       {
+        "name": "test_calculates_win_rate",
+        "line": 120,
+        "markers": [],
+        "docstring": ""
+      },
+      {
         "name": "test_calculates_avg_win_loss",
-        "line": 117,
+        "line": 128,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_calculates_largest_win_loss",
-        "line": 127,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_calculates_profit_factor",
         "line": 138,
         "markers": [],
         "docstring": ""
       },
       {
+        "name": "test_calculates_profit_factor",
+        "line": 149,
+        "markers": [],
+        "docstring": ""
+      },
+      {
         "name": "test_profit_factor_zero_when_no_losses",
-        "line": 146,
+        "line": 157,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_calculates_sharpe_ratio",
-        "line": 153,
+        "line": 164,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_sharpe_ratio_zero_with_single_trade",
-        "line": 162,
+        "line": 173,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_calculates_max_drawdown",
-        "line": 167,
+        "line": 178,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_calculates_max_drawdown_pct",
-        "line": 176,
+        "line": 187,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_ignores_non_fill_events",
-        "line": 184,
+        "line": 195,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_empty_events",
-        "line": 197,
+        "line": 208,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_skips_events_without_symbol",
-        "line": 201,
+        "line": 212,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_groups_by_symbol",
-        "line": 206,
+        "line": 217,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_calculates_symbol_realized_pnl",
-        "line": 216,
+        "line": 227,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_tracks_unrealized_pnl",
-        "line": 225,
+        "line": 236,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_accumulates_funding_pnl",
-        "line": 232,
+        "line": 243,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_calculates_total_pnl",
-        "line": 240,
+        "line": 251,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_counts_trades",
-        "line": 249,
+        "line": 260,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_calculates_win_rate",
-        "line": 258,
+        "line": 269,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_calculates_avg_win_loss",
-        "line": 266,
+        "line": 277,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_calculates_profit_factor",
-        "line": 276,
+        "line": 287,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_tracks_regime",
-        "line": 284,
+        "line": 295,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_tracks_exposure_from_position_update",
-        "line": 291,
+        "line": 302,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_empty_events",
-        "line": 307,
+        "line": 318,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_counts_guard_triggers",
-        "line": 312,
+        "line": 323,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_handles_unknown_guard",
-        "line": 322,
+        "line": 333,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_tracks_circuit_breaker_state",
-        "line": 327,
+        "line": 338,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_empty_events",
-        "line": 345,
+        "line": 356,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_counts_stale_marks",
-        "line": 352,
+        "line": 363,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_counts_ws_reconnects",
-        "line": 360,
+        "line": 371,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_counts_unfilled_orders",
-        "line": 369,
+        "line": 380,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_counts_api_errors",
-        "line": 374,
+        "line": 385,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_counts_all_types",
-        "line": 382,
+        "line": 393,
         "markers": [],
         "docstring": ""
       }
@@ -71670,8 +72314,14 @@
         "docstring": ""
       },
       {
+        "name": "test_generate_liveness_uses_generated_at",
+        "line": 97,
+        "markers": [],
+        "docstring": ""
+      },
+      {
         "name": "test_save_report_writes_json_and_text",
-        "line": 85,
+        "line": 175,
         "markers": [],
         "docstring": ""
       }
@@ -71679,417 +72329,494 @@
     "tests/unit/gpt_trader/monitoring/daily_report/test_models.py": [
       {
         "name": "TestSymbolPerformance::test_creation_with_required_field",
-        "line": 74,
+        "line": 76,
         "markers": [],
         "docstring": "",
         "class": "TestSymbolPerformance"
       },
       {
         "name": "TestSymbolPerformance::test_defaults",
-        "line": 78,
+        "line": 80,
         "markers": [],
         "docstring": "",
         "class": "TestSymbolPerformance"
       },
       {
         "name": "TestSymbolPerformance::test_full_creation",
-        "line": 92,
+        "line": 94,
         "markers": [],
         "docstring": "",
         "class": "TestSymbolPerformance"
       },
       {
         "name": "TestDailyReport::test_creation",
-        "line": 104,
+        "line": 106,
         "markers": [],
         "docstring": "",
         "class": "TestDailyReport"
       },
       {
         "name": "TestDailyReport::test_pnl_fields",
-        "line": 110,
+        "line": 112,
         "markers": [],
         "docstring": "",
         "class": "TestDailyReport"
       },
       {
         "name": "TestDailyReport::test_performance_fields",
-        "line": 118,
+        "line": 120,
         "markers": [],
         "docstring": "",
         "class": "TestDailyReport"
       },
       {
         "name": "TestDailyReport::test_trade_fields",
-        "line": 124,
+        "line": 126,
         "markers": [],
         "docstring": "",
         "class": "TestDailyReport"
       },
       {
         "name": "TestDailyReport::test_health_fields",
-        "line": 130,
+        "line": 132,
         "markers": [],
         "docstring": "",
         "class": "TestDailyReport"
       },
       {
         "name": "TestDailyReportToDict::test_returns_dict",
-        "line": 141,
+        "line": 143,
         "markers": [],
         "docstring": "",
         "class": "TestDailyReportToDict"
       },
       {
         "name": "TestDailyReportToDict::test_date_and_profile",
-        "line": 146,
+        "line": 148,
         "markers": [],
         "docstring": "",
         "class": "TestDailyReportToDict"
       },
       {
         "name": "TestDailyReportToDict::test_account_section",
-        "line": 153,
+        "line": 155,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReportToDict"
+      },
+      {
+        "name": "TestDailyReportToDict::test_account_section_with_missing_equity",
+        "line": 162,
         "markers": [],
         "docstring": "",
         "class": "TestDailyReportToDict"
       },
       {
         "name": "TestDailyReportToDict::test_pnl_section",
-        "line": 160,
+        "line": 169,
         "markers": [],
         "docstring": "",
         "class": "TestDailyReportToDict"
       },
       {
         "name": "TestDailyReportToDict::test_performance_section",
-        "line": 169,
+        "line": 178,
         "markers": [],
         "docstring": "",
         "class": "TestDailyReportToDict"
       },
       {
         "name": "TestDailyReportToDict::test_trades_section",
-        "line": 178,
+        "line": 187,
         "markers": [],
         "docstring": "",
         "class": "TestDailyReportToDict"
       },
       {
         "name": "TestDailyReportToDict::test_risk_section",
-        "line": 189,
+        "line": 198,
         "markers": [],
         "docstring": "",
         "class": "TestDailyReportToDict"
       },
       {
         "name": "TestDailyReportToDict::test_symbols_section",
-        "line": 198,
+        "line": 207,
         "markers": [],
         "docstring": "",
         "class": "TestDailyReportToDict"
       },
       {
         "name": "TestDailyReportToDict::test_symbol_pnl_nested",
-        "line": 209,
+        "line": 218,
         "markers": [],
         "docstring": "",
         "class": "TestDailyReportToDict"
       },
       {
         "name": "TestDailyReportToDict::test_health_section",
-        "line": 226,
+        "line": 235,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReportToDict"
+      },
+      {
+        "name": "TestDailyReportToDict::test_health_liveness_and_runtime_fields",
+        "line": 243,
         "markers": [],
         "docstring": "",
         "class": "TestDailyReportToDict"
       },
       {
         "name": "TestDailyReportToText::test_returns_string",
-        "line": 238,
+        "line": 256,
         "markers": [],
         "docstring": "",
         "class": "TestDailyReportToText"
       },
       {
         "name": "TestDailyReportToText::test_contains_header",
-        "line": 243,
+        "line": 261,
         "markers": [],
         "docstring": "",
         "class": "TestDailyReportToText"
       },
       {
         "name": "TestDailyReportToText::test_contains_account_summary",
-        "line": 249,
+        "line": 278,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReportToText"
+      },
+      {
+        "name": "TestDailyReportToText::test_account_summary_handles_missing_equity",
+        "line": 284,
         "markers": [],
         "docstring": "",
         "class": "TestDailyReportToText"
       },
       {
         "name": "TestDailyReportToText::test_contains_pnl_breakdown",
-        "line": 255,
+        "line": 290,
         "markers": [],
         "docstring": "",
         "class": "TestDailyReportToText"
       },
       {
         "name": "TestDailyReportToText::test_contains_performance_metrics",
-        "line": 263,
+        "line": 298,
         "markers": [],
         "docstring": "",
         "class": "TestDailyReportToText"
       },
       {
         "name": "TestDailyReportToText::test_contains_trade_statistics",
-        "line": 271,
+        "line": 306,
         "markers": [],
         "docstring": "",
         "class": "TestDailyReportToText"
       },
       {
         "name": "TestDailyReportToText::test_contains_health_metrics",
-        "line": 279,
+        "line": 314,
         "markers": [],
         "docstring": "",
         "class": "TestDailyReportToText"
       },
       {
         "name": "TestDailyReportToText::test_shows_no_guard_triggers",
-        "line": 286,
+        "line": 321,
         "markers": [],
         "docstring": "",
         "class": "TestDailyReportToText"
       },
       {
         "name": "TestDailyReportToText::test_shows_guard_triggers",
-        "line": 291,
+        "line": 326,
         "markers": [],
         "docstring": "",
         "class": "TestDailyReportToText"
       },
       {
         "name": "TestDailyReportToText::test_shows_circuit_breaker_ok",
-        "line": 298,
+        "line": 333,
         "markers": [],
         "docstring": "",
         "class": "TestDailyReportToText"
       },
       {
         "name": "TestDailyReportToText::test_shows_circuit_breaker_state",
-        "line": 303,
+        "line": 338,
         "markers": [],
         "docstring": "",
         "class": "TestDailyReportToText"
       },
       {
         "name": "TestDailyReportToText::test_contains_symbol_performance",
-        "line": 311,
+        "line": 346,
         "markers": [],
         "docstring": "",
         "class": "TestDailyReportToText"
       },
       {
         "name": "TestDailyReportToText::test_no_symbol_section_when_empty",
-        "line": 322,
+        "line": 357,
         "markers": [],
         "docstring": "",
         "class": "TestDailyReportToText"
       },
       {
         "name": "TestDailyReportToText::test_symbol_with_no_regime",
-        "line": 327,
+        "line": 362,
         "markers": [],
         "docstring": "",
         "class": "TestDailyReportToText"
       },
       {
         "name": "test_creation_with_required_field",
-        "line": 74,
+        "line": 76,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_defaults",
-        "line": 78,
+        "line": 80,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_full_creation",
-        "line": 92,
+        "line": 94,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_creation",
-        "line": 104,
+        "line": 106,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_pnl_fields",
-        "line": 110,
+        "line": 112,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_performance_fields",
-        "line": 118,
+        "line": 120,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_trade_fields",
-        "line": 124,
+        "line": 126,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_health_fields",
-        "line": 130,
+        "line": 132,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_returns_dict",
-        "line": 141,
+        "line": 143,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_date_and_profile",
-        "line": 146,
+        "line": 148,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_account_section",
-        "line": 153,
+        "line": 155,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_account_section_with_missing_equity",
+        "line": 162,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_pnl_section",
-        "line": 160,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_performance_section",
         "line": 169,
         "markers": [],
         "docstring": ""
       },
       {
-        "name": "test_trades_section",
+        "name": "test_performance_section",
         "line": 178,
         "markers": [],
         "docstring": ""
       },
       {
-        "name": "test_risk_section",
-        "line": 189,
+        "name": "test_trades_section",
+        "line": 187,
         "markers": [],
         "docstring": ""
       },
       {
-        "name": "test_symbols_section",
+        "name": "test_risk_section",
         "line": 198,
         "markers": [],
         "docstring": ""
       },
       {
+        "name": "test_symbols_section",
+        "line": 207,
+        "markers": [],
+        "docstring": ""
+      },
+      {
         "name": "test_symbol_pnl_nested",
-        "line": 209,
+        "line": 218,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_health_section",
-        "line": 226,
+        "line": 235,
         "markers": [],
         "docstring": ""
       },
       {
-        "name": "test_returns_string",
-        "line": 238,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_contains_header",
+        "name": "test_health_liveness_and_runtime_fields",
         "line": 243,
         "markers": [],
         "docstring": ""
       },
       {
+        "name": "test_returns_string",
+        "line": 256,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_contains_header",
+        "line": 261,
+        "markers": [],
+        "docstring": ""
+      },
+      {
         "name": "test_contains_account_summary",
-        "line": 249,
+        "line": 278,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_account_summary_handles_missing_equity",
+        "line": 284,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_contains_pnl_breakdown",
-        "line": 255,
+        "line": 290,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_contains_performance_metrics",
-        "line": 263,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_contains_trade_statistics",
-        "line": 271,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_contains_health_metrics",
-        "line": 279,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_shows_no_guard_triggers",
-        "line": 286,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_shows_guard_triggers",
-        "line": 291,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_shows_circuit_breaker_ok",
         "line": 298,
         "markers": [],
         "docstring": ""
       },
       {
+        "name": "test_contains_trade_statistics",
+        "line": 306,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_contains_health_metrics",
+        "line": 314,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_shows_no_guard_triggers",
+        "line": 321,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_shows_guard_triggers",
+        "line": 326,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_shows_circuit_breaker_ok",
+        "line": 333,
+        "markers": [],
+        "docstring": ""
+      },
+      {
         "name": "test_shows_circuit_breaker_state",
-        "line": 303,
+        "line": 338,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_contains_symbol_performance",
-        "line": 311,
+        "line": 346,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_no_symbol_section_when_empty",
-        "line": 322,
+        "line": 357,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_symbol_with_no_regime",
-        "line": 327,
+        "line": 362,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/monitoring/daily_report/test_liveness_runtime.py": [
+      {
+        "name": "test_liveness_green",
+        "line": 48,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_liveness_green_with_one_fresh_event",
+        "line": 73,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_liveness_red",
+        "line": 98,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_liveness_unknown_when_missing_events",
+        "line": 116,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_runtime_fingerprint_parses_payload",
+        "line": 127,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_runtime_fingerprint_does_not_echo_secrets",
+        "line": 150,
         "markers": [],
         "docstring": ""
       }

@@ -1,6 +1,6 @@
 {
   "artifact": "config_code_map",
-  "generated_at": "2026-01-15T13:32:28.405208+00:00",
+  "generated_at": "2026-01-18T01:50:52.204104+00:00",
   "description": "Config field \u2192 code linkage map based on static scan.",
   "scan_root": "src/gpt_trader",
   "sections": [
@@ -136,6 +136,12 @@
           "notes": "No direct usage found"
         },
         {
+          "field": "market_order_fallback",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
           "field": "metadata",
           "usage_count": 0,
           "files": [],
@@ -185,6 +191,12 @@
         },
         {
           "field": "reduce_only_mode",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "regime_switcher_trend_mode",
           "usage_count": 0,
           "files": [],
           "notes": "No direct usage found"
@@ -245,6 +257,12 @@
         },
         {
           "field": "trading_modes",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "use_limit_orders",
           "usage_count": 0,
           "files": [],
           "notes": "No direct usage found"
@@ -445,6 +463,12 @@
       "prefix": "config.mean_reversion",
       "fields": [
         {
+          "field": "cooldown_bars",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
           "field": "enable_shorts",
           "usage_count": 0,
           "files": [],
@@ -482,6 +506,30 @@
         },
         {
           "field": "target_daily_volatility",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "trend_filter_enabled",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "trend_override_z_score",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "trend_threshold_pct",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "trend_window",
           "usage_count": 0,
           "files": [],
           "notes": "No direct usage found"

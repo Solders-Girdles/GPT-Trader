@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "description": "Catalog of structured log events in GPT-Trader",
-  "total_event_types": 129,
+  "total_event_types": 132,
   "categories": {
     "trading": [
       "cancel_order",
@@ -21,6 +21,7 @@
       "list_orders",
       "list_positions",
       "list_spot_positions_as_core",
+      "order_audit",
       "order_cancel",
       "order_decision_trace",
       "order_placement",
@@ -87,6 +88,7 @@
       "collect_runtime_guard_state",
       "config_guardian",
       "runtime_guards",
+      "runtime_start",
       "spot_profile_service"
     ],
     "system": [
@@ -146,6 +148,7 @@
       "to_product",
       "update_status",
       "user_event_emit",
+      "user_events",
       "validation_escalation",
       "verify_integrity",
       "write_event"
@@ -1396,6 +1399,21 @@
         "features/live_trade/execution/order_submission.py"
       ]
     },
+    "user_events": {
+      "occurrence_count": 1,
+      "components": null,
+      "statuses": null,
+      "levels": [
+        "INFO"
+      ],
+      "common_fields": [
+        "broker",
+        "stage"
+      ],
+      "source_files": [
+        "features/live_trade/engines/strategy.py"
+      ]
+    },
     "order_recovery": {
       "occurrence_count": 2,
       "components": null,
@@ -1451,6 +1469,18 @@
         "features/live_trade/engines/strategy.py"
       ]
     },
+    "runtime_start": {
+      "occurrence_count": 1,
+      "components": null,
+      "statuses": null,
+      "levels": [
+        "INFO"
+      ],
+      "common_fields": [],
+      "source_files": [
+        "features/live_trade/engines/strategy.py"
+      ]
+    },
     "runtime_guards": {
       "occurrence_count": 4,
       "components": null,
@@ -1481,6 +1511,21 @@
       "common_fields": [
         "_connection_status",
         "broker"
+      ],
+      "source_files": [
+        "features/live_trade/engines/strategy.py"
+      ]
+    },
+    "order_audit": {
+      "occurrence_count": 1,
+      "components": null,
+      "statuses": null,
+      "levels": [
+        "INFO"
+      ],
+      "common_fields": [
+        "audit_task",
+        "stage"
       ],
       "source_files": [
         "features/live_trade/engines/strategy.py"
@@ -2424,7 +2469,7 @@
     }
   },
   "field_frequency": {
-    "stage": 143,
+    "stage": 145,
     "error_message": 74,
     "symbol": 70,
     "error_type": 68,
@@ -2435,12 +2480,12 @@
     "guard_name": 10,
     "service": 9,
     "path": 8,
+    "broker": 6,
     "event_type": 5,
     "error_msg": 5,
     "__all__": 5,
     "granularity": 5,
     "quantity": 5,
-    "broker": 5,
     "client_ip": 4,
     "_tracer": 4,
     "client_order_id": 4,
@@ -2456,7 +2501,7 @@
     "enabled": 3
   },
   "level_distribution": {
-    "INFO": 103,
+    "INFO": 106,
     "WARNING": 66,
     "DEBUG": 46,
     "ERROR": 81,

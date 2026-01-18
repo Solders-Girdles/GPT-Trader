@@ -93,7 +93,7 @@
     ]
   },
   "counts": {
-    "parametrize": 92,
+    "parametrize": 94,
     "skipif": 16,
     "integration": 14,
     "property": 11,

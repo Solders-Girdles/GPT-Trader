@@ -1,6 +1,6 @@
 # Config → Code Linkage Map
 
-Generated: 2026-01-15T13:32:28.405208+00:00
+Generated: 2026-01-18T01:50:52.204104+00:00
 
 Scan root: `src/gpt_trader`
 
@@ -28,6 +28,7 @@ Scan root: `src/gpt_trader`
 | event_store_root_override | 0 | — |
 | interval | 0 | — |
 | log_level | 0 | — |
+| market_order_fallback | 0 | — |
 | metadata | 0 | — |
 | mock_broker | 0 | — |
 | perps_enable_streaming | 0 | — |
@@ -37,6 +38,7 @@ Scan root: `src/gpt_trader`
 | perps_stream_level | 0 | — |
 | profile | 0 | — |
 | reduce_only_mode | 0 | — |
+| regime_switcher_trend_mode | 0 | — |
 | risk_config_path | 0 | — |
 | runtime_root | 0 | — |
 | spot_force_live | 0 | — |
@@ -47,6 +49,7 @@ Scan root: `src/gpt_trader`
 | symbols | 0 | — |
 | time_in_force | 0 | — |
 | trading_modes | 0 | — |
+| use_limit_orders | 0 | — |
 | webhook_url | 0 | — |
 
 ## BotRiskConfig
@@ -88,6 +91,7 @@ Scan root: `src/gpt_trader`
 ## MeanReversionConfig
 | Field | Usage count | Example files |
 |-------|-------------|---------------|
+| cooldown_bars | 0 | — |
 | enable_shorts | 0 | — |
 | kill_switch_enabled | 0 | — |
 | lookback_window | 0 | — |
@@ -95,6 +99,10 @@ Scan root: `src/gpt_trader`
 | stop_loss_pct | 0 | — |
 | take_profit_pct | 0 | — |
 | target_daily_volatility | 0 | — |
+| trend_filter_enabled | 0 | — |
+| trend_override_z_score | 0 | — |
+| trend_threshold_pct | 0 | — |
+| trend_window | 0 | — |
 | z_score_entry_threshold | 0 | — |
 | z_score_exit_threshold | 0 | — |
 

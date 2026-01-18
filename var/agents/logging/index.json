@@ -6,7 +6,7 @@
     "log_schema": "log_schema.json"
   },
   "summary": {
-    "total_events": 129,
+    "total_events": 132,
     "categories": [
       "trading",
       "data",

@@ -2,8 +2,7 @@
   "artifact": "cli_flow_map",
   "description": "CLI \u2192 config \u2192 container \u2192 engine flow map.",
   "entrypoints": [
-    "uv run gpt-trader run --profile dev --dev-fast",
-    "uv run coinbase-trader run --profile dev --dev-fast"
+    "uv run gpt-trader run --profile dev --dev-fast"
   ],
   "nodes": [
     {
@@ -114,5 +113,5 @@
       "label": "select strategy"
     }
   ],
-  "generated_at": "2026-01-15T13:32:26.175858+00:00"
+  "generated_at": "2026-01-18T01:50:49.698562+00:00"
 }

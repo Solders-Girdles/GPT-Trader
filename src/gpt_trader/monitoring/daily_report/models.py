@@ -63,7 +63,7 @@ class DailyReport:
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
-        payload = {
+        payload: dict[str, Any] = {
             "date": self.date,
             "profile": self.profile,
             "generated_at": self.generated_at,

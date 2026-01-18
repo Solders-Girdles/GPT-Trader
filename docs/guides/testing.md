@@ -9,11 +9,19 @@ This codebase targets a **100% pass rate** on actively maintained spot trading s
 ### Running Tests
 
 ```bash
-# Run all tests
+# Run default suite (unit by default via pytest.ini addopts)
+make test
 uv run pytest
 
 # Run with coverage
 uv run pytest --cov --cov-report=html --cov-report=term
+
+# Unit-only (explicit)
+make test-unit
+
+# Integration (opt-in; overrides pytest.ini addopts)
+make test-integration-fast
+make test-integration
 
 # Run specific test file
 uv run pytest tests/unit/gpt_trader/config/test_bot_config_env.py
@@ -53,16 +61,14 @@ uv run pytest --cov --cov-report=term -q
 
 ```
 tests/
-├── unit/                  # Unit tests (fast, isolated)
-│   ├── gpt_trader/
-│   │   ├── config/        # Mirrors src structure
-│   │   ├── features/
-│   │   │   ├── live_trade/
-│   │   │   └── brokerages/
-│   │   └── app/           # Application container tests
-│   └── coinbase/          # Coinbase-specific utilities
-├── support/               # Shared fixtures (when co-located insufficient)
-└── fixtures/              # Test fixtures including behavioral scenarios
+├── unit/                  # Unit tests (fast, isolated; default suite)
+│   └── gpt_trader/         # Mirrors src/gpt_trader (preferred location)
+├── integration/           # Integration tests (opt-in)
+├── property/              # Property-based tests (opt-in)
+├── contract/              # Contract tests (opt-in)
+├── fixtures/              # Test fixtures and scenario data
+├── support/               # Shared fixtures/helpers (when co-located insufficient)
+└── _triage/               # Legacy test triage manifest
 ```
 
 ### Active Test Suites
@@ -170,10 +176,27 @@ def test_live_api_connection(self): ...
 
 ```bash
 # Run only integration tests
-uv run pytest -m integration
+make test-integration-fast
 
 # Skip integration tests (default)
-uv run pytest -m "not integration"
+make test
+```
+
+## Legacy Test Triage
+
+We track tests that are **legacy-pattern** (delete vs modernize) in `tests/_triage/legacy_tests.yaml`.
+The root `conftest.py` applies `legacy_delete` / `legacy_modernize` markers automatically based on that
+manifest (tracking only; tests are not auto-skipped).
+
+```bash
+# Heuristic report of candidates + current manifest
+make test-triage
+
+# Fail (non-zero) if actionable candidates exist or manifest is invalid
+make test-triage-check
+
+# Collect just the modernize backlog (ignore pytest.ini addopts)
+uv run pytest -o addopts= -m legacy_modernize --collect-only -q
 ```
 
 ## Coverage Guidelines
@@ -243,7 +266,7 @@ uv run agent-impact --files src/gpt_trader/features/live_trade/bot.py --exclude-
 ```
 
 CI safeguards:
-- `scripts/ci/check_test_hygiene.py` enforces coverage expectations for critical paths
+- `scripts/ci/check_test_hygiene.py` enforces unit test layout + basic hygiene guardrails
 - Push builds to `main` always run the full suite
 
 ## Common Issues

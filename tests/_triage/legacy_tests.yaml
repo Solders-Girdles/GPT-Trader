@@ -1,0 +1,14 @@
+version: 1
+# Legacy test triage manifest.
+#
+# Keys are repo-relative file paths (use forward slashes).
+# Values track whether a test file should be deleted or modernized.
+#
+# Example:
+# tests/integration/test_some_old_thing.py:
+#   action: delete  # or: modernize
+#   status: todo    # optional: todo|in_progress|done
+#   reason: "Why this is legacy or redundant"
+#   owner: "name/handle"  # optional
+#   added: "2026-01-18"   # optional (YYYY-MM-DD)
+tests: {}

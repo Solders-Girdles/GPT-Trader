@@ -20,6 +20,7 @@ from gpt_trader.features.live_trade.execution.guard_manager import GuardManager
 from gpt_trader.features.live_trade.execution.guards import RuntimeGuardState
 from gpt_trader.features.live_trade.execution.order_event_recorder import OrderEventRecorder
 from gpt_trader.features.live_trade.execution.order_submission import OrderSubmitter
+from gpt_trader.features.live_trade.execution.state_collection import StateCollector
 from gpt_trader.features.live_trade.execution.validation import OrderValidator
 from gpt_trader.utilities.datetime_helpers import utc_now
 
@@ -36,6 +37,19 @@ def mock_broker() -> MagicMock:
     broker.get_market_snapshot.return_value = None
     broker.get_product.return_value = None
     return broker
+
+
+@pytest.fixture
+def mock_config(bot_config_factory):
+    """Create mock BotConfig for state collection tests."""
+    return bot_config_factory()
+
+
+@pytest.fixture
+def collector(mock_broker: MagicMock, mock_config, monkeypatch) -> StateCollector:
+    """Create a StateCollector instance."""
+    monkeypatch.setenv("PERPS_COLLATERAL_ASSETS", "USD,USDC")
+    return StateCollector(mock_broker, mock_config)
 
 
 @pytest.fixture
@@ -239,3 +253,17 @@ def mock_order() -> Order:
         submitted_at=utc_now(),
         updated_at=utc_now(),
     )
+
+
+@pytest.fixture
+def rejected_order() -> MagicMock:
+    """Create a mock rejected order object."""
+    order = MagicMock()
+    order.id = "rejected-order"
+    order.quantity = Decimal("1.0")
+    order.filled_quantity = Decimal("0")
+    order.price = Decimal("50000")
+    order.side = OrderSide.BUY
+    order.type = OrderType.LIMIT
+    order.tif = TimeInForce.GTC
+    return order

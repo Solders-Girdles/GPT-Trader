@@ -145,6 +145,10 @@ def compile_patterns(patterns: Sequence[str]) -> dict[str, re.Pattern[str]]:
 
 def iter_files(paths: Sequence[str]) -> Iterator[Path]:
     def should_skip(path: Path) -> bool:
+        if any(part.endswith(".egg-info") for part in path.parts):
+            return True
+        if any(part.endswith(".dist-info") for part in path.parts):
+            return True
         if any(part == "__pycache__" for part in path.parts):
             return True
         if path.suffix in {".pyc", ".pyo"}:

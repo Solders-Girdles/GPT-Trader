@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """CLI entry points for agent tools.
 
-Wraps scripts/agents/*.py to expose as uv/poetry commands.
+Wraps scripts/agents/*.py to expose as `uv run` commands.
 Each function corresponds to an entry point in pyproject.toml.
 
 Usage:

@@ -59,39 +59,15 @@ agent-naming = "gpt_trader.agents.cli:naming"
 agent-health = "gpt_trader.agents.cli:health"
 agent-regenerate = "gpt_trader.agents.cli:regenerate"
 
-[tool.poetry]
-packages = [
-    { include = "gpt_trader", from = "src" },
-]
-[tool.poetry.group.dev.dependencies]
-ruff = "^0.14.3"
-black = "^25.12.0"
-mypy = "~1.10.0"
-pre-commit = "^4.3.0"
-yfinance = "^0.2.40"
-types-requests = "^2.32.0.20240712"
-pandas-stubs = "^2.2.2.240603"
-types-pyyaml = "^6.0.12"
-pytest = "^8.2.0"
-pytest-asyncio = "^0.23.0"
-pytest-cov = "^4.0.0"
-pytest-mock = "^3.10.0"
-pytest-xdist = "^3.0.0"
-pytest-benchmark = "^5.2.0"
-pytest-textual-snapshot = "^1.0.0"
-faker = "^37.12.0"
-freezegun = "^1.2.0"
-trio = "^0.32.0"
-hypothesis = "^6.144.0"
-responses = "^0.23.0"
-coverage = "^7.0.0"
-pip-audit = "^2.9.0"
-bandit = "^1.7.9"
-diff-cover = "^10.2.0"
-
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [dependency-groups]
 dev = [

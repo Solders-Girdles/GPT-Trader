@@ -44,8 +44,6 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/preflight/test_core.py",  # preflight core validation
     "tests/property/test_fee_invariants.py",  # property-based fee calculation invariants with comprehensive edge cases
     "tests/property/test_liquidation_invariants.py",  # property-based liquidation safety invariants across margin scenarios
-    "tests/property/test_margin_invariants.py",  # property-based margin requirement invariants with leverage permutations
-    "tests/property/test_pnl_invariants.py",  # property-based PnL calculation invariants covering all position/entry combinations
     "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health.py",  # telemetry health check and mark extraction coverage
     "tests/unit/gpt_trader/backtesting/simulation/test_fee_calculator.py",  # fee tier matrix coverage across volume brackets
     "tests/unit/gpt_trader/validation/test_composite_validators.py",  # composite validator chain permutations

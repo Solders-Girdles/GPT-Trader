@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 11103,
-    "total_files": 668,
+    "total_files": 670,
     "markers_used": 9
   },
   "marker_definitions": {
@@ -1192,94 +1192,34 @@
         "docstring": "Verify the liquidation formula matches documentation."
       }
     ],
-    "tests/property/test_pnl_invariants.py": [
+    "tests/property/test_pnl_invariants_pnl_metrics.py": [
       {
         "name": "test_total_pnl_is_sum_of_components",
-        "line": 70,
+        "line": 26,
         "markers": [],
-        "docstring": "Property: Total PnL = realized + unrealized.\n\nThis fundamental relationship must always hold."
+        "docstring": "Property: Total PnL = realized + unrealized."
       },
       {
         "name": "test_pnl_components_correctly_extracted",
-        "line": 101,
+        "line": 53,
         "markers": [],
-        "docstring": "Property: PnL components should be correctly extracted from events."
-      },
-      {
-        "name": "test_win_rate_bounded",
-        "line": 131,
-        "markers": [],
-        "docstring": "Property: Win rate should always be in [0, 1] range."
-      },
-      {
-        "name": "test_win_rate_calculation",
-        "line": 159,
-        "markers": [],
-        "docstring": "Property: Win rate = winning_trades / total_trades."
-      },
-      {
-        "name": "test_profit_factor_non_negative",
-        "line": 193,
-        "markers": [],
-        "docstring": "Property: Profit factor should always be non-negative.\n\nprofit_factor = gross_profit / gross_loss"
-      },
-      {
-        "name": "test_profit_factor_calculation",
-        "line": 221,
-        "markers": [],
-        "docstring": "Property: Profit factor = gross_profit / gross_loss."
-      },
-      {
-        "name": "test_max_drawdown_non_negative",
-        "line": 254,
-        "markers": [],
-        "docstring": "Property: Max drawdown should always be non-negative."
-      },
-      {
-        "name": "test_trade_counts_correct",
-        "line": 283,
-        "markers": [],
-        "docstring": "Property: Trade counts should match input events."
-      },
-      {
-        "name": "test_all_wins_profit_factor_handling",
-        "line": 308,
-        "markers": [],
-        "docstring": "Property: All wins with no losses should handle profit factor edge case."
-      },
-      {
-        "name": "test_all_losses_win_rate_zero",
-        "line": 330,
-        "markers": [],
-        "docstring": "Property: All losses should have 0% win rate."
-      },
-      {
-        "name": "test_average_win_loss_calculation",
-        "line": 351,
-        "markers": [],
-        "docstring": "Property: Average win/loss should be correctly calculated."
-      },
-      {
-        "name": "test_largest_win_loss_calculation",
-        "line": 384,
-        "markers": [],
-        "docstring": "Property: Largest win/loss should be the maximum values."
+        "docstring": "Property: PnL components should be extracted from events."
       },
       {
         "name": "test_equity_change_percentage",
-        "line": 417,
+        "line": 81,
         "markers": [],
-        "docstring": "Property: Equity change percentage should be correctly calculated.\n\nequity_change_pct = (total_pnl / prev_equity) * 100\nwhere prev_equity = equity - total_pnl"
+        "docstring": "Property: equity_change_pct matches (total_pnl / prev_equity) * 100."
       },
       {
         "name": "test_fees_accumulation",
-        "line": 454,
+        "line": 113,
         "markers": [],
-        "docstring": "Property: Fees should be correctly accumulated from fill events."
+        "docstring": "Property: Fees are accumulated from fill events."
       },
       {
         "name": "TestPnLPropertyBased::test_empty_events_returns_defaults",
-        "line": 478,
+        "line": 135,
         "markers": [
           "property"
         ],
@@ -1287,94 +1227,49 @@
         "class": "TestPnLPropertyBased"
       },
       {
-        "name": "TestPnLPropertyBased::test_empty_events_trade_metrics",
-        "line": 488,
-        "markers": [
-          "property"
-        ],
-        "docstring": "Verify empty events trade metrics return sensible defaults.",
-        "class": "TestPnLPropertyBased"
-      },
-      {
-        "name": "TestPnLPropertyBased::test_sharpe_ratio_requires_variance",
-        "line": 496,
-        "markers": [
-          "property"
-        ],
-        "docstring": "Verify Sharpe ratio calculation handles edge cases.",
-        "class": "TestPnLPropertyBased"
-      },
-      {
-        "name": "TestPnLPropertyBased::test_max_drawdown_sequence",
-        "line": 506,
-        "markers": [
-          "property"
-        ],
-        "docstring": "Verify max drawdown calculation with known sequence.",
-        "class": "TestPnLPropertyBased"
-      },
-      {
         "name": "test_empty_events_returns_defaults",
-        "line": 478,
+        "line": 135,
         "markers": [],
         "docstring": "Verify empty events return sensible defaults."
-      },
-      {
-        "name": "test_empty_events_trade_metrics",
-        "line": 488,
-        "markers": [],
-        "docstring": "Verify empty events trade metrics return sensible defaults."
-      },
-      {
-        "name": "test_sharpe_ratio_requires_variance",
-        "line": 496,
-        "markers": [],
-        "docstring": "Verify Sharpe ratio calculation handles edge cases."
-      },
-      {
-        "name": "test_max_drawdown_sequence",
-        "line": 506,
-        "markers": [],
-        "docstring": "Verify max drawdown calculation with known sequence."
       }
     ],
-    "tests/property/test_margin_invariants.py": [
+    "tests/property/test_margin_invariants_window_policy.py": [
       {
         "name": "test_margin_window_deterministic",
-        "line": 261,
+        "line": 22,
         "markers": [],
-        "docstring": "Property: Margin window determination should be deterministic.\n\nSame time should always produce same window."
+        "docstring": "Property: Same time should always produce same window."
       },
       {
         "name": "test_margin_window_coverage",
-        "line": 289,
+        "line": 43,
         "markers": [],
-        "docstring": "Property: Every time should map to exactly one valid margin window.\n\nNo gaps or overlaps in window assignment."
+        "docstring": "Property: Every time maps to exactly one valid window."
       },
       {
         "name": "test_margin_requirements_ordering",
-        "line": 320,
+        "line": 63,
         "markers": [],
-        "docstring": "Property: Margin requirements should maintain consistent ordering.\n\nNORMAL <= INTRADAY <= OVERNIGHT <= PRE_FUNDING (in terms of strictness)\nThis is enforced by initial_rate ordering."
+        "docstring": "Property: Window requirements maintain strictness ordering."
       },
       {
         "name": "test_margin_requirement_consistency",
-        "line": 457,
+        "line": 86,
         "markers": [],
-        "docstring": "Property: Margin requirements should be internally consistent.\n\n- maintenance_rate < initial_rate (always)\n- max_leverage = 1 / initial_rate (approximately)"
+        "docstring": "Property: Requirements are internally consistent."
       },
       {
         "name": "TestMarginPropertyBased::test_margin_window_pre_funding_times",
-        "line": 484,
+        "line": 104,
         "markers": [
           "property"
         ],
-        "docstring": "Verify pre-funding window is active 30 minutes before funding.",
+        "docstring": "Verify pre-funding window behavior around funding times.",
         "class": "TestMarginPropertyBased"
       },
       {
         "name": "TestMarginPropertyBased::test_overnight_window_hours",
-        "line": 516,
+        "line": 124,
         "markers": [
           "property"
         ],
@@ -1383,15 +1278,124 @@
       },
       {
         "name": "test_margin_window_pre_funding_times",
-        "line": 484,
+        "line": 104,
         "markers": [],
-        "docstring": "Verify pre-funding window is active 30 minutes before funding."
+        "docstring": "Verify pre-funding window behavior around funding times."
       },
       {
         "name": "test_overnight_window_hours",
-        "line": 516,
+        "line": 124,
         "markers": [],
         "docstring": "Verify overnight window covers expected hours."
+      }
+    ],
+    "tests/property/test_pnl_invariants_trade_metrics_win_rate_and_counts.py": [
+      {
+        "name": "test_win_rate_bounded",
+        "line": 18,
+        "markers": [],
+        "docstring": "Property: Win rate is always in [0, 1]."
+      },
+      {
+        "name": "test_win_rate_calculation",
+        "line": 39,
+        "markers": [],
+        "docstring": "Property: Win rate = winning_trades / total_trades."
+      },
+      {
+        "name": "test_trade_counts_correct",
+        "line": 66,
+        "markers": [],
+        "docstring": "Property: Trade counts should match input events."
+      },
+      {
+        "name": "test_all_wins_profit_factor_handling",
+        "line": 85,
+        "markers": [],
+        "docstring": "Property: All wins (no losses) handles profit factor edge case."
+      },
+      {
+        "name": "test_all_losses_win_rate_zero",
+        "line": 102,
+        "markers": [],
+        "docstring": "Property: All losses yield 0% win rate."
+      }
+    ],
+    "tests/property/test_pnl_invariants_trade_metrics_profit_factor_and_risk.py": [
+      {
+        "name": "test_profit_factor_non_negative",
+        "line": 19,
+        "markers": [],
+        "docstring": "Property: Profit factor should always be non-negative."
+      },
+      {
+        "name": "test_profit_factor_calculation",
+        "line": 39,
+        "markers": [],
+        "docstring": "Property: Profit factor = gross_profit / gross_loss."
+      },
+      {
+        "name": "test_max_drawdown_non_negative",
+        "line": 66,
+        "markers": [],
+        "docstring": "Property: Max drawdown should always be non-negative."
+      },
+      {
+        "name": "test_average_win_loss_calculation",
+        "line": 89,
+        "markers": [],
+        "docstring": "Property: Average win/loss is computed correctly."
+      },
+      {
+        "name": "test_largest_win_loss_calculation",
+        "line": 116,
+        "markers": [],
+        "docstring": "Property: Largest win/loss is the maximum values."
+      },
+      {
+        "name": "TestPnLPropertyBased::test_empty_events_trade_metrics",
+        "line": 141,
+        "markers": [
+          "property"
+        ],
+        "docstring": "Verify empty events trade metrics return sensible defaults.",
+        "class": "TestPnLPropertyBased"
+      },
+      {
+        "name": "TestPnLPropertyBased::test_sharpe_ratio_requires_variance",
+        "line": 149,
+        "markers": [
+          "property"
+        ],
+        "docstring": "Verify Sharpe ratio calculation handles edge cases.",
+        "class": "TestPnLPropertyBased"
+      },
+      {
+        "name": "TestPnLPropertyBased::test_max_drawdown_sequence",
+        "line": 156,
+        "markers": [
+          "property"
+        ],
+        "docstring": "Verify max drawdown calculation with known sequence.",
+        "class": "TestPnLPropertyBased"
+      },
+      {
+        "name": "test_empty_events_trade_metrics",
+        "line": 141,
+        "markers": [],
+        "docstring": "Verify empty events trade metrics return sensible defaults."
+      },
+      {
+        "name": "test_sharpe_ratio_requires_variance",
+        "line": 149,
+        "markers": [],
+        "docstring": "Verify Sharpe ratio calculation handles edge cases."
+      },
+      {
+        "name": "test_max_drawdown_sequence",
+        "line": 156,
+        "markers": [],
+        "docstring": "Verify max drawdown calculation with known sequence."
       }
     ],
     "tests/integration/test_boot_container_perps_bot.py": [
@@ -23588,27 +23592,27 @@
     "tests/unit/gpt_trader/backtesting/metrics/test_statistics_streak_metrics.py": [
       {
         "name": "TestCalculateStreakMetrics::test_returns_zeros_placeholder",
-        "line": 12,
+        "line": 13,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateStreakMetrics"
       },
       {
         "name": "TestCalculateStreakMetrics::test_with_orders_returns_zeros",
-        "line": 18,
+        "line": 19,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateStreakMetrics"
       },
       {
         "name": "test_returns_zeros_placeholder",
-        "line": 12,
+        "line": 13,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_with_orders_returns_zeros",
-        "line": 18,
+        "line": 19,
         "markers": [],
         "docstring": ""
       }
@@ -24739,40 +24743,40 @@
     "tests/unit/gpt_trader/backtesting/metrics/test_statistics_pnl_metrics.py": [
       {
         "name": "TestCalculatePnlMetrics::test_empty_orders_returns_zeros",
-        "line": 14,
+        "line": 15,
         "markers": [],
         "docstring": "",
         "class": "TestCalculatePnlMetrics"
       },
       {
         "name": "TestCalculatePnlMetrics::test_orders_without_fill_price_skipped",
-        "line": 22,
+        "line": 23,
         "markers": [],
         "docstring": "",
         "class": "TestCalculatePnlMetrics"
       },
       {
         "name": "TestCalculatePnlMetrics::test_returns_structure_correct",
-        "line": 27,
+        "line": 28,
         "markers": [],
         "docstring": "",
         "class": "TestCalculatePnlMetrics"
       },
       {
         "name": "test_empty_orders_returns_zeros",
-        "line": 14,
+        "line": 15,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_orders_without_fill_price_skipped",
-        "line": 22,
+        "line": 23,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_returns_structure_correct",
-        "line": 27,
+        "line": 28,
         "markers": [],
         "docstring": ""
       }

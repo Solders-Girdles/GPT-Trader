@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 665,
+    "tests_scanned": 669,
     "source_modules": 348,
     "unresolved_modules": 3
   },
@@ -1293,7 +1293,9 @@
       "tests/unit/gpt_trader/monitoring/configuration_guardian/test_state_validator_edges.py"
     ],
     "gpt_trader.monitoring.daily_report.analytics": [
-      "tests/property/test_pnl_invariants.py",
+      "tests/property/test_pnl_invariants_pnl_metrics.py",
+      "tests/property/test_pnl_invariants_trade_metrics_profit_factor_and_risk.py",
+      "tests/property/test_pnl_invariants_trade_metrics_win_rate_and_counts.py",
       "tests/unit/gpt_trader/monitoring/daily_report/test_analytics.py"
     ],
     "gpt_trader.monitoring.daily_report.generator": [
@@ -1312,7 +1314,9 @@
       "tests/unit/gpt_trader/monitoring/domain/test_perps_liquidation.py"
     ],
     "gpt_trader.monitoring.domain.perps.margin": [
-      "tests/property/test_margin_invariants.py",
+      "tests/property/test_margin_invariants_compute_state_requirements_and_flags.py",
+      "tests/property/test_margin_invariants_compute_state_utilization_and_leverage.py",
+      "tests/property/test_margin_invariants_window_policy.py",
       "tests/unit/gpt_trader/monitoring/domain/test_margin_policy.py"
     ],
     "gpt_trader.monitoring.guards": [
@@ -2081,10 +2085,22 @@
     "tests/property/test_liquidation_invariants.py": [
       "gpt_trader.monitoring.domain.perps.liquidation"
     ],
-    "tests/property/test_margin_invariants.py": [
+    "tests/property/test_margin_invariants_compute_state_requirements_and_flags.py": [
       "gpt_trader.monitoring.domain.perps.margin"
     ],
-    "tests/property/test_pnl_invariants.py": [
+    "tests/property/test_margin_invariants_compute_state_utilization_and_leverage.py": [
+      "gpt_trader.monitoring.domain.perps.margin"
+    ],
+    "tests/property/test_margin_invariants_window_policy.py": [
+      "gpt_trader.monitoring.domain.perps.margin"
+    ],
+    "tests/property/test_pnl_invariants_pnl_metrics.py": [
+      "gpt_trader.monitoring.daily_report.analytics"
+    ],
+    "tests/property/test_pnl_invariants_trade_metrics_profit_factor_and_risk.py": [
+      "gpt_trader.monitoring.daily_report.analytics"
+    ],
+    "tests/property/test_pnl_invariants_trade_metrics_win_rate_and_counts.py": [
       "gpt_trader.monitoring.daily_report.analytics"
     ],
     "tests/property/test_validation_invariants.py": [

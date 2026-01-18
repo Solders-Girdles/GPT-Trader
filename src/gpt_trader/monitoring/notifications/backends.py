@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 from dataclasses import dataclass, field
 from typing import Any
@@ -273,12 +274,15 @@ class FileNotificationBackend:
 
         try:
             line = json.dumps(alert.to_dict()) + "\n"
-            with open(self.file_path, "a") as f:
-                f.write(line)
+            await asyncio.to_thread(self._append_to_file, line)
             return True
         except Exception as e:
             logger.error(f"File notification failed: {e}")
             return False
+
+    def _append_to_file(self, line: str) -> None:
+        with open(self.file_path, "a") as f:
+            f.write(line)
 
     async def test_connection(self) -> bool:
         """Test if file is writable."""

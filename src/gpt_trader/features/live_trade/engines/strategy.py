@@ -951,6 +951,7 @@ class TradingEngine(BaseEngine):
             for symbol in symbols
         ]
         results = await asyncio.gather(*tasks, return_exceptions=True)
+        failures: list[BaseException] = []
 
         for symbol, res in zip(symbols, results):
             if isinstance(res, Exception):
@@ -959,6 +960,10 @@ class TradingEngine(BaseEngine):
                     exc_info=res,
                     symbol=symbol,
                 )
+                failures.append(res)
+
+        if failures:
+            raise ExceptionGroup("Cycle completed with symbol processing errors", failures)
 
     async def _fetch_positions_and_audit(
         self,

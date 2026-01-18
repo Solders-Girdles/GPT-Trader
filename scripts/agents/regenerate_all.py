@@ -21,6 +21,7 @@ import sys
 import time
 from collections.abc import Sequence
 from pathlib import Path
+from typing import Final
 from typing import NamedTuple
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
@@ -47,6 +48,44 @@ class GeneratorResult(NamedTuple):
     duration: float
     output_dir: str
     error: str | None = None
+
+
+_NORMALIZE_SUFFIXES: Final[frozenset[str]] = frozenset(
+    {".dot", ".json", ".md", ".txt", ".yaml", ".yml"}
+)
+
+
+def _normalize_text_file(path: Path) -> bool:
+    """Match repo hygiene hooks for generated files.
+
+    - Strip trailing whitespace (spaces/tabs) per line.
+    - Ensure file ends with a single newline (unless empty).
+    """
+    if path.suffix not in _NORMALIZE_SUFFIXES:
+        return False
+    try:
+        original = path.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        return False
+
+    normalized_lines = [line.rstrip(" \t") for line in original.splitlines()]
+    normalized = "\n".join(normalized_lines)
+    if normalized:
+        normalized += "\n"
+
+    if normalized == original:
+        return False
+
+    path.write_text(normalized, encoding="utf-8")
+    return True
+
+
+def normalize_output_dir(output_dir: Path) -> None:
+    if not output_dir.exists():
+        return
+    for candidate in output_dir.rglob("*"):
+        if candidate.is_file():
+            _normalize_text_file(candidate)
 
 
 def run_generator(
@@ -96,6 +135,8 @@ def run_generator(
                 output_dir=output_dir,
                 error=error_msg[:500],  # Truncate long errors
             )
+
+        normalize_output_dir(PROJECT_ROOT / "var" / "agents" / output_dir)
 
         return GeneratorResult(
             script=script_name,

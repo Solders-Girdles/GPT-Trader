@@ -1,7 +1,7 @@
 [project]
 name = "gpt-trader"
 version = "0.1.0"
-description = "Equities-first trading bot scaffold with adapter-based data, backtesting, and paper trading hooks."
+description = "Coinbase Advanced Trade trading system with DI container, live spot/CFM futures support, and strategy tooling."
 readme = "README.md"
 authors = [{name = "RJ + GPT-5"}]
 requires-python = ">=3.12,<3.13"
@@ -48,7 +48,6 @@ observability = [
 
 [project.scripts]
 gpt-trader = "gpt_trader.cli:main"
-coinbase-trader = "gpt_trader.cli:main"
 # Agent tools - first-class commands for AI-assisted development
 agent-check = "gpt_trader.agents.cli:check"
 agent-impact = "gpt_trader.agents.cli:impact"

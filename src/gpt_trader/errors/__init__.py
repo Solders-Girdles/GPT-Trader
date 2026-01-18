@@ -1,5 +1,5 @@
 """
-Centralized error handling for GPT-Trader V2
+Centralized error handling for GPT-Trader.
 
 This module provides a comprehensive error hierarchy and handling system
 for all feature slices, ensuring consistent error management across the system.

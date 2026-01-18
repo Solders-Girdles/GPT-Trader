@@ -428,16 +428,12 @@ class MockDataGenerator:
                 }
             )
 
-        # Legacy active_guards for backward compatibility
-        active_guards = [g["name"] for g in guards]
-
         return {
             "max_leverage": 2.0,
             "daily_loss_limit_pct": 5.0,
             "current_daily_loss_pct": abs(min(0, daily_loss_pct)),
             "reduce_only_mode": False,
             "reduce_only_reason": "",
-            "active_guards": active_guards,
             "guards": guards,
         }
 

@@ -613,7 +613,6 @@ class TestGuardThresholdSnapshots:
             current_daily_loss_pct=-0.031,  # 3.1% loss (62% of limit)
             max_leverage=5.0,
             reduce_only_mode=False,
-            active_guards=["DailyLossGuard", "MaxLeverageGuard"],
             guards=[
                 RiskGuard(name="DailyLossGuard", severity="CRITICAL"),
                 RiskGuard(name="MaxLeverageGuard", severity="HIGH"),
@@ -648,7 +647,6 @@ class TestGuardThresholdSnapshots:
             max_leverage=3.0,
             reduce_only_mode=True,
             reduce_only_reason="Daily loss limit exceeded",
-            active_guards=["DailyLossGuard", "ReduceOnlyGuard", "VolatilityGuard"],
             guards=[
                 RiskGuard(name="DailyLossGuard", severity="CRITICAL"),
                 RiskGuard(name="ReduceOnlyGuard", severity="HIGH"),

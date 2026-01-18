@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 from textual.widgets import Label, ProgressBar
 
-from gpt_trader.tui.types import RiskState
+from gpt_trader.tui.types import RiskGuard, RiskState
 from gpt_trader.tui.widgets.risk import RiskWidget
 
 
@@ -34,7 +34,7 @@ class TestRiskWidget:
             daily_loss_limit_pct=0.05,
             current_daily_loss_pct=0.01,
             reduce_only_mode=False,
-            active_guards=[],
+            guards=[],
         )
 
         widget.update_risk(data)
@@ -52,7 +52,10 @@ class TestRiskWidget:
             current_daily_loss_pct=0.04,
             reduce_only_mode=True,
             reduce_only_reason="Loss Limit Reached",
-            active_guards=["MaxLeverage", "DailyLoss"],
+            guards=[
+                RiskGuard(name="MaxLeverage"),
+                RiskGuard(name="DailyLoss"),
+            ],
         )
 
         widget.update_risk(data)
@@ -70,7 +73,11 @@ class TestRiskWidget:
             daily_loss_limit_pct=0.10,
             current_daily_loss_pct=0.02,
             reduce_only_mode=False,
-            active_guards=["MaxLeverage", "DailyLoss", "MaxPositions"],
+            guards=[
+                RiskGuard(name="MaxLeverage"),
+                RiskGuard(name="DailyLoss"),
+                RiskGuard(name="MaxPositions"),
+            ],
         )
 
         widget.update_risk(data)
@@ -87,7 +94,7 @@ class TestRiskWidget:
             daily_loss_limit_pct=0.10,  # 10% limit
             current_daily_loss_pct=-0.05,  # 5% loss (50% of limit)
             reduce_only_mode=False,
-            active_guards=[],
+            guards=[],
         )
 
         widget.update_risk(data)
@@ -104,7 +111,7 @@ class TestRiskWidget:
             daily_loss_limit_pct=0.10,
             current_daily_loss_pct=0.01,  # Only 10% of limit used
             reduce_only_mode=False,
-            active_guards=[],
+            guards=[],
         )
 
         widget.update_risk(data)
@@ -121,7 +128,7 @@ class TestRiskWidget:
             daily_loss_limit_pct=0.10,
             current_daily_loss_pct=-0.05,  # 50% of limit used
             reduce_only_mode=False,
-            active_guards=["MaxLeverage"],
+            guards=[RiskGuard(name="MaxLeverage")],
         )
 
         widget.update_risk(data)
@@ -139,7 +146,11 @@ class TestRiskWidget:
             current_daily_loss_pct=-0.08,  # 80% of limit used
             reduce_only_mode=True,  # Adds to risk score
             reduce_only_reason="Max drawdown",
-            active_guards=["MaxLeverage", "DailyLoss", "MaxPositions"],
+            guards=[
+                RiskGuard(name="MaxLeverage"),
+                RiskGuard(name="DailyLoss"),
+                RiskGuard(name="MaxPositions"),
+            ],
         )
 
         widget.update_risk(data)
@@ -156,7 +167,7 @@ class TestRiskWidget:
             daily_loss_limit_pct=0.0,  # No limit configured
             current_daily_loss_pct=0.0,
             reduce_only_mode=False,
-            active_guards=[],
+            guards=[],
         )
 
         widget.update_risk(data)
@@ -173,7 +184,7 @@ class TestRiskWidget:
             daily_loss_limit_pct=0.10,
             current_daily_loss_pct=0.05,  # 5% profit
             reduce_only_mode=False,
-            active_guards=[],
+            guards=[],
         )
 
         widget.update_risk(data)
@@ -190,7 +201,7 @@ class TestRiskWidget:
             daily_loss_limit_pct=0.10,
             current_daily_loss_pct=0.0,
             reduce_only_mode=False,
-            active_guards=["MaxLeverage"],
+            guards=[RiskGuard(name="MaxLeverage")],
         )
 
         widget.update_risk(data)
@@ -208,7 +219,7 @@ class TestRiskWidget:
             current_daily_loss_pct=0.0,
             reduce_only_mode=True,
             reduce_only_reason="This is a very long reason that should be truncated for display",
-            active_guards=[],
+            guards=[],
         )
 
         widget.update_risk(data)

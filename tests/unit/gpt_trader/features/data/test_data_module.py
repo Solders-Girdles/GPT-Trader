@@ -196,7 +196,7 @@ def test_fetch_data_downloads_when_storage_misses(
     def _download_stub(symbols, start, end, interval):
         return {symbol: downloaded_frame for symbol in symbols}
 
-    monkeypatch.setattr(data_service["service"], "download_from_yahoo", _download_stub)
+    monkeypatch.setattr(data_service["service"], "download_from_coinbase", _download_stub)
 
     query = DataQuery(
         symbols=["SOL-USD"],

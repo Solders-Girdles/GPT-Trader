@@ -1,22 +1,22 @@
-# V2 Scripts
+# Slice Scripts
 
 ## Purpose
-V2-native utility scripts that work with the vertical slice architecture.
+Utility scripts that work with the vertical slice architecture.
 
-## V2 Architecture Requirements
+## Architecture Requirements
 - Prefer explicit imports: `from gpt_trader.features.[slice] import module`
 - Avoid wildcard imports; they complicate static analysis and tooling
 - No cross-slice dependencies allowed
 - Each script should target a specific slice
 - Scripts must respect slice isolation principles
 
-## Available V2 Scripts
+## Available Scripts
 (To be created as needed)
 
 ## Script Template
 ```python
 #!/usr/bin/env python
-"""V2 script for [purpose]"""
+"""Slice script for [purpose]"""
 
 from gpt_trader.features.[slice] import module_a, module_b
 

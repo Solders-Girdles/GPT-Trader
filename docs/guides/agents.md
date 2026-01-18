@@ -11,7 +11,7 @@ This is the consolidated reference for AI agents working with the GPT-Trader rep
 ## Current State
 
 **Active System**: Spot trading bot with Coinbase Advanced Trade
-**Primary CLI**: `uv run gpt-trader` (alias: `uv run coinbase-trader`)
+**Primary CLI**: `uv run gpt-trader`
 **Architecture**: Vertical slices under `src/gpt_trader/`
 **Perpetuals**: INTX perps require INTX access + `COINBASE_ENABLE_INTX_PERPS=1` (legacy: `COINBASE_ENABLE_DERIVATIVES=1`)
 

@@ -26,7 +26,7 @@ def test_store_wraps_non_dict_payload() -> None:
     store = EventStore()
     store.store("payload")
 
-    assert store.events == [{"type": "event", "data": {"payload": "payload"}}]
+    assert store.list_events() == [{"type": "event", "data": {"payload": "payload"}}]
 
 
 def test_append_error_prefers_message_and_context() -> None:
@@ -39,7 +39,7 @@ def test_append_error_prefers_message_and_context() -> None:
         context={"ok": True},
     )
 
-    event = store.events[0]
+    event = store.list_events()[0]
     assert event["data"]["error"] == "use-this"
     assert event["data"]["details"] == {"ok": True}
 

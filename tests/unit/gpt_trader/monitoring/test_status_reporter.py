@@ -57,7 +57,7 @@ class TestStatusReporterInit:
     def test_default_values(self) -> None:
         reporter = StatusReporter()
         assert reporter.status_file == "status.json"
-        assert reporter.update_interval == 10
+        assert reporter.file_write_interval == 60.0
         assert reporter.bot_id == ""
         assert reporter.enabled is True
         assert reporter._running is False
@@ -65,12 +65,12 @@ class TestStatusReporterInit:
     def test_custom_values(self) -> None:
         reporter = StatusReporter(
             status_file="/tmp/custom_status.json",
-            update_interval=30,
+            file_write_interval=30,
             bot_id="test-bot",
             enabled=False,
         )
         assert reporter.status_file == "/tmp/custom_status.json"
-        assert reporter.update_interval == 30
+        assert reporter.file_write_interval == 30
         assert reporter.bot_id == "test-bot"
         assert reporter.enabled is False
 
@@ -91,7 +91,7 @@ class TestStatusReporterStart:
             status_file = Path(tmpdir) / "status.json"
             reporter = StatusReporter(
                 status_file=str(status_file),
-                update_interval=1,
+                file_write_interval=1,
             )
             task = await reporter.start()
 
@@ -151,7 +151,7 @@ class TestStatusReporterStop:
             status_file = Path(tmpdir) / "status.json"
             reporter = StatusReporter(
                 status_file=str(status_file),
-                update_interval=10,
+                file_write_interval=10,
             )
             await reporter.start()
             await reporter.stop()

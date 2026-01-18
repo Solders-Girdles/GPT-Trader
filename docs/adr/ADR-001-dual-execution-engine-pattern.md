@@ -121,7 +121,7 @@ Feature flags (in `RiskConfig`):
 
 ### Factory Pattern (Historical)
 
-> **Removal Note:** The `orchestration/` package was removed in v3.0.
+> **Removal Note:** The `orchestration/` package was removed during the DI migration.
 > New code should use the TradingEngine guard stack (`_validate_and_place_order`
 > for the live loop, `submit_order` for external callers).
 
@@ -210,7 +210,7 @@ This ADR follows the same principle: **modular, composable services** with **fea
 
 ## References
 
-> **Note:** Paths under `orchestration/` were removed in v3.0; references below are historical.
+> **Note:** Paths under `orchestration/` were removed during the DI migration; references below are historical.
 > See `docs/ARCHITECTURE.md` for current paths.
 
 - **Analysis:** Archived Phase 3 execution layer analysis (not tracked in repo)

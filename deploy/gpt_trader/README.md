@@ -87,4 +87,4 @@ their historical traces and log searches.
 
 ## Migrating from the Legacy Stack
 If you previously relied on `deploy/docker/`, migrate to `deploy/gpt_trader/docker`.
-The legacy assets were removed in v3.0; use git history if you need the retired compose files.
+The legacy assets were removed during the DI migration; use git history if you need the retired compose files.

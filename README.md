@@ -79,6 +79,7 @@ See [config/environments/.env.template](config/environments/.env.template) for a
 ```
 src/gpt_trader/
 ├── app/                  # Modern DI container (ApplicationContainer)
+├── backtesting/           # Backtesting framework (canonical)
 ├── cli/                  # Command-line interface
 ├── features/             # Vertical feature slices
 │   ├── brokerages/       # Coinbase REST/WebSocket integration
@@ -88,6 +89,7 @@ src/gpt_trader/
 │   ├── optimize/         # Parameter optimization
 │   └── strategy_tools/   # Shared strategy helpers
 ├── monitoring/           # Runtime guards, metrics, telemetry
+├── persistence/          # Event/order persistence
 ├── security/             # Secrets management, input sanitization
 ├── tui/                  # Terminal User Interface (Textual)
 └── validation/           # Declarative validators
@@ -167,7 +169,7 @@ Full documentation index: [docs/README.md](docs/README.md)
 
 ## Architecture Notes
 
-This project uses a modern **Dependency Injection** pattern via `ApplicationContainer` in `src/gpt_trader/app/`. The legacy `orchestration/` layer was removed in v3.0; prefer `app/` and `features/` paths.
+This project uses a modern **Dependency Injection** pattern via `ApplicationContainer` in `src/gpt_trader/app/`. The legacy `orchestration/` layer was removed during the DI migration; prefer `app/` and `features/` paths.
 
 See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for details.
 

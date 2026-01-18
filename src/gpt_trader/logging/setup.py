@@ -1,4 +1,4 @@
-"""Centralized logging setup for GPT-Trader V2."""
+"""Centralized logging setup for GPT-Trader."""
 
 from __future__ import annotations
 

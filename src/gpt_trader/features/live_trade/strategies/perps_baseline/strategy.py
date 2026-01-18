@@ -201,7 +201,7 @@ class BaselinePerpsStrategy:
             )
 
         # Minimum data requirements
-        min_data = max(self.config.long_ma, self.config.rsi_period + 1)
+        min_data = max(self.config.long_ma_period, self.config.rsi_period + 1)
         if len(recent_marks) < min_data:
             return Decision(
                 Action.HOLD,
@@ -233,8 +233,10 @@ class BaselinePerpsStrategy:
         state.rsi = relative_strength_index(list(recent_marks), period=self.config.rsi_period)
 
         # Calculate moving averages
-        state.short_ma = simple_moving_average(list(recent_marks), period=self.config.short_ma)
-        state.long_ma = simple_moving_average(list(recent_marks), period=self.config.long_ma)
+        state.short_ma = simple_moving_average(
+            list(recent_marks), period=self.config.short_ma_period
+        )
+        state.long_ma = simple_moving_average(list(recent_marks), period=self.config.long_ma_period)
 
         # Determine RSI signal
         if state.rsi is not None:
@@ -256,9 +258,13 @@ class BaselinePerpsStrategy:
                 state.trend = "neutral"
 
         # Detect MA crossover
-        if len(recent_marks) >= self.config.long_ma:
-            short_ma_series = compute_ma_series(list(recent_marks), self.config.short_ma, "sma")
-            long_ma_series = compute_ma_series(list(recent_marks), self.config.long_ma, "sma")
+        if len(recent_marks) >= self.config.long_ma_period:
+            short_ma_series = compute_ma_series(
+                list(recent_marks), self.config.short_ma_period, "sma"
+            )
+            long_ma_series = compute_ma_series(
+                list(recent_marks), self.config.long_ma_period, "sma"
+            )
 
             crossover = detect_crossover(short_ma_series, long_ma_series, lookback=3)
             if crossover and crossover.crossed:

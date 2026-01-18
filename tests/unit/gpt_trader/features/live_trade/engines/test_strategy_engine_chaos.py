@@ -209,7 +209,7 @@ class TestGuardFailureDegradation:
         with patch.object(asyncio, "sleep", stop), pytest.raises(asyncio.CancelledError):
             await engine._runtime_guard_sweep()
         assert engine._degradation.is_paused()
-        events = engine._event_store.events
+        events = engine._event_store.list_events()
         assert any(e.get("type") == "guard_triggered" for e in events)
 
     @pytest.mark.asyncio
@@ -222,7 +222,7 @@ class TestGuardFailureDegradation:
             details={"error_rate": 0.5},
         )
         await engine._handle_guard_failure(err)
-        events = engine._event_store.events
+        events = engine._event_store.list_events()
         assert any(
             e.get("type") == "guard_triggered" and e.get("data", {}).get("guard") == "api_health"
             for e in events
@@ -277,7 +277,7 @@ class TestMarkStalenessDegradation:
         await self._place_order(engine)
         assert engine._degradation.is_paused(symbol="BTC-USD")
         assert "mark_staleness" in (engine._degradation.get_pause_reason("BTC-USD") or "")
-        events = engine._event_store.events
+        events = engine._event_store.list_events()
         assert any(e.get("type") == "stale_mark_detected" for e in events)
 
     @pytest.mark.asyncio
@@ -517,7 +517,7 @@ class TestWSHealthDegradation:
         assert "ws_reconnect" in (engine._degradation.get_pause_reason() or "")
         # Verify reconnect tracking was reset
         assert engine._ws_reconnect_attempts == 0
-        events = engine._event_store.events
+        events = engine._event_store.list_events()
         assert any(e.get("type") == "websocket_reconnect" for e in events)
 
     @pytest.mark.asyncio
@@ -641,11 +641,11 @@ class TestOrderAuditAlerts:
         }
 
         await engine._audit_orders()
-        events = engine._event_store.events
+        events = engine._event_store.list_events()
         alert_events = [e for e in events if e.get("type") == "unfilled_order_alert"]
         assert len(alert_events) == 1
 
         await engine._audit_orders()
-        events = engine._event_store.events
+        events = engine._event_store.list_events()
         alert_events = [e for e in events if e.get("type") == "unfilled_order_alert"]
         assert len(alert_events) == 1

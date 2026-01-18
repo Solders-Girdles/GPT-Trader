@@ -304,11 +304,12 @@ class StrategyWidget(Static):
                     reason = reason[:17] + "..."
                 return f"reduce-only ({reason})"
 
-            # Check active guards
-            if risk.active_guards:
-                if len(risk.active_guards) == 1:
-                    return risk.active_guards[0]
-                return f"{len(risk.active_guards)} guards"
+            # Check guards
+            guard_names = [guard.name for guard in risk.guards if guard.name]
+            if guard_names:
+                if len(guard_names) == 1:
+                    return guard_names[0]
+                return f"{len(guard_names)} guards"
 
         except Exception:
             pass

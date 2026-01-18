@@ -152,10 +152,10 @@ class RiskWidget(Static):
             reduce_only_label.update("OFF")
             reduce_only_label.add_class("status-ok")
 
-        # Guards count - use guards list if present, otherwise active_guards
+        # Guards count
         guards_label = self.query_one("#summary-guards", Label)
         guards_label.remove_class("status-ok", "status-warning", "status-critical")
-        guard_count = len(data.guards) if data.guards else len(data.active_guards)
+        guard_count = len(data.guards)
         guards_label.update(str(guard_count))
         if guard_count >= 3:
             guards_label.add_class("status-critical")
@@ -262,9 +262,9 @@ class RiskWidget(Static):
             risk_score += 3
 
         # Factor 3: Active guards
-        if len(data.active_guards) >= 3:
+        if len(data.guards) >= 3:
             risk_score += 2
-        elif len(data.active_guards) >= 1:
+        elif len(data.guards) >= 1:
             risk_score += 1
 
         # Factor 4: High leverage per position
@@ -303,8 +303,9 @@ class RiskWidget(Static):
         - 3+ guards: red (critical)
         """
         guards_label = self.query_one("#active-guards", Label)
-        if data.active_guards:
-            count = len(data.active_guards)
+        guard_names = [guard.name for guard in data.guards if guard.name]
+        if guard_names:
+            count = len(guard_names)
 
             # Determine status level based on count
             if count >= 3:
@@ -316,9 +317,9 @@ class RiskWidget(Static):
 
             # Format display text
             if count <= 2:
-                display_text = ", ".join(data.active_guards)
+                display_text = ", ".join(guard_names)
             else:
-                first_two = ", ".join(data.active_guards[:2])
+                first_two = ", ".join(guard_names[:2])
                 display_text = f"{first_two} +{count - 2} more"
 
             guards_label.update(Text(display_text, style=color))

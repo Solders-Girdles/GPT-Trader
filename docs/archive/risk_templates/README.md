@@ -32,7 +32,7 @@ Suggested First‑Run Values
 Notes
 - YAML supports inline comments—capture rationale directly in the file and keep this history updated.
 - Exchange rules (MMR, leverage) can change; treat these caps as upper bounds.
-- There is no built-in Pydantic loader for these templates in v3.0. Use
+- There is no built-in Pydantic loader for these templates in the current stack. Use
   `features/live_trade/risk/config.py` as the canonical model when wiring manually.
 
 Related Env

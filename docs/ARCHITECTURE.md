@@ -6,7 +6,7 @@
 
 This project completed a major architectural migration from a legacy "Orchestration" pattern (monolithic builders) to a modern **Dependency Injection** pattern using `ApplicationContainer`.
 
-- **Legacy Core:** removed in v3.0 (no longer present)
+- **Legacy Core:** removed during the DI migration (no longer present)
 - **Modern Core:** `src/gpt_trader/app/` (Composition Root) and `src/gpt_trader/features/` (Vertical Slices)
 - **Migration Guide:** See [MIGRATION_STATUS.md](MIGRATION_STATUS.md) for current migration progress and patterns.
 
@@ -19,7 +19,7 @@ last-updated: 2026-01-08
 
 ## Current State
 
-GPT-Trader V2 is a production-ready Coinbase trading system supporting **spot** and **CFM futures** trading. INTX perpetuals code paths remain compiled and testable but require international account access.
+GPT-Trader is a production-ready Coinbase Advanced Trade trading system supporting **spot** and **CFM futures** trading. INTX perpetuals code paths remain compiled and testable but require international account access.
 
 > 📘 **Trust reminder:** Confirm this document's details against `docs/agents/Document_Verification_Matrix.md` before acting on them.
 
@@ -50,7 +50,7 @@ src/gpt_trader/features/
 │   └── sizing/          # Kelly criterion position sizing
 ├── live_trade/          # Production trading engine
 ├── optimize/            # Parameter optimisation experiments
-├── research/            # Research and backtesting evaluation
+├── research/            # Research and evaluation (wrapping backtesting tools)
 ├── strategy_dev/        # Strategy development lab
 └── strategy_tools/      # Shared helpers for strategy slices
 ```
@@ -59,13 +59,18 @@ Additional cross-cutting packages now live at the top level. These intentionally
 
 ```
 src/gpt_trader/
+├── backtesting/          # Canonical backtesting framework
 ├── errors/              # Centralized error hierarchy providing consistent exception types
 ├── monitoring/          # Runtime guards, configuration guardian, system logger
+├── persistence/          # Event/order stores and persistence utilities
 ├── preflight/           # Production preflight verification and startup checks
 ├── security/            # Security primitives: input sanitization, secrets management
 ├── tui/                 # Terminal User Interface (Textual-based)
 └── validation/          # Declarative validators and decorators
 ```
+
+> **Note:** `src/gpt_trader/backtesting/` is the canonical backtesting framework. `features/research/` hosts
+> research workflows and adapters that build on top of the backtesting package.
 
 ### High-Level Flow
 
@@ -86,14 +91,14 @@ Key capabilities documented:
 
 ### Entry Point & Service Wiring
 
-- `uv run gpt-trader` (alias: `uv run coinbase-trader`) invokes `gpt_trader.cli:main`, producing a `BotConfig` from
+- `uv run gpt-trader` invokes `gpt_trader.cli:main`, producing a `BotConfig` from
   CLI arguments and environment overrides.
 - `ApplicationContainer` (`gpt_trader/app/container.py`) is the **canonical composition root**.
   It lazily initializes all services (broker, risk manager, event store, etc.) and wires
   them into `TradingBot` via `container.create_bot()`.
 - `TradingBot` receives services directly from the container—no intermediate registry.
 
-> **Note:** The legacy `gpt_trader/orchestration/` package was removed in v3.0.
+> **Note:** The legacy `gpt_trader/orchestration/` package was removed during the DI migration.
 > Use `gpt_trader/app/bootstrap.py` and `ApplicationContainer` for all new code.
 
 #### Container Sub-Containers
@@ -114,9 +119,9 @@ Service locators such as `get_failure_tracker()` always require an application
 container. Tests should set up `ApplicationContainer` via fixtures or explicit
 registration before calling container-resolved helpers.
 
-#### Removed Modules (v3.0)
+#### Removed Modules (DI migration)
 
-The `gpt_trader.orchestration` package was removed in v3.0. Use the canonical paths:
+The `gpt_trader.orchestration` package was removed during the DI migration. Use the canonical paths:
 
 | Removed Path | Canonical Path |
 |--------------|----------------|
@@ -164,7 +169,7 @@ Live trading uses a simplified engine pattern centered on `CoordinatorContext`.
 2. `TradingEngine.start_background_tasks()` launches background tasks (health checks, streaming, status, maintenance).
 3. `TradingEngine.shutdown()` stops background tasks and health checks.
 
-Legacy orchestration facades were removed in v3.0. Use `features/live_trade/` and `app/` paths.
+Legacy orchestration facades were removed during the DI migration. Use `features/live_trade/` and `app/` paths.
 
 #### Coinbase Client Package
 

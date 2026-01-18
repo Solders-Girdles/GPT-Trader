@@ -118,6 +118,8 @@ var/*
 coverage.xml
 coverage_baseline.json
 claude_code_zai_env.sh
+coverage_output.txt
+test_output.txt
 
 # Generated reports (CI artifacts)
 naming_inventory.md

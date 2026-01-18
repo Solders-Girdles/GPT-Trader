@@ -322,8 +322,6 @@ class RiskState:
     current_daily_loss_pct: float = 0.0
     reduce_only_mode: bool = False
     reduce_only_reason: str = ""
-    # Legacy: simple guard names (for backward compatibility)
-    active_guards: list[str] = field(default_factory=list)
     # Enhanced: full guard objects with metadata
     guards: list[RiskGuard] = field(default_factory=list)
 

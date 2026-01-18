@@ -19,6 +19,12 @@ def check_environment_variables(checker: PreflightCheck) -> bool:
     legacy_raw = os.getenv("COINBASE_ENABLE_DERIVATIVES")
     use_legacy_flag = intx_raw is None or intx_raw == ""
     all_good = True
+
+    if legacy_raw:
+        checker.log_warning(
+            "COINBASE_ENABLE_DERIVATIVES is deprecated; use COINBASE_ENABLE_INTX_PERPS. "
+            "Target removal after 2026-06-30."
+        )
     for var, (expected, strict) in ctx.expected_env_defaults().items():
         if var == "COINBASE_ENABLE_DERIVATIVES":
             if not intx_perps_enabled:

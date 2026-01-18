@@ -10,9 +10,9 @@ from __future__ import annotations
 
 import asyncio
 
-from gpt_trader.orchestration.configuration import BotConfig, Profile
-
-from gpt_trader.app.container import create_application_container
+from gpt_trader.app.config import BotConfig
+from gpt_trader.app.container import create_application_container, set_application_container
+from gpt_trader.config.types import Profile
 
 
 async def main() -> None:
@@ -24,6 +24,7 @@ async def main() -> None:
     config = BotConfig.from_profile(
         Profile.DEV,
         symbols=["BTC-USD"],
+        interval=1,
         mock_broker=True,  # Use mock broker for safety
     )
 
@@ -34,25 +35,27 @@ async def main() -> None:
     # Create application container
     print("\nCreating application container...")
     container = create_application_container(config)
+    set_application_container(container)
 
     # Show container information
     print(f"Container created for profile: {container.config.profile.value}")
-    print(f"Settings data dir: {container.settings.data_dir}")
+    print(f"Runtime storage dir: {container.runtime_paths.storage_dir}")
 
     # Create TradingBot from container
     print("\nCreating TradingBot from container...")
     bot = container.create_bot()
 
-    print(f"Bot ID: {bot.bot_id}")
-    print(f"Bot symbols: {bot.symbols}")
+    bot_id = str(bot.context.bot_id or bot.config.profile or "live")
+    print(f"Bot ID: {bot_id}")
+    print(f"Bot symbols: {list(bot.context.symbols)}")
     print(f"Bot has container: {bot.container is not None}")
 
     # Show service information
     print("\nService Information:")
-    print(f"Config controller: {type(bot.config_controller).__name__}")
-    print(f"Event store: {type(bot.event_store).__name__}")
-    print(f"Orders store: {type(bot.orders_store).__name__}")
-    print(f"Broker: {type(bot.broker).__name__}")
+    print(f"Config controller: {type(container.config_controller).__name__}")
+    print(f"Event store: {type(container.event_store).__name__}")
+    print(f"Orders store: {type(container.orders_store).__name__}")
+    print(f"Broker: {type(container.broker).__name__}")
 
     # Run a single trading cycle
     print("\nRunning single trading cycle...")

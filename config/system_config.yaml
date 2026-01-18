@@ -1,5 +1,5 @@
 version: '1.0'
-description: Global system configuration for GPT-Trader V2
+description: Global system configuration for GPT-Trader
 last_updated: '2025-08-19'
 logging:
   level: INFO

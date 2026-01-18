@@ -55,7 +55,7 @@ async def test_data_flow_from_reporter_to_state(mock_app):
             current_daily_loss_pct=0.01,
             reduce_only_mode=False,
             reduce_only_reason="",
-            active_guards=[],
+            guards=[],
         ),
     )
 

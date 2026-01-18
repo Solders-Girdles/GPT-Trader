@@ -1,10 +1,10 @@
 # ADR 002: Coordinator Pattern for the Orchestration Layer
 
 ## Status
-Superseded - Orchestration package removed in v3.0 (Engine Context pattern lives in `features/live_trade/engines/`)
+Superseded - Orchestration package removed during the DI migration (Engine Context pattern lives in `features/live_trade/engines/`)
 
 > **Note:** This ADR is historical. The coordinator registry and orchestration
-> paths referenced below were removed in v3.0.
+> paths referenced below were removed during the DI migration.
 
 ## Context
 - The original orchestration layer coupled coordinator logic tightly to `TradingBot` (formerly `PerpsBot`), making it difficult to test modules in isolation.

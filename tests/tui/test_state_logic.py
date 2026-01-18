@@ -9,6 +9,7 @@ from gpt_trader.monitoring.status_reporter import (
     BalanceEntry,
     BotStatus,
     DecisionEntry,
+    GuardStatus,
     MarketStatus,
     OrderStatus,
     PositionStatus,
@@ -172,7 +173,7 @@ def test_update_risk_data(tui_state):
             current_daily_loss_pct=0.01,
             reduce_only_mode=True,
             reduce_only_reason="Drawdown",
-            active_guards=["DrawdownGuard"],
+            guards=[GuardStatus(name="DrawdownGuard")],
         )
     )
     tui_state.update_from_bot_status(status)
@@ -227,7 +228,7 @@ def test_malformed_data_handling(tui_state):
         current_daily_loss_pct=0.0,
         reduce_only_mode=False,
         reduce_only_reason="",
-        active_guards=[],
+        guards=[],
     )
 
     status.system = SimpleNamespace(

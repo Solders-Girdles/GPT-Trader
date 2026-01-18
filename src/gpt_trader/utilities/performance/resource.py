@@ -22,13 +22,6 @@ class ResourceMonitor:
         self._try_import_psutil()
 
     def _try_import_psutil(self) -> None:
-        import sys
-
-        legacy = sys.modules.get("gpt_trader.utilities.performance_monitoring")
-        maybe = getattr(legacy, "psutil", None) if legacy is not None else None
-        if maybe is not None:
-            self._psutil = maybe
-            return
         if psutil is not None:
             self._psutil = psutil
             return

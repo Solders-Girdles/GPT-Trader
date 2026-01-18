@@ -17,16 +17,14 @@ Classification of legacy shims/fallbacks and compatibility keepers.
 
 | Item | Location | Owner | Status | Notes |
 |------|----------|-------|--------|-------|
-| `gpt_trader.logging.orchestration_helpers` | `src/gpt_trader/logging/orchestration_helpers.py` | Core Runtime | remove now | Drop shim + export. |
-| `get_failure_tracker()` fallback without container | `src/gpt_trader/features/live_trade/execution/validation.py` | Live Trade | remove now | Require container. |
-| `Alert.id` / `Alert.timestamp` aliases | `src/gpt_trader/monitoring/alert_types.py` | Monitoring | remove now | Remove alias properties. |
-| `CoinbaseRestServiceBase` alias | `src/gpt_trader/features/brokerages/coinbase/rest/base.py` | Brokerage | remove now | Remove alias + tests. |
-| Legacy profile mapping in `BotConfig.from_dict` | `src/gpt_trader/app/config/bot_config.py` | Core Config | remove now | Remove legacy key mapping. |
-| `daily_loss_limit` in profile schema | `src/gpt_trader/app/config/profile_loader.py` | Core Config | remove now | Use `daily_loss_limit_pct`. |
-| CLI fallback for unknown profile YAML | `src/gpt_trader/cli/services.py` | CLI | remove now | Require `Profile` enum or `--config`. |
-| Legacy risk template references | `docs/archive/risk_templates/README.md` | Docs | remove now | Archive legacy templates. |
-| Legacy API key detection | `src/gpt_trader/tui/services/credential_validator.py` | TUI | keep indefinitely | Coinbase legacy key format support. |
-| Legacy order payload builders | `src/gpt_trader/features/brokerages/coinbase/rest/base.py` | Brokerage | keep indefinitely | `_build_order_payload`, `_execute_order_payload`. |
+| `BotConfig` flat compat accessors (`short_ma`, `long_ma`, etc.) | `src/gpt_trader/app/config/bot_config.py` | Core Config | evaluate | Internal code uses nested config; keep for external compatibility until safe to remove. |
+| Perps strategy compat aliases (`short_ma`/`long_ma` props, `StrategyConfig`) | `src/gpt_trader/features/live_trade/strategies/perps_baseline/strategy.py` | Live Trade | evaluate | Internal strategy uses `*_ma_period`; aliases kept for compatibility. |
+| `DataSource.YAHOO` legacy alias | `src/gpt_trader/features/data/types.py` | Data | evaluate | Routed to Coinbase; decide to implement `yfinance` or drop the Yahoo path. |
+| `download_from_yahoo()` legacy stub | `src/gpt_trader/features/data/data.py` | Data | evaluate | Retained for legacy callers; `DataService.fetch_data()` routes through Coinbase. |
+| `EventStore.events` list + `EventStore.path` JSONL alias | `src/gpt_trader/persistence/event_store.py` | Persistence | deprecate | Internal call sites now use `list_events()`/`root`; legacy properties emit deprecation warnings. |
+| `RiskConfig.daily_loss_limit` (absolute dollars) | `src/gpt_trader/features/live_trade/risk/config.py` | Risk | evaluate | Legacy absolute-dollar limit; prefer `daily_loss_limit_pct`. |
+| Legacy env var alias `COINBASE_ENABLE_DERIVATIVES` | `src/gpt_trader/app/config/bot_config.py`, `src/gpt_trader/preflight/checks/environment.py` | Core Config | deprecate | Alias for INTX/perps gating; warn when set; target removal after 2026-06-30. |
+| TUI legacy guard shapes (`active_guards`) | `src/gpt_trader/tui/state.py`, `src/gpt_trader/monitoring/status_reporter.py` | TUI | deprecate | `active_guards` removed from TUI state/output; legacy inputs are normalized into `guards`. |
 
 ### Configuration (Remove after v4.0)
 
@@ -56,6 +54,7 @@ Before removing any deprecated item:
 | Item | Removed In | Migration Path |
 |------|------------|----------------|
 | `gpt_trader.logging.orchestration_helpers` | Unreleased | Use `gpt_trader.logging.runtime_helpers`. |
+| `StatusReporter.update_interval` + `StatusReporter.get_status_dict()` | Unreleased | Use `file_write_interval` + `get_status()`. |
 | `get_failure_tracker()` fallback without container | Unreleased | Set application container; use `container.validation_failure_tracker`. |
 | `Alert.id` / `Alert.timestamp` aliases | Unreleased | Use `alert_id` / `created_at`. |
 | `CoinbaseRestServiceBase` alias | Unreleased | Use `CoinbaseRestServiceCore`. |
@@ -74,16 +73,16 @@ Before removing any deprecated item:
 | `SYMBOLS` env var | v4.0 | Use `TRADING_SYMBOLS` |
 | `POSITION_FRACTION` env var | v4.0 | Use `RISK_MAX_POSITION_PCT_PER_SYMBOL` |
 | `OrderRouter.execute()` | v4.0 | Use `OrderRouter.execute_async()` |
-| `gpt_trader.orchestration` package | v3.0 | Use canonical paths: `app.*`, `features.live_trade.*` |
-| `orchestration.configuration.bot_config` | v3.0 | `gpt_trader.app.config.BotConfig` |
-| `orchestration.configuration.risk.model` | v3.0 | `gpt_trader.features.live_trade.risk.config.RiskConfig` |
+| `gpt_trader.orchestration` package | DI migration | Use canonical paths: `app.*`, `features.live_trade.*` |
+| `orchestration.configuration.bot_config` | DI migration | `gpt_trader.app.config.BotConfig` |
+| `orchestration.configuration.risk.model` | DI migration | `gpt_trader.features.live_trade.risk.config.RiskConfig` |
 | `features.live_trade.execution.LiveExecutionEngine` | v4.0 | TradingEngine guard stack (`_validate_and_place_order` live loop; `submit_order` external) |
-| `orchestration.execution.*` | v3.0 | `gpt_trader.features.live_trade.execution.*` |
-| `orchestration.symbols` | v3.0 | `gpt_trader.features.live_trade.symbols` |
+| `orchestration.execution.*` | DI migration | `gpt_trader.features.live_trade.execution.*` |
+| `orchestration.symbols` | DI migration | `gpt_trader.features.live_trade.symbols` |
 
-### v3.0 Removal Summary (Phase 13)
+### DI Migration Removal Summary (Phase 13)
 
-The entire `src/gpt_trader/orchestration/` package was removed. Migration phases:
+The entire `src/gpt_trader/orchestration/` package was removed during the DI migration. Migration phases:
 
 - **Phase 9-10**: Converted orchestration modules to pure re-export shims
 - **Phase 11**: Moved tests to canonical locations, created deprecation test bucket
@@ -93,4 +92,4 @@ The entire `src/gpt_trader/orchestration/` package was removed. Migration phases
 
 ---
 
-*Last updated: 2026-01-09*
+*Last updated: 2026-01-18*

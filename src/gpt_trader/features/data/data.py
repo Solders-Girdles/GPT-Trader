@@ -130,15 +130,10 @@ class DataService:
                     self._cache.put(cache_key, data)
                 return cast(pd.DataFrame, data)
 
-        # Fetch from source (Coinbase or legacy Yahoo stub)
+        # Fetch from source (Coinbase; DataSource.YAHOO is a legacy alias)
         result: dict[str, pd.DataFrame] | None = None
-        if query.source == DataSource.COINBASE and self._coinbase_manager is not None:
+        if query.source in (DataSource.COINBASE, DataSource.YAHOO):
             result = self.download_from_coinbase(
-                query.symbols, query.start_date, query.end_date, query.interval
-            )
-        else:
-            # Legacy fallback
-            result = self.download_from_yahoo(
                 query.symbols, query.start_date, query.end_date, query.interval
             )
 

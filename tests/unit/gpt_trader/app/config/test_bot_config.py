@@ -157,5 +157,6 @@ class TestDerivativesEnvParsing:
             "COINBASE_ENABLE_DERIVATIVES": "1",
         }
         with patch.dict(os.environ, env, clear=True):
-            config = BotConfig.from_env()
+            with pytest.warns(DeprecationWarning, match="COINBASE_ENABLE_DERIVATIVES"):
+                config = BotConfig.from_env()
         assert config.derivatives_enabled is True

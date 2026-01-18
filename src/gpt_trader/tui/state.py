@@ -553,7 +553,12 @@ class TuiState(Widget):
         """Update risk data from typed RiskStatus."""
         # Parse enhanced guards if available
         guards: list[RiskGuard] = []
-        raw_guards = getattr(risk, "guards", []) or []
+        raw_guards = getattr(risk, "guards", None)
+        if not raw_guards:
+            legacy_guards = getattr(risk, "active_guards", None)
+            if legacy_guards:
+                raw_guards = [{"name": name} for name in legacy_guards]
+        raw_guards = raw_guards or []
         for guard_data in raw_guards:
             if isinstance(guard_data, dict):
                 guards.append(
@@ -567,6 +572,16 @@ class TuiState(Widget):
                 )
             elif isinstance(guard_data, RiskGuard):
                 guards.append(guard_data)
+            elif hasattr(guard_data, "name"):
+                guards.append(
+                    RiskGuard(
+                        name=str(getattr(guard_data, "name", "")),
+                        severity=str(getattr(guard_data, "severity", "MEDIUM")),
+                        last_triggered=float(getattr(guard_data, "last_triggered", 0.0) or 0.0),
+                        triggered_count=int(getattr(guard_data, "triggered_count", 0) or 0),
+                        description=str(getattr(guard_data, "description", "") or ""),
+                    )
+                )
 
         self.risk_data = RiskState(
             max_leverage=float(getattr(risk, "max_leverage", 0.0) or 0.0),
@@ -574,7 +589,6 @@ class TuiState(Widget):
             current_daily_loss_pct=float(getattr(risk, "current_daily_loss_pct", 0.0) or 0.0),
             reduce_only_mode=bool(getattr(risk, "reduce_only_mode", False)),
             reduce_only_reason=str(getattr(risk, "reduce_only_reason", "") or ""),
-            active_guards=list(getattr(risk, "active_guards", []) or []),
             guards=guards,
         )
 

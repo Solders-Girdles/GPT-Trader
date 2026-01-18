@@ -1,5 +1,5 @@
 """
-GPT-Trader V2 - Cryptocurrency Trading Bot
+GPT-Trader - Coinbase Advanced Trade Trading Bot
 
 A production-ready Coinbase spot trading system with future-ready perpetuals support.
 """

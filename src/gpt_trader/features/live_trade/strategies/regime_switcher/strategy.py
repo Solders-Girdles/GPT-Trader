@@ -100,6 +100,8 @@ class RegimeSwitchingStrategy:
         required_lookback_bars: int = 64,
         sticky_positions: bool = True,
         close_on_crisis: bool = True,
+        trend_mode: Literal["delegate", "regime_follow"] = "delegate",
+        enable_shorts: bool = True,
     ) -> None:
         self._trend_factory = trend_strategy_factory
         self._mean_reversion_factory = mean_reversion_strategy_factory
@@ -107,6 +109,8 @@ class RegimeSwitchingStrategy:
         self._required_lookback_bars = max(1, int(required_lookback_bars))
         self._sticky_positions = sticky_positions
         self._close_on_crisis = close_on_crisis
+        self._trend_mode: Literal["delegate", "regime_follow"] = trend_mode
+        self._enable_shorts = enable_shorts
 
         self._trend_by_symbol: dict[str, TradingStrategy] = {}
         self._mean_reversion_by_symbol: dict[str, TradingStrategy] = {}
@@ -117,6 +121,8 @@ class RegimeSwitchingStrategy:
             required_lookback_bars=self._required_lookback_bars,
             sticky_positions=self._sticky_positions,
             close_on_crisis=self._close_on_crisis,
+            trend_mode=self._trend_mode,
+            enable_shorts=self._enable_shorts,
         )
 
     def required_lookback_bars(self) -> int:
@@ -201,19 +207,26 @@ class RegimeSwitchingStrategy:
         else:
             selected = "trend" if bucket == "trend" else "mean_reversion"
 
-        delegate = (
-            self._get_trend(symbol) if selected == "trend" else self._get_mean_reversion(symbol)
-        )
-        delegated = delegate.decide(
-            symbol=symbol,
-            current_mark=current_mark,
-            position_state=position_state,
-            recent_marks=recent_marks,
-            equity=equity,
-            product=product,
-            market_data=market_data,
-            candles=candles,
-        )
+        if selected == "trend" and self._trend_mode == "regime_follow":
+            delegated = self._decide_regime_follow(
+                regime_state=regime_state,
+                position_state=position_state,
+                enable_shorts=self._enable_shorts,
+            )
+        else:
+            delegate = (
+                self._get_trend(symbol) if selected == "trend" else self._get_mean_reversion(symbol)
+            )
+            delegated = delegate.decide(
+                symbol=symbol,
+                current_mark=current_mark,
+                position_state=position_state,
+                recent_marks=recent_marks,
+                equity=equity,
+                product=product,
+                market_data=market_data,
+                candles=candles,
+            )
 
         # Track which side opened the current position (best-effort).
         if not position_open and delegated.action in (Action.BUY, Action.SELL):
@@ -227,6 +240,63 @@ class RegimeSwitchingStrategy:
             selected=selected,
             sticky_used=sticky_used,
             active=self._active_by_symbol.get(symbol),
+        )
+
+    def _decide_regime_follow(
+        self,
+        *,
+        regime_state: RegimeState,
+        position_state: dict[str, Any] | None,
+        enable_shorts: bool,
+    ) -> Decision:
+        confidence = max(0.0, min(float(regime_state.confidence), 1.0))
+        side_raw = (position_state.get("side") if position_state else None) or "none"
+        side = str(side_raw).strip().lower()
+        quantity = (
+            Decimal(str(position_state.get("quantity", 0))) if position_state else Decimal("0")
+        )
+        if side in ("long", "buy"):
+            is_long = True
+            is_short = False
+        elif side in ("short", "sell"):
+            is_long = False
+            is_short = True
+        else:
+            is_long = quantity > 0
+            is_short = quantity < 0
+
+        if regime_state.is_bullish():
+            if is_short:
+                action = Action.CLOSE
+                reason = "Regime follow: bull, closing short"
+            elif is_long:
+                action = Action.HOLD
+                reason = "Regime follow: bull, holding long"
+            else:
+                action = Action.BUY
+                reason = "Regime follow: bull, opening long"
+        elif regime_state.is_bearish():
+            if is_long:
+                action = Action.CLOSE
+                reason = "Regime follow: bear, closing long"
+            elif is_short:
+                action = Action.HOLD
+                reason = "Regime follow: bear, holding short"
+            elif enable_shorts:
+                action = Action.SELL
+                reason = "Regime follow: bear, opening short"
+            else:
+                action = Action.HOLD
+                reason = "Regime follow: bear, shorts disabled"
+        else:
+            action = Action.HOLD
+            reason = "Regime follow: non-trend regime"
+
+        return Decision(
+            action=action,
+            reason=f"{reason} ({regime_state.regime.name})",
+            confidence=confidence,
+            indicators={},
         )
 
     def rehydrate(self, events: Sequence[dict[str, Any]]) -> int:

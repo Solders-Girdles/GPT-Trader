@@ -166,6 +166,8 @@ class BotConfig:
     # - regime_switcher = switch between trend and mean reversion by regime
     strategy_type: StrategyType = "baseline"
 
+    regime_switcher_trend_mode: Literal["delegate", "regime_follow"] = "delegate"
+
     # General config (not nested)
     symbols: list[str] = field(default_factory=lambda: ["BTC-USD", "ETH-USD"])
     interval: int = 60  # seconds

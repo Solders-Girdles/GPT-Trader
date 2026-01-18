@@ -1939,7 +1939,7 @@ class TradingEngine(BaseEngine):
 
                 if self._order_validator.enable_order_preview:
                     try:
-                        self._order_validator.maybe_preview_order(
+                        await self._order_validator.maybe_preview_order_async(
                             symbol=symbol,
                             side=side,
                             order_type=OrderType.MARKET,

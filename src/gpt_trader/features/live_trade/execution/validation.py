@@ -18,6 +18,7 @@ Error Handling Strategy:
 
 from __future__ import annotations
 
+import asyncio
 from collections import defaultdict
 from dataclasses import dataclass, field
 from decimal import Decimal
@@ -393,6 +394,92 @@ class OrderValidator:
             equity=equity,
             current_positions=current_positions,
         )
+
+    async def maybe_preview_order_async(
+        self,
+        *,
+        symbol: str,
+        side: OrderSide,
+        order_type: OrderType,
+        order_quantity: Decimal,
+        effective_price: Decimal,
+        stop_price: Decimal | None,
+        tif: Any | None,
+        reduce_only: bool,
+        leverage: int | None,
+    ) -> None:
+        """
+        Preview order if enabled (asynchronous).
+
+        Args:
+            symbol: Trading symbol
+            side: Order side
+            order_type: Order type
+            order_quantity: Order quantity
+            effective_price: Effective price
+            stop_price: Stop price for stop orders
+            tif: Time in force
+            reduce_only: Whether order is reduce-only
+            leverage: Leverage multiplier
+
+        Note:
+            Preview failures are informational and do not block order execution.
+            Non-ValidationError exceptions are logged at debug level and counted
+            via metrics for monitoring purposes.
+        """
+        if not self.enable_order_preview:
+            logger.debug(
+                "Order preview disabled",
+                operation="order_preview",
+                stage="disabled",
+            )
+            return
+        broker = self.broker
+        if not isinstance(broker, _PreviewBroker):
+            logger.debug(
+                "Broker does not support order preview",
+                operation="order_preview",
+                stage="unsupported",
+            )
+            return
+        preview_broker = cast(_PreviewBroker, broker)
+        try:
+            tif_value = tif if isinstance(tif, TimeInForce) else (tif or TimeInForce.GTC)
+
+            # Offload the blocking call to a thread
+            preview_data = await asyncio.to_thread(
+                preview_broker.preview_order,
+                symbol=symbol,
+                side=side,
+                order_type=order_type,
+                quantity=order_quantity,
+                price=effective_price,
+                stop_price=stop_price,
+                tif=tif_value,
+                reduce_only=reduce_only,
+                leverage=leverage,
+            )
+
+            self._record_preview(
+                symbol, side, order_type, order_quantity, effective_price, preview_data
+            )
+            # Preview succeeded - reset failure counter
+            self._failure_tracker.record_success("order_preview")
+        except ValidationError:
+            raise
+        except Exception as exc:
+            # Record metric for visibility (preview failures are less critical)
+            record_counter(METRIC_ORDER_PREVIEW_FAILED)
+            # Track consecutive failures (but don't trigger escalation for preview)
+            self._failure_tracker.record_failure("order_preview")
+
+            logger.debug(
+                "Preview call failed",
+                error=str(exc),
+                operation="order_preview",
+                stage="error",
+                consecutive_failures=self._failure_tracker.get_failure_count("order_preview"),
+            )
 
     def maybe_preview_order(
         self,

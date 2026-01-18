@@ -951,7 +951,7 @@ class TradingEngine(BaseEngine):
             for symbol in symbols
         ]
         results = await asyncio.gather(*tasks, return_exceptions=True)
-        failures: list[BaseException] = []
+        failures: list[Exception] = []
 
         for symbol, res in zip(symbols, results):
             if isinstance(res, Exception):

@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
+
 import pytest
 
 from gpt_trader.core import OrderSide, OrderType, TimeInForce
 from gpt_trader.features.live_trade.execution.validation import OrderValidator
 from gpt_trader.features.live_trade.risk import ValidationError
+
 
 @pytest.fixture
 def validator(
@@ -27,6 +29,7 @@ def validator(
         record_rejection_callback=record_rejection,
         failure_tracker=mock_failure_tracker,
     )
+
 
 @pytest.mark.asyncio
 async def test_maybe_preview_order_async_success(
@@ -71,6 +74,7 @@ async def test_maybe_preview_order_async_success(
     # Check success record
     mock_failure_tracker.record_success.assert_called_once_with("order_preview")
 
+
 @pytest.mark.asyncio
 async def test_maybe_preview_order_async_validation_error(
     mock_risk_manager: MagicMock,
@@ -102,6 +106,7 @@ async def test_maybe_preview_order_async_validation_error(
             reduce_only=False,
             leverage=10,
         )
+
 
 @pytest.mark.asyncio
 async def test_maybe_preview_order_async_generic_error(
@@ -137,6 +142,7 @@ async def test_maybe_preview_order_async_generic_error(
 
     broker.preview_order.assert_called_once()
     mock_failure_tracker.record_failure.assert_called_once_with("order_preview")
+
 
 @pytest.mark.asyncio
 async def test_maybe_preview_order_async_disabled(

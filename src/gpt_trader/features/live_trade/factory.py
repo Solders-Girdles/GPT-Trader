@@ -134,6 +134,8 @@ def create_strategy(config: "BotConfig") -> TradingStrategy:
             mean_reversion_strategy_factory=mean_reversion_factory,
             regime_detector=detector,
             required_lookback_bars=required_lookback,
+            trend_mode=config.regime_switcher_trend_mode,
+            enable_shorts=config.enable_shorts,
         )
 
     else:

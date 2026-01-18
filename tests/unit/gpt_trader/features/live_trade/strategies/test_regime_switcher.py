@@ -2,9 +2,15 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from decimal import Decimal
-from typing import Any
+from typing import Any, cast
 
-from gpt_trader.features.intelligence.regime import RegimeState, RegimeType
+import pytest
+
+from gpt_trader.features.intelligence.regime import (
+    MarketRegimeDetector,
+    RegimeState,
+    RegimeType,
+)
 from gpt_trader.features.live_trade.strategies.perps_baseline import Action, Decision
 from gpt_trader.features.live_trade.strategies.regime_switcher import (
     RegimeSwitchingStrategy,
@@ -61,6 +67,59 @@ def _pos_long() -> dict[str, Any]:
     return {"quantity": Decimal("1"), "side": "long", "entry_price": Decimal("100")}
 
 
+def _pos_short() -> dict[str, Any]:
+    return {"quantity": Decimal("1"), "side": "short", "entry_price": Decimal("100")}
+
+
+def _build_regime_follow_strategy(
+    regime: RegimeType,
+    *,
+    enable_shorts: bool = True,
+) -> RegimeSwitchingStrategy:
+    detector = _StubDetector([regime])
+    trend = _StubStrategy([Decision(Action.HOLD, "trend", indicators={"from": "trend"})])
+    mean_rev = _StubStrategy([Decision(Action.HOLD, "mr", indicators={"from": "mr"})])
+    return RegimeSwitchingStrategy(
+        trend_strategy_factory=lambda: trend,
+        mean_reversion_strategy_factory=lambda: mean_rev,
+        regime_detector=cast(MarketRegimeDetector, detector),
+        trend_mode="regime_follow",
+        enable_shorts=enable_shorts,
+    )
+
+
+@pytest.mark.parametrize(
+    ("regime", "position_state", "enable_shorts", "expected_action", "reason_fragment"),
+    [
+        (RegimeType.BULL_QUIET, None, True, Action.BUY, "bull"),
+        (RegimeType.BEAR_QUIET, _pos_long(), True, Action.CLOSE, "bear"),
+        (RegimeType.BULL_VOLATILE, _pos_short(), True, Action.CLOSE, "bull"),
+        (RegimeType.BEAR_QUIET, None, True, Action.SELL, "bear"),
+        (RegimeType.BEAR_VOLATILE, None, False, Action.HOLD, "shorts disabled"),
+    ],
+)
+def test_regime_follow_actions(
+    regime: RegimeType,
+    position_state: dict[str, Any] | None,
+    enable_shorts: bool,
+    expected_action: Action,
+    reason_fragment: str,
+) -> None:
+    strategy = _build_regime_follow_strategy(regime, enable_shorts=enable_shorts)
+
+    decision = strategy.decide(
+        symbol="BTC-USD",
+        current_mark=Decimal("100"),
+        position_state=position_state,
+        recent_marks=[Decimal("100")] * 70,
+        equity=Decimal("10000"),
+        product=None,
+    )
+
+    assert decision.action == expected_action
+    assert reason_fragment in decision.reason
+
+
 class TestRegimeSwitchingStrategy:
     def test_delegates_by_regime_when_flat(self) -> None:
         detector = _StubDetector([RegimeType.SIDEWAYS_QUIET])
@@ -70,7 +129,7 @@ class TestRegimeSwitchingStrategy:
         strategy = RegimeSwitchingStrategy(
             trend_strategy_factory=lambda: trend,
             mean_reversion_strategy_factory=lambda: mean_rev,
-            regime_detector=detector,
+            regime_detector=cast(MarketRegimeDetector, detector),
         )
 
         decision = strategy.decide(
@@ -103,7 +162,7 @@ class TestRegimeSwitchingStrategy:
         strategy = RegimeSwitchingStrategy(
             trend_strategy_factory=lambda: trend,
             mean_reversion_strategy_factory=lambda: mean_rev,
-            regime_detector=detector,
+            regime_detector=cast(MarketRegimeDetector, detector),
         )
 
         first = strategy.decide(
@@ -150,7 +209,7 @@ class TestRegimeSwitchingStrategy:
         strategy = RegimeSwitchingStrategy(
             trend_strategy_factory=lambda: trend,
             mean_reversion_strategy_factory=lambda: mean_rev,
-            regime_detector=detector,
+            regime_detector=cast(MarketRegimeDetector, detector),
         )
 
         decision = strategy.decide(

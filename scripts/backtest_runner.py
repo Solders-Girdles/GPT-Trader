@@ -17,7 +17,7 @@ from dataclasses import asdict, is_dataclass
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 from gpt_trader.app.config import StrategyType
 from gpt_trader.app.config.bot_config import BotConfig
@@ -133,6 +133,11 @@ def _select_strategy(config: BotConfig, *, ensemble_profile: str | None = None) 
     if config.strategy_type == "baseline" and not config.enable_shorts:
         return SpotStrategy(config=config.strategy)
 
+    if config.strategy_type == "regime_switcher":
+        config.regime_switcher_trend_mode = cast(
+            Literal["delegate", "regime_follow"], config.regime_switcher_trend_mode
+        )
+
     return strategy
 
 
@@ -140,7 +145,10 @@ def _lookback_bars(strategy: Any) -> int:
     hint = getattr(strategy, "required_lookback_bars", None)
     if hint is not None:
         try:
-            return int(hint() if callable(hint) else hint)
+            value = hint() if callable(hint) else hint
+            if isinstance(value, (int, float, str)):
+                return int(value)
+            return int(str(value))
         except (TypeError, ValueError):
             pass
 
@@ -339,6 +347,7 @@ async def run_backtest(
     strategy_type: str | None = None,
     ensemble_profile: str | None = None,
     enable_shorts: bool | None = None,
+    regime_trend_mode: str = "delegate",
     risk_free_rate: Decimal = Decimal("0"),
     spike_threshold_pct: float = 15.0,
     volume_anomaly_std: float = 6.0,
@@ -360,6 +369,9 @@ async def run_backtest(
     if enable_shorts is not None:
         config.enable_shorts = enable_shorts
         config.mean_reversion.enable_shorts = enable_shorts
+    config.regime_switcher_trend_mode = cast(
+        Literal["delegate", "regime_follow"], regime_trend_mode
+    )
 
     if mean_reversion_entry is not None:
         config.mean_reversion.z_score_entry_threshold = mean_reversion_entry
@@ -634,6 +646,13 @@ def _parse_args() -> argparse.Namespace:
         help="Override strategy type for the run",
     )
     parser.add_argument(
+        "--regime-trend-mode",
+        type=str,
+        default="delegate",
+        choices=["delegate", "regime_follow"],
+        help="Trend behavior for regime_switcher (default: delegate)",
+    )
+    parser.add_argument(
         "--enable-shorts",
         action="store_true",
         help="Enable shorts for the backtest run",
@@ -771,6 +790,9 @@ def main() -> int:
         if enable_shorts is not None:
             config.enable_shorts = enable_shorts
             config.mean_reversion.enable_shorts = enable_shorts
+        config.regime_switcher_trend_mode = cast(
+            Literal["delegate", "regime_follow"], args.regime_trend_mode
+        )
 
         if args.mean_reversion_entry is not None:
             config.mean_reversion.z_score_entry_threshold = args.mean_reversion_entry
@@ -819,6 +841,7 @@ def main() -> int:
             "strategy_type": args.strategy_type,
             "ensemble_profile": args.ensemble_profile,
             "enable_shorts": enable_shorts,
+            "regime_trend_mode": args.regime_trend_mode,
             "risk_free_rate": Decimal(str(args.risk_free_rate)),
             "spike_threshold_pct": float(args.spike_threshold_pct),
             "volume_anomaly_std": float(args.volume_anomaly_std),
@@ -849,6 +872,7 @@ def main() -> int:
             "strategy": {
                 "strategy_type": args.strategy_type,
                 "ensemble_profile": args.ensemble_profile,
+                "regime_trend_mode": args.regime_trend_mode,
                 "mean_reversion_entry": args.mean_reversion_entry,
                 "mean_reversion_exit": args.mean_reversion_exit,
                 "mean_reversion_window": args.mean_reversion_window,
@@ -995,6 +1019,7 @@ def main() -> int:
             strategy_type=args.strategy_type,
             ensemble_profile=args.ensemble_profile,
             enable_shorts=enable_shorts,
+            regime_trend_mode=args.regime_trend_mode,
             risk_free_rate=Decimal(str(args.risk_free_rate)),
             spike_threshold_pct=float(args.spike_threshold_pct),
             volume_anomaly_std=float(args.volume_anomaly_std),

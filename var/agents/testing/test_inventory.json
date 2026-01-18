@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 11103,
-    "total_files": 649,
+    "total_files": 655,
     "markers_used": 9
   },
   "marker_definitions": {
@@ -380,15 +380,21 @@
     "utilities": [
       "tests/unit/gpt_trader/utilities/test_performance_monitor.py",
       "tests/unit/gpt_trader/utilities/test_parsing.py",
+      "tests/unit/gpt_trader/utilities/test_logging_patterns_log_operation.py",
       "tests/unit/gpt_trader/utilities/test_iterators.py",
+      "tests/unit/gpt_trader/utilities/test_logging_patterns_system_health.py",
+      "tests/unit/gpt_trader/utilities/test_logging_patterns_structured_logger.py",
       "tests/unit/gpt_trader/utilities/test_async_utils_core.py",
       "tests/unit/gpt_trader/utilities/test_async_utils_function_detection.py",
+      "tests/unit/gpt_trader/utilities/test_logging_patterns_market_data.py",
       "tests/unit/gpt_trader/utilities/test_logging_patterns_execution.py",
-      "tests/unit/gpt_trader/utilities/test_logging_patterns.py",
+      "tests/unit/gpt_trader/utilities/test_logging_patterns_error_and_config_change.py",
       "tests/unit/gpt_trader/utilities/test_quantization.py",
       "tests/unit/gpt_trader/utilities/test_console_logging_core.py",
+      "tests/unit/gpt_trader/utilities/test_logging_patterns_trade_and_position.py",
       "tests/unit/gpt_trader/utilities/test_datetime_helpers.py",
       "tests/unit/gpt_trader/utilities/test_console_logging_functions.py",
+      "tests/unit/gpt_trader/utilities/test_logging_patterns_decorator.py",
       "tests/unit/gpt_trader/utilities/performance/test_monitor.py",
       "tests/unit/gpt_trader/utilities/performance/test_timing.py",
       "tests/unit/gpt_trader/utilities/performance/test_reporter.py",
@@ -10489,6 +10495,20 @@
         "docstring": "None aliases should not affect behavior."
       }
     ],
+    "tests/unit/gpt_trader/utilities/test_logging_patterns_log_operation.py": [
+      {
+        "name": "test_log_operation_with_plain_logger",
+        "line": 11,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_operation_with_default_logger",
+        "line": 27,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/utilities/test_iterators.py": [
       {
         "name": "TestEmptyStream::test_returns_iterator",
@@ -10539,6 +10559,46 @@
       {
         "name": "test_multiple_calls_independent",
         "line": 28,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/utilities/test_logging_patterns_system_health.py": [
+      {
+        "name": "test_log_system_health_warns_on_non_healthy",
+        "line": 13,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_system_health_wraps_logging_logger",
+        "line": 28,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_system_health_defaults_to_structured_logger",
+        "line": 58,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_system_health_plain_logger_branch",
+        "line": 67,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/utilities/test_logging_patterns_structured_logger.py": [
+      {
+        "name": "test_structured_logger_methods_apply_component",
+        "line": 12,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_get_logger_returns_structured_logger",
+        "line": 27,
         "markers": [],
         "docstring": ""
       }
@@ -10638,6 +10698,38 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/utilities/test_logging_patterns_market_data.py": [
+      {
+        "name": "test_log_market_data_update_supports_optional_fields",
+        "line": 14,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_market_data_update_without_optional_fields",
+        "line": 29,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_market_data_update_with_plain_logger_and_optional_fields",
+        "line": 40,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_market_data_update_plain_logger_branch",
+        "line": 56,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_market_data_update_wraps_logging_logger",
+        "line": 69,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/utilities/test_logging_patterns_execution.py": [
       {
         "name": "test_log_execution_includes_args_and_result",
@@ -10646,202 +10738,46 @@
         "docstring": "Test that log_execution decorator captures args and results."
       }
     ],
-    "tests/unit/gpt_trader/utilities/test_logging_patterns.py": [
-      {
-        "name": "test_log_operation_with_plain_logger",
-        "line": 46,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_operation_with_default_logger",
-        "line": 62,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_trade_event_includes_all_context",
-        "line": 72,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_trade_event_defaults_to_structured_logger",
-        "line": 93,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_trade_event_with_structured_logger",
-        "line": 102,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_position_update_adds_metrics",
-        "line": 113,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_position_update_defaults_to_structured_logger",
-        "line": 132,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_position_update_with_plain_logger",
-        "line": 140,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_position_update_plain_logger_branch",
-        "line": 149,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_position_update_wraps_logging_logger",
-        "line": 160,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_system_health_warns_on_non_healthy",
-        "line": 177,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_system_health_wraps_logging_logger",
-        "line": 192,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_system_health_defaults_to_structured_logger",
-        "line": 221,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_system_health_plain_logger_branch",
-        "line": 230,
-        "markers": [],
-        "docstring": ""
-      },
+    "tests/unit/gpt_trader/utilities/test_logging_patterns_error_and_config_change.py": [
       {
         "name": "test_log_error_with_context",
-        "line": 241,
+        "line": 13,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_log_error_with_context_without_component",
-        "line": 255,
+        "line": 27,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_log_configuration_change_includes_component",
-        "line": 267,
+        "line": 39,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_log_configuration_change_without_component",
-        "line": 276,
+        "line": 48,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_log_configuration_change_with_plain_logger",
-        "line": 285,
+        "line": 57,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_log_configuration_change_wraps_logging_logger",
-        "line": 294,
+        "line": 66,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_log_configuration_change_plain_logger_branch",
-        "line": 311,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_market_data_update_supports_optional_fields",
-        "line": 322,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_market_data_update_without_optional_fields",
-        "line": 337,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_market_data_update_with_plain_logger_and_optional_fields",
-        "line": 348,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_market_data_update_plain_logger_branch",
-        "line": 364,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_market_data_update_wraps_logging_logger",
-        "line": 377,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_execution_includes_args_and_result",
-        "line": 394,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_execution_uses_module_logger_when_none",
-        "line": 413,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_execution_with_structured_logger",
-        "line": 427,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_execution_excludes_callable_args",
-        "line": 441,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_execution_no_result_logging_when_none",
-        "line": 466,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_structured_logger_methods_apply_component",
-        "line": 478,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_get_logger_returns_structured_logger",
-        "line": 494,
+        "line": 83,
         "markers": [],
         "docstring": ""
       }
@@ -11320,6 +11256,56 @@
         "line": 330,
         "markers": [],
         "docstring": "Calling get_console_logger after initialization should reuse singleton."
+      }
+    ],
+    "tests/unit/gpt_trader/utilities/test_logging_patterns_trade_and_position.py": [
+      {
+        "name": "test_log_trade_event_includes_all_context",
+        "line": 14,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_trade_event_defaults_to_structured_logger",
+        "line": 35,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_trade_event_with_structured_logger",
+        "line": 44,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_position_update_adds_metrics",
+        "line": 55,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_position_update_defaults_to_structured_logger",
+        "line": 74,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_position_update_with_plain_logger",
+        "line": 82,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_position_update_plain_logger_branch",
+        "line": 91,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_position_update_wraps_logging_logger",
+        "line": 102,
+        "markers": [],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/utilities/test_datetime_helpers.py": [
@@ -11818,6 +11804,38 @@
         "line": 285,
         "markers": [],
         "docstring": "Test multiple calls to console functions."
+      }
+    ],
+    "tests/unit/gpt_trader/utilities/test_logging_patterns_decorator.py": [
+      {
+        "name": "test_log_execution_includes_args_and_result",
+        "line": 9,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_execution_uses_module_logger_when_none",
+        "line": 28,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_execution_with_structured_logger",
+        "line": 42,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_execution_excludes_callable_args",
+        "line": 56,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_execution_no_result_logging_when_none",
+        "line": 81,
+        "markers": [],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/persistence/test_database_engine.py": [
@@ -15542,14 +15560,14 @@
       },
       {
         "name": "TestRuntimeGuardManagerE2E::test_multiple_guards_trigger_multiple_alerts",
-        "line": 178,
+        "line": 180,
         "markers": [],
         "docstring": "Test multiple guards can trigger simultaneously.",
         "class": "TestRuntimeGuardManagerE2E"
       },
       {
         "name": "TestRuntimeGuardManagerE2E::test_manager_reset_clears_all_state",
-        "line": 199,
+        "line": 201,
         "markers": [],
         "docstring": "Test manager reset clears all state.",
         "class": "TestRuntimeGuardManagerE2E"
@@ -15598,13 +15616,13 @@
       },
       {
         "name": "test_multiple_guards_trigger_multiple_alerts",
-        "line": 178,
+        "line": 180,
         "markers": [],
         "docstring": "Test multiple guards can trigger simultaneously."
       },
       {
         "name": "test_manager_reset_clears_all_state",
-        "line": 199,
+        "line": 201,
         "markers": [],
         "docstring": "Test manager reset clears all state."
       }
@@ -21722,53 +21740,53 @@
     "tests/unit/gpt_trader/preflight/test_checks_connectivity_key_permissions_retries.py": [
       {
         "name": "TestCheckKeyPermissionsRetries::test_retries_on_transient_errors",
-        "line": 16,
+        "line": 14,
         "markers": [],
         "docstring": "Should retry on transient network errors.",
         "class": "TestCheckKeyPermissionsRetries"
       },
       {
         "name": "TestCheckKeyPermissionsRetries::test_fails_after_max_retries",
-        "line": 40,
+        "line": 38,
         "markers": [],
         "docstring": "Should fail after max retry attempts.",
         "class": "TestCheckKeyPermissionsRetries"
       },
       {
         "name": "TestCheckKeyPermissionsRetries::test_fails_on_non_transient_error",
-        "line": 59,
+        "line": 57,
         "markers": [],
         "docstring": "Should fail immediately on non-transient errors.",
         "class": "TestCheckKeyPermissionsRetries"
       },
       {
         "name": "TestCheckKeyPermissionsRetries::test_fails_on_empty_permissions_response",
-        "line": 79,
+        "line": 77,
         "markers": [],
         "docstring": "Should fail when permissions response is empty/None.",
         "class": "TestCheckKeyPermissionsRetries"
       },
       {
         "name": "test_retries_on_transient_errors",
-        "line": 16,
+        "line": 14,
         "markers": [],
         "docstring": "Should retry on transient network errors."
       },
       {
         "name": "test_fails_after_max_retries",
-        "line": 40,
+        "line": 38,
         "markers": [],
         "docstring": "Should fail after max retry attempts."
       },
       {
         "name": "test_fails_on_non_transient_error",
-        "line": 59,
+        "line": 57,
         "markers": [],
         "docstring": "Should fail immediately on non-transient errors."
       },
       {
         "name": "test_fails_on_empty_permissions_response",
-        "line": 79,
+        "line": 77,
         "markers": [],
         "docstring": "Should fail when permissions response is empty/None."
       }
@@ -44935,7 +44953,7 @@
       },
       {
         "name": "test_normalize_symbols_custom_quote_and_config",
-        "line": 37,
+        "line": 39,
         "markers": [],
         "docstring": "Test normalize_symbols with custom quote and config."
       }

@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 646,
+    "tests_scanned": 652,
     "source_modules": 348,
     "unresolved_modules": 3
   },
@@ -1871,8 +1871,14 @@
       "tests/unit/gpt_trader/tui/widgets/test_validation_indicator.py"
     ],
     "gpt_trader.utilities": [
-      "tests/unit/gpt_trader/utilities/test_logging_patterns.py",
-      "tests/unit/gpt_trader/utilities/test_logging_patterns_execution.py"
+      "tests/unit/gpt_trader/utilities/test_logging_patterns_decorator.py",
+      "tests/unit/gpt_trader/utilities/test_logging_patterns_error_and_config_change.py",
+      "tests/unit/gpt_trader/utilities/test_logging_patterns_execution.py",
+      "tests/unit/gpt_trader/utilities/test_logging_patterns_log_operation.py",
+      "tests/unit/gpt_trader/utilities/test_logging_patterns_market_data.py",
+      "tests/unit/gpt_trader/utilities/test_logging_patterns_structured_logger.py",
+      "tests/unit/gpt_trader/utilities/test_logging_patterns_system_health.py",
+      "tests/unit/gpt_trader/utilities/test_logging_patterns_trade_and_position.py"
     ],
     "gpt_trader.utilities.async_tools": [
       "tests/unit/gpt_trader/utilities/test_async_utils_core.py",
@@ -4455,10 +4461,28 @@
     "tests/unit/gpt_trader/utilities/test_iterators.py": [
       "gpt_trader.utilities.iterators"
     ],
-    "tests/unit/gpt_trader/utilities/test_logging_patterns.py": [
+    "tests/unit/gpt_trader/utilities/test_logging_patterns_decorator.py": [
+      "gpt_trader.utilities"
+    ],
+    "tests/unit/gpt_trader/utilities/test_logging_patterns_error_and_config_change.py": [
       "gpt_trader.utilities"
     ],
     "tests/unit/gpt_trader/utilities/test_logging_patterns_execution.py": [
+      "gpt_trader.utilities"
+    ],
+    "tests/unit/gpt_trader/utilities/test_logging_patterns_log_operation.py": [
+      "gpt_trader.utilities"
+    ],
+    "tests/unit/gpt_trader/utilities/test_logging_patterns_market_data.py": [
+      "gpt_trader.utilities"
+    ],
+    "tests/unit/gpt_trader/utilities/test_logging_patterns_structured_logger.py": [
+      "gpt_trader.utilities"
+    ],
+    "tests/unit/gpt_trader/utilities/test_logging_patterns_system_health.py": [
+      "gpt_trader.utilities"
+    ],
+    "tests/unit/gpt_trader/utilities/test_logging_patterns_trade_and_position.py": [
       "gpt_trader.utilities"
     ],
     "tests/unit/gpt_trader/utilities/test_parsing.py": [
@@ -4622,9 +4646,9 @@
     "gpt_trader.observability.tracing": "src/gpt_trader/observability/tracing.py",
     "gpt_trader.utilities.performance": "src/gpt_trader/utilities/performance/__init__.py",
     "gpt_trader.utilities.parsing": "src/gpt_trader/utilities/parsing.py",
+    "gpt_trader.utilities": "src/gpt_trader/utilities/__init__.py",
     "gpt_trader.utilities.iterators": "src/gpt_trader/utilities/iterators.py",
     "gpt_trader.utilities.async_tools": "src/gpt_trader/utilities/async_tools/__init__.py",
-    "gpt_trader.utilities": "src/gpt_trader/utilities/__init__.py",
     "gpt_trader.utilities.quantization": "src/gpt_trader/utilities/quantization.py",
     "gpt_trader.utilities.console_logging": "src/gpt_trader/utilities/console_logging.py",
     "gpt_trader.persistence.database": "src/gpt_trader/persistence/database.py",

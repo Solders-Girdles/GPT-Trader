@@ -35,12 +35,10 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/security/security_validator/test_symbol_validation.py",  # 243 lines: comprehensive symbol/blocklist validation cases
     "tests/unit/gpt_trader/cli/test_commands_orders.py",  # 254 lines: comprehensive CLI orders command coverage
     "tests/unit/gpt_trader/utilities/test_console_logging_core.py",  # 336 lines: console logging contract and fallback behavior matrix
-    "tests/unit/gpt_trader/utilities/test_logging_patterns.py",  # 494 lines: extensive structured logging patterns and decorator coverage
     "tests/property/test_coinbase_invariants.py",  # property-based coverage for invariants across stochastic market scenarios
     "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer.py",  # IP allowlist enforcement scenarios
     "tests/unit/gpt_trader/preflight/test_context.py",  # preflight context scenarios
     "tests/unit/gpt_trader/security/test_request_validator.py",  # request validation coverage
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_coverage.py",  # transport layer coverage
     "tests/unit/gpt_trader/security/test_input_sanitizer.py",  # input sanitization edge cases
     "tests/contract/test_coinbase_api_contract.py",  # API contract compliance suite
     "tests/unit/gpt_trader/preflight/test_core.py",  # preflight core validation

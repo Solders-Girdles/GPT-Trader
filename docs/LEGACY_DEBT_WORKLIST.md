@@ -65,8 +65,8 @@ This is the canonical legacy-debt tracker; other reports (e.g. `docs/LEGACY_DEBT
 
 ## P3 — Low-impact cleanup candidates
 
-- [ ] Remove or justify unused equities-market constants:
-  - `src/gpt_trader/config/constants.py` (`MARKET_OPEN_HOUR`, `MARKET_CLOSE_HOUR`)
+- [x] Remove or justify unused equities-market constants:
+  - `src/gpt_trader/config/constants.py` (removed `MARKET_OPEN_HOUR`, `MARKET_CLOSE_HOUR`)
 - [x] Close remaining doc gaps so architecture docs match the current tree:
   - Add `src/gpt_trader/persistence/` to `README.md` and `docs/ARCHITECTURE.md`.
   - Clarify canonical `src/gpt_trader/backtesting/` and how `features/research` relates (wrapper/adapter).

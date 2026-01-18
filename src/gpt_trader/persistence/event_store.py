@@ -4,6 +4,7 @@ Event persistence layer with optional SQLite durability.
 
 from __future__ import annotations
 
+import warnings
 from collections import deque
 from pathlib import Path
 from typing import Any
@@ -57,6 +58,11 @@ class EventStore:
     @property
     def path(self) -> Path | None:
         """Legacy path property for backward compatibility."""
+        warnings.warn(
+            "EventStore.path is deprecated; use EventStore.root and store SQLite data in events.db.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if self._root:
             return self._root / "events.jsonl"
         return None
@@ -69,6 +75,26 @@ class EventStore:
         Returns a list copy of the internal deque for backward compatibility
         with tests that use store.events[0], len(store.events), etc.
         """
+        warnings.warn(
+            "EventStore.events is deprecated; use EventStore.list_events().",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return list(self._events)
+
+    def list_events(self, count: int | None = None) -> list[dict[str, Any]]:
+        """Return a snapshot of events.
+
+        In persistent mode, reads from the database to include all events,
+        not just the in-memory cache.
+
+        Args:
+            count: If provided, return only the most recent count events.
+        """
+        if count is not None:
+            return self.get_recent(count)
+        if self._database is not None:
+            return self._database.read_all_events()
         return list(self._events)
 
     def _extract_bot_id(self, data: dict[str, Any]) -> str | None:

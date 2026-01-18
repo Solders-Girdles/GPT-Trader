@@ -12,7 +12,10 @@ from gpt_trader.features.research.backtesting.data_loader import (
 
 class StubEventStore:
     def __init__(self, events: list[dict]) -> None:
-        self.events = events
+        self._events = events
+
+    def list_events(self) -> list[dict]:
+        return list(self._events)
 
 
 def test_load_symbol_filters_invalid_and_truncates() -> None:

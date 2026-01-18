@@ -137,7 +137,7 @@ class TradingEngine(BaseEngine):
         # Initialize status reporter
         self._status_reporter = StatusReporter(
             status_file=getattr(context.config, "status_file", "status.json"),
-            update_interval=getattr(context.config, "status_interval", 10),
+            file_write_interval=getattr(context.config, "status_interval", 60),
             bot_id=context.bot_id,
             enabled=getattr(context.config, "status_enabled", True),
         )

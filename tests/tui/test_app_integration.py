@@ -49,7 +49,7 @@ async def test_tui_receives_status_update(mock_app, mock_bot):
                 daily_loss_limit_pct=0.02,
                 current_daily_loss_pct=0.0,
                 reduce_only_mode=False,
-                active_guards=[],
+                guards=[],
             ),
         )
 

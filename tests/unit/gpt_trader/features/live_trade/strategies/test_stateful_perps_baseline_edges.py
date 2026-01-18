@@ -7,7 +7,7 @@ from gpt_trader.features.live_trade.strategies.perps_baseline.stateful import (
 )
 from gpt_trader.features.live_trade.strategies.perps_baseline.strategy import (
     Action,
-    StrategyConfig,
+    PerpsStrategyConfig,
 )
 
 
@@ -18,7 +18,7 @@ class SimpleConfig:
 
 
 def _make_strategy(**overrides) -> StatefulBaselineStrategy:
-    config = StrategyConfig(
+    config = PerpsStrategyConfig(
         short_ma_period=2,
         long_ma_period=3,
         rsi_period=2,

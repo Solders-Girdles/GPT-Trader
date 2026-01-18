@@ -1,5 +1,5 @@
 """
-Comprehensive validation framework for GPT-Trader V2
+Comprehensive validation framework for GPT-Trader.
 
 Provides input validation, data validation, and configuration validation
 with detailed error messages and type checking.

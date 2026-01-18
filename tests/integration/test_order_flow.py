@@ -52,7 +52,7 @@ class TestTradingEngineOrderFlow:
         )
         assert result.success is True
 
-        events = engine.context.event_store.events
+        events = engine.context.event_store.list_events()
         trade_events = [e for e in events if e["type"] == "trade"]
         assert len(trade_events) >= 1, "Expected at least one trade event"
 
@@ -93,7 +93,7 @@ class TestTradingEngineOrderFlow:
         )
         assert second.success is True
 
-        events = engine.context.event_store.events
+        events = engine.context.event_store.list_events()
         trade_events = [e for e in events if e["type"] == "trade"]
         assert len(trade_events) >= 2, "Expected at least two trade events"
 
@@ -116,7 +116,7 @@ class TestTradingEngineGuardStack:
 
         engine.context.risk_manager.set_reduce_only_mode(True, reason="integration_test")
 
-        initial_events = len(engine.context.event_store.events)
+        initial_events = len(engine.context.event_store.list_events())
 
         from gpt_trader.features.live_trade.strategies.perps_baseline import Action, Decision
 
@@ -130,7 +130,7 @@ class TestTradingEngineGuardStack:
         )
         assert result.blocked is True
 
-        events = engine.context.event_store.events
+        events = engine.context.event_store.list_events()
         new_events = events[initial_events:]
         trade_events = [e for e in new_events if e["type"] == "trade"]
         assert len(trade_events) == 0, "Should not have recorded any trades"
@@ -148,7 +148,7 @@ class TestTradingEngineGuardStack:
 
         buy_decision = Decision(action=Action.BUY, reason="Test signal", confidence=0.8)
 
-        initial_events = len(engine.context.event_store.events)
+        initial_events = len(engine.context.event_store.list_events())
 
         result = await engine._validate_and_place_order(
             symbol="BTC-USD",
@@ -160,7 +160,7 @@ class TestTradingEngineGuardStack:
         assert result.reason is not None
         assert "stale" in result.reason.lower() or "mark" in result.reason.lower()
 
-        events = engine.context.event_store.events
+        events = engine.context.event_store.list_events()
         new_events = events[initial_events:]
         rejection_events = [
             e

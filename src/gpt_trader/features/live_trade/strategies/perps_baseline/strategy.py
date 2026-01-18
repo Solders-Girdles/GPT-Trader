@@ -71,17 +71,6 @@ class BaseStrategyConfig:
     # Position sizing
     position_fraction: float | None = None
 
-    # Backward compatibility aliases for legacy code
-    @property
-    def short_ma(self) -> int:
-        """Alias for short_ma_period (backward compat)."""
-        return self.short_ma_period
-
-    @property
-    def long_ma(self) -> int:
-        """Alias for long_ma_period (backward compat)."""
-        return self.long_ma_period
-
 
 @dataclass
 class SpotStrategyConfig(BaseStrategyConfig):
@@ -108,10 +97,6 @@ class PerpsStrategyConfig(BaseStrategyConfig):
     target_leverage: int = 5
     enable_shorts: bool = True
     max_leverage: int = 10
-
-
-# Backward compatibility alias - legacy code uses StrategyConfig
-StrategyConfig = PerpsStrategyConfig
 
 
 @dataclass
@@ -147,23 +132,23 @@ class BaselinePerpsStrategy:
     def __init__(self, config: BaseStrategyConfig | Any = None, risk_manager: Any = None):
         self.config: BaseStrategyConfig
         if config is None:
-            self.config = StrategyConfig()
+            self.config = PerpsStrategyConfig()
         elif isinstance(config, BaseStrategyConfig):
             self.config = config
         else:
-            # Convert dict or other config object to StrategyConfig
+            # Convert dict or other config object to PerpsStrategyConfig
             self.config = self._parse_config(config)
         self.risk_manager = risk_manager
 
-    def _parse_config(self, config: Any) -> StrategyConfig:
+    def _parse_config(self, config: Any) -> PerpsStrategyConfig:
         """Parse configuration from various formats."""
         if hasattr(config, "__dict__"):
             kwargs = {}
-            for field_name in StrategyConfig.__dataclass_fields__:
+            for field_name in PerpsStrategyConfig.__dataclass_fields__:
                 if hasattr(config, field_name):
                     kwargs[field_name] = getattr(config, field_name)
-            return StrategyConfig(**kwargs)
-        return StrategyConfig()
+            return PerpsStrategyConfig(**kwargs)
+        return PerpsStrategyConfig()
 
     def decide(
         self,
@@ -201,7 +186,7 @@ class BaselinePerpsStrategy:
             )
 
         # Minimum data requirements
-        min_data = max(self.config.long_ma, self.config.rsi_period + 1)
+        min_data = max(self.config.long_ma_period, self.config.rsi_period + 1)
         if len(recent_marks) < min_data:
             return Decision(
                 Action.HOLD,
@@ -233,8 +218,10 @@ class BaselinePerpsStrategy:
         state.rsi = relative_strength_index(list(recent_marks), period=self.config.rsi_period)
 
         # Calculate moving averages
-        state.short_ma = simple_moving_average(list(recent_marks), period=self.config.short_ma)
-        state.long_ma = simple_moving_average(list(recent_marks), period=self.config.long_ma)
+        state.short_ma = simple_moving_average(
+            list(recent_marks), period=self.config.short_ma_period
+        )
+        state.long_ma = simple_moving_average(list(recent_marks), period=self.config.long_ma_period)
 
         # Determine RSI signal
         if state.rsi is not None:
@@ -256,9 +243,13 @@ class BaselinePerpsStrategy:
                 state.trend = "neutral"
 
         # Detect MA crossover
-        if len(recent_marks) >= self.config.long_ma:
-            short_ma_series = compute_ma_series(list(recent_marks), self.config.short_ma, "sma")
-            long_ma_series = compute_ma_series(list(recent_marks), self.config.long_ma, "sma")
+        if len(recent_marks) >= self.config.long_ma_period:
+            short_ma_series = compute_ma_series(
+                list(recent_marks), self.config.short_ma_period, "sma"
+            )
+            long_ma_series = compute_ma_series(
+                list(recent_marks), self.config.long_ma_period, "sma"
+            )
 
             crossover = detect_crossover(short_ma_series, long_ma_series, lookback=3)
             if crossover and crossover.crossed:

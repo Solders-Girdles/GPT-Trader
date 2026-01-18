@@ -161,6 +161,17 @@ class StrategyStatus:
 
 
 @dataclass
+class GuardStatus:
+    """Status snapshot of a single risk guard."""
+
+    name: str
+    severity: str = "MEDIUM"
+    last_triggered: float = 0.0
+    triggered_count: int = 0
+    description: str = ""
+
+
+@dataclass
 class RiskStatus:
     """Status snapshot of risk management metrics."""
 
@@ -169,7 +180,7 @@ class RiskStatus:
     current_daily_loss_pct: float = 0.0
     reduce_only_mode: bool = False
     reduce_only_reason: str = ""
-    active_guards: list[str] = field(default_factory=list)
+    guards: list[GuardStatus] = field(default_factory=list)
 
 
 @dataclass
@@ -277,7 +288,6 @@ class StatusReporter:
     status_file: str = "status.json"
     observer_interval: float = 2.0  # seconds - fast loop for TUI observers
     file_write_interval: float = 60.0  # seconds - slow loop for disk writes
-    update_interval: int = 10  # Deprecated: use file_write_interval instead
     bot_id: str = ""
     enabled: bool = True
 
@@ -914,6 +924,7 @@ class StatusReporter:
         current_daily_loss: float,
         reduce_only: bool,
         reduce_reason: str,
+        guards: list[GuardStatus | dict[str, Any]] | None = None,
         active_guards: list[str] | None = None,
     ) -> None:
         """Update risk status."""
@@ -922,8 +933,26 @@ class StatusReporter:
         self._status.risk.current_daily_loss_pct = current_daily_loss
         self._status.risk.reduce_only_mode = reduce_only
         self._status.risk.reduce_only_reason = reduce_reason
-        if active_guards:
-            self._status.risk.active_guards = active_guards
+        if guards is not None:
+            normalized: list[GuardStatus] = []
+            for guard in guards:
+                if isinstance(guard, GuardStatus):
+                    normalized.append(guard)
+                elif isinstance(guard, dict):
+                    normalized.append(
+                        GuardStatus(
+                            name=str(guard.get("name", "")),
+                            severity=str(guard.get("severity", "MEDIUM")),
+                            last_triggered=float(guard.get("last_triggered", 0.0) or 0.0),
+                            triggered_count=int(guard.get("triggered_count", 0) or 0),
+                            description=str(guard.get("description", "") or ""),
+                        )
+                    )
+                else:
+                    normalized.append(GuardStatus(name=str(guard)))
+            self._status.risk.guards = normalized
+        elif active_guards is not None:
+            self._status.risk.guards = [GuardStatus(name=str(name)) for name in active_guards]
 
     def update_system(
         self, latency: float, connection: str, rate_limit: str, memory: str, cpu: str
@@ -986,16 +1015,6 @@ class StatusReporter:
         self._update_status()
         return self._status
 
-    def get_status_dict(self) -> dict[str, Any]:
-        """
-        Get current status as a dictionary (backward compatibility).
-
-        Deprecated: Use get_status() for typed access.
-        This method will be removed after TUI migration is complete.
-        """
-        self._update_status()
-        return asdict(self._status)
-
 
 __all__ = [
     "StatusReporter",
@@ -1009,6 +1028,7 @@ __all__ = [
     "BalanceEntry",
     "DecisionEntry",
     "StrategyStatus",
+    "GuardStatus",
     "RiskStatus",
     "SystemStatus",
     "HeartbeatStatus",

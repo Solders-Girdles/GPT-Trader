@@ -177,7 +177,7 @@ class TestCrashRecovery:
         engine1._record_price_tick("BTC-USD", Decimal("50000"))
 
         # Verify event was recorded in memory
-        assert len(store1.events) == 1
+        assert len(store1.list_events()) == 1
 
         # Session 2: New in-memory store
         store2 = EventStore()  # New in-memory store

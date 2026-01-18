@@ -78,6 +78,7 @@ def update_mark_and_metrics(
     symbol: str,
     mark: Decimal,
 ) -> None:
+    config = getattr(ctx, "config", None)
     strategy_coordinator = getattr(ctx, "strategy_coordinator", None)
     if strategy_coordinator and hasattr(strategy_coordinator, "update_mark_window"):
         try:
@@ -97,7 +98,26 @@ def update_mark_and_metrics(
             with runtime_state.mark_lock:
                 window = runtime_state.mark_windows.setdefault(symbol, [])
                 window.append(mark)
-                max_size = max(ctx.config.short_ma, ctx.config.long_ma) + 5
+
+                def _coerce_int(value: Any) -> int | None:
+                    try:
+                        return int(value)
+                    except (TypeError, ValueError):
+                        return None
+
+                short_period = _coerce_int(
+                    getattr(getattr(config, "strategy", None), "short_ma_period", None)
+                )
+                if short_period is None:
+                    short_period = 5
+
+                long_period = _coerce_int(
+                    getattr(getattr(config, "strategy", None), "long_ma_period", None)
+                )
+                if long_period is None:
+                    long_period = 20
+
+                max_size = max(short_period, long_period) + 5
                 if len(window) > max_size:
                     runtime_state.mark_windows[symbol] = window[-max_size:]
 
@@ -157,7 +177,6 @@ def update_mark_and_metrics(
         except Exception:
             last_emit = {}
 
-    config = getattr(ctx, "config", None)
     raw_interval = getattr(config, "status_interval", 60)
     try:
         interval = max(int(raw_interval), 1)

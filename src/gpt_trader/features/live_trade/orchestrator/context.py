@@ -200,7 +200,13 @@ class ContextBuilderMixin(_HasBot):
             return True  # Skip risk checks if no risk manager
 
         try:
-            window = context.marks[-max(bot.config.long_ma, 20) :]
+            try:
+                long_period = int(
+                    getattr(getattr(bot.config, "strategy", None), "long_ma_period", 20)
+                )
+            except (TypeError, ValueError):
+                long_period = 20
+            window = context.marks[-max(long_period, 20) :]
             cb = bot.risk_manager.check_volatility_circuit_breaker(context.symbol, list(window))
             if cb is not None and cb.triggered:
                 logger.warning(

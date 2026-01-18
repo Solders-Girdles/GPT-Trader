@@ -6,7 +6,7 @@ from collections.abc import Sequence
 
 from gpt_trader.core import Balance, Position
 from gpt_trader.features.live_trade.strategies.perps_baseline import Action
-from gpt_trader.logging import correlation_context, log_execution_error, symbol_context
+from gpt_trader.utilities.logging import correlation_context, log_execution_error, symbol_context
 
 from .context import ContextBuilderMixin
 from .decision import DecisionEngineMixin

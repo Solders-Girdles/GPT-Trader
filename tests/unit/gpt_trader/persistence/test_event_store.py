@@ -15,25 +15,25 @@ class TestEventStore:
     def test_event_store_init_default_path(self) -> None:
         """Test EventStore initialization with default path."""
         store = EventStore()
-        assert store.events == []
-        assert store.path is None
+        assert store.list_events() == []
+        assert store.root is None
 
     def test_event_store_init_custom_path(self) -> None:
         """Test EventStore initialization with custom path."""
         custom_root = Path("/tmp/test_events")
         store = EventStore(root=custom_root)
 
-        expected_path = custom_root / "events.jsonl"
-        assert store.path == expected_path
-        assert store.events == []
+        assert store.root == custom_root
+        assert store.list_events() == []
 
     def test_append_adds_to_memory(self) -> None:
         """Test append method adds to in-memory list."""
         store = EventStore()
         store.append("test_type", {"key": "value"})
 
-        assert len(store.events) == 1
-        assert store.events[0] == {"type": "test_type", "data": {"key": "value"}}
+        events = store.list_events()
+        assert len(events) == 1
+        assert events[0] == {"type": "test_type", "data": {"key": "value"}}
 
     def test_append_trade(self) -> None:
         """Test append_trade method."""
@@ -41,8 +41,9 @@ class TestEventStore:
         trade_data = {"symbol": "BTC-USD", "side": "buy", "size": 0.1}
         store.append_trade("bot123", trade_data)
 
-        assert len(store.events) == 1
-        event = store.events[0]
+        events = store.list_events()
+        assert len(events) == 1
+        event = events[0]
         assert event["type"] == "trade"
         assert event["data"]["bot_id"] == "bot123"
         assert event["data"]["symbol"] == "BTC-USD"
@@ -54,8 +55,9 @@ class TestEventStore:
         trade_data = {"bot_id": "bot123", "symbol": "BTC-USD", "side": "buy"}
         store.append_trade(trade_data)
 
-        assert len(store.events) == 1
-        event = store.events[0]
+        events = store.list_events()
+        assert len(events) == 1
+        event = events[0]
         assert event["type"] == "trade"
         assert event["data"] == trade_data
 
@@ -69,8 +71,9 @@ class TestEventStore:
         }
         store.append_position("bot123", position_data)
 
-        assert len(store.events) == 1
-        event = store.events[0]
+        events = store.list_events()
+        assert len(events) == 1
+        event = events[0]
         assert event["type"] == "position"
         assert event["data"]["bot_id"] == "bot123"
         assert event["data"]["position"] == position_data
@@ -81,8 +84,9 @@ class TestEventStore:
         metric_data = {"portfolio_value": 10000.0}
         store.append_metric("bot123", metric_data)
 
-        assert len(store.events) == 1
-        event = store.events[0]
+        events = store.list_events()
+        assert len(events) == 1
+        event = events[0]
         assert event["type"] == "metric"
         assert event["data"]["bot_id"] == "bot123"
         assert event["data"]["metrics"] == metric_data
@@ -92,8 +96,9 @@ class TestEventStore:
         store = EventStore()
         store.append_error(error="Connection failed", bot_id="bot123")
 
-        assert len(store.events) == 1
-        event = store.events[0]
+        events = store.list_events()
+        assert len(events) == 1
+        event = events[0]
         assert event["type"] == "error"
         assert event["data"]["bot_id"] == "bot123"
         assert event["data"]["error"] == "Connection failed"
@@ -105,8 +110,9 @@ class TestEventStore:
         context = {"retry_count": 3}
         store.append_error(error="Connection failed", details=context, bot_id="bot123")
 
-        assert len(store.events) == 1
-        event = store.events[0]
+        events = store.list_events()
+        assert len(events) == 1
+        event = events[0]
         assert event["type"] == "error"
         assert event["data"]["bot_id"] == "bot123"
         assert event["data"]["error"] == "Connection failed"
@@ -117,8 +123,9 @@ class TestEventStore:
         store = EventStore()
         store.store_event("custom", {"foo": "bar"})
 
-        assert len(store.events) == 1
-        assert store.events[0] == {"type": "custom", "data": {"foo": "bar"}}
+        events = store.list_events()
+        assert len(events) == 1
+        assert events[0] == {"type": "custom", "data": {"foo": "bar"}}
 
 
 class TestEventStorePruning:
@@ -134,7 +141,7 @@ class TestEventStorePruning:
         pruned = store.prune(max_rows=5)
         assert pruned == 0
         # Events still in memory (limited by deque maxlen, not prune)
-        assert len(store.events) == 10
+        assert len(store.list_events()) == 10
 
     def test_prune_persistent_removes_oldest(self, tmp_path: Path) -> None:
         """Prune on persistent store removes oldest events."""

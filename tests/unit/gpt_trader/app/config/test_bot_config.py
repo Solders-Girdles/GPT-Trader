@@ -157,5 +157,16 @@ class TestDerivativesEnvParsing:
             "COINBASE_ENABLE_DERIVATIVES": "1",
         }
         with patch.dict(os.environ, env, clear=True):
-            config = BotConfig.from_env()
+            with pytest.warns(DeprecationWarning, match="COINBASE_ENABLE_DERIVATIVES"):
+                config = BotConfig.from_env()
         assert config.derivatives_enabled is True
+
+
+class TestFromDictLegacyProfileMapping:
+    """Test BotConfig.from_dict legacy profile schema compatibility."""
+
+    def test_profile_style_emits_deprecation_warning(self) -> None:
+        with pytest.warns(DeprecationWarning, match=r"Legacy profile-style YAML mapping"):
+            config = BotConfig.from_dict({"profile_name": "minimal"})
+
+        assert config.symbols

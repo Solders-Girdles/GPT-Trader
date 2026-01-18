@@ -13,6 +13,7 @@ from gpt_trader.tui.types import (
     Order,
     PortfolioSummary,
     Position,
+    RiskGuard,
     RiskState,
     SystemStatus,
     Trade,
@@ -353,7 +354,7 @@ class TestStateDeltaUpdater:
             current_daily_loss_pct=1.0,
             reduce_only_mode=False,
             reduce_only_reason="",
-            active_guards=["guard1"],
+            guards=[RiskGuard(name="guard1")],
         )
 
         result = updater.compare_risk(risk, risk)

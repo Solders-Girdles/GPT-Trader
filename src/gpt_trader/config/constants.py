@@ -86,14 +86,6 @@ BLOCKED_SYMBOLS: frozenset[str] = frozenset(
 )
 
 # =============================================================================
-# Market Hours Configuration
-# =============================================================================
-
-# US equity market hours (Eastern Time)
-MARKET_OPEN_HOUR: int = int(os.getenv("GPT_TRADER_MARKET_OPEN_HOUR", "9"))
-MARKET_CLOSE_HOUR: int = int(os.getenv("GPT_TRADER_MARKET_CLOSE_HOUR", "16"))
-
-# =============================================================================
 # Rate Limiting Configuration
 # =============================================================================
 

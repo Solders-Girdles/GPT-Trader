@@ -150,8 +150,8 @@ class TestUpdateMarkAndMetrics:
         runtime_state.mark_lock = threading.Lock()
         runtime_state.mark_windows = {}
         ctx.runtime_state = runtime_state
-        ctx.config.short_ma = 10
-        ctx.config.long_ma = 20
+        ctx.config.strategy.short_ma_period = 10
+        ctx.config.strategy.long_ma_period = 20
 
         update_mark_and_metrics(coordinator, ctx, "ETH-PERP", Decimal("3000"))
 
@@ -168,8 +168,8 @@ class TestUpdateMarkAndMetrics:
         # Pre-populate with many marks
         runtime_state.mark_windows = {"BTC-PERP": [Decimal(str(i)) for i in range(50)]}
         ctx.runtime_state = runtime_state
-        ctx.config.short_ma = 10
-        ctx.config.long_ma = 20
+        ctx.config.strategy.short_ma_period = 10
+        ctx.config.strategy.long_ma_period = 20
 
         update_mark_and_metrics(coordinator, ctx, "BTC-PERP", Decimal("100"))
 

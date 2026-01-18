@@ -140,7 +140,7 @@ class RiskDetailModal(ModalScreen):
                 # Active guards section with enhanced display
                 yield Static("─── Active Guards ───", classes="section-header")
 
-                # Use enhanced guards if available, fall back to legacy active_guards
+                # Use enhanced guards list
                 guards_to_display = self._get_sorted_guards(data)
 
                 if guards_to_display:
@@ -229,9 +229,9 @@ class RiskDetailModal(ModalScreen):
             score += 3
 
         # Factor 3: Active guards
-        if len(data.active_guards) >= 3:
+        if len(data.guards) >= 3:
             score += 2
-        elif len(data.active_guards) >= 1:
+        elif len(data.guards) >= 1:
             score += 1
 
         return score
@@ -260,7 +260,7 @@ class RiskDetailModal(ModalScreen):
             lines.append("Reduce-only active: +3")
 
         # Guards contribution
-        guard_count = len(data.active_guards)
+        guard_count = len(data.guards)
         if guard_count >= 3:
             lines.append(f"{guard_count} guards active: +2")
         elif guard_count >= 1:
@@ -283,61 +283,17 @@ class RiskDetailModal(ModalScreen):
     def _get_sorted_guards(self, data: RiskState) -> list[RiskGuard]:
         """Get guards sorted by severity (highest first).
 
-        Falls back to legacy active_guards if enhanced guards not available.
-
         Args:
             data: RiskState containing guard information.
 
         Returns:
             List of RiskGuard objects sorted by severity.
         """
-        from gpt_trader.tui.types import RiskGuard
-
-        # Prefer enhanced guards list
-        if data.guards:
-            # Sort by severity (descending) then by name
-            return sorted(
-                data.guards,
-                key=lambda g: (-g.severity_order, g.name),
-            )
-
-        # Fall back to legacy active_guards (convert to RiskGuard objects)
-        if data.active_guards:
-            return [
-                RiskGuard(
-                    name=guard_name,
-                    severity=self._infer_severity(guard_name),
-                )
-                for guard_name in data.active_guards
-            ]
-
-        return []
-
-    def _infer_severity(self, guard_name: str) -> str:
-        """Infer severity from guard name for legacy guards.
-
-        Args:
-            guard_name: Name of the guard.
-
-        Returns:
-            Inferred severity level.
-        """
-        name_lower = guard_name.lower()
-
-        # Critical guards
-        if any(word in name_lower for word in ["drawdown", "loss", "margin", "liquidation"]):
-            return "CRITICAL"
-
-        # High severity guards
-        if any(word in name_lower for word in ["volatility", "exposure", "leverage"]):
-            return "HIGH"
-
-        # Medium severity guards
-        if any(word in name_lower for word in ["position", "size", "daily"]):
-            return "MEDIUM"
-
-        # Default to LOW
-        return "LOW"
+        # Sort by severity (descending) then by name
+        return sorted(
+            data.guards,
+            key=lambda g: (-g.severity_order, g.name),
+        )
 
     def _format_guard_row(self, guard: RiskGuard) -> Text:
         """Format a single guard row with severity and timestamp.

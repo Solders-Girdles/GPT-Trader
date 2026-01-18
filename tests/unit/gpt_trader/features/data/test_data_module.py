@@ -155,7 +155,7 @@ def test_fetch_data_returns_cache_hit(data_service) -> None:
         start_date=frame.index.min(),
         end_date=frame.index.max(),
         data_type=DataType.OHLCV,
-        source=DataSource.YAHOO,
+        source=DataSource.COINBASE,
     )
     cache.put(query.get_cache_key(), frame)
 
@@ -196,14 +196,14 @@ def test_fetch_data_downloads_when_storage_misses(
     def _download_stub(symbols, start, end, interval):
         return {symbol: downloaded_frame for symbol in symbols}
 
-    monkeypatch.setattr(data_service["service"], "download_from_yahoo", _download_stub)
+    monkeypatch.setattr(data_service["service"], "download_from_coinbase", _download_stub)
 
     query = DataQuery(
         symbols=["SOL-USD"],
         start_date=downloaded_frame.index.min(),
         end_date=downloaded_frame.index.max(),
         data_type=DataType.OHLCV,
-        source=DataSource.YAHOO,
+        source=DataSource.COINBASE,
     )
 
     result = data_service["service"].fetch_data(query)

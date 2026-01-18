@@ -5,7 +5,7 @@ This module defines the core types for the data fetching and caching subsystem:
 
 Types
 -----
-- ``DataSource``: Enum of supported market data providers (Coinbase, Yahoo)
+- ``DataSource``: Enum of supported market data providers (Coinbase)
 - ``DataType``: Enum of data formats (OHLCV candles, etc.)
 - ``DataQuery``: Request object for fetching historical data
 
@@ -25,14 +25,13 @@ Example::
     cache_key = query.get_cache_key()
 """
 
-from dataclasses import dataclass, field
-from enum import Enum
+from dataclasses import dataclass
 from datetime import datetime
+from enum import Enum
 
 
 class DataSource(Enum):
     COINBASE = "coinbase"
-    YAHOO = "yahoo"
 
 
 class DataType(Enum):

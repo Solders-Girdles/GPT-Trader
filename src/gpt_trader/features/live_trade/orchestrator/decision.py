@@ -14,8 +14,8 @@ from gpt_trader.features.live_trade.strategies.perps_baseline import (
     BaselinePerpsStrategy,
     Decision,
 )
-from gpt_trader.logging import log_strategy_decision
 from gpt_trader.monitoring.system import get_logger as _get_plog
+from gpt_trader.utilities.logging import log_strategy_decision
 
 from .logging_utils import logger  # naming: allow
 from .models import SymbolProcessingContext

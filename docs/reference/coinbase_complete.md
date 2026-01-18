@@ -261,14 +261,17 @@ Features:
 
 ## Migration Notes
 
-### From V2 to V3 API
+### From Coinbase API v2 (legacy) to Advanced Trade API v3
 
-The system currently uses V2 (Advanced Trade) which is stable and recommended. V3 migration considerations:
+GPT-Trader uses **Coinbase Advanced Trade API v3** (`/api/v3/brokerage/...`) with **JWT (CDP)** auth.
+If you are migrating code that previously used the legacy Coinbase API v2 (`/v2/...`) endpoints, key formats,
+or response shapes, consider the following:
 
-1. **Authentication**: V3 uses JWT exclusively
-2. **Endpoints**: Different URL structure
-3. **Order Schema**: New `order_configuration` format
-4. **WebSocket**: Different subscription format
+1. **Authentication**: v3 uses JWT (CDP keys); legacy v2 keys will not work on `/api/v3/...`
+2. **Endpoints**: `/api/v3/brokerage/...` vs `/v2/...` URL structure
+3. **Account Model**: portfolios + portfolio UUIDs vs legacy account/wallet shapes
+4. **Order Schema**: `order_configuration` payloads vs legacy order shapes
+5. **WebSocket**: different channel/subscription formats and payload shapes
 
 ### From Equities to Perpetuals
 

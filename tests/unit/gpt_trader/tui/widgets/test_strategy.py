@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 
 from textual.widgets import DataTable
 
-from gpt_trader.tui.types import ActiveOrders, DecisionData, RiskState, StrategyState
+from gpt_trader.tui.types import ActiveOrders, DecisionData, RiskGuard, RiskState, StrategyState
 from gpt_trader.tui.widgets.strategy import StrategyWidget
 
 
@@ -72,7 +72,7 @@ class TestStrategyWidgetBlockingReason:
         mock_state = MagicMock()
         mock_state.risk_data = RiskState(
             reduce_only_mode=False,
-            active_guards=[],
+            guards=[],
         )
         widget.state = mock_state
         assert widget._get_blocking_reason() == ""
@@ -84,7 +84,7 @@ class TestStrategyWidgetBlockingReason:
         mock_state.risk_data = RiskState(
             reduce_only_mode=True,
             reduce_only_reason="daily loss limit",
-            active_guards=[],
+            guards=[],
         )
         widget.state = mock_state
         result = widget._get_blocking_reason()
@@ -98,7 +98,7 @@ class TestStrategyWidgetBlockingReason:
         mock_state.risk_data = RiskState(
             reduce_only_mode=True,
             reduce_only_reason="this is a very long reason that should be truncated",
-            active_guards=[],
+            guards=[],
         )
         widget.state = mock_state
         result = widget._get_blocking_reason()
@@ -112,7 +112,7 @@ class TestStrategyWidgetBlockingReason:
         mock_state = MagicMock()
         mock_state.risk_data = RiskState(
             reduce_only_mode=False,
-            active_guards=["DailyLossGuard"],
+            guards=[RiskGuard(name="DailyLossGuard")],
         )
         widget.state = mock_state
         assert widget._get_blocking_reason() == "DailyLossGuard"
@@ -123,7 +123,11 @@ class TestStrategyWidgetBlockingReason:
         mock_state = MagicMock()
         mock_state.risk_data = RiskState(
             reduce_only_mode=False,
-            active_guards=["DailyLossGuard", "VolatilityGuard", "MaxDrawdownGuard"],
+            guards=[
+                RiskGuard(name="DailyLossGuard"),
+                RiskGuard(name="VolatilityGuard"),
+                RiskGuard(name="MaxDrawdownGuard"),
+            ],
         )
         widget.state = mock_state
         assert widget._get_blocking_reason() == "3 guards"
@@ -135,7 +139,7 @@ class TestStrategyWidgetBlockingReason:
         mock_state.risk_data = RiskState(
             reduce_only_mode=True,
             reduce_only_reason="risk limit",
-            active_guards=["DailyLossGuard"],
+            guards=[RiskGuard(name="DailyLossGuard")],
         )
         widget.state = mock_state
         result = widget._get_blocking_reason()
@@ -236,7 +240,7 @@ class TestDecisionBlockedBy:
         mock_state = MagicMock()
         mock_state.risk_data = RiskState(
             reduce_only_mode=False,
-            active_guards=[],
+            guards=[],
         )
         mock_state.order_data = ActiveOrders(orders=[])
         widget.state = mock_state
@@ -262,7 +266,7 @@ class TestDecisionBlockedBy:
         mock_state = MagicMock()
         mock_state.risk_data = RiskState(
             reduce_only_mode=False,
-            active_guards=["MaxDrawdownGuard"],
+            guards=[RiskGuard(name="MaxDrawdownGuard")],
         )
         widget.state = mock_state
 

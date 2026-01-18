@@ -53,7 +53,7 @@ class TradingBot:
             logger=logger,
         )
 
-        # Get services directly from container (no longer using ServiceRegistry)
+        # Get services directly from container (legacy registry removed)
         self.broker: BrokerProtocol | None = container.broker
         self.risk_manager: RiskManagerProtocol | None = container.risk_manager
         self.account_manager: AccountManagerProtocol | None = getattr(

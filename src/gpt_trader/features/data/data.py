@@ -130,17 +130,13 @@ class DataService:
                     self._cache.put(cache_key, data)
                 return cast(pd.DataFrame, data)
 
-        # Fetch from source (Coinbase or legacy Yahoo stub)
-        result: dict[str, pd.DataFrame] | None = None
-        if query.source == DataSource.COINBASE and self._coinbase_manager is not None:
-            result = self.download_from_coinbase(
-                query.symbols, query.start_date, query.end_date, query.interval
-            )
-        else:
-            # Legacy fallback
-            result = self.download_from_yahoo(
-                query.symbols, query.start_date, query.end_date, query.interval
-            )
+        # Fetch from source
+        if query.source is not DataSource.COINBASE:
+            raise ValueError(f"Unsupported data source: {query.source}")
+
+        result = self.download_from_coinbase(
+            query.symbols, query.start_date, query.end_date, query.interval
+        )
 
         if isinstance(result, dict):
             # Cache the results
@@ -209,13 +205,6 @@ class DataService:
             asyncio.run(fetch_all())
 
         return result if result else None
-
-    def download_from_yahoo(self, *args: Any, **kwargs: Any) -> Any:
-        """Legacy stub - redirects to Coinbase if available."""
-        if len(args) >= 4:
-            symbols, start_date, end_date, interval = args[:4]
-            return self.download_from_coinbase(symbols, start_date, end_date, interval)
-        return None
 
     def cache_data(self, key: str, data: Any, ttl_seconds: int = 3600) -> bool:
         if self._cache:

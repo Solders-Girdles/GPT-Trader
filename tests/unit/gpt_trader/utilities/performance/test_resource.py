@@ -1,6 +1,4 @@
 import builtins
-import sys
-from types import SimpleNamespace
 
 import pytest
 
@@ -34,10 +32,8 @@ class StubPsutil:
 @pytest.fixture(autouse=True)
 def reset_singleton():
     resource._resource_monitor = None
-    sys.modules.pop("gpt_trader.utilities.performance_monitoring", None)
     yield
     resource._resource_monitor = None
-    sys.modules.pop("gpt_trader.utilities.performance_monitoring", None)
 
 
 def test_resource_monitor_reports_usage(monkeypatch):
@@ -83,20 +79,8 @@ def test_get_resource_monitor_memoizes_instance(monkeypatch):
     assert monitor1 is monitor2
 
 
-def test_try_import_psutil_uses_legacy(monkeypatch):
-    legacy_psutil = object()
-    sys.modules["gpt_trader.utilities.performance_monitoring"] = SimpleNamespace(
-        psutil=legacy_psutil
-    )
-
-    monkeypatch.setattr(resource, "psutil", None)
-    monitor = resource.ResourceMonitor()
-    assert monitor._psutil is legacy_psutil
-
-
 def test_try_import_psutil_handles_import_error(monkeypatch):
     monkeypatch.setattr(resource, "psutil", None)
-    sys.modules["gpt_trader.utilities.performance_monitoring"] = SimpleNamespace(psutil=None)
 
     original_import = builtins.__import__
 

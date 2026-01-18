@@ -288,8 +288,8 @@ class StateDeltaUpdater:
                 new.reduce_only_reason,
             )
 
-        if old.active_guards != new.active_guards:
-            result.add_change("active_guards", old.active_guards, new.active_guards)
+        if old.guards != new.guards:
+            result.add_change("guards", old.guards, new.guards)
 
         return result
 

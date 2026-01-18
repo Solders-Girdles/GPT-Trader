@@ -124,7 +124,7 @@ class HistoricalDataLoader:
         Returns:
             DataLoadResult with reconstructed data points.
         """
-        events = self._event_store.events
+        events = self._event_store.list_events()
         logger.info(
             "Loading historical data",
             symbol=symbol,
@@ -242,7 +242,7 @@ class HistoricalDataLoader:
         Returns:
             Dict mapping symbol to DataLoadResult.
         """
-        events = self._event_store.events
+        events = self._event_store.list_events()
 
         # Find all symbols
         symbols: set[str] = set()

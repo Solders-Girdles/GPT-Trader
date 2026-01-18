@@ -16,7 +16,7 @@ class TestRiskDetailModal:
             daily_loss_limit_pct=0.10,
             current_daily_loss_pct=0.0,
             reduce_only_mode=False,
-            active_guards=[],
+            guards=[],
         )
         modal = RiskDetailModal(data)
         assert modal._calculate_risk_score(data) == 0
@@ -28,7 +28,7 @@ class TestRiskDetailModal:
             daily_loss_limit_pct=0.10,
             current_daily_loss_pct=-0.03,  # 30% utilization
             reduce_only_mode=False,
-            active_guards=[],
+            guards=[],
         )
         modal = RiskDetailModal(data)
         assert modal._calculate_risk_score(data) == 1
@@ -40,7 +40,7 @@ class TestRiskDetailModal:
             daily_loss_limit_pct=0.10,
             current_daily_loss_pct=-0.06,  # 60% utilization
             reduce_only_mode=False,
-            active_guards=[],
+            guards=[],
         )
         modal = RiskDetailModal(data)
         assert modal._calculate_risk_score(data) == 2
@@ -52,7 +52,7 @@ class TestRiskDetailModal:
             daily_loss_limit_pct=0.10,
             current_daily_loss_pct=-0.08,  # 80% utilization
             reduce_only_mode=False,
-            active_guards=[],
+            guards=[],
         )
         modal = RiskDetailModal(data)
         assert modal._calculate_risk_score(data) == 3
@@ -65,7 +65,7 @@ class TestRiskDetailModal:
             current_daily_loss_pct=0.0,
             reduce_only_mode=True,
             reduce_only_reason="Risk limit",
-            active_guards=[],
+            guards=[],
         )
         modal = RiskDetailModal(data)
         assert modal._calculate_risk_score(data) == 3
@@ -77,7 +77,7 @@ class TestRiskDetailModal:
             daily_loss_limit_pct=0.10,
             current_daily_loss_pct=0.0,
             reduce_only_mode=False,
-            active_guards=["MaxDrawdown"],
+            guards=[RiskGuard(name="MaxDrawdown")],
         )
         modal = RiskDetailModal(data)
         assert modal._calculate_risk_score(data) == 1
@@ -89,7 +89,10 @@ class TestRiskDetailModal:
             daily_loss_limit_pct=0.10,
             current_daily_loss_pct=0.0,
             reduce_only_mode=False,
-            active_guards=["MaxDrawdown", "DailyLossLimit"],
+            guards=[
+                RiskGuard(name="MaxDrawdown"),
+                RiskGuard(name="DailyLossLimit"),
+            ],
         )
         modal = RiskDetailModal(data)
         assert modal._calculate_risk_score(data) == 1
@@ -101,7 +104,11 @@ class TestRiskDetailModal:
             daily_loss_limit_pct=0.10,
             current_daily_loss_pct=0.0,
             reduce_only_mode=False,
-            active_guards=["MaxDrawdown", "DailyLossLimit", "VolatilityGuard"],
+            guards=[
+                RiskGuard(name="MaxDrawdown"),
+                RiskGuard(name="DailyLossLimit"),
+                RiskGuard(name="VolatilityGuard"),
+            ],
         )
         modal = RiskDetailModal(data)
         assert modal._calculate_risk_score(data) == 2
@@ -113,7 +120,11 @@ class TestRiskDetailModal:
             daily_loss_limit_pct=0.10,
             current_daily_loss_pct=-0.08,  # +3 (critical)
             reduce_only_mode=True,  # +3
-            active_guards=["MaxDrawdown", "DailyLossLimit", "VolatilityGuard"],  # +2
+            guards=[
+                RiskGuard(name="MaxDrawdown"),
+                RiskGuard(name="DailyLossLimit"),
+                RiskGuard(name="VolatilityGuard"),
+            ],  # +2
         )
         modal = RiskDetailModal(data)
         # 3 (critical loss) + 3 (reduce-only) + 2 (3 guards) = 8
@@ -126,7 +137,7 @@ class TestRiskDetailModal:
             daily_loss_limit_pct=0.10,
             current_daily_loss_pct=0.0,
             reduce_only_mode=False,
-            active_guards=[],
+            guards=[],
         )
         modal = RiskDetailModal(data)
         breakdown = modal._format_score_breakdown(data)
@@ -139,7 +150,7 @@ class TestRiskDetailModal:
             daily_loss_limit_pct=0.10,
             current_daily_loss_pct=-0.08,  # critical loss
             reduce_only_mode=True,
-            active_guards=["MaxDrawdown"],
+            guards=[RiskGuard(name="MaxDrawdown")],
         )
         modal = RiskDetailModal(data)
         breakdown = modal._format_score_breakdown(data)
@@ -154,7 +165,11 @@ class TestRiskDetailModal:
             daily_loss_limit_pct=0.10,
             current_daily_loss_pct=0.0,
             reduce_only_mode=False,
-            active_guards=["A", "B", "C"],
+            guards=[
+                RiskGuard(name="A"),
+                RiskGuard(name="B"),
+                RiskGuard(name="C"),
+            ],
         )
         modal = RiskDetailModal(data)
         breakdown = modal._format_score_breakdown(data)
@@ -181,53 +196,6 @@ class TestEnhancedGuardVisibility:
         assert sorted_guards[1].name == "HighGuard"
         assert sorted_guards[2].name == "MediumGuard"
         assert sorted_guards[3].name == "LowGuard"
-
-    def test_get_sorted_guards_fallback_to_legacy(self):
-        """Falls back to legacy active_guards when no enhanced guards."""
-        data = RiskState(
-            active_guards=["DailyLossGuard", "PositionSizeLimit"],
-            guards=[],  # No enhanced guards
-        )
-        modal = RiskDetailModal(data)
-
-        sorted_guards = modal._get_sorted_guards(data)
-        assert len(sorted_guards) == 2
-        # Should be converted to RiskGuard objects
-        assert all(isinstance(g, RiskGuard) for g in sorted_guards)
-
-    def test_infer_severity_critical(self):
-        """Drawdown/loss guards inferred as CRITICAL."""
-        data = RiskState()
-        modal = RiskDetailModal(data)
-
-        assert modal._infer_severity("DailyLossGuard") == "CRITICAL"
-        assert modal._infer_severity("MaxDrawdownLimit") == "CRITICAL"
-        assert modal._infer_severity("MarginCallGuard") == "CRITICAL"
-
-    def test_infer_severity_high(self):
-        """Volatility/exposure guards inferred as HIGH."""
-        data = RiskState()
-        modal = RiskDetailModal(data)
-
-        assert modal._infer_severity("VolatilityGuard") == "HIGH"
-        assert modal._infer_severity("ExposureLimit") == "HIGH"
-        assert modal._infer_severity("LeverageGuard") == "HIGH"
-
-    def test_infer_severity_medium(self):
-        """Position/size guards inferred as MEDIUM."""
-        data = RiskState()
-        modal = RiskDetailModal(data)
-
-        assert modal._infer_severity("PositionSizeLimit") == "MEDIUM"
-        assert modal._infer_severity("DailySizeGuard") == "MEDIUM"
-
-    def test_infer_severity_default_low(self):
-        """Unknown guards default to LOW."""
-        data = RiskState()
-        modal = RiskDetailModal(data)
-
-        assert modal._infer_severity("RandomGuard") == "LOW"
-        assert modal._infer_severity("SomeOtherThing") == "LOW"
 
     def test_format_guard_row_with_recent_trigger(self):
         """Guard row shows recent trigger in red."""

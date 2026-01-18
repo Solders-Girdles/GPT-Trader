@@ -446,9 +446,9 @@ class RiskMetricsCard(Static):
                 )
 
             # Active guards
-            guards = risk_state.active_guards
-            if guards:
-                guards_str = ", ".join(guards)
+            guard_names = [guard.name for guard in risk_state.guards if guard.name]
+            if guard_names:
+                guards_str = ", ".join(guard_names)
                 self.query_one("#active-guards", Label).update(
                     Text.from_markup(
                         f"[{THEME.colors.warning}]{guards_str}[/{THEME.colors.warning}]"

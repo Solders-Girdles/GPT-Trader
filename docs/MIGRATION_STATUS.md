@@ -1,6 +1,6 @@
 # Migration Status (Composition Root / Orchestration)
 
-The DI migration to `ApplicationContainer` is **complete** (v3.0). All legacy
+The DI migration to `ApplicationContainer` is **complete**. All legacy
 `ServiceRegistry` code has been removed. `TradingBot` now receives all services
 directly from the container.
 
@@ -35,11 +35,11 @@ bot = build_bot(config)
 bot = bot_from_profile("demo")
 ```
 
-> **Note:** `orchestration.bootstrap` was removed in v3.0. Update imports to `gpt_trader.app.bootstrap`.
+> **Note:** `orchestration.bootstrap` was removed during the DI migration. Update imports to `gpt_trader.app.bootstrap`.
 
-## v3.0 Changes (Completed)
+## DI Migration Changes (Completed)
 
-The following legacy items were removed in v3.0:
+The following legacy items were removed during the DI migration:
 | Item | Action Taken |
 |------|--------------|
 | `ServiceRegistry` | Deleted `orchestration/service_registry.py` |

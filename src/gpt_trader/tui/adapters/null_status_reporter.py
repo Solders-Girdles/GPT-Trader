@@ -145,7 +145,7 @@ def _create_unavailable_status() -> BotStatus:
             current_daily_loss_pct=0.0,
             reduce_only_mode=False,
             reduce_only_reason="",
-            active_guards=[],
+            guards=[],
         ),
         system=SystemStatus(
             api_latency=0.0,

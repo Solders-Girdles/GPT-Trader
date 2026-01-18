@@ -257,7 +257,7 @@ class DemoStatusReporter:
                 current_daily_loss_pct=float(risk_data.get("current_daily_loss_pct", 0.0)),
                 reduce_only_mode=bool(risk_data.get("reduce_only_mode", False)),
                 reduce_only_reason=risk_data.get("reduce_only_reason", ""),
-                active_guards=risk_data.get("active_guards", []),
+                guards=risk_data.get("guards", []),
             )
 
             # Convert SystemStatus

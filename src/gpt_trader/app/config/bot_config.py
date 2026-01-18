@@ -8,6 +8,7 @@ Supports nested configuration structure for optimization framework compatibility
 """
 
 import os
+import warnings
 from dataclasses import dataclass, field, fields, replace
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, ClassVar, Literal
@@ -144,9 +145,9 @@ def _get_default_strategy_config() -> "PerpsStrategyConfig":
 class BotConfig:
     """Bot configuration with nested strategy and risk configs.
 
-    Supports both:
-    - Nested access: config.strategy.short_ma_period, config.risk.max_leverage
-    - Flat access (backward compat): config.short_ma, config.max_leverage
+    Supports nested access:
+    - Strategy: config.strategy.short_ma_period, config.strategy.long_ma_period, etc.
+    - Risk: config.risk.max_leverage, config.risk.position_fraction, etc.
     """
 
     # Nested configurations
@@ -283,34 +284,6 @@ class BotConfig:
 
         return canonical
 
-    @property
-    def short_ma(self) -> int:
-        """Backward-compatible alias for strategy.short_ma_period."""
-        return int(getattr(self.strategy, "short_ma_period", 5))
-
-    @property
-    def long_ma(self) -> int:
-        """Backward-compatible alias for strategy.long_ma_period."""
-        return int(getattr(self.strategy, "long_ma_period", 20))
-
-    @property
-    def target_leverage(self) -> int:
-        """Backward-compatible alias for risk.target_leverage."""
-        return int(self.risk.target_leverage)
-
-    @property
-    def max_leverage(self) -> int:
-        """Backward-compatible alias for risk.max_leverage."""
-        return int(self.risk.max_leverage)
-
-    @property
-    def trailing_stop_pct(self) -> float | None:
-        """Backward-compatible alias for strategy/risk trailing stop."""
-        strategy_value = getattr(self.strategy, "trailing_stop_pct", None)
-        if strategy_value is not None:
-            return float(strategy_value)
-        return float(self.risk.trailing_stop_pct)
-
     @classmethod
     def from_profile(
         cls,
@@ -380,10 +353,18 @@ class BotConfig:
         )
 
         intx_perps_raw = os.getenv("COINBASE_ENABLE_INTX_PERPS")
+        legacy_perps_raw = os.getenv("COINBASE_ENABLE_DERIVATIVES")
         if intx_perps_raw is not None and intx_perps_raw != "":
             derivatives_enabled = parse_bool_env("COINBASE_ENABLE_INTX_PERPS", default=False)
         else:
             derivatives_enabled = parse_bool_env("COINBASE_ENABLE_DERIVATIVES", default=False)
+            if legacy_perps_raw is not None and legacy_perps_raw != "":
+                warnings.warn(
+                    "COINBASE_ENABLE_DERIVATIVES is deprecated; use COINBASE_ENABLE_INTX_PERPS. "
+                    "Target removal after 2026-06-30.",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
 
         # Build health thresholds config from env (HEALTH_* prefix)
         def _health_float(key: str, default: float) -> float:
@@ -494,6 +475,14 @@ class BotConfig:
 
         if any(key in data for key in ("trading", "risk_management", "profile_name")):
             from gpt_trader.app.config.profile_loader import ProfileSchema
+
+            warnings.warn(
+                "Legacy profile-style YAML mapping via BotConfig.from_dict() is deprecated and will "
+                "be removed in v4.0. Load profiles via ProfileSchema (or use BotConfig schema "
+                "directly).",
+                DeprecationWarning,
+                stacklevel=2,
+            )
 
             schema = ProfileSchema.from_yaml(data, data.get("profile_name", "custom"))
 

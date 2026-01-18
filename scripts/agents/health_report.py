@@ -543,7 +543,7 @@ def build_example() -> dict[str, Any]:
             "version": APP_VERSION,
             "script": TOOL_SCRIPT,
         },
-        "generated_at": _timestamp(),
+        "generated_at": "1970-01-01T00:00:00+00:00",
         "profile": "dev",
         "status": "warning",
         "summary": {"passed": 3, "failed": 0, "warning": 1, "skipped": 1},

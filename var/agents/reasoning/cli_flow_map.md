@@ -1,6 +1,6 @@
 # CLI → Config → Container → Engine Flow
 
-Generated: 2026-01-18T01:50:49.698562+00:00
+Generated: 1970-01-01T00:00:00+00:00
 
 ## Entrypoints
 - `uv run gpt-trader run --profile dev --dev-fast`

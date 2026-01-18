@@ -1,6 +1,6 @@
 # Backtest Entrypoints Map
 
-Generated: 2026-01-18T01:50:49.764936+00:00
+Generated: 1970-01-01T00:00:00+00:00
 
 ## CLI Entrypoints
 | ID | Label | Path |

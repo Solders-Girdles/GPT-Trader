@@ -13,7 +13,6 @@ import sys
 from collections import defaultdict
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, fields
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, TextIO
 
@@ -2107,7 +2106,8 @@ BACKTEST_VALIDATION_CHAOS_EDGES = [
 
 
 def _timestamp() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    # Must be deterministic so `uv run agent-regenerate --verify` is stable.
+    return "1970-01-01T00:00:00+00:00"
 
 
 def _ensure_output_dir() -> None:

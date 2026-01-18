@@ -314,5 +314,5 @@
     "OrderSubmitter handles broker IO, telemetry, and persistence.",
     "Guard rejections emit metrics; stale marks append EventStore events."
   ],
-  "generated_at": "2026-01-18T01:50:49.723695+00:00"
+  "generated_at": "1970-01-01T00:00:00+00:00"
 }

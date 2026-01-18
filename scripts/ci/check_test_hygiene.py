@@ -15,8 +15,6 @@ UNIT_ALLOWED_PREFIXES = (
     "tests/unit/support/",
 )
 ALLOWLIST = {
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_quantization.py",
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base.py",  # REST validation matrix
     "tests/unit/gpt_trader/features/live_trade/test_degradation.py",  # 349 lines: monotonicity + guard telemetry coverage
     "tests/unit/gpt_trader/logging/test_runtime_helpers.py",  # runtime logging helper coverage
     "tests/unit/gpt_trader/monitoring/test_health_checks.py",  # extensive health matrix
@@ -37,7 +35,6 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/security/security_validator/test_rate_limiting.py",  # 305 lines: rate limiter escalation, blocking, and reset regression suite
     "tests/unit/gpt_trader/security/security_validator/test_suspicious_activity.py",  # 294 lines: suspicious activity detection heuristics and alert coverage
     "tests/unit/gpt_trader/security/security_validator/test_symbol_validation.py",  # 243 lines: comprehensive symbol/blocklist validation cases
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite.py",  # REST contract suite covering retries, fallbacks, and error surfaces
     "tests/unit/gpt_trader/cli/test_commands_orders.py",  # 254 lines: comprehensive CLI orders command coverage
     "tests/unit/gpt_trader/utilities/test_console_logging_core.py",  # 336 lines: console logging contract and fallback behavior matrix
     "tests/unit/gpt_trader/utilities/test_logging_patterns.py",  # 494 lines: extensive structured logging patterns and decorator coverage
@@ -60,13 +57,8 @@ ALLOWLIST = {
     "tests/property/test_margin_invariants.py",  # property-based margin requirement invariants with leverage permutations
     "tests/property/test_pnl_invariants.py",  # property-based PnL calculation invariants covering all position/entry combinations
     "tests/unit/gpt_trader/preflight/test_checks_connectivity.py",  # comprehensive connectivity check scenarios with retry/timeout coverage
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders.py",  # comprehensive REST orders mixin coverage
-    "tests/unit/gpt_trader/features/live_trade/test_risk_manager.py",  # LiveRiskManager risk validation, volatility breakers, daily PnL tracking
     "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry.py",  # account telemetry collection and publishing
-    "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming.py",  # WebSocket streaming telemetry with async/threading patterns
     "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health.py",  # telemetry health check and mark extraction coverage
-    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine.py",  # strategy engine dynamic sizing, position tracking, risk format validation
-    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py",  # chaos/fault injection tests for graceful degradation scenarios
     "tests/unit/gpt_trader/backtesting/simulation/test_fee_calculator.py",  # fee tier matrix coverage across volume brackets
     "tests/unit/gpt_trader/validation/test_composite_validators.py",  # composite validator chain permutations
     "tests/unit/gpt_trader/validation/test_config_validators.py",  # configuration validation matrix
@@ -78,16 +70,13 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/features/live_trade/test_indicators.py",  # indicator calculation coverage
     "tests/unit/gpt_trader/backtesting/metrics/test_risk.py",  # risk metrics calculation matrix
     "tests/unit/gpt_trader/errors/test_error_patterns.py",  # error pattern decorator coverage
-    "tests/unit/gpt_trader/backtesting/validation/test_decision_logger.py",  # decision logging scenarios
     "tests/unit/gpt_trader/monitoring/test_alert_types.py",  # alert type coverage
     "tests/unit/gpt_trader/app/test_health_server.py",  # health server endpoint coverage
     "tests/unit/gpt_trader/validation/test_rules.py",  # validation rule matrix
     "tests/unit/gpt_trader/monitoring/daily_report/test_analytics.py",  # daily report analytics
     "tests/unit/gpt_trader/backtesting/metrics/test_statistics.py",  # trade statistics coverage
     "tests/unit/gpt_trader/backtesting/engine/test_clock.py",  # simulation clock scenarios
-    "tests/unit/gpt_trader/backtesting/engine/test_bar_runner.py",  # bar runner orchestration
     "tests/unit/gpt_trader/monitoring/daily_report/test_models.py",  # daily report model coverage
-    "tests/unit/gpt_trader/backtesting/metrics/test_report.py",  # backtest report generation
     "tests/unit/gpt_trader/backtesting/validation/test_validator.py",  # validation scenarios
     "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline.py",  # baseline strategy coverage
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin.py",  # WebSocket streaming mixin with threading patterns
@@ -105,8 +94,6 @@ ALLOWLIST = {
     # Phase 2 pain points remediation: critical service coverage
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service.py",  # OrderService protocol coverage: place/cancel/list/get orders
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service.py",  # PortfolioService coverage: balances, positions, INTX/CFM ops
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_product_service.py",  # ProductService coverage: products, quotes, candles, tickers
-    "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker.py",  # HybridPaperBroker paper trading simulation: orders, positions, market data
     # Optimization and CLI test suites
     "tests/unit/gpt_trader/features/optimize/objectives/test_constraints.py",  # constraint objective validation matrix
     "tests/unit/gpt_trader/features/optimize/objectives/test_single.py",  # single objective validation matrix
@@ -173,10 +160,10 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/features/live_trade/signals/test_vwap.py",  # VWAP signal comprehensive scenarios
     "tests/unit/gpt_trader/app/config/test_profile_loader.py",  # profile loader comprehensive coverage
     "tests/unit/gpt_trader/app/containers/test_risk_validation.py",  # risk validation container scenarios
+    "tests/unit/gpt_trader/backtesting/validation/test_decision_logger_logging_and_retrieval.py",  # decision logger modularized coverage (242 lines)
 }
 
 SLEEP_ALLOWLIST = {
-    "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming.py",  # uses time.sleep for run_in_executor cancellation test
     "tests/unit/gpt_trader/utilities/performance/test_timing.py",  # timing utility coverage requires real sleep for precision tests
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin.py",  # uses time.sleep for WebSocket thread synchronization
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_response_cache.py",  # TTL-based cache expiration requires real time elapsed

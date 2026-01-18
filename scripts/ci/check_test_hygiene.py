@@ -143,6 +143,7 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/app/config/test_profile_loader.py",  # profile loader comprehensive coverage
     "tests/unit/gpt_trader/app/containers/test_risk_validation.py",  # risk validation container scenarios
     "tests/unit/gpt_trader/backtesting/validation/test_decision_logger_logging_and_retrieval.py",  # decision logger modularized coverage (242 lines)
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_real_transport.py",  # transport layer coverage across real transport scenarios (272 lines)
 }
 
 SLEEP_ALLOWLIST = {

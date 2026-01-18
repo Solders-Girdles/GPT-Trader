@@ -5,7 +5,7 @@ This module defines the core types for the data fetching and caching subsystem:
 
 Types
 -----
-- ``DataSource``: Enum of supported market data providers (Coinbase, legacy Yahoo alias)
+- ``DataSource``: Enum of supported market data providers (Coinbase)
 - ``DataType``: Enum of data formats (OHLCV candles, etc.)
 - ``DataQuery``: Request object for fetching historical data
 
@@ -32,7 +32,6 @@ from enum import Enum
 
 class DataSource(Enum):
     COINBASE = "coinbase"
-    YAHOO = "yahoo"  # legacy alias; routed to Coinbase
 
 
 class DataType(Enum):

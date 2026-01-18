@@ -27,10 +27,10 @@ This is the canonical legacy-debt tracker; other reports (e.g. `docs/LEGACY_DEBT
 
 ## P2 — Backward-compatibility shims to evaluate (remove when safe)
 
-- [ ] Config alias properties and “compat” accessors (remove once no longer needed):
+- [x] Config alias properties and “compat” accessors (removed now that no longer needed):
   - `src/gpt_trader/app/config/bot_config.py` (e.g., `short_ma`, `long_ma`, etc.)
   - `src/gpt_trader/features/live_trade/strategies/perps_baseline/strategy.py` (e.g., `StrategyConfig = PerpsStrategyConfig`, `short_ma`, `long_ma`)
-  - Status: internal call sites now prefer canonical `*.short_ma_period` / `*.long_ma_period` access; aliases remain for backward compatibility.
+  - Status: internal call sites use canonical `*.short_ma_period` / `*.long_ma_period` access; flat/alias accessors removed.
 - [x] Persistence compatibility:
   - `src/gpt_trader/persistence/event_store.py` (`events` list property and `path` JSONL alias)
   - Status: internal call sites migrated to `list_events()`/`root`; legacy properties emit deprecation warnings.
@@ -57,11 +57,8 @@ This is the canonical legacy-debt tracker; other reports (e.g. `docs/LEGACY_DEBT
 
 ## P2 — Partially removed integrations (choose: finish or delete)
 
-- [ ] Data layer still models a Yahoo source but only stubs/redirects it:
-  - `src/gpt_trader/features/data/types.py` (`DataSource.YAHOO`)
-  - `src/gpt_trader/features/data/data.py` (`download_from_yahoo` stub)
-  - Status: `DataSource.YAHOO` is now treated as a legacy alias for Coinbase in `DataService.fetch_data`; decide whether to complete `yfinance` or drop the Yahoo path.
-  - decide whether to complete the optional `yfinance` integration or drop the Yahoo path entirely
+- [x] Removed Yahoo stub path from the data layer:
+  - Removed `DataSource.YAHOO` and `DataService.download_from_yahoo()`; only Coinbase is supported.
 
 ## P3 — Low-impact cleanup candidates
 
@@ -74,5 +71,5 @@ This is the canonical legacy-debt tracker; other reports (e.g. `docs/LEGACY_DEBT
 - [x] Update stale “orchestration” wording in `docs/plans/TUI_IMPROVEMENT_PLAN.md`.
 - [x] Deprecate legacy profile-mapping schema support in `BotConfig.from_dict` (warnings + removal plan).
 - [x] Confirm `gpt_trader.logging.orchestration_helpers` is fully removed (code is gone; keep only migration notes in docs).
-- [ ] Reconcile / prune stale entries in the deprecation tracker so it reflects reality:
+- [x] Reconcile / prune stale entries in the deprecation tracker so it reflects reality:
   - `docs/DEPRECATIONS.md` (some “remove now” items appear already removed or migrated)

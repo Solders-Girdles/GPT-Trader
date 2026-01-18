@@ -9,7 +9,6 @@ from .strategy import (
     PerpsStrategyConfig,
     SpotStrategy,
     SpotStrategyConfig,
-    StrategyConfig,
 )
 
 __all__ = [
@@ -28,5 +27,4 @@ __all__ = [
     "BaseStrategyConfig",
     "SpotStrategyConfig",
     "PerpsStrategyConfig",
-    "StrategyConfig",  # Backward compat alias
 ]

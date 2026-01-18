@@ -71,17 +71,6 @@ class BaseStrategyConfig:
     # Position sizing
     position_fraction: float | None = None
 
-    # Backward compatibility aliases for legacy code
-    @property
-    def short_ma(self) -> int:
-        """Alias for short_ma_period (backward compat)."""
-        return self.short_ma_period
-
-    @property
-    def long_ma(self) -> int:
-        """Alias for long_ma_period (backward compat)."""
-        return self.long_ma_period
-
 
 @dataclass
 class SpotStrategyConfig(BaseStrategyConfig):
@@ -108,10 +97,6 @@ class PerpsStrategyConfig(BaseStrategyConfig):
     target_leverage: int = 5
     enable_shorts: bool = True
     max_leverage: int = 10
-
-
-# Backward compatibility alias - legacy code uses StrategyConfig
-StrategyConfig = PerpsStrategyConfig
 
 
 @dataclass
@@ -147,23 +132,23 @@ class BaselinePerpsStrategy:
     def __init__(self, config: BaseStrategyConfig | Any = None, risk_manager: Any = None):
         self.config: BaseStrategyConfig
         if config is None:
-            self.config = StrategyConfig()
+            self.config = PerpsStrategyConfig()
         elif isinstance(config, BaseStrategyConfig):
             self.config = config
         else:
-            # Convert dict or other config object to StrategyConfig
+            # Convert dict or other config object to PerpsStrategyConfig
             self.config = self._parse_config(config)
         self.risk_manager = risk_manager
 
-    def _parse_config(self, config: Any) -> StrategyConfig:
+    def _parse_config(self, config: Any) -> PerpsStrategyConfig:
         """Parse configuration from various formats."""
         if hasattr(config, "__dict__"):
             kwargs = {}
-            for field_name in StrategyConfig.__dataclass_fields__:
+            for field_name in PerpsStrategyConfig.__dataclass_fields__:
                 if hasattr(config, field_name):
                     kwargs[field_name] = getattr(config, field_name)
-            return StrategyConfig(**kwargs)
-        return StrategyConfig()
+            return PerpsStrategyConfig(**kwargs)
+        return PerpsStrategyConfig()
 
     def decide(
         self,

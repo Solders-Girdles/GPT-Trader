@@ -9,7 +9,7 @@ from gpt_trader.features.live_trade.strategies.perps_baseline.strategy import (
     BaselinePerpsStrategy,
     Decision,
     IndicatorState,
-    StrategyConfig,
+    PerpsStrategyConfig,
 )
 
 
@@ -43,13 +43,13 @@ def make_sideways(periods: int = 25) -> list[Decimal]:
     return make_price_series(100, changes)
 
 
-class TestStrategyConfig:
-    """Tests for StrategyConfig dataclass."""
+class TestPerpsStrategyConfig:
+    """Tests for PerpsStrategyConfig dataclass."""
 
     def test_default_values(self) -> None:
-        config = StrategyConfig()
-        assert config.long_ma == 20
-        assert config.short_ma == 5
+        config = PerpsStrategyConfig()
+        assert config.long_ma_period == 20
+        assert config.short_ma_period == 5
         assert config.rsi_period == 14
         assert config.rsi_overbought == 70
         assert config.rsi_oversold == 30
@@ -57,13 +57,13 @@ class TestStrategyConfig:
         assert config.take_profit_pct == 0.05
 
     def test_custom_values(self) -> None:
-        config = StrategyConfig(
+        config = PerpsStrategyConfig(
             long_ma_period=50,
             short_ma_period=10,
             rsi_period=7,
         )
-        assert config.long_ma == 50  # Property alias
-        assert config.short_ma == 10  # Property alias
+        assert config.long_ma_period == 50
+        assert config.short_ma_period == 10
         assert config.rsi_period == 7
 
 
@@ -88,13 +88,13 @@ class TestBaselinePerpsStrategyInit:
 
     def test_default_config(self) -> None:
         strategy = BaselinePerpsStrategy()
-        assert strategy.config.long_ma == 20
-        assert strategy.config.short_ma == 5
+        assert strategy.config.long_ma_period == 20
+        assert strategy.config.short_ma_period == 5
 
     def test_custom_config(self) -> None:
-        config = StrategyConfig(long_ma_period=50, rsi_period=21)
+        config = PerpsStrategyConfig(long_ma_period=50, rsi_period=21)
         strategy = BaselinePerpsStrategy(config=config)
-        assert strategy.config.long_ma == 50  # Property alias
+        assert strategy.config.long_ma_period == 50
         assert strategy.config.rsi_period == 21
 
 
@@ -132,7 +132,7 @@ class TestStrategyKillSwitch:
     """Tests for kill switch functionality."""
 
     def test_kill_switch_returns_hold(self) -> None:
-        config = StrategyConfig(kill_switch_enabled=True)
+        config = PerpsStrategyConfig(kill_switch_enabled=True)
         strategy = BaselinePerpsStrategy(config=config)
         decision = strategy.decide(
             symbol="BTC-PERP",
@@ -153,7 +153,7 @@ class TestStrategyEntrySignals:
     def test_bullish_trend_generates_buy(self) -> None:
         # Create a clear uptrend
         prices = make_uptrend(30)
-        strategy = BaselinePerpsStrategy(config=StrategyConfig(min_confidence=0.3))
+        strategy = BaselinePerpsStrategy(config=PerpsStrategyConfig(min_confidence=0.3))
         decision = strategy.decide(
             symbol="BTC-PERP",
             current_mark=prices[-1],
@@ -169,7 +169,7 @@ class TestStrategyEntrySignals:
     def test_bearish_trend_generates_sell(self) -> None:
         # Create a clear downtrend
         prices = make_downtrend(30)
-        strategy = BaselinePerpsStrategy(config=StrategyConfig(min_confidence=0.3))
+        strategy = BaselinePerpsStrategy(config=PerpsStrategyConfig(min_confidence=0.3))
         decision = strategy.decide(
             symbol="BTC-PERP",
             current_mark=prices[-1],
@@ -203,7 +203,7 @@ class TestStrategyExitSignals:
     def test_long_position_exit_on_bearish_signal(self) -> None:
         # Create downtrend that should trigger exit
         prices = make_downtrend(30)
-        strategy = BaselinePerpsStrategy(config=StrategyConfig(min_confidence=0.3))
+        strategy = BaselinePerpsStrategy(config=PerpsStrategyConfig(min_confidence=0.3))
         decision = strategy.decide(
             symbol="BTC-PERP",
             current_mark=prices[-1],
@@ -217,7 +217,7 @@ class TestStrategyExitSignals:
 
     def test_stop_loss_triggers_close(self) -> None:
         prices = make_sideways(30)
-        strategy = BaselinePerpsStrategy(config=StrategyConfig(stop_loss_pct=0.02))
+        strategy = BaselinePerpsStrategy(config=PerpsStrategyConfig(stop_loss_pct=0.02))
         # Entry at 100, current at 97 = -3% loss
         decision = strategy.decide(
             symbol="BTC-PERP",
@@ -236,7 +236,7 @@ class TestStrategyExitSignals:
 
     def test_take_profit_triggers_close(self) -> None:
         prices = make_sideways(30)
-        strategy = BaselinePerpsStrategy(config=StrategyConfig(take_profit_pct=0.05))
+        strategy = BaselinePerpsStrategy(config=PerpsStrategyConfig(take_profit_pct=0.05))
         # Entry at 100, current at 106 = +6% profit
         decision = strategy.decide(
             symbol="BTC-PERP",
@@ -316,7 +316,7 @@ class TestStrategyConfidence:
     def test_multiple_bullish_signals_high_confidence(self) -> None:
         # Strong uptrend should have high confidence
         prices = make_uptrend(30)
-        strategy = BaselinePerpsStrategy(config=StrategyConfig(min_confidence=0.3))
+        strategy = BaselinePerpsStrategy(config=PerpsStrategyConfig(min_confidence=0.3))
         decision = strategy.decide(
             symbol="BTC-PERP",
             current_mark=prices[-1],

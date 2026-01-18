@@ -109,15 +109,11 @@ def update_mark_and_metrics(
                     getattr(getattr(config, "strategy", None), "short_ma_period", None)
                 )
                 if short_period is None:
-                    short_period = _coerce_int(getattr(config, "short_ma", None))
-                if short_period is None:
                     short_period = 5
 
                 long_period = _coerce_int(
                     getattr(getattr(config, "strategy", None), "long_ma_period", None)
                 )
-                if long_period is None:
-                    long_period = _coerce_int(getattr(config, "long_ma", None))
                 if long_period is None:
                     long_period = 20
 

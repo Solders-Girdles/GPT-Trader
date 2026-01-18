@@ -17,11 +17,7 @@ Classification of legacy shims/fallbacks and compatibility keepers.
 
 | Item | Location | Owner | Status | Notes |
 |------|----------|-------|--------|-------|
-| `BotConfig` flat compat accessors (`short_ma`, `long_ma`, etc.) | `src/gpt_trader/app/config/bot_config.py` | Core Config | evaluate | Internal code uses nested config; keep for external compatibility until safe to remove. |
 | `BotConfig.from_dict` legacy profile-style YAML mapping | `src/gpt_trader/app/config/bot_config.py` | Core Config | deprecate | Emits `DeprecationWarning`; target removal in v4.0. |
-| Perps strategy compat aliases (`short_ma`/`long_ma` props, `StrategyConfig`) | `src/gpt_trader/features/live_trade/strategies/perps_baseline/strategy.py` | Live Trade | evaluate | Internal strategy uses `*_ma_period`; aliases kept for compatibility. |
-| `DataSource.YAHOO` legacy alias | `src/gpt_trader/features/data/types.py` | Data | evaluate | Routed to Coinbase; decide to implement `yfinance` or drop the Yahoo path. |
-| `download_from_yahoo()` legacy stub | `src/gpt_trader/features/data/data.py` | Data | evaluate | Retained for legacy callers; `DataService.fetch_data()` routes through Coinbase. |
 | `EventStore.events` list + `EventStore.path` JSONL alias | `src/gpt_trader/persistence/event_store.py` | Persistence | deprecate | Internal call sites now use `list_events()`/`root`; legacy properties emit deprecation warnings. |
 | `RiskConfig.daily_loss_limit` (absolute dollars) | `src/gpt_trader/features/live_trade/risk/config.py` | Risk | evaluate | Legacy absolute-dollar limit; prefer `daily_loss_limit_pct`. |
 | Legacy env var alias `COINBASE_ENABLE_DERIVATIVES` | `src/gpt_trader/app/config/bot_config.py`, `src/gpt_trader/preflight/checks/environment.py` | Core Config | deprecate | Alias for INTX/perps gating; warn when set; target removal after 2026-06-30. |
@@ -54,17 +50,20 @@ Before removing any deprecated item:
 
 | Item | Removed In | Migration Path |
 |------|------------|----------------|
+| `BotConfig` flat compat accessors (`short_ma`, `long_ma`, etc.) | Unreleased | Use nested config: `config.strategy.*` and `config.risk.*`. |
 | `gpt_trader.logging.orchestration_helpers` | Unreleased | Use `gpt_trader.logging.runtime_helpers`. |
 | `StatusReporter.update_interval` + `StatusReporter.get_status_dict()` | Unreleased | Use `file_write_interval` + `get_status()`. |
 | `get_failure_tracker()` fallback without container | Unreleased | Set application container; use `container.validation_failure_tracker`. |
 | `Alert.id` / `Alert.timestamp` aliases | Unreleased | Use `alert_id` / `created_at`. |
 | `CoinbaseRestServiceBase` alias | Unreleased | Use `CoinbaseRestServiceCore`. |
 | `daily_loss_limit` in profile schema | Unreleased | Use `daily_loss_limit_pct`. |
+| Perps strategy compat aliases (`short_ma`/`long_ma` props, `StrategyConfig`) | Unreleased | Use `PerpsStrategyConfig` and `short_ma_period`/`long_ma_period`. |
 | CLI fallback for unknown profile YAML | Unreleased | Use a `Profile` enum value or `--config`. |
 | Legacy risk templates | Unreleased | Archived under `docs/archive/risk_templates/`. |
 | Module-level `health_state` | Unreleased | Use `ApplicationContainer.health_state` and pass `HealthState` explicitly to health helpers. |
 | Module-level `secrets_manager` helpers | Unreleased | Use `ApplicationContainer.secrets_manager` or instantiate `SecretsManager`. |
 | Data module singletons (`store_data`/`fetch_data` functions) | Unreleased | Use `DataService` and its instance methods. |
+| Yahoo data source stub (`DataSource.YAHOO`, `download_from_yahoo`) | Unreleased | Use `DataSource.COINBASE` and `download_from_coinbase`. |
 | TUI legacy preferences fallback (`config/tui_preferences.json`) | Unreleased | Use runtime preferences path or `GPT_TRADER_TUI_PREFERENCES_PATH` |
 | TUI legacy status CSS aliases (`good`/`bad`/`risk-status-*`) | Unreleased | Use `status-ok`, `status-warning`, `status-critical` |
 | TUI validation `ValidationError` alias | Unreleased | Use `FieldValidationError` |

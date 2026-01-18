@@ -602,9 +602,9 @@ await validator.validate_last_n_cycles(n=10)
 from decimal import Decimal
 import pandas as pd
 # NOTE: These imports reference unimplemented modules
-from gpt_trader.features.live_trade.strategies.perps_baseline.strategy import (
+from gpt_trader.features.live_trade.strategies.perps_baseline import (
     BaselinePerpsStrategy,
-    StrategyConfig,  # StrategyConfig is in strategy.py, not config.py
+    PerpsStrategyConfig,
 )
 from gpt_trader.features.optimize.backtest_engine import run_backtest_production  # NOT IMPLEMENTED
 from gpt_trader.features.optimize.types_v2 import BacktestConfig  # NOT IMPLEMENTED
@@ -613,7 +613,7 @@ from gpt_trader.features.optimize.types_v2 import BacktestConfig  # NOT IMPLEMEN
 data = pd.read_csv("historical_btc.csv")  # Must have 'close' column
 
 # Configure strategy (same config you use in production)
-strategy_config = StrategyConfig(
+strategy_config = PerpsStrategyConfig(
     short_ma_period=5,
     long_ma_period=20,
     position_fraction=0.1,

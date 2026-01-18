@@ -27,7 +27,7 @@ from .strategy import (
     BaseStrategyConfig,
     Decision,
     IndicatorState,
-    StrategyConfig,
+    PerpsStrategyConfig,
 )
 
 if TYPE_CHECKING:
@@ -55,7 +55,7 @@ class StatefulBaselineStrategy(StatefulStrategyBase):
     ):
         self.config: BaseStrategyConfig
         if config is None:
-            self.config = StrategyConfig()
+            self.config = PerpsStrategyConfig()
         elif isinstance(config, BaseStrategyConfig):
             self.config = config
         else:
@@ -66,15 +66,15 @@ class StatefulBaselineStrategy(StatefulStrategyBase):
         # Per-symbol indicator bundles
         self._indicators: dict[str, _SymbolIndicators] = {}
 
-    def _parse_config(self, config: Any) -> StrategyConfig:
+    def _parse_config(self, config: Any) -> PerpsStrategyConfig:
         """Parse configuration from various formats."""
         if hasattr(config, "__dict__"):
             kwargs = {}
-            for field_name in StrategyConfig.__dataclass_fields__:
+            for field_name in PerpsStrategyConfig.__dataclass_fields__:
                 if hasattr(config, field_name):
                     kwargs[field_name] = getattr(config, field_name)
-            return StrategyConfig(**kwargs)
-        return StrategyConfig()
+            return PerpsStrategyConfig(**kwargs)
+        return PerpsStrategyConfig()
 
     def _get_or_create_indicators(self, symbol: str) -> "_SymbolIndicators":
         """Get or create indicator bundle for a symbol."""

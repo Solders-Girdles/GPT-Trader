@@ -936,17 +936,29 @@ class TradingEngine(BaseEngine):
         await self._await_audit_task(audit_task, context="post equity")
         self._update_equity_and_risk(equity)
 
-        symbols = self.context.config.symbols
+        # Ensure symbols is a list to avoid iterator exhaustion during multiple iterations
+        symbols = list(self.context.config.symbols)
         tickers = await self._fetch_batch_tickers(broker, symbols)
 
-        for symbol in symbols:
-            await self._process_symbol(
+        tasks = [
+            self._process_symbol(
                 symbol=symbol,
                 broker=broker,
                 ticker=tickers.get(symbol),
                 positions=positions,
                 equity=equity,
             )
+            for symbol in symbols
+        ]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        for symbol, res in zip(symbols, results):
+            if isinstance(res, Exception):
+                logger.error(
+                    f"Failed to process symbol {symbol}: {res}",
+                    exc_info=res,
+                    symbol=symbol,
+                )
 
     async def _fetch_positions_and_audit(
         self,

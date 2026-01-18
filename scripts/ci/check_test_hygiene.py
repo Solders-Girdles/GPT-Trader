@@ -15,7 +15,6 @@ UNIT_ALLOWED_PREFIXES = (
     "tests/unit/support/",
 )
 ALLOWLIST = {
-    "tests/unit/gpt_trader/features/live_trade/test_degradation.py",  # 349 lines: monotonicity + guard telemetry coverage
     "tests/unit/gpt_trader/logging/test_runtime_helpers.py",  # runtime logging helper coverage
     "tests/unit/gpt_trader/monitoring/test_health_signals.py",  # health signal model contract coverage
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_permissions.py",  # permissions coverage table
@@ -24,7 +23,6 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/utilities/test_console_logging_functions.py",  # logging formatting matrix
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_accounts.py",  # account snapshot + treasury surface coverage
     "tests/unit/gpt_trader/errors/test_base.py",  # error taxonomy coverage
-    "tests/unit/gpt_trader/utilities/test_async_utils_core.py",  # async helper regression suite  # naming: allow
     "tests/unit/gpt_trader/logging/test_setup.py",  # logging stack regression suite
     "tests/unit/gpt_trader/validation/test_calculation_validator.py",  # calculation validator coverage
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service.py",  # market data service contract
@@ -43,14 +41,12 @@ ALLOWLIST = {
     "tests/contract/test_coinbase_api_contract.py",  # API contract compliance suite
     "tests/unit/gpt_trader/preflight/test_core.py",  # preflight core validation
     "tests/property/test_fee_invariants.py",  # property-based fee calculation invariants with comprehensive edge cases
-    "tests/property/test_liquidation_invariants.py",  # property-based liquidation safety invariants across margin scenarios
     "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health.py",  # telemetry health check and mark extraction coverage
     "tests/unit/gpt_trader/backtesting/simulation/test_fee_calculator.py",  # fee tier matrix coverage across volume brackets
     "tests/unit/gpt_trader/validation/test_composite_validators.py",  # composite validator chain permutations
     "tests/unit/gpt_trader/validation/test_config_validators.py",  # configuration validation matrix
     "tests/unit/gpt_trader/validation/test_data_validators.py",  # data validation edge cases and error handling
     "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator.py",  # strategy orchestration routing and signal aggregation
-    "tests/unit/gpt_trader/features/live_trade/test_bot.py",  # trading bot lifecycle and state management scenarios
     # Coverage expansion tests (C1 task)
     "tests/unit/gpt_trader/features/live_trade/test_indicators.py",  # indicator calculation coverage
     "tests/unit/gpt_trader/backtesting/metrics/test_risk.py",  # risk metrics calculation matrix
@@ -117,7 +113,6 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/tui/widgets/test_position_card.py",  # position card widget resilience with missing data
     "tests/integration/test_validation_escalation.py",  # validation escalation integration flow coverage
     "tests/integration/test_container_lifecycle.py",  # container lifecycle and service registration coverage
-    "tests/unit/gpt_trader/tui/widgets/test_alert_inbox.py",  # alert inbox widget comprehensive scenarios
     "tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen.py",  # signal detail formatting, backtest display, delta formatting, entry/exit badges
     "tests/unit/gpt_trader/config/test_bot_config_env.py",  # BotConfig env/profile wiring: RISK_* prefixes, daily loss limit, reduce-only enforcement, mark staleness
     "tests/unit/gpt_trader/monitoring/test_metrics_collector.py",  # metrics collector coverage: counters, gauges, histograms with labels
@@ -134,7 +129,6 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/tui/test_trade_matcher.py",  # trade matcher FIFO comprehensive scenarios
     "tests/unit/gpt_trader/tui/widgets/test_cfm_balance.py",  # CFM balance widget scenarios
     "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_profile.py",  # ensemble profile comprehensive coverage
-    "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager.py",  # CFM risk manager comprehensive scenarios
     "tests/unit/gpt_trader/features/live_trade/signals/test_vwap.py",  # VWAP signal comprehensive scenarios
     "tests/unit/gpt_trader/app/config/test_profile_loader.py",  # profile loader comprehensive coverage
     "tests/unit/gpt_trader/app/containers/test_risk_validation.py",  # risk validation container scenarios

@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 11103,
-    "total_files": 670,
+    "total_files": 687,
     "markers_used": 9
   },
   "marker_definitions": {
@@ -340,15 +340,19 @@
       "tests/unit/gpt_trader/tui/widgets/test_trades_widget_filters.py",
       "tests/unit/gpt_trader/tui/widgets/test_config_modal.py",
       "tests/unit/gpt_trader/tui/widgets/test_strategy.py",
+      "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_alert_item.py",
       "tests/unit/gpt_trader/tui/widgets/test_performance_dashboard.py",
       "tests/unit/gpt_trader/tui/widgets/test_dashboard.py",
-      "tests/unit/gpt_trader/tui/widgets/test_alert_inbox.py",
       "tests/unit/gpt_trader/tui/widgets/test_execution_issues_modal.py",
       "tests/unit/gpt_trader/tui/widgets/test_orders_widget_sorting.py",
+      "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_refresh_and_empty_states.py",
+      "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_recovery_hint.py",
       "tests/unit/gpt_trader/tui/widgets/test_orders_widget_update.py",
       "tests/unit/gpt_trader/tui/widgets/test_trades_widget_update.py",
       "tests/unit/gpt_trader/tui/widgets/test_responsive_widgets.py",
       "tests/unit/gpt_trader/tui/widgets/test_risk.py",
+      "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_clear_and_bindings.py",
+      "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_filter_actions.py",
       "tests/unit/gpt_trader/tui/widgets/test_logs.py",
       "tests/unit/gpt_trader/tui/widgets/test_position_detail_modal_trade_classification.py",
       "tests/unit/gpt_trader/tui/widgets/test_trading_stats.py",
@@ -359,6 +363,7 @@
       "tests/unit/gpt_trader/tui/widgets/test_order_detail_modal.py",
       "tests/unit/gpt_trader/tui/widgets/test_position_detail_modal_calculations.py",
       "tests/unit/gpt_trader/tui/widgets/test_positions_widget.py",
+      "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_alert_list_render.py",
       "tests/unit/gpt_trader/tui/widgets/test_position_detail_modal_init.py",
       "tests/unit/gpt_trader/tui/widgets/test_risk_detail_modal.py"
     ],
@@ -388,8 +393,9 @@
       "tests/unit/gpt_trader/utilities/test_logging_patterns_log_operation.py",
       "tests/unit/gpt_trader/utilities/test_iterators.py",
       "tests/unit/gpt_trader/utilities/test_logging_patterns_system_health.py",
+      "tests/unit/gpt_trader/utilities/test_async_utils_core_concurrency.py",
       "tests/unit/gpt_trader/utilities/test_logging_patterns_structured_logger.py",
-      "tests/unit/gpt_trader/utilities/test_async_utils_core.py",
+      "tests/unit/gpt_trader/utilities/test_async_utils_core_wrappers.py",
       "tests/unit/gpt_trader/utilities/test_async_utils_function_detection.py",
       "tests/unit/gpt_trader/utilities/test_logging_patterns_market_data.py",
       "tests/unit/gpt_trader/utilities/test_logging_patterns_execution.py",
@@ -538,32 +544,41 @@
       "tests/unit/gpt_trader/features/data/test_quality_candles.py",
       "tests/unit/gpt_trader/features/data/test_quality.py",
       "tests/unit/gpt_trader/features/live_trade/test_config_dict_json.py",
+      "tests/unit/gpt_trader/features/live_trade/test_degradation_failure_tracking.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager_pre_trade_validate.py",
       "tests/unit/gpt_trader/features/live_trade/test_lifecycle.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager_volatility_check_outcome.py",
       "tests/unit/gpt_trader/features/live_trade/test_total_exposure_breach.py",
       "tests/unit/gpt_trader/features/live_trade/test_symbols_derivatives_enabled.py",
+      "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_exposure.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager_integration.py",
+      "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_leverage_and_summary.py",
       "tests/unit/gpt_trader/features/live_trade/test_symbols_normalize_symbols.py",
       "tests/unit/gpt_trader/features/live_trade/test_symbols_derivatives_modes_and_constants.py",
       "tests/unit/gpt_trader/features/live_trade/test_state_recovery.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager_reset_daily_tracking.py",
+      "tests/unit/gpt_trader/features/live_trade/test_bot_lifecycle.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager_mark_staleness.py",
       "tests/unit/gpt_trader/features/live_trade/test_strategy_factory.py",
+      "tests/unit/gpt_trader/features/live_trade/test_degradation_status_and_clear_all.py",
+      "tests/unit/gpt_trader/features/live_trade/test_bot_initialization.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager_liquidation_buffer.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager_reduce_only_mode.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager_volatility_breaker.py",
+      "tests/unit/gpt_trader/features/live_trade/test_degradation_pause_records_and_basic_pause.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager_daily_pnl.py",
       "tests/unit/gpt_trader/features/live_trade/test_indicators.py",
-      "tests/unit/gpt_trader/features/live_trade/test_degradation.py",
+      "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_liquidation_buffer_and_reduce_only.py",
       "tests/unit/gpt_trader/features/live_trade/test_symbols_normalize_symbol_list.py",
       "tests/unit/gpt_trader/features/live_trade/test_guard_errors.py",
       "tests/unit/gpt_trader/features/live_trade/test_liq_price_buffer.py",
-      "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager.py",
+      "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_models.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager_risk_metrics.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager_init_and_stubs.py",
-      "tests/unit/gpt_trader/features/live_trade/test_bot.py",
       "tests/unit/gpt_trader/features/live_trade/test_leverage_time_windows.py",
+      "tests/unit/gpt_trader/features/live_trade/test_bot_engine_delegation.py",
+      "tests/unit/gpt_trader/features/live_trade/test_degradation_pause_monotonicity.py",
+      "tests/unit/gpt_trader/features/live_trade/test_degradation_pause_expiry_and_recovery.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager_validation_error.py",
       "tests/unit/gpt_trader/features/live_trade/test_leverage_cap.py",
       "tests/unit/gpt_trader/features/live_trade/test_symbols_cfm.py",
@@ -1065,6 +1080,26 @@
         "docstring": "Property: Reduce-only behavior for symbol pause should be consistent."
       }
     ],
+    "tests/property/test_liquidation_invariants_distance_and_risk.py": [
+      {
+        "name": "test_distance_calculation_invariants",
+        "line": 27,
+        "markers": [],
+        "docstring": "Property: Distance to liquidation calculations are mathematically consistent.\n\n- distance_bps = distance_pct * 100 (basis points = percentage * 100)\n- Long: positive distance when current > liq (safe), negative when current < liq\n- Short: positive distance when liq > current (safe), negative when liq < current"
+      },
+      {
+        "name": "test_risk_level_invariants",
+        "line": 87,
+        "markers": [],
+        "docstring": "Property: Risk levels follow a strict ordering based on distance.\n\n- safe: distance > warning_buffer\n- warning: critical_buffer < distance <= warning_buffer\n- critical: 0 < distance <= critical_buffer\n- liquidated: distance <= 0\n\nThe guards (reduce_only, reject_entry) should be consistent with risk levels."
+      },
+      {
+        "name": "test_zero_position_is_always_safe",
+        "line": 171,
+        "markers": [],
+        "docstring": "Property: Zero position size should always result in 'safe' risk level.\n\nThis is a critical safety property - we should never flag risk on empty positions."
+      }
+    ],
     "tests/property/test_validation_invariants.py": [
       {
         "name": "test_failure_counter_increments",
@@ -1137,59 +1172,6 @@
         "line": 371,
         "markers": [],
         "docstring": "Property: record_failure returns True at threshold even without callback."
-      }
-    ],
-    "tests/property/test_liquidation_invariants.py": [
-      {
-        "name": "test_liquidation_price_invariants",
-        "line": 50,
-        "markers": [],
-        "docstring": "Property: Liquidation price is always positioned correctly relative to entry.\n\nFor long positions: liquidation_price < entry_price (liquidated when price drops)\nFor short positions: liquidation_price > entry_price (liquidated when price rises)\n\nException: Very high leverage with high maintenance margin can violate this,\nbut the formulas should still be mathematically consistent."
-      },
-      {
-        "name": "test_distance_calculation_invariants",
-        "line": 121,
-        "markers": [],
-        "docstring": "Property: Distance to liquidation calculations are mathematically consistent.\n\n- distance_bps = distance_pct * 100 (basis points = percentage * 100)\n- Long: positive distance when current > liq (safe), negative when current < liq\n- Short: positive distance when liq > current (safe), negative when liq < current"
-      },
-      {
-        "name": "test_risk_level_invariants",
-        "line": 181,
-        "markers": [],
-        "docstring": "Property: Risk levels follow a strict ordering based on distance.\n\n- safe: distance > warning_buffer\n- warning: critical_buffer < distance <= warning_buffer\n- critical: 0 < distance <= critical_buffer\n- liquidated: distance <= 0\n\nThe guards (reduce_only, reject_entry) should be consistent with risk levels."
-      },
-      {
-        "name": "test_zero_position_is_always_safe",
-        "line": 265,
-        "markers": [],
-        "docstring": "Property: Zero position size should always result in 'safe' risk level.\n\nThis is a critical safety property - we should never flag risk on empty positions."
-      },
-      {
-        "name": "test_liquidation_symmetry",
-        "line": 302,
-        "markers": [],
-        "docstring": "Property: Long and short liquidation prices should be symmetric around entry.\n\nIf a long is liquidated X% below entry, a short should be liquidated X% above entry\n(with same leverage and margin rate)."
-      },
-      {
-        "name": "test_higher_leverage_closer_liquidation",
-        "line": 370,
-        "markers": [],
-        "docstring": "Property: Higher leverage should result in liquidation price closer to entry.\n\nThis is fundamental to leveraged trading - more leverage = more risk = tighter liquidation."
-      },
-      {
-        "name": "TestLiquidationPropertyBased::test_liquidation_price_formula_documented",
-        "line": 431,
-        "markers": [
-          "property"
-        ],
-        "docstring": "Verify the liquidation formula matches documentation.",
-        "class": "TestLiquidationPropertyBased"
-      },
-      {
-        "name": "test_liquidation_price_formula_documented",
-        "line": 431,
-        "markers": [],
-        "docstring": "Verify the liquidation formula matches documentation."
       }
     ],
     "tests/property/test_pnl_invariants_pnl_metrics.py": [
@@ -1287,6 +1269,43 @@
         "line": 124,
         "markers": [],
         "docstring": "Verify overnight window covers expected hours."
+      }
+    ],
+    "tests/property/test_liquidation_invariants_price_and_formula.py": [
+      {
+        "name": "test_liquidation_price_invariants",
+        "line": 27,
+        "markers": [],
+        "docstring": "Property: Liquidation price is always positioned correctly relative to entry.\n\nFor long positions: liquidation_price < entry_price (liquidated when price drops)\nFor short positions: liquidation_price > entry_price (liquidated when price rises)\n\nException: Very high leverage with high maintenance margin can violate this,\nbut the formulas should still be mathematically consistent."
+      },
+      {
+        "name": "TestLiquidationPropertyBased::test_liquidation_price_formula_documented",
+        "line": 95,
+        "markers": [
+          "property"
+        ],
+        "docstring": "Verify the liquidation formula matches documentation.",
+        "class": "TestLiquidationPropertyBased"
+      },
+      {
+        "name": "test_liquidation_price_formula_documented",
+        "line": 95,
+        "markers": [],
+        "docstring": "Verify the liquidation formula matches documentation."
+      }
+    ],
+    "tests/property/test_liquidation_invariants_symmetry_and_leverage.py": [
+      {
+        "name": "test_liquidation_symmetry",
+        "line": 26,
+        "markers": [],
+        "docstring": "Property: Long and short liquidation prices should be symmetric around entry.\n\nIf a long is liquidated X% below entry, a short should be liquidated X% above entry\n(with same leverage and margin rate)."
+      },
+      {
+        "name": "test_higher_leverage_closer_liquidation",
+        "line": 94,
+        "markers": [],
+        "docstring": "Property: Higher leverage should result in liquidation price closer to entry.\n\nThis is fundamental to leveraged trading - more leverage = more risk = tighter liquidation."
       }
     ],
     "tests/property/test_pnl_invariants_trade_metrics_win_rate_and_counts.py": [
@@ -10606,6 +10625,21 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/utilities/test_async_utils_core_concurrency.py": [
+      {
+        "name": "TestBoundedToThread::test_invalid_concurrency",
+        "line": 21,
+        "markers": [],
+        "docstring": "",
+        "class": "TestBoundedToThread"
+      },
+      {
+        "name": "test_invalid_concurrency",
+        "line": 21,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/utilities/test_logging_patterns_structured_logger.py": [
       {
         "name": "test_structured_logger_methods_apply_component",
@@ -10620,69 +10654,56 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/utilities/test_async_utils_core.py": [
+    "tests/unit/gpt_trader/utilities/test_async_utils_core_wrappers.py": [
       {
         "name": "TestAsyncToSyncWrapper::test_async_to_sync_basic",
-        "line": 32,
+        "line": 21,
         "markers": [],
         "docstring": "Test basic async to sync conversion.",
         "class": "TestAsyncToSyncWrapper"
       },
       {
         "name": "TestAsyncToSyncWrapper::test_async_to_sync_with_exception",
-        "line": 42,
+        "line": 31,
         "markers": [],
         "docstring": "Test async to sync with exception.",
         "class": "TestAsyncToSyncWrapper"
       },
       {
         "name": "TestAsyncToSyncWrapper::test_async_to_sync_decorator",
-        "line": 52,
+        "line": 41,
         "markers": [],
         "docstring": "Test async_to_sync decorator.",
         "class": "TestAsyncToSyncWrapper"
       },
       {
         "name": "TestAsyncToSyncWrapper::test_async_to_sync_in_running_loop",
-        "line": 62,
+        "line": 51,
         "markers": [],
         "docstring": "",
         "class": "TestAsyncToSyncWrapper"
       },
       {
-        "name": "TestBoundedToThread::test_invalid_concurrency",
-        "line": 129,
-        "markers": [],
-        "docstring": "",
-        "class": "TestBoundedToThread"
-      },
-      {
         "name": "test_async_to_sync_basic",
-        "line": 32,
+        "line": 21,
         "markers": [],
         "docstring": "Test basic async to sync conversion."
       },
       {
         "name": "test_async_to_sync_with_exception",
-        "line": 42,
+        "line": 31,
         "markers": [],
         "docstring": "Test async to sync with exception."
       },
       {
         "name": "test_async_to_sync_decorator",
-        "line": 52,
+        "line": 41,
         "markers": [],
         "docstring": "Test async_to_sync decorator."
       },
       {
         "name": "test_async_to_sync_in_running_loop",
-        "line": 62,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_invalid_concurrency",
-        "line": 129,
+        "line": 51,
         "markers": [],
         "docstring": ""
       }
@@ -41012,6 +41033,47 @@
         "docstring": "Badge lookup is case-insensitive."
       }
     ],
+    "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_alert_item.py": [
+      {
+        "name": "TestAlertItem::test_alert_item_stores_alert",
+        "line": 12,
+        "markers": [],
+        "docstring": "Test that AlertItem stores the alert reference.",
+        "class": "TestAlertItem"
+      },
+      {
+        "name": "TestAlertItem::test_alert_item_truncate_short_text",
+        "line": 27,
+        "markers": [],
+        "docstring": "Test _truncate with text shorter than max_length.",
+        "class": "TestAlertItem"
+      },
+      {
+        "name": "TestAlertItem::test_alert_item_truncate_long_text",
+        "line": 43,
+        "markers": [],
+        "docstring": "Test _truncate with text longer than max_length.",
+        "class": "TestAlertItem"
+      },
+      {
+        "name": "test_alert_item_stores_alert",
+        "line": 12,
+        "markers": [],
+        "docstring": "Test that AlertItem stores the alert reference."
+      },
+      {
+        "name": "test_alert_item_truncate_short_text",
+        "line": 27,
+        "markers": [],
+        "docstring": "Test _truncate with text shorter than max_length."
+      },
+      {
+        "name": "test_alert_item_truncate_long_text",
+        "line": 43,
+        "markers": [],
+        "docstring": "Test _truncate with text longer than max_length."
+      }
+    ],
     "tests/unit/gpt_trader/tui/widgets/test_performance_dashboard.py": [
       {
         "name": "TestPerformanceDashboardWidget::test_init_default_mode",
@@ -41487,359 +41549,6 @@
         "docstring": "Test with low-priced assets like DOGE."
       }
     ],
-    "tests/unit/gpt_trader/tui/widgets/test_alert_inbox.py": [
-      {
-        "name": "TestGetRecoveryHint::test_returns_rule_specific_hint",
-        "line": 24,
-        "markers": [],
-        "docstring": "Test that specific rule_id returns its mapped hint.",
-        "class": "TestGetRecoveryHint"
-      },
-      {
-        "name": "TestGetRecoveryHint::test_returns_rule_specific_hint_rate_limit",
-        "line": 29,
-        "markers": [],
-        "docstring": "Test rate_limit_high rule returns expected hint.",
-        "class": "TestGetRecoveryHint"
-      },
-      {
-        "name": "TestGetRecoveryHint::test_returns_rule_specific_hint_reduce_only",
-        "line": 34,
-        "markers": [],
-        "docstring": "Test reduce_only_active rule returns expected hint.",
-        "class": "TestGetRecoveryHint"
-      },
-      {
-        "name": "TestGetRecoveryHint::test_returns_rule_specific_hint_daily_loss",
-        "line": 39,
-        "markers": [],
-        "docstring": "Test daily_loss_warning rule returns expected hint.",
-        "class": "TestGetRecoveryHint"
-      },
-      {
-        "name": "TestGetRecoveryHint::test_returns_rule_specific_hint_bot_stopped",
-        "line": 44,
-        "markers": [],
-        "docstring": "Test bot_stopped rule returns expected hint.",
-        "class": "TestGetRecoveryHint"
-      },
-      {
-        "name": "TestGetRecoveryHint::test_falls_back_to_category_hint_system",
-        "line": 49,
-        "markers": [],
-        "docstring": "Test unknown rule falls back to category-based hint.",
-        "class": "TestGetRecoveryHint"
-      },
-      {
-        "name": "TestGetRecoveryHint::test_falls_back_to_category_hint_risk",
-        "line": 54,
-        "markers": [],
-        "docstring": "Test unknown rule falls back to risk category hint.",
-        "class": "TestGetRecoveryHint"
-      },
-      {
-        "name": "TestGetRecoveryHint::test_falls_back_to_category_hint_error",
-        "line": 59,
-        "markers": [],
-        "docstring": "Test unknown rule falls back to error category hint.",
-        "class": "TestGetRecoveryHint"
-      },
-      {
-        "name": "TestGetRecoveryHint::test_returns_none_for_unknown_category",
-        "line": 64,
-        "markers": [],
-        "docstring": "Test returns None when both rule and category are unknown.",
-        "class": "TestGetRecoveryHint"
-      },
-      {
-        "name": "TestAlertInboxRefreshAndEmptyStates::test_refresh_with_no_manager_calls_show_empty",
-        "line": 106,
-        "markers": [],
-        "docstring": "Test that _refresh_alerts with no manager shows empty state.",
-        "class": "TestAlertInboxRefreshAndEmptyStates"
-      },
-      {
-        "name": "TestAlertInboxRefreshAndEmptyStates::test_show_empty_hides_list_shows_empty_state",
-        "line": 119,
-        "markers": [],
-        "docstring": "Test that _show_empty hides list and shows empty state.",
-        "class": "TestAlertInboxRefreshAndEmptyStates"
-      },
-      {
-        "name": "TestAlertInboxAlertListRender::test_refresh_with_alerts_updates_count_label",
-        "line": 186,
-        "markers": [],
-        "docstring": "Test that refreshing with alerts updates the count label.",
-        "class": "TestAlertInboxAlertListRender"
-      },
-      {
-        "name": "TestAlertInboxAlertListRender::test_refresh_with_alerts_shows_list_hides_empty",
-        "line": 197,
-        "markers": [],
-        "docstring": "Test that refreshing with alerts shows list and hides empty state.",
-        "class": "TestAlertInboxAlertListRender"
-      },
-      {
-        "name": "TestAlertInboxAlertListRender::test_refresh_with_alerts_appends_alert_items",
-        "line": 209,
-        "markers": [],
-        "docstring": "Test that refreshing with alerts appends AlertItem entries.",
-        "class": "TestAlertInboxAlertListRender"
-      },
-      {
-        "name": "TestAlertInboxAlertListRender::test_refresh_with_empty_alerts_shows_empty_state",
-        "line": 225,
-        "markers": [],
-        "docstring": "Test that refreshing with empty alert list shows empty state.",
-        "class": "TestAlertInboxAlertListRender"
-      },
-      {
-        "name": "TestAlertInboxFilterActions::test_action_filter_trade_sets_category_filter",
-        "line": 289,
-        "markers": [],
-        "docstring": "Test that action_filter_trade sets correct category_filter.",
-        "class": "TestAlertInboxFilterActions"
-      },
-      {
-        "name": "TestAlertInboxFilterActions::test_action_filter_system_sets_category_filter",
-        "line": 301,
-        "markers": [],
-        "docstring": "Test that action_filter_system sets correct category_filter.",
-        "class": "TestAlertInboxFilterActions"
-      },
-      {
-        "name": "TestAlertInboxFilterActions::test_action_filter_error_sets_category_and_severity",
-        "line": 313,
-        "markers": [],
-        "docstring": "Test that action_filter_error sets category_filter and min_severity.",
-        "class": "TestAlertInboxFilterActions"
-      },
-      {
-        "name": "TestAlertInboxFilterActions::test_action_filter_all_resets_filters",
-        "line": 326,
-        "markers": [],
-        "docstring": "Test that action_filter_all resets category_filter and min_severity.",
-        "class": "TestAlertInboxFilterActions"
-      },
-      {
-        "name": "TestAlertInboxFilterActions::test_set_active_filter_toggles_button_classes",
-        "line": 342,
-        "markers": [],
-        "docstring": "Test that _set_active_filter toggles button active classes.",
-        "class": "TestAlertInboxFilterActions"
-      },
-      {
-        "name": "TestAlertInboxClearAction::test_action_clear_alerts_calls_clear_history",
-        "line": 391,
-        "markers": [],
-        "docstring": "Test that action_clear_alerts calls alert_manager.clear_history().",
-        "class": "TestAlertInboxClearAction"
-      },
-      {
-        "name": "TestAlertInboxClearAction::test_action_clear_alerts_calls_notify",
-        "line": 402,
-        "markers": [],
-        "docstring": "Test that action_clear_alerts calls notify.",
-        "class": "TestAlertInboxClearAction"
-      },
-      {
-        "name": "TestAlertInboxClearAction::test_action_clear_alerts_with_no_manager_does_not_crash",
-        "line": 413,
-        "markers": [],
-        "docstring": "Test that action_clear_alerts handles missing manager gracefully.",
-        "class": "TestAlertInboxClearAction"
-      },
-      {
-        "name": "TestAlertInboxBindings::test_has_expected_bindings",
-        "line": 426,
-        "markers": [],
-        "docstring": "Test that AlertInbox class has expected key bindings.",
-        "class": "TestAlertInboxBindings"
-      },
-      {
-        "name": "TestAlertItem::test_alert_item_stores_alert",
-        "line": 443,
-        "markers": [],
-        "docstring": "Test that AlertItem stores the alert reference.",
-        "class": "TestAlertItem"
-      },
-      {
-        "name": "TestAlertItem::test_alert_item_truncate_short_text",
-        "line": 458,
-        "markers": [],
-        "docstring": "Test _truncate with text shorter than max_length.",
-        "class": "TestAlertItem"
-      },
-      {
-        "name": "TestAlertItem::test_alert_item_truncate_long_text",
-        "line": 474,
-        "markers": [],
-        "docstring": "Test _truncate with text longer than max_length.",
-        "class": "TestAlertItem"
-      },
-      {
-        "name": "test_returns_rule_specific_hint",
-        "line": 24,
-        "markers": [],
-        "docstring": "Test that specific rule_id returns its mapped hint."
-      },
-      {
-        "name": "test_returns_rule_specific_hint_rate_limit",
-        "line": 29,
-        "markers": [],
-        "docstring": "Test rate_limit_high rule returns expected hint."
-      },
-      {
-        "name": "test_returns_rule_specific_hint_reduce_only",
-        "line": 34,
-        "markers": [],
-        "docstring": "Test reduce_only_active rule returns expected hint."
-      },
-      {
-        "name": "test_returns_rule_specific_hint_daily_loss",
-        "line": 39,
-        "markers": [],
-        "docstring": "Test daily_loss_warning rule returns expected hint."
-      },
-      {
-        "name": "test_returns_rule_specific_hint_bot_stopped",
-        "line": 44,
-        "markers": [],
-        "docstring": "Test bot_stopped rule returns expected hint."
-      },
-      {
-        "name": "test_falls_back_to_category_hint_system",
-        "line": 49,
-        "markers": [],
-        "docstring": "Test unknown rule falls back to category-based hint."
-      },
-      {
-        "name": "test_falls_back_to_category_hint_risk",
-        "line": 54,
-        "markers": [],
-        "docstring": "Test unknown rule falls back to risk category hint."
-      },
-      {
-        "name": "test_falls_back_to_category_hint_error",
-        "line": 59,
-        "markers": [],
-        "docstring": "Test unknown rule falls back to error category hint."
-      },
-      {
-        "name": "test_returns_none_for_unknown_category",
-        "line": 64,
-        "markers": [],
-        "docstring": "Test returns None when both rule and category are unknown."
-      },
-      {
-        "name": "test_refresh_with_no_manager_calls_show_empty",
-        "line": 106,
-        "markers": [],
-        "docstring": "Test that _refresh_alerts with no manager shows empty state."
-      },
-      {
-        "name": "test_show_empty_hides_list_shows_empty_state",
-        "line": 119,
-        "markers": [],
-        "docstring": "Test that _show_empty hides list and shows empty state."
-      },
-      {
-        "name": "test_refresh_with_alerts_updates_count_label",
-        "line": 186,
-        "markers": [],
-        "docstring": "Test that refreshing with alerts updates the count label."
-      },
-      {
-        "name": "test_refresh_with_alerts_shows_list_hides_empty",
-        "line": 197,
-        "markers": [],
-        "docstring": "Test that refreshing with alerts shows list and hides empty state."
-      },
-      {
-        "name": "test_refresh_with_alerts_appends_alert_items",
-        "line": 209,
-        "markers": [],
-        "docstring": "Test that refreshing with alerts appends AlertItem entries."
-      },
-      {
-        "name": "test_refresh_with_empty_alerts_shows_empty_state",
-        "line": 225,
-        "markers": [],
-        "docstring": "Test that refreshing with empty alert list shows empty state."
-      },
-      {
-        "name": "test_action_filter_trade_sets_category_filter",
-        "line": 289,
-        "markers": [],
-        "docstring": "Test that action_filter_trade sets correct category_filter."
-      },
-      {
-        "name": "test_action_filter_system_sets_category_filter",
-        "line": 301,
-        "markers": [],
-        "docstring": "Test that action_filter_system sets correct category_filter."
-      },
-      {
-        "name": "test_action_filter_error_sets_category_and_severity",
-        "line": 313,
-        "markers": [],
-        "docstring": "Test that action_filter_error sets category_filter and min_severity."
-      },
-      {
-        "name": "test_action_filter_all_resets_filters",
-        "line": 326,
-        "markers": [],
-        "docstring": "Test that action_filter_all resets category_filter and min_severity."
-      },
-      {
-        "name": "test_set_active_filter_toggles_button_classes",
-        "line": 342,
-        "markers": [],
-        "docstring": "Test that _set_active_filter toggles button active classes."
-      },
-      {
-        "name": "test_action_clear_alerts_calls_clear_history",
-        "line": 391,
-        "markers": [],
-        "docstring": "Test that action_clear_alerts calls alert_manager.clear_history()."
-      },
-      {
-        "name": "test_action_clear_alerts_calls_notify",
-        "line": 402,
-        "markers": [],
-        "docstring": "Test that action_clear_alerts calls notify."
-      },
-      {
-        "name": "test_action_clear_alerts_with_no_manager_does_not_crash",
-        "line": 413,
-        "markers": [],
-        "docstring": "Test that action_clear_alerts handles missing manager gracefully."
-      },
-      {
-        "name": "test_has_expected_bindings",
-        "line": 426,
-        "markers": [],
-        "docstring": "Test that AlertInbox class has expected key bindings."
-      },
-      {
-        "name": "test_alert_item_stores_alert",
-        "line": 443,
-        "markers": [],
-        "docstring": "Test that AlertItem stores the alert reference."
-      },
-      {
-        "name": "test_alert_item_truncate_short_text",
-        "line": 458,
-        "markers": [],
-        "docstring": "Test _truncate with text shorter than max_length."
-      },
-      {
-        "name": "test_alert_item_truncate_long_text",
-        "line": 474,
-        "markers": [],
-        "docstring": "Test _truncate with text longer than max_length."
-      }
-    ],
     "tests/unit/gpt_trader/tui/widgets/test_execution_issues_modal.py": [
       {
         "name": "TestExecutionIssuesModal::test_format_issue_row_buy_side",
@@ -42011,6 +41720,153 @@
         "line": 155,
         "markers": [],
         "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_refresh_and_empty_states.py": [
+      {
+        "name": "TestAlertInboxRefreshAndEmptyStates::test_refresh_with_no_manager_calls_show_empty",
+        "line": 46,
+        "markers": [],
+        "docstring": "Test that _refresh_alerts with no manager shows empty state.",
+        "class": "TestAlertInboxRefreshAndEmptyStates"
+      },
+      {
+        "name": "TestAlertInboxRefreshAndEmptyStates::test_show_empty_hides_list_shows_empty_state",
+        "line": 59,
+        "markers": [],
+        "docstring": "Test that _show_empty hides list and shows empty state.",
+        "class": "TestAlertInboxRefreshAndEmptyStates"
+      },
+      {
+        "name": "test_refresh_with_no_manager_calls_show_empty",
+        "line": 46,
+        "markers": [],
+        "docstring": "Test that _refresh_alerts with no manager shows empty state."
+      },
+      {
+        "name": "test_show_empty_hides_list_shows_empty_state",
+        "line": 59,
+        "markers": [],
+        "docstring": "Test that _show_empty hides list and shows empty state."
+      }
+    ],
+    "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_recovery_hint.py": [
+      {
+        "name": "TestGetRecoveryHint::test_returns_rule_specific_hint",
+        "line": 9,
+        "markers": [],
+        "docstring": "Test that specific rule_id returns its mapped hint.",
+        "class": "TestGetRecoveryHint"
+      },
+      {
+        "name": "TestGetRecoveryHint::test_returns_rule_specific_hint_rate_limit",
+        "line": 14,
+        "markers": [],
+        "docstring": "Test rate_limit_high rule returns expected hint.",
+        "class": "TestGetRecoveryHint"
+      },
+      {
+        "name": "TestGetRecoveryHint::test_returns_rule_specific_hint_reduce_only",
+        "line": 19,
+        "markers": [],
+        "docstring": "Test reduce_only_active rule returns expected hint.",
+        "class": "TestGetRecoveryHint"
+      },
+      {
+        "name": "TestGetRecoveryHint::test_returns_rule_specific_hint_daily_loss",
+        "line": 24,
+        "markers": [],
+        "docstring": "Test daily_loss_warning rule returns expected hint.",
+        "class": "TestGetRecoveryHint"
+      },
+      {
+        "name": "TestGetRecoveryHint::test_returns_rule_specific_hint_bot_stopped",
+        "line": 29,
+        "markers": [],
+        "docstring": "Test bot_stopped rule returns expected hint.",
+        "class": "TestGetRecoveryHint"
+      },
+      {
+        "name": "TestGetRecoveryHint::test_falls_back_to_category_hint_system",
+        "line": 34,
+        "markers": [],
+        "docstring": "Test unknown rule falls back to category-based hint.",
+        "class": "TestGetRecoveryHint"
+      },
+      {
+        "name": "TestGetRecoveryHint::test_falls_back_to_category_hint_risk",
+        "line": 39,
+        "markers": [],
+        "docstring": "Test unknown rule falls back to risk category hint.",
+        "class": "TestGetRecoveryHint"
+      },
+      {
+        "name": "TestGetRecoveryHint::test_falls_back_to_category_hint_error",
+        "line": 44,
+        "markers": [],
+        "docstring": "Test unknown rule falls back to error category hint.",
+        "class": "TestGetRecoveryHint"
+      },
+      {
+        "name": "TestGetRecoveryHint::test_returns_none_for_unknown_category",
+        "line": 49,
+        "markers": [],
+        "docstring": "Test returns None when both rule and category are unknown.",
+        "class": "TestGetRecoveryHint"
+      },
+      {
+        "name": "test_returns_rule_specific_hint",
+        "line": 9,
+        "markers": [],
+        "docstring": "Test that specific rule_id returns its mapped hint."
+      },
+      {
+        "name": "test_returns_rule_specific_hint_rate_limit",
+        "line": 14,
+        "markers": [],
+        "docstring": "Test rate_limit_high rule returns expected hint."
+      },
+      {
+        "name": "test_returns_rule_specific_hint_reduce_only",
+        "line": 19,
+        "markers": [],
+        "docstring": "Test reduce_only_active rule returns expected hint."
+      },
+      {
+        "name": "test_returns_rule_specific_hint_daily_loss",
+        "line": 24,
+        "markers": [],
+        "docstring": "Test daily_loss_warning rule returns expected hint."
+      },
+      {
+        "name": "test_returns_rule_specific_hint_bot_stopped",
+        "line": 29,
+        "markers": [],
+        "docstring": "Test bot_stopped rule returns expected hint."
+      },
+      {
+        "name": "test_falls_back_to_category_hint_system",
+        "line": 34,
+        "markers": [],
+        "docstring": "Test unknown rule falls back to category-based hint."
+      },
+      {
+        "name": "test_falls_back_to_category_hint_risk",
+        "line": 39,
+        "markers": [],
+        "docstring": "Test unknown rule falls back to risk category hint."
+      },
+      {
+        "name": "test_falls_back_to_category_hint_error",
+        "line": 44,
+        "markers": [],
+        "docstring": "Test unknown rule falls back to error category hint."
+      },
+      {
+        "name": "test_returns_none_for_unknown_category",
+        "line": 49,
+        "markers": [],
+        "docstring": "Test returns None when both rule and category are unknown."
       }
     ],
     "tests/unit/gpt_trader/tui/widgets/test_orders_widget_update.py": [
@@ -42292,6 +42148,127 @@
         "line": 212,
         "markers": [],
         "docstring": "Test that long reduce-only reasons are truncated."
+      }
+    ],
+    "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_clear_and_bindings.py": [
+      {
+        "name": "TestAlertInboxClearAction::test_action_clear_alerts_calls_clear_history",
+        "line": 45,
+        "markers": [],
+        "docstring": "Test that action_clear_alerts calls alert_manager.clear_history().",
+        "class": "TestAlertInboxClearAction"
+      },
+      {
+        "name": "TestAlertInboxClearAction::test_action_clear_alerts_calls_notify",
+        "line": 56,
+        "markers": [],
+        "docstring": "Test that action_clear_alerts calls notify.",
+        "class": "TestAlertInboxClearAction"
+      },
+      {
+        "name": "TestAlertInboxClearAction::test_action_clear_alerts_with_no_manager_does_not_crash",
+        "line": 67,
+        "markers": [],
+        "docstring": "Test that action_clear_alerts handles missing manager gracefully.",
+        "class": "TestAlertInboxClearAction"
+      },
+      {
+        "name": "TestAlertInboxBindings::test_has_expected_bindings",
+        "line": 80,
+        "markers": [],
+        "docstring": "Test that AlertInbox class has expected key bindings.",
+        "class": "TestAlertInboxBindings"
+      },
+      {
+        "name": "test_action_clear_alerts_calls_clear_history",
+        "line": 45,
+        "markers": [],
+        "docstring": "Test that action_clear_alerts calls alert_manager.clear_history()."
+      },
+      {
+        "name": "test_action_clear_alerts_calls_notify",
+        "line": 56,
+        "markers": [],
+        "docstring": "Test that action_clear_alerts calls notify."
+      },
+      {
+        "name": "test_action_clear_alerts_with_no_manager_does_not_crash",
+        "line": 67,
+        "markers": [],
+        "docstring": "Test that action_clear_alerts handles missing manager gracefully."
+      },
+      {
+        "name": "test_has_expected_bindings",
+        "line": 80,
+        "markers": [],
+        "docstring": "Test that AlertInbox class has expected key bindings."
+      }
+    ],
+    "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_filter_actions.py": [
+      {
+        "name": "TestAlertInboxFilterActions::test_action_filter_trade_sets_category_filter",
+        "line": 62,
+        "markers": [],
+        "docstring": "Test that action_filter_trade sets correct category_filter.",
+        "class": "TestAlertInboxFilterActions"
+      },
+      {
+        "name": "TestAlertInboxFilterActions::test_action_filter_system_sets_category_filter",
+        "line": 74,
+        "markers": [],
+        "docstring": "Test that action_filter_system sets correct category_filter.",
+        "class": "TestAlertInboxFilterActions"
+      },
+      {
+        "name": "TestAlertInboxFilterActions::test_action_filter_error_sets_category_and_severity",
+        "line": 86,
+        "markers": [],
+        "docstring": "Test that action_filter_error sets category_filter and min_severity.",
+        "class": "TestAlertInboxFilterActions"
+      },
+      {
+        "name": "TestAlertInboxFilterActions::test_action_filter_all_resets_filters",
+        "line": 99,
+        "markers": [],
+        "docstring": "Test that action_filter_all resets category_filter and min_severity.",
+        "class": "TestAlertInboxFilterActions"
+      },
+      {
+        "name": "TestAlertInboxFilterActions::test_set_active_filter_toggles_button_classes",
+        "line": 115,
+        "markers": [],
+        "docstring": "Test that _set_active_filter toggles button active classes.",
+        "class": "TestAlertInboxFilterActions"
+      },
+      {
+        "name": "test_action_filter_trade_sets_category_filter",
+        "line": 62,
+        "markers": [],
+        "docstring": "Test that action_filter_trade sets correct category_filter."
+      },
+      {
+        "name": "test_action_filter_system_sets_category_filter",
+        "line": 74,
+        "markers": [],
+        "docstring": "Test that action_filter_system sets correct category_filter."
+      },
+      {
+        "name": "test_action_filter_error_sets_category_and_severity",
+        "line": 86,
+        "markers": [],
+        "docstring": "Test that action_filter_error sets category_filter and min_severity."
+      },
+      {
+        "name": "test_action_filter_all_resets_filters",
+        "line": 99,
+        "markers": [],
+        "docstring": "Test that action_filter_all resets category_filter and min_severity."
+      },
+      {
+        "name": "test_set_active_filter_toggles_button_classes",
+        "line": 115,
+        "markers": [],
+        "docstring": "Test that _set_active_filter toggles button active classes."
       }
     ],
     "tests/unit/gpt_trader/tui/widgets/test_logs.py": [
@@ -43313,6 +43290,60 @@
         "line": 16,
         "markers": [],
         "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_alert_list_render.py": [
+      {
+        "name": "TestAlertInboxAlertListRender::test_refresh_with_alerts_updates_count_label",
+        "line": 70,
+        "markers": [],
+        "docstring": "Test that refreshing with alerts updates the count label.",
+        "class": "TestAlertInboxAlertListRender"
+      },
+      {
+        "name": "TestAlertInboxAlertListRender::test_refresh_with_alerts_shows_list_hides_empty",
+        "line": 81,
+        "markers": [],
+        "docstring": "Test that refreshing with alerts shows list and hides empty state.",
+        "class": "TestAlertInboxAlertListRender"
+      },
+      {
+        "name": "TestAlertInboxAlertListRender::test_refresh_with_alerts_appends_alert_items",
+        "line": 93,
+        "markers": [],
+        "docstring": "Test that refreshing with alerts appends AlertItem entries.",
+        "class": "TestAlertInboxAlertListRender"
+      },
+      {
+        "name": "TestAlertInboxAlertListRender::test_refresh_with_empty_alerts_shows_empty_state",
+        "line": 109,
+        "markers": [],
+        "docstring": "Test that refreshing with empty alert list shows empty state.",
+        "class": "TestAlertInboxAlertListRender"
+      },
+      {
+        "name": "test_refresh_with_alerts_updates_count_label",
+        "line": 70,
+        "markers": [],
+        "docstring": "Test that refreshing with alerts updates the count label."
+      },
+      {
+        "name": "test_refresh_with_alerts_shows_list_hides_empty",
+        "line": 81,
+        "markers": [],
+        "docstring": "Test that refreshing with alerts shows list and hides empty state."
+      },
+      {
+        "name": "test_refresh_with_alerts_appends_alert_items",
+        "line": 93,
+        "markers": [],
+        "docstring": "Test that refreshing with alerts appends AlertItem entries."
+      },
+      {
+        "name": "test_refresh_with_empty_alerts_shows_empty_state",
+        "line": 109,
+        "markers": [],
+        "docstring": "Test that refreshing with empty alert list shows empty state."
       }
     ],
     "tests/unit/gpt_trader/tui/widgets/test_position_detail_modal_init.py": [
@@ -44769,6 +44800,164 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/features/live_trade/test_degradation_failure_tracking.py": [
+      {
+        "name": "TestSlippageFailureTracking::test_record_slippage_failure_increments_counter",
+        "line": 22,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSlippageFailureTracking"
+      },
+      {
+        "name": "TestSlippageFailureTracking::test_record_slippage_failure_triggers_pause_at_threshold",
+        "line": 27,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSlippageFailureTracking"
+      },
+      {
+        "name": "TestSlippageFailureTracking::test_slippage_counter_resets_after_pause",
+        "line": 36,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSlippageFailureTracking"
+      },
+      {
+        "name": "TestSlippageFailureTracking::test_reset_slippage_failures_clears_counter",
+        "line": 42,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSlippageFailureTracking"
+      },
+      {
+        "name": "TestBrokerFailureTracking::test_record_broker_failure_increments_counter",
+        "line": 59,
+        "markers": [],
+        "docstring": "",
+        "class": "TestBrokerFailureTracking"
+      },
+      {
+        "name": "TestBrokerFailureTracking::test_record_broker_failure_triggers_global_pause",
+        "line": 64,
+        "markers": [],
+        "docstring": "",
+        "class": "TestBrokerFailureTracking"
+      },
+      {
+        "name": "TestBrokerFailureTracking::test_broker_counter_resets_after_pause",
+        "line": 71,
+        "markers": [],
+        "docstring": "",
+        "class": "TestBrokerFailureTracking"
+      },
+      {
+        "name": "TestBrokerFailureTracking::test_reset_broker_failures_clears_counter",
+        "line": 77,
+        "markers": [],
+        "docstring": "",
+        "class": "TestBrokerFailureTracking"
+      },
+      {
+        "name": "TestGuardFailureTelemetry::test_slippage_failure_increments_once_per_call",
+        "line": 96,
+        "markers": [],
+        "docstring": "Each slippage failure call increments counter exactly once.",
+        "class": "TestGuardFailureTelemetry"
+      },
+      {
+        "name": "TestGuardFailureTelemetry::test_broker_failure_increments_once_per_call",
+        "line": 104,
+        "markers": [],
+        "docstring": "Each broker failure call increments counter exactly once.",
+        "class": "TestGuardFailureTelemetry"
+      },
+      {
+        "name": "TestGuardFailureTelemetry::test_slippage_pause_triggers_exactly_at_threshold",
+        "line": 112,
+        "markers": [],
+        "docstring": "Slippage pause triggers exactly when threshold is reached, not before or after.",
+        "class": "TestGuardFailureTelemetry"
+      },
+      {
+        "name": "TestGuardFailureTelemetry::test_broker_pause_triggers_exactly_at_threshold",
+        "line": 126,
+        "markers": [],
+        "docstring": "Broker pause triggers exactly when threshold is reached.",
+        "class": "TestGuardFailureTelemetry"
+      },
+      {
+        "name": "test_record_slippage_failure_increments_counter",
+        "line": 22,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_record_slippage_failure_triggers_pause_at_threshold",
+        "line": 27,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_slippage_counter_resets_after_pause",
+        "line": 36,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_reset_slippage_failures_clears_counter",
+        "line": 42,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_record_broker_failure_increments_counter",
+        "line": 59,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_record_broker_failure_triggers_global_pause",
+        "line": 64,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_broker_counter_resets_after_pause",
+        "line": 71,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_reset_broker_failures_clears_counter",
+        "line": 77,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_slippage_failure_increments_once_per_call",
+        "line": 96,
+        "markers": [],
+        "docstring": "Each slippage failure call increments counter exactly once."
+      },
+      {
+        "name": "test_broker_failure_increments_once_per_call",
+        "line": 104,
+        "markers": [],
+        "docstring": "Each broker failure call increments counter exactly once."
+      },
+      {
+        "name": "test_slippage_pause_triggers_exactly_at_threshold",
+        "line": 112,
+        "markers": [],
+        "docstring": "Slippage pause triggers exactly when threshold is reached, not before or after."
+      },
+      {
+        "name": "test_broker_pause_triggers_exactly_at_threshold",
+        "line": 126,
+        "markers": [],
+        "docstring": "Broker pause triggers exactly when threshold is reached."
+      }
+    ],
     "tests/unit/gpt_trader/features/live_trade/test_risk_manager_pre_trade_validate.py": [
       {
         "name": "TestPreTradeValidate::test_no_config_passes",
@@ -44938,6 +45127,125 @@
         "docstring": "Test derivatives_enabled with edge cases and import failures."
       }
     ],
+    "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_exposure.py": [
+      {
+        "name": "TestLiveRiskManagerCFMExposure::test_update_exposure_spot_only",
+        "line": 12,
+        "markers": [],
+        "docstring": "Updates spot exposure from positions.",
+        "class": "TestLiveRiskManagerCFMExposure"
+      },
+      {
+        "name": "TestLiveRiskManagerCFMExposure::test_update_exposure_cfm_only",
+        "line": 34,
+        "markers": [],
+        "docstring": "Updates CFM exposure from positions with leverage.",
+        "class": "TestLiveRiskManagerCFMExposure"
+      },
+      {
+        "name": "TestLiveRiskManagerCFMExposure::test_update_exposure_hybrid",
+        "line": 52,
+        "markers": [],
+        "docstring": "Updates both spot and CFM exposure.",
+        "class": "TestLiveRiskManagerCFMExposure"
+      },
+      {
+        "name": "TestLiveRiskManagerCFMExposure::test_update_exposure_with_cfm_balance",
+        "line": 76,
+        "markers": [],
+        "docstring": "Updates margin info from CFM balance.",
+        "class": "TestLiveRiskManagerCFMExposure"
+      },
+      {
+        "name": "TestLiveRiskManagerCFMExposure::test_get_exposure_state",
+        "line": 92,
+        "markers": [],
+        "docstring": "Can retrieve current exposure state.",
+        "class": "TestLiveRiskManagerCFMExposure"
+      },
+      {
+        "name": "TestLiveRiskManagerCFMExposure::test_get_total_exposure",
+        "line": 104,
+        "markers": [],
+        "docstring": "Can get total exposure directly.",
+        "class": "TestLiveRiskManagerCFMExposure"
+      },
+      {
+        "name": "TestLiveRiskManagerCFMExposureLimits::test_check_cfm_exposure_limits_ok",
+        "line": 120,
+        "markers": [],
+        "docstring": "No warnings when within limits.",
+        "class": "TestLiveRiskManagerCFMExposureLimits"
+      },
+      {
+        "name": "TestLiveRiskManagerCFMExposureLimits::test_check_cfm_exposure_limits_exceeded",
+        "line": 135,
+        "markers": [],
+        "docstring": "Warning when CFM exposure exceeds limit.",
+        "class": "TestLiveRiskManagerCFMExposureLimits"
+      },
+      {
+        "name": "TestLiveRiskManagerCFMExposureLimits::test_check_cfm_exposure_limits_zero_equity",
+        "line": 153,
+        "markers": [],
+        "docstring": "Returns empty list for zero equity.",
+        "class": "TestLiveRiskManagerCFMExposureLimits"
+      },
+      {
+        "name": "test_update_exposure_spot_only",
+        "line": 12,
+        "markers": [],
+        "docstring": "Updates spot exposure from positions."
+      },
+      {
+        "name": "test_update_exposure_cfm_only",
+        "line": 34,
+        "markers": [],
+        "docstring": "Updates CFM exposure from positions with leverage."
+      },
+      {
+        "name": "test_update_exposure_hybrid",
+        "line": 52,
+        "markers": [],
+        "docstring": "Updates both spot and CFM exposure."
+      },
+      {
+        "name": "test_update_exposure_with_cfm_balance",
+        "line": 76,
+        "markers": [],
+        "docstring": "Updates margin info from CFM balance."
+      },
+      {
+        "name": "test_get_exposure_state",
+        "line": 92,
+        "markers": [],
+        "docstring": "Can retrieve current exposure state."
+      },
+      {
+        "name": "test_get_total_exposure",
+        "line": 104,
+        "markers": [],
+        "docstring": "Can get total exposure directly."
+      },
+      {
+        "name": "test_check_cfm_exposure_limits_ok",
+        "line": 120,
+        "markers": [],
+        "docstring": "No warnings when within limits."
+      },
+      {
+        "name": "test_check_cfm_exposure_limits_exceeded",
+        "line": 135,
+        "markers": [],
+        "docstring": "Warning when CFM exposure exceeds limit."
+      },
+      {
+        "name": "test_check_cfm_exposure_limits_zero_equity",
+        "line": 153,
+        "markers": [],
+        "docstring": "Returns empty list for zero equity."
+      }
+    ],
     "tests/unit/gpt_trader/features/live_trade/test_risk_manager_integration.py": [
       {
         "name": "TestLiveRiskManagerIntegration::test_daily_workflow",
@@ -44977,6 +45285,99 @@
         "line": 84,
         "markers": [],
         "docstring": "Test liquidation buffer check triggers reduce-only for symbol."
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_leverage_and_summary.py": [
+      {
+        "name": "TestLiveRiskManagerCFMLeverageValidation::test_validate_cfm_leverage_ok",
+        "line": 15,
+        "markers": [],
+        "docstring": "No error when leverage within limit.",
+        "class": "TestLiveRiskManagerCFMLeverageValidation"
+      },
+      {
+        "name": "TestLiveRiskManagerCFMLeverageValidation::test_validate_cfm_leverage_at_limit",
+        "line": 24,
+        "markers": [],
+        "docstring": "No error when leverage at limit.",
+        "class": "TestLiveRiskManagerCFMLeverageValidation"
+      },
+      {
+        "name": "TestLiveRiskManagerCFMLeverageValidation::test_validate_cfm_leverage_exceeded",
+        "line": 33,
+        "markers": [],
+        "docstring": "Error when leverage exceeds limit.",
+        "class": "TestLiveRiskManagerCFMLeverageValidation"
+      },
+      {
+        "name": "TestLiveRiskManagerCFMLeverageValidation::test_validate_cfm_leverage_default",
+        "line": 43,
+        "markers": [],
+        "docstring": "Uses default 5x when no config.",
+        "class": "TestLiveRiskManagerCFMLeverageValidation"
+      },
+      {
+        "name": "TestLiveRiskManagerCFMRiskSummary::test_get_cfm_risk_summary",
+        "line": 57,
+        "markers": [],
+        "docstring": "Can get CFM risk summary.",
+        "class": "TestLiveRiskManagerCFMRiskSummary"
+      },
+      {
+        "name": "TestLiveRiskManagerCFMRiskSummary::test_get_risk_warnings",
+        "line": 78,
+        "markers": [],
+        "docstring": "Can get all risk warnings.",
+        "class": "TestLiveRiskManagerCFMRiskSummary"
+      },
+      {
+        "name": "TestLiveRiskManagerCFMRiskSummary::test_clear_risk_warnings",
+        "line": 90,
+        "markers": [],
+        "docstring": "Can clear all warnings.",
+        "class": "TestLiveRiskManagerCFMRiskSummary"
+      },
+      {
+        "name": "test_validate_cfm_leverage_ok",
+        "line": 15,
+        "markers": [],
+        "docstring": "No error when leverage within limit."
+      },
+      {
+        "name": "test_validate_cfm_leverage_at_limit",
+        "line": 24,
+        "markers": [],
+        "docstring": "No error when leverage at limit."
+      },
+      {
+        "name": "test_validate_cfm_leverage_exceeded",
+        "line": 33,
+        "markers": [],
+        "docstring": "Error when leverage exceeds limit."
+      },
+      {
+        "name": "test_validate_cfm_leverage_default",
+        "line": 43,
+        "markers": [],
+        "docstring": "Uses default 5x when no config."
+      },
+      {
+        "name": "test_get_cfm_risk_summary",
+        "line": 57,
+        "markers": [],
+        "docstring": "Can get CFM risk summary."
+      },
+      {
+        "name": "test_get_risk_warnings",
+        "line": 78,
+        "markers": [],
+        "docstring": "Can get all risk warnings."
+      },
+      {
+        "name": "test_clear_risk_warnings",
+        "line": 90,
+        "markers": [],
+        "docstring": "Can clear all warnings."
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/test_symbols_normalize_symbols.py": [
@@ -45316,6 +45717,21 @@
         "docstring": "Test multiple resets are safe."
       }
     ],
+    "tests/unit/gpt_trader/features/live_trade/test_bot_lifecycle.py": [
+      {
+        "name": "TestTradingBotStateManagement::test_initial_state",
+        "line": 121,
+        "markers": [],
+        "docstring": "Test initial state of TradingBot.",
+        "class": "TestTradingBotStateManagement"
+      },
+      {
+        "name": "test_initial_state",
+        "line": 121,
+        "markers": [],
+        "docstring": "Test initial state of TradingBot."
+      }
+    ],
     "tests/unit/gpt_trader/features/live_trade/test_risk_manager_mark_staleness.py": [
       {
         "name": "TestCheckMarkStaleness::test_no_update_is_stale",
@@ -45408,6 +45824,114 @@
         "line": 29,
         "markers": [],
         "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/test_degradation_status_and_clear_all.py": [
+      {
+        "name": "TestClearAllAndStatus::test_clear_all_resets_state",
+        "line": 11,
+        "markers": [],
+        "docstring": "",
+        "class": "TestClearAllAndStatus"
+      },
+      {
+        "name": "TestClearAllAndStatus::test_get_status_returns_complete_state",
+        "line": 22,
+        "markers": [],
+        "docstring": "",
+        "class": "TestClearAllAndStatus"
+      },
+      {
+        "name": "TestClearAllAndStatus::test_get_status_when_not_paused",
+        "line": 33,
+        "markers": [],
+        "docstring": "",
+        "class": "TestClearAllAndStatus"
+      },
+      {
+        "name": "test_clear_all_resets_state",
+        "line": 11,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_get_status_returns_complete_state",
+        "line": 22,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_get_status_when_not_paused",
+        "line": 33,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/test_bot_initialization.py": [
+      {
+        "name": "TestTradingBotInitialization::test_init_with_config_only",
+        "line": 23,
+        "markers": [],
+        "docstring": "Test initialization with only config.",
+        "class": "TestTradingBotInitialization"
+      },
+      {
+        "name": "TestTradingBotInitialization::test_init_with_container",
+        "line": 47,
+        "markers": [],
+        "docstring": "Test initialization with container.",
+        "class": "TestTradingBotInitialization"
+      },
+      {
+        "name": "TestTradingBotInitialization::test_init_creates_context",
+        "line": 57,
+        "markers": [],
+        "docstring": "Test that initialization creates CoordinatorContext.",
+        "class": "TestTradingBotInitialization"
+      },
+      {
+        "name": "TestTradingBotInitialization::test_init_creates_engine",
+        "line": 88,
+        "markers": [],
+        "docstring": "Test that initialization creates TradingEngine.",
+        "class": "TestTradingBotInitialization"
+      },
+      {
+        "name": "TestTradingBotInitialization::test_init_container_missing_optional_attributes",
+        "line": 98,
+        "markers": [],
+        "docstring": "Test initialization handles container with missing optional attributes.",
+        "class": "TestTradingBotInitialization"
+      },
+      {
+        "name": "test_init_with_config_only",
+        "line": 23,
+        "markers": [],
+        "docstring": "Test initialization with only config."
+      },
+      {
+        "name": "test_init_with_container",
+        "line": 47,
+        "markers": [],
+        "docstring": "Test initialization with container."
+      },
+      {
+        "name": "test_init_creates_context",
+        "line": 57,
+        "markers": [],
+        "docstring": "Test that initialization creates CoordinatorContext."
+      },
+      {
+        "name": "test_init_creates_engine",
+        "line": 88,
+        "markers": [],
+        "docstring": "Test that initialization creates TradingEngine."
+      },
+      {
+        "name": "test_init_container_missing_optional_attributes",
+        "line": 98,
+        "markers": [],
+        "docstring": "Test initialization handles container with missing optional attributes."
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/test_risk_manager_liquidation_buffer.py": [
@@ -45726,6 +46250,177 @@
         "line": 90,
         "markers": [],
         "docstring": "Test returns not triggered when average is zero."
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/test_degradation_pause_records_and_basic_pause.py": [
+      {
+        "name": "TestPauseRecord::test_pause_record_creation",
+        "line": 13,
+        "markers": [],
+        "docstring": "",
+        "class": "TestPauseRecord"
+      },
+      {
+        "name": "TestDegradationStatePauseAll::test_pause_all_sets_global_pause",
+        "line": 21,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDegradationStatePauseAll"
+      },
+      {
+        "name": "TestDegradationStatePauseAll::test_is_paused_returns_true_during_global_pause",
+        "line": 28,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDegradationStatePauseAll"
+      },
+      {
+        "name": "TestDegradationStatePauseAll::test_is_paused_returns_false_after_expiry",
+        "line": 33,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDegradationStatePauseAll"
+      },
+      {
+        "name": "TestDegradationStatePauseAll::test_global_pause_allows_reduce_only_when_configured",
+        "line": 38,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDegradationStatePauseAll"
+      },
+      {
+        "name": "TestDegradationStatePauseAll::test_global_pause_blocks_all_when_reduce_only_disabled",
+        "line": 44,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDegradationStatePauseAll"
+      },
+      {
+        "name": "TestDegradationStatePauseSymbol::test_pause_symbol_sets_symbol_pause",
+        "line": 56,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDegradationStatePauseSymbol"
+      },
+      {
+        "name": "TestDegradationStatePauseSymbol::test_symbol_pause_only_affects_that_symbol",
+        "line": 63,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDegradationStatePauseSymbol"
+      },
+      {
+        "name": "TestDegradationStatePauseSymbol::test_symbol_pause_allows_reduce_only_when_configured",
+        "line": 70,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDegradationStatePauseSymbol"
+      },
+      {
+        "name": "TestDegradationStatePauseSymbol::test_symbol_pause_expires",
+        "line": 76,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDegradationStatePauseSymbol"
+      },
+      {
+        "name": "TestGetPauseReason::test_returns_global_reason_when_globally_paused",
+        "line": 86,
+        "markers": [],
+        "docstring": "",
+        "class": "TestGetPauseReason"
+      },
+      {
+        "name": "TestGetPauseReason::test_returns_symbol_reason_when_symbol_paused",
+        "line": 91,
+        "markers": [],
+        "docstring": "",
+        "class": "TestGetPauseReason"
+      },
+      {
+        "name": "TestGetPauseReason::test_returns_none_when_not_paused",
+        "line": 96,
+        "markers": [],
+        "docstring": "",
+        "class": "TestGetPauseReason"
+      },
+      {
+        "name": "test_pause_record_creation",
+        "line": 13,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_pause_all_sets_global_pause",
+        "line": 21,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_is_paused_returns_true_during_global_pause",
+        "line": 28,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_is_paused_returns_false_after_expiry",
+        "line": 33,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_global_pause_allows_reduce_only_when_configured",
+        "line": 38,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_global_pause_blocks_all_when_reduce_only_disabled",
+        "line": 44,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_pause_symbol_sets_symbol_pause",
+        "line": 56,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_symbol_pause_only_affects_that_symbol",
+        "line": 63,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_symbol_pause_allows_reduce_only_when_configured",
+        "line": 70,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_symbol_pause_expires",
+        "line": 76,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_returns_global_reason_when_globally_paused",
+        "line": 86,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_returns_symbol_reason_when_symbol_paused",
+        "line": 91,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_returns_none_when_not_paused",
+        "line": 96,
+        "markers": [],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/test_risk_manager_daily_pnl.py": [
@@ -46226,526 +46921,123 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/test_degradation.py": [
+    "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_liquidation_buffer_and_reduce_only.py": [
       {
-        "name": "TestPauseRecord::test_pause_record_creation",
+        "name": "TestLiveRiskManagerCFMLiquidationBuffer::test_check_cfm_liquidation_buffer_ok",
         "line": 16,
         "markers": [],
-        "docstring": "",
-        "class": "TestPauseRecord"
+        "docstring": "No warnings when buffer is sufficient.",
+        "class": "TestLiveRiskManagerCFMLiquidationBuffer"
       },
       {
-        "name": "TestDegradationStatePauseAll::test_pause_all_sets_global_pause",
-        "line": 24,
+        "name": "TestLiveRiskManagerCFMLiquidationBuffer::test_check_cfm_liquidation_buffer_warning",
+        "line": 32,
         "markers": [],
-        "docstring": "",
-        "class": "TestDegradationStatePauseAll"
+        "docstring": "Warning when buffer is below threshold but not critical.",
+        "class": "TestLiveRiskManagerCFMLiquidationBuffer"
       },
       {
-        "name": "TestDegradationStatePauseAll::test_is_paused_returns_true_during_global_pause",
-        "line": 31,
+        "name": "TestLiveRiskManagerCFMLiquidationBuffer::test_check_cfm_liquidation_buffer_critical",
+        "line": 52,
         "markers": [],
-        "docstring": "",
-        "class": "TestDegradationStatePauseAll"
+        "docstring": "Critical warning and reduce-only when buffer is very low.",
+        "class": "TestLiveRiskManagerCFMLiquidationBuffer"
       },
       {
-        "name": "TestDegradationStatePauseAll::test_is_paused_returns_false_after_expiry",
-        "line": 36,
+        "name": "TestLiveRiskManagerCFMLiquidationBuffer::test_check_cfm_liquidation_buffer_with_percentage_field",
+        "line": 69,
         "markers": [],
-        "docstring": "",
-        "class": "TestDegradationStatePauseAll"
+        "docstring": "Uses liquidation_buffer_percentage field if available.",
+        "class": "TestLiveRiskManagerCFMLiquidationBuffer"
       },
       {
-        "name": "TestDegradationStatePauseAll::test_global_pause_allows_reduce_only_when_configured",
-        "line": 41,
+        "name": "TestLiveRiskManagerCFMLiquidationBuffer::test_check_cfm_liquidation_buffer_none_balance",
+        "line": 83,
         "markers": [],
-        "docstring": "",
-        "class": "TestDegradationStatePauseAll"
+        "docstring": "Returns empty list for None balance.",
+        "class": "TestLiveRiskManagerCFMLiquidationBuffer"
       },
       {
-        "name": "TestDegradationStatePauseAll::test_global_pause_blocks_all_when_reduce_only_disabled",
-        "line": 47,
+        "name": "TestLiveRiskManagerCFMReduceOnlyMode::test_cfm_reduce_only_mode_default",
+        "line": 95,
         "markers": [],
-        "docstring": "",
-        "class": "TestDegradationStatePauseAll"
+        "docstring": "CFM reduce-only mode is off by default.",
+        "class": "TestLiveRiskManagerCFMReduceOnlyMode"
       },
       {
-        "name": "TestDegradationStatePauseSymbol::test_pause_symbol_sets_symbol_pause",
-        "line": 59,
+        "name": "TestLiveRiskManagerCFMReduceOnlyMode::test_set_cfm_reduce_only_mode",
+        "line": 100,
         "markers": [],
-        "docstring": "",
-        "class": "TestDegradationStatePauseSymbol"
+        "docstring": "Can set CFM reduce-only mode.",
+        "class": "TestLiveRiskManagerCFMReduceOnlyMode"
       },
       {
-        "name": "TestDegradationStatePauseSymbol::test_symbol_pause_only_affects_that_symbol",
-        "line": 66,
+        "name": "TestLiveRiskManagerCFMReduceOnlyMode::test_clear_cfm_reduce_only_mode",
+        "line": 109,
         "markers": [],
-        "docstring": "",
-        "class": "TestDegradationStatePauseSymbol"
+        "docstring": "Can clear CFM reduce-only mode.",
+        "class": "TestLiveRiskManagerCFMReduceOnlyMode"
       },
       {
-        "name": "TestDegradationStatePauseSymbol::test_symbol_pause_allows_reduce_only_when_configured",
-        "line": 73,
+        "name": "TestLiveRiskManagerResetWithCFM::test_reset_daily_tracking_clears_cfm_state",
+        "line": 122,
         "markers": [],
-        "docstring": "",
-        "class": "TestDegradationStatePauseSymbol"
+        "docstring": "Reset clears CFM-specific state.",
+        "class": "TestLiveRiskManagerResetWithCFM"
       },
       {
-        "name": "TestDegradationStatePauseSymbol::test_symbol_pause_expires",
-        "line": 79,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDegradationStatePauseSymbol"
-      },
-      {
-        "name": "TestGetPauseReason::test_returns_global_reason_when_globally_paused",
-        "line": 89,
-        "markers": [],
-        "docstring": "",
-        "class": "TestGetPauseReason"
-      },
-      {
-        "name": "TestGetPauseReason::test_returns_symbol_reason_when_symbol_paused",
-        "line": 94,
-        "markers": [],
-        "docstring": "",
-        "class": "TestGetPauseReason"
-      },
-      {
-        "name": "TestGetPauseReason::test_returns_none_when_not_paused",
-        "line": 99,
-        "markers": [],
-        "docstring": "",
-        "class": "TestGetPauseReason"
-      },
-      {
-        "name": "TestSlippageFailureTracking::test_record_slippage_failure_increments_counter",
-        "line": 114,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSlippageFailureTracking"
-      },
-      {
-        "name": "TestSlippageFailureTracking::test_record_slippage_failure_triggers_pause_at_threshold",
-        "line": 119,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSlippageFailureTracking"
-      },
-      {
-        "name": "TestSlippageFailureTracking::test_slippage_counter_resets_after_pause",
-        "line": 128,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSlippageFailureTracking"
-      },
-      {
-        "name": "TestSlippageFailureTracking::test_reset_slippage_failures_clears_counter",
-        "line": 134,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSlippageFailureTracking"
-      },
-      {
-        "name": "TestBrokerFailureTracking::test_record_broker_failure_increments_counter",
-        "line": 151,
-        "markers": [],
-        "docstring": "",
-        "class": "TestBrokerFailureTracking"
-      },
-      {
-        "name": "TestBrokerFailureTracking::test_record_broker_failure_triggers_global_pause",
-        "line": 156,
-        "markers": [],
-        "docstring": "",
-        "class": "TestBrokerFailureTracking"
-      },
-      {
-        "name": "TestBrokerFailureTracking::test_broker_counter_resets_after_pause",
-        "line": 163,
-        "markers": [],
-        "docstring": "",
-        "class": "TestBrokerFailureTracking"
-      },
-      {
-        "name": "TestBrokerFailureTracking::test_reset_broker_failures_clears_counter",
-        "line": 169,
-        "markers": [],
-        "docstring": "",
-        "class": "TestBrokerFailureTracking"
-      },
-      {
-        "name": "TestClearAllAndStatus::test_clear_all_resets_state",
-        "line": 179,
-        "markers": [],
-        "docstring": "",
-        "class": "TestClearAllAndStatus"
-      },
-      {
-        "name": "TestClearAllAndStatus::test_get_status_returns_complete_state",
-        "line": 190,
-        "markers": [],
-        "docstring": "",
-        "class": "TestClearAllAndStatus"
-      },
-      {
-        "name": "TestClearAllAndStatus::test_get_status_when_not_paused",
-        "line": 201,
-        "markers": [],
-        "docstring": "",
-        "class": "TestClearAllAndStatus"
-      },
-      {
-        "name": "TestPauseMonotonicity::test_global_pause_does_not_shorten_existing_pause",
-        "line": 211,
-        "markers": [],
-        "docstring": "A shorter pause request should not shorten an existing longer pause.",
-        "class": "TestPauseMonotonicity"
-      },
-      {
-        "name": "TestPauseMonotonicity::test_global_pause_extends_existing_pause",
-        "line": 225,
-        "markers": [],
-        "docstring": "A longer pause request should extend an existing shorter pause.",
-        "class": "TestPauseMonotonicity"
-      },
-      {
-        "name": "TestPauseMonotonicity::test_symbol_pause_does_not_shorten_existing_pause",
-        "line": 239,
-        "markers": [],
-        "docstring": "A shorter symbol pause should not shorten an existing longer pause.",
-        "class": "TestPauseMonotonicity"
-      },
-      {
-        "name": "TestPauseMonotonicity::test_symbol_pause_extends_existing_pause",
-        "line": 253,
-        "markers": [],
-        "docstring": "A longer symbol pause request should extend an existing shorter pause.",
-        "class": "TestPauseMonotonicity"
-      },
-      {
-        "name": "TestPauseMonotonicity::test_symbol_pause_monotonicity_independent_per_symbol",
-        "line": 267,
-        "markers": [],
-        "docstring": "Monotonicity is enforced independently for each symbol.",
-        "class": "TestPauseMonotonicity"
-      },
-      {
-        "name": "TestGuardFailureTelemetry::test_slippage_failure_increments_once_per_call",
-        "line": 300,
-        "markers": [],
-        "docstring": "Each slippage failure call increments counter exactly once.",
-        "class": "TestGuardFailureTelemetry"
-      },
-      {
-        "name": "TestGuardFailureTelemetry::test_broker_failure_increments_once_per_call",
-        "line": 308,
-        "markers": [],
-        "docstring": "Each broker failure call increments counter exactly once.",
-        "class": "TestGuardFailureTelemetry"
-      },
-      {
-        "name": "TestGuardFailureTelemetry::test_slippage_pause_triggers_exactly_at_threshold",
-        "line": 316,
-        "markers": [],
-        "docstring": "Slippage pause triggers exactly when threshold is reached, not before or after.",
-        "class": "TestGuardFailureTelemetry"
-      },
-      {
-        "name": "TestGuardFailureTelemetry::test_broker_pause_triggers_exactly_at_threshold",
-        "line": 333,
-        "markers": [],
-        "docstring": "Broker pause triggers exactly when threshold is reached.",
-        "class": "TestGuardFailureTelemetry"
-      },
-      {
-        "name": "TestPauseExpiryRecovery::test_global_pause_expires_and_trading_resumes",
-        "line": 359,
-        "markers": [],
-        "docstring": "Test that global pause expires and is_paused returns False.",
-        "class": "TestPauseExpiryRecovery"
-      },
-      {
-        "name": "TestPauseExpiryRecovery::test_symbol_pause_expires_and_trading_resumes",
-        "line": 376,
-        "markers": [],
-        "docstring": "Test that symbol-specific pause expires correctly.",
-        "class": "TestPauseExpiryRecovery"
-      },
-      {
-        "name": "TestPauseExpiryRecovery::test_reduce_only_allowed_during_pause",
-        "line": 394,
-        "markers": [],
-        "docstring": "Test that reduce-only orders are allowed when configured.",
-        "class": "TestPauseExpiryRecovery"
-      },
-      {
-        "name": "TestPauseExpiryRecovery::test_pause_then_recovery_sequence",
-        "line": 408,
-        "markers": [],
-        "docstring": "Test a complete pause -> recovery sequence.",
-        "class": "TestPauseExpiryRecovery"
-      },
-      {
-        "name": "TestPauseExpiryRecovery::test_multiple_symbol_pauses_expire_independently",
-        "line": 431,
-        "markers": [],
-        "docstring": "Test that each symbol's pause expires independently.",
-        "class": "TestPauseExpiryRecovery"
-      },
-      {
-        "name": "TestPauseExpiryRecovery::test_guard_error_triggers_pause_via_record_broker_failure",
-        "line": 455,
-        "markers": [],
-        "docstring": "Test that guard/broker errors trigger pause when threshold reached.",
-        "class": "TestPauseExpiryRecovery"
-      },
-      {
-        "name": "TestPauseExpiryRecovery::test_pause_allows_trading_after_cooldown",
-        "line": 473,
-        "markers": [],
-        "docstring": "Test that trading is allowed after cooldown period.",
-        "class": "TestPauseExpiryRecovery"
-      },
-      {
-        "name": "test_pause_record_creation",
+        "name": "test_check_cfm_liquidation_buffer_ok",
         "line": 16,
         "markers": [],
-        "docstring": ""
+        "docstring": "No warnings when buffer is sufficient."
       },
       {
-        "name": "test_pause_all_sets_global_pause",
-        "line": 24,
+        "name": "test_check_cfm_liquidation_buffer_warning",
+        "line": 32,
         "markers": [],
-        "docstring": ""
+        "docstring": "Warning when buffer is below threshold but not critical."
       },
       {
-        "name": "test_is_paused_returns_true_during_global_pause",
-        "line": 31,
+        "name": "test_check_cfm_liquidation_buffer_critical",
+        "line": 52,
         "markers": [],
-        "docstring": ""
+        "docstring": "Critical warning and reduce-only when buffer is very low."
       },
       {
-        "name": "test_is_paused_returns_false_after_expiry",
-        "line": 36,
+        "name": "test_check_cfm_liquidation_buffer_with_percentage_field",
+        "line": 69,
         "markers": [],
-        "docstring": ""
+        "docstring": "Uses liquidation_buffer_percentage field if available."
       },
       {
-        "name": "test_global_pause_allows_reduce_only_when_configured",
-        "line": 41,
+        "name": "test_check_cfm_liquidation_buffer_none_balance",
+        "line": 83,
         "markers": [],
-        "docstring": ""
+        "docstring": "Returns empty list for None balance."
       },
       {
-        "name": "test_global_pause_blocks_all_when_reduce_only_disabled",
-        "line": 47,
+        "name": "test_cfm_reduce_only_mode_default",
+        "line": 95,
         "markers": [],
-        "docstring": ""
+        "docstring": "CFM reduce-only mode is off by default."
       },
       {
-        "name": "test_pause_symbol_sets_symbol_pause",
-        "line": 59,
+        "name": "test_set_cfm_reduce_only_mode",
+        "line": 100,
         "markers": [],
-        "docstring": ""
+        "docstring": "Can set CFM reduce-only mode."
       },
       {
-        "name": "test_symbol_pause_only_affects_that_symbol",
-        "line": 66,
+        "name": "test_clear_cfm_reduce_only_mode",
+        "line": 109,
         "markers": [],
-        "docstring": ""
+        "docstring": "Can clear CFM reduce-only mode."
       },
       {
-        "name": "test_symbol_pause_allows_reduce_only_when_configured",
-        "line": 73,
+        "name": "test_reset_daily_tracking_clears_cfm_state",
+        "line": 122,
         "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_symbol_pause_expires",
-        "line": 79,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_returns_global_reason_when_globally_paused",
-        "line": 89,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_returns_symbol_reason_when_symbol_paused",
-        "line": 94,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_returns_none_when_not_paused",
-        "line": 99,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_record_slippage_failure_increments_counter",
-        "line": 114,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_record_slippage_failure_triggers_pause_at_threshold",
-        "line": 119,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_slippage_counter_resets_after_pause",
-        "line": 128,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_reset_slippage_failures_clears_counter",
-        "line": 134,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_record_broker_failure_increments_counter",
-        "line": 151,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_record_broker_failure_triggers_global_pause",
-        "line": 156,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_broker_counter_resets_after_pause",
-        "line": 163,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_reset_broker_failures_clears_counter",
-        "line": 169,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_clear_all_resets_state",
-        "line": 179,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_get_status_returns_complete_state",
-        "line": 190,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_get_status_when_not_paused",
-        "line": 201,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_global_pause_does_not_shorten_existing_pause",
-        "line": 211,
-        "markers": [],
-        "docstring": "A shorter pause request should not shorten an existing longer pause."
-      },
-      {
-        "name": "test_global_pause_extends_existing_pause",
-        "line": 225,
-        "markers": [],
-        "docstring": "A longer pause request should extend an existing shorter pause."
-      },
-      {
-        "name": "test_symbol_pause_does_not_shorten_existing_pause",
-        "line": 239,
-        "markers": [],
-        "docstring": "A shorter symbol pause should not shorten an existing longer pause."
-      },
-      {
-        "name": "test_symbol_pause_extends_existing_pause",
-        "line": 253,
-        "markers": [],
-        "docstring": "A longer symbol pause request should extend an existing shorter pause."
-      },
-      {
-        "name": "test_symbol_pause_monotonicity_independent_per_symbol",
-        "line": 267,
-        "markers": [],
-        "docstring": "Monotonicity is enforced independently for each symbol."
-      },
-      {
-        "name": "test_slippage_failure_increments_once_per_call",
-        "line": 300,
-        "markers": [],
-        "docstring": "Each slippage failure call increments counter exactly once."
-      },
-      {
-        "name": "test_broker_failure_increments_once_per_call",
-        "line": 308,
-        "markers": [],
-        "docstring": "Each broker failure call increments counter exactly once."
-      },
-      {
-        "name": "test_slippage_pause_triggers_exactly_at_threshold",
-        "line": 316,
-        "markers": [],
-        "docstring": "Slippage pause triggers exactly when threshold is reached, not before or after."
-      },
-      {
-        "name": "test_broker_pause_triggers_exactly_at_threshold",
-        "line": 333,
-        "markers": [],
-        "docstring": "Broker pause triggers exactly when threshold is reached."
-      },
-      {
-        "name": "test_global_pause_expires_and_trading_resumes",
-        "line": 359,
-        "markers": [],
-        "docstring": "Test that global pause expires and is_paused returns False."
-      },
-      {
-        "name": "test_symbol_pause_expires_and_trading_resumes",
-        "line": 376,
-        "markers": [],
-        "docstring": "Test that symbol-specific pause expires correctly."
-      },
-      {
-        "name": "test_reduce_only_allowed_during_pause",
-        "line": 394,
-        "markers": [],
-        "docstring": "Test that reduce-only orders are allowed when configured."
-      },
-      {
-        "name": "test_pause_then_recovery_sequence",
-        "line": 408,
-        "markers": [],
-        "docstring": "Test a complete pause -> recovery sequence."
-      },
-      {
-        "name": "test_multiple_symbol_pauses_expire_independently",
-        "line": 431,
-        "markers": [],
-        "docstring": "Test that each symbol's pause expires independently."
-      },
-      {
-        "name": "test_guard_error_triggers_pause_via_record_broker_failure",
-        "line": 455,
-        "markers": [],
-        "docstring": "Test that guard/broker errors trigger pause when threshold reached."
-      },
-      {
-        "name": "test_pause_allows_trading_after_cooldown",
-        "line": 473,
-        "markers": [],
-        "docstring": "Test that trading is allowed after cooldown period."
+        "docstring": "Reset clears CFM-specific state."
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/test_symbols_normalize_symbol_list.py": [
@@ -46877,435 +47169,110 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager.py": [
+    "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_models.py": [
       {
         "name": "TestExposureState::test_default_values",
-        "line": 20,
+        "line": 15,
         "markers": [],
         "docstring": "Default values are all zero.",
         "class": "TestExposureState"
       },
       {
         "name": "TestExposureState::test_total_exposure",
-        "line": 29,
+        "line": 24,
         "markers": [],
         "docstring": "Total exposure sums spot and CFM.",
         "class": "TestExposureState"
       },
       {
         "name": "TestExposureState::test_cfm_margin_utilization_empty",
-        "line": 37,
+        "line": 32,
         "markers": [],
         "docstring": "Zero margin returns zero utilization.",
         "class": "TestExposureState"
       },
       {
         "name": "TestExposureState::test_cfm_margin_utilization",
-        "line": 42,
+        "line": 37,
         "markers": [],
         "docstring": "Margin utilization calculated correctly.",
         "class": "TestExposureState"
       },
       {
         "name": "TestExposureState::test_to_payload",
-        "line": 51,
+        "line": 46,
         "markers": [],
         "docstring": "Exposure state serializes to dict.",
         "class": "TestExposureState"
       },
       {
         "name": "TestRiskWarning::test_warning_creation",
-        "line": 66,
+        "line": 61,
         "markers": [],
         "docstring": "Can create risk warning.",
         "class": "TestRiskWarning"
       },
       {
         "name": "TestRiskWarning::test_critical_warning",
-        "line": 79,
+        "line": 74,
         "markers": [],
         "docstring": "Can create critical warning.",
         "class": "TestRiskWarning"
       },
       {
         "name": "TestRiskWarning::test_to_payload",
-        "line": 87,
+        "line": 82,
         "markers": [],
         "docstring": "Warning serializes to dict.",
         "class": "TestRiskWarning"
       },
       {
-        "name": "TestLiveRiskManagerCFMExposure::test_update_exposure_spot_only",
-        "line": 107,
-        "markers": [],
-        "docstring": "Updates spot exposure from positions.",
-        "class": "TestLiveRiskManagerCFMExposure"
-      },
-      {
-        "name": "TestLiveRiskManagerCFMExposure::test_update_exposure_cfm_only",
-        "line": 129,
-        "markers": [],
-        "docstring": "Updates CFM exposure from positions with leverage.",
-        "class": "TestLiveRiskManagerCFMExposure"
-      },
-      {
-        "name": "TestLiveRiskManagerCFMExposure::test_update_exposure_hybrid",
-        "line": 147,
-        "markers": [],
-        "docstring": "Updates both spot and CFM exposure.",
-        "class": "TestLiveRiskManagerCFMExposure"
-      },
-      {
-        "name": "TestLiveRiskManagerCFMExposure::test_update_exposure_with_cfm_balance",
-        "line": 171,
-        "markers": [],
-        "docstring": "Updates margin info from CFM balance.",
-        "class": "TestLiveRiskManagerCFMExposure"
-      },
-      {
-        "name": "TestLiveRiskManagerCFMExposure::test_get_exposure_state",
-        "line": 187,
-        "markers": [],
-        "docstring": "Can retrieve current exposure state.",
-        "class": "TestLiveRiskManagerCFMExposure"
-      },
-      {
-        "name": "TestLiveRiskManagerCFMExposure::test_get_total_exposure",
-        "line": 199,
-        "markers": [],
-        "docstring": "Can get total exposure directly.",
-        "class": "TestLiveRiskManagerCFMExposure"
-      },
-      {
-        "name": "TestLiveRiskManagerCFMLiquidationBuffer::test_check_cfm_liquidation_buffer_ok",
-        "line": 215,
-        "markers": [],
-        "docstring": "No warnings when buffer is sufficient.",
-        "class": "TestLiveRiskManagerCFMLiquidationBuffer"
-      },
-      {
-        "name": "TestLiveRiskManagerCFMLiquidationBuffer::test_check_cfm_liquidation_buffer_warning",
-        "line": 231,
-        "markers": [],
-        "docstring": "Warning when buffer is below threshold but not critical.",
-        "class": "TestLiveRiskManagerCFMLiquidationBuffer"
-      },
-      {
-        "name": "TestLiveRiskManagerCFMLiquidationBuffer::test_check_cfm_liquidation_buffer_critical",
-        "line": 251,
-        "markers": [],
-        "docstring": "Critical warning and reduce-only when buffer is very low.",
-        "class": "TestLiveRiskManagerCFMLiquidationBuffer"
-      },
-      {
-        "name": "TestLiveRiskManagerCFMLiquidationBuffer::test_check_cfm_liquidation_buffer_with_percentage_field",
-        "line": 268,
-        "markers": [],
-        "docstring": "Uses liquidation_buffer_percentage field if available.",
-        "class": "TestLiveRiskManagerCFMLiquidationBuffer"
-      },
-      {
-        "name": "TestLiveRiskManagerCFMLiquidationBuffer::test_check_cfm_liquidation_buffer_none_balance",
-        "line": 282,
-        "markers": [],
-        "docstring": "Returns empty list for None balance.",
-        "class": "TestLiveRiskManagerCFMLiquidationBuffer"
-      },
-      {
-        "name": "TestLiveRiskManagerCFMExposureLimits::test_check_cfm_exposure_limits_ok",
-        "line": 294,
-        "markers": [],
-        "docstring": "No warnings when within limits.",
-        "class": "TestLiveRiskManagerCFMExposureLimits"
-      },
-      {
-        "name": "TestLiveRiskManagerCFMExposureLimits::test_check_cfm_exposure_limits_exceeded",
-        "line": 309,
-        "markers": [],
-        "docstring": "Warning when CFM exposure exceeds limit.",
-        "class": "TestLiveRiskManagerCFMExposureLimits"
-      },
-      {
-        "name": "TestLiveRiskManagerCFMExposureLimits::test_check_cfm_exposure_limits_zero_equity",
-        "line": 327,
-        "markers": [],
-        "docstring": "Returns empty list for zero equity.",
-        "class": "TestLiveRiskManagerCFMExposureLimits"
-      },
-      {
-        "name": "TestLiveRiskManagerCFMLeverageValidation::test_validate_cfm_leverage_ok",
-        "line": 339,
-        "markers": [],
-        "docstring": "No error when leverage within limit.",
-        "class": "TestLiveRiskManagerCFMLeverageValidation"
-      },
-      {
-        "name": "TestLiveRiskManagerCFMLeverageValidation::test_validate_cfm_leverage_at_limit",
-        "line": 348,
-        "markers": [],
-        "docstring": "No error when leverage at limit.",
-        "class": "TestLiveRiskManagerCFMLeverageValidation"
-      },
-      {
-        "name": "TestLiveRiskManagerCFMLeverageValidation::test_validate_cfm_leverage_exceeded",
-        "line": 357,
-        "markers": [],
-        "docstring": "Error when leverage exceeds limit.",
-        "class": "TestLiveRiskManagerCFMLeverageValidation"
-      },
-      {
-        "name": "TestLiveRiskManagerCFMLeverageValidation::test_validate_cfm_leverage_default",
-        "line": 367,
-        "markers": [],
-        "docstring": "Uses default 5x when no config.",
-        "class": "TestLiveRiskManagerCFMLeverageValidation"
-      },
-      {
-        "name": "TestLiveRiskManagerCFMReduceOnlyMode::test_cfm_reduce_only_mode_default",
-        "line": 381,
-        "markers": [],
-        "docstring": "CFM reduce-only mode is off by default.",
-        "class": "TestLiveRiskManagerCFMReduceOnlyMode"
-      },
-      {
-        "name": "TestLiveRiskManagerCFMReduceOnlyMode::test_set_cfm_reduce_only_mode",
-        "line": 386,
-        "markers": [],
-        "docstring": "Can set CFM reduce-only mode.",
-        "class": "TestLiveRiskManagerCFMReduceOnlyMode"
-      },
-      {
-        "name": "TestLiveRiskManagerCFMReduceOnlyMode::test_clear_cfm_reduce_only_mode",
-        "line": 395,
-        "markers": [],
-        "docstring": "Can clear CFM reduce-only mode.",
-        "class": "TestLiveRiskManagerCFMReduceOnlyMode"
-      },
-      {
-        "name": "TestLiveRiskManagerCFMRiskSummary::test_get_cfm_risk_summary",
-        "line": 408,
-        "markers": [],
-        "docstring": "Can get CFM risk summary.",
-        "class": "TestLiveRiskManagerCFMRiskSummary"
-      },
-      {
-        "name": "TestLiveRiskManagerCFMRiskSummary::test_get_risk_warnings",
-        "line": 429,
-        "markers": [],
-        "docstring": "Can get all risk warnings.",
-        "class": "TestLiveRiskManagerCFMRiskSummary"
-      },
-      {
-        "name": "TestLiveRiskManagerCFMRiskSummary::test_clear_risk_warnings",
-        "line": 441,
-        "markers": [],
-        "docstring": "Can clear all warnings.",
-        "class": "TestLiveRiskManagerCFMRiskSummary"
-      },
-      {
-        "name": "TestLiveRiskManagerResetWithCFM::test_reset_daily_tracking_clears_cfm_state",
-        "line": 458,
-        "markers": [],
-        "docstring": "Reset clears CFM-specific state.",
-        "class": "TestLiveRiskManagerResetWithCFM"
-      },
-      {
         "name": "test_default_values",
-        "line": 20,
+        "line": 15,
         "markers": [],
         "docstring": "Default values are all zero."
       },
       {
         "name": "test_total_exposure",
-        "line": 29,
+        "line": 24,
         "markers": [],
         "docstring": "Total exposure sums spot and CFM."
       },
       {
         "name": "test_cfm_margin_utilization_empty",
-        "line": 37,
+        "line": 32,
         "markers": [],
         "docstring": "Zero margin returns zero utilization."
       },
       {
         "name": "test_cfm_margin_utilization",
-        "line": 42,
+        "line": 37,
         "markers": [],
         "docstring": "Margin utilization calculated correctly."
       },
       {
         "name": "test_to_payload",
-        "line": 51,
+        "line": 46,
         "markers": [],
         "docstring": "Exposure state serializes to dict."
       },
       {
         "name": "test_warning_creation",
-        "line": 66,
+        "line": 61,
         "markers": [],
         "docstring": "Can create risk warning."
       },
       {
         "name": "test_critical_warning",
-        "line": 79,
+        "line": 74,
         "markers": [],
         "docstring": "Can create critical warning."
       },
       {
         "name": "test_to_payload",
-        "line": 87,
+        "line": 82,
         "markers": [],
         "docstring": "Warning serializes to dict."
-      },
-      {
-        "name": "test_update_exposure_spot_only",
-        "line": 107,
-        "markers": [],
-        "docstring": "Updates spot exposure from positions."
-      },
-      {
-        "name": "test_update_exposure_cfm_only",
-        "line": 129,
-        "markers": [],
-        "docstring": "Updates CFM exposure from positions with leverage."
-      },
-      {
-        "name": "test_update_exposure_hybrid",
-        "line": 147,
-        "markers": [],
-        "docstring": "Updates both spot and CFM exposure."
-      },
-      {
-        "name": "test_update_exposure_with_cfm_balance",
-        "line": 171,
-        "markers": [],
-        "docstring": "Updates margin info from CFM balance."
-      },
-      {
-        "name": "test_get_exposure_state",
-        "line": 187,
-        "markers": [],
-        "docstring": "Can retrieve current exposure state."
-      },
-      {
-        "name": "test_get_total_exposure",
-        "line": 199,
-        "markers": [],
-        "docstring": "Can get total exposure directly."
-      },
-      {
-        "name": "test_check_cfm_liquidation_buffer_ok",
-        "line": 215,
-        "markers": [],
-        "docstring": "No warnings when buffer is sufficient."
-      },
-      {
-        "name": "test_check_cfm_liquidation_buffer_warning",
-        "line": 231,
-        "markers": [],
-        "docstring": "Warning when buffer is below threshold but not critical."
-      },
-      {
-        "name": "test_check_cfm_liquidation_buffer_critical",
-        "line": 251,
-        "markers": [],
-        "docstring": "Critical warning and reduce-only when buffer is very low."
-      },
-      {
-        "name": "test_check_cfm_liquidation_buffer_with_percentage_field",
-        "line": 268,
-        "markers": [],
-        "docstring": "Uses liquidation_buffer_percentage field if available."
-      },
-      {
-        "name": "test_check_cfm_liquidation_buffer_none_balance",
-        "line": 282,
-        "markers": [],
-        "docstring": "Returns empty list for None balance."
-      },
-      {
-        "name": "test_check_cfm_exposure_limits_ok",
-        "line": 294,
-        "markers": [],
-        "docstring": "No warnings when within limits."
-      },
-      {
-        "name": "test_check_cfm_exposure_limits_exceeded",
-        "line": 309,
-        "markers": [],
-        "docstring": "Warning when CFM exposure exceeds limit."
-      },
-      {
-        "name": "test_check_cfm_exposure_limits_zero_equity",
-        "line": 327,
-        "markers": [],
-        "docstring": "Returns empty list for zero equity."
-      },
-      {
-        "name": "test_validate_cfm_leverage_ok",
-        "line": 339,
-        "markers": [],
-        "docstring": "No error when leverage within limit."
-      },
-      {
-        "name": "test_validate_cfm_leverage_at_limit",
-        "line": 348,
-        "markers": [],
-        "docstring": "No error when leverage at limit."
-      },
-      {
-        "name": "test_validate_cfm_leverage_exceeded",
-        "line": 357,
-        "markers": [],
-        "docstring": "Error when leverage exceeds limit."
-      },
-      {
-        "name": "test_validate_cfm_leverage_default",
-        "line": 367,
-        "markers": [],
-        "docstring": "Uses default 5x when no config."
-      },
-      {
-        "name": "test_cfm_reduce_only_mode_default",
-        "line": 381,
-        "markers": [],
-        "docstring": "CFM reduce-only mode is off by default."
-      },
-      {
-        "name": "test_set_cfm_reduce_only_mode",
-        "line": 386,
-        "markers": [],
-        "docstring": "Can set CFM reduce-only mode."
-      },
-      {
-        "name": "test_clear_cfm_reduce_only_mode",
-        "line": 395,
-        "markers": [],
-        "docstring": "Can clear CFM reduce-only mode."
-      },
-      {
-        "name": "test_get_cfm_risk_summary",
-        "line": 408,
-        "markers": [],
-        "docstring": "Can get CFM risk summary."
-      },
-      {
-        "name": "test_get_risk_warnings",
-        "line": 429,
-        "markers": [],
-        "docstring": "Can get all risk warnings."
-      },
-      {
-        "name": "test_clear_risk_warnings",
-        "line": 441,
-        "markers": [],
-        "docstring": "Can clear all warnings."
-      },
-      {
-        "name": "test_reset_daily_tracking_clears_cfm_state",
-        "line": 458,
-        "markers": [],
-        "docstring": "Reset clears CFM-specific state."
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/test_risk_manager_risk_metrics.py": [
@@ -47455,164 +47422,6 @@
         "docstring": "Test update_position is a no-op."
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/test_bot.py": [
-      {
-        "name": "TestTradingBotInitialization::test_init_with_config_only",
-        "line": 24,
-        "markers": [],
-        "docstring": "Test initialization with only config.",
-        "class": "TestTradingBotInitialization"
-      },
-      {
-        "name": "TestTradingBotInitialization::test_init_with_container",
-        "line": 48,
-        "markers": [],
-        "docstring": "Test initialization with container.",
-        "class": "TestTradingBotInitialization"
-      },
-      {
-        "name": "TestTradingBotInitialization::test_init_creates_context",
-        "line": 58,
-        "markers": [],
-        "docstring": "Test that initialization creates CoordinatorContext.",
-        "class": "TestTradingBotInitialization"
-      },
-      {
-        "name": "TestTradingBotInitialization::test_init_creates_engine",
-        "line": 89,
-        "markers": [],
-        "docstring": "Test that initialization creates TradingEngine.",
-        "class": "TestTradingBotInitialization"
-      },
-      {
-        "name": "TestTradingBotInitialization::test_init_container_missing_optional_attributes",
-        "line": 99,
-        "markers": [],
-        "docstring": "Test initialization handles container with missing optional attributes.",
-        "class": "TestTradingBotInitialization"
-      },
-      {
-        "name": "TestTradingBotExecuteDecision::test_execute_decision_delegates_to_engine",
-        "line": 247,
-        "markers": [],
-        "docstring": "Test that execute_decision delegates to engine.",
-        "class": "TestTradingBotExecuteDecision"
-      },
-      {
-        "name": "TestTradingBotExecuteDecision::test_execute_decision_returns_none_when_engine_lacks_method",
-        "line": 267,
-        "markers": [],
-        "docstring": "Test execute_decision returns None if engine lacks the method.",
-        "class": "TestTradingBotExecuteDecision"
-      },
-      {
-        "name": "TestTradingBotExecuteDecision::test_execute_decision_with_minimal_args",
-        "line": 286,
-        "markers": [],
-        "docstring": "Test execute_decision with minimal arguments.",
-        "class": "TestTradingBotExecuteDecision"
-      },
-      {
-        "name": "TestTradingBotGetProduct::test_get_product_with_broker",
-        "line": 304,
-        "markers": [],
-        "docstring": "Test get_product when broker is available.",
-        "class": "TestTradingBotGetProduct"
-      },
-      {
-        "name": "TestTradingBotGetProduct::test_get_product_without_broker",
-        "line": 327,
-        "markers": [],
-        "docstring": "Test get_product when broker is None.",
-        "class": "TestTradingBotGetProduct"
-      },
-      {
-        "name": "TestTradingBotGetProduct::test_get_product_broker_without_method",
-        "line": 348,
-        "markers": [],
-        "docstring": "Test get_product when broker lacks get_product method.",
-        "class": "TestTradingBotGetProduct"
-      },
-      {
-        "name": "TestTradingBotStateManagement::test_initial_state",
-        "line": 372,
-        "markers": [],
-        "docstring": "Test initial state of TradingBot.",
-        "class": "TestTradingBotStateManagement"
-      },
-      {
-        "name": "test_init_with_config_only",
-        "line": 24,
-        "markers": [],
-        "docstring": "Test initialization with only config."
-      },
-      {
-        "name": "test_init_with_container",
-        "line": 48,
-        "markers": [],
-        "docstring": "Test initialization with container."
-      },
-      {
-        "name": "test_init_creates_context",
-        "line": 58,
-        "markers": [],
-        "docstring": "Test that initialization creates CoordinatorContext."
-      },
-      {
-        "name": "test_init_creates_engine",
-        "line": 89,
-        "markers": [],
-        "docstring": "Test that initialization creates TradingEngine."
-      },
-      {
-        "name": "test_init_container_missing_optional_attributes",
-        "line": 99,
-        "markers": [],
-        "docstring": "Test initialization handles container with missing optional attributes."
-      },
-      {
-        "name": "test_execute_decision_delegates_to_engine",
-        "line": 247,
-        "markers": [],
-        "docstring": "Test that execute_decision delegates to engine."
-      },
-      {
-        "name": "test_execute_decision_returns_none_when_engine_lacks_method",
-        "line": 267,
-        "markers": [],
-        "docstring": "Test execute_decision returns None if engine lacks the method."
-      },
-      {
-        "name": "test_execute_decision_with_minimal_args",
-        "line": 286,
-        "markers": [],
-        "docstring": "Test execute_decision with minimal arguments."
-      },
-      {
-        "name": "test_get_product_with_broker",
-        "line": 304,
-        "markers": [],
-        "docstring": "Test get_product when broker is available."
-      },
-      {
-        "name": "test_get_product_without_broker",
-        "line": 327,
-        "markers": [],
-        "docstring": "Test get_product when broker is None."
-      },
-      {
-        "name": "test_get_product_broker_without_method",
-        "line": 348,
-        "markers": [],
-        "docstring": "Test get_product when broker lacks get_product method."
-      },
-      {
-        "name": "test_initial_state",
-        "line": 372,
-        "markers": [],
-        "docstring": "Test initial state of TradingBot."
-      }
-    ],
     "tests/unit/gpt_trader/features/live_trade/test_leverage_time_windows.py": [
       {
         "name": "test_day_vs_night_leverage_caps_enforced",
@@ -47625,6 +47434,246 @@
         "line": 75,
         "markers": [],
         "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/test_bot_engine_delegation.py": [
+      {
+        "name": "TestTradingBotExecuteDecision::test_execute_decision_delegates_to_engine",
+        "line": 31,
+        "markers": [],
+        "docstring": "Test that execute_decision delegates to engine.",
+        "class": "TestTradingBotExecuteDecision"
+      },
+      {
+        "name": "TestTradingBotExecuteDecision::test_execute_decision_returns_none_when_engine_lacks_method",
+        "line": 51,
+        "markers": [],
+        "docstring": "Test execute_decision returns None if engine lacks the method.",
+        "class": "TestTradingBotExecuteDecision"
+      },
+      {
+        "name": "TestTradingBotExecuteDecision::test_execute_decision_with_minimal_args",
+        "line": 70,
+        "markers": [],
+        "docstring": "Test execute_decision with minimal arguments.",
+        "class": "TestTradingBotExecuteDecision"
+      },
+      {
+        "name": "TestTradingBotGetProduct::test_get_product_with_broker",
+        "line": 88,
+        "markers": [],
+        "docstring": "Test get_product when broker is available.",
+        "class": "TestTradingBotGetProduct"
+      },
+      {
+        "name": "TestTradingBotGetProduct::test_get_product_without_broker",
+        "line": 111,
+        "markers": [],
+        "docstring": "Test get_product when broker is None.",
+        "class": "TestTradingBotGetProduct"
+      },
+      {
+        "name": "TestTradingBotGetProduct::test_get_product_broker_without_method",
+        "line": 132,
+        "markers": [],
+        "docstring": "Test get_product when broker lacks get_product method.",
+        "class": "TestTradingBotGetProduct"
+      },
+      {
+        "name": "test_execute_decision_delegates_to_engine",
+        "line": 31,
+        "markers": [],
+        "docstring": "Test that execute_decision delegates to engine."
+      },
+      {
+        "name": "test_execute_decision_returns_none_when_engine_lacks_method",
+        "line": 51,
+        "markers": [],
+        "docstring": "Test execute_decision returns None if engine lacks the method."
+      },
+      {
+        "name": "test_execute_decision_with_minimal_args",
+        "line": 70,
+        "markers": [],
+        "docstring": "Test execute_decision with minimal arguments."
+      },
+      {
+        "name": "test_get_product_with_broker",
+        "line": 88,
+        "markers": [],
+        "docstring": "Test get_product when broker is available."
+      },
+      {
+        "name": "test_get_product_without_broker",
+        "line": 111,
+        "markers": [],
+        "docstring": "Test get_product when broker is None."
+      },
+      {
+        "name": "test_get_product_broker_without_method",
+        "line": 132,
+        "markers": [],
+        "docstring": "Test get_product when broker lacks get_product method."
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/test_degradation_pause_monotonicity.py": [
+      {
+        "name": "TestPauseMonotonicity::test_global_pause_does_not_shorten_existing_pause",
+        "line": 11,
+        "markers": [],
+        "docstring": "A shorter pause request should not shorten an existing longer pause.",
+        "class": "TestPauseMonotonicity"
+      },
+      {
+        "name": "TestPauseMonotonicity::test_global_pause_extends_existing_pause",
+        "line": 22,
+        "markers": [],
+        "docstring": "A longer pause request should extend an existing shorter pause.",
+        "class": "TestPauseMonotonicity"
+      },
+      {
+        "name": "TestPauseMonotonicity::test_symbol_pause_does_not_shorten_existing_pause",
+        "line": 33,
+        "markers": [],
+        "docstring": "A shorter symbol pause should not shorten an existing longer pause.",
+        "class": "TestPauseMonotonicity"
+      },
+      {
+        "name": "TestPauseMonotonicity::test_symbol_pause_extends_existing_pause",
+        "line": 44,
+        "markers": [],
+        "docstring": "A longer symbol pause request should extend an existing shorter pause.",
+        "class": "TestPauseMonotonicity"
+      },
+      {
+        "name": "TestPauseMonotonicity::test_symbol_pause_monotonicity_independent_per_symbol",
+        "line": 55,
+        "markers": [],
+        "docstring": "Monotonicity is enforced independently for each symbol.",
+        "class": "TestPauseMonotonicity"
+      },
+      {
+        "name": "test_global_pause_does_not_shorten_existing_pause",
+        "line": 11,
+        "markers": [],
+        "docstring": "A shorter pause request should not shorten an existing longer pause."
+      },
+      {
+        "name": "test_global_pause_extends_existing_pause",
+        "line": 22,
+        "markers": [],
+        "docstring": "A longer pause request should extend an existing shorter pause."
+      },
+      {
+        "name": "test_symbol_pause_does_not_shorten_existing_pause",
+        "line": 33,
+        "markers": [],
+        "docstring": "A shorter symbol pause should not shorten an existing longer pause."
+      },
+      {
+        "name": "test_symbol_pause_extends_existing_pause",
+        "line": 44,
+        "markers": [],
+        "docstring": "A longer symbol pause request should extend an existing shorter pause."
+      },
+      {
+        "name": "test_symbol_pause_monotonicity_independent_per_symbol",
+        "line": 55,
+        "markers": [],
+        "docstring": "Monotonicity is enforced independently for each symbol."
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/test_degradation_pause_expiry_and_recovery.py": [
+      {
+        "name": "TestPauseExpiryRecovery::test_global_pause_expires_and_trading_resumes",
+        "line": 14,
+        "markers": [],
+        "docstring": "Test that global pause expires and is_paused returns False.",
+        "class": "TestPauseExpiryRecovery"
+      },
+      {
+        "name": "TestPauseExpiryRecovery::test_symbol_pause_expires_and_trading_resumes",
+        "line": 28,
+        "markers": [],
+        "docstring": "Test that symbol-specific pause expires correctly.",
+        "class": "TestPauseExpiryRecovery"
+      },
+      {
+        "name": "TestPauseExpiryRecovery::test_reduce_only_allowed_during_pause",
+        "line": 42,
+        "markers": [],
+        "docstring": "Test that reduce-only orders are allowed when configured.",
+        "class": "TestPauseExpiryRecovery"
+      },
+      {
+        "name": "TestPauseExpiryRecovery::test_pause_then_recovery_sequence",
+        "line": 54,
+        "markers": [],
+        "docstring": "Test a complete pause -> recovery sequence.",
+        "class": "TestPauseExpiryRecovery"
+      },
+      {
+        "name": "TestPauseExpiryRecovery::test_multiple_symbol_pauses_expire_independently",
+        "line": 73,
+        "markers": [],
+        "docstring": "Test that each symbol's pause expires independently.",
+        "class": "TestPauseExpiryRecovery"
+      },
+      {
+        "name": "TestPauseExpiryRecovery::test_guard_error_triggers_pause_via_record_broker_failure",
+        "line": 94,
+        "markers": [],
+        "docstring": "Test that guard/broker errors trigger pause when threshold reached.",
+        "class": "TestPauseExpiryRecovery"
+      },
+      {
+        "name": "TestPauseExpiryRecovery::test_pause_allows_trading_after_cooldown",
+        "line": 110,
+        "markers": [],
+        "docstring": "Test that trading is allowed after cooldown period.",
+        "class": "TestPauseExpiryRecovery"
+      },
+      {
+        "name": "test_global_pause_expires_and_trading_resumes",
+        "line": 14,
+        "markers": [],
+        "docstring": "Test that global pause expires and is_paused returns False."
+      },
+      {
+        "name": "test_symbol_pause_expires_and_trading_resumes",
+        "line": 28,
+        "markers": [],
+        "docstring": "Test that symbol-specific pause expires correctly."
+      },
+      {
+        "name": "test_reduce_only_allowed_during_pause",
+        "line": 42,
+        "markers": [],
+        "docstring": "Test that reduce-only orders are allowed when configured."
+      },
+      {
+        "name": "test_pause_then_recovery_sequence",
+        "line": 54,
+        "markers": [],
+        "docstring": "Test a complete pause -> recovery sequence."
+      },
+      {
+        "name": "test_multiple_symbol_pauses_expire_independently",
+        "line": 73,
+        "markers": [],
+        "docstring": "Test that each symbol's pause expires independently."
+      },
+      {
+        "name": "test_guard_error_triggers_pause_via_record_broker_failure",
+        "line": 94,
+        "markers": [],
+        "docstring": "Test that guard/broker errors trigger pause when threshold reached."
+      },
+      {
+        "name": "test_pause_allows_trading_after_cooldown",
+        "line": 110,
+        "markers": [],
+        "docstring": "Test that trading is allowed after cooldown period."
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/test_risk_manager_validation_error.py": [

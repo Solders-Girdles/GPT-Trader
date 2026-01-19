@@ -36,6 +36,19 @@ def mock_results():
     return result, risk, stats
 
 
+@pytest.fixture
+def loss_rate_profit_factor_constraint() -> ConditionalConstraint:
+    return ConditionalConstraint(
+        name="high_loss_requires_high_pf",
+        condition_metric="loss_rate",
+        condition_operator="gt",
+        condition_threshold=50.0,
+        constrained_metric="profit_factor",
+        constraint_operator="gt",
+        constraint_threshold=2.0,
+    )
+
+
 class TestConditionalConstraint:
     def test_validation_invalid_condition_operator(self):
         """Test validation rejects invalid condition operator."""
@@ -63,60 +76,32 @@ class TestConditionalConstraint:
                 constraint_threshold=2.0,
             )
 
-    def test_satisfied_condition_not_met(self, mock_results):
+    def test_satisfied_condition_not_met(self, mock_results, loss_rate_profit_factor_constraint):
         """Test constraint passes when condition is not met."""
         result, risk, stats = mock_results
-        # Condition: loss_rate > 50% (but it's 45%)
-        constraint = ConditionalConstraint(
-            name="high_loss_requires_high_pf",
-            condition_metric="loss_rate",
-            condition_operator="gt",
-            condition_threshold=50.0,
-            constrained_metric="profit_factor",
-            constraint_operator="gt",
-            constraint_threshold=2.0,
-        )
+        assert loss_rate_profit_factor_constraint.is_satisfied(result, risk, stats)
 
-        # Condition not met (45% < 50%), so constraint passes regardless
-        assert constraint.is_satisfied(result, risk, stats)
-
-    def test_satisfied_condition_met_constraint_satisfied(self, mock_results):
+    def test_satisfied_condition_met_constraint_satisfied(
+        self, mock_results, loss_rate_profit_factor_constraint
+    ):
         """Test constraint passes when condition is met and constraint is satisfied."""
         result, risk, stats = mock_results
         stats.loss_rate = Decimal("55.0")  # Now loss_rate > 50%
         stats.profit_factor = Decimal("2.5")  # And profit_factor > 2.0
 
-        constraint = ConditionalConstraint(
-            name="high_loss_requires_high_pf",
-            condition_metric="loss_rate",
-            condition_operator="gt",
-            condition_threshold=50.0,
-            constrained_metric="profit_factor",
-            constraint_operator="gt",
-            constraint_threshold=2.0,
-        )
-
         # Condition met AND constraint satisfied
-        assert constraint.is_satisfied(result, risk, stats)
+        assert loss_rate_profit_factor_constraint.is_satisfied(result, risk, stats)
 
-    def test_not_satisfied_condition_met_constraint_not_satisfied(self, mock_results):
+    def test_not_satisfied_condition_met_constraint_not_satisfied(
+        self, mock_results, loss_rate_profit_factor_constraint
+    ):
         """Test constraint fails when condition is met but constraint is not satisfied."""
         result, risk, stats = mock_results
         stats.loss_rate = Decimal("55.0")  # loss_rate > 50%
         stats.profit_factor = Decimal("1.5")  # But profit_factor < 2.0
 
-        constraint = ConditionalConstraint(
-            name="high_loss_requires_high_pf",
-            condition_metric="loss_rate",
-            condition_operator="gt",
-            condition_threshold=50.0,
-            constrained_metric="profit_factor",
-            constraint_operator="gt",
-            constraint_threshold=2.0,
-        )
-
         # Condition met BUT constraint not satisfied
-        assert not constraint.is_satisfied(result, risk, stats)
+        assert not loss_rate_profit_factor_constraint.is_satisfied(result, risk, stats)
 
 
 class TestRangeConstraint:

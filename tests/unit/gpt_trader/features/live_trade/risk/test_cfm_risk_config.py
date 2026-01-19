@@ -1,8 +1,6 @@
 """Tests for CFM-specific risk configuration in gpt_trader.features.live_trade.risk module."""
 
 import json
-import os
-import tempfile
 from decimal import Decimal
 
 from gpt_trader.features.live_trade.risk.config import RiskConfig
@@ -149,7 +147,7 @@ class TestCFMRiskConfigFromEnv:
 class TestCFMRiskConfigFromJson:
     """Tests for loading CFM risk config from JSON."""
 
-    def test_from_json_cfm_values(self):
+    def test_from_json_cfm_values(self, tmp_path):
         """Loads CFM config values from JSON."""
         config_data = {
             "cfm_max_leverage": 10,
@@ -158,20 +156,16 @@ class TestCFMRiskConfigFromJson:
             "cfm_max_position_size_pct": 0.30,
         }
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
-            json.dump(config_data, f)
-            temp_path = f.name
+        config_path = tmp_path / "config.json"
+        config_path.write_text(json.dumps(config_data))
 
-        try:
-            config = RiskConfig.from_json(temp_path)
-            assert config.cfm_max_leverage == 10
-            assert config.cfm_min_liquidation_buffer_pct == 0.20
-            assert config.cfm_max_exposure_pct == 0.7
-            assert config.cfm_max_position_size_pct == 0.30
-        finally:
-            os.unlink(temp_path)
+        config = RiskConfig.from_json(str(config_path))
+        assert config.cfm_max_leverage == 10
+        assert config.cfm_min_liquidation_buffer_pct == 0.20
+        assert config.cfm_max_exposure_pct == 0.7
+        assert config.cfm_max_position_size_pct == 0.30
 
-    def test_from_json_cfm_max_notional_per_symbol(self):
+    def test_from_json_cfm_max_notional_per_symbol(self, tmp_path):
         """Loads CFM notional limits with Decimal conversion."""
         config_data = {
             "cfm_max_notional_per_symbol": {
@@ -180,18 +174,14 @@ class TestCFMRiskConfigFromJson:
             }
         }
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
-            json.dump(config_data, f)
-            temp_path = f.name
+        config_path = tmp_path / "config.json"
+        config_path.write_text(json.dumps(config_data))
 
-        try:
-            config = RiskConfig.from_json(temp_path)
-            assert config.cfm_max_notional_per_symbol["BTC-20DEC30-CDE"] == Decimal("100000")
-            assert config.cfm_max_notional_per_symbol["ETH-20DEC30-CDE"] == Decimal("50000")
-        finally:
-            os.unlink(temp_path)
+        config = RiskConfig.from_json(str(config_path))
+        assert config.cfm_max_notional_per_symbol["BTC-20DEC30-CDE"] == Decimal("100000")
+        assert config.cfm_max_notional_per_symbol["ETH-20DEC30-CDE"] == Decimal("50000")
 
-    def test_from_json_cfm_leverage_per_symbol(self):
+    def test_from_json_cfm_leverage_per_symbol(self, tmp_path):
         """Loads CFM leverage limits from JSON."""
         config_data = {
             "cfm_leverage_max_per_symbol": {"BTC-20DEC30-CDE": 10, "ETH-20DEC30-CDE": 5},
@@ -199,20 +189,16 @@ class TestCFMRiskConfigFromJson:
             "cfm_night_leverage_max_per_symbol": {"BTC-20DEC30-CDE": 5},
         }
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
-            json.dump(config_data, f)
-            temp_path = f.name
+        config_path = tmp_path / "config.json"
+        config_path.write_text(json.dumps(config_data))
 
-        try:
-            config = RiskConfig.from_json(temp_path)
-            assert config.cfm_leverage_max_per_symbol == {
-                "BTC-20DEC30-CDE": 10,
-                "ETH-20DEC30-CDE": 5,
-            }
-            assert config.cfm_day_leverage_max_per_symbol == {"BTC-20DEC30-CDE": 15}
-            assert config.cfm_night_leverage_max_per_symbol == {"BTC-20DEC30-CDE": 5}
-        finally:
-            os.unlink(temp_path)
+        config = RiskConfig.from_json(str(config_path))
+        assert config.cfm_leverage_max_per_symbol == {
+            "BTC-20DEC30-CDE": 10,
+            "ETH-20DEC30-CDE": 5,
+        }
+        assert config.cfm_day_leverage_max_per_symbol == {"BTC-20DEC30-CDE": 15}
+        assert config.cfm_night_leverage_max_per_symbol == {"BTC-20DEC30-CDE": 5}
 
 
 class TestCFMRiskConfigToDict:

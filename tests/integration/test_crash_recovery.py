@@ -1,7 +1,6 @@
 """Integration tests for crash recovery and state rehydration.
 
-Tests that the TradingEngine can recover its state after a simulated crash
-by reading persisted price_tick events from the EventStore.
+TradingEngine rehydrates price history from EventStore price_tick events after restart.
 """
 
 import tempfile

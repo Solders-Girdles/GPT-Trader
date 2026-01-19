@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 11054,
-    "total_files": 848,
+    "total_files": 866,
     "markers_used": 9
   },
   "marker_definitions": {
@@ -198,11 +198,14 @@
       "tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker_mark_price_and_snapshot.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_stop_orders.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_fill_result.py",
+      "tests/unit/gpt_trader/backtesting/engine/test_clock_time_and_speed.py",
       "tests/unit/gpt_trader/backtesting/engine/test_bar_runner_init.py",
+      "tests/unit/gpt_trader/backtesting/engine/test_clock_delays.py",
       "tests/unit/gpt_trader/backtesting/engine/test_bar_runner_hooks_and_progress.py",
+      "tests/unit/gpt_trader/backtesting/engine/test_clock_advance.py",
       "tests/unit/gpt_trader/backtesting/engine/test_bar_runner_granularity_and_quotes.py",
       "tests/unit/gpt_trader/backtesting/engine/test_bar_runner_funding.py",
-      "tests/unit/gpt_trader/backtesting/engine/test_clock.py",
+      "tests/unit/gpt_trader/backtesting/engine/test_clock_init.py",
       "tests/unit/gpt_trader/backtesting/chaos/test_scenarios.py",
       "tests/unit/gpt_trader/backtesting/validation/test_guarded_execution.py",
       "tests/unit/gpt_trader/backtesting/validation/test_decision_logger_init_and_cycles.py",
@@ -356,11 +359,15 @@
       "tests/unit/gpt_trader/tui/utilities/test_table_formatting_cells.py",
       "tests/unit/gpt_trader/tui/utilities/test_table_formatting_truncate_id.py",
       "tests/unit/gpt_trader/tui/adapters/test_null_status_reporter.py",
+      "tests/unit/gpt_trader/tui/state_management/test_validators_market.py",
       "tests/unit/gpt_trader/tui/state_management/test_delta_updater_result_and_helpers.py",
-      "tests/unit/gpt_trader/tui/state_management/test_validators.py",
+      "tests/unit/gpt_trader/tui/state_management/test_validators_account_risk_system.py",
+      "tests/unit/gpt_trader/tui/state_management/test_validators_full_state.py",
+      "tests/unit/gpt_trader/tui/state_management/test_validators_orders_and_trades.py",
       "tests/unit/gpt_trader/tui/state_management/test_delta_updater_compare_account_risk_system.py",
       "tests/unit/gpt_trader/tui/state_management/test_delta_updater_compare_market_and_positions.py",
       "tests/unit/gpt_trader/tui/state_management/test_delta_updater_compare_orders_and_trades.py",
+      "tests/unit/gpt_trader/tui/state_management/test_validators_result.py",
       "tests/unit/gpt_trader/tui/services/test_config_service.py",
       "tests/unit/gpt_trader/tui/services/test_trading_stats_service_compute_stats.py",
       "tests/unit/gpt_trader/tui/services/test_state_registry.py",
@@ -461,16 +468,19 @@
       "tests/unit/gpt_trader/utilities/test_logging_patterns_structured_logger.py",
       "tests/unit/gpt_trader/utilities/test_async_utils_core_wrappers.py",
       "tests/unit/gpt_trader/utilities/test_console_logging_core_basic.py",
+      "tests/unit/gpt_trader/utilities/test_datetime_helpers_integration.py",
       "tests/unit/gpt_trader/utilities/test_async_utils_function_detection.py",
       "tests/unit/gpt_trader/utilities/test_logging_patterns_market_data.py",
+      "tests/unit/gpt_trader/utilities/test_datetime_helpers_to_iso_utc.py",
       "tests/unit/gpt_trader/utilities/test_logging_patterns_execution.py",
       "tests/unit/gpt_trader/utilities/test_logging_patterns_error_and_config_change.py",
       "tests/unit/gpt_trader/utilities/test_quantization.py",
       "tests/unit/gpt_trader/utilities/test_console_logging_core_fallbacks.py",
       "tests/unit/gpt_trader/utilities/test_console_logging_functions_wrappers.py",
       "tests/unit/gpt_trader/utilities/test_console_logging_functions_integration.py",
+      "tests/unit/gpt_trader/utilities/test_datetime_helpers_now.py",
+      "tests/unit/gpt_trader/utilities/test_datetime_helpers_normalize_to_utc.py",
       "tests/unit/gpt_trader/utilities/test_logging_patterns_trade_and_position.py",
-      "tests/unit/gpt_trader/utilities/test_datetime_helpers.py",
       "tests/unit/gpt_trader/utilities/test_logging_patterns_decorator.py",
       "tests/unit/gpt_trader/utilities/performance/test_monitor.py",
       "tests/unit/gpt_trader/utilities/performance/test_timing.py",
@@ -492,9 +502,10 @@
       "tests/unit/gpt_trader/fixtures/test_failure_injection.py"
     ],
     "errors": [
+      "tests/unit/gpt_trader/errors/test_error_patterns_sync.py",
+      "tests/unit/gpt_trader/errors/test_base_specific_errors.py",
       "tests/unit/gpt_trader/errors/test_handler.py",
-      "tests/unit/gpt_trader/errors/test_error_patterns.py",
-      "tests/unit/gpt_trader/errors/test_base.py"
+      "tests/unit/gpt_trader/errors/test_base_trading_and_hierarchy.py"
     ],
     "monitoring": [
       "tests/unit/gpt_trader/monitoring/test_memory_metrics.py",
@@ -630,10 +641,12 @@
       "tests/unit/gpt_trader/features/strategy_tools/test_risk_guards_edges.py",
       "tests/unit/gpt_trader/features/data/test_data_coinbase_runtime_edges.py",
       "tests/unit/gpt_trader/features/data/test_data_coinbase_edges.py",
-      "tests/unit/gpt_trader/features/data/test_data_module.py",
+      "tests/unit/gpt_trader/features/data/test_data_module_import_export.py",
+      "tests/unit/gpt_trader/features/data/test_data_module_store_and_fetch.py",
       "tests/unit/gpt_trader/features/data/test_cache.py",
       "tests/unit/gpt_trader/features/data/test_quality_candles.py",
       "tests/unit/gpt_trader/features/data/test_quality.py",
+      "tests/unit/gpt_trader/features/data/test_data_module_cache_and_stats.py",
       "tests/unit/gpt_trader/features/live_trade/test_config_dict_json.py",
       "tests/unit/gpt_trader/features/live_trade/test_degradation_failure_tracking.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager_pre_trade_validate.py",
@@ -716,12 +729,13 @@
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_edges.py",
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_order_execution.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_health.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_real_transport_edge_cases.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_health.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_types_and_sequence_guard.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_real_transport.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_service_loading.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service_ticker_service.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_reset.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_auth.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_enforce_perps_rules.py",
@@ -740,6 +754,7 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_cfm_endpoints.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_validation_and_safe_sizing.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_system.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_degradation_callback.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service_alias.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_models_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_permissions_client_endpoint.py",
@@ -760,6 +775,7 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_parsing.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_noop_transport.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_accounts_positions_and_treasury.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_backoff.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_conversion_endpoints.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_websocket.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_websocket_edges.py",
@@ -779,6 +795,7 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_stream_trades_and_control.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_product_catalog.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_data_models.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_circuit_breaker_registry.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_integration_flows.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_perform_http_request_and_lifecycle.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_request_retries.py",
@@ -789,13 +806,14 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_market_mixin.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_priority.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_circuit_breaker.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_request_cache_priority_and_circuit.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_portfolio_mixin_requests.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_circuit_breaker_core.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_circuit_breaker.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_request_client_errors.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_portfolio_mixin_aliases.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_circuit_breaker_error.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_metrics_and_priority.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_pagination.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_request_happy_path.py",
@@ -11152,6 +11170,47 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/utilities/test_datetime_helpers_integration.py": [
+      {
+        "name": "TestIntegrationWorkflow::test_roundtrip_datetime_to_iso_and_back",
+        "line": 17,
+        "markers": [],
+        "docstring": "Test roundtrip conversion: datetime -> iso -> datetime.",
+        "class": "TestIntegrationWorkflow"
+      },
+      {
+        "name": "TestIntegrationWorkflow::test_all_functions_use_utc",
+        "line": 32,
+        "markers": [],
+        "docstring": "Test all functions consistently use UTC.",
+        "class": "TestIntegrationWorkflow"
+      },
+      {
+        "name": "TestIntegrationWorkflow::test_timezone_conversion_consistency",
+        "line": 55,
+        "markers": [],
+        "docstring": "Test timezone conversion is consistent across functions.",
+        "class": "TestIntegrationWorkflow"
+      },
+      {
+        "name": "test_roundtrip_datetime_to_iso_and_back",
+        "line": 17,
+        "markers": [],
+        "docstring": "Test roundtrip conversion: datetime -> iso -> datetime."
+      },
+      {
+        "name": "test_all_functions_use_utc",
+        "line": 32,
+        "markers": [],
+        "docstring": "Test all functions consistently use UTC."
+      },
+      {
+        "name": "test_timezone_conversion_consistency",
+        "line": 55,
+        "markers": [],
+        "docstring": "Test timezone conversion is consistent across functions."
+      }
+    ],
     "tests/unit/gpt_trader/utilities/test_async_utils_function_detection.py": [
       {
         "name": "TestAsyncFunctionDetection::test_is_async_func",
@@ -11210,6 +11269,86 @@
         "line": 69,
         "markers": [],
         "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/utilities/test_datetime_helpers_to_iso_utc.py": [
+      {
+        "name": "TestToIsoUtc::test_to_iso_utc_with_utc_datetime",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test to_iso_utc with UTC datetime.",
+        "class": "TestToIsoUtc"
+      },
+      {
+        "name": "TestToIsoUtc::test_to_iso_utc_with_naive_datetime",
+        "line": 18,
+        "markers": [],
+        "docstring": "Test to_iso_utc with naive datetime.",
+        "class": "TestToIsoUtc"
+      },
+      {
+        "name": "TestToIsoUtc::test_to_iso_utc_with_different_timezone",
+        "line": 25,
+        "markers": [],
+        "docstring": "Test to_iso_utc with different timezone.",
+        "class": "TestToIsoUtc"
+      },
+      {
+        "name": "TestToIsoUtc::test_to_iso_utc_with_positive_timezone",
+        "line": 35,
+        "markers": [],
+        "docstring": "Test to_iso_utc with positive timezone offset.",
+        "class": "TestToIsoUtc"
+      },
+      {
+        "name": "TestToIsoUtc::test_to_iso_utc_with_microseconds",
+        "line": 45,
+        "markers": [],
+        "docstring": "Test to_iso_utc preserves microseconds.",
+        "class": "TestToIsoUtc"
+      },
+      {
+        "name": "TestToIsoUtc::test_to_iso_utc_edge_cases",
+        "line": 52,
+        "markers": [],
+        "docstring": "Test to_iso_utc with edge case datetimes.",
+        "class": "TestToIsoUtc"
+      },
+      {
+        "name": "test_to_iso_utc_with_utc_datetime",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test to_iso_utc with UTC datetime."
+      },
+      {
+        "name": "test_to_iso_utc_with_naive_datetime",
+        "line": 18,
+        "markers": [],
+        "docstring": "Test to_iso_utc with naive datetime."
+      },
+      {
+        "name": "test_to_iso_utc_with_different_timezone",
+        "line": 25,
+        "markers": [],
+        "docstring": "Test to_iso_utc with different timezone."
+      },
+      {
+        "name": "test_to_iso_utc_with_positive_timezone",
+        "line": 35,
+        "markers": [],
+        "docstring": "Test to_iso_utc with positive timezone offset."
+      },
+      {
+        "name": "test_to_iso_utc_with_microseconds",
+        "line": 45,
+        "markers": [],
+        "docstring": "Test to_iso_utc preserves microseconds."
+      },
+      {
+        "name": "test_to_iso_utc_edge_cases",
+        "line": 52,
+        "markers": [],
+        "docstring": "Test to_iso_utc with edge case datetimes."
       }
     ],
     "tests/unit/gpt_trader/utilities/test_logging_patterns_execution.py": [
@@ -11692,6 +11831,205 @@
         "docstring": "Test multiple calls to console functions."
       }
     ],
+    "tests/unit/gpt_trader/utilities/test_datetime_helpers_now.py": [
+      {
+        "name": "TestUtcNow::test_utc_now_returns_timezone_aware",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test utc_now returns timezone-aware datetime.",
+        "class": "TestUtcNow"
+      },
+      {
+        "name": "TestUtcNow::test_utc_now_is_recent",
+        "line": 19,
+        "markers": [],
+        "docstring": "Test utc_now returns recent time.",
+        "class": "TestUtcNow"
+      },
+      {
+        "name": "TestUtcNow::test_utc_now_consistency",
+        "line": 27,
+        "markers": [],
+        "docstring": "Test utc_now is consistent across calls.",
+        "class": "TestUtcNow"
+      },
+      {
+        "name": "TestUtcNowIso::test_utc_now_iso_returns_string",
+        "line": 40,
+        "markers": [],
+        "docstring": "Test utc_now_iso returns string.",
+        "class": "TestUtcNowIso"
+      },
+      {
+        "name": "TestUtcNowIso::test_utc_now_iso_format",
+        "line": 46,
+        "markers": [],
+        "docstring": "Test utc_now_iso returns correct ISO format.",
+        "class": "TestUtcNowIso"
+      },
+      {
+        "name": "TestUtcNowIso::test_utc_now_iso_consistency",
+        "line": 58,
+        "markers": [],
+        "docstring": "Test utc_now_iso is consistent with utc_now.",
+        "class": "TestUtcNowIso"
+      },
+      {
+        "name": "TestUtcTimestamp::test_utc_timestamp_returns_float",
+        "line": 73,
+        "markers": [],
+        "docstring": "Test utc_timestamp returns float.",
+        "class": "TestUtcTimestamp"
+      },
+      {
+        "name": "TestUtcTimestamp::test_utc_timestamp_is_recent",
+        "line": 79,
+        "markers": [],
+        "docstring": "Test utc_timestamp returns recent timestamp.",
+        "class": "TestUtcTimestamp"
+      },
+      {
+        "name": "TestUtcTimestamp::test_utc_timestamp_consistency",
+        "line": 87,
+        "markers": [],
+        "docstring": "Test utc_timestamp is consistent with utc_now.",
+        "class": "TestUtcTimestamp"
+      },
+      {
+        "name": "test_utc_now_returns_timezone_aware",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test utc_now returns timezone-aware datetime."
+      },
+      {
+        "name": "test_utc_now_is_recent",
+        "line": 19,
+        "markers": [],
+        "docstring": "Test utc_now returns recent time."
+      },
+      {
+        "name": "test_utc_now_consistency",
+        "line": 27,
+        "markers": [],
+        "docstring": "Test utc_now is consistent across calls."
+      },
+      {
+        "name": "test_utc_now_iso_returns_string",
+        "line": 40,
+        "markers": [],
+        "docstring": "Test utc_now_iso returns string."
+      },
+      {
+        "name": "test_utc_now_iso_format",
+        "line": 46,
+        "markers": [],
+        "docstring": "Test utc_now_iso returns correct ISO format."
+      },
+      {
+        "name": "test_utc_now_iso_consistency",
+        "line": 58,
+        "markers": [],
+        "docstring": "Test utc_now_iso is consistent with utc_now."
+      },
+      {
+        "name": "test_utc_timestamp_returns_float",
+        "line": 73,
+        "markers": [],
+        "docstring": "Test utc_timestamp returns float."
+      },
+      {
+        "name": "test_utc_timestamp_is_recent",
+        "line": 79,
+        "markers": [],
+        "docstring": "Test utc_timestamp returns recent timestamp."
+      },
+      {
+        "name": "test_utc_timestamp_consistency",
+        "line": 87,
+        "markers": [],
+        "docstring": "Test utc_timestamp is consistent with utc_now."
+      }
+    ],
+    "tests/unit/gpt_trader/utilities/test_datetime_helpers_normalize_to_utc.py": [
+      {
+        "name": "TestNormalizeToUtc::test_normalize_to_utc_with_utc_datetime",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test normalize_to_utc with UTC datetime.",
+        "class": "TestNormalizeToUtc"
+      },
+      {
+        "name": "TestNormalizeToUtc::test_normalize_to_utc_with_naive_datetime",
+        "line": 19,
+        "markers": [],
+        "docstring": "Test normalize_to_utc with naive datetime.",
+        "class": "TestNormalizeToUtc"
+      },
+      {
+        "name": "TestNormalizeToUtc::test_normalize_to_utc_with_different_timezone",
+        "line": 27,
+        "markers": [],
+        "docstring": "Test normalize_to_utc with different timezone.",
+        "class": "TestNormalizeToUtc"
+      },
+      {
+        "name": "TestNormalizeToUtc::test_normalize_to_utc_with_positive_timezone",
+        "line": 39,
+        "markers": [],
+        "docstring": "Test normalize_to_utc with positive timezone offset.",
+        "class": "TestNormalizeToUtc"
+      },
+      {
+        "name": "TestNormalizeToUtc::test_normalize_to_utc_preserves_microseconds",
+        "line": 51,
+        "markers": [],
+        "docstring": "Test normalize_to_utc preserves microseconds.",
+        "class": "TestNormalizeToUtc"
+      },
+      {
+        "name": "TestNormalizeToUtc::test_normalize_to_utc_does_not_modify_original",
+        "line": 60,
+        "markers": [],
+        "docstring": "Test normalize_to_utc doesn't modify original datetime.",
+        "class": "TestNormalizeToUtc"
+      },
+      {
+        "name": "test_normalize_to_utc_with_utc_datetime",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test normalize_to_utc with UTC datetime."
+      },
+      {
+        "name": "test_normalize_to_utc_with_naive_datetime",
+        "line": 19,
+        "markers": [],
+        "docstring": "Test normalize_to_utc with naive datetime."
+      },
+      {
+        "name": "test_normalize_to_utc_with_different_timezone",
+        "line": 27,
+        "markers": [],
+        "docstring": "Test normalize_to_utc with different timezone."
+      },
+      {
+        "name": "test_normalize_to_utc_with_positive_timezone",
+        "line": 39,
+        "markers": [],
+        "docstring": "Test normalize_to_utc with positive timezone offset."
+      },
+      {
+        "name": "test_normalize_to_utc_preserves_microseconds",
+        "line": 51,
+        "markers": [],
+        "docstring": "Test normalize_to_utc preserves microseconds."
+      },
+      {
+        "name": "test_normalize_to_utc_does_not_modify_original",
+        "line": 60,
+        "markers": [],
+        "docstring": "Test normalize_to_utc doesn't modify original datetime."
+      }
+    ],
     "tests/unit/gpt_trader/utilities/test_logging_patterns_trade_and_position.py": [
       {
         "name": "test_log_trade_event_includes_all_context",
@@ -11740,320 +12078,6 @@
         "line": 102,
         "markers": [],
         "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/utilities/test_datetime_helpers.py": [
-      {
-        "name": "TestUtcNow::test_utc_now_returns_timezone_aware",
-        "line": 17,
-        "markers": [],
-        "docstring": "Test utc_now returns timezone-aware datetime.",
-        "class": "TestUtcNow"
-      },
-      {
-        "name": "TestUtcNow::test_utc_now_is_recent",
-        "line": 25,
-        "markers": [],
-        "docstring": "Test utc_now returns recent time.",
-        "class": "TestUtcNow"
-      },
-      {
-        "name": "TestUtcNow::test_utc_now_consistency",
-        "line": 33,
-        "markers": [],
-        "docstring": "Test utc_now is consistent across calls.",
-        "class": "TestUtcNow"
-      },
-      {
-        "name": "TestUtcNowIso::test_utc_now_iso_returns_string",
-        "line": 46,
-        "markers": [],
-        "docstring": "Test utc_now_iso returns string.",
-        "class": "TestUtcNowIso"
-      },
-      {
-        "name": "TestUtcNowIso::test_utc_now_iso_format",
-        "line": 52,
-        "markers": [],
-        "docstring": "Test utc_now_iso returns correct ISO format.",
-        "class": "TestUtcNowIso"
-      },
-      {
-        "name": "TestUtcNowIso::test_utc_now_iso_consistency",
-        "line": 64,
-        "markers": [],
-        "docstring": "Test utc_now_iso is consistent with utc_now.",
-        "class": "TestUtcNowIso"
-      },
-      {
-        "name": "TestUtcTimestamp::test_utc_timestamp_returns_float",
-        "line": 79,
-        "markers": [],
-        "docstring": "Test utc_timestamp returns float.",
-        "class": "TestUtcTimestamp"
-      },
-      {
-        "name": "TestUtcTimestamp::test_utc_timestamp_is_recent",
-        "line": 85,
-        "markers": [],
-        "docstring": "Test utc_timestamp returns recent timestamp.",
-        "class": "TestUtcTimestamp"
-      },
-      {
-        "name": "TestUtcTimestamp::test_utc_timestamp_consistency",
-        "line": 93,
-        "markers": [],
-        "docstring": "Test utc_timestamp is consistent with utc_now.",
-        "class": "TestUtcTimestamp"
-      },
-      {
-        "name": "TestToIsoUtc::test_to_iso_utc_with_utc_datetime",
-        "line": 108,
-        "markers": [],
-        "docstring": "Test to_iso_utc with UTC datetime.",
-        "class": "TestToIsoUtc"
-      },
-      {
-        "name": "TestToIsoUtc::test_to_iso_utc_with_naive_datetime",
-        "line": 115,
-        "markers": [],
-        "docstring": "Test to_iso_utc with naive datetime.",
-        "class": "TestToIsoUtc"
-      },
-      {
-        "name": "TestToIsoUtc::test_to_iso_utc_with_different_timezone",
-        "line": 122,
-        "markers": [],
-        "docstring": "Test to_iso_utc with different timezone.",
-        "class": "TestToIsoUtc"
-      },
-      {
-        "name": "TestToIsoUtc::test_to_iso_utc_with_positive_timezone",
-        "line": 132,
-        "markers": [],
-        "docstring": "Test to_iso_utc with positive timezone offset.",
-        "class": "TestToIsoUtc"
-      },
-      {
-        "name": "TestToIsoUtc::test_to_iso_utc_with_microseconds",
-        "line": 142,
-        "markers": [],
-        "docstring": "Test to_iso_utc preserves microseconds.",
-        "class": "TestToIsoUtc"
-      },
-      {
-        "name": "TestToIsoUtc::test_to_iso_utc_edge_cases",
-        "line": 149,
-        "markers": [],
-        "docstring": "Test to_iso_utc with edge case datetimes.",
-        "class": "TestToIsoUtc"
-      },
-      {
-        "name": "TestNormalizeToUtc::test_normalize_to_utc_with_utc_datetime",
-        "line": 165,
-        "markers": [],
-        "docstring": "Test normalize_to_utc with UTC datetime.",
-        "class": "TestNormalizeToUtc"
-      },
-      {
-        "name": "TestNormalizeToUtc::test_normalize_to_utc_with_naive_datetime",
-        "line": 173,
-        "markers": [],
-        "docstring": "Test normalize_to_utc with naive datetime.",
-        "class": "TestNormalizeToUtc"
-      },
-      {
-        "name": "TestNormalizeToUtc::test_normalize_to_utc_with_different_timezone",
-        "line": 181,
-        "markers": [],
-        "docstring": "Test normalize_to_utc with different timezone.",
-        "class": "TestNormalizeToUtc"
-      },
-      {
-        "name": "TestNormalizeToUtc::test_normalize_to_utc_with_positive_timezone",
-        "line": 193,
-        "markers": [],
-        "docstring": "Test normalize_to_utc with positive timezone offset.",
-        "class": "TestNormalizeToUtc"
-      },
-      {
-        "name": "TestNormalizeToUtc::test_normalize_to_utc_preserves_microseconds",
-        "line": 205,
-        "markers": [],
-        "docstring": "Test normalize_to_utc preserves microseconds.",
-        "class": "TestNormalizeToUtc"
-      },
-      {
-        "name": "TestNormalizeToUtc::test_normalize_to_utc_does_not_modify_original",
-        "line": 214,
-        "markers": [],
-        "docstring": "Test normalize_to_utc doesn't modify original datetime.",
-        "class": "TestNormalizeToUtc"
-      },
-      {
-        "name": "TestIntegrationWorkflow::test_roundtrip_datetime_to_iso_and_back",
-        "line": 227,
-        "markers": [],
-        "docstring": "Test roundtrip conversion: datetime -> iso -> datetime.",
-        "class": "TestIntegrationWorkflow"
-      },
-      {
-        "name": "TestIntegrationWorkflow::test_all_functions_use_utc",
-        "line": 242,
-        "markers": [],
-        "docstring": "Test all functions consistently use UTC.",
-        "class": "TestIntegrationWorkflow"
-      },
-      {
-        "name": "TestIntegrationWorkflow::test_timezone_conversion_consistency",
-        "line": 265,
-        "markers": [],
-        "docstring": "Test timezone conversion is consistent across functions.",
-        "class": "TestIntegrationWorkflow"
-      },
-      {
-        "name": "test_utc_now_returns_timezone_aware",
-        "line": 17,
-        "markers": [],
-        "docstring": "Test utc_now returns timezone-aware datetime."
-      },
-      {
-        "name": "test_utc_now_is_recent",
-        "line": 25,
-        "markers": [],
-        "docstring": "Test utc_now returns recent time."
-      },
-      {
-        "name": "test_utc_now_consistency",
-        "line": 33,
-        "markers": [],
-        "docstring": "Test utc_now is consistent across calls."
-      },
-      {
-        "name": "test_utc_now_iso_returns_string",
-        "line": 46,
-        "markers": [],
-        "docstring": "Test utc_now_iso returns string."
-      },
-      {
-        "name": "test_utc_now_iso_format",
-        "line": 52,
-        "markers": [],
-        "docstring": "Test utc_now_iso returns correct ISO format."
-      },
-      {
-        "name": "test_utc_now_iso_consistency",
-        "line": 64,
-        "markers": [],
-        "docstring": "Test utc_now_iso is consistent with utc_now."
-      },
-      {
-        "name": "test_utc_timestamp_returns_float",
-        "line": 79,
-        "markers": [],
-        "docstring": "Test utc_timestamp returns float."
-      },
-      {
-        "name": "test_utc_timestamp_is_recent",
-        "line": 85,
-        "markers": [],
-        "docstring": "Test utc_timestamp returns recent timestamp."
-      },
-      {
-        "name": "test_utc_timestamp_consistency",
-        "line": 93,
-        "markers": [],
-        "docstring": "Test utc_timestamp is consistent with utc_now."
-      },
-      {
-        "name": "test_to_iso_utc_with_utc_datetime",
-        "line": 108,
-        "markers": [],
-        "docstring": "Test to_iso_utc with UTC datetime."
-      },
-      {
-        "name": "test_to_iso_utc_with_naive_datetime",
-        "line": 115,
-        "markers": [],
-        "docstring": "Test to_iso_utc with naive datetime."
-      },
-      {
-        "name": "test_to_iso_utc_with_different_timezone",
-        "line": 122,
-        "markers": [],
-        "docstring": "Test to_iso_utc with different timezone."
-      },
-      {
-        "name": "test_to_iso_utc_with_positive_timezone",
-        "line": 132,
-        "markers": [],
-        "docstring": "Test to_iso_utc with positive timezone offset."
-      },
-      {
-        "name": "test_to_iso_utc_with_microseconds",
-        "line": 142,
-        "markers": [],
-        "docstring": "Test to_iso_utc preserves microseconds."
-      },
-      {
-        "name": "test_to_iso_utc_edge_cases",
-        "line": 149,
-        "markers": [],
-        "docstring": "Test to_iso_utc with edge case datetimes."
-      },
-      {
-        "name": "test_normalize_to_utc_with_utc_datetime",
-        "line": 165,
-        "markers": [],
-        "docstring": "Test normalize_to_utc with UTC datetime."
-      },
-      {
-        "name": "test_normalize_to_utc_with_naive_datetime",
-        "line": 173,
-        "markers": [],
-        "docstring": "Test normalize_to_utc with naive datetime."
-      },
-      {
-        "name": "test_normalize_to_utc_with_different_timezone",
-        "line": 181,
-        "markers": [],
-        "docstring": "Test normalize_to_utc with different timezone."
-      },
-      {
-        "name": "test_normalize_to_utc_with_positive_timezone",
-        "line": 193,
-        "markers": [],
-        "docstring": "Test normalize_to_utc with positive timezone offset."
-      },
-      {
-        "name": "test_normalize_to_utc_preserves_microseconds",
-        "line": 205,
-        "markers": [],
-        "docstring": "Test normalize_to_utc preserves microseconds."
-      },
-      {
-        "name": "test_normalize_to_utc_does_not_modify_original",
-        "line": 214,
-        "markers": [],
-        "docstring": "Test normalize_to_utc doesn't modify original datetime."
-      },
-      {
-        "name": "test_roundtrip_datetime_to_iso_and_back",
-        "line": 227,
-        "markers": [],
-        "docstring": "Test roundtrip conversion: datetime -> iso -> datetime."
-      },
-      {
-        "name": "test_all_functions_use_utc",
-        "line": 242,
-        "markers": [],
-        "docstring": "Test all functions consistently use UTC."
-      },
-      {
-        "name": "test_timezone_conversion_consistency",
-        "line": 265,
-        "markers": [],
-        "docstring": "Test timezone conversion is consistent across functions."
       }
     ],
     "tests/unit/gpt_trader/utilities/test_logging_patterns_decorator.py": [
@@ -13126,6 +13150,488 @@
         "docstring": "Test that no_op_sleep is callable and returns None."
       }
     ],
+    "tests/unit/gpt_trader/errors/test_error_patterns_sync.py": [
+      {
+        "name": "test_error_context_swallow_logs_extra_context",
+        "line": 12,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_error_context_reraise_for_matching_type",
+        "line": 25,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_handle_errors_returns_default_for_swallowed_exception",
+        "line": 31,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_handle_errors_reraises_specified_exception",
+        "line": 39,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_safe_execute_respects_reraise",
+        "line": 48,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_safe_execute_returns_default_when_swallowed",
+        "line": 57,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "TestErrorContextExtended::test_exit_no_exception",
+        "line": 72,
+        "markers": [],
+        "docstring": "",
+        "class": "TestErrorContextExtended"
+      },
+      {
+        "name": "TestErrorContextExtended::test_reraise_tuple_matching",
+        "line": 77,
+        "markers": [],
+        "docstring": "",
+        "class": "TestErrorContextExtended"
+      },
+      {
+        "name": "TestErrorContextExtended::test_reraise_tuple_non_matching",
+        "line": 82,
+        "markers": [],
+        "docstring": "",
+        "class": "TestErrorContextExtended"
+      },
+      {
+        "name": "TestErrorContextExtended::test_log_level_below_error",
+        "line": 89,
+        "markers": [],
+        "docstring": "",
+        "class": "TestErrorContextExtended"
+      },
+      {
+        "name": "TestHandleBrokerageErrors::test_returns_result_on_success",
+        "line": 99,
+        "markers": [],
+        "docstring": "",
+        "class": "TestHandleBrokerageErrors"
+      },
+      {
+        "name": "TestHandleOrderErrors::test_returns_result_on_success",
+        "line": 112,
+        "markers": [],
+        "docstring": "",
+        "class": "TestHandleOrderErrors"
+      },
+      {
+        "name": "TestHandleDataErrors::test_returns_result_on_success",
+        "line": 125,
+        "markers": [],
+        "docstring": "",
+        "class": "TestHandleDataErrors"
+      },
+      {
+        "name": "TestHandleConfigErrors::test_returns_result_on_success",
+        "line": 138,
+        "markers": [],
+        "docstring": "",
+        "class": "TestHandleConfigErrors"
+      },
+      {
+        "name": "TestHandleAccountErrors::test_returns_result_on_success",
+        "line": 151,
+        "markers": [],
+        "docstring": "",
+        "class": "TestHandleAccountErrors"
+      },
+      {
+        "name": "TestRetryOnError::test_succeeds_without_retry",
+        "line": 164,
+        "markers": [],
+        "docstring": "",
+        "class": "TestRetryOnError"
+      },
+      {
+        "name": "TestRetryOnError::test_retries_on_failure",
+        "line": 179,
+        "markers": [],
+        "docstring": "",
+        "class": "TestRetryOnError"
+      },
+      {
+        "name": "test_exit_no_exception",
+        "line": 72,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_reraise_tuple_matching",
+        "line": 77,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_reraise_tuple_non_matching",
+        "line": 82,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_level_below_error",
+        "line": 89,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_returns_result_on_success",
+        "line": 99,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_returns_result_on_success",
+        "line": 112,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_returns_result_on_success",
+        "line": 125,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_returns_result_on_success",
+        "line": 138,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_returns_result_on_success",
+        "line": 151,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_succeeds_without_retry",
+        "line": 164,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_retries_on_failure",
+        "line": 179,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/errors/test_base_specific_errors.py": [
+      {
+        "name": "TestValidationError::test_validation_error_inheritance",
+        "line": 24,
+        "markers": [],
+        "docstring": "Test that ValidationError inherits from TradingError.",
+        "class": "TestValidationError"
+      },
+      {
+        "name": "TestValidationError::test_validation_error_creation",
+        "line": 29,
+        "markers": [],
+        "docstring": "Test ValidationError can be created with message.",
+        "class": "TestValidationError"
+      },
+      {
+        "name": "TestValidationError::test_validation_error_with_field",
+        "line": 34,
+        "markers": [],
+        "docstring": "Test ValidationError can include field context.",
+        "class": "TestValidationError"
+      },
+      {
+        "name": "TestExecutionError::test_execution_error_inheritance",
+        "line": 45,
+        "markers": [],
+        "docstring": "Test that ExecutionError inherits from TradingError.",
+        "class": "TestExecutionError"
+      },
+      {
+        "name": "TestExecutionError::test_execution_error_creation",
+        "line": 50,
+        "markers": [],
+        "docstring": "Test ExecutionError can be created with message.",
+        "class": "TestExecutionError"
+      },
+      {
+        "name": "TestExecutionError::test_execution_error_with_order_id",
+        "line": 55,
+        "markers": [],
+        "docstring": "Test ExecutionError can include order context.",
+        "class": "TestExecutionError"
+      },
+      {
+        "name": "TestConfigurationError::test_configuration_error_inheritance",
+        "line": 65,
+        "markers": [],
+        "docstring": "Test that ConfigurationError inherits from TradingError.",
+        "class": "TestConfigurationError"
+      },
+      {
+        "name": "TestConfigurationError::test_configuration_error_creation",
+        "line": 70,
+        "markers": [],
+        "docstring": "Test ConfigurationError can be created with message.",
+        "class": "TestConfigurationError"
+      },
+      {
+        "name": "TestConfigurationError::test_configuration_error_with_config_key",
+        "line": 75,
+        "markers": [],
+        "docstring": "Test ConfigurationError can include config context.",
+        "class": "TestConfigurationError"
+      },
+      {
+        "name": "TestRiskLimitExceeded::test_risk_limit_exceeded_inheritance",
+        "line": 85,
+        "markers": [],
+        "docstring": "Test that RiskLimitExceeded inherits from TradingError.",
+        "class": "TestRiskLimitExceeded"
+      },
+      {
+        "name": "TestRiskLimitExceeded::test_risk_limit_exceeded_creation",
+        "line": 90,
+        "markers": [],
+        "docstring": "Test RiskLimitExceeded can be created with message.",
+        "class": "TestRiskLimitExceeded"
+      },
+      {
+        "name": "TestRiskLimitExceeded::test_risk_limit_exceeded_with_risk_metrics",
+        "line": 97,
+        "markers": [],
+        "docstring": "Test RiskLimitExceeded can include risk context.",
+        "class": "TestRiskLimitExceeded"
+      },
+      {
+        "name": "TestDataError::test_data_error_inheritance",
+        "line": 113,
+        "markers": [],
+        "docstring": "Test that DataError inherits from TradingError.",
+        "class": "TestDataError"
+      },
+      {
+        "name": "TestDataError::test_data_error_creation",
+        "line": 117,
+        "markers": [],
+        "docstring": "Test DataError can be created with message.",
+        "class": "TestDataError"
+      },
+      {
+        "name": "TestStrategyError::test_strategy_error_inheritance",
+        "line": 126,
+        "markers": [],
+        "docstring": "Test that StrategyError inherits from TradingError.",
+        "class": "TestStrategyError"
+      },
+      {
+        "name": "TestStrategyError::test_strategy_error_creation",
+        "line": 130,
+        "markers": [],
+        "docstring": "Test StrategyError can be created with message.",
+        "class": "TestStrategyError"
+      },
+      {
+        "name": "TestBacktestError::test_backtest_error_inheritance",
+        "line": 139,
+        "markers": [],
+        "docstring": "Test that BacktestError inherits from TradingError.",
+        "class": "TestBacktestError"
+      },
+      {
+        "name": "TestBacktestError::test_backtest_error_creation",
+        "line": 143,
+        "markers": [],
+        "docstring": "Test BacktestError can be created with message.",
+        "class": "TestBacktestError"
+      },
+      {
+        "name": "TestNetworkError::test_network_error_inheritance",
+        "line": 152,
+        "markers": [],
+        "docstring": "Test that NetworkError inherits from TradingError.",
+        "class": "TestNetworkError"
+      },
+      {
+        "name": "TestNetworkError::test_network_error_creation",
+        "line": 156,
+        "markers": [],
+        "docstring": "Test NetworkError can be created with message.",
+        "class": "TestNetworkError"
+      },
+      {
+        "name": "TestInsufficientFundsError::test_insufficient_funds_error_inheritance",
+        "line": 165,
+        "markers": [],
+        "docstring": "Test that InsufficientFundsError inherits from TradingError.",
+        "class": "TestInsufficientFundsError"
+      },
+      {
+        "name": "TestInsufficientFundsError::test_insufficient_funds_error_creation",
+        "line": 169,
+        "markers": [],
+        "docstring": "Test InsufficientFundsError can be created with message.",
+        "class": "TestInsufficientFundsError"
+      },
+      {
+        "name": "TestErrorHierarchyInheritance::test_all_errors_inherit_from_trading_error",
+        "line": 181,
+        "markers": [],
+        "docstring": "Test that all custom errors inherit from TradingError.",
+        "class": "TestErrorHierarchyInheritance"
+      },
+      {
+        "name": "test_validation_error_inheritance",
+        "line": 24,
+        "markers": [],
+        "docstring": "Test that ValidationError inherits from TradingError."
+      },
+      {
+        "name": "test_validation_error_creation",
+        "line": 29,
+        "markers": [],
+        "docstring": "Test ValidationError can be created with message."
+      },
+      {
+        "name": "test_validation_error_with_field",
+        "line": 34,
+        "markers": [],
+        "docstring": "Test ValidationError can include field context."
+      },
+      {
+        "name": "test_execution_error_inheritance",
+        "line": 45,
+        "markers": [],
+        "docstring": "Test that ExecutionError inherits from TradingError."
+      },
+      {
+        "name": "test_execution_error_creation",
+        "line": 50,
+        "markers": [],
+        "docstring": "Test ExecutionError can be created with message."
+      },
+      {
+        "name": "test_execution_error_with_order_id",
+        "line": 55,
+        "markers": [],
+        "docstring": "Test ExecutionError can include order context."
+      },
+      {
+        "name": "test_configuration_error_inheritance",
+        "line": 65,
+        "markers": [],
+        "docstring": "Test that ConfigurationError inherits from TradingError."
+      },
+      {
+        "name": "test_configuration_error_creation",
+        "line": 70,
+        "markers": [],
+        "docstring": "Test ConfigurationError can be created with message."
+      },
+      {
+        "name": "test_configuration_error_with_config_key",
+        "line": 75,
+        "markers": [],
+        "docstring": "Test ConfigurationError can include config context."
+      },
+      {
+        "name": "test_risk_limit_exceeded_inheritance",
+        "line": 85,
+        "markers": [],
+        "docstring": "Test that RiskLimitExceeded inherits from TradingError."
+      },
+      {
+        "name": "test_risk_limit_exceeded_creation",
+        "line": 90,
+        "markers": [],
+        "docstring": "Test RiskLimitExceeded can be created with message."
+      },
+      {
+        "name": "test_risk_limit_exceeded_with_risk_metrics",
+        "line": 97,
+        "markers": [],
+        "docstring": "Test RiskLimitExceeded can include risk context."
+      },
+      {
+        "name": "test_data_error_inheritance",
+        "line": 113,
+        "markers": [],
+        "docstring": "Test that DataError inherits from TradingError."
+      },
+      {
+        "name": "test_data_error_creation",
+        "line": 117,
+        "markers": [],
+        "docstring": "Test DataError can be created with message."
+      },
+      {
+        "name": "test_strategy_error_inheritance",
+        "line": 126,
+        "markers": [],
+        "docstring": "Test that StrategyError inherits from TradingError."
+      },
+      {
+        "name": "test_strategy_error_creation",
+        "line": 130,
+        "markers": [],
+        "docstring": "Test StrategyError can be created with message."
+      },
+      {
+        "name": "test_backtest_error_inheritance",
+        "line": 139,
+        "markers": [],
+        "docstring": "Test that BacktestError inherits from TradingError."
+      },
+      {
+        "name": "test_backtest_error_creation",
+        "line": 143,
+        "markers": [],
+        "docstring": "Test BacktestError can be created with message."
+      },
+      {
+        "name": "test_network_error_inheritance",
+        "line": 152,
+        "markers": [],
+        "docstring": "Test that NetworkError inherits from TradingError."
+      },
+      {
+        "name": "test_network_error_creation",
+        "line": 156,
+        "markers": [],
+        "docstring": "Test NetworkError can be created with message."
+      },
+      {
+        "name": "test_insufficient_funds_error_inheritance",
+        "line": 165,
+        "markers": [],
+        "docstring": "Test that InsufficientFundsError inherits from TradingError."
+      },
+      {
+        "name": "test_insufficient_funds_error_creation",
+        "line": 169,
+        "markers": [],
+        "docstring": "Test InsufficientFundsError can be created with message."
+      },
+      {
+        "name": "test_all_errors_inherit_from_trading_error",
+        "line": 181,
+        "markers": [],
+        "docstring": "Test that all custom errors inherit from TradingError."
+      }
+    ],
     "tests/unit/gpt_trader/errors/test_handler.py": [
       {
         "name": "TestCircuitBreaker::test_closed_to_open_transition",
@@ -13336,601 +13842,121 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/errors/test_error_patterns.py": [
-      {
-        "name": "test_error_context_swallow_logs_extra_context",
-        "line": 18,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_error_context_reraise_for_matching_type",
-        "line": 31,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_handle_errors_returns_default_for_swallowed_exception",
-        "line": 37,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_handle_errors_reraises_specified_exception",
-        "line": 45,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_safe_execute_respects_reraise",
-        "line": 54,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_safe_execute_returns_default_when_swallowed",
-        "line": 63,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "TestErrorContextExtended::test_exit_no_exception",
-        "line": 106,
-        "markers": [],
-        "docstring": "",
-        "class": "TestErrorContextExtended"
-      },
-      {
-        "name": "TestErrorContextExtended::test_reraise_tuple_matching",
-        "line": 111,
-        "markers": [],
-        "docstring": "",
-        "class": "TestErrorContextExtended"
-      },
-      {
-        "name": "TestErrorContextExtended::test_reraise_tuple_non_matching",
-        "line": 116,
-        "markers": [],
-        "docstring": "",
-        "class": "TestErrorContextExtended"
-      },
-      {
-        "name": "TestErrorContextExtended::test_log_level_below_error",
-        "line": 123,
-        "markers": [],
-        "docstring": "",
-        "class": "TestErrorContextExtended"
-      },
-      {
-        "name": "TestHandleBrokerageErrors::test_returns_result_on_success",
-        "line": 133,
-        "markers": [],
-        "docstring": "",
-        "class": "TestHandleBrokerageErrors"
-      },
-      {
-        "name": "TestHandleOrderErrors::test_returns_result_on_success",
-        "line": 146,
-        "markers": [],
-        "docstring": "",
-        "class": "TestHandleOrderErrors"
-      },
-      {
-        "name": "TestHandleDataErrors::test_returns_result_on_success",
-        "line": 159,
-        "markers": [],
-        "docstring": "",
-        "class": "TestHandleDataErrors"
-      },
-      {
-        "name": "TestHandleConfigErrors::test_returns_result_on_success",
-        "line": 172,
-        "markers": [],
-        "docstring": "",
-        "class": "TestHandleConfigErrors"
-      },
-      {
-        "name": "TestHandleAccountErrors::test_returns_result_on_success",
-        "line": 185,
-        "markers": [],
-        "docstring": "",
-        "class": "TestHandleAccountErrors"
-      },
-      {
-        "name": "TestRetryOnError::test_succeeds_without_retry",
-        "line": 250,
-        "markers": [],
-        "docstring": "",
-        "class": "TestRetryOnError"
-      },
-      {
-        "name": "TestRetryOnError::test_retries_on_failure",
-        "line": 265,
-        "markers": [],
-        "docstring": "",
-        "class": "TestRetryOnError"
-      },
-      {
-        "name": "test_exit_no_exception",
-        "line": 106,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_reraise_tuple_matching",
-        "line": 111,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_reraise_tuple_non_matching",
-        "line": 116,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_level_below_error",
-        "line": 123,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_returns_result_on_success",
-        "line": 133,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_returns_result_on_success",
-        "line": 146,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_returns_result_on_success",
-        "line": 159,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_returns_result_on_success",
-        "line": 172,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_returns_result_on_success",
-        "line": 185,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_succeeds_without_retry",
-        "line": 250,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_retries_on_failure",
-        "line": 265,
-        "markers": [],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/errors/test_base.py": [
+    "tests/unit/gpt_trader/errors/test_base_trading_and_hierarchy.py": [
       {
         "name": "TestTradingError::test_trading_error_inheritance",
-        "line": 23,
+        "line": 19,
         "markers": [],
         "docstring": "Test that TradingError inherits from Exception.",
         "class": "TestTradingError"
       },
       {
         "name": "TestTradingError::test_trading_error_creation",
-        "line": 27,
+        "line": 23,
         "markers": [],
         "docstring": "Test TradingError can be created with message.",
         "class": "TestTradingError"
       },
       {
         "name": "TestTradingError::test_trading_error_creation_without_message",
-        "line": 33,
+        "line": 29,
         "markers": [],
         "docstring": "Test TradingError requires a message.",
         "class": "TestTradingError"
       },
       {
         "name": "TestTradingError::test_trading_error_with_context",
-        "line": 39,
+        "line": 35,
         "markers": [],
         "docstring": "Test TradingError supports context.",
         "class": "TestTradingError"
       },
       {
         "name": "TestTradingError::test_trading_error_captures_stack_when_no_exception",
-        "line": 45,
+        "line": 41,
         "markers": [],
         "docstring": "Ensure stack trace is captured even when instantiated outside except blocks.",
         "class": "TestTradingError"
       },
       {
-        "name": "TestValidationError::test_validation_error_inheritance",
-        "line": 55,
-        "markers": [],
-        "docstring": "Test that ValidationError inherits from TradingError.",
-        "class": "TestValidationError"
-      },
-      {
-        "name": "TestValidationError::test_validation_error_creation",
-        "line": 60,
-        "markers": [],
-        "docstring": "Test ValidationError can be created with message.",
-        "class": "TestValidationError"
-      },
-      {
-        "name": "TestValidationError::test_validation_error_with_field",
-        "line": 65,
-        "markers": [],
-        "docstring": "Test ValidationError can include field context.",
-        "class": "TestValidationError"
-      },
-      {
-        "name": "TestExecutionError::test_execution_error_inheritance",
-        "line": 76,
-        "markers": [],
-        "docstring": "Test that ExecutionError inherits from TradingError.",
-        "class": "TestExecutionError"
-      },
-      {
-        "name": "TestExecutionError::test_execution_error_creation",
-        "line": 81,
-        "markers": [],
-        "docstring": "Test ExecutionError can be created with message.",
-        "class": "TestExecutionError"
-      },
-      {
-        "name": "TestExecutionError::test_execution_error_with_order_id",
-        "line": 86,
-        "markers": [],
-        "docstring": "Test ExecutionError can include order context.",
-        "class": "TestExecutionError"
-      },
-      {
-        "name": "TestConfigurationError::test_configuration_error_inheritance",
-        "line": 96,
-        "markers": [],
-        "docstring": "Test that ConfigurationError inherits from TradingError.",
-        "class": "TestConfigurationError"
-      },
-      {
-        "name": "TestConfigurationError::test_configuration_error_creation",
-        "line": 101,
-        "markers": [],
-        "docstring": "Test ConfigurationError can be created with message.",
-        "class": "TestConfigurationError"
-      },
-      {
-        "name": "TestConfigurationError::test_configuration_error_with_config_key",
-        "line": 106,
-        "markers": [],
-        "docstring": "Test ConfigurationError can include config context.",
-        "class": "TestConfigurationError"
-      },
-      {
-        "name": "TestRiskLimitExceeded::test_risk_limit_exceeded_inheritance",
-        "line": 116,
-        "markers": [],
-        "docstring": "Test that RiskLimitExceeded inherits from TradingError.",
-        "class": "TestRiskLimitExceeded"
-      },
-      {
-        "name": "TestRiskLimitExceeded::test_risk_limit_exceeded_creation",
-        "line": 121,
-        "markers": [],
-        "docstring": "Test RiskLimitExceeded can be created with message.",
-        "class": "TestRiskLimitExceeded"
-      },
-      {
-        "name": "TestRiskLimitExceeded::test_risk_limit_exceeded_with_risk_metrics",
-        "line": 128,
-        "markers": [],
-        "docstring": "Test RiskLimitExceeded can include risk context.",
-        "class": "TestRiskLimitExceeded"
-      },
-      {
-        "name": "TestDataError::test_data_error_inheritance",
-        "line": 144,
-        "markers": [],
-        "docstring": "Test that DataError inherits from TradingError.",
-        "class": "TestDataError"
-      },
-      {
-        "name": "TestDataError::test_data_error_creation",
-        "line": 148,
-        "markers": [],
-        "docstring": "Test DataError can be created with message.",
-        "class": "TestDataError"
-      },
-      {
-        "name": "TestStrategyError::test_strategy_error_inheritance",
-        "line": 157,
-        "markers": [],
-        "docstring": "Test that StrategyError inherits from TradingError.",
-        "class": "TestStrategyError"
-      },
-      {
-        "name": "TestStrategyError::test_strategy_error_creation",
-        "line": 161,
-        "markers": [],
-        "docstring": "Test StrategyError can be created with message.",
-        "class": "TestStrategyError"
-      },
-      {
-        "name": "TestBacktestError::test_backtest_error_inheritance",
-        "line": 170,
-        "markers": [],
-        "docstring": "Test that BacktestError inherits from TradingError.",
-        "class": "TestBacktestError"
-      },
-      {
-        "name": "TestBacktestError::test_backtest_error_creation",
-        "line": 174,
-        "markers": [],
-        "docstring": "Test BacktestError can be created with message.",
-        "class": "TestBacktestError"
-      },
-      {
-        "name": "TestNetworkError::test_network_error_inheritance",
-        "line": 183,
-        "markers": [],
-        "docstring": "Test that NetworkError inherits from TradingError.",
-        "class": "TestNetworkError"
-      },
-      {
-        "name": "TestNetworkError::test_network_error_creation",
-        "line": 187,
-        "markers": [],
-        "docstring": "Test NetworkError can be created with message.",
-        "class": "TestNetworkError"
-      },
-      {
-        "name": "TestInsufficientFundsError::test_insufficient_funds_error_inheritance",
-        "line": 196,
-        "markers": [],
-        "docstring": "Test that InsufficientFundsError inherits from TradingError.",
-        "class": "TestInsufficientFundsError"
-      },
-      {
-        "name": "TestInsufficientFundsError::test_insufficient_funds_error_creation",
-        "line": 200,
-        "markers": [],
-        "docstring": "Test InsufficientFundsError can be created with message.",
-        "class": "TestInsufficientFundsError"
-      },
-      {
         "name": "TestHandleError::test_handle_error_wraps_exception_with_traceback",
-        "line": 212,
+        "line": 51,
         "markers": [],
         "docstring": "Ensure wrapped exceptions retain traceback information.",
         "class": "TestHandleError"
       },
       {
-        "name": "TestErrorHierarchy::test_all_errors_inherit_from_trading_error",
-        "line": 228,
-        "markers": [],
-        "docstring": "Test that all custom errors inherit from TradingError.",
-        "class": "TestErrorHierarchy"
-      },
-      {
         "name": "TestErrorHierarchy::test_error_catching_hierarchy",
-        "line": 244,
+        "line": 67,
         "markers": [],
         "docstring": "Test that errors can be caught by their parent classes.",
         "class": "TestErrorHierarchy"
       },
       {
         "name": "TestErrorHierarchy::test_specific_error_catching",
-        "line": 258,
+        "line": 81,
         "markers": [],
         "docstring": "Test that errors can be caught specifically.",
         "class": "TestErrorHierarchy"
       },
       {
         "name": "TestErrorHierarchy::test_exception_chaining",
-        "line": 267,
+        "line": 90,
         "markers": [],
         "docstring": "Test that errors support exception chaining.",
         "class": "TestErrorHierarchy"
       },
       {
         "name": "test_trading_error_inheritance",
-        "line": 23,
+        "line": 19,
         "markers": [],
         "docstring": "Test that TradingError inherits from Exception."
       },
       {
         "name": "test_trading_error_creation",
-        "line": 27,
+        "line": 23,
         "markers": [],
         "docstring": "Test TradingError can be created with message."
       },
       {
         "name": "test_trading_error_creation_without_message",
-        "line": 33,
+        "line": 29,
         "markers": [],
         "docstring": "Test TradingError requires a message."
       },
       {
         "name": "test_trading_error_with_context",
-        "line": 39,
+        "line": 35,
         "markers": [],
         "docstring": "Test TradingError supports context."
       },
       {
         "name": "test_trading_error_captures_stack_when_no_exception",
-        "line": 45,
+        "line": 41,
         "markers": [],
         "docstring": "Ensure stack trace is captured even when instantiated outside except blocks."
       },
       {
-        "name": "test_validation_error_inheritance",
-        "line": 55,
-        "markers": [],
-        "docstring": "Test that ValidationError inherits from TradingError."
-      },
-      {
-        "name": "test_validation_error_creation",
-        "line": 60,
-        "markers": [],
-        "docstring": "Test ValidationError can be created with message."
-      },
-      {
-        "name": "test_validation_error_with_field",
-        "line": 65,
-        "markers": [],
-        "docstring": "Test ValidationError can include field context."
-      },
-      {
-        "name": "test_execution_error_inheritance",
-        "line": 76,
-        "markers": [],
-        "docstring": "Test that ExecutionError inherits from TradingError."
-      },
-      {
-        "name": "test_execution_error_creation",
-        "line": 81,
-        "markers": [],
-        "docstring": "Test ExecutionError can be created with message."
-      },
-      {
-        "name": "test_execution_error_with_order_id",
-        "line": 86,
-        "markers": [],
-        "docstring": "Test ExecutionError can include order context."
-      },
-      {
-        "name": "test_configuration_error_inheritance",
-        "line": 96,
-        "markers": [],
-        "docstring": "Test that ConfigurationError inherits from TradingError."
-      },
-      {
-        "name": "test_configuration_error_creation",
-        "line": 101,
-        "markers": [],
-        "docstring": "Test ConfigurationError can be created with message."
-      },
-      {
-        "name": "test_configuration_error_with_config_key",
-        "line": 106,
-        "markers": [],
-        "docstring": "Test ConfigurationError can include config context."
-      },
-      {
-        "name": "test_risk_limit_exceeded_inheritance",
-        "line": 116,
-        "markers": [],
-        "docstring": "Test that RiskLimitExceeded inherits from TradingError."
-      },
-      {
-        "name": "test_risk_limit_exceeded_creation",
-        "line": 121,
-        "markers": [],
-        "docstring": "Test RiskLimitExceeded can be created with message."
-      },
-      {
-        "name": "test_risk_limit_exceeded_with_risk_metrics",
-        "line": 128,
-        "markers": [],
-        "docstring": "Test RiskLimitExceeded can include risk context."
-      },
-      {
-        "name": "test_data_error_inheritance",
-        "line": 144,
-        "markers": [],
-        "docstring": "Test that DataError inherits from TradingError."
-      },
-      {
-        "name": "test_data_error_creation",
-        "line": 148,
-        "markers": [],
-        "docstring": "Test DataError can be created with message."
-      },
-      {
-        "name": "test_strategy_error_inheritance",
-        "line": 157,
-        "markers": [],
-        "docstring": "Test that StrategyError inherits from TradingError."
-      },
-      {
-        "name": "test_strategy_error_creation",
-        "line": 161,
-        "markers": [],
-        "docstring": "Test StrategyError can be created with message."
-      },
-      {
-        "name": "test_backtest_error_inheritance",
-        "line": 170,
-        "markers": [],
-        "docstring": "Test that BacktestError inherits from TradingError."
-      },
-      {
-        "name": "test_backtest_error_creation",
-        "line": 174,
-        "markers": [],
-        "docstring": "Test BacktestError can be created with message."
-      },
-      {
-        "name": "test_network_error_inheritance",
-        "line": 183,
-        "markers": [],
-        "docstring": "Test that NetworkError inherits from TradingError."
-      },
-      {
-        "name": "test_network_error_creation",
-        "line": 187,
-        "markers": [],
-        "docstring": "Test NetworkError can be created with message."
-      },
-      {
-        "name": "test_insufficient_funds_error_inheritance",
-        "line": 196,
-        "markers": [],
-        "docstring": "Test that InsufficientFundsError inherits from TradingError."
-      },
-      {
-        "name": "test_insufficient_funds_error_creation",
-        "line": 200,
-        "markers": [],
-        "docstring": "Test InsufficientFundsError can be created with message."
-      },
-      {
         "name": "test_handle_error_wraps_exception_with_traceback",
-        "line": 212,
+        "line": 51,
         "markers": [],
         "docstring": "Ensure wrapped exceptions retain traceback information."
       },
       {
-        "name": "test_all_errors_inherit_from_trading_error",
-        "line": 228,
-        "markers": [],
-        "docstring": "Test that all custom errors inherit from TradingError."
-      },
-      {
         "name": "test_error_catching_hierarchy",
-        "line": 244,
+        "line": 67,
         "markers": [],
         "docstring": "Test that errors can be caught by their parent classes."
       },
       {
         "name": "test_specific_error_catching",
-        "line": 258,
+        "line": 81,
         "markers": [],
         "docstring": "Test that errors can be caught specifically."
       },
       {
         "name": "test_exception_chaining",
-        "line": 267,
+        "line": 90,
         "markers": [],
         "docstring": "Test that errors support exception chaining."
       }
@@ -27481,6 +27507,112 @@
         "docstring": "Test creating a filled result."
       }
     ],
+    "tests/unit/gpt_trader/backtesting/engine/test_clock_time_and_speed.py": [
+      {
+        "name": "TestSimulationClockSetTime::test_set_time_updates_current_time",
+        "line": 15,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSimulationClockSetTime"
+      },
+      {
+        "name": "TestSimulationClockSetTime::test_set_time_can_go_backwards",
+        "line": 23,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSimulationClockSetTime"
+      },
+      {
+        "name": "TestSimulationClockElapsedTime::test_elapsed_sim_time_starts_at_zero",
+        "line": 36,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSimulationClockElapsedTime"
+      },
+      {
+        "name": "TestSimulationClockElapsedTime::test_elapsed_sim_time_after_advance",
+        "line": 40,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSimulationClockElapsedTime"
+      },
+      {
+        "name": "TestSimulationClockElapsedTime::test_elapsed_wall_time_is_non_negative",
+        "line": 48,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSimulationClockElapsedTime"
+      },
+      {
+        "name": "TestSimulationClockSpeedupRatio::test_speedup_ratio_inf_when_wall_time_is_zero",
+        "line": 57,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSimulationClockSpeedupRatio"
+      },
+      {
+        "name": "TestSimulationClockSpeedupRatio::test_speedup_ratio_zero_when_no_sim_advance",
+        "line": 63,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSimulationClockSpeedupRatio"
+      },
+      {
+        "name": "TestSimulationClockSpeedupRatio::test_speedup_ratio_after_advance",
+        "line": 70,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSimulationClockSpeedupRatio"
+      },
+      {
+        "name": "test_set_time_updates_current_time",
+        "line": 15,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_set_time_can_go_backwards",
+        "line": 23,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_elapsed_sim_time_starts_at_zero",
+        "line": 36,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_elapsed_sim_time_after_advance",
+        "line": 40,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_elapsed_wall_time_is_non_negative",
+        "line": 48,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_speedup_ratio_inf_when_wall_time_is_zero",
+        "line": 57,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_speedup_ratio_zero_when_no_sim_advance",
+        "line": 63,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_speedup_ratio_after_advance",
+        "line": 70,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/backtesting/engine/test_bar_runner_init.py": [
       {
         "name": "TestClockedBarRunnerInit::test_basic_initialization",
@@ -27531,6 +27663,60 @@
       {
         "name": "test_multiple_symbols",
         "line": 61,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/backtesting/engine/test_clock_delays.py": [
+      {
+        "name": "TestSimulationClockDelays::test_instant_speed_no_delay",
+        "line": 17,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSimulationClockDelays"
+      },
+      {
+        "name": "TestSimulationClockDelays::test_real_time_speed_full_delay",
+        "line": 24,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSimulationClockDelays"
+      },
+      {
+        "name": "TestSimulationClockDelays::test_fast_10x_speed_reduced_delay",
+        "line": 31,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSimulationClockDelays"
+      },
+      {
+        "name": "TestSimulationClockDelays::test_fast_100x_speed_minimal_delay",
+        "line": 38,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSimulationClockDelays"
+      },
+      {
+        "name": "test_instant_speed_no_delay",
+        "line": 17,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_real_time_speed_full_delay",
+        "line": 24,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_fast_10x_speed_reduced_delay",
+        "line": 31,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_fast_100x_speed_minimal_delay",
+        "line": 38,
         "markers": [],
         "docstring": ""
       }
@@ -27611,6 +27797,86 @@
       {
         "name": "test_bars_remaining_zero_duration",
         "line": 90,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/backtesting/engine/test_clock_advance.py": [
+      {
+        "name": "TestSimulationClockAdvance::test_advance_updates_time",
+        "line": 17,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSimulationClockAdvance"
+      },
+      {
+        "name": "TestSimulationClockAdvance::test_advance_triggers_callbacks",
+        "line": 27,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSimulationClockAdvance"
+      },
+      {
+        "name": "TestSimulationClockAdvance::test_advance_triggers_multiple_callbacks",
+        "line": 38,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSimulationClockAdvance"
+      },
+      {
+        "name": "TestSimulationClockAdvance::test_multiple_advances_accumulate",
+        "line": 53,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSimulationClockAdvance"
+      },
+      {
+        "name": "TestSimulationClockOnTick::test_on_tick_adds_callback",
+        "line": 95,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSimulationClockOnTick"
+      },
+      {
+        "name": "TestSimulationClockOnTick::test_multiple_callbacks_can_be_registered",
+        "line": 103,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSimulationClockOnTick"
+      },
+      {
+        "name": "test_advance_updates_time",
+        "line": 17,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_advance_triggers_callbacks",
+        "line": 27,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_advance_triggers_multiple_callbacks",
+        "line": 38,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_multiple_advances_accumulate",
+        "line": 53,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_on_tick_adds_callback",
+        "line": 95,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_multiple_callbacks_can_be_registered",
+        "line": 103,
         "markers": [],
         "docstring": ""
       }
@@ -27931,303 +28197,69 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/backtesting/engine/test_clock.py": [
+    "tests/unit/gpt_trader/backtesting/engine/test_clock_init.py": [
       {
         "name": "TestSimulationClockInit::test_default_speed_is_instant",
-        "line": 18,
+        "line": 15,
         "markers": [],
         "docstring": "",
         "class": "TestSimulationClockInit"
       },
       {
         "name": "TestSimulationClockInit::test_custom_speed",
-        "line": 22,
+        "line": 19,
         "markers": [],
         "docstring": "",
         "class": "TestSimulationClockInit"
       },
       {
         "name": "TestSimulationClockInit::test_default_start_time_is_now",
-        "line": 26,
+        "line": 23,
         "markers": [],
         "docstring": "",
         "class": "TestSimulationClockInit"
       },
       {
         "name": "TestSimulationClockInit::test_custom_start_time",
-        "line": 32,
+        "line": 29,
         "markers": [],
         "docstring": "",
         "class": "TestSimulationClockInit"
       },
       {
         "name": "TestSimulationClockInit::test_initializes_empty_callbacks",
-        "line": 37,
+        "line": 34,
         "markers": [],
         "docstring": "",
         "class": "TestSimulationClockInit"
       },
       {
-        "name": "TestSimulationClockAdvance::test_advance_updates_time",
-        "line": 45,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSimulationClockAdvance"
-      },
-      {
-        "name": "TestSimulationClockAdvance::test_advance_triggers_callbacks",
-        "line": 55,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSimulationClockAdvance"
-      },
-      {
-        "name": "TestSimulationClockAdvance::test_advance_triggers_multiple_callbacks",
-        "line": 66,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSimulationClockAdvance"
-      },
-      {
-        "name": "TestSimulationClockAdvance::test_multiple_advances_accumulate",
-        "line": 81,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSimulationClockAdvance"
-      },
-      {
-        "name": "TestSimulationClockSetTime::test_set_time_updates_current_time",
-        "line": 123,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSimulationClockSetTime"
-      },
-      {
-        "name": "TestSimulationClockSetTime::test_set_time_can_go_backwards",
-        "line": 131,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSimulationClockSetTime"
-      },
-      {
-        "name": "TestSimulationClockElapsedTime::test_elapsed_sim_time_starts_at_zero",
-        "line": 144,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSimulationClockElapsedTime"
-      },
-      {
-        "name": "TestSimulationClockElapsedTime::test_elapsed_sim_time_after_advance",
-        "line": 148,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSimulationClockElapsedTime"
-      },
-      {
-        "name": "TestSimulationClockElapsedTime::test_elapsed_wall_time_is_non_negative",
-        "line": 156,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSimulationClockElapsedTime"
-      },
-      {
-        "name": "TestSimulationClockSpeedupRatio::test_speedup_ratio_inf_when_wall_time_is_zero",
-        "line": 165,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSimulationClockSpeedupRatio"
-      },
-      {
-        "name": "TestSimulationClockSpeedupRatio::test_speedup_ratio_zero_when_no_sim_advance",
-        "line": 171,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSimulationClockSpeedupRatio"
-      },
-      {
-        "name": "TestSimulationClockSpeedupRatio::test_speedup_ratio_after_advance",
-        "line": 178,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSimulationClockSpeedupRatio"
-      },
-      {
-        "name": "TestSimulationClockOnTick::test_on_tick_adds_callback",
-        "line": 193,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSimulationClockOnTick"
-      },
-      {
-        "name": "TestSimulationClockOnTick::test_multiple_callbacks_can_be_registered",
-        "line": 201,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSimulationClockOnTick"
-      },
-      {
-        "name": "TestSimulationClockDelays::test_instant_speed_no_delay",
-        "line": 220,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSimulationClockDelays"
-      },
-      {
-        "name": "TestSimulationClockDelays::test_real_time_speed_full_delay",
-        "line": 227,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSimulationClockDelays"
-      },
-      {
-        "name": "TestSimulationClockDelays::test_fast_10x_speed_reduced_delay",
-        "line": 234,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSimulationClockDelays"
-      },
-      {
-        "name": "TestSimulationClockDelays::test_fast_100x_speed_minimal_delay",
-        "line": 241,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSimulationClockDelays"
-      },
-      {
         "name": "test_default_speed_is_instant",
-        "line": 18,
+        "line": 15,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_custom_speed",
-        "line": 22,
+        "line": 19,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_default_start_time_is_now",
-        "line": 26,
+        "line": 23,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_custom_start_time",
-        "line": 32,
+        "line": 29,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_initializes_empty_callbacks",
-        "line": 37,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_advance_updates_time",
-        "line": 45,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_advance_triggers_callbacks",
-        "line": 55,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_advance_triggers_multiple_callbacks",
-        "line": 66,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_multiple_advances_accumulate",
-        "line": 81,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_set_time_updates_current_time",
-        "line": 123,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_set_time_can_go_backwards",
-        "line": 131,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_elapsed_sim_time_starts_at_zero",
-        "line": 144,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_elapsed_sim_time_after_advance",
-        "line": 148,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_elapsed_wall_time_is_non_negative",
-        "line": 156,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_speedup_ratio_inf_when_wall_time_is_zero",
-        "line": 165,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_speedup_ratio_zero_when_no_sim_advance",
-        "line": 171,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_speedup_ratio_after_advance",
-        "line": 178,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_on_tick_adds_callback",
-        "line": 193,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_multiple_callbacks_can_be_registered",
-        "line": 201,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_instant_speed_no_delay",
-        "line": 220,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_real_time_speed_full_delay",
-        "line": 227,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_fast_10x_speed_reduced_delay",
-        "line": 234,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_fast_100x_speed_minimal_delay",
-        "line": 241,
+        "line": 34,
         "markers": [],
         "docstring": ""
       }
@@ -36759,6 +36791,60 @@
         "docstring": "All status components should be initialized."
       }
     ],
+    "tests/unit/gpt_trader/tui/state_management/test_validators_market.py": [
+      {
+        "name": "TestStateValidatorMarket::test_validate_market_valid_prices",
+        "line": 13,
+        "markers": [],
+        "docstring": "Test market validation passes for valid prices.",
+        "class": "TestStateValidatorMarket"
+      },
+      {
+        "name": "TestStateValidatorMarket::test_validate_market_negative_price_error",
+        "line": 24,
+        "markers": [],
+        "docstring": "Test market validation catches negative prices.",
+        "class": "TestStateValidatorMarket"
+      },
+      {
+        "name": "TestStateValidatorMarket::test_validate_market_invalid_price_format",
+        "line": 36,
+        "markers": [],
+        "docstring": "Test market validation catches invalid price format.",
+        "class": "TestStateValidatorMarket"
+      },
+      {
+        "name": "TestStateValidatorMarket::test_validate_price_helper",
+        "line": 48,
+        "markers": [],
+        "docstring": "Test _validate_price helper function.",
+        "class": "TestStateValidatorMarket"
+      },
+      {
+        "name": "test_validate_market_valid_prices",
+        "line": 13,
+        "markers": [],
+        "docstring": "Test market validation passes for valid prices."
+      },
+      {
+        "name": "test_validate_market_negative_price_error",
+        "line": 24,
+        "markers": [],
+        "docstring": "Test market validation catches negative prices."
+      },
+      {
+        "name": "test_validate_market_invalid_price_format",
+        "line": 36,
+        "markers": [],
+        "docstring": "Test market validation catches invalid price format."
+      },
+      {
+        "name": "test_validate_price_helper",
+        "line": 48,
+        "markers": [],
+        "docstring": "Test _validate_price helper function."
+      }
+    ],
     "tests/unit/gpt_trader/tui/state_management/test_delta_updater_result_and_helpers.py": [
       {
         "name": "TestDeltaResult::test_initial_state_no_changes",
@@ -36865,277 +36951,164 @@
         "docstring": "Test decimal comparison handles None values."
       }
     ],
-    "tests/unit/gpt_trader/tui/state_management/test_validators.py": [
+    "tests/unit/gpt_trader/tui/state_management/test_validators_account_risk_system.py": [
       {
-        "name": "TestValidationResult::test_initial_state_is_valid",
+        "name": "TestStateValidatorAccount::test_validate_account_valid",
         "line": 14,
-        "markers": [],
-        "docstring": "Test new ValidationResult is valid with empty lists.",
-        "class": "TestValidationResult"
-      },
-      {
-        "name": "TestValidationResult::test_add_error_sets_invalid",
-        "line": 22,
-        "markers": [],
-        "docstring": "Test adding error marks result as invalid.",
-        "class": "TestValidationResult"
-      },
-      {
-        "name": "TestValidationResult::test_add_warning_keeps_valid",
-        "line": 33,
-        "markers": [],
-        "docstring": "Test adding warning does not invalidate result.",
-        "class": "TestValidationResult"
-      },
-      {
-        "name": "TestValidationResult::test_merge_combines_results",
-        "line": 42,
-        "markers": [],
-        "docstring": "Test merge combines errors and warnings from both results.",
-        "class": "TestValidationResult"
-      },
-      {
-        "name": "TestValidationResult::test_merge_propagates_invalid_state",
-        "line": 56,
-        "markers": [],
-        "docstring": "Test merging invalid result makes target invalid.",
-        "class": "TestValidationResult"
-      },
-      {
-        "name": "TestStateValidator::test_validate_full_state_handles_none_components",
-        "line": 70,
-        "markers": [],
-        "docstring": "Test validation handles None components gracefully.",
-        "class": "TestStateValidator"
-      },
-      {
-        "name": "TestStateValidator::test_validate_market_valid_prices",
-        "line": 88,
-        "markers": [],
-        "docstring": "Test market validation passes for valid prices.",
-        "class": "TestStateValidator"
-      },
-      {
-        "name": "TestStateValidator::test_validate_market_negative_price_error",
-        "line": 99,
-        "markers": [],
-        "docstring": "Test market validation catches negative prices.",
-        "class": "TestStateValidator"
-      },
-      {
-        "name": "TestStateValidator::test_validate_market_invalid_price_format",
-        "line": 111,
-        "markers": [],
-        "docstring": "Test market validation catches invalid price format.",
-        "class": "TestStateValidator"
-      },
-      {
-        "name": "TestStateValidator::test_validate_orders_valid",
-        "line": 123,
-        "markers": [],
-        "docstring": "Test order validation passes for valid orders.",
-        "class": "TestStateValidator"
-      },
-      {
-        "name": "TestStateValidator::test_validate_orders_missing_order_id",
-        "line": 137,
-        "markers": [],
-        "docstring": "Test order validation warns on missing order_id.",
-        "class": "TestStateValidator"
-      },
-      {
-        "name": "TestStateValidator::test_validate_trades_valid",
-        "line": 149,
-        "markers": [],
-        "docstring": "Test trade validation passes for valid trades.",
-        "class": "TestStateValidator"
-      },
-      {
-        "name": "TestStateValidator::test_validate_trades_negative_quantity_error",
-        "line": 164,
-        "markers": [],
-        "docstring": "Test trade validation catches negative quantity.",
-        "class": "TestStateValidator"
-      },
-      {
-        "name": "TestStateValidator::test_validate_account_valid",
-        "line": 178,
         "markers": [],
         "docstring": "Test account validation passes for valid account.",
-        "class": "TestStateValidator"
+        "class": "TestStateValidatorAccount"
       },
       {
-        "name": "TestStateValidator::test_validate_account_available_exceeds_total_warning",
-        "line": 193,
+        "name": "TestStateValidatorAccount::test_validate_account_available_exceeds_total_warning",
+        "line": 29,
         "markers": [],
         "docstring": "Test account validation warns when available exceeds total.",
-        "class": "TestStateValidator"
+        "class": "TestStateValidatorAccount"
       },
       {
-        "name": "TestStateValidator::test_validate_risk_valid",
-        "line": 209,
+        "name": "TestStateValidatorRisk::test_validate_risk_valid",
+        "line": 49,
         "markers": [],
         "docstring": "Test risk validation passes for valid risk data.",
-        "class": "TestStateValidator"
+        "class": "TestStateValidatorRisk"
       },
       {
-        "name": "TestStateValidator::test_validate_risk_leverage_out_of_range",
-        "line": 221,
+        "name": "TestStateValidatorRisk::test_validate_risk_leverage_out_of_range",
+        "line": 61,
         "markers": [],
         "docstring": "Test risk validation warns on excessive leverage.",
-        "class": "TestStateValidator"
+        "class": "TestStateValidatorRisk"
       },
       {
-        "name": "TestStateValidator::test_validate_system_valid",
-        "line": 233,
+        "name": "TestStateValidatorSystem::test_validate_system_valid",
+        "line": 77,
         "markers": [],
         "docstring": "Test system validation passes for valid system data.",
-        "class": "TestStateValidator"
+        "class": "TestStateValidatorSystem"
       },
       {
-        "name": "TestStateValidator::test_validate_system_unknown_status_warning",
-        "line": 244,
-        "markers": [],
-        "docstring": "Test system validation warns on unknown connection status.",
-        "class": "TestStateValidator"
-      },
-      {
-        "name": "TestStateValidator::test_validate_price_helper",
-        "line": 255,
-        "markers": [],
-        "docstring": "Test _validate_price helper function.",
-        "class": "TestStateValidator"
-      },
-      {
-        "name": "TestStateValidator::test_validate_quantity_helper",
-        "line": 271,
-        "markers": [],
-        "docstring": "Test _validate_quantity helper function.",
-        "class": "TestStateValidator"
-      },
-      {
-        "name": "test_initial_state_is_valid",
-        "line": 14,
-        "markers": [],
-        "docstring": "Test new ValidationResult is valid with empty lists."
-      },
-      {
-        "name": "test_add_error_sets_invalid",
-        "line": 22,
-        "markers": [],
-        "docstring": "Test adding error marks result as invalid."
-      },
-      {
-        "name": "test_add_warning_keeps_valid",
-        "line": 33,
-        "markers": [],
-        "docstring": "Test adding warning does not invalidate result."
-      },
-      {
-        "name": "test_merge_combines_results",
-        "line": 42,
-        "markers": [],
-        "docstring": "Test merge combines errors and warnings from both results."
-      },
-      {
-        "name": "test_merge_propagates_invalid_state",
-        "line": 56,
-        "markers": [],
-        "docstring": "Test merging invalid result makes target invalid."
-      },
-      {
-        "name": "test_validate_full_state_handles_none_components",
-        "line": 70,
-        "markers": [],
-        "docstring": "Test validation handles None components gracefully."
-      },
-      {
-        "name": "test_validate_market_valid_prices",
+        "name": "TestStateValidatorSystem::test_validate_system_unknown_status_warning",
         "line": 88,
         "markers": [],
-        "docstring": "Test market validation passes for valid prices."
-      },
-      {
-        "name": "test_validate_market_negative_price_error",
-        "line": 99,
-        "markers": [],
-        "docstring": "Test market validation catches negative prices."
-      },
-      {
-        "name": "test_validate_market_invalid_price_format",
-        "line": 111,
-        "markers": [],
-        "docstring": "Test market validation catches invalid price format."
-      },
-      {
-        "name": "test_validate_orders_valid",
-        "line": 123,
-        "markers": [],
-        "docstring": "Test order validation passes for valid orders."
-      },
-      {
-        "name": "test_validate_orders_missing_order_id",
-        "line": 137,
-        "markers": [],
-        "docstring": "Test order validation warns on missing order_id."
-      },
-      {
-        "name": "test_validate_trades_valid",
-        "line": 149,
-        "markers": [],
-        "docstring": "Test trade validation passes for valid trades."
-      },
-      {
-        "name": "test_validate_trades_negative_quantity_error",
-        "line": 164,
-        "markers": [],
-        "docstring": "Test trade validation catches negative quantity."
+        "docstring": "Test system validation warns on unknown connection status.",
+        "class": "TestStateValidatorSystem"
       },
       {
         "name": "test_validate_account_valid",
-        "line": 178,
+        "line": 14,
         "markers": [],
         "docstring": "Test account validation passes for valid account."
       },
       {
         "name": "test_validate_account_available_exceeds_total_warning",
-        "line": 193,
+        "line": 29,
         "markers": [],
         "docstring": "Test account validation warns when available exceeds total."
       },
       {
         "name": "test_validate_risk_valid",
-        "line": 209,
+        "line": 49,
         "markers": [],
         "docstring": "Test risk validation passes for valid risk data."
       },
       {
         "name": "test_validate_risk_leverage_out_of_range",
-        "line": 221,
+        "line": 61,
         "markers": [],
         "docstring": "Test risk validation warns on excessive leverage."
       },
       {
         "name": "test_validate_system_valid",
-        "line": 233,
+        "line": 77,
         "markers": [],
         "docstring": "Test system validation passes for valid system data."
       },
       {
         "name": "test_validate_system_unknown_status_warning",
-        "line": 244,
+        "line": 88,
         "markers": [],
         "docstring": "Test system validation warns on unknown connection status."
+      }
+    ],
+    "tests/unit/gpt_trader/tui/state_management/test_validators_full_state.py": [
+      {
+        "name": "TestStateValidatorFullState::test_validate_full_state_handles_none_components",
+        "line": 13,
+        "markers": [],
+        "docstring": "Test validation handles None components gracefully.",
+        "class": "TestStateValidatorFullState"
       },
       {
-        "name": "test_validate_price_helper",
-        "line": 255,
+        "name": "test_validate_full_state_handles_none_components",
+        "line": 13,
         "markers": [],
-        "docstring": "Test _validate_price helper function."
+        "docstring": "Test validation handles None components gracefully."
+      }
+    ],
+    "tests/unit/gpt_trader/tui/state_management/test_validators_orders_and_trades.py": [
+      {
+        "name": "TestStateValidatorOrders::test_validate_orders_valid",
+        "line": 13,
+        "markers": [],
+        "docstring": "Test order validation passes for valid orders.",
+        "class": "TestStateValidatorOrders"
+      },
+      {
+        "name": "TestStateValidatorOrders::test_validate_orders_missing_order_id",
+        "line": 27,
+        "markers": [],
+        "docstring": "Test order validation warns on missing order_id.",
+        "class": "TestStateValidatorOrders"
+      },
+      {
+        "name": "TestStateValidatorTrades::test_validate_trades_valid",
+        "line": 43,
+        "markers": [],
+        "docstring": "Test trade validation passes for valid trades.",
+        "class": "TestStateValidatorTrades"
+      },
+      {
+        "name": "TestStateValidatorTrades::test_validate_trades_negative_quantity_error",
+        "line": 58,
+        "markers": [],
+        "docstring": "Test trade validation catches negative quantity.",
+        "class": "TestStateValidatorTrades"
+      },
+      {
+        "name": "TestStateValidatorQuantityHelper::test_validate_quantity_helper",
+        "line": 76,
+        "markers": [],
+        "docstring": "Test _validate_quantity helper function.",
+        "class": "TestStateValidatorQuantityHelper"
+      },
+      {
+        "name": "test_validate_orders_valid",
+        "line": 13,
+        "markers": [],
+        "docstring": "Test order validation passes for valid orders."
+      },
+      {
+        "name": "test_validate_orders_missing_order_id",
+        "line": 27,
+        "markers": [],
+        "docstring": "Test order validation warns on missing order_id."
+      },
+      {
+        "name": "test_validate_trades_valid",
+        "line": 43,
+        "markers": [],
+        "docstring": "Test trade validation passes for valid trades."
+      },
+      {
+        "name": "test_validate_trades_negative_quantity_error",
+        "line": 58,
+        "markers": [],
+        "docstring": "Test trade validation catches negative quantity."
       },
       {
         "name": "test_validate_quantity_helper",
-        "line": 271,
+        "line": 76,
         "markers": [],
         "docstring": "Test _validate_quantity helper function."
       }
@@ -37365,6 +37338,73 @@
         "line": 110,
         "markers": [],
         "docstring": "Test trade comparison detects new trade."
+      }
+    ],
+    "tests/unit/gpt_trader/tui/state_management/test_validators_result.py": [
+      {
+        "name": "TestValidationResult::test_initial_state_is_valid",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test new ValidationResult is valid with empty lists.",
+        "class": "TestValidationResult"
+      },
+      {
+        "name": "TestValidationResult::test_add_error_sets_invalid",
+        "line": 19,
+        "markers": [],
+        "docstring": "Test adding error marks result as invalid.",
+        "class": "TestValidationResult"
+      },
+      {
+        "name": "TestValidationResult::test_add_warning_keeps_valid",
+        "line": 30,
+        "markers": [],
+        "docstring": "Test adding warning does not invalidate result.",
+        "class": "TestValidationResult"
+      },
+      {
+        "name": "TestValidationResult::test_merge_combines_results",
+        "line": 39,
+        "markers": [],
+        "docstring": "Test merge combines errors and warnings from both results.",
+        "class": "TestValidationResult"
+      },
+      {
+        "name": "TestValidationResult::test_merge_propagates_invalid_state",
+        "line": 53,
+        "markers": [],
+        "docstring": "Test merging invalid result makes target invalid.",
+        "class": "TestValidationResult"
+      },
+      {
+        "name": "test_initial_state_is_valid",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test new ValidationResult is valid with empty lists."
+      },
+      {
+        "name": "test_add_error_sets_invalid",
+        "line": 19,
+        "markers": [],
+        "docstring": "Test adding error marks result as invalid."
+      },
+      {
+        "name": "test_add_warning_keeps_valid",
+        "line": 30,
+        "markers": [],
+        "docstring": "Test adding warning does not invalidate result."
+      },
+      {
+        "name": "test_merge_combines_results",
+        "line": 39,
+        "markers": [],
+        "docstring": "Test merge combines errors and warnings from both results."
+      },
+      {
+        "name": "test_merge_propagates_invalid_state",
+        "line": 53,
+        "markers": [],
+        "docstring": "Test merging invalid result makes target invalid."
       }
     ],
     "tests/unit/gpt_trader/tui/services/test_config_service.py": [
@@ -44760,64 +44800,48 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/features/data/test_data_module.py": [
-      {
-        "name": "test_store_data_updates_cache_with_warning",
-        "line": 136,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_fetch_data_returns_cache_hit",
-        "line": 150,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_fetch_data_loads_from_storage_and_updates_cache",
-        "line": 167,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_fetch_data_downloads_when_storage_misses",
-        "line": 188,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_cache_data_delegates_to_cache",
-        "line": 215,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_clean_old_data_clears_cache",
-        "line": 222,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_get_storage_stats_combines_sources",
-        "line": 231,
-        "markers": [],
-        "docstring": ""
-      },
+    "tests/unit/gpt_trader/features/data/test_data_module_import_export.py": [
       {
         "name": "test_export_data_writes_csv",
-        "line": 238,
+        "line": 9,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_import_data_roundtrips_csv",
-        "line": 261,
+        "line": 32,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_import_data_rejects_unknown_format",
-        "line": 280,
+        "line": 49,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/data/test_data_module_store_and_fetch.py": [
+      {
+        "name": "test_store_data_updates_cache_with_warning",
+        "line": 16,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_fetch_data_returns_cache_hit",
+        "line": 30,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_fetch_data_loads_from_storage_and_updates_cache",
+        "line": 47,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_fetch_data_downloads_when_storage_misses",
+        "line": 68,
         "markers": [],
         "docstring": ""
       }
@@ -45106,6 +45130,26 @@
       {
         "name": "test_multiple_scores",
         "line": 200,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/data/test_data_module_cache_and_stats.py": [
+      {
+        "name": "test_cache_data_delegates_to_cache",
+        "line": 11,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_clean_old_data_clears_cache",
+        "line": 18,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_get_storage_stats_combines_sources",
+        "line": 27,
         "markers": [],
         "docstring": ""
       }
@@ -51926,203 +51970,6 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection.py": [
-      {
-        "name": "TestCalculateBackoffWithJitter::test_backoff_grows_exponentially",
-        "line": 17,
-        "markers": [],
-        "docstring": "Test that backoff delay grows with each attempt.",
-        "class": "TestCalculateBackoffWithJitter"
-      },
-      {
-        "name": "TestCalculateBackoffWithJitter::test_backoff_respects_max",
-        "line": 26,
-        "markers": [],
-        "docstring": "Test that backoff delay is capped at max_seconds.",
-        "class": "TestCalculateBackoffWithJitter"
-      },
-      {
-        "name": "TestCalculateBackoffWithJitter::test_backoff_uses_base_at_attempt_zero",
-        "line": 35,
-        "markers": [],
-        "docstring": "Test that first attempt uses base delay.",
-        "class": "TestCalculateBackoffWithJitter"
-      },
-      {
-        "name": "TestCalculateBackoffWithJitter::test_backoff_uses_multiplier",
-        "line": 41,
-        "markers": [],
-        "docstring": "Test that multiplier is applied correctly.",
-        "class": "TestCalculateBackoffWithJitter"
-      },
-      {
-        "name": "TestCalculateBackoffWithJitter::test_jitter_within_bounds",
-        "line": 60,
-        "markers": [],
-        "docstring": "Test that jitter stays within \u00b1jitter_pct bounds.",
-        "class": "TestCalculateBackoffWithJitter"
-      },
-      {
-        "name": "TestCalculateBackoffWithJitter::test_jitter_produces_different_values",
-        "line": 79,
-        "markers": [],
-        "docstring": "Test that jitter produces variation across calls.",
-        "class": "TestCalculateBackoffWithJitter"
-      },
-      {
-        "name": "TestCalculateBackoffWithJitter::test_jitter_uses_random_uniform",
-        "line": 89,
-        "markers": [],
-        "docstring": "Test that jitter uses random.uniform for deterministic testing.",
-        "class": "TestCalculateBackoffWithJitter"
-      },
-      {
-        "name": "TestWebSocketReconnectionReset::test_attempts_reset_after_stable_period",
-        "line": 107,
-        "markers": [],
-        "docstring": "Test that reconnect counter resets after stable connection.",
-        "class": "TestWebSocketReconnectionReset"
-      },
-      {
-        "name": "TestWebSocketReconnectionReset::test_attempts_not_reset_if_unstable",
-        "line": 131,
-        "markers": [],
-        "docstring": "Test that reconnect counter is NOT reset if connection was short-lived.",
-        "class": "TestWebSocketReconnectionReset"
-      },
-      {
-        "name": "TestWebSocketDegradationCallback::test_callback_triggered_on_max_attempts",
-        "line": 159,
-        "markers": [],
-        "docstring": "Test that degradation callback is triggered when max attempts exceeded.",
-        "class": "TestWebSocketDegradationCallback"
-      },
-      {
-        "name": "TestWebSocketDegradationCallback::test_callback_only_triggered_once",
-        "line": 189,
-        "markers": [],
-        "docstring": "Test that degradation callback is only triggered once per max-exceeded event.",
-        "class": "TestWebSocketDegradationCallback"
-      },
-      {
-        "name": "TestWebSocketDegradationCallback::test_no_callback_when_none_provided",
-        "line": 218,
-        "markers": [],
-        "docstring": "Test that missing callback doesn't cause errors.",
-        "class": "TestWebSocketDegradationCallback"
-      },
-      {
-        "name": "TestWebSocketDegradationCallback::test_callback_exception_does_not_crash",
-        "line": 235,
-        "markers": [],
-        "docstring": "Test that exception in callback is handled gracefully.",
-        "class": "TestWebSocketDegradationCallback"
-      },
-      {
-        "name": "TestWebSocketHealthIncludesNewFields::test_health_includes_connected_since",
-        "line": 260,
-        "markers": [],
-        "docstring": "Test that health dict includes connected_since field.",
-        "class": "TestWebSocketHealthIncludesNewFields"
-      },
-      {
-        "name": "TestWebSocketHealthIncludesNewFields::test_health_includes_max_attempts_triggered",
-        "line": 270,
-        "markers": [],
-        "docstring": "Test that health dict includes max_attempts_triggered field.",
-        "class": "TestWebSocketHealthIncludesNewFields"
-      },
-      {
-        "name": "test_backoff_grows_exponentially",
-        "line": 17,
-        "markers": [],
-        "docstring": "Test that backoff delay grows with each attempt."
-      },
-      {
-        "name": "test_backoff_respects_max",
-        "line": 26,
-        "markers": [],
-        "docstring": "Test that backoff delay is capped at max_seconds."
-      },
-      {
-        "name": "test_backoff_uses_base_at_attempt_zero",
-        "line": 35,
-        "markers": [],
-        "docstring": "Test that first attempt uses base delay."
-      },
-      {
-        "name": "test_backoff_uses_multiplier",
-        "line": 41,
-        "markers": [],
-        "docstring": "Test that multiplier is applied correctly."
-      },
-      {
-        "name": "test_jitter_within_bounds",
-        "line": 60,
-        "markers": [],
-        "docstring": "Test that jitter stays within \u00b1jitter_pct bounds."
-      },
-      {
-        "name": "test_jitter_produces_different_values",
-        "line": 79,
-        "markers": [],
-        "docstring": "Test that jitter produces variation across calls."
-      },
-      {
-        "name": "test_jitter_uses_random_uniform",
-        "line": 89,
-        "markers": [],
-        "docstring": "Test that jitter uses random.uniform for deterministic testing."
-      },
-      {
-        "name": "test_attempts_reset_after_stable_period",
-        "line": 107,
-        "markers": [],
-        "docstring": "Test that reconnect counter resets after stable connection."
-      },
-      {
-        "name": "test_attempts_not_reset_if_unstable",
-        "line": 131,
-        "markers": [],
-        "docstring": "Test that reconnect counter is NOT reset if connection was short-lived."
-      },
-      {
-        "name": "test_callback_triggered_on_max_attempts",
-        "line": 159,
-        "markers": [],
-        "docstring": "Test that degradation callback is triggered when max attempts exceeded."
-      },
-      {
-        "name": "test_callback_only_triggered_once",
-        "line": 189,
-        "markers": [],
-        "docstring": "Test that degradation callback is only triggered once per max-exceeded event."
-      },
-      {
-        "name": "test_no_callback_when_none_provided",
-        "line": 218,
-        "markers": [],
-        "docstring": "Test that missing callback doesn't cause errors."
-      },
-      {
-        "name": "test_callback_exception_does_not_crash",
-        "line": 235,
-        "markers": [],
-        "docstring": "Test that exception in callback is handled gracefully."
-      },
-      {
-        "name": "test_health_includes_connected_since",
-        "line": 260,
-        "markers": [],
-        "docstring": "Test that health dict includes connected_since field."
-      },
-      {
-        "name": "test_health_includes_max_attempts_triggered",
-        "line": 270,
-        "markers": [],
-        "docstring": "Test that health dict includes max_attempts_triggered field."
-      }
-    ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_real_transport_edge_cases.py": [
       {
         "name": "TestRealTransportEdgeCases::test_real_transport_malformed_json_stream",
@@ -52162,6 +52009,34 @@
         "line": 38,
         "markers": [],
         "docstring": "Test streaming None messages."
+      }
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_health.py": [
+      {
+        "name": "TestWebSocketHealthIncludesNewFields::test_health_includes_connected_since",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test that health dict includes connected_since field.",
+        "class": "TestWebSocketHealthIncludesNewFields"
+      },
+      {
+        "name": "TestWebSocketHealthIncludesNewFields::test_health_includes_max_attempts_triggered",
+        "line": 21,
+        "markers": [],
+        "docstring": "Test that health dict includes max_attempts_triggered field.",
+        "class": "TestWebSocketHealthIncludesNewFields"
+      },
+      {
+        "name": "test_health_includes_connected_since",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test that health dict includes connected_since field."
+      },
+      {
+        "name": "test_health_includes_max_attempts_triggered",
+        "line": 21,
+        "markers": [],
+        "docstring": "Test that health dict includes max_attempts_triggered field."
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_types_and_sequence_guard.py": [
@@ -52742,6 +52617,34 @@
         "line": 103,
         "markers": [],
         "docstring": "Test multiple start/stop cycles."
+      }
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_reset.py": [
+      {
+        "name": "TestWebSocketReconnectionReset::test_attempts_reset_after_stable_period",
+        "line": 14,
+        "markers": [],
+        "docstring": "Test that reconnect counter resets after stable connection.",
+        "class": "TestWebSocketReconnectionReset"
+      },
+      {
+        "name": "TestWebSocketReconnectionReset::test_attempts_not_reset_if_unstable",
+        "line": 38,
+        "markers": [],
+        "docstring": "Test that reconnect counter is NOT reset if connection was short-lived.",
+        "class": "TestWebSocketReconnectionReset"
+      },
+      {
+        "name": "test_attempts_reset_after_stable_period",
+        "line": 14,
+        "markers": [],
+        "docstring": "Test that reconnect counter resets after stable connection."
+      },
+      {
+        "name": "test_attempts_not_reset_if_unstable",
+        "line": 38,
+        "markers": [],
+        "docstring": "Test that reconnect counter is NOT reset if connection was short-lived."
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_auth.py": [
@@ -53641,6 +53544,60 @@
         "line": 113,
         "markers": [],
         "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_degradation_callback.py": [
+      {
+        "name": "TestWebSocketDegradationCallback::test_callback_triggered_on_max_attempts",
+        "line": 13,
+        "markers": [],
+        "docstring": "Test that degradation callback is triggered when max attempts exceeded.",
+        "class": "TestWebSocketDegradationCallback"
+      },
+      {
+        "name": "TestWebSocketDegradationCallback::test_callback_only_triggered_once",
+        "line": 43,
+        "markers": [],
+        "docstring": "Test that degradation callback is only triggered once per max-exceeded event.",
+        "class": "TestWebSocketDegradationCallback"
+      },
+      {
+        "name": "TestWebSocketDegradationCallback::test_no_callback_when_none_provided",
+        "line": 72,
+        "markers": [],
+        "docstring": "Test that missing callback doesn't cause errors.",
+        "class": "TestWebSocketDegradationCallback"
+      },
+      {
+        "name": "TestWebSocketDegradationCallback::test_callback_exception_does_not_crash",
+        "line": 89,
+        "markers": [],
+        "docstring": "Test that exception in callback is handled gracefully.",
+        "class": "TestWebSocketDegradationCallback"
+      },
+      {
+        "name": "test_callback_triggered_on_max_attempts",
+        "line": 13,
+        "markers": [],
+        "docstring": "Test that degradation callback is triggered when max attempts exceeded."
+      },
+      {
+        "name": "test_callback_only_triggered_once",
+        "line": 43,
+        "markers": [],
+        "docstring": "Test that degradation callback is only triggered once per max-exceeded event."
+      },
+      {
+        "name": "test_no_callback_when_none_provided",
+        "line": 72,
+        "markers": [],
+        "docstring": "Test that missing callback doesn't cause errors."
+      },
+      {
+        "name": "test_callback_exception_does_not_crash",
+        "line": 89,
+        "markers": [],
+        "docstring": "Test that exception in callback is handled gracefully."
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service_alias.py": [
@@ -54977,6 +54934,99 @@
         "line": 146,
         "markers": [],
         "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_backoff.py": [
+      {
+        "name": "TestCalculateBackoffWithJitter::test_backoff_grows_exponentially",
+        "line": 13,
+        "markers": [],
+        "docstring": "Test that backoff delay grows with each attempt.",
+        "class": "TestCalculateBackoffWithJitter"
+      },
+      {
+        "name": "TestCalculateBackoffWithJitter::test_backoff_respects_max",
+        "line": 22,
+        "markers": [],
+        "docstring": "Test that backoff delay is capped at max_seconds.",
+        "class": "TestCalculateBackoffWithJitter"
+      },
+      {
+        "name": "TestCalculateBackoffWithJitter::test_backoff_uses_base_at_attempt_zero",
+        "line": 31,
+        "markers": [],
+        "docstring": "Test that first attempt uses base delay.",
+        "class": "TestCalculateBackoffWithJitter"
+      },
+      {
+        "name": "TestCalculateBackoffWithJitter::test_backoff_uses_multiplier",
+        "line": 37,
+        "markers": [],
+        "docstring": "Test that multiplier is applied correctly.",
+        "class": "TestCalculateBackoffWithJitter"
+      },
+      {
+        "name": "TestCalculateBackoffWithJitter::test_jitter_within_bounds",
+        "line": 56,
+        "markers": [],
+        "docstring": "Test that jitter stays within \u00b1jitter_pct bounds.",
+        "class": "TestCalculateBackoffWithJitter"
+      },
+      {
+        "name": "TestCalculateBackoffWithJitter::test_jitter_produces_different_values",
+        "line": 75,
+        "markers": [],
+        "docstring": "Test that jitter produces variation across calls.",
+        "class": "TestCalculateBackoffWithJitter"
+      },
+      {
+        "name": "TestCalculateBackoffWithJitter::test_jitter_uses_random_uniform",
+        "line": 85,
+        "markers": [],
+        "docstring": "Test that jitter uses random.uniform for deterministic testing.",
+        "class": "TestCalculateBackoffWithJitter"
+      },
+      {
+        "name": "test_backoff_grows_exponentially",
+        "line": 13,
+        "markers": [],
+        "docstring": "Test that backoff delay grows with each attempt."
+      },
+      {
+        "name": "test_backoff_respects_max",
+        "line": 22,
+        "markers": [],
+        "docstring": "Test that backoff delay is capped at max_seconds."
+      },
+      {
+        "name": "test_backoff_uses_base_at_attempt_zero",
+        "line": 31,
+        "markers": [],
+        "docstring": "Test that first attempt uses base delay."
+      },
+      {
+        "name": "test_backoff_uses_multiplier",
+        "line": 37,
+        "markers": [],
+        "docstring": "Test that multiplier is applied correctly."
+      },
+      {
+        "name": "test_jitter_within_bounds",
+        "line": 56,
+        "markers": [],
+        "docstring": "Test that jitter stays within \u00b1jitter_pct bounds."
+      },
+      {
+        "name": "test_jitter_produces_different_values",
+        "line": 75,
+        "markers": [],
+        "docstring": "Test that jitter produces variation across calls."
+      },
+      {
+        "name": "test_jitter_uses_random_uniform",
+        "line": 85,
+        "markers": [],
+        "docstring": "Test that jitter uses random.uniform for deterministic testing."
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_conversion_endpoints.py": [
@@ -56334,6 +56384,99 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_circuit_breaker_registry.py": [
+      {
+        "name": "TestCircuitBreakerRegistry::test_get_breaker_creates_new",
+        "line": 12,
+        "markers": [],
+        "docstring": "Test that get_breaker creates new breakers as needed.",
+        "class": "TestCircuitBreakerRegistry"
+      },
+      {
+        "name": "TestCircuitBreakerRegistry::test_same_category_shares_breaker",
+        "line": 20,
+        "markers": [],
+        "docstring": "Test that endpoints in same category share a breaker.",
+        "class": "TestCircuitBreakerRegistry"
+      },
+      {
+        "name": "TestCircuitBreakerRegistry::test_different_categories_different_breakers",
+        "line": 29,
+        "markers": [],
+        "docstring": "Test that different categories have different breakers.",
+        "class": "TestCircuitBreakerRegistry"
+      },
+      {
+        "name": "TestCircuitBreakerRegistry::test_can_proceed_delegates_to_breaker",
+        "line": 38,
+        "markers": [],
+        "docstring": "Test that can_proceed delegates to the appropriate breaker.",
+        "class": "TestCircuitBreakerRegistry"
+      },
+      {
+        "name": "TestCircuitBreakerRegistry::test_disabled_registry_always_allows",
+        "line": 51,
+        "markers": [],
+        "docstring": "Test that disabled registry always allows requests.",
+        "class": "TestCircuitBreakerRegistry"
+      },
+      {
+        "name": "TestCircuitBreakerRegistry::test_get_all_status",
+        "line": 61,
+        "markers": [],
+        "docstring": "Test getting status of all breakers.",
+        "class": "TestCircuitBreakerRegistry"
+      },
+      {
+        "name": "TestCircuitBreakerRegistry::test_reset_all",
+        "line": 72,
+        "markers": [],
+        "docstring": "Test resetting all breakers.",
+        "class": "TestCircuitBreakerRegistry"
+      },
+      {
+        "name": "test_get_breaker_creates_new",
+        "line": 12,
+        "markers": [],
+        "docstring": "Test that get_breaker creates new breakers as needed."
+      },
+      {
+        "name": "test_same_category_shares_breaker",
+        "line": 20,
+        "markers": [],
+        "docstring": "Test that endpoints in same category share a breaker."
+      },
+      {
+        "name": "test_different_categories_different_breakers",
+        "line": 29,
+        "markers": [],
+        "docstring": "Test that different categories have different breakers."
+      },
+      {
+        "name": "test_can_proceed_delegates_to_breaker",
+        "line": 38,
+        "markers": [],
+        "docstring": "Test that can_proceed delegates to the appropriate breaker."
+      },
+      {
+        "name": "test_disabled_registry_always_allows",
+        "line": 51,
+        "markers": [],
+        "docstring": "Test that disabled registry always allows requests."
+      },
+      {
+        "name": "test_get_all_status",
+        "line": 61,
+        "markers": [],
+        "docstring": "Test getting status of all breakers."
+      },
+      {
+        "name": "test_reset_all",
+        "line": 72,
+        "markers": [],
+        "docstring": "Test resetting all breakers."
+      }
+    ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_integration_flows.py": [
       {
         "name": "TestAPIResilienceIntegrationFlows::test_full_request_flow_simulation",
@@ -57237,229 +57380,6 @@
         "docstring": "Test that error can be raised and caught."
       }
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_circuit_breaker.py": [
-      {
-        "name": "TestCircuitBreaker::test_initial_state_is_closed",
-        "line": 16,
-        "markers": [],
-        "docstring": "Test that circuit breaker starts in closed state.",
-        "class": "TestCircuitBreaker"
-      },
-      {
-        "name": "TestCircuitBreaker::test_failures_trip_breaker",
-        "line": 22,
-        "markers": [],
-        "docstring": "Test that threshold failures trip the breaker to open.",
-        "class": "TestCircuitBreaker"
-      },
-      {
-        "name": "TestCircuitBreaker::test_success_resets_failure_count",
-        "line": 37,
-        "markers": [],
-        "docstring": "Test that success resets the failure counter.",
-        "class": "TestCircuitBreaker"
-      },
-      {
-        "name": "TestCircuitBreaker::test_recovery_to_half_open",
-        "line": 49,
-        "markers": [],
-        "docstring": "Test that breaker transitions to half-open after recovery timeout.",
-        "class": "TestCircuitBreaker"
-      },
-      {
-        "name": "TestCircuitBreaker::test_half_open_to_closed_on_success",
-        "line": 77,
-        "markers": [],
-        "docstring": "Test that half-open transitions to closed after success threshold.",
-        "class": "TestCircuitBreaker"
-      },
-      {
-        "name": "TestCircuitBreaker::test_half_open_to_open_on_failure",
-        "line": 113,
-        "markers": [],
-        "docstring": "Test that half-open transitions back to open on failure.",
-        "class": "TestCircuitBreaker"
-      },
-      {
-        "name": "TestCircuitBreaker::test_reset_returns_to_closed",
-        "line": 141,
-        "markers": [],
-        "docstring": "Test that reset returns breaker to closed state.",
-        "class": "TestCircuitBreaker"
-      },
-      {
-        "name": "TestCircuitBreaker::test_get_status",
-        "line": 153,
-        "markers": [],
-        "docstring": "Test getting circuit breaker status.",
-        "class": "TestCircuitBreaker"
-      },
-      {
-        "name": "TestCircuitBreaker::test_thread_safety",
-        "line": 165,
-        "markers": [],
-        "docstring": "Test that circuit breaker is thread-safe.",
-        "class": "TestCircuitBreaker"
-      },
-      {
-        "name": "TestCircuitBreakerRegistry::test_get_breaker_creates_new",
-        "line": 199,
-        "markers": [],
-        "docstring": "Test that get_breaker creates new breakers as needed.",
-        "class": "TestCircuitBreakerRegistry"
-      },
-      {
-        "name": "TestCircuitBreakerRegistry::test_same_category_shares_breaker",
-        "line": 207,
-        "markers": [],
-        "docstring": "Test that endpoints in same category share a breaker.",
-        "class": "TestCircuitBreakerRegistry"
-      },
-      {
-        "name": "TestCircuitBreakerRegistry::test_different_categories_different_breakers",
-        "line": 216,
-        "markers": [],
-        "docstring": "Test that different categories have different breakers.",
-        "class": "TestCircuitBreakerRegistry"
-      },
-      {
-        "name": "TestCircuitBreakerRegistry::test_can_proceed_delegates_to_breaker",
-        "line": 225,
-        "markers": [],
-        "docstring": "Test that can_proceed delegates to the appropriate breaker.",
-        "class": "TestCircuitBreakerRegistry"
-      },
-      {
-        "name": "TestCircuitBreakerRegistry::test_disabled_registry_always_allows",
-        "line": 238,
-        "markers": [],
-        "docstring": "Test that disabled registry always allows requests.",
-        "class": "TestCircuitBreakerRegistry"
-      },
-      {
-        "name": "TestCircuitBreakerRegistry::test_get_all_status",
-        "line": 248,
-        "markers": [],
-        "docstring": "Test getting status of all breakers.",
-        "class": "TestCircuitBreakerRegistry"
-      },
-      {
-        "name": "TestCircuitBreakerRegistry::test_reset_all",
-        "line": 259,
-        "markers": [],
-        "docstring": "Test resetting all breakers.",
-        "class": "TestCircuitBreakerRegistry"
-      },
-      {
-        "name": "TestCircuitOpenError::test_error_message",
-        "line": 279,
-        "markers": [],
-        "docstring": "Test error message format.",
-        "class": "TestCircuitOpenError"
-      },
-      {
-        "name": "test_initial_state_is_closed",
-        "line": 16,
-        "markers": [],
-        "docstring": "Test that circuit breaker starts in closed state."
-      },
-      {
-        "name": "test_failures_trip_breaker",
-        "line": 22,
-        "markers": [],
-        "docstring": "Test that threshold failures trip the breaker to open."
-      },
-      {
-        "name": "test_success_resets_failure_count",
-        "line": 37,
-        "markers": [],
-        "docstring": "Test that success resets the failure counter."
-      },
-      {
-        "name": "test_recovery_to_half_open",
-        "line": 49,
-        "markers": [],
-        "docstring": "Test that breaker transitions to half-open after recovery timeout."
-      },
-      {
-        "name": "test_half_open_to_closed_on_success",
-        "line": 77,
-        "markers": [],
-        "docstring": "Test that half-open transitions to closed after success threshold."
-      },
-      {
-        "name": "test_half_open_to_open_on_failure",
-        "line": 113,
-        "markers": [],
-        "docstring": "Test that half-open transitions back to open on failure."
-      },
-      {
-        "name": "test_reset_returns_to_closed",
-        "line": 141,
-        "markers": [],
-        "docstring": "Test that reset returns breaker to closed state."
-      },
-      {
-        "name": "test_get_status",
-        "line": 153,
-        "markers": [],
-        "docstring": "Test getting circuit breaker status."
-      },
-      {
-        "name": "test_thread_safety",
-        "line": 165,
-        "markers": [],
-        "docstring": "Test that circuit breaker is thread-safe."
-      },
-      {
-        "name": "test_get_breaker_creates_new",
-        "line": 199,
-        "markers": [],
-        "docstring": "Test that get_breaker creates new breakers as needed."
-      },
-      {
-        "name": "test_same_category_shares_breaker",
-        "line": 207,
-        "markers": [],
-        "docstring": "Test that endpoints in same category share a breaker."
-      },
-      {
-        "name": "test_different_categories_different_breakers",
-        "line": 216,
-        "markers": [],
-        "docstring": "Test that different categories have different breakers."
-      },
-      {
-        "name": "test_can_proceed_delegates_to_breaker",
-        "line": 225,
-        "markers": [],
-        "docstring": "Test that can_proceed delegates to the appropriate breaker."
-      },
-      {
-        "name": "test_disabled_registry_always_allows",
-        "line": 238,
-        "markers": [],
-        "docstring": "Test that disabled registry always allows requests."
-      },
-      {
-        "name": "test_get_all_status",
-        "line": 248,
-        "markers": [],
-        "docstring": "Test getting status of all breakers."
-      },
-      {
-        "name": "test_reset_all",
-        "line": 259,
-        "markers": [],
-        "docstring": "Test resetting all breakers."
-      },
-      {
-        "name": "test_error_message",
-        "line": 279,
-        "markers": [],
-        "docstring": "Test error message format."
-      }
-    ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_request_cache_priority_and_circuit.py": [
       {
         "name": "TestCoinbaseClientBaseRequestResilience::test_request_uses_cache",
@@ -57535,6 +57455,125 @@
           "parametrize"
         ],
         "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_circuit_breaker_core.py": [
+      {
+        "name": "TestCircuitBreaker::test_initial_state_is_closed",
+        "line": 14,
+        "markers": [],
+        "docstring": "Test that circuit breaker starts in closed state.",
+        "class": "TestCircuitBreaker"
+      },
+      {
+        "name": "TestCircuitBreaker::test_failures_trip_breaker",
+        "line": 20,
+        "markers": [],
+        "docstring": "Test that threshold failures trip the breaker to open.",
+        "class": "TestCircuitBreaker"
+      },
+      {
+        "name": "TestCircuitBreaker::test_success_resets_failure_count",
+        "line": 35,
+        "markers": [],
+        "docstring": "Test that success resets the failure counter.",
+        "class": "TestCircuitBreaker"
+      },
+      {
+        "name": "TestCircuitBreaker::test_recovery_to_half_open",
+        "line": 47,
+        "markers": [],
+        "docstring": "Test that breaker transitions to half-open after recovery timeout.",
+        "class": "TestCircuitBreaker"
+      },
+      {
+        "name": "TestCircuitBreaker::test_half_open_to_closed_on_success",
+        "line": 75,
+        "markers": [],
+        "docstring": "Test that half-open transitions to closed after success threshold.",
+        "class": "TestCircuitBreaker"
+      },
+      {
+        "name": "TestCircuitBreaker::test_half_open_to_open_on_failure",
+        "line": 111,
+        "markers": [],
+        "docstring": "Test that half-open transitions back to open on failure.",
+        "class": "TestCircuitBreaker"
+      },
+      {
+        "name": "TestCircuitBreaker::test_reset_returns_to_closed",
+        "line": 139,
+        "markers": [],
+        "docstring": "Test that reset returns breaker to closed state.",
+        "class": "TestCircuitBreaker"
+      },
+      {
+        "name": "TestCircuitBreaker::test_get_status",
+        "line": 151,
+        "markers": [],
+        "docstring": "Test getting circuit breaker status.",
+        "class": "TestCircuitBreaker"
+      },
+      {
+        "name": "TestCircuitBreaker::test_thread_safety",
+        "line": 163,
+        "markers": [],
+        "docstring": "Test that circuit breaker is thread-safe.",
+        "class": "TestCircuitBreaker"
+      },
+      {
+        "name": "test_initial_state_is_closed",
+        "line": 14,
+        "markers": [],
+        "docstring": "Test that circuit breaker starts in closed state."
+      },
+      {
+        "name": "test_failures_trip_breaker",
+        "line": 20,
+        "markers": [],
+        "docstring": "Test that threshold failures trip the breaker to open."
+      },
+      {
+        "name": "test_success_resets_failure_count",
+        "line": 35,
+        "markers": [],
+        "docstring": "Test that success resets the failure counter."
+      },
+      {
+        "name": "test_recovery_to_half_open",
+        "line": 47,
+        "markers": [],
+        "docstring": "Test that breaker transitions to half-open after recovery timeout."
+      },
+      {
+        "name": "test_half_open_to_closed_on_success",
+        "line": 75,
+        "markers": [],
+        "docstring": "Test that half-open transitions to closed after success threshold."
+      },
+      {
+        "name": "test_half_open_to_open_on_failure",
+        "line": 111,
+        "markers": [],
+        "docstring": "Test that half-open transitions back to open on failure."
+      },
+      {
+        "name": "test_reset_returns_to_closed",
+        "line": 139,
+        "markers": [],
+        "docstring": "Test that reset returns breaker to closed state."
+      },
+      {
+        "name": "test_get_status",
+        "line": 151,
+        "markers": [],
+        "docstring": "Test getting circuit breaker status."
+      },
+      {
+        "name": "test_thread_safety",
+        "line": 163,
+        "markers": [],
+        "docstring": "Test that circuit breaker is thread-safe."
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics_edges.py": [
@@ -57676,6 +57715,21 @@
         "line": 57,
         "markers": [],
         "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_circuit_breaker_error.py": [
+      {
+        "name": "TestCircuitOpenError::test_error_message",
+        "line": 9,
+        "markers": [],
+        "docstring": "Test error message format.",
+        "class": "TestCircuitOpenError"
+      },
+      {
+        "name": "test_error_message",
+        "line": 9,
+        "markers": [],
+        "docstring": "Test error message format."
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_metrics_and_priority.py": [

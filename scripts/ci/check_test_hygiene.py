@@ -17,10 +17,7 @@ UNIT_ALLOWED_PREFIXES = (
 ALLOWLIST = {
     "tests/unit/gpt_trader/logging/test_runtime_helpers.py",  # runtime logging helper coverage
     "tests/unit/gpt_trader/monitoring/test_health_signals.py",  # health signal model contract coverage
-    "tests/unit/gpt_trader/utilities/test_datetime_helpers.py",  # datetime edge-case coverage
-    "tests/unit/gpt_trader/errors/test_base.py",  # error taxonomy coverage
     "tests/unit/gpt_trader/validation/test_calculation_validator.py",  # calculation validator coverage
-    "tests/unit/gpt_trader/features/data/test_data_module.py",  # 295 lines: comprehensive data module contract with storage/cache stubs
     "tests/unit/gpt_trader/security/security_validator/test_symbol_validation.py",  # 243 lines: comprehensive symbol/blocklist validation cases
     "tests/unit/gpt_trader/cli/test_commands_orders.py",  # 254 lines: comprehensive CLI orders command coverage
     "tests/unit/gpt_trader/security/test_input_sanitizer.py",  # input sanitization edge cases
@@ -29,9 +26,7 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/validation/test_config_validators.py",  # configuration validation matrix
     # Coverage expansion tests (C1 task)
     "tests/unit/gpt_trader/features/live_trade/test_indicators.py",  # indicator calculation coverage
-    "tests/unit/gpt_trader/errors/test_error_patterns.py",  # error pattern decorator coverage
     "tests/unit/gpt_trader/app/test_health_server.py",  # health server endpoint coverage
-    "tests/unit/gpt_trader/backtesting/engine/test_clock.py",  # simulation clock scenarios
     "tests/unit/gpt_trader/monitoring/test_heartbeat.py",  # heartbeat monitoring scenarios
     "tests/unit/gpt_trader/persistence/test_orders_store.py",  # comprehensive order persistence contract with lifecycle, recovery, and integrity validation
     "tests/unit/gpt_trader/app/test_bootstrap.py",  # comprehensive bootstrap module coverage with profile loading and container initialization
@@ -45,19 +40,15 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/features/intelligence/ensemble/test_adaptive.py",
     "tests/unit/gpt_trader/features/strategy_dev/lab/test_experiment.py",
     # TUI Phase 3.5 comprehensive test suites
-    "tests/unit/gpt_trader/tui/state_management/test_validators.py",  # state validator permutation matrix
     "tests/unit/gpt_trader/tui/services/test_mode_service.py",  # mode service state transitions
     "tests/unit/gpt_trader/features/live_trade/signals/test_orderbook_imbalance.py",  # orderbook imbalance signal comprehensive scenarios
-    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_circuit_breaker.py",  # circuit breaker state machine coverage
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics.py",  # API metrics collection comprehensive scenarios
     "tests/unit/gpt_trader/features/live_trade/risk/test_cfm_risk_config.py",  # CFM risk config validation matrix
     # TUI reliability/fault-injection tests
-    "tests/integration/test_validation_escalation.py",  # validation escalation integration flow coverage
     "tests/unit/gpt_trader/config/test_bot_config_env.py",  # BotConfig env/profile wiring: RISK_* prefixes, daily loss limit, reduce-only enforcement, mark staleness
     "tests/unit/gpt_trader/monitoring/test_metrics_collector.py",  # metrics collector coverage: counters, gauges, histograms with labels
     # Architecture migration and observability tests
     "tests/integration/test_crash_recovery.py",  # crash recovery scenarios and state restoration
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection.py",  # WebSocket reconnection reliability scenarios
     # Pre-existing TUI and feature test suites
     "tests/unit/gpt_trader/tui/test_trade_matcher.py",  # trade matcher FIFO comprehensive scenarios
     "tests/unit/gpt_trader/tui/widgets/test_cfm_balance.py",  # CFM balance widget scenarios

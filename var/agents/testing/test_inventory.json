@@ -4,7 +4,7 @@
   "summary": {
     "total_tests": 11049,
     "total_files": 908,
-    "markers_used": 9
+    "markers_used": 11
   },
   "marker_definitions": {
     "unit": "Unit tests (isolated component tests)",
@@ -102,9 +102,11 @@
     ]
   },
   "marker_counts": {
+    "endpoints": 140,
+    "integration": 103,
     "parametrize": 94,
     "skipif": 16,
-    "integration": 11,
+    "e2e": 12,
     "property": 10,
     "perps": 5,
     "perf": 4,
@@ -1638,13 +1640,17 @@
       {
         "name": "test_container_bot_boot_roundtrip",
         "line": 26,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test that container can boot TradingBot and verify wiring."
       },
       {
         "name": "test_container_services",
         "line": 67,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test that container provides all expected services."
       }
     ],
@@ -1652,27 +1658,35 @@
       {
         "name": "TestFundingPnLAccumulation::test_funding_accumulates_over_time",
         "line": 21,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Funding accumulates correctly over multiple intervals.",
         "class": "TestFundingPnLAccumulation"
       },
       {
         "name": "TestFundingPnLAccumulation::test_no_position_no_funding",
         "line": 49,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "No funding is charged when there's no position.",
         "class": "TestFundingPnLAccumulation"
       },
       {
         "name": "test_funding_accumulates_over_time",
         "line": 21,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Funding accumulates correctly over multiple intervals."
       },
       {
         "name": "test_no_position_no_funding",
         "line": 49,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "No funding is charged when there's no position."
       }
     ],
@@ -1680,105 +1694,137 @@
       {
         "name": "TestContainerLifecycleMultipleCycles::test_multiple_bot_cycles_no_leak",
         "line": 72,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "",
         "class": "TestContainerLifecycleMultipleCycles"
       },
       {
         "name": "TestContainerLifecycleMultipleCycles::test_container_services_are_fresh_each_cycle",
         "line": 85,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "",
         "class": "TestContainerLifecycleMultipleCycles"
       },
       {
         "name": "TestContainerLifecycleErrorPaths::test_container_cleared_when_bot_creation_fails",
         "line": 105,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "",
         "class": "TestContainerLifecycleErrorPaths"
       },
       {
         "name": "TestContainerServiceAccess::test_services_accessible_after_registration",
         "line": 139,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "",
         "class": "TestContainerServiceAccess"
       },
       {
         "name": "TestContainerServiceAccess::test_services_not_accessible_after_clear",
         "line": 150,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "",
         "class": "TestContainerServiceAccess"
       },
       {
         "name": "TestContainerServiceAccess::test_service_resolution_functions_handle_missing_container",
         "line": 159,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "",
         "class": "TestContainerServiceAccess"
       },
       {
         "name": "TestContainerDebugLogging::test_set_container_logs_debug",
         "line": 174,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "",
         "class": "TestContainerDebugLogging"
       },
       {
         "name": "TestContainerDebugLogging::test_clear_container_logs_debug",
         "line": 182,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "",
         "class": "TestContainerDebugLogging"
       },
       {
         "name": "test_multiple_bot_cycles_no_leak",
         "line": 72,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": ""
       },
       {
         "name": "test_container_services_are_fresh_each_cycle",
         "line": 85,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": ""
       },
       {
         "name": "test_container_cleared_when_bot_creation_fails",
         "line": 105,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": ""
       },
       {
         "name": "test_services_accessible_after_registration",
         "line": 139,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": ""
       },
       {
         "name": "test_services_not_accessible_after_clear",
         "line": 150,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": ""
       },
       {
         "name": "test_service_resolution_functions_handle_missing_container",
         "line": 159,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": ""
       },
       {
         "name": "test_set_container_logs_debug",
         "line": 174,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": ""
       },
       {
         "name": "test_clear_container_logs_debug",
         "line": 182,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": ""
       }
     ],
@@ -1786,79 +1832,103 @@
       {
         "name": "TestCrashRecovery::test_price_history_survives_restart",
         "line": 61,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Price history should be restored from EventStore after restart.",
         "class": "TestCrashRecovery"
       },
       {
         "name": "TestCrashRecovery::test_rehydration_filters_by_configured_symbols",
         "line": 111,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Rehydration should only restore prices for symbols in config.",
         "class": "TestCrashRecovery"
       },
       {
         "name": "TestCrashRecovery::test_rehydration_respects_max_history_size",
         "line": 140,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Rehydration should keep price history bounded to 20 items.",
         "class": "TestCrashRecovery"
       },
       {
         "name": "TestCrashRecovery::test_in_memory_mode_no_persistence",
         "line": 169,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "In-memory EventStore should not persist across restarts.",
         "class": "TestCrashRecovery"
       },
       {
         "name": "TestCrashRecovery::test_no_event_store_graceful_degradation",
         "line": 194,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Engine should work without EventStore (no persistence).",
         "class": "TestCrashRecovery"
       },
       {
         "name": "TestCrashRecovery::test_multiple_restarts_accumulate_correctly",
         "line": 207,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Multiple restart cycles should accumulate prices correctly.",
         "class": "TestCrashRecovery"
       },
       {
         "name": "test_price_history_survives_restart",
         "line": 61,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Price history should be restored from EventStore after restart."
       },
       {
         "name": "test_rehydration_filters_by_configured_symbols",
         "line": 111,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Rehydration should only restore prices for symbols in config."
       },
       {
         "name": "test_rehydration_respects_max_history_size",
         "line": 140,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Rehydration should keep price history bounded to 20 items."
       },
       {
         "name": "test_in_memory_mode_no_persistence",
         "line": 169,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "In-memory EventStore should not persist across restarts."
       },
       {
         "name": "test_no_event_store_graceful_degradation",
         "line": 194,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Engine should work without EventStore (no persistence)."
       },
       {
         "name": "test_multiple_restarts_accumulate_correctly",
         "line": 207,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Multiple restart cycles should accumulate prices correctly."
       }
     ],
@@ -1866,66 +1936,86 @@
       {
         "name": "TestValidationEscalationFlow::test_escalation_flow_triggers_reduce_only_mode",
         "line": 86,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test that 5 consecutive validation failures trigger reduce-only mode.",
         "class": "TestValidationEscalationFlow"
       },
       {
         "name": "TestValidationEscalationFlow::test_successful_validation_resets_failure_counter",
         "line": 109,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test that successful validations reset the failure counter.",
         "class": "TestValidationEscalationFlow"
       },
       {
         "name": "TestValidationEscalationFlow::test_slippage_guard_failures_also_trigger_escalation",
         "line": 142,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test that slippage guard failures also trigger escalation.",
         "class": "TestValidationEscalationFlow"
       },
       {
         "name": "TestValidationEscalationFlow::test_different_check_types_have_independent_counters",
         "line": 163,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test that different check types track failures independently.",
         "class": "TestValidationEscalationFlow"
       },
       {
         "name": "TestValidationEscalationFlow::test_escalation_reason_is_correct",
         "line": 191,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test that escalation sets the correct reason on risk manager.",
         "class": "TestValidationEscalationFlow"
       },
       {
         "name": "test_escalation_flow_triggers_reduce_only_mode",
         "line": 86,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test that 5 consecutive validation failures trigger reduce-only mode."
       },
       {
         "name": "test_successful_validation_resets_failure_counter",
         "line": 109,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test that successful validations reset the failure counter."
       },
       {
         "name": "test_slippage_guard_failures_also_trigger_escalation",
         "line": 142,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test that slippage guard failures also trigger escalation."
       },
       {
         "name": "test_different_check_types_have_independent_counters",
         "line": 163,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test that different check types track failures independently."
       },
       {
         "name": "test_escalation_reason_is_correct",
         "line": 191,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test that escalation sets the correct reason on risk manager."
       }
     ],
@@ -1933,157 +2023,205 @@
       {
         "name": "TestEventStorePersistence::test_events_persist_across_restart",
         "line": 17,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test that events survive EventStore restart.",
         "class": "TestEventStorePersistence"
       },
       {
         "name": "TestEventStorePersistence::test_in_memory_mode_unchanged",
         "line": 38,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test that in-memory mode works as before (no persistence).",
         "class": "TestEventStorePersistence"
       },
       {
         "name": "TestEventStorePersistence::test_get_recent_from_persistent_store",
         "line": 49,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test get_recent works with persistent storage.",
         "class": "TestEventStorePersistence"
       },
       {
         "name": "TestEventStorePersistence::test_large_event_persistence",
         "line": 62,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test persistence of events with large payloads.",
         "class": "TestEventStorePersistence"
       },
       {
         "name": "TestEventStorePersistence::test_concurrent_writes",
         "line": 74,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test thread safety of event writes.",
         "class": "TestEventStorePersistence"
       },
       {
         "name": "TestEventStorePersistence::test_context_manager",
         "line": 98,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test context manager support.",
         "class": "TestEventStorePersistence"
       },
       {
         "name": "TestEventStorePersistence::test_cache_eviction",
         "line": 111,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test that deque evicts oldest events when full.",
         "class": "TestEventStorePersistence"
       },
       {
         "name": "TestEventStorePersistence::test_database_has_all_events_after_eviction",
         "line": 124,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test that DB retains all events even when cache evicts.",
         "class": "TestEventStorePersistence"
       },
       {
         "name": "TestEventStorePersistence::test_root_property_with_root",
         "line": 141,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test root property returns expected value.",
         "class": "TestEventStorePersistence"
       },
       {
         "name": "TestEventStoreSnapshots::test_list_events_empty_and_populated",
         "line": 152,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test list_events snapshot behavior.",
         "class": "TestEventStoreSnapshots"
       },
       {
         "name": "TestEventStoreSnapshots::test_append_trade_both_signatures",
         "line": 159,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test both append_trade signatures work.",
         "class": "TestEventStoreSnapshots"
       },
       {
         "name": "TestEventStoreSnapshots::test_bot_id_extraction",
         "line": 167,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test bot_id extraction for database indexing.",
         "class": "TestEventStoreSnapshots"
       },
       {
         "name": "test_events_persist_across_restart",
         "line": 17,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test that events survive EventStore restart."
       },
       {
         "name": "test_in_memory_mode_unchanged",
         "line": 38,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test that in-memory mode works as before (no persistence)."
       },
       {
         "name": "test_get_recent_from_persistent_store",
         "line": 49,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test get_recent works with persistent storage."
       },
       {
         "name": "test_large_event_persistence",
         "line": 62,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test persistence of events with large payloads."
       },
       {
         "name": "test_concurrent_writes",
         "line": 74,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test thread safety of event writes."
       },
       {
         "name": "test_context_manager",
         "line": 98,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test context manager support."
       },
       {
         "name": "test_cache_eviction",
         "line": 111,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test that deque evicts oldest events when full."
       },
       {
         "name": "test_database_has_all_events_after_eviction",
         "line": 124,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test that DB retains all events even when cache evicts."
       },
       {
         "name": "test_root_property_with_root",
         "line": 141,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test root property returns expected value."
       },
       {
         "name": "test_list_events_empty_and_populated",
         "line": 152,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test list_events snapshot behavior."
       },
       {
         "name": "test_append_trade_both_signatures",
         "line": 159,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test both append_trade signatures work."
       },
       {
         "name": "test_bot_id_extraction",
         "line": 167,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test bot_id extraction for database indexing."
       }
     ],
@@ -2091,66 +2229,86 @@
       {
         "name": "TestContainerLifecycleCLI::test_instantiate_bot_registers_container",
         "line": 42,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "",
         "class": "TestContainerLifecycleCLI"
       },
       {
         "name": "TestContainerLifecycleCLI::test_instantiate_bot_uses_existing_container",
         "line": 55,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "",
         "class": "TestContainerLifecycleCLI"
       },
       {
         "name": "TestContainerLifecycleCLI::test_run_bot_clears_container_on_success",
         "line": 66,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "",
         "class": "TestContainerLifecycleCLI"
       },
       {
         "name": "TestContainerLifecycleCLI::test_run_bot_clears_container_on_exception",
         "line": 81,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "",
         "class": "TestContainerLifecycleCLI"
       },
       {
         "name": "TestContainerLifecycleCLI::test_run_bot_clears_container_on_keyboard_interrupt",
         "line": 95,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "",
         "class": "TestContainerLifecycleCLI"
       },
       {
         "name": "test_instantiate_bot_registers_container",
         "line": 42,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": ""
       },
       {
         "name": "test_instantiate_bot_uses_existing_container",
         "line": 55,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": ""
       },
       {
         "name": "test_run_bot_clears_container_on_success",
         "line": 66,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": ""
       },
       {
         "name": "test_run_bot_clears_container_on_exception",
         "line": 81,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": ""
       },
       {
         "name": "test_run_bot_clears_container_on_keyboard_interrupt",
         "line": 95,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": ""
       }
     ],
@@ -2265,27 +2423,35 @@
       {
         "name": "TestFundingPnLLongShort::test_long_position_pays_positive_funding",
         "line": 21,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Long position pays funding when rate is positive.",
         "class": "TestFundingPnLLongShort"
       },
       {
         "name": "TestFundingPnLLongShort::test_short_position_receives_positive_funding",
         "line": 51,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Short position receives funding when rate is positive.",
         "class": "TestFundingPnLLongShort"
       },
       {
         "name": "test_long_position_pays_positive_funding",
         "line": 21,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Long position pays funding when rate is positive."
       },
       {
         "name": "test_short_position_receives_positive_funding",
         "line": 51,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Short position receives funding when rate is positive."
       }
     ],
@@ -2293,40 +2459,52 @@
       {
         "name": "TestFundingWithSimulationConfig::test_config_funding_rates_passed_to_broker",
         "line": 19,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Verify funding rates from config are accessible.",
         "class": "TestFundingWithSimulationConfig"
       },
       {
         "name": "TestFundingWithSimulationConfig::test_funding_disabled_skips_processing",
         "line": 37,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "When enable_funding_pnl is False, no funding is processed.",
         "class": "TestFundingWithSimulationConfig"
       },
       {
         "name": "TestFundingWithSimulationConfig::test_default_funding_settlement_is_8_hours",
         "line": 56,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Verify default settlement interval is 8 hours (Coinbase standard).",
         "class": "TestFundingWithSimulationConfig"
       },
       {
         "name": "test_config_funding_rates_passed_to_broker",
         "line": 19,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Verify funding rates from config are accessible."
       },
       {
         "name": "test_funding_disabled_skips_processing",
         "line": 37,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "When enable_funding_pnl is False, no funding is processed."
       },
       {
         "name": "test_default_funding_settlement_is_8_hours",
         "line": 56,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Verify default settlement interval is 8 hours (Coinbase standard)."
       }
     ],
@@ -2334,14 +2512,18 @@
       {
         "name": "TestFundingPnLEquityImpact::test_funding_affects_final_equity",
         "line": 21,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Funding payments are reflected in final equity.",
         "class": "TestFundingPnLEquityImpact"
       },
       {
         "name": "test_funding_affects_final_equity",
         "line": 21,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Funding payments are reflected in final equity."
       }
     ],
@@ -2349,14 +2531,18 @@
       {
         "name": "TestValidationEscalationWithMetrics::test_metrics_recorded_during_escalation",
         "line": 39,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test that metrics are recorded when escalation occurs.",
         "class": "TestValidationEscalationWithMetrics"
       },
       {
         "name": "test_metrics_recorded_during_escalation",
         "line": 39,
-        "markers": [],
+        "markers": [
+          "integration"
+        ],
         "docstring": "Test that metrics are recorded when escalation occurs."
       }
     ],
@@ -53008,6 +53194,7 @@
         "name": "TestCoinbaseAccountEndpoints::test_client_account_endpoints",
         "line": 22,
         "markers": [
+          "endpoints",
           "parametrize"
         ],
         "docstring": "",
@@ -53017,6 +53204,7 @@
         "name": "test_client_account_endpoints",
         "line": 22,
         "markers": [
+          "endpoints",
           "parametrize"
         ],
         "docstring": ""
@@ -53172,40 +53360,52 @@
       {
         "name": "TestCoinbaseAccountBalances::test_list_balances_advanced_shape",
         "line": 18,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseAccountBalances"
       },
       {
         "name": "TestCoinbaseAccountBalances::test_list_balances_exchange_shape",
         "line": 38,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseAccountBalances"
       },
       {
         "name": "TestCoinbaseProductFundingEnrichment::test_funding_enrichment_uses_product_catalog",
         "line": 53,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseProductFundingEnrichment"
       },
       {
         "name": "test_list_balances_advanced_shape",
         "line": 18,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_list_balances_exchange_shape",
         "line": 38,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_funding_enrichment_uses_product_catalog",
         "line": 53,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       }
     ],
@@ -53405,43 +53605,57 @@
       {
         "name": "test_cfm_balance_summary_requires_advanced_mode",
         "line": 15,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "Test cfm_balance_summary is only available in advanced mode."
       },
       {
         "name": "test_cfm_positions_formats_path",
         "line": 33,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "Test cfm_positions endpoint path."
       },
       {
         "name": "test_cfm_position_with_product_id",
         "line": 50,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "Test cfm_position with specific product_id."
       },
       {
         "name": "test_cfm_intraday_current_margin_window",
         "line": 67,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "Test cfm_intraday_current_margin_window endpoint."
       },
       {
         "name": "test_cfm_methods_require_advanced_mode",
         "line": 84,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "Test that CFM methods are not available in exchange mode."
       },
       {
         "name": "test_cfm_sweeps_and_schedule_paths",
         "line": 98,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "Test cfm_sweeps and cfm_sweeps_schedule endpoints paths (GET)."
       },
       {
         "name": "test_cfm_intraday_margin_setting_posts_payload",
         "line": 127,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       }
     ],
@@ -53543,6 +53757,8 @@
         "name": "TestCoinbaseSystem::test_client_system_endpoints",
         "line": 28,
         "markers": [
+          "endpoints",
+          "e2e",
           "parametrize"
         ],
         "docstring": "",
@@ -53552,6 +53768,8 @@
         "name": "TestCoinbaseSystem::test_get_products_perf_budget",
         "line": 56,
         "markers": [
+          "endpoints",
+          "e2e",
           "perf"
         ],
         "docstring": "",
@@ -53561,6 +53779,8 @@
         "name": "TestCoinbaseSystem::test_place_order_perf_budget",
         "line": 67,
         "markers": [
+          "endpoints",
+          "e2e",
           "perf"
         ],
         "docstring": "",
@@ -53569,21 +53789,30 @@
       {
         "name": "TestCoinbaseSystem::test_connection_validation",
         "line": 77,
-        "markers": [],
+        "markers": [
+          "endpoints",
+          "e2e"
+        ],
         "docstring": "",
         "class": "TestCoinbaseSystem"
       },
       {
         "name": "TestCoinbaseSystem::test_position_list_spot_trading",
         "line": 95,
-        "markers": [],
+        "markers": [
+          "endpoints",
+          "e2e"
+        ],
         "docstring": "",
         "class": "TestCoinbaseSystem"
       },
       {
         "name": "TestCoinbaseSystem::test_order_error_handling",
         "line": 113,
-        "markers": [],
+        "markers": [
+          "endpoints",
+          "e2e"
+        ],
         "docstring": "",
         "class": "TestCoinbaseSystem"
       },
@@ -53591,6 +53820,8 @@
         "name": "test_client_system_endpoints",
         "line": 28,
         "markers": [
+          "endpoints",
+          "e2e",
           "parametrize"
         ],
         "docstring": ""
@@ -53599,6 +53830,8 @@
         "name": "test_get_products_perf_budget",
         "line": 56,
         "markers": [
+          "endpoints",
+          "e2e",
           "perf"
         ],
         "docstring": ""
@@ -53607,6 +53840,8 @@
         "name": "test_place_order_perf_budget",
         "line": 67,
         "markers": [
+          "endpoints",
+          "e2e",
           "perf"
         ],
         "docstring": ""
@@ -53614,19 +53849,28 @@
       {
         "name": "test_connection_validation",
         "line": 77,
-        "markers": [],
+        "markers": [
+          "endpoints",
+          "e2e"
+        ],
         "docstring": ""
       },
       {
         "name": "test_position_list_spot_trading",
         "line": 95,
-        "markers": [],
+        "markers": [
+          "endpoints",
+          "e2e"
+        ],
         "docstring": ""
       },
       {
         "name": "test_order_error_handling",
         "line": 113,
-        "markers": [],
+        "markers": [
+          "endpoints",
+          "e2e"
+        ],
         "docstring": ""
       }
     ],
@@ -54010,43 +54254,57 @@
       {
         "name": "test_intx_allocate_posts_payload",
         "line": 22,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_intx_balances_formats_path",
         "line": 40,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_intx_portfolio_formats_path",
         "line": 53,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_intx_positions_formats_path",
         "line": 66,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_intx_position_formats_path",
         "line": 79,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_intx_multi_asset_collateral_formats_path",
         "line": 92,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_intx_endpoints_blocked_in_exchange_mode",
         "line": 108,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       }
     ],
@@ -54054,66 +54312,86 @@
       {
         "name": "TestCoinbaseAccountManagerSnapshot::test_snapshot_collects_all_sections",
         "line": 15,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseAccountManagerSnapshot"
       },
       {
         "name": "TestCoinbaseAccountManagerSnapshot::test_intx_unavailable_marks_reason",
         "line": 41,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseAccountManagerSnapshot"
       },
       {
         "name": "TestCoinbaseAccountManagerSnapshot::test_intx_recovers_after_refresh",
         "line": 56,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseAccountManagerSnapshot"
       },
       {
         "name": "TestCoinbaseAccountManagerSnapshot::test_convert_commits_when_requested",
         "line": 81,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseAccountManagerSnapshot"
       },
       {
         "name": "TestCoinbaseAccountManagerSnapshot::test_move_funds_delegates_to_broker",
         "line": 93,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseAccountManagerSnapshot"
       },
       {
         "name": "test_snapshot_collects_all_sections",
         "line": 15,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_intx_unavailable_marks_reason",
         "line": 41,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_intx_recovers_after_refresh",
         "line": 56,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_convert_commits_when_requested",
         "line": 81,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_move_funds_delegates_to_broker",
         "line": 93,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       }
     ],
@@ -54957,66 +55235,86 @@
       {
         "name": "TestCoinbasePositionsMapping::test_list_positions_maps_from_cfm",
         "line": 22,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbasePositionsMapping"
       },
       {
         "name": "TestCoinbaseTreasuryDelegation::test_adapter_cfm_telemetry_delegates_to_rest_service",
         "line": 62,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseTreasuryDelegation"
       },
       {
         "name": "TestCoinbaseTreasuryDelegation::test_adapter_cfm_telemetry_respects_derivatives_gating",
         "line": 93,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseTreasuryDelegation"
       },
       {
         "name": "TestCoinbaseTreasuryDelegation::test_adapter_intx_methods_delegate_to_rest_service",
         "line": 115,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseTreasuryDelegation"
       },
       {
         "name": "TestCoinbaseTreasuryDelegation::test_adapter_intx_methods_respect_intx_support",
         "line": 146,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseTreasuryDelegation"
       },
       {
         "name": "test_list_positions_maps_from_cfm",
         "line": 22,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_adapter_cfm_telemetry_delegates_to_rest_service",
         "line": 62,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_adapter_cfm_telemetry_respects_derivatives_gating",
         "line": 93,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_adapter_intx_methods_delegate_to_rest_service",
         "line": 115,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_adapter_intx_methods_respect_intx_support",
         "line": 146,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       }
     ],
@@ -55117,19 +55415,25 @@
       {
         "name": "test_convert_quote_posts_payload",
         "line": 15,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_get_convert_trade_formats_path",
         "line": 33,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_commit_convert_trade_posts_payload",
         "line": 49,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       }
     ],
@@ -55366,6 +55670,7 @@
         "name": "TestCoinbaseMarketDataEndpoints::test_client_market_data_endpoints",
         "line": 24,
         "markers": [
+          "endpoints",
           "parametrize"
         ],
         "docstring": "",
@@ -55374,63 +55679,81 @@
       {
         "name": "TestCoinbaseMarketDataEndpoints::test_get_product_formats_path",
         "line": 65,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseMarketDataEndpoints"
       },
       {
         "name": "TestCoinbaseMarketDataEndpoints::test_products_path_differs_by_mode",
         "line": 79,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseMarketDataEndpoints"
       },
       {
         "name": "TestCoinbaseMarketDataEndpoints::test_get_product_book_path_mapping_by_mode",
         "line": 100,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseMarketDataEndpoints"
       },
       {
         "name": "TestCoinbaseMarketDataEndpoints::test_advanced_only_endpoints_raise_in_exchange",
         "line": 125,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseMarketDataEndpoints"
       },
       {
         "name": "TestCoinbaseMarketDataEndpoints::test_list_parameters_comma_separated",
         "line": 132,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseMarketDataEndpoints"
       },
       {
         "name": "TestCoinbaseMarketDataEndpoints::test_repeated_parameters_not_encoded_as_array",
         "line": 146,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseMarketDataEndpoints"
       },
       {
         "name": "TestCoinbaseMarketDataEndpoints::test_unicode_emoji_in_params",
         "line": 160,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseMarketDataEndpoints"
       },
       {
         "name": "TestCoinbaseMarketDataEndpoints::test_empty_values_are_included",
         "line": 173,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseMarketDataEndpoints"
       },
       {
         "name": "TestCoinbaseMarketDataEndpoints::test_special_characters_plus_slash_at",
         "line": 185,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseMarketDataEndpoints"
       },
@@ -55438,6 +55761,7 @@
         "name": "test_client_market_data_endpoints",
         "line": 24,
         "markers": [
+          "endpoints",
           "parametrize"
         ],
         "docstring": ""
@@ -55445,55 +55769,73 @@
       {
         "name": "test_get_product_formats_path",
         "line": 65,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_products_path_differs_by_mode",
         "line": 79,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_get_product_book_path_mapping_by_mode",
         "line": 100,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_advanced_only_endpoints_raise_in_exchange",
         "line": 125,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_list_parameters_comma_separated",
         "line": 132,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_repeated_parameters_not_encoded_as_array",
         "line": 146,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_unicode_emoji_in_params",
         "line": 160,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_empty_values_are_included",
         "line": 173,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_special_characters_plus_slash_at",
         "line": 185,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       }
     ],
@@ -55501,27 +55843,35 @@
       {
         "name": "TestCoinbaseMarketDataStaleness::test_staleness_detection_fresh_vs_stale_toggles",
         "line": 16,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseMarketDataStaleness"
       },
       {
         "name": "TestCoinbaseMarketDataStaleness::test_staleness_behavior_matches_validator",
         "line": 35,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseMarketDataStaleness"
       },
       {
         "name": "test_staleness_detection_fresh_vs_stale_toggles",
         "line": 16,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_staleness_behavior_matches_validator",
         "line": 35,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       }
     ],
@@ -55529,19 +55879,25 @@
       {
         "name": "test_trading_flow_place_get_cancel",
         "line": 15,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_market_data_flow_products_ticker_candles",
         "line": 54,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_position_flow_cfm_positions_then_detail",
         "line": 82,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       }
     ],
@@ -55696,144 +56052,188 @@
       {
         "name": "TestCoinbasePerpRulesAndQuantize::test_enforce_quantizes_quantity",
         "line": 34,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbasePerpRulesAndQuantize"
       },
       {
         "name": "TestCoinbasePerpRulesAndQuantize::test_enforce_quantizes_price",
         "line": 40,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbasePerpRulesAndQuantize"
       },
       {
         "name": "TestCoinbasePerpRulesAndQuantize::test_enforce_rejects_below_min_size",
         "line": 46,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbasePerpRulesAndQuantize"
       },
       {
         "name": "TestCoinbasePerpRulesAndQuantize::test_enforce_rejects_below_min_notional",
         "line": 52,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbasePerpRulesAndQuantize"
       },
       {
         "name": "TestCoinbasePerpRulesAndQuantize::test_enforce_accepts_valid_notional",
         "line": 58,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbasePerpRulesAndQuantize"
       },
       {
         "name": "TestCoinbasePerpRulesAndQuantize::test_enforce_handles_no_min_notional",
         "line": 64,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbasePerpRulesAndQuantize"
       },
       {
         "name": "TestCoinbasePerpRulesAndQuantize::test_enforce_complex_quantization",
         "line": 71,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbasePerpRulesAndQuantize"
       },
       {
         "name": "TestCoinbasePerpRulesAndQuantize::test_quantize_basic",
         "line": 88,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbasePerpRulesAndQuantize"
       },
       {
         "name": "TestCoinbasePerpRulesAndQuantize::test_quantize_floors_not_rounds",
         "line": 92,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbasePerpRulesAndQuantize"
       },
       {
         "name": "TestCoinbasePerpRulesAndQuantize::test_quantize_handles_zero_increment",
         "line": 96,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbasePerpRulesAndQuantize"
       },
       {
         "name": "TestCoinbasePerpRulesAndQuantize::test_quantize_arbitrary_increments",
         "line": 102,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbasePerpRulesAndQuantize"
       },
       {
         "name": "test_enforce_quantizes_quantity",
         "line": 34,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_enforce_quantizes_price",
         "line": 40,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_enforce_rejects_below_min_size",
         "line": 46,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_enforce_rejects_below_min_notional",
         "line": 52,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_enforce_accepts_valid_notional",
         "line": 58,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_enforce_handles_no_min_notional",
         "line": 64,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_enforce_complex_quantization",
         "line": 71,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_quantize_basic",
         "line": 88,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_quantize_floors_not_rounds",
         "line": 92,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_quantize_handles_zero_increment",
         "line": 96,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_quantize_arbitrary_increments",
         "line": 102,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       }
     ],
@@ -56247,79 +56647,103 @@
       {
         "name": "TestProductCatalog::test_catalog_refresh_with_perps",
         "line": 22,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestProductCatalog"
       },
       {
         "name": "TestProductCatalog::test_catalog_get_with_expiry",
         "line": 58,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestProductCatalog"
       },
       {
         "name": "TestProductCatalog::test_catalog_get_not_found",
         "line": 85,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestProductCatalog"
       },
       {
         "name": "TestProductCatalog::test_catalog_get_funding_for_perpetual",
         "line": 94,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestProductCatalog"
       },
       {
         "name": "TestProductCatalog::test_catalog_get_funding_for_spot",
         "line": 116,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestProductCatalog"
       },
       {
         "name": "TestProductCatalog::test_catalog_handles_alternative_response_format",
         "line": 135,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestProductCatalog"
       },
       {
         "name": "test_catalog_refresh_with_perps",
         "line": 22,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_catalog_get_with_expiry",
         "line": 58,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_catalog_get_not_found",
         "line": 85,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_catalog_get_funding_for_perpetual",
         "line": 94,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_catalog_get_funding_for_spot",
         "line": 116,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_catalog_handles_alternative_response_format",
         "line": 135,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       }
     ],
@@ -56327,144 +56751,188 @@
       {
         "name": "TestCoinbaseMarketDataModels::test_depth_snapshot_l1_l10_depth_correctness",
         "line": 22,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseMarketDataModels"
       },
       {
         "name": "TestCoinbaseMarketDataModels::test_depth_snapshot_spread_bps",
         "line": 35,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseMarketDataModels"
       },
       {
         "name": "TestCoinbaseMarketDataModels::test_depth_snapshot_mid_price",
         "line": 43,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseMarketDataModels"
       },
       {
         "name": "TestCoinbaseMarketDataModels::test_rolling_window_cleanup_and_stats",
         "line": 51,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseMarketDataModels"
       },
       {
         "name": "TestCoinbaseMarketDataModels::test_trade_tape_vwap_calculation",
         "line": 68,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseMarketDataModels"
       },
       {
         "name": "TestCoinbaseMarketDataModels::test_trade_tape_aggressor_ratio",
         "line": 77,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseMarketDataModels"
       },
       {
         "name": "TestCoinbaseMarketDataModels::test_to_product_spot_market",
         "line": 85,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseMarketDataModels"
       },
       {
         "name": "TestCoinbaseMarketDataModels::test_to_product_perpetual_full",
         "line": 103,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseMarketDataModels"
       },
       {
         "name": "TestCoinbaseMarketDataModels::test_to_product_perpetual_partial",
         "line": 126,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseMarketDataModels"
       },
       {
         "name": "TestCoinbaseMarketDataModels::test_to_product_future_market",
         "line": 144,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseMarketDataModels"
       },
       {
         "name": "TestCoinbaseMarketDataModels::test_to_product_invalid_funding_time",
         "line": 162,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": "",
         "class": "TestCoinbaseMarketDataModels"
       },
       {
         "name": "test_depth_snapshot_l1_l10_depth_correctness",
         "line": 22,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_depth_snapshot_spread_bps",
         "line": 35,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_depth_snapshot_mid_price",
         "line": 43,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_rolling_window_cleanup_and_stats",
         "line": 51,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_trade_tape_vwap_calculation",
         "line": 68,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_trade_tape_aggressor_ratio",
         "line": 77,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_to_product_spot_market",
         "line": 85,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_to_product_perpetual_full",
         "line": 103,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_to_product_perpetual_partial",
         "line": 126,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_to_product_future_market",
         "line": 144,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       },
       {
         "name": "test_to_product_invalid_funding_time",
         "line": 162,
-        "markers": [],
+        "markers": [
+          "endpoints"
+        ],
         "docstring": ""
       }
     ],

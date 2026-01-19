@@ -9,7 +9,7 @@
   "summary": {
     "total_tests": 11049,
     "total_files": 908,
-    "markers_used": 9
+    "markers_used": 11
   },
   "quick_commands": {
     "run_unit_tests": "pytest -m unit",

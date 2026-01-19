@@ -75,8 +75,33 @@ def extract_test_info(file_path: Path) -> list[dict[str, Any]]:
     except Exception:
         return tests
 
-    # Get file-level markers (decorators on class or module)
+    def extract_pytestmark_markers(node: ast.expr) -> list[str]:
+        """Extract markers from a pytestmark assignment expression."""
+        markers: list[str] = []
+
+        if isinstance(node, (ast.List, ast.Tuple, ast.Set)):
+            values = node.elts
+        else:
+            values = [node]
+
+        for value in values:
+            marker = extract_marker(value)
+            if marker:
+                markers.append(marker)
+
+        return markers
+
+    # Get file-level markers (module-level pytestmark assignment)
     file_markers: set[str] = set()
+    for node in tree.body:
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id == "pytestmark":
+                    file_markers.update(extract_pytestmark_markers(node.value))
+        elif isinstance(node, ast.AnnAssign):
+            if isinstance(node.target, ast.Name) and node.target.id == "pytestmark":
+                if node.value is not None:
+                    file_markers.update(extract_pytestmark_markers(node.value))
 
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef) and node.name.startswith("test_"):

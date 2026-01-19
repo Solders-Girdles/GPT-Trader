@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 854,
+    "tests_scanned": 856,
     "source_modules": 347,
     "unresolved_modules": 3
   },
@@ -480,7 +480,9 @@
       "tests/unit/gpt_trader/validation/test_base_validator.py",
       "tests/unit/gpt_trader/validation/test_composite_validators.py",
       "tests/unit/gpt_trader/validation/test_config_validators.py",
-      "tests/unit/gpt_trader/validation/test_data_validators.py",
+      "tests/unit/gpt_trader/validation/test_data_validators_dataframe.py",
+      "tests/unit/gpt_trader/validation/test_data_validators_ohlc.py",
+      "tests/unit/gpt_trader/validation/test_data_validators_series.py",
       "tests/unit/gpt_trader/validation/test_decorators.py",
       "tests/unit/gpt_trader/validation/test_numeric_validators.py",
       "tests/unit/gpt_trader/validation/test_pattern_validators.py",
@@ -2202,7 +2204,9 @@
       "tests/unit/gpt_trader/validation/test_config_validators.py"
     ],
     "gpt_trader.validation.data_validators": [
-      "tests/unit/gpt_trader/validation/test_data_validators.py"
+      "tests/unit/gpt_trader/validation/test_data_validators_dataframe.py",
+      "tests/unit/gpt_trader/validation/test_data_validators_ohlc.py",
+      "tests/unit/gpt_trader/validation/test_data_validators_series.py"
     ],
     "gpt_trader.validation.decorators": [
       "tests/unit/gpt_trader/validation/test_decorators.py"
@@ -5417,7 +5421,15 @@
       "gpt_trader.validation.base_validators",
       "gpt_trader.validation.config_validators"
     ],
-    "tests/unit/gpt_trader/validation/test_data_validators.py": [
+    "tests/unit/gpt_trader/validation/test_data_validators_dataframe.py": [
+      "gpt_trader.errors",
+      "gpt_trader.validation.data_validators"
+    ],
+    "tests/unit/gpt_trader/validation/test_data_validators_ohlc.py": [
+      "gpt_trader.errors",
+      "gpt_trader.validation.data_validators"
+    ],
+    "tests/unit/gpt_trader/validation/test_data_validators_series.py": [
       "gpt_trader.errors",
       "gpt_trader.validation.data_validators"
     ],
@@ -5584,6 +5596,7 @@
     "gpt_trader.logging.json_formatter": "src/gpt_trader/logging/json_formatter.py",
     "gpt_trader.validation.rules.base": "src/gpt_trader/validation/rules/base.py",
     "gpt_trader.validation.rules.collections": "src/gpt_trader/validation/rules/collections.py",
+    "gpt_trader.validation.data_validators": "src/gpt_trader/validation/data_validators.py",
     "gpt_trader.validation.base_validators": "src/gpt_trader/validation/base_validators.py",
     "gpt_trader.validation.decorators": "src/gpt_trader/validation/decorators.py",
     "gpt_trader.validation.config_validators": "src/gpt_trader/validation/config_validators.py",
@@ -5593,7 +5606,6 @@
     "gpt_trader.validation.composite_validators": "src/gpt_trader/validation/composite_validators.py",
     "gpt_trader.validation.type_validators": "src/gpt_trader/validation/type_validators.py",
     "gpt_trader.validation.calculation_validator": "src/gpt_trader/validation/calculation_validator.py",
-    "gpt_trader.validation.data_validators": "src/gpt_trader/validation/data_validators.py",
     "gpt_trader.validation.temporal_validators": "src/gpt_trader/validation/temporal_validators.py",
     "gpt_trader.preflight.checks.diagnostics": "src/gpt_trader/preflight/checks/diagnostics.py",
     "gpt_trader.preflight.core": "src/gpt_trader/preflight/core.py",

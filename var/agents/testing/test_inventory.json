@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 11054,
-    "total_files": 846,
+    "total_files": 848,
     "markers_used": 9
   },
   "marker_definitions": {
@@ -572,6 +572,7 @@
     ],
     "validation": [
       "tests/unit/gpt_trader/validation/test_collection_rules.py",
+      "tests/unit/gpt_trader/validation/test_data_validators_dataframe.py",
       "tests/unit/gpt_trader/validation/test_decorators.py",
       "tests/unit/gpt_trader/validation/test_config_validators.py",
       "tests/unit/gpt_trader/validation/test_pattern_validators.py",
@@ -584,9 +585,10 @@
       "tests/unit/gpt_trader/validation/test_rules_boolean_rule.py",
       "tests/unit/gpt_trader/validation/test_rules_infrastructure.py",
       "tests/unit/gpt_trader/validation/test_rules_numeric_rules.py",
-      "tests/unit/gpt_trader/validation/test_data_validators.py",
+      "tests/unit/gpt_trader/validation/test_data_validators_series.py",
       "tests/unit/gpt_trader/validation/test_rules_string_time_and_symbol_rules.py",
-      "tests/unit/gpt_trader/validation/test_temporal_validators.py"
+      "tests/unit/gpt_trader/validation/test_temporal_validators.py",
+      "tests/unit/gpt_trader/validation/test_data_validators_ohlc.py"
     ],
     "preflight": [
       "tests/unit/gpt_trader/preflight/test_checks_diagnostics.py",
@@ -5048,7 +5050,7 @@
       },
       {
         "name": "TestValidateRequestInvalidAction::test_validate_request_path_traversal_action",
-        "line": 46,
+        "line": 48,
         "markers": [],
         "docstring": "Test that path traversal in action is detected.",
         "class": "TestValidateRequestInvalidAction"
@@ -5073,7 +5075,7 @@
       },
       {
         "name": "test_validate_request_path_traversal_action",
-        "line": 46,
+        "line": 48,
         "markers": [],
         "docstring": "Test that path traversal in action is detected."
       }
@@ -17574,6 +17576,125 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/validation/test_data_validators_dataframe.py": [
+      {
+        "name": "TestDataFrameValidator::test_validates_empty_dataframe",
+        "line": 15,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDataFrameValidator"
+      },
+      {
+        "name": "TestDataFrameValidator::test_validates_dataframe_with_data",
+        "line": 20,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDataFrameValidator"
+      },
+      {
+        "name": "TestDataFrameValidator::test_validates_required_columns_present",
+        "line": 26,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDataFrameValidator"
+      },
+      {
+        "name": "TestDataFrameValidator::test_rejects_missing_columns",
+        "line": 32,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDataFrameValidator"
+      },
+      {
+        "name": "TestDataFrameValidator::test_validates_min_rows",
+        "line": 38,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDataFrameValidator"
+      },
+      {
+        "name": "TestDataFrameValidator::test_rejects_insufficient_rows",
+        "line": 44,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDataFrameValidator"
+      },
+      {
+        "name": "TestDataFrameValidator::test_rejects_non_dataframe",
+        "line": 50,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDataFrameValidator"
+      },
+      {
+        "name": "TestDataFrameValidator::test_rejects_dict",
+        "line": 55,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDataFrameValidator"
+      },
+      {
+        "name": "TestDataFrameValidator::test_field_name_in_error",
+        "line": 60,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDataFrameValidator"
+      },
+      {
+        "name": "test_validates_empty_dataframe",
+        "line": 15,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_validates_dataframe_with_data",
+        "line": 20,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_validates_required_columns_present",
+        "line": 26,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_rejects_missing_columns",
+        "line": 32,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_validates_min_rows",
+        "line": 38,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_rejects_insufficient_rows",
+        "line": 44,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_rejects_non_dataframe",
+        "line": 50,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_rejects_dict",
+        "line": 55,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_field_name_in_error",
+        "line": 60,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/validation/test_decorators.py": [
       {
         "name": "TestValidateInputsDecorator::test_decorator_with_validator_instance",
@@ -20235,381 +20356,95 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/validation/test_data_validators.py": [
-      {
-        "name": "TestDataFrameValidator::test_validates_empty_dataframe",
-        "line": 19,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDataFrameValidator"
-      },
-      {
-        "name": "TestDataFrameValidator::test_validates_dataframe_with_data",
-        "line": 24,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDataFrameValidator"
-      },
-      {
-        "name": "TestDataFrameValidator::test_validates_required_columns_present",
-        "line": 30,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDataFrameValidator"
-      },
-      {
-        "name": "TestDataFrameValidator::test_rejects_missing_columns",
-        "line": 36,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDataFrameValidator"
-      },
-      {
-        "name": "TestDataFrameValidator::test_validates_min_rows",
-        "line": 42,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDataFrameValidator"
-      },
-      {
-        "name": "TestDataFrameValidator::test_rejects_insufficient_rows",
-        "line": 48,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDataFrameValidator"
-      },
-      {
-        "name": "TestDataFrameValidator::test_rejects_non_dataframe",
-        "line": 54,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDataFrameValidator"
-      },
-      {
-        "name": "TestDataFrameValidator::test_rejects_dict",
-        "line": 59,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDataFrameValidator"
-      },
-      {
-        "name": "TestDataFrameValidator::test_field_name_in_error",
-        "line": 64,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDataFrameValidator"
-      },
-      {
-        "name": "TestOHLCDataValidator::test_validates_valid_ohlc",
-        "line": 87,
-        "markers": [],
-        "docstring": "",
-        "class": "TestOHLCDataValidator"
-      },
-      {
-        "name": "TestOHLCDataValidator::test_validates_flat_candle",
-        "line": 92,
-        "markers": [],
-        "docstring": "",
-        "class": "TestOHLCDataValidator"
-      },
-      {
-        "name": "TestOHLCDataValidator::test_rejects_missing_columns",
-        "line": 107,
-        "markers": [],
-        "docstring": "",
-        "class": "TestOHLCDataValidator"
-      },
-      {
-        "name": "TestOHLCDataValidator::test_rejects_high_less_than_low",
-        "line": 113,
-        "markers": [],
-        "docstring": "",
-        "class": "TestOHLCDataValidator"
-      },
-      {
-        "name": "TestOHLCDataValidator::test_rejects_high_below_open",
-        "line": 127,
-        "markers": [],
-        "docstring": "",
-        "class": "TestOHLCDataValidator"
-      },
-      {
-        "name": "TestOHLCDataValidator::test_rejects_high_below_close",
-        "line": 141,
-        "markers": [],
-        "docstring": "",
-        "class": "TestOHLCDataValidator"
-      },
-      {
-        "name": "TestOHLCDataValidator::test_rejects_low_above_open",
-        "line": 155,
-        "markers": [],
-        "docstring": "",
-        "class": "TestOHLCDataValidator"
-      },
-      {
-        "name": "TestOHLCDataValidator::test_rejects_low_above_close",
-        "line": 169,
-        "markers": [],
-        "docstring": "",
-        "class": "TestOHLCDataValidator"
-      },
-      {
-        "name": "TestOHLCDataValidator::test_rejects_negative_price",
-        "line": 183,
-        "markers": [],
-        "docstring": "",
-        "class": "TestOHLCDataValidator"
-      },
-      {
-        "name": "TestOHLCDataValidator::test_rejects_negative_volume",
-        "line": 198,
-        "markers": [],
-        "docstring": "",
-        "class": "TestOHLCDataValidator"
-      },
-      {
-        "name": "TestOHLCDataValidator::test_rejects_empty_dataframe",
-        "line": 212,
-        "markers": [],
-        "docstring": "",
-        "class": "TestOHLCDataValidator"
-      },
-      {
-        "name": "TestOHLCDataValidator::test_validates_multiple_valid_rows",
-        "line": 218,
-        "markers": [],
-        "docstring": "",
-        "class": "TestOHLCDataValidator"
-      },
-      {
-        "name": "TestOHLCDataValidator::test_detects_single_invalid_row_among_valid",
-        "line": 232,
-        "markers": [],
-        "docstring": "",
-        "class": "TestOHLCDataValidator"
-      },
+    "tests/unit/gpt_trader/validation/test_data_validators_series.py": [
       {
         "name": "TestSeriesValidator::test_validates_series",
-        "line": 250,
+        "line": 15,
         "markers": [],
         "docstring": "",
         "class": "TestSeriesValidator"
       },
       {
         "name": "TestSeriesValidator::test_validates_empty_series",
-        "line": 256,
+        "line": 21,
         "markers": [],
         "docstring": "",
         "class": "TestSeriesValidator"
       },
       {
         "name": "TestSeriesValidator::test_validates_named_series",
-        "line": 262,
+        "line": 27,
         "markers": [],
         "docstring": "",
         "class": "TestSeriesValidator"
       },
       {
         "name": "TestSeriesValidator::test_rejects_list",
-        "line": 268,
+        "line": 33,
         "markers": [],
         "docstring": "",
         "class": "TestSeriesValidator"
       },
       {
         "name": "TestSeriesValidator::test_rejects_dataframe",
-        "line": 273,
+        "line": 38,
         "markers": [],
         "docstring": "",
         "class": "TestSeriesValidator"
       },
       {
         "name": "TestSeriesValidator::test_rejects_scalar",
-        "line": 279,
+        "line": 44,
         "markers": [],
         "docstring": "",
         "class": "TestSeriesValidator"
       },
       {
         "name": "TestSeriesValidator::test_field_name_in_error",
-        "line": 284,
+        "line": 49,
         "markers": [],
         "docstring": "",
         "class": "TestSeriesValidator"
       },
       {
-        "name": "test_validates_empty_dataframe",
-        "line": 19,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_validates_dataframe_with_data",
-        "line": 24,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_validates_required_columns_present",
-        "line": 30,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_rejects_missing_columns",
-        "line": 36,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_validates_min_rows",
-        "line": 42,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_rejects_insufficient_rows",
-        "line": 48,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_rejects_non_dataframe",
-        "line": 54,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_rejects_dict",
-        "line": 59,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_field_name_in_error",
-        "line": 64,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_validates_valid_ohlc",
-        "line": 87,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_validates_flat_candle",
-        "line": 92,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_rejects_missing_columns",
-        "line": 107,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_rejects_high_less_than_low",
-        "line": 113,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_rejects_high_below_open",
-        "line": 127,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_rejects_high_below_close",
-        "line": 141,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_rejects_low_above_open",
-        "line": 155,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_rejects_low_above_close",
-        "line": 169,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_rejects_negative_price",
-        "line": 183,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_rejects_negative_volume",
-        "line": 198,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_rejects_empty_dataframe",
-        "line": 212,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_validates_multiple_valid_rows",
-        "line": 218,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_detects_single_invalid_row_among_valid",
-        "line": 232,
-        "markers": [],
-        "docstring": ""
-      },
-      {
         "name": "test_validates_series",
-        "line": 250,
+        "line": 15,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_validates_empty_series",
-        "line": 256,
+        "line": 21,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_validates_named_series",
-        "line": 262,
+        "line": 27,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_rejects_list",
-        "line": 268,
+        "line": 33,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_rejects_dataframe",
-        "line": 273,
+        "line": 38,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_rejects_scalar",
-        "line": 279,
+        "line": 44,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_field_name_in_error",
-        "line": 284,
+        "line": 49,
         "markers": [],
         "docstring": ""
       }
@@ -21082,6 +20917,177 @@
       {
         "name": "test_datetime_comparison_with_datetime_bounds",
         "line": 104,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/validation/test_data_validators_ohlc.py": [
+      {
+        "name": "TestOHLCDataValidator::test_validates_valid_ohlc",
+        "line": 28,
+        "markers": [],
+        "docstring": "",
+        "class": "TestOHLCDataValidator"
+      },
+      {
+        "name": "TestOHLCDataValidator::test_validates_flat_candle",
+        "line": 33,
+        "markers": [],
+        "docstring": "",
+        "class": "TestOHLCDataValidator"
+      },
+      {
+        "name": "TestOHLCDataValidator::test_rejects_missing_columns",
+        "line": 48,
+        "markers": [],
+        "docstring": "",
+        "class": "TestOHLCDataValidator"
+      },
+      {
+        "name": "TestOHLCDataValidator::test_rejects_high_less_than_low",
+        "line": 54,
+        "markers": [],
+        "docstring": "",
+        "class": "TestOHLCDataValidator"
+      },
+      {
+        "name": "TestOHLCDataValidator::test_rejects_high_below_open",
+        "line": 68,
+        "markers": [],
+        "docstring": "",
+        "class": "TestOHLCDataValidator"
+      },
+      {
+        "name": "TestOHLCDataValidator::test_rejects_high_below_close",
+        "line": 82,
+        "markers": [],
+        "docstring": "",
+        "class": "TestOHLCDataValidator"
+      },
+      {
+        "name": "TestOHLCDataValidator::test_rejects_low_above_open",
+        "line": 96,
+        "markers": [],
+        "docstring": "",
+        "class": "TestOHLCDataValidator"
+      },
+      {
+        "name": "TestOHLCDataValidator::test_rejects_low_above_close",
+        "line": 110,
+        "markers": [],
+        "docstring": "",
+        "class": "TestOHLCDataValidator"
+      },
+      {
+        "name": "TestOHLCDataValidator::test_rejects_negative_price",
+        "line": 124,
+        "markers": [],
+        "docstring": "",
+        "class": "TestOHLCDataValidator"
+      },
+      {
+        "name": "TestOHLCDataValidator::test_rejects_negative_volume",
+        "line": 139,
+        "markers": [],
+        "docstring": "",
+        "class": "TestOHLCDataValidator"
+      },
+      {
+        "name": "TestOHLCDataValidator::test_rejects_empty_dataframe",
+        "line": 153,
+        "markers": [],
+        "docstring": "",
+        "class": "TestOHLCDataValidator"
+      },
+      {
+        "name": "TestOHLCDataValidator::test_validates_multiple_valid_rows",
+        "line": 159,
+        "markers": [],
+        "docstring": "",
+        "class": "TestOHLCDataValidator"
+      },
+      {
+        "name": "TestOHLCDataValidator::test_detects_single_invalid_row_among_valid",
+        "line": 173,
+        "markers": [],
+        "docstring": "",
+        "class": "TestOHLCDataValidator"
+      },
+      {
+        "name": "test_validates_valid_ohlc",
+        "line": 28,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_validates_flat_candle",
+        "line": 33,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_rejects_missing_columns",
+        "line": 48,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_rejects_high_less_than_low",
+        "line": 54,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_rejects_high_below_open",
+        "line": 68,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_rejects_high_below_close",
+        "line": 82,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_rejects_low_above_open",
+        "line": 96,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_rejects_low_above_close",
+        "line": 110,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_rejects_negative_price",
+        "line": 124,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_rejects_negative_volume",
+        "line": 139,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_rejects_empty_dataframe",
+        "line": 153,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_validates_multiple_valid_rows",
+        "line": 159,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_detects_single_invalid_row_among_valid",
+        "line": 173,
         "markers": [],
         "docstring": ""
       }

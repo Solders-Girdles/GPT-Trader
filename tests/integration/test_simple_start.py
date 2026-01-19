@@ -7,6 +7,8 @@ from gpt_trader.app.config import BotConfig
 from gpt_trader.app.container import clear_application_container, set_application_container
 from gpt_trader.features.live_trade.bot import TradingBot
 
+pytestmark = [pytest.mark.integration, pytest.mark.legacy_delete]
+
 
 @pytest.mark.asyncio
 async def test_bot_startup_shutdown(monkeypatch):

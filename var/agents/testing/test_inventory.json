@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 11051,
+    "total_tests": 11049,
     "total_files": 908,
     "markers_used": 9
   },
@@ -9818,13 +9818,13 @@
     "tests/unit/gpt_trader/cli/test_commands_orders_payload.py": [
       {
         "name": "test_build_order_payload_includes_optional_fields",
-        "line": 8,
+        "line": 7,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_build_order_payload_omits_optional_fields_when_missing",
-        "line": 24,
+        "line": 23,
         "markers": [],
         "docstring": ""
       }
@@ -10071,31 +10071,31 @@
     "tests/unit/gpt_trader/cli/test_commands_orders_editing.py": [
       {
         "name": "test_handle_edit_preview_errors_without_support",
-        "line": 13,
+        "line": 12,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_handle_edit_preview_invokes_broker",
-        "line": 31,
+        "line": 30,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_handle_apply_edit_serializes_dataclass",
-        "line": 66,
+        "line": 65,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_handle_apply_edit_errors_without_support",
-        "line": 102,
+        "line": 101,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_handle_apply_edit_propagates_broker_errors",
-        "line": 120,
+        "line": 119,
         "markers": [],
         "docstring": ""
       }
@@ -10222,13 +10222,13 @@
     "tests/unit/gpt_trader/cli/test_commands_orders_preview.py": [
       {
         "name": "test_handle_preview_prints_json",
-        "line": 12,
+        "line": 11,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_handle_preview_errors_without_preview_support",
-        "line": 50,
+        "line": 49,
         "markers": [],
         "docstring": ""
       }
@@ -53427,32 +53427,20 @@
         "docstring": "Test cfm_intraday_current_margin_window endpoint."
       },
       {
-        "name": "test_cfm_intraday_position_refresh_not_implemented",
-        "line": 84,
-        "markers": [],
-        "docstring": "Test cfm_intraday_position_refresh endpoint - currently not implemented."
-      },
-      {
-        "name": "test_cfm_sweep_not_implemented",
-        "line": 92,
-        "markers": [],
-        "docstring": "Test cfm_sweep endpoint - currently not implemented."
-      },
-      {
         "name": "test_cfm_methods_require_advanced_mode",
-        "line": 100,
+        "line": 84,
         "markers": [],
         "docstring": "Test that CFM methods are not available in exchange mode."
       },
       {
         "name": "test_cfm_sweeps_and_schedule_paths",
-        "line": 114,
+        "line": 98,
         "markers": [],
         "docstring": "Test cfm_sweeps and cfm_sweeps_schedule endpoints paths (GET)."
       },
       {
         "name": "test_cfm_intraday_margin_setting_posts_payload",
-        "line": 143,
+        "line": 127,
         "markers": [],
         "docstring": ""
       }
@@ -55133,14 +55121,14 @@
         "docstring": ""
       },
       {
-        "name": "test_get_convert_trade_already_covered_in_system_tests",
+        "name": "test_get_convert_trade_formats_path",
         "line": 33,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_commit_convert_trade_posts_payload",
-        "line": 42,
+        "line": 49,
         "markers": [],
         "docstring": ""
       }
@@ -56777,105 +56765,105 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics_collector.py": [
       {
         "name": "TestAPIMetricsCollector::test_initial_state",
-        "line": 13,
+        "line": 11,
         "markers": [],
         "docstring": "Test initial collector state.",
         "class": "TestAPIMetricsCollector"
       },
       {
         "name": "TestAPIMetricsCollector::test_record_request",
-        "line": 20,
+        "line": 18,
         "markers": [],
         "docstring": "Test recording a request.",
         "class": "TestAPIMetricsCollector"
       },
       {
         "name": "TestAPIMetricsCollector::test_endpoint_categorization",
-        "line": 30,
+        "line": 28,
         "markers": [],
         "docstring": "Test that endpoints are correctly categorized.",
         "class": "TestAPIMetricsCollector"
       },
       {
         "name": "TestAPIMetricsCollector::test_error_and_rate_limit_tracking",
-        "line": 48,
+        "line": 46,
         "markers": [],
         "docstring": "Test tracking errors and rate limits.",
         "class": "TestAPIMetricsCollector"
       },
       {
         "name": "TestAPIMetricsCollector::test_disabled_collector",
-        "line": 61,
+        "line": 59,
         "markers": [],
         "docstring": "Test that disabled collector doesn't record.",
         "class": "TestAPIMetricsCollector"
       },
       {
         "name": "TestAPIMetricsCollector::test_reset",
-        "line": 70,
+        "line": 68,
         "markers": [],
         "docstring": "Test resetting all metrics.",
         "class": "TestAPIMetricsCollector"
       },
       {
         "name": "TestAPIMetricsCollector::test_rate_limit_usage_display",
-        "line": 81,
+        "line": 79,
         "markers": [],
         "docstring": "Test rate limit usage formatting.",
         "class": "TestAPIMetricsCollector"
       },
       {
         "name": "TestAPIMetricsCollector::test_thread_safety",
-        "line": 88,
+        "line": 86,
         "markers": [],
         "docstring": "Test that collector is thread-safe.",
         "class": "TestAPIMetricsCollector"
       },
       {
         "name": "test_initial_state",
-        "line": 13,
+        "line": 11,
         "markers": [],
         "docstring": "Test initial collector state."
       },
       {
         "name": "test_record_request",
-        "line": 20,
+        "line": 18,
         "markers": [],
         "docstring": "Test recording a request."
       },
       {
         "name": "test_endpoint_categorization",
-        "line": 30,
+        "line": 28,
         "markers": [],
         "docstring": "Test that endpoints are correctly categorized."
       },
       {
         "name": "test_error_and_rate_limit_tracking",
-        "line": 48,
+        "line": 46,
         "markers": [],
         "docstring": "Test tracking errors and rate limits."
       },
       {
         "name": "test_disabled_collector",
-        "line": 61,
+        "line": 59,
         "markers": [],
         "docstring": "Test that disabled collector doesn't record."
       },
       {
         "name": "test_reset",
-        "line": 70,
+        "line": 68,
         "markers": [],
         "docstring": "Test resetting all metrics."
       },
       {
         "name": "test_rate_limit_usage_display",
-        "line": 81,
+        "line": 79,
         "markers": [],
         "docstring": "Test rate limit usage formatting."
       },
       {
         "name": "test_thread_safety",
-        "line": 88,
+        "line": 86,
         "markers": [],
         "docstring": "Test that collector is thread-safe."
       }
@@ -64215,27 +64203,27 @@
     "tests/unit/gpt_trader/features/live_trade/signals/test_orderbook_imbalance_config.py": [
       {
         "name": "TestOrderbookImbalanceSignalConfig::test_default_values",
-        "line": 9,
+        "line": 11,
         "markers": [],
         "docstring": "Test default config values.",
         "class": "TestOrderbookImbalanceSignalConfig"
       },
       {
         "name": "TestOrderbookImbalanceSignalConfig::test_custom_values",
-        "line": 16,
+        "line": 18,
         "markers": [],
         "docstring": "Test custom config values.",
         "class": "TestOrderbookImbalanceSignalConfig"
       },
       {
         "name": "test_default_values",
-        "line": 9,
+        "line": 11,
         "markers": [],
         "docstring": "Test default config values."
       },
       {
         "name": "test_custom_values",
-        "line": 16,
+        "line": 18,
         "markers": [],
         "docstring": "Test custom config values."
       }

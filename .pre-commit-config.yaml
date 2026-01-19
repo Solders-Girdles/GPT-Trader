@@ -38,6 +38,12 @@ repos:
         language: python
         pass_filenames: true
         files: ^tests/.*\.py$
+    -   id: legacy-test-triage
+        name: legacy-test-triage
+        entry: uv run python scripts/ci/check_legacy_test_triage.py
+        language: system
+        pass_filenames: false
+        always_run: true
     -   id: naming-check
         name: naming-standards
         entry: python scripts/agents/naming_inventory.py --strict --quiet

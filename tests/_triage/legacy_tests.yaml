@@ -11,4 +11,9 @@ version: 1
 #   reason: "Why this is legacy or redundant"
 #   owner: "name/handle"  # optional
 #   added: "2026-01-18"   # optional (YYYY-MM-DD)
-tests: {}
+tests:
+  tests/integration/test_simple_start.py:
+    action: delete
+    status: todo
+    reason: "Legacy bot startup test uses global container + heavy patching; redundant with newer TradingBot unit/integration coverage."
+    added: "2026-01-19"

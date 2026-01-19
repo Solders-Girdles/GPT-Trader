@@ -96,8 +96,8 @@
   },
   "counts": {
     "endpoints": 140,
-    "integration": 103,
-    "parametrize": 94,
+    "integration": 100,
+    "parametrize": 93,
     "skipif": 16,
     "e2e": 12,
     "property": 10,

@@ -14,6 +14,11 @@ version: 1
 tests:
   tests/integration/test_simple_start.py:
     action: delete
-    status: todo
+    status: done
     reason: "Legacy bot startup test uses global container + heavy patching; redundant with newer TradingBot unit/integration coverage."
+    added: "2026-01-19"
+  tests/unit/gpt_trader/cli/test_cli_integration.py:
+    action: delete
+    status: done
+    reason: "Subprocess-based CLI tests duplicated by focused unit tests (cli.main, command registration/parsing) and were not part of any CI suite."
     added: "2026-01-19"

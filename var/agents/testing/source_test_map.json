@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 916,
+    "tests_scanned": 915,
     "source_modules": 347,
     "unresolved_modules": 3
   },
@@ -20,7 +20,6 @@
       "tests/integration/test_container_lifecycle_runtime.py",
       "tests/integration/test_crash_recovery.py",
       "tests/integration/test_end_to_end_buy.py",
-      "tests/integration/test_simple_start.py",
       "tests/integration/test_validation_escalation_flow.py",
       "tests/integration/test_validation_escalation_metrics.py",
       "tests/unit/gpt_trader/app/config/test_bot_config.py",
@@ -81,7 +80,6 @@
       "tests/integration/test_container_lifecycle_runtime.py",
       "tests/integration/test_crash_recovery.py",
       "tests/integration/test_end_to_end_buy.py",
-      "tests/integration/test_simple_start.py",
       "tests/integration/test_validation_escalation_flow.py",
       "tests/integration/test_validation_escalation_metrics.py",
       "tests/unit/gpt_trader/app/config/test_profile_loader_container_api.py",
@@ -879,7 +877,6 @@
     "gpt_trader.features.live_trade.bot": [
       "tests/integration/test_core_validation.py",
       "tests/integration/test_paper_mode.py",
-      "tests/integration/test_simple_start.py",
       "tests/unit/gpt_trader/app/test_bootstrap.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_engine_delegation.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop.py",
@@ -2398,11 +2395,6 @@
     ],
     "tests/integration/test_persistence.py": [
       "gpt_trader.persistence.event_store"
-    ],
-    "tests/integration/test_simple_start.py": [
-      "gpt_trader.app.config",
-      "gpt_trader.app.container",
-      "gpt_trader.features.live_trade.bot"
     ],
     "tests/integration/test_validation_escalation_flow.py": [
       "gpt_trader.app.config",
@@ -5773,13 +5765,13 @@
     "gpt_trader.monitoring.domain.perps.margin": "src/gpt_trader/monitoring/domain/perps/margin.py",
     "gpt_trader.app.config": "src/gpt_trader/app/config/__init__.py",
     "gpt_trader.app.container": "src/gpt_trader/app/container.py",
-    "gpt_trader.features.live_trade.bot": "src/gpt_trader/features/live_trade/bot.py",
     "gpt_trader.backtesting.engine.bar_runner": "src/gpt_trader/backtesting/engine/bar_runner.py",
     "gpt_trader.backtesting.simulation.broker": "src/gpt_trader/backtesting/simulation/broker.py",
     "gpt_trader.app.config.profile_loader": "src/gpt_trader/app/config/profile_loader.py",
     "gpt_trader.cli.services": "src/gpt_trader/cli/services.py",
     "gpt_trader.features.live_trade.engines.base": "src/gpt_trader/features/live_trade/engines/base.py",
     "gpt_trader.features.live_trade.engines.strategy": "src/gpt_trader/features/live_trade/engines/strategy.py",
+    "gpt_trader.features.live_trade.bot": "src/gpt_trader/features/live_trade/bot.py",
     "gpt_trader.features.live_trade.risk": "src/gpt_trader/features/live_trade/risk/__init__.py",
     "gpt_trader.features.optimize.study.manager": "src/gpt_trader/features/optimize/study/manager.py",
     "gpt_trader.features.optimize.types": "src/gpt_trader/features/optimize/types.py",

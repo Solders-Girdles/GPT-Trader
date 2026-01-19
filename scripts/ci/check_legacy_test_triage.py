@@ -93,8 +93,11 @@ def validate_manifest_entries(manifest: dict[str, dict[str, Any]]) -> list[str]:
             problems.append(f"{path_str}: must live under tests/")
         if path.suffix != ".py":
             problems.append(f"{path_str}: must be a .py file")
-        if not path.exists():
-            problems.append(f"{path_str}: file does not exist")
+        status = meta.get("status")
+        if status is not None and status not in VALID_STATUSES:
+            problems.append(f"{path_str}: status must be one of {sorted(VALID_STATUSES)}")
+        if not path.exists() and status != "done":
+            problems.append(f"{path_str}: file does not exist (set status: done if removed)")
 
         action = meta.get("action")
         if action not in VALID_ACTIONS:
@@ -104,10 +107,6 @@ def validate_manifest_entries(manifest: dict[str, dict[str, Any]]) -> list[str]:
         reason = meta.get("reason")
         if not isinstance(reason, str) or not reason.strip():
             problems.append(f"{path_str}: reason is required")
-
-        status = meta.get("status")
-        if status is not None and status not in VALID_STATUSES:
-            problems.append(f"{path_str}: status must be one of {sorted(VALID_STATUSES)}")
 
     return problems
 
@@ -136,6 +135,8 @@ def validate_marker_alignment(
         action = meta.get("action")
         expected = MARKER_BY_ACTION.get(action)
         if not expected:
+            continue
+        if meta.get("status") == "done" and not Path(file_path).exists():
             continue
         marker = marked_files.get(file_path)
         if marker != expected:

@@ -25,7 +25,6 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/validation/test_calculation_validator.py",  # calculation validator coverage
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service.py",  # market data service contract
     "tests/unit/gpt_trader/features/data/test_data_module.py",  # 295 lines: comprehensive data module contract with storage/cache stubs
-    "tests/unit/gpt_trader/security/security_validator/test_order_validation.py",  # 335 lines: full order validation matrix across pricing/limits/error paths
     "tests/unit/gpt_trader/security/security_validator/test_rate_limiting.py",  # 305 lines: rate limiter escalation, blocking, and reset regression suite
     "tests/unit/gpt_trader/security/security_validator/test_suspicious_activity.py",  # 294 lines: suspicious activity detection heuristics and alert coverage
     "tests/unit/gpt_trader/security/security_validator/test_symbol_validation.py",  # 243 lines: comprehensive symbol/blocklist validation cases
@@ -46,15 +45,12 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/errors/test_error_patterns.py",  # error pattern decorator coverage
     "tests/unit/gpt_trader/monitoring/test_alert_types.py",  # alert type coverage
     "tests/unit/gpt_trader/app/test_health_server.py",  # health server endpoint coverage
-    "tests/unit/gpt_trader/monitoring/daily_report/test_analytics.py",  # daily report analytics
     "tests/unit/gpt_trader/backtesting/engine/test_clock.py",  # simulation clock scenarios
     "tests/unit/gpt_trader/monitoring/daily_report/test_models.py",  # daily report model coverage
-    "tests/unit/gpt_trader/backtesting/validation/test_validator.py",  # validation scenarios
     "tests/integration/test_optimize_feature.py",  # optimization feature integration coverage
     "tests/unit/gpt_trader/features/optimize/test_walk_forward.py",  # walk-forward analysis comprehensive scenarios
     "tests/unit/gpt_trader/monitoring/notifications/test_notification_service.py",  # notification backend coverage
     "tests/unit/gpt_trader/monitoring/test_heartbeat.py",  # heartbeat monitoring scenarios
-    "tests/integration/test_funding_pnl_integration.py",  # funding and PnL calculation scenarios
     "tests/unit/gpt_trader/persistence/test_orders_store.py",  # comprehensive order persistence contract with lifecycle, recovery, and integrity validation
     "tests/unit/gpt_trader/app/test_bootstrap.py",  # comprehensive bootstrap module coverage with profile loading and container initialization
     # Phase 2 pain points remediation: critical service coverage
@@ -77,7 +73,6 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/features/strategy_dev/lab/test_experiment.py",
     # TUI Phase 3.5 comprehensive test suites
     "tests/unit/gpt_trader/tui/state_management/test_validators.py",  # state validator permutation matrix
-    "tests/unit/gpt_trader/tui/mixins/test_event_handlers.py",  # mixin event handler coverage across components
     "tests/unit/gpt_trader/tui/test_screen_flows.py",  # screen navigation and lifecycle scenarios
     "tests/unit/gpt_trader/tui/services/test_mode_service.py",  # mode service state transitions
     "tests/unit/gpt_trader/tui/test_thresholds.py",  # unified threshold system test coverage (status levels, risk, confidence)
@@ -105,7 +100,6 @@ ALLOWLIST = {
     "tests/integration/test_crash_recovery.py",  # crash recovery scenarios and state restoration
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection.py",  # WebSocket reconnection reliability scenarios
     "tests/unit/gpt_trader/features/live_trade/test_state_recovery.py",  # state recovery and persistence contract
-    "tests/property/test_validation_invariants.py",  # property-based validation invariants across order parameters
     # Pre-existing TUI and feature test suites
     "tests/unit/gpt_trader/tui/widgets/test_performance_dashboard.py",  # performance dashboard widget scenarios
     "tests/unit/gpt_trader/tui/services/test_performance_service.py",  # performance service comprehensive coverage

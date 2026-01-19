@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 11056,
-    "total_files": 733,
+    "total_files": 753,
     "markers_used": 9
   },
   "marker_definitions": {
@@ -203,12 +203,15 @@
       "tests/unit/gpt_trader/backtesting/chaos/test_scenarios.py",
       "tests/unit/gpt_trader/backtesting/validation/test_guarded_execution.py",
       "tests/unit/gpt_trader/backtesting/validation/test_decision_logger_init_and_cycles.py",
+      "tests/unit/gpt_trader/backtesting/validation/test_validator_init_reset_and_properties.py",
+      "tests/unit/gpt_trader/backtesting/validation/test_validator_validate_decision.py",
       "tests/unit/gpt_trader/backtesting/validation/test_decision_logger_strategy_decision_serialization.py",
       "tests/unit/gpt_trader/backtesting/validation/test_decision_logger_strategy_decision_create.py",
       "tests/unit/gpt_trader/backtesting/validation/test_decision_logger_logging_and_retrieval.py",
       "tests/unit/gpt_trader/backtesting/validation/test_decision_logger_strategy_decision_builder_methods.py",
       "tests/unit/gpt_trader/backtesting/validation/test_decision_logger_clear_export_and_properties.py",
-      "tests/unit/gpt_trader/backtesting/validation/test_validator.py"
+      "tests/unit/gpt_trader/backtesting/validation/test_validator_validation_result.py",
+      "tests/unit/gpt_trader/backtesting/validation/test_validator_reporting_and_divergences.py"
     ],
     "core": [
       "tests/unit/gpt_trader/core/test_core_types.py",
@@ -260,12 +263,17 @@
       "tests/unit/gpt_trader/security/security_validator/test_convenience_wrappers.py",
       "tests/unit/gpt_trader/security/security_validator/test_trading_hours.py",
       "tests/unit/gpt_trader/security/security_validator/test_rate_limiting.py",
-      "tests/unit/gpt_trader/security/security_validator/test_order_validation.py",
+      "tests/unit/gpt_trader/security/security_validator/test_order_validation_quantity_and_price_rules.py",
+      "tests/unit/gpt_trader/security/security_validator/test_order_validation_account_value_effects.py",
       "tests/unit/gpt_trader/security/security_validator/test_symbol_validation.py",
+      "tests/unit/gpt_trader/security/security_validator/test_order_validation_symbol_and_required_fields.py",
       "tests/unit/gpt_trader/security/security_validator/test_numeric_valid_inputs.py",
       "tests/unit/gpt_trader/security/security_validator/test_input_sanitisation.py",
+      "tests/unit/gpt_trader/security/security_validator/test_order_validation_payload_and_errors.py",
+      "tests/unit/gpt_trader/security/security_validator/test_order_validation_value_limits.py",
       "tests/unit/gpt_trader/security/security_validator/test_suspicious_activity.py",
-      "tests/unit/gpt_trader/security/security_validator/test_numeric_edge_behaviour.py"
+      "tests/unit/gpt_trader/security/security_validator/test_numeric_edge_behaviour.py",
+      "tests/unit/gpt_trader/security/security_validator/test_order_validation_happy_path.py"
     ],
     "tui": [
       "tests/unit/gpt_trader/tui/test_snapshots_navigation.py",
@@ -312,7 +320,10 @@
       "tests/unit/gpt_trader/tui/test_state_resilience_and_performance.py",
       "tests/unit/gpt_trader/tui/test_log_manager_handler_emit.py",
       "tests/unit/gpt_trader/tui/demo/test_mock_data.py",
-      "tests/unit/gpt_trader/tui/mixins/test_event_handlers.py",
+      "tests/unit/gpt_trader/tui/mixins/test_event_handlers_utilities_and_docs.py",
+      "tests/unit/gpt_trader/tui/mixins/test_event_handlers_custom_overrides.py",
+      "tests/unit/gpt_trader/tui/mixins/test_event_handlers_basics.py",
+      "tests/unit/gpt_trader/tui/mixins/test_event_handlers_default_handlers.py",
       "tests/unit/gpt_trader/tui/screens/test_api_setup_wizard.py",
       "tests/unit/gpt_trader/tui/screens/test_alert_history.py",
       "tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen.py",
@@ -482,9 +493,13 @@
       "tests/unit/gpt_trader/monitoring/configuration_guardian/test_detector_edges.py",
       "tests/unit/gpt_trader/monitoring/configuration_guardian/test_environment_monitor_edges.py",
       "tests/unit/gpt_trader/monitoring/configuration_guardian/test_state_validator_edges.py",
+      "tests/unit/gpt_trader/monitoring/daily_report/test_analytics_health_metrics.py",
       "tests/unit/gpt_trader/monitoring/daily_report/test_loaders_edges.py",
-      "tests/unit/gpt_trader/monitoring/daily_report/test_analytics.py",
+      "tests/unit/gpt_trader/monitoring/daily_report/test_analytics_pnl_metrics.py",
+      "tests/unit/gpt_trader/monitoring/daily_report/test_analytics_trade_metrics.py",
       "tests/unit/gpt_trader/monitoring/daily_report/test_generator_edges.py",
+      "tests/unit/gpt_trader/monitoring/daily_report/test_analytics_symbol_metrics.py",
+      "tests/unit/gpt_trader/monitoring/daily_report/test_analytics_risk_metrics.py",
       "tests/unit/gpt_trader/monitoring/daily_report/test_models.py",
       "tests/unit/gpt_trader/monitoring/daily_report/test_liveness_runtime.py",
       "tests/unit/gpt_trader/monitoring/system/test_metrics.py",
@@ -986,6 +1001,20 @@
         "docstring": "Property: get_status should accurately reflect current degradation state."
       }
     ],
+    "tests/property/test_validation_invariants_interleaved.py": [
+      {
+        "name": "test_interleaved_operations_consistency",
+        "line": 31,
+        "markers": [],
+        "docstring": "Property: Interleaved fail/success operations maintain counter consistency.\n\nAfter any sequence of operations, the state should be internally consistent."
+      },
+      {
+        "name": "test_callback_exception_does_not_break_tracking",
+        "line": 64,
+        "markers": [],
+        "docstring": "Property: If callback raises an exception, tracking should continue."
+      }
+    ],
     "tests/property/test_fee_invariants_calculation.py": [
       {
         "name": "test_fee_non_negative",
@@ -1018,6 +1047,38 @@
         "docstring": "Property: Fee of sum equals sum of fees.\n\nfee(a + b) = fee(a) + fee(b)\nThis property enables accurate aggregation of fees."
       }
     ],
+    "tests/property/test_validation_invariants_counters.py": [
+      {
+        "name": "test_failure_counter_increments",
+        "line": 22,
+        "markers": [],
+        "docstring": "Property: Each record_failure call should increment the counter by 1."
+      },
+      {
+        "name": "test_success_resets_counter",
+        "line": 46,
+        "markers": [],
+        "docstring": "Property: record_success should always reset the counter to zero."
+      },
+      {
+        "name": "test_check_types_are_independent",
+        "line": 71,
+        "markers": [],
+        "docstring": "Property: Different check types should have independent counters.\n\nFailures in one type should not affect other types."
+      },
+      {
+        "name": "test_get_failure_count_is_readonly",
+        "line": 102,
+        "markers": [],
+        "docstring": "Property: get_failure_count should not modify state."
+      },
+      {
+        "name": "test_initial_failure_count_is_zero",
+        "line": 128,
+        "markers": [],
+        "docstring": "Property: Initial failure count for any check type should be zero."
+      }
+    ],
     "tests/property/test_fee_invariants_volume_tracking.py": [
       {
         "name": "test_volume_tracking_tier_upgrades",
@@ -1038,6 +1099,38 @@
         "docstring": "Verify volume tracking disabled keeps tier constant."
       }
     ],
+    "tests/property/test_validation_invariants_escalation.py": [
+      {
+        "name": "test_escalation_triggers_at_threshold",
+        "line": 24,
+        "markers": [],
+        "docstring": "Property: Escalation should trigger when counter reaches threshold.\n\nrecord_failure returns True exactly when threshold is reached."
+      },
+      {
+        "name": "test_escalation_callback_called",
+        "line": 55,
+        "markers": [],
+        "docstring": "Property: Escalation callback should be called when threshold is reached."
+      },
+      {
+        "name": "test_reset_allows_new_escalation",
+        "line": 83,
+        "markers": [],
+        "docstring": "Property: After reset, reaching threshold again should trigger escalation."
+      },
+      {
+        "name": "test_escalation_does_not_trigger_below_threshold",
+        "line": 113,
+        "markers": [],
+        "docstring": "Property: record_failure should return False for all failures below threshold."
+      },
+      {
+        "name": "test_no_callback_still_returns_true",
+        "line": 134,
+        "markers": [],
+        "docstring": "Property: record_failure returns True at threshold even without callback."
+      }
+    ],
     "tests/property/test_liquidation_invariants_distance_and_risk.py": [
       {
         "name": "test_distance_calculation_invariants",
@@ -1056,80 +1149,6 @@
         "line": 171,
         "markers": [],
         "docstring": "Property: Zero position size should always result in 'safe' risk level.\n\nThis is a critical safety property - we should never flag risk on empty positions."
-      }
-    ],
-    "tests/property/test_validation_invariants.py": [
-      {
-        "name": "test_failure_counter_increments",
-        "line": 41,
-        "markers": [],
-        "docstring": "Property: Each record_failure call should increment the counter by 1."
-      },
-      {
-        "name": "test_success_resets_counter",
-        "line": 65,
-        "markers": [],
-        "docstring": "Property: record_success should always reset the counter to zero."
-      },
-      {
-        "name": "test_escalation_triggers_at_threshold",
-        "line": 93,
-        "markers": [],
-        "docstring": "Property: Escalation should trigger when counter reaches threshold.\n\nrecord_failure returns True exactly when threshold is reached."
-      },
-      {
-        "name": "test_escalation_callback_called",
-        "line": 140,
-        "markers": [],
-        "docstring": "Property: Escalation callback should be called when threshold is reached."
-      },
-      {
-        "name": "test_check_types_are_independent",
-        "line": 170,
-        "markers": [],
-        "docstring": "Property: Different check types should have independent counters.\n\nFailures in one type should not affect other types."
-      },
-      {
-        "name": "test_get_failure_count_is_readonly",
-        "line": 204,
-        "markers": [],
-        "docstring": "Property: get_failure_count should not modify state."
-      },
-      {
-        "name": "test_reset_allows_new_escalation",
-        "line": 232,
-        "markers": [],
-        "docstring": "Property: After reset, reaching threshold again should trigger escalation."
-      },
-      {
-        "name": "test_initial_failure_count_is_zero",
-        "line": 265,
-        "markers": [],
-        "docstring": "Property: Initial failure count for any check type should be zero."
-      },
-      {
-        "name": "test_escalation_does_not_trigger_below_threshold",
-        "line": 281,
-        "markers": [],
-        "docstring": "Property: record_failure should return False for all failures below threshold."
-      },
-      {
-        "name": "test_interleaved_operations_consistency",
-        "line": 309,
-        "markers": [],
-        "docstring": "Property: Interleaved fail/success operations maintain counter consistency.\n\nAfter any sequence of operations, the state should be internally consistent."
-      },
-      {
-        "name": "test_callback_exception_does_not_break_tracking",
-        "line": 344,
-        "markers": [],
-        "docstring": "Property: If callback raises an exception, tracking should continue."
-      },
-      {
-        "name": "test_no_callback_still_returns_true",
-        "line": 371,
-        "markers": [],
-        "docstring": "Property: record_failure returns True at threshold even without callback."
       }
     ],
     "tests/property/test_fee_invariants_tiers.py": [
@@ -1476,6 +1495,34 @@
         "docstring": "Test that container provides all expected services."
       }
     ],
+    "tests/integration/test_funding_pnl_accumulation.py": [
+      {
+        "name": "TestFundingPnLAccumulation::test_funding_accumulates_over_time",
+        "line": 21,
+        "markers": [],
+        "docstring": "Funding accumulates correctly over multiple intervals.",
+        "class": "TestFundingPnLAccumulation"
+      },
+      {
+        "name": "TestFundingPnLAccumulation::test_no_position_no_funding",
+        "line": 49,
+        "markers": [],
+        "docstring": "No funding is charged when there's no position.",
+        "class": "TestFundingPnLAccumulation"
+      },
+      {
+        "name": "test_funding_accumulates_over_time",
+        "line": 21,
+        "markers": [],
+        "docstring": "Funding accumulates correctly over multiple intervals."
+      },
+      {
+        "name": "test_no_position_no_funding",
+        "line": 49,
+        "markers": [],
+        "docstring": "No funding is charged when there's no position."
+      }
+    ],
     "tests/integration/test_crash_recovery.py": [
       {
         "name": "TestCrashRecovery::test_price_history_survives_restart",
@@ -1554,112 +1601,6 @@
         "line": 208,
         "markers": [],
         "docstring": "Multiple restart cycles should accumulate prices correctly."
-      }
-    ],
-    "tests/integration/test_funding_pnl_integration.py": [
-      {
-        "name": "TestFundingPnLIntegration::test_long_position_pays_positive_funding",
-        "line": 82,
-        "markers": [],
-        "docstring": "Long position pays funding when rate is positive.",
-        "class": "TestFundingPnLIntegration"
-      },
-      {
-        "name": "TestFundingPnLIntegration::test_short_position_receives_positive_funding",
-        "line": 152,
-        "markers": [],
-        "docstring": "Short position receives funding when rate is positive.",
-        "class": "TestFundingPnLIntegration"
-      },
-      {
-        "name": "TestFundingPnLIntegration::test_funding_accumulates_over_time",
-        "line": 213,
-        "markers": [],
-        "docstring": "Funding accumulates correctly over multiple intervals.",
-        "class": "TestFundingPnLIntegration"
-      },
-      {
-        "name": "TestFundingPnLIntegration::test_no_position_no_funding",
-        "line": 273,
-        "markers": [],
-        "docstring": "No funding is charged when there's no position.",
-        "class": "TestFundingPnLIntegration"
-      },
-      {
-        "name": "TestFundingPnLIntegration::test_funding_affects_final_equity",
-        "line": 295,
-        "markers": [],
-        "docstring": "Funding payments are reflected in final equity.",
-        "class": "TestFundingPnLIntegration"
-      },
-      {
-        "name": "TestFundingWithSimulationConfig::test_config_funding_rates_passed_to_broker",
-        "line": 367,
-        "markers": [],
-        "docstring": "Verify funding rates from config are accessible.",
-        "class": "TestFundingWithSimulationConfig"
-      },
-      {
-        "name": "TestFundingWithSimulationConfig::test_funding_disabled_skips_processing",
-        "line": 385,
-        "markers": [],
-        "docstring": "When enable_funding_pnl is False, no funding is processed.",
-        "class": "TestFundingWithSimulationConfig"
-      },
-      {
-        "name": "TestFundingWithSimulationConfig::test_default_funding_settlement_is_8_hours",
-        "line": 404,
-        "markers": [],
-        "docstring": "Verify default settlement interval is 8 hours (Coinbase standard).",
-        "class": "TestFundingWithSimulationConfig"
-      },
-      {
-        "name": "test_long_position_pays_positive_funding",
-        "line": 82,
-        "markers": [],
-        "docstring": "Long position pays funding when rate is positive."
-      },
-      {
-        "name": "test_short_position_receives_positive_funding",
-        "line": 152,
-        "markers": [],
-        "docstring": "Short position receives funding when rate is positive."
-      },
-      {
-        "name": "test_funding_accumulates_over_time",
-        "line": 213,
-        "markers": [],
-        "docstring": "Funding accumulates correctly over multiple intervals."
-      },
-      {
-        "name": "test_no_position_no_funding",
-        "line": 273,
-        "markers": [],
-        "docstring": "No funding is charged when there's no position."
-      },
-      {
-        "name": "test_funding_affects_final_equity",
-        "line": 295,
-        "markers": [],
-        "docstring": "Funding payments are reflected in final equity."
-      },
-      {
-        "name": "test_config_funding_rates_passed_to_broker",
-        "line": 367,
-        "markers": [],
-        "docstring": "Verify funding rates from config are accessible."
-      },
-      {
-        "name": "test_funding_disabled_skips_processing",
-        "line": 385,
-        "markers": [],
-        "docstring": "When enable_funding_pnl is False, no funding is processed."
-      },
-      {
-        "name": "test_default_funding_settlement_is_8_hours",
-        "line": 404,
-        "markers": [],
-        "docstring": "Verify default settlement interval is 8 hours (Coinbase standard)."
       }
     ],
     "tests/integration/test_persistence.py": [
@@ -2096,6 +2037,90 @@
         "line": 134,
         "markers": [],
         "docstring": "Verify state persistence components are available."
+      }
+    ],
+    "tests/integration/test_funding_pnl_long_short.py": [
+      {
+        "name": "TestFundingPnLLongShort::test_long_position_pays_positive_funding",
+        "line": 21,
+        "markers": [],
+        "docstring": "Long position pays funding when rate is positive.",
+        "class": "TestFundingPnLLongShort"
+      },
+      {
+        "name": "TestFundingPnLLongShort::test_short_position_receives_positive_funding",
+        "line": 49,
+        "markers": [],
+        "docstring": "Short position receives funding when rate is positive.",
+        "class": "TestFundingPnLLongShort"
+      },
+      {
+        "name": "test_long_position_pays_positive_funding",
+        "line": 21,
+        "markers": [],
+        "docstring": "Long position pays funding when rate is positive."
+      },
+      {
+        "name": "test_short_position_receives_positive_funding",
+        "line": 49,
+        "markers": [],
+        "docstring": "Short position receives funding when rate is positive."
+      }
+    ],
+    "tests/integration/test_funding_pnl_simulation_config.py": [
+      {
+        "name": "TestFundingWithSimulationConfig::test_config_funding_rates_passed_to_broker",
+        "line": 19,
+        "markers": [],
+        "docstring": "Verify funding rates from config are accessible.",
+        "class": "TestFundingWithSimulationConfig"
+      },
+      {
+        "name": "TestFundingWithSimulationConfig::test_funding_disabled_skips_processing",
+        "line": 37,
+        "markers": [],
+        "docstring": "When enable_funding_pnl is False, no funding is processed.",
+        "class": "TestFundingWithSimulationConfig"
+      },
+      {
+        "name": "TestFundingWithSimulationConfig::test_default_funding_settlement_is_8_hours",
+        "line": 56,
+        "markers": [],
+        "docstring": "Verify default settlement interval is 8 hours (Coinbase standard).",
+        "class": "TestFundingWithSimulationConfig"
+      },
+      {
+        "name": "test_config_funding_rates_passed_to_broker",
+        "line": 19,
+        "markers": [],
+        "docstring": "Verify funding rates from config are accessible."
+      },
+      {
+        "name": "test_funding_disabled_skips_processing",
+        "line": 37,
+        "markers": [],
+        "docstring": "When enable_funding_pnl is False, no funding is processed."
+      },
+      {
+        "name": "test_default_funding_settlement_is_8_hours",
+        "line": 56,
+        "markers": [],
+        "docstring": "Verify default settlement interval is 8 hours (Coinbase standard)."
+      }
+    ],
+    "tests/integration/test_funding_pnl_equity_effect.py": [
+      {
+        "name": "TestFundingPnLEquityImpact::test_funding_affects_final_equity",
+        "line": 21,
+        "markers": [],
+        "docstring": "Funding payments are reflected in final equity.",
+        "class": "TestFundingPnLEquityImpact"
+      },
+      {
+        "name": "test_funding_affects_final_equity",
+        "line": 21,
+        "markers": [],
+        "docstring": "Funding payments are reflected in final equity."
       }
     ],
     "tests/integration/test_validation_escalation.py": [
@@ -28663,6 +28688,257 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/backtesting/validation/test_validator_init_reset_and_properties.py": [
+      {
+        "name": "TestGoldenPathValidatorInit::test_default_tolerances",
+        "line": 14,
+        "markers": [],
+        "docstring": "",
+        "class": "TestGoldenPathValidatorInit"
+      },
+      {
+        "name": "TestGoldenPathValidatorInit::test_custom_tolerances",
+        "line": 20,
+        "markers": [],
+        "docstring": "",
+        "class": "TestGoldenPathValidatorInit"
+      },
+      {
+        "name": "TestGoldenPathValidatorInit::test_initial_state",
+        "line": 30,
+        "markers": [],
+        "docstring": "",
+        "class": "TestGoldenPathValidatorInit"
+      },
+      {
+        "name": "TestReset::test_reset_clears_state",
+        "line": 40,
+        "markers": [],
+        "docstring": "",
+        "class": "TestReset"
+      },
+      {
+        "name": "TestProperties::test_total_comparisons_property",
+        "line": 61,
+        "markers": [],
+        "docstring": "",
+        "class": "TestProperties"
+      },
+      {
+        "name": "TestProperties::test_matching_comparisons_property",
+        "line": 68,
+        "markers": [],
+        "docstring": "",
+        "class": "TestProperties"
+      },
+      {
+        "name": "TestProperties::test_divergence_count_property",
+        "line": 73,
+        "markers": [],
+        "docstring": "",
+        "class": "TestProperties"
+      },
+      {
+        "name": "test_default_tolerances",
+        "line": 14,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_custom_tolerances",
+        "line": 20,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_initial_state",
+        "line": 30,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_reset_clears_state",
+        "line": 40,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_total_comparisons_property",
+        "line": 61,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_matching_comparisons_property",
+        "line": 68,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_divergence_count_property",
+        "line": 73,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/backtesting/validation/test_validator_validate_decision.py": [
+      {
+        "name": "TestValidateDecision::test_exact_match",
+        "line": 14,
+        "markers": [],
+        "docstring": "",
+        "class": "TestValidateDecision"
+      },
+      {
+        "name": "TestValidateDecision::test_action_mismatch_strict",
+        "line": 26,
+        "markers": [],
+        "docstring": "",
+        "class": "TestValidateDecision"
+      },
+      {
+        "name": "TestValidateDecision::test_action_mismatch_non_strict",
+        "line": 38,
+        "markers": [],
+        "docstring": "",
+        "class": "TestValidateDecision"
+      },
+      {
+        "name": "TestValidateDecision::test_quantity_within_tolerance",
+        "line": 49,
+        "markers": [],
+        "docstring": "",
+        "class": "TestValidateDecision"
+      },
+      {
+        "name": "TestValidateDecision::test_quantity_outside_tolerance",
+        "line": 59,
+        "markers": [],
+        "docstring": "",
+        "class": "TestValidateDecision"
+      },
+      {
+        "name": "TestValidateDecision::test_price_within_tolerance",
+        "line": 70,
+        "markers": [],
+        "docstring": "",
+        "class": "TestValidateDecision"
+      },
+      {
+        "name": "TestValidateDecision::test_price_outside_tolerance",
+        "line": 79,
+        "markers": [],
+        "docstring": "",
+        "class": "TestValidateDecision"
+      },
+      {
+        "name": "TestValidateDecision::test_risk_check_mismatch",
+        "line": 89,
+        "markers": [],
+        "docstring": "",
+        "class": "TestValidateDecision"
+      },
+      {
+        "name": "TestValidateDecision::test_order_type_mismatch_warning",
+        "line": 99,
+        "markers": [],
+        "docstring": "",
+        "class": "TestValidateDecision"
+      },
+      {
+        "name": "TestValidateDecision::test_hold_actions_skip_quantity_check",
+        "line": 110,
+        "markers": [],
+        "docstring": "",
+        "class": "TestValidateDecision"
+      },
+      {
+        "name": "TestEstimateImpact::test_hold_vs_trade_full_impact",
+        "line": 123,
+        "markers": [],
+        "docstring": "",
+        "class": "TestEstimateImpact"
+      },
+      {
+        "name": "TestEstimateImpact::test_both_hold_zero_impact",
+        "line": 134,
+        "markers": [],
+        "docstring": "",
+        "class": "TestEstimateImpact"
+      },
+      {
+        "name": "test_exact_match",
+        "line": 14,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_action_mismatch_strict",
+        "line": 26,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_action_mismatch_non_strict",
+        "line": 38,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_quantity_within_tolerance",
+        "line": 49,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_quantity_outside_tolerance",
+        "line": 59,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_price_within_tolerance",
+        "line": 70,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_price_outside_tolerance",
+        "line": 79,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_risk_check_mismatch",
+        "line": 89,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_order_type_mismatch_warning",
+        "line": 99,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_hold_actions_skip_quantity_check",
+        "line": 110,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_hold_vs_trade_full_impact",
+        "line": 123,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_both_hold_zero_impact",
+        "line": 134,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/backtesting/validation/test_decision_logger_strategy_decision_serialization.py": [
       {
         "name": "TestStrategyDecisionSerialization::test_to_dict_converts_decimals",
@@ -29115,394 +29391,149 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/backtesting/validation/test_validator.py": [
+    "tests/unit/gpt_trader/backtesting/validation/test_validator_validation_result.py": [
       {
         "name": "TestValidationResult::test_matching_result",
-        "line": 47,
+        "line": 14,
         "markers": [],
         "docstring": "",
         "class": "TestValidationResult"
       },
       {
         "name": "TestValidationResult::test_non_matching_result",
-        "line": 59,
+        "line": 26,
         "markers": [],
         "docstring": "",
         "class": "TestValidationResult"
       },
       {
         "name": "TestValidationResult::test_result_with_details",
-        "line": 72,
+        "line": 39,
         "markers": [],
         "docstring": "",
         "class": "TestValidationResult"
       },
       {
-        "name": "TestGoldenPathValidatorInit::test_default_tolerances",
-        "line": 86,
+        "name": "test_matching_result",
+        "line": 14,
         "markers": [],
-        "docstring": "",
-        "class": "TestGoldenPathValidatorInit"
+        "docstring": ""
       },
       {
-        "name": "TestGoldenPathValidatorInit::test_custom_tolerances",
-        "line": 92,
+        "name": "test_non_matching_result",
+        "line": 26,
         "markers": [],
-        "docstring": "",
-        "class": "TestGoldenPathValidatorInit"
+        "docstring": ""
       },
       {
-        "name": "TestGoldenPathValidatorInit::test_initial_state",
-        "line": 102,
+        "name": "test_result_with_details",
+        "line": 39,
         "markers": [],
-        "docstring": "",
-        "class": "TestGoldenPathValidatorInit"
-      },
-      {
-        "name": "TestValidateDecision::test_exact_match",
-        "line": 112,
-        "markers": [],
-        "docstring": "",
-        "class": "TestValidateDecision"
-      },
-      {
-        "name": "TestValidateDecision::test_action_mismatch_strict",
-        "line": 124,
-        "markers": [],
-        "docstring": "",
-        "class": "TestValidateDecision"
-      },
-      {
-        "name": "TestValidateDecision::test_action_mismatch_non_strict",
-        "line": 136,
-        "markers": [],
-        "docstring": "",
-        "class": "TestValidateDecision"
-      },
-      {
-        "name": "TestValidateDecision::test_quantity_within_tolerance",
-        "line": 147,
-        "markers": [],
-        "docstring": "",
-        "class": "TestValidateDecision"
-      },
-      {
-        "name": "TestValidateDecision::test_quantity_outside_tolerance",
-        "line": 157,
-        "markers": [],
-        "docstring": "",
-        "class": "TestValidateDecision"
-      },
-      {
-        "name": "TestValidateDecision::test_price_within_tolerance",
-        "line": 168,
-        "markers": [],
-        "docstring": "",
-        "class": "TestValidateDecision"
-      },
-      {
-        "name": "TestValidateDecision::test_price_outside_tolerance",
-        "line": 177,
-        "markers": [],
-        "docstring": "",
-        "class": "TestValidateDecision"
-      },
-      {
-        "name": "TestValidateDecision::test_risk_check_mismatch",
-        "line": 187,
-        "markers": [],
-        "docstring": "",
-        "class": "TestValidateDecision"
-      },
-      {
-        "name": "TestValidateDecision::test_order_type_mismatch_warning",
-        "line": 197,
-        "markers": [],
-        "docstring": "",
-        "class": "TestValidateDecision"
-      },
-      {
-        "name": "TestValidateDecision::test_hold_actions_skip_quantity_check",
-        "line": 208,
-        "markers": [],
-        "docstring": "",
-        "class": "TestValidateDecision"
-      },
-      {
-        "name": "TestEstimateImpact::test_hold_vs_trade_full_impact",
-        "line": 221,
-        "markers": [],
-        "docstring": "",
-        "class": "TestEstimateImpact"
-      },
-      {
-        "name": "TestEstimateImpact::test_both_hold_zero_impact",
-        "line": 232,
-        "markers": [],
-        "docstring": "",
-        "class": "TestEstimateImpact"
-      },
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/backtesting/validation/test_validator_reporting_and_divergences.py": [
       {
         "name": "TestGetMatchRate::test_no_comparisons_returns_100",
-        "line": 248,
+        "line": 14,
         "markers": [],
         "docstring": "",
         "class": "TestGetMatchRate"
       },
       {
         "name": "TestGetMatchRate::test_all_matches",
-        "line": 252,
+        "line": 18,
         "markers": [],
         "docstring": "",
         "class": "TestGetMatchRate"
       },
       {
         "name": "TestGetMatchRate::test_partial_matches",
-        "line": 261,
+        "line": 25,
         "markers": [],
         "docstring": "",
         "class": "TestGetMatchRate"
       },
       {
         "name": "TestGetDivergences::test_empty_divergences",
-        "line": 283,
+        "line": 43,
         "markers": [],
         "docstring": "",
         "class": "TestGetDivergences"
       },
       {
         "name": "TestGetDivergences::test_filter_by_symbol",
-        "line": 288,
+        "line": 48,
         "markers": [],
         "docstring": "",
         "class": "TestGetDivergences"
       },
       {
         "name": "TestGetDivergences::test_filter_by_min_impact",
-        "line": 305,
+        "line": 65,
         "markers": [],
         "docstring": "",
         "class": "TestGetDivergences"
       },
       {
-        "name": "TestReset::test_reset_clears_state",
-        "line": 325,
-        "markers": [],
-        "docstring": "",
-        "class": "TestReset"
-      },
-      {
         "name": "TestGenerateReport::test_generate_report_structure",
-        "line": 347,
+        "line": 82,
         "markers": [],
         "docstring": "",
         "class": "TestGenerateReport"
       },
       {
         "name": "TestGenerateReport::test_report_includes_divergences",
-        "line": 363,
+        "line": 97,
         "markers": [],
         "docstring": "",
         "class": "TestGenerateReport"
       },
       {
-        "name": "TestProperties::test_total_comparisons_property",
-        "line": 379,
-        "markers": [],
-        "docstring": "",
-        "class": "TestProperties"
-      },
-      {
-        "name": "TestProperties::test_matching_comparisons_property",
-        "line": 386,
-        "markers": [],
-        "docstring": "",
-        "class": "TestProperties"
-      },
-      {
-        "name": "TestProperties::test_divergence_count_property",
-        "line": 391,
-        "markers": [],
-        "docstring": "",
-        "class": "TestProperties"
-      },
-      {
-        "name": "test_matching_result",
-        "line": 47,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_non_matching_result",
-        "line": 59,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_result_with_details",
-        "line": 72,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_default_tolerances",
-        "line": 86,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_custom_tolerances",
-        "line": 92,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_initial_state",
-        "line": 102,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_exact_match",
-        "line": 112,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_action_mismatch_strict",
-        "line": 124,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_action_mismatch_non_strict",
-        "line": 136,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_quantity_within_tolerance",
-        "line": 147,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_quantity_outside_tolerance",
-        "line": 157,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_price_within_tolerance",
-        "line": 168,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_price_outside_tolerance",
-        "line": 177,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_risk_check_mismatch",
-        "line": 187,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_order_type_mismatch_warning",
-        "line": 197,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_hold_actions_skip_quantity_check",
-        "line": 208,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_hold_vs_trade_full_impact",
-        "line": 221,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_both_hold_zero_impact",
-        "line": 232,
-        "markers": [],
-        "docstring": ""
-      },
-      {
         "name": "test_no_comparisons_returns_100",
-        "line": 248,
+        "line": 14,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_all_matches",
-        "line": 252,
+        "line": 18,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_partial_matches",
-        "line": 261,
+        "line": 25,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_empty_divergences",
-        "line": 283,
+        "line": 43,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_filter_by_symbol",
-        "line": 288,
+        "line": 48,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_filter_by_min_impact",
-        "line": 305,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_reset_clears_state",
-        "line": 325,
+        "line": 65,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_generate_report_structure",
-        "line": 347,
+        "line": 82,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_report_includes_divergences",
-        "line": 363,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_total_comparisons_property",
-        "line": 379,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_matching_comparisons_property",
-        "line": 386,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_divergence_count_property",
-        "line": 391,
+        "line": 97,
         "markers": [],
         "docstring": ""
       }
@@ -32802,344 +32833,138 @@
         "docstring": "Test rate limiting for login attempts."
       }
     ],
-    "tests/unit/gpt_trader/security/security_validator/test_order_validation.py": [
+    "tests/unit/gpt_trader/security/security_validator/test_order_validation_quantity_and_price_rules.py": [
       {
-        "name": "TestOrderValidation::test_valid_limit_order",
+        "name": "TestOrderValidationQuantityAndPriceRules::test_limit_order_price_validation",
         "line": 11,
-        "markers": [],
-        "docstring": "Test valid limit order passes validation.",
-        "class": "TestOrderValidation"
-      },
-      {
-        "name": "TestOrderValidation::test_valid_market_order",
-        "line": 23,
-        "markers": [],
-        "docstring": "Test valid market order passes validation.",
-        "class": "TestOrderValidation"
-      },
-      {
-        "name": "TestOrderValidation::test_invalid_symbol_rejection",
-        "line": 35,
-        "markers": [],
-        "docstring": "Test order with invalid symbol is rejected.",
-        "class": "TestOrderValidation"
-      },
-      {
-        "name": "TestOrderValidation::test_order_value_below_minimum",
-        "line": 52,
-        "markers": [],
-        "docstring": "Test order value below minimum is rejected.",
-        "class": "TestOrderValidation"
-      },
-      {
-        "name": "TestOrderValidation::test_order_value_above_maximum",
-        "line": 64,
-        "markers": [],
-        "docstring": "Test order value above maximum is rejected.",
-        "class": "TestOrderValidation"
-      },
-      {
-        "name": "TestOrderValidation::test_position_size_limit",
-        "line": 76,
-        "markers": [],
-        "docstring": "Test position size limit enforcement.",
-        "class": "TestOrderValidation"
-      },
-      {
-        "name": "TestOrderValidation::test_limit_order_price_validation",
-        "line": 92,
         "markers": [],
         "docstring": "Test limit order price validation.",
-        "class": "TestOrderValidation"
+        "class": "TestOrderValidationQuantityAndPriceRules"
       },
       {
-        "name": "TestOrderValidation::test_market_order_price_ignored",
-        "line": 108,
-        "markers": [],
-        "docstring": "Test market order ignores price field.",
-        "class": "TestOrderValidation"
-      },
-      {
-        "name": "TestOrderValidation::test_order_quantity_validation",
-        "line": 123,
+        "name": "TestOrderValidationQuantityAndPriceRules::test_order_quantity_validation",
+        "line": 27,
         "markers": [],
         "docstring": "Test order quantity validation.",
-        "class": "TestOrderValidation"
+        "class": "TestOrderValidationQuantityAndPriceRules"
       },
       {
-        "name": "TestOrderValidation::test_order_with_zero_account_value",
-        "line": 139,
-        "markers": [],
-        "docstring": "Test order validation with zero account value.",
-        "class": "TestOrderValidation"
-      },
-      {
-        "name": "TestOrderValidation::test_order_with_negative_account_value",
-        "line": 154,
-        "markers": [],
-        "docstring": "Test order validation with negative account value.",
-        "class": "TestOrderValidation"
-      },
-      {
-        "name": "TestOrderValidation::test_order_missing_required_fields",
-        "line": 169,
-        "markers": [],
-        "docstring": "Test order with missing required fields.",
-        "class": "TestOrderValidation"
-      },
-      {
-        "name": "TestOrderValidation::test_order_with_invalid_order_type",
-        "line": 184,
-        "markers": [],
-        "docstring": "Test order with invalid order type.",
-        "class": "TestOrderValidation"
-      },
-      {
-        "name": "TestOrderValidation::test_order_with_very_small_quantity",
-        "line": 200,
+        "name": "TestOrderValidationQuantityAndPriceRules::test_order_with_very_small_quantity",
+        "line": 43,
         "markers": [],
         "docstring": "Test order with very small quantity.",
-        "class": "TestOrderValidation"
+        "class": "TestOrderValidationQuantityAndPriceRules"
       },
       {
-        "name": "TestOrderValidation::test_order_with_very_large_quantity",
-        "line": 215,
+        "name": "TestOrderValidationQuantityAndPriceRules::test_order_with_very_large_quantity",
+        "line": 58,
         "markers": [],
         "docstring": "Test order with very large quantity.",
-        "class": "TestOrderValidation"
+        "class": "TestOrderValidationQuantityAndPriceRules"
       },
       {
-        "name": "TestOrderValidation::test_order_with_negative_quantity",
-        "line": 230,
+        "name": "TestOrderValidationQuantityAndPriceRules::test_order_with_negative_quantity",
+        "line": 73,
         "markers": [],
         "docstring": "Test order with negative quantity.",
-        "class": "TestOrderValidation"
+        "class": "TestOrderValidationQuantityAndPriceRules"
       },
       {
-        "name": "TestOrderValidation::test_order_with_negative_price",
-        "line": 245,
+        "name": "TestOrderValidationQuantityAndPriceRules::test_order_with_negative_price",
+        "line": 88,
         "markers": [],
         "docstring": "Test order with negative price.",
-        "class": "TestOrderValidation"
+        "class": "TestOrderValidationQuantityAndPriceRules"
       },
       {
-        "name": "TestOrderValidation::test_order_validation_error_accumulation",
-        "line": 260,
-        "markers": [],
-        "docstring": "Test that multiple order validation errors are accumulated.",
-        "class": "TestOrderValidation"
-      },
-      {
-        "name": "TestOrderValidation::test_order_edge_case_values",
-        "line": 275,
-        "markers": [],
-        "docstring": "Test order with edge case values.",
-        "class": "TestOrderValidation"
-      },
-      {
-        "name": "TestOrderValidation::test_order_with_different_account_sizes",
-        "line": 292,
-        "markers": [],
-        "docstring": "Test order validation with different account sizes.",
-        "class": "TestOrderValidation"
-      },
-      {
-        "name": "TestOrderValidation::test_order_validation_with_missing_price_for_market_order",
-        "line": 309,
+        "name": "TestOrderValidationQuantityAndPriceRules::test_order_validation_with_missing_price_for_market_order",
+        "line": 103,
         "markers": [],
         "docstring": "Test market order validation with missing price.",
-        "class": "TestOrderValidation"
-      },
-      {
-        "name": "TestOrderValidation::test_order_validation_with_numeric_strings",
-        "line": 325,
-        "markers": [],
-        "docstring": "Test order validation with numeric string values.",
-        "class": "TestOrderValidation"
-      },
-      {
-        "name": "TestOrderValidation::test_non_limit_order_with_non_numeric_price",
-        "line": 340,
-        "markers": [],
-        "docstring": "Test non-limit order with non-numeric price falls back to default.\n\nThis covers line 68 in order_validator.py where price_value is set to 100.0\nwhen order is not a limit order and price is non-numeric.",
-        "class": "TestOrderValidation"
-      },
-      {
-        "name": "TestOrderValidation::test_order_value_calculation_fallback",
-        "line": 361,
-        "markers": [],
-        "docstring": "Test order value calculation exception handling.\n\nThis covers lines 73-74 in order_validator.py where TypeError/ValueError\nis caught during order value calculation.",
-        "class": "TestOrderValidation"
-      },
-      {
-        "name": "TestOrderValidation::test_order_payload_not_dict",
-        "line": 385,
-        "markers": [],
-        "docstring": "Test order validation with non-dict payload.\n\nThis covers line 42 in order_validator.py.",
-        "class": "TestOrderValidation"
-      },
-      {
-        "name": "TestOrderValidation::test_order_payload_list",
-        "line": 398,
-        "markers": [],
-        "docstring": "Test order validation with list payload.",
-        "class": "TestOrderValidation"
-      },
-      {
-        "name": "test_valid_limit_order",
-        "line": 11,
-        "markers": [],
-        "docstring": "Test valid limit order passes validation."
-      },
-      {
-        "name": "test_valid_market_order",
-        "line": 23,
-        "markers": [],
-        "docstring": "Test valid market order passes validation."
-      },
-      {
-        "name": "test_invalid_symbol_rejection",
-        "line": 35,
-        "markers": [],
-        "docstring": "Test order with invalid symbol is rejected."
-      },
-      {
-        "name": "test_order_value_below_minimum",
-        "line": 52,
-        "markers": [],
-        "docstring": "Test order value below minimum is rejected."
-      },
-      {
-        "name": "test_order_value_above_maximum",
-        "line": 64,
-        "markers": [],
-        "docstring": "Test order value above maximum is rejected."
-      },
-      {
-        "name": "test_position_size_limit",
-        "line": 76,
-        "markers": [],
-        "docstring": "Test position size limit enforcement."
+        "class": "TestOrderValidationQuantityAndPriceRules"
       },
       {
         "name": "test_limit_order_price_validation",
-        "line": 92,
+        "line": 11,
         "markers": [],
         "docstring": "Test limit order price validation."
       },
       {
-        "name": "test_market_order_price_ignored",
-        "line": 108,
-        "markers": [],
-        "docstring": "Test market order ignores price field."
-      },
-      {
         "name": "test_order_quantity_validation",
-        "line": 123,
+        "line": 27,
         "markers": [],
         "docstring": "Test order quantity validation."
       },
       {
-        "name": "test_order_with_zero_account_value",
-        "line": 139,
-        "markers": [],
-        "docstring": "Test order validation with zero account value."
-      },
-      {
-        "name": "test_order_with_negative_account_value",
-        "line": 154,
-        "markers": [],
-        "docstring": "Test order validation with negative account value."
-      },
-      {
-        "name": "test_order_missing_required_fields",
-        "line": 169,
-        "markers": [],
-        "docstring": "Test order with missing required fields."
-      },
-      {
-        "name": "test_order_with_invalid_order_type",
-        "line": 184,
-        "markers": [],
-        "docstring": "Test order with invalid order type."
-      },
-      {
         "name": "test_order_with_very_small_quantity",
-        "line": 200,
+        "line": 43,
         "markers": [],
         "docstring": "Test order with very small quantity."
       },
       {
         "name": "test_order_with_very_large_quantity",
-        "line": 215,
+        "line": 58,
         "markers": [],
         "docstring": "Test order with very large quantity."
       },
       {
         "name": "test_order_with_negative_quantity",
-        "line": 230,
+        "line": 73,
         "markers": [],
         "docstring": "Test order with negative quantity."
       },
       {
         "name": "test_order_with_negative_price",
-        "line": 245,
+        "line": 88,
         "markers": [],
         "docstring": "Test order with negative price."
       },
       {
-        "name": "test_order_validation_error_accumulation",
-        "line": 260,
+        "name": "test_order_validation_with_missing_price_for_market_order",
+        "line": 103,
         "markers": [],
-        "docstring": "Test that multiple order validation errors are accumulated."
+        "docstring": "Test market order validation with missing price."
+      }
+    ],
+    "tests/unit/gpt_trader/security/security_validator/test_order_validation_account_value_effects.py": [
+      {
+        "name": "TestOrderValidationAccountValueEffects::test_order_with_zero_account_value",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test order validation with zero account value.",
+        "class": "TestOrderValidationAccountValueEffects"
       },
       {
-        "name": "test_order_edge_case_values",
-        "line": 275,
+        "name": "TestOrderValidationAccountValueEffects::test_order_with_negative_account_value",
+        "line": 26,
         "markers": [],
-        "docstring": "Test order with edge case values."
+        "docstring": "Test order validation with negative account value.",
+        "class": "TestOrderValidationAccountValueEffects"
+      },
+      {
+        "name": "TestOrderValidationAccountValueEffects::test_order_with_different_account_sizes",
+        "line": 41,
+        "markers": [],
+        "docstring": "Test order validation with different account sizes.",
+        "class": "TestOrderValidationAccountValueEffects"
+      },
+      {
+        "name": "test_order_with_zero_account_value",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test order validation with zero account value."
+      },
+      {
+        "name": "test_order_with_negative_account_value",
+        "line": 26,
+        "markers": [],
+        "docstring": "Test order validation with negative account value."
       },
       {
         "name": "test_order_with_different_account_sizes",
-        "line": 292,
+        "line": 41,
         "markers": [],
         "docstring": "Test order validation with different account sizes."
-      },
-      {
-        "name": "test_order_validation_with_missing_price_for_market_order",
-        "line": 309,
-        "markers": [],
-        "docstring": "Test market order validation with missing price."
-      },
-      {
-        "name": "test_order_validation_with_numeric_strings",
-        "line": 325,
-        "markers": [],
-        "docstring": "Test order validation with numeric string values."
-      },
-      {
-        "name": "test_non_limit_order_with_non_numeric_price",
-        "line": 340,
-        "markers": [],
-        "docstring": "Test non-limit order with non-numeric price falls back to default.\n\nThis covers line 68 in order_validator.py where price_value is set to 100.0\nwhen order is not a limit order and price is non-numeric."
-      },
-      {
-        "name": "test_order_value_calculation_fallback",
-        "line": 361,
-        "markers": [],
-        "docstring": "Test order value calculation exception handling.\n\nThis covers lines 73-74 in order_validator.py where TypeError/ValueError\nis caught during order value calculation."
-      },
-      {
-        "name": "test_order_payload_not_dict",
-        "line": 385,
-        "markers": [],
-        "docstring": "Test order validation with non-dict payload.\n\nThis covers line 42 in order_validator.py."
-      },
-      {
-        "name": "test_order_payload_list",
-        "line": 398,
-        "markers": [],
-        "docstring": "Test order validation with list payload."
       }
     ],
     "tests/unit/gpt_trader/security/security_validator/test_symbol_validation.py": [
@@ -33388,6 +33213,34 @@
         "line": 246,
         "markers": [],
         "docstring": "Test that generic exceptions (non-RuleError) are caught gracefully.\n\nThis covers the generic Exception handler (lines 24-26) in symbol_validator.py."
+      }
+    ],
+    "tests/unit/gpt_trader/security/security_validator/test_order_validation_symbol_and_required_fields.py": [
+      {
+        "name": "TestOrderValidationSymbolAndRequiredFields::test_invalid_symbol_rejection",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test order with invalid symbol is rejected.",
+        "class": "TestOrderValidationSymbolAndRequiredFields"
+      },
+      {
+        "name": "TestOrderValidationSymbolAndRequiredFields::test_order_missing_required_fields",
+        "line": 28,
+        "markers": [],
+        "docstring": "Test order with missing required fields.",
+        "class": "TestOrderValidationSymbolAndRequiredFields"
+      },
+      {
+        "name": "test_invalid_symbol_rejection",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test order with invalid symbol is rejected."
+      },
+      {
+        "name": "test_order_missing_required_fields",
+        "line": 28,
+        "markers": [],
+        "docstring": "Test order with missing required fields."
       }
     ],
     "tests/unit/gpt_trader/security/security_validator/test_numeric_valid_inputs.py": [
@@ -33750,6 +33603,140 @@
         "line": 218,
         "markers": [],
         "docstring": "Test sanitisation with newlines and tabs."
+      }
+    ],
+    "tests/unit/gpt_trader/security/security_validator/test_order_validation_payload_and_errors.py": [
+      {
+        "name": "TestOrderValidationPayloadAndErrors::test_order_with_invalid_order_type",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test order with invalid order type.",
+        "class": "TestOrderValidationPayloadAndErrors"
+      },
+      {
+        "name": "TestOrderValidationPayloadAndErrors::test_order_validation_error_accumulation",
+        "line": 27,
+        "markers": [],
+        "docstring": "Test that multiple order validation errors are accumulated.",
+        "class": "TestOrderValidationPayloadAndErrors"
+      },
+      {
+        "name": "TestOrderValidationPayloadAndErrors::test_order_value_calculation_fallback",
+        "line": 42,
+        "markers": [],
+        "docstring": "Test order value calculation exception handling.\n\nThis covers lines 73-74 in order_validator.py where TypeError/ValueError\nis caught during order value calculation.",
+        "class": "TestOrderValidationPayloadAndErrors"
+      },
+      {
+        "name": "TestOrderValidationPayloadAndErrors::test_order_payload_not_dict",
+        "line": 62,
+        "markers": [],
+        "docstring": "Test order validation with non-dict payload.\n\nThis covers line 42 in order_validator.py.",
+        "class": "TestOrderValidationPayloadAndErrors"
+      },
+      {
+        "name": "TestOrderValidationPayloadAndErrors::test_order_payload_list",
+        "line": 74,
+        "markers": [],
+        "docstring": "Test order validation with list payload.",
+        "class": "TestOrderValidationPayloadAndErrors"
+      },
+      {
+        "name": "test_order_with_invalid_order_type",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test order with invalid order type."
+      },
+      {
+        "name": "test_order_validation_error_accumulation",
+        "line": 27,
+        "markers": [],
+        "docstring": "Test that multiple order validation errors are accumulated."
+      },
+      {
+        "name": "test_order_value_calculation_fallback",
+        "line": 42,
+        "markers": [],
+        "docstring": "Test order value calculation exception handling.\n\nThis covers lines 73-74 in order_validator.py where TypeError/ValueError\nis caught during order value calculation."
+      },
+      {
+        "name": "test_order_payload_not_dict",
+        "line": 62,
+        "markers": [],
+        "docstring": "Test order validation with non-dict payload.\n\nThis covers line 42 in order_validator.py."
+      },
+      {
+        "name": "test_order_payload_list",
+        "line": 74,
+        "markers": [],
+        "docstring": "Test order validation with list payload."
+      }
+    ],
+    "tests/unit/gpt_trader/security/security_validator/test_order_validation_value_limits.py": [
+      {
+        "name": "TestOrderValidationValueLimits::test_order_value_below_minimum",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test order value below minimum is rejected.",
+        "class": "TestOrderValidationValueLimits"
+      },
+      {
+        "name": "TestOrderValidationValueLimits::test_order_value_above_maximum",
+        "line": 23,
+        "markers": [],
+        "docstring": "Test order value above maximum is rejected.",
+        "class": "TestOrderValidationValueLimits"
+      },
+      {
+        "name": "TestOrderValidationValueLimits::test_position_size_limit",
+        "line": 35,
+        "markers": [],
+        "docstring": "Test position size limit enforcement.",
+        "class": "TestOrderValidationValueLimits"
+      },
+      {
+        "name": "TestOrderValidationValueLimits::test_order_edge_case_values",
+        "line": 51,
+        "markers": [],
+        "docstring": "Test order with edge case values.",
+        "class": "TestOrderValidationValueLimits"
+      },
+      {
+        "name": "TestOrderValidationValueLimits::test_non_limit_order_with_non_numeric_price",
+        "line": 68,
+        "markers": [],
+        "docstring": "Test non-limit order with non-numeric price falls back to default.\n\nThis covers line 68 in order_validator.py where price_value is set to 100.0\nwhen order is not a limit order and price is non-numeric.",
+        "class": "TestOrderValidationValueLimits"
+      },
+      {
+        "name": "test_order_value_below_minimum",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test order value below minimum is rejected."
+      },
+      {
+        "name": "test_order_value_above_maximum",
+        "line": 23,
+        "markers": [],
+        "docstring": "Test order value above maximum is rejected."
+      },
+      {
+        "name": "test_position_size_limit",
+        "line": 35,
+        "markers": [],
+        "docstring": "Test position size limit enforcement."
+      },
+      {
+        "name": "test_order_edge_case_values",
+        "line": 51,
+        "markers": [],
+        "docstring": "Test order with edge case values."
+      },
+      {
+        "name": "test_non_limit_order_with_non_numeric_price",
+        "line": 68,
+        "markers": [],
+        "docstring": "Test non-limit order with non-numeric price falls back to default.\n\nThis covers line 68 in order_validator.py where price_value is set to 100.0\nwhen order is not a limit order and price is non-numeric."
       }
     ],
     "tests/unit/gpt_trader/security/security_validator/test_suspicious_activity.py": [
@@ -34167,6 +34154,60 @@
         "docstring": "Test that TypeError is raised if DecimalRule returns non-Decimal.\n\nThis covers the type assertion (line 27) in numeric_validator.py.\nThe DecimalRule should always return a Decimal, but if it doesn't,\nthe validator catches the TypeError and returns an error."
       }
     ],
+    "tests/unit/gpt_trader/security/security_validator/test_order_validation_happy_path.py": [
+      {
+        "name": "TestOrderValidationHappyPath::test_valid_limit_order",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test valid limit order passes validation.",
+        "class": "TestOrderValidationHappyPath"
+      },
+      {
+        "name": "TestOrderValidationHappyPath::test_valid_market_order",
+        "line": 23,
+        "markers": [],
+        "docstring": "Test valid market order passes validation.",
+        "class": "TestOrderValidationHappyPath"
+      },
+      {
+        "name": "TestOrderValidationHappyPath::test_market_order_price_ignored",
+        "line": 35,
+        "markers": [],
+        "docstring": "Test market order ignores price field.",
+        "class": "TestOrderValidationHappyPath"
+      },
+      {
+        "name": "TestOrderValidationHappyPath::test_order_validation_with_numeric_strings",
+        "line": 50,
+        "markers": [],
+        "docstring": "Test order validation with numeric string values.",
+        "class": "TestOrderValidationHappyPath"
+      },
+      {
+        "name": "test_valid_limit_order",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test valid limit order passes validation."
+      },
+      {
+        "name": "test_valid_market_order",
+        "line": 23,
+        "markers": [],
+        "docstring": "Test valid market order passes validation."
+      },
+      {
+        "name": "test_market_order_price_ignored",
+        "line": 35,
+        "markers": [],
+        "docstring": "Test market order ignores price field."
+      },
+      {
+        "name": "test_order_validation_with_numeric_strings",
+        "line": 50,
+        "markers": [],
+        "docstring": "Test order validation with numeric string values."
+      }
+    ],
     "tests/unit/gpt_trader/tui/demo/test_mock_data.py": [
       {
         "name": "TestMockDataGeneratorSeeding::test_same_seed_produces_identical_output",
@@ -34286,279 +34327,285 @@
         "docstring": "Performance dicts are deterministic with same seed."
       }
     ],
-    "tests/unit/gpt_trader/tui/mixins/test_event_handlers.py": [
-      {
-        "name": "TestEventHandlerMixinBasics::test_mixin_can_be_used_with_static_widget",
-        "line": 35,
-        "markers": [],
-        "docstring": "Test that mixin works with Textual Static widget.",
-        "class": "TestEventHandlerMixinBasics"
-      },
-      {
-        "name": "TestEventHandlerMixinBasics::test_mixin_provides_all_event_handlers",
-        "line": 45,
-        "markers": [],
-        "docstring": "Test that mixin provides expected event handler methods.",
-        "class": "TestEventHandlerMixinBasics"
-      },
-      {
-        "name": "TestDefaultEventHandlers::test_on_bot_state_changed_logs_default",
-        "line": 69,
-        "markers": [],
-        "docstring": "Test default on_bot_state_changed logs event.",
-        "class": "TestDefaultEventHandlers"
-      },
-      {
-        "name": "TestDefaultEventHandlers::test_on_bot_mode_changed_logs_default",
-        "line": 89,
-        "markers": [],
-        "docstring": "Test default on_bot_mode_changed logs event.",
-        "class": "TestDefaultEventHandlers"
-      },
-      {
-        "name": "TestDefaultEventHandlers::test_on_state_update_received_logs_default",
-        "line": 108,
-        "markers": [],
-        "docstring": "Test default on_state_update_received logs event.",
-        "class": "TestDefaultEventHandlers"
-      },
-      {
-        "name": "TestDefaultEventHandlers::test_on_state_validation_failed_logs_warnings",
-        "line": 126,
-        "markers": [],
-        "docstring": "Test default on_state_validation_failed logs warnings.",
-        "class": "TestDefaultEventHandlers"
-      },
-      {
-        "name": "TestDefaultEventHandlers::test_on_state_validation_passed_logs_default",
-        "line": 146,
-        "markers": [],
-        "docstring": "Test default on_state_validation_passed logs event.",
-        "class": "TestDefaultEventHandlers"
-      },
-      {
-        "name": "TestDefaultEventHandlers::test_on_state_delta_update_applied_logs_default",
-        "line": 160,
-        "markers": [],
-        "docstring": "Test default on_state_delta_update_applied logs event.",
-        "class": "TestDefaultEventHandlers"
-      },
-      {
-        "name": "TestDefaultEventHandlers::test_on_responsive_state_changed_logs_default",
-        "line": 179,
-        "markers": [],
-        "docstring": "Test default on_responsive_state_changed logs event.",
-        "class": "TestDefaultEventHandlers"
-      },
-      {
-        "name": "TestDefaultEventHandlers::test_on_theme_changed_logs_default",
-        "line": 196,
-        "markers": [],
-        "docstring": "Test default on_theme_changed logs event.",
-        "class": "TestDefaultEventHandlers"
-      },
-      {
-        "name": "TestDefaultEventHandlers::test_on_error_occurred_logs_error_severity",
-        "line": 212,
-        "markers": [],
-        "docstring": "Test on_error_occurred logs with correct severity.",
-        "class": "TestDefaultEventHandlers"
-      },
-      {
-        "name": "TestDefaultEventHandlers::test_on_error_occurred_logs_warning_severity",
-        "line": 227,
-        "markers": [],
-        "docstring": "Test on_error_occurred logs warning for warning severity.",
-        "class": "TestDefaultEventHandlers"
-      },
-      {
-        "name": "TestCustomEventHandlers::test_custom_handler_overrides_default",
-        "line": 246,
-        "markers": [],
-        "docstring": "Test that custom handler can override mixin default.",
-        "class": "TestCustomEventHandlers"
-      },
-      {
-        "name": "TestCustomEventHandlers::test_custom_handler_without_super_call",
-        "line": 269,
-        "markers": [],
-        "docstring": "Test custom handler that doesn't call super.",
-        "class": "TestCustomEventHandlers"
-      },
+    "tests/unit/gpt_trader/tui/mixins/test_event_handlers_utilities_and_docs.py": [
       {
         "name": "TestUtilityMethods::test_post_event_when_mounted",
-        "line": 292,
+        "line": 16,
         "markers": [],
         "docstring": "Test post_event utility method when post_message is available.",
         "class": "TestUtilityMethods"
       },
       {
         "name": "TestUtilityMethods::test_post_event_when_not_mounted",
-        "line": 305,
+        "line": 29,
         "markers": [],
         "docstring": "Test post_event warns when post_message is unavailable.",
         "class": "TestUtilityMethods"
       },
       {
         "name": "TestUtilityMethods::test_log_event_received_utility",
-        "line": 318,
+        "line": 42,
         "markers": [],
         "docstring": "Test log_event_received utility method.",
         "class": "TestUtilityMethods"
       },
       {
         "name": "TestUtilityMethods::test_log_event_received_without_details",
-        "line": 334,
+        "line": 58,
         "markers": [],
         "docstring": "Test log_event_received without details.",
         "class": "TestUtilityMethods"
       },
       {
         "name": "TestMixinDocumentation::test_mixin_has_docstring",
-        "line": 352,
+        "line": 76,
         "markers": [],
         "docstring": "Test that EventHandlerMixin has proper docstring.",
         "class": "TestMixinDocumentation"
       },
       {
         "name": "TestMixinDocumentation::test_all_handler_methods_have_docstrings",
-        "line": 357,
+        "line": 81,
         "markers": [],
         "docstring": "Test that all handler methods have docstrings.",
         "class": "TestMixinDocumentation"
       },
       {
         "name": "TestMixinDocumentation::test_utility_methods_have_docstrings",
-        "line": 376,
+        "line": 100,
         "markers": [],
         "docstring": "Test that utility methods have docstrings.",
         "class": "TestMixinDocumentation"
       },
       {
-        "name": "test_mixin_can_be_used_with_static_widget",
-        "line": 35,
-        "markers": [],
-        "docstring": "Test that mixin works with Textual Static widget."
-      },
-      {
-        "name": "test_mixin_provides_all_event_handlers",
-        "line": 45,
-        "markers": [],
-        "docstring": "Test that mixin provides expected event handler methods."
-      },
-      {
-        "name": "test_on_bot_state_changed_logs_default",
-        "line": 69,
-        "markers": [],
-        "docstring": "Test default on_bot_state_changed logs event."
-      },
-      {
-        "name": "test_on_bot_mode_changed_logs_default",
-        "line": 89,
-        "markers": [],
-        "docstring": "Test default on_bot_mode_changed logs event."
-      },
-      {
-        "name": "test_on_state_update_received_logs_default",
-        "line": 108,
-        "markers": [],
-        "docstring": "Test default on_state_update_received logs event."
-      },
-      {
-        "name": "test_on_state_validation_failed_logs_warnings",
-        "line": 126,
-        "markers": [],
-        "docstring": "Test default on_state_validation_failed logs warnings."
-      },
-      {
-        "name": "test_on_state_validation_passed_logs_default",
-        "line": 146,
-        "markers": [],
-        "docstring": "Test default on_state_validation_passed logs event."
-      },
-      {
-        "name": "test_on_state_delta_update_applied_logs_default",
-        "line": 160,
-        "markers": [],
-        "docstring": "Test default on_state_delta_update_applied logs event."
-      },
-      {
-        "name": "test_on_responsive_state_changed_logs_default",
-        "line": 179,
-        "markers": [],
-        "docstring": "Test default on_responsive_state_changed logs event."
-      },
-      {
-        "name": "test_on_theme_changed_logs_default",
-        "line": 196,
-        "markers": [],
-        "docstring": "Test default on_theme_changed logs event."
-      },
-      {
-        "name": "test_on_error_occurred_logs_error_severity",
-        "line": 212,
-        "markers": [],
-        "docstring": "Test on_error_occurred logs with correct severity."
-      },
-      {
-        "name": "test_on_error_occurred_logs_warning_severity",
-        "line": 227,
-        "markers": [],
-        "docstring": "Test on_error_occurred logs warning for warning severity."
-      },
-      {
-        "name": "test_custom_handler_overrides_default",
-        "line": 246,
-        "markers": [],
-        "docstring": "Test that custom handler can override mixin default."
-      },
-      {
-        "name": "test_custom_handler_without_super_call",
-        "line": 269,
-        "markers": [],
-        "docstring": "Test custom handler that doesn't call super."
-      },
-      {
         "name": "test_post_event_when_mounted",
-        "line": 292,
+        "line": 16,
         "markers": [],
         "docstring": "Test post_event utility method when post_message is available."
       },
       {
         "name": "test_post_event_when_not_mounted",
-        "line": 305,
+        "line": 29,
         "markers": [],
         "docstring": "Test post_event warns when post_message is unavailable."
       },
       {
         "name": "test_log_event_received_utility",
-        "line": 318,
+        "line": 42,
         "markers": [],
         "docstring": "Test log_event_received utility method."
       },
       {
         "name": "test_log_event_received_without_details",
-        "line": 334,
+        "line": 58,
         "markers": [],
         "docstring": "Test log_event_received without details."
       },
       {
         "name": "test_mixin_has_docstring",
-        "line": 352,
+        "line": 76,
         "markers": [],
         "docstring": "Test that EventHandlerMixin has proper docstring."
       },
       {
         "name": "test_all_handler_methods_have_docstrings",
-        "line": 357,
+        "line": 81,
         "markers": [],
         "docstring": "Test that all handler methods have docstrings."
       },
       {
         "name": "test_utility_methods_have_docstrings",
-        "line": 376,
+        "line": 100,
         "markers": [],
         "docstring": "Test that utility methods have docstrings."
+      }
+    ],
+    "tests/unit/gpt_trader/tui/mixins/test_event_handlers_custom_overrides.py": [
+      {
+        "name": "TestCustomEventHandlers::test_custom_handler_overrides_default",
+        "line": 17,
+        "markers": [],
+        "docstring": "Test that custom handler can override mixin default.",
+        "class": "TestCustomEventHandlers"
+      },
+      {
+        "name": "TestCustomEventHandlers::test_custom_handler_without_super_call",
+        "line": 37,
+        "markers": [],
+        "docstring": "Test custom handler that doesn't call super.",
+        "class": "TestCustomEventHandlers"
+      },
+      {
+        "name": "test_custom_handler_overrides_default",
+        "line": 17,
+        "markers": [],
+        "docstring": "Test that custom handler can override mixin default."
+      },
+      {
+        "name": "test_custom_handler_without_super_call",
+        "line": 37,
+        "markers": [],
+        "docstring": "Test custom handler that doesn't call super."
+      }
+    ],
+    "tests/unit/gpt_trader/tui/mixins/test_event_handlers_basics.py": [
+      {
+        "name": "TestEventHandlerMixinBasics::test_mixin_can_be_used_with_static_widget",
+        "line": 13,
+        "markers": [],
+        "docstring": "Test that mixin works with Textual Static widget.",
+        "class": "TestEventHandlerMixinBasics"
+      },
+      {
+        "name": "TestEventHandlerMixinBasics::test_mixin_provides_all_event_handlers",
+        "line": 23,
+        "markers": [],
+        "docstring": "Test that mixin provides expected event handler methods.",
+        "class": "TestEventHandlerMixinBasics"
+      },
+      {
+        "name": "test_mixin_can_be_used_with_static_widget",
+        "line": 13,
+        "markers": [],
+        "docstring": "Test that mixin works with Textual Static widget."
+      },
+      {
+        "name": "test_mixin_provides_all_event_handlers",
+        "line": 23,
+        "markers": [],
+        "docstring": "Test that mixin provides expected event handler methods."
+      }
+    ],
+    "tests/unit/gpt_trader/tui/mixins/test_event_handlers_default_handlers.py": [
+      {
+        "name": "TestDefaultEventHandlers::test_on_bot_state_changed_logs_default",
+        "line": 28,
+        "markers": [],
+        "docstring": "Test default on_bot_state_changed logs event.",
+        "class": "TestDefaultEventHandlers"
+      },
+      {
+        "name": "TestDefaultEventHandlers::test_on_bot_mode_changed_logs_default",
+        "line": 47,
+        "markers": [],
+        "docstring": "Test default on_bot_mode_changed logs event.",
+        "class": "TestDefaultEventHandlers"
+      },
+      {
+        "name": "TestDefaultEventHandlers::test_on_state_update_received_logs_default",
+        "line": 66,
+        "markers": [],
+        "docstring": "Test default on_state_update_received logs event.",
+        "class": "TestDefaultEventHandlers"
+      },
+      {
+        "name": "TestDefaultEventHandlers::test_on_state_validation_failed_logs_warnings",
+        "line": 84,
+        "markers": [],
+        "docstring": "Test default on_state_validation_failed logs warnings.",
+        "class": "TestDefaultEventHandlers"
+      },
+      {
+        "name": "TestDefaultEventHandlers::test_on_state_validation_passed_logs_default",
+        "line": 103,
+        "markers": [],
+        "docstring": "Test default on_state_validation_passed logs event.",
+        "class": "TestDefaultEventHandlers"
+      },
+      {
+        "name": "TestDefaultEventHandlers::test_on_state_delta_update_applied_logs_default",
+        "line": 117,
+        "markers": [],
+        "docstring": "Test default on_state_delta_update_applied logs event.",
+        "class": "TestDefaultEventHandlers"
+      },
+      {
+        "name": "TestDefaultEventHandlers::test_on_responsive_state_changed_logs_default",
+        "line": 136,
+        "markers": [],
+        "docstring": "Test default on_responsive_state_changed logs event.",
+        "class": "TestDefaultEventHandlers"
+      },
+      {
+        "name": "TestDefaultEventHandlers::test_on_theme_changed_logs_default",
+        "line": 153,
+        "markers": [],
+        "docstring": "Test default on_theme_changed logs event.",
+        "class": "TestDefaultEventHandlers"
+      },
+      {
+        "name": "TestDefaultEventHandlers::test_on_error_occurred_logs_error_severity",
+        "line": 169,
+        "markers": [],
+        "docstring": "Test on_error_occurred logs with correct severity.",
+        "class": "TestDefaultEventHandlers"
+      },
+      {
+        "name": "TestDefaultEventHandlers::test_on_error_occurred_logs_warning_severity",
+        "line": 183,
+        "markers": [],
+        "docstring": "Test on_error_occurred logs warning for warning severity.",
+        "class": "TestDefaultEventHandlers"
+      },
+      {
+        "name": "test_on_bot_state_changed_logs_default",
+        "line": 28,
+        "markers": [],
+        "docstring": "Test default on_bot_state_changed logs event."
+      },
+      {
+        "name": "test_on_bot_mode_changed_logs_default",
+        "line": 47,
+        "markers": [],
+        "docstring": "Test default on_bot_mode_changed logs event."
+      },
+      {
+        "name": "test_on_state_update_received_logs_default",
+        "line": 66,
+        "markers": [],
+        "docstring": "Test default on_state_update_received logs event."
+      },
+      {
+        "name": "test_on_state_validation_failed_logs_warnings",
+        "line": 84,
+        "markers": [],
+        "docstring": "Test default on_state_validation_failed logs warnings."
+      },
+      {
+        "name": "test_on_state_validation_passed_logs_default",
+        "line": 103,
+        "markers": [],
+        "docstring": "Test default on_state_validation_passed logs event."
+      },
+      {
+        "name": "test_on_state_delta_update_applied_logs_default",
+        "line": 117,
+        "markers": [],
+        "docstring": "Test default on_state_delta_update_applied logs event."
+      },
+      {
+        "name": "test_on_responsive_state_changed_logs_default",
+        "line": 136,
+        "markers": [],
+        "docstring": "Test default on_responsive_state_changed logs event."
+      },
+      {
+        "name": "test_on_theme_changed_logs_default",
+        "line": 153,
+        "markers": [],
+        "docstring": "Test default on_theme_changed logs event."
+      },
+      {
+        "name": "test_on_error_occurred_logs_error_severity",
+        "line": 169,
+        "markers": [],
+        "docstring": "Test on_error_occurred logs with correct severity."
+      },
+      {
+        "name": "test_on_error_occurred_logs_warning_severity",
+        "line": 183,
+        "markers": [],
+        "docstring": "Test on_error_occurred logs warning for warning severity."
       }
     ],
     "tests/unit/gpt_trader/tui/screens/test_api_setup_wizard.py": [
@@ -72007,6 +72054,86 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/monitoring/daily_report/test_analytics_health_metrics.py": [
+      {
+        "name": "TestCalculateHealthMetrics::test_empty_events",
+        "line": 11,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateHealthMetrics"
+      },
+      {
+        "name": "TestCalculateHealthMetrics::test_counts_stale_marks",
+        "line": 18,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateHealthMetrics"
+      },
+      {
+        "name": "TestCalculateHealthMetrics::test_counts_ws_reconnects",
+        "line": 26,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateHealthMetrics"
+      },
+      {
+        "name": "TestCalculateHealthMetrics::test_counts_unfilled_orders",
+        "line": 35,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateHealthMetrics"
+      },
+      {
+        "name": "TestCalculateHealthMetrics::test_counts_api_errors",
+        "line": 40,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateHealthMetrics"
+      },
+      {
+        "name": "TestCalculateHealthMetrics::test_counts_all_types",
+        "line": 48,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateHealthMetrics"
+      },
+      {
+        "name": "test_empty_events",
+        "line": 11,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_counts_stale_marks",
+        "line": 18,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_counts_ws_reconnects",
+        "line": 26,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_counts_unfilled_orders",
+        "line": 35,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_counts_api_errors",
+        "line": 40,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_counts_all_types",
+        "line": 48,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/monitoring/daily_report/test_loaders_edges.py": [
       {
         "name": "test_load_metrics_missing_file_returns_empty",
@@ -72069,615 +72196,318 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/monitoring/daily_report/test_analytics.py": [
+    "tests/unit/gpt_trader/monitoring/daily_report/test_analytics_pnl_metrics.py": [
       {
         "name": "TestCalculatePnlMetrics::test_returns_none_equity_when_missing",
-        "line": 17,
+        "line": 11,
         "markers": [],
         "docstring": "",
         "class": "TestCalculatePnlMetrics"
       },
       {
         "name": "TestCalculatePnlMetrics::test_extracts_equity_from_account",
-        "line": 21,
+        "line": 15,
         "markers": [],
         "docstring": "",
         "class": "TestCalculatePnlMetrics"
       },
       {
         "name": "TestCalculatePnlMetrics::test_accumulates_realized_pnl_from_events",
-        "line": 28,
+        "line": 22,
         "markers": [],
         "docstring": "",
         "class": "TestCalculatePnlMetrics"
       },
       {
         "name": "TestCalculatePnlMetrics::test_uses_last_unrealized_pnl",
-        "line": 36,
+        "line": 30,
         "markers": [],
         "docstring": "",
         "class": "TestCalculatePnlMetrics"
       },
       {
         "name": "TestCalculatePnlMetrics::test_accumulates_funding_payments",
-        "line": 44,
+        "line": 38,
         "markers": [],
         "docstring": "",
         "class": "TestCalculatePnlMetrics"
       },
       {
         "name": "TestCalculatePnlMetrics::test_accumulates_fees_from_fills",
-        "line": 52,
+        "line": 46,
         "markers": [],
         "docstring": "",
         "class": "TestCalculatePnlMetrics"
       },
       {
         "name": "TestCalculatePnlMetrics::test_calculates_total_pnl",
-        "line": 60,
+        "line": 54,
         "markers": [],
         "docstring": "",
         "class": "TestCalculatePnlMetrics"
       },
       {
         "name": "TestCalculatePnlMetrics::test_calculates_equity_change",
-        "line": 67,
+        "line": 61,
         "markers": [],
         "docstring": "",
         "class": "TestCalculatePnlMetrics"
       },
       {
         "name": "TestCalculatePnlMetrics::test_calculates_equity_change_pct",
-        "line": 74,
+        "line": 68,
         "markers": [],
         "docstring": "",
         "class": "TestCalculatePnlMetrics"
       },
       {
         "name": "TestCalculatePnlMetrics::test_equity_change_pct_none_when_equity_missing",
-        "line": 81,
+        "line": 75,
         "markers": [],
         "docstring": "",
         "class": "TestCalculatePnlMetrics"
       },
       {
         "name": "TestCalculatePnlMetrics::test_equity_change_pct_zero_when_no_prev_equity",
-        "line": 88,
+        "line": 82,
         "markers": [],
         "docstring": "",
         "class": "TestCalculatePnlMetrics"
       },
       {
         "name": "TestCalculatePnlMetrics::test_equity_none_when_not_parseable",
-        "line": 95,
+        "line": 89,
         "markers": [],
         "docstring": "",
         "class": "TestCalculatePnlMetrics"
       },
       {
+        "name": "test_returns_none_equity_when_missing",
+        "line": 11,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_extracts_equity_from_account",
+        "line": 15,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_accumulates_realized_pnl_from_events",
+        "line": 22,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_uses_last_unrealized_pnl",
+        "line": 30,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_accumulates_funding_payments",
+        "line": 38,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_accumulates_fees_from_fills",
+        "line": 46,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_calculates_total_pnl",
+        "line": 54,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_calculates_equity_change",
+        "line": 61,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_calculates_equity_change_pct",
+        "line": 68,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_equity_change_pct_none_when_equity_missing",
+        "line": 75,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_equity_change_pct_zero_when_no_prev_equity",
+        "line": 82,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_equity_none_when_not_parseable",
+        "line": 89,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/monitoring/daily_report/test_analytics_trade_metrics.py": [
+      {
         "name": "TestCalculateTradeMetrics::test_empty_events",
-        "line": 103,
+        "line": 11,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTradeMetrics"
       },
       {
         "name": "TestCalculateTradeMetrics::test_counts_winning_trades",
-        "line": 109,
+        "line": 17,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTradeMetrics"
       },
       {
         "name": "TestCalculateTradeMetrics::test_calculates_win_rate",
-        "line": 120,
+        "line": 28,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTradeMetrics"
       },
       {
         "name": "TestCalculateTradeMetrics::test_calculates_avg_win_loss",
-        "line": 128,
+        "line": 36,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTradeMetrics"
       },
       {
         "name": "TestCalculateTradeMetrics::test_calculates_largest_win_loss",
-        "line": 138,
+        "line": 46,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTradeMetrics"
       },
       {
         "name": "TestCalculateTradeMetrics::test_calculates_profit_factor",
-        "line": 149,
+        "line": 57,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTradeMetrics"
       },
       {
         "name": "TestCalculateTradeMetrics::test_profit_factor_zero_when_no_losses",
-        "line": 157,
+        "line": 65,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTradeMetrics"
       },
       {
         "name": "TestCalculateTradeMetrics::test_calculates_sharpe_ratio",
-        "line": 164,
+        "line": 72,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTradeMetrics"
       },
       {
         "name": "TestCalculateTradeMetrics::test_sharpe_ratio_zero_with_single_trade",
-        "line": 173,
+        "line": 81,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTradeMetrics"
       },
       {
         "name": "TestCalculateTradeMetrics::test_calculates_max_drawdown",
-        "line": 178,
+        "line": 86,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTradeMetrics"
       },
       {
         "name": "TestCalculateTradeMetrics::test_calculates_max_drawdown_pct",
-        "line": 187,
+        "line": 95,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTradeMetrics"
       },
       {
         "name": "TestCalculateTradeMetrics::test_ignores_non_fill_events",
-        "line": 195,
+        "line": 103,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateTradeMetrics"
       },
       {
-        "name": "TestCalculateSymbolMetrics::test_empty_events",
-        "line": 208,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateSymbolMetrics"
-      },
-      {
-        "name": "TestCalculateSymbolMetrics::test_skips_events_without_symbol",
-        "line": 212,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateSymbolMetrics"
-      },
-      {
-        "name": "TestCalculateSymbolMetrics::test_groups_by_symbol",
-        "line": 217,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateSymbolMetrics"
-      },
-      {
-        "name": "TestCalculateSymbolMetrics::test_calculates_symbol_realized_pnl",
-        "line": 227,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateSymbolMetrics"
-      },
-      {
-        "name": "TestCalculateSymbolMetrics::test_tracks_unrealized_pnl",
-        "line": 236,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateSymbolMetrics"
-      },
-      {
-        "name": "TestCalculateSymbolMetrics::test_accumulates_funding_pnl",
-        "line": 243,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateSymbolMetrics"
-      },
-      {
-        "name": "TestCalculateSymbolMetrics::test_calculates_total_pnl",
-        "line": 251,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateSymbolMetrics"
-      },
-      {
-        "name": "TestCalculateSymbolMetrics::test_counts_trades",
-        "line": 260,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateSymbolMetrics"
-      },
-      {
-        "name": "TestCalculateSymbolMetrics::test_calculates_win_rate",
-        "line": 269,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateSymbolMetrics"
-      },
-      {
-        "name": "TestCalculateSymbolMetrics::test_calculates_avg_win_loss",
-        "line": 277,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateSymbolMetrics"
-      },
-      {
-        "name": "TestCalculateSymbolMetrics::test_calculates_profit_factor",
-        "line": 287,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateSymbolMetrics"
-      },
-      {
-        "name": "TestCalculateSymbolMetrics::test_tracks_regime",
-        "line": 295,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateSymbolMetrics"
-      },
-      {
-        "name": "TestCalculateSymbolMetrics::test_tracks_exposure_from_position_update",
-        "line": 302,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateSymbolMetrics"
-      },
-      {
-        "name": "TestCalculateRiskMetrics::test_empty_events",
-        "line": 318,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateRiskMetrics"
-      },
-      {
-        "name": "TestCalculateRiskMetrics::test_counts_guard_triggers",
-        "line": 323,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateRiskMetrics"
-      },
-      {
-        "name": "TestCalculateRiskMetrics::test_handles_unknown_guard",
-        "line": 333,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateRiskMetrics"
-      },
-      {
-        "name": "TestCalculateRiskMetrics::test_tracks_circuit_breaker_state",
-        "line": 338,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateRiskMetrics"
-      },
-      {
-        "name": "TestCalculateHealthMetrics::test_empty_events",
-        "line": 356,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateHealthMetrics"
-      },
-      {
-        "name": "TestCalculateHealthMetrics::test_counts_stale_marks",
-        "line": 363,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateHealthMetrics"
-      },
-      {
-        "name": "TestCalculateHealthMetrics::test_counts_ws_reconnects",
-        "line": 371,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateHealthMetrics"
-      },
-      {
-        "name": "TestCalculateHealthMetrics::test_counts_unfilled_orders",
-        "line": 380,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateHealthMetrics"
-      },
-      {
-        "name": "TestCalculateHealthMetrics::test_counts_api_errors",
-        "line": 385,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateHealthMetrics"
-      },
-      {
-        "name": "TestCalculateHealthMetrics::test_counts_all_types",
-        "line": 393,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateHealthMetrics"
-      },
-      {
-        "name": "test_returns_none_equity_when_missing",
-        "line": 17,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_extracts_equity_from_account",
-        "line": 21,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_accumulates_realized_pnl_from_events",
-        "line": 28,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_uses_last_unrealized_pnl",
-        "line": 36,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_accumulates_funding_payments",
-        "line": 44,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_accumulates_fees_from_fills",
-        "line": 52,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_calculates_total_pnl",
-        "line": 60,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_calculates_equity_change",
-        "line": 67,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_calculates_equity_change_pct",
-        "line": 74,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_equity_change_pct_none_when_equity_missing",
-        "line": 81,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_equity_change_pct_zero_when_no_prev_equity",
-        "line": 88,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_equity_none_when_not_parseable",
-        "line": 95,
-        "markers": [],
-        "docstring": ""
-      },
-      {
         "name": "test_empty_events",
-        "line": 103,
+        "line": 11,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_counts_winning_trades",
-        "line": 109,
+        "line": 17,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_calculates_win_rate",
-        "line": 120,
+        "line": 28,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_calculates_avg_win_loss",
-        "line": 128,
+        "line": 36,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_calculates_largest_win_loss",
-        "line": 138,
+        "line": 46,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_calculates_profit_factor",
-        "line": 149,
+        "line": 57,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_profit_factor_zero_when_no_losses",
-        "line": 157,
+        "line": 65,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_calculates_sharpe_ratio",
-        "line": 164,
+        "line": 72,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_sharpe_ratio_zero_with_single_trade",
-        "line": 173,
+        "line": 81,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_calculates_max_drawdown",
-        "line": 178,
+        "line": 86,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_calculates_max_drawdown_pct",
-        "line": 187,
+        "line": 95,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_ignores_non_fill_events",
-        "line": 195,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_empty_events",
-        "line": 208,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_skips_events_without_symbol",
-        "line": 212,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_groups_by_symbol",
-        "line": 217,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_calculates_symbol_realized_pnl",
-        "line": 227,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_tracks_unrealized_pnl",
-        "line": 236,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_accumulates_funding_pnl",
-        "line": 243,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_calculates_total_pnl",
-        "line": 251,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_counts_trades",
-        "line": 260,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_calculates_win_rate",
-        "line": 269,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_calculates_avg_win_loss",
-        "line": 277,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_calculates_profit_factor",
-        "line": 287,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_tracks_regime",
-        "line": 295,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_tracks_exposure_from_position_update",
-        "line": 302,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_empty_events",
-        "line": 318,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_counts_guard_triggers",
-        "line": 323,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_handles_unknown_guard",
-        "line": 333,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_tracks_circuit_breaker_state",
-        "line": 338,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_empty_events",
-        "line": 356,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_counts_stale_marks",
-        "line": 363,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_counts_ws_reconnects",
-        "line": 371,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_counts_unfilled_orders",
-        "line": 380,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_counts_api_errors",
-        "line": 385,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_counts_all_types",
-        "line": 393,
+        "line": 103,
         "markers": [],
         "docstring": ""
       }
@@ -72698,6 +72528,231 @@
       {
         "name": "test_save_report_writes_json_and_text",
         "line": 175,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/monitoring/daily_report/test_analytics_symbol_metrics.py": [
+      {
+        "name": "TestCalculateSymbolMetrics::test_empty_events",
+        "line": 11,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateSymbolMetrics"
+      },
+      {
+        "name": "TestCalculateSymbolMetrics::test_skips_events_without_symbol",
+        "line": 15,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateSymbolMetrics"
+      },
+      {
+        "name": "TestCalculateSymbolMetrics::test_groups_by_symbol",
+        "line": 20,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateSymbolMetrics"
+      },
+      {
+        "name": "TestCalculateSymbolMetrics::test_calculates_symbol_realized_pnl",
+        "line": 30,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateSymbolMetrics"
+      },
+      {
+        "name": "TestCalculateSymbolMetrics::test_tracks_unrealized_pnl",
+        "line": 39,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateSymbolMetrics"
+      },
+      {
+        "name": "TestCalculateSymbolMetrics::test_accumulates_funding_pnl",
+        "line": 46,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateSymbolMetrics"
+      },
+      {
+        "name": "TestCalculateSymbolMetrics::test_calculates_total_pnl",
+        "line": 54,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateSymbolMetrics"
+      },
+      {
+        "name": "TestCalculateSymbolMetrics::test_counts_trades",
+        "line": 63,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateSymbolMetrics"
+      },
+      {
+        "name": "TestCalculateSymbolMetrics::test_calculates_win_rate",
+        "line": 72,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateSymbolMetrics"
+      },
+      {
+        "name": "TestCalculateSymbolMetrics::test_calculates_avg_win_loss",
+        "line": 80,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateSymbolMetrics"
+      },
+      {
+        "name": "TestCalculateSymbolMetrics::test_calculates_profit_factor",
+        "line": 90,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateSymbolMetrics"
+      },
+      {
+        "name": "TestCalculateSymbolMetrics::test_tracks_regime",
+        "line": 98,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateSymbolMetrics"
+      },
+      {
+        "name": "TestCalculateSymbolMetrics::test_tracks_exposure_from_position_update",
+        "line": 105,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateSymbolMetrics"
+      },
+      {
+        "name": "test_empty_events",
+        "line": 11,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_skips_events_without_symbol",
+        "line": 15,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_groups_by_symbol",
+        "line": 20,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_calculates_symbol_realized_pnl",
+        "line": 30,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_tracks_unrealized_pnl",
+        "line": 39,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_accumulates_funding_pnl",
+        "line": 46,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_calculates_total_pnl",
+        "line": 54,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_counts_trades",
+        "line": 63,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_calculates_win_rate",
+        "line": 72,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_calculates_avg_win_loss",
+        "line": 80,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_calculates_profit_factor",
+        "line": 90,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_tracks_regime",
+        "line": 98,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_tracks_exposure_from_position_update",
+        "line": 105,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/monitoring/daily_report/test_analytics_risk_metrics.py": [
+      {
+        "name": "TestCalculateRiskMetrics::test_empty_events",
+        "line": 11,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateRiskMetrics"
+      },
+      {
+        "name": "TestCalculateRiskMetrics::test_counts_guard_triggers",
+        "line": 16,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateRiskMetrics"
+      },
+      {
+        "name": "TestCalculateRiskMetrics::test_handles_unknown_guard",
+        "line": 26,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateRiskMetrics"
+      },
+      {
+        "name": "TestCalculateRiskMetrics::test_tracks_circuit_breaker_state",
+        "line": 31,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateRiskMetrics"
+      },
+      {
+        "name": "test_empty_events",
+        "line": 11,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_counts_guard_triggers",
+        "line": 16,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_handles_unknown_guard",
+        "line": 26,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_tracks_circuit_breaker_state",
+        "line": 31,
         "markers": [],
         "docstring": ""
       }

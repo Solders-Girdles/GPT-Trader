@@ -65,6 +65,18 @@ def parse_pytest_ini() -> dict[str, Any]:
     }
 
 
+def dedupe_preserve_order(values: list[str]) -> list[str]:
+    """Return list with duplicates removed (stable order)."""
+    seen: set[str] = set()
+    deduped: list[str] = []
+    for value in values:
+        if value in seen:
+            continue
+        seen.add(value)
+        deduped.append(value)
+    return deduped
+
+
 def extract_test_info(file_path: Path) -> list[dict[str, Any]]:
     """Extract test function information from a Python test file."""
     tests = []
@@ -92,25 +104,29 @@ def extract_test_info(file_path: Path) -> list[dict[str, Any]]:
         return markers
 
     # Get file-level markers (module-level pytestmark assignment)
-    file_markers: set[str] = set()
+    file_markers: list[str] = []
     for node in tree.body:
         if isinstance(node, ast.Assign):
             for target in node.targets:
                 if isinstance(target, ast.Name) and target.id == "pytestmark":
-                    file_markers.update(extract_pytestmark_markers(node.value))
+                    file_markers = dedupe_preserve_order(
+                        [*file_markers, *extract_pytestmark_markers(node.value)]
+                    )
         elif isinstance(node, ast.AnnAssign):
             if isinstance(node.target, ast.Name) and node.target.id == "pytestmark":
                 if node.value is not None:
-                    file_markers.update(extract_pytestmark_markers(node.value))
+                    file_markers = dedupe_preserve_order(
+                        [*file_markers, *extract_pytestmark_markers(node.value)]
+                    )
 
-    for node in ast.walk(tree):
+    for node in tree.body:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name.startswith(
             "test_"
         ):
             test_info = {
                 "name": node.name,
                 "line": node.lineno,
-                "markers": list(file_markers.copy()),
+                "markers": list(file_markers),
                 "docstring": ast.get_docstring(node) or "",
             }
 
@@ -120,15 +136,17 @@ def extract_test_info(file_path: Path) -> list[dict[str, Any]]:
                 if marker:
                     test_info["markers"].append(marker)
 
+            test_info["markers"] = dedupe_preserve_order(test_info["markers"])
             tests.append(test_info)
 
         elif isinstance(node, ast.ClassDef) and node.name.startswith("Test"):
             # Extract class-level markers
-            class_markers = list(file_markers.copy())
+            class_markers = list(file_markers)
             for decorator in node.decorator_list:
                 marker = extract_marker(decorator)
                 if marker:
                     class_markers.append(marker)
+            class_markers = dedupe_preserve_order(class_markers)
 
             # Extract methods from test class
             for item in node.body:
@@ -149,6 +167,7 @@ def extract_test_info(file_path: Path) -> list[dict[str, Any]]:
                         if marker:
                             test_info["markers"].append(marker)
 
+                    test_info["markers"] = dedupe_preserve_order(test_info["markers"])
                     tests.append(test_info)
 
     return tests
@@ -199,18 +218,6 @@ def extract_marker(decorator: ast.expr) -> str | None:
     return None
 
 
-def dedupe_preserve_order(values: list[str]) -> list[str]:
-    """Return list with duplicates removed (stable order)."""
-    seen: set[str] = set()
-    deduped: list[str] = []
-    for value in values:
-        if value in seen:
-            continue
-        seen.add(value)
-        deduped.append(value)
-    return deduped
-
-
 def infer_suite_markers(rel_path: str) -> list[str]:
     """Infer suite/type markers based on test file path conventions."""
     if rel_path.startswith("tests/unit/"):
@@ -248,7 +255,7 @@ def scan_test_files(test_dir: Path) -> dict[str, Any]:
     imports_by_file: dict[str, list[str]] = {}
     total_tests = 0
 
-    for test_file in test_dir.rglob("test_*.py"):
+    for test_file in sorted(test_dir.rglob("test_*.py")):
         if "__pycache__" in str(test_file):
             continue
 
@@ -343,7 +350,9 @@ def generate_test_inventory(
         },
         "marker_definitions": marker_defs,
         "marker_categories": marker_categories,
-        "marker_counts": dict(sorted(scan_results["marker_counts"].items(), key=lambda x: -x[1])),
+        "marker_counts": dict(
+            sorted(scan_results["marker_counts"].items(), key=lambda x: (-x[1], x[0]))
+        ),
         "path_categories": path_categories,
         "tests_by_file": inventory,
     }

@@ -96,15 +96,16 @@
   },
   "counts": {
     "endpoints": 140,
-    "integration": 100,
+    "integration": 99,
     "parametrize": 93,
     "skipif": 16,
-    "e2e": 12,
     "property": 10,
     "perps": 5,
     "perf": 4,
     "uses_real_preferences": 2,
     "slow": 2,
+    "requires_secrets": 1,
+    "requires_network": 1,
     "real_api": 1
   },
   "usage": {

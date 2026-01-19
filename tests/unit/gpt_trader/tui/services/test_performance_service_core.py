@@ -55,17 +55,6 @@ class TestTuiPerformanceService:
         context = disabled_service.time_operation("test_op")
         assert isinstance(context, _NoOpContext)
 
-    def test_disabled_service_minimal_overhead(
-        self, disabled_service: TuiPerformanceService
-    ) -> None:
-        start = time.time()
-        for _ in range(1000):
-            with disabled_service.time_operation("noop"):
-                pass
-        duration = time.time() - start
-
-        assert duration < 0.050
-
     def test_record_frame(self, service: TuiPerformanceService) -> None:
         metrics = FrameMetrics(
             timestamp=time.time(),

@@ -2,9 +2,9 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 11042,
+    "total_tests": 11040,
     "total_files": 907,
-    "markers_used": 11
+    "markers_used": 12
   },
   "marker_definitions": {
     "unit": "Unit tests (isolated component tests)",
@@ -103,15 +103,16 @@
   },
   "marker_counts": {
     "endpoints": 140,
-    "integration": 100,
+    "integration": 99,
     "parametrize": 93,
     "skipif": 16,
-    "e2e": 12,
     "property": 10,
     "perps": 5,
     "perf": 4,
     "uses_real_preferences": 2,
     "slow": 2,
+    "requires_secrets": 1,
+    "requires_network": 1,
     "real_api": 1
   },
   "path_categories": {
@@ -784,7 +785,6 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_environment_options.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_credentials_resolution.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_accounts_balances_and_products.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_permissions_live_integration.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_features_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_mock_transport.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_cfm_endpoints.py",
@@ -2543,6 +2543,18 @@
           "integration"
         ],
         "docstring": "Test that metrics are recorded when escalation occurs."
+      }
+    ],
+    "tests/real_api/test_coinbase_permissions.py": [
+      {
+        "name": "test_live_permission_check",
+        "line": 46,
+        "markers": [
+          "requires_secrets",
+          "requires_network",
+          "real_api"
+        ],
+        "docstring": ""
       }
     ],
     "tests/unit/support/test_chaos.py": [
@@ -39685,99 +39697,92 @@
         "class": "TestTuiPerformanceService"
       },
       {
-        "name": "TestTuiPerformanceService::test_disabled_service_minimal_overhead",
+        "name": "TestTuiPerformanceService::test_record_frame",
         "line": 58,
         "markers": [],
         "docstring": "",
         "class": "TestTuiPerformanceService"
       },
       {
-        "name": "TestTuiPerformanceService::test_record_frame",
-        "line": 69,
-        "markers": [],
-        "docstring": "",
-        "class": "TestTuiPerformanceService"
-      },
-      {
         "name": "TestTuiPerformanceService::test_record_frame_disabled",
-        "line": 82,
+        "line": 71,
         "markers": [],
         "docstring": "",
         "class": "TestTuiPerformanceService"
       },
       {
         "name": "TestTuiPerformanceService::test_fps_calculation",
-        "line": 89,
+        "line": 78,
         "markers": [],
         "docstring": "",
         "class": "TestTuiPerformanceService"
       },
       {
         "name": "TestTuiPerformanceService::test_frame_time_statistics",
-        "line": 103,
+        "line": 92,
         "markers": [],
         "docstring": "",
         "class": "TestTuiPerformanceService"
       },
       {
         "name": "TestTuiPerformanceService::test_slow_operation_tracking",
-        "line": 119,
+        "line": 108,
         "markers": [],
         "docstring": "",
         "class": "TestTuiPerformanceService"
       },
       {
         "name": "TestTuiPerformanceService::test_slow_operation_not_tracked_below_threshold",
-        "line": 128,
+        "line": 117,
         "markers": [],
         "docstring": "",
         "class": "TestTuiPerformanceService"
       },
       {
         "name": "TestTuiPerformanceService::test_slow_operation_disabled",
-        "line": 137,
+        "line": 126,
         "markers": [],
         "docstring": "",
         "class": "TestTuiPerformanceService"
       },
       {
         "name": "TestTuiPerformanceService::test_get_operation_stats",
-        "line": 142,
+        "line": 131,
         "markers": [],
         "docstring": "",
         "class": "TestTuiPerformanceService"
       },
       {
         "name": "TestTuiPerformanceService::test_reset",
-        "line": 152,
+        "line": 141,
         "markers": [],
         "docstring": "",
         "class": "TestTuiPerformanceService"
       },
       {
         "name": "TestTuiPerformanceService::test_snapshot_with_app_reference",
-        "line": 165,
+        "line": 154,
         "markers": [],
         "docstring": "",
         "class": "TestTuiPerformanceService"
       },
       {
         "name": "TestTuiPerformanceService::test_snapshot_memory_metrics",
-        "line": 179,
+        "line": 168,
         "markers": [],
         "docstring": "",
         "class": "TestTuiPerformanceService"
       },
       {
         "name": "TestGlobalService::test_get_creates_service",
-        "line": 200,
+        "line": 189,
         "markers": [],
         "docstring": "",
         "class": "TestGlobalService"
       },
       {
         "name": "TestGlobalService::test_set_and_get_service",
-        "line": 210,
+        "line": 199,
         "markers": [],
         "docstring": "",
         "class": "TestGlobalService"
@@ -39807,86 +39812,80 @@
         "docstring": ""
       },
       {
-        "name": "test_disabled_service_minimal_overhead",
+        "name": "test_record_frame",
         "line": 58,
         "markers": [],
         "docstring": ""
       },
       {
-        "name": "test_record_frame",
-        "line": 69,
-        "markers": [],
-        "docstring": ""
-      },
-      {
         "name": "test_record_frame_disabled",
-        "line": 82,
+        "line": 71,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_fps_calculation",
-        "line": 89,
+        "line": 78,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_frame_time_statistics",
-        "line": 103,
+        "line": 92,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_slow_operation_tracking",
-        "line": 119,
+        "line": 108,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_slow_operation_not_tracked_below_threshold",
-        "line": 128,
+        "line": 117,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_slow_operation_disabled",
-        "line": 137,
+        "line": 126,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_get_operation_stats",
-        "line": 142,
+        "line": 131,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_reset",
-        "line": 152,
+        "line": 141,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_snapshot_with_app_reference",
-        "line": 165,
+        "line": 154,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_snapshot_memory_metrics",
-        "line": 179,
+        "line": 168,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_get_creates_service",
-        "line": 200,
+        "line": 189,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_set_and_get_service",
-        "line": 210,
+        "line": 199,
         "markers": [],
         "docstring": ""
       }
@@ -53356,17 +53355,6 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_permissions_live_integration.py": [
-      {
-        "name": "test_live_permission_check",
-        "line": 13,
-        "markers": [
-          "integration",
-          "real_api"
-        ],
-        "docstring": ""
-      }
-    ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_features_edges.py": [
       {
         "name": "test_rolling_window_empty_stats",
@@ -53704,7 +53692,6 @@
         "name": "TestCoinbaseSystem::test_client_system_endpoints",
         "line": 28,
         "markers": [
-          "e2e",
           "endpoints",
           "parametrize"
         ],
@@ -53715,7 +53702,6 @@
         "name": "TestCoinbaseSystem::test_get_products_perf_budget",
         "line": 56,
         "markers": [
-          "e2e",
           "endpoints",
           "perf"
         ],
@@ -53726,7 +53712,6 @@
         "name": "TestCoinbaseSystem::test_place_order_perf_budget",
         "line": 67,
         "markers": [
-          "e2e",
           "endpoints",
           "perf"
         ],
@@ -53737,7 +53722,6 @@
         "name": "TestCoinbaseSystem::test_connection_validation",
         "line": 77,
         "markers": [
-          "e2e",
           "endpoints"
         ],
         "docstring": "",
@@ -53747,7 +53731,6 @@
         "name": "TestCoinbaseSystem::test_position_list_spot_trading",
         "line": 95,
         "markers": [
-          "e2e",
           "endpoints"
         ],
         "docstring": "",
@@ -53757,7 +53740,6 @@
         "name": "TestCoinbaseSystem::test_order_error_handling",
         "line": 113,
         "markers": [
-          "e2e",
           "endpoints"
         ],
         "docstring": "",
@@ -53767,7 +53749,6 @@
         "name": "test_client_system_endpoints",
         "line": 28,
         "markers": [
-          "e2e",
           "endpoints",
           "parametrize"
         ],
@@ -53777,7 +53758,6 @@
         "name": "test_get_products_perf_budget",
         "line": 56,
         "markers": [
-          "e2e",
           "endpoints",
           "perf"
         ],
@@ -53787,7 +53767,6 @@
         "name": "test_place_order_perf_budget",
         "line": 67,
         "markers": [
-          "e2e",
           "endpoints",
           "perf"
         ],
@@ -53797,7 +53776,6 @@
         "name": "test_connection_validation",
         "line": 77,
         "markers": [
-          "e2e",
           "endpoints"
         ],
         "docstring": ""
@@ -53806,7 +53784,6 @@
         "name": "test_position_list_spot_trading",
         "line": 95,
         "markers": [
-          "e2e",
           "endpoints"
         ],
         "docstring": ""
@@ -53815,7 +53792,6 @@
         "name": "test_order_error_handling",
         "line": 113,
         "markers": [
-          "e2e",
           "endpoints"
         ],
         "docstring": ""

@@ -20,7 +20,7 @@ from tests.unit.gpt_trader.features.brokerages.coinbase.helpers import (
     make_client,
 )
 
-pytestmark = [pytest.mark.endpoints, pytest.mark.e2e]
+pytestmark = [pytest.mark.endpoints]
 
 
 class TestCoinbaseSystem:

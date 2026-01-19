@@ -71,3 +71,27 @@ def pytest_sessionfinish(session, exitstatus):
             cwd=repo_root,
             capture_output=True,
         )
+
+
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+    """Apply path-based markers for consistent selection.
+
+    Allows running suites via `pytest -m unit|integration|contract|real_api` without
+    requiring every file to declare a redundant marker.
+    """
+    repo_root = Path(__file__).resolve().parents[1]
+
+    for item in items:
+        try:
+            rel = Path(str(item.fspath)).resolve().relative_to(repo_root).as_posix()
+        except Exception:
+            continue
+
+        if rel.startswith("tests/unit/"):
+            item.add_marker(pytest.mark.unit)
+        elif rel.startswith("tests/integration/"):
+            item.add_marker(pytest.mark.integration)
+        elif rel.startswith("tests/contract/"):
+            item.add_marker(pytest.mark.contract)
+        elif rel.startswith("tests/real_api/"):
+            item.add_marker(pytest.mark.real_api)

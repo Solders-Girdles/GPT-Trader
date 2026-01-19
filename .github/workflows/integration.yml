@@ -58,4 +58,4 @@ jobs:
           # pytest tests/integration/test_paper_mode.py (Perps paper)
 
           # Override default marker filter in pytest.ini to run integration tests.
-          uv run pytest tests/integration/ -v -m "integration and not legacy_delete and not legacy_modernize"
+          uv run pytest tests/integration/ -v -m "integration and not real_api and not legacy_delete and not legacy_modernize"

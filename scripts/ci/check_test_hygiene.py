@@ -16,6 +16,7 @@ UNIT_ALLOWED_PREFIXES = (
 )
 INTEGRATION_TEST_PREFIX = "tests/integration/"
 CONTRACT_TEST_PREFIX = "tests/contract/"
+REAL_API_TEST_PREFIX = "tests/real_api/"
 ALLOWLIST = {
     # Coverage expansion tests (C1 task)
     # Phase 2 pain points remediation: critical service coverage
@@ -26,10 +27,7 @@ ALLOWLIST = {
     # Pre-existing TUI and feature test suites
 }
 
-SLEEP_ALLOWLIST = {
-    "tests/unit/gpt_trader/utilities/performance/test_timing.py",  # timing utility coverage requires real sleep for precision tests
-    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_response_cache.py",  # TTL-based cache expiration requires real time elapsed
-}
+SLEEP_ALLOWLIST: set[str] = set()
 
 
 def scan(paths: Sequence[str]) -> int:
@@ -73,6 +71,23 @@ def scan(paths: Sequence[str]) -> int:
         if rel_str.startswith(CONTRACT_TEST_PREFIX) and ".mark.contract" not in text:
             problems.append(
                 f"{rel} is under `tests/contract/` but is missing the `pytest.mark.contract` marker."
+            )
+
+        if rel_str.startswith(REAL_API_TEST_PREFIX) and ".mark.real_api" not in text:
+            problems.append(
+                f"{rel} is under `tests/real_api/` but is missing the `pytest.mark.real_api` marker."
+            )
+
+        if rel_str.startswith("tests/unit/") and (
+            ".mark.integration" in text or ".mark.contract" in text or ".mark.real_api" in text
+        ):
+            problems.append(
+                f"{rel} is under `tests/unit/` but is marked integration/contract/real_api. Reclassify it under `tests/integration/`, `tests/contract/`, or `tests/real_api/`."
+            )
+
+        if rel_str.startswith(INTEGRATION_TEST_PREFIX) and ".mark.real_api" in text:
+            problems.append(
+                f"{rel} is under `tests/integration/` but is marked real_api. Move it to `tests/real_api/`."
             )
 
         if line_count > THRESHOLD and rel_str not in ALLOWLIST:

@@ -527,6 +527,7 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_account_manager_snapshot.py"
     ],
     "gpt_trader.features.brokerages.coinbase.auth": [
+      "tests/real_api/test_coinbase_permissions.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_auth_headers.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_convenience_and_transport.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_endpoints_and_paths.py",
@@ -540,18 +541,17 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_request_happy_path.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_request_retries.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_auth.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_permissions_live_integration.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_http_request_layer.py"
     ],
     "gpt_trader.features.brokerages.coinbase.client": [
       "tests/contract/test_coinbase_api_contract.py",
+      "tests/real_api/test_coinbase_permissions.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_coinbase_client.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_market_mixin.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_portfolio_mixin.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_rest_service_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_accounts_positions_and_treasury.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_permissions_live_integration.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_http_request_layer.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_fallback.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_retry_behaviour.py"
@@ -2485,6 +2485,10 @@
     "tests/property/test_validation_invariants_interleaved.py": [
       "gpt_trader.features.live_trade.execution.validation"
     ],
+    "tests/real_api/test_coinbase_permissions.py": [
+      "gpt_trader.features.brokerages.coinbase.auth",
+      "gpt_trader.features.brokerages.coinbase.client"
+    ],
     "tests/unit/gpt_trader/agents/test_agents_import.py": [
       "gpt_trader.agents"
     ],
@@ -3293,10 +3297,6 @@
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_permissions_client_endpoint.py": [
       "gpt_trader.features.brokerages.coinbase.errors"
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_permissions_live_integration.py": [
-      "gpt_trader.features.brokerages.coinbase.auth",
-      "gpt_trader.features.brokerages.coinbase.client"
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_perp_rules_and_quantize.py": [
       "gpt_trader.core",
@@ -5779,6 +5779,7 @@
     "gpt_trader.cli.commands.run": "src/gpt_trader/cli/commands/run.py",
     "gpt_trader.monitoring.metrics_collector": "src/gpt_trader/monitoring/metrics_collector.py",
     "gpt_trader.features.brokerages.coinbase.ws": "src/gpt_trader/features/brokerages/coinbase/ws.py",
+    "gpt_trader.features.brokerages.coinbase.auth": "src/gpt_trader/features/brokerages/coinbase/auth.py",
     "gpt_trader.app.config.bot_config": "src/gpt_trader/app/config/bot_config.py",
     "gpt_trader.features.live_trade.strategies.mean_reversion.strategy": "src/gpt_trader/features/live_trade/strategies/mean_reversion/strategy.py",
     "gpt_trader.backtesting.simulation": "src/gpt_trader/backtesting/simulation/__init__.py",
@@ -5999,7 +6000,6 @@
     "gpt_trader.features.brokerages.paper.hybrid": "src/gpt_trader/features/brokerages/paper/hybrid.py",
     "gpt_trader.features.brokerages.coinbase.transports": "src/gpt_trader/features/brokerages/coinbase/transports.py",
     "gpt_trader.features.brokerages.coinbase.ws_events": "src/gpt_trader/features/brokerages/coinbase/ws_events.py",
-    "gpt_trader.features.brokerages.coinbase.auth": "src/gpt_trader/features/brokerages/coinbase/auth.py",
     "gpt_trader.features.brokerages.coinbase.derivatives_discovery": "src/gpt_trader/features/brokerages/coinbase/derivatives_discovery.py",
     "gpt_trader.features.brokerages.coinbase.user_event_handler": "src/gpt_trader/features/brokerages/coinbase/user_event_handler.py",
     "gpt_trader.features.brokerages.coinbase.credentials": "src/gpt_trader/features/brokerages/coinbase/credentials.py",

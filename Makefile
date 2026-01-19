@@ -4,7 +4,7 @@
 	agent-regenerate agent-verify agent-docs-links canary-liveness canary-liveness-check canary-daily canary-decision-traces \
 	canary-decision-trace-probe canary-runtime-info canary-stop canary-start \
 	canary-restart canary-status canary-watchdog canary-watchdog-once ops-controls-smoke \
-	test-triage test-triage-check test-unit test-integration test-integration-fast
+	test-triage test-triage-check test-unit test-property test-contract test-real-api test-integration test-integration-fast
 
 COMPOSE_DIR=deploy/gpt_trader/docker
 COMPOSE_FILE=$(COMPOSE_DIR)/docker-compose.yaml
@@ -43,6 +43,15 @@ test-triage-check:
 
 test-unit:
 	uv run pytest -q tests/unit
+
+test-property:
+	uv run pytest -q tests/property
+
+test-contract:
+	uv run pytest -q tests/contract
+
+test-real-api:
+	uv run pytest -q -o addopts= -m real_api tests/real_api
 
 test-integration:
 	uv run pytest -q -o addopts= -m "integration and not real_api" tests/integration

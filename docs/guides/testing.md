@@ -2,14 +2,14 @@
 
 ## Overview
 
-This codebase targets a **100% pass rate** on actively maintained spot trading suites. The test infrastructure supports unit, integration, and behavioral testing with comprehensive coverage tracking.
+This codebase targets a **100% pass rate** on actively maintained spot trading suites. The test infrastructure supports unit, property, contract, integration, and real-API testing with comprehensive coverage tracking.
 
 ## Quick Start
 
 ### Running Tests
 
 ```bash
-# Run default suite (unit by default via pytest.ini addopts)
+# Run default suite (excludes integration/real_api/legacy markers via pytest.ini addopts)
 make test
 uv run pytest
 
@@ -22,6 +22,13 @@ make test-unit
 # Integration (opt-in; overrides pytest.ini addopts)
 make test-integration-fast
 make test-integration
+
+# Property / contract suites (CI also runs these explicitly)
+make test-property
+make test-contract
+
+# Real API tests (opt-in; overrides pytest.ini addopts)
+make test-real-api
 
 # Run specific test file
 uv run pytest tests/unit/gpt_trader/config/test_bot_config_env_aliasing.py
@@ -63,9 +70,10 @@ uv run pytest --cov --cov-report=term -q
 tests/
 ├── unit/                  # Unit tests (fast, isolated; default suite)
 │   └── gpt_trader/         # Mirrors src/gpt_trader (preferred location)
-├── integration/           # Integration tests (opt-in)
-├── property/              # Property-based tests (opt-in)
-├── contract/              # Contract tests (opt-in)
+├── integration/           # Integration tests (opt-in; skipped by default)
+├── property/              # Property-based tests (run explicitly / in CI)
+├── contract/              # Contract tests (run explicitly / in CI)
+├── real_api/              # Tests that hit real APIs (opt-in; skipped by default)
 ├── fixtures/              # Test fixtures and scenario data
 ├── support/               # Shared fixtures/helpers (when co-located insufficient)
 └── _triage/               # Legacy test triage manifest
@@ -182,11 +190,21 @@ make test-integration-fast
 make test
 ```
 
+## Guardrails
+
+This repo enforces lightweight hygiene checks in CI to keep the suite fast and maintainable:
+
+- `scripts/ci/check_test_hygiene.py`: caps `test_*.py` module size, enforces directory marker conventions, and discourages `time.sleep` in favor of deterministic fake clocks.
+- `scripts/ci/check_legacy_test_triage.py`: keeps `tests/_triage/legacy_tests.yaml` aligned with `pytest.mark.legacy_delete` / `pytest.mark.legacy_modernize` usage.
+
 ## Legacy Test Triage
 
 We track tests that are **legacy-pattern** (delete vs modernize) in `tests/_triage/legacy_tests.yaml`.
-The root `conftest.py` applies `legacy_delete` / `legacy_modernize` markers automatically based on that
-manifest (tracking only; tests are not auto-skipped).
+Triaged tests should carry a module-level marker (`pytest.mark.legacy_delete` or `pytest.mark.legacy_modernize`)
+and the manifest is the source of truth for why/when the decision was made.
+
+The default suite excludes `legacy_delete` / `legacy_modernize` via `pytest.ini` `addopts`, so triaged tests
+won't run unless you override selection.
 
 ```bash
 # Heuristic report of candidates + current manifest

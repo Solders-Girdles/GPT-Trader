@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from gpt_trader.core import Order
-from gpt_trader.features.brokerages.coinbase.errors import OrderQueryError
+from gpt_trader.features.brokerages.coinbase.errors import BrokerageError, OrderQueryError
 from gpt_trader.features.brokerages.coinbase.rest.order_service import OrderService
 from tests.unit.gpt_trader.features.brokerages.coinbase.rest.order_service_test_base import (
     OrderServiceTestBase,
@@ -91,6 +91,17 @@ class TestListOrders(OrderServiceTestBase):
         mock_client.list_orders.side_effect = RuntimeError("API error")
 
         with pytest.raises(OrderQueryError, match="Failed to list orders"):
+            order_service.list_orders()
+
+    def test_list_orders_re_raises_brokerage_error(
+        self,
+        order_service: OrderService,
+        mock_client: MagicMock,
+    ) -> None:
+        """Test that BrokerageError isn't wrapped."""
+        mock_client.list_orders.side_effect = BrokerageError("rate limited")
+
+        with pytest.raises(BrokerageError, match="rate limited"):
             order_service.list_orders()
 
     def test_list_orders_respects_limit(

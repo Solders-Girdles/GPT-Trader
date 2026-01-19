@@ -7,7 +7,11 @@ from unittest.mock import MagicMock
 import pytest
 
 from gpt_trader.core import Order
-from gpt_trader.features.brokerages.coinbase.errors import OrderQueryError
+from gpt_trader.features.brokerages.coinbase.errors import (
+    BrokerageError,
+    NotFoundError,
+    OrderQueryError,
+)
 from gpt_trader.features.brokerages.coinbase.rest.order_service import OrderService
 from tests.unit.gpt_trader.features.brokerages.coinbase.rest.order_service_test_base import (
     OrderServiceTestBase,
@@ -43,6 +47,18 @@ class TestGetOrder(OrderServiceTestBase):
 
         assert result is None
 
+    def test_get_order_not_found_error_returns_none(
+        self,
+        order_service: OrderService,
+        mock_client: MagicMock,
+    ) -> None:
+        """Test that NotFoundError results in None."""
+        mock_client.get_order_historical.side_effect = NotFoundError("missing")
+
+        result = order_service.get_order("missing")
+
+        assert result is None
+
     def test_get_order_handles_exception(
         self,
         order_service: OrderService,
@@ -52,4 +68,15 @@ class TestGetOrder(OrderServiceTestBase):
         mock_client.get_order_historical.side_effect = RuntimeError("API error")
 
         with pytest.raises(OrderQueryError, match="Failed to get order"):
+            order_service.get_order("order-123")
+
+    def test_get_order_re_raises_brokerage_error(
+        self,
+        order_service: OrderService,
+        mock_client: MagicMock,
+    ) -> None:
+        """Test that BrokerageError isn't wrapped."""
+        mock_client.get_order_historical.side_effect = BrokerageError("auth failed")
+
+        with pytest.raises(BrokerageError, match="auth failed"):
             order_service.get_order("order-123")

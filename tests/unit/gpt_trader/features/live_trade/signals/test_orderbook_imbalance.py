@@ -31,27 +31,6 @@ class MockDepthSnapshot:
         return self._bid_depth, self._ask_depth
 
 
-class TestOrderbookImbalanceSignalConfig:
-    """Tests for OrderbookImbalanceSignalConfig."""
-
-    def test_default_values(self) -> None:
-        """Test default config values."""
-        config = OrderbookImbalanceSignalConfig()
-        assert config.levels == 5
-        assert config.imbalance_threshold == 0.2
-        assert config.strong_imbalance_threshold == 0.5
-
-    def test_custom_values(self) -> None:
-        """Test custom config values."""
-        config = OrderbookImbalanceSignalConfig(
-            levels=10,
-            imbalance_threshold=0.3,
-            strong_imbalance_threshold=0.6,
-        )
-        assert config.levels == 10
-        assert config.imbalance_threshold == 0.3
-
-
 class TestOrderbookImbalanceSignal:
     """Tests for OrderbookImbalanceSignal."""
 

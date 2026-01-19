@@ -1,6 +1,5 @@
 """Paper mode trading integration tests.
 
-Converted from legacy validation script (removed).
 Tests multi-cycle trading simulation with DeterministicBroker.
 
 This is the most unique test in the integration suite - it validates

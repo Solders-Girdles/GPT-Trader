@@ -8,6 +8,9 @@ from gpt_trader.errors import ValidationError
 from gpt_trader.validation.base_validators import Validator
 from gpt_trader.validation.composite_validators import CompositeValidator
 
+LT_100 = "Must be less than 100"
+BETWEEN_1_100 = "Must be between 1 and 100"
+
 
 class TestCompositeValidatorBasics:
     """Test basic CompositeValidator functionality."""
@@ -43,13 +46,11 @@ class TestCompositeValidatorBasics:
     def test_second_validator_fails(self) -> None:
         """Test that second failing validator raises error."""
         positive = Validator(predicate=lambda x: x > 0)
-        less_than_100 = Validator(
-            predicate=lambda x: x < 100, error_message="Must be less than 100"
-        )
+        less_than_100 = Validator(predicate=lambda x: x < 100, error_message=LT_100)
 
         composite = CompositeValidator(positive, less_than_100)
 
-        with pytest.raises(ValidationError, match="Must be less than 100"):
+        with pytest.raises(ValidationError, match=LT_100):
             composite.validate(150, "value")
 
     def test_empty_composite_passes_through(self) -> None:
@@ -86,14 +87,11 @@ class TestCompositeValidatorChaining:
 
     def test_transformation_chain(self) -> None:
         """Test that transformations are chained correctly."""
-        # First validator: double the value
         double = Validator(predicate=lambda x: (True, x * 2))
-        # Second validator: add 10
         add_ten = Validator(predicate=lambda x: (True, x + 10))
 
         composite = CompositeValidator(double, add_ten)
 
-        # 5 -> 10 -> 20
         result = composite.validate(5, "value")
         assert result == 20
 
@@ -167,10 +165,7 @@ class TestCompositeValidatorWithDifferentTypes:
     def test_numeric_range_validators(self) -> None:
         """Test composite for numeric range validation."""
         is_int = Validator(predicate=lambda x: isinstance(x, int), error_message="Must be integer")
-        in_range = Validator(
-            predicate=lambda x: 1 <= x <= 100,
-            error_message="Must be between 1 and 100",
-        )
+        in_range = Validator(predicate=lambda x: 1 <= x <= 100, error_message=BETWEEN_1_100)
 
         composite = CompositeValidator(is_int, in_range)
 
@@ -179,7 +174,7 @@ class TestCompositeValidatorWithDifferentTypes:
         with pytest.raises(ValidationError, match="Must be integer"):
             composite.validate(50.5, "percent")
 
-        with pytest.raises(ValidationError, match="between 1 and 100"):
+        with pytest.raises(ValidationError, match=BETWEEN_1_100):
             composite.validate(150, "percent")
 
 

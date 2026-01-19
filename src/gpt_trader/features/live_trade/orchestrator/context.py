@@ -107,6 +107,16 @@ class ContextBuilderMixin(_HasBot):
         if balances is not None:
             return balances
         assert self._bot.broker is not None, "Broker not initialized"
+        broker_calls = getattr(getattr(self._bot, "context", None), "broker_calls", None)
+        if broker_calls is not None and asyncio.iscoroutinefunction(
+            getattr(broker_calls, "__call__", None)
+        ):
+            raw = await broker_calls(self._bot.broker.list_balances)
+            if raw is None:
+                return []
+            if isinstance(raw, Sequence):
+                return cast(Sequence[Balance], raw)
+            return []
         return await asyncio.to_thread(self._bot.broker.list_balances)
 
     def _extract_equity(self, balances: Sequence[Balance]) -> Decimal:
@@ -132,7 +142,13 @@ class ContextBuilderMixin(_HasBot):
         if position_map is not None:
             return position_map
         assert self._bot.broker is not None, "Broker not initialized"
-        positions = await asyncio.to_thread(self._bot.broker.list_positions)
+        broker_calls = getattr(getattr(self._bot, "context", None), "broker_calls", None)
+        if broker_calls is not None and asyncio.iscoroutinefunction(
+            getattr(broker_calls, "__call__", None)
+        ):
+            positions = await broker_calls(self._bot.broker.list_positions)
+        else:
+            positions = await asyncio.to_thread(self._bot.broker.list_positions)
         return {p.symbol: p for p in positions if hasattr(p, "symbol")}
 
     def _build_position_state(

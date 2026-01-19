@@ -4,12 +4,23 @@ This test verifies that the composition root pattern works correctly and that
 TradingBot can be created and started using the ApplicationContainer.
 """
 
+import pytest
+
 from gpt_trader.app.config import BotConfig
 from gpt_trader.app.container import (
     ApplicationContainer,
     clear_application_container,
     set_application_container,
 )
+
+pytestmark = pytest.mark.integration
+
+
+@pytest.fixture(autouse=True)
+def clean_container():
+    clear_application_container()
+    yield
+    clear_application_container()
 
 
 def test_container_bot_boot_roundtrip():
@@ -52,10 +63,6 @@ def test_container_bot_boot_roundtrip():
     assert bot.broker == broker
     assert bot.container == container
 
-    # Cleanup
-    clear_application_container()
-    print("Container-based TradingBot integration test passed!")
-
 
 def test_container_services():
     """Test that container provides all expected services."""
@@ -73,13 +80,3 @@ def test_container_services():
     assert container.orders_store is not None
     assert container.risk_manager is not None
     assert container.notification_service is not None
-
-    # Cleanup
-    clear_application_container()
-    print("Container services test passed!")
-
-
-if __name__ == "__main__":
-    # Run the tests directly
-    test_container_services()
-    print("\nAll container integration tests passed!")

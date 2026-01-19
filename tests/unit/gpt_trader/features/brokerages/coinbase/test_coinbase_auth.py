@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from gpt_trader.features.brokerages.coinbase.auth import CDPJWTAuth, SimpleAuth
 from gpt_trader.features.brokerages.coinbase.models import APIConfig
-from tests.unit.gpt_trader.features.brokerages.coinbase.test_helpers import CoinbaseBrokerage
+from tests.unit.gpt_trader.features.brokerages.coinbase.helpers import CoinbaseBrokerage
 
 
 def test_cdp_jwt_auth_generates_valid_headers(monkeypatch):

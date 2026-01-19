@@ -7,7 +7,7 @@ import json
 
 import pytest
 
-from tests.unit.gpt_trader.features.brokerages.coinbase.test_helpers import make_client
+from tests.unit.gpt_trader.features.brokerages.coinbase.helpers import make_client
 
 pytestmark = pytest.mark.endpoints
 
@@ -79,22 +79,6 @@ def test_cfm_intraday_current_margin_window():
     assert calls[0][0] == "GET"
     assert calls[0][1].endswith("/api/v3/brokerage/cfm/intraday/current_margin_window")
     assert out["margin_window"] == "INTRADAY_HIGH_MARGIN_1H"
-
-
-def test_cfm_intraday_position_refresh_not_implemented():
-    """Test cfm_intraday_position_refresh endpoint - currently not implemented."""
-    pytest.xfail(
-        "cfm_intraday_position_refresh not implemented in CoinbaseClient yet (see "
-        "src/gpt_trader/features/brokerages/coinbase/client.py)"
-    )
-
-
-def test_cfm_sweep_not_implemented():
-    """Test cfm_sweep endpoint - currently not implemented."""
-    pytest.xfail(
-        "cfm_sweep not implemented in CoinbaseClient yet (see "
-        "src/gpt_trader/features/brokerages/coinbase/client.py)"
-    )
 
 
 def test_cfm_methods_require_advanced_mode():

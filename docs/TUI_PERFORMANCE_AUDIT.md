@@ -191,5 +191,5 @@ Access via: `F9` key in TUI to open Performance Dashboard
 TUI_PERF_TRACE=1 uv run gpt-trader tui --demo
 
 # Profile specific update paths
-uv run pytest tests/tui -v -k "performance"
+uv run pytest tests/unit/gpt_trader/tui -v -k "performance"
 ```

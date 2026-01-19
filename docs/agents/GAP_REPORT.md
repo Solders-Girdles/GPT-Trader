@@ -6,7 +6,7 @@ Date: 2026-01-13
 - `agent-impact`: No changed files detected (impact level `low`).
 - `agent-tests`: 11,087 tests across 409 files; trading markers defined for `spot`, `perps`, `portfolio`, `strategy`, `liquidity`, but only `perps` shows counts.
 - `agent-check`: FAILED (32 format issues, 16 type errors, 1 snapshot failure).
-  - Snapshot failures: `tests/unit/gpt_trader/cli/test_cli_integration.py::test_cli_dev_fast_single_cycle`, `tests/unit/gpt_trader/tui/test_snapshots.py::TestModeSelectionSnapshots::test_mode_selection_screen`.
+  - Snapshot failures: `tests/unit/gpt_trader/cli/test_cli_integration.py::test_cli_dev_fast_single_cycle`, `tests/unit/gpt_trader/tui/test_snapshots_portfolio_overlays.py::TestModeSelectionSnapshots::test_mode_selection_screen`.
 
 ## Gaps & Recommended Actions
 - Spot/perps entrypoints are not explicit in `docs/agents/CODEBASE_MAP.md`. Action: add pointers for `src/gpt_trader/features/live_trade/symbols.py`, `src/gpt_trader/features/live_trade/strategies/perps_baseline/`, and `src/gpt_trader/features/live_trade/strategies/hybrid/base.py` with notes on CFM/INTX gating.

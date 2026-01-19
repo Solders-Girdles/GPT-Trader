@@ -57,5 +57,5 @@ jobs:
           # pytest tests/unit/gpt_trader/features/brokerages/coinbase -v (Coinbase API suite)
           # pytest tests/integration/test_paper_mode.py (Perps paper)
 
-          # We'll run a general integration pass here if secrets are present.
-          uv run pytest tests/integration/ -v
+          # Override default marker filter in pytest.ini to run integration tests.
+          uv run pytest tests/integration/ -v -m "integration and not real_api and not legacy_delete and not legacy_modernize"

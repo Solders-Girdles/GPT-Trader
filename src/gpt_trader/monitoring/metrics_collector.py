@@ -149,6 +149,7 @@ class _GuardMetricsCollector:
         self.counters.clear()
         self.gauges.clear()
         self.histograms.clear()
+        self._histogram_buckets.clear()
 
     def get_metrics_summary(self) -> dict[str, object]:
         """Get summary of all metrics.

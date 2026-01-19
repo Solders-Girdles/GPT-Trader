@@ -139,7 +139,7 @@ uv run pytest tests/unit --cov=src/gpt_trader -q
 uv run pytest tests/property -q
 
 # TUI snapshot tests
-uv run pytest tests/tui -q
+uv run pytest tests/unit/gpt_trader/tui/test_snapshots_*.py -q
 ```
 
 ### Agent Tools

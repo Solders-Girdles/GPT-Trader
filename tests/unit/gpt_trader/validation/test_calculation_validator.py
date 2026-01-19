@@ -8,13 +8,16 @@ import pytest
 from gpt_trader.validation.calculation_validator import manual_backtest_example
 
 
+@pytest.fixture
+def backtest_result() -> dict:
+    return manual_backtest_example()
+
+
 class TestManualBacktestExample:
     """Test the manual backtest example function."""
 
-    def test_manual_backtest_example_returns_expected_structure(self) -> None:
+    def test_manual_backtest_example_returns_expected_structure(self, backtest_result) -> None:
         """Test that the function returns the expected dictionary structure."""
-        result = manual_backtest_example()
-
         expected_keys = [
             "prices",
             "ma3",
@@ -26,30 +29,28 @@ class TestManualBacktestExample:
         ]
 
         for key in expected_keys:
-            assert key in result, f"Missing key: {key}"
+            assert key in backtest_result, f"Missing key: {key}"
 
         # Check data types
-        assert isinstance(result["prices"], list)
-        assert isinstance(result["ma3"], list)
-        assert isinstance(result["ma5"], list)
-        assert isinstance(result["signals"], list)
-        assert isinstance(result["trades"], list)
-        assert isinstance(result["final_value"], (int, float))
-        assert isinstance(result["return_pct"], (int, float))
+        assert isinstance(backtest_result["prices"], list)
+        assert isinstance(backtest_result["ma3"], list)
+        assert isinstance(backtest_result["ma5"], list)
+        assert isinstance(backtest_result["signals"], list)
+        assert isinstance(backtest_result["trades"], list)
+        assert isinstance(backtest_result["final_value"], (int, float))
+        assert isinstance(backtest_result["return_pct"], (int, float))
 
-    def test_manual_backtest_example_price_data(self) -> None:
+    def test_manual_backtest_example_price_data(self, backtest_result) -> None:
         """Test that the price data is correct."""
-        result = manual_backtest_example()
-        prices = result["prices"]
+        prices = backtest_result["prices"]
 
         expected_prices = [100, 98, 96, 97, 99, 102, 104, 103, 101, 100]
         assert prices == expected_prices
 
-    def test_manual_backtest_example_moving_averages(self) -> None:
+    def test_manual_backtest_example_moving_averages(self, backtest_result) -> None:
         """Test moving average calculations."""
-        result = manual_backtest_example()
-        ma3 = result["ma3"]
-        ma5 = result["ma5"]
+        ma3 = backtest_result["ma3"]
+        ma5 = backtest_result["ma5"]
 
         # MA3 should start from day 3 (index 2)
         assert ma3[0] is None
@@ -64,13 +65,12 @@ class TestManualBacktestExample:
         assert ma5[3] is None
         assert ma5[4] == pytest.approx((100 + 98 + 96 + 97 + 99) / 5)
 
-    def test_manual_backtest_example_signal_generation(self) -> None:
+    def test_manual_backtest_example_signal_generation(self, backtest_result) -> None:
         """Test that signals are generated correctly."""
-        result = manual_backtest_example()
-        signals = result["signals"]
+        signals = backtest_result["signals"]
 
         # Should have same length as prices
-        assert len(signals) == len(result["prices"])
+        assert len(signals) == len(backtest_result["prices"])
 
         # First few days should have no signal (insufficient data)
         assert signals[0] == "-"
@@ -81,10 +81,9 @@ class TestManualBacktestExample:
         for signal in signals:
             assert signal in valid_signals
 
-    def test_manual_backtest_example_trading_logic(self) -> None:
+    def test_manual_backtest_example_trading_logic(self, backtest_result) -> None:
         """Test that trading logic produces valid trades."""
-        result = manual_backtest_example()
-        trades = result["trades"]
+        trades = backtest_result["trades"]
 
         # Should have at least one trade
         assert len(trades) > 0
@@ -107,10 +106,9 @@ class TestManualBacktestExample:
                 assert trade["shares"] > 0
                 assert trade["proceeds"] > 0
 
-    def test_manual_backtest_example_buy_sell_pairs(self) -> None:
+    def test_manual_backtest_example_buy_sell_pairs(self, backtest_result) -> None:
         """Test that buys and sells are properly paired."""
-        result = manual_backtest_example()
-        trades = result["trades"]
+        trades = backtest_result["trades"]
 
         # Should alternate between BUY and SELL
         if len(trades) >= 2:
@@ -124,13 +122,11 @@ class TestManualBacktestExample:
                 elif current_action == "SELL":
                     assert next_action != "SELL"
 
-    def test_manual_backtest_example_financial_calculations(self) -> None:
+    def test_manual_backtest_example_financial_calculations(self, backtest_result) -> None:
         """Test financial calculations are reasonable."""
-        result = manual_backtest_example()
-
         # Starting capital should be 10000
-        final_value = result["final_value"]
-        return_pct = result["return_pct"]
+        final_value = backtest_result["final_value"]
+        return_pct = backtest_result["return_pct"]
 
         # Final value should be positive
         assert final_value > 0
@@ -162,12 +158,11 @@ class TestManualBacktestExample:
         # Results should be identical
         assert result1 == result2
 
-    def test_manual_backtest_example_ma_crossover_logic(self) -> None:
+    def test_manual_backtest_example_ma_crossover_logic(self, backtest_result) -> None:
         """Test specific MA crossover signal logic."""
-        result = manual_backtest_example()
-        signals = result["signals"]
-        ma3 = result["ma3"]
-        ma5 = result["ma5"]
+        signals = backtest_result["signals"]
+        ma3 = backtest_result["ma3"]
+        ma5 = backtest_result["ma5"]
 
         # Find first BUY signal
         buy_days = [i for i, signal in enumerate(signals) if signal == "BUY"]
@@ -185,10 +180,9 @@ class TestManualBacktestExample:
                 assert ma5[first_buy - 1] is not None
                 assert ma3[first_buy - 1] <= ma5[first_buy - 1]
 
-    def test_manual_backtest_example_position_management(self) -> None:
+    def test_manual_backtest_example_position_management(self, backtest_result) -> None:
         """Test that position management is correct."""
-        result = manual_backtest_example()
-        trades = result["trades"]
+        trades = backtest_result["trades"]
 
         # Track position through trades
         position = 0
@@ -203,10 +197,9 @@ class TestManualBacktestExample:
         # Should end with no position (all positions closed)
         assert position == 0
 
-    def test_manual_backtest_example_cash_flow(self) -> None:
+    def test_manual_backtest_example_cash_flow(self, backtest_result) -> None:
         """Test that cash flow calculations are correct."""
-        result = manual_backtest_example()
-        trades = result["trades"]
+        trades = backtest_result["trades"]
 
         starting_cash = 10000
         cash = starting_cash
@@ -224,12 +217,11 @@ class TestManualBacktestExample:
                 cash = cash_after
 
         # Final cash should be in the result
-        assert cash == result["final_value"]  # Assuming no open position
+        assert cash == backtest_result["final_value"]  # Assuming no open position
 
-    def test_manual_backtest_example_buy_hold_comparison(self) -> None:
+    def test_manual_backtest_example_buy_hold_comparison(self, backtest_result) -> None:
         """Test buy & hold comparison logic."""
-        result = manual_backtest_example()
-        prices = result["prices"]
+        prices = backtest_result["prices"]
 
         starting_capital = 10000
         buy_hold_shares = int(starting_capital / prices[0])
@@ -241,5 +233,5 @@ class TestManualBacktestExample:
 
         # Strategy might outperform or underperform buy & hold
         # Both should be reasonable values
-        assert result["final_value"] > 0
+        assert backtest_result["final_value"] > 0
         assert buy_hold_value > 0

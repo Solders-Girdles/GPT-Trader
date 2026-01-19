@@ -146,7 +146,7 @@ assert get_sleeps() == [0.5, 1.0]  # Exponential delays
 
 ```bash
 # Broker executor resilience tests
-uv run pytest tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor.py::TestBrokerExecutorResilience -v
+uv run pytest tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_resilience_*.py -v
 
 # Degradation recovery tests
 uv run pytest tests/unit/gpt_trader/features/live_trade/test_degradation.py::TestPauseExpiryRecovery -v
@@ -277,10 +277,10 @@ Snapshot tests verify TUI rendering consistency:
 
 ```bash
 # Run snapshot tests
-uv run pytest tests/tui -q
+uv run pytest tests/unit/gpt_trader/tui/test_snapshots_*.py -q
 
 # Update snapshots after intentional UI changes
-uv run pytest tests/tui --snapshot-update
+uv run pytest tests/unit/gpt_trader/tui/test_snapshots_*.py --snapshot-update
 ```
 
 ### Naming Standards Check
@@ -332,8 +332,8 @@ The CI workflow (`.github/workflows/ci.yml`) runs checks in parallel lanes for f
 | **Lint** | `lint` | `uv run ruff check . && uv run black --check .` | Code style |
 | **Type Check** | `typecheck` | `uv run mypy src` | Static typing |
 | **TUI CSS** | `tui-css` | `python scripts/ci/check_tui_css_up_to_date.py` | Generated CSS in sync |
-| **Unit (Core)** | `unit-tests` | `uv run pytest tests/unit -n auto -q --ignore=tests/unit/gpt_trader/tui/test_snapshots.py` | Fast unit tests |
-| **TUI Snapshots** | `tui-snapshots` | `uv run pytest tests/unit/gpt_trader/tui/test_snapshots.py tests/tui -v` | Visual regression |
+| **Unit (Core)** | `unit-tests` | `uv run pytest tests/unit -n auto -q --ignore-glob=tests/unit/gpt_trader/tui/test_snapshots_*.py` | Fast unit tests |
+| **TUI Snapshots** | `tui-snapshots` | `uv run pytest tests/unit/gpt_trader/tui/test_snapshots_*.py -v` | Visual regression |
 | **Property** | `property-tests` | `uv run pytest tests/property -v` | Property-based tests |
 | **Contract** | `contract-tests` | `uv run pytest tests/contract -v` | API contracts |
 
@@ -350,10 +350,10 @@ uv run mypy src
 python scripts/ci/check_tui_css_up_to_date.py
 
 # Unit tests (core, excluding TUI snapshots)
-uv run pytest tests/unit -n auto -q --ignore=tests/unit/gpt_trader/tui/test_snapshots.py
+uv run pytest tests/unit -n auto -q --ignore-glob=tests/unit/gpt_trader/tui/test_snapshots_*.py
 
 # TUI snapshot tests
-uv run pytest tests/unit/gpt_trader/tui/test_snapshots.py tests/tui -v
+uv run pytest tests/unit/gpt_trader/tui/test_snapshots_*.py -v
 
 # Property tests
 uv run pytest tests/property -v

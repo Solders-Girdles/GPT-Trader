@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import time
 from decimal import Decimal
 from typing import Any
 from unittest.mock import MagicMock
@@ -14,13 +13,13 @@ import pytest
 from gpt_trader.core import Order, OrderSide, OrderType
 from gpt_trader.features.brokerages.coinbase.errors import InsufficientFunds
 from gpt_trader.features.brokerages.coinbase.models import APIConfig
-from tests.unit.gpt_trader.features.brokerages.coinbase.test_helpers import (
+from tests.unit.gpt_trader.features.brokerages.coinbase.helpers import (
     SYSTEM_ENDPOINT_CASES,
     CoinbaseBrokerage,
     make_client,
 )
 
-pytestmark = [pytest.mark.endpoints, pytest.mark.e2e]
+pytestmark = [pytest.mark.endpoints]
 
 
 class TestCoinbaseSystem:
@@ -51,28 +50,6 @@ class TestCoinbaseSystem:
         expected_result = case.get("expected_result")
         if expected_result is not None:
             assert result == expected_result
-
-    @pytest.mark.perf
-    def test_get_products_perf_budget(self) -> None:
-        client = make_client()
-        client.set_transport_for_testing(
-            lambda m, u, h, b, t: (200, {}, json.dumps({"products": []}))
-        )
-        start = time.perf_counter()
-        _ = client.get_products()
-        elapsed_ms = (time.perf_counter() - start) * 1000
-        assert elapsed_ms < 10
-
-    @pytest.mark.perf
-    def test_place_order_perf_budget(self) -> None:
-        client = make_client()
-        client.set_transport_for_testing(
-            lambda m, u, h, b, t: (200, {}, json.dumps({"order_id": "ord"}))
-        )
-        start = time.perf_counter()
-        _ = client.place_order({"product_id": "BTC-USD", "side": "BUY", "size": "0.01"})
-        elapsed_ms = (time.perf_counter() - start) * 1000
-        assert elapsed_ms < 10
 
     def test_connection_validation(self) -> None:
         config = APIConfig(

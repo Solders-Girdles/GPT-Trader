@@ -83,7 +83,7 @@ Pre-trade validation lives in `features/live_trade/execution/validation.py`
 
 ## Testing
 
-- Runtime guard coverage: `tests/unit/gpt_trader/features/live_trade/execution/test_guards.py`.
+- Runtime guard coverage: `tests/unit/gpt_trader/features/live_trade/execution/` (see `test_guard_manager_*.py` and `test_*_guard.py`).
 - Guard error behavior: `tests/unit/gpt_trader/features/live_trade/test_guard_errors.py`.
 - Monitoring guard manager tests: `tests/unit/gpt_trader/monitoring/test_guard_manager_e2e.py`.
 - Preflight risk validation: `src/gpt_trader/preflight/checks/risk.py`.

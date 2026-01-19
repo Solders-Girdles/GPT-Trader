@@ -65,7 +65,7 @@ class DegradationState:
     # Broker failure count (for consecutive failure tracking)
     _broker_failures: int = 0
 
-    def pause_all(self, seconds: int, reason: str, allow_reduce_only: bool = True) -> None:
+    def pause_all(self, seconds: float, reason: str, allow_reduce_only: bool = True) -> None:
         """
         Pause all trading for a duration.
 
@@ -105,7 +105,7 @@ class DegradationState:
         )
 
     def pause_symbol(
-        self, symbol: str, seconds: int, reason: str, allow_reduce_only: bool = True
+        self, symbol: str, seconds: float, reason: str, allow_reduce_only: bool = True
     ) -> None:
         """
         Pause trading for a specific symbol.

@@ -1,0 +1,110 @@
+"""Tests for PreflightContext CDP credential resolution."""
+
+from __future__ import annotations
+
+import os
+from unittest.mock import patch
+
+from gpt_trader.preflight.context import PreflightContext
+
+
+class TestPreflightContextCredentials:
+    """Test CDP credential resolution."""
+
+    def test_resolve_cdp_credentials_from_prod_env(self) -> None:
+        """Should prefer PROD env vars."""
+        with patch.dict(
+            os.environ,
+            {
+                "COINBASE_PROD_CDP_API_KEY": "prod_key",
+                "COINBASE_PROD_CDP_PRIVATE_KEY": "prod_private",
+                "COINBASE_CDP_API_KEY": "fallback_key",
+                "COINBASE_CDP_PRIVATE_KEY": "fallback_private",
+            },
+            clear=False,
+        ):
+            ctx = PreflightContext()
+            api_key, private_key = ctx.resolve_cdp_credentials()
+            resolved = ctx.resolve_cdp_credentials_info()
+
+            assert api_key == "prod_key"
+            assert private_key == "prod_private"
+            assert resolved is not None
+            assert resolved.key_name == "prod_key"
+            assert resolved.private_key == "prod_private"
+
+    def test_resolve_cdp_credentials_fallback(self) -> None:
+        """Should fall back to non-PROD env vars."""
+        with patch.dict(
+            os.environ,
+            {
+                "COINBASE_CDP_API_KEY": "fallback_key",
+                "COINBASE_CDP_PRIVATE_KEY": "fallback_private",
+            },
+            clear=True,
+        ):
+            ctx = PreflightContext()
+            api_key, private_key = ctx.resolve_cdp_credentials()
+            resolved = ctx.resolve_cdp_credentials_info()
+
+            assert api_key == "fallback_key"
+            assert private_key == "fallback_private"
+            assert resolved is not None
+            assert resolved.key_name == "fallback_key"
+            assert resolved.private_key == "fallback_private"
+
+    def test_resolve_cdp_credentials_returns_none_when_missing(self) -> None:
+        """Should return None when credentials not set."""
+        with patch.dict(os.environ, {}, clear=True):
+            ctx = PreflightContext()
+            api_key, private_key = ctx.resolve_cdp_credentials()
+            resolved = ctx.resolve_cdp_credentials_info()
+
+            assert api_key is None
+            assert private_key is None
+            assert resolved is None
+
+    def test_has_real_cdp_credentials_valid(self) -> None:
+        """Should return True for valid CDP credentials."""
+        with patch.dict(
+            os.environ,
+            {
+                "COINBASE_CDP_API_KEY": "organizations/abc/apiKeys/xyz",
+                "COINBASE_CDP_PRIVATE_KEY": "-----BEGIN EC PRIVATE KEY-----\ntest\n-----END EC PRIVATE KEY-----",
+            },
+            clear=True,
+        ):
+            ctx = PreflightContext()
+            assert ctx.has_real_cdp_credentials() is True
+
+    def test_has_real_cdp_credentials_invalid_key_format(self) -> None:
+        """Should return False for invalid key format."""
+        with patch.dict(
+            os.environ,
+            {
+                "COINBASE_CDP_API_KEY": "invalid_format",
+                "COINBASE_CDP_PRIVATE_KEY": "-----BEGIN EC PRIVATE KEY-----\ntest\n-----END EC PRIVATE KEY-----",
+            },
+            clear=True,
+        ):
+            ctx = PreflightContext()
+            assert ctx.has_real_cdp_credentials() is False
+
+    def test_has_real_cdp_credentials_invalid_private_key_format(self) -> None:
+        """Should return False for invalid private key format."""
+        with patch.dict(
+            os.environ,
+            {
+                "COINBASE_CDP_API_KEY": "organizations/abc/apiKeys/xyz",
+                "COINBASE_CDP_PRIVATE_KEY": "not-a-valid-key",
+            },
+            clear=True,
+        ):
+            ctx = PreflightContext()
+            assert ctx.has_real_cdp_credentials() is False
+
+    def test_has_real_cdp_credentials_missing(self) -> None:
+        """Should return False when credentials missing."""
+        with patch.dict(os.environ, {}, clear=True):
+            ctx = PreflightContext()
+            assert ctx.has_real_cdp_credentials() is False

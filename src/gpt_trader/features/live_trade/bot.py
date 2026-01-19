@@ -17,6 +17,7 @@ from gpt_trader.features.live_trade.lifecycle import (
     LifecycleStateMachine,
     TradingBotState,
 )
+from gpt_trader.utilities.async_tools import BoundedToThread
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -71,11 +72,24 @@ class TradingBot:
         # Get notification_service from parameter or container
         self._notification_service = notification_service or container.notification_service
 
+        # Concurrency-limited entrypoint for sync broker calls from async code.
+        broker_call_limit = getattr(config, "max_concurrent_broker_calls", None)
+        if broker_call_limit is None:
+            broker_call_limit = getattr(config, "max_concurrent_rest_calls", 5)
+        try:
+            raw_limit = broker_call_limit if broker_call_limit is not None else 5
+            broker_call_limit = int(raw_limit)
+        except (TypeError, ValueError):
+            broker_call_limit = 5
+        broker_call_limit = max(1, broker_call_limit)
+        self._broker_calls = BoundedToThread(max_concurrency=broker_call_limit)
+
         # Setup context
         self.context = CoordinatorContext(
             config=config,
             container=container,
             broker=self.broker,
+            broker_calls=self._broker_calls,
             symbols=tuple(config.symbols),
             risk_manager=self.risk_manager,
             event_store=self._event_store,
@@ -210,7 +224,13 @@ class TradingBot:
 
         try:
             # 1. Fetch positions
-            positions = await asyncio.to_thread(self.broker.list_positions)
+            broker_calls = getattr(self, "_broker_calls", None)
+            if broker_calls is not None and asyncio.iscoroutinefunction(
+                getattr(broker_calls, "__call__", None)
+            ):
+                positions = await broker_calls(self.broker.list_positions)
+            else:
+                positions = await asyncio.to_thread(self.broker.list_positions)
             if not positions:
                 messages.append("No open positions found.")
             else:
@@ -225,9 +245,24 @@ class TradingBot:
                         quantity = abs(pos.quantity)
 
                         # Direct broker call bypasses guard stack intentionally
-                        await asyncio.to_thread(
-                            self.broker.place_order, pos.symbol, side, OrderType.MARKET, quantity
-                        )
+                        if broker_calls is not None and asyncio.iscoroutinefunction(
+                            getattr(broker_calls, "__call__", None)
+                        ):
+                            await broker_calls(
+                                self.broker.place_order,
+                                pos.symbol,
+                                side,
+                                OrderType.MARKET,
+                                quantity,
+                            )
+                        else:
+                            await asyncio.to_thread(
+                                self.broker.place_order,
+                                pos.symbol,
+                                side,
+                                OrderType.MARKET,
+                                quantity,
+                            )
                         logger.info(
                             "Emergency close submitted",
                             symbol=pos.symbol,

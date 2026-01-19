@@ -89,6 +89,7 @@ from gpt_trader.monitoring.profiling import profile_span
 from gpt_trader.monitoring.status_reporter import StatusReporter
 from gpt_trader.observability.tracing import trace_span
 from gpt_trader.persistence.event_store import EventStore
+from gpt_trader.utilities.async_tools import BoundedToThread
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="trading_engine")
@@ -165,6 +166,25 @@ class TradingEngine(BaseEngine):
             price_history=self._price_tick_store.price_history,
         )
 
+        broker_calls = getattr(context, "broker_calls", None)
+        if broker_calls is not None and not asyncio.iscoroutinefunction(
+            getattr(broker_calls, "__call__", None)
+        ):
+            broker_calls = None
+        if broker_calls is None:
+            broker_call_limit = getattr(context.config, "max_concurrent_broker_calls", None)
+            if broker_call_limit is None:
+                broker_call_limit = getattr(context.config, "max_concurrent_rest_calls", 5)
+            try:
+                raw_limit = broker_call_limit if broker_call_limit is not None else 5
+                broker_call_limit = int(raw_limit)
+            except (TypeError, ValueError):
+                broker_call_limit = 5
+            broker_call_limit = max(1, broker_call_limit)
+            broker_calls = BoundedToThread(max_concurrency=broker_call_limit)
+
+        self._broker_calls = broker_calls
+
         # Initialize health check runner for active /health probes
         health_state = context.container.health_state if context.container else HealthState()
         self._health_check_runner = HealthCheckRunner(
@@ -175,6 +195,7 @@ class TradingEngine(BaseEngine):
             interval_seconds=HEALTH_CHECK_INTERVAL_SECONDS,
             message_stale_seconds=getattr(context.config, "ws_message_stale_seconds", 60.0),
             heartbeat_stale_seconds=getattr(context.config, "ws_heartbeat_stale_seconds", 120.0),
+            broker_calls=self._broker_calls,
         )
 
         # Initialize streaming lifecycle attributes
@@ -189,11 +210,6 @@ class TradingEngine(BaseEngine):
         self._ws_reconnect_attempts: int = 0
         self._ws_reconnect_delay: float = 1.0
         self._ws_last_health_check: float = 0.0
-
-        # Concurrency control for REST API calls (prevents burst overload)
-        # Default to 5 concurrent calls; configurable via config if needed
-        max_concurrent_rest = getattr(context.config, "max_concurrent_rest_calls", 5)
-        self._rest_semaphore: asyncio.Semaphore = asyncio.Semaphore(max_concurrent_rest)
 
         # Initialize pre-trade guard stack (Option A: embedded guards)
         self._init_guard_stack()
@@ -619,7 +635,7 @@ class TradingEngine(BaseEngine):
             try:
                 if self._guard_manager is not None:
                     # Use run_runtime_guards directly to catch GuardError for degradation
-                    state = self._guard_manager.run_runtime_guards()
+                    state = await self._broker_calls(self._guard_manager.run_runtime_guards)
                     self._record_guard_events(state.guard_events)
 
             except GuardError as err:
@@ -648,7 +664,7 @@ class TradingEngine(BaseEngine):
 
         # Cancel all open orders
         if self._guard_manager is not None:
-            cancelled = self._guard_manager.cancel_all_orders()
+            cancelled = await self._broker_calls(self._guard_manager.cancel_all_orders)
             logger.warning(
                 "Guard failure triggered order cancellation",
                 guard_name=err.guard_name,
@@ -699,13 +715,34 @@ class TradingEngine(BaseEngine):
         On reconnect, pauses briefly to allow state synchronization.
         """
         risk_manager = self.context.risk_manager
-        config = risk_manager.config if risk_manager else None
+        config = getattr(risk_manager, "config", None) if risk_manager else None
+
+        def _coerce_seconds(value: Any, default: float) -> float:
+            if value is None or isinstance(value, bool):
+                return default
+            if isinstance(value, (int, float)):
+                return float(value)
+            if isinstance(value, str):
+                try:
+                    return float(value)
+                except ValueError:
+                    return default
+            return default
 
         # Get thresholds from config or use defaults
-        interval = config.ws_health_interval_seconds if config else 5
-        message_stale_threshold = config.ws_message_stale_seconds if config else 15
-        heartbeat_stale_threshold = config.ws_heartbeat_stale_seconds if config else 30
-        reconnect_pause = config.ws_reconnect_pause_seconds if config else 30
+        interval = _coerce_seconds(getattr(config, "ws_health_interval_seconds", None), 5.0)
+        message_stale_threshold = _coerce_seconds(
+            getattr(config, "ws_message_stale_seconds", None), 15.0
+        )
+        heartbeat_stale_threshold = _coerce_seconds(
+            getattr(config, "ws_heartbeat_stale_seconds", None), 30.0
+        )
+        reconnect_pause = _coerce_seconds(getattr(config, "ws_reconnect_pause_seconds", None), 30.0)
+
+        interval = max(0.1, interval)
+        message_stale_threshold = max(0.0, message_stale_threshold)
+        heartbeat_stale_threshold = max(0.0, heartbeat_stale_threshold)
+        reconnect_pause = max(0.0, reconnect_pause)
 
         last_reconnect_count = 0
 
@@ -732,11 +769,39 @@ class TradingEngine(BaseEngine):
                     continue
 
                 current_time = time.time()
-                last_message_ts = ws_health.get("last_message_ts")
-                last_heartbeat_ts = ws_health.get("last_heartbeat_ts")
-                reconnect_count = ws_health.get("reconnect_count", 0)
-                gap_count = ws_health.get("gap_count", 0)
-                connected = ws_health.get("connected", False)
+
+                last_message_ts_raw = ws_health.get("last_message_ts")
+                last_message_ts = (
+                    float(last_message_ts_raw)
+                    if isinstance(last_message_ts_raw, (int, float))
+                    and not isinstance(last_message_ts_raw, bool)
+                    else None
+                )
+                last_heartbeat_ts_raw = ws_health.get("last_heartbeat_ts")
+                last_heartbeat_ts = (
+                    float(last_heartbeat_ts_raw)
+                    if isinstance(last_heartbeat_ts_raw, (int, float))
+                    and not isinstance(last_heartbeat_ts_raw, bool)
+                    else None
+                )
+
+                reconnect_count_raw = ws_health.get("reconnect_count", 0)
+                reconnect_count = (
+                    int(reconnect_count_raw)
+                    if isinstance(reconnect_count_raw, (int, float))
+                    and not isinstance(reconnect_count_raw, bool)
+                    else 0
+                )
+                gap_count_raw = ws_health.get("gap_count", 0)
+                gap_count = (
+                    int(gap_count_raw)
+                    if isinstance(gap_count_raw, (int, float))
+                    and not isinstance(gap_count_raw, bool)
+                    else 0
+                )
+
+                connected_raw = ws_health.get("connected", False)
+                connected = connected_raw if isinstance(connected_raw, bool) else False
 
                 # Check for reconnect event
                 if reconnect_count > last_reconnect_count:
@@ -1043,8 +1108,7 @@ class TradingEngine(BaseEngine):
         get_tickers_method = getattr(broker, "get_tickers", None)
         if get_tickers_method is not None and callable(get_tickers_method):
             try:
-                async with self._rest_semaphore:
-                    result = await asyncio.to_thread(get_tickers_method, symbols)
+                result = await self._broker_calls(get_tickers_method, symbols)
                 if isinstance(result, dict):
                     tickers = result
                     logger.debug(
@@ -1070,8 +1134,7 @@ class TradingEngine(BaseEngine):
 
         if ticker is None:
             try:
-                async with self._rest_semaphore:
-                    ticker = await asyncio.to_thread(broker.get_ticker, symbol)
+                ticker = await self._broker_calls(broker.get_ticker, symbol)
             except Exception as e:
                 logger.error(f"Failed to fetch ticker for {symbol}: {e}")
                 self._connection_status = "DISCONNECTED"
@@ -1083,10 +1146,11 @@ class TradingEngine(BaseEngine):
             return
 
         try:
-            async with self._rest_semaphore:
-                candles_result = await asyncio.to_thread(
-                    broker.get_candles, symbol, granularity="ONE_MINUTE"
-                )
+            candles_result = await self._broker_calls(
+                broker.get_candles,
+                symbol,
+                granularity="ONE_MINUTE",
+            )
             if isinstance(candles_result, Exception):
                 logger.warning(f"Failed to fetch candles for {symbol}: {candles_result}")
             else:
@@ -1217,7 +1281,7 @@ class TradingEngine(BaseEngine):
         start_time = time.perf_counter()
         result = "ok"
         try:
-            positions_list = await asyncio.to_thread(self.context.broker.list_positions)
+            positions_list = await self._broker_calls(self.context.broker.list_positions)
             # Success: reset broker failure counter
             self._degradation.reset_broker_failures()
             return {p.symbol: p for p in positions_list}
@@ -1649,7 +1713,17 @@ class TradingEngine(BaseEngine):
         if hasattr(self.context.config, "risk"):
             risk = self.context.config.risk
             if risk:
-                limits["max_position_size"] = float(getattr(risk, "max_position_pct", 0.05))
+                max_position_size = 0.05
+                raw_max_position_fraction = getattr(risk, "max_position_pct", None)
+                if raw_max_position_fraction is None:
+                    raw_max_position_fraction = getattr(risk, "position_fraction", None)
+                if raw_max_position_fraction is not None:
+                    try:
+                        max_position_size = float(raw_max_position_fraction)
+                    except (TypeError, ValueError):
+                        max_position_size = 0.05
+                limits["max_position_size"] = max_position_size
+
                 limits["max_leverage"] = float(getattr(risk, "max_leverage", 2.0))
                 limits["max_daily_loss"] = float(getattr(risk, "daily_loss_limit_pct", 0.02))
 
@@ -2178,7 +2252,7 @@ class TradingEngine(BaseEngine):
             return result
 
         # Place order via OrderSubmitter for proper ID tracking and telemetry
-        order_id = await asyncio.to_thread(
+        order_id = await self._broker_calls(
             self._order_submitter.submit_order,
             symbol=symbol,
             side=side,
@@ -2383,7 +2457,7 @@ class TradingEngine(BaseEngine):
             # Use getattr to safely call list_orders (not part of base BrokerProtocol)
             list_orders = getattr(self.context.broker, "list_orders", None)
             if list_orders:
-                response = await asyncio.to_thread(list_orders, order_status="OPEN")
+                response = await self._broker_calls(list_orders, order_status="OPEN")
                 orders = response.get("orders", [])
             else:
                 orders = []
@@ -2404,14 +2478,16 @@ class TradingEngine(BaseEngine):
             # Update Account Metrics (every 60 cycles ~ 1 minute)
             if self._cycle_count % 60 == 0:
                 try:
-                    balances = self.context.broker.list_balances()
+                    balances = await self._broker_calls(self.context.broker.list_balances)
                     # Check if broker supports transaction summary (Coinbase specific)
                     summary = {}
                     if hasattr(self.context.broker, "client") and hasattr(
                         self.context.broker.client, "get_transaction_summary"
                     ):
                         try:
-                            summary = self.context.broker.client.get_transaction_summary()
+                            summary = await self._broker_calls(
+                                self.context.broker.client.get_transaction_summary
+                            )
                         except Exception:
                             pass  # Feature might not be available or API mode issue
 

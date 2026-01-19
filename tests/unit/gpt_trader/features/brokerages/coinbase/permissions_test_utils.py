@@ -7,10 +7,10 @@ from unittest.mock import Mock
 
 from gpt_trader.features.brokerages.coinbase.auth import CDPJWTAuth
 from gpt_trader.features.brokerages.coinbase.models import APIConfig
-from tests.unit.gpt_trader.features.brokerages.coinbase.test_helpers import (
+from tests.unit.gpt_trader.features.brokerages.coinbase.helpers import (
     CoinbaseBrokerage,
 )
-from tests.unit.gpt_trader.features.brokerages.coinbase.test_helpers import (
+from tests.unit.gpt_trader.features.brokerages.coinbase.helpers import (
     make_client as shared_make_client,
 )
 

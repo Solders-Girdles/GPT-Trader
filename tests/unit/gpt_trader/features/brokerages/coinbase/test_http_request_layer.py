@@ -5,7 +5,7 @@ import pytest
 
 from gpt_trader.core import AuthError
 from gpt_trader.features.brokerages.coinbase.client import CoinbaseAuth
-from tests.unit.gpt_trader.features.brokerages.coinbase.test_helpers import make_client
+from tests.unit.gpt_trader.features.brokerages.coinbase.helpers import make_client
 
 
 # Advanced Trade product discovery should follow the documented

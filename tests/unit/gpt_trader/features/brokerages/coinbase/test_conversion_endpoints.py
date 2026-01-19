@@ -7,7 +7,7 @@ import json
 
 import pytest
 
-from tests.unit.gpt_trader.features.brokerages.coinbase.test_helpers import make_client
+from tests.unit.gpt_trader.features.brokerages.coinbase.helpers import make_client
 
 pytestmark = pytest.mark.endpoints
 
@@ -30,13 +30,20 @@ def test_convert_quote_posts_payload():
     assert out["quote_id"] == "q-123"
 
 
-def test_get_convert_trade_already_covered_in_system_tests():
-    # See tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_integration.py::TestCoinbaseSystem
-    # This placeholder ensures file cohesion without duplicating tests.
-    pytest.xfail(
-        "Covered by Coinbase system tests: "
-        "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_integration.py::TestCoinbaseSystem"
-    )
+def test_get_convert_trade_formats_path():
+    client = make_client()
+    calls = []
+
+    def transport(method, url, headers, body, timeout):
+        calls.append((method, url))
+        return 200, {}, json.dumps({"trade_id": "trade-1", "status": "pending"})
+
+    client.set_transport_for_testing(transport)
+    out = client.get_convert_trade("trade-1")
+    method, url = calls[0]
+    assert method == "GET"
+    assert url.endswith("/api/v3/brokerage/convert/trade/trade-1")
+    assert out["trade_id"] == "trade-1"
 
 
 def test_commit_convert_trade_posts_payload():

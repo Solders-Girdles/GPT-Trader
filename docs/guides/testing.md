@@ -24,10 +24,10 @@ make test-integration-fast
 make test-integration
 
 # Run specific test file
-uv run pytest tests/unit/gpt_trader/config/test_bot_config_env.py
+uv run pytest tests/unit/gpt_trader/config/test_bot_config_env_aliasing.py
 
 # Run specific test class or function
-uv run pytest tests/unit/gpt_trader/config/test_bot_config_env.py::TestBotConfigEnvAliasing::test_risk_max_leverage_with_prefix
+uv run pytest tests/unit/gpt_trader/config/test_bot_config_env_aliasing.py::TestBotConfigEnvAliasing::test_risk_max_leverage_with_prefix
 
 # Run tests matching a pattern
 uv run pytest -k "test_error"

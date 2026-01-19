@@ -747,7 +747,7 @@
       "tests/unit/gpt_trader/monitoring/test_resource_metrics_edges.py",
       "tests/unit/gpt_trader/monitoring/test_runtime_guards_base.py",
       "tests/unit/gpt_trader/monitoring/test_status_reporter_edges.py",
-      "tests/unit/gpt_trader/monitoring/test_status_reporter_file_output_and_integration.py",
+      "tests/unit/gpt_trader/monitoring/test_status_reporter_file_output.py",
       "tests/unit/gpt_trader/monitoring/test_status_reporter_io_edges.py",
       "tests/unit/gpt_trader/monitoring/test_status_reporter_lifecycle.py",
       "tests/unit/gpt_trader/monitoring/test_status_reporter_limits_edges.py",
@@ -1038,9 +1038,9 @@
       "tests/unit/gpt_trader/utilities/test_async_utils_integration_scenarios.py",
       "tests/unit/gpt_trader/utilities/test_console_logging_core_basic.py",
       "tests/unit/gpt_trader/utilities/test_console_logging_core_fallbacks.py",
-      "tests/unit/gpt_trader/utilities/test_console_logging_functions_integration.py",
+      "tests/unit/gpt_trader/utilities/test_console_logging_functions.py",
       "tests/unit/gpt_trader/utilities/test_console_logging_functions_wrappers.py",
-      "tests/unit/gpt_trader/utilities/test_datetime_helpers_integration.py",
+      "tests/unit/gpt_trader/utilities/test_datetime_helpers.py",
       "tests/unit/gpt_trader/utilities/test_datetime_helpers_normalize_to_utc.py",
       "tests/unit/gpt_trader/utilities/test_datetime_helpers_now.py",
       "tests/unit/gpt_trader/utilities/test_datetime_helpers_to_iso_utc.py",
@@ -29408,7 +29408,7 @@
     "tests/unit/gpt_trader/features/live_trade/test_state_recovery_price_tick_recording.py": [
       {
         "name": "TestTradingEngineRecordPriceTick::test_record_price_tick_stores_event",
-        "line": 18,
+        "line": 20,
         "markers": [
           "unit"
         ],
@@ -29417,7 +29417,7 @@
       },
       {
         "name": "TestTradingEngineRecordPriceTick::test_record_price_tick_without_store",
-        "line": 37,
+        "line": 39,
         "markers": [
           "unit"
         ],
@@ -29428,7 +29428,7 @@
     "tests/unit/gpt_trader/features/live_trade/test_state_recovery_rehydration.py": [
       {
         "name": "TestTradingEngineRehydration::test_rehydrate_from_empty_events",
-        "line": 20,
+        "line": 22,
         "markers": [
           "unit"
         ],
@@ -29437,7 +29437,7 @@
       },
       {
         "name": "TestTradingEngineRehydration::test_rehydrate_from_price_ticks",
-        "line": 35,
+        "line": 37,
         "markers": [
           "unit"
         ],
@@ -29446,7 +29446,7 @@
       },
       {
         "name": "TestTradingEngineRehydration::test_rehydrate_ignores_unknown_symbols",
-        "line": 57,
+        "line": 59,
         "markers": [
           "unit"
         ],
@@ -29455,7 +29455,7 @@
       },
       {
         "name": "TestTradingEngineRehydration::test_rehydrate_ignores_other_event_types",
-        "line": 76,
+        "line": 78,
         "markers": [
           "unit"
         ],
@@ -29464,7 +29464,7 @@
       },
       {
         "name": "TestTradingEngineRehydration::test_rehydrate_bounds_history_to_20",
-        "line": 95,
+        "line": 97,
         "markers": [
           "unit"
         ],
@@ -29473,7 +29473,7 @@
       },
       {
         "name": "TestTradingEngineRehydration::test_rehydrate_without_event_store",
-        "line": 117,
+        "line": 119,
         "markers": [
           "unit"
         ],
@@ -29482,7 +29482,7 @@
       },
       {
         "name": "TestTradingEngineRehydration::test_rehydrate_handles_invalid_price",
-        "line": 127,
+        "line": 129,
         "markers": [
           "unit"
         ],
@@ -29491,7 +29491,7 @@
       },
       {
         "name": "TestTradingEngineRehydration::test_rehydrate_open_orders_from_store",
-        "line": 147,
+        "line": 149,
         "markers": [
           "unit"
         ],
@@ -29500,7 +29500,7 @@
       },
       {
         "name": "TestTradingEngineRehydration::test_rehydrate_handles_missing_fields",
-        "line": 184,
+        "line": 186,
         "markers": [
           "unit"
         ],
@@ -36950,7 +36950,7 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/monitoring/test_status_reporter_file_output_and_integration.py": [
+    "tests/unit/gpt_trader/monitoring/test_status_reporter_file_output.py": [
       {
         "name": "test_writes_valid_json",
         "line": 30,
@@ -55534,60 +55534,60 @@
         "class": "TestGlobalConsoleLogger"
       }
     ],
-    "tests/unit/gpt_trader/utilities/test_console_logging_functions_integration.py": [
+    "tests/unit/gpt_trader/utilities/test_console_logging_functions.py": [
       {
-        "name": "TestIntegration::test_end_to_end_logging_workflow",
+        "name": "TestConsoleLoggingFunctions::test_end_to_end_logging_workflow",
         "line": 25,
         "markers": [
           "unit"
         ],
         "docstring": "Test complete logging workflow.",
-        "class": "TestIntegration"
+        "class": "TestConsoleLoggingFunctions"
       },
       {
-        "name": "TestIntegration::test_all_context_methods",
+        "name": "TestConsoleLoggingFunctions::test_all_context_methods",
         "line": 56,
         "markers": [
           "unit"
         ],
         "docstring": "Test all context-specific methods work without errors.",
-        "class": "TestIntegration"
+        "class": "TestConsoleLoggingFunctions"
       },
       {
-        "name": "TestIntegration::test_table_formatting_complex_data",
+        "name": "TestConsoleLoggingFunctions::test_table_formatting_complex_data",
         "line": 76,
         "markers": [
           "unit"
         ],
         "docstring": "Test table formatting with complex data.",
-        "class": "TestIntegration"
+        "class": "TestConsoleLoggingFunctions"
       },
       {
-        "name": "TestIntegration::test_error_handling_in_global_functions",
+        "name": "TestConsoleLoggingFunctions::test_error_handling_in_global_functions",
         "line": 101,
         "markers": [
           "unit"
         ],
         "docstring": "Test error handling in global console functions.",
-        "class": "TestIntegration"
+        "class": "TestConsoleLoggingFunctions"
       },
       {
-        "name": "TestIntegration::test_function_parameter_passing",
+        "name": "TestConsoleLoggingFunctions::test_function_parameter_passing",
         "line": 115,
         "markers": [
           "unit"
         ],
         "docstring": "Test that parameters are correctly passed to underlying logger.",
-        "class": "TestIntegration"
+        "class": "TestConsoleLoggingFunctions"
       },
       {
-        "name": "TestIntegration::test_multiple_function_calls",
+        "name": "TestConsoleLoggingFunctions::test_multiple_function_calls",
         "line": 135,
         "markers": [
           "unit"
         ],
         "docstring": "Test multiple calls to console functions.",
-        "class": "TestIntegration"
+        "class": "TestConsoleLoggingFunctions"
       }
     ],
     "tests/unit/gpt_trader/utilities/test_console_logging_functions_wrappers.py": [
@@ -55664,33 +55664,33 @@
         "class": "TestGlobalConsoleFunctions"
       }
     ],
-    "tests/unit/gpt_trader/utilities/test_datetime_helpers_integration.py": [
+    "tests/unit/gpt_trader/utilities/test_datetime_helpers.py": [
       {
-        "name": "TestIntegrationWorkflow::test_roundtrip_datetime_to_iso_and_back",
+        "name": "TestDateTimeHelpers::test_roundtrip_datetime_to_iso_and_back",
         "line": 17,
         "markers": [
           "unit"
         ],
         "docstring": "Test roundtrip conversion: datetime -> iso -> datetime.",
-        "class": "TestIntegrationWorkflow"
+        "class": "TestDateTimeHelpers"
       },
       {
-        "name": "TestIntegrationWorkflow::test_all_functions_use_utc",
+        "name": "TestDateTimeHelpers::test_all_functions_use_utc",
         "line": 32,
         "markers": [
           "unit"
         ],
         "docstring": "Test all functions consistently use UTC.",
-        "class": "TestIntegrationWorkflow"
+        "class": "TestDateTimeHelpers"
       },
       {
-        "name": "TestIntegrationWorkflow::test_timezone_conversion_consistency",
+        "name": "TestDateTimeHelpers::test_timezone_conversion_consistency",
         "line": 55,
         "markers": [
           "unit"
         ],
         "docstring": "Test timezone conversion is consistent across functions.",
-        "class": "TestIntegrationWorkflow"
+        "class": "TestDateTimeHelpers"
       }
     ],
     "tests/unit/gpt_trader/utilities/test_datetime_helpers_normalize_to_utc.py": [

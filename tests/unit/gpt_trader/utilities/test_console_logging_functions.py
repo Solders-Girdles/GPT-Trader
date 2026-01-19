@@ -1,4 +1,4 @@
-"""Integration tests for console logging global helpers."""
+"""Tests for console logging global helpers."""
 
 from unittest.mock import Mock, patch
 
@@ -19,8 +19,8 @@ from gpt_trader.utilities.console_logging import (
 )
 
 
-class TestIntegration:
-    """Integration tests for console logging utilities."""
+class TestConsoleLoggingFunctions:
+    """Tests for console logging utilities."""
 
     def test_end_to_end_logging_workflow(self):
         """Test complete logging workflow."""

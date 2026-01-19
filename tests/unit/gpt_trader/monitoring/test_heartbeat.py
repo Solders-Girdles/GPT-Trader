@@ -10,6 +10,8 @@ import pytest
 
 from gpt_trader.monitoring.heartbeat import EVENT_HEARTBEAT, HeartbeatService
 
+pytestmark = pytest.mark.legacy_modernize
+
 
 class TestHeartbeatServiceInit:
     """Tests for HeartbeatService initialization."""

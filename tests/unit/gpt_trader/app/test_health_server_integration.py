@@ -14,6 +14,8 @@ from gpt_trader.app.health_server import (
     mark_ready,
 )
 
+pytestmark = pytest.mark.legacy_modernize
+
 
 class TestHealthServerIntegration:
     """Integration tests for the HealthServer."""

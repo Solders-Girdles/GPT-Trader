@@ -11,6 +11,8 @@ import pytest
 
 from gpt_trader.logging.setup import configure_logging
 
+pytestmark = pytest.mark.legacy_modernize
+
 
 class TestConfigureLoggingHandlers:
     """Test handler creation and formatter behavior in configure_logging."""

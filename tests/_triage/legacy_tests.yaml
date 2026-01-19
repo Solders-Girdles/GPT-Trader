@@ -22,3 +22,43 @@ tests:
     status: done
     reason: "Subprocess-based CLI tests duplicated by focused unit tests (cli.main, command registration/parsing) and were not part of any CI suite."
     added: "2026-01-19"
+  tests/unit/gpt_trader/app/test_health_server_integration.py:
+    action: modernize
+    status: todo
+    reason: "Starts a live asyncio server with socket retries/sleeps inside unit suite; move to integration or refactor to a deterministic client/server fixture."
+    added: "2026-01-19"
+  tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_edges.py:
+    action: modernize
+    status: todo
+    reason: "High patch/monkeypatch density with many edge assertions; split into smaller focused tests and reduce mock scaffolding."
+    added: "2026-01-19"
+  tests/unit/gpt_trader/logging/test_setup_configure_logging_handlers.py:
+    action: modernize
+    status: todo
+    reason: "Handler wiring relies on extensive patching and global logger state; consolidate into fewer integration-style checks or fixture-driven unit tests."
+    added: "2026-01-19"
+  tests/unit/gpt_trader/monitoring/test_heartbeat.py:
+    action: modernize
+    status: todo
+    reason: "Relies on real time and asyncio sleeps in unit suite; replace with fake clock or move to integration."
+    added: "2026-01-19"
+  tests/unit/gpt_trader/monitoring/test_heartbeat_error_handling.py:
+    action: modernize
+    status: todo
+    reason: "Uses real time/sleep loops for error handling; refactor to deterministic timing or integration-only coverage."
+    added: "2026-01-19"
+  tests/unit/gpt_trader/monitoring/test_status_reporter_file_output_and_integration.py:
+    action: modernize
+    status: todo
+    reason: "Async background file writes with sleeps make unit runs slow/flaky; move to integration or use fake clock + in-memory IO."
+    added: "2026-01-19"
+  tests/unit/gpt_trader/tui/test_events_integration.py:
+    action: modernize
+    status: todo
+    reason: "Runs Textual app loop to exercise event wiring; reclassify as integration or refactor to lightweight unit harness."
+    added: "2026-01-19"
+  tests/unit/gpt_trader/utilities/test_async_utils_integration_scenarios.py: # naming: allow
+    action: modernize
+    status: todo
+    reason: "Integration scenarios depend on sleeps/time and concurrency; make deterministic with fake clock or relocate to integration."
+    added: "2026-01-19"

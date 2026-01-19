@@ -8,6 +8,8 @@ from textual.widgets import Static
 
 from gpt_trader.tui.events import BotStateChanged
 
+pytestmark = pytest.mark.legacy_modernize
+
 
 class TestEventIntegration:
     """Integration tests for event posting and handling."""

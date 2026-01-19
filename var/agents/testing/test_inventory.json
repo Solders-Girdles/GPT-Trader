@@ -4,7 +4,7 @@
   "summary": {
     "total_tests": 11036,
     "total_files": 907,
-    "markers_used": 11
+    "markers_used": 12
   },
   "marker_definitions": {
     "unit": "Unit tests (isolated component tests)",
@@ -105,14 +105,15 @@
     "endpoints": 136,
     "integration": 99,
     "parametrize": 93,
+    "legacy_modernize": 34,
     "skipif": 16,
     "property": 10,
     "perps": 5,
     "uses_real_preferences": 2,
     "slow": 2,
     "real_api": 1,
-    "requires_network": 1,
-    "requires_secrets": 1
+    "requires_secrets": 1,
+    "requires_network": 1
   },
   "path_categories": {
     "test_chaos.py": [
@@ -2550,8 +2551,8 @@
         "line": 46,
         "markers": [
           "real_api",
-          "requires_network",
-          "requires_secrets"
+          "requires_secrets",
+          "requires_network"
         ],
         "docstring": ""
       }
@@ -15483,54 +15484,70 @@
     "tests/unit/gpt_trader/monitoring/test_heartbeat.py": [
       {
         "name": "TestHeartbeatServiceInit::test_default_values",
-        "line": 17,
-        "markers": [],
+        "line": 19,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": "",
         "class": "TestHeartbeatServiceInit"
       },
       {
         "name": "TestHeartbeatServiceInit::test_custom_values",
-        "line": 28,
-        "markers": [],
+        "line": 30,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": "",
         "class": "TestHeartbeatServiceInit"
       },
       {
         "name": "TestHeartbeatServiceStatus::test_get_status_initial",
-        "line": 168,
-        "markers": [],
+        "line": 170,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": "",
         "class": "TestHeartbeatServiceStatus"
       },
       {
         "name": "TestHeartbeatServiceStatus::test_is_healthy_when_not_running",
-        "line": 201,
-        "markers": [],
+        "line": 203,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": "",
         "class": "TestHeartbeatServiceStatus"
       },
       {
         "name": "test_default_values",
-        "line": 17,
-        "markers": [],
+        "line": 19,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": ""
       },
       {
         "name": "test_custom_values",
-        "line": 28,
-        "markers": [],
+        "line": 30,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": ""
       },
       {
         "name": "test_get_status_initial",
-        "line": 168,
-        "markers": [],
+        "line": 170,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": ""
       },
       {
         "name": "test_is_healthy_when_not_running",
-        "line": 201,
-        "markers": [],
+        "line": 203,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": ""
       }
     ],
@@ -17125,106 +17142,138 @@
     "tests/unit/gpt_trader/logging/test_setup_configure_logging_handlers.py": [
       {
         "name": "TestConfigureLoggingHandlers::test_configure_logging_creates_directories",
-        "line": 49,
-        "markers": [],
+        "line": 51,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": "Test that logging directories are created.",
         "class": "TestConfigureLoggingHandlers"
       },
       {
         "name": "TestConfigureLoggingHandlers::test_configure_logging_creates_console_handler",
-        "line": 61,
-        "markers": [],
+        "line": 63,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": "Test that console handler is created.",
         "class": "TestConfigureLoggingHandlers"
       },
       {
         "name": "TestConfigureLoggingHandlers::test_configure_logging_creates_file_handlers",
-        "line": 77,
-        "markers": [],
+        "line": 79,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": "Test that file handlers are created.",
         "class": "TestConfigureLoggingHandlers"
       },
       {
         "name": "TestConfigureLoggingHandlers::test_configure_logging_sets_root_level",
-        "line": 93,
-        "markers": [],
+        "line": 95,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": "Test that root logger level is set to INFO.",
         "class": "TestConfigureLoggingHandlers"
       },
       {
         "name": "TestConfigureLoggingHandlers::test_configure_logging_creates_json_logger",
-        "line": 105,
-        "markers": [],
+        "line": 107,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": "Test that JSON logger is configured.",
         "class": "TestConfigureLoggingHandlers"
       },
       {
         "name": "TestConfigureLoggingHandlers::test_configure_logging_json_handlers",
-        "line": 119,
-        "markers": [],
+        "line": 121,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": "Test that JSON logger handlers are properly configured.",
         "class": "TestConfigureLoggingHandlers"
       },
       {
         "name": "TestConfigureLoggingHandlers::test_configure_logging_critical_handler_level",
-        "line": 143,
-        "markers": [],
+        "line": 145,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": "Test that critical handler is set to WARNING level.",
         "class": "TestConfigureLoggingHandlers"
       },
       {
         "name": "TestConfigureLoggingHandlers::test_configure_logging_handler_formatters",
-        "line": 161,
-        "markers": [],
+        "line": 163,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": "Test that handlers have formatters configured.",
         "class": "TestConfigureLoggingHandlers"
       },
       {
         "name": "test_configure_logging_creates_directories",
-        "line": 49,
-        "markers": [],
+        "line": 51,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": "Test that logging directories are created."
       },
       {
         "name": "test_configure_logging_creates_console_handler",
-        "line": 61,
-        "markers": [],
+        "line": 63,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": "Test that console handler is created."
       },
       {
         "name": "test_configure_logging_creates_file_handlers",
-        "line": 77,
-        "markers": [],
+        "line": 79,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": "Test that file handlers are created."
       },
       {
         "name": "test_configure_logging_sets_root_level",
-        "line": 93,
-        "markers": [],
+        "line": 95,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": "Test that root logger level is set to INFO."
       },
       {
         "name": "test_configure_logging_creates_json_logger",
-        "line": 105,
-        "markers": [],
+        "line": 107,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": "Test that JSON logger is configured."
       },
       {
         "name": "test_configure_logging_json_handlers",
-        "line": 119,
-        "markers": [],
+        "line": 121,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": "Test that JSON logger handlers are properly configured."
       },
       {
         "name": "test_configure_logging_critical_handler_level",
-        "line": 143,
-        "markers": [],
+        "line": 145,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": "Test that critical handler is set to WARNING level."
       },
       {
         "name": "test_configure_logging_handler_formatters",
-        "line": 161,
-        "markers": [],
+        "line": 163,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": "Test that handlers have formatters configured."
       }
     ],
@@ -65822,62 +65871,82 @@
     "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_edges.py": [
       {
         "name": "test_update_mark_and_metrics_invalid_interval_throttles",
-        "line": 43,
-        "markers": [],
+        "line": 47,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": ""
       },
       {
         "name": "test_record_mark_update_result_is_stored",
-        "line": 57,
-        "markers": [],
+        "line": 61,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": ""
       },
       {
         "name": "test_record_mark_update_exception_uses_fallback",
-        "line": 70,
-        "markers": [],
+        "line": 74,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": ""
       },
       {
         "name": "test_update_orderbook_snapshot_invalid_product_id",
-        "line": 83,
-        "markers": [],
+        "line": 87,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": ""
       },
       {
         "name": "test_update_orderbook_snapshot_success_calls_emit",
-        "line": 100,
-        "markers": [],
+        "line": 104,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": ""
       },
       {
         "name": "test_update_orderbook_snapshot_logs_on_error",
-        "line": 120,
-        "markers": [],
+        "line": 124,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": ""
       },
       {
         "name": "test_update_trade_aggregator_creates_and_emits",
-        "line": 140,
-        "markers": [],
+        "line": 144,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": ""
       },
       {
         "name": "test_update_trade_aggregator_skips_missing_fields",
-        "line": 164,
-        "markers": [],
+        "line": 168,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": ""
       },
       {
         "name": "test_emit_orderbook_snapshot_throttles",
-        "line": 188,
-        "markers": [],
+        "line": 192,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": ""
       },
       {
         "name": "test_emit_trade_flow_summary_missing_and_present",
-        "line": 208,
-        "markers": [],
+        "line": 212,
+        "markers": [
+          "legacy_modernize"
+        ],
         "docstring": ""
       }
     ],

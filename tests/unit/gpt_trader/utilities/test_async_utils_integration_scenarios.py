@@ -9,6 +9,8 @@ import pytest
 
 from gpt_trader.utilities.async_tools import gather_with_concurrency
 
+pytestmark = pytest.mark.legacy_modernize
+
 
 class TestAsyncIntegrationScenarios:
     @pytest.mark.asyncio

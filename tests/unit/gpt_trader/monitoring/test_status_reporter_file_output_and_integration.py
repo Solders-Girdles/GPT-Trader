@@ -12,6 +12,8 @@ import pytest
 
 from gpt_trader.monitoring.status_reporter import StatusReporter
 
+pytestmark = pytest.mark.legacy_modernize
+
 
 class TestStatusReporterFileOutput:
     """Tests for StatusReporter file output."""

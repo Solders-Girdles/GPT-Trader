@@ -9,6 +9,8 @@ import pytest
 
 from gpt_trader.monitoring.heartbeat import HeartbeatService
 
+pytestmark = pytest.mark.legacy_modernize
+
 
 class TestHeartbeatServiceErrorHandling:
     """Tests for HeartbeatService error handling."""

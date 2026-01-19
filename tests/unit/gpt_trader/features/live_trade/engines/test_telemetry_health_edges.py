@@ -6,7 +6,11 @@ from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
+import pytest
+
 from gpt_trader.features.live_trade.engines import telemetry_health
+
+pytestmark = pytest.mark.legacy_modernize
 
 
 def _make_runtime_state() -> SimpleNamespace:

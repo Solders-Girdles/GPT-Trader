@@ -27,8 +27,3 @@ tests:
     status: todo
     reason: "High patch/monkeypatch density with many edge assertions; split into smaller focused tests and reduce mock scaffolding."
     added: "2026-01-19"
-  tests/unit/gpt_trader/tui/test_events_integration.py:
-    action: modernize
-    status: todo
-    reason: "Runs Textual app loop to exercise event wiring; reclassify as integration or refactor to lightweight unit harness."
-    added: "2026-01-19"

@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 11054,
-    "total_files": 767,
+    "total_files": 778,
     "markers_used": 9
   },
   "marker_definitions": {
@@ -329,8 +329,10 @@
       "tests/unit/gpt_trader/tui/mixins/test_event_handlers_basics.py",
       "tests/unit/gpt_trader/tui/mixins/test_event_handlers_default_handlers.py",
       "tests/unit/gpt_trader/tui/screens/test_api_setup_wizard.py",
+      "tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen_indicator_hints.py",
+      "tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen_backtest_and_badges.py",
+      "tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen_signal_detail_content.py",
       "tests/unit/gpt_trader/tui/screens/test_alert_history.py",
-      "tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen.py",
       "tests/unit/gpt_trader/tui/utilities/test_pnl_formatting.py",
       "tests/unit/gpt_trader/tui/utilities/test_table_formatting_sorting.py",
       "tests/unit/gpt_trader/tui/utilities/test_table_formatting_clipboard.py",
@@ -634,11 +636,14 @@
       "tests/unit/gpt_trader/features/research/backtesting/test_simulator_edges.py",
       "tests/unit/gpt_trader/features/research/backtesting/test_data_loader_edges.py",
       "tests/unit/gpt_trader/features/optimize/study/test_manager.py",
+      "tests/unit/gpt_trader/features/optimize/objectives/test_single_return_objectives.py",
       "tests/unit/gpt_trader/features/optimize/objectives/test_constraints.py",
+      "tests/unit/gpt_trader/features/optimize/objectives/test_single_risk_objectives.py",
+      "tests/unit/gpt_trader/features/optimize/objectives/test_single_trade_quality_objectives.py",
       "tests/unit/gpt_trader/features/optimize/objectives/test_factories.py",
       "tests/unit/gpt_trader/features/optimize/objectives/test_perpetuals.py",
-      "tests/unit/gpt_trader/features/optimize/objectives/test_single.py",
       "tests/unit/gpt_trader/features/optimize/objectives/test_composite_edges.py",
+      "tests/unit/gpt_trader/features/optimize/objectives/test_single_exposure_and_timing_objectives.py",
       "tests/unit/gpt_trader/features/optimize/persistence/test_storage_edges.py",
       "tests/unit/gpt_trader/features/optimize/parameter_space/test_builder.py",
       "tests/unit/gpt_trader/features/intelligence/ensemble/test_voting.py",
@@ -647,8 +652,11 @@
       "tests/unit/gpt_trader/features/intelligence/ensemble/test_adaptive.py",
       "tests/unit/gpt_trader/features/intelligence/backtesting/test_batch_regime.py",
       "tests/unit/gpt_trader/features/intelligence/sizing/test_position_sizer.py",
-      "tests/unit/gpt_trader/features/intelligence/regime/test_detector.py",
+      "tests/unit/gpt_trader/features/intelligence/regime/test_detector_persistence.py",
+      "tests/unit/gpt_trader/features/intelligence/regime/test_detector_crisis_detection.py",
+      "tests/unit/gpt_trader/features/intelligence/regime/test_detector_models.py",
       "tests/unit/gpt_trader/features/intelligence/regime/test_detector_edges.py",
+      "tests/unit/gpt_trader/features/intelligence/regime/test_detector_regime_classification.py",
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_init.py",
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_positions_and_balances.py",
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_status.py",
@@ -740,18 +748,21 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_convenience_and_transport.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_response_cache.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_accounts_mixin.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_cfm.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_product_service_product_filters.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_edge_cases.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_list_fills.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_positions.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_unified_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_cancel_order.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_get_order.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_balances.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_initialization.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_flags_and_coercion.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_product_service_ticker_and_mark_price.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_rest_service_edges.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_intx.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_portfolio_service.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_product_service_get_tickers.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_edges.py",
@@ -34866,6 +34877,480 @@
         "docstring": "Step should never exceed bounds during navigation."
       }
     ],
+    "tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen_indicator_hints.py": [
+      {
+        "name": "TestStrategyParametersFormat::test_rsi_period_formatted",
+        "line": 10,
+        "markers": [],
+        "docstring": "RSI with period shows formatted param string.",
+        "class": "TestStrategyParametersFormat"
+      },
+      {
+        "name": "TestStrategyParametersFormat::test_ma_shows_all_parts",
+        "line": 15,
+        "markers": [],
+        "docstring": "MA with fast, slow, type shows all parts.",
+        "class": "TestStrategyParametersFormat"
+      },
+      {
+        "name": "TestStrategyParametersFormat::test_ema_uses_ma_params",
+        "line": 23,
+        "markers": [],
+        "docstring": "EMA indicator uses MA params.",
+        "class": "TestStrategyParametersFormat"
+      },
+      {
+        "name": "TestStrategyParametersFormat::test_zscore_formatted",
+        "line": 30,
+        "markers": [],
+        "docstring": "Z-Score shows lookback and entry threshold.",
+        "class": "TestStrategyParametersFormat"
+      },
+      {
+        "name": "TestStrategyParametersFormat::test_vwap_deviation_percent",
+        "line": 37,
+        "markers": [],
+        "docstring": "VWAP deviation formatted as percentage.",
+        "class": "TestStrategyParametersFormat"
+      },
+      {
+        "name": "TestStrategyParametersFormat::test_spread_tight_bps",
+        "line": 42,
+        "markers": [],
+        "docstring": "Spread shows tight threshold in bps.",
+        "class": "TestStrategyParametersFormat"
+      },
+      {
+        "name": "TestStrategyParametersFormat::test_orderbook_formatted",
+        "line": 47,
+        "markers": [],
+        "docstring": "Orderbook shows levels and threshold.",
+        "class": "TestStrategyParametersFormat"
+      },
+      {
+        "name": "TestStrategyParametersFormat::test_unknown_indicator_returns_none",
+        "line": 54,
+        "markers": [],
+        "docstring": "Unknown indicator returns None.",
+        "class": "TestStrategyParametersFormat"
+      },
+      {
+        "name": "TestStrategyParametersFormat::test_no_params_configured_returns_none",
+        "line": 60,
+        "markers": [],
+        "docstring": "Indicator with no configured params returns None.",
+        "class": "TestStrategyParametersFormat"
+      },
+      {
+        "name": "TestStrategyParametersFormat::test_case_insensitive",
+        "line": 66,
+        "markers": [],
+        "docstring": "Indicator name lookup is case-insensitive.",
+        "class": "TestStrategyParametersFormat"
+      },
+      {
+        "name": "TestGetIndicatorHint::test_exact_match_static_fallback",
+        "line": 76,
+        "markers": [],
+        "docstring": "Exact indicator name returns static hint when no params.",
+        "class": "TestGetIndicatorHint"
+      },
+      {
+        "name": "TestGetIndicatorHint::test_case_insensitive_static",
+        "line": 81,
+        "markers": [],
+        "docstring": "Static hint lookup is case-insensitive.",
+        "class": "TestGetIndicatorHint"
+      },
+      {
+        "name": "TestGetIndicatorHint::test_with_parameters_in_name",
+        "line": 86,
+        "markers": [],
+        "docstring": "Indicator with parameters extracts first token for static lookup.",
+        "class": "TestGetIndicatorHint"
+      },
+      {
+        "name": "TestGetIndicatorHint::test_unknown_returns_none",
+        "line": 92,
+        "markers": [],
+        "docstring": "Unknown indicator returns None.",
+        "class": "TestGetIndicatorHint"
+      },
+      {
+        "name": "TestGetIndicatorHint::test_live_params_take_precedence",
+        "line": 97,
+        "markers": [],
+        "docstring": "Live params take precedence over static hints.",
+        "class": "TestGetIndicatorHint"
+      },
+      {
+        "name": "TestGetIndicatorHint::test_fallback_to_static_when_param_not_configured",
+        "line": 102,
+        "markers": [],
+        "docstring": "Falls back to static when specific param not configured.",
+        "class": "TestGetIndicatorHint"
+      },
+      {
+        "name": "TestGetIndicatorHint::test_live_params_for_multiple_indicators",
+        "line": 107,
+        "markers": [],
+        "docstring": "Multiple indicators with live params.",
+        "class": "TestGetIndicatorHint"
+      },
+      {
+        "name": "test_rsi_period_formatted",
+        "line": 10,
+        "markers": [],
+        "docstring": "RSI with period shows formatted param string."
+      },
+      {
+        "name": "test_ma_shows_all_parts",
+        "line": 15,
+        "markers": [],
+        "docstring": "MA with fast, slow, type shows all parts."
+      },
+      {
+        "name": "test_ema_uses_ma_params",
+        "line": 23,
+        "markers": [],
+        "docstring": "EMA indicator uses MA params."
+      },
+      {
+        "name": "test_zscore_formatted",
+        "line": 30,
+        "markers": [],
+        "docstring": "Z-Score shows lookback and entry threshold."
+      },
+      {
+        "name": "test_vwap_deviation_percent",
+        "line": 37,
+        "markers": [],
+        "docstring": "VWAP deviation formatted as percentage."
+      },
+      {
+        "name": "test_spread_tight_bps",
+        "line": 42,
+        "markers": [],
+        "docstring": "Spread shows tight threshold in bps."
+      },
+      {
+        "name": "test_orderbook_formatted",
+        "line": 47,
+        "markers": [],
+        "docstring": "Orderbook shows levels and threshold."
+      },
+      {
+        "name": "test_unknown_indicator_returns_none",
+        "line": 54,
+        "markers": [],
+        "docstring": "Unknown indicator returns None."
+      },
+      {
+        "name": "test_no_params_configured_returns_none",
+        "line": 60,
+        "markers": [],
+        "docstring": "Indicator with no configured params returns None."
+      },
+      {
+        "name": "test_case_insensitive",
+        "line": 66,
+        "markers": [],
+        "docstring": "Indicator name lookup is case-insensitive."
+      },
+      {
+        "name": "test_exact_match_static_fallback",
+        "line": 76,
+        "markers": [],
+        "docstring": "Exact indicator name returns static hint when no params."
+      },
+      {
+        "name": "test_case_insensitive_static",
+        "line": 81,
+        "markers": [],
+        "docstring": "Static hint lookup is case-insensitive."
+      },
+      {
+        "name": "test_with_parameters_in_name",
+        "line": 86,
+        "markers": [],
+        "docstring": "Indicator with parameters extracts first token for static lookup."
+      },
+      {
+        "name": "test_unknown_returns_none",
+        "line": 92,
+        "markers": [],
+        "docstring": "Unknown indicator returns None."
+      },
+      {
+        "name": "test_live_params_take_precedence",
+        "line": 97,
+        "markers": [],
+        "docstring": "Live params take precedence over static hints."
+      },
+      {
+        "name": "test_fallback_to_static_when_param_not_configured",
+        "line": 102,
+        "markers": [],
+        "docstring": "Falls back to static when specific param not configured."
+      },
+      {
+        "name": "test_live_params_for_multiple_indicators",
+        "line": 107,
+        "markers": [],
+        "docstring": "Multiple indicators with live params."
+      }
+    ],
+    "tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen_backtest_and_badges.py": [
+      {
+        "name": "TestBuildBacktestDisplay::test_build_backtest_display_placeholder",
+        "line": 10,
+        "markers": [],
+        "docstring": "None performance returns placeholder values and note.",
+        "class": "TestBuildBacktestDisplay"
+      },
+      {
+        "name": "TestBuildBacktestDisplay::test_build_backtest_display_values",
+        "line": 24,
+        "markers": [],
+        "docstring": "Performance with trades returns formatted values.",
+        "class": "TestBuildBacktestDisplay"
+      },
+      {
+        "name": "TestFormatDelta::test_positive_delta_shows_green_with_plus",
+        "line": 46,
+        "markers": [],
+        "docstring": "Positive delta shows green color with plus sign.",
+        "class": "TestFormatDelta"
+      },
+      {
+        "name": "TestFormatDelta::test_negative_delta_shows_red",
+        "line": 53,
+        "markers": [],
+        "docstring": "Negative delta shows red color.",
+        "class": "TestFormatDelta"
+      },
+      {
+        "name": "TestFormatDelta::test_no_previous_returns_empty",
+        "line": 60,
+        "markers": [],
+        "docstring": "No previous value returns empty string.",
+        "class": "TestFormatDelta"
+      },
+      {
+        "name": "TestFormatDelta::test_tiny_delta_ignored",
+        "line": 66,
+        "markers": [],
+        "docstring": "Deltas smaller than 0.01 are ignored.",
+        "class": "TestFormatDelta"
+      },
+      {
+        "name": "TestFormatDelta::test_precision_parameter",
+        "line": 72,
+        "markers": [],
+        "docstring": "Precision parameter controls decimal places.",
+        "class": "TestFormatDelta"
+      },
+      {
+        "name": "TestFormatDelta::test_suffix_parameter",
+        "line": 78,
+        "markers": [],
+        "docstring": "Suffix parameter appends to formatted value.",
+        "class": "TestFormatDelta"
+      },
+      {
+        "name": "TestEntryExitBadgeDetailScreen::test_buy_action_returns_entry_badge",
+        "line": 88,
+        "markers": [],
+        "docstring": "BUY action returns ENTRY badge.",
+        "class": "TestEntryExitBadgeDetailScreen"
+      },
+      {
+        "name": "TestEntryExitBadgeDetailScreen::test_close_action_returns_exit_badge",
+        "line": 95,
+        "markers": [],
+        "docstring": "CLOSE action returns EXIT badge.",
+        "class": "TestEntryExitBadgeDetailScreen"
+      },
+      {
+        "name": "TestEntryExitBadgeDetailScreen::test_hold_action_returns_empty",
+        "line": 102,
+        "markers": [],
+        "docstring": "HOLD action returns empty string.",
+        "class": "TestEntryExitBadgeDetailScreen"
+      },
+      {
+        "name": "test_build_backtest_display_placeholder",
+        "line": 10,
+        "markers": [],
+        "docstring": "None performance returns placeholder values and note."
+      },
+      {
+        "name": "test_build_backtest_display_values",
+        "line": 24,
+        "markers": [],
+        "docstring": "Performance with trades returns formatted values."
+      },
+      {
+        "name": "test_positive_delta_shows_green_with_plus",
+        "line": 46,
+        "markers": [],
+        "docstring": "Positive delta shows green color with plus sign."
+      },
+      {
+        "name": "test_negative_delta_shows_red",
+        "line": 53,
+        "markers": [],
+        "docstring": "Negative delta shows red color."
+      },
+      {
+        "name": "test_no_previous_returns_empty",
+        "line": 60,
+        "markers": [],
+        "docstring": "No previous value returns empty string."
+      },
+      {
+        "name": "test_tiny_delta_ignored",
+        "line": 66,
+        "markers": [],
+        "docstring": "Deltas smaller than 0.01 are ignored."
+      },
+      {
+        "name": "test_precision_parameter",
+        "line": 72,
+        "markers": [],
+        "docstring": "Precision parameter controls decimal places."
+      },
+      {
+        "name": "test_suffix_parameter",
+        "line": 78,
+        "markers": [],
+        "docstring": "Suffix parameter appends to formatted value."
+      },
+      {
+        "name": "test_buy_action_returns_entry_badge",
+        "line": 88,
+        "markers": [],
+        "docstring": "BUY action returns ENTRY badge."
+      },
+      {
+        "name": "test_close_action_returns_exit_badge",
+        "line": 95,
+        "markers": [],
+        "docstring": "CLOSE action returns EXIT badge."
+      },
+      {
+        "name": "test_hold_action_returns_empty",
+        "line": 102,
+        "markers": [],
+        "docstring": "HOLD action returns empty string."
+      }
+    ],
+    "tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen_signal_detail_content.py": [
+      {
+        "name": "TestBuildSignalDetailContent::test_bullish_signal_shows_positive_contribution_and_up_arrow",
+        "line": 10,
+        "markers": [],
+        "docstring": "Bullish signal shows positive contribution with up arrow.",
+        "class": "TestBuildSignalDetailContent"
+      },
+      {
+        "name": "TestBuildSignalDetailContent::test_bearish_signal_shows_negative_contribution_and_down_arrow",
+        "line": 26,
+        "markers": [],
+        "docstring": "Bearish signal shows negative contribution with down arrow.",
+        "class": "TestBuildSignalDetailContent"
+      },
+      {
+        "name": "TestBuildSignalDetailContent::test_neutral_signal_shows_right_arrow",
+        "line": 42,
+        "markers": [],
+        "docstring": "Neutral signal shows near-zero contribution with right arrow.",
+        "class": "TestBuildSignalDetailContent"
+      },
+      {
+        "name": "TestBuildSignalDetailContent::test_long_name_truncated_to_ten_characters",
+        "line": 57,
+        "markers": [],
+        "docstring": "Long signal names are truncated to 10 characters.",
+        "class": "TestBuildSignalDetailContent"
+      },
+      {
+        "name": "TestBuildSignalDetailContent::test_includes_formatted_value_and_weight",
+        "line": 72,
+        "markers": [],
+        "docstring": "Row includes formatted value and weight.",
+        "class": "TestBuildSignalDetailContent"
+      },
+      {
+        "name": "TestBuildSignalDetailContent::test_rsi_row_includes_static_hint_when_no_params",
+        "line": 87,
+        "markers": [],
+        "docstring": "RSI row includes static tuning hint when no params set.",
+        "class": "TestBuildSignalDetailContent"
+      },
+      {
+        "name": "TestBuildSignalDetailContent::test_rsi_row_includes_live_params_when_set",
+        "line": 101,
+        "markers": [],
+        "docstring": "RSI row includes live params when strategy params set.",
+        "class": "TestBuildSignalDetailContent"
+      },
+      {
+        "name": "TestBuildSignalDetailContent::test_unknown_indicator_has_no_hint",
+        "line": 117,
+        "markers": [],
+        "docstring": "Unknown indicator row has no hint appended.",
+        "class": "TestBuildSignalDetailContent"
+      },
+      {
+        "name": "test_bullish_signal_shows_positive_contribution_and_up_arrow",
+        "line": 10,
+        "markers": [],
+        "docstring": "Bullish signal shows positive contribution with up arrow."
+      },
+      {
+        "name": "test_bearish_signal_shows_negative_contribution_and_down_arrow",
+        "line": 26,
+        "markers": [],
+        "docstring": "Bearish signal shows negative contribution with down arrow."
+      },
+      {
+        "name": "test_neutral_signal_shows_right_arrow",
+        "line": 42,
+        "markers": [],
+        "docstring": "Neutral signal shows near-zero contribution with right arrow."
+      },
+      {
+        "name": "test_long_name_truncated_to_ten_characters",
+        "line": 57,
+        "markers": [],
+        "docstring": "Long signal names are truncated to 10 characters."
+      },
+      {
+        "name": "test_includes_formatted_value_and_weight",
+        "line": 72,
+        "markers": [],
+        "docstring": "Row includes formatted value and weight."
+      },
+      {
+        "name": "test_rsi_row_includes_static_hint_when_no_params",
+        "line": 87,
+        "markers": [],
+        "docstring": "RSI row includes static tuning hint when no params set."
+      },
+      {
+        "name": "test_rsi_row_includes_live_params_when_set",
+        "line": 101,
+        "markers": [],
+        "docstring": "RSI row includes live params when strategy params set."
+      },
+      {
+        "name": "test_unknown_indicator_has_no_hint",
+        "line": 117,
+        "markers": [],
+        "docstring": "Unknown indicator row has no hint appended."
+      }
+    ],
     "tests/unit/gpt_trader/tui/screens/test_alert_history.py": [
       {
         "name": "TestAlertHistoryScreen::test_screen_has_bindings",
@@ -35022,476 +35507,6 @@
         "line": 176,
         "markers": [],
         "docstring": "Test 1-5 keybinds for direct filter selection are present."
-      }
-    ],
-    "tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen.py": [
-      {
-        "name": "TestBuildSignalDetailContent::test_bullish_signal_shows_positive_contribution_and_up_arrow",
-        "line": 18,
-        "markers": [],
-        "docstring": "Bullish signal shows positive contribution with up arrow.",
-        "class": "TestBuildSignalDetailContent"
-      },
-      {
-        "name": "TestBuildSignalDetailContent::test_bearish_signal_shows_negative_contribution_and_down_arrow",
-        "line": 37,
-        "markers": [],
-        "docstring": "Bearish signal shows negative contribution with down arrow.",
-        "class": "TestBuildSignalDetailContent"
-      },
-      {
-        "name": "TestBuildSignalDetailContent::test_neutral_signal_shows_right_arrow",
-        "line": 56,
-        "markers": [],
-        "docstring": "Neutral signal shows near-zero contribution with right arrow.",
-        "class": "TestBuildSignalDetailContent"
-      },
-      {
-        "name": "TestBuildSignalDetailContent::test_long_name_truncated_to_ten_characters",
-        "line": 73,
-        "markers": [],
-        "docstring": "Long signal names are truncated to 10 characters.",
-        "class": "TestBuildSignalDetailContent"
-      },
-      {
-        "name": "TestBuildSignalDetailContent::test_includes_formatted_value_and_weight",
-        "line": 90,
-        "markers": [],
-        "docstring": "Row includes formatted value and weight.",
-        "class": "TestBuildSignalDetailContent"
-      },
-      {
-        "name": "TestBuildSignalDetailContent::test_rsi_row_includes_static_hint_when_no_params",
-        "line": 107,
-        "markers": [],
-        "docstring": "RSI row includes static tuning hint when no params set.",
-        "class": "TestBuildSignalDetailContent"
-      },
-      {
-        "name": "TestBuildSignalDetailContent::test_rsi_row_includes_live_params_when_set",
-        "line": 122,
-        "markers": [],
-        "docstring": "RSI row includes live params when strategy params set.",
-        "class": "TestBuildSignalDetailContent"
-      },
-      {
-        "name": "TestBuildSignalDetailContent::test_unknown_indicator_has_no_hint",
-        "line": 140,
-        "markers": [],
-        "docstring": "Unknown indicator row has no hint appended.",
-        "class": "TestBuildSignalDetailContent"
-      },
-      {
-        "name": "TestStrategyParametersFormat::test_rsi_period_formatted",
-        "line": 161,
-        "markers": [],
-        "docstring": "RSI with period shows formatted param string.",
-        "class": "TestStrategyParametersFormat"
-      },
-      {
-        "name": "TestStrategyParametersFormat::test_ma_shows_all_parts",
-        "line": 166,
-        "markers": [],
-        "docstring": "MA with fast, slow, type shows all parts.",
-        "class": "TestStrategyParametersFormat"
-      },
-      {
-        "name": "TestStrategyParametersFormat::test_ema_uses_ma_params",
-        "line": 174,
-        "markers": [],
-        "docstring": "EMA indicator uses MA params.",
-        "class": "TestStrategyParametersFormat"
-      },
-      {
-        "name": "TestStrategyParametersFormat::test_zscore_formatted",
-        "line": 181,
-        "markers": [],
-        "docstring": "Z-Score shows lookback and entry threshold.",
-        "class": "TestStrategyParametersFormat"
-      },
-      {
-        "name": "TestStrategyParametersFormat::test_vwap_deviation_percent",
-        "line": 188,
-        "markers": [],
-        "docstring": "VWAP deviation formatted as percentage.",
-        "class": "TestStrategyParametersFormat"
-      },
-      {
-        "name": "TestStrategyParametersFormat::test_spread_tight_bps",
-        "line": 193,
-        "markers": [],
-        "docstring": "Spread shows tight threshold in bps.",
-        "class": "TestStrategyParametersFormat"
-      },
-      {
-        "name": "TestStrategyParametersFormat::test_orderbook_formatted",
-        "line": 198,
-        "markers": [],
-        "docstring": "Orderbook shows levels and threshold.",
-        "class": "TestStrategyParametersFormat"
-      },
-      {
-        "name": "TestStrategyParametersFormat::test_unknown_indicator_returns_none",
-        "line": 205,
-        "markers": [],
-        "docstring": "Unknown indicator returns None.",
-        "class": "TestStrategyParametersFormat"
-      },
-      {
-        "name": "TestStrategyParametersFormat::test_no_params_configured_returns_none",
-        "line": 211,
-        "markers": [],
-        "docstring": "Indicator with no configured params returns None.",
-        "class": "TestStrategyParametersFormat"
-      },
-      {
-        "name": "TestStrategyParametersFormat::test_case_insensitive",
-        "line": 217,
-        "markers": [],
-        "docstring": "Indicator name lookup is case-insensitive.",
-        "class": "TestStrategyParametersFormat"
-      },
-      {
-        "name": "TestGetIndicatorHint::test_exact_match_static_fallback",
-        "line": 227,
-        "markers": [],
-        "docstring": "Exact indicator name returns static hint when no params.",
-        "class": "TestGetIndicatorHint"
-      },
-      {
-        "name": "TestGetIndicatorHint::test_case_insensitive_static",
-        "line": 232,
-        "markers": [],
-        "docstring": "Static hint lookup is case-insensitive.",
-        "class": "TestGetIndicatorHint"
-      },
-      {
-        "name": "TestGetIndicatorHint::test_with_parameters_in_name",
-        "line": 237,
-        "markers": [],
-        "docstring": "Indicator with parameters extracts first token for static lookup.",
-        "class": "TestGetIndicatorHint"
-      },
-      {
-        "name": "TestGetIndicatorHint::test_unknown_returns_none",
-        "line": 243,
-        "markers": [],
-        "docstring": "Unknown indicator returns None.",
-        "class": "TestGetIndicatorHint"
-      },
-      {
-        "name": "TestGetIndicatorHint::test_live_params_take_precedence",
-        "line": 248,
-        "markers": [],
-        "docstring": "Live params take precedence over static hints.",
-        "class": "TestGetIndicatorHint"
-      },
-      {
-        "name": "TestGetIndicatorHint::test_fallback_to_static_when_param_not_configured",
-        "line": 253,
-        "markers": [],
-        "docstring": "Falls back to static when specific param not configured.",
-        "class": "TestGetIndicatorHint"
-      },
-      {
-        "name": "TestGetIndicatorHint::test_live_params_for_multiple_indicators",
-        "line": 259,
-        "markers": [],
-        "docstring": "Multiple indicators with live params.",
-        "class": "TestGetIndicatorHint"
-      },
-      {
-        "name": "TestBuildBacktestDisplay::test_build_backtest_display_placeholder",
-        "line": 275,
-        "markers": [],
-        "docstring": "None performance returns placeholder values and note.",
-        "class": "TestBuildBacktestDisplay"
-      },
-      {
-        "name": "TestBuildBacktestDisplay::test_build_backtest_display_values",
-        "line": 289,
-        "markers": [],
-        "docstring": "Performance with trades returns formatted values.",
-        "class": "TestBuildBacktestDisplay"
-      },
-      {
-        "name": "TestFormatDelta::test_positive_delta_shows_green_with_plus",
-        "line": 311,
-        "markers": [],
-        "docstring": "Positive delta shows green color with plus sign.",
-        "class": "TestFormatDelta"
-      },
-      {
-        "name": "TestFormatDelta::test_negative_delta_shows_red",
-        "line": 318,
-        "markers": [],
-        "docstring": "Negative delta shows red color.",
-        "class": "TestFormatDelta"
-      },
-      {
-        "name": "TestFormatDelta::test_no_previous_returns_empty",
-        "line": 325,
-        "markers": [],
-        "docstring": "No previous value returns empty string.",
-        "class": "TestFormatDelta"
-      },
-      {
-        "name": "TestFormatDelta::test_tiny_delta_ignored",
-        "line": 331,
-        "markers": [],
-        "docstring": "Deltas smaller than 0.01 are ignored.",
-        "class": "TestFormatDelta"
-      },
-      {
-        "name": "TestFormatDelta::test_precision_parameter",
-        "line": 337,
-        "markers": [],
-        "docstring": "Precision parameter controls decimal places.",
-        "class": "TestFormatDelta"
-      },
-      {
-        "name": "TestFormatDelta::test_suffix_parameter",
-        "line": 343,
-        "markers": [],
-        "docstring": "Suffix parameter appends to formatted value.",
-        "class": "TestFormatDelta"
-      },
-      {
-        "name": "TestEntryExitBadgeDetailScreen::test_buy_action_returns_entry_badge",
-        "line": 353,
-        "markers": [],
-        "docstring": "BUY action returns ENTRY badge.",
-        "class": "TestEntryExitBadgeDetailScreen"
-      },
-      {
-        "name": "TestEntryExitBadgeDetailScreen::test_close_action_returns_exit_badge",
-        "line": 360,
-        "markers": [],
-        "docstring": "CLOSE action returns EXIT badge.",
-        "class": "TestEntryExitBadgeDetailScreen"
-      },
-      {
-        "name": "TestEntryExitBadgeDetailScreen::test_hold_action_returns_empty",
-        "line": 367,
-        "markers": [],
-        "docstring": "HOLD action returns empty string.",
-        "class": "TestEntryExitBadgeDetailScreen"
-      },
-      {
-        "name": "test_bullish_signal_shows_positive_contribution_and_up_arrow",
-        "line": 18,
-        "markers": [],
-        "docstring": "Bullish signal shows positive contribution with up arrow."
-      },
-      {
-        "name": "test_bearish_signal_shows_negative_contribution_and_down_arrow",
-        "line": 37,
-        "markers": [],
-        "docstring": "Bearish signal shows negative contribution with down arrow."
-      },
-      {
-        "name": "test_neutral_signal_shows_right_arrow",
-        "line": 56,
-        "markers": [],
-        "docstring": "Neutral signal shows near-zero contribution with right arrow."
-      },
-      {
-        "name": "test_long_name_truncated_to_ten_characters",
-        "line": 73,
-        "markers": [],
-        "docstring": "Long signal names are truncated to 10 characters."
-      },
-      {
-        "name": "test_includes_formatted_value_and_weight",
-        "line": 90,
-        "markers": [],
-        "docstring": "Row includes formatted value and weight."
-      },
-      {
-        "name": "test_rsi_row_includes_static_hint_when_no_params",
-        "line": 107,
-        "markers": [],
-        "docstring": "RSI row includes static tuning hint when no params set."
-      },
-      {
-        "name": "test_rsi_row_includes_live_params_when_set",
-        "line": 122,
-        "markers": [],
-        "docstring": "RSI row includes live params when strategy params set."
-      },
-      {
-        "name": "test_unknown_indicator_has_no_hint",
-        "line": 140,
-        "markers": [],
-        "docstring": "Unknown indicator row has no hint appended."
-      },
-      {
-        "name": "test_rsi_period_formatted",
-        "line": 161,
-        "markers": [],
-        "docstring": "RSI with period shows formatted param string."
-      },
-      {
-        "name": "test_ma_shows_all_parts",
-        "line": 166,
-        "markers": [],
-        "docstring": "MA with fast, slow, type shows all parts."
-      },
-      {
-        "name": "test_ema_uses_ma_params",
-        "line": 174,
-        "markers": [],
-        "docstring": "EMA indicator uses MA params."
-      },
-      {
-        "name": "test_zscore_formatted",
-        "line": 181,
-        "markers": [],
-        "docstring": "Z-Score shows lookback and entry threshold."
-      },
-      {
-        "name": "test_vwap_deviation_percent",
-        "line": 188,
-        "markers": [],
-        "docstring": "VWAP deviation formatted as percentage."
-      },
-      {
-        "name": "test_spread_tight_bps",
-        "line": 193,
-        "markers": [],
-        "docstring": "Spread shows tight threshold in bps."
-      },
-      {
-        "name": "test_orderbook_formatted",
-        "line": 198,
-        "markers": [],
-        "docstring": "Orderbook shows levels and threshold."
-      },
-      {
-        "name": "test_unknown_indicator_returns_none",
-        "line": 205,
-        "markers": [],
-        "docstring": "Unknown indicator returns None."
-      },
-      {
-        "name": "test_no_params_configured_returns_none",
-        "line": 211,
-        "markers": [],
-        "docstring": "Indicator with no configured params returns None."
-      },
-      {
-        "name": "test_case_insensitive",
-        "line": 217,
-        "markers": [],
-        "docstring": "Indicator name lookup is case-insensitive."
-      },
-      {
-        "name": "test_exact_match_static_fallback",
-        "line": 227,
-        "markers": [],
-        "docstring": "Exact indicator name returns static hint when no params."
-      },
-      {
-        "name": "test_case_insensitive_static",
-        "line": 232,
-        "markers": [],
-        "docstring": "Static hint lookup is case-insensitive."
-      },
-      {
-        "name": "test_with_parameters_in_name",
-        "line": 237,
-        "markers": [],
-        "docstring": "Indicator with parameters extracts first token for static lookup."
-      },
-      {
-        "name": "test_unknown_returns_none",
-        "line": 243,
-        "markers": [],
-        "docstring": "Unknown indicator returns None."
-      },
-      {
-        "name": "test_live_params_take_precedence",
-        "line": 248,
-        "markers": [],
-        "docstring": "Live params take precedence over static hints."
-      },
-      {
-        "name": "test_fallback_to_static_when_param_not_configured",
-        "line": 253,
-        "markers": [],
-        "docstring": "Falls back to static when specific param not configured."
-      },
-      {
-        "name": "test_live_params_for_multiple_indicators",
-        "line": 259,
-        "markers": [],
-        "docstring": "Multiple indicators with live params."
-      },
-      {
-        "name": "test_build_backtest_display_placeholder",
-        "line": 275,
-        "markers": [],
-        "docstring": "None performance returns placeholder values and note."
-      },
-      {
-        "name": "test_build_backtest_display_values",
-        "line": 289,
-        "markers": [],
-        "docstring": "Performance with trades returns formatted values."
-      },
-      {
-        "name": "test_positive_delta_shows_green_with_plus",
-        "line": 311,
-        "markers": [],
-        "docstring": "Positive delta shows green color with plus sign."
-      },
-      {
-        "name": "test_negative_delta_shows_red",
-        "line": 318,
-        "markers": [],
-        "docstring": "Negative delta shows red color."
-      },
-      {
-        "name": "test_no_previous_returns_empty",
-        "line": 325,
-        "markers": [],
-        "docstring": "No previous value returns empty string."
-      },
-      {
-        "name": "test_tiny_delta_ignored",
-        "line": 331,
-        "markers": [],
-        "docstring": "Deltas smaller than 0.01 are ignored."
-      },
-      {
-        "name": "test_precision_parameter",
-        "line": 337,
-        "markers": [],
-        "docstring": "Precision parameter controls decimal places."
-      },
-      {
-        "name": "test_suffix_parameter",
-        "line": 343,
-        "markers": [],
-        "docstring": "Suffix parameter appends to formatted value."
-      },
-      {
-        "name": "test_buy_action_returns_entry_badge",
-        "line": 353,
-        "markers": [],
-        "docstring": "BUY action returns ENTRY badge."
-      },
-      {
-        "name": "test_close_action_returns_exit_badge",
-        "line": 360,
-        "markers": [],
-        "docstring": "CLOSE action returns EXIT badge."
-      },
-      {
-        "name": "test_hold_action_returns_empty",
-        "line": 367,
-        "markers": [],
-        "docstring": "HOLD action returns empty string."
       }
     ],
     "tests/unit/gpt_trader/tui/utilities/test_pnl_formatting.py": [
@@ -48409,6 +48424,60 @@
         "docstring": "Test parameter suggestion."
       }
     ],
+    "tests/unit/gpt_trader/features/optimize/objectives/test_single_return_objectives.py": [
+      {
+        "name": "TestSharpeRatioObjective::test_calculate",
+        "line": 44,
+        "markers": [],
+        "docstring": "Test Sharpe ratio calculation.",
+        "class": "TestSharpeRatioObjective"
+      },
+      {
+        "name": "TestSharpeRatioObjective::test_calculate_none",
+        "line": 52,
+        "markers": [],
+        "docstring": "Test calculation when Sharpe is None.",
+        "class": "TestSharpeRatioObjective"
+      },
+      {
+        "name": "TestSharpeRatioObjective::test_feasibility",
+        "line": 61,
+        "markers": [],
+        "docstring": "Test feasibility check.",
+        "class": "TestSharpeRatioObjective"
+      },
+      {
+        "name": "TestTotalReturnObjective::test_calculate",
+        "line": 73,
+        "markers": [],
+        "docstring": "Test total return calculation.",
+        "class": "TestTotalReturnObjective"
+      },
+      {
+        "name": "test_calculate",
+        "line": 44,
+        "markers": [],
+        "docstring": "Test Sharpe ratio calculation."
+      },
+      {
+        "name": "test_calculate_none",
+        "line": 52,
+        "markers": [],
+        "docstring": "Test calculation when Sharpe is None."
+      },
+      {
+        "name": "test_feasibility",
+        "line": 61,
+        "markers": [],
+        "docstring": "Test feasibility check."
+      },
+      {
+        "name": "test_calculate",
+        "line": 73,
+        "markers": [],
+        "docstring": "Test total return calculation."
+      }
+    ],
     "tests/unit/gpt_trader/features/optimize/objectives/test_constraints.py": [
       {
         "name": "TestConditionalConstraint::test_validation_invalid_condition_operator",
@@ -48630,6 +48699,270 @@
         "line": 238,
         "markers": [],
         "docstring": "Test constraint fails when periods exceed limit."
+      }
+    ],
+    "tests/unit/gpt_trader/features/optimize/objectives/test_single_risk_objectives.py": [
+      {
+        "name": "TestValueAtRisk95Objective::test_properties",
+        "line": 50,
+        "markers": [],
+        "docstring": "Test objective properties.",
+        "class": "TestValueAtRisk95Objective"
+      },
+      {
+        "name": "TestValueAtRisk95Objective::test_calculate",
+        "line": 56,
+        "markers": [],
+        "docstring": "Test VaR 95 calculation.",
+        "class": "TestValueAtRisk95Objective"
+      },
+      {
+        "name": "TestValueAtRisk95Objective::test_feasibility",
+        "line": 64,
+        "markers": [],
+        "docstring": "Test feasibility check.",
+        "class": "TestValueAtRisk95Objective"
+      },
+      {
+        "name": "TestValueAtRisk99Objective::test_properties",
+        "line": 75,
+        "markers": [],
+        "docstring": "Test objective properties.",
+        "class": "TestValueAtRisk99Objective"
+      },
+      {
+        "name": "TestValueAtRisk99Objective::test_calculate",
+        "line": 81,
+        "markers": [],
+        "docstring": "Test VaR 99 calculation.",
+        "class": "TestValueAtRisk99Objective"
+      },
+      {
+        "name": "TestDrawdownRecoveryObjective::test_properties",
+        "line": 91,
+        "markers": [],
+        "docstring": "Test objective properties.",
+        "class": "TestDrawdownRecoveryObjective"
+      },
+      {
+        "name": "TestDrawdownRecoveryObjective::test_calculate",
+        "line": 97,
+        "markers": [],
+        "docstring": "Test drawdown recovery calculation.",
+        "class": "TestDrawdownRecoveryObjective"
+      },
+      {
+        "name": "TestDrawdownRecoveryObjective::test_feasibility_with_duration_constraint",
+        "line": 105,
+        "markers": [],
+        "docstring": "Test feasibility with max duration constraint.",
+        "class": "TestDrawdownRecoveryObjective"
+      },
+      {
+        "name": "TestDownsideVolatilityObjective::test_properties",
+        "line": 117,
+        "markers": [],
+        "docstring": "Test objective properties.",
+        "class": "TestDownsideVolatilityObjective"
+      },
+      {
+        "name": "TestDownsideVolatilityObjective::test_calculate",
+        "line": 123,
+        "markers": [],
+        "docstring": "Test downside volatility calculation.",
+        "class": "TestDownsideVolatilityObjective"
+      },
+      {
+        "name": "TestTailRiskAdjustedReturnObjective::test_properties",
+        "line": 133,
+        "markers": [],
+        "docstring": "Test objective properties.",
+        "class": "TestTailRiskAdjustedReturnObjective"
+      },
+      {
+        "name": "TestTailRiskAdjustedReturnObjective::test_calculate",
+        "line": 139,
+        "markers": [],
+        "docstring": "Test tail risk adjusted return calculation.",
+        "class": "TestTailRiskAdjustedReturnObjective"
+      },
+      {
+        "name": "TestTailRiskAdjustedReturnObjective::test_calculate_zero_var",
+        "line": 147,
+        "markers": [],
+        "docstring": "Test calculation when VaR is zero.",
+        "class": "TestTailRiskAdjustedReturnObjective"
+      },
+      {
+        "name": "test_properties",
+        "line": 50,
+        "markers": [],
+        "docstring": "Test objective properties."
+      },
+      {
+        "name": "test_calculate",
+        "line": 56,
+        "markers": [],
+        "docstring": "Test VaR 95 calculation."
+      },
+      {
+        "name": "test_feasibility",
+        "line": 64,
+        "markers": [],
+        "docstring": "Test feasibility check."
+      },
+      {
+        "name": "test_properties",
+        "line": 75,
+        "markers": [],
+        "docstring": "Test objective properties."
+      },
+      {
+        "name": "test_calculate",
+        "line": 81,
+        "markers": [],
+        "docstring": "Test VaR 99 calculation."
+      },
+      {
+        "name": "test_properties",
+        "line": 91,
+        "markers": [],
+        "docstring": "Test objective properties."
+      },
+      {
+        "name": "test_calculate",
+        "line": 97,
+        "markers": [],
+        "docstring": "Test drawdown recovery calculation."
+      },
+      {
+        "name": "test_feasibility_with_duration_constraint",
+        "line": 105,
+        "markers": [],
+        "docstring": "Test feasibility with max duration constraint."
+      },
+      {
+        "name": "test_properties",
+        "line": 117,
+        "markers": [],
+        "docstring": "Test objective properties."
+      },
+      {
+        "name": "test_calculate",
+        "line": 123,
+        "markers": [],
+        "docstring": "Test downside volatility calculation."
+      },
+      {
+        "name": "test_properties",
+        "line": 133,
+        "markers": [],
+        "docstring": "Test objective properties."
+      },
+      {
+        "name": "test_calculate",
+        "line": 139,
+        "markers": [],
+        "docstring": "Test tail risk adjusted return calculation."
+      },
+      {
+        "name": "test_calculate_zero_var",
+        "line": 147,
+        "markers": [],
+        "docstring": "Test calculation when VaR is zero."
+      }
+    ],
+    "tests/unit/gpt_trader/features/optimize/objectives/test_single_trade_quality_objectives.py": [
+      {
+        "name": "TestStreakConsistencyObjective::test_properties",
+        "line": 48,
+        "markers": [],
+        "docstring": "Test objective properties.",
+        "class": "TestStreakConsistencyObjective"
+      },
+      {
+        "name": "TestStreakConsistencyObjective::test_calculate",
+        "line": 54,
+        "markers": [],
+        "docstring": "Test streak consistency calculation.",
+        "class": "TestStreakConsistencyObjective"
+      },
+      {
+        "name": "TestStreakConsistencyObjective::test_feasibility_with_streak_constraint",
+        "line": 62,
+        "markers": [],
+        "docstring": "Test feasibility with max streak constraint.",
+        "class": "TestStreakConsistencyObjective"
+      },
+      {
+        "name": "TestCostAdjustedReturnObjective::test_properties",
+        "line": 74,
+        "markers": [],
+        "docstring": "Test objective properties.",
+        "class": "TestCostAdjustedReturnObjective"
+      },
+      {
+        "name": "TestCostAdjustedReturnObjective::test_calculate",
+        "line": 80,
+        "markers": [],
+        "docstring": "Test cost adjusted return calculation.",
+        "class": "TestCostAdjustedReturnObjective"
+      },
+      {
+        "name": "TestExecutionQualityObjective::test_properties",
+        "line": 90,
+        "markers": [],
+        "docstring": "Test objective properties.",
+        "class": "TestExecutionQualityObjective"
+      },
+      {
+        "name": "TestExecutionQualityObjective::test_calculate",
+        "line": 96,
+        "markers": [],
+        "docstring": "Test execution quality calculation.",
+        "class": "TestExecutionQualityObjective"
+      },
+      {
+        "name": "test_properties",
+        "line": 48,
+        "markers": [],
+        "docstring": "Test objective properties."
+      },
+      {
+        "name": "test_calculate",
+        "line": 54,
+        "markers": [],
+        "docstring": "Test streak consistency calculation."
+      },
+      {
+        "name": "test_feasibility_with_streak_constraint",
+        "line": 62,
+        "markers": [],
+        "docstring": "Test feasibility with max streak constraint."
+      },
+      {
+        "name": "test_properties",
+        "line": 74,
+        "markers": [],
+        "docstring": "Test objective properties."
+      },
+      {
+        "name": "test_calculate",
+        "line": 80,
+        "markers": [],
+        "docstring": "Test cost adjusted return calculation."
+      },
+      {
+        "name": "test_properties",
+        "line": 90,
+        "markers": [],
+        "docstring": "Test objective properties."
+      },
+      {
+        "name": "test_calculate",
+        "line": 96,
+        "markers": [],
+        "docstring": "Test execution quality calculation."
       }
     ],
     "tests/unit/gpt_trader/features/optimize/objectives/test_factories.py": [
@@ -49000,437 +49333,6 @@
         "docstring": "Test feasibility check."
       }
     ],
-    "tests/unit/gpt_trader/features/optimize/objectives/test_single.py": [
-      {
-        "name": "TestSharpeRatioObjective::test_calculate",
-        "line": 58,
-        "markers": [],
-        "docstring": "Test Sharpe ratio calculation.",
-        "class": "TestSharpeRatioObjective"
-      },
-      {
-        "name": "TestSharpeRatioObjective::test_calculate_none",
-        "line": 66,
-        "markers": [],
-        "docstring": "Test calculation when Sharpe is None.",
-        "class": "TestSharpeRatioObjective"
-      },
-      {
-        "name": "TestSharpeRatioObjective::test_feasibility",
-        "line": 75,
-        "markers": [],
-        "docstring": "Test feasibility check.",
-        "class": "TestSharpeRatioObjective"
-      },
-      {
-        "name": "TestTotalReturnObjective::test_calculate",
-        "line": 87,
-        "markers": [],
-        "docstring": "Test total return calculation.",
-        "class": "TestTotalReturnObjective"
-      },
-      {
-        "name": "TestValueAtRisk95Objective::test_properties",
-        "line": 102,
-        "markers": [],
-        "docstring": "Test objective properties.",
-        "class": "TestValueAtRisk95Objective"
-      },
-      {
-        "name": "TestValueAtRisk95Objective::test_calculate",
-        "line": 108,
-        "markers": [],
-        "docstring": "Test VaR 95 calculation.",
-        "class": "TestValueAtRisk95Objective"
-      },
-      {
-        "name": "TestValueAtRisk95Objective::test_feasibility",
-        "line": 116,
-        "markers": [],
-        "docstring": "Test feasibility check.",
-        "class": "TestValueAtRisk95Objective"
-      },
-      {
-        "name": "TestValueAtRisk99Objective::test_properties",
-        "line": 127,
-        "markers": [],
-        "docstring": "Test objective properties.",
-        "class": "TestValueAtRisk99Objective"
-      },
-      {
-        "name": "TestValueAtRisk99Objective::test_calculate",
-        "line": 133,
-        "markers": [],
-        "docstring": "Test VaR 99 calculation.",
-        "class": "TestValueAtRisk99Objective"
-      },
-      {
-        "name": "TestDrawdownRecoveryObjective::test_properties",
-        "line": 143,
-        "markers": [],
-        "docstring": "Test objective properties.",
-        "class": "TestDrawdownRecoveryObjective"
-      },
-      {
-        "name": "TestDrawdownRecoveryObjective::test_calculate",
-        "line": 149,
-        "markers": [],
-        "docstring": "Test drawdown recovery calculation.",
-        "class": "TestDrawdownRecoveryObjective"
-      },
-      {
-        "name": "TestDrawdownRecoveryObjective::test_feasibility_with_duration_constraint",
-        "line": 157,
-        "markers": [],
-        "docstring": "Test feasibility with max duration constraint.",
-        "class": "TestDrawdownRecoveryObjective"
-      },
-      {
-        "name": "TestDownsideVolatilityObjective::test_properties",
-        "line": 171,
-        "markers": [],
-        "docstring": "Test objective properties.",
-        "class": "TestDownsideVolatilityObjective"
-      },
-      {
-        "name": "TestDownsideVolatilityObjective::test_calculate",
-        "line": 177,
-        "markers": [],
-        "docstring": "Test downside volatility calculation.",
-        "class": "TestDownsideVolatilityObjective"
-      },
-      {
-        "name": "TestTailRiskAdjustedReturnObjective::test_properties",
-        "line": 187,
-        "markers": [],
-        "docstring": "Test objective properties.",
-        "class": "TestTailRiskAdjustedReturnObjective"
-      },
-      {
-        "name": "TestTailRiskAdjustedReturnObjective::test_calculate",
-        "line": 193,
-        "markers": [],
-        "docstring": "Test tail risk adjusted return calculation.",
-        "class": "TestTailRiskAdjustedReturnObjective"
-      },
-      {
-        "name": "TestTailRiskAdjustedReturnObjective::test_calculate_zero_var",
-        "line": 202,
-        "markers": [],
-        "docstring": "Test calculation when VaR is zero.",
-        "class": "TestTailRiskAdjustedReturnObjective"
-      },
-      {
-        "name": "TestStreakConsistencyObjective::test_properties",
-        "line": 218,
-        "markers": [],
-        "docstring": "Test objective properties.",
-        "class": "TestStreakConsistencyObjective"
-      },
-      {
-        "name": "TestStreakConsistencyObjective::test_calculate",
-        "line": 224,
-        "markers": [],
-        "docstring": "Test streak consistency calculation.",
-        "class": "TestStreakConsistencyObjective"
-      },
-      {
-        "name": "TestStreakConsistencyObjective::test_feasibility_with_streak_constraint",
-        "line": 232,
-        "markers": [],
-        "docstring": "Test feasibility with max streak constraint.",
-        "class": "TestStreakConsistencyObjective"
-      },
-      {
-        "name": "TestCostAdjustedReturnObjective::test_properties",
-        "line": 246,
-        "markers": [],
-        "docstring": "Test objective properties.",
-        "class": "TestCostAdjustedReturnObjective"
-      },
-      {
-        "name": "TestCostAdjustedReturnObjective::test_calculate",
-        "line": 252,
-        "markers": [],
-        "docstring": "Test cost adjusted return calculation.",
-        "class": "TestCostAdjustedReturnObjective"
-      },
-      {
-        "name": "TestExecutionQualityObjective::test_properties",
-        "line": 263,
-        "markers": [],
-        "docstring": "Test objective properties.",
-        "class": "TestExecutionQualityObjective"
-      },
-      {
-        "name": "TestExecutionQualityObjective::test_calculate",
-        "line": 269,
-        "markers": [],
-        "docstring": "Test execution quality calculation.",
-        "class": "TestExecutionQualityObjective"
-      },
-      {
-        "name": "TestTimeEfficiencyObjective::test_properties",
-        "line": 287,
-        "markers": [],
-        "docstring": "Test objective properties.",
-        "class": "TestTimeEfficiencyObjective"
-      },
-      {
-        "name": "TestTimeEfficiencyObjective::test_calculate",
-        "line": 293,
-        "markers": [],
-        "docstring": "Test time efficiency calculation.",
-        "class": "TestTimeEfficiencyObjective"
-      },
-      {
-        "name": "TestTimeEfficiencyObjective::test_calculate_low_exposure",
-        "line": 302,
-        "markers": [],
-        "docstring": "Test calculation with very low market exposure.",
-        "class": "TestTimeEfficiencyObjective"
-      },
-      {
-        "name": "TestHoldDurationObjective::test_properties",
-        "line": 313,
-        "markers": [],
-        "docstring": "Test objective properties.",
-        "class": "TestHoldDurationObjective"
-      },
-      {
-        "name": "TestHoldDurationObjective::test_calculate_at_target",
-        "line": 319,
-        "markers": [],
-        "docstring": "Test calculation when at target.",
-        "class": "TestHoldDurationObjective"
-      },
-      {
-        "name": "TestHoldDurationObjective::test_calculate_deviation",
-        "line": 328,
-        "markers": [],
-        "docstring": "Test calculation with deviation from target.",
-        "class": "TestHoldDurationObjective"
-      },
-      {
-        "name": "TestLeverageAdjustedReturnObjective::test_properties",
-        "line": 340,
-        "markers": [],
-        "docstring": "Test objective properties.",
-        "class": "TestLeverageAdjustedReturnObjective"
-      },
-      {
-        "name": "TestLeverageAdjustedReturnObjective::test_calculate",
-        "line": 346,
-        "markers": [],
-        "docstring": "Test leverage adjusted return calculation.",
-        "class": "TestLeverageAdjustedReturnObjective"
-      },
-      {
-        "name": "TestLeverageAdjustedReturnObjective::test_calculate_no_leverage",
-        "line": 355,
-        "markers": [],
-        "docstring": "Test calculation when no leverage tracked.",
-        "class": "TestLeverageAdjustedReturnObjective"
-      },
-      {
-        "name": "test_calculate",
-        "line": 58,
-        "markers": [],
-        "docstring": "Test Sharpe ratio calculation."
-      },
-      {
-        "name": "test_calculate_none",
-        "line": 66,
-        "markers": [],
-        "docstring": "Test calculation when Sharpe is None."
-      },
-      {
-        "name": "test_feasibility",
-        "line": 75,
-        "markers": [],
-        "docstring": "Test feasibility check."
-      },
-      {
-        "name": "test_calculate",
-        "line": 87,
-        "markers": [],
-        "docstring": "Test total return calculation."
-      },
-      {
-        "name": "test_properties",
-        "line": 102,
-        "markers": [],
-        "docstring": "Test objective properties."
-      },
-      {
-        "name": "test_calculate",
-        "line": 108,
-        "markers": [],
-        "docstring": "Test VaR 95 calculation."
-      },
-      {
-        "name": "test_feasibility",
-        "line": 116,
-        "markers": [],
-        "docstring": "Test feasibility check."
-      },
-      {
-        "name": "test_properties",
-        "line": 127,
-        "markers": [],
-        "docstring": "Test objective properties."
-      },
-      {
-        "name": "test_calculate",
-        "line": 133,
-        "markers": [],
-        "docstring": "Test VaR 99 calculation."
-      },
-      {
-        "name": "test_properties",
-        "line": 143,
-        "markers": [],
-        "docstring": "Test objective properties."
-      },
-      {
-        "name": "test_calculate",
-        "line": 149,
-        "markers": [],
-        "docstring": "Test drawdown recovery calculation."
-      },
-      {
-        "name": "test_feasibility_with_duration_constraint",
-        "line": 157,
-        "markers": [],
-        "docstring": "Test feasibility with max duration constraint."
-      },
-      {
-        "name": "test_properties",
-        "line": 171,
-        "markers": [],
-        "docstring": "Test objective properties."
-      },
-      {
-        "name": "test_calculate",
-        "line": 177,
-        "markers": [],
-        "docstring": "Test downside volatility calculation."
-      },
-      {
-        "name": "test_properties",
-        "line": 187,
-        "markers": [],
-        "docstring": "Test objective properties."
-      },
-      {
-        "name": "test_calculate",
-        "line": 193,
-        "markers": [],
-        "docstring": "Test tail risk adjusted return calculation."
-      },
-      {
-        "name": "test_calculate_zero_var",
-        "line": 202,
-        "markers": [],
-        "docstring": "Test calculation when VaR is zero."
-      },
-      {
-        "name": "test_properties",
-        "line": 218,
-        "markers": [],
-        "docstring": "Test objective properties."
-      },
-      {
-        "name": "test_calculate",
-        "line": 224,
-        "markers": [],
-        "docstring": "Test streak consistency calculation."
-      },
-      {
-        "name": "test_feasibility_with_streak_constraint",
-        "line": 232,
-        "markers": [],
-        "docstring": "Test feasibility with max streak constraint."
-      },
-      {
-        "name": "test_properties",
-        "line": 246,
-        "markers": [],
-        "docstring": "Test objective properties."
-      },
-      {
-        "name": "test_calculate",
-        "line": 252,
-        "markers": [],
-        "docstring": "Test cost adjusted return calculation."
-      },
-      {
-        "name": "test_properties",
-        "line": 263,
-        "markers": [],
-        "docstring": "Test objective properties."
-      },
-      {
-        "name": "test_calculate",
-        "line": 269,
-        "markers": [],
-        "docstring": "Test execution quality calculation."
-      },
-      {
-        "name": "test_properties",
-        "line": 287,
-        "markers": [],
-        "docstring": "Test objective properties."
-      },
-      {
-        "name": "test_calculate",
-        "line": 293,
-        "markers": [],
-        "docstring": "Test time efficiency calculation."
-      },
-      {
-        "name": "test_calculate_low_exposure",
-        "line": 302,
-        "markers": [],
-        "docstring": "Test calculation with very low market exposure."
-      },
-      {
-        "name": "test_properties",
-        "line": 313,
-        "markers": [],
-        "docstring": "Test objective properties."
-      },
-      {
-        "name": "test_calculate_at_target",
-        "line": 319,
-        "markers": [],
-        "docstring": "Test calculation when at target."
-      },
-      {
-        "name": "test_calculate_deviation",
-        "line": 328,
-        "markers": [],
-        "docstring": "Test calculation with deviation from target."
-      },
-      {
-        "name": "test_properties",
-        "line": 340,
-        "markers": [],
-        "docstring": "Test objective properties."
-      },
-      {
-        "name": "test_calculate",
-        "line": 346,
-        "markers": [],
-        "docstring": "Test leverage adjusted return calculation."
-      },
-      {
-        "name": "test_calculate_no_leverage",
-        "line": 355,
-        "markers": [],
-        "docstring": "Test calculation when no leverage tracked."
-      }
-    ],
     "tests/unit/gpt_trader/features/optimize/objectives/test_composite_edges.py": [
       {
         "name": "test_constraint_invalid_operator_raises",
@@ -49489,6 +49391,125 @@
         "line": 104,
         "markers": [],
         "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/optimize/objectives/test_single_exposure_and_timing_objectives.py": [
+      {
+        "name": "TestTimeEfficiencyObjective::test_properties",
+        "line": 48,
+        "markers": [],
+        "docstring": "Test objective properties.",
+        "class": "TestTimeEfficiencyObjective"
+      },
+      {
+        "name": "TestTimeEfficiencyObjective::test_calculate",
+        "line": 54,
+        "markers": [],
+        "docstring": "Test time efficiency calculation.",
+        "class": "TestTimeEfficiencyObjective"
+      },
+      {
+        "name": "TestTimeEfficiencyObjective::test_calculate_low_exposure",
+        "line": 62,
+        "markers": [],
+        "docstring": "Test calculation with very low market exposure.",
+        "class": "TestTimeEfficiencyObjective"
+      },
+      {
+        "name": "TestHoldDurationObjective::test_properties",
+        "line": 73,
+        "markers": [],
+        "docstring": "Test objective properties.",
+        "class": "TestHoldDurationObjective"
+      },
+      {
+        "name": "TestHoldDurationObjective::test_calculate_at_target",
+        "line": 79,
+        "markers": [],
+        "docstring": "Test calculation when at target.",
+        "class": "TestHoldDurationObjective"
+      },
+      {
+        "name": "TestHoldDurationObjective::test_calculate_deviation",
+        "line": 87,
+        "markers": [],
+        "docstring": "Test calculation with deviation from target.",
+        "class": "TestHoldDurationObjective"
+      },
+      {
+        "name": "TestLeverageAdjustedReturnObjective::test_properties",
+        "line": 98,
+        "markers": [],
+        "docstring": "Test objective properties.",
+        "class": "TestLeverageAdjustedReturnObjective"
+      },
+      {
+        "name": "TestLeverageAdjustedReturnObjective::test_calculate",
+        "line": 104,
+        "markers": [],
+        "docstring": "Test leverage adjusted return calculation.",
+        "class": "TestLeverageAdjustedReturnObjective"
+      },
+      {
+        "name": "TestLeverageAdjustedReturnObjective::test_calculate_no_leverage",
+        "line": 112,
+        "markers": [],
+        "docstring": "Test calculation when no leverage tracked.",
+        "class": "TestLeverageAdjustedReturnObjective"
+      },
+      {
+        "name": "test_properties",
+        "line": 48,
+        "markers": [],
+        "docstring": "Test objective properties."
+      },
+      {
+        "name": "test_calculate",
+        "line": 54,
+        "markers": [],
+        "docstring": "Test time efficiency calculation."
+      },
+      {
+        "name": "test_calculate_low_exposure",
+        "line": 62,
+        "markers": [],
+        "docstring": "Test calculation with very low market exposure."
+      },
+      {
+        "name": "test_properties",
+        "line": 73,
+        "markers": [],
+        "docstring": "Test objective properties."
+      },
+      {
+        "name": "test_calculate_at_target",
+        "line": 79,
+        "markers": [],
+        "docstring": "Test calculation when at target."
+      },
+      {
+        "name": "test_calculate_deviation",
+        "line": 87,
+        "markers": [],
+        "docstring": "Test calculation with deviation from target."
+      },
+      {
+        "name": "test_properties",
+        "line": 98,
+        "markers": [],
+        "docstring": "Test objective properties."
+      },
+      {
+        "name": "test_calculate",
+        "line": 104,
+        "markers": [],
+        "docstring": "Test leverage adjusted return calculation."
+      },
+      {
+        "name": "test_calculate_no_leverage",
+        "line": 112,
+        "markers": [],
+        "docstring": "Test calculation when no leverage tracked."
       }
     ],
     "tests/unit/gpt_trader/features/optimize/persistence/test_storage_edges.py": [
@@ -50718,279 +50739,205 @@
         "docstring": "Test to_dict produces expected format."
       }
     ],
-    "tests/unit/gpt_trader/features/intelligence/regime/test_detector.py": [
+    "tests/unit/gpt_trader/features/intelligence/regime/test_detector_persistence.py": [
       {
-        "name": "TestRegimeType::test_regime_types_exist",
-        "line": 18,
-        "markers": [],
-        "docstring": "Verify all expected regime types exist.",
-        "class": "TestRegimeType"
-      },
-      {
-        "name": "TestRegimeState::test_create_regime_state",
-        "line": 33,
-        "markers": [],
-        "docstring": "Test creating a regime state.",
-        "class": "TestRegimeState"
-      },
-      {
-        "name": "TestRegimeState::test_unknown_factory",
-        "line": 52,
-        "markers": [],
-        "docstring": "Test unknown() factory method.",
-        "class": "TestRegimeState"
-      },
-      {
-        "name": "TestRegimeState::test_is_bullish",
-        "line": 58,
-        "markers": [],
-        "docstring": "Test is_bullish helper.",
-        "class": "TestRegimeState"
-      },
-      {
-        "name": "TestRegimeState::test_is_volatile",
-        "line": 84,
-        "markers": [],
-        "docstring": "Test is_volatile helper.",
-        "class": "TestRegimeState"
-      },
-      {
-        "name": "TestRegimeState::test_to_dict",
-        "line": 102,
-        "markers": [],
-        "docstring": "Test serialization to dict.",
-        "class": "TestRegimeState"
-      },
-      {
-        "name": "TestRegimeConfig::test_default_config",
-        "line": 123,
-        "markers": [],
-        "docstring": "Test default configuration values.",
-        "class": "TestRegimeConfig"
-      },
-      {
-        "name": "TestRegimeConfig::test_custom_config",
-        "line": 130,
-        "markers": [],
-        "docstring": "Test custom configuration.",
-        "class": "TestRegimeConfig"
-      },
-      {
-        "name": "TestRegimeConfig::test_to_dict_and_from_dict",
-        "line": 141,
-        "markers": [],
-        "docstring": "Test config serialization roundtrip.",
-        "class": "TestRegimeConfig"
-      },
-      {
-        "name": "TestMarketRegimeDetector::test_initial_state_is_unknown",
-        "line": 172,
-        "markers": [],
-        "docstring": "Test that initial state is unknown.",
-        "class": "TestMarketRegimeDetector"
-      },
-      {
-        "name": "TestMarketRegimeDetector::test_warmup_period",
-        "line": 178,
-        "markers": [],
-        "docstring": "Test that detector needs warmup period.",
-        "class": "TestMarketRegimeDetector"
-      },
-      {
-        "name": "TestMarketRegimeDetector::test_detects_uptrend",
-        "line": 186,
-        "markers": [],
-        "docstring": "Test detection of bullish regime.",
-        "class": "TestMarketRegimeDetector"
-      },
-      {
-        "name": "TestMarketRegimeDetector::test_detects_downtrend",
-        "line": 201,
-        "markers": [],
-        "docstring": "Test detection of bearish regime.",
-        "class": "TestMarketRegimeDetector"
-      },
-      {
-        "name": "TestMarketRegimeDetector::test_detects_sideways",
-        "line": 221,
-        "markers": [],
-        "docstring": "Test detection of sideways regime.",
-        "class": "TestMarketRegimeDetector"
-      },
-      {
-        "name": "TestMarketRegimeDetector::test_multiple_symbols",
-        "line": 242,
-        "markers": [],
-        "docstring": "Test tracking multiple symbols independently.",
-        "class": "TestMarketRegimeDetector"
-      },
-      {
-        "name": "TestMarketRegimeDetector::test_serialization_roundtrip",
-        "line": 258,
+        "name": "TestMarketRegimeDetectorPersistence::test_serialization_roundtrip",
+        "line": 27,
         "markers": [],
         "docstring": "Test state persistence and recovery.",
-        "class": "TestMarketRegimeDetector"
+        "class": "TestMarketRegimeDetectorPersistence"
       },
       {
-        "name": "TestMarketRegimeDetector::test_reset_symbol",
-        "line": 282,
+        "name": "TestMarketRegimeDetectorPersistence::test_reset_symbol",
+        "line": 46,
         "markers": [],
         "docstring": "Test resetting a single symbol.",
-        "class": "TestMarketRegimeDetector"
+        "class": "TestMarketRegimeDetectorPersistence"
       },
       {
-        "name": "TestMarketRegimeDetector::test_reset_all",
-        "line": 295,
+        "name": "TestMarketRegimeDetectorPersistence::test_reset_all",
+        "line": 56,
         "markers": [],
         "docstring": "Test resetting all symbols.",
-        "class": "TestMarketRegimeDetector"
+        "class": "TestMarketRegimeDetectorPersistence"
       },
       {
-        "name": "TestMarketRegimeDetector::test_regime_persistence",
-        "line": 309,
+        "name": "TestMarketRegimeDetectorPersistence::test_regime_persistence",
+        "line": 67,
         "markers": [],
         "docstring": "Test that regime doesn't flip-flop on noise.",
-        "class": "TestMarketRegimeDetector"
+        "class": "TestMarketRegimeDetectorPersistence"
       },
       {
+        "name": "test_serialization_roundtrip",
+        "line": 27,
+        "markers": [],
+        "docstring": "Test state persistence and recovery."
+      },
+      {
+        "name": "test_reset_symbol",
+        "line": 46,
+        "markers": [],
+        "docstring": "Test resetting a single symbol."
+      },
+      {
+        "name": "test_reset_all",
+        "line": 56,
+        "markers": [],
+        "docstring": "Test resetting all symbols."
+      },
+      {
+        "name": "test_regime_persistence",
+        "line": 67,
+        "markers": [],
+        "docstring": "Test that regime doesn't flip-flop on noise."
+      }
+    ],
+    "tests/unit/gpt_trader/features/intelligence/regime/test_detector_crisis_detection.py": [
+      {
         "name": "TestCrisisDetection::test_detects_drawdown_crisis",
-        "line": 340,
+        "line": 29,
         "markers": [],
         "docstring": "Test crisis detection on large drawdown.",
         "class": "TestCrisisDetection"
       },
       {
         "name": "TestCrisisDetection::test_crisis_state_to_dict",
-        "line": 360,
+        "line": 44,
         "markers": [],
         "docstring": "Test crisis state serialization.",
         "class": "TestCrisisDetection"
       },
       {
-        "name": "test_regime_types_exist",
-        "line": 18,
-        "markers": [],
-        "docstring": "Verify all expected regime types exist."
-      },
-      {
-        "name": "test_create_regime_state",
-        "line": 33,
-        "markers": [],
-        "docstring": "Test creating a regime state."
-      },
-      {
-        "name": "test_unknown_factory",
-        "line": 52,
-        "markers": [],
-        "docstring": "Test unknown() factory method."
-      },
-      {
-        "name": "test_is_bullish",
-        "line": 58,
-        "markers": [],
-        "docstring": "Test is_bullish helper."
-      },
-      {
-        "name": "test_is_volatile",
-        "line": 84,
-        "markers": [],
-        "docstring": "Test is_volatile helper."
-      },
-      {
-        "name": "test_to_dict",
-        "line": 102,
-        "markers": [],
-        "docstring": "Test serialization to dict."
-      },
-      {
-        "name": "test_default_config",
-        "line": 123,
-        "markers": [],
-        "docstring": "Test default configuration values."
-      },
-      {
-        "name": "test_custom_config",
-        "line": 130,
-        "markers": [],
-        "docstring": "Test custom configuration."
-      },
-      {
-        "name": "test_to_dict_and_from_dict",
-        "line": 141,
-        "markers": [],
-        "docstring": "Test config serialization roundtrip."
-      },
-      {
-        "name": "test_initial_state_is_unknown",
-        "line": 172,
-        "markers": [],
-        "docstring": "Test that initial state is unknown."
-      },
-      {
-        "name": "test_warmup_period",
-        "line": 178,
-        "markers": [],
-        "docstring": "Test that detector needs warmup period."
-      },
-      {
-        "name": "test_detects_uptrend",
-        "line": 186,
-        "markers": [],
-        "docstring": "Test detection of bullish regime."
-      },
-      {
-        "name": "test_detects_downtrend",
-        "line": 201,
-        "markers": [],
-        "docstring": "Test detection of bearish regime."
-      },
-      {
-        "name": "test_detects_sideways",
-        "line": 221,
-        "markers": [],
-        "docstring": "Test detection of sideways regime."
-      },
-      {
-        "name": "test_multiple_symbols",
-        "line": 242,
-        "markers": [],
-        "docstring": "Test tracking multiple symbols independently."
-      },
-      {
-        "name": "test_serialization_roundtrip",
-        "line": 258,
-        "markers": [],
-        "docstring": "Test state persistence and recovery."
-      },
-      {
-        "name": "test_reset_symbol",
-        "line": 282,
-        "markers": [],
-        "docstring": "Test resetting a single symbol."
-      },
-      {
-        "name": "test_reset_all",
-        "line": 295,
-        "markers": [],
-        "docstring": "Test resetting all symbols."
-      },
-      {
-        "name": "test_regime_persistence",
-        "line": 309,
-        "markers": [],
-        "docstring": "Test that regime doesn't flip-flop on noise."
-      },
-      {
         "name": "test_detects_drawdown_crisis",
-        "line": 340,
+        "line": 29,
         "markers": [],
         "docstring": "Test crisis detection on large drawdown."
       },
       {
         "name": "test_crisis_state_to_dict",
-        "line": 360,
+        "line": 44,
         "markers": [],
         "docstring": "Test crisis state serialization."
+      }
+    ],
+    "tests/unit/gpt_trader/features/intelligence/regime/test_detector_models.py": [
+      {
+        "name": "TestRegimeType::test_regime_types_exist",
+        "line": 9,
+        "markers": [],
+        "docstring": "Verify all expected regime types exist.",
+        "class": "TestRegimeType"
+      },
+      {
+        "name": "TestRegimeState::test_create_regime_state",
+        "line": 24,
+        "markers": [],
+        "docstring": "Test creating a regime state.",
+        "class": "TestRegimeState"
+      },
+      {
+        "name": "TestRegimeState::test_unknown_factory",
+        "line": 43,
+        "markers": [],
+        "docstring": "Test unknown() factory method.",
+        "class": "TestRegimeState"
+      },
+      {
+        "name": "TestRegimeState::test_is_bullish",
+        "line": 49,
+        "markers": [],
+        "docstring": "Test is_bullish helper.",
+        "class": "TestRegimeState"
+      },
+      {
+        "name": "TestRegimeState::test_is_volatile",
+        "line": 75,
+        "markers": [],
+        "docstring": "Test is_volatile helper.",
+        "class": "TestRegimeState"
+      },
+      {
+        "name": "TestRegimeState::test_to_dict",
+        "line": 93,
+        "markers": [],
+        "docstring": "Test serialization to dict.",
+        "class": "TestRegimeState"
+      },
+      {
+        "name": "TestRegimeConfig::test_default_config",
+        "line": 114,
+        "markers": [],
+        "docstring": "Test default configuration values.",
+        "class": "TestRegimeConfig"
+      },
+      {
+        "name": "TestRegimeConfig::test_custom_config",
+        "line": 121,
+        "markers": [],
+        "docstring": "Test custom configuration.",
+        "class": "TestRegimeConfig"
+      },
+      {
+        "name": "TestRegimeConfig::test_to_dict_and_from_dict",
+        "line": 132,
+        "markers": [],
+        "docstring": "Test config serialization roundtrip.",
+        "class": "TestRegimeConfig"
+      },
+      {
+        "name": "test_regime_types_exist",
+        "line": 9,
+        "markers": [],
+        "docstring": "Verify all expected regime types exist."
+      },
+      {
+        "name": "test_create_regime_state",
+        "line": 24,
+        "markers": [],
+        "docstring": "Test creating a regime state."
+      },
+      {
+        "name": "test_unknown_factory",
+        "line": 43,
+        "markers": [],
+        "docstring": "Test unknown() factory method."
+      },
+      {
+        "name": "test_is_bullish",
+        "line": 49,
+        "markers": [],
+        "docstring": "Test is_bullish helper."
+      },
+      {
+        "name": "test_is_volatile",
+        "line": 75,
+        "markers": [],
+        "docstring": "Test is_volatile helper."
+      },
+      {
+        "name": "test_to_dict",
+        "line": 93,
+        "markers": [],
+        "docstring": "Test serialization to dict."
+      },
+      {
+        "name": "test_default_config",
+        "line": 114,
+        "markers": [],
+        "docstring": "Test default configuration values."
+      },
+      {
+        "name": "test_custom_config",
+        "line": 121,
+        "markers": [],
+        "docstring": "Test custom configuration."
+      },
+      {
+        "name": "test_to_dict_and_from_dict",
+        "line": 132,
+        "markers": [],
+        "docstring": "Test config serialization roundtrip."
       }
     ],
     "tests/unit/gpt_trader/features/intelligence/regime/test_detector_edges.py": [
@@ -51065,6 +51012,86 @@
         "line": 165,
         "markers": [],
         "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/intelligence/regime/test_detector_regime_classification.py": [
+      {
+        "name": "TestMarketRegimeDetector::test_initial_state_is_unknown",
+        "line": 32,
+        "markers": [],
+        "docstring": "Test that initial state is unknown.",
+        "class": "TestMarketRegimeDetector"
+      },
+      {
+        "name": "TestMarketRegimeDetector::test_warmup_period",
+        "line": 37,
+        "markers": [],
+        "docstring": "Test that detector needs warmup period.",
+        "class": "TestMarketRegimeDetector"
+      },
+      {
+        "name": "TestMarketRegimeDetector::test_detects_uptrend",
+        "line": 43,
+        "markers": [],
+        "docstring": "Test detection of bullish regime.",
+        "class": "TestMarketRegimeDetector"
+      },
+      {
+        "name": "TestMarketRegimeDetector::test_detects_downtrend",
+        "line": 56,
+        "markers": [],
+        "docstring": "Test detection of bearish regime.",
+        "class": "TestMarketRegimeDetector"
+      },
+      {
+        "name": "TestMarketRegimeDetector::test_detects_sideways",
+        "line": 74,
+        "markers": [],
+        "docstring": "Test detection of sideways regime.",
+        "class": "TestMarketRegimeDetector"
+      },
+      {
+        "name": "TestMarketRegimeDetector::test_multiple_symbols",
+        "line": 92,
+        "markers": [],
+        "docstring": "Test tracking multiple symbols independently.",
+        "class": "TestMarketRegimeDetector"
+      },
+      {
+        "name": "test_initial_state_is_unknown",
+        "line": 32,
+        "markers": [],
+        "docstring": "Test that initial state is unknown."
+      },
+      {
+        "name": "test_warmup_period",
+        "line": 37,
+        "markers": [],
+        "docstring": "Test that detector needs warmup period."
+      },
+      {
+        "name": "test_detects_uptrend",
+        "line": 43,
+        "markers": [],
+        "docstring": "Test detection of bullish regime."
+      },
+      {
+        "name": "test_detects_downtrend",
+        "line": 56,
+        "markers": [],
+        "docstring": "Test detection of bearish regime."
+      },
+      {
+        "name": "test_detects_sideways",
+        "line": 74,
+        "markers": [],
+        "docstring": "Test detection of sideways regime."
+      },
+      {
+        "name": "test_multiple_symbols",
+        "line": 92,
+        "markers": [],
+        "docstring": "Test tracking multiple symbols independently."
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_init.py": [
@@ -58346,6 +58373,99 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_cfm.py": [
+      {
+        "name": "TestPortfolioServiceCfm::test_get_cfm_balance_summary_returns_summary",
+        "line": 15,
+        "markers": [],
+        "docstring": "Test getting CFM balance summary.",
+        "class": "TestPortfolioServiceCfm"
+      },
+      {
+        "name": "TestPortfolioServiceCfm::test_get_cfm_balance_summary_returns_empty_when_not_supported",
+        "line": 36,
+        "markers": [],
+        "docstring": "Test CFM balance summary returns empty when derivatives not supported.",
+        "class": "TestPortfolioServiceCfm"
+      },
+      {
+        "name": "TestPortfolioServiceCfm::test_list_cfm_sweeps_returns_sweeps",
+        "line": 48,
+        "markers": [],
+        "docstring": "Test listing CFM sweeps.",
+        "class": "TestPortfolioServiceCfm"
+      },
+      {
+        "name": "TestPortfolioServiceCfm::test_get_cfm_sweeps_schedule_returns_schedule",
+        "line": 68,
+        "markers": [],
+        "docstring": "Test getting CFM sweeps schedule.",
+        "class": "TestPortfolioServiceCfm"
+      },
+      {
+        "name": "TestPortfolioServiceCfm::test_get_cfm_margin_window_returns_window",
+        "line": 84,
+        "markers": [],
+        "docstring": "Test getting CFM margin window.",
+        "class": "TestPortfolioServiceCfm"
+      },
+      {
+        "name": "TestPortfolioServiceCfm::test_update_cfm_margin_window_success",
+        "line": 101,
+        "markers": [],
+        "docstring": "Test updating CFM margin window.",
+        "class": "TestPortfolioServiceCfm"
+      },
+      {
+        "name": "TestPortfolioServiceCfm::test_update_cfm_margin_window_raises_when_not_supported",
+        "line": 120,
+        "markers": [],
+        "docstring": "Test update_cfm_margin_window raises when derivatives not supported.",
+        "class": "TestPortfolioServiceCfm"
+      },
+      {
+        "name": "test_get_cfm_balance_summary_returns_summary",
+        "line": 15,
+        "markers": [],
+        "docstring": "Test getting CFM balance summary."
+      },
+      {
+        "name": "test_get_cfm_balance_summary_returns_empty_when_not_supported",
+        "line": 36,
+        "markers": [],
+        "docstring": "Test CFM balance summary returns empty when derivatives not supported."
+      },
+      {
+        "name": "test_list_cfm_sweeps_returns_sweeps",
+        "line": 48,
+        "markers": [],
+        "docstring": "Test listing CFM sweeps."
+      },
+      {
+        "name": "test_get_cfm_sweeps_schedule_returns_schedule",
+        "line": 68,
+        "markers": [],
+        "docstring": "Test getting CFM sweeps schedule."
+      },
+      {
+        "name": "test_get_cfm_margin_window_returns_window",
+        "line": 84,
+        "markers": [],
+        "docstring": "Test getting CFM margin window."
+      },
+      {
+        "name": "test_update_cfm_margin_window_success",
+        "line": 101,
+        "markers": [],
+        "docstring": "Test updating CFM margin window."
+      },
+      {
+        "name": "test_update_cfm_margin_window_raises_when_not_supported",
+        "line": 120,
+        "markers": [],
+        "docstring": "Test update_cfm_margin_window raises when derivatives not supported."
+      }
+    ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_product_service_product_filters.py": [
       {
         "name": "TestProductServiceProductFilters::test_get_perpetuals_returns_only_perpetuals",
@@ -58454,346 +58574,6 @@
         "docstring": "Test placing market order without price delegates correctly."
       }
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service.py": [
-      {
-        "name": "TestPortfolioService::test_service_init",
-        "line": 29,
-        "markers": [],
-        "docstring": "Test service initialization.",
-        "class": "TestPortfolioService"
-      },
-      {
-        "name": "TestPortfolioService::test_list_balances_returns_balances",
-        "line": 35,
-        "markers": [],
-        "docstring": "Test listing balances returns parsed balances.",
-        "class": "TestPortfolioService"
-      },
-      {
-        "name": "TestPortfolioService::test_list_balances_handles_list_response",
-        "line": 64,
-        "markers": [],
-        "docstring": "Test listing balances handles list response shape.",
-        "class": "TestPortfolioService"
-      },
-      {
-        "name": "TestPortfolioService::test_list_balances_calculates_total_when_missing",
-        "line": 81,
-        "markers": [],
-        "docstring": "Test list_balances calculates total from available + hold.",
-        "class": "TestPortfolioService"
-      },
-      {
-        "name": "TestPortfolioService::test_list_balances_handles_exception",
-        "line": 98,
-        "markers": [],
-        "docstring": "Test list_balances handles API exception.",
-        "class": "TestPortfolioService"
-      },
-      {
-        "name": "TestPortfolioService::test_list_balances_skips_invalid_entries",
-        "line": 106,
-        "markers": [],
-        "docstring": "Test list_balances skips entries that fail to parse.",
-        "class": "TestPortfolioService"
-      },
-      {
-        "name": "TestPortfolioService::test_get_portfolio_balances_delegates_to_list_balances",
-        "line": 129,
-        "markers": [],
-        "docstring": "Test get_portfolio_balances delegates to list_balances.",
-        "class": "TestPortfolioService"
-      },
-      {
-        "name": "TestPortfolioService::test_list_positions_returns_positions",
-        "line": 138,
-        "markers": [],
-        "docstring": "Test listing positions when derivatives are supported.",
-        "class": "TestPortfolioService"
-      },
-      {
-        "name": "TestPortfolioService::test_list_positions_returns_empty_when_derivatives_not_supported",
-        "line": 161,
-        "markers": [],
-        "docstring": "Test list_positions returns empty when derivatives not supported.",
-        "class": "TestPortfolioService"
-      },
-      {
-        "name": "TestPortfolioService::test_list_positions_handles_exception",
-        "line": 170,
-        "markers": [],
-        "docstring": "Test list_positions handles API exception.",
-        "class": "TestPortfolioService"
-      },
-      {
-        "name": "TestPortfolioService::test_get_position_returns_position",
-        "line": 179,
-        "markers": [],
-        "docstring": "Test getting a single position.",
-        "class": "TestPortfolioService"
-      },
-      {
-        "name": "TestPortfolioService::test_get_position_returns_none_when_not_supported",
-        "line": 197,
-        "markers": [],
-        "docstring": "Test get_position returns None when derivatives not supported.",
-        "class": "TestPortfolioService"
-      },
-      {
-        "name": "TestPortfolioService::test_intx_allocate_requires_advanced_mode",
-        "line": 205,
-        "markers": [],
-        "docstring": "Test intx_allocate raises when not in advanced mode.",
-        "class": "TestPortfolioService"
-      },
-      {
-        "name": "TestPortfolioService::test_intx_allocate_success",
-        "line": 212,
-        "markers": [],
-        "docstring": "Test successful INTX allocation.",
-        "class": "TestPortfolioService"
-      },
-      {
-        "name": "TestPortfolioService::test_get_intx_balances_returns_empty_when_not_advanced",
-        "line": 225,
-        "markers": [],
-        "docstring": "Test get_intx_balances returns empty when not in advanced mode.",
-        "class": "TestPortfolioService"
-      },
-      {
-        "name": "TestPortfolioService::test_get_intx_balances_returns_balances",
-        "line": 233,
-        "markers": [],
-        "docstring": "Test get_intx_balances returns balances.",
-        "class": "TestPortfolioService"
-      },
-      {
-        "name": "TestPortfolioService::test_get_intx_portfolio_returns_empty_when_not_advanced",
-        "line": 248,
-        "markers": [],
-        "docstring": "Test get_intx_portfolio returns empty when not in advanced mode.",
-        "class": "TestPortfolioService"
-      },
-      {
-        "name": "TestPortfolioService::test_get_intx_portfolio_success",
-        "line": 256,
-        "markers": [],
-        "docstring": "Test successful INTX portfolio retrieval.",
-        "class": "TestPortfolioService"
-      },
-      {
-        "name": "TestPortfolioService::test_list_intx_positions_returns_positions",
-        "line": 268,
-        "markers": [],
-        "docstring": "Test listing INTX positions.",
-        "class": "TestPortfolioService"
-      },
-      {
-        "name": "TestPortfolioService::test_get_cfm_balance_summary_returns_summary",
-        "line": 286,
-        "markers": [],
-        "docstring": "Test getting CFM balance summary.",
-        "class": "TestPortfolioService"
-      },
-      {
-        "name": "TestPortfolioService::test_get_cfm_balance_summary_returns_empty_when_not_supported",
-        "line": 301,
-        "markers": [],
-        "docstring": "Test CFM balance summary returns empty when derivatives not supported.",
-        "class": "TestPortfolioService"
-      },
-      {
-        "name": "TestPortfolioService::test_list_cfm_sweeps_returns_sweeps",
-        "line": 309,
-        "markers": [],
-        "docstring": "Test listing CFM sweeps.",
-        "class": "TestPortfolioService"
-      },
-      {
-        "name": "TestPortfolioService::test_get_cfm_sweeps_schedule_returns_schedule",
-        "line": 324,
-        "markers": [],
-        "docstring": "Test getting CFM sweeps schedule.",
-        "class": "TestPortfolioService"
-      },
-      {
-        "name": "TestPortfolioService::test_get_cfm_margin_window_returns_window",
-        "line": 335,
-        "markers": [],
-        "docstring": "Test getting CFM margin window.",
-        "class": "TestPortfolioService"
-      },
-      {
-        "name": "TestPortfolioService::test_update_cfm_margin_window_success",
-        "line": 347,
-        "markers": [],
-        "docstring": "Test updating CFM margin window.",
-        "class": "TestPortfolioService"
-      },
-      {
-        "name": "TestPortfolioService::test_update_cfm_margin_window_raises_when_not_supported",
-        "line": 360,
-        "markers": [],
-        "docstring": "Test update_cfm_margin_window raises when derivatives not supported.",
-        "class": "TestPortfolioService"
-      },
-      {
-        "name": "test_service_init",
-        "line": 29,
-        "markers": [],
-        "docstring": "Test service initialization."
-      },
-      {
-        "name": "test_list_balances_returns_balances",
-        "line": 35,
-        "markers": [],
-        "docstring": "Test listing balances returns parsed balances."
-      },
-      {
-        "name": "test_list_balances_handles_list_response",
-        "line": 64,
-        "markers": [],
-        "docstring": "Test listing balances handles list response shape."
-      },
-      {
-        "name": "test_list_balances_calculates_total_when_missing",
-        "line": 81,
-        "markers": [],
-        "docstring": "Test list_balances calculates total from available + hold."
-      },
-      {
-        "name": "test_list_balances_handles_exception",
-        "line": 98,
-        "markers": [],
-        "docstring": "Test list_balances handles API exception."
-      },
-      {
-        "name": "test_list_balances_skips_invalid_entries",
-        "line": 106,
-        "markers": [],
-        "docstring": "Test list_balances skips entries that fail to parse."
-      },
-      {
-        "name": "test_get_portfolio_balances_delegates_to_list_balances",
-        "line": 129,
-        "markers": [],
-        "docstring": "Test get_portfolio_balances delegates to list_balances."
-      },
-      {
-        "name": "test_list_positions_returns_positions",
-        "line": 138,
-        "markers": [],
-        "docstring": "Test listing positions when derivatives are supported."
-      },
-      {
-        "name": "test_list_positions_returns_empty_when_derivatives_not_supported",
-        "line": 161,
-        "markers": [],
-        "docstring": "Test list_positions returns empty when derivatives not supported."
-      },
-      {
-        "name": "test_list_positions_handles_exception",
-        "line": 170,
-        "markers": [],
-        "docstring": "Test list_positions handles API exception."
-      },
-      {
-        "name": "test_get_position_returns_position",
-        "line": 179,
-        "markers": [],
-        "docstring": "Test getting a single position."
-      },
-      {
-        "name": "test_get_position_returns_none_when_not_supported",
-        "line": 197,
-        "markers": [],
-        "docstring": "Test get_position returns None when derivatives not supported."
-      },
-      {
-        "name": "test_intx_allocate_requires_advanced_mode",
-        "line": 205,
-        "markers": [],
-        "docstring": "Test intx_allocate raises when not in advanced mode."
-      },
-      {
-        "name": "test_intx_allocate_success",
-        "line": 212,
-        "markers": [],
-        "docstring": "Test successful INTX allocation."
-      },
-      {
-        "name": "test_get_intx_balances_returns_empty_when_not_advanced",
-        "line": 225,
-        "markers": [],
-        "docstring": "Test get_intx_balances returns empty when not in advanced mode."
-      },
-      {
-        "name": "test_get_intx_balances_returns_balances",
-        "line": 233,
-        "markers": [],
-        "docstring": "Test get_intx_balances returns balances."
-      },
-      {
-        "name": "test_get_intx_portfolio_returns_empty_when_not_advanced",
-        "line": 248,
-        "markers": [],
-        "docstring": "Test get_intx_portfolio returns empty when not in advanced mode."
-      },
-      {
-        "name": "test_get_intx_portfolio_success",
-        "line": 256,
-        "markers": [],
-        "docstring": "Test successful INTX portfolio retrieval."
-      },
-      {
-        "name": "test_list_intx_positions_returns_positions",
-        "line": 268,
-        "markers": [],
-        "docstring": "Test listing INTX positions."
-      },
-      {
-        "name": "test_get_cfm_balance_summary_returns_summary",
-        "line": 286,
-        "markers": [],
-        "docstring": "Test getting CFM balance summary."
-      },
-      {
-        "name": "test_get_cfm_balance_summary_returns_empty_when_not_supported",
-        "line": 301,
-        "markers": [],
-        "docstring": "Test CFM balance summary returns empty when derivatives not supported."
-      },
-      {
-        "name": "test_list_cfm_sweeps_returns_sweeps",
-        "line": 309,
-        "markers": [],
-        "docstring": "Test listing CFM sweeps."
-      },
-      {
-        "name": "test_get_cfm_sweeps_schedule_returns_schedule",
-        "line": 324,
-        "markers": [],
-        "docstring": "Test getting CFM sweeps schedule."
-      },
-      {
-        "name": "test_get_cfm_margin_window_returns_window",
-        "line": 335,
-        "markers": [],
-        "docstring": "Test getting CFM margin window."
-      },
-      {
-        "name": "test_update_cfm_margin_window_success",
-        "line": 347,
-        "markers": [],
-        "docstring": "Test updating CFM margin window."
-      },
-      {
-        "name": "test_update_cfm_margin_window_raises_when_not_supported",
-        "line": 360,
-        "markers": [],
-        "docstring": "Test update_cfm_margin_window raises when derivatives not supported."
-      }
-    ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_list_fills.py": [
       {
         "name": "TestListFills::test_list_fills_returns_fills",
@@ -58872,6 +58652,73 @@
         "line": 92,
         "markers": [],
         "docstring": "Test that BrokerageError isn't wrapped."
+      }
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_positions.py": [
+      {
+        "name": "TestPortfolioServicePositions::test_list_positions_returns_positions",
+        "line": 12,
+        "markers": [],
+        "docstring": "Test listing positions when derivatives are supported.",
+        "class": "TestPortfolioServicePositions"
+      },
+      {
+        "name": "TestPortfolioServicePositions::test_list_positions_returns_empty_when_derivatives_not_supported",
+        "line": 39,
+        "markers": [],
+        "docstring": "Test list_positions returns empty when derivatives not supported.",
+        "class": "TestPortfolioServicePositions"
+      },
+      {
+        "name": "TestPortfolioServicePositions::test_list_positions_handles_exception",
+        "line": 53,
+        "markers": [],
+        "docstring": "Test list_positions handles API exception.",
+        "class": "TestPortfolioServicePositions"
+      },
+      {
+        "name": "TestPortfolioServicePositions::test_get_position_returns_position",
+        "line": 67,
+        "markers": [],
+        "docstring": "Test getting a single position.",
+        "class": "TestPortfolioServicePositions"
+      },
+      {
+        "name": "TestPortfolioServicePositions::test_get_position_returns_none_when_not_supported",
+        "line": 89,
+        "markers": [],
+        "docstring": "Test get_position returns None when derivatives not supported.",
+        "class": "TestPortfolioServicePositions"
+      },
+      {
+        "name": "test_list_positions_returns_positions",
+        "line": 12,
+        "markers": [],
+        "docstring": "Test listing positions when derivatives are supported."
+      },
+      {
+        "name": "test_list_positions_returns_empty_when_derivatives_not_supported",
+        "line": 39,
+        "markers": [],
+        "docstring": "Test list_positions returns empty when derivatives not supported."
+      },
+      {
+        "name": "test_list_positions_handles_exception",
+        "line": 53,
+        "markers": [],
+        "docstring": "Test list_positions handles API exception."
+      },
+      {
+        "name": "test_get_position_returns_position",
+        "line": 67,
+        "markers": [],
+        "docstring": "Test getting a single position."
+      },
+      {
+        "name": "test_get_position_returns_none_when_not_supported",
+        "line": 89,
+        "markers": [],
+        "docstring": "Test get_position returns None when derivatives not supported."
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_unified_edges.py": [
@@ -59064,6 +58911,99 @@
         "line": 73,
         "markers": [],
         "docstring": "Test that BrokerageError isn't wrapped."
+      }
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_balances.py": [
+      {
+        "name": "TestPortfolioServiceBalances::test_service_init",
+        "line": 12,
+        "markers": [],
+        "docstring": "Test service initialization.",
+        "class": "TestPortfolioServiceBalances"
+      },
+      {
+        "name": "TestPortfolioServiceBalances::test_list_balances_returns_balances",
+        "line": 24,
+        "markers": [],
+        "docstring": "Test listing balances returns parsed balances.",
+        "class": "TestPortfolioServiceBalances"
+      },
+      {
+        "name": "TestPortfolioServiceBalances::test_list_balances_handles_list_response",
+        "line": 57,
+        "markers": [],
+        "docstring": "Test listing balances handles list response shape.",
+        "class": "TestPortfolioServiceBalances"
+      },
+      {
+        "name": "TestPortfolioServiceBalances::test_list_balances_calculates_total_when_missing",
+        "line": 78,
+        "markers": [],
+        "docstring": "Test list_balances calculates total from available + hold.",
+        "class": "TestPortfolioServiceBalances"
+      },
+      {
+        "name": "TestPortfolioServiceBalances::test_list_balances_handles_exception",
+        "line": 99,
+        "markers": [],
+        "docstring": "Test list_balances handles API exception.",
+        "class": "TestPortfolioServiceBalances"
+      },
+      {
+        "name": "TestPortfolioServiceBalances::test_list_balances_skips_invalid_entries",
+        "line": 111,
+        "markers": [],
+        "docstring": "Test list_balances skips entries that fail to parse.",
+        "class": "TestPortfolioServiceBalances"
+      },
+      {
+        "name": "TestPortfolioServiceBalances::test_get_portfolio_balances_delegates_to_list_balances",
+        "line": 137,
+        "markers": [],
+        "docstring": "Test get_portfolio_balances delegates to list_balances.",
+        "class": "TestPortfolioServiceBalances"
+      },
+      {
+        "name": "test_service_init",
+        "line": 12,
+        "markers": [],
+        "docstring": "Test service initialization."
+      },
+      {
+        "name": "test_list_balances_returns_balances",
+        "line": 24,
+        "markers": [],
+        "docstring": "Test listing balances returns parsed balances."
+      },
+      {
+        "name": "test_list_balances_handles_list_response",
+        "line": 57,
+        "markers": [],
+        "docstring": "Test listing balances handles list response shape."
+      },
+      {
+        "name": "test_list_balances_calculates_total_when_missing",
+        "line": 78,
+        "markers": [],
+        "docstring": "Test list_balances calculates total from available + hold."
+      },
+      {
+        "name": "test_list_balances_handles_exception",
+        "line": 99,
+        "markers": [],
+        "docstring": "Test list_balances handles API exception."
+      },
+      {
+        "name": "test_list_balances_skips_invalid_entries",
+        "line": 111,
+        "markers": [],
+        "docstring": "Test list_balances skips entries that fail to parse."
+      },
+      {
+        "name": "test_get_portfolio_balances_delegates_to_list_balances",
+        "line": 137,
+        "markers": [],
+        "docstring": "Test get_portfolio_balances delegates to list_balances."
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_initialization.py": [
@@ -59278,6 +59218,99 @@
         "line": 85,
         "markers": [],
         "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_intx.py": [
+      {
+        "name": "TestPortfolioServiceIntx::test_intx_allocate_requires_advanced_mode",
+        "line": 15,
+        "markers": [],
+        "docstring": "Test intx_allocate raises when not in advanced mode.",
+        "class": "TestPortfolioServiceIntx"
+      },
+      {
+        "name": "TestPortfolioServiceIntx::test_intx_allocate_success",
+        "line": 26,
+        "markers": [],
+        "docstring": "Test successful INTX allocation.",
+        "class": "TestPortfolioServiceIntx"
+      },
+      {
+        "name": "TestPortfolioServiceIntx::test_get_intx_balances_returns_empty_when_not_advanced",
+        "line": 45,
+        "markers": [],
+        "docstring": "Test get_intx_balances returns empty when not in advanced mode.",
+        "class": "TestPortfolioServiceIntx"
+      },
+      {
+        "name": "TestPortfolioServiceIntx::test_get_intx_balances_returns_balances",
+        "line": 57,
+        "markers": [],
+        "docstring": "Test get_intx_balances returns balances.",
+        "class": "TestPortfolioServiceIntx"
+      },
+      {
+        "name": "TestPortfolioServiceIntx::test_get_intx_portfolio_returns_empty_when_not_advanced",
+        "line": 77,
+        "markers": [],
+        "docstring": "Test get_intx_portfolio returns empty when not in advanced mode.",
+        "class": "TestPortfolioServiceIntx"
+      },
+      {
+        "name": "TestPortfolioServiceIntx::test_get_intx_portfolio_success",
+        "line": 89,
+        "markers": [],
+        "docstring": "Test successful INTX portfolio retrieval.",
+        "class": "TestPortfolioServiceIntx"
+      },
+      {
+        "name": "TestPortfolioServiceIntx::test_list_intx_positions_returns_positions",
+        "line": 106,
+        "markers": [],
+        "docstring": "Test listing INTX positions.",
+        "class": "TestPortfolioServiceIntx"
+      },
+      {
+        "name": "test_intx_allocate_requires_advanced_mode",
+        "line": 15,
+        "markers": [],
+        "docstring": "Test intx_allocate raises when not in advanced mode."
+      },
+      {
+        "name": "test_intx_allocate_success",
+        "line": 26,
+        "markers": [],
+        "docstring": "Test successful INTX allocation."
+      },
+      {
+        "name": "test_get_intx_balances_returns_empty_when_not_advanced",
+        "line": 45,
+        "markers": [],
+        "docstring": "Test get_intx_balances returns empty when not in advanced mode."
+      },
+      {
+        "name": "test_get_intx_balances_returns_balances",
+        "line": 57,
+        "markers": [],
+        "docstring": "Test get_intx_balances returns balances."
+      },
+      {
+        "name": "test_get_intx_portfolio_returns_empty_when_not_advanced",
+        "line": 77,
+        "markers": [],
+        "docstring": "Test get_intx_portfolio returns empty when not in advanced mode."
+      },
+      {
+        "name": "test_get_intx_portfolio_success",
+        "line": 89,
+        "markers": [],
+        "docstring": "Test successful INTX portfolio retrieval."
+      },
+      {
+        "name": "test_list_intx_positions_returns_positions",
+        "line": 106,
+        "markers": [],
+        "docstring": "Test listing INTX positions."
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_portfolio_service.py": [

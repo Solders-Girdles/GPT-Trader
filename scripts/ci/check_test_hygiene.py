@@ -51,10 +51,8 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/persistence/test_orders_store.py",  # comprehensive order persistence contract with lifecycle, recovery, and integrity validation
     "tests/unit/gpt_trader/app/test_bootstrap.py",  # comprehensive bootstrap module coverage with profile loading and container initialization
     # Phase 2 pain points remediation: critical service coverage
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service.py",  # PortfolioService coverage: balances, positions, INTX/CFM ops
     # Optimization and CLI test suites
     "tests/unit/gpt_trader/features/optimize/objectives/test_constraints.py",  # constraint objective validation matrix
-    "tests/unit/gpt_trader/features/optimize/objectives/test_single.py",  # single objective validation matrix
     "tests/unit/gpt_trader/cli/commands/optimize/test_commands.py",  # CLI command integration tests
     "tests/unit/gpt_trader/cli/commands/optimize/test_config_loader.py",  # config loader edge cases
     "tests/unit/gpt_trader/cli/test_response.py",  # CLI response formatting coverage
@@ -64,7 +62,6 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/features/intelligence/ensemble/test_adaptive.py",
     "tests/unit/gpt_trader/features/intelligence/backtesting/test_batch_regime.py",
     "tests/unit/gpt_trader/features/intelligence/sizing/test_position_sizer.py",
-    "tests/unit/gpt_trader/features/intelligence/regime/test_detector.py",
     "tests/unit/gpt_trader/features/strategy_dev/monitor/test_metrics.py",
     "tests/unit/gpt_trader/features/strategy_dev/monitor/test_alerts.py",
     "tests/unit/gpt_trader/features/strategy_dev/lab/test_experiment.py",
@@ -82,11 +79,9 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics.py",  # API metrics collection comprehensive scenarios
     "tests/unit/gpt_trader/features/live_trade/risk/test_cfm_risk_config.py",  # CFM risk config validation matrix
     # TUI reliability/fault-injection tests
-    "tests/unit/gpt_trader/tui/widgets/test_account.py",  # account widget partial state and signature caching tests
     "tests/unit/gpt_trader/tui/widgets/test_position_card.py",  # position card widget resilience with missing data
     "tests/integration/test_validation_escalation.py",  # validation escalation integration flow coverage
     "tests/integration/test_container_lifecycle.py",  # container lifecycle and service registration coverage
-    "tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen.py",  # signal detail formatting, backtest display, delta formatting, entry/exit badges
     "tests/unit/gpt_trader/config/test_bot_config_env.py",  # BotConfig env/profile wiring: RISK_* prefixes, daily loss limit, reduce-only enforcement, mark staleness
     "tests/unit/gpt_trader/monitoring/test_metrics_collector.py",  # metrics collector coverage: counters, gauges, histograms with labels
     # Architecture migration and observability tests

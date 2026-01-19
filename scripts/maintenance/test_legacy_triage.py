@@ -276,9 +276,13 @@ def _iter_manifest_issues(manifest_tests: dict[str, Any]) -> list[dict[str, str]
             issues.append({"path": str(rel), "issue": "Manifest entry must be a mapping/dict."})
             continue
 
+        status = entry.get("status")
+        normalized_status = str(status).strip().lower() if status is not None else ""
+
         abs_path = PROJECT_ROOT / rel
         if not abs_path.exists():
-            issues.append({"path": rel, "issue": "Path does not exist on disk."})
+            if normalized_status not in {"done", "completed"}:
+                issues.append({"path": rel, "issue": "Path does not exist on disk."})
 
         action = entry.get("action")
         if action is not None and not _is_allowed_action(action):
@@ -289,9 +293,7 @@ def _iter_manifest_issues(manifest_tests: dict[str, Any]) -> list[dict[str, str]
                 }
             )
 
-        status = entry.get("status")
         if status is not None:
-            normalized_status = str(status).strip().lower()
             if normalized_status not in {
                 "todo",
                 "in_progress",

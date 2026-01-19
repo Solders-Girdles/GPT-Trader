@@ -2,52 +2,51 @@
 
 from __future__ import annotations
 
-import asyncio
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
+import gpt_trader.monitoring.heartbeat as heartbeat
 from gpt_trader.monitoring.heartbeat import HeartbeatService
-
-pytestmark = pytest.mark.legacy_modernize
 
 
 class TestHeartbeatServiceErrorHandling:
     """Tests for HeartbeatService error handling."""
 
     @pytest.mark.asyncio
-    async def test_continues_on_event_store_error(self) -> None:
-        mock_store = Mock()
-        mock_store.store.side_effect = Exception("Store error")
+    async def test_continues_on_event_store_error(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        service = HeartbeatService(interval_seconds=1)
+        calls = {"count": 0}
 
-        service = HeartbeatService(
-            event_store=mock_store,
-            interval_seconds=0.05,
-        )
+        async def flaky_send() -> None:
+            calls["count"] += 1
+            if calls["count"] == 1:
+                raise Exception("Store error")
 
-        await service.start()
-        await asyncio.sleep(0.12)
-        await service.stop()
+        async def fake_sleep(_seconds: float) -> None:
+            if calls["count"] >= 2:
+                service._running = False
 
-        # Should have attempted multiple heartbeats despite errors
-        assert mock_store.store.call_count >= 2
+        monkeypatch.setattr(service, "_send_heartbeat", flaky_send)
+        monkeypatch.setattr(heartbeat.asyncio, "sleep", fake_sleep)
+
+        service._running = True
+        await service._heartbeat_loop()
+
+        assert calls["count"] == 2
 
     @pytest.mark.asyncio
     async def test_continues_on_ping_error(self) -> None:
-        """Test that heartbeat continues even when ping fails."""
         service = HeartbeatService(
             ping_url="https://hc-ping.com/test",
-            interval_seconds=0.05,
+            interval_seconds=1,
         )
 
-        # Patch _ping_external to always fail
         with patch.object(service, "_ping_external", new_callable=AsyncMock) as mock_ping:
             mock_ping.return_value = False
 
-            await service.start()
-            await asyncio.sleep(0.12)
-            await service.stop()
+            await service._send_heartbeat()
+            await service._send_heartbeat()
 
-            # Should have continued despite ping failures
-            assert service._heartbeat_count >= 2
-            assert mock_ping.call_count >= 2
+            assert service._heartbeat_count == 2
+            assert mock_ping.call_count == 2

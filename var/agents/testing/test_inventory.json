@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 11036,
+    "total_tests": 11040,
     "total_files": 907,
     "markers_used": 12
   },
@@ -105,15 +105,15 @@
     "endpoints": 136,
     "integration": 99,
     "parametrize": 93,
-    "legacy_modernize": 34,
+    "legacy_modernize": 26,
     "skipif": 16,
     "property": 10,
     "perps": 5,
     "uses_real_preferences": 2,
     "slow": 2,
     "real_api": 1,
-    "requires_secrets": 1,
-    "requires_network": 1
+    "requires_network": 1,
+    "requires_secrets": 1
   },
   "path_categories": {
     "test_chaos.py": [
@@ -2551,8 +2551,8 @@
         "line": 46,
         "markers": [
           "real_api",
-          "requires_secrets",
-          "requires_network"
+          "requires_network",
+          "requires_secrets"
         ],
         "docstring": ""
       }
@@ -15484,70 +15484,80 @@
     "tests/unit/gpt_trader/monitoring/test_heartbeat.py": [
       {
         "name": "TestHeartbeatServiceInit::test_default_values",
-        "line": 19,
-        "markers": [
-          "legacy_modernize"
-        ],
+        "line": 29,
+        "markers": [],
         "docstring": "",
         "class": "TestHeartbeatServiceInit"
       },
       {
         "name": "TestHeartbeatServiceInit::test_custom_values",
-        "line": 30,
-        "markers": [
-          "legacy_modernize"
-        ],
+        "line": 40,
+        "markers": [],
         "docstring": "",
         "class": "TestHeartbeatServiceInit"
       },
       {
         "name": "TestHeartbeatServiceStatus::test_get_status_initial",
-        "line": 170,
-        "markers": [
-          "legacy_modernize"
-        ],
+        "line": 182,
+        "markers": [],
         "docstring": "",
         "class": "TestHeartbeatServiceStatus"
       },
       {
         "name": "TestHeartbeatServiceStatus::test_is_healthy_when_not_running",
-        "line": 203,
-        "markers": [
-          "legacy_modernize"
-        ],
+        "line": 214,
+        "markers": [],
+        "docstring": "",
+        "class": "TestHeartbeatServiceStatus"
+      },
+      {
+        "name": "TestHeartbeatServiceStatus::test_is_healthy_just_started",
+        "line": 218,
+        "markers": [],
+        "docstring": "",
+        "class": "TestHeartbeatServiceStatus"
+      },
+      {
+        "name": "TestHeartbeatServiceStatus::test_is_healthy_after_heartbeat",
+        "line": 226,
+        "markers": [],
         "docstring": "",
         "class": "TestHeartbeatServiceStatus"
       },
       {
         "name": "test_default_values",
-        "line": 19,
-        "markers": [
-          "legacy_modernize"
-        ],
+        "line": 29,
+        "markers": [],
         "docstring": ""
       },
       {
         "name": "test_custom_values",
-        "line": 30,
-        "markers": [
-          "legacy_modernize"
-        ],
+        "line": 40,
+        "markers": [],
         "docstring": ""
       },
       {
         "name": "test_get_status_initial",
-        "line": 170,
-        "markers": [
-          "legacy_modernize"
-        ],
+        "line": 182,
+        "markers": [],
         "docstring": ""
       },
       {
         "name": "test_is_healthy_when_not_running",
-        "line": 203,
-        "markers": [
-          "legacy_modernize"
-        ],
+        "line": 214,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_is_healthy_just_started",
+        "line": 218,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_is_healthy_after_heartbeat",
+        "line": 226,
+        "markers": [],
         "docstring": ""
       }
     ],

@@ -70,7 +70,6 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics.py",  # API metrics collection comprehensive scenarios
     "tests/unit/gpt_trader/features/live_trade/risk/test_cfm_risk_config.py",  # CFM risk config validation matrix
     # TUI reliability/fault-injection tests
-    "tests/unit/gpt_trader/tui/widgets/test_position_card.py",  # position card widget resilience with missing data
     "tests/integration/test_validation_escalation.py",  # validation escalation integration flow coverage
     "tests/unit/gpt_trader/config/test_bot_config_env.py",  # BotConfig env/profile wiring: RISK_* prefixes, daily loss limit, reduce-only enforcement, mark staleness
     "tests/unit/gpt_trader/monitoring/test_metrics_collector.py",  # metrics collector coverage: counters, gauges, histograms with labels

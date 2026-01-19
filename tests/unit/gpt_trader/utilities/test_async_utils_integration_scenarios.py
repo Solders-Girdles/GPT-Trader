@@ -4,15 +4,42 @@ from __future__ import annotations
 
 import asyncio
 import time
+from dataclasses import dataclass
+from typing import Any
 
 import pytest
 
 from gpt_trader.utilities.async_tools import gather_with_concurrency
 
-pytestmark = pytest.mark.legacy_modernize
-
 
 class TestAsyncIntegrationScenarios:
+    @dataclass
+    class FakeClock:
+        current: float = 1_000_000.0
+
+        def time(self) -> float:
+            return self.current
+
+        def sleep(self, seconds: float) -> None:
+            self.current += seconds
+
+    @pytest.fixture(autouse=True)
+    def _deterministic_time(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> TestAsyncIntegrationScenarios.FakeClock:
+        clock = self.FakeClock()
+        monkeypatch.setattr(time, "time", clock.time)
+
+        original_sleep = asyncio.sleep
+
+        async def fake_sleep(delay: float = 0.0, result: Any | None = None) -> Any | None:
+            clock.sleep(delay)
+            await original_sleep(0)
+            return result
+
+        monkeypatch.setattr(asyncio, "sleep", fake_sleep)
+        return clock
+
     @pytest.mark.asyncio
     async def test_rate_limiting_with_batch_processing(self) -> None:
         from gpt_trader.utilities.async_tools import (  # naming: allow
@@ -41,33 +68,27 @@ class TestAsyncIntegrationScenarios:
         cache = AsyncCache(ttl=1.0)
         retry = AsyncRetry(max_attempts=3, base_delay=0.01)
 
-        call_count = 0
+        compute_calls: dict[int, int] = {}
 
         async def cached_retry_operation(x: int) -> int:
-            nonlocal call_count
-            call_count += 1
-
             cache_key = f"op_{x}"
             cached_result = await cache.get(cache_key)
             if cached_result is not None:
                 return cached_result
 
-            if call_count == 2 and x == 5:
+            compute_calls[x] = compute_calls.get(x, 0) + 1
+            if x == 2 and compute_calls[x] == 1:
                 raise ValueError("Temporary failure")
 
             result = x * 3
             await cache.set(cache_key, result)
             return result
 
-        results = []
-        for i in range(5):
-            for _ in range(2):
-                result = await retry.execute(cached_retry_operation, i)
-                results.append(result)
-
-        assert len(results) == 10
-        assert results[0] == results[1]
-        assert results[2] == results[3]
+        first = await retry.execute(cached_retry_operation, 2)
+        second = await retry.execute(cached_retry_operation, 2)
+        assert first == 6
+        assert second == 6
+        assert compute_calls[2] == 2  # first attempt fails, second succeeds, then cached
 
     @pytest.mark.asyncio
     async def test_timeout_with_concurrency(self) -> None:

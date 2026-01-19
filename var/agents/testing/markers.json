@@ -105,8 +105,8 @@
     "uses_real_preferences": 2,
     "slow": 2,
     "real_api": 1,
-    "requires_network": 1,
-    "requires_secrets": 1
+    "requires_secrets": 1,
+    "requires_network": 1
   },
   "usage": {
     "run_by_marker": "pytest -m <marker>",

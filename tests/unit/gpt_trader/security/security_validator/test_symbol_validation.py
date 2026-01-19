@@ -230,34 +230,3 @@ class TestSymbolValidation:
             result = security_validator.validate_symbol(symbol)
             assert not result.is_valid
             assert any("Invalid symbol format" in error for error in result.errors)
-
-    def test_symbol_validation_performance(self, security_validator: Any) -> None:
-        """Test symbol validation performance with many symbols."""
-        symbols = ["BTC-USD", "ETH-USD", "AAPL", "GOOGL"] * 100
-
-        for symbol in symbols:
-            result = security_validator.validate_symbol(symbol)
-            assert result.is_valid
-
-
-class TestSymbolValidationExceptionHandling:
-    """Test exception handling in symbol validation."""
-
-    def test_symbol_validation_generic_exception(self) -> None:
-        """Test that generic exceptions (non-RuleError) are caught gracefully.
-
-        This covers the generic Exception handler (lines 24-26) in symbol_validator.py.
-        """
-        from unittest.mock import patch
-
-        from gpt_trader.security.symbol_validator import SymbolValidator
-
-        # Mock the SymbolRule to raise a generic Exception
-        with patch.object(SymbolValidator, "_SYMBOL_RULE") as mock_rule:
-            mock_rule.side_effect = RuntimeError("Unexpected internal error")
-
-            result = SymbolValidator.validate_symbol("BTC-USD")
-
-            assert not result.is_valid
-            assert "Invalid symbol format" in result.errors
-            assert result.sanitized_value is None

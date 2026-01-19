@@ -111,9 +111,9 @@
     "perps": 5,
     "uses_real_preferences": 2,
     "slow": 2,
-    "real_api": 1,
+    "requires_network": 1,
     "requires_secrets": 1,
-    "requires_network": 1
+    "real_api": 1
   },
   "path_categories": {
     "test_chaos.py": [
@@ -2550,9 +2550,9 @@
         "name": "test_live_permission_check",
         "line": 46,
         "markers": [
-          "real_api",
+          "requires_network",
           "requires_secrets",
-          "requires_network"
+          "real_api"
         ],
         "docstring": ""
       }

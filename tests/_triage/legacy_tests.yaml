@@ -22,11 +22,6 @@ tests:
     status: done
     reason: "Subprocess-based CLI tests duplicated by focused unit tests (cli.main, command registration/parsing) and were not part of any CI suite."
     added: "2026-01-19"
-  tests/unit/gpt_trader/app/test_health_server_integration.py:
-    action: modernize
-    status: todo
-    reason: "Starts a live asyncio server with socket retries/sleeps inside unit suite; move to integration or refactor to a deterministic client/server fixture."
-    added: "2026-01-19"
   tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_edges.py:
     action: modernize
     status: todo

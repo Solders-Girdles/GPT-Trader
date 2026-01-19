@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 11103,
-    "total_files": 687,
+    "total_files": 714,
     "markers_used": 9
   },
   "marker_definitions": {
@@ -150,14 +150,18 @@
       "tests/unit/gpt_trader/backtesting/test_historical_data_manager_edges.py",
       "tests/unit/gpt_trader/backtesting/test_coinbase_historical_fetcher_edges.py",
       "tests/unit/gpt_trader/backtesting/test_types.py",
+      "tests/unit/gpt_trader/backtesting/metrics/test_risk_empty_and_time_in_market.py",
+      "tests/unit/gpt_trader/backtesting/metrics/test_risk_metrics_dataclass_and_edge_cases.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_statistics_trade_statistics_dataclass.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_statistics_streak_metrics.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_backtest_report.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_statistics_timing_metrics.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_csv_row.py",
+      "tests/unit/gpt_trader/backtesting/metrics/test_risk_returns_std_dev_and_var.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_statistics_position_metrics.py",
-      "tests/unit/gpt_trader/backtesting/metrics/test_risk.py",
+      "tests/unit/gpt_trader/backtesting/metrics/test_risk_calculate_risk_metrics.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_summary.py",
+      "tests/unit/gpt_trader/backtesting/metrics/test_risk_drawdown_metrics.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_statistics_calculate_trade_statistics.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_result.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_report_reporter_basics.py",
@@ -265,6 +269,7 @@
     ],
     "tui": [
       "tests/unit/gpt_trader/tui/test_snapshots_navigation.py",
+      "tests/unit/gpt_trader/tui/test_risk_preview_position_impacts.py",
       "tests/unit/gpt_trader/tui/test_snapshots_strategy_detail_screen.py",
       "tests/unit/gpt_trader/tui/test_state_cfm_and_data_staleness.py",
       "tests/unit/gpt_trader/tui/test_market_widget.py",
@@ -279,6 +284,7 @@
       "tests/unit/gpt_trader/tui/test_staleness_helpers_banners_and_empty_state.py",
       "tests/unit/gpt_trader/tui/test_snapshots_system_indicators.py",
       "tests/unit/gpt_trader/tui/test_snapshots_main_screen.py",
+      "tests/unit/gpt_trader/tui/test_risk_preview_preview_and_scenarios.py",
       "tests/unit/gpt_trader/tui/test_trade_matcher.py",
       "tests/unit/gpt_trader/tui/test_log_manager_formatters_compact.py",
       "tests/unit/gpt_trader/tui/test_log_manager_entries.py",
@@ -286,15 +292,16 @@
       "tests/unit/gpt_trader/tui/test_formatting.py",
       "tests/unit/gpt_trader/tui/test_staleness_helpers_freshness_label_and_display.py",
       "tests/unit/gpt_trader/tui/test_degraded_mode.py",
+      "tests/unit/gpt_trader/tui/test_risk_preview_threshold_helpers.py",
       "tests/unit/gpt_trader/tui/test_log_manager_formatters_structured.py",
       "tests/unit/gpt_trader/tui/test_log_manager_handler_message_safety.py",
       "tests/unit/gpt_trader/tui/test_helpers.py",
+      "tests/unit/gpt_trader/tui/test_risk_preview_models.py",
       "tests/unit/gpt_trader/tui/test_staleness_helpers_data_age_and_severity.py",
       "tests/unit/gpt_trader/tui/test_events.py",
       "tests/unit/gpt_trader/tui/test_credential_cache.py",
       "tests/unit/gpt_trader/tui/test_snapshots_execution_issues_modal.py",
       "tests/unit/gpt_trader/tui/test_staleness_helpers_execution_health.py",
-      "tests/unit/gpt_trader/tui/test_risk_preview.py",
       "tests/unit/gpt_trader/tui/test_staleness_helpers_edge_cases.py",
       "tests/unit/gpt_trader/tui/test_thresholds.py",
       "tests/unit/gpt_trader/tui/test_screens.py",
@@ -309,8 +316,11 @@
       "tests/unit/gpt_trader/tui/utilities/test_pnl_formatting.py",
       "tests/unit/gpt_trader/tui/utilities/test_table_formatting.py",
       "tests/unit/gpt_trader/tui/adapters/test_null_status_reporter.py",
+      "tests/unit/gpt_trader/tui/state_management/test_delta_updater_result_and_helpers.py",
       "tests/unit/gpt_trader/tui/state_management/test_validators.py",
-      "tests/unit/gpt_trader/tui/state_management/test_delta_updater.py",
+      "tests/unit/gpt_trader/tui/state_management/test_delta_updater_compare_account_risk_system.py",
+      "tests/unit/gpt_trader/tui/state_management/test_delta_updater_compare_market_and_positions.py",
+      "tests/unit/gpt_trader/tui/state_management/test_delta_updater_compare_orders_and_trades.py",
       "tests/unit/gpt_trader/tui/services/test_config_service.py",
       "tests/unit/gpt_trader/tui/services/test_state_registry.py",
       "tests/unit/gpt_trader/tui/services/test_execution_telemetry_submission_record.py",
@@ -482,12 +492,16 @@
       "tests/unit/gpt_trader/monitoring/guards/test_builtins_edge_cases.py"
     ],
     "logging": [
-      "tests/unit/gpt_trader/logging/test_setup.py",
       "tests/unit/gpt_trader/logging/test_correlation_edges.py",
       "tests/unit/gpt_trader/logging/test_runtime_helpers.py",
+      "tests/unit/gpt_trader/logging/test_setup_integration.py",
       "tests/unit/gpt_trader/logging/test_correlation.py",
+      "tests/unit/gpt_trader/logging/test_setup_configure_logging_modes_and_idempotency.py",
+      "tests/unit/gpt_trader/logging/test_setup_configure_logging_handlers.py",
       "tests/unit/gpt_trader/logging/test_json_redaction.py",
-      "tests/unit/gpt_trader/logging/test_json_formatter.py"
+      "tests/unit/gpt_trader/logging/test_json_formatter.py",
+      "tests/unit/gpt_trader/logging/test_setup_env_flag.py",
+      "tests/unit/gpt_trader/logging/test_setup_configure_logging_env_overrides.py"
     ],
     "validation": [
       "tests/unit/gpt_trader/validation/test_collection_rules.py",
@@ -609,9 +623,11 @@
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_position_updates.py",
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_edges.py",
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_order_execution.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_health.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_real_transport_edge_cases.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_accounts.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_types_and_sequence_guard.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_real_transport.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_service_loading.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_auth.py",
@@ -636,11 +652,13 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_product_spec.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_fallback.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_http_request_layer.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_dispatcher.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery_intx.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_intx_portfolio_service.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_permissions.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_errors.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_ws_health.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_parsing.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_noop_transport.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_conversion_endpoints.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_websocket.py",
@@ -654,7 +672,6 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_perp_rules_and_quantize.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_exchange_specs.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_service_order_and_size_methods.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_message_filtering.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_stream_orderbook.py",
@@ -731,14 +748,22 @@
       "tests/unit/gpt_trader/features/strategy_dev/lab/test_experiment.py",
       "tests/unit/gpt_trader/features/strategy_dev/lab/test_parameter_grid.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_profile.py",
+      "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_entry_and_exit_signals.py",
+      "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_indicators_and_confidence.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_perps_baseline_edges.py",
-      "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators.py",
-      "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline.py",
+      "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_models.py",
+      "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_spot_and_perps_strategies.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_strategy_edges.py",
+      "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_bundle_and_performance.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_profile_edges.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful.py",
+      "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_zscore.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_strategy.py",
+      "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_welford_and_window.py",
+      "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_sma_and_ema.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_regime_switcher.py",
+      "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_rsi.py",
+      "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_baseline_strategy_init_and_guards.py",
       "tests/unit/gpt_trader/features/live_trade/signals/test_registry.py",
       "tests/unit/gpt_trader/features/live_trade/signals/test_vwap.py",
       "tests/unit/gpt_trader/features/live_trade/signals/test_spread.py",
@@ -1000,84 +1025,88 @@
         "docstring": "Verify volume tracking disabled keeps tier constant."
       }
     ],
-    "tests/property/test_degradation_invariants.py": [
+    "tests/property/test_degradation_invariants_pause_behavior.py": [
       {
         "name": "test_global_pause_is_active_during_duration",
-        "line": 34,
+        "line": 23,
         "markers": [],
         "docstring": "Property: Global pause should be active immediately after calling pause_all.\n\nis_paused() should return True when not reduce-only (or reduce-only not allowed)."
       },
       {
         "name": "test_symbol_pause_is_isolated",
-        "line": 72,
+        "line": 61,
         "markers": [],
         "docstring": "Property: Symbol pause should only affect the paused symbol.\n\nOther symbols should remain unpaused."
       },
       {
         "name": "test_global_pause_takes_precedence",
-        "line": 108,
+        "line": 97,
         "markers": [],
         "docstring": "Property: Global pause should take precedence over symbol pause.\n\nWhen both are active, global pause properties should apply."
       },
       {
         "name": "test_pause_reason_returned_correctly",
-        "line": 137,
+        "line": 126,
         "markers": [],
         "docstring": "Property: get_pause_reason should return the correct reason."
       },
       {
-        "name": "test_slippage_failure_escalation",
-        "line": 162,
-        "markers": [],
-        "docstring": "Property: Slippage failures should trigger pause exactly at threshold.\n\nThe pause should be triggered when count >= threshold, and counter resets."
-      },
-      {
-        "name": "test_broker_failure_escalation",
-        "line": 204,
-        "markers": [],
-        "docstring": "Property: Broker failures should trigger global pause exactly at threshold.\n\nCounter resets after pause is triggered."
-      },
-      {
-        "name": "test_slippage_counter_resets_on_success",
-        "line": 238,
-        "markers": [],
-        "docstring": "Property: reset_slippage_failures should reset the counter.\n\nSubsequent failures start from zero."
-      },
-      {
-        "name": "test_broker_counter_resets_on_success",
-        "line": 266,
-        "markers": [],
-        "docstring": "Property: reset_broker_failures should reset the counter."
-      },
-      {
-        "name": "test_clear_all_removes_all_pauses",
-        "line": 293,
-        "markers": [],
-        "docstring": "Property: clear_all should remove all pause states and counters."
-      },
-      {
-        "name": "test_get_status_reflects_current_state",
-        "line": 327,
-        "markers": [],
-        "docstring": "Property: get_status should accurately reflect current degradation state."
-      },
-      {
-        "name": "test_multiple_symbol_pauses_are_independent",
-        "line": 360,
-        "markers": [],
-        "docstring": "Property: Multiple symbol pauses should be independent.\n\nEach symbol can be paused/unpaused independently."
-      },
-      {
         "name": "test_reduce_only_consistency_global",
-        "line": 389,
+        "line": 149,
         "markers": [],
         "docstring": "Property: Reduce-only behavior should be consistent with the pause setting."
       },
       {
         "name": "test_reduce_only_consistency_symbol",
-        "line": 415,
+        "line": 175,
         "markers": [],
         "docstring": "Property: Reduce-only behavior for symbol pause should be consistent."
+      },
+      {
+        "name": "test_multiple_symbol_pauses_are_independent",
+        "line": 203,
+        "markers": [],
+        "docstring": "Property: Multiple symbol pauses should be independent.\n\nEach symbol can be paused/unpaused independently."
+      }
+    ],
+    "tests/property/test_degradation_invariants_failure_counters.py": [
+      {
+        "name": "test_slippage_failure_escalation",
+        "line": 23,
+        "markers": [],
+        "docstring": "Property: Slippage failures should trigger pause exactly at threshold.\n\nThe pause should be triggered when count >= threshold, and counter resets."
+      },
+      {
+        "name": "test_broker_failure_escalation",
+        "line": 65,
+        "markers": [],
+        "docstring": "Property: Broker failures should trigger global pause exactly at threshold.\n\nCounter resets after pause is triggered."
+      },
+      {
+        "name": "test_slippage_counter_resets_on_success",
+        "line": 99,
+        "markers": [],
+        "docstring": "Property: reset_slippage_failures should reset the counter.\n\nSubsequent failures start from zero."
+      },
+      {
+        "name": "test_broker_counter_resets_on_success",
+        "line": 127,
+        "markers": [],
+        "docstring": "Property: reset_broker_failures should reset the counter."
+      }
+    ],
+    "tests/property/test_degradation_invariants_status_and_clear_all.py": [
+      {
+        "name": "test_clear_all_removes_all_pauses",
+        "line": 23,
+        "markers": [],
+        "docstring": "Property: clear_all should remove all pause states and counters."
+      },
+      {
+        "name": "test_get_status_reflects_current_state",
+        "line": 57,
+        "markers": [],
+        "docstring": "Property: get_status should accurately reflect current degradation state."
       }
     ],
     "tests/property/test_liquidation_invariants_distance_and_risk.py": [
@@ -4967,6 +4996,112 @@
         "docstring": "Snapshot test for focus after arrow key navigation."
       }
     ],
+    "tests/unit/gpt_trader/tui/test_risk_preview_position_impacts.py": [
+      {
+        "name": "TestComputePositionImpacts::test_no_positions_returns_empty",
+        "line": 50,
+        "markers": [],
+        "docstring": "Empty positions returns empty impacts.",
+        "class": "TestComputePositionImpacts"
+      },
+      {
+        "name": "TestComputePositionImpacts::test_zero_equity_returns_empty",
+        "line": 62,
+        "markers": [],
+        "docstring": "Zero equity returns empty impacts.",
+        "class": "TestComputePositionImpacts"
+      },
+      {
+        "name": "TestComputePositionImpacts::test_negative_shock_creates_impacts_for_long_positions",
+        "line": 74,
+        "markers": [],
+        "docstring": "Negative shock creates impacts for long positions losing value.",
+        "class": "TestComputePositionImpacts"
+      },
+      {
+        "name": "TestComputePositionImpacts::test_positive_shock_gains_for_long_positions",
+        "line": 92,
+        "markers": [],
+        "docstring": "Positive shock creates gains for long positions (no breach).",
+        "class": "TestComputePositionImpacts"
+      },
+      {
+        "name": "TestComputePositionImpacts::test_leverage_guard_triggers_on_excessive_leverage",
+        "line": 102,
+        "markers": [],
+        "docstring": "LeverageGuard triggers when position leverage exceeds max.",
+        "class": "TestComputePositionImpacts"
+      },
+      {
+        "name": "TestComputePositionImpacts::test_impacts_sorted_by_projected_loss",
+        "line": 131,
+        "markers": [],
+        "docstring": "Impacts are sorted by projected loss (worst first).",
+        "class": "TestComputePositionImpacts"
+      },
+      {
+        "name": "TestComputePreviewWithPositionImpacts::test_compute_preview_includes_position_impacts",
+        "line": 169,
+        "markers": [],
+        "docstring": "compute_preview returns position_impacts field.",
+        "class": "TestComputePreviewWithPositionImpacts"
+      },
+      {
+        "name": "TestComputePreviewWithPositionImpacts::test_no_limit_returns_empty_position_impacts",
+        "line": 176,
+        "markers": [],
+        "docstring": "No daily limit configured returns empty position impacts.",
+        "class": "TestComputePreviewWithPositionImpacts"
+      },
+      {
+        "name": "test_no_positions_returns_empty",
+        "line": 50,
+        "markers": [],
+        "docstring": "Empty positions returns empty impacts."
+      },
+      {
+        "name": "test_zero_equity_returns_empty",
+        "line": 62,
+        "markers": [],
+        "docstring": "Zero equity returns empty impacts."
+      },
+      {
+        "name": "test_negative_shock_creates_impacts_for_long_positions",
+        "line": 74,
+        "markers": [],
+        "docstring": "Negative shock creates impacts for long positions losing value."
+      },
+      {
+        "name": "test_positive_shock_gains_for_long_positions",
+        "line": 92,
+        "markers": [],
+        "docstring": "Positive shock creates gains for long positions (no breach)."
+      },
+      {
+        "name": "test_leverage_guard_triggers_on_excessive_leverage",
+        "line": 102,
+        "markers": [],
+        "docstring": "LeverageGuard triggers when position leverage exceeds max."
+      },
+      {
+        "name": "test_impacts_sorted_by_projected_loss",
+        "line": 131,
+        "markers": [],
+        "docstring": "Impacts are sorted by projected loss (worst first)."
+      },
+      {
+        "name": "test_compute_preview_includes_position_impacts",
+        "line": 169,
+        "markers": [],
+        "docstring": "compute_preview returns position_impacts field."
+      },
+      {
+        "name": "test_no_limit_returns_empty_position_impacts",
+        "line": 176,
+        "markers": [],
+        "docstring": "No daily limit configured returns empty position impacts."
+      }
+    ],
     "tests/unit/gpt_trader/tui/test_snapshots_strategy_detail_screen.py": [
       {
         "name": "TestStrategyDetailSnapshots::test_strategy_detail_signal_details_with_hints",
@@ -6244,6 +6379,112 @@
         "docstring": "Snapshot test for MainScreen with high-contrast accessibility theme."
       }
     ],
+    "tests/unit/gpt_trader/tui/test_risk_preview_preview_and_scenarios.py": [
+      {
+        "name": "TestComputePreview::test_positive_shock_no_increase",
+        "line": 27,
+        "markers": [],
+        "docstring": "Positive shock doesn't increase loss.",
+        "class": "TestComputePreview"
+      },
+      {
+        "name": "TestComputePreview::test_negative_shock_increases_loss",
+        "line": 34,
+        "markers": [],
+        "docstring": "Negative shock increases loss with leverage.",
+        "class": "TestComputePreview"
+      },
+      {
+        "name": "TestComputePreview::test_shock_triggers_warning_and_critical",
+        "line": 41,
+        "markers": [],
+        "docstring": "Large shocks can trigger warning and critical status.",
+        "class": "TestComputePreview"
+      },
+      {
+        "name": "TestComputePreview::test_leverage_fallback_and_no_limit",
+        "line": 58,
+        "markers": [],
+        "docstring": "Falls back to 1.0 leverage; returns OK when no limit configured.",
+        "class": "TestComputePreview"
+      },
+      {
+        "name": "TestGetDefaultScenarios::test_returns_all_scenarios",
+        "line": 76,
+        "markers": [],
+        "docstring": "Returns all standard shock scenarios with correct structure.",
+        "class": "TestGetDefaultScenarios"
+      },
+      {
+        "name": "TestComputeAllPreviews::test_returns_all_scenario_results",
+        "line": 102,
+        "markers": [],
+        "docstring": "Returns results for all default scenarios.",
+        "class": "TestComputeAllPreviews"
+      },
+      {
+        "name": "TestComputeAllPreviews::test_negative_scenarios_have_higher_loss",
+        "line": 110,
+        "markers": [],
+        "docstring": "Negative shocks should have higher loss than positive.",
+        "class": "TestComputeAllPreviews"
+      },
+      {
+        "name": "TestShockScenariosConstant::test_standard_scenarios",
+        "line": 124,
+        "markers": [],
+        "docstring": "Contains standard symmetric \u00b12%, \u00b15%, \u00b110% scenarios in order.",
+        "class": "TestShockScenariosConstant"
+      },
+      {
+        "name": "test_positive_shock_no_increase",
+        "line": 27,
+        "markers": [],
+        "docstring": "Positive shock doesn't increase loss."
+      },
+      {
+        "name": "test_negative_shock_increases_loss",
+        "line": 34,
+        "markers": [],
+        "docstring": "Negative shock increases loss with leverage."
+      },
+      {
+        "name": "test_shock_triggers_warning_and_critical",
+        "line": 41,
+        "markers": [],
+        "docstring": "Large shocks can trigger warning and critical status."
+      },
+      {
+        "name": "test_leverage_fallback_and_no_limit",
+        "line": 58,
+        "markers": [],
+        "docstring": "Falls back to 1.0 leverage; returns OK when no limit configured."
+      },
+      {
+        "name": "test_returns_all_scenarios",
+        "line": 76,
+        "markers": [],
+        "docstring": "Returns all standard shock scenarios with correct structure."
+      },
+      {
+        "name": "test_returns_all_scenario_results",
+        "line": 102,
+        "markers": [],
+        "docstring": "Returns results for all default scenarios."
+      },
+      {
+        "name": "test_negative_scenarios_have_higher_loss",
+        "line": 110,
+        "markers": [],
+        "docstring": "Negative shocks should have higher loss than positive."
+      },
+      {
+        "name": "test_standard_scenarios",
+        "line": 124,
+        "markers": [],
+        "docstring": "Contains standard symmetric \u00b12%, \u00b15%, \u00b110% scenarios in order."
+      }
+    ],
     "tests/unit/gpt_trader/tui/test_trade_matcher.py": [
       {
         "name": "TestTradeMatcher::test_simple_long_position",
@@ -6882,6 +7123,47 @@
         "docstring": "Should detect NullStatusReporter and update state on mode switch."
       }
     ],
+    "tests/unit/gpt_trader/tui/test_risk_preview_threshold_helpers.py": [
+      {
+        "name": "TestGetRatioStatus::test_status_boundaries",
+        "line": 10,
+        "markers": [],
+        "docstring": "Status transitions at correct threshold boundaries.",
+        "class": "TestGetRatioStatus"
+      },
+      {
+        "name": "TestGetGuardImpacts::test_guards_by_threshold",
+        "line": 26,
+        "markers": [],
+        "docstring": "Guards trigger at correct thresholds with reasons.",
+        "class": "TestGetGuardImpacts"
+      },
+      {
+        "name": "TestGetGuardImpacts::test_reasons_include_threshold_text",
+        "line": 43,
+        "markers": [],
+        "docstring": "Guard reasons include threshold percentage text.",
+        "class": "TestGetGuardImpacts"
+      },
+      {
+        "name": "test_status_boundaries",
+        "line": 10,
+        "markers": [],
+        "docstring": "Status transitions at correct threshold boundaries."
+      },
+      {
+        "name": "test_guards_by_threshold",
+        "line": 26,
+        "markers": [],
+        "docstring": "Guards trigger at correct thresholds with reasons."
+      },
+      {
+        "name": "test_reasons_include_threshold_text",
+        "line": 43,
+        "markers": [],
+        "docstring": "Guard reasons include threshold percentage text."
+      }
+    ],
     "tests/unit/gpt_trader/tui/test_log_manager_formatters_structured.py": [
       {
         "name": "TestStructuredTuiFormatter::test_detect_category_function",
@@ -7101,6 +7383,47 @@
         "line": 214,
         "markers": [],
         "docstring": "Test @safe_update handles tracker failures gracefully."
+      }
+    ],
+    "tests/unit/gpt_trader/tui/test_risk_preview_models.py": [
+      {
+        "name": "TestRiskPreviewScenario::test_scenario_creation_and_immutability",
+        "line": 19,
+        "markers": [],
+        "docstring": "Scenario stores label and shock percentage, is immutable.",
+        "class": "TestRiskPreviewScenario"
+      },
+      {
+        "name": "TestRiskPreviewResult::test_result_creation",
+        "line": 31,
+        "markers": [],
+        "docstring": "Result stores all preview fields with defaults.",
+        "class": "TestRiskPreviewResult"
+      },
+      {
+        "name": "TestGuardPositionImpact::test_guard_position_impact_dataclass",
+        "line": 53,
+        "markers": [],
+        "docstring": "GuardPositionImpact stores all fields correctly.",
+        "class": "TestGuardPositionImpact"
+      },
+      {
+        "name": "test_scenario_creation_and_immutability",
+        "line": 19,
+        "markers": [],
+        "docstring": "Scenario stores label and shock percentage, is immutable."
+      },
+      {
+        "name": "test_result_creation",
+        "line": 31,
+        "markers": [],
+        "docstring": "Result stores all preview fields with defaults."
+      },
+      {
+        "name": "test_guard_position_impact_dataclass",
+        "line": 53,
+        "markers": [],
+        "docstring": "GuardPositionImpact stores all fields correctly."
       }
     ],
     "tests/unit/gpt_trader/tui/test_staleness_helpers_data_age_and_severity.py": [
@@ -7956,294 +8279,6 @@
         "line": 144,
         "markers": [],
         "docstring": "Critical execution should show instead of stale warning."
-      }
-    ],
-    "tests/unit/gpt_trader/tui/test_risk_preview.py": [
-      {
-        "name": "TestRiskPreviewScenario::test_scenario_creation_and_immutability",
-        "line": 28,
-        "markers": [],
-        "docstring": "Scenario stores label and shock percentage, is immutable.",
-        "class": "TestRiskPreviewScenario"
-      },
-      {
-        "name": "TestRiskPreviewResult::test_result_creation",
-        "line": 40,
-        "markers": [],
-        "docstring": "Result stores all preview fields with defaults.",
-        "class": "TestRiskPreviewResult"
-      },
-      {
-        "name": "TestGetRatioStatus::test_status_boundaries",
-        "line": 62,
-        "markers": [],
-        "docstring": "Status transitions at correct threshold boundaries.",
-        "class": "TestGetRatioStatus"
-      },
-      {
-        "name": "TestGetGuardImpacts::test_guards_by_threshold",
-        "line": 78,
-        "markers": [],
-        "docstring": "Guards trigger at correct thresholds with reasons.",
-        "class": "TestGetGuardImpacts"
-      },
-      {
-        "name": "TestGetGuardImpacts::test_reasons_include_threshold_text",
-        "line": 95,
-        "markers": [],
-        "docstring": "Guard reasons include threshold percentage text.",
-        "class": "TestGetGuardImpacts"
-      },
-      {
-        "name": "TestComputePreview::test_positive_shock_no_increase",
-        "line": 118,
-        "markers": [],
-        "docstring": "Positive shock doesn't increase loss.",
-        "class": "TestComputePreview"
-      },
-      {
-        "name": "TestComputePreview::test_negative_shock_increases_loss",
-        "line": 125,
-        "markers": [],
-        "docstring": "Negative shock increases loss with leverage.",
-        "class": "TestComputePreview"
-      },
-      {
-        "name": "TestComputePreview::test_shock_triggers_warning_and_critical",
-        "line": 132,
-        "markers": [],
-        "docstring": "Large shocks can trigger warning and critical status.",
-        "class": "TestComputePreview"
-      },
-      {
-        "name": "TestComputePreview::test_leverage_fallback_and_no_limit",
-        "line": 149,
-        "markers": [],
-        "docstring": "Falls back to 1.0 leverage; returns OK when no limit configured.",
-        "class": "TestComputePreview"
-      },
-      {
-        "name": "TestGetDefaultScenarios::test_returns_all_scenarios",
-        "line": 167,
-        "markers": [],
-        "docstring": "Returns all standard shock scenarios with correct structure.",
-        "class": "TestGetDefaultScenarios"
-      },
-      {
-        "name": "TestComputeAllPreviews::test_returns_all_scenario_results",
-        "line": 195,
-        "markers": [],
-        "docstring": "Returns results for all default scenarios.",
-        "class": "TestComputeAllPreviews"
-      },
-      {
-        "name": "TestComputeAllPreviews::test_negative_scenarios_have_higher_loss",
-        "line": 203,
-        "markers": [],
-        "docstring": "Negative shocks should have higher loss than positive.",
-        "class": "TestComputeAllPreviews"
-      },
-      {
-        "name": "TestShockScenariosConstant::test_standard_scenarios",
-        "line": 217,
-        "markers": [],
-        "docstring": "Contains standard symmetric \u00b12%, \u00b15%, \u00b110% scenarios in order.",
-        "class": "TestShockScenariosConstant"
-      },
-      {
-        "name": "TestComputePositionImpacts::test_no_positions_returns_empty",
-        "line": 271,
-        "markers": [],
-        "docstring": "Empty positions returns empty impacts.",
-        "class": "TestComputePositionImpacts"
-      },
-      {
-        "name": "TestComputePositionImpacts::test_zero_equity_returns_empty",
-        "line": 283,
-        "markers": [],
-        "docstring": "Zero equity returns empty impacts.",
-        "class": "TestComputePositionImpacts"
-      },
-      {
-        "name": "TestComputePositionImpacts::test_negative_shock_creates_impacts_for_long_positions",
-        "line": 295,
-        "markers": [],
-        "docstring": "Negative shock creates impacts for long positions losing value.",
-        "class": "TestComputePositionImpacts"
-      },
-      {
-        "name": "TestComputePositionImpacts::test_positive_shock_gains_for_long_positions",
-        "line": 317,
-        "markers": [],
-        "docstring": "Positive shock creates gains for long positions (no breach).",
-        "class": "TestComputePositionImpacts"
-      },
-      {
-        "name": "TestComputePositionImpacts::test_leverage_guard_triggers_on_excessive_leverage",
-        "line": 331,
-        "markers": [],
-        "docstring": "LeverageGuard triggers when position leverage exceeds max.",
-        "class": "TestComputePositionImpacts"
-      },
-      {
-        "name": "TestComputePositionImpacts::test_impacts_sorted_by_projected_loss",
-        "line": 360,
-        "markers": [],
-        "docstring": "Impacts are sorted by projected loss (worst first).",
-        "class": "TestComputePositionImpacts"
-      },
-      {
-        "name": "TestComputePositionImpacts::test_guard_position_impact_dataclass",
-        "line": 370,
-        "markers": [],
-        "docstring": "GuardPositionImpact dataclass stores all fields correctly.",
-        "class": "TestComputePositionImpacts"
-      },
-      {
-        "name": "TestComputePreviewWithPositionImpacts::test_compute_preview_includes_position_impacts",
-        "line": 415,
-        "markers": [],
-        "docstring": "compute_preview returns position_impacts field.",
-        "class": "TestComputePreviewWithPositionImpacts"
-      },
-      {
-        "name": "TestComputePreviewWithPositionImpacts::test_no_limit_returns_empty_position_impacts",
-        "line": 422,
-        "markers": [],
-        "docstring": "No daily limit configured returns empty position impacts.",
-        "class": "TestComputePreviewWithPositionImpacts"
-      },
-      {
-        "name": "test_scenario_creation_and_immutability",
-        "line": 28,
-        "markers": [],
-        "docstring": "Scenario stores label and shock percentage, is immutable."
-      },
-      {
-        "name": "test_result_creation",
-        "line": 40,
-        "markers": [],
-        "docstring": "Result stores all preview fields with defaults."
-      },
-      {
-        "name": "test_status_boundaries",
-        "line": 62,
-        "markers": [],
-        "docstring": "Status transitions at correct threshold boundaries."
-      },
-      {
-        "name": "test_guards_by_threshold",
-        "line": 78,
-        "markers": [],
-        "docstring": "Guards trigger at correct thresholds with reasons."
-      },
-      {
-        "name": "test_reasons_include_threshold_text",
-        "line": 95,
-        "markers": [],
-        "docstring": "Guard reasons include threshold percentage text."
-      },
-      {
-        "name": "test_positive_shock_no_increase",
-        "line": 118,
-        "markers": [],
-        "docstring": "Positive shock doesn't increase loss."
-      },
-      {
-        "name": "test_negative_shock_increases_loss",
-        "line": 125,
-        "markers": [],
-        "docstring": "Negative shock increases loss with leverage."
-      },
-      {
-        "name": "test_shock_triggers_warning_and_critical",
-        "line": 132,
-        "markers": [],
-        "docstring": "Large shocks can trigger warning and critical status."
-      },
-      {
-        "name": "test_leverage_fallback_and_no_limit",
-        "line": 149,
-        "markers": [],
-        "docstring": "Falls back to 1.0 leverage; returns OK when no limit configured."
-      },
-      {
-        "name": "test_returns_all_scenarios",
-        "line": 167,
-        "markers": [],
-        "docstring": "Returns all standard shock scenarios with correct structure."
-      },
-      {
-        "name": "test_returns_all_scenario_results",
-        "line": 195,
-        "markers": [],
-        "docstring": "Returns results for all default scenarios."
-      },
-      {
-        "name": "test_negative_scenarios_have_higher_loss",
-        "line": 203,
-        "markers": [],
-        "docstring": "Negative shocks should have higher loss than positive."
-      },
-      {
-        "name": "test_standard_scenarios",
-        "line": 217,
-        "markers": [],
-        "docstring": "Contains standard symmetric \u00b12%, \u00b15%, \u00b110% scenarios in order."
-      },
-      {
-        "name": "test_no_positions_returns_empty",
-        "line": 271,
-        "markers": [],
-        "docstring": "Empty positions returns empty impacts."
-      },
-      {
-        "name": "test_zero_equity_returns_empty",
-        "line": 283,
-        "markers": [],
-        "docstring": "Zero equity returns empty impacts."
-      },
-      {
-        "name": "test_negative_shock_creates_impacts_for_long_positions",
-        "line": 295,
-        "markers": [],
-        "docstring": "Negative shock creates impacts for long positions losing value."
-      },
-      {
-        "name": "test_positive_shock_gains_for_long_positions",
-        "line": 317,
-        "markers": [],
-        "docstring": "Positive shock creates gains for long positions (no breach)."
-      },
-      {
-        "name": "test_leverage_guard_triggers_on_excessive_leverage",
-        "line": 331,
-        "markers": [],
-        "docstring": "LeverageGuard triggers when position leverage exceeds max."
-      },
-      {
-        "name": "test_impacts_sorted_by_projected_loss",
-        "line": 360,
-        "markers": [],
-        "docstring": "Impacts are sorted by projected loss (worst first)."
-      },
-      {
-        "name": "test_guard_position_impact_dataclass",
-        "line": 370,
-        "markers": [],
-        "docstring": "GuardPositionImpact dataclass stores all fields correctly."
-      },
-      {
-        "name": "test_compute_preview_includes_position_impacts",
-        "line": 415,
-        "markers": [],
-        "docstring": "compute_preview returns position_impacts field."
-      },
-      {
-        "name": "test_no_limit_returns_empty_position_impacts",
-        "line": 422,
-        "markers": [],
-        "docstring": "No daily limit configured returns empty position impacts."
       }
     ],
     "tests/unit/gpt_trader/tui/test_staleness_helpers_edge_cases.py": [
@@ -16426,281 +16461,6 @@
         "docstring": "Test default creation with missing config values."
       }
     ],
-    "tests/unit/gpt_trader/logging/test_setup.py": [
-      {
-        "name": "TestEnvFlag::test_env_flag_true_values",
-        "line": 16,
-        "markers": [],
-        "docstring": "Test that various true values are recognized.",
-        "class": "TestEnvFlag"
-      },
-      {
-        "name": "TestEnvFlag::test_env_flag_false_values",
-        "line": 23,
-        "markers": [],
-        "docstring": "Test that various false values are recognized.",
-        "class": "TestEnvFlag"
-      },
-      {
-        "name": "TestEnvFlag::test_env_flag_default_value",
-        "line": 30,
-        "markers": [],
-        "docstring": "Test that default value is used when env var not set.",
-        "class": "TestEnvFlag"
-      },
-      {
-        "name": "TestEnvFlag::test_env_flag_with_whitespace",
-        "line": 36,
-        "markers": [],
-        "docstring": "Test that whitespace is stripped.",
-        "class": "TestEnvFlag"
-      },
-      {
-        "name": "TestConfigureLogging::test_configure_logging_creates_directories",
-        "line": 79,
-        "markers": [],
-        "docstring": "Test that logging directories are created.",
-        "class": "TestConfigureLogging"
-      },
-      {
-        "name": "TestConfigureLogging::test_configure_logging_creates_console_handler",
-        "line": 91,
-        "markers": [],
-        "docstring": "Test that console handler is created.",
-        "class": "TestConfigureLogging"
-      },
-      {
-        "name": "TestConfigureLogging::test_configure_logging_creates_file_handlers",
-        "line": 107,
-        "markers": [],
-        "docstring": "Test that file handlers are created.",
-        "class": "TestConfigureLogging"
-      },
-      {
-        "name": "TestConfigureLogging::test_configure_logging_sets_root_level",
-        "line": 123,
-        "markers": [],
-        "docstring": "Test that root logger level is set to INFO.",
-        "class": "TestConfigureLogging"
-      },
-      {
-        "name": "TestConfigureLogging::test_configure_logging_creates_json_logger",
-        "line": 135,
-        "markers": [],
-        "docstring": "Test that JSON logger is configured.",
-        "class": "TestConfigureLogging"
-      },
-      {
-        "name": "TestConfigureLogging::test_configure_logging_json_handlers",
-        "line": 149,
-        "markers": [],
-        "docstring": "Test that JSON logger handlers are properly configured.",
-        "class": "TestConfigureLogging"
-      },
-      {
-        "name": "TestConfigureLogging::test_configure_logging_respects_env_log_dir",
-        "line": 172,
-        "markers": [],
-        "docstring": "Test that PERPS_LOG_DIR environment variable is respected.",
-        "class": "TestConfigureLogging"
-      },
-      {
-        "name": "TestConfigureLogging::test_configure_logging_respects_max_bytes_env",
-        "line": 194,
-        "markers": [],
-        "docstring": "Test that log size environment variables are respected.",
-        "class": "TestConfigureLogging"
-      },
-      {
-        "name": "TestConfigureLogging::test_configure_logging_respects_backup_count_env",
-        "line": 218,
-        "markers": [],
-        "docstring": "Test that backup count environment variables are respected.",
-        "class": "TestConfigureLogging"
-      },
-      {
-        "name": "TestConfigureLogging::test_configure_logging_enables_debug_with_env",
-        "line": 242,
-        "markers": [],
-        "docstring": "Test that PERPS_DEBUG environment variable enables debug logging.",
-        "class": "TestConfigureLogging"
-      },
-      {
-        "name": "TestConfigureLogging::test_configure_logging_idempotent",
-        "line": 264,
-        "markers": [],
-        "docstring": "Test that calling configure_logging multiple times doesn't duplicate handlers.",
-        "class": "TestConfigureLogging"
-      },
-      {
-        "name": "TestConfigureLogging::test_configure_logging_critical_handler_level",
-        "line": 281,
-        "markers": [],
-        "docstring": "Test that critical handler is set to WARNING level.",
-        "class": "TestConfigureLogging"
-      },
-      {
-        "name": "TestConfigureLogging::test_configure_logging_handler_formatters",
-        "line": 299,
-        "markers": [],
-        "docstring": "Test that handlers have formatters configured.",
-        "class": "TestConfigureLogging"
-      },
-      {
-        "name": "TestConfigureLogging::test_configure_logging_tui_mode_suppresses_stream_handler",
-        "line": 316,
-        "markers": [],
-        "docstring": "Test that TUI mode suppresses StreamHandler to prevent display corruption.",
-        "class": "TestConfigureLogging"
-      },
-      {
-        "name": "TestConfigureLogging::test_configure_logging_cli_mode_creates_stream_handler",
-        "line": 338,
-        "markers": [],
-        "docstring": "Test that CLI mode creates StreamHandler for console output.",
-        "class": "TestConfigureLogging"
-      },
-      {
-        "name": "TestConfigureLogging::test_configure_logging_file_handlers_present_in_both_modes",
-        "line": 360,
-        "markers": [],
-        "docstring": "Test that file handlers are present in both TUI and CLI modes.",
-        "class": "TestConfigureLogging"
-      },
-      {
-        "name": "TestLoggingIntegration::test_logging_works_after_configuration",
-        "line": 421,
-        "markers": [],
-        "docstring": "Test that logging actually works after configuration.",
-        "class": "TestLoggingIntegration"
-      },
-      {
-        "name": "test_env_flag_true_values",
-        "line": 16,
-        "markers": [],
-        "docstring": "Test that various true values are recognized."
-      },
-      {
-        "name": "test_env_flag_false_values",
-        "line": 23,
-        "markers": [],
-        "docstring": "Test that various false values are recognized."
-      },
-      {
-        "name": "test_env_flag_default_value",
-        "line": 30,
-        "markers": [],
-        "docstring": "Test that default value is used when env var not set."
-      },
-      {
-        "name": "test_env_flag_with_whitespace",
-        "line": 36,
-        "markers": [],
-        "docstring": "Test that whitespace is stripped."
-      },
-      {
-        "name": "test_configure_logging_creates_directories",
-        "line": 79,
-        "markers": [],
-        "docstring": "Test that logging directories are created."
-      },
-      {
-        "name": "test_configure_logging_creates_console_handler",
-        "line": 91,
-        "markers": [],
-        "docstring": "Test that console handler is created."
-      },
-      {
-        "name": "test_configure_logging_creates_file_handlers",
-        "line": 107,
-        "markers": [],
-        "docstring": "Test that file handlers are created."
-      },
-      {
-        "name": "test_configure_logging_sets_root_level",
-        "line": 123,
-        "markers": [],
-        "docstring": "Test that root logger level is set to INFO."
-      },
-      {
-        "name": "test_configure_logging_creates_json_logger",
-        "line": 135,
-        "markers": [],
-        "docstring": "Test that JSON logger is configured."
-      },
-      {
-        "name": "test_configure_logging_json_handlers",
-        "line": 149,
-        "markers": [],
-        "docstring": "Test that JSON logger handlers are properly configured."
-      },
-      {
-        "name": "test_configure_logging_respects_env_log_dir",
-        "line": 172,
-        "markers": [],
-        "docstring": "Test that PERPS_LOG_DIR environment variable is respected."
-      },
-      {
-        "name": "test_configure_logging_respects_max_bytes_env",
-        "line": 194,
-        "markers": [],
-        "docstring": "Test that log size environment variables are respected."
-      },
-      {
-        "name": "test_configure_logging_respects_backup_count_env",
-        "line": 218,
-        "markers": [],
-        "docstring": "Test that backup count environment variables are respected."
-      },
-      {
-        "name": "test_configure_logging_enables_debug_with_env",
-        "line": 242,
-        "markers": [],
-        "docstring": "Test that PERPS_DEBUG environment variable enables debug logging."
-      },
-      {
-        "name": "test_configure_logging_idempotent",
-        "line": 264,
-        "markers": [],
-        "docstring": "Test that calling configure_logging multiple times doesn't duplicate handlers."
-      },
-      {
-        "name": "test_configure_logging_critical_handler_level",
-        "line": 281,
-        "markers": [],
-        "docstring": "Test that critical handler is set to WARNING level."
-      },
-      {
-        "name": "test_configure_logging_handler_formatters",
-        "line": 299,
-        "markers": [],
-        "docstring": "Test that handlers have formatters configured."
-      },
-      {
-        "name": "test_configure_logging_tui_mode_suppresses_stream_handler",
-        "line": 316,
-        "markers": [],
-        "docstring": "Test that TUI mode suppresses StreamHandler to prevent display corruption."
-      },
-      {
-        "name": "test_configure_logging_cli_mode_creates_stream_handler",
-        "line": 338,
-        "markers": [],
-        "docstring": "Test that CLI mode creates StreamHandler for console output."
-      },
-      {
-        "name": "test_configure_logging_file_handlers_present_in_both_modes",
-        "line": 360,
-        "markers": [],
-        "docstring": "Test that file handlers are present in both TUI and CLI modes."
-      },
-      {
-        "name": "test_logging_works_after_configuration",
-        "line": 421,
-        "markers": [],
-        "docstring": "Test that logging actually works after configuration."
-      }
-    ],
     "tests/unit/gpt_trader/logging/test_correlation_edges.py": [
       {
         "name": "test_correlation_context_nested_restores_prior_values",
@@ -16813,6 +16573,21 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/logging/test_setup_integration.py": [
+      {
+        "name": "TestLoggingIntegration::test_logging_works_after_configuration",
+        "line": 42,
+        "markers": [],
+        "docstring": "Test that logging actually works after configuration.",
+        "class": "TestLoggingIntegration"
+      },
+      {
+        "name": "test_logging_works_after_configuration",
+        "line": 42,
+        "markers": [],
+        "docstring": "Test that logging actually works after configuration."
+      }
+    ],
     "tests/unit/gpt_trader/logging/test_correlation.py": [
       {
         "name": "test_generate_correlation_id",
@@ -16869,6 +16644,166 @@
         "docstring": "Test nesting context managers."
       }
     ],
+    "tests/unit/gpt_trader/logging/test_setup_configure_logging_modes_and_idempotency.py": [
+      {
+        "name": "TestConfigureLoggingModesAndIdempotency::test_configure_logging_idempotent",
+        "line": 42,
+        "markers": [],
+        "docstring": "Test that calling configure_logging multiple times doesn't duplicate handlers.",
+        "class": "TestConfigureLoggingModesAndIdempotency"
+      },
+      {
+        "name": "TestConfigureLoggingModesAndIdempotency::test_configure_logging_tui_mode_suppresses_stream_handler",
+        "line": 59,
+        "markers": [],
+        "docstring": "Test that TUI mode suppresses StreamHandler to prevent display corruption.",
+        "class": "TestConfigureLoggingModesAndIdempotency"
+      },
+      {
+        "name": "TestConfigureLoggingModesAndIdempotency::test_configure_logging_cli_mode_creates_stream_handler",
+        "line": 81,
+        "markers": [],
+        "docstring": "Test that CLI mode creates StreamHandler for console output.",
+        "class": "TestConfigureLoggingModesAndIdempotency"
+      },
+      {
+        "name": "TestConfigureLoggingModesAndIdempotency::test_configure_logging_file_handlers_present_in_both_modes",
+        "line": 103,
+        "markers": [],
+        "docstring": "Test that file handlers are present in both TUI and CLI modes.",
+        "class": "TestConfigureLoggingModesAndIdempotency"
+      },
+      {
+        "name": "test_configure_logging_idempotent",
+        "line": 42,
+        "markers": [],
+        "docstring": "Test that calling configure_logging multiple times doesn't duplicate handlers."
+      },
+      {
+        "name": "test_configure_logging_tui_mode_suppresses_stream_handler",
+        "line": 59,
+        "markers": [],
+        "docstring": "Test that TUI mode suppresses StreamHandler to prevent display corruption."
+      },
+      {
+        "name": "test_configure_logging_cli_mode_creates_stream_handler",
+        "line": 81,
+        "markers": [],
+        "docstring": "Test that CLI mode creates StreamHandler for console output."
+      },
+      {
+        "name": "test_configure_logging_file_handlers_present_in_both_modes",
+        "line": 103,
+        "markers": [],
+        "docstring": "Test that file handlers are present in both TUI and CLI modes."
+      }
+    ],
+    "tests/unit/gpt_trader/logging/test_setup_configure_logging_handlers.py": [
+      {
+        "name": "TestConfigureLoggingHandlers::test_configure_logging_creates_directories",
+        "line": 49,
+        "markers": [],
+        "docstring": "Test that logging directories are created.",
+        "class": "TestConfigureLoggingHandlers"
+      },
+      {
+        "name": "TestConfigureLoggingHandlers::test_configure_logging_creates_console_handler",
+        "line": 61,
+        "markers": [],
+        "docstring": "Test that console handler is created.",
+        "class": "TestConfigureLoggingHandlers"
+      },
+      {
+        "name": "TestConfigureLoggingHandlers::test_configure_logging_creates_file_handlers",
+        "line": 77,
+        "markers": [],
+        "docstring": "Test that file handlers are created.",
+        "class": "TestConfigureLoggingHandlers"
+      },
+      {
+        "name": "TestConfigureLoggingHandlers::test_configure_logging_sets_root_level",
+        "line": 93,
+        "markers": [],
+        "docstring": "Test that root logger level is set to INFO.",
+        "class": "TestConfigureLoggingHandlers"
+      },
+      {
+        "name": "TestConfigureLoggingHandlers::test_configure_logging_creates_json_logger",
+        "line": 105,
+        "markers": [],
+        "docstring": "Test that JSON logger is configured.",
+        "class": "TestConfigureLoggingHandlers"
+      },
+      {
+        "name": "TestConfigureLoggingHandlers::test_configure_logging_json_handlers",
+        "line": 119,
+        "markers": [],
+        "docstring": "Test that JSON logger handlers are properly configured.",
+        "class": "TestConfigureLoggingHandlers"
+      },
+      {
+        "name": "TestConfigureLoggingHandlers::test_configure_logging_critical_handler_level",
+        "line": 143,
+        "markers": [],
+        "docstring": "Test that critical handler is set to WARNING level.",
+        "class": "TestConfigureLoggingHandlers"
+      },
+      {
+        "name": "TestConfigureLoggingHandlers::test_configure_logging_handler_formatters",
+        "line": 161,
+        "markers": [],
+        "docstring": "Test that handlers have formatters configured.",
+        "class": "TestConfigureLoggingHandlers"
+      },
+      {
+        "name": "test_configure_logging_creates_directories",
+        "line": 49,
+        "markers": [],
+        "docstring": "Test that logging directories are created."
+      },
+      {
+        "name": "test_configure_logging_creates_console_handler",
+        "line": 61,
+        "markers": [],
+        "docstring": "Test that console handler is created."
+      },
+      {
+        "name": "test_configure_logging_creates_file_handlers",
+        "line": 77,
+        "markers": [],
+        "docstring": "Test that file handlers are created."
+      },
+      {
+        "name": "test_configure_logging_sets_root_level",
+        "line": 93,
+        "markers": [],
+        "docstring": "Test that root logger level is set to INFO."
+      },
+      {
+        "name": "test_configure_logging_creates_json_logger",
+        "line": 105,
+        "markers": [],
+        "docstring": "Test that JSON logger is configured."
+      },
+      {
+        "name": "test_configure_logging_json_handlers",
+        "line": 119,
+        "markers": [],
+        "docstring": "Test that JSON logger handlers are properly configured."
+      },
+      {
+        "name": "test_configure_logging_critical_handler_level",
+        "line": 143,
+        "markers": [],
+        "docstring": "Test that critical handler is set to WARNING level."
+      },
+      {
+        "name": "test_configure_logging_handler_formatters",
+        "line": 161,
+        "markers": [],
+        "docstring": "Test that handlers have formatters configured."
+      }
+    ],
     "tests/unit/gpt_trader/logging/test_json_redaction.py": [
       {
         "name": "test_json_redaction",
@@ -16919,6 +16854,114 @@
         "line": 191,
         "markers": [],
         "docstring": "Test handling of context_ attributes."
+      }
+    ],
+    "tests/unit/gpt_trader/logging/test_setup_env_flag.py": [
+      {
+        "name": "TestEnvFlag::test_env_flag_true_values",
+        "line": 13,
+        "markers": [],
+        "docstring": "Test that various true values are recognized.",
+        "class": "TestEnvFlag"
+      },
+      {
+        "name": "TestEnvFlag::test_env_flag_false_values",
+        "line": 20,
+        "markers": [],
+        "docstring": "Test that various false values are recognized.",
+        "class": "TestEnvFlag"
+      },
+      {
+        "name": "TestEnvFlag::test_env_flag_default_value",
+        "line": 27,
+        "markers": [],
+        "docstring": "Test that default value is used when env var not set.",
+        "class": "TestEnvFlag"
+      },
+      {
+        "name": "TestEnvFlag::test_env_flag_with_whitespace",
+        "line": 33,
+        "markers": [],
+        "docstring": "Test that whitespace is stripped.",
+        "class": "TestEnvFlag"
+      },
+      {
+        "name": "test_env_flag_true_values",
+        "line": 13,
+        "markers": [],
+        "docstring": "Test that various true values are recognized."
+      },
+      {
+        "name": "test_env_flag_false_values",
+        "line": 20,
+        "markers": [],
+        "docstring": "Test that various false values are recognized."
+      },
+      {
+        "name": "test_env_flag_default_value",
+        "line": 27,
+        "markers": [],
+        "docstring": "Test that default value is used when env var not set."
+      },
+      {
+        "name": "test_env_flag_with_whitespace",
+        "line": 33,
+        "markers": [],
+        "docstring": "Test that whitespace is stripped."
+      }
+    ],
+    "tests/unit/gpt_trader/logging/test_setup_configure_logging_env_overrides.py": [
+      {
+        "name": "TestConfigureLoggingEnvOverrides::test_configure_logging_respects_env_log_dir",
+        "line": 41,
+        "markers": [],
+        "docstring": "Test that PERPS_LOG_DIR environment variable is respected.",
+        "class": "TestConfigureLoggingEnvOverrides"
+      },
+      {
+        "name": "TestConfigureLoggingEnvOverrides::test_configure_logging_respects_max_bytes_env",
+        "line": 63,
+        "markers": [],
+        "docstring": "Test that log size environment variables are respected.",
+        "class": "TestConfigureLoggingEnvOverrides"
+      },
+      {
+        "name": "TestConfigureLoggingEnvOverrides::test_configure_logging_respects_backup_count_env",
+        "line": 87,
+        "markers": [],
+        "docstring": "Test that backup count environment variables are respected.",
+        "class": "TestConfigureLoggingEnvOverrides"
+      },
+      {
+        "name": "TestConfigureLoggingEnvOverrides::test_configure_logging_enables_debug_with_env",
+        "line": 111,
+        "markers": [],
+        "docstring": "Test that PERPS_DEBUG environment variable enables debug logging.",
+        "class": "TestConfigureLoggingEnvOverrides"
+      },
+      {
+        "name": "test_configure_logging_respects_env_log_dir",
+        "line": 41,
+        "markers": [],
+        "docstring": "Test that PERPS_LOG_DIR environment variable is respected."
+      },
+      {
+        "name": "test_configure_logging_respects_max_bytes_env",
+        "line": 63,
+        "markers": [],
+        "docstring": "Test that log size environment variables are respected."
+      },
+      {
+        "name": "test_configure_logging_respects_backup_count_env",
+        "line": 87,
+        "markers": [],
+        "docstring": "Test that backup count environment variables are respected."
+      },
+      {
+        "name": "test_configure_logging_enables_debug_with_env",
+        "line": 111,
+        "markers": [],
+        "docstring": "Test that PERPS_DEBUG environment variable enables debug logging."
       }
     ],
     "tests/unit/gpt_trader/validation/test_collection_rules.py": [
@@ -23582,6 +23625,153 @@
         "docstring": "Should handle 'passed' keyword without extractable count."
       }
     ],
+    "tests/unit/gpt_trader/backtesting/metrics/test_risk_empty_and_time_in_market.py": [
+      {
+        "name": "TestEmptyRiskMetrics::test_returns_valid_risk_metrics",
+        "line": 19,
+        "markers": [],
+        "docstring": "",
+        "class": "TestEmptyRiskMetrics"
+      },
+      {
+        "name": "TestEmptyRiskMetrics::test_all_values_are_zero_or_none",
+        "line": 23,
+        "markers": [],
+        "docstring": "",
+        "class": "TestEmptyRiskMetrics"
+      },
+      {
+        "name": "TestEmptyRiskMetrics::test_leverage_defaults_to_one",
+        "line": 32,
+        "markers": [],
+        "docstring": "",
+        "class": "TestEmptyRiskMetrics"
+      },
+      {
+        "name": "TestCalculateTimeInMarket::test_empty_equity_curve_returns_zero",
+        "line": 41,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateTimeInMarket"
+      },
+      {
+        "name": "TestCalculateTimeInMarket::test_single_point_returns_zero",
+        "line": 47,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateTimeInMarket"
+      },
+      {
+        "name": "TestCalculateTimeInMarket::test_no_positions_returns_zero",
+        "line": 53,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateTimeInMarket"
+      },
+      {
+        "name": "TestCalculateTimeInMarket::test_with_positions_returns_estimate",
+        "line": 64,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateTimeInMarket"
+      },
+      {
+        "name": "test_returns_valid_risk_metrics",
+        "line": 19,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_all_values_are_zero_or_none",
+        "line": 23,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_leverage_defaults_to_one",
+        "line": 32,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_empty_equity_curve_returns_zero",
+        "line": 41,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_single_point_returns_zero",
+        "line": 47,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_no_positions_returns_zero",
+        "line": 53,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_with_positions_returns_estimate",
+        "line": 64,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/backtesting/metrics/test_risk_metrics_dataclass_and_edge_cases.py": [
+      {
+        "name": "TestRiskMetricsDataclass::test_all_fields_accessible",
+        "line": 15,
+        "markers": [],
+        "docstring": "",
+        "class": "TestRiskMetricsDataclass"
+      },
+      {
+        "name": "TestRiskMetricsDataclass::test_optional_ratios_can_be_none",
+        "line": 40,
+        "markers": [],
+        "docstring": "",
+        "class": "TestRiskMetricsDataclass"
+      },
+      {
+        "name": "TestCalculateRiskMetricsEdgeCases::test_zero_equity_returns_empty_metrics",
+        "line": 69,
+        "markers": [],
+        "docstring": "Test that equity curves starting at zero return empty metrics.",
+        "class": "TestCalculateRiskMetricsEdgeCases"
+      },
+      {
+        "name": "TestCalculateRiskMetricsEdgeCases::test_same_day_equity_curve",
+        "line": 86,
+        "markers": [],
+        "docstring": "Test equity curve within same day (years=0 path).",
+        "class": "TestCalculateRiskMetricsEdgeCases"
+      },
+      {
+        "name": "test_all_fields_accessible",
+        "line": 15,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_optional_ratios_can_be_none",
+        "line": 40,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_zero_equity_returns_empty_metrics",
+        "line": 69,
+        "markers": [],
+        "docstring": "Test that equity curves starting at zero return empty metrics."
+      },
+      {
+        "name": "test_same_day_equity_curve",
+        "line": 86,
+        "markers": [],
+        "docstring": "Test equity curve within same day (years=0 path)."
+      }
+    ],
     "tests/unit/gpt_trader/backtesting/metrics/test_statistics_trade_statistics_dataclass.py": [
       {
         "name": "TestTradeStatisticsDataclass::test_all_fields_accessible",
@@ -23787,6 +23977,229 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/backtesting/metrics/test_risk_returns_std_dev_and_var.py": [
+      {
+        "name": "TestCalculateReturns::test_empty_list_returns_empty",
+        "line": 13,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateReturns"
+      },
+      {
+        "name": "TestCalculateReturns::test_single_value_returns_empty",
+        "line": 16,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateReturns"
+      },
+      {
+        "name": "TestCalculateReturns::test_two_values_calculates_return",
+        "line": 19,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateReturns"
+      },
+      {
+        "name": "TestCalculateReturns::test_multiple_values",
+        "line": 24,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateReturns"
+      },
+      {
+        "name": "TestCalculateReturns::test_handles_zero_equity",
+        "line": 35,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateReturns"
+      },
+      {
+        "name": "TestCalculateReturns::test_steady_growth",
+        "line": 40,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateReturns"
+      },
+      {
+        "name": "TestStdDev::test_empty_list_returns_zero",
+        "line": 51,
+        "markers": [],
+        "docstring": "",
+        "class": "TestStdDev"
+      },
+      {
+        "name": "TestStdDev::test_single_value_returns_zero",
+        "line": 54,
+        "markers": [],
+        "docstring": "",
+        "class": "TestStdDev"
+      },
+      {
+        "name": "TestStdDev::test_two_identical_values",
+        "line": 57,
+        "markers": [],
+        "docstring": "",
+        "class": "TestStdDev"
+      },
+      {
+        "name": "TestStdDev::test_simple_case",
+        "line": 60,
+        "markers": [],
+        "docstring": "",
+        "class": "TestStdDev"
+      },
+      {
+        "name": "TestStdDev::test_negative_values",
+        "line": 69,
+        "markers": [],
+        "docstring": "",
+        "class": "TestStdDev"
+      },
+      {
+        "name": "TestStdDev::test_sample_standard_deviation",
+        "line": 76,
+        "markers": [],
+        "docstring": "",
+        "class": "TestStdDev"
+      },
+      {
+        "name": "TestCalculateVar::test_empty_returns_zero",
+        "line": 89,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateVar"
+      },
+      {
+        "name": "TestCalculateVar::test_single_value",
+        "line": 92,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateVar"
+      },
+      {
+        "name": "TestCalculateVar::test_all_positive_returns",
+        "line": 97,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateVar"
+      },
+      {
+        "name": "TestCalculateVar::test_mixed_returns_95",
+        "line": 103,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateVar"
+      },
+      {
+        "name": "TestCalculateVar::test_var_99_more_conservative",
+        "line": 110,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateVar"
+      },
+      {
+        "name": "test_empty_list_returns_empty",
+        "line": 13,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_single_value_returns_empty",
+        "line": 16,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_two_values_calculates_return",
+        "line": 19,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_multiple_values",
+        "line": 24,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_handles_zero_equity",
+        "line": 35,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_steady_growth",
+        "line": 40,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_empty_list_returns_zero",
+        "line": 51,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_single_value_returns_zero",
+        "line": 54,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_two_identical_values",
+        "line": 57,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_simple_case",
+        "line": 60,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_negative_values",
+        "line": 69,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_sample_standard_deviation",
+        "line": 76,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_empty_returns_zero",
+        "line": 89,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_single_value",
+        "line": 92,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_all_positive_returns",
+        "line": 97,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_mixed_returns_95",
+        "line": 103,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_var_99_more_conservative",
+        "line": 110,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/backtesting/metrics/test_statistics_position_metrics.py": [
       {
         "name": "TestCalculatePositionMetrics::test_empty_orders_returns_defaults",
@@ -23854,565 +24267,136 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/backtesting/metrics/test_risk.py": [
-      {
-        "name": "TestCalculateReturns::test_empty_list_returns_empty",
-        "line": 27,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateReturns"
-      },
-      {
-        "name": "TestCalculateReturns::test_single_value_returns_empty",
-        "line": 30,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateReturns"
-      },
-      {
-        "name": "TestCalculateReturns::test_two_values_calculates_return",
-        "line": 33,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateReturns"
-      },
-      {
-        "name": "TestCalculateReturns::test_multiple_values",
-        "line": 38,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateReturns"
-      },
-      {
-        "name": "TestCalculateReturns::test_handles_zero_equity",
-        "line": 49,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateReturns"
-      },
-      {
-        "name": "TestCalculateReturns::test_steady_growth",
-        "line": 54,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateReturns"
-      },
-      {
-        "name": "TestStdDev::test_empty_list_returns_zero",
-        "line": 65,
-        "markers": [],
-        "docstring": "",
-        "class": "TestStdDev"
-      },
-      {
-        "name": "TestStdDev::test_single_value_returns_zero",
-        "line": 68,
-        "markers": [],
-        "docstring": "",
-        "class": "TestStdDev"
-      },
-      {
-        "name": "TestStdDev::test_two_identical_values",
-        "line": 71,
-        "markers": [],
-        "docstring": "",
-        "class": "TestStdDev"
-      },
-      {
-        "name": "TestStdDev::test_simple_case",
-        "line": 74,
-        "markers": [],
-        "docstring": "",
-        "class": "TestStdDev"
-      },
-      {
-        "name": "TestStdDev::test_negative_values",
-        "line": 83,
-        "markers": [],
-        "docstring": "",
-        "class": "TestStdDev"
-      },
-      {
-        "name": "TestStdDev::test_sample_standard_deviation",
-        "line": 90,
-        "markers": [],
-        "docstring": "",
-        "class": "TestStdDev"
-      },
-      {
-        "name": "TestCalculateVar::test_empty_returns_zero",
-        "line": 103,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateVar"
-      },
-      {
-        "name": "TestCalculateVar::test_single_value",
-        "line": 106,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateVar"
-      },
-      {
-        "name": "TestCalculateVar::test_all_positive_returns",
-        "line": 111,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateVar"
-      },
-      {
-        "name": "TestCalculateVar::test_mixed_returns_95",
-        "line": 117,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateVar"
-      },
-      {
-        "name": "TestCalculateVar::test_var_99_more_conservative",
-        "line": 124,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateVar"
-      },
-      {
-        "name": "TestCalculateDrawdownMetrics::test_empty_equities",
-        "line": 135,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateDrawdownMetrics"
-      },
-      {
-        "name": "TestCalculateDrawdownMetrics::test_no_drawdown_monotonic_increase",
-        "line": 140,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateDrawdownMetrics"
-      },
-      {
-        "name": "TestCalculateDrawdownMetrics::test_single_drawdown",
-        "line": 151,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateDrawdownMetrics"
-      },
-      {
-        "name": "TestCalculateDrawdownMetrics::test_multiple_drawdowns",
-        "line": 163,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateDrawdownMetrics"
-      },
-      {
-        "name": "TestCalculateDrawdownMetrics::test_still_in_drawdown_at_end",
-        "line": 171,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateDrawdownMetrics"
-      },
-      {
-        "name": "TestEmptyRiskMetrics::test_returns_valid_risk_metrics",
-        "line": 183,
-        "markers": [],
-        "docstring": "",
-        "class": "TestEmptyRiskMetrics"
-      },
-      {
-        "name": "TestEmptyRiskMetrics::test_all_values_are_zero_or_none",
-        "line": 187,
-        "markers": [],
-        "docstring": "",
-        "class": "TestEmptyRiskMetrics"
-      },
-      {
-        "name": "TestEmptyRiskMetrics::test_leverage_defaults_to_one",
-        "line": 196,
-        "markers": [],
-        "docstring": "",
-        "class": "TestEmptyRiskMetrics"
-      },
-      {
-        "name": "TestCalculateTimeInMarket::test_empty_equity_curve_returns_zero",
-        "line": 205,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateTimeInMarket"
-      },
-      {
-        "name": "TestCalculateTimeInMarket::test_single_point_returns_zero",
-        "line": 211,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateTimeInMarket"
-      },
-      {
-        "name": "TestCalculateTimeInMarket::test_no_positions_returns_zero",
-        "line": 217,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateTimeInMarket"
-      },
-      {
-        "name": "TestCalculateTimeInMarket::test_with_positions_returns_estimate",
-        "line": 228,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCalculateTimeInMarket"
-      },
+    "tests/unit/gpt_trader/backtesting/metrics/test_risk_calculate_risk_metrics.py": [
       {
         "name": "TestCalculateRiskMetrics::test_insufficient_data_returns_empty_metrics",
-        "line": 266,
+        "line": 40,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateRiskMetrics"
       },
       {
         "name": "TestCalculateRiskMetrics::test_single_equity_point_returns_empty",
-        "line": 273,
+        "line": 47,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateRiskMetrics"
       },
       {
         "name": "TestCalculateRiskMetrics::test_calculates_total_return",
-        "line": 279,
+        "line": 53,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateRiskMetrics"
       },
       {
         "name": "TestCalculateRiskMetrics::test_calculates_sharpe_ratio",
-        "line": 288,
+        "line": 62,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateRiskMetrics"
       },
       {
         "name": "TestCalculateRiskMetrics::test_calculates_volatility",
-        "line": 302,
+        "line": 76,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateRiskMetrics"
       },
       {
         "name": "TestCalculateRiskMetrics::test_calculates_var_metrics",
-        "line": 309,
+        "line": 83,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateRiskMetrics"
       },
       {
         "name": "TestCalculateRiskMetrics::test_calmar_ratio_when_drawdown_exists",
-        "line": 316,
+        "line": 90,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateRiskMetrics"
       },
       {
         "name": "TestCalculateRiskMetrics::test_calmar_ratio_none_when_no_drawdown",
-        "line": 322,
+        "line": 96,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateRiskMetrics"
       },
       {
         "name": "TestCalculateRiskMetrics::test_uses_custom_risk_free_rate",
-        "line": 328,
+        "line": 102,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateRiskMetrics"
       },
       {
         "name": "TestCalculateRiskMetrics::test_handles_negative_returns",
-        "line": 336,
+        "line": 110,
         "markers": [],
         "docstring": "",
         "class": "TestCalculateRiskMetrics"
       },
       {
-        "name": "TestRiskMetricsDataclass::test_all_fields_accessible",
-        "line": 355,
-        "markers": [],
-        "docstring": "",
-        "class": "TestRiskMetricsDataclass"
-      },
-      {
-        "name": "TestRiskMetricsDataclass::test_optional_ratios_can_be_none",
-        "line": 380,
-        "markers": [],
-        "docstring": "",
-        "class": "TestRiskMetricsDataclass"
-      },
-      {
-        "name": "TestCalculateRiskMetricsEdgeCases::test_zero_equity_returns_empty_metrics",
-        "line": 409,
-        "markers": [],
-        "docstring": "Test that equity curves starting at zero return empty metrics.",
-        "class": "TestCalculateRiskMetricsEdgeCases"
-      },
-      {
-        "name": "TestCalculateRiskMetricsEdgeCases::test_same_day_equity_curve",
-        "line": 426,
-        "markers": [],
-        "docstring": "Test equity curve within same day (years=0 path).",
-        "class": "TestCalculateRiskMetricsEdgeCases"
-      },
-      {
-        "name": "test_empty_list_returns_empty",
-        "line": 27,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_single_value_returns_empty",
-        "line": 30,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_two_values_calculates_return",
-        "line": 33,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_multiple_values",
-        "line": 38,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_handles_zero_equity",
-        "line": 49,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_steady_growth",
-        "line": 54,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_empty_list_returns_zero",
-        "line": 65,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_single_value_returns_zero",
-        "line": 68,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_two_identical_values",
-        "line": 71,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_simple_case",
-        "line": 74,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_negative_values",
-        "line": 83,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_sample_standard_deviation",
-        "line": 90,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_empty_returns_zero",
-        "line": 103,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_single_value",
-        "line": 106,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_all_positive_returns",
-        "line": 111,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_mixed_returns_95",
-        "line": 117,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_var_99_more_conservative",
-        "line": 124,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_empty_equities",
-        "line": 135,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_no_drawdown_monotonic_increase",
-        "line": 140,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_single_drawdown",
-        "line": 151,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_multiple_drawdowns",
-        "line": 163,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_still_in_drawdown_at_end",
-        "line": 171,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_returns_valid_risk_metrics",
-        "line": 183,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_all_values_are_zero_or_none",
-        "line": 187,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_leverage_defaults_to_one",
-        "line": 196,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_empty_equity_curve_returns_zero",
-        "line": 205,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_single_point_returns_zero",
-        "line": 211,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_no_positions_returns_zero",
-        "line": 217,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_with_positions_returns_estimate",
-        "line": 228,
-        "markers": [],
-        "docstring": ""
-      },
-      {
         "name": "test_insufficient_data_returns_empty_metrics",
-        "line": 266,
+        "line": 40,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_single_equity_point_returns_empty",
-        "line": 273,
+        "line": 47,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_calculates_total_return",
-        "line": 279,
+        "line": 53,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_calculates_sharpe_ratio",
-        "line": 288,
+        "line": 62,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_calculates_volatility",
-        "line": 302,
+        "line": 76,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_calculates_var_metrics",
-        "line": 309,
+        "line": 83,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_calmar_ratio_when_drawdown_exists",
-        "line": 316,
+        "line": 90,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_calmar_ratio_none_when_no_drawdown",
-        "line": 322,
+        "line": 96,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_uses_custom_risk_free_rate",
-        "line": 328,
+        "line": 102,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_handles_negative_returns",
-        "line": 336,
+        "line": 110,
         "markers": [],
         "docstring": ""
-      },
-      {
-        "name": "test_all_fields_accessible",
-        "line": 355,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_optional_ratios_can_be_none",
-        "line": 380,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_zero_equity_returns_empty_metrics",
-        "line": 409,
-        "markers": [],
-        "docstring": "Test that equity curves starting at zero return empty metrics."
-      },
-      {
-        "name": "test_same_day_equity_curve",
-        "line": 426,
-        "markers": [],
-        "docstring": "Test equity curve within same day (years=0 path)."
       }
     ],
     "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_summary.py": [
@@ -24491,6 +24475,73 @@
       {
         "name": "test_generate_summary_handles_none_sharpe",
         "line": 134,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/backtesting/metrics/test_risk_drawdown_metrics.py": [
+      {
+        "name": "TestCalculateDrawdownMetrics::test_empty_equities",
+        "line": 16,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateDrawdownMetrics"
+      },
+      {
+        "name": "TestCalculateDrawdownMetrics::test_no_drawdown_monotonic_increase",
+        "line": 21,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateDrawdownMetrics"
+      },
+      {
+        "name": "TestCalculateDrawdownMetrics::test_single_drawdown",
+        "line": 32,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateDrawdownMetrics"
+      },
+      {
+        "name": "TestCalculateDrawdownMetrics::test_multiple_drawdowns",
+        "line": 44,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateDrawdownMetrics"
+      },
+      {
+        "name": "TestCalculateDrawdownMetrics::test_still_in_drawdown_at_end",
+        "line": 52,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCalculateDrawdownMetrics"
+      },
+      {
+        "name": "test_empty_equities",
+        "line": 16,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_no_drawdown_monotonic_increase",
+        "line": 21,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_single_drawdown",
+        "line": 32,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_multiple_drawdowns",
+        "line": 44,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_still_in_drawdown_at_end",
+        "line": 52,
         "markers": [],
         "docstring": ""
       }
@@ -36463,6 +36514,112 @@
         "docstring": "All status components should be initialized."
       }
     ],
+    "tests/unit/gpt_trader/tui/state_management/test_delta_updater_result_and_helpers.py": [
+      {
+        "name": "TestDeltaResult::test_initial_state_no_changes",
+        "line": 13,
+        "markers": [],
+        "docstring": "Test new DeltaResult has no changes.",
+        "class": "TestDeltaResult"
+      },
+      {
+        "name": "TestDeltaResult::test_add_change_sets_has_changes",
+        "line": 21,
+        "markers": [],
+        "docstring": "Test adding a change sets has_changes flag.",
+        "class": "TestDeltaResult"
+      },
+      {
+        "name": "TestDeltaResult::test_add_multiple_changes",
+        "line": 30,
+        "markers": [],
+        "docstring": "Test adding multiple changes.",
+        "class": "TestDeltaResult"
+      },
+      {
+        "name": "TestStateDeltaUpdaterHelpers::test_should_update_component_no_changes",
+        "line": 43,
+        "markers": [],
+        "docstring": "Test should_update returns False when no changes.",
+        "class": "TestStateDeltaUpdaterHelpers"
+      },
+      {
+        "name": "TestStateDeltaUpdaterHelpers::test_should_update_component_with_changes",
+        "line": 50,
+        "markers": [],
+        "docstring": "Test should_update returns True when there are changes.",
+        "class": "TestStateDeltaUpdaterHelpers"
+      },
+      {
+        "name": "TestStateDeltaUpdaterHelpers::test_float_equal_within_epsilon",
+        "line": 58,
+        "markers": [],
+        "docstring": "Test float comparison with epsilon tolerance.",
+        "class": "TestStateDeltaUpdaterHelpers"
+      },
+      {
+        "name": "TestStateDeltaUpdaterHelpers::test_decimal_equal_within_epsilon",
+        "line": 66,
+        "markers": [],
+        "docstring": "Test decimal comparison with epsilon tolerance.",
+        "class": "TestStateDeltaUpdaterHelpers"
+      },
+      {
+        "name": "TestStateDeltaUpdaterHelpers::test_decimal_equal_handles_none",
+        "line": 74,
+        "markers": [],
+        "docstring": "Test decimal comparison handles None values.",
+        "class": "TestStateDeltaUpdaterHelpers"
+      },
+      {
+        "name": "test_initial_state_no_changes",
+        "line": 13,
+        "markers": [],
+        "docstring": "Test new DeltaResult has no changes."
+      },
+      {
+        "name": "test_add_change_sets_has_changes",
+        "line": 21,
+        "markers": [],
+        "docstring": "Test adding a change sets has_changes flag."
+      },
+      {
+        "name": "test_add_multiple_changes",
+        "line": 30,
+        "markers": [],
+        "docstring": "Test adding multiple changes."
+      },
+      {
+        "name": "test_should_update_component_no_changes",
+        "line": 43,
+        "markers": [],
+        "docstring": "Test should_update returns False when no changes."
+      },
+      {
+        "name": "test_should_update_component_with_changes",
+        "line": 50,
+        "markers": [],
+        "docstring": "Test should_update returns True when there are changes."
+      },
+      {
+        "name": "test_float_equal_within_epsilon",
+        "line": 58,
+        "markers": [],
+        "docstring": "Test float comparison with epsilon tolerance."
+      },
+      {
+        "name": "test_decimal_equal_within_epsilon",
+        "line": 66,
+        "markers": [],
+        "docstring": "Test decimal comparison with epsilon tolerance."
+      },
+      {
+        "name": "test_decimal_equal_handles_none",
+        "line": 74,
+        "markers": [],
+        "docstring": "Test decimal comparison handles None values."
+      }
+    ],
     "tests/unit/gpt_trader/tui/state_management/test_validators.py": [
       {
         "name": "TestValidationResult::test_initial_state_is_valid",
@@ -36738,331 +36895,231 @@
         "docstring": "Test _validate_quantity helper function."
       }
     ],
-    "tests/unit/gpt_trader/tui/state_management/test_delta_updater.py": [
+    "tests/unit/gpt_trader/tui/state_management/test_delta_updater_compare_account_risk_system.py": [
       {
-        "name": "TestDeltaResult::test_initial_state_no_changes",
-        "line": 27,
-        "markers": [],
-        "docstring": "Test new DeltaResult has no changes.",
-        "class": "TestDeltaResult"
-      },
-      {
-        "name": "TestDeltaResult::test_add_change_sets_has_changes",
-        "line": 35,
-        "markers": [],
-        "docstring": "Test adding a change sets has_changes flag.",
-        "class": "TestDeltaResult"
-      },
-      {
-        "name": "TestDeltaResult::test_add_multiple_changes",
-        "line": 44,
-        "markers": [],
-        "docstring": "Test adding multiple changes.",
-        "class": "TestDeltaResult"
-      },
-      {
-        "name": "TestStateDeltaUpdater::test_compare_market_no_changes",
-        "line": 57,
-        "markers": [],
-        "docstring": "Test market comparison with identical data.",
-        "class": "TestStateDeltaUpdater"
-      },
-      {
-        "name": "TestStateDeltaUpdater::test_compare_market_price_change",
-        "line": 69,
-        "markers": [],
-        "docstring": "Test market comparison detects price change.",
-        "class": "TestStateDeltaUpdater"
-      },
-      {
-        "name": "TestStateDeltaUpdater::test_compare_market_new_symbol",
-        "line": 86,
-        "markers": [],
-        "docstring": "Test market comparison detects new symbol.",
-        "class": "TestStateDeltaUpdater"
-      },
-      {
-        "name": "TestStateDeltaUpdater::test_compare_market_removed_symbol",
-        "line": 103,
-        "markers": [],
-        "docstring": "Test market comparison detects removed symbol.",
-        "class": "TestStateDeltaUpdater"
-      },
-      {
-        "name": "TestStateDeltaUpdater::test_compare_positions_no_changes",
-        "line": 120,
-        "markers": [],
-        "docstring": "Test position comparison with identical data.",
-        "class": "TestStateDeltaUpdater"
-      },
-      {
-        "name": "TestStateDeltaUpdater::test_compare_positions_pnl_change",
-        "line": 141,
-        "markers": [],
-        "docstring": "Test position comparison detects P&L change.",
-        "class": "TestStateDeltaUpdater"
-      },
-      {
-        "name": "TestStateDeltaUpdater::test_compare_orders_no_changes",
-        "line": 176,
-        "markers": [],
-        "docstring": "Test order comparison with identical data.",
-        "class": "TestStateDeltaUpdater"
-      },
-      {
-        "name": "TestStateDeltaUpdater::test_compare_orders_status_change",
-        "line": 196,
-        "markers": [],
-        "docstring": "Test order comparison detects status change.",
-        "class": "TestStateDeltaUpdater"
-      },
-      {
-        "name": "TestStateDeltaUpdater::test_compare_orders_new_order",
-        "line": 229,
-        "markers": [],
-        "docstring": "Test order comparison detects new order.",
-        "class": "TestStateDeltaUpdater"
-      },
-      {
-        "name": "TestStateDeltaUpdater::test_compare_trades_no_changes",
-        "line": 251,
-        "markers": [],
-        "docstring": "Test trade comparison with identical data.",
-        "class": "TestStateDeltaUpdater"
-      },
-      {
-        "name": "TestStateDeltaUpdater::test_compare_trades_new_trade",
-        "line": 272,
-        "markers": [],
-        "docstring": "Test trade comparison detects new trade.",
-        "class": "TestStateDeltaUpdater"
-      },
-      {
-        "name": "TestStateDeltaUpdater::test_compare_account_no_changes",
-        "line": 295,
+        "name": "TestStateDeltaUpdaterAccountRiskSystem::test_compare_account_no_changes",
+        "line": 20,
         "markers": [],
         "docstring": "Test account comparison with identical data.",
-        "class": "TestStateDeltaUpdater"
+        "class": "TestStateDeltaUpdaterAccountRiskSystem"
       },
       {
-        "name": "TestStateDeltaUpdater::test_compare_account_balance_change",
-        "line": 315,
+        "name": "TestStateDeltaUpdaterAccountRiskSystem::test_compare_account_balance_change",
+        "line": 40,
         "markers": [],
         "docstring": "Test account comparison detects balance change.",
-        "class": "TestStateDeltaUpdater"
+        "class": "TestStateDeltaUpdaterAccountRiskSystem"
       },
       {
-        "name": "TestStateDeltaUpdater::test_compare_risk_no_changes",
-        "line": 348,
+        "name": "TestStateDeltaUpdaterAccountRiskSystem::test_compare_risk_no_changes",
+        "line": 73,
         "markers": [],
         "docstring": "Test risk comparison with identical data.",
-        "class": "TestStateDeltaUpdater"
+        "class": "TestStateDeltaUpdaterAccountRiskSystem"
       },
       {
-        "name": "TestStateDeltaUpdater::test_compare_risk_reduce_only_change",
-        "line": 364,
+        "name": "TestStateDeltaUpdaterAccountRiskSystem::test_compare_risk_reduce_only_change",
+        "line": 89,
         "markers": [],
         "docstring": "Test risk comparison detects reduce_only mode change.",
-        "class": "TestStateDeltaUpdater"
+        "class": "TestStateDeltaUpdaterAccountRiskSystem"
       },
       {
-        "name": "TestStateDeltaUpdater::test_compare_system_no_changes",
-        "line": 387,
+        "name": "TestStateDeltaUpdaterAccountRiskSystem::test_compare_system_no_changes",
+        "line": 112,
         "markers": [],
         "docstring": "Test system comparison with identical data.",
-        "class": "TestStateDeltaUpdater"
+        "class": "TestStateDeltaUpdaterAccountRiskSystem"
       },
       {
-        "name": "TestStateDeltaUpdater::test_compare_system_connection_change",
-        "line": 402,
+        "name": "TestStateDeltaUpdaterAccountRiskSystem::test_compare_system_connection_change",
+        "line": 127,
         "markers": [],
         "docstring": "Test system comparison detects connection status change.",
-        "class": "TestStateDeltaUpdater"
-      },
-      {
-        "name": "TestStateDeltaUpdater::test_should_update_component_no_changes",
-        "line": 419,
-        "markers": [],
-        "docstring": "Test should_update returns False when no changes.",
-        "class": "TestStateDeltaUpdater"
-      },
-      {
-        "name": "TestStateDeltaUpdater::test_should_update_component_with_changes",
-        "line": 426,
-        "markers": [],
-        "docstring": "Test should_update returns True when there are changes.",
-        "class": "TestStateDeltaUpdater"
-      },
-      {
-        "name": "TestStateDeltaUpdater::test_float_equal_within_epsilon",
-        "line": 434,
-        "markers": [],
-        "docstring": "Test float comparison with epsilon tolerance.",
-        "class": "TestStateDeltaUpdater"
-      },
-      {
-        "name": "TestStateDeltaUpdater::test_decimal_equal_within_epsilon",
-        "line": 442,
-        "markers": [],
-        "docstring": "Test decimal comparison with epsilon tolerance.",
-        "class": "TestStateDeltaUpdater"
-      },
-      {
-        "name": "TestStateDeltaUpdater::test_decimal_equal_handles_none",
-        "line": 450,
-        "markers": [],
-        "docstring": "Test decimal comparison handles None values.",
-        "class": "TestStateDeltaUpdater"
-      },
-      {
-        "name": "test_initial_state_no_changes",
-        "line": 27,
-        "markers": [],
-        "docstring": "Test new DeltaResult has no changes."
-      },
-      {
-        "name": "test_add_change_sets_has_changes",
-        "line": 35,
-        "markers": [],
-        "docstring": "Test adding a change sets has_changes flag."
-      },
-      {
-        "name": "test_add_multiple_changes",
-        "line": 44,
-        "markers": [],
-        "docstring": "Test adding multiple changes."
-      },
-      {
-        "name": "test_compare_market_no_changes",
-        "line": 57,
-        "markers": [],
-        "docstring": "Test market comparison with identical data."
-      },
-      {
-        "name": "test_compare_market_price_change",
-        "line": 69,
-        "markers": [],
-        "docstring": "Test market comparison detects price change."
-      },
-      {
-        "name": "test_compare_market_new_symbol",
-        "line": 86,
-        "markers": [],
-        "docstring": "Test market comparison detects new symbol."
-      },
-      {
-        "name": "test_compare_market_removed_symbol",
-        "line": 103,
-        "markers": [],
-        "docstring": "Test market comparison detects removed symbol."
-      },
-      {
-        "name": "test_compare_positions_no_changes",
-        "line": 120,
-        "markers": [],
-        "docstring": "Test position comparison with identical data."
-      },
-      {
-        "name": "test_compare_positions_pnl_change",
-        "line": 141,
-        "markers": [],
-        "docstring": "Test position comparison detects P&L change."
-      },
-      {
-        "name": "test_compare_orders_no_changes",
-        "line": 176,
-        "markers": [],
-        "docstring": "Test order comparison with identical data."
-      },
-      {
-        "name": "test_compare_orders_status_change",
-        "line": 196,
-        "markers": [],
-        "docstring": "Test order comparison detects status change."
-      },
-      {
-        "name": "test_compare_orders_new_order",
-        "line": 229,
-        "markers": [],
-        "docstring": "Test order comparison detects new order."
-      },
-      {
-        "name": "test_compare_trades_no_changes",
-        "line": 251,
-        "markers": [],
-        "docstring": "Test trade comparison with identical data."
-      },
-      {
-        "name": "test_compare_trades_new_trade",
-        "line": 272,
-        "markers": [],
-        "docstring": "Test trade comparison detects new trade."
+        "class": "TestStateDeltaUpdaterAccountRiskSystem"
       },
       {
         "name": "test_compare_account_no_changes",
-        "line": 295,
+        "line": 20,
         "markers": [],
         "docstring": "Test account comparison with identical data."
       },
       {
         "name": "test_compare_account_balance_change",
-        "line": 315,
+        "line": 40,
         "markers": [],
         "docstring": "Test account comparison detects balance change."
       },
       {
         "name": "test_compare_risk_no_changes",
-        "line": 348,
+        "line": 73,
         "markers": [],
         "docstring": "Test risk comparison with identical data."
       },
       {
         "name": "test_compare_risk_reduce_only_change",
-        "line": 364,
+        "line": 89,
         "markers": [],
         "docstring": "Test risk comparison detects reduce_only mode change."
       },
       {
         "name": "test_compare_system_no_changes",
-        "line": 387,
+        "line": 112,
         "markers": [],
         "docstring": "Test system comparison with identical data."
       },
       {
         "name": "test_compare_system_connection_change",
-        "line": 402,
+        "line": 127,
         "markers": [],
         "docstring": "Test system comparison detects connection status change."
+      }
+    ],
+    "tests/unit/gpt_trader/tui/state_management/test_delta_updater_compare_market_and_positions.py": [
+      {
+        "name": "TestStateDeltaUpdaterMarketAndPositions::test_compare_market_no_changes",
+        "line": 14,
+        "markers": [],
+        "docstring": "Test market comparison with identical data.",
+        "class": "TestStateDeltaUpdaterMarketAndPositions"
       },
       {
-        "name": "test_should_update_component_no_changes",
-        "line": 419,
+        "name": "TestStateDeltaUpdaterMarketAndPositions::test_compare_market_price_change",
+        "line": 26,
         "markers": [],
-        "docstring": "Test should_update returns False when no changes."
+        "docstring": "Test market comparison detects price change.",
+        "class": "TestStateDeltaUpdaterMarketAndPositions"
       },
       {
-        "name": "test_should_update_component_with_changes",
-        "line": 426,
+        "name": "TestStateDeltaUpdaterMarketAndPositions::test_compare_market_new_symbol",
+        "line": 43,
         "markers": [],
-        "docstring": "Test should_update returns True when there are changes."
+        "docstring": "Test market comparison detects new symbol.",
+        "class": "TestStateDeltaUpdaterMarketAndPositions"
       },
       {
-        "name": "test_float_equal_within_epsilon",
-        "line": 434,
+        "name": "TestStateDeltaUpdaterMarketAndPositions::test_compare_market_removed_symbol",
+        "line": 60,
         "markers": [],
-        "docstring": "Test float comparison with epsilon tolerance."
+        "docstring": "Test market comparison detects removed symbol.",
+        "class": "TestStateDeltaUpdaterMarketAndPositions"
       },
       {
-        "name": "test_decimal_equal_within_epsilon",
-        "line": 442,
+        "name": "TestStateDeltaUpdaterMarketAndPositions::test_compare_positions_no_changes",
+        "line": 77,
         "markers": [],
-        "docstring": "Test decimal comparison with epsilon tolerance."
+        "docstring": "Test position comparison with identical data.",
+        "class": "TestStateDeltaUpdaterMarketAndPositions"
       },
       {
-        "name": "test_decimal_equal_handles_none",
-        "line": 450,
+        "name": "TestStateDeltaUpdaterMarketAndPositions::test_compare_positions_pnl_change",
+        "line": 98,
         "markers": [],
-        "docstring": "Test decimal comparison handles None values."
+        "docstring": "Test position comparison detects P&L change.",
+        "class": "TestStateDeltaUpdaterMarketAndPositions"
+      },
+      {
+        "name": "test_compare_market_no_changes",
+        "line": 14,
+        "markers": [],
+        "docstring": "Test market comparison with identical data."
+      },
+      {
+        "name": "test_compare_market_price_change",
+        "line": 26,
+        "markers": [],
+        "docstring": "Test market comparison detects price change."
+      },
+      {
+        "name": "test_compare_market_new_symbol",
+        "line": 43,
+        "markers": [],
+        "docstring": "Test market comparison detects new symbol."
+      },
+      {
+        "name": "test_compare_market_removed_symbol",
+        "line": 60,
+        "markers": [],
+        "docstring": "Test market comparison detects removed symbol."
+      },
+      {
+        "name": "test_compare_positions_no_changes",
+        "line": 77,
+        "markers": [],
+        "docstring": "Test position comparison with identical data."
+      },
+      {
+        "name": "test_compare_positions_pnl_change",
+        "line": 98,
+        "markers": [],
+        "docstring": "Test position comparison detects P&L change."
+      }
+    ],
+    "tests/unit/gpt_trader/tui/state_management/test_delta_updater_compare_orders_and_trades.py": [
+      {
+        "name": "TestStateDeltaUpdaterOrdersAndTrades::test_compare_orders_no_changes",
+        "line": 14,
+        "markers": [],
+        "docstring": "Test order comparison with identical data.",
+        "class": "TestStateDeltaUpdaterOrdersAndTrades"
+      },
+      {
+        "name": "TestStateDeltaUpdaterOrdersAndTrades::test_compare_orders_status_change",
+        "line": 34,
+        "markers": [],
+        "docstring": "Test order comparison detects status change.",
+        "class": "TestStateDeltaUpdaterOrdersAndTrades"
+      },
+      {
+        "name": "TestStateDeltaUpdaterOrdersAndTrades::test_compare_orders_new_order",
+        "line": 67,
+        "markers": [],
+        "docstring": "Test order comparison detects new order.",
+        "class": "TestStateDeltaUpdaterOrdersAndTrades"
+      },
+      {
+        "name": "TestStateDeltaUpdaterOrdersAndTrades::test_compare_trades_no_changes",
+        "line": 89,
+        "markers": [],
+        "docstring": "Test trade comparison with identical data.",
+        "class": "TestStateDeltaUpdaterOrdersAndTrades"
+      },
+      {
+        "name": "TestStateDeltaUpdaterOrdersAndTrades::test_compare_trades_new_trade",
+        "line": 110,
+        "markers": [],
+        "docstring": "Test trade comparison detects new trade.",
+        "class": "TestStateDeltaUpdaterOrdersAndTrades"
+      },
+      {
+        "name": "test_compare_orders_no_changes",
+        "line": 14,
+        "markers": [],
+        "docstring": "Test order comparison with identical data."
+      },
+      {
+        "name": "test_compare_orders_status_change",
+        "line": 34,
+        "markers": [],
+        "docstring": "Test order comparison detects status change."
+      },
+      {
+        "name": "test_compare_orders_new_order",
+        "line": 67,
+        "markers": [],
+        "docstring": "Test order comparison detects new order."
+      },
+      {
+        "name": "test_compare_trades_no_changes",
+        "line": 89,
+        "markers": [],
+        "docstring": "Test trade comparison with identical data."
+      },
+      {
+        "name": "test_compare_trades_new_trade",
+        "line": 110,
+        "markers": [],
+        "docstring": "Test trade comparison detects new trade."
       }
     ],
     "tests/unit/gpt_trader/tui/services/test_config_service.py": [
@@ -46924,118 +46981,118 @@
     "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_liquidation_buffer_and_reduce_only.py": [
       {
         "name": "TestLiveRiskManagerCFMLiquidationBuffer::test_check_cfm_liquidation_buffer_ok",
-        "line": 16,
+        "line": 14,
         "markers": [],
         "docstring": "No warnings when buffer is sufficient.",
         "class": "TestLiveRiskManagerCFMLiquidationBuffer"
       },
       {
         "name": "TestLiveRiskManagerCFMLiquidationBuffer::test_check_cfm_liquidation_buffer_warning",
-        "line": 32,
+        "line": 30,
         "markers": [],
         "docstring": "Warning when buffer is below threshold but not critical.",
         "class": "TestLiveRiskManagerCFMLiquidationBuffer"
       },
       {
         "name": "TestLiveRiskManagerCFMLiquidationBuffer::test_check_cfm_liquidation_buffer_critical",
-        "line": 52,
+        "line": 50,
         "markers": [],
         "docstring": "Critical warning and reduce-only when buffer is very low.",
         "class": "TestLiveRiskManagerCFMLiquidationBuffer"
       },
       {
         "name": "TestLiveRiskManagerCFMLiquidationBuffer::test_check_cfm_liquidation_buffer_with_percentage_field",
-        "line": 69,
+        "line": 67,
         "markers": [],
         "docstring": "Uses liquidation_buffer_percentage field if available.",
         "class": "TestLiveRiskManagerCFMLiquidationBuffer"
       },
       {
         "name": "TestLiveRiskManagerCFMLiquidationBuffer::test_check_cfm_liquidation_buffer_none_balance",
-        "line": 83,
+        "line": 81,
         "markers": [],
         "docstring": "Returns empty list for None balance.",
         "class": "TestLiveRiskManagerCFMLiquidationBuffer"
       },
       {
         "name": "TestLiveRiskManagerCFMReduceOnlyMode::test_cfm_reduce_only_mode_default",
-        "line": 95,
+        "line": 93,
         "markers": [],
         "docstring": "CFM reduce-only mode is off by default.",
         "class": "TestLiveRiskManagerCFMReduceOnlyMode"
       },
       {
         "name": "TestLiveRiskManagerCFMReduceOnlyMode::test_set_cfm_reduce_only_mode",
-        "line": 100,
+        "line": 98,
         "markers": [],
         "docstring": "Can set CFM reduce-only mode.",
         "class": "TestLiveRiskManagerCFMReduceOnlyMode"
       },
       {
         "name": "TestLiveRiskManagerCFMReduceOnlyMode::test_clear_cfm_reduce_only_mode",
-        "line": 109,
+        "line": 107,
         "markers": [],
         "docstring": "Can clear CFM reduce-only mode.",
         "class": "TestLiveRiskManagerCFMReduceOnlyMode"
       },
       {
         "name": "TestLiveRiskManagerResetWithCFM::test_reset_daily_tracking_clears_cfm_state",
-        "line": 122,
+        "line": 120,
         "markers": [],
         "docstring": "Reset clears CFM-specific state.",
         "class": "TestLiveRiskManagerResetWithCFM"
       },
       {
         "name": "test_check_cfm_liquidation_buffer_ok",
-        "line": 16,
+        "line": 14,
         "markers": [],
         "docstring": "No warnings when buffer is sufficient."
       },
       {
         "name": "test_check_cfm_liquidation_buffer_warning",
-        "line": 32,
+        "line": 30,
         "markers": [],
         "docstring": "Warning when buffer is below threshold but not critical."
       },
       {
         "name": "test_check_cfm_liquidation_buffer_critical",
-        "line": 52,
+        "line": 50,
         "markers": [],
         "docstring": "Critical warning and reduce-only when buffer is very low."
       },
       {
         "name": "test_check_cfm_liquidation_buffer_with_percentage_field",
-        "line": 69,
+        "line": 67,
         "markers": [],
         "docstring": "Uses liquidation_buffer_percentage field if available."
       },
       {
         "name": "test_check_cfm_liquidation_buffer_none_balance",
-        "line": 83,
+        "line": 81,
         "markers": [],
         "docstring": "Returns empty list for None balance."
       },
       {
         "name": "test_cfm_reduce_only_mode_default",
-        "line": 95,
+        "line": 93,
         "markers": [],
         "docstring": "CFM reduce-only mode is off by default."
       },
       {
         "name": "test_set_cfm_reduce_only_mode",
-        "line": 100,
+        "line": 98,
         "markers": [],
         "docstring": "Can set CFM reduce-only mode."
       },
       {
         "name": "test_clear_cfm_reduce_only_mode",
-        "line": 109,
+        "line": 107,
         "markers": [],
         "docstring": "Can clear CFM reduce-only mode."
       },
       {
         "name": "test_reset_daily_tracking_clears_cfm_state",
-        "line": 122,
+        "line": 120,
         "markers": [],
         "docstring": "Reset clears CFM-specific state."
       }
@@ -51512,6 +51569,60 @@
         "docstring": "Test getting non-existent order."
       }
     ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_health.py": [
+      {
+        "name": "TestCoinbaseWebSocketHealth::test_get_health_returns_all_fields",
+        "line": 9,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbaseWebSocketHealth"
+      },
+      {
+        "name": "TestCoinbaseWebSocketHealth::test_get_health_initial_state",
+        "line": 24,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbaseWebSocketHealth"
+      },
+      {
+        "name": "TestCoinbaseWebSocketHealth::test_get_health_reflects_gap_count",
+        "line": 39,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbaseWebSocketHealth"
+      },
+      {
+        "name": "TestCoinbaseWebSocketHealth::test_get_health_reflects_reconnect_count",
+        "line": 49,
+        "markers": [],
+        "docstring": "",
+        "class": "TestCoinbaseWebSocketHealth"
+      },
+      {
+        "name": "test_get_health_returns_all_fields",
+        "line": 9,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_get_health_initial_state",
+        "line": 24,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_get_health_reflects_gap_count",
+        "line": 39,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_get_health_reflects_reconnect_count",
+        "line": 49,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection.py": [
       {
         "name": "TestCalculateBackoffWithJitter::test_backoff_grows_exponentially",
@@ -51934,6 +52045,86 @@
       {
         "name": "test_account_manager_move_funds_delegates_to_broker",
         "line": 352,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_types_and_sequence_guard.py": [
+      {
+        "name": "TestEventType::test_event_types_values",
+        "line": 11,
+        "markers": [],
+        "docstring": "",
+        "class": "TestEventType"
+      },
+      {
+        "name": "TestSequenceGuard::test_annotate_returns_message_unchanged_without_sequence",
+        "line": 21,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSequenceGuard"
+      },
+      {
+        "name": "TestSequenceGuard::test_annotate_first_message_no_gap",
+        "line": 32,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSequenceGuard"
+      },
+      {
+        "name": "TestSequenceGuard::test_annotate_sequential_messages_no_gap",
+        "line": 42,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSequenceGuard"
+      },
+      {
+        "name": "TestSequenceGuard::test_annotate_gap_detected",
+        "line": 55,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSequenceGuard"
+      },
+      {
+        "name": "TestSequenceGuard::test_reset_clears_state",
+        "line": 65,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSequenceGuard"
+      },
+      {
+        "name": "test_event_types_values",
+        "line": 11,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_annotate_returns_message_unchanged_without_sequence",
+        "line": 21,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_annotate_first_message_no_gap",
+        "line": 32,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_annotate_sequential_messages_no_gap",
+        "line": 42,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_annotate_gap_detected",
+        "line": 55,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_reset_clears_state",
+        "line": 65,
         "markers": [],
         "docstring": ""
       }
@@ -53439,6 +53630,99 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_dispatcher.py": [
+      {
+        "name": "TestEventDispatcher::test_dispatch_ticker",
+        "line": 11,
+        "markers": [],
+        "docstring": "",
+        "class": "TestEventDispatcher"
+      },
+      {
+        "name": "TestEventDispatcher::test_dispatch_trades",
+        "line": 26,
+        "markers": [],
+        "docstring": "",
+        "class": "TestEventDispatcher"
+      },
+      {
+        "name": "TestEventDispatcher::test_dispatch_orderbook",
+        "line": 53,
+        "markers": [],
+        "docstring": "",
+        "class": "TestEventDispatcher"
+      },
+      {
+        "name": "TestEventDispatcher::test_dispatch_raw_always_called",
+        "line": 67,
+        "markers": [],
+        "docstring": "",
+        "class": "TestEventDispatcher"
+      },
+      {
+        "name": "TestEventDispatcher::test_dispatch_error_event",
+        "line": 79,
+        "markers": [],
+        "docstring": "",
+        "class": "TestEventDispatcher"
+      },
+      {
+        "name": "TestEventDispatcher::test_handler_exception_does_not_stop_dispatch",
+        "line": 91,
+        "markers": [],
+        "docstring": "",
+        "class": "TestEventDispatcher"
+      },
+      {
+        "name": "TestEventDispatcher::test_multiple_handlers",
+        "line": 113,
+        "markers": [],
+        "docstring": "",
+        "class": "TestEventDispatcher"
+      },
+      {
+        "name": "test_dispatch_ticker",
+        "line": 11,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_dispatch_trades",
+        "line": 26,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_dispatch_orderbook",
+        "line": 53,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_dispatch_raw_always_called",
+        "line": 67,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_dispatch_error_event",
+        "line": 79,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_handler_exception_does_not_stop_dispatch",
+        "line": 91,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_multiple_handlers",
+        "line": 113,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery_intx.py": [
       {
         "name": "TestDiscoverDerivativesINTX::test_intx_market_accessible",
@@ -53841,6 +54125,86 @@
         "line": 72,
         "markers": [],
         "docstring": "get_ws_health should be thread-safe using the lock."
+      }
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_parsing.py": [
+      {
+        "name": "TestTickerEvent::test_from_message_basic",
+        "line": 18,
+        "markers": [],
+        "docstring": "",
+        "class": "TestTickerEvent"
+      },
+      {
+        "name": "TestTickerEvent::test_from_message_missing_optional",
+        "line": 46,
+        "markers": [],
+        "docstring": "",
+        "class": "TestTickerEvent"
+      },
+      {
+        "name": "TestTradeEvent::test_from_message_single_trade",
+        "line": 63,
+        "markers": [],
+        "docstring": "",
+        "class": "TestTradeEvent"
+      },
+      {
+        "name": "TestTradeEvent::test_from_message_multiple_trades",
+        "line": 91,
+        "markers": [],
+        "docstring": "",
+        "class": "TestTradeEvent"
+      },
+      {
+        "name": "TestOrderbookUpdate::test_from_message_bids_and_asks",
+        "line": 126,
+        "markers": [],
+        "docstring": "",
+        "class": "TestOrderbookUpdate"
+      },
+      {
+        "name": "TestOrderUpdateEvent::test_from_message_order_update",
+        "line": 168,
+        "markers": [],
+        "docstring": "",
+        "class": "TestOrderUpdateEvent"
+      },
+      {
+        "name": "test_from_message_basic",
+        "line": 18,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_from_message_missing_optional",
+        "line": 46,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_from_message_single_trade",
+        "line": 63,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_from_message_multiple_trades",
+        "line": 91,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_from_message_bids_and_asks",
+        "line": 126,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_from_message_order_update",
+        "line": 168,
+        "markers": [],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_noop_transport.py": [
@@ -55089,307 +55453,6 @@
         "line": 373,
         "markers": [],
         "docstring": "Test multiple start/stop cycles."
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events.py": [
-      {
-        "name": "TestTickerEvent::test_from_message_basic",
-        "line": 20,
-        "markers": [],
-        "docstring": "",
-        "class": "TestTickerEvent"
-      },
-      {
-        "name": "TestTickerEvent::test_from_message_missing_optional",
-        "line": 48,
-        "markers": [],
-        "docstring": "",
-        "class": "TestTickerEvent"
-      },
-      {
-        "name": "TestTradeEvent::test_from_message_single_trade",
-        "line": 65,
-        "markers": [],
-        "docstring": "",
-        "class": "TestTradeEvent"
-      },
-      {
-        "name": "TestTradeEvent::test_from_message_multiple_trades",
-        "line": 93,
-        "markers": [],
-        "docstring": "",
-        "class": "TestTradeEvent"
-      },
-      {
-        "name": "TestOrderbookUpdate::test_from_message_bids_and_asks",
-        "line": 128,
-        "markers": [],
-        "docstring": "",
-        "class": "TestOrderbookUpdate"
-      },
-      {
-        "name": "TestOrderUpdateEvent::test_from_message_order_update",
-        "line": 170,
-        "markers": [],
-        "docstring": "",
-        "class": "TestOrderUpdateEvent"
-      },
-      {
-        "name": "TestEventDispatcher::test_dispatch_ticker",
-        "line": 205,
-        "markers": [],
-        "docstring": "",
-        "class": "TestEventDispatcher"
-      },
-      {
-        "name": "TestEventDispatcher::test_dispatch_trades",
-        "line": 220,
-        "markers": [],
-        "docstring": "",
-        "class": "TestEventDispatcher"
-      },
-      {
-        "name": "TestEventDispatcher::test_dispatch_orderbook",
-        "line": 247,
-        "markers": [],
-        "docstring": "",
-        "class": "TestEventDispatcher"
-      },
-      {
-        "name": "TestEventDispatcher::test_dispatch_raw_always_called",
-        "line": 261,
-        "markers": [],
-        "docstring": "",
-        "class": "TestEventDispatcher"
-      },
-      {
-        "name": "TestEventDispatcher::test_dispatch_error_event",
-        "line": 273,
-        "markers": [],
-        "docstring": "",
-        "class": "TestEventDispatcher"
-      },
-      {
-        "name": "TestEventDispatcher::test_handler_exception_does_not_stop_dispatch",
-        "line": 285,
-        "markers": [],
-        "docstring": "",
-        "class": "TestEventDispatcher"
-      },
-      {
-        "name": "TestEventDispatcher::test_multiple_handlers",
-        "line": 307,
-        "markers": [],
-        "docstring": "",
-        "class": "TestEventDispatcher"
-      },
-      {
-        "name": "TestEventType::test_event_types_values",
-        "line": 328,
-        "markers": [],
-        "docstring": "",
-        "class": "TestEventType"
-      },
-      {
-        "name": "TestSequenceGuard::test_annotate_returns_message_unchanged_without_sequence",
-        "line": 338,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSequenceGuard"
-      },
-      {
-        "name": "TestSequenceGuard::test_annotate_first_message_no_gap",
-        "line": 349,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSequenceGuard"
-      },
-      {
-        "name": "TestSequenceGuard::test_annotate_sequential_messages_no_gap",
-        "line": 359,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSequenceGuard"
-      },
-      {
-        "name": "TestSequenceGuard::test_annotate_gap_detected",
-        "line": 372,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSequenceGuard"
-      },
-      {
-        "name": "TestSequenceGuard::test_reset_clears_state",
-        "line": 382,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSequenceGuard"
-      },
-      {
-        "name": "TestCoinbaseWebSocketHealth::test_get_health_returns_all_fields",
-        "line": 398,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseWebSocketHealth"
-      },
-      {
-        "name": "TestCoinbaseWebSocketHealth::test_get_health_initial_state",
-        "line": 413,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseWebSocketHealth"
-      },
-      {
-        "name": "TestCoinbaseWebSocketHealth::test_get_health_reflects_gap_count",
-        "line": 428,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseWebSocketHealth"
-      },
-      {
-        "name": "TestCoinbaseWebSocketHealth::test_get_health_reflects_reconnect_count",
-        "line": 438,
-        "markers": [],
-        "docstring": "",
-        "class": "TestCoinbaseWebSocketHealth"
-      },
-      {
-        "name": "test_from_message_basic",
-        "line": 20,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_from_message_missing_optional",
-        "line": 48,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_from_message_single_trade",
-        "line": 65,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_from_message_multiple_trades",
-        "line": 93,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_from_message_bids_and_asks",
-        "line": 128,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_from_message_order_update",
-        "line": 170,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_dispatch_ticker",
-        "line": 205,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_dispatch_trades",
-        "line": 220,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_dispatch_orderbook",
-        "line": 247,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_dispatch_raw_always_called",
-        "line": 261,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_dispatch_error_event",
-        "line": 273,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_handler_exception_does_not_stop_dispatch",
-        "line": 285,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_multiple_handlers",
-        "line": 307,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_event_types_values",
-        "line": 328,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_annotate_returns_message_unchanged_without_sequence",
-        "line": 338,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_annotate_first_message_no_gap",
-        "line": 349,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_annotate_sequential_messages_no_gap",
-        "line": 359,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_annotate_gap_detected",
-        "line": 372,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_reset_clears_state",
-        "line": 382,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_get_health_returns_all_fields",
-        "line": 398,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_get_health_initial_state",
-        "line": 413,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_get_health_reflects_gap_count",
-        "line": 428,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_get_health_reflects_reconnect_count",
-        "line": 438,
-        "markers": [],
-        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_service_order_and_size_methods.py": [
@@ -62639,6 +62702,153 @@
         "docstring": "Different profiles should have different decision thresholds."
       }
     ],
+    "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_entry_and_exit_signals.py": [
+      {
+        "name": "TestStrategyEntrySignals::test_bullish_trend_generates_buy",
+        "line": 22,
+        "markers": [],
+        "docstring": "",
+        "class": "TestStrategyEntrySignals"
+      },
+      {
+        "name": "TestStrategyEntrySignals::test_bearish_trend_generates_sell",
+        "line": 38,
+        "markers": [],
+        "docstring": "",
+        "class": "TestStrategyEntrySignals"
+      },
+      {
+        "name": "TestStrategyEntrySignals::test_sideways_market_holds",
+        "line": 54,
+        "markers": [],
+        "docstring": "",
+        "class": "TestStrategyEntrySignals"
+      },
+      {
+        "name": "TestStrategyExitSignals::test_long_position_exit_on_bearish_signal",
+        "line": 72,
+        "markers": [],
+        "docstring": "",
+        "class": "TestStrategyExitSignals"
+      },
+      {
+        "name": "TestStrategyExitSignals::test_stop_loss_triggers_close",
+        "line": 87,
+        "markers": [],
+        "docstring": "",
+        "class": "TestStrategyExitSignals"
+      },
+      {
+        "name": "TestStrategyExitSignals::test_take_profit_triggers_close",
+        "line": 106,
+        "markers": [],
+        "docstring": "",
+        "class": "TestStrategyExitSignals"
+      },
+      {
+        "name": "test_bullish_trend_generates_buy",
+        "line": 22,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_bearish_trend_generates_sell",
+        "line": 38,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_sideways_market_holds",
+        "line": 54,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_long_position_exit_on_bearish_signal",
+        "line": 72,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_stop_loss_triggers_close",
+        "line": 87,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_take_profit_triggers_close",
+        "line": 106,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_indicators_and_confidence.py": [
+      {
+        "name": "TestStrategyIndicatorCalculation::test_indicators_populated_in_decision",
+        "line": 19,
+        "markers": [],
+        "docstring": "",
+        "class": "TestStrategyIndicatorCalculation"
+      },
+      {
+        "name": "TestStrategyIndicatorCalculation::test_rsi_signal_oversold",
+        "line": 37,
+        "markers": [],
+        "docstring": "",
+        "class": "TestStrategyIndicatorCalculation"
+      },
+      {
+        "name": "TestStrategyIndicatorCalculation::test_rsi_signal_overbought",
+        "line": 54,
+        "markers": [],
+        "docstring": "",
+        "class": "TestStrategyIndicatorCalculation"
+      },
+      {
+        "name": "TestStrategyConfidence::test_multiple_bullish_signals_high_confidence",
+        "line": 75,
+        "markers": [],
+        "docstring": "",
+        "class": "TestStrategyConfidence"
+      },
+      {
+        "name": "TestStrategyConfidence::test_weak_signals_low_confidence",
+        "line": 91,
+        "markers": [],
+        "docstring": "",
+        "class": "TestStrategyConfidence"
+      },
+      {
+        "name": "test_indicators_populated_in_decision",
+        "line": 19,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_rsi_signal_oversold",
+        "line": 37,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_rsi_signal_overbought",
+        "line": 54,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_multiple_bullish_signals_high_confidence",
+        "line": 75,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_weak_signals_low_confidence",
+        "line": 91,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_perps_baseline_edges.py": [
       {
         "name": "test_parse_config_from_object",
@@ -62671,790 +62881,149 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators.py": [
-      {
-        "name": "TestWelfordState::test_empty_state",
-        "line": 32,
-        "markers": [],
-        "docstring": "Test initial state values.",
-        "class": "TestWelfordState"
-      },
-      {
-        "name": "TestWelfordState::test_single_value",
-        "line": 39,
-        "markers": [],
-        "docstring": "Test state after single update.",
-        "class": "TestWelfordState"
-      },
-      {
-        "name": "TestWelfordState::test_multiple_values_mean",
-        "line": 47,
-        "markers": [],
-        "docstring": "Test mean calculation with multiple values.",
-        "class": "TestWelfordState"
-      },
-      {
-        "name": "TestWelfordState::test_variance_calculation",
-        "line": 57,
-        "markers": [],
-        "docstring": "Test variance matches expected value.",
-        "class": "TestWelfordState"
-      },
-      {
-        "name": "TestWelfordState::test_serialize_deserialize_roundtrip",
-        "line": 70,
-        "markers": [],
-        "docstring": "Test serialization preserves state.",
-        "class": "TestWelfordState"
-      },
-      {
-        "name": "TestRollingWindow::test_add_below_capacity",
-        "line": 87,
-        "markers": [],
-        "docstring": "Test adding values before window is full.",
-        "class": "TestRollingWindow"
-      },
-      {
-        "name": "TestRollingWindow::test_add_at_capacity_evicts",
-        "line": 95,
-        "markers": [],
-        "docstring": "Test that adding at capacity evicts oldest value.",
-        "class": "TestRollingWindow"
-      },
-      {
-        "name": "TestRollingWindow::test_mean_calculation",
-        "line": 107,
-        "markers": [],
-        "docstring": "Test O(1) mean calculation.",
-        "class": "TestRollingWindow"
-      },
-      {
-        "name": "TestRollingWindow::test_running_sum_accuracy",
-        "line": 116,
-        "markers": [],
-        "docstring": "Test running sum stays accurate through evictions.",
-        "class": "TestRollingWindow"
-      },
-      {
-        "name": "TestRollingWindow::test_serialize_deserialize_roundtrip",
-        "line": 126,
-        "markers": [],
-        "docstring": "Test serialization preserves window state.",
-        "class": "TestRollingWindow"
-      },
-      {
-        "name": "TestOnlineSMA::test_warmup_period",
-        "line": 143,
-        "markers": [],
-        "docstring": "Test SMA during warmup before window is full.",
-        "class": "TestOnlineSMA"
-      },
-      {
-        "name": "TestOnlineSMA::test_full_window",
-        "line": 150,
-        "markers": [],
-        "docstring": "Test SMA when window is full.",
-        "class": "TestOnlineSMA"
-      },
-      {
-        "name": "TestOnlineSMA::test_matches_stateless_sma",
-        "line": 160,
-        "markers": [],
-        "docstring": "Test that online SMA matches stateless implementation.",
-        "class": "TestOnlineSMA"
-      },
-      {
-        "name": "TestOnlineSMA::test_serialize_deserialize_roundtrip",
-        "line": 179,
-        "markers": [],
-        "docstring": "Test serialization preserves SMA state.",
-        "class": "TestOnlineSMA"
-      },
-      {
-        "name": "TestOnlineEMA::test_warmup_period",
-        "line": 197,
-        "markers": [],
-        "docstring": "Test EMA during warmup before initialization.",
-        "class": "TestOnlineEMA"
-      },
-      {
-        "name": "TestOnlineEMA::test_initialization",
-        "line": 204,
-        "markers": [],
-        "docstring": "Test EMA initializes with SMA of warmup values.",
-        "class": "TestOnlineEMA"
-      },
-      {
-        "name": "TestOnlineEMA::test_subsequent_updates",
-        "line": 215,
-        "markers": [],
-        "docstring": "Test EMA updates after initialization.",
-        "class": "TestOnlineEMA"
-      },
-      {
-        "name": "TestOnlineEMA::test_serialize_deserialize_roundtrip",
-        "line": 228,
-        "markers": [],
-        "docstring": "Test serialization preserves EMA state.",
-        "class": "TestOnlineEMA"
-      },
-      {
-        "name": "TestOnlineRSI::test_first_price_returns_none",
-        "line": 246,
-        "markers": [],
-        "docstring": "Test that first price (no change) returns None.",
-        "class": "TestOnlineRSI"
-      },
-      {
-        "name": "TestOnlineRSI::test_warmup_period",
-        "line": 251,
-        "markers": [],
-        "docstring": "Test RSI during warmup before initialization.",
-        "class": "TestOnlineRSI"
-      },
-      {
-        "name": "TestOnlineRSI::test_initialization",
-        "line": 259,
-        "markers": [],
-        "docstring": "Test RSI initializes after period changes.",
-        "class": "TestOnlineRSI"
-      },
-      {
-        "name": "TestOnlineRSI::test_all_gains_rsi_100",
-        "line": 271,
-        "markers": [],
-        "docstring": "Test RSI approaches 100 with only gains.",
-        "class": "TestOnlineRSI"
-      },
-      {
-        "name": "TestOnlineRSI::test_matches_stateless_rsi",
-        "line": 280,
-        "markers": [],
-        "docstring": "Test that online RSI matches stateless implementation.",
-        "class": "TestOnlineRSI"
-      },
-      {
-        "name": "TestOnlineRSI::test_serialize_deserialize_roundtrip",
-        "line": 320,
-        "markers": [],
-        "docstring": "Test serialization preserves RSI state.",
-        "class": "TestOnlineRSI"
-      },
-      {
-        "name": "TestOnlineZScore::test_insufficient_data_returns_none",
-        "line": 339,
-        "markers": [],
-        "docstring": "Test Z-Score returns None with insufficient data.",
-        "class": "TestOnlineZScore"
-      },
-      {
-        "name": "TestOnlineZScore::test_z_score_calculation",
-        "line": 344,
-        "markers": [],
-        "docstring": "Test Z-Score is calculated correctly.",
-        "class": "TestOnlineZScore"
-      },
-      {
-        "name": "TestOnlineZScore::test_windowed_z_score",
-        "line": 357,
-        "markers": [],
-        "docstring": "Test Z-Score with rolling window.",
-        "class": "TestOnlineZScore"
-      },
-      {
-        "name": "TestOnlineZScore::test_serialize_deserialize_roundtrip",
-        "line": 372,
-        "markers": [],
-        "docstring": "Test serialization preserves Z-Score state.",
-        "class": "TestOnlineZScore"
-      },
-      {
-        "name": "TestIndicatorBundle::test_create_with_defaults",
-        "line": 388,
-        "markers": [],
-        "docstring": "Test bundle creation with default parameters.",
-        "class": "TestIndicatorBundle"
-      },
-      {
-        "name": "TestIndicatorBundle::test_create_with_custom_params",
-        "line": 397,
-        "markers": [],
-        "docstring": "Test bundle creation with custom parameters.",
-        "class": "TestIndicatorBundle"
-      },
-      {
-        "name": "TestIndicatorBundle::test_update_returns_all_values",
-        "line": 410,
-        "markers": [],
-        "docstring": "Test update returns dict of all indicator values.",
-        "class": "TestIndicatorBundle"
-      },
-      {
-        "name": "TestIndicatorBundle::test_serialize_deserialize_roundtrip",
-        "line": 421,
-        "markers": [],
-        "docstring": "Test serialization preserves all indicator states.",
-        "class": "TestIndicatorBundle"
-      },
-      {
-        "name": "TestPerformanceComparison::test_large_dataset_efficiency",
-        "line": 449,
-        "markers": [
-          "slow"
-        ],
-        "docstring": "Test that stateful indicators don't recompute history.\n\nThis test verifies the fundamental advantage of stateful indicators:\nthey maintain running state rather than recomputing from scratch.",
-        "class": "TestPerformanceComparison"
-      },
-      {
-        "name": "test_empty_state",
-        "line": 32,
-        "markers": [],
-        "docstring": "Test initial state values."
-      },
-      {
-        "name": "test_single_value",
-        "line": 39,
-        "markers": [],
-        "docstring": "Test state after single update."
-      },
-      {
-        "name": "test_multiple_values_mean",
-        "line": 47,
-        "markers": [],
-        "docstring": "Test mean calculation with multiple values."
-      },
-      {
-        "name": "test_variance_calculation",
-        "line": 57,
-        "markers": [],
-        "docstring": "Test variance matches expected value."
-      },
-      {
-        "name": "test_serialize_deserialize_roundtrip",
-        "line": 70,
-        "markers": [],
-        "docstring": "Test serialization preserves state."
-      },
-      {
-        "name": "test_add_below_capacity",
-        "line": 87,
-        "markers": [],
-        "docstring": "Test adding values before window is full."
-      },
-      {
-        "name": "test_add_at_capacity_evicts",
-        "line": 95,
-        "markers": [],
-        "docstring": "Test that adding at capacity evicts oldest value."
-      },
-      {
-        "name": "test_mean_calculation",
-        "line": 107,
-        "markers": [],
-        "docstring": "Test O(1) mean calculation."
-      },
-      {
-        "name": "test_running_sum_accuracy",
-        "line": 116,
-        "markers": [],
-        "docstring": "Test running sum stays accurate through evictions."
-      },
-      {
-        "name": "test_serialize_deserialize_roundtrip",
-        "line": 126,
-        "markers": [],
-        "docstring": "Test serialization preserves window state."
-      },
-      {
-        "name": "test_warmup_period",
-        "line": 143,
-        "markers": [],
-        "docstring": "Test SMA during warmup before window is full."
-      },
-      {
-        "name": "test_full_window",
-        "line": 150,
-        "markers": [],
-        "docstring": "Test SMA when window is full."
-      },
-      {
-        "name": "test_matches_stateless_sma",
-        "line": 160,
-        "markers": [],
-        "docstring": "Test that online SMA matches stateless implementation."
-      },
-      {
-        "name": "test_serialize_deserialize_roundtrip",
-        "line": 179,
-        "markers": [],
-        "docstring": "Test serialization preserves SMA state."
-      },
-      {
-        "name": "test_warmup_period",
-        "line": 197,
-        "markers": [],
-        "docstring": "Test EMA during warmup before initialization."
-      },
-      {
-        "name": "test_initialization",
-        "line": 204,
-        "markers": [],
-        "docstring": "Test EMA initializes with SMA of warmup values."
-      },
-      {
-        "name": "test_subsequent_updates",
-        "line": 215,
-        "markers": [],
-        "docstring": "Test EMA updates after initialization."
-      },
-      {
-        "name": "test_serialize_deserialize_roundtrip",
-        "line": 228,
-        "markers": [],
-        "docstring": "Test serialization preserves EMA state."
-      },
-      {
-        "name": "test_first_price_returns_none",
-        "line": 246,
-        "markers": [],
-        "docstring": "Test that first price (no change) returns None."
-      },
-      {
-        "name": "test_warmup_period",
-        "line": 251,
-        "markers": [],
-        "docstring": "Test RSI during warmup before initialization."
-      },
-      {
-        "name": "test_initialization",
-        "line": 259,
-        "markers": [],
-        "docstring": "Test RSI initializes after period changes."
-      },
-      {
-        "name": "test_all_gains_rsi_100",
-        "line": 271,
-        "markers": [],
-        "docstring": "Test RSI approaches 100 with only gains."
-      },
-      {
-        "name": "test_matches_stateless_rsi",
-        "line": 280,
-        "markers": [],
-        "docstring": "Test that online RSI matches stateless implementation."
-      },
-      {
-        "name": "test_serialize_deserialize_roundtrip",
-        "line": 320,
-        "markers": [],
-        "docstring": "Test serialization preserves RSI state."
-      },
-      {
-        "name": "test_insufficient_data_returns_none",
-        "line": 339,
-        "markers": [],
-        "docstring": "Test Z-Score returns None with insufficient data."
-      },
-      {
-        "name": "test_z_score_calculation",
-        "line": 344,
-        "markers": [],
-        "docstring": "Test Z-Score is calculated correctly."
-      },
-      {
-        "name": "test_windowed_z_score",
-        "line": 357,
-        "markers": [],
-        "docstring": "Test Z-Score with rolling window."
-      },
-      {
-        "name": "test_serialize_deserialize_roundtrip",
-        "line": 372,
-        "markers": [],
-        "docstring": "Test serialization preserves Z-Score state."
-      },
-      {
-        "name": "test_create_with_defaults",
-        "line": 388,
-        "markers": [],
-        "docstring": "Test bundle creation with default parameters."
-      },
-      {
-        "name": "test_create_with_custom_params",
-        "line": 397,
-        "markers": [],
-        "docstring": "Test bundle creation with custom parameters."
-      },
-      {
-        "name": "test_update_returns_all_values",
-        "line": 410,
-        "markers": [],
-        "docstring": "Test update returns dict of all indicator values."
-      },
-      {
-        "name": "test_serialize_deserialize_roundtrip",
-        "line": 421,
-        "markers": [],
-        "docstring": "Test serialization preserves all indicator states."
-      },
-      {
-        "name": "test_large_dataset_efficiency",
-        "line": 449,
-        "markers": [
-          "slow"
-        ],
-        "docstring": "Test that stateful indicators don't recompute history.\n\nThis test verifies the fundamental advantage of stateful indicators:\nthey maintain running state rather than recomputing from scratch."
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline.py": [
+    "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_models.py": [
       {
         "name": "TestPerpsStrategyConfig::test_default_values",
-        "line": 49,
+        "line": 18,
         "markers": [],
         "docstring": "",
         "class": "TestPerpsStrategyConfig"
       },
       {
         "name": "TestPerpsStrategyConfig::test_custom_values",
-        "line": 59,
+        "line": 28,
         "markers": [],
         "docstring": "",
         "class": "TestPerpsStrategyConfig"
       },
       {
         "name": "TestDecision::test_basic_decision",
-        "line": 73,
+        "line": 42,
         "markers": [],
         "docstring": "",
         "class": "TestDecision"
       },
       {
         "name": "TestDecision::test_decision_with_indicators",
-        "line": 79,
+        "line": 48,
         "markers": [],
         "docstring": "",
         "class": "TestDecision"
       },
       {
-        "name": "TestBaselinePerpsStrategyInit::test_default_config",
-        "line": 89,
-        "markers": [],
-        "docstring": "",
-        "class": "TestBaselinePerpsStrategyInit"
-      },
-      {
-        "name": "TestBaselinePerpsStrategyInit::test_custom_config",
-        "line": 94,
-        "markers": [],
-        "docstring": "",
-        "class": "TestBaselinePerpsStrategyInit"
-      },
-      {
-        "name": "TestStrategyInsufficientData::test_empty_marks_returns_hold",
-        "line": 104,
-        "markers": [],
-        "docstring": "",
-        "class": "TestStrategyInsufficientData"
-      },
-      {
-        "name": "TestStrategyInsufficientData::test_few_marks_returns_hold",
-        "line": 117,
-        "markers": [],
-        "docstring": "",
-        "class": "TestStrategyInsufficientData"
-      },
-      {
-        "name": "TestStrategyKillSwitch::test_kill_switch_returns_hold",
-        "line": 134,
-        "markers": [],
-        "docstring": "",
-        "class": "TestStrategyKillSwitch"
-      },
-      {
-        "name": "TestStrategyEntrySignals::test_bullish_trend_generates_buy",
-        "line": 153,
-        "markers": [],
-        "docstring": "",
-        "class": "TestStrategyEntrySignals"
-      },
-      {
-        "name": "TestStrategyEntrySignals::test_bearish_trend_generates_sell",
-        "line": 169,
-        "markers": [],
-        "docstring": "",
-        "class": "TestStrategyEntrySignals"
-      },
-      {
-        "name": "TestStrategyEntrySignals::test_sideways_market_holds",
-        "line": 185,
-        "markers": [],
-        "docstring": "",
-        "class": "TestStrategyEntrySignals"
-      },
-      {
-        "name": "TestStrategyExitSignals::test_long_position_exit_on_bearish_signal",
-        "line": 203,
-        "markers": [],
-        "docstring": "",
-        "class": "TestStrategyExitSignals"
-      },
-      {
-        "name": "TestStrategyExitSignals::test_stop_loss_triggers_close",
-        "line": 218,
-        "markers": [],
-        "docstring": "",
-        "class": "TestStrategyExitSignals"
-      },
-      {
-        "name": "TestStrategyExitSignals::test_take_profit_triggers_close",
-        "line": 237,
-        "markers": [],
-        "docstring": "",
-        "class": "TestStrategyExitSignals"
-      },
-      {
-        "name": "TestStrategyIndicatorCalculation::test_indicators_populated_in_decision",
-        "line": 260,
-        "markers": [],
-        "docstring": "",
-        "class": "TestStrategyIndicatorCalculation"
-      },
-      {
-        "name": "TestStrategyIndicatorCalculation::test_rsi_signal_oversold",
-        "line": 278,
-        "markers": [],
-        "docstring": "",
-        "class": "TestStrategyIndicatorCalculation"
-      },
-      {
-        "name": "TestStrategyIndicatorCalculation::test_rsi_signal_overbought",
-        "line": 295,
-        "markers": [],
-        "docstring": "",
-        "class": "TestStrategyIndicatorCalculation"
-      },
-      {
-        "name": "TestStrategyConfidence::test_multiple_bullish_signals_high_confidence",
-        "line": 316,
-        "markers": [],
-        "docstring": "",
-        "class": "TestStrategyConfidence"
-      },
-      {
-        "name": "TestStrategyConfidence::test_weak_signals_low_confidence",
-        "line": 332,
-        "markers": [],
-        "docstring": "",
-        "class": "TestStrategyConfidence"
-      },
-      {
         "name": "TestIndicatorState::test_default_state",
-        "line": 351,
+        "line": 58,
         "markers": [],
         "docstring": "",
         "class": "TestIndicatorState"
       },
       {
         "name": "TestIndicatorState::test_state_assignment",
-        "line": 360,
+        "line": 67,
         "markers": [],
         "docstring": "",
         "class": "TestIndicatorState"
       },
       {
+        "name": "test_default_values",
+        "line": 18,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_custom_values",
+        "line": 28,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_basic_decision",
+        "line": 42,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_decision_with_indicators",
+        "line": 48,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_default_state",
+        "line": 58,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_state_assignment",
+        "line": 67,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_spot_and_perps_strategies.py": [
+      {
         "name": "TestSpotStrategy::test_spot_strategy_uses_spot_config",
-        "line": 376,
+        "line": 17,
         "markers": [],
         "docstring": "",
         "class": "TestSpotStrategy"
       },
       {
         "name": "TestSpotStrategy::test_spot_strategy_converts_sell_to_hold",
-        "line": 387,
+        "line": 28,
         "markers": [],
         "docstring": "Spot strategy should convert SELL signals to HOLD (no shorting).",
         "class": "TestSpotStrategy"
       },
       {
         "name": "TestSpotStrategy::test_spot_strategy_allows_buy",
-        "line": 410,
+        "line": 51,
         "markers": [],
         "docstring": "Spot strategy should still allow BUY signals.",
         "class": "TestSpotStrategy"
       },
       {
         "name": "TestPerpsStrategy::test_perps_strategy_uses_perps_config",
-        "line": 434,
+        "line": 75,
         "markers": [],
         "docstring": "",
         "class": "TestPerpsStrategy"
       },
       {
         "name": "TestPerpsStrategy::test_perps_strategy_allows_sell",
-        "line": 445,
+        "line": 86,
         "markers": [],
         "docstring": "Perps strategy should allow SELL signals for shorting.",
         "class": "TestPerpsStrategy"
       },
       {
-        "name": "test_default_values",
-        "line": 49,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_custom_values",
-        "line": 59,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_basic_decision",
-        "line": 73,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_decision_with_indicators",
-        "line": 79,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_default_config",
-        "line": 89,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_custom_config",
-        "line": 94,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_empty_marks_returns_hold",
-        "line": 104,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_few_marks_returns_hold",
-        "line": 117,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_kill_switch_returns_hold",
-        "line": 134,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_bullish_trend_generates_buy",
-        "line": 153,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_bearish_trend_generates_sell",
-        "line": 169,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_sideways_market_holds",
-        "line": 185,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_long_position_exit_on_bearish_signal",
-        "line": 203,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_stop_loss_triggers_close",
-        "line": 218,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_take_profit_triggers_close",
-        "line": 237,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_indicators_populated_in_decision",
-        "line": 260,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_rsi_signal_oversold",
-        "line": 278,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_rsi_signal_overbought",
-        "line": 295,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_multiple_bullish_signals_high_confidence",
-        "line": 316,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_weak_signals_low_confidence",
-        "line": 332,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_default_state",
-        "line": 351,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_state_assignment",
-        "line": 360,
-        "markers": [],
-        "docstring": ""
-      },
-      {
         "name": "test_spot_strategy_uses_spot_config",
-        "line": 376,
+        "line": 17,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_spot_strategy_converts_sell_to_hold",
-        "line": 387,
+        "line": 28,
         "markers": [],
         "docstring": "Spot strategy should convert SELL signals to HOLD (no shorting)."
       },
       {
         "name": "test_spot_strategy_allows_buy",
-        "line": 410,
+        "line": 51,
         "markers": [],
         "docstring": "Spot strategy should still allow BUY signals."
       },
       {
         "name": "test_perps_strategy_uses_perps_config",
-        "line": 434,
+        "line": 75,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_perps_strategy_allows_sell",
-        "line": 445,
+        "line": 86,
         "markers": [],
         "docstring": "Perps strategy should allow SELL signals for shorting."
       }
@@ -63489,6 +63058,77 @@
         "line": 156,
         "markers": [],
         "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_bundle_and_performance.py": [
+      {
+        "name": "TestIndicatorBundle::test_create_with_defaults",
+        "line": 13,
+        "markers": [],
+        "docstring": "Test bundle creation with default parameters.",
+        "class": "TestIndicatorBundle"
+      },
+      {
+        "name": "TestIndicatorBundle::test_create_with_custom_params",
+        "line": 22,
+        "markers": [],
+        "docstring": "Test bundle creation with custom parameters.",
+        "class": "TestIndicatorBundle"
+      },
+      {
+        "name": "TestIndicatorBundle::test_update_returns_all_values",
+        "line": 35,
+        "markers": [],
+        "docstring": "Test update returns dict of all indicator values.",
+        "class": "TestIndicatorBundle"
+      },
+      {
+        "name": "TestIndicatorBundle::test_serialize_deserialize_roundtrip",
+        "line": 46,
+        "markers": [],
+        "docstring": "Test serialization preserves all indicator states.",
+        "class": "TestIndicatorBundle"
+      },
+      {
+        "name": "TestPerformanceComparison::test_large_dataset_efficiency",
+        "line": 74,
+        "markers": [
+          "slow"
+        ],
+        "docstring": "Test that stateful indicators don't recompute history.\n\nThis test verifies the fundamental advantage of stateful indicators:\nthey maintain running state rather than recomputing from scratch.",
+        "class": "TestPerformanceComparison"
+      },
+      {
+        "name": "test_create_with_defaults",
+        "line": 13,
+        "markers": [],
+        "docstring": "Test bundle creation with default parameters."
+      },
+      {
+        "name": "test_create_with_custom_params",
+        "line": 22,
+        "markers": [],
+        "docstring": "Test bundle creation with custom parameters."
+      },
+      {
+        "name": "test_update_returns_all_values",
+        "line": 35,
+        "markers": [],
+        "docstring": "Test update returns dict of all indicator values."
+      },
+      {
+        "name": "test_serialize_deserialize_roundtrip",
+        "line": 46,
+        "markers": [],
+        "docstring": "Test serialization preserves all indicator states."
+      },
+      {
+        "name": "test_large_dataset_efficiency",
+        "line": 74,
+        "markers": [
+          "slow"
+        ],
+        "docstring": "Test that stateful indicators don't recompute history.\n\nThis test verifies the fundamental advantage of stateful indicators:\nthey maintain running state rather than recomputing from scratch."
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_profile_edges.py": [
@@ -63583,6 +63223,60 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_zscore.py": [
+      {
+        "name": "TestOnlineZScore::test_insufficient_data_returns_none",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test Z-Score returns None with insufficient data.",
+        "class": "TestOnlineZScore"
+      },
+      {
+        "name": "TestOnlineZScore::test_z_score_calculation",
+        "line": 16,
+        "markers": [],
+        "docstring": "Test Z-Score is calculated correctly.",
+        "class": "TestOnlineZScore"
+      },
+      {
+        "name": "TestOnlineZScore::test_windowed_z_score",
+        "line": 29,
+        "markers": [],
+        "docstring": "Test Z-Score with rolling window.",
+        "class": "TestOnlineZScore"
+      },
+      {
+        "name": "TestOnlineZScore::test_serialize_deserialize_roundtrip",
+        "line": 44,
+        "markers": [],
+        "docstring": "Test serialization preserves Z-Score state.",
+        "class": "TestOnlineZScore"
+      },
+      {
+        "name": "test_insufficient_data_returns_none",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test Z-Score returns None with insufficient data."
+      },
+      {
+        "name": "test_z_score_calculation",
+        "line": 16,
+        "markers": [],
+        "docstring": "Test Z-Score is calculated correctly."
+      },
+      {
+        "name": "test_windowed_z_score",
+        "line": 29,
+        "markers": [],
+        "docstring": "Test Z-Score with rolling window."
+      },
+      {
+        "name": "test_serialize_deserialize_roundtrip",
+        "line": 44,
+        "markers": [],
+        "docstring": "Test serialization preserves Z-Score state."
+      }
+    ],
     "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_strategy.py": [
       {
         "name": "test_initialization",
@@ -63601,6 +63295,244 @@
         "line": 37,
         "markers": [],
         "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_welford_and_window.py": [
+      {
+        "name": "TestWelfordState::test_empty_state",
+        "line": 13,
+        "markers": [],
+        "docstring": "Test initial state values.",
+        "class": "TestWelfordState"
+      },
+      {
+        "name": "TestWelfordState::test_single_value",
+        "line": 20,
+        "markers": [],
+        "docstring": "Test state after single update.",
+        "class": "TestWelfordState"
+      },
+      {
+        "name": "TestWelfordState::test_multiple_values_mean",
+        "line": 28,
+        "markers": [],
+        "docstring": "Test mean calculation with multiple values.",
+        "class": "TestWelfordState"
+      },
+      {
+        "name": "TestWelfordState::test_variance_calculation",
+        "line": 38,
+        "markers": [],
+        "docstring": "Test variance matches expected value.",
+        "class": "TestWelfordState"
+      },
+      {
+        "name": "TestWelfordState::test_serialize_deserialize_roundtrip",
+        "line": 51,
+        "markers": [],
+        "docstring": "Test serialization preserves state.",
+        "class": "TestWelfordState"
+      },
+      {
+        "name": "TestRollingWindow::test_add_below_capacity",
+        "line": 68,
+        "markers": [],
+        "docstring": "Test adding values before window is full.",
+        "class": "TestRollingWindow"
+      },
+      {
+        "name": "TestRollingWindow::test_add_at_capacity_evicts",
+        "line": 76,
+        "markers": [],
+        "docstring": "Test that adding at capacity evicts oldest value.",
+        "class": "TestRollingWindow"
+      },
+      {
+        "name": "TestRollingWindow::test_mean_calculation",
+        "line": 88,
+        "markers": [],
+        "docstring": "Test O(1) mean calculation.",
+        "class": "TestRollingWindow"
+      },
+      {
+        "name": "TestRollingWindow::test_running_sum_accuracy",
+        "line": 97,
+        "markers": [],
+        "docstring": "Test running sum stays accurate through evictions.",
+        "class": "TestRollingWindow"
+      },
+      {
+        "name": "TestRollingWindow::test_serialize_deserialize_roundtrip",
+        "line": 107,
+        "markers": [],
+        "docstring": "Test serialization preserves window state.",
+        "class": "TestRollingWindow"
+      },
+      {
+        "name": "test_empty_state",
+        "line": 13,
+        "markers": [],
+        "docstring": "Test initial state values."
+      },
+      {
+        "name": "test_single_value",
+        "line": 20,
+        "markers": [],
+        "docstring": "Test state after single update."
+      },
+      {
+        "name": "test_multiple_values_mean",
+        "line": 28,
+        "markers": [],
+        "docstring": "Test mean calculation with multiple values."
+      },
+      {
+        "name": "test_variance_calculation",
+        "line": 38,
+        "markers": [],
+        "docstring": "Test variance matches expected value."
+      },
+      {
+        "name": "test_serialize_deserialize_roundtrip",
+        "line": 51,
+        "markers": [],
+        "docstring": "Test serialization preserves state."
+      },
+      {
+        "name": "test_add_below_capacity",
+        "line": 68,
+        "markers": [],
+        "docstring": "Test adding values before window is full."
+      },
+      {
+        "name": "test_add_at_capacity_evicts",
+        "line": 76,
+        "markers": [],
+        "docstring": "Test that adding at capacity evicts oldest value."
+      },
+      {
+        "name": "test_mean_calculation",
+        "line": 88,
+        "markers": [],
+        "docstring": "Test O(1) mean calculation."
+      },
+      {
+        "name": "test_running_sum_accuracy",
+        "line": 97,
+        "markers": [],
+        "docstring": "Test running sum stays accurate through evictions."
+      },
+      {
+        "name": "test_serialize_deserialize_roundtrip",
+        "line": 107,
+        "markers": [],
+        "docstring": "Test serialization preserves window state."
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_sma_and_ema.py": [
+      {
+        "name": "TestOnlineSMA::test_warmup_period",
+        "line": 12,
+        "markers": [],
+        "docstring": "Test SMA during warmup before window is full.",
+        "class": "TestOnlineSMA"
+      },
+      {
+        "name": "TestOnlineSMA::test_full_window",
+        "line": 19,
+        "markers": [],
+        "docstring": "Test SMA when window is full.",
+        "class": "TestOnlineSMA"
+      },
+      {
+        "name": "TestOnlineSMA::test_matches_stateless_sma",
+        "line": 29,
+        "markers": [],
+        "docstring": "Test that online SMA matches stateless implementation.",
+        "class": "TestOnlineSMA"
+      },
+      {
+        "name": "TestOnlineSMA::test_serialize_deserialize_roundtrip",
+        "line": 48,
+        "markers": [],
+        "docstring": "Test serialization preserves SMA state.",
+        "class": "TestOnlineSMA"
+      },
+      {
+        "name": "TestOnlineEMA::test_warmup_period",
+        "line": 66,
+        "markers": [],
+        "docstring": "Test EMA during warmup before initialization.",
+        "class": "TestOnlineEMA"
+      },
+      {
+        "name": "TestOnlineEMA::test_initialization",
+        "line": 73,
+        "markers": [],
+        "docstring": "Test EMA initializes with SMA of warmup values.",
+        "class": "TestOnlineEMA"
+      },
+      {
+        "name": "TestOnlineEMA::test_subsequent_updates",
+        "line": 84,
+        "markers": [],
+        "docstring": "Test EMA updates after initialization.",
+        "class": "TestOnlineEMA"
+      },
+      {
+        "name": "TestOnlineEMA::test_serialize_deserialize_roundtrip",
+        "line": 97,
+        "markers": [],
+        "docstring": "Test serialization preserves EMA state.",
+        "class": "TestOnlineEMA"
+      },
+      {
+        "name": "test_warmup_period",
+        "line": 12,
+        "markers": [],
+        "docstring": "Test SMA during warmup before window is full."
+      },
+      {
+        "name": "test_full_window",
+        "line": 19,
+        "markers": [],
+        "docstring": "Test SMA when window is full."
+      },
+      {
+        "name": "test_matches_stateless_sma",
+        "line": 29,
+        "markers": [],
+        "docstring": "Test that online SMA matches stateless implementation."
+      },
+      {
+        "name": "test_serialize_deserialize_roundtrip",
+        "line": 48,
+        "markers": [],
+        "docstring": "Test serialization preserves SMA state."
+      },
+      {
+        "name": "test_warmup_period",
+        "line": 66,
+        "markers": [],
+        "docstring": "Test EMA during warmup before initialization."
+      },
+      {
+        "name": "test_initialization",
+        "line": 73,
+        "markers": [],
+        "docstring": "Test EMA initializes with SMA of warmup values."
+      },
+      {
+        "name": "test_subsequent_updates",
+        "line": 84,
+        "markers": [],
+        "docstring": "Test EMA updates after initialization."
+      },
+      {
+        "name": "test_serialize_deserialize_roundtrip",
+        "line": 97,
+        "markers": [],
+        "docstring": "Test serialization preserves EMA state."
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/strategies/test_regime_switcher.py": [
@@ -63648,6 +63580,153 @@
       {
         "name": "test_crisis_closes_position",
         "line": 204,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_rsi.py": [
+      {
+        "name": "TestOnlineRSI::test_first_price_returns_none",
+        "line": 12,
+        "markers": [],
+        "docstring": "Test that first price (no change) returns None.",
+        "class": "TestOnlineRSI"
+      },
+      {
+        "name": "TestOnlineRSI::test_warmup_period",
+        "line": 17,
+        "markers": [],
+        "docstring": "Test RSI during warmup before initialization.",
+        "class": "TestOnlineRSI"
+      },
+      {
+        "name": "TestOnlineRSI::test_initialization",
+        "line": 25,
+        "markers": [],
+        "docstring": "Test RSI initializes after period changes.",
+        "class": "TestOnlineRSI"
+      },
+      {
+        "name": "TestOnlineRSI::test_all_gains_rsi_100",
+        "line": 37,
+        "markers": [],
+        "docstring": "Test RSI approaches 100 with only gains.",
+        "class": "TestOnlineRSI"
+      },
+      {
+        "name": "TestOnlineRSI::test_matches_stateless_rsi",
+        "line": 46,
+        "markers": [],
+        "docstring": "Test that online RSI matches stateless implementation.",
+        "class": "TestOnlineRSI"
+      },
+      {
+        "name": "TestOnlineRSI::test_serialize_deserialize_roundtrip",
+        "line": 86,
+        "markers": [],
+        "docstring": "Test serialization preserves RSI state.",
+        "class": "TestOnlineRSI"
+      },
+      {
+        "name": "test_first_price_returns_none",
+        "line": 12,
+        "markers": [],
+        "docstring": "Test that first price (no change) returns None."
+      },
+      {
+        "name": "test_warmup_period",
+        "line": 17,
+        "markers": [],
+        "docstring": "Test RSI during warmup before initialization."
+      },
+      {
+        "name": "test_initialization",
+        "line": 25,
+        "markers": [],
+        "docstring": "Test RSI initializes after period changes."
+      },
+      {
+        "name": "test_all_gains_rsi_100",
+        "line": 37,
+        "markers": [],
+        "docstring": "Test RSI approaches 100 with only gains."
+      },
+      {
+        "name": "test_matches_stateless_rsi",
+        "line": 46,
+        "markers": [],
+        "docstring": "Test that online RSI matches stateless implementation."
+      },
+      {
+        "name": "test_serialize_deserialize_roundtrip",
+        "line": 86,
+        "markers": [],
+        "docstring": "Test serialization preserves RSI state."
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_baseline_strategy_init_and_guards.py": [
+      {
+        "name": "TestBaselinePerpsStrategyInit::test_default_config",
+        "line": 20,
+        "markers": [],
+        "docstring": "",
+        "class": "TestBaselinePerpsStrategyInit"
+      },
+      {
+        "name": "TestBaselinePerpsStrategyInit::test_custom_config",
+        "line": 25,
+        "markers": [],
+        "docstring": "",
+        "class": "TestBaselinePerpsStrategyInit"
+      },
+      {
+        "name": "TestStrategyInsufficientData::test_empty_marks_returns_hold",
+        "line": 35,
+        "markers": [],
+        "docstring": "",
+        "class": "TestStrategyInsufficientData"
+      },
+      {
+        "name": "TestStrategyInsufficientData::test_few_marks_returns_hold",
+        "line": 48,
+        "markers": [],
+        "docstring": "",
+        "class": "TestStrategyInsufficientData"
+      },
+      {
+        "name": "TestStrategyKillSwitch::test_kill_switch_returns_hold",
+        "line": 65,
+        "markers": [],
+        "docstring": "",
+        "class": "TestStrategyKillSwitch"
+      },
+      {
+        "name": "test_default_config",
+        "line": 20,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_custom_config",
+        "line": 25,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_empty_marks_returns_hold",
+        "line": 35,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_few_marks_returns_hold",
+        "line": 48,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_kill_switch_returns_hold",
+        "line": 65,
         "markers": [],
         "docstring": ""
       }

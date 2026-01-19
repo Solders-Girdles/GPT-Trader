@@ -14,6 +14,8 @@ UNIT_ALLOWED_PREFIXES = (
     "tests/unit/scripts/",
     "tests/unit/support/",
 )
+INTEGRATION_TEST_PREFIX = "tests/integration/"
+CONTRACT_TEST_PREFIX = "tests/contract/"
 ALLOWLIST = {
     # Coverage expansion tests (C1 task)
     # Phase 2 pain points remediation: critical service coverage
@@ -61,6 +63,16 @@ def scan(paths: Sequence[str]) -> int:
         if rel_str.startswith("tests/unit/") and not rel_str.startswith(UNIT_ALLOWED_PREFIXES):
             problems.append(
                 f"{rel} is a unit test outside the supported layout. Place unit tests under `tests/unit/gpt_trader/` (or `tests/unit/scripts/`, `tests/unit/support/`)."
+            )
+
+        if rel_str.startswith(INTEGRATION_TEST_PREFIX) and ".mark.integration" not in text:
+            problems.append(
+                f"{rel} is under `tests/integration/` but is missing the `pytest.mark.integration` marker."
+            )
+
+        if rel_str.startswith(CONTRACT_TEST_PREFIX) and ".mark.contract" not in text:
+            problems.append(
+                f"{rel} is under `tests/contract/` but is missing the `pytest.mark.contract` marker."
             )
 
         if line_count > THRESHOLD and rel_str not in ALLOWLIST:

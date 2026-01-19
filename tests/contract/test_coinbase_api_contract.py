@@ -153,11 +153,6 @@ async def test_list_balances_contract(broker):
         else broker.list_balances()
     )
 
-    # Handle async/sync difference if any (MockAsyncBroker has async balances, CoinbaseRestService might be sync or async)
-    # CoinbaseRestService.list_balances is likely sync based on previous view, but let's check.
-    # Actually MockAsyncBroker has async balances(). CoinbaseRestService has list_balances().
-    # We should standardize or handle both.
-
     assert isinstance(balances, list)
     if len(balances) > 0:
         balance = balances[0]
@@ -194,13 +189,6 @@ async def test_order_lifecycle_contract(broker):
     """
     Contract: Place order -> Get order -> Cancel order.
     """
-    from gpt_trader.core import (
-        OrderSide,
-        OrderStatus,
-        OrderType,
-        TimeInForce,
-    )
-
     symbol = "BTC-USD"
     if isinstance(broker, MockAsyncBroker):
         symbol = "BTC-PERP"

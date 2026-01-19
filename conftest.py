@@ -87,6 +87,8 @@ def pytest_collection_modifyitems(config: Any, items: list[Any]) -> None:  # pra
             item.add_marker(pytest.mark.property)
         elif rel_path.startswith("tests/contract/"):
             item.add_marker(pytest.mark.contract)
+        elif rel_path.startswith("tests/real_api/"):
+            item.add_marker(pytest.mark.real_api)
 
         if not triage:
             continue

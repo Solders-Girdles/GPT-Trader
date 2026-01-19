@@ -1713,7 +1713,17 @@ class TradingEngine(BaseEngine):
         if hasattr(self.context.config, "risk"):
             risk = self.context.config.risk
             if risk:
-                limits["max_position_size"] = float(getattr(risk, "max_position_pct", 0.05))
+                max_position_size = 0.05
+                raw_max_position_fraction = getattr(risk, "max_position_pct", None)
+                if raw_max_position_fraction is None:
+                    raw_max_position_fraction = getattr(risk, "position_fraction", None)
+                if raw_max_position_fraction is not None:
+                    try:
+                        max_position_size = float(raw_max_position_fraction)
+                    except (TypeError, ValueError):
+                        max_position_size = 0.05
+                limits["max_position_size"] = max_position_size
+
                 limits["max_leverage"] = float(getattr(risk, "max_leverage", 2.0))
                 limits["max_daily_loss"] = float(getattr(risk, "daily_loss_limit_pct", 0.02))
 

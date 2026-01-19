@@ -1584,7 +1584,7 @@
     ],
     "gpt_trader.monitoring.status_reporter": [
       "tests/unit/gpt_trader/monitoring/test_status_reporter_edges.py",
-      "tests/unit/gpt_trader/monitoring/test_status_reporter_file_output_and_integration.py",
+      "tests/unit/gpt_trader/monitoring/test_status_reporter_file_output.py",
       "tests/unit/gpt_trader/monitoring/test_status_reporter_io_edges.py",
       "tests/unit/gpt_trader/monitoring/test_status_reporter_lifecycle.py",
       "tests/unit/gpt_trader/monitoring/test_status_reporter_limits_edges.py",
@@ -2207,7 +2207,7 @@
     "gpt_trader.utilities.console_logging": [
       "tests/unit/gpt_trader/utilities/test_console_logging_core_basic.py",
       "tests/unit/gpt_trader/utilities/test_console_logging_core_fallbacks.py",
-      "tests/unit/gpt_trader/utilities/test_console_logging_functions_integration.py",
+      "tests/unit/gpt_trader/utilities/test_console_logging_functions.py",
       "tests/unit/gpt_trader/utilities/test_console_logging_functions_wrappers.py"
     ],
     "gpt_trader.utilities.datetime_helpers": [
@@ -2223,7 +2223,7 @@
       "tests/unit/gpt_trader/monitoring/test_alert_types_alert_creation.py",
       "tests/unit/gpt_trader/monitoring/test_alert_types_alert_lifecycle.py",
       "tests/unit/gpt_trader/security/test_request_validator_success.py",
-      "tests/unit/gpt_trader/utilities/test_datetime_helpers_integration.py",
+      "tests/unit/gpt_trader/utilities/test_datetime_helpers.py",
       "tests/unit/gpt_trader/utilities/test_datetime_helpers_normalize_to_utc.py",
       "tests/unit/gpt_trader/utilities/test_datetime_helpers_now.py",
       "tests/unit/gpt_trader/utilities/test_datetime_helpers_to_iso_utc.py"
@@ -4704,7 +4704,7 @@
     "tests/unit/gpt_trader/monitoring/test_status_reporter_edges.py": [
       "gpt_trader.monitoring.status_reporter"
     ],
-    "tests/unit/gpt_trader/monitoring/test_status_reporter_file_output_and_integration.py": [
+    "tests/unit/gpt_trader/monitoring/test_status_reporter_file_output.py": [
       "gpt_trader.monitoring.status_reporter"
     ],
     "tests/unit/gpt_trader/monitoring/test_status_reporter_io_edges.py": [
@@ -5607,13 +5607,13 @@
     "tests/unit/gpt_trader/utilities/test_console_logging_core_fallbacks.py": [
       "gpt_trader.utilities.console_logging"
     ],
-    "tests/unit/gpt_trader/utilities/test_console_logging_functions_integration.py": [
+    "tests/unit/gpt_trader/utilities/test_console_logging_functions.py": [
       "gpt_trader.utilities.console_logging"
     ],
     "tests/unit/gpt_trader/utilities/test_console_logging_functions_wrappers.py": [
       "gpt_trader.utilities.console_logging"
     ],
-    "tests/unit/gpt_trader/utilities/test_datetime_helpers_integration.py": [
+    "tests/unit/gpt_trader/utilities/test_datetime_helpers.py": [
       "gpt_trader.utilities.datetime_helpers"
     ],
     "tests/unit/gpt_trader/utilities/test_datetime_helpers_normalize_to_utc.py": [

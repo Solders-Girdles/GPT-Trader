@@ -1,4 +1,4 @@
-"""Tests for datetime helper utilities (integration workflows)."""
+"""Tests for datetime helper utilities."""
 
 from datetime import UTC, datetime, timedelta, timezone
 
@@ -11,8 +11,8 @@ from gpt_trader.utilities.datetime_helpers import (
 )
 
 
-class TestIntegrationWorkflow:
-    """Test integration between different functions."""
+class TestDateTimeHelpers:
+    """Test consistency between datetime helper functions."""
 
     def test_roundtrip_datetime_to_iso_and_back(self) -> None:
         """Test roundtrip conversion: datetime -> iso -> datetime."""

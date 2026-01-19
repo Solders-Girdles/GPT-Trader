@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from contextlib import nullcontext
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -9,8 +10,6 @@ from unittest.mock import MagicMock
 import pytest
 
 from gpt_trader.features.live_trade.engines import telemetry_health
-
-pytestmark = pytest.mark.legacy_modernize
 
 
 def _make_runtime_state() -> SimpleNamespace:
@@ -44,11 +43,16 @@ def _make_coordinator() -> SimpleNamespace:
     return SimpleNamespace(_market_monitor=None, _mark_metric_last_emit=None)
 
 
+@pytest.fixture(autouse=True)
+def reset_snapshot_throttles(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(telemetry_health, "_last_snapshot_times", {})
+
+
 def test_update_mark_and_metrics_invalid_interval_throttles(monkeypatch) -> None:
     coordinator = _make_coordinator()
     ctx = _make_ctx(status_interval="bad")
     times = iter([100.0, 101.0])
-    monkeypatch.setattr(telemetry_health.time, "time", lambda: next(times))
+    monkeypatch.setattr(time, "time", lambda: next(times))
     emit = MagicMock()
     monkeypatch.setattr(telemetry_health, "emit_metric", emit)
 
@@ -200,8 +204,7 @@ def test_emit_orderbook_snapshot_throttles(monkeypatch) -> None:
     ctx.runtime_state.orderbook_snapshots["BTC-USD"] = snapshot
 
     times = iter([100.0, 101.0])
-    monkeypatch.setattr(telemetry_health.time, "time", lambda: next(times))
-    monkeypatch.setattr(telemetry_health, "_last_snapshot_times", {})
+    monkeypatch.setattr(time, "time", lambda: next(times))
 
     telemetry_health.emit_orderbook_snapshot(ctx, "BTC-USD")
     telemetry_health.emit_orderbook_snapshot(ctx, "BTC-USD")
@@ -220,8 +223,7 @@ def test_emit_trade_flow_summary_missing_and_present(monkeypatch) -> None:
         "aggressor_ratio": 0.5,
     }
     times = iter([100.0, 200.0])
-    monkeypatch.setattr(telemetry_health.time, "time", lambda: next(times))
-    monkeypatch.setattr(telemetry_health, "_last_snapshot_times", {})
+    monkeypatch.setattr(time, "time", lambda: next(times))
 
     telemetry_health.emit_trade_flow_summary(ctx, "BTC-USD")
     ctx.runtime_state.trade_aggregators["BTC-USD"] = agg

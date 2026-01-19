@@ -4,7 +4,7 @@
   "summary": {
     "total_tests": 11038,
     "total_files": 907,
-    "markers_used": 12
+    "markers_used": 11
   },
   "marker_definitions": {
     "unit": "Unit tests (isolated component tests)",
@@ -107,13 +107,12 @@
     "parametrize": 93,
     "skipif": 16,
     "property": 10,
-    "legacy_modernize": 10,
     "perps": 5,
     "uses_real_preferences": 2,
     "slow": 2,
     "real_api": 1,
-    "requires_secrets": 1,
-    "requires_network": 1
+    "requires_network": 1,
+    "requires_secrets": 1
   },
   "path_categories": {
     "test_chaos.py": [
@@ -2551,8 +2550,8 @@
         "line": 46,
         "markers": [
           "real_api",
-          "requires_secrets",
-          "requires_network"
+          "requires_network",
+          "requires_secrets"
         ],
         "docstring": ""
       }
@@ -65836,82 +65835,62 @@
     "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_edges.py": [
       {
         "name": "test_update_mark_and_metrics_invalid_interval_throttles",
-        "line": 47,
-        "markers": [
-          "legacy_modernize"
-        ],
+        "line": 51,
+        "markers": [],
         "docstring": ""
       },
       {
         "name": "test_record_mark_update_result_is_stored",
-        "line": 61,
-        "markers": [
-          "legacy_modernize"
-        ],
+        "line": 65,
+        "markers": [],
         "docstring": ""
       },
       {
         "name": "test_record_mark_update_exception_uses_fallback",
-        "line": 74,
-        "markers": [
-          "legacy_modernize"
-        ],
+        "line": 78,
+        "markers": [],
         "docstring": ""
       },
       {
         "name": "test_update_orderbook_snapshot_invalid_product_id",
-        "line": 87,
-        "markers": [
-          "legacy_modernize"
-        ],
+        "line": 91,
+        "markers": [],
         "docstring": ""
       },
       {
         "name": "test_update_orderbook_snapshot_success_calls_emit",
-        "line": 104,
-        "markers": [
-          "legacy_modernize"
-        ],
+        "line": 108,
+        "markers": [],
         "docstring": ""
       },
       {
         "name": "test_update_orderbook_snapshot_logs_on_error",
-        "line": 124,
-        "markers": [
-          "legacy_modernize"
-        ],
+        "line": 128,
+        "markers": [],
         "docstring": ""
       },
       {
         "name": "test_update_trade_aggregator_creates_and_emits",
-        "line": 144,
-        "markers": [
-          "legacy_modernize"
-        ],
+        "line": 148,
+        "markers": [],
         "docstring": ""
       },
       {
         "name": "test_update_trade_aggregator_skips_missing_fields",
-        "line": 168,
-        "markers": [
-          "legacy_modernize"
-        ],
+        "line": 172,
+        "markers": [],
         "docstring": ""
       },
       {
         "name": "test_emit_orderbook_snapshot_throttles",
-        "line": 192,
-        "markers": [
-          "legacy_modernize"
-        ],
+        "line": 196,
+        "markers": [],
         "docstring": ""
       },
       {
         "name": "test_emit_trade_flow_summary_missing_and_present",
-        "line": 212,
-        "markers": [
-          "legacy_modernize"
-        ],
+        "line": 215,
+        "markers": [],
         "docstring": ""
       }
     ],

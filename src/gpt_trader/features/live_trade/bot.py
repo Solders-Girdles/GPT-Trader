@@ -77,7 +77,8 @@ class TradingBot:
         if broker_call_limit is None:
             broker_call_limit = getattr(config, "max_concurrent_rest_calls", 5)
         try:
-            broker_call_limit = int(broker_call_limit)
+            raw_limit = broker_call_limit if broker_call_limit is not None else 5
+            broker_call_limit = int(raw_limit)
         except (TypeError, ValueError):
             broker_call_limit = 5
         broker_call_limit = max(1, broker_call_limit)

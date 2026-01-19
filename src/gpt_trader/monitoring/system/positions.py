@@ -53,7 +53,15 @@ class PositionReconciler:
             if broker_calls is not None and asyncio.iscoroutinefunction(
                 getattr(broker_calls, "__call__", None)
             ):
-                return await broker_calls(bot.broker.list_positions)
+                raw = await broker_calls(bot.broker.list_positions)
+                if raw is None:
+                    return []
+                if isinstance(raw, list):
+                    return raw
+                try:
+                    return list(raw)
+                except TypeError:
+                    return []
             return await asyncio.to_thread(bot.broker.list_positions)
         except Exception:
             return []

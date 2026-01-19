@@ -111,7 +111,12 @@ class ContextBuilderMixin(_HasBot):
         if broker_calls is not None and asyncio.iscoroutinefunction(
             getattr(broker_calls, "__call__", None)
         ):
-            return await broker_calls(self._bot.broker.list_balances)
+            raw = await broker_calls(self._bot.broker.list_balances)
+            if raw is None:
+                return []
+            if isinstance(raw, Sequence):
+                return cast(Sequence[Balance], raw)
+            return []
         return await asyncio.to_thread(self._bot.broker.list_balances)
 
     def _extract_equity(self, balances: Sequence[Balance]) -> Decimal:

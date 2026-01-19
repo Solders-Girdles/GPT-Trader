@@ -176,7 +176,8 @@ class TradingEngine(BaseEngine):
             if broker_call_limit is None:
                 broker_call_limit = getattr(context.config, "max_concurrent_rest_calls", 5)
             try:
-                broker_call_limit = int(broker_call_limit)
+                raw_limit = broker_call_limit if broker_call_limit is not None else 5
+                broker_call_limit = int(raw_limit)
             except (TypeError, ValueError):
                 broker_call_limit = 5
             broker_call_limit = max(1, broker_call_limit)
@@ -714,13 +715,34 @@ class TradingEngine(BaseEngine):
         On reconnect, pauses briefly to allow state synchronization.
         """
         risk_manager = self.context.risk_manager
-        config = risk_manager.config if risk_manager else None
+        config = getattr(risk_manager, "config", None) if risk_manager else None
+
+        def _coerce_seconds(value: Any, default: float) -> float:
+            if value is None or isinstance(value, bool):
+                return default
+            if isinstance(value, (int, float)):
+                return float(value)
+            if isinstance(value, str):
+                try:
+                    return float(value)
+                except ValueError:
+                    return default
+            return default
 
         # Get thresholds from config or use defaults
-        interval = config.ws_health_interval_seconds if config else 5
-        message_stale_threshold = config.ws_message_stale_seconds if config else 15
-        heartbeat_stale_threshold = config.ws_heartbeat_stale_seconds if config else 30
-        reconnect_pause = config.ws_reconnect_pause_seconds if config else 30
+        interval = _coerce_seconds(getattr(config, "ws_health_interval_seconds", None), 5.0)
+        message_stale_threshold = _coerce_seconds(
+            getattr(config, "ws_message_stale_seconds", None), 15.0
+        )
+        heartbeat_stale_threshold = _coerce_seconds(
+            getattr(config, "ws_heartbeat_stale_seconds", None), 30.0
+        )
+        reconnect_pause = _coerce_seconds(getattr(config, "ws_reconnect_pause_seconds", None), 30.0)
+
+        interval = max(0.1, interval)
+        message_stale_threshold = max(0.0, message_stale_threshold)
+        heartbeat_stale_threshold = max(0.0, heartbeat_stale_threshold)
+        reconnect_pause = max(0.0, reconnect_pause)
 
         last_reconnect_count = 0
 
@@ -747,11 +769,39 @@ class TradingEngine(BaseEngine):
                     continue
 
                 current_time = time.time()
-                last_message_ts = ws_health.get("last_message_ts")
-                last_heartbeat_ts = ws_health.get("last_heartbeat_ts")
-                reconnect_count = ws_health.get("reconnect_count", 0)
-                gap_count = ws_health.get("gap_count", 0)
-                connected = ws_health.get("connected", False)
+
+                last_message_ts_raw = ws_health.get("last_message_ts")
+                last_message_ts = (
+                    float(last_message_ts_raw)
+                    if isinstance(last_message_ts_raw, (int, float))
+                    and not isinstance(last_message_ts_raw, bool)
+                    else None
+                )
+                last_heartbeat_ts_raw = ws_health.get("last_heartbeat_ts")
+                last_heartbeat_ts = (
+                    float(last_heartbeat_ts_raw)
+                    if isinstance(last_heartbeat_ts_raw, (int, float))
+                    and not isinstance(last_heartbeat_ts_raw, bool)
+                    else None
+                )
+
+                reconnect_count_raw = ws_health.get("reconnect_count", 0)
+                reconnect_count = (
+                    int(reconnect_count_raw)
+                    if isinstance(reconnect_count_raw, (int, float))
+                    and not isinstance(reconnect_count_raw, bool)
+                    else 0
+                )
+                gap_count_raw = ws_health.get("gap_count", 0)
+                gap_count = (
+                    int(gap_count_raw)
+                    if isinstance(gap_count_raw, (int, float))
+                    and not isinstance(gap_count_raw, bool)
+                    else 0
+                )
+
+                connected_raw = ws_health.get("connected", False)
+                connected = connected_raw if isinstance(connected_raw, bool) else False
 
                 # Check for reconnect event
                 if reconnect_count > last_reconnect_count:

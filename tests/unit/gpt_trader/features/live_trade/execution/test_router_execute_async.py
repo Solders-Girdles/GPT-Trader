@@ -1,12 +1,12 @@
-"""Tests for OrderRouter."""
+"""Tests for OrderRouter.execute_async."""
 
 from decimal import Decimal
 from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from gpt_trader.core import Order, OrderSide
-from gpt_trader.features.live_trade.execution.router import OrderResult, OrderRouter
+from gpt_trader.core import OrderSide
+from gpt_trader.features.live_trade.execution.router import OrderRouter
 from gpt_trader.features.live_trade.execution.submission_result import (
     OrderSubmissionResult,
     OrderSubmissionStatus,
@@ -16,118 +16,6 @@ from gpt_trader.features.live_trade.strategies.hybrid.types import (
     HybridDecision,
     TradingMode,
 )
-
-
-class TestOrderResult:
-    """Tests for OrderResult dataclass."""
-
-    def test_success_result(self) -> None:
-        """Creates successful result."""
-        order = Mock(spec=Order)
-        order.order_id = "test-123"
-        order.symbol = "BTC-USD"
-
-        result = OrderResult(success=True, order=order)
-
-        assert result.success is True
-        assert result.order == order
-        assert result.error is None
-
-    def test_failure_result(self) -> None:
-        """Creates failure result."""
-        result = OrderResult(
-            success=False,
-            error="Test error",
-            error_code="TEST_ERROR",
-        )
-
-        assert result.success is False
-        assert result.error == "Test error"
-        assert result.error_code == "TEST_ERROR"
-
-    def test_to_dict_success(self) -> None:
-        """Serializes successful result."""
-        order = Mock(spec=Order)
-        order.order_id = "test-123"
-        order.symbol = "BTC-USD"
-
-        decision = HybridDecision(
-            action=Action.BUY,
-            symbol="BTC-USD",
-            mode=TradingMode.SPOT_ONLY,
-        )
-
-        result = OrderResult(success=True, order=order, decision=decision)
-        data = result.to_dict()
-
-        assert data["success"] is True
-        assert data["order_id"] == "test-123"
-        assert data["mode"] == "spot_only"
-
-    def test_to_dict_failure(self) -> None:
-        """Serializes failure result."""
-        result = OrderResult(
-            success=False,
-            error="Test error",
-            error_code="TEST_ERROR",
-        )
-        data = result.to_dict()
-
-        assert data["success"] is False
-        assert data["error"] == "Test error"
-        assert data["error_code"] == "TEST_ERROR"
-
-
-class TestResolveOrderIdFallback:
-    """Tests for _resolve_order_id fallback behavior."""
-
-    def test_resolve_order_id_with_id_attribute(self) -> None:
-        """Test that 'id' attribute is used first."""
-        from gpt_trader.features.live_trade.execution.router import _resolve_order_id
-
-        order = Mock()
-        order.id = "primary-id-123"
-        order.order_id = "fallback-id-456"
-
-        result = _resolve_order_id(order)
-        assert result == "primary-id-123"
-
-    def test_resolve_order_id_fallback_to_order_id(self) -> None:
-        """Test fallback to 'order_id' when 'id' is None."""
-        from gpt_trader.features.live_trade.execution.router import _resolve_order_id
-
-        order = Mock()
-        order.id = None
-        order.order_id = "fallback-id-456"
-
-        result = _resolve_order_id(order)
-        assert result == "fallback-id-456"
-
-    def test_resolve_order_id_fallback_when_id_missing(self) -> None:
-        """Test fallback to 'order_id' when 'id' attribute doesn't exist."""
-        from gpt_trader.features.live_trade.execution.router import _resolve_order_id
-
-        order = Mock(spec=["order_id"])
-        order.order_id = "fallback-id-789"
-
-        result = _resolve_order_id(order)
-        assert result == "fallback-id-789"
-
-    def test_resolve_order_id_returns_none_for_none_order(self) -> None:
-        """Test that None order returns None."""
-        from gpt_trader.features.live_trade.execution.router import _resolve_order_id
-
-        result = _resolve_order_id(None)
-        assert result is None
-
-    def test_resolve_order_id_returns_none_when_both_missing(self) -> None:
-        """Test that None is returned when both id and order_id are missing/None."""
-        from gpt_trader.features.live_trade.execution.router import _resolve_order_id
-
-        order = Mock(spec=[])
-
-        result = _resolve_order_id(order)
-        assert result is None
 
 
 class TestOrderRouterAsyncExecution:

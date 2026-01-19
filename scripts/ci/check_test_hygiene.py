@@ -17,13 +17,10 @@ UNIT_ALLOWED_PREFIXES = (
 ALLOWLIST = {
     "tests/unit/gpt_trader/logging/test_runtime_helpers.py",  # runtime logging helper coverage
     "tests/unit/gpt_trader/monitoring/test_health_signals.py",  # health signal model contract coverage
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_permissions.py",  # permissions coverage table
     "tests/unit/gpt_trader/utilities/test_datetime_helpers.py",  # datetime edge-case coverage
-    "tests/unit/gpt_trader/utilities/test_console_logging_functions.py",  # logging formatting matrix
     "tests/unit/gpt_trader/errors/test_base.py",  # error taxonomy coverage
     "tests/unit/gpt_trader/validation/test_calculation_validator.py",  # calculation validator coverage
     "tests/unit/gpt_trader/features/data/test_data_module.py",  # 295 lines: comprehensive data module contract with storage/cache stubs
-    "tests/unit/gpt_trader/security/security_validator/test_rate_limiting.py",  # 305 lines: rate limiter escalation, blocking, and reset regression suite
     "tests/unit/gpt_trader/security/security_validator/test_suspicious_activity.py",  # 294 lines: suspicious activity detection heuristics and alert coverage
     "tests/unit/gpt_trader/security/security_validator/test_symbol_validation.py",  # 243 lines: comprehensive symbol/blocklist validation cases
     "tests/unit/gpt_trader/cli/test_commands_orders.py",  # 254 lines: comprehensive CLI orders command coverage
@@ -38,7 +35,6 @@ ALLOWLIST = {
     # Coverage expansion tests (C1 task)
     "tests/unit/gpt_trader/features/live_trade/test_indicators.py",  # indicator calculation coverage
     "tests/unit/gpt_trader/errors/test_error_patterns.py",  # error pattern decorator coverage
-    "tests/unit/gpt_trader/monitoring/test_alert_types.py",  # alert type coverage
     "tests/unit/gpt_trader/app/test_health_server.py",  # health server endpoint coverage
     "tests/unit/gpt_trader/backtesting/engine/test_clock.py",  # simulation clock scenarios
     "tests/unit/gpt_trader/monitoring/test_heartbeat.py",  # heartbeat monitoring scenarios
@@ -49,23 +45,14 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/features/optimize/objectives/test_constraints.py",  # constraint objective validation matrix
     "tests/unit/gpt_trader/cli/commands/optimize/test_commands.py",  # CLI command integration tests
     "tests/unit/gpt_trader/cli/commands/optimize/test_config_loader.py",  # config loader edge cases
-    "tests/unit/gpt_trader/cli/test_response.py",  # CLI response formatting coverage
     # Intelligence and Strategy Dev tests (large modules)
     "tests/unit/gpt_trader/features/intelligence/ensemble/test_voting.py",
     "tests/unit/gpt_trader/features/intelligence/ensemble/test_adaptive.py",
-    "tests/unit/gpt_trader/features/intelligence/backtesting/test_batch_regime.py",
-    "tests/unit/gpt_trader/features/intelligence/sizing/test_position_sizer.py",
-    "tests/unit/gpt_trader/features/strategy_dev/monitor/test_metrics.py",
-    "tests/unit/gpt_trader/features/strategy_dev/monitor/test_alerts.py",
     "tests/unit/gpt_trader/features/strategy_dev/lab/test_experiment.py",
     # TUI Phase 3.5 comprehensive test suites
     "tests/unit/gpt_trader/tui/state_management/test_validators.py",  # state validator permutation matrix
     "tests/unit/gpt_trader/tui/services/test_mode_service.py",  # mode service state transitions
-    "tests/unit/gpt_trader/tui/widgets/test_risk_detail_modal.py",  # risk detail modal comprehensive scenarios
-    "tests/unit/gpt_trader/features/live_trade/strategies/hybrid/test_types.py",  # hybrid strategy types validation matrix
     "tests/unit/gpt_trader/features/live_trade/signals/test_orderbook_imbalance.py",  # orderbook imbalance signal comprehensive scenarios
-    "tests/unit/gpt_trader/features/live_trade/execution/test_router.py",  # execution router comprehensive flow coverage
-    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience.py",  # API resilience patterns comprehensive coverage
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_circuit_breaker.py",  # circuit breaker state machine coverage
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics.py",  # API metrics collection comprehensive scenarios
     "tests/unit/gpt_trader/features/live_trade/risk/test_cfm_risk_config.py",  # CFM risk config validation matrix
@@ -76,9 +63,7 @@ ALLOWLIST = {
     # Architecture migration and observability tests
     "tests/integration/test_crash_recovery.py",  # crash recovery scenarios and state restoration
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection.py",  # WebSocket reconnection reliability scenarios
-    "tests/unit/gpt_trader/features/live_trade/test_state_recovery.py",  # state recovery and persistence contract
     # Pre-existing TUI and feature test suites
-    "tests/unit/gpt_trader/tui/widgets/test_performance_dashboard.py",  # performance dashboard widget scenarios
     "tests/unit/gpt_trader/tui/test_trade_matcher.py",  # trade matcher FIFO comprehensive scenarios
     "tests/unit/gpt_trader/tui/widgets/test_cfm_balance.py",  # CFM balance widget scenarios
     "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_profile.py",  # ensemble profile comprehensive coverage

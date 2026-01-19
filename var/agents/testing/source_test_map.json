@@ -1420,7 +1420,8 @@
     ],
     "gpt_trader.logging.json_formatter": [
       "tests/unit/gpt_trader/logging/test_json_formatter.py",
-      "tests/unit/gpt_trader/logging/test_json_redaction.py"
+      "tests/unit/gpt_trader/logging/test_json_redaction.py",
+      "tests/unit/gpt_trader/logging/test_setup_configure_logging_handlers.py"
     ],
     "gpt_trader.logging.runtime_helpers": [
       "tests/unit/gpt_trader/logging/test_runtime_helpers.py",
@@ -4490,6 +4491,7 @@
       "gpt_trader.logging.setup"
     ],
     "tests/unit/gpt_trader/logging/test_setup_configure_logging_handlers.py": [
+      "gpt_trader.logging.json_formatter",
       "gpt_trader.logging.setup"
     ],
     "tests/unit/gpt_trader/logging/test_setup_configure_logging_modes_and_idempotency.py": [

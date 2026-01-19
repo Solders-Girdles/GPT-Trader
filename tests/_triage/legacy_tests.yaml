@@ -27,11 +27,6 @@ tests:
     status: todo
     reason: "High patch/monkeypatch density with many edge assertions; split into smaller focused tests and reduce mock scaffolding."
     added: "2026-01-19"
-  tests/unit/gpt_trader/logging/test_setup_configure_logging_handlers.py:
-    action: modernize
-    status: todo
-    reason: "Handler wiring relies on extensive patching and global logger state; consolidate into fewer integration-style checks or fixture-driven unit tests."
-    added: "2026-01-19"
   tests/unit/gpt_trader/tui/test_events_integration.py:
     action: modernize
     status: todo

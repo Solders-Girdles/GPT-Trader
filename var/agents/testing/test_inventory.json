@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 11040,
+    "total_tests": 11038,
     "total_files": 907,
     "markers_used": 12
   },
@@ -105,15 +105,15 @@
     "endpoints": 136,
     "integration": 99,
     "parametrize": 93,
-    "legacy_modernize": 26,
     "skipif": 16,
     "property": 10,
+    "legacy_modernize": 10,
     "perps": 5,
     "uses_real_preferences": 2,
     "slow": 2,
+    "real_api": 1,
     "requires_network": 1,
-    "requires_secrets": 1,
-    "real_api": 1
+    "requires_secrets": 1
   },
   "path_categories": {
     "test_chaos.py": [
@@ -2550,9 +2550,9 @@
         "name": "test_live_permission_check",
         "line": 46,
         "markers": [
+          "real_api",
           "requires_network",
-          "requires_secrets",
-          "real_api"
+          "requires_secrets"
         ],
         "docstring": ""
       }
@@ -17152,138 +17152,93 @@
     "tests/unit/gpt_trader/logging/test_setup_configure_logging_handlers.py": [
       {
         "name": "TestConfigureLoggingHandlers::test_configure_logging_creates_directories",
-        "line": 51,
-        "markers": [
-          "legacy_modernize"
-        ],
-        "docstring": "Test that logging directories are created.",
+        "line": 66,
+        "markers": [],
+        "docstring": "Test that logging directories are created in the configured log dir.",
         "class": "TestConfigureLoggingHandlers"
       },
       {
         "name": "TestConfigureLoggingHandlers::test_configure_logging_creates_console_handler",
-        "line": 63,
-        "markers": [
-          "legacy_modernize"
-        ],
+        "line": 76,
+        "markers": [],
         "docstring": "Test that console handler is created.",
         "class": "TestConfigureLoggingHandlers"
       },
       {
         "name": "TestConfigureLoggingHandlers::test_configure_logging_creates_file_handlers",
-        "line": 79,
-        "markers": [
-          "legacy_modernize"
-        ],
+        "line": 90,
+        "markers": [],
         "docstring": "Test that file handlers are created.",
         "class": "TestConfigureLoggingHandlers"
       },
       {
-        "name": "TestConfigureLoggingHandlers::test_configure_logging_sets_root_level",
-        "line": 95,
-        "markers": [
-          "legacy_modernize"
-        ],
-        "docstring": "Test that root logger level is set to INFO.",
-        "class": "TestConfigureLoggingHandlers"
-      },
-      {
         "name": "TestConfigureLoggingHandlers::test_configure_logging_creates_json_logger",
-        "line": 107,
-        "markers": [
-          "legacy_modernize"
-        ],
+        "line": 104,
+        "markers": [],
         "docstring": "Test that JSON logger is configured.",
         "class": "TestConfigureLoggingHandlers"
       },
       {
         "name": "TestConfigureLoggingHandlers::test_configure_logging_json_handlers",
-        "line": 121,
-        "markers": [
-          "legacy_modernize"
-        ],
+        "line": 114,
+        "markers": [],
         "docstring": "Test that JSON logger handlers are properly configured.",
         "class": "TestConfigureLoggingHandlers"
       },
       {
         "name": "TestConfigureLoggingHandlers::test_configure_logging_critical_handler_level",
-        "line": 145,
-        "markers": [
-          "legacy_modernize"
-        ],
+        "line": 132,
+        "markers": [],
         "docstring": "Test that critical handler is set to WARNING level.",
         "class": "TestConfigureLoggingHandlers"
       },
       {
         "name": "TestConfigureLoggingHandlers::test_configure_logging_handler_formatters",
-        "line": 163,
-        "markers": [
-          "legacy_modernize"
-        ],
+        "line": 148,
+        "markers": [],
         "docstring": "Test that handlers have formatters configured.",
         "class": "TestConfigureLoggingHandlers"
       },
       {
         "name": "test_configure_logging_creates_directories",
-        "line": 51,
-        "markers": [
-          "legacy_modernize"
-        ],
-        "docstring": "Test that logging directories are created."
+        "line": 66,
+        "markers": [],
+        "docstring": "Test that logging directories are created in the configured log dir."
       },
       {
         "name": "test_configure_logging_creates_console_handler",
-        "line": 63,
-        "markers": [
-          "legacy_modernize"
-        ],
+        "line": 76,
+        "markers": [],
         "docstring": "Test that console handler is created."
       },
       {
         "name": "test_configure_logging_creates_file_handlers",
-        "line": 79,
-        "markers": [
-          "legacy_modernize"
-        ],
+        "line": 90,
+        "markers": [],
         "docstring": "Test that file handlers are created."
       },
       {
-        "name": "test_configure_logging_sets_root_level",
-        "line": 95,
-        "markers": [
-          "legacy_modernize"
-        ],
-        "docstring": "Test that root logger level is set to INFO."
-      },
-      {
         "name": "test_configure_logging_creates_json_logger",
-        "line": 107,
-        "markers": [
-          "legacy_modernize"
-        ],
+        "line": 104,
+        "markers": [],
         "docstring": "Test that JSON logger is configured."
       },
       {
         "name": "test_configure_logging_json_handlers",
-        "line": 121,
-        "markers": [
-          "legacy_modernize"
-        ],
+        "line": 114,
+        "markers": [],
         "docstring": "Test that JSON logger handlers are properly configured."
       },
       {
         "name": "test_configure_logging_critical_handler_level",
-        "line": 145,
-        "markers": [
-          "legacy_modernize"
-        ],
+        "line": 132,
+        "markers": [],
         "docstring": "Test that critical handler is set to WARNING level."
       },
       {
         "name": "test_configure_logging_handler_formatters",
-        "line": 163,
-        "markers": [
-          "legacy_modernize"
-        ],
+        "line": 148,
+        "markers": [],
         "docstring": "Test that handlers have formatters configured."
       }
     ],

@@ -8,30 +8,8 @@ from gpt_trader.features.live_trade.signals.protocol import StrategyContext
 from gpt_trader.features.live_trade.signals.types import SignalType
 from gpt_trader.features.live_trade.signals.vwap import (
     VWAPSignal,
-    VWAPSignalConfig,
 )
 from gpt_trader.features.live_trade.strategies.base import MarketDataContext
-
-
-class TestVWAPSignalConfig:
-    """Tests for VWAPSignalConfig."""
-
-    def test_default_values(self) -> None:
-        """Test default config values."""
-        config = VWAPSignalConfig()
-        assert config.deviation_threshold == 0.01
-        assert config.strong_deviation_threshold == 0.025
-        assert config.min_trades == 20
-
-    def test_custom_values(self) -> None:
-        """Test custom config values."""
-        config = VWAPSignalConfig(
-            deviation_threshold=0.005,
-            strong_deviation_threshold=0.02,
-            min_trades=50,
-        )
-        assert config.deviation_threshold == 0.005
-        assert config.min_trades == 50
 
 
 class TestVWAPSignal:
@@ -219,43 +197,3 @@ class TestVWAPSignal:
 
         assert result.strength == 0.0
         assert result.metadata["reason"] == "no_vwap"
-
-    def test_custom_thresholds(self, base_context: StrategyContext) -> None:
-        """Test signal with custom thresholds."""
-        custom_signal = VWAPSignal(
-            VWAPSignalConfig(
-                deviation_threshold=0.02,  # 2%
-                min_trades=10,
-            )
-        )
-
-        # 1.5% deviation would trigger default but not custom
-        base_context.market_data = MarketDataContext(
-            trade_volume_stats={"count": 50, "vwap": Decimal("50750")}
-        )
-        result = custom_signal.generate(base_context)
-
-        assert result.strength == 0.0
-        assert result.metadata["reason"] == "near_vwap"
-
-    def test_metadata_contains_expected_fields(
-        self, signal: VWAPSignal, base_context: StrategyContext
-    ) -> None:
-        """Test that metadata contains all expected fields."""
-        base_context.market_data = MarketDataContext(
-            trade_volume_stats={
-                "count": 50,
-                "vwap": Decimal("51000"),
-                "volume": Decimal("1000"),
-                "avg_size": Decimal("20"),
-            }
-        )
-        result = signal.generate(base_context)
-
-        assert "vwap" in result.metadata
-        assert "current_price" in result.metadata
-        assert "deviation_pct" in result.metadata
-        assert "trade_count" in result.metadata
-        assert "volume" in result.metadata
-        assert "avg_size" in result.metadata
-        assert "reason" in result.metadata

@@ -556,6 +556,7 @@ def main() -> int:
     inventory_path = output_dir / "test_inventory.json"
     with open(inventory_path, "w") as f:
         json.dump(inventory, f, indent=2)
+        f.write("\n")
     print(f"Test inventory written to: {inventory_path}")
 
     # Write markers reference
@@ -572,6 +573,7 @@ def main() -> int:
     markers_path = output_dir / "markers.json"
     with open(markers_path, "w") as f:
         json.dump(markers_ref, f, indent=2)
+        f.write("\n")
     print(f"Markers reference written to: {markers_path}")
 
     # Write index
@@ -597,12 +599,14 @@ def main() -> int:
     index_path = output_dir / "index.json"
     with open(index_path, "w") as f:
         json.dump(index, f, indent=2)
+        f.write("\n")
     print(f"Index written to: {index_path}")
 
     # Write source-to-test map
     source_test_map_path = output_dir / "source_test_map.json"
     with open(source_test_map_path, "w") as f:
         json.dump(source_test_map, f, indent=2)
+        f.write("\n")
     print(f"Source/test map written to: {source_test_map_path}")
 
     print(

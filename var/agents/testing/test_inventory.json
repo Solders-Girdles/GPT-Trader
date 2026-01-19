@@ -2,9 +2,9 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 11040,
+    "total_tests": 11036,
     "total_files": 907,
-    "markers_used": 12
+    "markers_used": 11
   },
   "marker_definitions": {
     "unit": "Unit tests (isolated component tests)",
@@ -102,18 +102,17 @@
     ]
   },
   "marker_counts": {
-    "endpoints": 140,
+    "endpoints": 136,
     "integration": 99,
     "parametrize": 93,
     "skipif": 16,
     "property": 10,
     "perps": 5,
-    "perf": 4,
     "uses_real_preferences": 2,
     "slow": 2,
-    "requires_secrets": 1,
+    "real_api": 1,
     "requires_network": 1,
-    "real_api": 1
+    "requires_secrets": 1
   },
   "path_categories": {
     "test_chaos.py": [
@@ -2550,9 +2549,9 @@
         "name": "test_live_permission_check",
         "line": 46,
         "markers": [
-          "requires_secrets",
+          "real_api",
           "requires_network",
-          "real_api"
+          "requires_secrets"
         ],
         "docstring": ""
       }
@@ -53690,7 +53689,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_system.py": [
       {
         "name": "TestCoinbaseSystem::test_client_system_endpoints",
-        "line": 28,
+        "line": 27,
         "markers": [
           "endpoints",
           "parametrize"
@@ -53699,28 +53698,8 @@
         "class": "TestCoinbaseSystem"
       },
       {
-        "name": "TestCoinbaseSystem::test_get_products_perf_budget",
-        "line": 56,
-        "markers": [
-          "endpoints",
-          "perf"
-        ],
-        "docstring": "",
-        "class": "TestCoinbaseSystem"
-      },
-      {
-        "name": "TestCoinbaseSystem::test_place_order_perf_budget",
-        "line": 67,
-        "markers": [
-          "endpoints",
-          "perf"
-        ],
-        "docstring": "",
-        "class": "TestCoinbaseSystem"
-      },
-      {
         "name": "TestCoinbaseSystem::test_connection_validation",
-        "line": 77,
+        "line": 54,
         "markers": [
           "endpoints"
         ],
@@ -53729,7 +53708,7 @@
       },
       {
         "name": "TestCoinbaseSystem::test_position_list_spot_trading",
-        "line": 95,
+        "line": 72,
         "markers": [
           "endpoints"
         ],
@@ -53738,7 +53717,7 @@
       },
       {
         "name": "TestCoinbaseSystem::test_order_error_handling",
-        "line": 113,
+        "line": 90,
         "markers": [
           "endpoints"
         ],
@@ -53747,7 +53726,7 @@
       },
       {
         "name": "test_client_system_endpoints",
-        "line": 28,
+        "line": 27,
         "markers": [
           "endpoints",
           "parametrize"
@@ -53755,26 +53734,8 @@
         "docstring": ""
       },
       {
-        "name": "test_get_products_perf_budget",
-        "line": 56,
-        "markers": [
-          "endpoints",
-          "perf"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_place_order_perf_budget",
-        "line": 67,
-        "markers": [
-          "endpoints",
-          "perf"
-        ],
-        "docstring": ""
-      },
-      {
         "name": "test_connection_validation",
-        "line": 77,
+        "line": 54,
         "markers": [
           "endpoints"
         ],
@@ -53782,7 +53743,7 @@
       },
       {
         "name": "test_position_list_spot_trading",
-        "line": 95,
+        "line": 72,
         "markers": [
           "endpoints"
         ],
@@ -53790,7 +53751,7 @@
       },
       {
         "name": "test_order_error_handling",
-        "line": 113,
+        "line": 90,
         "markers": [
           "endpoints"
         ],

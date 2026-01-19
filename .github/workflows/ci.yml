@@ -283,7 +283,7 @@ jobs:
         run: uv sync --all-extras --dev
 
       - name: Run unit tests (excluding TUI snapshots)
-        run: uv run pytest tests/unit -n auto -q --ignore=tests/unit/gpt_trader/tui/test_snapshots.py
+        run: uv run pytest tests/unit -n auto -q --ignore-glob=tests/unit/gpt_trader/tui/test_snapshots_*.py
 
   tui-snapshots:
     name: TUI Snapshot Tests
@@ -309,7 +309,7 @@ jobs:
         run: uv sync --all-extras --dev
 
       - name: Run TUI snapshot tests
-        run: uv run pytest tests/unit/gpt_trader/tui/test_snapshots.py tests/tui -v
+        run: uv run pytest tests/unit/gpt_trader/tui/test_snapshots_*.py -v
 
   property-tests:
     name: Property Tests

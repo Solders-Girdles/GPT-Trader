@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 11056,
-    "total_files": 753,
+    "total_tests": 11054,
+    "total_files": 767,
     "markers_used": 9
   },
   "marker_definitions": {
@@ -278,6 +278,8 @@
     "tui": [
       "tests/unit/gpt_trader/tui/test_snapshots_navigation.py",
       "tests/unit/gpt_trader/tui/test_risk_preview_position_impacts.py",
+      "tests/unit/gpt_trader/tui/test_thresholds_performance_metrics.py",
+      "tests/unit/gpt_trader/tui/test_thresholds_status_level.py",
       "tests/unit/gpt_trader/tui/test_snapshots_strategy_detail_screen.py",
       "tests/unit/gpt_trader/tui/test_state_cfm_and_data_staleness.py",
       "tests/unit/gpt_trader/tui/test_market_widget.py",
@@ -296,10 +298,12 @@
       "tests/unit/gpt_trader/tui/test_risk_preview_preview_and_scenarios.py",
       "tests/unit/gpt_trader/tui/test_trade_matcher.py",
       "tests/unit/gpt_trader/tui/test_log_manager_formatters_compact.py",
+      "tests/unit/gpt_trader/tui/test_thresholds_risk_score_and_order_status.py",
       "tests/unit/gpt_trader/tui/test_events_bot_and_ui.py",
       "tests/unit/gpt_trader/tui/test_log_manager_entries.py",
       "tests/unit/gpt_trader/tui/test_events_state_updates.py",
       "tests/unit/gpt_trader/tui/test_log_manager_handler_widget_controls.py",
+      "tests/unit/gpt_trader/tui/test_thresholds_risk_loss_ratio.py",
       "tests/unit/gpt_trader/tui/test_formatting.py",
       "tests/unit/gpt_trader/tui/test_staleness_helpers_freshness_label_and_display.py",
       "tests/unit/gpt_trader/tui/test_degraded_mode.py",
@@ -314,8 +318,8 @@
       "tests/unit/gpt_trader/tui/test_snapshots_execution_issues_modal.py",
       "tests/unit/gpt_trader/tui/test_staleness_helpers_execution_health.py",
       "tests/unit/gpt_trader/tui/test_staleness_helpers_edge_cases.py",
-      "tests/unit/gpt_trader/tui/test_thresholds.py",
       "tests/unit/gpt_trader/tui/test_screens.py",
+      "tests/unit/gpt_trader/tui/test_thresholds_confidence.py",
       "tests/unit/gpt_trader/tui/test_app.py",
       "tests/unit/gpt_trader/tui/test_state_resilience_and_performance.py",
       "tests/unit/gpt_trader/tui/test_log_manager_handler_emit.py",
@@ -328,7 +332,11 @@
       "tests/unit/gpt_trader/tui/screens/test_alert_history.py",
       "tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen.py",
       "tests/unit/gpt_trader/tui/utilities/test_pnl_formatting.py",
-      "tests/unit/gpt_trader/tui/utilities/test_table_formatting.py",
+      "tests/unit/gpt_trader/tui/utilities/test_table_formatting_sorting.py",
+      "tests/unit/gpt_trader/tui/utilities/test_table_formatting_clipboard.py",
+      "tests/unit/gpt_trader/tui/utilities/test_table_formatting_timestamp.py",
+      "tests/unit/gpt_trader/tui/utilities/test_table_formatting_cells.py",
+      "tests/unit/gpt_trader/tui/utilities/test_table_formatting_truncate_id.py",
       "tests/unit/gpt_trader/tui/adapters/test_null_status_reporter.py",
       "tests/unit/gpt_trader/tui/state_management/test_delta_updater_result_and_helpers.py",
       "tests/unit/gpt_trader/tui/state_management/test_validators.py",
@@ -494,13 +502,16 @@
       "tests/unit/gpt_trader/monitoring/configuration_guardian/test_environment_monitor_edges.py",
       "tests/unit/gpt_trader/monitoring/configuration_guardian/test_state_validator_edges.py",
       "tests/unit/gpt_trader/monitoring/daily_report/test_analytics_health_metrics.py",
+      "tests/unit/gpt_trader/monitoring/daily_report/test_models_daily_report_to_text.py",
       "tests/unit/gpt_trader/monitoring/daily_report/test_loaders_edges.py",
+      "tests/unit/gpt_trader/monitoring/daily_report/test_models_daily_report_to_dict.py",
       "tests/unit/gpt_trader/monitoring/daily_report/test_analytics_pnl_metrics.py",
       "tests/unit/gpt_trader/monitoring/daily_report/test_analytics_trade_metrics.py",
+      "tests/unit/gpt_trader/monitoring/daily_report/test_models_daily_report_core.py",
       "tests/unit/gpt_trader/monitoring/daily_report/test_generator_edges.py",
       "tests/unit/gpt_trader/monitoring/daily_report/test_analytics_symbol_metrics.py",
+      "tests/unit/gpt_trader/monitoring/daily_report/test_models_symbol_performance.py",
       "tests/unit/gpt_trader/monitoring/daily_report/test_analytics_risk_metrics.py",
-      "tests/unit/gpt_trader/monitoring/daily_report/test_models.py",
       "tests/unit/gpt_trader/monitoring/daily_report/test_liveness_runtime.py",
       "tests/unit/gpt_trader/monitoring/system/test_metrics.py",
       "tests/unit/gpt_trader/monitoring/system/test_positions_reconciler_edges.py",
@@ -652,6 +663,7 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_types_and_sequence_guard.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_real_transport.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_service_loading.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service_ticker_service.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_auth.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_enforce_perps_rules.py",
@@ -667,7 +679,10 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_cfm_endpoints.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_validation_and_safe_sizing.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_system.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service_alias.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_models_edges.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service_ticker.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service_ticker_cache.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_intx_endpoints.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery_both.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_quantization_core.py",
@@ -693,7 +708,6 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery_eligibility_and_none.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_perp_rules_and_quantize.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_exchange_specs.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_service_order_and_size_methods.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_message_filtering.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_stream_orderbook.py",
@@ -2049,7 +2063,7 @@
       },
       {
         "name": "TestFundingPnLLongShort::test_short_position_receives_positive_funding",
-        "line": 49,
+        "line": 51,
         "markers": [],
         "docstring": "Short position receives funding when rate is positive.",
         "class": "TestFundingPnLLongShort"
@@ -2062,7 +2076,7 @@
       },
       {
         "name": "test_short_position_receives_positive_funding",
-        "line": 49,
+        "line": 51,
         "markers": [],
         "docstring": "Short position receives funding when rate is positive."
       }
@@ -5143,6 +5157,166 @@
         "docstring": "No daily limit configured returns empty position impacts."
       }
     ],
+    "tests/unit/gpt_trader/tui/test_thresholds_performance_metrics.py": [
+      {
+        "name": "TestPerformanceThresholds::test_latency_ok",
+        "line": 14,
+        "markers": [],
+        "docstring": "Low latency returns OK status.",
+        "class": "TestPerformanceThresholds"
+      },
+      {
+        "name": "TestPerformanceThresholds::test_latency_warning",
+        "line": 18,
+        "markers": [],
+        "docstring": "Moderate latency returns WARNING status.",
+        "class": "TestPerformanceThresholds"
+      },
+      {
+        "name": "TestPerformanceThresholds::test_latency_critical",
+        "line": 22,
+        "markers": [],
+        "docstring": "High latency returns CRITICAL status.",
+        "class": "TestPerformanceThresholds"
+      },
+      {
+        "name": "TestPerformanceThresholds::test_cpu_ok",
+        "line": 26,
+        "markers": [],
+        "docstring": "Low CPU returns OK status.",
+        "class": "TestPerformanceThresholds"
+      },
+      {
+        "name": "TestPerformanceThresholds::test_cpu_warning",
+        "line": 30,
+        "markers": [],
+        "docstring": "Moderate CPU returns WARNING status.",
+        "class": "TestPerformanceThresholds"
+      },
+      {
+        "name": "TestPerformanceThresholds::test_cpu_critical",
+        "line": 34,
+        "markers": [],
+        "docstring": "High CPU returns CRITICAL status.",
+        "class": "TestPerformanceThresholds"
+      },
+      {
+        "name": "TestPerformanceThresholds::test_memory_ok",
+        "line": 38,
+        "markers": [],
+        "docstring": "Low memory returns OK status.",
+        "class": "TestPerformanceThresholds"
+      },
+      {
+        "name": "TestPerformanceThresholds::test_memory_warning",
+        "line": 42,
+        "markers": [],
+        "docstring": "Moderate memory returns WARNING status.",
+        "class": "TestPerformanceThresholds"
+      },
+      {
+        "name": "TestPerformanceThresholds::test_memory_critical",
+        "line": 46,
+        "markers": [],
+        "docstring": "High memory returns CRITICAL status.",
+        "class": "TestPerformanceThresholds"
+      },
+      {
+        "name": "test_latency_ok",
+        "line": 14,
+        "markers": [],
+        "docstring": "Low latency returns OK status."
+      },
+      {
+        "name": "test_latency_warning",
+        "line": 18,
+        "markers": [],
+        "docstring": "Moderate latency returns WARNING status."
+      },
+      {
+        "name": "test_latency_critical",
+        "line": 22,
+        "markers": [],
+        "docstring": "High latency returns CRITICAL status."
+      },
+      {
+        "name": "test_cpu_ok",
+        "line": 26,
+        "markers": [],
+        "docstring": "Low CPU returns OK status."
+      },
+      {
+        "name": "test_cpu_warning",
+        "line": 30,
+        "markers": [],
+        "docstring": "Moderate CPU returns WARNING status."
+      },
+      {
+        "name": "test_cpu_critical",
+        "line": 34,
+        "markers": [],
+        "docstring": "High CPU returns CRITICAL status."
+      },
+      {
+        "name": "test_memory_ok",
+        "line": 38,
+        "markers": [],
+        "docstring": "Low memory returns OK status."
+      },
+      {
+        "name": "test_memory_warning",
+        "line": 42,
+        "markers": [],
+        "docstring": "Moderate memory returns WARNING status."
+      },
+      {
+        "name": "test_memory_critical",
+        "line": 46,
+        "markers": [],
+        "docstring": "High memory returns CRITICAL status."
+      }
+    ],
+    "tests/unit/gpt_trader/tui/test_thresholds_status_level.py": [
+      {
+        "name": "TestStatusLevel::test_status_class_mapping",
+        "line": 14,
+        "markers": [],
+        "docstring": "Each status level maps to correct CSS class.",
+        "class": "TestStatusLevel"
+      },
+      {
+        "name": "TestStatusLevel::test_status_icon_mapping",
+        "line": 20,
+        "markers": [],
+        "docstring": "Each status level has an icon.",
+        "class": "TestStatusLevel"
+      },
+      {
+        "name": "TestStatusLevel::test_status_color_mapping",
+        "line": 26,
+        "markers": [],
+        "docstring": "Each status level has a Rich color.",
+        "class": "TestStatusLevel"
+      },
+      {
+        "name": "test_status_class_mapping",
+        "line": 14,
+        "markers": [],
+        "docstring": "Each status level maps to correct CSS class."
+      },
+      {
+        "name": "test_status_icon_mapping",
+        "line": 20,
+        "markers": [],
+        "docstring": "Each status level has an icon."
+      },
+      {
+        "name": "test_status_color_mapping",
+        "line": 26,
+        "markers": [],
+        "docstring": "Each status level has a Rich color."
+      }
+    ],
     "tests/unit/gpt_trader/tui/test_snapshots_strategy_detail_screen.py": [
       {
         "name": "TestStrategyDetailSnapshots::test_strategy_detail_signal_details_with_hints",
@@ -6766,6 +6940,229 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/tui/test_thresholds_risk_score_and_order_status.py": [
+      {
+        "name": "TestRiskScoreStatus::test_low_score_returns_ok",
+        "line": 15,
+        "markers": [],
+        "docstring": "Score below OK threshold is LOW risk.",
+        "class": "TestRiskScoreStatus"
+      },
+      {
+        "name": "TestRiskScoreStatus::test_medium_score_returns_warning",
+        "line": 20,
+        "markers": [],
+        "docstring": "Score between thresholds is MEDIUM risk.",
+        "class": "TestRiskScoreStatus"
+      },
+      {
+        "name": "TestRiskScoreStatus::test_high_score_returns_critical",
+        "line": 26,
+        "markers": [],
+        "docstring": "Score at or above warning threshold is HIGH risk.",
+        "class": "TestRiskScoreStatus"
+      },
+      {
+        "name": "TestRiskScoreStatus::test_custom_thresholds",
+        "line": 31,
+        "markers": [],
+        "docstring": "Custom score thresholds are respected.",
+        "class": "TestRiskScoreStatus"
+      },
+      {
+        "name": "TestRiskStatusLabel::test_ok_maps_to_low",
+        "line": 42,
+        "markers": [],
+        "docstring": "OK status maps to LOW risk label.",
+        "class": "TestRiskStatusLabel"
+      },
+      {
+        "name": "TestRiskStatusLabel::test_warning_maps_to_medium",
+        "line": 46,
+        "markers": [],
+        "docstring": "WARNING status maps to MEDIUM risk label.",
+        "class": "TestRiskStatusLabel"
+      },
+      {
+        "name": "TestRiskStatusLabel::test_critical_maps_to_high",
+        "line": 50,
+        "markers": [],
+        "docstring": "CRITICAL status maps to HIGH risk label.",
+        "class": "TestRiskStatusLabel"
+      },
+      {
+        "name": "TestOrderStatusLevel::test_open_status_returns_ok",
+        "line": 64,
+        "markers": [],
+        "docstring": "OPEN orders are normal - OK status.",
+        "class": "TestOrderStatusLevel"
+      },
+      {
+        "name": "TestOrderStatusLevel::test_pending_status_returns_ok",
+        "line": 69,
+        "markers": [],
+        "docstring": "PENDING orders are normal - OK status.",
+        "class": "TestOrderStatusLevel"
+      },
+      {
+        "name": "TestOrderStatusLevel::test_filled_status_returns_ok",
+        "line": 73,
+        "markers": [],
+        "docstring": "FILLED orders are complete - OK status.",
+        "class": "TestOrderStatusLevel"
+      },
+      {
+        "name": "TestOrderStatusLevel::test_cancelled_status_returns_ok",
+        "line": 77,
+        "markers": [],
+        "docstring": "CANCELLED orders are user-initiated - OK status (not error).",
+        "class": "TestOrderStatusLevel"
+      },
+      {
+        "name": "TestOrderStatusLevel::test_partial_status_returns_warning",
+        "line": 82,
+        "markers": [],
+        "docstring": "PARTIAL fills need attention - WARNING status.",
+        "class": "TestOrderStatusLevel"
+      },
+      {
+        "name": "TestOrderStatusLevel::test_expired_status_returns_warning",
+        "line": 86,
+        "markers": [],
+        "docstring": "EXPIRED orders may indicate stale strategy - WARNING status.",
+        "class": "TestOrderStatusLevel"
+      },
+      {
+        "name": "TestOrderStatusLevel::test_rejected_status_returns_critical",
+        "line": 90,
+        "markers": [],
+        "docstring": "REJECTED orders are errors - CRITICAL status.",
+        "class": "TestOrderStatusLevel"
+      },
+      {
+        "name": "TestOrderStatusLevel::test_failed_status_returns_critical",
+        "line": 94,
+        "markers": [],
+        "docstring": "FAILED orders are errors - CRITICAL status.",
+        "class": "TestOrderStatusLevel"
+      },
+      {
+        "name": "TestOrderStatusLevel::test_unknown_status_returns_ok",
+        "line": 98,
+        "markers": [],
+        "docstring": "Unknown statuses default to OK (safe fallback).",
+        "class": "TestOrderStatusLevel"
+      },
+      {
+        "name": "TestOrderStatusLevel::test_case_insensitive",
+        "line": 103,
+        "markers": [],
+        "docstring": "Status matching is case-insensitive.",
+        "class": "TestOrderStatusLevel"
+      },
+      {
+        "name": "test_low_score_returns_ok",
+        "line": 15,
+        "markers": [],
+        "docstring": "Score below OK threshold is LOW risk."
+      },
+      {
+        "name": "test_medium_score_returns_warning",
+        "line": 20,
+        "markers": [],
+        "docstring": "Score between thresholds is MEDIUM risk."
+      },
+      {
+        "name": "test_high_score_returns_critical",
+        "line": 26,
+        "markers": [],
+        "docstring": "Score at or above warning threshold is HIGH risk."
+      },
+      {
+        "name": "test_custom_thresholds",
+        "line": 31,
+        "markers": [],
+        "docstring": "Custom score thresholds are respected."
+      },
+      {
+        "name": "test_ok_maps_to_low",
+        "line": 42,
+        "markers": [],
+        "docstring": "OK status maps to LOW risk label."
+      },
+      {
+        "name": "test_warning_maps_to_medium",
+        "line": 46,
+        "markers": [],
+        "docstring": "WARNING status maps to MEDIUM risk label."
+      },
+      {
+        "name": "test_critical_maps_to_high",
+        "line": 50,
+        "markers": [],
+        "docstring": "CRITICAL status maps to HIGH risk label."
+      },
+      {
+        "name": "test_open_status_returns_ok",
+        "line": 64,
+        "markers": [],
+        "docstring": "OPEN orders are normal - OK status."
+      },
+      {
+        "name": "test_pending_status_returns_ok",
+        "line": 69,
+        "markers": [],
+        "docstring": "PENDING orders are normal - OK status."
+      },
+      {
+        "name": "test_filled_status_returns_ok",
+        "line": 73,
+        "markers": [],
+        "docstring": "FILLED orders are complete - OK status."
+      },
+      {
+        "name": "test_cancelled_status_returns_ok",
+        "line": 77,
+        "markers": [],
+        "docstring": "CANCELLED orders are user-initiated - OK status (not error)."
+      },
+      {
+        "name": "test_partial_status_returns_warning",
+        "line": 82,
+        "markers": [],
+        "docstring": "PARTIAL fills need attention - WARNING status."
+      },
+      {
+        "name": "test_expired_status_returns_warning",
+        "line": 86,
+        "markers": [],
+        "docstring": "EXPIRED orders may indicate stale strategy - WARNING status."
+      },
+      {
+        "name": "test_rejected_status_returns_critical",
+        "line": 90,
+        "markers": [],
+        "docstring": "REJECTED orders are errors - CRITICAL status."
+      },
+      {
+        "name": "test_failed_status_returns_critical",
+        "line": 94,
+        "markers": [],
+        "docstring": "FAILED orders are errors - CRITICAL status."
+      },
+      {
+        "name": "test_unknown_status_returns_ok",
+        "line": 98,
+        "markers": [],
+        "docstring": "Unknown statuses default to OK (safe fallback)."
+      },
+      {
+        "name": "test_case_insensitive",
+        "line": 103,
+        "markers": [],
+        "docstring": "Status matching is case-insensitive."
+      }
+    ],
     "tests/unit/gpt_trader/tui/test_events_bot_and_ui.py": [
       {
         "name": "TestBotLifecycleEvents::test_bot_start_requested_creation",
@@ -7214,6 +7611,177 @@
         "line": 110,
         "markers": [],
         "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/tui/test_thresholds_risk_loss_ratio.py": [
+      {
+        "name": "TestRiskThresholds::test_default_thresholds_exist",
+        "line": 14,
+        "markers": [],
+        "docstring": "Default risk thresholds are properly configured.",
+        "class": "TestRiskThresholds"
+      },
+      {
+        "name": "TestLossRatioStatus::test_no_limit_configured_returns_ok",
+        "line": 29,
+        "markers": [],
+        "docstring": "When no loss limit is set, always returns OK.",
+        "class": "TestLossRatioStatus"
+      },
+      {
+        "name": "TestLossRatioStatus::test_zero_loss_returns_ok",
+        "line": 35,
+        "markers": [],
+        "docstring": "Zero loss is within limits.",
+        "class": "TestLossRatioStatus"
+      },
+      {
+        "name": "TestLossRatioStatus::test_small_loss_returns_ok",
+        "line": 39,
+        "markers": [],
+        "docstring": "Loss under 50% of limit returns OK.",
+        "class": "TestLossRatioStatus"
+      },
+      {
+        "name": "TestLossRatioStatus::test_moderate_loss_returns_warning",
+        "line": 44,
+        "markers": [],
+        "docstring": "Loss between 50-75% of limit returns WARNING.",
+        "class": "TestLossRatioStatus"
+      },
+      {
+        "name": "TestLossRatioStatus::test_high_loss_returns_critical",
+        "line": 49,
+        "markers": [],
+        "docstring": "Loss over 75% of limit returns CRITICAL.",
+        "class": "TestLossRatioStatus"
+      },
+      {
+        "name": "TestLossRatioStatus::test_loss_at_limit_returns_critical",
+        "line": 54,
+        "markers": [],
+        "docstring": "Loss at 100% of limit returns CRITICAL.",
+        "class": "TestLossRatioStatus"
+      },
+      {
+        "name": "TestLossRatioStatus::test_loss_exceeds_limit_returns_critical",
+        "line": 58,
+        "markers": [],
+        "docstring": "Loss exceeding limit returns CRITICAL.",
+        "class": "TestLossRatioStatus"
+      },
+      {
+        "name": "TestLossRatioStatus::test_abs_fix_negative_loss_handled_correctly",
+        "line": 62,
+        "markers": [],
+        "docstring": "CRITICAL: Negative losses are converted to positive for ratio.\n\nThis is the key test for the abs() fix. Before the fix:\n- loss_ratio = -0.05 / 0.10 = -0.50\n- -0.50 < 0.50 (threshold) = TRUE = OK (WRONG!)\n\nAfter the fix:\n- loss_ratio = abs(-0.05) / 0.10 = 0.50\n- 0.50 < 0.50 = FALSE, 0.50 < 0.75 = TRUE = WARNING (CORRECT!)",
+        "class": "TestLossRatioStatus"
+      },
+      {
+        "name": "TestLossRatioStatus::test_profit_does_not_affect_risk",
+        "line": 76,
+        "markers": [],
+        "docstring": "Positive P&L (profit) treated same as loss for risk calculation.\n\nProfit is still \"distance from zero\" for risk purposes.",
+        "class": "TestLossRatioStatus"
+      },
+      {
+        "name": "TestLossRatioStatus::test_boundary_at_ok_threshold",
+        "line": 85,
+        "markers": [],
+        "docstring": "Exactly at OK threshold boundary.",
+        "class": "TestLossRatioStatus"
+      },
+      {
+        "name": "TestLossRatioStatus::test_boundary_at_warn_threshold",
+        "line": 92,
+        "markers": [],
+        "docstring": "Around WARNING threshold boundary.",
+        "class": "TestLossRatioStatus"
+      },
+      {
+        "name": "TestLossRatioStatus::test_custom_thresholds",
+        "line": 99,
+        "markers": [],
+        "docstring": "Custom thresholds are respected.",
+        "class": "TestLossRatioStatus"
+      },
+      {
+        "name": "test_default_thresholds_exist",
+        "line": 14,
+        "markers": [],
+        "docstring": "Default risk thresholds are properly configured."
+      },
+      {
+        "name": "test_no_limit_configured_returns_ok",
+        "line": 29,
+        "markers": [],
+        "docstring": "When no loss limit is set, always returns OK."
+      },
+      {
+        "name": "test_zero_loss_returns_ok",
+        "line": 35,
+        "markers": [],
+        "docstring": "Zero loss is within limits."
+      },
+      {
+        "name": "test_small_loss_returns_ok",
+        "line": 39,
+        "markers": [],
+        "docstring": "Loss under 50% of limit returns OK."
+      },
+      {
+        "name": "test_moderate_loss_returns_warning",
+        "line": 44,
+        "markers": [],
+        "docstring": "Loss between 50-75% of limit returns WARNING."
+      },
+      {
+        "name": "test_high_loss_returns_critical",
+        "line": 49,
+        "markers": [],
+        "docstring": "Loss over 75% of limit returns CRITICAL."
+      },
+      {
+        "name": "test_loss_at_limit_returns_critical",
+        "line": 54,
+        "markers": [],
+        "docstring": "Loss at 100% of limit returns CRITICAL."
+      },
+      {
+        "name": "test_loss_exceeds_limit_returns_critical",
+        "line": 58,
+        "markers": [],
+        "docstring": "Loss exceeding limit returns CRITICAL."
+      },
+      {
+        "name": "test_abs_fix_negative_loss_handled_correctly",
+        "line": 62,
+        "markers": [],
+        "docstring": "CRITICAL: Negative losses are converted to positive for ratio.\n\nThis is the key test for the abs() fix. Before the fix:\n- loss_ratio = -0.05 / 0.10 = -0.50\n- -0.50 < 0.50 (threshold) = TRUE = OK (WRONG!)\n\nAfter the fix:\n- loss_ratio = abs(-0.05) / 0.10 = 0.50\n- 0.50 < 0.50 = FALSE, 0.50 < 0.75 = TRUE = WARNING (CORRECT!)"
+      },
+      {
+        "name": "test_profit_does_not_affect_risk",
+        "line": 76,
+        "markers": [],
+        "docstring": "Positive P&L (profit) treated same as loss for risk calculation.\n\nProfit is still \"distance from zero\" for risk purposes."
+      },
+      {
+        "name": "test_boundary_at_ok_threshold",
+        "line": 85,
+        "markers": [],
+        "docstring": "Exactly at OK threshold boundary."
+      },
+      {
+        "name": "test_boundary_at_warn_threshold",
+        "line": 92,
+        "markers": [],
+        "docstring": "Around WARNING threshold boundary."
+      },
+      {
+        "name": "test_custom_thresholds",
+        "line": 99,
+        "markers": [],
+        "docstring": "Custom thresholds are respected."
       }
     ],
     "tests/unit/gpt_trader/tui/test_formatting.py": [
@@ -8447,697 +9015,6 @@
         "docstring": "Test staleness exactly at threshold boundaries."
       }
     ],
-    "tests/unit/gpt_trader/tui/test_thresholds.py": [
-      {
-        "name": "TestStatusLevel::test_status_class_mapping",
-        "line": 32,
-        "markers": [],
-        "docstring": "Each status level maps to correct CSS class.",
-        "class": "TestStatusLevel"
-      },
-      {
-        "name": "TestStatusLevel::test_status_icon_mapping",
-        "line": 38,
-        "markers": [],
-        "docstring": "Each status level has an icon.",
-        "class": "TestStatusLevel"
-      },
-      {
-        "name": "TestStatusLevel::test_status_color_mapping",
-        "line": 44,
-        "markers": [],
-        "docstring": "Each status level has a Rich color.",
-        "class": "TestStatusLevel"
-      },
-      {
-        "name": "TestPerformanceThresholds::test_latency_ok",
-        "line": 54,
-        "markers": [],
-        "docstring": "Low latency returns OK status.",
-        "class": "TestPerformanceThresholds"
-      },
-      {
-        "name": "TestPerformanceThresholds::test_latency_warning",
-        "line": 58,
-        "markers": [],
-        "docstring": "Moderate latency returns WARNING status.",
-        "class": "TestPerformanceThresholds"
-      },
-      {
-        "name": "TestPerformanceThresholds::test_latency_critical",
-        "line": 62,
-        "markers": [],
-        "docstring": "High latency returns CRITICAL status.",
-        "class": "TestPerformanceThresholds"
-      },
-      {
-        "name": "TestPerformanceThresholds::test_cpu_ok",
-        "line": 66,
-        "markers": [],
-        "docstring": "Low CPU returns OK status.",
-        "class": "TestPerformanceThresholds"
-      },
-      {
-        "name": "TestPerformanceThresholds::test_cpu_warning",
-        "line": 70,
-        "markers": [],
-        "docstring": "Moderate CPU returns WARNING status.",
-        "class": "TestPerformanceThresholds"
-      },
-      {
-        "name": "TestPerformanceThresholds::test_cpu_critical",
-        "line": 74,
-        "markers": [],
-        "docstring": "High CPU returns CRITICAL status.",
-        "class": "TestPerformanceThresholds"
-      },
-      {
-        "name": "TestPerformanceThresholds::test_memory_ok",
-        "line": 78,
-        "markers": [],
-        "docstring": "Low memory returns OK status.",
-        "class": "TestPerformanceThresholds"
-      },
-      {
-        "name": "TestPerformanceThresholds::test_memory_warning",
-        "line": 82,
-        "markers": [],
-        "docstring": "Moderate memory returns WARNING status.",
-        "class": "TestPerformanceThresholds"
-      },
-      {
-        "name": "TestPerformanceThresholds::test_memory_critical",
-        "line": 86,
-        "markers": [],
-        "docstring": "High memory returns CRITICAL status.",
-        "class": "TestPerformanceThresholds"
-      },
-      {
-        "name": "TestRiskThresholds::test_default_thresholds_exist",
-        "line": 94,
-        "markers": [],
-        "docstring": "Default risk thresholds are properly configured.",
-        "class": "TestRiskThresholds"
-      },
-      {
-        "name": "TestLossRatioStatus::test_no_limit_configured_returns_ok",
-        "line": 109,
-        "markers": [],
-        "docstring": "When no loss limit is set, always returns OK.",
-        "class": "TestLossRatioStatus"
-      },
-      {
-        "name": "TestLossRatioStatus::test_zero_loss_returns_ok",
-        "line": 115,
-        "markers": [],
-        "docstring": "Zero loss is within limits.",
-        "class": "TestLossRatioStatus"
-      },
-      {
-        "name": "TestLossRatioStatus::test_small_loss_returns_ok",
-        "line": 119,
-        "markers": [],
-        "docstring": "Loss under 50% of limit returns OK.",
-        "class": "TestLossRatioStatus"
-      },
-      {
-        "name": "TestLossRatioStatus::test_moderate_loss_returns_warning",
-        "line": 124,
-        "markers": [],
-        "docstring": "Loss between 50-75% of limit returns WARNING.",
-        "class": "TestLossRatioStatus"
-      },
-      {
-        "name": "TestLossRatioStatus::test_high_loss_returns_critical",
-        "line": 129,
-        "markers": [],
-        "docstring": "Loss over 75% of limit returns CRITICAL.",
-        "class": "TestLossRatioStatus"
-      },
-      {
-        "name": "TestLossRatioStatus::test_loss_at_limit_returns_critical",
-        "line": 134,
-        "markers": [],
-        "docstring": "Loss at 100% of limit returns CRITICAL.",
-        "class": "TestLossRatioStatus"
-      },
-      {
-        "name": "TestLossRatioStatus::test_loss_exceeds_limit_returns_critical",
-        "line": 138,
-        "markers": [],
-        "docstring": "Loss exceeding limit returns CRITICAL.",
-        "class": "TestLossRatioStatus"
-      },
-      {
-        "name": "TestLossRatioStatus::test_abs_fix_negative_loss_handled_correctly",
-        "line": 142,
-        "markers": [],
-        "docstring": "CRITICAL: Negative losses are converted to positive for ratio.\n\nThis is the key test for the abs() fix. Before the fix:\n- loss_ratio = -0.05 / 0.10 = -0.50\n- -0.50 < 0.50 (threshold) = TRUE = OK (WRONG!)\n\nAfter the fix:\n- loss_ratio = abs(-0.05) / 0.10 = 0.50\n- 0.50 < 0.50 = FALSE, 0.50 < 0.75 = TRUE = WARNING (CORRECT!)",
-        "class": "TestLossRatioStatus"
-      },
-      {
-        "name": "TestLossRatioStatus::test_profit_does_not_affect_risk",
-        "line": 156,
-        "markers": [],
-        "docstring": "Positive P&L (profit) treated same as loss for risk calculation.\n\nProfit is still \"distance from zero\" for risk purposes.",
-        "class": "TestLossRatioStatus"
-      },
-      {
-        "name": "TestLossRatioStatus::test_boundary_at_ok_threshold",
-        "line": 165,
-        "markers": [],
-        "docstring": "Exactly at OK threshold boundary.",
-        "class": "TestLossRatioStatus"
-      },
-      {
-        "name": "TestLossRatioStatus::test_boundary_at_warn_threshold",
-        "line": 172,
-        "markers": [],
-        "docstring": "Around WARNING threshold boundary.",
-        "class": "TestLossRatioStatus"
-      },
-      {
-        "name": "TestLossRatioStatus::test_custom_thresholds",
-        "line": 179,
-        "markers": [],
-        "docstring": "Custom thresholds are respected.",
-        "class": "TestLossRatioStatus"
-      },
-      {
-        "name": "TestRiskScoreStatus::test_low_score_returns_ok",
-        "line": 196,
-        "markers": [],
-        "docstring": "Score below OK threshold is LOW risk.",
-        "class": "TestRiskScoreStatus"
-      },
-      {
-        "name": "TestRiskScoreStatus::test_medium_score_returns_warning",
-        "line": 201,
-        "markers": [],
-        "docstring": "Score between thresholds is MEDIUM risk.",
-        "class": "TestRiskScoreStatus"
-      },
-      {
-        "name": "TestRiskScoreStatus::test_high_score_returns_critical",
-        "line": 207,
-        "markers": [],
-        "docstring": "Score at or above warning threshold is HIGH risk.",
-        "class": "TestRiskScoreStatus"
-      },
-      {
-        "name": "TestRiskScoreStatus::test_custom_thresholds",
-        "line": 212,
-        "markers": [],
-        "docstring": "Custom score thresholds are respected.",
-        "class": "TestRiskScoreStatus"
-      },
-      {
-        "name": "TestRiskStatusLabel::test_ok_maps_to_low",
-        "line": 223,
-        "markers": [],
-        "docstring": "OK status maps to LOW risk label.",
-        "class": "TestRiskStatusLabel"
-      },
-      {
-        "name": "TestRiskStatusLabel::test_warning_maps_to_medium",
-        "line": 227,
-        "markers": [],
-        "docstring": "WARNING status maps to MEDIUM risk label.",
-        "class": "TestRiskStatusLabel"
-      },
-      {
-        "name": "TestRiskStatusLabel::test_critical_maps_to_high",
-        "line": 231,
-        "markers": [],
-        "docstring": "CRITICAL status maps to HIGH risk label.",
-        "class": "TestRiskStatusLabel"
-      },
-      {
-        "name": "TestConfidenceThresholds::test_default_thresholds_exist",
-        "line": 239,
-        "markers": [],
-        "docstring": "Default confidence thresholds are properly configured.",
-        "class": "TestConfidenceThresholds"
-      },
-      {
-        "name": "TestConfidenceStatus::test_high_confidence_returns_ok",
-        "line": 254,
-        "markers": [],
-        "docstring": "High confidence (>= 0.7) returns OK status.",
-        "class": "TestConfidenceStatus"
-      },
-      {
-        "name": "TestConfidenceStatus::test_medium_confidence_returns_warning",
-        "line": 260,
-        "markers": [],
-        "docstring": "Medium confidence (0.4-0.7) returns WARNING status.",
-        "class": "TestConfidenceStatus"
-      },
-      {
-        "name": "TestConfidenceStatus::test_low_confidence_returns_critical",
-        "line": 266,
-        "markers": [],
-        "docstring": "Low confidence (< 0.4) returns CRITICAL status.",
-        "class": "TestConfidenceStatus"
-      },
-      {
-        "name": "TestConfidenceStatus::test_custom_thresholds",
-        "line": 272,
-        "markers": [],
-        "docstring": "Custom confidence thresholds are respected.",
-        "class": "TestConfidenceStatus"
-      },
-      {
-        "name": "TestConfidenceLabel::test_ok_maps_to_high",
-        "line": 284,
-        "markers": [],
-        "docstring": "OK status maps to HIGH confidence label.",
-        "class": "TestConfidenceLabel"
-      },
-      {
-        "name": "TestConfidenceLabel::test_warning_maps_to_med",
-        "line": 288,
-        "markers": [],
-        "docstring": "WARNING status maps to MED confidence label.",
-        "class": "TestConfidenceLabel"
-      },
-      {
-        "name": "TestConfidenceLabel::test_critical_maps_to_low",
-        "line": 292,
-        "markers": [],
-        "docstring": "CRITICAL status maps to LOW confidence label.",
-        "class": "TestConfidenceLabel"
-      },
-      {
-        "name": "TestFormatConfidenceWithBadge::test_high_confidence_format",
-        "line": 300,
-        "markers": [],
-        "docstring": "High confidence formats with HIGH badge and ok class.",
-        "class": "TestFormatConfidenceWithBadge"
-      },
-      {
-        "name": "TestFormatConfidenceWithBadge::test_medium_confidence_format",
-        "line": 306,
-        "markers": [],
-        "docstring": "Medium confidence formats with MED badge and warning class.",
-        "class": "TestFormatConfidenceWithBadge"
-      },
-      {
-        "name": "TestFormatConfidenceWithBadge::test_low_confidence_format",
-        "line": 312,
-        "markers": [],
-        "docstring": "Low confidence formats with LOW badge and critical class.",
-        "class": "TestFormatConfidenceWithBadge"
-      },
-      {
-        "name": "TestOrderStatusLevel::test_open_status_returns_ok",
-        "line": 328,
-        "markers": [],
-        "docstring": "OPEN orders are normal - OK status.",
-        "class": "TestOrderStatusLevel"
-      },
-      {
-        "name": "TestOrderStatusLevel::test_pending_status_returns_ok",
-        "line": 333,
-        "markers": [],
-        "docstring": "PENDING orders are normal - OK status.",
-        "class": "TestOrderStatusLevel"
-      },
-      {
-        "name": "TestOrderStatusLevel::test_filled_status_returns_ok",
-        "line": 337,
-        "markers": [],
-        "docstring": "FILLED orders are complete - OK status.",
-        "class": "TestOrderStatusLevel"
-      },
-      {
-        "name": "TestOrderStatusLevel::test_cancelled_status_returns_ok",
-        "line": 341,
-        "markers": [],
-        "docstring": "CANCELLED orders are user-initiated - OK status (not error).",
-        "class": "TestOrderStatusLevel"
-      },
-      {
-        "name": "TestOrderStatusLevel::test_partial_status_returns_warning",
-        "line": 346,
-        "markers": [],
-        "docstring": "PARTIAL fills need attention - WARNING status.",
-        "class": "TestOrderStatusLevel"
-      },
-      {
-        "name": "TestOrderStatusLevel::test_expired_status_returns_warning",
-        "line": 350,
-        "markers": [],
-        "docstring": "EXPIRED orders may indicate stale strategy - WARNING status.",
-        "class": "TestOrderStatusLevel"
-      },
-      {
-        "name": "TestOrderStatusLevel::test_rejected_status_returns_critical",
-        "line": 354,
-        "markers": [],
-        "docstring": "REJECTED orders are errors - CRITICAL status.",
-        "class": "TestOrderStatusLevel"
-      },
-      {
-        "name": "TestOrderStatusLevel::test_failed_status_returns_critical",
-        "line": 358,
-        "markers": [],
-        "docstring": "FAILED orders are errors - CRITICAL status.",
-        "class": "TestOrderStatusLevel"
-      },
-      {
-        "name": "TestOrderStatusLevel::test_unknown_status_returns_ok",
-        "line": 362,
-        "markers": [],
-        "docstring": "Unknown statuses default to OK (safe fallback).",
-        "class": "TestOrderStatusLevel"
-      },
-      {
-        "name": "TestOrderStatusLevel::test_case_insensitive",
-        "line": 367,
-        "markers": [],
-        "docstring": "Status matching is case-insensitive.",
-        "class": "TestOrderStatusLevel"
-      },
-      {
-        "name": "test_status_class_mapping",
-        "line": 32,
-        "markers": [],
-        "docstring": "Each status level maps to correct CSS class."
-      },
-      {
-        "name": "test_status_icon_mapping",
-        "line": 38,
-        "markers": [],
-        "docstring": "Each status level has an icon."
-      },
-      {
-        "name": "test_status_color_mapping",
-        "line": 44,
-        "markers": [],
-        "docstring": "Each status level has a Rich color."
-      },
-      {
-        "name": "test_latency_ok",
-        "line": 54,
-        "markers": [],
-        "docstring": "Low latency returns OK status."
-      },
-      {
-        "name": "test_latency_warning",
-        "line": 58,
-        "markers": [],
-        "docstring": "Moderate latency returns WARNING status."
-      },
-      {
-        "name": "test_latency_critical",
-        "line": 62,
-        "markers": [],
-        "docstring": "High latency returns CRITICAL status."
-      },
-      {
-        "name": "test_cpu_ok",
-        "line": 66,
-        "markers": [],
-        "docstring": "Low CPU returns OK status."
-      },
-      {
-        "name": "test_cpu_warning",
-        "line": 70,
-        "markers": [],
-        "docstring": "Moderate CPU returns WARNING status."
-      },
-      {
-        "name": "test_cpu_critical",
-        "line": 74,
-        "markers": [],
-        "docstring": "High CPU returns CRITICAL status."
-      },
-      {
-        "name": "test_memory_ok",
-        "line": 78,
-        "markers": [],
-        "docstring": "Low memory returns OK status."
-      },
-      {
-        "name": "test_memory_warning",
-        "line": 82,
-        "markers": [],
-        "docstring": "Moderate memory returns WARNING status."
-      },
-      {
-        "name": "test_memory_critical",
-        "line": 86,
-        "markers": [],
-        "docstring": "High memory returns CRITICAL status."
-      },
-      {
-        "name": "test_default_thresholds_exist",
-        "line": 94,
-        "markers": [],
-        "docstring": "Default risk thresholds are properly configured."
-      },
-      {
-        "name": "test_no_limit_configured_returns_ok",
-        "line": 109,
-        "markers": [],
-        "docstring": "When no loss limit is set, always returns OK."
-      },
-      {
-        "name": "test_zero_loss_returns_ok",
-        "line": 115,
-        "markers": [],
-        "docstring": "Zero loss is within limits."
-      },
-      {
-        "name": "test_small_loss_returns_ok",
-        "line": 119,
-        "markers": [],
-        "docstring": "Loss under 50% of limit returns OK."
-      },
-      {
-        "name": "test_moderate_loss_returns_warning",
-        "line": 124,
-        "markers": [],
-        "docstring": "Loss between 50-75% of limit returns WARNING."
-      },
-      {
-        "name": "test_high_loss_returns_critical",
-        "line": 129,
-        "markers": [],
-        "docstring": "Loss over 75% of limit returns CRITICAL."
-      },
-      {
-        "name": "test_loss_at_limit_returns_critical",
-        "line": 134,
-        "markers": [],
-        "docstring": "Loss at 100% of limit returns CRITICAL."
-      },
-      {
-        "name": "test_loss_exceeds_limit_returns_critical",
-        "line": 138,
-        "markers": [],
-        "docstring": "Loss exceeding limit returns CRITICAL."
-      },
-      {
-        "name": "test_abs_fix_negative_loss_handled_correctly",
-        "line": 142,
-        "markers": [],
-        "docstring": "CRITICAL: Negative losses are converted to positive for ratio.\n\nThis is the key test for the abs() fix. Before the fix:\n- loss_ratio = -0.05 / 0.10 = -0.50\n- -0.50 < 0.50 (threshold) = TRUE = OK (WRONG!)\n\nAfter the fix:\n- loss_ratio = abs(-0.05) / 0.10 = 0.50\n- 0.50 < 0.50 = FALSE, 0.50 < 0.75 = TRUE = WARNING (CORRECT!)"
-      },
-      {
-        "name": "test_profit_does_not_affect_risk",
-        "line": 156,
-        "markers": [],
-        "docstring": "Positive P&L (profit) treated same as loss for risk calculation.\n\nProfit is still \"distance from zero\" for risk purposes."
-      },
-      {
-        "name": "test_boundary_at_ok_threshold",
-        "line": 165,
-        "markers": [],
-        "docstring": "Exactly at OK threshold boundary."
-      },
-      {
-        "name": "test_boundary_at_warn_threshold",
-        "line": 172,
-        "markers": [],
-        "docstring": "Around WARNING threshold boundary."
-      },
-      {
-        "name": "test_custom_thresholds",
-        "line": 179,
-        "markers": [],
-        "docstring": "Custom thresholds are respected."
-      },
-      {
-        "name": "test_low_score_returns_ok",
-        "line": 196,
-        "markers": [],
-        "docstring": "Score below OK threshold is LOW risk."
-      },
-      {
-        "name": "test_medium_score_returns_warning",
-        "line": 201,
-        "markers": [],
-        "docstring": "Score between thresholds is MEDIUM risk."
-      },
-      {
-        "name": "test_high_score_returns_critical",
-        "line": 207,
-        "markers": [],
-        "docstring": "Score at or above warning threshold is HIGH risk."
-      },
-      {
-        "name": "test_custom_thresholds",
-        "line": 212,
-        "markers": [],
-        "docstring": "Custom score thresholds are respected."
-      },
-      {
-        "name": "test_ok_maps_to_low",
-        "line": 223,
-        "markers": [],
-        "docstring": "OK status maps to LOW risk label."
-      },
-      {
-        "name": "test_warning_maps_to_medium",
-        "line": 227,
-        "markers": [],
-        "docstring": "WARNING status maps to MEDIUM risk label."
-      },
-      {
-        "name": "test_critical_maps_to_high",
-        "line": 231,
-        "markers": [],
-        "docstring": "CRITICAL status maps to HIGH risk label."
-      },
-      {
-        "name": "test_default_thresholds_exist",
-        "line": 239,
-        "markers": [],
-        "docstring": "Default confidence thresholds are properly configured."
-      },
-      {
-        "name": "test_high_confidence_returns_ok",
-        "line": 254,
-        "markers": [],
-        "docstring": "High confidence (>= 0.7) returns OK status."
-      },
-      {
-        "name": "test_medium_confidence_returns_warning",
-        "line": 260,
-        "markers": [],
-        "docstring": "Medium confidence (0.4-0.7) returns WARNING status."
-      },
-      {
-        "name": "test_low_confidence_returns_critical",
-        "line": 266,
-        "markers": [],
-        "docstring": "Low confidence (< 0.4) returns CRITICAL status."
-      },
-      {
-        "name": "test_custom_thresholds",
-        "line": 272,
-        "markers": [],
-        "docstring": "Custom confidence thresholds are respected."
-      },
-      {
-        "name": "test_ok_maps_to_high",
-        "line": 284,
-        "markers": [],
-        "docstring": "OK status maps to HIGH confidence label."
-      },
-      {
-        "name": "test_warning_maps_to_med",
-        "line": 288,
-        "markers": [],
-        "docstring": "WARNING status maps to MED confidence label."
-      },
-      {
-        "name": "test_critical_maps_to_low",
-        "line": 292,
-        "markers": [],
-        "docstring": "CRITICAL status maps to LOW confidence label."
-      },
-      {
-        "name": "test_high_confidence_format",
-        "line": 300,
-        "markers": [],
-        "docstring": "High confidence formats with HIGH badge and ok class."
-      },
-      {
-        "name": "test_medium_confidence_format",
-        "line": 306,
-        "markers": [],
-        "docstring": "Medium confidence formats with MED badge and warning class."
-      },
-      {
-        "name": "test_low_confidence_format",
-        "line": 312,
-        "markers": [],
-        "docstring": "Low confidence formats with LOW badge and critical class."
-      },
-      {
-        "name": "test_open_status_returns_ok",
-        "line": 328,
-        "markers": [],
-        "docstring": "OPEN orders are normal - OK status."
-      },
-      {
-        "name": "test_pending_status_returns_ok",
-        "line": 333,
-        "markers": [],
-        "docstring": "PENDING orders are normal - OK status."
-      },
-      {
-        "name": "test_filled_status_returns_ok",
-        "line": 337,
-        "markers": [],
-        "docstring": "FILLED orders are complete - OK status."
-      },
-      {
-        "name": "test_cancelled_status_returns_ok",
-        "line": 341,
-        "markers": [],
-        "docstring": "CANCELLED orders are user-initiated - OK status (not error)."
-      },
-      {
-        "name": "test_partial_status_returns_warning",
-        "line": 346,
-        "markers": [],
-        "docstring": "PARTIAL fills need attention - WARNING status."
-      },
-      {
-        "name": "test_expired_status_returns_warning",
-        "line": 350,
-        "markers": [],
-        "docstring": "EXPIRED orders may indicate stale strategy - WARNING status."
-      },
-      {
-        "name": "test_rejected_status_returns_critical",
-        "line": 354,
-        "markers": [],
-        "docstring": "REJECTED orders are errors - CRITICAL status."
-      },
-      {
-        "name": "test_failed_status_returns_critical",
-        "line": 358,
-        "markers": [],
-        "docstring": "FAILED orders are errors - CRITICAL status."
-      },
-      {
-        "name": "test_unknown_status_returns_ok",
-        "line": 362,
-        "markers": [],
-        "docstring": "Unknown statuses default to OK (safe fallback)."
-      },
-      {
-        "name": "test_case_insensitive",
-        "line": 367,
-        "markers": [],
-        "docstring": "Status matching is case-insensitive."
-      }
-    ],
     "tests/unit/gpt_trader/tui/test_screens.py": [
       {
         "name": "TestMainScreen::test_update_ui",
@@ -9151,6 +9028,151 @@
         "line": 9,
         "markers": [],
         "docstring": "Test that update_ui correctly sets screen state for StateRegistry broadcast.\n\nWith the StateRegistry pattern, update_ui() sets self.state which triggers\nwatch_state() -> StateRegistry.broadcast(). Widgets that implement StateObserver\nreceive updates via their on_state_updated() method rather than direct property\nassignment from MainScreen."
+      }
+    ],
+    "tests/unit/gpt_trader/tui/test_thresholds_confidence.py": [
+      {
+        "name": "TestConfidenceThresholds::test_default_thresholds_exist",
+        "line": 16,
+        "markers": [],
+        "docstring": "Default confidence thresholds are properly configured.",
+        "class": "TestConfidenceThresholds"
+      },
+      {
+        "name": "TestConfidenceStatus::test_high_confidence_returns_ok",
+        "line": 31,
+        "markers": [],
+        "docstring": "High confidence (>= 0.7) returns OK status.",
+        "class": "TestConfidenceStatus"
+      },
+      {
+        "name": "TestConfidenceStatus::test_medium_confidence_returns_warning",
+        "line": 37,
+        "markers": [],
+        "docstring": "Medium confidence (0.4-0.7) returns WARNING status.",
+        "class": "TestConfidenceStatus"
+      },
+      {
+        "name": "TestConfidenceStatus::test_low_confidence_returns_critical",
+        "line": 43,
+        "markers": [],
+        "docstring": "Low confidence (< 0.4) returns CRITICAL status.",
+        "class": "TestConfidenceStatus"
+      },
+      {
+        "name": "TestConfidenceStatus::test_custom_thresholds",
+        "line": 49,
+        "markers": [],
+        "docstring": "Custom confidence thresholds are respected.",
+        "class": "TestConfidenceStatus"
+      },
+      {
+        "name": "TestConfidenceLabel::test_ok_maps_to_high",
+        "line": 60,
+        "markers": [],
+        "docstring": "OK status maps to HIGH confidence label.",
+        "class": "TestConfidenceLabel"
+      },
+      {
+        "name": "TestConfidenceLabel::test_warning_maps_to_med",
+        "line": 64,
+        "markers": [],
+        "docstring": "WARNING status maps to MED confidence label.",
+        "class": "TestConfidenceLabel"
+      },
+      {
+        "name": "TestConfidenceLabel::test_critical_maps_to_low",
+        "line": 68,
+        "markers": [],
+        "docstring": "CRITICAL status maps to LOW confidence label.",
+        "class": "TestConfidenceLabel"
+      },
+      {
+        "name": "TestFormatConfidenceWithBadge::test_high_confidence_format",
+        "line": 76,
+        "markers": [],
+        "docstring": "High confidence formats with HIGH badge and ok class.",
+        "class": "TestFormatConfidenceWithBadge"
+      },
+      {
+        "name": "TestFormatConfidenceWithBadge::test_medium_confidence_format",
+        "line": 82,
+        "markers": [],
+        "docstring": "Medium confidence formats with MED badge and warning class.",
+        "class": "TestFormatConfidenceWithBadge"
+      },
+      {
+        "name": "TestFormatConfidenceWithBadge::test_low_confidence_format",
+        "line": 88,
+        "markers": [],
+        "docstring": "Low confidence formats with LOW badge and critical class.",
+        "class": "TestFormatConfidenceWithBadge"
+      },
+      {
+        "name": "test_default_thresholds_exist",
+        "line": 16,
+        "markers": [],
+        "docstring": "Default confidence thresholds are properly configured."
+      },
+      {
+        "name": "test_high_confidence_returns_ok",
+        "line": 31,
+        "markers": [],
+        "docstring": "High confidence (>= 0.7) returns OK status."
+      },
+      {
+        "name": "test_medium_confidence_returns_warning",
+        "line": 37,
+        "markers": [],
+        "docstring": "Medium confidence (0.4-0.7) returns WARNING status."
+      },
+      {
+        "name": "test_low_confidence_returns_critical",
+        "line": 43,
+        "markers": [],
+        "docstring": "Low confidence (< 0.4) returns CRITICAL status."
+      },
+      {
+        "name": "test_custom_thresholds",
+        "line": 49,
+        "markers": [],
+        "docstring": "Custom confidence thresholds are respected."
+      },
+      {
+        "name": "test_ok_maps_to_high",
+        "line": 60,
+        "markers": [],
+        "docstring": "OK status maps to HIGH confidence label."
+      },
+      {
+        "name": "test_warning_maps_to_med",
+        "line": 64,
+        "markers": [],
+        "docstring": "WARNING status maps to MED confidence label."
+      },
+      {
+        "name": "test_critical_maps_to_low",
+        "line": 68,
+        "markers": [],
+        "docstring": "CRITICAL status maps to LOW confidence label."
+      },
+      {
+        "name": "test_high_confidence_format",
+        "line": 76,
+        "markers": [],
+        "docstring": "High confidence formats with HIGH badge and ok class."
+      },
+      {
+        "name": "test_medium_confidence_format",
+        "line": 82,
+        "markers": [],
+        "docstring": "Medium confidence formats with MED badge and warning class."
+      },
+      {
+        "name": "test_low_confidence_format",
+        "line": 88,
+        "markers": [],
+        "docstring": "Low confidence formats with LOW badge and critical class."
       }
     ],
     "tests/unit/gpt_trader/tui/test_app.py": [
@@ -28691,92 +28713,92 @@
     "tests/unit/gpt_trader/backtesting/validation/test_validator_init_reset_and_properties.py": [
       {
         "name": "TestGoldenPathValidatorInit::test_default_tolerances",
-        "line": 14,
+        "line": 15,
         "markers": [],
         "docstring": "",
         "class": "TestGoldenPathValidatorInit"
       },
       {
         "name": "TestGoldenPathValidatorInit::test_custom_tolerances",
-        "line": 20,
+        "line": 21,
         "markers": [],
         "docstring": "",
         "class": "TestGoldenPathValidatorInit"
       },
       {
         "name": "TestGoldenPathValidatorInit::test_initial_state",
-        "line": 30,
+        "line": 31,
         "markers": [],
         "docstring": "",
         "class": "TestGoldenPathValidatorInit"
       },
       {
         "name": "TestReset::test_reset_clears_state",
-        "line": 40,
+        "line": 41,
         "markers": [],
         "docstring": "",
         "class": "TestReset"
       },
       {
         "name": "TestProperties::test_total_comparisons_property",
-        "line": 61,
+        "line": 62,
         "markers": [],
         "docstring": "",
         "class": "TestProperties"
       },
       {
         "name": "TestProperties::test_matching_comparisons_property",
-        "line": 68,
+        "line": 69,
         "markers": [],
         "docstring": "",
         "class": "TestProperties"
       },
       {
         "name": "TestProperties::test_divergence_count_property",
-        "line": 73,
+        "line": 74,
         "markers": [],
         "docstring": "",
         "class": "TestProperties"
       },
       {
         "name": "test_default_tolerances",
-        "line": 14,
+        "line": 15,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_custom_tolerances",
-        "line": 20,
+        "line": 21,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_initial_state",
-        "line": 30,
+        "line": 31,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_reset_clears_state",
-        "line": 40,
+        "line": 41,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_total_comparisons_property",
-        "line": 61,
+        "line": 62,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_matching_comparisons_property",
-        "line": 68,
+        "line": 69,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_divergence_count_property",
-        "line": 73,
+        "line": 74,
         "markers": [],
         "docstring": ""
       }
@@ -28784,157 +28806,157 @@
     "tests/unit/gpt_trader/backtesting/validation/test_validator_validate_decision.py": [
       {
         "name": "TestValidateDecision::test_exact_match",
-        "line": 14,
+        "line": 15,
         "markers": [],
         "docstring": "",
         "class": "TestValidateDecision"
       },
       {
         "name": "TestValidateDecision::test_action_mismatch_strict",
-        "line": 26,
+        "line": 27,
         "markers": [],
         "docstring": "",
         "class": "TestValidateDecision"
       },
       {
         "name": "TestValidateDecision::test_action_mismatch_non_strict",
-        "line": 38,
+        "line": 39,
         "markers": [],
         "docstring": "",
         "class": "TestValidateDecision"
       },
       {
         "name": "TestValidateDecision::test_quantity_within_tolerance",
-        "line": 49,
+        "line": 50,
         "markers": [],
         "docstring": "",
         "class": "TestValidateDecision"
       },
       {
         "name": "TestValidateDecision::test_quantity_outside_tolerance",
-        "line": 59,
+        "line": 60,
         "markers": [],
         "docstring": "",
         "class": "TestValidateDecision"
       },
       {
         "name": "TestValidateDecision::test_price_within_tolerance",
-        "line": 70,
+        "line": 71,
         "markers": [],
         "docstring": "",
         "class": "TestValidateDecision"
       },
       {
         "name": "TestValidateDecision::test_price_outside_tolerance",
-        "line": 79,
+        "line": 80,
         "markers": [],
         "docstring": "",
         "class": "TestValidateDecision"
       },
       {
         "name": "TestValidateDecision::test_risk_check_mismatch",
-        "line": 89,
+        "line": 90,
         "markers": [],
         "docstring": "",
         "class": "TestValidateDecision"
       },
       {
         "name": "TestValidateDecision::test_order_type_mismatch_warning",
-        "line": 99,
+        "line": 100,
         "markers": [],
         "docstring": "",
         "class": "TestValidateDecision"
       },
       {
         "name": "TestValidateDecision::test_hold_actions_skip_quantity_check",
-        "line": 110,
+        "line": 111,
         "markers": [],
         "docstring": "",
         "class": "TestValidateDecision"
       },
       {
         "name": "TestEstimateImpact::test_hold_vs_trade_full_impact",
-        "line": 123,
+        "line": 124,
         "markers": [],
         "docstring": "",
         "class": "TestEstimateImpact"
       },
       {
         "name": "TestEstimateImpact::test_both_hold_zero_impact",
-        "line": 134,
+        "line": 135,
         "markers": [],
         "docstring": "",
         "class": "TestEstimateImpact"
       },
       {
         "name": "test_exact_match",
-        "line": 14,
+        "line": 15,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_action_mismatch_strict",
-        "line": 26,
+        "line": 27,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_action_mismatch_non_strict",
-        "line": 38,
+        "line": 39,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_quantity_within_tolerance",
-        "line": 49,
+        "line": 50,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_quantity_outside_tolerance",
-        "line": 59,
+        "line": 60,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_price_within_tolerance",
-        "line": 70,
+        "line": 71,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_price_outside_tolerance",
-        "line": 79,
+        "line": 80,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_risk_check_mismatch",
-        "line": 89,
+        "line": 90,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_order_type_mismatch_warning",
-        "line": 99,
+        "line": 100,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_hold_actions_skip_quantity_check",
-        "line": 110,
+        "line": 111,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_hold_vs_trade_full_impact",
-        "line": 123,
+        "line": 124,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_both_hold_zero_impact",
-        "line": 134,
+        "line": 135,
         "markers": [],
         "docstring": ""
       }
@@ -29394,40 +29416,40 @@
     "tests/unit/gpt_trader/backtesting/validation/test_validator_validation_result.py": [
       {
         "name": "TestValidationResult::test_matching_result",
-        "line": 14,
+        "line": 15,
         "markers": [],
         "docstring": "",
         "class": "TestValidationResult"
       },
       {
         "name": "TestValidationResult::test_non_matching_result",
-        "line": 26,
+        "line": 27,
         "markers": [],
         "docstring": "",
         "class": "TestValidationResult"
       },
       {
         "name": "TestValidationResult::test_result_with_details",
-        "line": 39,
+        "line": 40,
         "markers": [],
         "docstring": "",
         "class": "TestValidationResult"
       },
       {
         "name": "test_matching_result",
-        "line": 14,
+        "line": 15,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_non_matching_result",
-        "line": 26,
+        "line": 27,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_result_with_details",
-        "line": 39,
+        "line": 40,
         "markers": [],
         "docstring": ""
       }
@@ -29435,105 +29457,105 @@
     "tests/unit/gpt_trader/backtesting/validation/test_validator_reporting_and_divergences.py": [
       {
         "name": "TestGetMatchRate::test_no_comparisons_returns_100",
-        "line": 14,
+        "line": 15,
         "markers": [],
         "docstring": "",
         "class": "TestGetMatchRate"
       },
       {
         "name": "TestGetMatchRate::test_all_matches",
-        "line": 18,
+        "line": 19,
         "markers": [],
         "docstring": "",
         "class": "TestGetMatchRate"
       },
       {
         "name": "TestGetMatchRate::test_partial_matches",
-        "line": 25,
+        "line": 26,
         "markers": [],
         "docstring": "",
         "class": "TestGetMatchRate"
       },
       {
         "name": "TestGetDivergences::test_empty_divergences",
-        "line": 43,
+        "line": 44,
         "markers": [],
         "docstring": "",
         "class": "TestGetDivergences"
       },
       {
         "name": "TestGetDivergences::test_filter_by_symbol",
-        "line": 48,
+        "line": 49,
         "markers": [],
         "docstring": "",
         "class": "TestGetDivergences"
       },
       {
         "name": "TestGetDivergences::test_filter_by_min_impact",
-        "line": 65,
+        "line": 66,
         "markers": [],
         "docstring": "",
         "class": "TestGetDivergences"
       },
       {
         "name": "TestGenerateReport::test_generate_report_structure",
-        "line": 82,
+        "line": 83,
         "markers": [],
         "docstring": "",
         "class": "TestGenerateReport"
       },
       {
         "name": "TestGenerateReport::test_report_includes_divergences",
-        "line": 97,
+        "line": 98,
         "markers": [],
         "docstring": "",
         "class": "TestGenerateReport"
       },
       {
         "name": "test_no_comparisons_returns_100",
-        "line": 14,
+        "line": 15,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_all_matches",
-        "line": 18,
+        "line": 19,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_partial_matches",
-        "line": 25,
+        "line": 26,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_empty_divergences",
-        "line": 43,
+        "line": 44,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_filter_by_symbol",
-        "line": 48,
+        "line": 49,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_filter_by_min_impact",
-        "line": 65,
+        "line": 66,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_generate_report_structure",
-        "line": 82,
+        "line": 83,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_report_includes_divergences",
-        "line": 97,
+        "line": 98,
         "markers": [],
         "docstring": ""
       }
@@ -35799,656 +35821,664 @@
         "docstring": "Single value returns success as default."
       }
     ],
-    "tests/unit/gpt_trader/tui/utilities/test_table_formatting.py": [
-      {
-        "name": "TestFormatTimestamp::test_iso_with_milliseconds_and_z",
-        "line": 24,
-        "markers": [],
-        "docstring": "Parse full ISO 8601 format with Z suffix.",
-        "class": "TestFormatTimestamp"
-      },
-      {
-        "name": "TestFormatTimestamp::test_iso_with_milliseconds",
-        "line": 29,
-        "markers": [],
-        "docstring": "Parse ISO format with milliseconds.",
-        "class": "TestFormatTimestamp"
-      },
-      {
-        "name": "TestFormatTimestamp::test_iso_without_milliseconds",
-        "line": 34,
-        "markers": [],
-        "docstring": "Parse ISO format without milliseconds.",
-        "class": "TestFormatTimestamp"
-      },
-      {
-        "name": "TestFormatTimestamp::test_empty_string",
-        "line": 39,
-        "markers": [],
-        "docstring": "Empty string returns empty string.",
-        "class": "TestFormatTimestamp"
-      },
-      {
-        "name": "TestFormatTimestamp::test_no_t_separator",
-        "line": 44,
-        "markers": [],
-        "docstring": "String without T returns original if parsing fails.",
-        "class": "TestFormatTimestamp"
-      },
-      {
-        "name": "TestFormatTimestamp::test_already_formatted_time",
-        "line": 49,
-        "markers": [],
-        "docstring": "Already formatted time returns as-is if no T.",
-        "class": "TestFormatTimestamp"
-      },
-      {
-        "name": "TestTruncateId::test_long_id_truncated",
-        "line": 58,
-        "markers": [],
-        "docstring": "Long ID is truncated to last N characters.",
-        "class": "TestTruncateId"
-      },
-      {
-        "name": "TestTruncateId::test_short_id_unchanged",
-        "line": 63,
-        "markers": [],
-        "docstring": "Short ID (shorter than length) is unchanged.",
-        "class": "TestTruncateId"
-      },
-      {
-        "name": "TestTruncateId::test_exact_length_unchanged",
-        "line": 68,
-        "markers": [],
-        "docstring": "ID exactly at length is unchanged.",
-        "class": "TestTruncateId"
-      },
-      {
-        "name": "TestTruncateId::test_empty_string",
-        "line": 73,
-        "markers": [],
-        "docstring": "Empty string returns empty string.",
-        "class": "TestTruncateId"
-      },
-      {
-        "name": "TestTruncateId::test_none_returns_empty",
-        "line": 78,
-        "markers": [],
-        "docstring": "None returns empty string.",
-        "class": "TestTruncateId"
-      },
-      {
-        "name": "TestTruncateId::test_default_length",
-        "line": 83,
-        "markers": [],
-        "docstring": "Default length is 8.",
-        "class": "TestTruncateId"
-      },
-      {
-        "name": "TestCreateNumericCell::test_basic_value",
-        "line": 93,
-        "markers": [],
-        "docstring": "Basic value is converted to right-aligned Text.",
-        "class": "TestCreateNumericCell"
-      },
-      {
-        "name": "TestCreateNumericCell::test_with_format_function",
-        "line": 100,
-        "markers": [],
-        "docstring": "Format function is applied to value.",
-        "class": "TestCreateNumericCell"
-      },
-      {
-        "name": "TestCreateNumericCell::test_custom_justify",
-        "line": 105,
-        "markers": [],
-        "docstring": "Custom justify is applied.",
-        "class": "TestCreateNumericCell"
-      },
-      {
-        "name": "TestCreateNumericCell::test_float_value",
-        "line": 110,
-        "markers": [],
-        "docstring": "Float value is handled correctly.",
-        "class": "TestCreateNumericCell"
-      },
-      {
-        "name": "TestCreateNumericCell::test_string_value",
-        "line": 115,
-        "markers": [],
-        "docstring": "String value is handled correctly.",
-        "class": "TestCreateNumericCell"
-      },
+    "tests/unit/gpt_trader/tui/utilities/test_table_formatting_sorting.py": [
       {
         "name": "TestSortTableData::test_sort_by_string_column_ascending",
-        "line": 124,
+        "line": 11,
         "markers": [],
         "docstring": "Sort by string column ascending.",
         "class": "TestSortTableData"
       },
       {
         "name": "TestSortTableData::test_sort_by_string_column_descending",
-        "line": 136,
+        "line": 23,
         "markers": [],
         "docstring": "Sort by string column descending.",
         "class": "TestSortTableData"
       },
       {
         "name": "TestSortTableData::test_sort_by_numeric_column",
-        "line": 148,
+        "line": 35,
         "markers": [],
         "docstring": "Sort by numeric column.",
         "class": "TestSortTableData"
       },
       {
         "name": "TestSortTableData::test_sort_empty_list",
-        "line": 160,
+        "line": 47,
         "markers": [],
         "docstring": "Sort empty list returns empty list.",
         "class": "TestSortTableData"
       },
       {
         "name": "TestSortTableData::test_sort_missing_column",
-        "line": 165,
+        "line": 52,
         "markers": [],
         "docstring": "Sort by missing column doesn't crash.",
         "class": "TestSortTableData"
       },
       {
         "name": "TestSortTableData::test_sort_decimal_values",
-        "line": 172,
+        "line": 58,
         "markers": [],
         "docstring": "Sort Decimal values correctly.",
         "class": "TestSortTableData"
       },
       {
-        "name": "TestFormatTableCell::test_format_text",
-        "line": 187,
-        "markers": [],
-        "docstring": "Format text value.",
-        "class": "TestFormatTableCell"
-      },
-      {
-        "name": "TestFormatTableCell::test_format_currency",
-        "line": 192,
-        "markers": [],
-        "docstring": "Format currency value.",
-        "class": "TestFormatTableCell"
-      },
-      {
-        "name": "TestFormatTableCell::test_format_percentage",
-        "line": 198,
-        "markers": [],
-        "docstring": "Format percentage value.",
-        "class": "TestFormatTableCell"
-      },
-      {
-        "name": "TestFormatTableCell::test_format_number",
-        "line": 205,
-        "markers": [],
-        "docstring": "Format number value.",
-        "class": "TestFormatTableCell"
-      },
-      {
-        "name": "TestFormatTableCell::test_format_decimal",
-        "line": 211,
-        "markers": [],
-        "docstring": "Format Decimal value.",
-        "class": "TestFormatTableCell"
-      },
-      {
-        "name": "TestFormatTableCell::test_format_with_max_length",
-        "line": 216,
-        "markers": [],
-        "docstring": "Format with max length truncation.",
-        "class": "TestFormatTableCell"
-      },
-      {
-        "name": "TestFormatTableCell::test_format_none",
-        "line": 221,
-        "markers": [],
-        "docstring": "Format None value.",
-        "class": "TestFormatTableCell"
-      },
-      {
         "name": "TestGetSortIndicator::test_no_sort",
-        "line": 230,
+        "line": 73,
         "markers": [],
         "docstring": "No sort indicator when column not sorted.",
         "class": "TestGetSortIndicator"
       },
       {
         "name": "TestGetSortIndicator::test_ascending_indicator",
-        "line": 235,
+        "line": 78,
         "markers": [],
         "docstring": "Ascending indicator for sorted column.",
         "class": "TestGetSortIndicator"
       },
       {
         "name": "TestGetSortIndicator::test_descending_indicator",
-        "line": 240,
+        "line": 83,
         "markers": [],
         "docstring": "Descending indicator for sorted column.",
         "class": "TestGetSortIndicator"
       },
       {
         "name": "TestGetSortIndicator::test_different_column_no_indicator",
-        "line": 245,
+        "line": 88,
         "markers": [],
         "docstring": "No indicator when different column is sorted.",
         "class": "TestGetSortIndicator"
       },
       {
+        "name": "test_sort_by_string_column_ascending",
+        "line": 11,
+        "markers": [],
+        "docstring": "Sort by string column ascending."
+      },
+      {
+        "name": "test_sort_by_string_column_descending",
+        "line": 23,
+        "markers": [],
+        "docstring": "Sort by string column descending."
+      },
+      {
+        "name": "test_sort_by_numeric_column",
+        "line": 35,
+        "markers": [],
+        "docstring": "Sort by numeric column."
+      },
+      {
+        "name": "test_sort_empty_list",
+        "line": 47,
+        "markers": [],
+        "docstring": "Sort empty list returns empty list."
+      },
+      {
+        "name": "test_sort_missing_column",
+        "line": 52,
+        "markers": [],
+        "docstring": "Sort by missing column doesn't crash."
+      },
+      {
+        "name": "test_sort_decimal_values",
+        "line": 58,
+        "markers": [],
+        "docstring": "Sort Decimal values correctly."
+      },
+      {
+        "name": "test_no_sort",
+        "line": 73,
+        "markers": [],
+        "docstring": "No sort indicator when column not sorted."
+      },
+      {
+        "name": "test_ascending_indicator",
+        "line": 78,
+        "markers": [],
+        "docstring": "Ascending indicator for sorted column."
+      },
+      {
+        "name": "test_descending_indicator",
+        "line": 83,
+        "markers": [],
+        "docstring": "Descending indicator for sorted column."
+      },
+      {
+        "name": "test_different_column_no_indicator",
+        "line": 88,
+        "markers": [],
+        "docstring": "No indicator when different column is sorted."
+      }
+    ],
+    "tests/unit/gpt_trader/tui/utilities/test_table_formatting_clipboard.py": [
+      {
         "name": "TestCopyToClipboard::test_copy_on_macos",
-        "line": 255,
+        "line": 12,
         "markers": [],
         "docstring": "Test clipboard copy on macOS.",
         "class": "TestCopyToClipboard"
       },
       {
         "name": "TestCopyToClipboard::test_copy_empty_string",
-        "line": 263,
+        "line": 20,
         "markers": [],
         "docstring": "Copy empty string doesn't crash.",
         "class": "TestCopyToClipboard"
       },
       {
+        "name": "test_copy_on_macos",
+        "line": 12,
+        "markers": [],
+        "docstring": "Test clipboard copy on macOS."
+      },
+      {
+        "name": "test_copy_empty_string",
+        "line": 20,
+        "markers": [],
+        "docstring": "Copy empty string doesn't crash."
+      }
+    ],
+    "tests/unit/gpt_trader/tui/utilities/test_table_formatting_timestamp.py": [
+      {
+        "name": "TestFormatTimestamp::test_iso_with_milliseconds_and_z",
+        "line": 13,
+        "markers": [],
+        "docstring": "Parse full ISO 8601 format with Z suffix.",
+        "class": "TestFormatTimestamp"
+      },
+      {
+        "name": "TestFormatTimestamp::test_iso_with_milliseconds",
+        "line": 18,
+        "markers": [],
+        "docstring": "Parse ISO format with milliseconds.",
+        "class": "TestFormatTimestamp"
+      },
+      {
+        "name": "TestFormatTimestamp::test_iso_without_milliseconds",
+        "line": 23,
+        "markers": [],
+        "docstring": "Parse ISO format without milliseconds.",
+        "class": "TestFormatTimestamp"
+      },
+      {
+        "name": "TestFormatTimestamp::test_empty_string",
+        "line": 28,
+        "markers": [],
+        "docstring": "Empty string returns empty string.",
+        "class": "TestFormatTimestamp"
+      },
+      {
+        "name": "TestFormatTimestamp::test_no_t_separator",
+        "line": 33,
+        "markers": [],
+        "docstring": "String without T returns original if parsing fails.",
+        "class": "TestFormatTimestamp"
+      },
+      {
+        "name": "TestFormatTimestamp::test_already_formatted_time",
+        "line": 38,
+        "markers": [],
+        "docstring": "Already formatted time returns as-is if no T.",
+        "class": "TestFormatTimestamp"
+      },
+      {
         "name": "TestParseTimestampToEpoch::test_float_passthrough",
-        "line": 273,
+        "line": 47,
         "markers": [],
         "docstring": "Float epoch timestamp passes through unchanged.",
         "class": "TestParseTimestampToEpoch"
       },
       {
         "name": "TestParseTimestampToEpoch::test_int_passthrough",
-        "line": 278,
+        "line": 52,
         "markers": [],
         "docstring": "Int epoch timestamp converts to float.",
         "class": "TestParseTimestampToEpoch"
       },
       {
         "name": "TestParseTimestampToEpoch::test_iso_with_z_suffix",
-        "line": 283,
+        "line": 57,
         "markers": [],
         "docstring": "Parse ISO timestamp with Z suffix.",
         "class": "TestParseTimestampToEpoch"
       },
       {
         "name": "TestParseTimestampToEpoch::test_iso_with_microseconds_and_z",
-        "line": 291,
+        "line": 65,
         "markers": [],
         "docstring": "Parse ISO timestamp with microseconds and Z suffix.",
         "class": "TestParseTimestampToEpoch"
       },
       {
         "name": "TestParseTimestampToEpoch::test_iso_without_z",
-        "line": 297,
+        "line": 71,
         "markers": [],
         "docstring": "Parse ISO timestamp without Z suffix.",
         "class": "TestParseTimestampToEpoch"
       },
       {
         "name": "TestParseTimestampToEpoch::test_none_returns_none",
-        "line": 303,
+        "line": 77,
         "markers": [],
         "docstring": "None input returns None.",
         "class": "TestParseTimestampToEpoch"
       },
       {
         "name": "TestParseTimestampToEpoch::test_empty_string_returns_none",
-        "line": 308,
+        "line": 82,
         "markers": [],
         "docstring": "Empty string returns None.",
         "class": "TestParseTimestampToEpoch"
       },
       {
         "name": "TestParseTimestampToEpoch::test_invalid_string_returns_none",
-        "line": 313,
+        "line": 87,
         "markers": [],
         "docstring": "Invalid string returns None.",
         "class": "TestParseTimestampToEpoch"
       },
       {
         "name": "TestGetAgeSeconds::test_recent_timestamp",
-        "line": 322,
+        "line": 96,
         "markers": [],
         "docstring": "Recent timestamp returns small positive age.",
         "class": "TestGetAgeSeconds"
       },
       {
         "name": "TestGetAgeSeconds::test_old_timestamp",
-        "line": 332,
+        "line": 106,
         "markers": [],
         "docstring": "Old timestamp returns correct age.",
         "class": "TestGetAgeSeconds"
       },
       {
         "name": "TestGetAgeSeconds::test_none_returns_none",
-        "line": 342,
+        "line": 116,
         "markers": [],
         "docstring": "None input returns None.",
         "class": "TestGetAgeSeconds"
       },
       {
         "name": "TestGetAgeSeconds::test_zero_returns_none",
-        "line": 347,
+        "line": 121,
         "markers": [],
         "docstring": "Zero timestamp returns None (invalid).",
         "class": "TestGetAgeSeconds"
       },
       {
         "name": "TestGetAgeSeconds::test_negative_returns_none",
-        "line": 352,
+        "line": 126,
         "markers": [],
         "docstring": "Negative timestamp returns None (invalid).",
         "class": "TestGetAgeSeconds"
       },
       {
         "name": "TestGetAgeSeconds::test_future_timestamp_returns_zero",
-        "line": 357,
+        "line": 131,
         "markers": [],
         "docstring": "Future timestamp returns 0 (not negative).",
         "class": "TestGetAgeSeconds"
       },
       {
         "name": "test_iso_with_milliseconds_and_z",
-        "line": 24,
+        "line": 13,
         "markers": [],
         "docstring": "Parse full ISO 8601 format with Z suffix."
       },
       {
         "name": "test_iso_with_milliseconds",
-        "line": 29,
+        "line": 18,
         "markers": [],
         "docstring": "Parse ISO format with milliseconds."
       },
       {
         "name": "test_iso_without_milliseconds",
-        "line": 34,
+        "line": 23,
         "markers": [],
         "docstring": "Parse ISO format without milliseconds."
       },
       {
         "name": "test_empty_string",
-        "line": 39,
+        "line": 28,
         "markers": [],
         "docstring": "Empty string returns empty string."
       },
       {
         "name": "test_no_t_separator",
-        "line": 44,
+        "line": 33,
         "markers": [],
         "docstring": "String without T returns original if parsing fails."
       },
       {
         "name": "test_already_formatted_time",
-        "line": 49,
+        "line": 38,
         "markers": [],
         "docstring": "Already formatted time returns as-is if no T."
       },
       {
-        "name": "test_long_id_truncated",
-        "line": 58,
-        "markers": [],
-        "docstring": "Long ID is truncated to last N characters."
-      },
-      {
-        "name": "test_short_id_unchanged",
-        "line": 63,
-        "markers": [],
-        "docstring": "Short ID (shorter than length) is unchanged."
-      },
-      {
-        "name": "test_exact_length_unchanged",
-        "line": 68,
-        "markers": [],
-        "docstring": "ID exactly at length is unchanged."
-      },
-      {
-        "name": "test_empty_string",
-        "line": 73,
-        "markers": [],
-        "docstring": "Empty string returns empty string."
-      },
-      {
-        "name": "test_none_returns_empty",
-        "line": 78,
-        "markers": [],
-        "docstring": "None returns empty string."
-      },
-      {
-        "name": "test_default_length",
-        "line": 83,
-        "markers": [],
-        "docstring": "Default length is 8."
-      },
-      {
-        "name": "test_basic_value",
-        "line": 93,
-        "markers": [],
-        "docstring": "Basic value is converted to right-aligned Text."
-      },
-      {
-        "name": "test_with_format_function",
-        "line": 100,
-        "markers": [],
-        "docstring": "Format function is applied to value."
-      },
-      {
-        "name": "test_custom_justify",
-        "line": 105,
-        "markers": [],
-        "docstring": "Custom justify is applied."
-      },
-      {
-        "name": "test_float_value",
-        "line": 110,
-        "markers": [],
-        "docstring": "Float value is handled correctly."
-      },
-      {
-        "name": "test_string_value",
-        "line": 115,
-        "markers": [],
-        "docstring": "String value is handled correctly."
-      },
-      {
-        "name": "test_sort_by_string_column_ascending",
-        "line": 124,
-        "markers": [],
-        "docstring": "Sort by string column ascending."
-      },
-      {
-        "name": "test_sort_by_string_column_descending",
-        "line": 136,
-        "markers": [],
-        "docstring": "Sort by string column descending."
-      },
-      {
-        "name": "test_sort_by_numeric_column",
-        "line": 148,
-        "markers": [],
-        "docstring": "Sort by numeric column."
-      },
-      {
-        "name": "test_sort_empty_list",
-        "line": 160,
-        "markers": [],
-        "docstring": "Sort empty list returns empty list."
-      },
-      {
-        "name": "test_sort_missing_column",
-        "line": 165,
-        "markers": [],
-        "docstring": "Sort by missing column doesn't crash."
-      },
-      {
-        "name": "test_sort_decimal_values",
-        "line": 172,
-        "markers": [],
-        "docstring": "Sort Decimal values correctly."
-      },
-      {
-        "name": "test_format_text",
-        "line": 187,
-        "markers": [],
-        "docstring": "Format text value."
-      },
-      {
-        "name": "test_format_currency",
-        "line": 192,
-        "markers": [],
-        "docstring": "Format currency value."
-      },
-      {
-        "name": "test_format_percentage",
-        "line": 198,
-        "markers": [],
-        "docstring": "Format percentage value."
-      },
-      {
-        "name": "test_format_number",
-        "line": 205,
-        "markers": [],
-        "docstring": "Format number value."
-      },
-      {
-        "name": "test_format_decimal",
-        "line": 211,
-        "markers": [],
-        "docstring": "Format Decimal value."
-      },
-      {
-        "name": "test_format_with_max_length",
-        "line": 216,
-        "markers": [],
-        "docstring": "Format with max length truncation."
-      },
-      {
-        "name": "test_format_none",
-        "line": 221,
-        "markers": [],
-        "docstring": "Format None value."
-      },
-      {
-        "name": "test_no_sort",
-        "line": 230,
-        "markers": [],
-        "docstring": "No sort indicator when column not sorted."
-      },
-      {
-        "name": "test_ascending_indicator",
-        "line": 235,
-        "markers": [],
-        "docstring": "Ascending indicator for sorted column."
-      },
-      {
-        "name": "test_descending_indicator",
-        "line": 240,
-        "markers": [],
-        "docstring": "Descending indicator for sorted column."
-      },
-      {
-        "name": "test_different_column_no_indicator",
-        "line": 245,
-        "markers": [],
-        "docstring": "No indicator when different column is sorted."
-      },
-      {
-        "name": "test_copy_on_macos",
-        "line": 255,
-        "markers": [],
-        "docstring": "Test clipboard copy on macOS."
-      },
-      {
-        "name": "test_copy_empty_string",
-        "line": 263,
-        "markers": [],
-        "docstring": "Copy empty string doesn't crash."
-      },
-      {
         "name": "test_float_passthrough",
-        "line": 273,
+        "line": 47,
         "markers": [],
         "docstring": "Float epoch timestamp passes through unchanged."
       },
       {
         "name": "test_int_passthrough",
-        "line": 278,
+        "line": 52,
         "markers": [],
         "docstring": "Int epoch timestamp converts to float."
       },
       {
         "name": "test_iso_with_z_suffix",
-        "line": 283,
+        "line": 57,
         "markers": [],
         "docstring": "Parse ISO timestamp with Z suffix."
       },
       {
         "name": "test_iso_with_microseconds_and_z",
-        "line": 291,
+        "line": 65,
         "markers": [],
         "docstring": "Parse ISO timestamp with microseconds and Z suffix."
       },
       {
         "name": "test_iso_without_z",
-        "line": 297,
+        "line": 71,
         "markers": [],
         "docstring": "Parse ISO timestamp without Z suffix."
       },
       {
         "name": "test_none_returns_none",
-        "line": 303,
+        "line": 77,
         "markers": [],
         "docstring": "None input returns None."
       },
       {
         "name": "test_empty_string_returns_none",
-        "line": 308,
+        "line": 82,
         "markers": [],
         "docstring": "Empty string returns None."
       },
       {
         "name": "test_invalid_string_returns_none",
-        "line": 313,
+        "line": 87,
         "markers": [],
         "docstring": "Invalid string returns None."
       },
       {
         "name": "test_recent_timestamp",
-        "line": 322,
+        "line": 96,
         "markers": [],
         "docstring": "Recent timestamp returns small positive age."
       },
       {
         "name": "test_old_timestamp",
-        "line": 332,
+        "line": 106,
         "markers": [],
         "docstring": "Old timestamp returns correct age."
       },
       {
         "name": "test_none_returns_none",
-        "line": 342,
+        "line": 116,
         "markers": [],
         "docstring": "None input returns None."
       },
       {
         "name": "test_zero_returns_none",
-        "line": 347,
+        "line": 121,
         "markers": [],
         "docstring": "Zero timestamp returns None (invalid)."
       },
       {
         "name": "test_negative_returns_none",
-        "line": 352,
+        "line": 126,
         "markers": [],
         "docstring": "Negative timestamp returns None (invalid)."
       },
       {
         "name": "test_future_timestamp_returns_zero",
-        "line": 357,
+        "line": 131,
         "markers": [],
         "docstring": "Future timestamp returns 0 (not negative)."
+      }
+    ],
+    "tests/unit/gpt_trader/tui/utilities/test_table_formatting_cells.py": [
+      {
+        "name": "TestCreateNumericCell::test_basic_value",
+        "line": 13,
+        "markers": [],
+        "docstring": "Basic value is converted to right-aligned Text.",
+        "class": "TestCreateNumericCell"
+      },
+      {
+        "name": "TestCreateNumericCell::test_with_format_function",
+        "line": 20,
+        "markers": [],
+        "docstring": "Format function is applied to value.",
+        "class": "TestCreateNumericCell"
+      },
+      {
+        "name": "TestCreateNumericCell::test_custom_justify",
+        "line": 25,
+        "markers": [],
+        "docstring": "Custom justify is applied.",
+        "class": "TestCreateNumericCell"
+      },
+      {
+        "name": "TestCreateNumericCell::test_float_value",
+        "line": 30,
+        "markers": [],
+        "docstring": "Float value is handled correctly.",
+        "class": "TestCreateNumericCell"
+      },
+      {
+        "name": "TestCreateNumericCell::test_string_value",
+        "line": 35,
+        "markers": [],
+        "docstring": "String value is handled correctly.",
+        "class": "TestCreateNumericCell"
+      },
+      {
+        "name": "TestFormatTableCell::test_format_text",
+        "line": 44,
+        "markers": [],
+        "docstring": "Format text value.",
+        "class": "TestFormatTableCell"
+      },
+      {
+        "name": "TestFormatTableCell::test_format_currency",
+        "line": 49,
+        "markers": [],
+        "docstring": "Format currency value.",
+        "class": "TestFormatTableCell"
+      },
+      {
+        "name": "TestFormatTableCell::test_format_percentage",
+        "line": 55,
+        "markers": [],
+        "docstring": "Format percentage value.",
+        "class": "TestFormatTableCell"
+      },
+      {
+        "name": "TestFormatTableCell::test_format_number",
+        "line": 62,
+        "markers": [],
+        "docstring": "Format number value.",
+        "class": "TestFormatTableCell"
+      },
+      {
+        "name": "TestFormatTableCell::test_format_decimal",
+        "line": 67,
+        "markers": [],
+        "docstring": "Format Decimal value.",
+        "class": "TestFormatTableCell"
+      },
+      {
+        "name": "TestFormatTableCell::test_format_with_max_length",
+        "line": 72,
+        "markers": [],
+        "docstring": "Format with max length truncation.",
+        "class": "TestFormatTableCell"
+      },
+      {
+        "name": "TestFormatTableCell::test_format_none",
+        "line": 77,
+        "markers": [],
+        "docstring": "Format None value.",
+        "class": "TestFormatTableCell"
+      },
+      {
+        "name": "test_basic_value",
+        "line": 13,
+        "markers": [],
+        "docstring": "Basic value is converted to right-aligned Text."
+      },
+      {
+        "name": "test_with_format_function",
+        "line": 20,
+        "markers": [],
+        "docstring": "Format function is applied to value."
+      },
+      {
+        "name": "test_custom_justify",
+        "line": 25,
+        "markers": [],
+        "docstring": "Custom justify is applied."
+      },
+      {
+        "name": "test_float_value",
+        "line": 30,
+        "markers": [],
+        "docstring": "Float value is handled correctly."
+      },
+      {
+        "name": "test_string_value",
+        "line": 35,
+        "markers": [],
+        "docstring": "String value is handled correctly."
+      },
+      {
+        "name": "test_format_text",
+        "line": 44,
+        "markers": [],
+        "docstring": "Format text value."
+      },
+      {
+        "name": "test_format_currency",
+        "line": 49,
+        "markers": [],
+        "docstring": "Format currency value."
+      },
+      {
+        "name": "test_format_percentage",
+        "line": 55,
+        "markers": [],
+        "docstring": "Format percentage value."
+      },
+      {
+        "name": "test_format_number",
+        "line": 62,
+        "markers": [],
+        "docstring": "Format number value."
+      },
+      {
+        "name": "test_format_decimal",
+        "line": 67,
+        "markers": [],
+        "docstring": "Format Decimal value."
+      },
+      {
+        "name": "test_format_with_max_length",
+        "line": 72,
+        "markers": [],
+        "docstring": "Format with max length truncation."
+      },
+      {
+        "name": "test_format_none",
+        "line": 77,
+        "markers": [],
+        "docstring": "Format None value."
+      }
+    ],
+    "tests/unit/gpt_trader/tui/utilities/test_table_formatting_truncate_id.py": [
+      {
+        "name": "TestTruncateId::test_long_id_truncated",
+        "line": 9,
+        "markers": [],
+        "docstring": "Long ID is truncated to last N characters.",
+        "class": "TestTruncateId"
+      },
+      {
+        "name": "TestTruncateId::test_short_id_unchanged",
+        "line": 14,
+        "markers": [],
+        "docstring": "Short ID (shorter than length) is unchanged.",
+        "class": "TestTruncateId"
+      },
+      {
+        "name": "TestTruncateId::test_exact_length_unchanged",
+        "line": 19,
+        "markers": [],
+        "docstring": "ID exactly at length is unchanged.",
+        "class": "TestTruncateId"
+      },
+      {
+        "name": "TestTruncateId::test_empty_string",
+        "line": 24,
+        "markers": [],
+        "docstring": "Empty string returns empty string.",
+        "class": "TestTruncateId"
+      },
+      {
+        "name": "TestTruncateId::test_none_returns_empty",
+        "line": 29,
+        "markers": [],
+        "docstring": "None returns empty string.",
+        "class": "TestTruncateId"
+      },
+      {
+        "name": "TestTruncateId::test_default_length",
+        "line": 34,
+        "markers": [],
+        "docstring": "Default length is 8.",
+        "class": "TestTruncateId"
+      },
+      {
+        "name": "test_long_id_truncated",
+        "line": 9,
+        "markers": [],
+        "docstring": "Long ID is truncated to last N characters."
+      },
+      {
+        "name": "test_short_id_unchanged",
+        "line": 14,
+        "markers": [],
+        "docstring": "Short ID (shorter than length) is unchanged."
+      },
+      {
+        "name": "test_exact_length_unchanged",
+        "line": 19,
+        "markers": [],
+        "docstring": "ID exactly at length is unchanged."
+      },
+      {
+        "name": "test_empty_string",
+        "line": 24,
+        "markers": [],
+        "docstring": "Empty string returns empty string."
+      },
+      {
+        "name": "test_none_returns_empty",
+        "line": 29,
+        "markers": [],
+        "docstring": "None returns empty string."
+      },
+      {
+        "name": "test_default_length",
+        "line": 34,
+        "markers": [],
+        "docstring": "Default length is 8."
       }
     ],
     "tests/unit/gpt_trader/tui/adapters/test_null_status_reporter.py": [
@@ -52548,6 +52578,164 @@
         "docstring": "Test retrieving slippage multiplier for product."
       }
     ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service_ticker_service.py": [
+      {
+        "name": "TestCoinbaseTickerService::test_init_default_symbols",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test initialization with default empty symbols.",
+        "class": "TestCoinbaseTickerService"
+      },
+      {
+        "name": "TestCoinbaseTickerService::test_init_with_symbols",
+        "line": 19,
+        "markers": [],
+        "docstring": "Test initialization with provided symbols.",
+        "class": "TestCoinbaseTickerService"
+      },
+      {
+        "name": "TestCoinbaseTickerService::test_set_symbols",
+        "line": 25,
+        "markers": [],
+        "docstring": "Test setting symbols after initialization.",
+        "class": "TestCoinbaseTickerService"
+      },
+      {
+        "name": "TestCoinbaseTickerService::test_start_sets_running",
+        "line": 32,
+        "markers": [],
+        "docstring": "Test that start sets running flag and creates thread.",
+        "class": "TestCoinbaseTickerService"
+      },
+      {
+        "name": "TestCoinbaseTickerService::test_stop_clears_running",
+        "line": 43,
+        "markers": [],
+        "docstring": "Test that stop clears running flag.",
+        "class": "TestCoinbaseTickerService"
+      },
+      {
+        "name": "TestCoinbaseTickerService::test_stop_without_start",
+        "line": 52,
+        "markers": [],
+        "docstring": "Test that stop handles case where thread was never started.",
+        "class": "TestCoinbaseTickerService"
+      },
+      {
+        "name": "TestCoinbaseTickerService::test_get_mark_returns_none",
+        "line": 60,
+        "markers": [],
+        "docstring": "Test that get_mark returns None (stub implementation).",
+        "class": "TestCoinbaseTickerService"
+      },
+      {
+        "name": "TestCoinbaseTickerService::test_service_lifecycle",
+        "line": 68,
+        "markers": [],
+        "docstring": "Test full start/stop lifecycle.",
+        "class": "TestCoinbaseTickerService"
+      },
+      {
+        "name": "TestCoinbaseTickerService::test_run_method_does_nothing",
+        "line": 80,
+        "markers": [],
+        "docstring": "Test that _run method is a no-op (stub).",
+        "class": "TestCoinbaseTickerService"
+      },
+      {
+        "name": "TestCoinbaseTickerService::test_service_set_symbols_replaces",
+        "line": 88,
+        "markers": [],
+        "docstring": "Test that set_symbols replaces all symbols.",
+        "class": "TestCoinbaseTickerService"
+      },
+      {
+        "name": "TestCoinbaseTickerService::test_service_set_empty_symbols",
+        "line": 96,
+        "markers": [],
+        "docstring": "Test setting empty symbols list.",
+        "class": "TestCoinbaseTickerService"
+      },
+      {
+        "name": "TestCoinbaseTickerService::test_multiple_start_stop_cycles",
+        "line": 103,
+        "markers": [],
+        "docstring": "Test multiple start/stop cycles.",
+        "class": "TestCoinbaseTickerService"
+      },
+      {
+        "name": "test_init_default_symbols",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test initialization with default empty symbols."
+      },
+      {
+        "name": "test_init_with_symbols",
+        "line": 19,
+        "markers": [],
+        "docstring": "Test initialization with provided symbols."
+      },
+      {
+        "name": "test_set_symbols",
+        "line": 25,
+        "markers": [],
+        "docstring": "Test setting symbols after initialization."
+      },
+      {
+        "name": "test_start_sets_running",
+        "line": 32,
+        "markers": [],
+        "docstring": "Test that start sets running flag and creates thread."
+      },
+      {
+        "name": "test_stop_clears_running",
+        "line": 43,
+        "markers": [],
+        "docstring": "Test that stop clears running flag."
+      },
+      {
+        "name": "test_stop_without_start",
+        "line": 52,
+        "markers": [],
+        "docstring": "Test that stop handles case where thread was never started."
+      },
+      {
+        "name": "test_get_mark_returns_none",
+        "line": 60,
+        "markers": [],
+        "docstring": "Test that get_mark returns None (stub implementation)."
+      },
+      {
+        "name": "test_service_lifecycle",
+        "line": 68,
+        "markers": [],
+        "docstring": "Test full start/stop lifecycle."
+      },
+      {
+        "name": "test_run_method_does_nothing",
+        "line": 80,
+        "markers": [],
+        "docstring": "Test that _run method is a no-op (stub)."
+      },
+      {
+        "name": "test_service_set_symbols_replaces",
+        "line": 88,
+        "markers": [],
+        "docstring": "Test that set_symbols replaces all symbols."
+      },
+      {
+        "name": "test_service_set_empty_symbols",
+        "line": 96,
+        "markers": [],
+        "docstring": "Test setting empty symbols list."
+      },
+      {
+        "name": "test_multiple_start_stop_cycles",
+        "line": 103,
+        "markers": [],
+        "docstring": "Test multiple start/stop cycles."
+      }
+    ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_auth.py": [
       {
         "name": "test_cdp_jwt_auth_generates_valid_headers",
@@ -53376,6 +53564,34 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service_alias.py": [
+      {
+        "name": "TestMarketDataServiceAlias::test_alias_is_coinbase_ticker_service",
+        "line": 14,
+        "markers": [],
+        "docstring": "Test that MarketDataService is an alias for CoinbaseTickerService.",
+        "class": "TestMarketDataServiceAlias"
+      },
+      {
+        "name": "TestMarketDataServiceAlias::test_alias_instantiation",
+        "line": 18,
+        "markers": [],
+        "docstring": "Test that MarketDataService can be instantiated.",
+        "class": "TestMarketDataServiceAlias"
+      },
+      {
+        "name": "test_alias_is_coinbase_ticker_service",
+        "line": 14,
+        "markers": [],
+        "docstring": "Test that MarketDataService is an alias for CoinbaseTickerService."
+      },
+      {
+        "name": "test_alias_instantiation",
+        "line": 18,
+        "markers": [],
+        "docstring": "Test that MarketDataService can be instantiated."
+      }
+    ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_models_edges.py": [
       {
         "name": "test_to_product_perpetual_logs_invalid_funding_time",
@@ -53424,6 +53640,218 @@
         "line": 162,
         "markers": [],
         "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service_ticker.py": [
+      {
+        "name": "TestTicker::test_ticker_creation",
+        "line": 12,
+        "markers": [],
+        "docstring": "Test creating a Ticker instance.",
+        "class": "TestTicker"
+      },
+      {
+        "name": "TestTicker::test_ticker_equality",
+        "line": 29,
+        "markers": [],
+        "docstring": "Test Ticker equality based on dataclass behavior.",
+        "class": "TestTicker"
+      },
+      {
+        "name": "TestTicker::test_ticker_different_symbols",
+        "line": 37,
+        "markers": [],
+        "docstring": "Test Tickers with different symbols are not equal.",
+        "class": "TestTicker"
+      },
+      {
+        "name": "TestTicker::test_ticker_with_zero_values",
+        "line": 45,
+        "markers": [],
+        "docstring": "Test ticker with zero bid/ask/last.",
+        "class": "TestTicker"
+      },
+      {
+        "name": "TestTicker::test_ticker_with_negative_values",
+        "line": 59,
+        "markers": [],
+        "docstring": "Test ticker with negative values (edge case, shouldn't happen in practice).",
+        "class": "TestTicker"
+      },
+      {
+        "name": "test_ticker_creation",
+        "line": 12,
+        "markers": [],
+        "docstring": "Test creating a Ticker instance."
+      },
+      {
+        "name": "test_ticker_equality",
+        "line": 29,
+        "markers": [],
+        "docstring": "Test Ticker equality based on dataclass behavior."
+      },
+      {
+        "name": "test_ticker_different_symbols",
+        "line": 37,
+        "markers": [],
+        "docstring": "Test Tickers with different symbols are not equal."
+      },
+      {
+        "name": "test_ticker_with_zero_values",
+        "line": 45,
+        "markers": [],
+        "docstring": "Test ticker with zero bid/ask/last."
+      },
+      {
+        "name": "test_ticker_with_negative_values",
+        "line": 59,
+        "markers": [],
+        "docstring": "Test ticker with negative values (edge case, shouldn't happen in practice)."
+      }
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service_ticker_cache.py": [
+      {
+        "name": "TestTickerCache::test_cache_init_default_ttl",
+        "line": 14,
+        "markers": [],
+        "docstring": "Test default TTL is 5 seconds.",
+        "class": "TestTickerCache"
+      },
+      {
+        "name": "TestTickerCache::test_cache_init_custom_ttl",
+        "line": 19,
+        "markers": [],
+        "docstring": "Test custom TTL can be set.",
+        "class": "TestTickerCache"
+      },
+      {
+        "name": "TestTickerCache::test_cache_update_and_get",
+        "line": 24,
+        "markers": [],
+        "docstring": "Test updating and retrieving from cache.",
+        "class": "TestTickerCache"
+      },
+      {
+        "name": "TestTickerCache::test_cache_get_nonexistent",
+        "line": 40,
+        "markers": [],
+        "docstring": "Test getting nonexistent symbol returns None.",
+        "class": "TestTickerCache"
+      },
+      {
+        "name": "TestTickerCache::test_cache_update_overwrites",
+        "line": 48,
+        "markers": [],
+        "docstring": "Test that updating same symbol overwrites.",
+        "class": "TestTickerCache"
+      },
+      {
+        "name": "TestTickerCache::test_cache_multiple_symbols",
+        "line": 64,
+        "markers": [],
+        "docstring": "Test caching multiple symbols.",
+        "class": "TestTickerCache"
+      },
+      {
+        "name": "TestTickerCache::test_is_stale_nonexistent_symbol",
+        "line": 78,
+        "markers": [],
+        "docstring": "Test that nonexistent symbol is considered stale.",
+        "class": "TestTickerCache"
+      },
+      {
+        "name": "TestTickerCache::test_is_stale_fresh_ticker",
+        "line": 84,
+        "markers": [],
+        "docstring": "Test that recently updated ticker is not stale.",
+        "class": "TestTickerCache"
+      },
+      {
+        "name": "TestTickerCache::test_is_stale_old_ticker",
+        "line": 98,
+        "markers": [],
+        "docstring": "Test that old ticker is considered stale.",
+        "class": "TestTickerCache"
+      },
+      {
+        "name": "TestTickerCache::test_cache_with_zero_ttl",
+        "line": 113,
+        "markers": [],
+        "docstring": "Test cache with zero TTL (always stale).",
+        "class": "TestTickerCache"
+      },
+      {
+        "name": "TestTickerCache::test_empty_symbol_string",
+        "line": 127,
+        "markers": [],
+        "docstring": "Test handling of empty symbol string.",
+        "class": "TestTickerCache"
+      },
+      {
+        "name": "test_cache_init_default_ttl",
+        "line": 14,
+        "markers": [],
+        "docstring": "Test default TTL is 5 seconds."
+      },
+      {
+        "name": "test_cache_init_custom_ttl",
+        "line": 19,
+        "markers": [],
+        "docstring": "Test custom TTL can be set."
+      },
+      {
+        "name": "test_cache_update_and_get",
+        "line": 24,
+        "markers": [],
+        "docstring": "Test updating and retrieving from cache."
+      },
+      {
+        "name": "test_cache_get_nonexistent",
+        "line": 40,
+        "markers": [],
+        "docstring": "Test getting nonexistent symbol returns None."
+      },
+      {
+        "name": "test_cache_update_overwrites",
+        "line": 48,
+        "markers": [],
+        "docstring": "Test that updating same symbol overwrites."
+      },
+      {
+        "name": "test_cache_multiple_symbols",
+        "line": 64,
+        "markers": [],
+        "docstring": "Test caching multiple symbols."
+      },
+      {
+        "name": "test_is_stale_nonexistent_symbol",
+        "line": 78,
+        "markers": [],
+        "docstring": "Test that nonexistent symbol is considered stale."
+      },
+      {
+        "name": "test_is_stale_fresh_ticker",
+        "line": 84,
+        "markers": [],
+        "docstring": "Test that recently updated ticker is not stale."
+      },
+      {
+        "name": "test_is_stale_old_ticker",
+        "line": 98,
+        "markers": [],
+        "docstring": "Test that old ticker is considered stale."
+      },
+      {
+        "name": "test_cache_with_zero_ttl",
+        "line": 113,
+        "markers": [],
+        "docstring": "Test cache with zero TTL (always stale)."
+      },
+      {
+        "name": "test_empty_symbol_string",
+        "line": 127,
+        "markers": [],
+        "docstring": "Test handling of empty symbol string."
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_intx_endpoints.py": [
@@ -55125,411 +55553,6 @@
         "line": 63,
         "markers": [],
         "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service.py": [
-      {
-        "name": "TestTicker::test_ticker_creation",
-        "line": 23,
-        "markers": [],
-        "docstring": "Test creating a Ticker instance.",
-        "class": "TestTicker"
-      },
-      {
-        "name": "TestTicker::test_ticker_equality",
-        "line": 40,
-        "markers": [],
-        "docstring": "Test Ticker equality based on dataclass behavior.",
-        "class": "TestTicker"
-      },
-      {
-        "name": "TestTicker::test_ticker_different_symbols",
-        "line": 48,
-        "markers": [],
-        "docstring": "Test Tickers with different symbols are not equal.",
-        "class": "TestTicker"
-      },
-      {
-        "name": "TestTickerCache::test_cache_init_default_ttl",
-        "line": 65,
-        "markers": [],
-        "docstring": "Test default TTL is 5 seconds.",
-        "class": "TestTickerCache"
-      },
-      {
-        "name": "TestTickerCache::test_cache_init_custom_ttl",
-        "line": 70,
-        "markers": [],
-        "docstring": "Test custom TTL can be set.",
-        "class": "TestTickerCache"
-      },
-      {
-        "name": "TestTickerCache::test_cache_update_and_get",
-        "line": 75,
-        "markers": [],
-        "docstring": "Test updating and retrieving from cache.",
-        "class": "TestTickerCache"
-      },
-      {
-        "name": "TestTickerCache::test_cache_get_nonexistent",
-        "line": 91,
-        "markers": [],
-        "docstring": "Test getting nonexistent symbol returns None.",
-        "class": "TestTickerCache"
-      },
-      {
-        "name": "TestTickerCache::test_cache_update_overwrites",
-        "line": 99,
-        "markers": [],
-        "docstring": "Test that updating same symbol overwrites.",
-        "class": "TestTickerCache"
-      },
-      {
-        "name": "TestTickerCache::test_cache_multiple_symbols",
-        "line": 115,
-        "markers": [],
-        "docstring": "Test caching multiple symbols.",
-        "class": "TestTickerCache"
-      },
-      {
-        "name": "TestTickerCache::test_is_stale_nonexistent_symbol",
-        "line": 129,
-        "markers": [],
-        "docstring": "Test that nonexistent symbol is considered stale.",
-        "class": "TestTickerCache"
-      },
-      {
-        "name": "TestTickerCache::test_is_stale_fresh_ticker",
-        "line": 135,
-        "markers": [],
-        "docstring": "Test that recently updated ticker is not stale.",
-        "class": "TestTickerCache"
-      },
-      {
-        "name": "TestTickerCache::test_is_stale_old_ticker",
-        "line": 149,
-        "markers": [],
-        "docstring": "Test that old ticker is considered stale.",
-        "class": "TestTickerCache"
-      },
-      {
-        "name": "TestTickerCache::test_is_stale_exactly_at_ttl",
-        "line": 164,
-        "markers": [],
-        "docstring": "Test staleness at exact TTL boundary.",
-        "class": "TestTickerCache"
-      },
-      {
-        "name": "TestCoinbaseTickerService::test_init_default_symbols",
-        "line": 195,
-        "markers": [],
-        "docstring": "Test initialization with default empty symbols.",
-        "class": "TestCoinbaseTickerService"
-      },
-      {
-        "name": "TestCoinbaseTickerService::test_init_with_symbols",
-        "line": 203,
-        "markers": [],
-        "docstring": "Test initialization with provided symbols.",
-        "class": "TestCoinbaseTickerService"
-      },
-      {
-        "name": "TestCoinbaseTickerService::test_set_symbols",
-        "line": 209,
-        "markers": [],
-        "docstring": "Test setting symbols after initialization.",
-        "class": "TestCoinbaseTickerService"
-      },
-      {
-        "name": "TestCoinbaseTickerService::test_start_sets_running",
-        "line": 216,
-        "markers": [],
-        "docstring": "Test that start sets running flag and creates thread.",
-        "class": "TestCoinbaseTickerService"
-      },
-      {
-        "name": "TestCoinbaseTickerService::test_stop_clears_running",
-        "line": 228,
-        "markers": [],
-        "docstring": "Test that stop clears running flag.",
-        "class": "TestCoinbaseTickerService"
-      },
-      {
-        "name": "TestCoinbaseTickerService::test_stop_without_start",
-        "line": 237,
-        "markers": [],
-        "docstring": "Test that stop handles case where thread was never started.",
-        "class": "TestCoinbaseTickerService"
-      },
-      {
-        "name": "TestCoinbaseTickerService::test_get_mark_returns_none",
-        "line": 246,
-        "markers": [],
-        "docstring": "Test that get_mark returns None (stub implementation).",
-        "class": "TestCoinbaseTickerService"
-      },
-      {
-        "name": "TestCoinbaseTickerService::test_service_lifecycle",
-        "line": 254,
-        "markers": [],
-        "docstring": "Test full start/stop lifecycle.",
-        "class": "TestCoinbaseTickerService"
-      },
-      {
-        "name": "TestCoinbaseTickerService::test_run_method_does_nothing",
-        "line": 270,
-        "markers": [],
-        "docstring": "Test that _run method is a no-op (stub).",
-        "class": "TestCoinbaseTickerService"
-      },
-      {
-        "name": "TestMarketDataServiceAlias::test_alias_is_coinbase_ticker_service",
-        "line": 287,
-        "markers": [],
-        "docstring": "Test that MarketDataService is an alias for CoinbaseTickerService.",
-        "class": "TestMarketDataServiceAlias"
-      },
-      {
-        "name": "TestMarketDataServiceAlias::test_alias_instantiation",
-        "line": 291,
-        "markers": [],
-        "docstring": "Test that MarketDataService can be instantiated.",
-        "class": "TestMarketDataServiceAlias"
-      },
-      {
-        "name": "TestMarketDataEdgeCases::test_ticker_with_zero_values",
-        "line": 307,
-        "markers": [],
-        "docstring": "Test ticker with zero bid/ask/last.",
-        "class": "TestMarketDataEdgeCases"
-      },
-      {
-        "name": "TestMarketDataEdgeCases::test_ticker_with_negative_values",
-        "line": 321,
-        "markers": [],
-        "docstring": "Test ticker with negative values (edge case, shouldn't happen in practice).",
-        "class": "TestMarketDataEdgeCases"
-      },
-      {
-        "name": "TestMarketDataEdgeCases::test_cache_with_zero_ttl",
-        "line": 333,
-        "markers": [],
-        "docstring": "Test cache with zero TTL (always stale).",
-        "class": "TestMarketDataEdgeCases"
-      },
-      {
-        "name": "TestMarketDataEdgeCases::test_empty_symbol_string",
-        "line": 348,
-        "markers": [],
-        "docstring": "Test handling of empty symbol string.",
-        "class": "TestMarketDataEdgeCases"
-      },
-      {
-        "name": "TestMarketDataEdgeCases::test_service_set_symbols_replaces",
-        "line": 358,
-        "markers": [],
-        "docstring": "Test that set_symbols replaces all symbols.",
-        "class": "TestMarketDataEdgeCases"
-      },
-      {
-        "name": "TestMarketDataEdgeCases::test_service_set_empty_symbols",
-        "line": 366,
-        "markers": [],
-        "docstring": "Test setting empty symbols list.",
-        "class": "TestMarketDataEdgeCases"
-      },
-      {
-        "name": "TestMarketDataEdgeCases::test_multiple_start_stop_cycles",
-        "line": 373,
-        "markers": [],
-        "docstring": "Test multiple start/stop cycles.",
-        "class": "TestMarketDataEdgeCases"
-      },
-      {
-        "name": "test_ticker_creation",
-        "line": 23,
-        "markers": [],
-        "docstring": "Test creating a Ticker instance."
-      },
-      {
-        "name": "test_ticker_equality",
-        "line": 40,
-        "markers": [],
-        "docstring": "Test Ticker equality based on dataclass behavior."
-      },
-      {
-        "name": "test_ticker_different_symbols",
-        "line": 48,
-        "markers": [],
-        "docstring": "Test Tickers with different symbols are not equal."
-      },
-      {
-        "name": "test_cache_init_default_ttl",
-        "line": 65,
-        "markers": [],
-        "docstring": "Test default TTL is 5 seconds."
-      },
-      {
-        "name": "test_cache_init_custom_ttl",
-        "line": 70,
-        "markers": [],
-        "docstring": "Test custom TTL can be set."
-      },
-      {
-        "name": "test_cache_update_and_get",
-        "line": 75,
-        "markers": [],
-        "docstring": "Test updating and retrieving from cache."
-      },
-      {
-        "name": "test_cache_get_nonexistent",
-        "line": 91,
-        "markers": [],
-        "docstring": "Test getting nonexistent symbol returns None."
-      },
-      {
-        "name": "test_cache_update_overwrites",
-        "line": 99,
-        "markers": [],
-        "docstring": "Test that updating same symbol overwrites."
-      },
-      {
-        "name": "test_cache_multiple_symbols",
-        "line": 115,
-        "markers": [],
-        "docstring": "Test caching multiple symbols."
-      },
-      {
-        "name": "test_is_stale_nonexistent_symbol",
-        "line": 129,
-        "markers": [],
-        "docstring": "Test that nonexistent symbol is considered stale."
-      },
-      {
-        "name": "test_is_stale_fresh_ticker",
-        "line": 135,
-        "markers": [],
-        "docstring": "Test that recently updated ticker is not stale."
-      },
-      {
-        "name": "test_is_stale_old_ticker",
-        "line": 149,
-        "markers": [],
-        "docstring": "Test that old ticker is considered stale."
-      },
-      {
-        "name": "test_is_stale_exactly_at_ttl",
-        "line": 164,
-        "markers": [],
-        "docstring": "Test staleness at exact TTL boundary."
-      },
-      {
-        "name": "test_init_default_symbols",
-        "line": 195,
-        "markers": [],
-        "docstring": "Test initialization with default empty symbols."
-      },
-      {
-        "name": "test_init_with_symbols",
-        "line": 203,
-        "markers": [],
-        "docstring": "Test initialization with provided symbols."
-      },
-      {
-        "name": "test_set_symbols",
-        "line": 209,
-        "markers": [],
-        "docstring": "Test setting symbols after initialization."
-      },
-      {
-        "name": "test_start_sets_running",
-        "line": 216,
-        "markers": [],
-        "docstring": "Test that start sets running flag and creates thread."
-      },
-      {
-        "name": "test_stop_clears_running",
-        "line": 228,
-        "markers": [],
-        "docstring": "Test that stop clears running flag."
-      },
-      {
-        "name": "test_stop_without_start",
-        "line": 237,
-        "markers": [],
-        "docstring": "Test that stop handles case where thread was never started."
-      },
-      {
-        "name": "test_get_mark_returns_none",
-        "line": 246,
-        "markers": [],
-        "docstring": "Test that get_mark returns None (stub implementation)."
-      },
-      {
-        "name": "test_service_lifecycle",
-        "line": 254,
-        "markers": [],
-        "docstring": "Test full start/stop lifecycle."
-      },
-      {
-        "name": "test_run_method_does_nothing",
-        "line": 270,
-        "markers": [],
-        "docstring": "Test that _run method is a no-op (stub)."
-      },
-      {
-        "name": "test_alias_is_coinbase_ticker_service",
-        "line": 287,
-        "markers": [],
-        "docstring": "Test that MarketDataService is an alias for CoinbaseTickerService."
-      },
-      {
-        "name": "test_alias_instantiation",
-        "line": 291,
-        "markers": [],
-        "docstring": "Test that MarketDataService can be instantiated."
-      },
-      {
-        "name": "test_ticker_with_zero_values",
-        "line": 307,
-        "markers": [],
-        "docstring": "Test ticker with zero bid/ask/last."
-      },
-      {
-        "name": "test_ticker_with_negative_values",
-        "line": 321,
-        "markers": [],
-        "docstring": "Test ticker with negative values (edge case, shouldn't happen in practice)."
-      },
-      {
-        "name": "test_cache_with_zero_ttl",
-        "line": 333,
-        "markers": [],
-        "docstring": "Test cache with zero TTL (always stale)."
-      },
-      {
-        "name": "test_empty_symbol_string",
-        "line": 348,
-        "markers": [],
-        "docstring": "Test handling of empty symbol string."
-      },
-      {
-        "name": "test_service_set_symbols_replaces",
-        "line": 358,
-        "markers": [],
-        "docstring": "Test that set_symbols replaces all symbols."
-      },
-      {
-        "name": "test_service_set_empty_symbols",
-        "line": 366,
-        "markers": [],
-        "docstring": "Test setting empty symbols list."
-      },
-      {
-        "name": "test_multiple_start_stop_cycles",
-        "line": 373,
-        "markers": [],
-        "docstring": "Test multiple start/stop cycles."
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_service_order_and_size_methods.py": [
@@ -72134,6 +72157,203 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/monitoring/daily_report/test_models_daily_report_to_text.py": [
+      {
+        "name": "TestDailyReportToText::test_returns_string",
+        "line": 11,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReportToText"
+      },
+      {
+        "name": "TestDailyReportToText::test_contains_header",
+        "line": 16,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReportToText"
+      },
+      {
+        "name": "TestDailyReportToText::test_contains_account_summary",
+        "line": 33,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReportToText"
+      },
+      {
+        "name": "TestDailyReportToText::test_account_summary_handles_missing_equity",
+        "line": 39,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReportToText"
+      },
+      {
+        "name": "TestDailyReportToText::test_contains_pnl_breakdown",
+        "line": 45,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReportToText"
+      },
+      {
+        "name": "TestDailyReportToText::test_contains_performance_metrics",
+        "line": 53,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReportToText"
+      },
+      {
+        "name": "TestDailyReportToText::test_contains_trade_statistics",
+        "line": 61,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReportToText"
+      },
+      {
+        "name": "TestDailyReportToText::test_contains_health_metrics",
+        "line": 69,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReportToText"
+      },
+      {
+        "name": "TestDailyReportToText::test_shows_no_guard_triggers",
+        "line": 76,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReportToText"
+      },
+      {
+        "name": "TestDailyReportToText::test_shows_guard_triggers",
+        "line": 81,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReportToText"
+      },
+      {
+        "name": "TestDailyReportToText::test_shows_circuit_breaker_ok",
+        "line": 88,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReportToText"
+      },
+      {
+        "name": "TestDailyReportToText::test_shows_circuit_breaker_state",
+        "line": 93,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReportToText"
+      },
+      {
+        "name": "TestDailyReportToText::test_contains_symbol_performance",
+        "line": 101,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReportToText"
+      },
+      {
+        "name": "TestDailyReportToText::test_no_symbol_section_when_empty",
+        "line": 112,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReportToText"
+      },
+      {
+        "name": "TestDailyReportToText::test_symbol_with_no_regime",
+        "line": 117,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReportToText"
+      },
+      {
+        "name": "test_returns_string",
+        "line": 11,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_contains_header",
+        "line": 16,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_contains_account_summary",
+        "line": 33,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_account_summary_handles_missing_equity",
+        "line": 39,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_contains_pnl_breakdown",
+        "line": 45,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_contains_performance_metrics",
+        "line": 53,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_contains_trade_statistics",
+        "line": 61,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_contains_health_metrics",
+        "line": 69,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_shows_no_guard_triggers",
+        "line": 76,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_shows_guard_triggers",
+        "line": 81,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_shows_circuit_breaker_ok",
+        "line": 88,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_shows_circuit_breaker_state",
+        "line": 93,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_contains_symbol_performance",
+        "line": 101,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_no_symbol_section_when_empty",
+        "line": 112,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_symbol_with_no_regime",
+        "line": 117,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/monitoring/daily_report/test_loaders_edges.py": [
       {
         "name": "test_load_metrics_missing_file_returns_empty",
@@ -72192,6 +72412,164 @@
       {
         "name": "test_load_runtime_fingerprint_missing_db",
         "line": 186,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/monitoring/daily_report/test_models_daily_report_to_dict.py": [
+      {
+        "name": "TestDailyReportToDict::test_returns_dict",
+        "line": 9,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReportToDict"
+      },
+      {
+        "name": "TestDailyReportToDict::test_date_and_profile",
+        "line": 14,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReportToDict"
+      },
+      {
+        "name": "TestDailyReportToDict::test_account_section",
+        "line": 21,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReportToDict"
+      },
+      {
+        "name": "TestDailyReportToDict::test_account_section_with_missing_equity",
+        "line": 28,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReportToDict"
+      },
+      {
+        "name": "TestDailyReportToDict::test_pnl_section",
+        "line": 35,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReportToDict"
+      },
+      {
+        "name": "TestDailyReportToDict::test_performance_section",
+        "line": 44,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReportToDict"
+      },
+      {
+        "name": "TestDailyReportToDict::test_trades_section",
+        "line": 53,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReportToDict"
+      },
+      {
+        "name": "TestDailyReportToDict::test_risk_section",
+        "line": 64,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReportToDict"
+      },
+      {
+        "name": "TestDailyReportToDict::test_symbols_section",
+        "line": 73,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReportToDict"
+      },
+      {
+        "name": "TestDailyReportToDict::test_symbol_pnl_nested",
+        "line": 84,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReportToDict"
+      },
+      {
+        "name": "TestDailyReportToDict::test_health_section",
+        "line": 101,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReportToDict"
+      },
+      {
+        "name": "TestDailyReportToDict::test_health_liveness_and_runtime_fields",
+        "line": 109,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReportToDict"
+      },
+      {
+        "name": "test_returns_dict",
+        "line": 9,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_date_and_profile",
+        "line": 14,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_account_section",
+        "line": 21,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_account_section_with_missing_equity",
+        "line": 28,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_pnl_section",
+        "line": 35,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_performance_section",
+        "line": 44,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_trades_section",
+        "line": 53,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_risk_section",
+        "line": 64,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_symbols_section",
+        "line": 73,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_symbol_pnl_nested",
+        "line": 84,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_health_section",
+        "line": 101,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_health_liveness_and_runtime_fields",
+        "line": 109,
         "markers": [],
         "docstring": ""
       }
@@ -72512,6 +72890,73 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/monitoring/daily_report/test_models_daily_report_core.py": [
+      {
+        "name": "TestDailyReport::test_creation",
+        "line": 9,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReport"
+      },
+      {
+        "name": "TestDailyReport::test_pnl_fields",
+        "line": 15,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReport"
+      },
+      {
+        "name": "TestDailyReport::test_performance_fields",
+        "line": 23,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReport"
+      },
+      {
+        "name": "TestDailyReport::test_trade_fields",
+        "line": 29,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReport"
+      },
+      {
+        "name": "TestDailyReport::test_health_fields",
+        "line": 35,
+        "markers": [],
+        "docstring": "",
+        "class": "TestDailyReport"
+      },
+      {
+        "name": "test_creation",
+        "line": 9,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_pnl_fields",
+        "line": 15,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_performance_fields",
+        "line": 23,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_trade_fields",
+        "line": 29,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_health_fields",
+        "line": 35,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/monitoring/daily_report/test_generator_edges.py": [
       {
         "name": "test_generate_uses_expected_files_and_cutoff",
@@ -72703,6 +73148,47 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/monitoring/daily_report/test_models_symbol_performance.py": [
+      {
+        "name": "TestSymbolPerformance::test_creation_with_required_field",
+        "line": 11,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSymbolPerformance"
+      },
+      {
+        "name": "TestSymbolPerformance::test_defaults",
+        "line": 15,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSymbolPerformance"
+      },
+      {
+        "name": "TestSymbolPerformance::test_full_creation",
+        "line": 29,
+        "markers": [],
+        "docstring": "",
+        "class": "TestSymbolPerformance"
+      },
+      {
+        "name": "test_creation_with_required_field",
+        "line": 11,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_defaults",
+        "line": 15,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_full_creation",
+        "line": 29,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/monitoring/daily_report/test_analytics_risk_metrics.py": [
       {
         "name": "TestCalculateRiskMetrics::test_empty_events",
@@ -72753,463 +73239,6 @@
       {
         "name": "test_tracks_circuit_breaker_state",
         "line": 31,
-        "markers": [],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/monitoring/daily_report/test_models.py": [
-      {
-        "name": "TestSymbolPerformance::test_creation_with_required_field",
-        "line": 76,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSymbolPerformance"
-      },
-      {
-        "name": "TestSymbolPerformance::test_defaults",
-        "line": 80,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSymbolPerformance"
-      },
-      {
-        "name": "TestSymbolPerformance::test_full_creation",
-        "line": 94,
-        "markers": [],
-        "docstring": "",
-        "class": "TestSymbolPerformance"
-      },
-      {
-        "name": "TestDailyReport::test_creation",
-        "line": 106,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDailyReport"
-      },
-      {
-        "name": "TestDailyReport::test_pnl_fields",
-        "line": 112,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDailyReport"
-      },
-      {
-        "name": "TestDailyReport::test_performance_fields",
-        "line": 120,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDailyReport"
-      },
-      {
-        "name": "TestDailyReport::test_trade_fields",
-        "line": 126,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDailyReport"
-      },
-      {
-        "name": "TestDailyReport::test_health_fields",
-        "line": 132,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDailyReport"
-      },
-      {
-        "name": "TestDailyReportToDict::test_returns_dict",
-        "line": 143,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDailyReportToDict"
-      },
-      {
-        "name": "TestDailyReportToDict::test_date_and_profile",
-        "line": 148,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDailyReportToDict"
-      },
-      {
-        "name": "TestDailyReportToDict::test_account_section",
-        "line": 155,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDailyReportToDict"
-      },
-      {
-        "name": "TestDailyReportToDict::test_account_section_with_missing_equity",
-        "line": 162,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDailyReportToDict"
-      },
-      {
-        "name": "TestDailyReportToDict::test_pnl_section",
-        "line": 169,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDailyReportToDict"
-      },
-      {
-        "name": "TestDailyReportToDict::test_performance_section",
-        "line": 178,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDailyReportToDict"
-      },
-      {
-        "name": "TestDailyReportToDict::test_trades_section",
-        "line": 187,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDailyReportToDict"
-      },
-      {
-        "name": "TestDailyReportToDict::test_risk_section",
-        "line": 198,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDailyReportToDict"
-      },
-      {
-        "name": "TestDailyReportToDict::test_symbols_section",
-        "line": 207,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDailyReportToDict"
-      },
-      {
-        "name": "TestDailyReportToDict::test_symbol_pnl_nested",
-        "line": 218,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDailyReportToDict"
-      },
-      {
-        "name": "TestDailyReportToDict::test_health_section",
-        "line": 235,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDailyReportToDict"
-      },
-      {
-        "name": "TestDailyReportToDict::test_health_liveness_and_runtime_fields",
-        "line": 243,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDailyReportToDict"
-      },
-      {
-        "name": "TestDailyReportToText::test_returns_string",
-        "line": 256,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDailyReportToText"
-      },
-      {
-        "name": "TestDailyReportToText::test_contains_header",
-        "line": 261,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDailyReportToText"
-      },
-      {
-        "name": "TestDailyReportToText::test_contains_account_summary",
-        "line": 278,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDailyReportToText"
-      },
-      {
-        "name": "TestDailyReportToText::test_account_summary_handles_missing_equity",
-        "line": 284,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDailyReportToText"
-      },
-      {
-        "name": "TestDailyReportToText::test_contains_pnl_breakdown",
-        "line": 290,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDailyReportToText"
-      },
-      {
-        "name": "TestDailyReportToText::test_contains_performance_metrics",
-        "line": 298,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDailyReportToText"
-      },
-      {
-        "name": "TestDailyReportToText::test_contains_trade_statistics",
-        "line": 306,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDailyReportToText"
-      },
-      {
-        "name": "TestDailyReportToText::test_contains_health_metrics",
-        "line": 314,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDailyReportToText"
-      },
-      {
-        "name": "TestDailyReportToText::test_shows_no_guard_triggers",
-        "line": 321,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDailyReportToText"
-      },
-      {
-        "name": "TestDailyReportToText::test_shows_guard_triggers",
-        "line": 326,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDailyReportToText"
-      },
-      {
-        "name": "TestDailyReportToText::test_shows_circuit_breaker_ok",
-        "line": 333,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDailyReportToText"
-      },
-      {
-        "name": "TestDailyReportToText::test_shows_circuit_breaker_state",
-        "line": 338,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDailyReportToText"
-      },
-      {
-        "name": "TestDailyReportToText::test_contains_symbol_performance",
-        "line": 346,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDailyReportToText"
-      },
-      {
-        "name": "TestDailyReportToText::test_no_symbol_section_when_empty",
-        "line": 357,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDailyReportToText"
-      },
-      {
-        "name": "TestDailyReportToText::test_symbol_with_no_regime",
-        "line": 362,
-        "markers": [],
-        "docstring": "",
-        "class": "TestDailyReportToText"
-      },
-      {
-        "name": "test_creation_with_required_field",
-        "line": 76,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_defaults",
-        "line": 80,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_full_creation",
-        "line": 94,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_creation",
-        "line": 106,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_pnl_fields",
-        "line": 112,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_performance_fields",
-        "line": 120,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_trade_fields",
-        "line": 126,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_health_fields",
-        "line": 132,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_returns_dict",
-        "line": 143,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_date_and_profile",
-        "line": 148,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_account_section",
-        "line": 155,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_account_section_with_missing_equity",
-        "line": 162,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_pnl_section",
-        "line": 169,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_performance_section",
-        "line": 178,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_trades_section",
-        "line": 187,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_risk_section",
-        "line": 198,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_symbols_section",
-        "line": 207,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_symbol_pnl_nested",
-        "line": 218,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_health_section",
-        "line": 235,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_health_liveness_and_runtime_fields",
-        "line": 243,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_returns_string",
-        "line": 256,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_contains_header",
-        "line": 261,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_contains_account_summary",
-        "line": 278,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_account_summary_handles_missing_equity",
-        "line": 284,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_contains_pnl_breakdown",
-        "line": 290,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_contains_performance_metrics",
-        "line": 298,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_contains_trade_statistics",
-        "line": 306,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_contains_health_metrics",
-        "line": 314,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_shows_no_guard_triggers",
-        "line": 321,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_shows_guard_triggers",
-        "line": 326,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_shows_circuit_breaker_ok",
-        "line": 333,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_shows_circuit_breaker_state",
-        "line": 338,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_contains_symbol_performance",
-        "line": 346,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_no_symbol_section_when_empty",
-        "line": 357,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_symbol_with_no_regime",
-        "line": 362,
         "markers": [],
         "docstring": ""
       }

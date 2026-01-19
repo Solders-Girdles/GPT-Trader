@@ -23,7 +23,6 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_accounts.py",  # account snapshot + treasury surface coverage
     "tests/unit/gpt_trader/errors/test_base.py",  # error taxonomy coverage
     "tests/unit/gpt_trader/validation/test_calculation_validator.py",  # calculation validator coverage
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service.py",  # market data service contract
     "tests/unit/gpt_trader/features/data/test_data_module.py",  # 295 lines: comprehensive data module contract with storage/cache stubs
     "tests/unit/gpt_trader/security/security_validator/test_rate_limiting.py",  # 305 lines: rate limiter escalation, blocking, and reset regression suite
     "tests/unit/gpt_trader/security/security_validator/test_suspicious_activity.py",  # 294 lines: suspicious activity detection heuristics and alert coverage
@@ -46,8 +45,6 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/monitoring/test_alert_types.py",  # alert type coverage
     "tests/unit/gpt_trader/app/test_health_server.py",  # health server endpoint coverage
     "tests/unit/gpt_trader/backtesting/engine/test_clock.py",  # simulation clock scenarios
-    "tests/unit/gpt_trader/monitoring/daily_report/test_models.py",  # daily report model coverage
-    "tests/integration/test_optimize_feature.py",  # optimization feature integration coverage
     "tests/unit/gpt_trader/features/optimize/test_walk_forward.py",  # walk-forward analysis comprehensive scenarios
     "tests/unit/gpt_trader/monitoring/notifications/test_notification_service.py",  # notification backend coverage
     "tests/unit/gpt_trader/monitoring/test_heartbeat.py",  # heartbeat monitoring scenarios
@@ -73,10 +70,7 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/features/strategy_dev/lab/test_experiment.py",
     # TUI Phase 3.5 comprehensive test suites
     "tests/unit/gpt_trader/tui/state_management/test_validators.py",  # state validator permutation matrix
-    "tests/unit/gpt_trader/tui/test_screen_flows.py",  # screen navigation and lifecycle scenarios
     "tests/unit/gpt_trader/tui/services/test_mode_service.py",  # mode service state transitions
-    "tests/unit/gpt_trader/tui/test_thresholds.py",  # unified threshold system test coverage (status levels, risk, confidence)
-    "tests/unit/gpt_trader/tui/utilities/test_table_formatting.py",  # table formatting utilities with timestamp parsing, sorting, clipboard, and cell formatting
     "tests/unit/gpt_trader/tui/services/test_onboarding_service.py",  # onboarding service state machine and persistence
     "tests/unit/gpt_trader/tui/widgets/test_strategy.py",  # strategy widget comprehensive display scenarios
     "tests/unit/gpt_trader/tui/widgets/test_risk_detail_modal.py",  # risk detail modal comprehensive scenarios

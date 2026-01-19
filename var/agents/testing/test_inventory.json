@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 11054,
-    "total_files": 833,
+    "total_files": 846,
     "markers_used": 9
   },
   "marker_definitions": {
@@ -244,12 +244,16 @@
       "tests/unit/gpt_trader/config/test_env_utils.py"
     ],
     "security": [
+      "tests/unit/gpt_trader/security/test_request_validator_size_limits.py",
+      "tests/unit/gpt_trader/security/test_request_validator_edge_cases.py",
+      "tests/unit/gpt_trader/security/test_request_validator_missing_fields.py",
       "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer_logging.py",
       "tests/unit/gpt_trader/security/test_input_sanitizer.py",
       "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer_rules.py",
       "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer_internals_and_singleton.py",
-      "tests/unit/gpt_trader/security/test_request_validator.py",
+      "tests/unit/gpt_trader/security/test_request_validator_success.py",
       "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer_validation.py",
+      "tests/unit/gpt_trader/security/test_request_validator_invalid_action.py",
       "tests/unit/gpt_trader/security/secrets_manager/test_cache_population.py",
       "tests/unit/gpt_trader/security/secrets_manager/test_error_bootstrap.py",
       "tests/unit/gpt_trader/security/secrets_manager/test_error_file_io.py",
@@ -268,18 +272,20 @@
       "tests/unit/gpt_trader/security/secrets_manager/test_cache_special_cases.py",
       "tests/unit/gpt_trader/security/security_validator/test_convenience_wrappers.py",
       "tests/unit/gpt_trader/security/security_validator/test_trading_hours.py",
+      "tests/unit/gpt_trader/security/security_validator/test_suspicious_activity_error_handling.py",
       "tests/unit/gpt_trader/security/security_validator/test_order_validation_quantity_and_price_rules.py",
       "tests/unit/gpt_trader/security/security_validator/test_order_validation_account_value_effects.py",
+      "tests/unit/gpt_trader/security/security_validator/test_suspicious_activity_thresholds_and_edges.py",
       "tests/unit/gpt_trader/security/security_validator/test_symbol_validation.py",
       "tests/unit/gpt_trader/security/security_validator/test_order_validation_symbol_and_required_fields.py",
       "tests/unit/gpt_trader/security/security_validator/test_rate_limiting_basic.py",
       "tests/unit/gpt_trader/security/security_validator/test_numeric_valid_inputs.py",
       "tests/unit/gpt_trader/security/security_validator/test_input_sanitisation.py",
+      "tests/unit/gpt_trader/security/security_validator/test_suspicious_activity_detection_samples.py",
       "tests/unit/gpt_trader/security/security_validator/test_rate_limiting_concurrency.py",
       "tests/unit/gpt_trader/security/security_validator/test_order_validation_payload_and_errors.py",
       "tests/unit/gpt_trader/security/security_validator/test_order_validation_value_limits.py",
       "tests/unit/gpt_trader/security/security_validator/test_rate_limiting_time_windows.py",
-      "tests/unit/gpt_trader/security/security_validator/test_suspicious_activity.py",
       "tests/unit/gpt_trader/security/security_validator/test_numeric_edge_behaviour.py",
       "tests/unit/gpt_trader/security/security_validator/test_order_validation_happy_path.py",
       "tests/unit/gpt_trader/security/security_validator/test_rate_limiting_escalation_and_clearing.py"
@@ -584,18 +590,23 @@
     ],
     "preflight": [
       "tests/unit/gpt_trader/preflight/test_checks_diagnostics.py",
+      "tests/unit/gpt_trader/preflight/test_context_credentials.py",
       "tests/unit/gpt_trader/preflight/test_checks_connectivity_key_permissions_core.py",
+      "tests/unit/gpt_trader/preflight/test_context_colors_and_init.py",
       "tests/unit/gpt_trader/preflight/test_checks_risk.py",
       "tests/unit/gpt_trader/preflight/test_checks_simulation.py",
-      "tests/unit/gpt_trader/preflight/test_core.py",
+      "tests/unit/gpt_trader/preflight/test_core_delegations.py",
+      "tests/unit/gpt_trader/preflight/test_core_helpers.py",
       "tests/unit/gpt_trader/preflight/test_checks_connectivity_key_permissions_retries.py",
+      "tests/unit/gpt_trader/preflight/test_context_logging.py",
+      "tests/unit/gpt_trader/preflight/test_core_init.py",
       "tests/unit/gpt_trader/preflight/test_report.py",
       "tests/unit/gpt_trader/preflight/test_checks_profile.py",
       "tests/unit/gpt_trader/preflight/test_checks_connectivity_api_connectivity.py",
       "tests/unit/gpt_trader/preflight/test_checks_dependencies.py",
       "tests/unit/gpt_trader/preflight/test_permissions_backoff.py",
       "tests/unit/gpt_trader/preflight/test_validation_result.py",
-      "tests/unit/gpt_trader/preflight/test_context.py",
+      "tests/unit/gpt_trader/preflight/test_context_remote_checks.py",
       "tests/unit/gpt_trader/preflight/test_checks_system.py",
       "tests/unit/gpt_trader/preflight/test_checks_connectivity_key_permissions_intx.py",
       "tests/unit/gpt_trader/preflight/test_checks_readiness.py",
@@ -844,13 +855,15 @@
       "tests/unit/gpt_trader/features/strategy_dev/config/test_strategy_profile.py",
       "tests/unit/gpt_trader/features/strategy_dev/lab/test_experiment.py",
       "tests/unit/gpt_trader/features/strategy_dev/lab/test_parameter_grid.py",
-      "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_profile.py",
+      "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_profile_core.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_entry_and_exit_signals.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_indicators_and_confidence.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_perps_baseline_edges.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_models.py",
+      "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_profile_configs.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_spot_and_perps_strategies.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_strategy_edges.py",
+      "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_profile_strategy.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_bundle_and_performance.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_profile_edges.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful.py",
@@ -4358,6 +4371,155 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/security/test_request_validator_size_limits.py": [
+      {
+        "name": "TestValidateRequestSizeLimit::test_validate_request_within_size_limit",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test that request within size limit passes.",
+        "class": "TestValidateRequestSizeLimit"
+      },
+      {
+        "name": "TestValidateRequestSizeLimit::test_validate_request_exceeds_size_limit",
+        "line": 23,
+        "markers": [],
+        "docstring": "Test that request exceeding 1MB limit fails.",
+        "class": "TestValidateRequestSizeLimit"
+      },
+      {
+        "name": "TestValidateRequestSizeLimit::test_validate_request_unserializable_content",
+        "line": 39,
+        "markers": [],
+        "docstring": "Test that request with unserializable content skips size check gracefully.",
+        "class": "TestValidateRequestSizeLimit"
+      },
+      {
+        "name": "test_validate_request_within_size_limit",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test that request within size limit passes."
+      },
+      {
+        "name": "test_validate_request_exceeds_size_limit",
+        "line": 23,
+        "markers": [],
+        "docstring": "Test that request exceeding 1MB limit fails."
+      },
+      {
+        "name": "test_validate_request_unserializable_content",
+        "line": 39,
+        "markers": [],
+        "docstring": "Test that request with unserializable content skips size check gracefully."
+      }
+    ],
+    "tests/unit/gpt_trader/security/test_request_validator_edge_cases.py": [
+      {
+        "name": "TestValidateRequestEdgeCases::test_validate_request_action_with_spaces",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test action with spaces.",
+        "class": "TestValidateRequestEdgeCases"
+      },
+      {
+        "name": "TestValidateRequestEdgeCases::test_validate_request_numeric_timestamp",
+        "line": 23,
+        "markers": [],
+        "docstring": "Test that numeric timestamp value is acceptable.",
+        "class": "TestValidateRequestEdgeCases"
+      },
+      {
+        "name": "TestValidateRequestEdgeCases::test_validate_request_none_values",
+        "line": 35,
+        "markers": [],
+        "docstring": "Test request with None values for required fields.",
+        "class": "TestValidateRequestEdgeCases"
+      },
+      {
+        "name": "TestValidateRequestEdgeCases::test_validate_request_whitespace_action",
+        "line": 49,
+        "markers": [],
+        "docstring": "Test action that is only whitespace.\n\nNote: The InputSanitizer allows whitespace-only strings through\nas it focuses on detecting malicious patterns (SQL injection, XSS, etc.)\nrather than enforcing non-empty content. Whitespace validation should\nbe handled at the application layer if required.",
+        "class": "TestValidateRequestEdgeCases"
+      },
+      {
+        "name": "test_validate_request_action_with_spaces",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test action with spaces."
+      },
+      {
+        "name": "test_validate_request_numeric_timestamp",
+        "line": 23,
+        "markers": [],
+        "docstring": "Test that numeric timestamp value is acceptable."
+      },
+      {
+        "name": "test_validate_request_none_values",
+        "line": 35,
+        "markers": [],
+        "docstring": "Test request with None values for required fields."
+      },
+      {
+        "name": "test_validate_request_whitespace_action",
+        "line": 49,
+        "markers": [],
+        "docstring": "Test action that is only whitespace.\n\nNote: The InputSanitizer allows whitespace-only strings through\nas it focuses on detecting malicious patterns (SQL injection, XSS, etc.)\nrather than enforcing non-empty content. Whitespace validation should\nbe handled at the application layer if required."
+      }
+    ],
+    "tests/unit/gpt_trader/security/test_request_validator_missing_fields.py": [
+      {
+        "name": "TestValidateRequestMissingFields::test_validate_request_missing_action",
+        "line": 13,
+        "markers": [],
+        "docstring": "Test that missing action field returns error.",
+        "class": "TestValidateRequestMissingFields"
+      },
+      {
+        "name": "TestValidateRequestMissingFields::test_validate_request_missing_timestamp",
+        "line": 25,
+        "markers": [],
+        "docstring": "Test that missing timestamp field returns error.",
+        "class": "TestValidateRequestMissingFields"
+      },
+      {
+        "name": "TestValidateRequestMissingFields::test_validate_request_missing_both_fields",
+        "line": 37,
+        "markers": [],
+        "docstring": "Test that missing both fields returns multiple errors.",
+        "class": "TestValidateRequestMissingFields"
+      },
+      {
+        "name": "TestValidateRequestMissingFields::test_validate_request_empty_dict",
+        "line": 50,
+        "markers": [],
+        "docstring": "Test that empty dict returns errors for both required fields.",
+        "class": "TestValidateRequestMissingFields"
+      },
+      {
+        "name": "test_validate_request_missing_action",
+        "line": 13,
+        "markers": [],
+        "docstring": "Test that missing action field returns error."
+      },
+      {
+        "name": "test_validate_request_missing_timestamp",
+        "line": 25,
+        "markers": [],
+        "docstring": "Test that missing timestamp field returns error."
+      },
+      {
+        "name": "test_validate_request_missing_both_fields",
+        "line": 37,
+        "markers": [],
+        "docstring": "Test that missing both fields returns multiple errors."
+      },
+      {
+        "name": "test_validate_request_empty_dict",
+        "line": 50,
+        "markers": [],
+        "docstring": "Test that empty dict returns errors for both required fields."
+      }
+    ],
     "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer_logging.py": [
       {
         "name": "test_validation_logging",
@@ -4765,240 +4927,45 @@
         "docstring": "Test global singleton and convenience functions."
       }
     ],
-    "tests/unit/gpt_trader/security/test_request_validator.py": [
+    "tests/unit/gpt_trader/security/test_request_validator_success.py": [
       {
         "name": "TestValidateRequestSuccess::test_validate_request_with_required_fields",
-        "line": 18,
+        "line": 12,
         "markers": [],
         "docstring": "Test valid request with action and timestamp passes.",
         "class": "TestValidateRequestSuccess"
       },
       {
         "name": "TestValidateRequestSuccess::test_validate_request_with_extra_fields",
-        "line": 31,
+        "line": 25,
         "markers": [],
         "docstring": "Test that extra fields are allowed.",
         "class": "TestValidateRequestSuccess"
       },
       {
         "name": "TestValidateRequestSuccess::test_validate_request_with_underscore_action",
-        "line": 46,
+        "line": 40,
         "markers": [],
         "docstring": "Test action with underscores is valid.",
         "class": "TestValidateRequestSuccess"
       },
       {
-        "name": "TestValidateRequestMissingFields::test_validate_request_missing_action",
-        "line": 66,
-        "markers": [],
-        "docstring": "Test that missing action field returns error.",
-        "class": "TestValidateRequestMissingFields"
-      },
-      {
-        "name": "TestValidateRequestMissingFields::test_validate_request_missing_timestamp",
-        "line": 78,
-        "markers": [],
-        "docstring": "Test that missing timestamp field returns error.",
-        "class": "TestValidateRequestMissingFields"
-      },
-      {
-        "name": "TestValidateRequestMissingFields::test_validate_request_missing_both_fields",
-        "line": 90,
-        "markers": [],
-        "docstring": "Test that missing both fields returns multiple errors.",
-        "class": "TestValidateRequestMissingFields"
-      },
-      {
-        "name": "TestValidateRequestMissingFields::test_validate_request_empty_dict",
-        "line": 103,
-        "markers": [],
-        "docstring": "Test that empty dict returns errors for both required fields.",
-        "class": "TestValidateRequestMissingFields"
-      },
-      {
-        "name": "TestValidateRequestInvalidAction::test_validate_request_sql_injection_action",
-        "line": 121,
-        "markers": [],
-        "docstring": "Test that SQL injection in action is detected.",
-        "class": "TestValidateRequestInvalidAction"
-      },
-      {
-        "name": "TestValidateRequestInvalidAction::test_validate_request_xss_action",
-        "line": 133,
-        "markers": [],
-        "docstring": "Test that XSS in action is detected.",
-        "class": "TestValidateRequestInvalidAction"
-      },
-      {
-        "name": "TestValidateRequestInvalidAction::test_validate_request_action_too_long",
-        "line": 144,
-        "markers": [],
-        "docstring": "Test that action exceeding max length is detected.",
-        "class": "TestValidateRequestInvalidAction"
-      },
-      {
-        "name": "TestValidateRequestInvalidAction::test_validate_request_path_traversal_action",
-        "line": 158,
-        "markers": [],
-        "docstring": "Test that path traversal in action is detected.",
-        "class": "TestValidateRequestInvalidAction"
-      },
-      {
-        "name": "TestValidateRequestSizeLimit::test_validate_request_within_size_limit",
-        "line": 178,
-        "markers": [],
-        "docstring": "Test that request within size limit passes.",
-        "class": "TestValidateRequestSizeLimit"
-      },
-      {
-        "name": "TestValidateRequestSizeLimit::test_validate_request_exceeds_size_limit",
-        "line": 190,
-        "markers": [],
-        "docstring": "Test that request exceeding 1MB limit fails.",
-        "class": "TestValidateRequestSizeLimit"
-      },
-      {
-        "name": "TestValidateRequestSizeLimit::test_validate_request_unserializable_content",
-        "line": 206,
-        "markers": [],
-        "docstring": "Test that request with unserializable content skips size check gracefully.",
-        "class": "TestValidateRequestSizeLimit"
-      },
-      {
-        "name": "TestValidateRequestEdgeCases::test_validate_request_action_with_spaces",
-        "line": 239,
-        "markers": [],
-        "docstring": "Test action with spaces.",
-        "class": "TestValidateRequestEdgeCases"
-      },
-      {
-        "name": "TestValidateRequestEdgeCases::test_validate_request_numeric_timestamp",
-        "line": 251,
-        "markers": [],
-        "docstring": "Test that numeric timestamp value is acceptable.",
-        "class": "TestValidateRequestEdgeCases"
-      },
-      {
-        "name": "TestValidateRequestEdgeCases::test_validate_request_none_values",
-        "line": 263,
-        "markers": [],
-        "docstring": "Test request with None values for required fields.",
-        "class": "TestValidateRequestEdgeCases"
-      },
-      {
-        "name": "TestValidateRequestEdgeCases::test_validate_request_whitespace_action",
-        "line": 277,
-        "markers": [],
-        "docstring": "Test action that is only whitespace.\n\nNote: The InputSanitizer allows whitespace-only strings through\nas it focuses on detecting malicious patterns (SQL injection, XSS, etc.)\nrather than enforcing non-empty content. Whitespace validation should\nbe handled at the application layer if required.",
-        "class": "TestValidateRequestEdgeCases"
-      },
-      {
         "name": "test_validate_request_with_required_fields",
-        "line": 18,
+        "line": 12,
         "markers": [],
         "docstring": "Test valid request with action and timestamp passes."
       },
       {
         "name": "test_validate_request_with_extra_fields",
-        "line": 31,
+        "line": 25,
         "markers": [],
         "docstring": "Test that extra fields are allowed."
       },
       {
         "name": "test_validate_request_with_underscore_action",
-        "line": 46,
+        "line": 40,
         "markers": [],
         "docstring": "Test action with underscores is valid."
-      },
-      {
-        "name": "test_validate_request_missing_action",
-        "line": 66,
-        "markers": [],
-        "docstring": "Test that missing action field returns error."
-      },
-      {
-        "name": "test_validate_request_missing_timestamp",
-        "line": 78,
-        "markers": [],
-        "docstring": "Test that missing timestamp field returns error."
-      },
-      {
-        "name": "test_validate_request_missing_both_fields",
-        "line": 90,
-        "markers": [],
-        "docstring": "Test that missing both fields returns multiple errors."
-      },
-      {
-        "name": "test_validate_request_empty_dict",
-        "line": 103,
-        "markers": [],
-        "docstring": "Test that empty dict returns errors for both required fields."
-      },
-      {
-        "name": "test_validate_request_sql_injection_action",
-        "line": 121,
-        "markers": [],
-        "docstring": "Test that SQL injection in action is detected."
-      },
-      {
-        "name": "test_validate_request_xss_action",
-        "line": 133,
-        "markers": [],
-        "docstring": "Test that XSS in action is detected."
-      },
-      {
-        "name": "test_validate_request_action_too_long",
-        "line": 144,
-        "markers": [],
-        "docstring": "Test that action exceeding max length is detected."
-      },
-      {
-        "name": "test_validate_request_path_traversal_action",
-        "line": 158,
-        "markers": [],
-        "docstring": "Test that path traversal in action is detected."
-      },
-      {
-        "name": "test_validate_request_within_size_limit",
-        "line": 178,
-        "markers": [],
-        "docstring": "Test that request within size limit passes."
-      },
-      {
-        "name": "test_validate_request_exceeds_size_limit",
-        "line": 190,
-        "markers": [],
-        "docstring": "Test that request exceeding 1MB limit fails."
-      },
-      {
-        "name": "test_validate_request_unserializable_content",
-        "line": 206,
-        "markers": [],
-        "docstring": "Test that request with unserializable content skips size check gracefully."
-      },
-      {
-        "name": "test_validate_request_action_with_spaces",
-        "line": 239,
-        "markers": [],
-        "docstring": "Test action with spaces."
-      },
-      {
-        "name": "test_validate_request_numeric_timestamp",
-        "line": 251,
-        "markers": [],
-        "docstring": "Test that numeric timestamp value is acceptable."
-      },
-      {
-        "name": "test_validate_request_none_values",
-        "line": 263,
-        "markers": [],
-        "docstring": "Test request with None values for required fields."
-      },
-      {
-        "name": "test_validate_request_whitespace_action",
-        "line": 277,
-        "markers": [],
-        "docstring": "Test action that is only whitespace.\n\nNote: The InputSanitizer allows whitespace-only strings through\nas it focuses on detecting malicious patterns (SQL injection, XSS, etc.)\nrather than enforcing non-empty content. Whitespace validation should\nbe handled at the application layer if required."
       }
     ],
     "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer_validation.py": [
@@ -5055,6 +5022,60 @@
         "line": 100,
         "markers": [],
         "docstring": "Test validation with disabled rule and log_validation=False."
+      }
+    ],
+    "tests/unit/gpt_trader/security/test_request_validator_invalid_action.py": [
+      {
+        "name": "TestValidateRequestInvalidAction::test_validate_request_sql_injection_action",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test that SQL injection in action is detected.",
+        "class": "TestValidateRequestInvalidAction"
+      },
+      {
+        "name": "TestValidateRequestInvalidAction::test_validate_request_xss_action",
+        "line": 23,
+        "markers": [],
+        "docstring": "Test that XSS in action is detected.",
+        "class": "TestValidateRequestInvalidAction"
+      },
+      {
+        "name": "TestValidateRequestInvalidAction::test_validate_request_action_too_long",
+        "line": 34,
+        "markers": [],
+        "docstring": "Test that action exceeding max length is detected.",
+        "class": "TestValidateRequestInvalidAction"
+      },
+      {
+        "name": "TestValidateRequestInvalidAction::test_validate_request_path_traversal_action",
+        "line": 46,
+        "markers": [],
+        "docstring": "Test that path traversal in action is detected.",
+        "class": "TestValidateRequestInvalidAction"
+      },
+      {
+        "name": "test_validate_request_sql_injection_action",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test that SQL injection in action is detected."
+      },
+      {
+        "name": "test_validate_request_xss_action",
+        "line": 23,
+        "markers": [],
+        "docstring": "Test that XSS in action is detected."
+      },
+      {
+        "name": "test_validate_request_action_too_long",
+        "line": 34,
+        "markers": [],
+        "docstring": "Test that action exceeding max length is detected."
+      },
+      {
+        "name": "test_validate_request_path_traversal_action",
+        "line": 46,
+        "markers": [],
+        "docstring": "Test that path traversal in action is detected."
       }
     ],
     "tests/unit/gpt_trader/tui/test_snapshots_navigation.py": [
@@ -21235,6 +21256,99 @@
         "docstring": "Should print section header."
       }
     ],
+    "tests/unit/gpt_trader/preflight/test_context_credentials.py": [
+      {
+        "name": "TestPreflightContextCredentials::test_resolve_cdp_credentials_from_prod_env",
+        "line": 14,
+        "markers": [],
+        "docstring": "Should prefer PROD env vars.",
+        "class": "TestPreflightContextCredentials"
+      },
+      {
+        "name": "TestPreflightContextCredentials::test_resolve_cdp_credentials_fallback",
+        "line": 36,
+        "markers": [],
+        "docstring": "Should fall back to non-PROD env vars.",
+        "class": "TestPreflightContextCredentials"
+      },
+      {
+        "name": "TestPreflightContextCredentials::test_resolve_cdp_credentials_returns_none_when_missing",
+        "line": 56,
+        "markers": [],
+        "docstring": "Should return None when credentials not set.",
+        "class": "TestPreflightContextCredentials"
+      },
+      {
+        "name": "TestPreflightContextCredentials::test_has_real_cdp_credentials_valid",
+        "line": 67,
+        "markers": [],
+        "docstring": "Should return True for valid CDP credentials.",
+        "class": "TestPreflightContextCredentials"
+      },
+      {
+        "name": "TestPreflightContextCredentials::test_has_real_cdp_credentials_invalid_key_format",
+        "line": 80,
+        "markers": [],
+        "docstring": "Should return False for invalid key format.",
+        "class": "TestPreflightContextCredentials"
+      },
+      {
+        "name": "TestPreflightContextCredentials::test_has_real_cdp_credentials_invalid_private_key_format",
+        "line": 93,
+        "markers": [],
+        "docstring": "Should return False for invalid private key format.",
+        "class": "TestPreflightContextCredentials"
+      },
+      {
+        "name": "TestPreflightContextCredentials::test_has_real_cdp_credentials_missing",
+        "line": 106,
+        "markers": [],
+        "docstring": "Should return False when credentials missing.",
+        "class": "TestPreflightContextCredentials"
+      },
+      {
+        "name": "test_resolve_cdp_credentials_from_prod_env",
+        "line": 14,
+        "markers": [],
+        "docstring": "Should prefer PROD env vars."
+      },
+      {
+        "name": "test_resolve_cdp_credentials_fallback",
+        "line": 36,
+        "markers": [],
+        "docstring": "Should fall back to non-PROD env vars."
+      },
+      {
+        "name": "test_resolve_cdp_credentials_returns_none_when_missing",
+        "line": 56,
+        "markers": [],
+        "docstring": "Should return None when credentials not set."
+      },
+      {
+        "name": "test_has_real_cdp_credentials_valid",
+        "line": 67,
+        "markers": [],
+        "docstring": "Should return True for valid CDP credentials."
+      },
+      {
+        "name": "test_has_real_cdp_credentials_invalid_key_format",
+        "line": 80,
+        "markers": [],
+        "docstring": "Should return False for invalid key format."
+      },
+      {
+        "name": "test_has_real_cdp_credentials_invalid_private_key_format",
+        "line": 93,
+        "markers": [],
+        "docstring": "Should return False for invalid private key format."
+      },
+      {
+        "name": "test_has_real_cdp_credentials_missing",
+        "line": 106,
+        "markers": [],
+        "docstring": "Should return False when credentials missing."
+      }
+    ],
     "tests/unit/gpt_trader/preflight/test_checks_connectivity_key_permissions_core.py": [
       {
         "name": "TestCheckKeyPermissionsCore::test_skips_when_remote_checks_bypassed",
@@ -21352,6 +21466,73 @@
         "line": 185,
         "markers": [],
         "docstring": "Should print section header."
+      }
+    ],
+    "tests/unit/gpt_trader/preflight/test_context_colors_and_init.py": [
+      {
+        "name": "TestColors::test_colors_are_ansi_escape_sequences",
+        "line": 11,
+        "markers": [],
+        "docstring": "All color constants should be ANSI escape sequences.",
+        "class": "TestColors"
+      },
+      {
+        "name": "TestColors::test_reset_terminates_formatting",
+        "line": 20,
+        "markers": [],
+        "docstring": "RESET should end all formatting.",
+        "class": "TestColors"
+      },
+      {
+        "name": "TestPreflightContextInit::test_default_initialization",
+        "line": 28,
+        "markers": [],
+        "docstring": "Context should initialize with sensible defaults.",
+        "class": "TestPreflightContextInit"
+      },
+      {
+        "name": "TestPreflightContextInit::test_custom_initialization",
+        "line": 39,
+        "markers": [],
+        "docstring": "Context should accept custom values.",
+        "class": "TestPreflightContextInit"
+      },
+      {
+        "name": "TestPreflightContextInit::test_lists_are_independent",
+        "line": 46,
+        "markers": [],
+        "docstring": "Each context should have independent lists.",
+        "class": "TestPreflightContextInit"
+      },
+      {
+        "name": "test_colors_are_ansi_escape_sequences",
+        "line": 11,
+        "markers": [],
+        "docstring": "All color constants should be ANSI escape sequences."
+      },
+      {
+        "name": "test_reset_terminates_formatting",
+        "line": 20,
+        "markers": [],
+        "docstring": "RESET should end all formatting."
+      },
+      {
+        "name": "test_default_initialization",
+        "line": 28,
+        "markers": [],
+        "docstring": "Context should initialize with sensible defaults."
+      },
+      {
+        "name": "test_custom_initialization",
+        "line": 39,
+        "markers": [],
+        "docstring": "Context should accept custom values."
+      },
+      {
+        "name": "test_lists_are_independent",
+        "line": 46,
+        "markers": [],
+        "docstring": "Each context should have independent lists."
       }
     ],
     "tests/unit/gpt_trader/preflight/test_checks_risk.py": [
@@ -21618,370 +21799,294 @@
         "docstring": "Should log config info when verbose."
       }
     ],
-    "tests/unit/gpt_trader/preflight/test_core.py": [
-      {
-        "name": "TestPreflightCheckInit::test_default_initialization",
-        "line": 15,
-        "markers": [],
-        "docstring": "PreflightCheck should initialize with defaults.",
-        "class": "TestPreflightCheckInit"
-      },
-      {
-        "name": "TestPreflightCheckInit::test_custom_initialization",
-        "line": 24,
-        "markers": [],
-        "docstring": "PreflightCheck should accept custom values.",
-        "class": "TestPreflightCheckInit"
-      },
-      {
-        "name": "TestPreflightCheckCompatibilityMirrors::test_errors_mirrors_context",
-        "line": 37,
-        "markers": [],
-        "docstring": "errors property should mirror context.errors.",
-        "class": "TestPreflightCheckCompatibilityMirrors"
-      },
-      {
-        "name": "TestPreflightCheckCompatibilityMirrors::test_warnings_mirrors_context",
-        "line": 45,
-        "markers": [],
-        "docstring": "warnings property should mirror context.warnings.",
-        "class": "TestPreflightCheckCompatibilityMirrors"
-      },
-      {
-        "name": "TestPreflightCheckCompatibilityMirrors::test_successes_mirrors_context",
-        "line": 52,
-        "markers": [],
-        "docstring": "successes property should mirror context.successes.",
-        "class": "TestPreflightCheckCompatibilityMirrors"
-      },
-      {
-        "name": "TestPreflightCheckCompatibilityMirrors::test_config_mirrors_context",
-        "line": 59,
-        "markers": [],
-        "docstring": "config property should mirror context.config.",
-        "class": "TestPreflightCheckCompatibilityMirrors"
-      },
-      {
-        "name": "TestPreflightCheckLoggingHelpers::test_log_success_delegates_to_context",
-        "line": 70,
-        "markers": [],
-        "docstring": "log_success should delegate to context.",
-        "class": "TestPreflightCheckLoggingHelpers"
-      },
-      {
-        "name": "TestPreflightCheckLoggingHelpers::test_log_warning_delegates_to_context",
-        "line": 79,
-        "markers": [],
-        "docstring": "log_warning should delegate to context.",
-        "class": "TestPreflightCheckLoggingHelpers"
-      },
-      {
-        "name": "TestPreflightCheckLoggingHelpers::test_log_error_delegates_to_context",
-        "line": 86,
-        "markers": [],
-        "docstring": "log_error should delegate to context.",
-        "class": "TestPreflightCheckLoggingHelpers"
-      },
-      {
-        "name": "TestPreflightCheckLoggingHelpers::test_log_info_delegates_to_context",
-        "line": 93,
-        "markers": [],
-        "docstring": "log_info should delegate to context.",
-        "class": "TestPreflightCheckLoggingHelpers"
-      },
-      {
-        "name": "TestPreflightCheckLoggingHelpers::test_section_header_delegates_to_context",
-        "line": 101,
-        "markers": [],
-        "docstring": "section_header should delegate to context.",
-        "class": "TestPreflightCheckLoggingHelpers"
-      },
-      {
-        "name": "TestPreflightCheckEnvironmentHelpers::test_resolve_cdp_credentials_delegates",
-        "line": 117,
-        "markers": [],
-        "docstring": "_resolve_cdp_credentials should return same as context.",
-        "class": "TestPreflightCheckEnvironmentHelpers"
-      },
-      {
-        "name": "TestPreflightCheckEnvironmentHelpers::test_has_real_cdp_credentials_delegates",
-        "line": 127,
-        "markers": [],
-        "docstring": "_has_real_cdp_credentials should return same as context.",
-        "class": "TestPreflightCheckEnvironmentHelpers"
-      },
-      {
-        "name": "TestPreflightCheckEnvironmentHelpers::test_should_skip_remote_checks_delegates",
-        "line": 136,
-        "markers": [],
-        "docstring": "_should_skip_remote_checks should return same as context.",
-        "class": "TestPreflightCheckEnvironmentHelpers"
-      },
-      {
-        "name": "TestPreflightCheckEnvironmentHelpers::test_expected_env_defaults_delegates",
-        "line": 145,
-        "markers": [],
-        "docstring": "_expected_env_defaults should return same as context.",
-        "class": "TestPreflightCheckEnvironmentHelpers"
-      },
+    "tests/unit/gpt_trader/preflight/test_core_delegations.py": [
       {
         "name": "TestPreflightCheckDelegations::test_check_python_version_delegates",
-        "line": 158,
+        "line": 13,
         "markers": [],
         "docstring": "check_python_version should delegate to module function.",
         "class": "TestPreflightCheckDelegations"
       },
       {
         "name": "TestPreflightCheckDelegations::test_check_dependencies_delegates",
-        "line": 169,
+        "line": 24,
         "markers": [],
         "docstring": "check_dependencies should delegate to module function.",
         "class": "TestPreflightCheckDelegations"
       },
       {
         "name": "TestPreflightCheckDelegations::test_check_environment_variables_delegates",
-        "line": 180,
+        "line": 35,
         "markers": [],
         "docstring": "check_environment_variables should delegate to module function.",
         "class": "TestPreflightCheckDelegations"
       },
       {
         "name": "TestPreflightCheckDelegations::test_check_api_connectivity_delegates",
-        "line": 191,
+        "line": 46,
         "markers": [],
         "docstring": "check_api_connectivity should delegate to module function.",
         "class": "TestPreflightCheckDelegations"
       },
       {
         "name": "TestPreflightCheckDelegations::test_check_key_permissions_delegates",
-        "line": 201,
+        "line": 56,
         "markers": [],
         "docstring": "check_key_permissions should delegate to module function.",
         "class": "TestPreflightCheckDelegations"
       },
       {
         "name": "TestPreflightCheckDelegations::test_check_risk_configuration_delegates",
-        "line": 211,
+        "line": 66,
         "markers": [],
         "docstring": "check_risk_configuration should delegate to module function.",
         "class": "TestPreflightCheckDelegations"
       },
       {
         "name": "TestPreflightCheckDelegations::test_check_readiness_report_delegates",
-        "line": 221,
+        "line": 76,
         "markers": [],
         "docstring": "check_readiness_report should delegate to module function.",
         "class": "TestPreflightCheckDelegations"
       },
       {
         "name": "TestPreflightCheckDelegations::test_check_test_suite_delegates",
-        "line": 231,
+        "line": 86,
         "markers": [],
         "docstring": "check_test_suite should delegate to module function.",
         "class": "TestPreflightCheckDelegations"
       },
       {
         "name": "TestPreflightCheckDelegations::test_check_profile_configuration_delegates",
-        "line": 241,
+        "line": 96,
         "markers": [],
         "docstring": "check_profile_configuration should delegate to module function.",
         "class": "TestPreflightCheckDelegations"
       },
       {
         "name": "TestPreflightCheckDelegations::test_check_system_time_delegates",
-        "line": 251,
+        "line": 106,
         "markers": [],
         "docstring": "check_system_time should delegate to module function.",
         "class": "TestPreflightCheckDelegations"
       },
       {
         "name": "TestPreflightCheckDelegations::test_check_disk_space_delegates",
-        "line": 261,
+        "line": 116,
         "markers": [],
         "docstring": "check_disk_space should delegate to module function.",
         "class": "TestPreflightCheckDelegations"
       },
       {
         "name": "TestPreflightCheckDelegations::test_simulate_dry_run_delegates",
-        "line": 271,
+        "line": 126,
         "markers": [],
         "docstring": "simulate_dry_run should delegate to module function.",
         "class": "TestPreflightCheckDelegations"
       },
       {
         "name": "TestPreflightCheckDelegations::test_generate_report_delegates",
-        "line": 281,
+        "line": 136,
         "markers": [],
         "docstring": "generate_report should delegate to module function.",
         "class": "TestPreflightCheckDelegations"
       },
       {
-        "name": "test_default_initialization",
-        "line": 15,
-        "markers": [],
-        "docstring": "PreflightCheck should initialize with defaults."
-      },
-      {
-        "name": "test_custom_initialization",
-        "line": 24,
-        "markers": [],
-        "docstring": "PreflightCheck should accept custom values."
-      },
-      {
-        "name": "test_errors_mirrors_context",
-        "line": 37,
-        "markers": [],
-        "docstring": "errors property should mirror context.errors."
-      },
-      {
-        "name": "test_warnings_mirrors_context",
-        "line": 45,
-        "markers": [],
-        "docstring": "warnings property should mirror context.warnings."
-      },
-      {
-        "name": "test_successes_mirrors_context",
-        "line": 52,
-        "markers": [],
-        "docstring": "successes property should mirror context.successes."
-      },
-      {
-        "name": "test_config_mirrors_context",
-        "line": 59,
-        "markers": [],
-        "docstring": "config property should mirror context.config."
-      },
-      {
-        "name": "test_log_success_delegates_to_context",
-        "line": 70,
-        "markers": [],
-        "docstring": "log_success should delegate to context."
-      },
-      {
-        "name": "test_log_warning_delegates_to_context",
-        "line": 79,
-        "markers": [],
-        "docstring": "log_warning should delegate to context."
-      },
-      {
-        "name": "test_log_error_delegates_to_context",
-        "line": 86,
-        "markers": [],
-        "docstring": "log_error should delegate to context."
-      },
-      {
-        "name": "test_log_info_delegates_to_context",
-        "line": 93,
-        "markers": [],
-        "docstring": "log_info should delegate to context."
-      },
-      {
-        "name": "test_section_header_delegates_to_context",
-        "line": 101,
-        "markers": [],
-        "docstring": "section_header should delegate to context."
-      },
-      {
-        "name": "test_resolve_cdp_credentials_delegates",
-        "line": 117,
-        "markers": [],
-        "docstring": "_resolve_cdp_credentials should return same as context."
-      },
-      {
-        "name": "test_has_real_cdp_credentials_delegates",
-        "line": 127,
-        "markers": [],
-        "docstring": "_has_real_cdp_credentials should return same as context."
-      },
-      {
-        "name": "test_should_skip_remote_checks_delegates",
-        "line": 136,
-        "markers": [],
-        "docstring": "_should_skip_remote_checks should return same as context."
-      },
-      {
-        "name": "test_expected_env_defaults_delegates",
-        "line": 145,
-        "markers": [],
-        "docstring": "_expected_env_defaults should return same as context."
-      },
-      {
         "name": "test_check_python_version_delegates",
-        "line": 158,
+        "line": 13,
         "markers": [],
         "docstring": "check_python_version should delegate to module function."
       },
       {
         "name": "test_check_dependencies_delegates",
-        "line": 169,
+        "line": 24,
         "markers": [],
         "docstring": "check_dependencies should delegate to module function."
       },
       {
         "name": "test_check_environment_variables_delegates",
-        "line": 180,
+        "line": 35,
         "markers": [],
         "docstring": "check_environment_variables should delegate to module function."
       },
       {
         "name": "test_check_api_connectivity_delegates",
-        "line": 191,
+        "line": 46,
         "markers": [],
         "docstring": "check_api_connectivity should delegate to module function."
       },
       {
         "name": "test_check_key_permissions_delegates",
-        "line": 201,
+        "line": 56,
         "markers": [],
         "docstring": "check_key_permissions should delegate to module function."
       },
       {
         "name": "test_check_risk_configuration_delegates",
-        "line": 211,
+        "line": 66,
         "markers": [],
         "docstring": "check_risk_configuration should delegate to module function."
       },
       {
         "name": "test_check_readiness_report_delegates",
-        "line": 221,
+        "line": 76,
         "markers": [],
         "docstring": "check_readiness_report should delegate to module function."
       },
       {
         "name": "test_check_test_suite_delegates",
-        "line": 231,
+        "line": 86,
         "markers": [],
         "docstring": "check_test_suite should delegate to module function."
       },
       {
         "name": "test_check_profile_configuration_delegates",
-        "line": 241,
+        "line": 96,
         "markers": [],
         "docstring": "check_profile_configuration should delegate to module function."
       },
       {
         "name": "test_check_system_time_delegates",
-        "line": 251,
+        "line": 106,
         "markers": [],
         "docstring": "check_system_time should delegate to module function."
       },
       {
         "name": "test_check_disk_space_delegates",
-        "line": 261,
+        "line": 116,
         "markers": [],
         "docstring": "check_disk_space should delegate to module function."
       },
       {
         "name": "test_simulate_dry_run_delegates",
-        "line": 271,
+        "line": 126,
         "markers": [],
         "docstring": "simulate_dry_run should delegate to module function."
       },
       {
         "name": "test_generate_report_delegates",
-        "line": 281,
+        "line": 136,
         "markers": [],
         "docstring": "generate_report should delegate to module function."
+      }
+    ],
+    "tests/unit/gpt_trader/preflight/test_core_helpers.py": [
+      {
+        "name": "TestPreflightCheckLoggingHelpers::test_log_success_delegates_to_context",
+        "line": 13,
+        "markers": [],
+        "docstring": "log_success should delegate to context.",
+        "class": "TestPreflightCheckLoggingHelpers"
+      },
+      {
+        "name": "TestPreflightCheckLoggingHelpers::test_log_warning_delegates_to_context",
+        "line": 22,
+        "markers": [],
+        "docstring": "log_warning should delegate to context.",
+        "class": "TestPreflightCheckLoggingHelpers"
+      },
+      {
+        "name": "TestPreflightCheckLoggingHelpers::test_log_error_delegates_to_context",
+        "line": 29,
+        "markers": [],
+        "docstring": "log_error should delegate to context.",
+        "class": "TestPreflightCheckLoggingHelpers"
+      },
+      {
+        "name": "TestPreflightCheckLoggingHelpers::test_log_info_delegates_to_context",
+        "line": 36,
+        "markers": [],
+        "docstring": "log_info should delegate to context.",
+        "class": "TestPreflightCheckLoggingHelpers"
+      },
+      {
+        "name": "TestPreflightCheckLoggingHelpers::test_section_header_delegates_to_context",
+        "line": 44,
+        "markers": [],
+        "docstring": "section_header should delegate to context.",
+        "class": "TestPreflightCheckLoggingHelpers"
+      },
+      {
+        "name": "TestPreflightCheckEnvironmentHelpers::test_resolve_cdp_credentials_delegates",
+        "line": 60,
+        "markers": [],
+        "docstring": "_resolve_cdp_credentials should return same as context.",
+        "class": "TestPreflightCheckEnvironmentHelpers"
+      },
+      {
+        "name": "TestPreflightCheckEnvironmentHelpers::test_has_real_cdp_credentials_delegates",
+        "line": 70,
+        "markers": [],
+        "docstring": "_has_real_cdp_credentials should return same as context.",
+        "class": "TestPreflightCheckEnvironmentHelpers"
+      },
+      {
+        "name": "TestPreflightCheckEnvironmentHelpers::test_should_skip_remote_checks_delegates",
+        "line": 79,
+        "markers": [],
+        "docstring": "_should_skip_remote_checks should return same as context.",
+        "class": "TestPreflightCheckEnvironmentHelpers"
+      },
+      {
+        "name": "TestPreflightCheckEnvironmentHelpers::test_expected_env_defaults_delegates",
+        "line": 88,
+        "markers": [],
+        "docstring": "_expected_env_defaults should return same as context.",
+        "class": "TestPreflightCheckEnvironmentHelpers"
+      },
+      {
+        "name": "test_log_success_delegates_to_context",
+        "line": 13,
+        "markers": [],
+        "docstring": "log_success should delegate to context."
+      },
+      {
+        "name": "test_log_warning_delegates_to_context",
+        "line": 22,
+        "markers": [],
+        "docstring": "log_warning should delegate to context."
+      },
+      {
+        "name": "test_log_error_delegates_to_context",
+        "line": 29,
+        "markers": [],
+        "docstring": "log_error should delegate to context."
+      },
+      {
+        "name": "test_log_info_delegates_to_context",
+        "line": 36,
+        "markers": [],
+        "docstring": "log_info should delegate to context."
+      },
+      {
+        "name": "test_section_header_delegates_to_context",
+        "line": 44,
+        "markers": [],
+        "docstring": "section_header should delegate to context."
+      },
+      {
+        "name": "test_resolve_cdp_credentials_delegates",
+        "line": 60,
+        "markers": [],
+        "docstring": "_resolve_cdp_credentials should return same as context."
+      },
+      {
+        "name": "test_has_real_cdp_credentials_delegates",
+        "line": 70,
+        "markers": [],
+        "docstring": "_has_real_cdp_credentials should return same as context."
+      },
+      {
+        "name": "test_should_skip_remote_checks_delegates",
+        "line": 79,
+        "markers": [],
+        "docstring": "_should_skip_remote_checks should return same as context."
+      },
+      {
+        "name": "test_expected_env_defaults_delegates",
+        "line": 88,
+        "markers": [],
+        "docstring": "_expected_env_defaults should return same as context."
       }
     ],
     "tests/unit/gpt_trader/preflight/test_checks_connectivity_key_permissions_retries.py": [
@@ -22036,6 +22141,153 @@
         "line": 77,
         "markers": [],
         "docstring": "Should fail when permissions response is empty/None."
+      }
+    ],
+    "tests/unit/gpt_trader/preflight/test_context_logging.py": [
+      {
+        "name": "TestPreflightContextLogging::test_log_success_appends_to_list",
+        "line": 13,
+        "markers": [],
+        "docstring": "log_success should append to successes list and print.",
+        "class": "TestPreflightContextLogging"
+      },
+      {
+        "name": "TestPreflightContextLogging::test_log_warning_appends_to_list",
+        "line": 23,
+        "markers": [],
+        "docstring": "log_warning should append to warnings list and print.",
+        "class": "TestPreflightContextLogging"
+      },
+      {
+        "name": "TestPreflightContextLogging::test_log_error_appends_to_list",
+        "line": 33,
+        "markers": [],
+        "docstring": "log_error should append to errors list and print.",
+        "class": "TestPreflightContextLogging"
+      },
+      {
+        "name": "TestPreflightContextLogging::test_log_info_only_prints_when_verbose",
+        "line": 43,
+        "markers": [],
+        "docstring": "log_info should only print when verbose=True.",
+        "class": "TestPreflightContextLogging"
+      },
+      {
+        "name": "TestPreflightContextLogging::test_section_header_prints_formatted",
+        "line": 57,
+        "markers": [],
+        "docstring": "section_header should print a formatted header.",
+        "class": "TestPreflightContextLogging"
+      },
+      {
+        "name": "test_log_success_appends_to_list",
+        "line": 13,
+        "markers": [],
+        "docstring": "log_success should append to successes list and print."
+      },
+      {
+        "name": "test_log_warning_appends_to_list",
+        "line": 23,
+        "markers": [],
+        "docstring": "log_warning should append to warnings list and print."
+      },
+      {
+        "name": "test_log_error_appends_to_list",
+        "line": 33,
+        "markers": [],
+        "docstring": "log_error should append to errors list and print."
+      },
+      {
+        "name": "test_log_info_only_prints_when_verbose",
+        "line": 43,
+        "markers": [],
+        "docstring": "log_info should only print when verbose=True."
+      },
+      {
+        "name": "test_section_header_prints_formatted",
+        "line": 57,
+        "markers": [],
+        "docstring": "section_header should print a formatted header."
+      }
+    ],
+    "tests/unit/gpt_trader/preflight/test_core_init.py": [
+      {
+        "name": "TestPreflightCheckInit::test_default_initialization",
+        "line": 11,
+        "markers": [],
+        "docstring": "PreflightCheck should initialize with defaults.",
+        "class": "TestPreflightCheckInit"
+      },
+      {
+        "name": "TestPreflightCheckInit::test_custom_initialization",
+        "line": 20,
+        "markers": [],
+        "docstring": "PreflightCheck should accept custom values.",
+        "class": "TestPreflightCheckInit"
+      },
+      {
+        "name": "TestPreflightCheckCompatibilityMirrors::test_errors_mirrors_context",
+        "line": 33,
+        "markers": [],
+        "docstring": "errors property should mirror context.errors.",
+        "class": "TestPreflightCheckCompatibilityMirrors"
+      },
+      {
+        "name": "TestPreflightCheckCompatibilityMirrors::test_warnings_mirrors_context",
+        "line": 41,
+        "markers": [],
+        "docstring": "warnings property should mirror context.warnings.",
+        "class": "TestPreflightCheckCompatibilityMirrors"
+      },
+      {
+        "name": "TestPreflightCheckCompatibilityMirrors::test_successes_mirrors_context",
+        "line": 48,
+        "markers": [],
+        "docstring": "successes property should mirror context.successes.",
+        "class": "TestPreflightCheckCompatibilityMirrors"
+      },
+      {
+        "name": "TestPreflightCheckCompatibilityMirrors::test_config_mirrors_context",
+        "line": 55,
+        "markers": [],
+        "docstring": "config property should mirror context.config.",
+        "class": "TestPreflightCheckCompatibilityMirrors"
+      },
+      {
+        "name": "test_default_initialization",
+        "line": 11,
+        "markers": [],
+        "docstring": "PreflightCheck should initialize with defaults."
+      },
+      {
+        "name": "test_custom_initialization",
+        "line": 20,
+        "markers": [],
+        "docstring": "PreflightCheck should accept custom values."
+      },
+      {
+        "name": "test_errors_mirrors_context",
+        "line": 33,
+        "markers": [],
+        "docstring": "errors property should mirror context.errors."
+      },
+      {
+        "name": "test_warnings_mirrors_context",
+        "line": 41,
+        "markers": [],
+        "docstring": "warnings property should mirror context.warnings."
+      },
+      {
+        "name": "test_successes_mirrors_context",
+        "line": 48,
+        "markers": [],
+        "docstring": "successes property should mirror context.successes."
+      },
+      {
+        "name": "test_config_mirrors_context",
+        "line": 55,
+        "markers": [],
+        "docstring": "config property should mirror context.config."
       }
     ],
     "tests/unit/gpt_trader/preflight/test_report.py": [
@@ -22734,316 +22986,95 @@
         "docstring": "add_error should create an error finding."
       }
     ],
-    "tests/unit/gpt_trader/preflight/test_context.py": [
-      {
-        "name": "TestColors::test_colors_are_ansi_escape_sequences",
-        "line": 16,
-        "markers": [],
-        "docstring": "All color constants should be ANSI escape sequences.",
-        "class": "TestColors"
-      },
-      {
-        "name": "TestColors::test_reset_terminates_formatting",
-        "line": 25,
-        "markers": [],
-        "docstring": "RESET should end all formatting.",
-        "class": "TestColors"
-      },
-      {
-        "name": "TestPreflightContextInit::test_default_initialization",
-        "line": 33,
-        "markers": [],
-        "docstring": "Context should initialize with sensible defaults.",
-        "class": "TestPreflightContextInit"
-      },
-      {
-        "name": "TestPreflightContextInit::test_custom_initialization",
-        "line": 44,
-        "markers": [],
-        "docstring": "Context should accept custom values.",
-        "class": "TestPreflightContextInit"
-      },
-      {
-        "name": "TestPreflightContextInit::test_lists_are_independent",
-        "line": 51,
-        "markers": [],
-        "docstring": "Each context should have independent lists.",
-        "class": "TestPreflightContextInit"
-      },
-      {
-        "name": "TestPreflightContextLogging::test_log_success_appends_to_list",
-        "line": 68,
-        "markers": [],
-        "docstring": "log_success should append to successes list and print.",
-        "class": "TestPreflightContextLogging"
-      },
-      {
-        "name": "TestPreflightContextLogging::test_log_warning_appends_to_list",
-        "line": 78,
-        "markers": [],
-        "docstring": "log_warning should append to warnings list and print.",
-        "class": "TestPreflightContextLogging"
-      },
-      {
-        "name": "TestPreflightContextLogging::test_log_error_appends_to_list",
-        "line": 88,
-        "markers": [],
-        "docstring": "log_error should append to errors list and print.",
-        "class": "TestPreflightContextLogging"
-      },
-      {
-        "name": "TestPreflightContextLogging::test_log_info_only_prints_when_verbose",
-        "line": 98,
-        "markers": [],
-        "docstring": "log_info should only print when verbose=True.",
-        "class": "TestPreflightContextLogging"
-      },
-      {
-        "name": "TestPreflightContextLogging::test_section_header_prints_formatted",
-        "line": 112,
-        "markers": [],
-        "docstring": "section_header should print a formatted header.",
-        "class": "TestPreflightContextLogging"
-      },
-      {
-        "name": "TestPreflightContextCredentials::test_resolve_cdp_credentials_from_prod_env",
-        "line": 127,
-        "markers": [],
-        "docstring": "Should prefer PROD env vars.",
-        "class": "TestPreflightContextCredentials"
-      },
-      {
-        "name": "TestPreflightContextCredentials::test_resolve_cdp_credentials_fallback",
-        "line": 149,
-        "markers": [],
-        "docstring": "Should fall back to non-PROD env vars.",
-        "class": "TestPreflightContextCredentials"
-      },
-      {
-        "name": "TestPreflightContextCredentials::test_resolve_cdp_credentials_returns_none_when_missing",
-        "line": 169,
-        "markers": [],
-        "docstring": "Should return None when credentials not set.",
-        "class": "TestPreflightContextCredentials"
-      },
-      {
-        "name": "TestPreflightContextCredentials::test_has_real_cdp_credentials_valid",
-        "line": 180,
-        "markers": [],
-        "docstring": "Should return True for valid CDP credentials.",
-        "class": "TestPreflightContextCredentials"
-      },
-      {
-        "name": "TestPreflightContextCredentials::test_has_real_cdp_credentials_invalid_key_format",
-        "line": 193,
-        "markers": [],
-        "docstring": "Should return False for invalid key format.",
-        "class": "TestPreflightContextCredentials"
-      },
-      {
-        "name": "TestPreflightContextCredentials::test_has_real_cdp_credentials_invalid_private_key_format",
-        "line": 206,
-        "markers": [],
-        "docstring": "Should return False for invalid private key format.",
-        "class": "TestPreflightContextCredentials"
-      },
-      {
-        "name": "TestPreflightContextCredentials::test_has_real_cdp_credentials_missing",
-        "line": 219,
-        "markers": [],
-        "docstring": "Should return False when credentials missing.",
-        "class": "TestPreflightContextCredentials"
-      },
+    "tests/unit/gpt_trader/preflight/test_context_remote_checks.py": [
       {
         "name": "TestPreflightContextSkipRemoteChecks::test_force_remote_overrides_skip",
-        "line": 229,
+        "line": 14,
         "markers": [],
         "docstring": "COINBASE_PREFLIGHT_FORCE_REMOTE=1 should force remote checks.",
         "class": "TestPreflightContextSkipRemoteChecks"
       },
       {
         "name": "TestPreflightContextSkipRemoteChecks::test_skip_remote_env_var",
-        "line": 239,
+        "line": 24,
         "markers": [],
         "docstring": "COINBASE_PREFLIGHT_SKIP_REMOTE=1 should skip remote checks.",
         "class": "TestPreflightContextSkipRemoteChecks"
       },
       {
         "name": "TestPreflightContextSkipRemoteChecks::test_dev_profile_without_credentials_skips",
-        "line": 249,
+        "line": 34,
         "markers": [],
         "docstring": "Dev profile without real credentials should skip remote checks.",
         "class": "TestPreflightContextSkipRemoteChecks"
       },
       {
         "name": "TestPreflightContextSkipRemoteChecks::test_prod_profile_without_credentials_does_not_skip",
-        "line": 255,
+        "line": 40,
         "markers": [],
         "docstring": "Prod profile without credentials should NOT skip (will fail later).",
         "class": "TestPreflightContextSkipRemoteChecks"
       },
       {
         "name": "TestPreflightContextEnvDefaults::test_dev_profile_defaults",
-        "line": 265,
+        "line": 50,
         "markers": [],
         "docstring": "Dev profile should have relaxed defaults.",
         "class": "TestPreflightContextEnvDefaults"
       },
       {
         "name": "TestPreflightContextEnvDefaults::test_prod_profile_defaults",
-        "line": 274,
+        "line": 59,
         "markers": [],
         "docstring": "Prod profile should have strict defaults.",
         "class": "TestPreflightContextEnvDefaults"
       },
       {
         "name": "TestPreflightContextEnvDefaults::test_canary_profile_uses_prod_defaults",
-        "line": 283,
+        "line": 68,
         "markers": [],
         "docstring": "Canary profile should use prod-like defaults.",
         "class": "TestPreflightContextEnvDefaults"
       },
       {
-        "name": "test_colors_are_ansi_escape_sequences",
-        "line": 16,
-        "markers": [],
-        "docstring": "All color constants should be ANSI escape sequences."
-      },
-      {
-        "name": "test_reset_terminates_formatting",
-        "line": 25,
-        "markers": [],
-        "docstring": "RESET should end all formatting."
-      },
-      {
-        "name": "test_default_initialization",
-        "line": 33,
-        "markers": [],
-        "docstring": "Context should initialize with sensible defaults."
-      },
-      {
-        "name": "test_custom_initialization",
-        "line": 44,
-        "markers": [],
-        "docstring": "Context should accept custom values."
-      },
-      {
-        "name": "test_lists_are_independent",
-        "line": 51,
-        "markers": [],
-        "docstring": "Each context should have independent lists."
-      },
-      {
-        "name": "test_log_success_appends_to_list",
-        "line": 68,
-        "markers": [],
-        "docstring": "log_success should append to successes list and print."
-      },
-      {
-        "name": "test_log_warning_appends_to_list",
-        "line": 78,
-        "markers": [],
-        "docstring": "log_warning should append to warnings list and print."
-      },
-      {
-        "name": "test_log_error_appends_to_list",
-        "line": 88,
-        "markers": [],
-        "docstring": "log_error should append to errors list and print."
-      },
-      {
-        "name": "test_log_info_only_prints_when_verbose",
-        "line": 98,
-        "markers": [],
-        "docstring": "log_info should only print when verbose=True."
-      },
-      {
-        "name": "test_section_header_prints_formatted",
-        "line": 112,
-        "markers": [],
-        "docstring": "section_header should print a formatted header."
-      },
-      {
-        "name": "test_resolve_cdp_credentials_from_prod_env",
-        "line": 127,
-        "markers": [],
-        "docstring": "Should prefer PROD env vars."
-      },
-      {
-        "name": "test_resolve_cdp_credentials_fallback",
-        "line": 149,
-        "markers": [],
-        "docstring": "Should fall back to non-PROD env vars."
-      },
-      {
-        "name": "test_resolve_cdp_credentials_returns_none_when_missing",
-        "line": 169,
-        "markers": [],
-        "docstring": "Should return None when credentials not set."
-      },
-      {
-        "name": "test_has_real_cdp_credentials_valid",
-        "line": 180,
-        "markers": [],
-        "docstring": "Should return True for valid CDP credentials."
-      },
-      {
-        "name": "test_has_real_cdp_credentials_invalid_key_format",
-        "line": 193,
-        "markers": [],
-        "docstring": "Should return False for invalid key format."
-      },
-      {
-        "name": "test_has_real_cdp_credentials_invalid_private_key_format",
-        "line": 206,
-        "markers": [],
-        "docstring": "Should return False for invalid private key format."
-      },
-      {
-        "name": "test_has_real_cdp_credentials_missing",
-        "line": 219,
-        "markers": [],
-        "docstring": "Should return False when credentials missing."
-      },
-      {
         "name": "test_force_remote_overrides_skip",
-        "line": 229,
+        "line": 14,
         "markers": [],
         "docstring": "COINBASE_PREFLIGHT_FORCE_REMOTE=1 should force remote checks."
       },
       {
         "name": "test_skip_remote_env_var",
-        "line": 239,
+        "line": 24,
         "markers": [],
         "docstring": "COINBASE_PREFLIGHT_SKIP_REMOTE=1 should skip remote checks."
       },
       {
         "name": "test_dev_profile_without_credentials_skips",
-        "line": 249,
+        "line": 34,
         "markers": [],
         "docstring": "Dev profile without real credentials should skip remote checks."
       },
       {
         "name": "test_prod_profile_without_credentials_does_not_skip",
-        "line": 255,
+        "line": 40,
         "markers": [],
         "docstring": "Prod profile without credentials should NOT skip (will fail later)."
       },
       {
         "name": "test_dev_profile_defaults",
-        "line": 265,
+        "line": 50,
         "markers": [],
         "docstring": "Dev profile should have relaxed defaults."
       },
       {
         "name": "test_prod_profile_defaults",
-        "line": 274,
+        "line": 59,
         "markers": [],
         "docstring": "Prod profile should have strict defaults."
       },
       {
         "name": "test_canary_profile_uses_prod_defaults",
-        "line": 283,
+        "line": 68,
         "markers": [],
         "docstring": "Canary profile should use prod-like defaults."
       }
@@ -32727,6 +32758,73 @@
         "docstring": "Test trading hours with microsecond precision."
       }
     ],
+    "tests/unit/gpt_trader/security/security_validator/test_suspicious_activity_error_handling.py": [
+      {
+        "name": "TestSuspiciousActivityErrorHandling::test_suspicious_activity_missing_fields",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test suspicious activity detection with missing fields.",
+        "class": "TestSuspiciousActivityErrorHandling"
+      },
+      {
+        "name": "TestSuspiciousActivityErrorHandling::test_suspicious_activity_zero_values",
+        "line": 26,
+        "markers": [],
+        "docstring": "Test suspicious activity detection with zero values.",
+        "class": "TestSuspiciousActivityErrorHandling"
+      },
+      {
+        "name": "TestSuspiciousActivityErrorHandling::test_suspicious_activity_with_zero_average",
+        "line": 41,
+        "markers": [],
+        "docstring": "Test suspicious activity detection with zero average order size.",
+        "class": "TestSuspiciousActivityErrorHandling"
+      },
+      {
+        "name": "TestSuspiciousActivityErrorHandling::test_suspicious_activity_error_handling",
+        "line": 57,
+        "markers": [],
+        "docstring": "Test suspicious activity detection error handling.",
+        "class": "TestSuspiciousActivityErrorHandling"
+      },
+      {
+        "name": "TestSuspiciousActivityErrorHandling::test_suspicious_activity_with_extreme_pattern_scores",
+        "line": 78,
+        "markers": [],
+        "docstring": "Test suspicious activity with extreme pattern scores.",
+        "class": "TestSuspiciousActivityErrorHandling"
+      },
+      {
+        "name": "test_suspicious_activity_missing_fields",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test suspicious activity detection with missing fields."
+      },
+      {
+        "name": "test_suspicious_activity_zero_values",
+        "line": 26,
+        "markers": [],
+        "docstring": "Test suspicious activity detection with zero values."
+      },
+      {
+        "name": "test_suspicious_activity_with_zero_average",
+        "line": 41,
+        "markers": [],
+        "docstring": "Test suspicious activity detection with zero average order size."
+      },
+      {
+        "name": "test_suspicious_activity_error_handling",
+        "line": 57,
+        "markers": [],
+        "docstring": "Test suspicious activity detection error handling."
+      },
+      {
+        "name": "test_suspicious_activity_with_extreme_pattern_scores",
+        "line": 78,
+        "markers": [],
+        "docstring": "Test suspicious activity with extreme pattern scores."
+      }
+    ],
     "tests/unit/gpt_trader/security/security_validator/test_order_validation_quantity_and_price_rules.py": [
       {
         "name": "TestOrderValidationQuantityAndPriceRules::test_limit_order_price_validation",
@@ -32859,6 +32957,73 @@
         "line": 41,
         "markers": [],
         "docstring": "Test order validation with different account sizes."
+      }
+    ],
+    "tests/unit/gpt_trader/security/security_validator/test_suspicious_activity_thresholds_and_edges.py": [
+      {
+        "name": "TestSuspiciousActivityThresholdsAndEdges::test_suspicious_activity_threshold",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test suspicious activity detection threshold.",
+        "class": "TestSuspiciousActivityThresholdsAndEdges"
+      },
+      {
+        "name": "TestSuspiciousActivityThresholdsAndEdges::test_suspicious_activity_edge_cases",
+        "line": 37,
+        "markers": [],
+        "docstring": "Test suspicious activity detection edge cases.",
+        "class": "TestSuspiciousActivityThresholdsAndEdges"
+      },
+      {
+        "name": "TestSuspiciousActivityThresholdsAndEdges::test_suspicious_activity_cumulative_detection",
+        "line": 69,
+        "markers": [],
+        "docstring": "Test suspicious activity detection is cumulative.",
+        "class": "TestSuspiciousActivityThresholdsAndEdges"
+      },
+      {
+        "name": "TestSuspiciousActivityThresholdsAndEdges::test_suspicious_activity_with_very_large_orders",
+        "line": 84,
+        "markers": [],
+        "docstring": "Test suspicious activity with very large orders.",
+        "class": "TestSuspiciousActivityThresholdsAndEdges"
+      },
+      {
+        "name": "TestSuspiciousActivityThresholdsAndEdges::test_suspicious_activity_with_float_values",
+        "line": 98,
+        "markers": [],
+        "docstring": "Test suspicious activity detection with float values.",
+        "class": "TestSuspiciousActivityThresholdsAndEdges"
+      },
+      {
+        "name": "test_suspicious_activity_threshold",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test suspicious activity detection threshold."
+      },
+      {
+        "name": "test_suspicious_activity_edge_cases",
+        "line": 37,
+        "markers": [],
+        "docstring": "Test suspicious activity detection edge cases."
+      },
+      {
+        "name": "test_suspicious_activity_cumulative_detection",
+        "line": 69,
+        "markers": [],
+        "docstring": "Test suspicious activity detection is cumulative."
+      },
+      {
+        "name": "test_suspicious_activity_with_very_large_orders",
+        "line": 84,
+        "markers": [],
+        "docstring": "Test suspicious activity with very large orders."
+      },
+      {
+        "name": "test_suspicious_activity_with_float_values",
+        "line": 98,
+        "markers": [],
+        "docstring": "Test suspicious activity detection with float values."
       }
     ],
     "tests/unit/gpt_trader/security/security_validator/test_symbol_validation.py": [
@@ -33631,6 +33796,112 @@
         "docstring": "Test sanitisation with newlines and tabs."
       }
     ],
+    "tests/unit/gpt_trader/security/security_validator/test_suspicious_activity_detection_samples.py": [
+      {
+        "name": "TestSuspiciousActivityDetectionSamples::test_rapid_orders_detection",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test detection of rapid order placement.",
+        "class": "TestSuspiciousActivityDetectionSamples"
+      },
+      {
+        "name": "TestSuspiciousActivityDetectionSamples::test_unusual_order_size_detection",
+        "line": 22,
+        "markers": [],
+        "docstring": "Test detection of unusual order sizes.",
+        "class": "TestSuspiciousActivityDetectionSamples"
+      },
+      {
+        "name": "TestSuspiciousActivityDetectionSamples::test_high_pattern_score_detection",
+        "line": 33,
+        "markers": [],
+        "docstring": "Test detection of high pattern scores.",
+        "class": "TestSuspiciousActivityDetectionSamples"
+      },
+      {
+        "name": "TestSuspiciousActivityDetectionSamples::test_multiple_indicators_detection",
+        "line": 44,
+        "markers": [],
+        "docstring": "Test detection with multiple suspicious indicators.",
+        "class": "TestSuspiciousActivityDetectionSamples"
+      },
+      {
+        "name": "TestSuspiciousActivityDetectionSamples::test_normal_activity_passes",
+        "line": 55,
+        "markers": [],
+        "docstring": "Test normal activity passes detection.",
+        "class": "TestSuspiciousActivityDetectionSamples"
+      },
+      {
+        "name": "TestSuspiciousActivityDetectionSamples::test_suspicious_activity_different_users",
+        "line": 66,
+        "markers": [],
+        "docstring": "Test suspicious activity detection for different users.",
+        "class": "TestSuspiciousActivityDetectionSamples"
+      },
+      {
+        "name": "TestSuspiciousActivityDetectionSamples::test_suspicious_activity_persistence",
+        "line": 78,
+        "markers": [],
+        "docstring": "Test suspicious activity detection persistence.",
+        "class": "TestSuspiciousActivityDetectionSamples"
+      },
+      {
+        "name": "TestSuspiciousActivityDetectionSamples::test_suspicious_activity_consistency",
+        "line": 92,
+        "markers": [],
+        "docstring": "Test suspicious activity detection consistency.",
+        "class": "TestSuspiciousActivityDetectionSamples"
+      },
+      {
+        "name": "test_rapid_orders_detection",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test detection of rapid order placement."
+      },
+      {
+        "name": "test_unusual_order_size_detection",
+        "line": 22,
+        "markers": [],
+        "docstring": "Test detection of unusual order sizes."
+      },
+      {
+        "name": "test_high_pattern_score_detection",
+        "line": 33,
+        "markers": [],
+        "docstring": "Test detection of high pattern scores."
+      },
+      {
+        "name": "test_multiple_indicators_detection",
+        "line": 44,
+        "markers": [],
+        "docstring": "Test detection with multiple suspicious indicators."
+      },
+      {
+        "name": "test_normal_activity_passes",
+        "line": 55,
+        "markers": [],
+        "docstring": "Test normal activity passes detection."
+      },
+      {
+        "name": "test_suspicious_activity_different_users",
+        "line": 66,
+        "markers": [],
+        "docstring": "Test suspicious activity detection for different users."
+      },
+      {
+        "name": "test_suspicious_activity_persistence",
+        "line": 78,
+        "markers": [],
+        "docstring": "Test suspicious activity detection persistence."
+      },
+      {
+        "name": "test_suspicious_activity_consistency",
+        "line": 92,
+        "markers": [],
+        "docstring": "Test suspicious activity detection consistency."
+      }
+    ],
     "tests/unit/gpt_trader/security/security_validator/test_rate_limiting_concurrency.py": [
       {
         "name": "TestRateLimitingConcurrency::test_rate_limit_concurrent_requests",
@@ -33806,242 +34077,6 @@
         "line": 34,
         "markers": [],
         "docstring": "Test rate limiting time precision."
-      }
-    ],
-    "tests/unit/gpt_trader/security/security_validator/test_suspicious_activity.py": [
-      {
-        "name": "TestSuspiciousActivity::test_rapid_orders_detection",
-        "line": 11,
-        "markers": [],
-        "docstring": "Test detection of rapid order placement.",
-        "class": "TestSuspiciousActivity"
-      },
-      {
-        "name": "TestSuspiciousActivity::test_unusual_order_size_detection",
-        "line": 22,
-        "markers": [],
-        "docstring": "Test detection of unusual order sizes.",
-        "class": "TestSuspiciousActivity"
-      },
-      {
-        "name": "TestSuspiciousActivity::test_high_pattern_score_detection",
-        "line": 33,
-        "markers": [],
-        "docstring": "Test detection of high pattern scores.",
-        "class": "TestSuspiciousActivity"
-      },
-      {
-        "name": "TestSuspiciousActivity::test_multiple_indicators_detection",
-        "line": 44,
-        "markers": [],
-        "docstring": "Test detection with multiple suspicious indicators.",
-        "class": "TestSuspiciousActivity"
-      },
-      {
-        "name": "TestSuspiciousActivity::test_normal_activity_passes",
-        "line": 55,
-        "markers": [],
-        "docstring": "Test normal activity passes detection.",
-        "class": "TestSuspiciousActivity"
-      },
-      {
-        "name": "TestSuspiciousActivity::test_suspicious_activity_threshold",
-        "line": 66,
-        "markers": [],
-        "docstring": "Test suspicious activity detection threshold.",
-        "class": "TestSuspiciousActivity"
-      },
-      {
-        "name": "TestSuspiciousActivity::test_suspicious_activity_missing_fields",
-        "line": 92,
-        "markers": [],
-        "docstring": "Test suspicious activity detection with missing fields.",
-        "class": "TestSuspiciousActivity"
-      },
-      {
-        "name": "TestSuspiciousActivity::test_suspicious_activity_zero_values",
-        "line": 107,
-        "markers": [],
-        "docstring": "Test suspicious activity detection with zero values.",
-        "class": "TestSuspiciousActivity"
-      },
-      {
-        "name": "TestSuspiciousActivity::test_suspicious_activity_edge_cases",
-        "line": 122,
-        "markers": [],
-        "docstring": "Test suspicious activity detection edge cases.",
-        "class": "TestSuspiciousActivity"
-      },
-      {
-        "name": "TestSuspiciousActivity::test_suspicious_activity_different_users",
-        "line": 154,
-        "markers": [],
-        "docstring": "Test suspicious activity detection for different users.",
-        "class": "TestSuspiciousActivity"
-      },
-      {
-        "name": "TestSuspiciousActivity::test_suspicious_activity_cumulative_detection",
-        "line": 166,
-        "markers": [],
-        "docstring": "Test suspicious activity detection is cumulative.",
-        "class": "TestSuspiciousActivity"
-      },
-      {
-        "name": "TestSuspiciousActivity::test_suspicious_activity_with_very_large_orders",
-        "line": 181,
-        "markers": [],
-        "docstring": "Test suspicious activity with very large orders.",
-        "class": "TestSuspiciousActivity"
-      },
-      {
-        "name": "TestSuspiciousActivity::test_suspicious_activity_persistence",
-        "line": 195,
-        "markers": [],
-        "docstring": "Test suspicious activity detection persistence.",
-        "class": "TestSuspiciousActivity"
-      },
-      {
-        "name": "TestSuspiciousActivity::test_suspicious_activity_with_zero_average",
-        "line": 209,
-        "markers": [],
-        "docstring": "Test suspicious activity detection with zero average order size.",
-        "class": "TestSuspiciousActivity"
-      },
-      {
-        "name": "TestSuspiciousActivity::test_suspicious_activity_with_float_values",
-        "line": 225,
-        "markers": [],
-        "docstring": "Test suspicious activity detection with float values.",
-        "class": "TestSuspiciousActivity"
-      },
-      {
-        "name": "TestSuspiciousActivity::test_suspicious_activity_error_handling",
-        "line": 239,
-        "markers": [],
-        "docstring": "Test suspicious activity detection error handling.",
-        "class": "TestSuspiciousActivity"
-      },
-      {
-        "name": "TestSuspiciousActivity::test_suspicious_activity_consistency",
-        "line": 260,
-        "markers": [],
-        "docstring": "Test suspicious activity detection consistency.",
-        "class": "TestSuspiciousActivity"
-      },
-      {
-        "name": "TestSuspiciousActivity::test_suspicious_activity_with_extreme_pattern_scores",
-        "line": 272,
-        "markers": [],
-        "docstring": "Test suspicious activity with extreme pattern scores.",
-        "class": "TestSuspiciousActivity"
-      },
-      {
-        "name": "test_rapid_orders_detection",
-        "line": 11,
-        "markers": [],
-        "docstring": "Test detection of rapid order placement."
-      },
-      {
-        "name": "test_unusual_order_size_detection",
-        "line": 22,
-        "markers": [],
-        "docstring": "Test detection of unusual order sizes."
-      },
-      {
-        "name": "test_high_pattern_score_detection",
-        "line": 33,
-        "markers": [],
-        "docstring": "Test detection of high pattern scores."
-      },
-      {
-        "name": "test_multiple_indicators_detection",
-        "line": 44,
-        "markers": [],
-        "docstring": "Test detection with multiple suspicious indicators."
-      },
-      {
-        "name": "test_normal_activity_passes",
-        "line": 55,
-        "markers": [],
-        "docstring": "Test normal activity passes detection."
-      },
-      {
-        "name": "test_suspicious_activity_threshold",
-        "line": 66,
-        "markers": [],
-        "docstring": "Test suspicious activity detection threshold."
-      },
-      {
-        "name": "test_suspicious_activity_missing_fields",
-        "line": 92,
-        "markers": [],
-        "docstring": "Test suspicious activity detection with missing fields."
-      },
-      {
-        "name": "test_suspicious_activity_zero_values",
-        "line": 107,
-        "markers": [],
-        "docstring": "Test suspicious activity detection with zero values."
-      },
-      {
-        "name": "test_suspicious_activity_edge_cases",
-        "line": 122,
-        "markers": [],
-        "docstring": "Test suspicious activity detection edge cases."
-      },
-      {
-        "name": "test_suspicious_activity_different_users",
-        "line": 154,
-        "markers": [],
-        "docstring": "Test suspicious activity detection for different users."
-      },
-      {
-        "name": "test_suspicious_activity_cumulative_detection",
-        "line": 166,
-        "markers": [],
-        "docstring": "Test suspicious activity detection is cumulative."
-      },
-      {
-        "name": "test_suspicious_activity_with_very_large_orders",
-        "line": 181,
-        "markers": [],
-        "docstring": "Test suspicious activity with very large orders."
-      },
-      {
-        "name": "test_suspicious_activity_persistence",
-        "line": 195,
-        "markers": [],
-        "docstring": "Test suspicious activity detection persistence."
-      },
-      {
-        "name": "test_suspicious_activity_with_zero_average",
-        "line": 209,
-        "markers": [],
-        "docstring": "Test suspicious activity detection with zero average order size."
-      },
-      {
-        "name": "test_suspicious_activity_with_float_values",
-        "line": 225,
-        "markers": [],
-        "docstring": "Test suspicious activity detection with float values."
-      },
-      {
-        "name": "test_suspicious_activity_error_handling",
-        "line": 239,
-        "markers": [],
-        "docstring": "Test suspicious activity detection error handling."
-      },
-      {
-        "name": "test_suspicious_activity_consistency",
-        "line": 260,
-        "markers": [],
-        "docstring": "Test suspicious activity detection consistency."
-      },
-      {
-        "name": "test_suspicious_activity_with_extreme_pattern_scores",
-        "line": 272,
-        "markers": [],
-        "docstring": "Test suspicious activity with extreme pattern scores."
       }
     ],
     "tests/unit/gpt_trader/security/security_validator/test_numeric_edge_behaviour.py": [
@@ -62335,357 +62370,149 @@
         "docstring": "Test RSI grid has oversold < overbought constraint."
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_profile.py": [
-      {
-        "name": "TestSignalProfileConfig::test_from_dict_minimal",
-        "line": 25,
-        "markers": [],
-        "docstring": "Create config with just name.",
-        "class": "TestSignalProfileConfig"
-      },
-      {
-        "name": "TestSignalProfileConfig::test_from_dict_full",
-        "line": 32,
-        "markers": [],
-        "docstring": "Create config with all fields.",
-        "class": "TestSignalProfileConfig"
-      },
-      {
-        "name": "TestSignalProfileConfig::test_to_dict_roundtrip",
-        "line": 44,
-        "markers": [],
-        "docstring": "to_dict should be reversible.",
-        "class": "TestSignalProfileConfig"
-      },
-      {
-        "name": "TestDecisionProfileConfig::test_defaults",
-        "line": 61,
-        "markers": [],
-        "docstring": "Default values should match EnsembleStrategyConfig.",
-        "class": "TestDecisionProfileConfig"
-      },
-      {
-        "name": "TestDecisionProfileConfig::test_from_dict_custom",
-        "line": 70,
-        "markers": [],
-        "docstring": "Custom values should override defaults.",
-        "class": "TestDecisionProfileConfig"
-      },
-      {
-        "name": "TestCombinerProfileConfig::test_defaults",
-        "line": 88,
-        "markers": [],
-        "docstring": "Default regime detection thresholds.",
-        "class": "TestCombinerProfileConfig"
-      },
-      {
-        "name": "TestCombinerProfileConfig::test_to_regime_config_with_weights",
-        "line": 95,
-        "markers": [],
-        "docstring": "Custom weights should be applied.",
-        "class": "TestCombinerProfileConfig"
-      },
+    "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_profile_core.py": [
       {
         "name": "TestEnsembleProfile::test_default_profile_is_valid",
-        "line": 113,
+        "line": 21,
         "markers": [],
         "docstring": "Default profile should pass validation.",
         "class": "TestEnsembleProfile"
       },
       {
         "name": "TestEnsembleProfile::test_microstructure_profile_is_valid",
-        "line": 119,
+        "line": 27,
         "markers": [],
         "docstring": "Microstructure profile should pass validation.",
         "class": "TestEnsembleProfile"
       },
       {
         "name": "TestEnsembleProfile::test_conservative_profile_is_valid",
-        "line": 125,
+        "line": 33,
         "markers": [],
         "docstring": "Conservative profile should pass validation.",
         "class": "TestEnsembleProfile"
       },
       {
         "name": "TestEnsembleProfile::test_aggressive_profile_is_valid",
-        "line": 131,
+        "line": 39,
         "markers": [],
         "docstring": "Aggressive profile should pass validation.",
         "class": "TestEnsembleProfile"
       },
       {
         "name": "TestEnsembleProfile::test_build_signals_creates_instances",
-        "line": 137,
+        "line": 45,
         "markers": [],
         "docstring": "build_signals should create SignalGenerator instances.",
         "class": "TestEnsembleProfile"
       },
       {
         "name": "TestEnsembleProfile::test_build_signals_respects_enabled_flag",
-        "line": 146,
+        "line": 54,
         "markers": [],
         "docstring": "Disabled signals should not be built.",
         "class": "TestEnsembleProfile"
       },
       {
         "name": "TestEnsembleProfile::test_build_combiner",
-        "line": 158,
+        "line": 66,
         "markers": [],
         "docstring": "build_combiner should create a RegimeAwareCombiner.",
         "class": "TestEnsembleProfile"
       },
       {
         "name": "TestEnsembleProfile::test_yaml_roundtrip",
-        "line": 165,
+        "line": 73,
         "markers": [],
         "docstring": "Profile should survive YAML serialization.",
         "class": "TestEnsembleProfile"
       },
       {
         "name": "TestEnsembleProfile::test_validation_requires_name",
-        "line": 183,
+        "line": 91,
         "markers": [],
         "docstring": "Profile without name should fail validation.",
         "class": "TestEnsembleProfile"
       },
       {
         "name": "TestEnsembleProfile::test_validation_requires_signals",
-        "line": 189,
+        "line": 97,
         "markers": [],
         "docstring": "Profile without signals should fail validation.",
         "class": "TestEnsembleProfile"
       },
       {
         "name": "TestEnsembleProfile::test_validation_requires_enabled_signals",
-        "line": 195,
+        "line": 103,
         "markers": [],
         "docstring": "Profile with all disabled signals should fail validation.",
         "class": "TestEnsembleProfile"
       },
       {
-        "name": "TestEnsembleStrategyFromProfile::test_from_profile_creates_strategy",
-        "line": 208,
-        "markers": [],
-        "docstring": "from_profile should create working EnsembleStrategy.",
-        "class": "TestEnsembleStrategyFromProfile"
-      },
-      {
-        "name": "TestEnsembleStrategyFromProfile::test_from_profile_name_default",
-        "line": 218,
-        "markers": [],
-        "docstring": "from_profile_name('default') should work.",
-        "class": "TestEnsembleStrategyFromProfile"
-      },
-      {
-        "name": "TestEnsembleStrategyFromProfile::test_from_profile_name_microstructure",
-        "line": 223,
-        "markers": [],
-        "docstring": "from_profile_name('microstructure') should work.",
-        "class": "TestEnsembleStrategyFromProfile"
-      },
-      {
-        "name": "TestEnsembleStrategyFromProfile::test_from_profile_name_conservative",
-        "line": 231,
-        "markers": [],
-        "docstring": "from_profile_name('conservative') should work.",
-        "class": "TestEnsembleStrategyFromProfile"
-      },
-      {
-        "name": "TestEnsembleStrategyFromProfile::test_from_profile_name_aggressive",
-        "line": 238,
-        "markers": [],
-        "docstring": "from_profile_name('aggressive') should work.",
-        "class": "TestEnsembleStrategyFromProfile"
-      },
-      {
-        "name": "TestEnsembleStrategyFromProfile::test_from_profile_name_unknown_raises",
-        "line": 245,
-        "markers": [],
-        "docstring": "from_profile_name with unknown name should raise ValueError.",
-        "class": "TestEnsembleStrategyFromProfile"
-      },
-      {
-        "name": "TestEnsembleStrategyFromProfile::test_from_yaml_file",
-        "line": 250,
-        "markers": [],
-        "docstring": "from_yaml should load and create strategy.",
-        "class": "TestEnsembleStrategyFromProfile"
-      },
-      {
-        "name": "TestProfileDecisionIntegration::test_strategy_from_profile_can_decide",
-        "line": 270,
-        "markers": [],
-        "docstring": "Strategy built from profile should make decisions.",
-        "class": "TestProfileDecisionIntegration"
-      },
-      {
-        "name": "TestProfileDecisionIntegration::test_different_profiles_different_thresholds",
-        "line": 288,
-        "markers": [],
-        "docstring": "Different profiles should have different decision thresholds.",
-        "class": "TestProfileDecisionIntegration"
-      },
-      {
-        "name": "test_from_dict_minimal",
-        "line": 25,
-        "markers": [],
-        "docstring": "Create config with just name."
-      },
-      {
-        "name": "test_from_dict_full",
-        "line": 32,
-        "markers": [],
-        "docstring": "Create config with all fields."
-      },
-      {
-        "name": "test_to_dict_roundtrip",
-        "line": 44,
-        "markers": [],
-        "docstring": "to_dict should be reversible."
-      },
-      {
-        "name": "test_defaults",
-        "line": 61,
-        "markers": [],
-        "docstring": "Default values should match EnsembleStrategyConfig."
-      },
-      {
-        "name": "test_from_dict_custom",
-        "line": 70,
-        "markers": [],
-        "docstring": "Custom values should override defaults."
-      },
-      {
-        "name": "test_defaults",
-        "line": 88,
-        "markers": [],
-        "docstring": "Default regime detection thresholds."
-      },
-      {
-        "name": "test_to_regime_config_with_weights",
-        "line": 95,
-        "markers": [],
-        "docstring": "Custom weights should be applied."
-      },
-      {
         "name": "test_default_profile_is_valid",
-        "line": 113,
+        "line": 21,
         "markers": [],
         "docstring": "Default profile should pass validation."
       },
       {
         "name": "test_microstructure_profile_is_valid",
-        "line": 119,
+        "line": 27,
         "markers": [],
         "docstring": "Microstructure profile should pass validation."
       },
       {
         "name": "test_conservative_profile_is_valid",
-        "line": 125,
+        "line": 33,
         "markers": [],
         "docstring": "Conservative profile should pass validation."
       },
       {
         "name": "test_aggressive_profile_is_valid",
-        "line": 131,
+        "line": 39,
         "markers": [],
         "docstring": "Aggressive profile should pass validation."
       },
       {
         "name": "test_build_signals_creates_instances",
-        "line": 137,
+        "line": 45,
         "markers": [],
         "docstring": "build_signals should create SignalGenerator instances."
       },
       {
         "name": "test_build_signals_respects_enabled_flag",
-        "line": 146,
+        "line": 54,
         "markers": [],
         "docstring": "Disabled signals should not be built."
       },
       {
         "name": "test_build_combiner",
-        "line": 158,
+        "line": 66,
         "markers": [],
         "docstring": "build_combiner should create a RegimeAwareCombiner."
       },
       {
         "name": "test_yaml_roundtrip",
-        "line": 165,
+        "line": 73,
         "markers": [],
         "docstring": "Profile should survive YAML serialization."
       },
       {
         "name": "test_validation_requires_name",
-        "line": 183,
+        "line": 91,
         "markers": [],
         "docstring": "Profile without name should fail validation."
       },
       {
         "name": "test_validation_requires_signals",
-        "line": 189,
+        "line": 97,
         "markers": [],
         "docstring": "Profile without signals should fail validation."
       },
       {
         "name": "test_validation_requires_enabled_signals",
-        "line": 195,
+        "line": 103,
         "markers": [],
         "docstring": "Profile with all disabled signals should fail validation."
-      },
-      {
-        "name": "test_from_profile_creates_strategy",
-        "line": 208,
-        "markers": [],
-        "docstring": "from_profile should create working EnsembleStrategy."
-      },
-      {
-        "name": "test_from_profile_name_default",
-        "line": 218,
-        "markers": [],
-        "docstring": "from_profile_name('default') should work."
-      },
-      {
-        "name": "test_from_profile_name_microstructure",
-        "line": 223,
-        "markers": [],
-        "docstring": "from_profile_name('microstructure') should work."
-      },
-      {
-        "name": "test_from_profile_name_conservative",
-        "line": 231,
-        "markers": [],
-        "docstring": "from_profile_name('conservative') should work."
-      },
-      {
-        "name": "test_from_profile_name_aggressive",
-        "line": 238,
-        "markers": [],
-        "docstring": "from_profile_name('aggressive') should work."
-      },
-      {
-        "name": "test_from_profile_name_unknown_raises",
-        "line": 245,
-        "markers": [],
-        "docstring": "from_profile_name with unknown name should raise ValueError."
-      },
-      {
-        "name": "test_from_yaml_file",
-        "line": 250,
-        "markers": [],
-        "docstring": "from_yaml should load and create strategy."
-      },
-      {
-        "name": "test_strategy_from_profile_can_decide",
-        "line": 270,
-        "markers": [],
-        "docstring": "Strategy built from profile should make decisions."
-      },
-      {
-        "name": "test_different_profiles_different_thresholds",
-        "line": 288,
-        "markers": [],
-        "docstring": "Different profiles should have different decision thresholds."
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_entry_and_exit_signals.py": [
@@ -62947,6 +62774,99 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_profile_configs.py": [
+      {
+        "name": "TestSignalProfileConfig::test_from_dict_minimal",
+        "line": 15,
+        "markers": [],
+        "docstring": "Create config with just name.",
+        "class": "TestSignalProfileConfig"
+      },
+      {
+        "name": "TestSignalProfileConfig::test_from_dict_full",
+        "line": 22,
+        "markers": [],
+        "docstring": "Create config with all fields.",
+        "class": "TestSignalProfileConfig"
+      },
+      {
+        "name": "TestSignalProfileConfig::test_to_dict_roundtrip",
+        "line": 34,
+        "markers": [],
+        "docstring": "to_dict should be reversible.",
+        "class": "TestSignalProfileConfig"
+      },
+      {
+        "name": "TestDecisionProfileConfig::test_defaults",
+        "line": 51,
+        "markers": [],
+        "docstring": "Default values should match EnsembleStrategyConfig.",
+        "class": "TestDecisionProfileConfig"
+      },
+      {
+        "name": "TestDecisionProfileConfig::test_from_dict_custom",
+        "line": 60,
+        "markers": [],
+        "docstring": "Custom values should override defaults.",
+        "class": "TestDecisionProfileConfig"
+      },
+      {
+        "name": "TestCombinerProfileConfig::test_defaults",
+        "line": 78,
+        "markers": [],
+        "docstring": "Default regime detection thresholds.",
+        "class": "TestCombinerProfileConfig"
+      },
+      {
+        "name": "TestCombinerProfileConfig::test_to_regime_config_with_weights",
+        "line": 85,
+        "markers": [],
+        "docstring": "Custom weights should be applied.",
+        "class": "TestCombinerProfileConfig"
+      },
+      {
+        "name": "test_from_dict_minimal",
+        "line": 15,
+        "markers": [],
+        "docstring": "Create config with just name."
+      },
+      {
+        "name": "test_from_dict_full",
+        "line": 22,
+        "markers": [],
+        "docstring": "Create config with all fields."
+      },
+      {
+        "name": "test_to_dict_roundtrip",
+        "line": 34,
+        "markers": [],
+        "docstring": "to_dict should be reversible."
+      },
+      {
+        "name": "test_defaults",
+        "line": 51,
+        "markers": [],
+        "docstring": "Default values should match EnsembleStrategyConfig."
+      },
+      {
+        "name": "test_from_dict_custom",
+        "line": 60,
+        "markers": [],
+        "docstring": "Custom values should override defaults."
+      },
+      {
+        "name": "test_defaults",
+        "line": 78,
+        "markers": [],
+        "docstring": "Default regime detection thresholds."
+      },
+      {
+        "name": "test_to_regime_config_with_weights",
+        "line": 85,
+        "markers": [],
+        "docstring": "Custom weights should be applied."
+      }
+    ],
     "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_spot_and_perps_strategies.py": [
       {
         "name": "TestSpotStrategy::test_spot_strategy_uses_spot_config",
@@ -63044,6 +62964,125 @@
         "line": 156,
         "markers": [],
         "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_profile_strategy.py": [
+      {
+        "name": "TestEnsembleStrategyFromProfile::test_from_profile_creates_strategy",
+        "line": 20,
+        "markers": [],
+        "docstring": "from_profile should create working EnsembleStrategy.",
+        "class": "TestEnsembleStrategyFromProfile"
+      },
+      {
+        "name": "TestEnsembleStrategyFromProfile::test_from_profile_name_default",
+        "line": 30,
+        "markers": [],
+        "docstring": "from_profile_name('default') should work.",
+        "class": "TestEnsembleStrategyFromProfile"
+      },
+      {
+        "name": "TestEnsembleStrategyFromProfile::test_from_profile_name_microstructure",
+        "line": 35,
+        "markers": [],
+        "docstring": "from_profile_name('microstructure') should work.",
+        "class": "TestEnsembleStrategyFromProfile"
+      },
+      {
+        "name": "TestEnsembleStrategyFromProfile::test_from_profile_name_conservative",
+        "line": 43,
+        "markers": [],
+        "docstring": "from_profile_name('conservative') should work.",
+        "class": "TestEnsembleStrategyFromProfile"
+      },
+      {
+        "name": "TestEnsembleStrategyFromProfile::test_from_profile_name_aggressive",
+        "line": 50,
+        "markers": [],
+        "docstring": "from_profile_name('aggressive') should work.",
+        "class": "TestEnsembleStrategyFromProfile"
+      },
+      {
+        "name": "TestEnsembleStrategyFromProfile::test_from_profile_name_unknown_raises",
+        "line": 57,
+        "markers": [],
+        "docstring": "from_profile_name with unknown name should raise ValueError.",
+        "class": "TestEnsembleStrategyFromProfile"
+      },
+      {
+        "name": "TestEnsembleStrategyFromProfile::test_from_yaml_file",
+        "line": 62,
+        "markers": [],
+        "docstring": "from_yaml should load and create strategy.",
+        "class": "TestEnsembleStrategyFromProfile"
+      },
+      {
+        "name": "TestProfileDecisionIntegration::test_strategy_from_profile_can_decide",
+        "line": 82,
+        "markers": [],
+        "docstring": "Strategy built from profile should make decisions.",
+        "class": "TestProfileDecisionIntegration"
+      },
+      {
+        "name": "TestProfileDecisionIntegration::test_different_profiles_different_thresholds",
+        "line": 100,
+        "markers": [],
+        "docstring": "Different profiles should have different decision thresholds.",
+        "class": "TestProfileDecisionIntegration"
+      },
+      {
+        "name": "test_from_profile_creates_strategy",
+        "line": 20,
+        "markers": [],
+        "docstring": "from_profile should create working EnsembleStrategy."
+      },
+      {
+        "name": "test_from_profile_name_default",
+        "line": 30,
+        "markers": [],
+        "docstring": "from_profile_name('default') should work."
+      },
+      {
+        "name": "test_from_profile_name_microstructure",
+        "line": 35,
+        "markers": [],
+        "docstring": "from_profile_name('microstructure') should work."
+      },
+      {
+        "name": "test_from_profile_name_conservative",
+        "line": 43,
+        "markers": [],
+        "docstring": "from_profile_name('conservative') should work."
+      },
+      {
+        "name": "test_from_profile_name_aggressive",
+        "line": 50,
+        "markers": [],
+        "docstring": "from_profile_name('aggressive') should work."
+      },
+      {
+        "name": "test_from_profile_name_unknown_raises",
+        "line": 57,
+        "markers": [],
+        "docstring": "from_profile_name with unknown name should raise ValueError."
+      },
+      {
+        "name": "test_from_yaml_file",
+        "line": 62,
+        "markers": [],
+        "docstring": "from_yaml should load and create strategy."
+      },
+      {
+        "name": "test_strategy_from_profile_can_decide",
+        "line": 82,
+        "markers": [],
+        "docstring": "Strategy built from profile should make decisions."
+      },
+      {
+        "name": "test_different_profiles_different_thresholds",
+        "line": 100,
+        "markers": [],
+        "docstring": "Different profiles should have different decision thresholds."
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_bundle_and_performance.py": [

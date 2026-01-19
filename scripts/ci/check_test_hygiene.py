@@ -21,17 +21,12 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/errors/test_base.py",  # error taxonomy coverage
     "tests/unit/gpt_trader/validation/test_calculation_validator.py",  # calculation validator coverage
     "tests/unit/gpt_trader/features/data/test_data_module.py",  # 295 lines: comprehensive data module contract with storage/cache stubs
-    "tests/unit/gpt_trader/security/security_validator/test_suspicious_activity.py",  # 294 lines: suspicious activity detection heuristics and alert coverage
     "tests/unit/gpt_trader/security/security_validator/test_symbol_validation.py",  # 243 lines: comprehensive symbol/blocklist validation cases
     "tests/unit/gpt_trader/cli/test_commands_orders.py",  # 254 lines: comprehensive CLI orders command coverage
-    "tests/unit/gpt_trader/preflight/test_context.py",  # preflight context scenarios
-    "tests/unit/gpt_trader/security/test_request_validator.py",  # request validation coverage
     "tests/unit/gpt_trader/security/test_input_sanitizer.py",  # input sanitization edge cases
     "tests/contract/test_coinbase_api_contract.py",  # API contract compliance suite
-    "tests/unit/gpt_trader/preflight/test_core.py",  # preflight core validation
     "tests/unit/gpt_trader/validation/test_composite_validators.py",  # composite validator chain permutations
     "tests/unit/gpt_trader/validation/test_config_validators.py",  # configuration validation matrix
-    "tests/unit/gpt_trader/validation/test_data_validators.py",  # data validation edge cases and error handling
     # Coverage expansion tests (C1 task)
     "tests/unit/gpt_trader/features/live_trade/test_indicators.py",  # indicator calculation coverage
     "tests/unit/gpt_trader/errors/test_error_patterns.py",  # error pattern decorator coverage
@@ -66,7 +61,6 @@ ALLOWLIST = {
     # Pre-existing TUI and feature test suites
     "tests/unit/gpt_trader/tui/test_trade_matcher.py",  # trade matcher FIFO comprehensive scenarios
     "tests/unit/gpt_trader/tui/widgets/test_cfm_balance.py",  # CFM balance widget scenarios
-    "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_profile.py",  # ensemble profile comprehensive coverage
     "tests/unit/gpt_trader/features/live_trade/signals/test_vwap.py",  # VWAP signal comprehensive scenarios
     "tests/unit/gpt_trader/app/config/test_profile_loader.py",  # profile loader comprehensive coverage
     "tests/unit/gpt_trader/app/containers/test_risk_validation.py",  # risk validation container scenarios

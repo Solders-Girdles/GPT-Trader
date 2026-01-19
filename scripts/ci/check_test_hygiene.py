@@ -21,21 +21,14 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/security/test_input_sanitizer.py",  # input sanitization edge cases
     "tests/contract/test_coinbase_api_contract.py",  # API contract compliance suite
     "tests/unit/gpt_trader/validation/test_composite_validators.py",  # composite validator chain permutations
-    "tests/unit/gpt_trader/validation/test_config_validators.py",  # configuration validation matrix
     # Coverage expansion tests (C1 task)
-    "tests/unit/gpt_trader/features/live_trade/test_indicators.py",  # indicator calculation coverage
-    "tests/unit/gpt_trader/app/test_health_server.py",  # health server endpoint coverage
     # Phase 2 pain points remediation: critical service coverage
     # Optimization and CLI test suites
     "tests/unit/gpt_trader/features/optimize/objectives/test_constraints.py",  # constraint objective validation matrix
-    "tests/unit/gpt_trader/cli/commands/optimize/test_commands.py",  # CLI command integration tests
     "tests/unit/gpt_trader/cli/commands/optimize/test_config_loader.py",  # config loader edge cases
     # Intelligence and Strategy Dev tests (large modules)
     "tests/unit/gpt_trader/features/intelligence/ensemble/test_voting.py",
-    "tests/unit/gpt_trader/features/intelligence/ensemble/test_adaptive.py",
-    "tests/unit/gpt_trader/features/strategy_dev/lab/test_experiment.py",
     # TUI Phase 3.5 comprehensive test suites
-    "tests/unit/gpt_trader/tui/services/test_mode_service.py",  # mode service state transitions
     "tests/unit/gpt_trader/features/live_trade/signals/test_orderbook_imbalance.py",  # orderbook imbalance signal comprehensive scenarios
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics.py",  # API metrics collection comprehensive scenarios
     "tests/unit/gpt_trader/features/live_trade/risk/test_cfm_risk_config.py",  # CFM risk config validation matrix
@@ -43,9 +36,6 @@ ALLOWLIST = {
     # Architecture migration and observability tests
     "tests/integration/test_crash_recovery.py",  # crash recovery scenarios and state restoration
     # Pre-existing TUI and feature test suites
-    "tests/unit/gpt_trader/tui/widgets/test_cfm_balance.py",  # CFM balance widget scenarios
-    "tests/unit/gpt_trader/features/live_trade/signals/test_vwap.py",  # VWAP signal comprehensive scenarios
-    "tests/unit/gpt_trader/app/containers/test_risk_validation.py",  # risk validation container scenarios
     "tests/unit/gpt_trader/backtesting/validation/test_decision_logger_logging_and_retrieval.py",  # decision logger modularized coverage (242 lines)
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_real_transport.py",  # transport layer coverage across real transport scenarios (272 lines)
 }

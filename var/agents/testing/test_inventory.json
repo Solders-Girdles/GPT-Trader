@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 11054,
-    "total_files": 877,
+    "total_tests": 11051,
+    "total_files": 892,
     "markers_used": 9
   },
   "marker_definitions": {
@@ -236,10 +236,12 @@
       "tests/unit/gpt_trader/app/config/test_validation.py",
       "tests/unit/gpt_trader/app/config/test_cfm_config.py",
       "tests/unit/gpt_trader/app/config/test_bot_config.py",
+      "tests/unit/gpt_trader/app/config/test_profile_loader_container_api.py",
       "tests/unit/gpt_trader/app/config/test_profile_loader.py",
       "tests/unit/gpt_trader/app/config/test_validation_rules.py",
       "tests/unit/gpt_trader/app/config/test_bot_config_loading.py",
       "tests/unit/gpt_trader/app/config/test_defaults.py",
+      "tests/unit/gpt_trader/app/containers/test_risk_validation_kill_switch.py",
       "tests/unit/gpt_trader/app/containers/test_risk_validation.py"
     ],
     "config": [
@@ -280,6 +282,7 @@
       "tests/unit/gpt_trader/security/secrets_manager/test_cache_special_cases.py",
       "tests/unit/gpt_trader/security/security_validator/test_convenience_wrappers.py",
       "tests/unit/gpt_trader/security/security_validator/test_trading_hours.py",
+      "tests/unit/gpt_trader/security/security_validator/test_symbol_validation_exception_handling.py",
       "tests/unit/gpt_trader/security/security_validator/test_suspicious_activity_error_handling.py",
       "tests/unit/gpt_trader/security/security_validator/test_order_validation_quantity_and_price_rules.py",
       "tests/unit/gpt_trader/security/security_validator/test_order_validation_account_value_effects.py",
@@ -294,6 +297,7 @@
       "tests/unit/gpt_trader/security/security_validator/test_order_validation_payload_and_errors.py",
       "tests/unit/gpt_trader/security/security_validator/test_order_validation_value_limits.py",
       "tests/unit/gpt_trader/security/security_validator/test_rate_limiting_time_windows.py",
+      "tests/unit/gpt_trader/security/security_validator/test_symbol_validation_bulk.py",
       "tests/unit/gpt_trader/security/security_validator/test_numeric_edge_behaviour.py",
       "tests/unit/gpt_trader/security/security_validator/test_order_validation_happy_path.py",
       "tests/unit/gpt_trader/security/security_validator/test_rate_limiting_escalation_and_clearing.py"
@@ -382,6 +386,7 @@
       "tests/unit/gpt_trader/tui/services/test_theme_service.py",
       "tests/unit/gpt_trader/tui/services/test_alert_manager_validation.py",
       "tests/unit/gpt_trader/tui/services/test_execution_telemetry_collector_core.py",
+      "tests/unit/gpt_trader/tui/services/test_mode_service_preferences.py",
       "tests/unit/gpt_trader/tui/services/test_trading_stats_service_model.py",
       "tests/unit/gpt_trader/tui/services/test_trading_stats_service_trade_matching.py",
       "tests/unit/gpt_trader/tui/services/test_execution_telemetry_reason_tracking.py",
@@ -393,14 +398,15 @@
       "tests/unit/gpt_trader/tui/services/test_credential_validator_mode_requirements.py",
       "tests/unit/gpt_trader/tui/services/test_alert_manager_categories.py",
       "tests/unit/gpt_trader/tui/services/test_performance_service_models.py",
+      "tests/unit/gpt_trader/tui/services/test_mode_service_create_bot.py",
       "tests/unit/gpt_trader/tui/services/test_alert_manager_execution_health.py",
       "tests/unit/gpt_trader/tui/services/test_performance_service_core.py",
       "tests/unit/gpt_trader/tui/services/test_alert_manager_trade_stale_orders.py",
       "tests/unit/gpt_trader/tui/services/test_preferences_watchlist.py",
       "tests/unit/gpt_trader/tui/services/test_alert_manager_trade_orders.py",
       "tests/unit/gpt_trader/tui/services/test_onboarding_service_status.py",
-      "tests/unit/gpt_trader/tui/services/test_mode_service.py",
       "tests/unit/gpt_trader/tui/services/test_execution_telemetry_issue_tracking.py",
+      "tests/unit/gpt_trader/tui/services/test_mode_service_core.py",
       "tests/unit/gpt_trader/tui/services/test_onboarding_service_checklist_item.py",
       "tests/unit/gpt_trader/tui/services/test_responsive_manager.py",
       "tests/unit/gpt_trader/tui/services/test_focus_manager.py",
@@ -416,7 +422,9 @@
       "tests/unit/gpt_trader/tui/widgets/test_risk_detail_modal_guard_visibility.py",
       "tests/unit/gpt_trader/tui/widgets/test_execution_issues_modal.py",
       "tests/unit/gpt_trader/tui/widgets/test_strategy_widget_core.py",
+      "tests/unit/gpt_trader/tui/widgets/test_cfm_balance_unavailable.py",
       "tests/unit/gpt_trader/tui/widgets/test_orders_widget_sorting.py",
+      "tests/unit/gpt_trader/tui/widgets/test_cfm_balance_basic.py",
       "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_refresh_and_empty_states.py",
       "tests/unit/gpt_trader/tui/widgets/test_strategy_widget_decision_display.py",
       "tests/unit/gpt_trader/tui/widgets/test_risk_detail_modal_score.py",
@@ -427,11 +435,11 @@
       "tests/unit/gpt_trader/tui/widgets/test_risk.py",
       "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_clear_and_bindings.py",
       "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_filter_actions.py",
+      "tests/unit/gpt_trader/tui/widgets/test_cfm_balance_color_coding.py",
       "tests/unit/gpt_trader/tui/widgets/test_logs.py",
       "tests/unit/gpt_trader/tui/widgets/test_performance_dashboard_classes.py",
       "tests/unit/gpt_trader/tui/widgets/test_position_detail_modal_trade_classification.py",
       "tests/unit/gpt_trader/tui/widgets/test_trading_stats.py",
-      "tests/unit/gpt_trader/tui/widgets/test_cfm_balance.py",
       "tests/unit/gpt_trader/tui/widgets/test_panic.py",
       "tests/unit/gpt_trader/tui/widgets/test_validation_indicator.py",
       "tests/unit/gpt_trader/tui/widgets/test_position_detail_modal_fill_quality.py",
@@ -456,8 +464,10 @@
       "tests/unit/gpt_trader/cli/test_response_error.py",
       "tests/unit/gpt_trader/cli/test_commands_account_treasury.py",
       "tests/unit/gpt_trader/cli/test_response_format.py",
+      "tests/unit/gpt_trader/cli/commands/optimize/test_commands_arg_parsing.py",
+      "tests/unit/gpt_trader/cli/commands/optimize/test_commands_execution.py",
       "tests/unit/gpt_trader/cli/commands/optimize/test_config_loader.py",
-      "tests/unit/gpt_trader/cli/commands/optimize/test_commands.py",
+      "tests/unit/gpt_trader/cli/commands/optimize/test_commands_registration.py",
       "tests/unit/gpt_trader/cli/commands/optimize/test_formatters.py"
     ],
     "observability": [
@@ -672,6 +682,7 @@
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager_reset_daily_tracking.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_lifecycle.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager_mark_staleness.py",
+      "tests/unit/gpt_trader/features/live_trade/test_indicators_atr.py",
       "tests/unit/gpt_trader/features/live_trade/test_state_recovery_rehydration.py",
       "tests/unit/gpt_trader/features/live_trade/test_state_recovery_strategy_rehydrate.py",
       "tests/unit/gpt_trader/features/live_trade/test_strategy_factory.py",
@@ -715,8 +726,9 @@
       "tests/unit/gpt_trader/features/optimize/parameter_space/test_builder.py",
       "tests/unit/gpt_trader/features/intelligence/ensemble/test_voting.py",
       "tests/unit/gpt_trader/features/intelligence/ensemble/test_weighting.py",
+      "tests/unit/gpt_trader/features/intelligence/ensemble/test_adaptive_weight_updater.py",
+      "tests/unit/gpt_trader/features/intelligence/ensemble/test_adaptive_strategy_performance.py",
       "tests/unit/gpt_trader/features/intelligence/ensemble/test_orchestrator_crisis_mode.py",
-      "tests/unit/gpt_trader/features/intelligence/ensemble/test_adaptive.py",
       "tests/unit/gpt_trader/features/intelligence/ensemble/test_orchestrator_decision.py",
       "tests/unit/gpt_trader/features/intelligence/ensemble/test_orchestrator_serialization.py",
       "tests/unit/gpt_trader/features/intelligence/backtesting/test_batch_regime_snapshot.py",
@@ -883,6 +895,7 @@
       "tests/unit/gpt_trader/features/strategy_dev/monitor/test_alerts_rule.py",
       "tests/unit/gpt_trader/features/strategy_dev/config/test_registry.py",
       "tests/unit/gpt_trader/features/strategy_dev/config/test_strategy_profile.py",
+      "tests/unit/gpt_trader/features/strategy_dev/lab/test_experiment_result.py",
       "tests/unit/gpt_trader/features/strategy_dev/lab/test_experiment.py",
       "tests/unit/gpt_trader/features/strategy_dev/lab/test_parameter_grid.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_profile_core.py",
@@ -908,6 +921,8 @@
       "tests/unit/gpt_trader/features/live_trade/signals/test_vwap.py",
       "tests/unit/gpt_trader/features/live_trade/signals/test_spread.py",
       "tests/unit/gpt_trader/features/live_trade/signals/test_orderbook_imbalance.py",
+      "tests/unit/gpt_trader/features/live_trade/signals/test_vwap_customization.py",
+      "tests/unit/gpt_trader/features/live_trade/signals/test_vwap_config.py",
       "tests/unit/gpt_trader/features/live_trade/signals/test_order_flow.py",
       "tests/unit/gpt_trader/features/live_trade/signals/test_mean_reversion_signal_edges.py",
       "tests/unit/gpt_trader/features/live_trade/signals/test_momentum_signal_edges.py",
@@ -12733,92 +12748,92 @@
     "tests/unit/gpt_trader/persistence/test_orders_store_record.py": [
       {
         "name": "TestOrderRecord::test_to_dict_and_from_dict",
-        "line": 15,
+        "line": 14,
         "markers": [],
         "docstring": "",
         "class": "TestOrderRecord"
       },
       {
         "name": "TestOrderRecord::test_compute_checksum_deterministic",
-        "line": 30,
+        "line": 29,
         "markers": [],
         "docstring": "",
         "class": "TestOrderRecord"
       },
       {
         "name": "TestOrderRecord::test_compute_checksum_changes_with_critical_fields",
-        "line": 36,
+        "line": 35,
         "markers": [],
         "docstring": "",
         "class": "TestOrderRecord"
       },
       {
         "name": "TestOrderRecord::test_is_terminal_pending",
-        "line": 41,
+        "line": 40,
         "markers": [],
         "docstring": "",
         "class": "TestOrderRecord"
       },
       {
         "name": "TestOrderRecord::test_is_terminal_open",
-        "line": 45,
+        "line": 44,
         "markers": [],
         "docstring": "",
         "class": "TestOrderRecord"
       },
       {
         "name": "TestOrderRecord::test_is_terminal_filled",
-        "line": 49,
+        "line": 48,
         "markers": [],
         "docstring": "",
         "class": "TestOrderRecord"
       },
       {
         "name": "TestOrderRecord::test_is_terminal_cancelled",
-        "line": 53,
+        "line": 52,
         "markers": [],
         "docstring": "",
         "class": "TestOrderRecord"
       },
       {
         "name": "test_to_dict_and_from_dict",
-        "line": 15,
+        "line": 14,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_compute_checksum_deterministic",
-        "line": 30,
+        "line": 29,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_compute_checksum_changes_with_critical_fields",
-        "line": 36,
+        "line": 35,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_is_terminal_pending",
-        "line": 41,
+        "line": 40,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_is_terminal_open",
-        "line": 45,
+        "line": 44,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_is_terminal_filled",
-        "line": 49,
+        "line": 48,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_is_terminal_cancelled",
-        "line": 53,
+        "line": 52,
         "markers": [],
         "docstring": ""
       }
@@ -12826,157 +12841,157 @@
     "tests/unit/gpt_trader/persistence/test_orders_store_persistence.py": [
       {
         "name": "TestOrdersStore::test_initialize_creates_database",
-        "line": 17,
+        "line": 16,
         "markers": [],
         "docstring": "",
         "class": "TestOrdersStore"
       },
       {
         "name": "TestOrdersStore::test_save_and_get_order",
-        "line": 25,
+        "line": 24,
         "markers": [],
         "docstring": "",
         "class": "TestOrdersStore"
       },
       {
         "name": "TestOrdersStore::test_get_order_not_found",
-        "line": 40,
+        "line": 39,
         "markers": [],
         "docstring": "",
         "class": "TestOrdersStore"
       },
       {
         "name": "TestOrdersStore::test_save_order_upsert",
-        "line": 46,
+        "line": 45,
         "markers": [],
         "docstring": "",
         "class": "TestOrdersStore"
       },
       {
         "name": "TestOrdersStore::test_upsert_by_client_id_updates_order_id",
-        "line": 61,
+        "line": 60,
         "markers": [],
         "docstring": "",
         "class": "TestOrdersStore"
       },
       {
         "name": "TestOrdersStore::test_get_pending_orders",
-        "line": 83,
+        "line": 82,
         "markers": [],
         "docstring": "",
         "class": "TestOrdersStore"
       },
       {
         "name": "TestOrdersStore::test_get_pending_orders_by_bot",
-        "line": 103,
+        "line": 102,
         "markers": [],
         "docstring": "",
         "class": "TestOrdersStore"
       },
       {
         "name": "TestOrdersStore::test_get_orders_by_symbol",
-        "line": 116,
+        "line": 115,
         "markers": [],
         "docstring": "",
         "class": "TestOrdersStore"
       },
       {
         "name": "TestOrdersStore::test_update_status",
-        "line": 129,
+        "line": 128,
         "markers": [],
         "docstring": "",
         "class": "TestOrdersStore"
       },
       {
         "name": "TestOrdersStore::test_verify_integrity_valid",
-        "line": 149,
+        "line": 148,
         "markers": [],
         "docstring": "",
         "class": "TestOrdersStore"
       },
       {
         "name": "TestOrdersStore::test_cleanup_old_orders",
-        "line": 160,
+        "line": 159,
         "markers": [],
         "docstring": "",
         "class": "TestOrdersStore"
       },
       {
         "name": "TestOrdersStore::test_context_manager",
-        "line": 176,
+        "line": 175,
         "markers": [],
         "docstring": "",
         "class": "TestOrdersStore"
       },
       {
         "name": "test_initialize_creates_database",
-        "line": 17,
+        "line": 16,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_save_and_get_order",
-        "line": 25,
+        "line": 24,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_get_order_not_found",
-        "line": 40,
+        "line": 39,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_save_order_upsert",
-        "line": 46,
+        "line": 45,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_upsert_by_client_id_updates_order_id",
-        "line": 61,
+        "line": 60,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_get_pending_orders",
-        "line": 83,
+        "line": 82,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_get_pending_orders_by_bot",
-        "line": 103,
+        "line": 102,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_get_orders_by_symbol",
-        "line": 116,
+        "line": 115,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_update_status",
-        "line": 129,
+        "line": 128,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_verify_integrity_valid",
-        "line": 149,
+        "line": 148,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_cleanup_old_orders",
-        "line": 160,
+        "line": 159,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_context_manager",
-        "line": 176,
+        "line": 175,
         "markers": [],
         "docstring": ""
       }
@@ -30533,80 +30548,45 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/app/config/test_profile_loader.py": [
-      {
-        "name": "TestProfileLoader::test_load_from_yaml_file",
-        "line": 52,
-        "markers": [],
-        "docstring": "Test loading profile from YAML file.",
-        "class": "TestProfileLoader"
-      },
-      {
-        "name": "TestProfileLoader::test_fallback_to_hardcoded_defaults",
-        "line": 92,
-        "markers": [],
-        "docstring": "Test fallback to hardcoded defaults when YAML doesn't exist.",
-        "class": "TestProfileLoader"
-      },
-      {
-        "name": "TestProfileLoader::test_hardcoded_defaults_exist_for_all_profiles",
-        "line": 105,
-        "markers": [],
-        "docstring": "Test that hardcoded defaults exist for all Profile enum values.",
-        "class": "TestProfileLoader"
-      },
-      {
-        "name": "TestProfileSchema::test_from_yaml_minimal",
-        "line": 120,
-        "markers": [],
-        "docstring": "Test creating ProfileSchema from minimal YAML data.",
-        "class": "TestProfileSchema"
-      },
-      {
-        "name": "TestProfileSchema::test_from_yaml_full",
-        "line": 132,
-        "markers": [],
-        "docstring": "Test creating ProfileSchema from complete YAML data.",
-        "class": "TestProfileSchema"
-      },
+    "tests/unit/gpt_trader/app/config/test_profile_loader_container_api.py": [
       {
         "name": "TestBuildProfileConfig::test_dev_profile_sets_mock_broker",
-        "line": 189,
+        "line": 48,
         "markers": [],
         "docstring": "",
         "class": "TestBuildProfileConfig"
       },
       {
         "name": "TestBuildProfileConfig::test_demo_profile_conservative_settings",
-        "line": 197,
+        "line": 56,
         "markers": [],
         "docstring": "",
         "class": "TestBuildProfileConfig"
       },
       {
         "name": "TestBuildProfileConfig::test_production_profile_settings",
-        "line": 205,
+        "line": 64,
         "markers": [],
         "docstring": "",
         "class": "TestBuildProfileConfig"
       },
       {
         "name": "TestBuildProfileConfig::test_canary_profile_reduce_only",
-        "line": 213,
+        "line": 72,
         "markers": [],
         "docstring": "",
         "class": "TestBuildProfileConfig"
       },
       {
         "name": "TestBuildProfileConfig::test_spot_profile_no_shorts",
-        "line": 221,
+        "line": 80,
         "markers": [],
         "docstring": "",
         "class": "TestBuildProfileConfig"
       },
       {
         "name": "TestProfileMapping::test_all_profiles_return_config",
-        "line": 238,
+        "line": 97,
         "markers": [
           "parametrize"
         ],
@@ -30615,14 +30595,14 @@
       },
       {
         "name": "TestLoadProfile::test_load_profile_returns_schema",
-        "line": 250,
+        "line": 109,
         "markers": [],
         "docstring": "Test that load_profile returns a valid ProfileSchema.",
         "class": "TestLoadProfile"
       },
       {
         "name": "TestLoadProfile::test_load_all_profiles",
-        "line": 258,
+        "line": 117,
         "markers": [
           "parametrize"
         ],
@@ -30630,68 +30610,38 @@
         "class": "TestLoadProfile"
       },
       {
-        "name": "test_load_from_yaml_file",
-        "line": 52,
-        "markers": [],
-        "docstring": "Test loading profile from YAML file."
-      },
-      {
-        "name": "test_fallback_to_hardcoded_defaults",
-        "line": 92,
-        "markers": [],
-        "docstring": "Test fallback to hardcoded defaults when YAML doesn't exist."
-      },
-      {
-        "name": "test_hardcoded_defaults_exist_for_all_profiles",
-        "line": 105,
-        "markers": [],
-        "docstring": "Test that hardcoded defaults exist for all Profile enum values."
-      },
-      {
-        "name": "test_from_yaml_minimal",
-        "line": 120,
-        "markers": [],
-        "docstring": "Test creating ProfileSchema from minimal YAML data."
-      },
-      {
-        "name": "test_from_yaml_full",
-        "line": 132,
-        "markers": [],
-        "docstring": "Test creating ProfileSchema from complete YAML data."
-      },
-      {
         "name": "test_dev_profile_sets_mock_broker",
-        "line": 189,
+        "line": 48,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_demo_profile_conservative_settings",
-        "line": 197,
+        "line": 56,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_production_profile_settings",
-        "line": 205,
+        "line": 64,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_canary_profile_reduce_only",
-        "line": 213,
+        "line": 72,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_spot_profile_no_shorts",
-        "line": 221,
+        "line": 80,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_all_profiles_return_config",
-        "line": 238,
+        "line": 97,
         "markers": [
           "parametrize"
         ],
@@ -30699,17 +30649,84 @@
       },
       {
         "name": "test_load_profile_returns_schema",
-        "line": 250,
+        "line": 109,
         "markers": [],
         "docstring": "Test that load_profile returns a valid ProfileSchema."
       },
       {
         "name": "test_load_all_profiles",
-        "line": 258,
+        "line": 117,
         "markers": [
           "parametrize"
         ],
         "docstring": "Test that all profiles can be loaded."
+      }
+    ],
+    "tests/unit/gpt_trader/app/config/test_profile_loader.py": [
+      {
+        "name": "TestProfileLoader::test_load_from_yaml_file",
+        "line": 19,
+        "markers": [],
+        "docstring": "Test loading profile from YAML file.",
+        "class": "TestProfileLoader"
+      },
+      {
+        "name": "TestProfileLoader::test_fallback_to_hardcoded_defaults",
+        "line": 59,
+        "markers": [],
+        "docstring": "Test fallback to hardcoded defaults when YAML doesn't exist.",
+        "class": "TestProfileLoader"
+      },
+      {
+        "name": "TestProfileLoader::test_hardcoded_defaults_exist_for_all_profiles",
+        "line": 72,
+        "markers": [],
+        "docstring": "Test that hardcoded defaults exist for all Profile enum values.",
+        "class": "TestProfileLoader"
+      },
+      {
+        "name": "TestProfileSchema::test_from_yaml_minimal",
+        "line": 87,
+        "markers": [],
+        "docstring": "Test creating ProfileSchema from minimal YAML data.",
+        "class": "TestProfileSchema"
+      },
+      {
+        "name": "TestProfileSchema::test_from_yaml_full",
+        "line": 99,
+        "markers": [],
+        "docstring": "Test creating ProfileSchema from complete YAML data.",
+        "class": "TestProfileSchema"
+      },
+      {
+        "name": "test_load_from_yaml_file",
+        "line": 19,
+        "markers": [],
+        "docstring": "Test loading profile from YAML file."
+      },
+      {
+        "name": "test_fallback_to_hardcoded_defaults",
+        "line": 59,
+        "markers": [],
+        "docstring": "Test fallback to hardcoded defaults when YAML doesn't exist."
+      },
+      {
+        "name": "test_hardcoded_defaults_exist_for_all_profiles",
+        "line": 72,
+        "markers": [],
+        "docstring": "Test that hardcoded defaults exist for all Profile enum values."
+      },
+      {
+        "name": "test_from_yaml_minimal",
+        "line": 87,
+        "markers": [],
+        "docstring": "Test creating ProfileSchema from minimal YAML data."
+      },
+      {
+        "name": "test_from_yaml_full",
+        "line": 99,
+        "markers": [],
+        "docstring": "Test creating ProfileSchema from complete YAML data."
       }
     ],
     "tests/unit/gpt_trader/app/config/test_validation_rules.py": [
@@ -31126,6 +31143,60 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/app/containers/test_risk_validation_kill_switch.py": [
+      {
+        "name": "TestKillSwitchDerivation::test_baseline_strategy_uses_strategy_config",
+        "line": 22,
+        "markers": [],
+        "docstring": "Baseline strategy type derives kill_switch from strategy config.",
+        "class": "TestKillSwitchDerivation"
+      },
+      {
+        "name": "TestKillSwitchDerivation::test_mean_reversion_strategy_uses_mean_reversion_config",
+        "line": 42,
+        "markers": [],
+        "docstring": "Mean reversion strategy type derives kill_switch from mean_reversion config.",
+        "class": "TestKillSwitchDerivation"
+      },
+      {
+        "name": "TestKillSwitchDerivation::test_ensemble_strategy_uses_strategy_config",
+        "line": 62,
+        "markers": [],
+        "docstring": "Ensemble strategy type falls back to strategy config.",
+        "class": "TestKillSwitchDerivation"
+      },
+      {
+        "name": "TestKillSwitchDerivation::test_reduce_only_mode_from_config",
+        "line": 82,
+        "markers": [],
+        "docstring": "Test reduce_only_mode is passed through to RiskConfig.",
+        "class": "TestKillSwitchDerivation"
+      },
+      {
+        "name": "test_baseline_strategy_uses_strategy_config",
+        "line": 22,
+        "markers": [],
+        "docstring": "Baseline strategy type derives kill_switch from strategy config."
+      },
+      {
+        "name": "test_mean_reversion_strategy_uses_mean_reversion_config",
+        "line": 42,
+        "markers": [],
+        "docstring": "Mean reversion strategy type derives kill_switch from mean_reversion config."
+      },
+      {
+        "name": "test_ensemble_strategy_uses_strategy_config",
+        "line": 62,
+        "markers": [],
+        "docstring": "Ensemble strategy type falls back to strategy config."
+      },
+      {
+        "name": "test_reduce_only_mode_from_config",
+        "line": 82,
+        "markers": [],
+        "docstring": "Test reduce_only_mode is passed through to RiskConfig."
+      }
+    ],
     "tests/unit/gpt_trader/app/containers/test_risk_validation.py": [
       {
         "name": "TestRiskValidationContainer::test_initialization",
@@ -31177,34 +31248,6 @@
         "class": "TestRiskValidationContainer"
       },
       {
-        "name": "TestKillSwitchDerivation::test_baseline_strategy_uses_strategy_config",
-        "line": 186,
-        "markers": [],
-        "docstring": "Baseline strategy type derives kill_switch from strategy config.",
-        "class": "TestKillSwitchDerivation"
-      },
-      {
-        "name": "TestKillSwitchDerivation::test_mean_reversion_strategy_uses_mean_reversion_config",
-        "line": 206,
-        "markers": [],
-        "docstring": "Mean reversion strategy type derives kill_switch from mean_reversion config.",
-        "class": "TestKillSwitchDerivation"
-      },
-      {
-        "name": "TestKillSwitchDerivation::test_ensemble_strategy_uses_strategy_config",
-        "line": 226,
-        "markers": [],
-        "docstring": "Ensemble strategy type falls back to strategy config.",
-        "class": "TestKillSwitchDerivation"
-      },
-      {
-        "name": "TestKillSwitchDerivation::test_reduce_only_mode_from_config",
-        "line": 246,
-        "markers": [],
-        "docstring": "Test reduce_only_mode is passed through to RiskConfig.",
-        "class": "TestKillSwitchDerivation"
-      },
-      {
         "name": "test_initialization",
         "line": 32,
         "markers": [],
@@ -31245,30 +31288,6 @@
         "line": 166,
         "markers": [],
         "docstring": ""
-      },
-      {
-        "name": "test_baseline_strategy_uses_strategy_config",
-        "line": 186,
-        "markers": [],
-        "docstring": "Baseline strategy type derives kill_switch from strategy config."
-      },
-      {
-        "name": "test_mean_reversion_strategy_uses_mean_reversion_config",
-        "line": 206,
-        "markers": [],
-        "docstring": "Mean reversion strategy type derives kill_switch from mean_reversion config."
-      },
-      {
-        "name": "test_ensemble_strategy_uses_strategy_config",
-        "line": 226,
-        "markers": [],
-        "docstring": "Ensemble strategy type falls back to strategy config."
-      },
-      {
-        "name": "test_reduce_only_mode_from_config",
-        "line": 246,
-        "markers": [],
-        "docstring": "Test reduce_only_mode is passed through to RiskConfig."
       }
     ],
     "tests/unit/gpt_trader/security/secrets_manager/test_cache_population.py": [
@@ -32828,6 +32847,21 @@
         "docstring": "Test trading hours with microsecond precision."
       }
     ],
+    "tests/unit/gpt_trader/security/security_validator/test_symbol_validation_exception_handling.py": [
+      {
+        "name": "TestSymbolValidationExceptionHandling::test_symbol_validation_generic_exception",
+        "line": 9,
+        "markers": [],
+        "docstring": "Test that generic exceptions (non-RuleError) are caught gracefully.",
+        "class": "TestSymbolValidationExceptionHandling"
+      },
+      {
+        "name": "test_symbol_validation_generic_exception",
+        "line": 9,
+        "markers": [],
+        "docstring": "Test that generic exceptions (non-RuleError) are caught gracefully."
+      }
+    ],
     "tests/unit/gpt_trader/security/security_validator/test_suspicious_activity_error_handling.py": [
       {
         "name": "TestSuspiciousActivityErrorHandling::test_suspicious_activity_missing_fields",
@@ -33216,20 +33250,6 @@
         "class": "TestSymbolValidation"
       },
       {
-        "name": "TestSymbolValidation::test_symbol_validation_performance",
-        "line": 234,
-        "markers": [],
-        "docstring": "Test symbol validation performance with many symbols.",
-        "class": "TestSymbolValidation"
-      },
-      {
-        "name": "TestSymbolValidationExceptionHandling::test_symbol_validation_generic_exception",
-        "line": 246,
-        "markers": [],
-        "docstring": "Test that generic exceptions (non-RuleError) are caught gracefully.\n\nThis covers the generic Exception handler (lines 24-26) in symbol_validator.py.",
-        "class": "TestSymbolValidationExceptionHandling"
-      },
-      {
         "name": "test_valid_symbols_pass",
         "line": 28,
         "markers": [
@@ -33330,18 +33350,6 @@
         "line": 221,
         "markers": [],
         "docstring": "Test symbol validation with Unicode characters."
-      },
-      {
-        "name": "test_symbol_validation_performance",
-        "line": 234,
-        "markers": [],
-        "docstring": "Test symbol validation performance with many symbols."
-      },
-      {
-        "name": "test_symbol_validation_generic_exception",
-        "line": 246,
-        "markers": [],
-        "docstring": "Test that generic exceptions (non-RuleError) are caught gracefully.\n\nThis covers the generic Exception handler (lines 24-26) in symbol_validator.py."
       }
     ],
     "tests/unit/gpt_trader/security/security_validator/test_order_validation_symbol_and_required_fields.py": [
@@ -34147,6 +34155,14 @@
         "line": 34,
         "markers": [],
         "docstring": "Test rate limiting time precision."
+      }
+    ],
+    "tests/unit/gpt_trader/security/security_validator/test_symbol_validation_bulk.py": [
+      {
+        "name": "test_symbol_validation_bulk_passes",
+        "line": 8,
+        "markers": [],
+        "docstring": "Validate a larger batch of known-good symbols."
       }
     ],
     "tests/unit/gpt_trader/security/security_validator/test_numeric_edge_behaviour.py": [
@@ -38248,6 +38264,129 @@
         "docstring": "Test that collector is thread-safe."
       }
     ],
+    "tests/unit/gpt_trader/tui/services/test_mode_service_preferences.py": [
+      {
+        "name": "TestModePreferencePersistence::test_load_mode_preference_returns_saved_mode",
+        "line": 18,
+        "markers": [],
+        "docstring": "Test loading a previously saved mode.",
+        "class": "TestModePreferencePersistence"
+      },
+      {
+        "name": "TestModePreferencePersistence::test_load_mode_preference_returns_none_when_missing",
+        "line": 30,
+        "markers": [],
+        "docstring": "Test returns None when no mode saved.",
+        "class": "TestModePreferencePersistence"
+      },
+      {
+        "name": "TestModePreferencePersistence::test_load_mode_preference_returns_none_for_nonexistent_file",
+        "line": 42,
+        "markers": [],
+        "docstring": "Test returns None when preferences file doesn't exist.",
+        "class": "TestModePreferencePersistence"
+      },
+      {
+        "name": "TestModePreferencePersistence::test_load_mode_preference_ignores_invalid_mode",
+        "line": 53,
+        "markers": [],
+        "docstring": "Test ignores saved mode if it's not a valid mode.",
+        "class": "TestModePreferencePersistence"
+      },
+      {
+        "name": "TestModePreferencePersistence::test_save_mode_preference_creates_file",
+        "line": 65,
+        "markers": [],
+        "docstring": "Test saving mode creates preferences file.",
+        "class": "TestModePreferencePersistence"
+      },
+      {
+        "name": "TestModePreferencePersistence::test_save_mode_preference_preserves_other_keys",
+        "line": 80,
+        "markers": [],
+        "docstring": "Test saving mode preserves other preferences.",
+        "class": "TestModePreferencePersistence"
+      },
+      {
+        "name": "TestModePreferencePersistence::test_save_mode_preference_rejects_invalid_mode",
+        "line": 96,
+        "markers": [],
+        "docstring": "Test saving invalid mode returns False.",
+        "class": "TestModePreferencePersistence"
+      },
+      {
+        "name": "TestModePreferencePersistence::test_save_mode_preference_accepts_all_valid_modes",
+        "line": 108,
+        "markers": [],
+        "docstring": "Test all valid modes can be saved.",
+        "class": "TestModePreferencePersistence"
+      },
+      {
+        "name": "TestModePreferencePersistence::test_init_sets_default_preferences_path",
+        "line": 125,
+        "markers": [
+          "uses_real_preferences"
+        ],
+        "docstring": "Test init uses default preferences path when not specified.",
+        "class": "TestModePreferencePersistence"
+      },
+      {
+        "name": "test_load_mode_preference_returns_saved_mode",
+        "line": 18,
+        "markers": [],
+        "docstring": "Test loading a previously saved mode."
+      },
+      {
+        "name": "test_load_mode_preference_returns_none_when_missing",
+        "line": 30,
+        "markers": [],
+        "docstring": "Test returns None when no mode saved."
+      },
+      {
+        "name": "test_load_mode_preference_returns_none_for_nonexistent_file",
+        "line": 42,
+        "markers": [],
+        "docstring": "Test returns None when preferences file doesn't exist."
+      },
+      {
+        "name": "test_load_mode_preference_ignores_invalid_mode",
+        "line": 53,
+        "markers": [],
+        "docstring": "Test ignores saved mode if it's not a valid mode."
+      },
+      {
+        "name": "test_save_mode_preference_creates_file",
+        "line": 65,
+        "markers": [],
+        "docstring": "Test saving mode creates preferences file."
+      },
+      {
+        "name": "test_save_mode_preference_preserves_other_keys",
+        "line": 80,
+        "markers": [],
+        "docstring": "Test saving mode preserves other preferences."
+      },
+      {
+        "name": "test_save_mode_preference_rejects_invalid_mode",
+        "line": 96,
+        "markers": [],
+        "docstring": "Test saving invalid mode returns False."
+      },
+      {
+        "name": "test_save_mode_preference_accepts_all_valid_modes",
+        "line": 108,
+        "markers": [],
+        "docstring": "Test all valid modes can be saved."
+      },
+      {
+        "name": "test_init_sets_default_preferences_path",
+        "line": 125,
+        "markers": [
+          "uses_real_preferences"
+        ],
+        "docstring": "Test init uses default preferences path when not specified."
+      }
+    ],
     "tests/unit/gpt_trader/tui/services/test_trading_stats_service_model.py": [
       {
         "name": "TestTradingStatsSampleSize::test_sample_label_format",
@@ -39126,6 +39265,47 @@
         "line": 78,
         "markers": [],
         "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/tui/services/test_mode_service_create_bot.py": [
+      {
+        "name": "TestCreateBotForMode::test_demo_mode_creates_demo_bot",
+        "line": 15,
+        "markers": [],
+        "docstring": "Test demo mode creates a DemoBot instance.",
+        "class": "TestCreateBotForMode"
+      },
+      {
+        "name": "TestCreateBotForMode::test_unknown_mode_raises_error",
+        "line": 21,
+        "markers": [],
+        "docstring": "Test unknown mode raises ValueError.",
+        "class": "TestCreateBotForMode"
+      },
+      {
+        "name": "TestCreateBotForMode::test_paper_mode_loads_paper_config",
+        "line": 28,
+        "markers": [],
+        "docstring": "Test paper mode attempts to load paper config.",
+        "class": "TestCreateBotForMode"
+      },
+      {
+        "name": "test_demo_mode_creates_demo_bot",
+        "line": 15,
+        "markers": [],
+        "docstring": "Test demo mode creates a DemoBot instance."
+      },
+      {
+        "name": "test_unknown_mode_raises_error",
+        "line": 21,
+        "markers": [],
+        "docstring": "Test unknown mode raises ValueError."
+      },
+      {
+        "name": "test_paper_mode_loads_paper_config",
+        "line": 28,
+        "markers": [],
+        "docstring": "Test paper mode attempts to load paper config."
       }
     ],
     "tests/unit/gpt_trader/tui/services/test_alert_manager_execution_health.py": [
@@ -40011,259 +40191,6 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/tui/services/test_mode_service.py": [
-      {
-        "name": "TestCreateBotForMode::test_demo_mode_creates_demo_bot",
-        "line": 18,
-        "markers": [],
-        "docstring": "Test demo mode creates a DemoBot instance.",
-        "class": "TestCreateBotForMode"
-      },
-      {
-        "name": "TestCreateBotForMode::test_unknown_mode_raises_error",
-        "line": 24,
-        "markers": [],
-        "docstring": "Test unknown mode raises ValueError.",
-        "class": "TestCreateBotForMode"
-      },
-      {
-        "name": "TestCreateBotForMode::test_paper_mode_loads_paper_config",
-        "line": 31,
-        "markers": [],
-        "docstring": "Test paper mode attempts to load paper config.",
-        "class": "TestCreateBotForMode"
-      },
-      {
-        "name": "TestModeService::test_init_sets_app_and_scenario",
-        "line": 47,
-        "markers": [],
-        "docstring": "Test initialization sets app and scenario.",
-        "class": "TestModeService"
-      },
-      {
-        "name": "TestModeService::test_detect_bot_mode_demo",
-        "line": 55,
-        "markers": [],
-        "docstring": "Test detect_bot_mode identifies DemoBot.",
-        "class": "TestModeService"
-      },
-      {
-        "name": "TestModeService::test_detect_bot_mode_read_only",
-        "line": 67,
-        "markers": [],
-        "docstring": "Test detect_bot_mode identifies read_only mode.",
-        "class": "TestModeService"
-      },
-      {
-        "name": "TestModeService::test_detect_bot_mode_live",
-        "line": 80,
-        "markers": [],
-        "docstring": "Test detect_bot_mode identifies live mode.",
-        "class": "TestModeService"
-      },
-      {
-        "name": "TestModeService::test_detect_bot_mode_paper_default",
-        "line": 94,
-        "markers": [],
-        "docstring": "Test detect_bot_mode defaults to paper for safety.",
-        "class": "TestModeService"
-      },
-      {
-        "name": "TestModeService::test_create_bot_delegates_to_function",
-        "line": 108,
-        "markers": [],
-        "docstring": "Test create_bot uses the module function.",
-        "class": "TestModeService"
-      },
-      {
-        "name": "TestModeService::test_notify_mode_changed_posts_event",
-        "line": 134,
-        "markers": [],
-        "docstring": "Test notify_mode_changed posts BotModeChanged event.",
-        "class": "TestModeService"
-      },
-      {
-        "name": "TestModePreferencePersistence::test_load_mode_preference_returns_saved_mode",
-        "line": 150,
-        "markers": [],
-        "docstring": "Test loading a previously saved mode.",
-        "class": "TestModePreferencePersistence"
-      },
-      {
-        "name": "TestModePreferencePersistence::test_load_mode_preference_returns_none_when_missing",
-        "line": 162,
-        "markers": [],
-        "docstring": "Test returns None when no mode saved.",
-        "class": "TestModePreferencePersistence"
-      },
-      {
-        "name": "TestModePreferencePersistence::test_load_mode_preference_returns_none_for_nonexistent_file",
-        "line": 174,
-        "markers": [],
-        "docstring": "Test returns None when preferences file doesn't exist.",
-        "class": "TestModePreferencePersistence"
-      },
-      {
-        "name": "TestModePreferencePersistence::test_load_mode_preference_ignores_invalid_mode",
-        "line": 185,
-        "markers": [],
-        "docstring": "Test ignores saved mode if it's not a valid mode.",
-        "class": "TestModePreferencePersistence"
-      },
-      {
-        "name": "TestModePreferencePersistence::test_save_mode_preference_creates_file",
-        "line": 197,
-        "markers": [],
-        "docstring": "Test saving mode creates preferences file.",
-        "class": "TestModePreferencePersistence"
-      },
-      {
-        "name": "TestModePreferencePersistence::test_save_mode_preference_preserves_other_keys",
-        "line": 212,
-        "markers": [],
-        "docstring": "Test saving mode preserves other preferences.",
-        "class": "TestModePreferencePersistence"
-      },
-      {
-        "name": "TestModePreferencePersistence::test_save_mode_preference_rejects_invalid_mode",
-        "line": 228,
-        "markers": [],
-        "docstring": "Test saving invalid mode returns False.",
-        "class": "TestModePreferencePersistence"
-      },
-      {
-        "name": "TestModePreferencePersistence::test_save_mode_preference_accepts_all_valid_modes",
-        "line": 240,
-        "markers": [],
-        "docstring": "Test all valid modes can be saved.",
-        "class": "TestModePreferencePersistence"
-      },
-      {
-        "name": "TestModePreferencePersistence::test_init_sets_default_preferences_path",
-        "line": 257,
-        "markers": [
-          "uses_real_preferences"
-        ],
-        "docstring": "Test init uses default preferences path when not specified.",
-        "class": "TestModePreferencePersistence"
-      },
-      {
-        "name": "test_demo_mode_creates_demo_bot",
-        "line": 18,
-        "markers": [],
-        "docstring": "Test demo mode creates a DemoBot instance."
-      },
-      {
-        "name": "test_unknown_mode_raises_error",
-        "line": 24,
-        "markers": [],
-        "docstring": "Test unknown mode raises ValueError."
-      },
-      {
-        "name": "test_paper_mode_loads_paper_config",
-        "line": 31,
-        "markers": [],
-        "docstring": "Test paper mode attempts to load paper config."
-      },
-      {
-        "name": "test_init_sets_app_and_scenario",
-        "line": 47,
-        "markers": [],
-        "docstring": "Test initialization sets app and scenario."
-      },
-      {
-        "name": "test_detect_bot_mode_demo",
-        "line": 55,
-        "markers": [],
-        "docstring": "Test detect_bot_mode identifies DemoBot."
-      },
-      {
-        "name": "test_detect_bot_mode_read_only",
-        "line": 67,
-        "markers": [],
-        "docstring": "Test detect_bot_mode identifies read_only mode."
-      },
-      {
-        "name": "test_detect_bot_mode_live",
-        "line": 80,
-        "markers": [],
-        "docstring": "Test detect_bot_mode identifies live mode."
-      },
-      {
-        "name": "test_detect_bot_mode_paper_default",
-        "line": 94,
-        "markers": [],
-        "docstring": "Test detect_bot_mode defaults to paper for safety."
-      },
-      {
-        "name": "test_create_bot_delegates_to_function",
-        "line": 108,
-        "markers": [],
-        "docstring": "Test create_bot uses the module function."
-      },
-      {
-        "name": "test_notify_mode_changed_posts_event",
-        "line": 134,
-        "markers": [],
-        "docstring": "Test notify_mode_changed posts BotModeChanged event."
-      },
-      {
-        "name": "test_load_mode_preference_returns_saved_mode",
-        "line": 150,
-        "markers": [],
-        "docstring": "Test loading a previously saved mode."
-      },
-      {
-        "name": "test_load_mode_preference_returns_none_when_missing",
-        "line": 162,
-        "markers": [],
-        "docstring": "Test returns None when no mode saved."
-      },
-      {
-        "name": "test_load_mode_preference_returns_none_for_nonexistent_file",
-        "line": 174,
-        "markers": [],
-        "docstring": "Test returns None when preferences file doesn't exist."
-      },
-      {
-        "name": "test_load_mode_preference_ignores_invalid_mode",
-        "line": 185,
-        "markers": [],
-        "docstring": "Test ignores saved mode if it's not a valid mode."
-      },
-      {
-        "name": "test_save_mode_preference_creates_file",
-        "line": 197,
-        "markers": [],
-        "docstring": "Test saving mode creates preferences file."
-      },
-      {
-        "name": "test_save_mode_preference_preserves_other_keys",
-        "line": 212,
-        "markers": [],
-        "docstring": "Test saving mode preserves other preferences."
-      },
-      {
-        "name": "test_save_mode_preference_rejects_invalid_mode",
-        "line": 228,
-        "markers": [],
-        "docstring": "Test saving invalid mode returns False."
-      },
-      {
-        "name": "test_save_mode_preference_accepts_all_valid_modes",
-        "line": 240,
-        "markers": [],
-        "docstring": "Test all valid modes can be saved."
-      },
-      {
-        "name": "test_init_sets_default_preferences_path",
-        "line": 257,
-        "markers": [
-          "uses_real_preferences"
-        ],
-        "docstring": "Test init uses default preferences path when not specified."
-      }
-    ],
     "tests/unit/gpt_trader/tui/services/test_execution_telemetry_issue_tracking.py": [
       {
         "name": "TestIssueTracking::test_rejection_issue_records_context",
@@ -40329,6 +40256,99 @@
         "line": 104,
         "markers": [],
         "docstring": "Test that empty retry reasons don't create issues."
+      }
+    ],
+    "tests/unit/gpt_trader/tui/services/test_mode_service_core.py": [
+      {
+        "name": "TestModeService::test_init_sets_app_and_scenario",
+        "line": 15,
+        "markers": [],
+        "docstring": "Test initialization sets app and scenario.",
+        "class": "TestModeService"
+      },
+      {
+        "name": "TestModeService::test_detect_bot_mode_demo",
+        "line": 23,
+        "markers": [],
+        "docstring": "Test detect_bot_mode identifies DemoBot.",
+        "class": "TestModeService"
+      },
+      {
+        "name": "TestModeService::test_detect_bot_mode_read_only",
+        "line": 35,
+        "markers": [],
+        "docstring": "Test detect_bot_mode identifies read_only mode.",
+        "class": "TestModeService"
+      },
+      {
+        "name": "TestModeService::test_detect_bot_mode_live",
+        "line": 48,
+        "markers": [],
+        "docstring": "Test detect_bot_mode identifies live mode.",
+        "class": "TestModeService"
+      },
+      {
+        "name": "TestModeService::test_detect_bot_mode_paper_default",
+        "line": 62,
+        "markers": [],
+        "docstring": "Test detect_bot_mode defaults to paper for safety.",
+        "class": "TestModeService"
+      },
+      {
+        "name": "TestModeService::test_create_bot_delegates_to_function",
+        "line": 76,
+        "markers": [],
+        "docstring": "Test create_bot uses the module function.",
+        "class": "TestModeService"
+      },
+      {
+        "name": "TestModeService::test_notify_mode_changed_posts_event",
+        "line": 100,
+        "markers": [],
+        "docstring": "Test notify_mode_changed posts BotModeChanged event.",
+        "class": "TestModeService"
+      },
+      {
+        "name": "test_init_sets_app_and_scenario",
+        "line": 15,
+        "markers": [],
+        "docstring": "Test initialization sets app and scenario."
+      },
+      {
+        "name": "test_detect_bot_mode_demo",
+        "line": 23,
+        "markers": [],
+        "docstring": "Test detect_bot_mode identifies DemoBot."
+      },
+      {
+        "name": "test_detect_bot_mode_read_only",
+        "line": 35,
+        "markers": [],
+        "docstring": "Test detect_bot_mode identifies read_only mode."
+      },
+      {
+        "name": "test_detect_bot_mode_live",
+        "line": 48,
+        "markers": [],
+        "docstring": "Test detect_bot_mode identifies live mode."
+      },
+      {
+        "name": "test_detect_bot_mode_paper_default",
+        "line": 62,
+        "markers": [],
+        "docstring": "Test detect_bot_mode defaults to paper for safety."
+      },
+      {
+        "name": "test_create_bot_delegates_to_function",
+        "line": 76,
+        "markers": [],
+        "docstring": "Test create_bot uses the module function."
+      },
+      {
+        "name": "test_notify_mode_changed_posts_event",
+        "line": 100,
+        "markers": [],
+        "docstring": "Test notify_mode_changed posts BotModeChanged event."
       }
     ],
     "tests/unit/gpt_trader/tui/services/test_onboarding_service_checklist_item.py": [
@@ -41836,6 +41856,21 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/tui/widgets/test_cfm_balance_unavailable.py": [
+      {
+        "name": "TestCFMBalanceWidgetUnavailable::test_show_unavailable",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test show_unavailable method sets has_cfm to False.",
+        "class": "TestCFMBalanceWidgetUnavailable"
+      },
+      {
+        "name": "test_show_unavailable",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test show_unavailable method sets has_cfm to False."
+      }
+    ],
     "tests/unit/gpt_trader/tui/widgets/test_orders_widget_sorting.py": [
       {
         "name": "TestOrdersWidgetSorting::test_sort_cycle",
@@ -41888,6 +41923,47 @@
         "line": 155,
         "markers": [],
         "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/tui/widgets/test_cfm_balance_basic.py": [
+      {
+        "name": "TestCFMBalanceWidgetBasic::test_initial_state_no_cfm",
+        "line": 15,
+        "markers": [],
+        "docstring": "Test widget starts with has_cfm=False.",
+        "class": "TestCFMBalanceWidgetBasic"
+      },
+      {
+        "name": "TestCFMBalanceWidgetBasic::test_update_balance_with_none",
+        "line": 20,
+        "markers": [],
+        "docstring": "Test that None balance sets has_cfm to False.",
+        "class": "TestCFMBalanceWidgetBasic"
+      },
+      {
+        "name": "TestCFMBalanceWidgetBasic::test_update_balance_with_valid_data",
+        "line": 30,
+        "markers": [],
+        "docstring": "Test that valid CFMBalance updates the widget correctly.",
+        "class": "TestCFMBalanceWidgetBasic"
+      },
+      {
+        "name": "test_initial_state_no_cfm",
+        "line": 15,
+        "markers": [],
+        "docstring": "Test widget starts with has_cfm=False."
+      },
+      {
+        "name": "test_update_balance_with_none",
+        "line": 20,
+        "markers": [],
+        "docstring": "Test that None balance sets has_cfm to False."
+      },
+      {
+        "name": "test_update_balance_with_valid_data",
+        "line": 30,
+        "markers": [],
+        "docstring": "Test that valid CFMBalance updates the widget correctly."
       }
     ],
     "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_refresh_and_empty_states.py": [
@@ -42729,6 +42805,73 @@
         "docstring": "Test that _set_active_filter toggles button active classes."
       }
     ],
+    "tests/unit/gpt_trader/tui/widgets/test_cfm_balance_color_coding.py": [
+      {
+        "name": "TestCFMBalanceWidgetColorCoding::test_margin_utilization_color_coding_low",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test margin utilization shows green for low usage.",
+        "class": "TestCFMBalanceWidgetColorCoding"
+      },
+      {
+        "name": "TestCFMBalanceWidgetColorCoding::test_margin_utilization_color_coding_high",
+        "line": 32,
+        "markers": [],
+        "docstring": "Test margin utilization shows red for high usage.",
+        "class": "TestCFMBalanceWidgetColorCoding"
+      },
+      {
+        "name": "TestCFMBalanceWidgetColorCoding::test_pnl_positive_color_coding",
+        "line": 53,
+        "markers": [],
+        "docstring": "Test positive P&L shows green with + prefix.",
+        "class": "TestCFMBalanceWidgetColorCoding"
+      },
+      {
+        "name": "TestCFMBalanceWidgetColorCoding::test_pnl_negative_color_coding",
+        "line": 75,
+        "markers": [],
+        "docstring": "Test negative P&L shows red.",
+        "class": "TestCFMBalanceWidgetColorCoding"
+      },
+      {
+        "name": "TestCFMBalanceWidgetColorCoding::test_liquidation_buffer_critical",
+        "line": 96,
+        "markers": [],
+        "docstring": "Test liquidation buffer shows red bold for critical level.",
+        "class": "TestCFMBalanceWidgetColorCoding"
+      },
+      {
+        "name": "test_margin_utilization_color_coding_low",
+        "line": 11,
+        "markers": [],
+        "docstring": "Test margin utilization shows green for low usage."
+      },
+      {
+        "name": "test_margin_utilization_color_coding_high",
+        "line": 32,
+        "markers": [],
+        "docstring": "Test margin utilization shows red for high usage."
+      },
+      {
+        "name": "test_pnl_positive_color_coding",
+        "line": 53,
+        "markers": [],
+        "docstring": "Test positive P&L shows green with + prefix."
+      },
+      {
+        "name": "test_pnl_negative_color_coding",
+        "line": 75,
+        "markers": [],
+        "docstring": "Test negative P&L shows red."
+      },
+      {
+        "name": "test_liquidation_buffer_critical",
+        "line": 96,
+        "markers": [],
+        "docstring": "Test liquidation buffer shows red bold for critical level."
+      }
+    ],
     "tests/unit/gpt_trader/tui/widgets/test_logs.py": [
       {
         "name": "TestLogWidgetFilterChips::test_filter_bindings_present",
@@ -43362,125 +43505,6 @@
         "line": 127,
         "markers": [],
         "docstring": "Test MainScreen has action methods for stats window cycling."
-      }
-    ],
-    "tests/unit/gpt_trader/tui/widgets/test_cfm_balance.py": [
-      {
-        "name": "TestCFMBalanceWidget::test_initial_state_no_cfm",
-        "line": 15,
-        "markers": [],
-        "docstring": "Test widget starts with has_cfm=False.",
-        "class": "TestCFMBalanceWidget"
-      },
-      {
-        "name": "TestCFMBalanceWidget::test_update_balance_with_none",
-        "line": 20,
-        "markers": [],
-        "docstring": "Test that None balance sets has_cfm to False.",
-        "class": "TestCFMBalanceWidget"
-      },
-      {
-        "name": "TestCFMBalanceWidget::test_update_balance_with_valid_data",
-        "line": 31,
-        "markers": [],
-        "docstring": "Test that valid CFMBalance updates the widget correctly.",
-        "class": "TestCFMBalanceWidget"
-      },
-      {
-        "name": "TestCFMBalanceWidget::test_margin_utilization_color_coding_low",
-        "line": 78,
-        "markers": [],
-        "docstring": "Test margin utilization shows green for low usage.",
-        "class": "TestCFMBalanceWidget"
-      },
-      {
-        "name": "TestCFMBalanceWidget::test_margin_utilization_color_coding_high",
-        "line": 111,
-        "markers": [],
-        "docstring": "Test margin utilization shows red for high usage.",
-        "class": "TestCFMBalanceWidget"
-      },
-      {
-        "name": "TestCFMBalanceWidget::test_pnl_positive_color_coding",
-        "line": 144,
-        "markers": [],
-        "docstring": "Test positive P&L shows green with + prefix.",
-        "class": "TestCFMBalanceWidget"
-      },
-      {
-        "name": "TestCFMBalanceWidget::test_pnl_negative_color_coding",
-        "line": 178,
-        "markers": [],
-        "docstring": "Test negative P&L shows red.",
-        "class": "TestCFMBalanceWidget"
-      },
-      {
-        "name": "TestCFMBalanceWidget::test_liquidation_buffer_critical",
-        "line": 211,
-        "markers": [],
-        "docstring": "Test liquidation buffer shows red bold for critical level.",
-        "class": "TestCFMBalanceWidget"
-      },
-      {
-        "name": "TestCFMBalanceWidget::test_show_unavailable",
-        "line": 244,
-        "markers": [],
-        "docstring": "Test show_unavailable method sets has_cfm to False.",
-        "class": "TestCFMBalanceWidget"
-      },
-      {
-        "name": "test_initial_state_no_cfm",
-        "line": 15,
-        "markers": [],
-        "docstring": "Test widget starts with has_cfm=False."
-      },
-      {
-        "name": "test_update_balance_with_none",
-        "line": 20,
-        "markers": [],
-        "docstring": "Test that None balance sets has_cfm to False."
-      },
-      {
-        "name": "test_update_balance_with_valid_data",
-        "line": 31,
-        "markers": [],
-        "docstring": "Test that valid CFMBalance updates the widget correctly."
-      },
-      {
-        "name": "test_margin_utilization_color_coding_low",
-        "line": 78,
-        "markers": [],
-        "docstring": "Test margin utilization shows green for low usage."
-      },
-      {
-        "name": "test_margin_utilization_color_coding_high",
-        "line": 111,
-        "markers": [],
-        "docstring": "Test margin utilization shows red for high usage."
-      },
-      {
-        "name": "test_pnl_positive_color_coding",
-        "line": 144,
-        "markers": [],
-        "docstring": "Test positive P&L shows green with + prefix."
-      },
-      {
-        "name": "test_pnl_negative_color_coding",
-        "line": 178,
-        "markers": [],
-        "docstring": "Test negative P&L shows red."
-      },
-      {
-        "name": "test_liquidation_buffer_critical",
-        "line": 211,
-        "markers": [],
-        "docstring": "Test liquidation buffer shows red bold for critical level."
-      },
-      {
-        "name": "test_show_unavailable",
-        "line": 244,
-        "markers": [],
-        "docstring": "Test show_unavailable method sets has_cfm to False."
       }
     ],
     "tests/unit/gpt_trader/tui/widgets/test_panic.py": [
@@ -46060,6 +46084,60 @@
         "docstring": "Test behavior at exact threshold boundary."
       }
     ],
+    "tests/unit/gpt_trader/features/live_trade/test_indicators_atr.py": [
+      {
+        "name": "TestTrueRange::test_simple_range",
+        "line": 13,
+        "markers": [],
+        "docstring": "",
+        "class": "TestTrueRange"
+      },
+      {
+        "name": "TestTrueRange::test_gap_up",
+        "line": 22,
+        "markers": [],
+        "docstring": "",
+        "class": "TestTrueRange"
+      },
+      {
+        "name": "TestAverageTrueRange::test_insufficient_data_returns_none",
+        "line": 35,
+        "markers": [],
+        "docstring": "",
+        "class": "TestAverageTrueRange"
+      },
+      {
+        "name": "TestAverageTrueRange::test_atr_with_sufficient_data",
+        "line": 41,
+        "markers": [],
+        "docstring": "",
+        "class": "TestAverageTrueRange"
+      },
+      {
+        "name": "test_simple_range",
+        "line": 13,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_gap_up",
+        "line": 22,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_insufficient_data_returns_none",
+        "line": 35,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_atr_with_sufficient_data",
+        "line": 41,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/features/live_trade/test_state_recovery_rehydration.py": [
       {
         "name": "TestTradingEngineRehydration::test_rehydrate_from_empty_events",
@@ -46901,404 +46979,352 @@
     "tests/unit/gpt_trader/features/live_trade/test_indicators.py": [
       {
         "name": "TestMeanDecimal::test_empty_list_returns_zero",
-        "line": 23,
+        "line": 21,
         "markers": [],
         "docstring": "",
         "class": "TestMeanDecimal"
       },
       {
         "name": "TestMeanDecimal::test_single_value",
-        "line": 26,
+        "line": 24,
         "markers": [],
         "docstring": "",
         "class": "TestMeanDecimal"
       },
       {
         "name": "TestMeanDecimal::test_multiple_values",
-        "line": 29,
+        "line": 27,
         "markers": [],
         "docstring": "",
         "class": "TestMeanDecimal"
       },
       {
         "name": "TestMeanDecimal::test_decimal_precision",
-        "line": 33,
+        "line": 31,
         "markers": [],
         "docstring": "",
         "class": "TestMeanDecimal"
       },
       {
         "name": "TestSimpleMovingAverage::test_insufficient_data_returns_none",
-        "line": 41,
+        "line": 39,
         "markers": [],
         "docstring": "",
         "class": "TestSimpleMovingAverage"
       },
       {
         "name": "TestSimpleMovingAverage::test_exact_period_length",
-        "line": 45,
+        "line": 43,
         "markers": [],
         "docstring": "",
         "class": "TestSimpleMovingAverage"
       },
       {
         "name": "TestSimpleMovingAverage::test_longer_than_period",
-        "line": 50,
+        "line": 48,
         "markers": [],
         "docstring": "",
         "class": "TestSimpleMovingAverage"
       },
       {
         "name": "TestExponentialMovingAverage::test_insufficient_data_returns_none",
-        "line": 61,
+        "line": 59,
         "markers": [],
         "docstring": "",
         "class": "TestExponentialMovingAverage"
       },
       {
         "name": "TestExponentialMovingAverage::test_exact_period_returns_sma",
-        "line": 65,
+        "line": 63,
         "markers": [],
         "docstring": "",
         "class": "TestExponentialMovingAverage"
       },
       {
         "name": "TestExponentialMovingAverage::test_ema_responds_to_price_changes",
-        "line": 72,
+        "line": 70,
         "markers": [],
         "docstring": "",
         "class": "TestExponentialMovingAverage"
       },
       {
         "name": "TestRelativeStrengthIndex::test_insufficient_data_returns_none",
-        "line": 86,
+        "line": 84,
         "markers": [],
         "docstring": "",
         "class": "TestRelativeStrengthIndex"
       },
       {
         "name": "TestRelativeStrengthIndex::test_minimum_data_for_period",
-        "line": 90,
+        "line": 88,
         "markers": [],
         "docstring": "",
         "class": "TestRelativeStrengthIndex"
       },
       {
         "name": "TestRelativeStrengthIndex::test_all_gains_returns_100",
-        "line": 97,
+        "line": 95,
         "markers": [],
         "docstring": "",
         "class": "TestRelativeStrengthIndex"
       },
       {
         "name": "TestRelativeStrengthIndex::test_all_losses_returns_near_zero",
-        "line": 104,
+        "line": 102,
         "markers": [],
         "docstring": "",
         "class": "TestRelativeStrengthIndex"
       },
       {
         "name": "TestRelativeStrengthIndex::test_mixed_prices_in_range",
-        "line": 111,
+        "line": 109,
         "markers": [],
         "docstring": "",
         "class": "TestRelativeStrengthIndex"
       },
       {
         "name": "TestCrossoverDetection::test_insufficient_data_returns_none",
-        "line": 139,
+        "line": 137,
         "markers": [],
         "docstring": "",
         "class": "TestCrossoverDetection"
       },
       {
         "name": "TestCrossoverDetection::test_bullish_crossover",
-        "line": 144,
+        "line": 142,
         "markers": [],
         "docstring": "",
         "class": "TestCrossoverDetection"
       },
       {
         "name": "TestCrossoverDetection::test_bearish_crossover",
-        "line": 153,
+        "line": 151,
         "markers": [],
         "docstring": "",
         "class": "TestCrossoverDetection"
       },
       {
         "name": "TestCrossoverDetection::test_no_crossover",
-        "line": 162,
+        "line": 160,
         "markers": [],
         "docstring": "",
         "class": "TestCrossoverDetection"
       },
       {
         "name": "TestCrossoverDetection::test_crossover_signal_contains_values",
-        "line": 171,
+        "line": 169,
         "markers": [],
         "docstring": "",
         "class": "TestCrossoverDetection"
       },
       {
         "name": "TestComputeMASeries::test_sma_series_length_matches_input",
-        "line": 183,
+        "line": 181,
         "markers": [],
         "docstring": "",
         "class": "TestComputeMASeries"
       },
       {
         "name": "TestComputeMASeries::test_sma_series_first_values_are_simple_avg",
-        "line": 188,
+        "line": 186,
         "markers": [],
         "docstring": "",
         "class": "TestComputeMASeries"
       },
       {
         "name": "TestComputeMASeries::test_ema_series",
-        "line": 196,
+        "line": 194,
         "markers": [],
         "docstring": "",
         "class": "TestComputeMASeries"
       },
       {
-        "name": "TestTrueRange::test_simple_range",
-        "line": 205,
-        "markers": [],
-        "docstring": "",
-        "class": "TestTrueRange"
-      },
-      {
-        "name": "TestTrueRange::test_gap_up",
-        "line": 214,
-        "markers": [],
-        "docstring": "",
-        "class": "TestTrueRange"
-      },
-      {
-        "name": "TestAverageTrueRange::test_insufficient_data_returns_none",
-        "line": 227,
-        "markers": [],
-        "docstring": "",
-        "class": "TestAverageTrueRange"
-      },
-      {
-        "name": "TestAverageTrueRange::test_atr_with_sufficient_data",
-        "line": 233,
-        "markers": [],
-        "docstring": "",
-        "class": "TestAverageTrueRange"
-      },
-      {
         "name": "TestToDecimal::test_int_conversion",
-        "line": 246,
+        "line": 203,
         "markers": [],
         "docstring": "",
         "class": "TestToDecimal"
       },
       {
         "name": "TestToDecimal::test_float_conversion",
-        "line": 249,
+        "line": 206,
         "markers": [],
         "docstring": "",
         "class": "TestToDecimal"
       },
       {
         "name": "TestToDecimal::test_string_conversion",
-        "line": 252,
+        "line": 209,
         "markers": [],
         "docstring": "",
         "class": "TestToDecimal"
       },
       {
         "name": "TestToDecimal::test_decimal_passthrough",
-        "line": 255,
+        "line": 212,
         "markers": [],
         "docstring": "",
         "class": "TestToDecimal"
       },
       {
         "name": "test_empty_list_returns_zero",
-        "line": 23,
+        "line": 21,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_single_value",
-        "line": 26,
+        "line": 24,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_multiple_values",
-        "line": 29,
+        "line": 27,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_decimal_precision",
-        "line": 33,
+        "line": 31,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_insufficient_data_returns_none",
-        "line": 41,
+        "line": 39,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_exact_period_length",
-        "line": 45,
+        "line": 43,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_longer_than_period",
-        "line": 50,
+        "line": 48,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_insufficient_data_returns_none",
-        "line": 61,
+        "line": 59,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_exact_period_returns_sma",
-        "line": 65,
+        "line": 63,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_ema_responds_to_price_changes",
-        "line": 72,
+        "line": 70,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_insufficient_data_returns_none",
-        "line": 86,
+        "line": 84,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_minimum_data_for_period",
-        "line": 90,
+        "line": 88,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_all_gains_returns_100",
-        "line": 97,
+        "line": 95,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_all_losses_returns_near_zero",
-        "line": 104,
+        "line": 102,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_mixed_prices_in_range",
-        "line": 111,
+        "line": 109,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_insufficient_data_returns_none",
-        "line": 139,
+        "line": 137,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_bullish_crossover",
-        "line": 144,
+        "line": 142,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_bearish_crossover",
-        "line": 153,
+        "line": 151,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_no_crossover",
-        "line": 162,
+        "line": 160,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_crossover_signal_contains_values",
-        "line": 171,
+        "line": 169,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_sma_series_length_matches_input",
-        "line": 183,
+        "line": 181,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_sma_series_first_values_are_simple_avg",
-        "line": 188,
+        "line": 186,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_ema_series",
-        "line": 196,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_simple_range",
-        "line": 205,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_gap_up",
-        "line": 214,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_insufficient_data_returns_none",
-        "line": 227,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_atr_with_sufficient_data",
-        "line": 233,
+        "line": 194,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_int_conversion",
-        "line": 246,
+        "line": 203,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_float_conversion",
-        "line": 249,
+        "line": 206,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_string_conversion",
-        "line": 252,
+        "line": 209,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_decimal_passthrough",
-        "line": 255,
+        "line": 212,
         "markers": [],
         "docstring": ""
       }
@@ -50130,6 +50156,218 @@
         "docstring": "Test that weights are properly normalized with extreme multipliers."
       }
     ],
+    "tests/unit/gpt_trader/features/intelligence/ensemble/test_adaptive_weight_updater.py": [
+      {
+        "name": "TestBayesianWeightUpdater::test_init_equal_weights",
+        "line": 15,
+        "markers": [],
+        "docstring": "Test initialization with equal weights.",
+        "class": "TestBayesianWeightUpdater"
+      },
+      {
+        "name": "TestBayesianWeightUpdater::test_init_custom_weights",
+        "line": 27,
+        "markers": [],
+        "docstring": "Test initialization with custom base weights.",
+        "class": "TestBayesianWeightUpdater"
+      },
+      {
+        "name": "TestBayesianWeightUpdater::test_record_outcome_updates_performance",
+        "line": 38,
+        "markers": [],
+        "docstring": "Test that recording outcomes updates performance.",
+        "class": "TestBayesianWeightUpdater"
+      },
+      {
+        "name": "TestBayesianWeightUpdater::test_weights_adapt_to_performance",
+        "line": 55,
+        "markers": [],
+        "docstring": "Test that weights adapt based on performance.",
+        "class": "TestBayesianWeightUpdater"
+      },
+      {
+        "name": "TestBayesianWeightUpdater::test_weight_caps",
+        "line": 72,
+        "markers": [],
+        "docstring": "Test weight min/max caps are enforced.",
+        "class": "TestBayesianWeightUpdater"
+      },
+      {
+        "name": "TestBayesianWeightUpdater::test_different_regimes_independent",
+        "line": 92,
+        "markers": [],
+        "docstring": "Test that different regimes have independent performance.",
+        "class": "TestBayesianWeightUpdater"
+      },
+      {
+        "name": "TestBayesianWeightUpdater::test_serialize_deserialize",
+        "line": 110,
+        "markers": [],
+        "docstring": "Test serialization round-trip.",
+        "class": "TestBayesianWeightUpdater"
+      },
+      {
+        "name": "TestBayesianWeightUpdater::test_get_all_performance",
+        "line": 130,
+        "markers": [],
+        "docstring": "Test getting performance for all strategies.",
+        "class": "TestBayesianWeightUpdater"
+      },
+      {
+        "name": "test_init_equal_weights",
+        "line": 15,
+        "markers": [],
+        "docstring": "Test initialization with equal weights."
+      },
+      {
+        "name": "test_init_custom_weights",
+        "line": 27,
+        "markers": [],
+        "docstring": "Test initialization with custom base weights."
+      },
+      {
+        "name": "test_record_outcome_updates_performance",
+        "line": 38,
+        "markers": [],
+        "docstring": "Test that recording outcomes updates performance."
+      },
+      {
+        "name": "test_weights_adapt_to_performance",
+        "line": 55,
+        "markers": [],
+        "docstring": "Test that weights adapt based on performance."
+      },
+      {
+        "name": "test_weight_caps",
+        "line": 72,
+        "markers": [],
+        "docstring": "Test weight min/max caps are enforced."
+      },
+      {
+        "name": "test_different_regimes_independent",
+        "line": 92,
+        "markers": [],
+        "docstring": "Test that different regimes have independent performance."
+      },
+      {
+        "name": "test_serialize_deserialize",
+        "line": 110,
+        "markers": [],
+        "docstring": "Test serialization round-trip."
+      },
+      {
+        "name": "test_get_all_performance",
+        "line": 130,
+        "markers": [],
+        "docstring": "Test getting performance for all strategies."
+      }
+    ],
+    "tests/unit/gpt_trader/features/intelligence/ensemble/test_adaptive_strategy_performance.py": [
+      {
+        "name": "TestStrategyPerformanceRecord::test_init_with_priors",
+        "line": 12,
+        "markers": [],
+        "docstring": "Test initialization with Beta(2,2) priors.",
+        "class": "TestStrategyPerformanceRecord"
+      },
+      {
+        "name": "TestStrategyPerformanceRecord::test_record_success",
+        "line": 22,
+        "markers": [],
+        "docstring": "Test recording successful trade.",
+        "class": "TestStrategyPerformanceRecord"
+      },
+      {
+        "name": "TestStrategyPerformanceRecord::test_record_failure",
+        "line": 38,
+        "markers": [],
+        "docstring": "Test recording failed trade.",
+        "class": "TestStrategyPerformanceRecord"
+      },
+      {
+        "name": "TestStrategyPerformanceRecord::test_totals_tracking",
+        "line": 49,
+        "markers": [],
+        "docstring": "Test total trades and wins tracking.",
+        "class": "TestStrategyPerformanceRecord"
+      },
+      {
+        "name": "TestStrategyPerformanceRecord::test_recent_win_rate",
+        "line": 61,
+        "markers": [],
+        "docstring": "Test recent win rate calculation.",
+        "class": "TestStrategyPerformanceRecord"
+      },
+      {
+        "name": "TestStrategyPerformanceRecord::test_confidence_interval",
+        "line": 73,
+        "markers": [],
+        "docstring": "Test confidence interval calculation.",
+        "class": "TestStrategyPerformanceRecord"
+      },
+      {
+        "name": "TestStrategyPerformanceRecord::test_uncertainty",
+        "line": 91,
+        "markers": [],
+        "docstring": "Test uncertainty decreases with more data.",
+        "class": "TestStrategyPerformanceRecord"
+      },
+      {
+        "name": "TestStrategyPerformanceRecord::test_serialize_deserialize",
+        "line": 106,
+        "markers": [],
+        "docstring": "Test serialization round-trip.",
+        "class": "TestStrategyPerformanceRecord"
+      },
+      {
+        "name": "test_init_with_priors",
+        "line": 12,
+        "markers": [],
+        "docstring": "Test initialization with Beta(2,2) priors."
+      },
+      {
+        "name": "test_record_success",
+        "line": 22,
+        "markers": [],
+        "docstring": "Test recording successful trade."
+      },
+      {
+        "name": "test_record_failure",
+        "line": 38,
+        "markers": [],
+        "docstring": "Test recording failed trade."
+      },
+      {
+        "name": "test_totals_tracking",
+        "line": 49,
+        "markers": [],
+        "docstring": "Test total trades and wins tracking."
+      },
+      {
+        "name": "test_recent_win_rate",
+        "line": 61,
+        "markers": [],
+        "docstring": "Test recent win rate calculation."
+      },
+      {
+        "name": "test_confidence_interval",
+        "line": 73,
+        "markers": [],
+        "docstring": "Test confidence interval calculation."
+      },
+      {
+        "name": "test_uncertainty",
+        "line": 91,
+        "markers": [],
+        "docstring": "Test uncertainty decreases with more data."
+      },
+      {
+        "name": "test_serialize_deserialize",
+        "line": 106,
+        "markers": [],
+        "docstring": "Test serialization round-trip."
+      }
+    ],
     "tests/unit/gpt_trader/features/intelligence/ensemble/test_orchestrator_crisis_mode.py": [
       {
         "name": "TestCrisisMode::test_crisis_adjustment_applied",
@@ -50143,216 +50381,6 @@
         "line": 13,
         "markers": [],
         "docstring": "Test that crisis mode adjustment is applied when regime is crisis."
-      }
-    ],
-    "tests/unit/gpt_trader/features/intelligence/ensemble/test_adaptive.py": [
-      {
-        "name": "TestStrategyPerformanceRecord::test_init_with_priors",
-        "line": 16,
-        "markers": [],
-        "docstring": "Test initialization with Beta(2,2) priors.",
-        "class": "TestStrategyPerformanceRecord"
-      },
-      {
-        "name": "TestStrategyPerformanceRecord::test_record_success",
-        "line": 26,
-        "markers": [],
-        "docstring": "Test recording successful trade.",
-        "class": "TestStrategyPerformanceRecord"
-      },
-      {
-        "name": "TestStrategyPerformanceRecord::test_record_failure",
-        "line": 42,
-        "markers": [],
-        "docstring": "Test recording failed trade.",
-        "class": "TestStrategyPerformanceRecord"
-      },
-      {
-        "name": "TestStrategyPerformanceRecord::test_totals_tracking",
-        "line": 53,
-        "markers": [],
-        "docstring": "Test total trades and wins tracking.",
-        "class": "TestStrategyPerformanceRecord"
-      },
-      {
-        "name": "TestStrategyPerformanceRecord::test_recent_win_rate",
-        "line": 65,
-        "markers": [],
-        "docstring": "Test recent win rate calculation.",
-        "class": "TestStrategyPerformanceRecord"
-      },
-      {
-        "name": "TestStrategyPerformanceRecord::test_confidence_interval",
-        "line": 77,
-        "markers": [],
-        "docstring": "Test confidence interval calculation.",
-        "class": "TestStrategyPerformanceRecord"
-      },
-      {
-        "name": "TestStrategyPerformanceRecord::test_uncertainty",
-        "line": 95,
-        "markers": [],
-        "docstring": "Test uncertainty decreases with more data.",
-        "class": "TestStrategyPerformanceRecord"
-      },
-      {
-        "name": "TestStrategyPerformanceRecord::test_serialize_deserialize",
-        "line": 110,
-        "markers": [],
-        "docstring": "Test serialization round-trip.",
-        "class": "TestStrategyPerformanceRecord"
-      },
-      {
-        "name": "TestBayesianWeightUpdater::test_init_equal_weights",
-        "line": 131,
-        "markers": [],
-        "docstring": "Test initialization with equal weights.",
-        "class": "TestBayesianWeightUpdater"
-      },
-      {
-        "name": "TestBayesianWeightUpdater::test_init_custom_weights",
-        "line": 143,
-        "markers": [],
-        "docstring": "Test initialization with custom base weights.",
-        "class": "TestBayesianWeightUpdater"
-      },
-      {
-        "name": "TestBayesianWeightUpdater::test_record_outcome_updates_performance",
-        "line": 154,
-        "markers": [],
-        "docstring": "Test that recording outcomes updates performance.",
-        "class": "TestBayesianWeightUpdater"
-      },
-      {
-        "name": "TestBayesianWeightUpdater::test_weights_adapt_to_performance",
-        "line": 171,
-        "markers": [],
-        "docstring": "Test that weights adapt based on performance.",
-        "class": "TestBayesianWeightUpdater"
-      },
-      {
-        "name": "TestBayesianWeightUpdater::test_weight_caps",
-        "line": 188,
-        "markers": [],
-        "docstring": "Test weight min/max caps are enforced.",
-        "class": "TestBayesianWeightUpdater"
-      },
-      {
-        "name": "TestBayesianWeightUpdater::test_different_regimes_independent",
-        "line": 208,
-        "markers": [],
-        "docstring": "Test that different regimes have independent performance.",
-        "class": "TestBayesianWeightUpdater"
-      },
-      {
-        "name": "TestBayesianWeightUpdater::test_serialize_deserialize",
-        "line": 226,
-        "markers": [],
-        "docstring": "Test serialization round-trip.",
-        "class": "TestBayesianWeightUpdater"
-      },
-      {
-        "name": "TestBayesianWeightUpdater::test_get_all_performance",
-        "line": 246,
-        "markers": [],
-        "docstring": "Test getting performance for all strategies.",
-        "class": "TestBayesianWeightUpdater"
-      },
-      {
-        "name": "test_init_with_priors",
-        "line": 16,
-        "markers": [],
-        "docstring": "Test initialization with Beta(2,2) priors."
-      },
-      {
-        "name": "test_record_success",
-        "line": 26,
-        "markers": [],
-        "docstring": "Test recording successful trade."
-      },
-      {
-        "name": "test_record_failure",
-        "line": 42,
-        "markers": [],
-        "docstring": "Test recording failed trade."
-      },
-      {
-        "name": "test_totals_tracking",
-        "line": 53,
-        "markers": [],
-        "docstring": "Test total trades and wins tracking."
-      },
-      {
-        "name": "test_recent_win_rate",
-        "line": 65,
-        "markers": [],
-        "docstring": "Test recent win rate calculation."
-      },
-      {
-        "name": "test_confidence_interval",
-        "line": 77,
-        "markers": [],
-        "docstring": "Test confidence interval calculation."
-      },
-      {
-        "name": "test_uncertainty",
-        "line": 95,
-        "markers": [],
-        "docstring": "Test uncertainty decreases with more data."
-      },
-      {
-        "name": "test_serialize_deserialize",
-        "line": 110,
-        "markers": [],
-        "docstring": "Test serialization round-trip."
-      },
-      {
-        "name": "test_init_equal_weights",
-        "line": 131,
-        "markers": [],
-        "docstring": "Test initialization with equal weights."
-      },
-      {
-        "name": "test_init_custom_weights",
-        "line": 143,
-        "markers": [],
-        "docstring": "Test initialization with custom base weights."
-      },
-      {
-        "name": "test_record_outcome_updates_performance",
-        "line": 154,
-        "markers": [],
-        "docstring": "Test that recording outcomes updates performance."
-      },
-      {
-        "name": "test_weights_adapt_to_performance",
-        "line": 171,
-        "markers": [],
-        "docstring": "Test that weights adapt based on performance."
-      },
-      {
-        "name": "test_weight_caps",
-        "line": 188,
-        "markers": [],
-        "docstring": "Test weight min/max caps are enforced."
-      },
-      {
-        "name": "test_different_regimes_independent",
-        "line": 208,
-        "markers": [],
-        "docstring": "Test that different regimes have independent performance."
-      },
-      {
-        "name": "test_serialize_deserialize",
-        "line": 226,
-        "markers": [],
-        "docstring": "Test serialization round-trip."
-      },
-      {
-        "name": "test_get_all_performance",
-        "line": 246,
-        "markers": [],
-        "docstring": "Test getting performance for all strategies."
       }
     ],
     "tests/unit/gpt_trader/features/intelligence/ensemble/test_orchestrator_decision.py": [
@@ -62120,134 +62148,136 @@
         "docstring": "Test serialization round-trip."
       }
     ],
-    "tests/unit/gpt_trader/features/strategy_dev/lab/test_experiment.py": [
+    "tests/unit/gpt_trader/features/strategy_dev/lab/test_experiment_result.py": [
       {
         "name": "TestExperimentResult::test_create_result",
-        "line": 17,
+        "line": 13,
         "markers": [],
         "docstring": "Test creating an experiment result.",
         "class": "TestExperimentResult"
       },
       {
         "name": "TestExperimentResult::test_to_dict",
-        "line": 38,
+        "line": 34,
         "markers": [],
         "docstring": "Test serialization to dict.",
         "class": "TestExperimentResult"
       },
       {
         "name": "TestExperimentResult::test_from_dict",
-        "line": 60,
+        "line": 56,
         "markers": [],
         "docstring": "Test deserialization from dict.",
         "class": "TestExperimentResult"
       },
       {
         "name": "TestExperimentResult::test_compare_to",
-        "line": 88,
+        "line": 84,
         "markers": [],
         "docstring": "Test comparing two results.",
         "class": "TestExperimentResult"
       },
       {
+        "name": "test_create_result",
+        "line": 13,
+        "markers": [],
+        "docstring": "Test creating an experiment result."
+      },
+      {
+        "name": "test_to_dict",
+        "line": 34,
+        "markers": [],
+        "docstring": "Test serialization to dict."
+      },
+      {
+        "name": "test_from_dict",
+        "line": 56,
+        "markers": [],
+        "docstring": "Test deserialization from dict."
+      },
+      {
+        "name": "test_compare_to",
+        "line": 84,
+        "markers": [],
+        "docstring": "Test comparing two results."
+      }
+    ],
+    "tests/unit/gpt_trader/features/strategy_dev/lab/test_experiment.py": [
+      {
         "name": "TestExperiment::test_create_experiment",
-        "line": 131,
+        "line": 17,
         "markers": [],
         "docstring": "Test creating an experiment.",
         "class": "TestExperiment"
       },
       {
         "name": "TestExperiment::test_parameter_hash",
-        "line": 145,
+        "line": 31,
         "markers": [],
         "docstring": "Test parameter hash generation.",
         "class": "TestExperiment"
       },
       {
         "name": "TestExperiment::test_lifecycle",
-        "line": 173,
+        "line": 59,
         "markers": [],
         "docstring": "Test experiment lifecycle.",
         "class": "TestExperiment"
       },
       {
         "name": "TestExperiment::test_fail",
-        "line": 210,
+        "line": 96,
         "markers": [],
         "docstring": "Test failing an experiment.",
         "class": "TestExperiment"
       },
       {
         "name": "TestExperiment::test_clone",
-        "line": 225,
+        "line": 111,
         "markers": [],
         "docstring": "Test cloning an experiment.",
         "class": "TestExperiment"
       },
       {
         "name": "TestExperiment::test_to_from_dict",
-        "line": 242,
+        "line": 128,
         "markers": [],
         "docstring": "Test serialization round-trip.",
         "class": "TestExperiment"
       },
       {
-        "name": "test_create_result",
-        "line": 17,
-        "markers": [],
-        "docstring": "Test creating an experiment result."
-      },
-      {
-        "name": "test_to_dict",
-        "line": 38,
-        "markers": [],
-        "docstring": "Test serialization to dict."
-      },
-      {
-        "name": "test_from_dict",
-        "line": 60,
-        "markers": [],
-        "docstring": "Test deserialization from dict."
-      },
-      {
-        "name": "test_compare_to",
-        "line": 88,
-        "markers": [],
-        "docstring": "Test comparing two results."
-      },
-      {
         "name": "test_create_experiment",
-        "line": 131,
+        "line": 17,
         "markers": [],
         "docstring": "Test creating an experiment."
       },
       {
         "name": "test_parameter_hash",
-        "line": 145,
+        "line": 31,
         "markers": [],
         "docstring": "Test parameter hash generation."
       },
       {
         "name": "test_lifecycle",
-        "line": 173,
+        "line": 59,
         "markers": [],
         "docstring": "Test experiment lifecycle."
       },
       {
         "name": "test_fail",
-        "line": 210,
+        "line": 96,
         "markers": [],
         "docstring": "Test failing an experiment."
       },
       {
         "name": "test_clone",
-        "line": 225,
+        "line": 111,
         "markers": [],
         "docstring": "Test cloning an experiment."
       },
       {
         "name": "test_to_from_dict",
-        "line": 242,
+        "line": 128,
         "markers": [],
         "docstring": "Test serialization round-trip."
       }
@@ -63999,199 +64029,147 @@
     ],
     "tests/unit/gpt_trader/features/live_trade/signals/test_vwap.py": [
       {
-        "name": "TestVWAPSignalConfig::test_default_values",
-        "line": 19,
-        "markers": [],
-        "docstring": "Test default config values.",
-        "class": "TestVWAPSignalConfig"
-      },
-      {
-        "name": "TestVWAPSignalConfig::test_custom_values",
-        "line": 26,
-        "markers": [],
-        "docstring": "Test custom config values.",
-        "class": "TestVWAPSignalConfig"
-      },
-      {
         "name": "TestVWAPSignal::test_no_market_data_returns_neutral",
-        "line": 58,
+        "line": 37,
         "markers": [],
         "docstring": "Test that missing market_data returns neutral signal.",
         "class": "TestVWAPSignal"
       },
       {
         "name": "TestVWAPSignal::test_no_trade_stats_returns_neutral",
-        "line": 70,
+        "line": 49,
         "markers": [],
         "docstring": "Test that missing trade_stats returns neutral signal.",
         "class": "TestVWAPSignal"
       },
       {
         "name": "TestVWAPSignal::test_no_vwap_returns_neutral",
-        "line": 80,
+        "line": 59,
         "markers": [],
         "docstring": "Test that missing vwap returns neutral signal.",
         "class": "TestVWAPSignal"
       },
       {
         "name": "TestVWAPSignal::test_insufficient_trades_returns_neutral",
-        "line": 90,
+        "line": 69,
         "markers": [],
         "docstring": "Test that too few trades returns neutral signal.",
         "class": "TestVWAPSignal"
       },
       {
         "name": "TestVWAPSignal::test_price_below_vwap_is_bullish",
-        "line": 103,
+        "line": 82,
         "markers": [],
         "docstring": "Test that price below VWAP generates bullish signal.",
         "class": "TestVWAPSignal"
       },
       {
         "name": "TestVWAPSignal::test_price_above_vwap_is_bearish",
-        "line": 122,
+        "line": 101,
         "markers": [],
         "docstring": "Test that price above VWAP generates bearish signal.",
         "class": "TestVWAPSignal"
       },
       {
         "name": "TestVWAPSignal::test_price_near_vwap_is_neutral",
-        "line": 141,
+        "line": 120,
         "markers": [],
         "docstring": "Test that price near VWAP generates neutral signal.",
         "class": "TestVWAPSignal"
       },
       {
         "name": "TestVWAPSignal::test_confidence_increases_with_trade_count",
-        "line": 157,
+        "line": 136,
         "markers": [],
         "docstring": "Test that more trades increase confidence.",
         "class": "TestVWAPSignal"
       },
       {
         "name": "TestVWAPSignal::test_strength_scales_with_deviation",
-        "line": 175,
+        "line": 154,
         "markers": [],
         "docstring": "Test that strength scales with deviation magnitude.",
         "class": "TestVWAPSignal"
       },
       {
         "name": "TestVWAPSignal::test_strong_deviation_increases_confidence",
-        "line": 193,
+        "line": 172,
         "markers": [],
         "docstring": "Test that stronger deviations have higher confidence.",
         "class": "TestVWAPSignal"
       },
       {
         "name": "TestVWAPSignal::test_zero_vwap_returns_neutral",
-        "line": 211,
+        "line": 190,
         "markers": [],
         "docstring": "Test that zero vwap returns neutral signal.",
         "class": "TestVWAPSignal"
       },
       {
-        "name": "TestVWAPSignal::test_custom_thresholds",
-        "line": 223,
-        "markers": [],
-        "docstring": "Test signal with custom thresholds.",
-        "class": "TestVWAPSignal"
-      },
-      {
-        "name": "TestVWAPSignal::test_metadata_contains_expected_fields",
-        "line": 241,
-        "markers": [],
-        "docstring": "Test that metadata contains all expected fields.",
-        "class": "TestVWAPSignal"
-      },
-      {
-        "name": "test_default_values",
-        "line": 19,
-        "markers": [],
-        "docstring": "Test default config values."
-      },
-      {
-        "name": "test_custom_values",
-        "line": 26,
-        "markers": [],
-        "docstring": "Test custom config values."
-      },
-      {
         "name": "test_no_market_data_returns_neutral",
-        "line": 58,
+        "line": 37,
         "markers": [],
         "docstring": "Test that missing market_data returns neutral signal."
       },
       {
         "name": "test_no_trade_stats_returns_neutral",
-        "line": 70,
+        "line": 49,
         "markers": [],
         "docstring": "Test that missing trade_stats returns neutral signal."
       },
       {
         "name": "test_no_vwap_returns_neutral",
-        "line": 80,
+        "line": 59,
         "markers": [],
         "docstring": "Test that missing vwap returns neutral signal."
       },
       {
         "name": "test_insufficient_trades_returns_neutral",
-        "line": 90,
+        "line": 69,
         "markers": [],
         "docstring": "Test that too few trades returns neutral signal."
       },
       {
         "name": "test_price_below_vwap_is_bullish",
-        "line": 103,
+        "line": 82,
         "markers": [],
         "docstring": "Test that price below VWAP generates bullish signal."
       },
       {
         "name": "test_price_above_vwap_is_bearish",
-        "line": 122,
+        "line": 101,
         "markers": [],
         "docstring": "Test that price above VWAP generates bearish signal."
       },
       {
         "name": "test_price_near_vwap_is_neutral",
-        "line": 141,
+        "line": 120,
         "markers": [],
         "docstring": "Test that price near VWAP generates neutral signal."
       },
       {
         "name": "test_confidence_increases_with_trade_count",
-        "line": 157,
+        "line": 136,
         "markers": [],
         "docstring": "Test that more trades increase confidence."
       },
       {
         "name": "test_strength_scales_with_deviation",
-        "line": 175,
+        "line": 154,
         "markers": [],
         "docstring": "Test that strength scales with deviation magnitude."
       },
       {
         "name": "test_strong_deviation_increases_confidence",
-        "line": 193,
+        "line": 172,
         "markers": [],
         "docstring": "Test that stronger deviations have higher confidence."
       },
       {
         "name": "test_zero_vwap_returns_neutral",
-        "line": 211,
+        "line": 190,
         "markers": [],
         "docstring": "Test that zero vwap returns neutral signal."
-      },
-      {
-        "name": "test_custom_thresholds",
-        "line": 223,
-        "markers": [],
-        "docstring": "Test signal with custom thresholds."
-      },
-      {
-        "name": "test_metadata_contains_expected_fields",
-        "line": 241,
-        "markers": [],
-        "docstring": "Test that metadata contains all expected fields."
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/signals/test_spread.py": [
@@ -64508,6 +64486,48 @@
         "line": 237,
         "markers": [],
         "docstring": "Test that levels config is passed to get_depth."
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/signals/test_vwap_customization.py": [
+      {
+        "name": "test_custom_thresholds",
+        "line": 29,
+        "markers": [],
+        "docstring": "Test signal with custom thresholds."
+      },
+      {
+        "name": "test_metadata_contains_expected_fields",
+        "line": 48,
+        "markers": [],
+        "docstring": "Test that metadata contains all expected fields."
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/signals/test_vwap_config.py": [
+      {
+        "name": "TestVWAPSignalConfig::test_default_values",
+        "line": 9,
+        "markers": [],
+        "docstring": "Test default config values.",
+        "class": "TestVWAPSignalConfig"
+      },
+      {
+        "name": "TestVWAPSignalConfig::test_custom_values",
+        "line": 16,
+        "markers": [],
+        "docstring": "Test custom config values.",
+        "class": "TestVWAPSignalConfig"
+      },
+      {
+        "name": "test_default_values",
+        "line": 9,
+        "markers": [],
+        "docstring": "Test default config values."
+      },
+      {
+        "name": "test_custom_values",
+        "line": 16,
+        "markers": [],
+        "docstring": "Test custom config values."
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/signals/test_order_flow.py": [
@@ -70780,6 +70800,205 @@
         "docstring": "Basis percentage is None with zero spot price."
       }
     ],
+    "tests/unit/gpt_trader/cli/commands/optimize/test_commands_arg_parsing.py": [
+      {
+        "name": "TestArgumentParsing::test_run_parses_objective",
+        "line": 35,
+        "markers": [],
+        "docstring": "Test run command parses objective.",
+        "class": "TestArgumentParsing"
+      },
+      {
+        "name": "TestArgumentParsing::test_run_parses_trials",
+        "line": 40,
+        "markers": [],
+        "docstring": "Test run command parses trials.",
+        "class": "TestArgumentParsing"
+      },
+      {
+        "name": "TestArgumentParsing::test_run_parses_symbols",
+        "line": 45,
+        "markers": [],
+        "docstring": "Test run command parses symbols.",
+        "class": "TestArgumentParsing"
+      },
+      {
+        "name": "TestArgumentParsing::test_view_parses_run_id",
+        "line": 50,
+        "markers": [],
+        "docstring": "Test view command parses run ID.",
+        "class": "TestArgumentParsing"
+      },
+      {
+        "name": "TestArgumentParsing::test_list_parses_limit",
+        "line": 55,
+        "markers": [],
+        "docstring": "Test list command parses limit.",
+        "class": "TestArgumentParsing"
+      },
+      {
+        "name": "TestArgumentParsing::test_compare_parses_run_ids",
+        "line": 60,
+        "markers": [],
+        "docstring": "Test compare command parses run IDs.",
+        "class": "TestArgumentParsing"
+      },
+      {
+        "name": "TestArgumentParsing::test_export_parses_format",
+        "line": 65,
+        "markers": [],
+        "docstring": "Test export command parses export format.",
+        "class": "TestArgumentParsing"
+      },
+      {
+        "name": "TestArgumentParsing::test_apply_parses_profile",
+        "line": 70,
+        "markers": [],
+        "docstring": "Test apply command parses profile.",
+        "class": "TestArgumentParsing"
+      },
+      {
+        "name": "test_run_parses_objective",
+        "line": 35,
+        "markers": [],
+        "docstring": "Test run command parses objective."
+      },
+      {
+        "name": "test_run_parses_trials",
+        "line": 40,
+        "markers": [],
+        "docstring": "Test run command parses trials."
+      },
+      {
+        "name": "test_run_parses_symbols",
+        "line": 45,
+        "markers": [],
+        "docstring": "Test run command parses symbols."
+      },
+      {
+        "name": "test_view_parses_run_id",
+        "line": 50,
+        "markers": [],
+        "docstring": "Test view command parses run ID."
+      },
+      {
+        "name": "test_list_parses_limit",
+        "line": 55,
+        "markers": [],
+        "docstring": "Test list command parses limit."
+      },
+      {
+        "name": "test_compare_parses_run_ids",
+        "line": 60,
+        "markers": [],
+        "docstring": "Test compare command parses run IDs."
+      },
+      {
+        "name": "test_export_parses_format",
+        "line": 65,
+        "markers": [],
+        "docstring": "Test export command parses export format."
+      },
+      {
+        "name": "test_apply_parses_profile",
+        "line": 70,
+        "markers": [],
+        "docstring": "Test apply command parses profile."
+      }
+    ],
+    "tests/unit/gpt_trader/cli/commands/optimize/test_commands_execution.py": [
+      {
+        "name": "TestRunCommand::test_dry_run_returns_success",
+        "line": 15,
+        "markers": [],
+        "docstring": "Test dry run mode returns success.",
+        "class": "TestRunCommand"
+      },
+      {
+        "name": "TestListCommand::test_execute_with_no_runs",
+        "line": 42,
+        "markers": [],
+        "docstring": "Test list command with no runs.",
+        "class": "TestListCommand"
+      },
+      {
+        "name": "TestListCommand::test_execute_with_runs",
+        "line": 53,
+        "markers": [],
+        "docstring": "Test list command with runs.",
+        "class": "TestListCommand"
+      },
+      {
+        "name": "TestViewCommand::test_execute_with_missing_run",
+        "line": 75,
+        "markers": [],
+        "docstring": "Test view command with missing run.",
+        "class": "TestViewCommand"
+      },
+      {
+        "name": "TestCompareCommand::test_execute_requires_two_runs",
+        "line": 92,
+        "markers": [],
+        "docstring": "Test compare command requires at least 2 runs.",
+        "class": "TestCompareCommand"
+      },
+      {
+        "name": "TestExportCommand::test_execute_with_missing_run",
+        "line": 102,
+        "markers": [],
+        "docstring": "Test export command with missing run.",
+        "class": "TestExportCommand"
+      },
+      {
+        "name": "TestApplyCommand::test_execute_with_missing_run",
+        "line": 123,
+        "markers": [],
+        "docstring": "Test apply command with missing run.",
+        "class": "TestApplyCommand"
+      },
+      {
+        "name": "test_dry_run_returns_success",
+        "line": 15,
+        "markers": [],
+        "docstring": "Test dry run mode returns success."
+      },
+      {
+        "name": "test_execute_with_no_runs",
+        "line": 42,
+        "markers": [],
+        "docstring": "Test list command with no runs."
+      },
+      {
+        "name": "test_execute_with_runs",
+        "line": 53,
+        "markers": [],
+        "docstring": "Test list command with runs."
+      },
+      {
+        "name": "test_execute_with_missing_run",
+        "line": 75,
+        "markers": [],
+        "docstring": "Test view command with missing run."
+      },
+      {
+        "name": "test_execute_requires_two_runs",
+        "line": 92,
+        "markers": [],
+        "docstring": "Test compare command requires at least 2 runs."
+      },
+      {
+        "name": "test_execute_with_missing_run",
+        "line": 102,
+        "markers": [],
+        "docstring": "Test export command with missing run."
+      },
+      {
+        "name": "test_execute_with_missing_run",
+        "line": 123,
+        "markers": [],
+        "docstring": "Test apply command with missing run."
+      }
+    ],
     "tests/unit/gpt_trader/cli/commands/optimize/test_config_loader.py": [
       {
         "name": "TestLoadConfigFile::test_loads_valid_yaml",
@@ -71094,292 +71313,97 @@
         "docstring": "Test all presets can be instantiated."
       }
     ],
-    "tests/unit/gpt_trader/cli/commands/optimize/test_commands.py": [
+    "tests/unit/gpt_trader/cli/commands/optimize/test_commands_registration.py": [
       {
         "name": "TestOptimizeSubcommandRegistration::test_run_register",
-        "line": 24,
+        "line": 22,
         "markers": [],
         "docstring": "Test run subcommand registers.",
         "class": "TestOptimizeSubcommandRegistration"
       },
       {
         "name": "TestOptimizeSubcommandRegistration::test_view_register",
-        "line": 30,
+        "line": 28,
         "markers": [],
         "docstring": "Test view subcommand registers.",
         "class": "TestOptimizeSubcommandRegistration"
       },
       {
         "name": "TestOptimizeSubcommandRegistration::test_list_register",
-        "line": 36,
+        "line": 34,
         "markers": [],
         "docstring": "Test list subcommand registers.",
         "class": "TestOptimizeSubcommandRegistration"
       },
       {
         "name": "TestOptimizeSubcommandRegistration::test_compare_register",
-        "line": 42,
+        "line": 40,
         "markers": [],
         "docstring": "Test compare subcommand registers.",
         "class": "TestOptimizeSubcommandRegistration"
       },
       {
         "name": "TestOptimizeSubcommandRegistration::test_export_register",
-        "line": 48,
+        "line": 46,
         "markers": [],
         "docstring": "Test export subcommand registers.",
         "class": "TestOptimizeSubcommandRegistration"
       },
       {
         "name": "TestOptimizeSubcommandRegistration::test_resume_register",
-        "line": 54,
+        "line": 52,
         "markers": [],
         "docstring": "Test resume subcommand registers.",
         "class": "TestOptimizeSubcommandRegistration"
       },
       {
         "name": "TestOptimizeSubcommandRegistration::test_apply_register",
-        "line": 60,
+        "line": 58,
         "markers": [],
         "docstring": "Test apply subcommand registers.",
         "class": "TestOptimizeSubcommandRegistration"
       },
       {
-        "name": "TestRunCommand::test_dry_run_returns_success",
-        "line": 70,
-        "markers": [],
-        "docstring": "Test dry run mode returns success.",
-        "class": "TestRunCommand"
-      },
-      {
-        "name": "TestListCommand::test_execute_with_no_runs",
-        "line": 97,
-        "markers": [],
-        "docstring": "Test list command with no runs.",
-        "class": "TestListCommand"
-      },
-      {
-        "name": "TestListCommand::test_execute_with_runs",
-        "line": 109,
-        "markers": [],
-        "docstring": "Test list command with runs.",
-        "class": "TestListCommand"
-      },
-      {
-        "name": "TestViewCommand::test_execute_with_missing_run",
-        "line": 131,
-        "markers": [],
-        "docstring": "Test view command with missing run.",
-        "class": "TestViewCommand"
-      },
-      {
-        "name": "TestCompareCommand::test_execute_requires_two_runs",
-        "line": 148,
-        "markers": [],
-        "docstring": "Test compare command requires at least 2 runs.",
-        "class": "TestCompareCommand"
-      },
-      {
-        "name": "TestExportCommand::test_execute_with_missing_run",
-        "line": 158,
-        "markers": [],
-        "docstring": "Test export command with missing run.",
-        "class": "TestExportCommand"
-      },
-      {
-        "name": "TestApplyCommand::test_execute_with_missing_run",
-        "line": 179,
-        "markers": [],
-        "docstring": "Test apply command with missing run.",
-        "class": "TestApplyCommand"
-      },
-      {
-        "name": "TestArgumentParsing::test_run_parses_objective",
-        "line": 220,
-        "markers": [],
-        "docstring": "Test run command parses objective.",
-        "class": "TestArgumentParsing"
-      },
-      {
-        "name": "TestArgumentParsing::test_run_parses_trials",
-        "line": 225,
-        "markers": [],
-        "docstring": "Test run command parses trials.",
-        "class": "TestArgumentParsing"
-      },
-      {
-        "name": "TestArgumentParsing::test_run_parses_symbols",
-        "line": 230,
-        "markers": [],
-        "docstring": "Test run command parses symbols.",
-        "class": "TestArgumentParsing"
-      },
-      {
-        "name": "TestArgumentParsing::test_view_parses_run_id",
-        "line": 235,
-        "markers": [],
-        "docstring": "Test view command parses run ID.",
-        "class": "TestArgumentParsing"
-      },
-      {
-        "name": "TestArgumentParsing::test_list_parses_limit",
-        "line": 240,
-        "markers": [],
-        "docstring": "Test list command parses limit.",
-        "class": "TestArgumentParsing"
-      },
-      {
-        "name": "TestArgumentParsing::test_compare_parses_run_ids",
-        "line": 245,
-        "markers": [],
-        "docstring": "Test compare command parses run IDs.",
-        "class": "TestArgumentParsing"
-      },
-      {
-        "name": "TestArgumentParsing::test_export_parses_format",
-        "line": 250,
-        "markers": [],
-        "docstring": "Test export command parses export format.",
-        "class": "TestArgumentParsing"
-      },
-      {
-        "name": "TestArgumentParsing::test_apply_parses_profile",
-        "line": 255,
-        "markers": [],
-        "docstring": "Test apply command parses profile.",
-        "class": "TestArgumentParsing"
-      },
-      {
         "name": "test_run_register",
-        "line": 24,
+        "line": 22,
         "markers": [],
         "docstring": "Test run subcommand registers."
       },
       {
         "name": "test_view_register",
-        "line": 30,
+        "line": 28,
         "markers": [],
         "docstring": "Test view subcommand registers."
       },
       {
         "name": "test_list_register",
-        "line": 36,
+        "line": 34,
         "markers": [],
         "docstring": "Test list subcommand registers."
       },
       {
         "name": "test_compare_register",
-        "line": 42,
+        "line": 40,
         "markers": [],
         "docstring": "Test compare subcommand registers."
       },
       {
         "name": "test_export_register",
-        "line": 48,
+        "line": 46,
         "markers": [],
         "docstring": "Test export subcommand registers."
       },
       {
         "name": "test_resume_register",
-        "line": 54,
+        "line": 52,
         "markers": [],
         "docstring": "Test resume subcommand registers."
       },
       {
         "name": "test_apply_register",
-        "line": 60,
+        "line": 58,
         "markers": [],
         "docstring": "Test apply subcommand registers."
-      },
-      {
-        "name": "test_dry_run_returns_success",
-        "line": 70,
-        "markers": [],
-        "docstring": "Test dry run mode returns success."
-      },
-      {
-        "name": "test_execute_with_no_runs",
-        "line": 97,
-        "markers": [],
-        "docstring": "Test list command with no runs."
-      },
-      {
-        "name": "test_execute_with_runs",
-        "line": 109,
-        "markers": [],
-        "docstring": "Test list command with runs."
-      },
-      {
-        "name": "test_execute_with_missing_run",
-        "line": 131,
-        "markers": [],
-        "docstring": "Test view command with missing run."
-      },
-      {
-        "name": "test_execute_requires_two_runs",
-        "line": 148,
-        "markers": [],
-        "docstring": "Test compare command requires at least 2 runs."
-      },
-      {
-        "name": "test_execute_with_missing_run",
-        "line": 158,
-        "markers": [],
-        "docstring": "Test export command with missing run."
-      },
-      {
-        "name": "test_execute_with_missing_run",
-        "line": 179,
-        "markers": [],
-        "docstring": "Test apply command with missing run."
-      },
-      {
-        "name": "test_run_parses_objective",
-        "line": 220,
-        "markers": [],
-        "docstring": "Test run command parses objective."
-      },
-      {
-        "name": "test_run_parses_trials",
-        "line": 225,
-        "markers": [],
-        "docstring": "Test run command parses trials."
-      },
-      {
-        "name": "test_run_parses_symbols",
-        "line": 230,
-        "markers": [],
-        "docstring": "Test run command parses symbols."
-      },
-      {
-        "name": "test_view_parses_run_id",
-        "line": 235,
-        "markers": [],
-        "docstring": "Test view command parses run ID."
-      },
-      {
-        "name": "test_list_parses_limit",
-        "line": 240,
-        "markers": [],
-        "docstring": "Test list command parses limit."
-      },
-      {
-        "name": "test_compare_parses_run_ids",
-        "line": 245,
-        "markers": [],
-        "docstring": "Test compare command parses run IDs."
-      },
-      {
-        "name": "test_export_parses_format",
-        "line": 250,
-        "markers": [],
-        "docstring": "Test export command parses export format."
-      },
-      {
-        "name": "test_apply_parses_profile",
-        "line": 255,
-        "markers": [],
-        "docstring": "Test apply command parses profile."
       }
     ],
     "tests/unit/gpt_trader/cli/commands/optimize/test_formatters.py": [

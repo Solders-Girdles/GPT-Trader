@@ -64,7 +64,7 @@ def context(mock_broker):
     risk_manager.config.slippage_failure_pause_after = 3
     risk_manager.config.slippage_pause_seconds = 60
     risk_manager.config.validation_failure_cooldown_seconds = 180
-    risk_manager.config.preview_failure_disable_after = 5
+    risk_manager.config.preview_failure_disable_after = 3
     risk_manager.config.api_health_cooldown_seconds = 300
     return CoordinatorContext(config=config, broker=mock_broker, risk_manager=risk_manager)
 

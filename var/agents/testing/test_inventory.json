@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 11051,
-    "total_files": 892,
+    "total_files": 908,
     "markers_used": 9
   },
   "marker_definitions": {
@@ -227,12 +227,13 @@
     ],
     "app": [
       "tests/unit/gpt_trader/app/test_application_container_reset_and_services.py",
-      "tests/unit/gpt_trader/app/test_health_server.py",
+      "tests/unit/gpt_trader/app/test_health_server_helpers.py",
       "tests/unit/gpt_trader/app/test_application_container_resources.py",
       "tests/unit/gpt_trader/app/test_bootstrap_profile_loading.py",
       "tests/unit/gpt_trader/app/test_application_container_registry.py",
       "tests/unit/gpt_trader/app/test_bootstrap.py",
       "tests/unit/gpt_trader/app/test_application_container_bot_creation.py",
+      "tests/unit/gpt_trader/app/test_health_server_state.py",
       "tests/unit/gpt_trader/app/config/test_validation.py",
       "tests/unit/gpt_trader/app/config/test_cfm_config.py",
       "tests/unit/gpt_trader/app/config/test_bot_config.py",
@@ -455,19 +456,24 @@
     ],
     "cli": [
       "tests/unit/gpt_trader/cli/test_response_envelope_contract.py",
+      "tests/unit/gpt_trader/cli/test_commands_orders_payload.py",
       "tests/unit/gpt_trader/cli/test_cli_unit.py",
       "tests/unit/gpt_trader/cli/test_services.py",
       "tests/unit/gpt_trader/cli/test_commands_run.py",
       "tests/unit/gpt_trader/cli/test_response_cli_response.py",
-      "tests/unit/gpt_trader/cli/test_commands_orders.py",
+      "tests/unit/gpt_trader/cli/test_commands_orders_editing.py",
       "tests/unit/gpt_trader/cli/test_cli_integration.py",
       "tests/unit/gpt_trader/cli/test_response_error.py",
+      "tests/unit/gpt_trader/cli/test_commands_orders_preview.py",
       "tests/unit/gpt_trader/cli/test_commands_account_treasury.py",
       "tests/unit/gpt_trader/cli/test_response_format.py",
       "tests/unit/gpt_trader/cli/commands/optimize/test_commands_arg_parsing.py",
       "tests/unit/gpt_trader/cli/commands/optimize/test_commands_execution.py",
-      "tests/unit/gpt_trader/cli/commands/optimize/test_config_loader.py",
+      "tests/unit/gpt_trader/cli/commands/optimize/test_config_loader_builders.py",
+      "tests/unit/gpt_trader/cli/commands/optimize/test_config_loader_objectives.py",
+      "tests/unit/gpt_trader/cli/commands/optimize/test_config_loader_file_loading.py",
       "tests/unit/gpt_trader/cli/commands/optimize/test_commands_registration.py",
+      "tests/unit/gpt_trader/cli/commands/optimize/test_config_loader_parsing.py",
       "tests/unit/gpt_trader/cli/commands/optimize/test_formatters.py"
     ],
     "observability": [
@@ -527,6 +533,7 @@
     ],
     "monitoring": [
       "tests/unit/gpt_trader/monitoring/test_memory_metrics.py",
+      "tests/unit/gpt_trader/monitoring/test_health_signals_thresholds.py",
       "tests/unit/gpt_trader/monitoring/test_status_reporter_io_edges.py",
       "tests/unit/gpt_trader/monitoring/test_health_checks_broker_ping.py",
       "tests/unit/gpt_trader/monitoring/test_metrics_collector.py",
@@ -534,6 +541,7 @@
       "tests/unit/gpt_trader/monitoring/test_health_checks_ws_freshness.py",
       "tests/unit/gpt_trader/monitoring/test_status_reporter_updates_and_health.py",
       "tests/unit/gpt_trader/monitoring/test_guard_manager_edges.py",
+      "tests/unit/gpt_trader/monitoring/test_health_signals_summary.py",
       "tests/unit/gpt_trader/monitoring/test_profiling.py",
       "tests/unit/gpt_trader/monitoring/test_health_checks_execution_signals.py",
       "tests/unit/gpt_trader/monitoring/test_status_reporter_metrics.py",
@@ -615,8 +623,10 @@
       "tests/unit/gpt_trader/validation/test_rules_collection_rules.py",
       "tests/unit/gpt_trader/validation/test_rules_boolean_rule.py",
       "tests/unit/gpt_trader/validation/test_rules_infrastructure.py",
+      "tests/unit/gpt_trader/validation/test_config_validators_validator_types.py",
       "tests/unit/gpt_trader/validation/test_rules_numeric_rules.py",
       "tests/unit/gpt_trader/validation/test_data_validators_series.py",
+      "tests/unit/gpt_trader/validation/test_config_validators_edge_cases.py",
       "tests/unit/gpt_trader/validation/test_rules_string_time_and_symbol_rules.py",
       "tests/unit/gpt_trader/validation/test_temporal_validators.py",
       "tests/unit/gpt_trader/validation/test_data_validators_ohlc.py"
@@ -724,13 +734,16 @@
       "tests/unit/gpt_trader/features/optimize/objectives/test_single_exposure_and_timing_objectives.py",
       "tests/unit/gpt_trader/features/optimize/persistence/test_storage_edges.py",
       "tests/unit/gpt_trader/features/optimize/parameter_space/test_builder.py",
-      "tests/unit/gpt_trader/features/intelligence/ensemble/test_voting.py",
       "tests/unit/gpt_trader/features/intelligence/ensemble/test_weighting.py",
       "tests/unit/gpt_trader/features/intelligence/ensemble/test_adaptive_weight_updater.py",
       "tests/unit/gpt_trader/features/intelligence/ensemble/test_adaptive_strategy_performance.py",
+      "tests/unit/gpt_trader/features/intelligence/ensemble/test_voting_strategy_vote.py",
       "tests/unit/gpt_trader/features/intelligence/ensemble/test_orchestrator_crisis_mode.py",
+      "tests/unit/gpt_trader/features/intelligence/ensemble/test_voting_weighted_majority.py",
+      "tests/unit/gpt_trader/features/intelligence/ensemble/test_voting_factory.py",
       "tests/unit/gpt_trader/features/intelligence/ensemble/test_orchestrator_decision.py",
       "tests/unit/gpt_trader/features/intelligence/ensemble/test_orchestrator_serialization.py",
+      "tests/unit/gpt_trader/features/intelligence/ensemble/test_voting_confidence_leader.py",
       "tests/unit/gpt_trader/features/intelligence/backtesting/test_batch_regime_snapshot.py",
       "tests/unit/gpt_trader/features/intelligence/backtesting/test_batch_regime_history.py",
       "tests/unit/gpt_trader/features/intelligence/backtesting/test_batch_regime_detector.py",
@@ -821,6 +834,7 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_integration_flows.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_perform_http_request_and_lifecycle.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_request_retries.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics_collector.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_metrics_and_resilience_status.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_rate_limiting.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_coinbase_client.py",
@@ -842,6 +856,7 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_market_mixin_requests.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_orders_mixin.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_endpoints_and_paths.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics_request_timer.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_portfolio_mixin.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_auth_headers.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_cache.py",
@@ -919,6 +934,7 @@
       "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_baseline_strategy_init_and_guards.py",
       "tests/unit/gpt_trader/features/live_trade/signals/test_registry.py",
       "tests/unit/gpt_trader/features/live_trade/signals/test_vwap.py",
+      "tests/unit/gpt_trader/features/live_trade/signals/test_orderbook_imbalance_config.py",
       "tests/unit/gpt_trader/features/live_trade/signals/test_spread.py",
       "tests/unit/gpt_trader/features/live_trade/signals/test_orderbook_imbalance.py",
       "tests/unit/gpt_trader/features/live_trade/signals/test_vwap_customization.py",
@@ -1769,79 +1785,79 @@
     "tests/integration/test_crash_recovery.py": [
       {
         "name": "TestCrashRecovery::test_price_history_survives_restart",
-        "line": 62,
+        "line": 61,
         "markers": [],
         "docstring": "Price history should be restored from EventStore after restart.",
         "class": "TestCrashRecovery"
       },
       {
         "name": "TestCrashRecovery::test_rehydration_filters_by_configured_symbols",
-        "line": 112,
+        "line": 111,
         "markers": [],
         "docstring": "Rehydration should only restore prices for symbols in config.",
         "class": "TestCrashRecovery"
       },
       {
         "name": "TestCrashRecovery::test_rehydration_respects_max_history_size",
-        "line": 141,
+        "line": 140,
         "markers": [],
         "docstring": "Rehydration should keep price history bounded to 20 items.",
         "class": "TestCrashRecovery"
       },
       {
         "name": "TestCrashRecovery::test_in_memory_mode_no_persistence",
-        "line": 170,
+        "line": 169,
         "markers": [],
         "docstring": "In-memory EventStore should not persist across restarts.",
         "class": "TestCrashRecovery"
       },
       {
         "name": "TestCrashRecovery::test_no_event_store_graceful_degradation",
-        "line": 195,
+        "line": 194,
         "markers": [],
         "docstring": "Engine should work without EventStore (no persistence).",
         "class": "TestCrashRecovery"
       },
       {
         "name": "TestCrashRecovery::test_multiple_restarts_accumulate_correctly",
-        "line": 208,
+        "line": 207,
         "markers": [],
         "docstring": "Multiple restart cycles should accumulate prices correctly.",
         "class": "TestCrashRecovery"
       },
       {
         "name": "test_price_history_survives_restart",
-        "line": 62,
+        "line": 61,
         "markers": [],
         "docstring": "Price history should be restored from EventStore after restart."
       },
       {
         "name": "test_rehydration_filters_by_configured_symbols",
-        "line": 112,
+        "line": 111,
         "markers": [],
         "docstring": "Rehydration should only restore prices for symbols in config."
       },
       {
         "name": "test_rehydration_respects_max_history_size",
-        "line": 141,
+        "line": 140,
         "markers": [],
         "docstring": "Rehydration should keep price history bounded to 20 items."
       },
       {
         "name": "test_in_memory_mode_no_persistence",
-        "line": 170,
+        "line": 169,
         "markers": [],
         "docstring": "In-memory EventStore should not persist across restarts."
       },
       {
         "name": "test_no_event_store_graceful_degradation",
-        "line": 195,
+        "line": 194,
         "markers": [],
         "docstring": "Engine should work without EventStore (no persistence)."
       },
       {
         "name": "test_multiple_restarts_accumulate_correctly",
-        "line": 208,
+        "line": 207,
         "markers": [],
         "docstring": "Multiple restart cycles should accumulate prices correctly."
       }
@@ -3355,140 +3371,69 @@
         "docstring": "Test that secrets manager is created correctly."
       }
     ],
-    "tests/unit/gpt_trader/app/test_health_server.py": [
-      {
-        "name": "TestHealthState::test_initial_state",
-        "line": 23,
-        "markers": [],
-        "docstring": "",
-        "class": "TestHealthState"
-      },
-      {
-        "name": "TestHealthState::test_set_ready",
-        "line": 30,
-        "markers": [],
-        "docstring": "",
-        "class": "TestHealthState"
-      },
-      {
-        "name": "TestHealthState::test_set_live",
-        "line": 36,
-        "markers": [],
-        "docstring": "",
-        "class": "TestHealthState"
-      },
-      {
-        "name": "TestHealthState::test_add_check_pass",
-        "line": 42,
-        "markers": [],
-        "docstring": "",
-        "class": "TestHealthState"
-      },
-      {
-        "name": "TestHealthState::test_add_check_fail",
-        "line": 48,
-        "markers": [],
-        "docstring": "",
-        "class": "TestHealthState"
-      },
+    "tests/unit/gpt_trader/app/test_health_server_helpers.py": [
       {
         "name": "TestHealthCheckFunctions::test_mark_ready",
-        "line": 181,
+        "line": 25,
         "markers": [],
         "docstring": "",
         "class": "TestHealthCheckFunctions"
       },
       {
         "name": "TestHealthCheckFunctions::test_mark_live",
-        "line": 186,
+        "line": 30,
         "markers": [],
         "docstring": "",
         "class": "TestHealthCheckFunctions"
       },
       {
         "name": "TestHealthCheckFunctions::test_add_health_check_success",
-        "line": 191,
+        "line": 35,
         "markers": [],
         "docstring": "",
         "class": "TestHealthCheckFunctions"
       },
       {
         "name": "TestHealthCheckFunctions::test_add_health_check_failure",
-        "line": 199,
+        "line": 43,
         "markers": [],
         "docstring": "",
         "class": "TestHealthCheckFunctions"
       },
       {
         "name": "TestHealthCheckFunctions::test_add_health_check_exception",
-        "line": 206,
+        "line": 50,
         "markers": [],
         "docstring": "",
         "class": "TestHealthCheckFunctions"
       },
       {
-        "name": "test_default_port_is_8080",
-        "line": 255,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_initial_state",
-        "line": 23,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_set_ready",
-        "line": 30,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_set_live",
-        "line": 36,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_add_check_pass",
-        "line": 42,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_add_check_fail",
-        "line": 48,
-        "markers": [],
-        "docstring": ""
-      },
-      {
         "name": "test_mark_ready",
-        "line": 181,
+        "line": 25,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_mark_live",
-        "line": 186,
+        "line": 30,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_add_health_check_success",
-        "line": 191,
+        "line": 35,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_add_health_check_failure",
-        "line": 199,
+        "line": 43,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_add_health_check_exception",
-        "line": 206,
+        "line": 50,
         "markers": [],
         "docstring": ""
       }
@@ -4016,6 +3961,79 @@
         "line": 50,
         "markers": [],
         "docstring": "Test that TradingBot is created with notification service."
+      }
+    ],
+    "tests/unit/gpt_trader/app/test_health_server_state.py": [
+      {
+        "name": "TestHealthState::test_initial_state",
+        "line": 9,
+        "markers": [],
+        "docstring": "",
+        "class": "TestHealthState"
+      },
+      {
+        "name": "TestHealthState::test_set_ready",
+        "line": 16,
+        "markers": [],
+        "docstring": "",
+        "class": "TestHealthState"
+      },
+      {
+        "name": "TestHealthState::test_set_live",
+        "line": 22,
+        "markers": [],
+        "docstring": "",
+        "class": "TestHealthState"
+      },
+      {
+        "name": "TestHealthState::test_add_check_pass",
+        "line": 28,
+        "markers": [],
+        "docstring": "",
+        "class": "TestHealthState"
+      },
+      {
+        "name": "TestHealthState::test_add_check_fail",
+        "line": 34,
+        "markers": [],
+        "docstring": "",
+        "class": "TestHealthState"
+      },
+      {
+        "name": "test_default_port_is_8080",
+        "line": 41,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_initial_state",
+        "line": 9,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_set_ready",
+        "line": 16,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_set_live",
+        "line": 22,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_add_check_pass",
+        "line": 28,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_add_check_fail",
+        "line": 34,
+        "markers": [],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/config/test_bot_config_profile_strategy_hydration.py": [
@@ -9797,6 +9815,20 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/cli/test_commands_orders_payload.py": [
+      {
+        "name": "test_build_order_payload_includes_optional_fields",
+        "line": 8,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_build_order_payload_omits_optional_fields_when_missing",
+        "line": 24,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/cli/test_cli_unit.py": [
       {
         "name": "test_cli_run_defaults_to_run_subcommand",
@@ -10036,58 +10068,34 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/cli/test_commands_orders.py": [
-      {
-        "name": "test_build_order_payload_includes_optional_fields",
-        "line": 33,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_build_order_payload_omits_optional_fields_when_missing",
-        "line": 49,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_handle_preview_prints_json",
-        "line": 63,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_handle_preview_errors_without_preview_support",
-        "line": 101,
-        "markers": [],
-        "docstring": ""
-      },
+    "tests/unit/gpt_trader/cli/test_commands_orders_editing.py": [
       {
         "name": "test_handle_edit_preview_errors_without_support",
-        "line": 119,
+        "line": 13,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_handle_edit_preview_invokes_broker",
-        "line": 137,
+        "line": 31,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_handle_apply_edit_serializes_dataclass",
-        "line": 172,
+        "line": 66,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_handle_apply_edit_errors_without_support",
-        "line": 208,
+        "line": 102,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_handle_apply_edit_propagates_broker_errors",
-        "line": 226,
+        "line": 120,
         "markers": [],
         "docstring": ""
       }
@@ -10207,6 +10215,20 @@
       {
         "name": "test_common_codes_exist",
         "line": 49,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/cli/test_commands_orders_preview.py": [
+      {
+        "name": "test_handle_preview_prints_json",
+        "line": 12,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_handle_preview_errors_without_preview_support",
+        "line": 50,
         "markers": [],
         "docstring": ""
       }
@@ -14097,6 +14119,34 @@
         "docstring": "Test fill ratio handles zero max_cache_size gracefully."
       }
     ],
+    "tests/unit/gpt_trader/monitoring/test_health_signals_thresholds.py": [
+      {
+        "name": "TestHealthThresholds::test_default_values",
+        "line": 11,
+        "markers": [],
+        "docstring": "",
+        "class": "TestHealthThresholds"
+      },
+      {
+        "name": "TestHealthThresholds::test_custom_values",
+        "line": 25,
+        "markers": [],
+        "docstring": "",
+        "class": "TestHealthThresholds"
+      },
+      {
+        "name": "test_default_values",
+        "line": 11,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_custom_values",
+        "line": 25,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/monitoring/test_status_reporter_io_edges.py": [
       {
         "name": "test_decimal_encoder_handles_nested_decimals",
@@ -14551,6 +14601,86 @@
       {
         "name": "test_guard_manager_empty_guard_list_no_side_effects",
         "line": 86,
+        "markers": [],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/monitoring/test_health_signals_summary.py": [
+      {
+        "name": "TestHealthSummary::test_from_signals_empty",
+        "line": 15,
+        "markers": [],
+        "docstring": "",
+        "class": "TestHealthSummary"
+      },
+      {
+        "name": "TestHealthSummary::test_from_signals_all_ok",
+        "line": 21,
+        "markers": [],
+        "docstring": "",
+        "class": "TestHealthSummary"
+      },
+      {
+        "name": "TestHealthSummary::test_from_signals_worst_status_wins",
+        "line": 32,
+        "markers": [],
+        "docstring": "",
+        "class": "TestHealthSummary"
+      },
+      {
+        "name": "TestHealthSummary::test_from_signals_crit_takes_precedence",
+        "line": 42,
+        "markers": [],
+        "docstring": "",
+        "class": "TestHealthSummary"
+      },
+      {
+        "name": "TestHealthSummary::test_from_signals_multiple_crit",
+        "line": 52,
+        "markers": [],
+        "docstring": "",
+        "class": "TestHealthSummary"
+      },
+      {
+        "name": "TestHealthSummary::test_to_dict",
+        "line": 62,
+        "markers": [],
+        "docstring": "",
+        "class": "TestHealthSummary"
+      },
+      {
+        "name": "test_from_signals_empty",
+        "line": 15,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_from_signals_all_ok",
+        "line": 21,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_from_signals_worst_status_wins",
+        "line": 32,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_from_signals_crit_takes_precedence",
+        "line": 42,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_from_signals_multiple_crit",
+        "line": 52,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_to_dict",
+        "line": 62,
         "markers": [],
         "docstring": ""
       }
@@ -15351,248 +15481,144 @@
     "tests/unit/gpt_trader/monitoring/test_health_signals.py": [
       {
         "name": "TestHealthStatus::test_enum_values",
-        "line": 16,
+        "line": 14,
         "markers": [],
         "docstring": "",
         "class": "TestHealthStatus"
       },
       {
         "name": "TestHealthStatus::test_string_inheritance",
-        "line": 22,
+        "line": 20,
         "markers": [],
         "docstring": "",
         "class": "TestHealthStatus"
       },
       {
         "name": "TestHealthSignal::test_creation",
-        "line": 32,
+        "line": 30,
         "markers": [],
         "docstring": "",
         "class": "TestHealthSignal"
       },
       {
         "name": "TestHealthSignal::test_from_value_ok",
-        "line": 49,
+        "line": 47,
         "markers": [],
         "docstring": "",
         "class": "TestHealthSignal"
       },
       {
         "name": "TestHealthSignal::test_from_value_warn",
-        "line": 59,
+        "line": 57,
         "markers": [],
         "docstring": "",
         "class": "TestHealthSignal"
       },
       {
         "name": "TestHealthSignal::test_from_value_crit",
-        "line": 69,
+        "line": 67,
         "markers": [],
         "docstring": "",
         "class": "TestHealthSignal"
       },
       {
         "name": "TestHealthSignal::test_from_value_at_warn_threshold",
-        "line": 79,
+        "line": 77,
         "markers": [],
         "docstring": "Test that value exactly at warn threshold triggers WARN.",
         "class": "TestHealthSignal"
       },
       {
         "name": "TestHealthSignal::test_from_value_at_crit_threshold",
-        "line": 89,
+        "line": 87,
         "markers": [],
         "docstring": "Test that value exactly at crit threshold triggers CRIT.",
         "class": "TestHealthSignal"
       },
       {
         "name": "TestHealthSignal::test_from_value_lower_is_worse",
-        "line": 99,
+        "line": 97,
         "markers": [],
         "docstring": "Test availability-style metrics where lower is worse.",
         "class": "TestHealthSignal"
       },
       {
         "name": "TestHealthSignal::test_from_value_with_details",
-        "line": 131,
+        "line": 129,
         "markers": [],
         "docstring": "",
         "class": "TestHealthSignal"
       },
       {
         "name": "TestHealthSignal::test_to_dict",
-        "line": 143,
+        "line": 141,
         "markers": [],
         "docstring": "",
         "class": "TestHealthSignal"
       },
       {
-        "name": "TestHealthSummary::test_from_signals_empty",
-        "line": 167,
-        "markers": [],
-        "docstring": "",
-        "class": "TestHealthSummary"
-      },
-      {
-        "name": "TestHealthSummary::test_from_signals_all_ok",
-        "line": 173,
-        "markers": [],
-        "docstring": "",
-        "class": "TestHealthSummary"
-      },
-      {
-        "name": "TestHealthSummary::test_from_signals_worst_status_wins",
-        "line": 184,
-        "markers": [],
-        "docstring": "",
-        "class": "TestHealthSummary"
-      },
-      {
-        "name": "TestHealthSummary::test_from_signals_crit_takes_precedence",
-        "line": 194,
-        "markers": [],
-        "docstring": "",
-        "class": "TestHealthSummary"
-      },
-      {
-        "name": "TestHealthSummary::test_from_signals_multiple_crit",
-        "line": 204,
-        "markers": [],
-        "docstring": "",
-        "class": "TestHealthSummary"
-      },
-      {
-        "name": "TestHealthSummary::test_to_dict",
-        "line": 214,
-        "markers": [],
-        "docstring": "",
-        "class": "TestHealthSummary"
-      },
-      {
-        "name": "TestHealthThresholds::test_default_values",
-        "line": 230,
-        "markers": [],
-        "docstring": "",
-        "class": "TestHealthThresholds"
-      },
-      {
-        "name": "TestHealthThresholds::test_custom_values",
-        "line": 244,
-        "markers": [],
-        "docstring": "",
-        "class": "TestHealthThresholds"
-      },
-      {
         "name": "test_enum_values",
-        "line": 16,
+        "line": 14,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_string_inheritance",
-        "line": 22,
+        "line": 20,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_creation",
-        "line": 32,
+        "line": 30,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_from_value_ok",
-        "line": 49,
+        "line": 47,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_from_value_warn",
-        "line": 59,
+        "line": 57,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_from_value_crit",
-        "line": 69,
+        "line": 67,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_from_value_at_warn_threshold",
-        "line": 79,
+        "line": 77,
         "markers": [],
         "docstring": "Test that value exactly at warn threshold triggers WARN."
       },
       {
         "name": "test_from_value_at_crit_threshold",
-        "line": 89,
+        "line": 87,
         "markers": [],
         "docstring": "Test that value exactly at crit threshold triggers CRIT."
       },
       {
         "name": "test_from_value_lower_is_worse",
-        "line": 99,
+        "line": 97,
         "markers": [],
         "docstring": "Test availability-style metrics where lower is worse."
       },
       {
         "name": "test_from_value_with_details",
-        "line": 131,
+        "line": 129,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_to_dict",
-        "line": 143,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_from_signals_empty",
-        "line": 167,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_from_signals_all_ok",
-        "line": 173,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_from_signals_worst_status_wins",
-        "line": 184,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_from_signals_crit_takes_precedence",
-        "line": 194,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_from_signals_multiple_crit",
-        "line": 204,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_to_dict",
-        "line": 214,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_default_values",
-        "line": 230,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_custom_values",
-        "line": 244,
+        "line": 141,
         "markers": [],
         "docstring": ""
       }
@@ -18030,69 +18056,6 @@
         "class": "TestValidateConfig"
       },
       {
-        "name": "TestValidateConfigWithValidators::test_with_string_validator",
-        "line": 143,
-        "markers": [],
-        "docstring": "Test config validation with string validators.",
-        "class": "TestValidateConfigWithValidators"
-      },
-      {
-        "name": "TestValidateConfigWithValidators::test_with_numeric_validator",
-        "line": 156,
-        "markers": [],
-        "docstring": "Test config validation with numeric validators.",
-        "class": "TestValidateConfigWithValidators"
-      },
-      {
-        "name": "TestValidateConfigWithValidators::test_with_list_validator",
-        "line": 169,
-        "markers": [],
-        "docstring": "Test config validation with list validators.",
-        "class": "TestValidateConfigWithValidators"
-      },
-      {
-        "name": "TestValidateConfigWithValidators::test_with_dict_validator",
-        "line": 182,
-        "markers": [],
-        "docstring": "Test config validation with dict validators.",
-        "class": "TestValidateConfigWithValidators"
-      },
-      {
-        "name": "TestValidateConfigEdgeCases::test_validates_none_values",
-        "line": 199,
-        "markers": [],
-        "docstring": "Test validation of None values when allowed.",
-        "class": "TestValidateConfigEdgeCases"
-      },
-      {
-        "name": "TestValidateConfigEdgeCases::test_validates_boolean_values",
-        "line": 209,
-        "markers": [],
-        "docstring": "Test validation of boolean values.",
-        "class": "TestValidateConfigEdgeCases"
-      },
-      {
-        "name": "TestValidateConfigEdgeCases::test_validates_zero_values",
-        "line": 222,
-        "markers": [],
-        "docstring": "Test validation of zero values.",
-        "class": "TestValidateConfigEdgeCases"
-      },
-      {
-        "name": "TestValidateConfigEdgeCases::test_validates_empty_string",
-        "line": 232,
-        "markers": [],
-        "docstring": "Test validation of empty string when allowed.",
-        "class": "TestValidateConfigEdgeCases"
-      },
-      {
-        "name": "TestValidateConfigEdgeCases::test_multiple_validation_errors_reports_first",
-        "line": 242,
-        "markers": [],
-        "docstring": "Test that first missing key is reported in error.",
-        "class": "TestValidateConfigEdgeCases"
-      },
-      {
         "name": "test_validates_simple_config",
         "line": 18,
         "markers": [],
@@ -18145,60 +18108,6 @@
         "line": 128,
         "markers": [],
         "docstring": "Test validation with empty schema but extra config keys."
-      },
-      {
-        "name": "test_with_string_validator",
-        "line": 143,
-        "markers": [],
-        "docstring": "Test config validation with string validators."
-      },
-      {
-        "name": "test_with_numeric_validator",
-        "line": 156,
-        "markers": [],
-        "docstring": "Test config validation with numeric validators."
-      },
-      {
-        "name": "test_with_list_validator",
-        "line": 169,
-        "markers": [],
-        "docstring": "Test config validation with list validators."
-      },
-      {
-        "name": "test_with_dict_validator",
-        "line": 182,
-        "markers": [],
-        "docstring": "Test config validation with dict validators."
-      },
-      {
-        "name": "test_validates_none_values",
-        "line": 199,
-        "markers": [],
-        "docstring": "Test validation of None values when allowed."
-      },
-      {
-        "name": "test_validates_boolean_values",
-        "line": 209,
-        "markers": [],
-        "docstring": "Test validation of boolean values."
-      },
-      {
-        "name": "test_validates_zero_values",
-        "line": 222,
-        "markers": [],
-        "docstring": "Test validation of zero values."
-      },
-      {
-        "name": "test_validates_empty_string",
-        "line": 232,
-        "markers": [],
-        "docstring": "Test validation of empty string when allowed."
-      },
-      {
-        "name": "test_multiple_validation_errors_reports_first",
-        "line": 242,
-        "markers": [],
-        "docstring": "Test that first missing key is reported in error."
       }
     ],
     "tests/unit/gpt_trader/validation/test_pattern_validators.py": [
@@ -18858,235 +18767,235 @@
     "tests/unit/gpt_trader/validation/test_composite_validators.py": [
       {
         "name": "TestCompositeValidatorBasics::test_single_validator",
-        "line": 15,
+        "line": 18,
         "markers": [],
         "docstring": "Test composite with single validator.",
         "class": "TestCompositeValidatorBasics"
       },
       {
         "name": "TestCompositeValidatorBasics::test_multiple_validators_all_pass",
-        "line": 23,
+        "line": 26,
         "markers": [],
         "docstring": "Test composite with multiple validators that all pass.",
         "class": "TestCompositeValidatorBasics"
       },
       {
         "name": "TestCompositeValidatorBasics::test_first_validator_fails",
-        "line": 33,
+        "line": 36,
         "markers": [],
         "docstring": "Test that first failing validator raises error.",
         "class": "TestCompositeValidatorBasics"
       },
       {
         "name": "TestCompositeValidatorBasics::test_second_validator_fails",
-        "line": 43,
+        "line": 46,
         "markers": [],
         "docstring": "Test that second failing validator raises error.",
         "class": "TestCompositeValidatorBasics"
       },
       {
         "name": "TestCompositeValidatorBasics::test_empty_composite_passes_through",
-        "line": 55,
+        "line": 56,
         "markers": [],
         "docstring": "Test composite with no validators passes value through.",
         "class": "TestCompositeValidatorBasics"
       },
       {
         "name": "TestCompositeValidatorChaining::test_validators_run_in_order",
-        "line": 66,
+        "line": 67,
         "markers": [],
         "docstring": "Test that validators run in the order they were provided.",
         "class": "TestCompositeValidatorChaining"
       },
       {
         "name": "TestCompositeValidatorChaining::test_transformation_chain",
-        "line": 87,
+        "line": 88,
         "markers": [],
         "docstring": "Test that transformations are chained correctly.",
         "class": "TestCompositeValidatorChaining"
       },
       {
         "name": "TestCompositeValidatorChaining::test_mixed_transformation_and_validation",
-        "line": 100,
+        "line": 98,
         "markers": [],
         "docstring": "Test mixing transformations and pure validation.",
         "class": "TestCompositeValidatorChaining"
       },
       {
         "name": "TestCompositeValidatorCallable::test_callable_interface",
-        "line": 119,
+        "line": 117,
         "markers": [],
         "docstring": "Test that CompositeValidator can be called directly.",
         "class": "TestCompositeValidatorCallable"
       },
       {
         "name": "TestCompositeValidatorCallable::test_callable_with_default_field_name",
-        "line": 128,
+        "line": 126,
         "markers": [],
         "docstring": "Test callable with default field name.",
         "class": "TestCompositeValidatorCallable"
       },
       {
         "name": "TestCompositeValidatorWithDifferentTypes::test_string_validators",
-        "line": 140,
+        "line": 138,
         "markers": [],
         "docstring": "Test composite with string validators.",
         "class": "TestCompositeValidatorWithDifferentTypes"
       },
       {
         "name": "TestCompositeValidatorWithDifferentTypes::test_list_validators",
-        "line": 155,
+        "line": 153,
         "markers": [],
         "docstring": "Test composite with list validators.",
         "class": "TestCompositeValidatorWithDifferentTypes"
       },
       {
         "name": "TestCompositeValidatorWithDifferentTypes::test_numeric_range_validators",
-        "line": 167,
+        "line": 165,
         "markers": [],
         "docstring": "Test composite for numeric range validation.",
         "class": "TestCompositeValidatorWithDifferentTypes"
       },
       {
         "name": "TestCompositeValidatorEdgeCases::test_validator_error_propagates_field_name",
-        "line": 189,
+        "line": 184,
         "markers": [],
         "docstring": "Test that field name is propagated to error.",
         "class": "TestCompositeValidatorEdgeCases"
       },
       {
         "name": "TestCompositeValidatorEdgeCases::test_none_value_handling",
-        "line": 199,
+        "line": 194,
         "markers": [],
         "docstring": "Test handling of None values.",
         "class": "TestCompositeValidatorEdgeCases"
       },
       {
         "name": "TestCompositeValidatorEdgeCases::test_deeply_nested_composites",
-        "line": 207,
+        "line": 202,
         "markers": [],
         "docstring": "Test nesting CompositeValidators.",
         "class": "TestCompositeValidatorEdgeCases"
       },
       {
         "name": "TestCompositeValidatorEdgeCases::test_many_validators_in_chain",
-        "line": 219,
+        "line": 214,
         "markers": [],
         "docstring": "Test chain with many validators.",
         "class": "TestCompositeValidatorEdgeCases"
       },
       {
         "name": "TestCompositeValidatorEdgeCases::test_early_failure_skips_remaining_validators",
-        "line": 228,
+        "line": 223,
         "markers": [],
         "docstring": "Test that early failure skips remaining validators.",
         "class": "TestCompositeValidatorEdgeCases"
       },
       {
         "name": "test_single_validator",
-        "line": 15,
+        "line": 18,
         "markers": [],
         "docstring": "Test composite with single validator."
       },
       {
         "name": "test_multiple_validators_all_pass",
-        "line": 23,
+        "line": 26,
         "markers": [],
         "docstring": "Test composite with multiple validators that all pass."
       },
       {
         "name": "test_first_validator_fails",
-        "line": 33,
+        "line": 36,
         "markers": [],
         "docstring": "Test that first failing validator raises error."
       },
       {
         "name": "test_second_validator_fails",
-        "line": 43,
+        "line": 46,
         "markers": [],
         "docstring": "Test that second failing validator raises error."
       },
       {
         "name": "test_empty_composite_passes_through",
-        "line": 55,
+        "line": 56,
         "markers": [],
         "docstring": "Test composite with no validators passes value through."
       },
       {
         "name": "test_validators_run_in_order",
-        "line": 66,
+        "line": 67,
         "markers": [],
         "docstring": "Test that validators run in the order they were provided."
       },
       {
         "name": "test_transformation_chain",
-        "line": 87,
+        "line": 88,
         "markers": [],
         "docstring": "Test that transformations are chained correctly."
       },
       {
         "name": "test_mixed_transformation_and_validation",
-        "line": 100,
+        "line": 98,
         "markers": [],
         "docstring": "Test mixing transformations and pure validation."
       },
       {
         "name": "test_callable_interface",
-        "line": 119,
+        "line": 117,
         "markers": [],
         "docstring": "Test that CompositeValidator can be called directly."
       },
       {
         "name": "test_callable_with_default_field_name",
-        "line": 128,
+        "line": 126,
         "markers": [],
         "docstring": "Test callable with default field name."
       },
       {
         "name": "test_string_validators",
-        "line": 140,
+        "line": 138,
         "markers": [],
         "docstring": "Test composite with string validators."
       },
       {
         "name": "test_list_validators",
-        "line": 155,
+        "line": 153,
         "markers": [],
         "docstring": "Test composite with list validators."
       },
       {
         "name": "test_numeric_range_validators",
-        "line": 167,
+        "line": 165,
         "markers": [],
         "docstring": "Test composite for numeric range validation."
       },
       {
         "name": "test_validator_error_propagates_field_name",
-        "line": 189,
+        "line": 184,
         "markers": [],
         "docstring": "Test that field name is propagated to error."
       },
       {
         "name": "test_none_value_handling",
-        "line": 199,
+        "line": 194,
         "markers": [],
         "docstring": "Test handling of None values."
       },
       {
         "name": "test_deeply_nested_composites",
-        "line": 207,
+        "line": 202,
         "markers": [],
         "docstring": "Test nesting CompositeValidators."
       },
       {
         "name": "test_many_validators_in_chain",
-        "line": 219,
+        "line": 214,
         "markers": [],
         "docstring": "Test chain with many validators."
       },
       {
         "name": "test_early_failure_skips_remaining_validators",
-        "line": 228,
+        "line": 223,
         "markers": [],
         "docstring": "Test that early failure skips remaining validators."
       }
@@ -19486,28 +19395,28 @@
     "tests/unit/gpt_trader/validation/test_calculation_validator.py": [
       {
         "name": "TestManualBacktestExample::test_manual_backtest_example_returns_expected_structure",
-        "line": 14,
+        "line": 19,
         "markers": [],
         "docstring": "Test that the function returns the expected dictionary structure.",
         "class": "TestManualBacktestExample"
       },
       {
         "name": "TestManualBacktestExample::test_manual_backtest_example_price_data",
-        "line": 40,
+        "line": 43,
         "markers": [],
         "docstring": "Test that the price data is correct.",
         "class": "TestManualBacktestExample"
       },
       {
         "name": "TestManualBacktestExample::test_manual_backtest_example_moving_averages",
-        "line": 48,
+        "line": 50,
         "markers": [],
         "docstring": "Test moving average calculations.",
         "class": "TestManualBacktestExample"
       },
       {
         "name": "TestManualBacktestExample::test_manual_backtest_example_signal_generation",
-        "line": 67,
+        "line": 68,
         "markers": [],
         "docstring": "Test that signals are generated correctly.",
         "class": "TestManualBacktestExample"
@@ -19521,81 +19430,81 @@
       },
       {
         "name": "TestManualBacktestExample::test_manual_backtest_example_buy_sell_pairs",
-        "line": 110,
+        "line": 109,
         "markers": [],
         "docstring": "Test that buys and sells are properly paired.",
         "class": "TestManualBacktestExample"
       },
       {
         "name": "TestManualBacktestExample::test_manual_backtest_example_financial_calculations",
-        "line": 127,
+        "line": 125,
         "markers": [],
         "docstring": "Test financial calculations are reasonable.",
         "class": "TestManualBacktestExample"
       },
       {
         "name": "TestManualBacktestExample::test_manual_backtest_example_logging",
-        "line": 142,
+        "line": 138,
         "markers": [],
         "docstring": "Test that the function logs expected messages.",
         "class": "TestManualBacktestExample"
       },
       {
         "name": "TestManualBacktestExample::test_manual_backtest_example_reproducibility",
-        "line": 157,
+        "line": 153,
         "markers": [],
         "docstring": "Test that the function produces consistent results.",
         "class": "TestManualBacktestExample"
       },
       {
         "name": "TestManualBacktestExample::test_manual_backtest_example_ma_crossover_logic",
-        "line": 165,
+        "line": 161,
         "markers": [],
         "docstring": "Test specific MA crossover signal logic.",
         "class": "TestManualBacktestExample"
       },
       {
         "name": "TestManualBacktestExample::test_manual_backtest_example_position_management",
-        "line": 188,
+        "line": 183,
         "markers": [],
         "docstring": "Test that position management is correct.",
         "class": "TestManualBacktestExample"
       },
       {
         "name": "TestManualBacktestExample::test_manual_backtest_example_cash_flow",
-        "line": 206,
+        "line": 200,
         "markers": [],
         "docstring": "Test that cash flow calculations are correct.",
         "class": "TestManualBacktestExample"
       },
       {
         "name": "TestManualBacktestExample::test_manual_backtest_example_buy_hold_comparison",
-        "line": 229,
+        "line": 222,
         "markers": [],
         "docstring": "Test buy & hold comparison logic.",
         "class": "TestManualBacktestExample"
       },
       {
         "name": "test_manual_backtest_example_returns_expected_structure",
-        "line": 14,
+        "line": 19,
         "markers": [],
         "docstring": "Test that the function returns the expected dictionary structure."
       },
       {
         "name": "test_manual_backtest_example_price_data",
-        "line": 40,
+        "line": 43,
         "markers": [],
         "docstring": "Test that the price data is correct."
       },
       {
         "name": "test_manual_backtest_example_moving_averages",
-        "line": 48,
+        "line": 50,
         "markers": [],
         "docstring": "Test moving average calculations."
       },
       {
         "name": "test_manual_backtest_example_signal_generation",
-        "line": 67,
+        "line": 68,
         "markers": [],
         "docstring": "Test that signals are generated correctly."
       },
@@ -19607,49 +19516,49 @@
       },
       {
         "name": "test_manual_backtest_example_buy_sell_pairs",
-        "line": 110,
+        "line": 109,
         "markers": [],
         "docstring": "Test that buys and sells are properly paired."
       },
       {
         "name": "test_manual_backtest_example_financial_calculations",
-        "line": 127,
+        "line": 125,
         "markers": [],
         "docstring": "Test financial calculations are reasonable."
       },
       {
         "name": "test_manual_backtest_example_logging",
-        "line": 142,
+        "line": 138,
         "markers": [],
         "docstring": "Test that the function logs expected messages."
       },
       {
         "name": "test_manual_backtest_example_reproducibility",
-        "line": 157,
+        "line": 153,
         "markers": [],
         "docstring": "Test that the function produces consistent results."
       },
       {
         "name": "test_manual_backtest_example_ma_crossover_logic",
-        "line": 165,
+        "line": 161,
         "markers": [],
         "docstring": "Test specific MA crossover signal logic."
       },
       {
         "name": "test_manual_backtest_example_position_management",
-        "line": 188,
+        "line": 183,
         "markers": [],
         "docstring": "Test that position management is correct."
       },
       {
         "name": "test_manual_backtest_example_cash_flow",
-        "line": 206,
+        "line": 200,
         "markers": [],
         "docstring": "Test that cash flow calculations are correct."
       },
       {
         "name": "test_manual_backtest_example_buy_hold_comparison",
-        "line": 229,
+        "line": 222,
         "markers": [],
         "docstring": "Test buy & hold comparison logic."
       }
@@ -20048,6 +19957,60 @@
         "line": 119,
         "markers": [],
         "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/validation/test_config_validators_validator_types.py": [
+      {
+        "name": "TestValidateConfigWithValidators::test_with_string_validator",
+        "line": 12,
+        "markers": [],
+        "docstring": "Test config validation with string validators.",
+        "class": "TestValidateConfigWithValidators"
+      },
+      {
+        "name": "TestValidateConfigWithValidators::test_with_numeric_validator",
+        "line": 25,
+        "markers": [],
+        "docstring": "Test config validation with numeric validators.",
+        "class": "TestValidateConfigWithValidators"
+      },
+      {
+        "name": "TestValidateConfigWithValidators::test_with_list_validator",
+        "line": 38,
+        "markers": [],
+        "docstring": "Test config validation with list validators.",
+        "class": "TestValidateConfigWithValidators"
+      },
+      {
+        "name": "TestValidateConfigWithValidators::test_with_dict_validator",
+        "line": 51,
+        "markers": [],
+        "docstring": "Test config validation with dict validators.",
+        "class": "TestValidateConfigWithValidators"
+      },
+      {
+        "name": "test_with_string_validator",
+        "line": 12,
+        "markers": [],
+        "docstring": "Test config validation with string validators."
+      },
+      {
+        "name": "test_with_numeric_validator",
+        "line": 25,
+        "markers": [],
+        "docstring": "Test config validation with numeric validators."
+      },
+      {
+        "name": "test_with_list_validator",
+        "line": 38,
+        "markers": [],
+        "docstring": "Test config validation with list validators."
+      },
+      {
+        "name": "test_with_dict_validator",
+        "line": 51,
+        "markers": [],
+        "docstring": "Test config validation with dict validators."
       }
     ],
     "tests/unit/gpt_trader/validation/test_rules_numeric_rules.py": [
@@ -20520,6 +20483,73 @@
         "line": 49,
         "markers": [],
         "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/validation/test_config_validators_edge_cases.py": [
+      {
+        "name": "TestValidateConfigEdgeCases::test_validates_none_values",
+        "line": 15,
+        "markers": [],
+        "docstring": "Test validation of None values when allowed.",
+        "class": "TestValidateConfigEdgeCases"
+      },
+      {
+        "name": "TestValidateConfigEdgeCases::test_validates_boolean_values",
+        "line": 25,
+        "markers": [],
+        "docstring": "Test validation of boolean values.",
+        "class": "TestValidateConfigEdgeCases"
+      },
+      {
+        "name": "TestValidateConfigEdgeCases::test_validates_zero_values",
+        "line": 38,
+        "markers": [],
+        "docstring": "Test validation of zero values.",
+        "class": "TestValidateConfigEdgeCases"
+      },
+      {
+        "name": "TestValidateConfigEdgeCases::test_validates_empty_string",
+        "line": 48,
+        "markers": [],
+        "docstring": "Test validation of empty string when allowed.",
+        "class": "TestValidateConfigEdgeCases"
+      },
+      {
+        "name": "TestValidateConfigEdgeCases::test_multiple_validation_errors_reports_first",
+        "line": 58,
+        "markers": [],
+        "docstring": "Test that first missing key is reported in error.",
+        "class": "TestValidateConfigEdgeCases"
+      },
+      {
+        "name": "test_validates_none_values",
+        "line": 15,
+        "markers": [],
+        "docstring": "Test validation of None values when allowed."
+      },
+      {
+        "name": "test_validates_boolean_values",
+        "line": 25,
+        "markers": [],
+        "docstring": "Test validation of boolean values."
+      },
+      {
+        "name": "test_validates_zero_values",
+        "line": 38,
+        "markers": [],
+        "docstring": "Test validation of zero values."
+      },
+      {
+        "name": "test_validates_empty_string",
+        "line": 48,
+        "markers": [],
+        "docstring": "Test validation of empty string when allowed."
+      },
+      {
+        "name": "test_multiple_validation_errors_reports_first",
+        "line": 58,
+        "markers": [],
+        "docstring": "Test that first missing key is reported in error."
       }
     ],
     "tests/unit/gpt_trader/validation/test_rules_string_time_and_symbol_rules.py": [
@@ -29283,21 +29313,21 @@
     "tests/unit/gpt_trader/backtesting/validation/test_decision_logger_logging_and_retrieval.py": [
       {
         "name": "TestDecisionLoggerLogDecision::test_log_decision_increments_count",
-        "line": 19,
+        "line": 43,
         "markers": [],
         "docstring": "",
         "class": "TestDecisionLoggerLogDecision"
       },
       {
         "name": "TestDecisionLoggerLogDecision::test_log_multiple_decisions",
-        "line": 37,
+        "line": 51,
         "markers": [],
         "docstring": "",
         "class": "TestDecisionLoggerLogDecision"
       },
       {
         "name": "TestDecisionLoggerLogDecision::test_log_decision_trims_when_over_limit",
-        "line": 56,
+        "line": 63,
         "markers": [],
         "docstring": "",
         "class": "TestDecisionLoggerLogDecision"
@@ -29311,68 +29341,68 @@
       },
       {
         "name": "TestDecisionLoggerGetDecisions::test_get_all_decisions",
-        "line": 103,
+        "line": 93,
         "markers": [],
         "docstring": "",
         "class": "TestDecisionLoggerGetDecisions"
       },
       {
         "name": "TestDecisionLoggerGetDecisions::test_filter_by_cycle_id",
-        "line": 124,
+        "line": 107,
         "markers": [],
         "docstring": "",
         "class": "TestDecisionLoggerGetDecisions"
       },
       {
         "name": "TestDecisionLoggerGetDecisions::test_filter_by_symbol",
-        "line": 146,
+        "line": 119,
         "markers": [],
         "docstring": "",
         "class": "TestDecisionLoggerGetDecisions"
       },
       {
         "name": "TestDecisionLoggerGetDecisions::test_filter_by_start_time",
-        "line": 168,
+        "line": 131,
         "markers": [],
         "docstring": "",
         "class": "TestDecisionLoggerGetDecisions"
       },
       {
         "name": "TestDecisionLoggerGetDecisions::test_filter_by_end_time",
-        "line": 190,
+        "line": 146,
         "markers": [],
         "docstring": "",
         "class": "TestDecisionLoggerGetDecisions"
       },
       {
         "name": "TestDecisionLoggerGetDecisionById::test_get_existing_decision",
-        "line": 216,
+        "line": 165,
         "markers": [],
         "docstring": "",
         "class": "TestDecisionLoggerGetDecisionById"
       },
       {
         "name": "TestDecisionLoggerGetDecisionById::test_get_nonexistent_decision",
-        "line": 236,
+        "line": 175,
         "markers": [],
         "docstring": "",
         "class": "TestDecisionLoggerGetDecisionById"
       },
       {
         "name": "test_log_decision_increments_count",
-        "line": 19,
+        "line": 43,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_log_multiple_decisions",
-        "line": 37,
+        "line": 51,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_log_decision_trims_when_over_limit",
-        "line": 56,
+        "line": 63,
         "markers": [],
         "docstring": ""
       },
@@ -29384,43 +29414,43 @@
       },
       {
         "name": "test_get_all_decisions",
-        "line": 103,
+        "line": 93,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_filter_by_cycle_id",
-        "line": 124,
+        "line": 107,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_filter_by_symbol",
-        "line": 146,
+        "line": 119,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_filter_by_start_time",
-        "line": 168,
+        "line": 131,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_filter_by_end_time",
-        "line": 190,
+        "line": 146,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_get_existing_decision",
-        "line": 216,
+        "line": 165,
         "markers": [],
         "docstring": ""
       },
       {
         "name": "test_get_nonexistent_decision",
-        "line": 236,
+        "line": 175,
         "markers": [],
         "docstring": ""
       }
@@ -41928,40 +41958,40 @@
     "tests/unit/gpt_trader/tui/widgets/test_cfm_balance_basic.py": [
       {
         "name": "TestCFMBalanceWidgetBasic::test_initial_state_no_cfm",
-        "line": 15,
+        "line": 14,
         "markers": [],
         "docstring": "Test widget starts with has_cfm=False.",
         "class": "TestCFMBalanceWidgetBasic"
       },
       {
         "name": "TestCFMBalanceWidgetBasic::test_update_balance_with_none",
-        "line": 20,
+        "line": 19,
         "markers": [],
         "docstring": "Test that None balance sets has_cfm to False.",
         "class": "TestCFMBalanceWidgetBasic"
       },
       {
         "name": "TestCFMBalanceWidgetBasic::test_update_balance_with_valid_data",
-        "line": 30,
+        "line": 29,
         "markers": [],
         "docstring": "Test that valid CFMBalance updates the widget correctly.",
         "class": "TestCFMBalanceWidgetBasic"
       },
       {
         "name": "test_initial_state_no_cfm",
-        "line": 15,
+        "line": 14,
         "markers": [],
         "docstring": "Test widget starts with has_cfm=False."
       },
       {
         "name": "test_update_balance_with_none",
-        "line": 20,
+        "line": 19,
         "markers": [],
         "docstring": "Test that None balance sets has_cfm to False."
       },
       {
         "name": "test_update_balance_with_valid_data",
-        "line": 30,
+        "line": 29,
         "markers": [],
         "docstring": "Test that valid CFMBalance updates the widget correctly."
       }
@@ -48738,222 +48768,222 @@
     "tests/unit/gpt_trader/features/optimize/objectives/test_constraints.py": [
       {
         "name": "TestConditionalConstraint::test_validation_invalid_condition_operator",
-        "line": 40,
+        "line": 53,
         "markers": [],
         "docstring": "Test validation rejects invalid condition operator.",
         "class": "TestConditionalConstraint"
       },
       {
         "name": "TestConditionalConstraint::test_validation_invalid_constraint_operator",
-        "line": 53,
+        "line": 66,
         "markers": [],
         "docstring": "Test validation rejects invalid constraint operator.",
         "class": "TestConditionalConstraint"
       },
       {
         "name": "TestConditionalConstraint::test_satisfied_condition_not_met",
-        "line": 66,
+        "line": 79,
         "markers": [],
         "docstring": "Test constraint passes when condition is not met.",
         "class": "TestConditionalConstraint"
       },
       {
         "name": "TestConditionalConstraint::test_satisfied_condition_met_constraint_satisfied",
-        "line": 83,
+        "line": 84,
         "markers": [],
         "docstring": "Test constraint passes when condition is met and constraint is satisfied.",
         "class": "TestConditionalConstraint"
       },
       {
         "name": "TestConditionalConstraint::test_not_satisfied_condition_met_constraint_not_satisfied",
-        "line": 102,
+        "line": 95,
         "markers": [],
         "docstring": "Test constraint fails when condition is met but constraint is not satisfied.",
         "class": "TestConditionalConstraint"
       },
       {
         "name": "TestRangeConstraint::test_validation_invalid_bounds",
-        "line": 123,
+        "line": 108,
         "markers": [],
         "docstring": "Test validation rejects lower > upper.",
         "class": "TestRangeConstraint"
       },
       {
         "name": "TestRangeConstraint::test_satisfied_within_range_inclusive",
-        "line": 133,
+        "line": 118,
         "markers": [],
         "docstring": "Test constraint passes when value is within inclusive range.",
         "class": "TestRangeConstraint"
       },
       {
         "name": "TestRangeConstraint::test_satisfied_at_bounds_inclusive",
-        "line": 147,
+        "line": 132,
         "markers": [],
         "docstring": "Test constraint passes when value equals bounds (inclusive).",
         "class": "TestRangeConstraint"
       },
       {
         "name": "TestRangeConstraint::test_not_satisfied_at_bounds_exclusive",
-        "line": 162,
+        "line": 147,
         "markers": [],
         "docstring": "Test constraint fails when value equals bounds (exclusive).",
         "class": "TestRangeConstraint"
       },
       {
         "name": "TestRangeConstraint::test_not_satisfied_outside_range",
-        "line": 178,
+        "line": 163,
         "markers": [],
         "docstring": "Test constraint fails when value is outside range.",
         "class": "TestRangeConstraint"
       },
       {
         "name": "TestCircuitBreakerConstraint::test_name_property",
-        "line": 194,
+        "line": 179,
         "markers": [],
         "docstring": "Test name property.",
         "class": "TestCircuitBreakerConstraint"
       },
       {
         "name": "TestCircuitBreakerConstraint::test_satisfied_no_triggers",
-        "line": 199,
+        "line": 184,
         "markers": [],
         "docstring": "Test constraint passes with no circuit breaker triggers.",
         "class": "TestCircuitBreakerConstraint"
       },
       {
         "name": "TestCircuitBreakerConstraint::test_satisfied_within_limit",
-        "line": 207,
+        "line": 192,
         "markers": [],
         "docstring": "Test constraint passes when triggers within limit.",
         "class": "TestCircuitBreakerConstraint"
       },
       {
         "name": "TestCircuitBreakerConstraint::test_not_satisfied_exceeds_limit",
-        "line": 215,
+        "line": 200,
         "markers": [],
         "docstring": "Test constraint fails when triggers exceed limit.",
         "class": "TestCircuitBreakerConstraint"
       },
       {
         "name": "TestReduceOnlyConstraint::test_name_property",
-        "line": 225,
+        "line": 210,
         "markers": [],
         "docstring": "Test name property.",
         "class": "TestReduceOnlyConstraint"
       },
       {
         "name": "TestReduceOnlyConstraint::test_satisfied_no_periods",
-        "line": 230,
+        "line": 215,
         "markers": [],
         "docstring": "Test constraint passes with no reduce-only periods.",
         "class": "TestReduceOnlyConstraint"
       },
       {
         "name": "TestReduceOnlyConstraint::test_not_satisfied_exceeds_limit",
-        "line": 238,
+        "line": 223,
         "markers": [],
         "docstring": "Test constraint fails when periods exceed limit.",
         "class": "TestReduceOnlyConstraint"
       },
       {
         "name": "test_validation_invalid_condition_operator",
-        "line": 40,
+        "line": 53,
         "markers": [],
         "docstring": "Test validation rejects invalid condition operator."
       },
       {
         "name": "test_validation_invalid_constraint_operator",
-        "line": 53,
+        "line": 66,
         "markers": [],
         "docstring": "Test validation rejects invalid constraint operator."
       },
       {
         "name": "test_satisfied_condition_not_met",
-        "line": 66,
+        "line": 79,
         "markers": [],
         "docstring": "Test constraint passes when condition is not met."
       },
       {
         "name": "test_satisfied_condition_met_constraint_satisfied",
-        "line": 83,
+        "line": 84,
         "markers": [],
         "docstring": "Test constraint passes when condition is met and constraint is satisfied."
       },
       {
         "name": "test_not_satisfied_condition_met_constraint_not_satisfied",
-        "line": 102,
+        "line": 95,
         "markers": [],
         "docstring": "Test constraint fails when condition is met but constraint is not satisfied."
       },
       {
         "name": "test_validation_invalid_bounds",
-        "line": 123,
+        "line": 108,
         "markers": [],
         "docstring": "Test validation rejects lower > upper."
       },
       {
         "name": "test_satisfied_within_range_inclusive",
-        "line": 133,
+        "line": 118,
         "markers": [],
         "docstring": "Test constraint passes when value is within inclusive range."
       },
       {
         "name": "test_satisfied_at_bounds_inclusive",
-        "line": 147,
+        "line": 132,
         "markers": [],
         "docstring": "Test constraint passes when value equals bounds (inclusive)."
       },
       {
         "name": "test_not_satisfied_at_bounds_exclusive",
-        "line": 162,
+        "line": 147,
         "markers": [],
         "docstring": "Test constraint fails when value equals bounds (exclusive)."
       },
       {
         "name": "test_not_satisfied_outside_range",
-        "line": 178,
+        "line": 163,
         "markers": [],
         "docstring": "Test constraint fails when value is outside range."
       },
       {
         "name": "test_name_property",
-        "line": 194,
+        "line": 179,
         "markers": [],
         "docstring": "Test name property."
       },
       {
         "name": "test_satisfied_no_triggers",
-        "line": 199,
+        "line": 184,
         "markers": [],
         "docstring": "Test constraint passes with no circuit breaker triggers."
       },
       {
         "name": "test_satisfied_within_limit",
-        "line": 207,
+        "line": 192,
         "markers": [],
         "docstring": "Test constraint passes when triggers within limit."
       },
       {
         "name": "test_not_satisfied_exceeds_limit",
-        "line": 215,
+        "line": 200,
         "markers": [],
         "docstring": "Test constraint fails when triggers exceed limit."
       },
       {
         "name": "test_name_property",
-        "line": 225,
+        "line": 210,
         "markers": [],
         "docstring": "Test name property."
       },
       {
         "name": "test_satisfied_no_periods",
-        "line": 230,
+        "line": 215,
         "markers": [],
         "docstring": "Test constraint passes with no reduce-only periods."
       },
       {
         "name": "test_not_satisfied_exceeds_limit",
-        "line": 238,
+        "line": 223,
         "markers": [],
         "docstring": "Test constraint fails when periods exceed limit."
       }
@@ -49892,177 +49922,6 @@
         "docstring": "Test adding default parameter sets."
       }
     ],
-    "tests/unit/gpt_trader/features/intelligence/ensemble/test_voting.py": [
-      {
-        "name": "TestVotingMechanismFactory::test_create_weighted_majority",
-        "line": 30,
-        "markers": [],
-        "docstring": "Test creating weighted majority voter.",
-        "class": "TestVotingMechanismFactory"
-      },
-      {
-        "name": "TestVotingMechanismFactory::test_create_confidence_leader",
-        "line": 35,
-        "markers": [],
-        "docstring": "Test creating confidence leader voter.",
-        "class": "TestVotingMechanismFactory"
-      },
-      {
-        "name": "TestVotingMechanismFactory::test_create_unknown_raises",
-        "line": 40,
-        "markers": [],
-        "docstring": "Test that unknown method raises ValueError.",
-        "class": "TestVotingMechanismFactory"
-      },
-      {
-        "name": "TestWeightedMajorityVoting::test_empty_votes_returns_hold",
-        "line": 54,
-        "markers": [],
-        "docstring": "Test that empty votes returns HOLD.",
-        "class": "TestWeightedMajorityVoting"
-      },
-      {
-        "name": "TestWeightedMajorityVoting::test_unanimous_buy",
-        "line": 62,
-        "markers": [],
-        "docstring": "Test unanimous BUY votes.",
-        "class": "TestWeightedMajorityVoting"
-      },
-      {
-        "name": "TestWeightedMajorityVoting::test_weighted_aggregation",
-        "line": 81,
-        "markers": [],
-        "docstring": "Test that weights affect outcome.",
-        "class": "TestWeightedMajorityVoting"
-      },
-      {
-        "name": "TestWeightedMajorityVoting::test_equal_weights_confidence_matters",
-        "line": 102,
-        "markers": [],
-        "docstring": "Test that confidence matters with equal weights.",
-        "class": "TestWeightedMajorityVoting"
-      },
-      {
-        "name": "TestConfidenceLeaderVoting::test_empty_votes_returns_hold",
-        "line": 132,
-        "markers": [],
-        "docstring": "Test that empty votes returns HOLD.",
-        "class": "TestConfidenceLeaderVoting"
-      },
-      {
-        "name": "TestConfidenceLeaderVoting::test_unanimous_boosted_confidence",
-        "line": 139,
-        "markers": [],
-        "docstring": "Test that unanimous agreement boosts confidence.",
-        "class": "TestConfidenceLeaderVoting"
-      },
-      {
-        "name": "TestConfidenceLeaderVoting::test_conflict_follows_leader",
-        "line": 162,
-        "markers": [],
-        "docstring": "Test that conflict follows highest weighted confidence.",
-        "class": "TestConfidenceLeaderVoting"
-      },
-      {
-        "name": "TestConfidenceLeaderVoting::test_conflict_penalizes_confidence",
-        "line": 185,
-        "markers": [],
-        "docstring": "Test that disagreement reduces final confidence.",
-        "class": "TestConfidenceLeaderVoting"
-      },
-      {
-        "name": "TestStrategyVote::test_weighted_confidence",
-        "line": 225,
-        "markers": [],
-        "docstring": "Test weighted_confidence property.",
-        "class": "TestStrategyVote"
-      },
-      {
-        "name": "TestStrategyVote::test_to_dict",
-        "line": 235,
-        "markers": [],
-        "docstring": "Test serialization.",
-        "class": "TestStrategyVote"
-      },
-      {
-        "name": "test_create_weighted_majority",
-        "line": 30,
-        "markers": [],
-        "docstring": "Test creating weighted majority voter."
-      },
-      {
-        "name": "test_create_confidence_leader",
-        "line": 35,
-        "markers": [],
-        "docstring": "Test creating confidence leader voter."
-      },
-      {
-        "name": "test_create_unknown_raises",
-        "line": 40,
-        "markers": [],
-        "docstring": "Test that unknown method raises ValueError."
-      },
-      {
-        "name": "test_empty_votes_returns_hold",
-        "line": 54,
-        "markers": [],
-        "docstring": "Test that empty votes returns HOLD."
-      },
-      {
-        "name": "test_unanimous_buy",
-        "line": 62,
-        "markers": [],
-        "docstring": "Test unanimous BUY votes."
-      },
-      {
-        "name": "test_weighted_aggregation",
-        "line": 81,
-        "markers": [],
-        "docstring": "Test that weights affect outcome."
-      },
-      {
-        "name": "test_equal_weights_confidence_matters",
-        "line": 102,
-        "markers": [],
-        "docstring": "Test that confidence matters with equal weights."
-      },
-      {
-        "name": "test_empty_votes_returns_hold",
-        "line": 132,
-        "markers": [],
-        "docstring": "Test that empty votes returns HOLD."
-      },
-      {
-        "name": "test_unanimous_boosted_confidence",
-        "line": 139,
-        "markers": [],
-        "docstring": "Test that unanimous agreement boosts confidence."
-      },
-      {
-        "name": "test_conflict_follows_leader",
-        "line": 162,
-        "markers": [],
-        "docstring": "Test that conflict follows highest weighted confidence."
-      },
-      {
-        "name": "test_conflict_penalizes_confidence",
-        "line": 185,
-        "markers": [],
-        "docstring": "Test that disagreement reduces final confidence."
-      },
-      {
-        "name": "test_weighted_confidence",
-        "line": 225,
-        "markers": [],
-        "docstring": "Test weighted_confidence property."
-      },
-      {
-        "name": "test_to_dict",
-        "line": 235,
-        "markers": [],
-        "docstring": "Test serialization."
-      }
-    ],
     "tests/unit/gpt_trader/features/intelligence/ensemble/test_weighting.py": [
       {
         "name": "TestDynamicWeightCalculator::test_equal_weights_with_no_adjustment",
@@ -50368,6 +50227,34 @@
         "docstring": "Test serialization round-trip."
       }
     ],
+    "tests/unit/gpt_trader/features/intelligence/ensemble/test_voting_strategy_vote.py": [
+      {
+        "name": "TestStrategyVote::test_weighted_confidence",
+        "line": 10,
+        "markers": [],
+        "docstring": "Test weighted_confidence property.",
+        "class": "TestStrategyVote"
+      },
+      {
+        "name": "TestStrategyVote::test_to_dict",
+        "line": 20,
+        "markers": [],
+        "docstring": "Test serialization.",
+        "class": "TestStrategyVote"
+      },
+      {
+        "name": "test_weighted_confidence",
+        "line": 10,
+        "markers": [],
+        "docstring": "Test weighted_confidence property."
+      },
+      {
+        "name": "test_to_dict",
+        "line": 20,
+        "markers": [],
+        "docstring": "Test serialization."
+      }
+    ],
     "tests/unit/gpt_trader/features/intelligence/ensemble/test_orchestrator_crisis_mode.py": [
       {
         "name": "TestCrisisMode::test_crisis_adjustment_applied",
@@ -50381,6 +50268,101 @@
         "line": 13,
         "markers": [],
         "docstring": "Test that crisis mode adjustment is applied when regime is crisis."
+      }
+    ],
+    "tests/unit/gpt_trader/features/intelligence/ensemble/test_voting_weighted_majority.py": [
+      {
+        "name": "TestWeightedMajorityVoting::test_empty_votes_returns_hold",
+        "line": 31,
+        "markers": [],
+        "docstring": "Test that empty votes returns HOLD.",
+        "class": "TestWeightedMajorityVoting"
+      },
+      {
+        "name": "TestWeightedMajorityVoting::test_unanimous_buy",
+        "line": 39,
+        "markers": [],
+        "docstring": "Test unanimous BUY votes.",
+        "class": "TestWeightedMajorityVoting"
+      },
+      {
+        "name": "TestWeightedMajorityVoting::test_weighted_aggregation",
+        "line": 58,
+        "markers": [],
+        "docstring": "Test that weights affect outcome.",
+        "class": "TestWeightedMajorityVoting"
+      },
+      {
+        "name": "TestWeightedMajorityVoting::test_equal_weights_confidence_matters",
+        "line": 77,
+        "markers": [],
+        "docstring": "Test that confidence matters with equal weights.",
+        "class": "TestWeightedMajorityVoting"
+      },
+      {
+        "name": "test_empty_votes_returns_hold",
+        "line": 31,
+        "markers": [],
+        "docstring": "Test that empty votes returns HOLD."
+      },
+      {
+        "name": "test_unanimous_buy",
+        "line": 39,
+        "markers": [],
+        "docstring": "Test unanimous BUY votes."
+      },
+      {
+        "name": "test_weighted_aggregation",
+        "line": 58,
+        "markers": [],
+        "docstring": "Test that weights affect outcome."
+      },
+      {
+        "name": "test_equal_weights_confidence_matters",
+        "line": 77,
+        "markers": [],
+        "docstring": "Test that confidence matters with equal weights."
+      }
+    ],
+    "tests/unit/gpt_trader/features/intelligence/ensemble/test_voting_factory.py": [
+      {
+        "name": "TestVotingMechanismFactory::test_create_weighted_majority",
+        "line": 15,
+        "markers": [],
+        "docstring": "Test creating weighted majority voter.",
+        "class": "TestVotingMechanismFactory"
+      },
+      {
+        "name": "TestVotingMechanismFactory::test_create_confidence_leader",
+        "line": 20,
+        "markers": [],
+        "docstring": "Test creating confidence leader voter.",
+        "class": "TestVotingMechanismFactory"
+      },
+      {
+        "name": "TestVotingMechanismFactory::test_create_unknown_raises",
+        "line": 25,
+        "markers": [],
+        "docstring": "Test that unknown method raises ValueError.",
+        "class": "TestVotingMechanismFactory"
+      },
+      {
+        "name": "test_create_weighted_majority",
+        "line": 15,
+        "markers": [],
+        "docstring": "Test creating weighted majority voter."
+      },
+      {
+        "name": "test_create_confidence_leader",
+        "line": 20,
+        "markers": [],
+        "docstring": "Test creating confidence leader voter."
+      },
+      {
+        "name": "test_create_unknown_raises",
+        "line": 25,
+        "markers": [],
+        "docstring": "Test that unknown method raises ValueError."
       }
     ],
     "tests/unit/gpt_trader/features/intelligence/ensemble/test_orchestrator_decision.py": [
@@ -50515,6 +50497,60 @@
         "line": 42,
         "markers": [],
         "docstring": "Test state restoration."
+      }
+    ],
+    "tests/unit/gpt_trader/features/intelligence/ensemble/test_voting_confidence_leader.py": [
+      {
+        "name": "TestConfidenceLeaderVoting::test_empty_votes_returns_hold",
+        "line": 31,
+        "markers": [],
+        "docstring": "Test that empty votes returns HOLD.",
+        "class": "TestConfidenceLeaderVoting"
+      },
+      {
+        "name": "TestConfidenceLeaderVoting::test_unanimous_boosted_confidence",
+        "line": 38,
+        "markers": [],
+        "docstring": "Test that unanimous agreement boosts confidence.",
+        "class": "TestConfidenceLeaderVoting"
+      },
+      {
+        "name": "TestConfidenceLeaderVoting::test_conflict_follows_leader",
+        "line": 61,
+        "markers": [],
+        "docstring": "Test that conflict follows highest weighted confidence.",
+        "class": "TestConfidenceLeaderVoting"
+      },
+      {
+        "name": "TestConfidenceLeaderVoting::test_conflict_penalizes_confidence",
+        "line": 84,
+        "markers": [],
+        "docstring": "Test that disagreement reduces final confidence.",
+        "class": "TestConfidenceLeaderVoting"
+      },
+      {
+        "name": "test_empty_votes_returns_hold",
+        "line": 31,
+        "markers": [],
+        "docstring": "Test that empty votes returns HOLD."
+      },
+      {
+        "name": "test_unanimous_boosted_confidence",
+        "line": 38,
+        "markers": [],
+        "docstring": "Test that unanimous agreement boosts confidence."
+      },
+      {
+        "name": "test_conflict_follows_leader",
+        "line": 61,
+        "markers": [],
+        "docstring": "Test that conflict follows highest weighted confidence."
+      },
+      {
+        "name": "test_conflict_penalizes_confidence",
+        "line": 84,
+        "markers": [],
+        "docstring": "Test that disagreement reduces final confidence."
       }
     ],
     "tests/unit/gpt_trader/features/intelligence/backtesting/test_batch_regime_snapshot.py": [
@@ -56738,6 +56774,112 @@
         "docstring": "Test request with max retries exceeded."
       }
     ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics_collector.py": [
+      {
+        "name": "TestAPIMetricsCollector::test_initial_state",
+        "line": 13,
+        "markers": [],
+        "docstring": "Test initial collector state.",
+        "class": "TestAPIMetricsCollector"
+      },
+      {
+        "name": "TestAPIMetricsCollector::test_record_request",
+        "line": 20,
+        "markers": [],
+        "docstring": "Test recording a request.",
+        "class": "TestAPIMetricsCollector"
+      },
+      {
+        "name": "TestAPIMetricsCollector::test_endpoint_categorization",
+        "line": 30,
+        "markers": [],
+        "docstring": "Test that endpoints are correctly categorized.",
+        "class": "TestAPIMetricsCollector"
+      },
+      {
+        "name": "TestAPIMetricsCollector::test_error_and_rate_limit_tracking",
+        "line": 48,
+        "markers": [],
+        "docstring": "Test tracking errors and rate limits.",
+        "class": "TestAPIMetricsCollector"
+      },
+      {
+        "name": "TestAPIMetricsCollector::test_disabled_collector",
+        "line": 61,
+        "markers": [],
+        "docstring": "Test that disabled collector doesn't record.",
+        "class": "TestAPIMetricsCollector"
+      },
+      {
+        "name": "TestAPIMetricsCollector::test_reset",
+        "line": 70,
+        "markers": [],
+        "docstring": "Test resetting all metrics.",
+        "class": "TestAPIMetricsCollector"
+      },
+      {
+        "name": "TestAPIMetricsCollector::test_rate_limit_usage_display",
+        "line": 81,
+        "markers": [],
+        "docstring": "Test rate limit usage formatting.",
+        "class": "TestAPIMetricsCollector"
+      },
+      {
+        "name": "TestAPIMetricsCollector::test_thread_safety",
+        "line": 88,
+        "markers": [],
+        "docstring": "Test that collector is thread-safe.",
+        "class": "TestAPIMetricsCollector"
+      },
+      {
+        "name": "test_initial_state",
+        "line": 13,
+        "markers": [],
+        "docstring": "Test initial collector state."
+      },
+      {
+        "name": "test_record_request",
+        "line": 20,
+        "markers": [],
+        "docstring": "Test recording a request."
+      },
+      {
+        "name": "test_endpoint_categorization",
+        "line": 30,
+        "markers": [],
+        "docstring": "Test that endpoints are correctly categorized."
+      },
+      {
+        "name": "test_error_and_rate_limit_tracking",
+        "line": 48,
+        "markers": [],
+        "docstring": "Test tracking errors and rate limits."
+      },
+      {
+        "name": "test_disabled_collector",
+        "line": 61,
+        "markers": [],
+        "docstring": "Test that disabled collector doesn't record."
+      },
+      {
+        "name": "test_reset",
+        "line": 70,
+        "markers": [],
+        "docstring": "Test resetting all metrics."
+      },
+      {
+        "name": "test_rate_limit_usage_display",
+        "line": 81,
+        "markers": [],
+        "docstring": "Test rate limit usage formatting."
+      },
+      {
+        "name": "test_thread_safety",
+        "line": 88,
+        "markers": [],
+        "docstring": "Test that collector is thread-safe."
+      }
+    ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_metrics_and_resilience_status.py": [
       {
         "name": "TestCoinbaseClientBaseMetricsAndResilienceStatus::test_record_success_sets_span_and_breaker",
@@ -57010,237 +57152,68 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics.py": [
       {
         "name": "TestEndpointMetrics::test_initial_values",
-        "line": 17,
+        "line": 13,
         "markers": [],
         "docstring": "Test initial metric values.",
         "class": "TestEndpointMetrics"
       },
       {
         "name": "TestEndpointMetrics::test_record_updates_metrics",
-        "line": 26,
+        "line": 22,
         "markers": [],
         "docstring": "Test that recording updates all metrics.",
         "class": "TestEndpointMetrics"
       },
       {
         "name": "TestEndpointMetrics::test_error_tracking",
-        "line": 44,
+        "line": 40,
         "markers": [],
         "docstring": "Test error rate calculation.",
         "class": "TestEndpointMetrics"
       },
       {
         "name": "TestEndpointMetrics::test_percentile_calculations",
-        "line": 56,
+        "line": 52,
         "markers": [],
         "docstring": "Test latency percentile calculations.",
         "class": "TestEndpointMetrics"
       },
       {
         "name": "TestEndpointMetrics::test_to_dict",
-        "line": 73,
+        "line": 69,
         "markers": [],
         "docstring": "Test dictionary serialization.",
         "class": "TestEndpointMetrics"
       },
       {
-        "name": "TestAPIMetricsCollector::test_initial_state",
-        "line": 90,
-        "markers": [],
-        "docstring": "Test initial collector state.",
-        "class": "TestAPIMetricsCollector"
-      },
-      {
-        "name": "TestAPIMetricsCollector::test_record_request",
-        "line": 97,
-        "markers": [],
-        "docstring": "Test recording a request.",
-        "class": "TestAPIMetricsCollector"
-      },
-      {
-        "name": "TestAPIMetricsCollector::test_endpoint_categorization",
-        "line": 107,
-        "markers": [],
-        "docstring": "Test that endpoints are correctly categorized.",
-        "class": "TestAPIMetricsCollector"
-      },
-      {
-        "name": "TestAPIMetricsCollector::test_error_and_rate_limit_tracking",
-        "line": 125,
-        "markers": [],
-        "docstring": "Test tracking errors and rate limits.",
-        "class": "TestAPIMetricsCollector"
-      },
-      {
-        "name": "TestAPIMetricsCollector::test_disabled_collector",
-        "line": 138,
-        "markers": [],
-        "docstring": "Test that disabled collector doesn't record.",
-        "class": "TestAPIMetricsCollector"
-      },
-      {
-        "name": "TestAPIMetricsCollector::test_reset",
-        "line": 147,
-        "markers": [],
-        "docstring": "Test resetting all metrics.",
-        "class": "TestAPIMetricsCollector"
-      },
-      {
-        "name": "TestAPIMetricsCollector::test_rate_limit_usage_display",
-        "line": 158,
-        "markers": [],
-        "docstring": "Test rate limit usage formatting.",
-        "class": "TestAPIMetricsCollector"
-      },
-      {
-        "name": "TestAPIMetricsCollector::test_thread_safety",
-        "line": 165,
-        "markers": [],
-        "docstring": "Test that collector is thread-safe.",
-        "class": "TestAPIMetricsCollector"
-      },
-      {
-        "name": "TestRequestTimer::test_timer_records_latency",
-        "line": 190,
-        "markers": [],
-        "docstring": "Test that timer records request latency.\n\nNote: We can't use time.sleep here because the coinbase conftest\nhas autouse=True for fast_retry_sleep which mocks time.sleep.\nInstead, we test that the timer correctly records elapsed time\nby verifying the record_request method works.",
-        "class": "TestRequestTimer"
-      },
-      {
-        "name": "TestRequestTimer::test_timer_context_manager_records",
-        "line": 207,
-        "markers": [],
-        "docstring": "Test that RequestTimer context manager records on exit.\n\nThis verifies the context manager protocol works correctly,\nthough actual timing may be near-zero due to mocked time.sleep.",
-        "class": "TestRequestTimer"
-      },
-      {
-        "name": "TestRequestTimer::test_timer_marks_error",
-        "line": 223,
-        "markers": [],
-        "docstring": "Test marking a request as error.",
-        "class": "TestRequestTimer"
-      },
-      {
-        "name": "TestRequestTimer::test_timer_marks_rate_limited",
-        "line": 233,
-        "markers": [],
-        "docstring": "Test marking a request as rate limited.",
-        "class": "TestRequestTimer"
-      },
-      {
-        "name": "TestRequestTimer::test_timer_records_on_exception",
-        "line": 244,
-        "markers": [],
-        "docstring": "Test that timer records even when exception occurs.",
-        "class": "TestRequestTimer"
-      },
-      {
         "name": "test_initial_values",
-        "line": 17,
+        "line": 13,
         "markers": [],
         "docstring": "Test initial metric values."
       },
       {
         "name": "test_record_updates_metrics",
-        "line": 26,
+        "line": 22,
         "markers": [],
         "docstring": "Test that recording updates all metrics."
       },
       {
         "name": "test_error_tracking",
-        "line": 44,
+        "line": 40,
         "markers": [],
         "docstring": "Test error rate calculation."
       },
       {
         "name": "test_percentile_calculations",
-        "line": 56,
+        "line": 52,
         "markers": [],
         "docstring": "Test latency percentile calculations."
       },
       {
         "name": "test_to_dict",
-        "line": 73,
+        "line": 69,
         "markers": [],
         "docstring": "Test dictionary serialization."
-      },
-      {
-        "name": "test_initial_state",
-        "line": 90,
-        "markers": [],
-        "docstring": "Test initial collector state."
-      },
-      {
-        "name": "test_record_request",
-        "line": 97,
-        "markers": [],
-        "docstring": "Test recording a request."
-      },
-      {
-        "name": "test_endpoint_categorization",
-        "line": 107,
-        "markers": [],
-        "docstring": "Test that endpoints are correctly categorized."
-      },
-      {
-        "name": "test_error_and_rate_limit_tracking",
-        "line": 125,
-        "markers": [],
-        "docstring": "Test tracking errors and rate limits."
-      },
-      {
-        "name": "test_disabled_collector",
-        "line": 138,
-        "markers": [],
-        "docstring": "Test that disabled collector doesn't record."
-      },
-      {
-        "name": "test_reset",
-        "line": 147,
-        "markers": [],
-        "docstring": "Test resetting all metrics."
-      },
-      {
-        "name": "test_rate_limit_usage_display",
-        "line": 158,
-        "markers": [],
-        "docstring": "Test rate limit usage formatting."
-      },
-      {
-        "name": "test_thread_safety",
-        "line": 165,
-        "markers": [],
-        "docstring": "Test that collector is thread-safe."
-      },
-      {
-        "name": "test_timer_records_latency",
-        "line": 190,
-        "markers": [],
-        "docstring": "Test that timer records request latency.\n\nNote: We can't use time.sleep here because the coinbase conftest\nhas autouse=True for fast_retry_sleep which mocks time.sleep.\nInstead, we test that the timer correctly records elapsed time\nby verifying the record_request method works."
-      },
-      {
-        "name": "test_timer_context_manager_records",
-        "line": 207,
-        "markers": [],
-        "docstring": "Test that RequestTimer context manager records on exit.\n\nThis verifies the context manager protocol works correctly,\nthough actual timing may be near-zero due to mocked time.sleep."
-      },
-      {
-        "name": "test_timer_marks_error",
-        "line": 223,
-        "markers": [],
-        "docstring": "Test marking a request as error."
-      },
-      {
-        "name": "test_timer_marks_rate_limited",
-        "line": 233,
-        "markers": [],
-        "docstring": "Test marking a request as rate limited."
-      },
-      {
-        "name": "test_timer_records_on_exception",
-        "line": 244,
-        "markers": [],
-        "docstring": "Test that timer records even when exception occurs."
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_priority.py": [
@@ -58299,6 +58272,73 @@
         "line": 135,
         "markers": [],
         "docstring": "Test auth path normalization strips queries and full URLs."
+      }
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics_request_timer.py": [
+      {
+        "name": "TestRequestTimer::test_timer_records_latency",
+        "line": 14,
+        "markers": [],
+        "docstring": "Test that timer records request latency.\n\nNote: We can't use time.sleep here because the coinbase conftest\nhas autouse=True for fast_retry_sleep which mocks time.sleep.\nInstead, we test that the timer correctly records elapsed time\nby verifying the record_request method works.",
+        "class": "TestRequestTimer"
+      },
+      {
+        "name": "TestRequestTimer::test_timer_context_manager_records",
+        "line": 31,
+        "markers": [],
+        "docstring": "Test that RequestTimer context manager records on exit.\n\nThis verifies the context manager protocol works correctly,\nthough actual timing may be near-zero due to mocked time.sleep.",
+        "class": "TestRequestTimer"
+      },
+      {
+        "name": "TestRequestTimer::test_timer_marks_error",
+        "line": 47,
+        "markers": [],
+        "docstring": "Test marking a request as error.",
+        "class": "TestRequestTimer"
+      },
+      {
+        "name": "TestRequestTimer::test_timer_marks_rate_limited",
+        "line": 57,
+        "markers": [],
+        "docstring": "Test marking a request as rate limited.",
+        "class": "TestRequestTimer"
+      },
+      {
+        "name": "TestRequestTimer::test_timer_records_on_exception",
+        "line": 68,
+        "markers": [],
+        "docstring": "Test that timer records even when exception occurs.",
+        "class": "TestRequestTimer"
+      },
+      {
+        "name": "test_timer_records_latency",
+        "line": 14,
+        "markers": [],
+        "docstring": "Test that timer records request latency.\n\nNote: We can't use time.sleep here because the coinbase conftest\nhas autouse=True for fast_retry_sleep which mocks time.sleep.\nInstead, we test that the timer correctly records elapsed time\nby verifying the record_request method works."
+      },
+      {
+        "name": "test_timer_context_manager_records",
+        "line": 31,
+        "markers": [],
+        "docstring": "Test that RequestTimer context manager records on exit.\n\nThis verifies the context manager protocol works correctly,\nthough actual timing may be near-zero due to mocked time.sleep."
+      },
+      {
+        "name": "test_timer_marks_error",
+        "line": 47,
+        "markers": [],
+        "docstring": "Test marking a request as error."
+      },
+      {
+        "name": "test_timer_marks_rate_limited",
+        "line": 57,
+        "markers": [],
+        "docstring": "Test marking a request as rate limited."
+      },
+      {
+        "name": "test_timer_records_on_exception",
+        "line": 68,
+        "markers": [],
+        "docstring": "Test that timer records even when exception occurs."
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_portfolio_mixin.py": [
@@ -62205,79 +62245,79 @@
     "tests/unit/gpt_trader/features/strategy_dev/lab/test_experiment.py": [
       {
         "name": "TestExperiment::test_create_experiment",
-        "line": 17,
+        "line": 15,
         "markers": [],
         "docstring": "Test creating an experiment.",
         "class": "TestExperiment"
       },
       {
         "name": "TestExperiment::test_parameter_hash",
-        "line": 31,
+        "line": 29,
         "markers": [],
         "docstring": "Test parameter hash generation.",
         "class": "TestExperiment"
       },
       {
         "name": "TestExperiment::test_lifecycle",
-        "line": 59,
+        "line": 57,
         "markers": [],
         "docstring": "Test experiment lifecycle.",
         "class": "TestExperiment"
       },
       {
         "name": "TestExperiment::test_fail",
-        "line": 96,
+        "line": 94,
         "markers": [],
         "docstring": "Test failing an experiment.",
         "class": "TestExperiment"
       },
       {
         "name": "TestExperiment::test_clone",
-        "line": 111,
+        "line": 109,
         "markers": [],
         "docstring": "Test cloning an experiment.",
         "class": "TestExperiment"
       },
       {
         "name": "TestExperiment::test_to_from_dict",
-        "line": 128,
+        "line": 126,
         "markers": [],
         "docstring": "Test serialization round-trip.",
         "class": "TestExperiment"
       },
       {
         "name": "test_create_experiment",
-        "line": 17,
+        "line": 15,
         "markers": [],
         "docstring": "Test creating an experiment."
       },
       {
         "name": "test_parameter_hash",
-        "line": 31,
+        "line": 29,
         "markers": [],
         "docstring": "Test parameter hash generation."
       },
       {
         "name": "test_lifecycle",
-        "line": 59,
+        "line": 57,
         "markers": [],
         "docstring": "Test experiment lifecycle."
       },
       {
         "name": "test_fail",
-        "line": 96,
+        "line": 94,
         "markers": [],
         "docstring": "Test failing an experiment."
       },
       {
         "name": "test_clone",
-        "line": 111,
+        "line": 109,
         "markers": [],
         "docstring": "Test cloning an experiment."
       },
       {
         "name": "test_to_from_dict",
-        "line": 128,
+        "line": 126,
         "markers": [],
         "docstring": "Test serialization round-trip."
       }
@@ -64030,146 +64070,174 @@
     "tests/unit/gpt_trader/features/live_trade/signals/test_vwap.py": [
       {
         "name": "TestVWAPSignal::test_no_market_data_returns_neutral",
-        "line": 37,
+        "line": 36,
         "markers": [],
         "docstring": "Test that missing market_data returns neutral signal.",
         "class": "TestVWAPSignal"
       },
       {
         "name": "TestVWAPSignal::test_no_trade_stats_returns_neutral",
-        "line": 49,
+        "line": 48,
         "markers": [],
         "docstring": "Test that missing trade_stats returns neutral signal.",
         "class": "TestVWAPSignal"
       },
       {
         "name": "TestVWAPSignal::test_no_vwap_returns_neutral",
-        "line": 59,
+        "line": 58,
         "markers": [],
         "docstring": "Test that missing vwap returns neutral signal.",
         "class": "TestVWAPSignal"
       },
       {
         "name": "TestVWAPSignal::test_insufficient_trades_returns_neutral",
-        "line": 69,
+        "line": 68,
         "markers": [],
         "docstring": "Test that too few trades returns neutral signal.",
         "class": "TestVWAPSignal"
       },
       {
         "name": "TestVWAPSignal::test_price_below_vwap_is_bullish",
-        "line": 82,
+        "line": 81,
         "markers": [],
         "docstring": "Test that price below VWAP generates bullish signal.",
         "class": "TestVWAPSignal"
       },
       {
         "name": "TestVWAPSignal::test_price_above_vwap_is_bearish",
-        "line": 101,
+        "line": 100,
         "markers": [],
         "docstring": "Test that price above VWAP generates bearish signal.",
         "class": "TestVWAPSignal"
       },
       {
         "name": "TestVWAPSignal::test_price_near_vwap_is_neutral",
-        "line": 120,
+        "line": 119,
         "markers": [],
         "docstring": "Test that price near VWAP generates neutral signal.",
         "class": "TestVWAPSignal"
       },
       {
         "name": "TestVWAPSignal::test_confidence_increases_with_trade_count",
-        "line": 136,
+        "line": 135,
         "markers": [],
         "docstring": "Test that more trades increase confidence.",
         "class": "TestVWAPSignal"
       },
       {
         "name": "TestVWAPSignal::test_strength_scales_with_deviation",
-        "line": 154,
+        "line": 153,
         "markers": [],
         "docstring": "Test that strength scales with deviation magnitude.",
         "class": "TestVWAPSignal"
       },
       {
         "name": "TestVWAPSignal::test_strong_deviation_increases_confidence",
-        "line": 172,
+        "line": 171,
         "markers": [],
         "docstring": "Test that stronger deviations have higher confidence.",
         "class": "TestVWAPSignal"
       },
       {
         "name": "TestVWAPSignal::test_zero_vwap_returns_neutral",
-        "line": 190,
+        "line": 189,
         "markers": [],
         "docstring": "Test that zero vwap returns neutral signal.",
         "class": "TestVWAPSignal"
       },
       {
         "name": "test_no_market_data_returns_neutral",
-        "line": 37,
+        "line": 36,
         "markers": [],
         "docstring": "Test that missing market_data returns neutral signal."
       },
       {
         "name": "test_no_trade_stats_returns_neutral",
-        "line": 49,
+        "line": 48,
         "markers": [],
         "docstring": "Test that missing trade_stats returns neutral signal."
       },
       {
         "name": "test_no_vwap_returns_neutral",
-        "line": 59,
+        "line": 58,
         "markers": [],
         "docstring": "Test that missing vwap returns neutral signal."
       },
       {
         "name": "test_insufficient_trades_returns_neutral",
-        "line": 69,
+        "line": 68,
         "markers": [],
         "docstring": "Test that too few trades returns neutral signal."
       },
       {
         "name": "test_price_below_vwap_is_bullish",
-        "line": 82,
+        "line": 81,
         "markers": [],
         "docstring": "Test that price below VWAP generates bullish signal."
       },
       {
         "name": "test_price_above_vwap_is_bearish",
-        "line": 101,
+        "line": 100,
         "markers": [],
         "docstring": "Test that price above VWAP generates bearish signal."
       },
       {
         "name": "test_price_near_vwap_is_neutral",
-        "line": 120,
+        "line": 119,
         "markers": [],
         "docstring": "Test that price near VWAP generates neutral signal."
       },
       {
         "name": "test_confidence_increases_with_trade_count",
-        "line": 136,
+        "line": 135,
         "markers": [],
         "docstring": "Test that more trades increase confidence."
       },
       {
         "name": "test_strength_scales_with_deviation",
-        "line": 154,
+        "line": 153,
         "markers": [],
         "docstring": "Test that strength scales with deviation magnitude."
       },
       {
         "name": "test_strong_deviation_increases_confidence",
-        "line": 172,
+        "line": 171,
         "markers": [],
         "docstring": "Test that stronger deviations have higher confidence."
       },
       {
         "name": "test_zero_vwap_returns_neutral",
-        "line": 190,
+        "line": 189,
         "markers": [],
         "docstring": "Test that zero vwap returns neutral signal."
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/signals/test_orderbook_imbalance_config.py": [
+      {
+        "name": "TestOrderbookImbalanceSignalConfig::test_default_values",
+        "line": 9,
+        "markers": [],
+        "docstring": "Test default config values.",
+        "class": "TestOrderbookImbalanceSignalConfig"
+      },
+      {
+        "name": "TestOrderbookImbalanceSignalConfig::test_custom_values",
+        "line": 16,
+        "markers": [],
+        "docstring": "Test custom config values.",
+        "class": "TestOrderbookImbalanceSignalConfig"
+      },
+      {
+        "name": "test_default_values",
+        "line": 9,
+        "markers": [],
+        "docstring": "Test default config values."
+      },
+      {
+        "name": "test_custom_values",
+        "line": 16,
+        "markers": [],
+        "docstring": "Test custom config values."
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/signals/test_spread.py": [
@@ -64332,158 +64400,132 @@
     ],
     "tests/unit/gpt_trader/features/live_trade/signals/test_orderbook_imbalance.py": [
       {
-        "name": "TestOrderbookImbalanceSignalConfig::test_default_values",
-        "line": 37,
-        "markers": [],
-        "docstring": "Test default config values.",
-        "class": "TestOrderbookImbalanceSignalConfig"
-      },
-      {
-        "name": "TestOrderbookImbalanceSignalConfig::test_custom_values",
-        "line": 44,
-        "markers": [],
-        "docstring": "Test custom config values.",
-        "class": "TestOrderbookImbalanceSignalConfig"
-      },
-      {
         "name": "TestOrderbookImbalanceSignal::test_no_market_data_returns_neutral",
-        "line": 76,
+        "line": 55,
         "markers": [],
         "docstring": "Test that missing market_data returns neutral signal.",
         "class": "TestOrderbookImbalanceSignal"
       },
       {
         "name": "TestOrderbookImbalanceSignal::test_no_orderbook_returns_neutral",
-        "line": 88,
+        "line": 67,
         "markers": [],
         "docstring": "Test that missing orderbook returns neutral signal.",
         "class": "TestOrderbookImbalanceSignal"
       },
       {
         "name": "TestOrderbookImbalanceSignal::test_bid_heavy_is_bullish",
-        "line": 98,
+        "line": 77,
         "markers": [],
         "docstring": "Test that bid-heavy orderbook generates bullish signal.",
         "class": "TestOrderbookImbalanceSignal"
       },
       {
         "name": "TestOrderbookImbalanceSignal::test_ask_heavy_is_bearish",
-        "line": 116,
+        "line": 95,
         "markers": [],
         "docstring": "Test that ask-heavy orderbook generates bearish signal.",
         "class": "TestOrderbookImbalanceSignal"
       },
       {
         "name": "TestOrderbookImbalanceSignal::test_balanced_is_neutral",
-        "line": 134,
+        "line": 113,
         "markers": [],
         "docstring": "Test that balanced orderbook generates neutral signal.",
         "class": "TestOrderbookImbalanceSignal"
       },
       {
         "name": "TestOrderbookImbalanceSignal::test_wide_spread_reduces_confidence",
-        "line": 151,
+        "line": 130,
         "markers": [],
         "docstring": "Test that wide spread reduces confidence.",
         "class": "TestOrderbookImbalanceSignal"
       },
       {
         "name": "TestOrderbookImbalanceSignal::test_strong_imbalance_increases_confidence",
-        "line": 175,
+        "line": 154,
         "markers": [],
         "docstring": "Test that stronger imbalance increases confidence.",
         "class": "TestOrderbookImbalanceSignal"
       },
       {
         "name": "TestOrderbookImbalanceSignal::test_zero_depth_returns_neutral",
-        "line": 199,
+        "line": 178,
         "markers": [],
         "docstring": "Test that zero total depth returns neutral signal.",
         "class": "TestOrderbookImbalanceSignal"
       },
       {
         "name": "TestOrderbookImbalanceSignal::test_custom_thresholds",
-        "line": 215,
+        "line": 194,
         "markers": [],
         "docstring": "Test signal with custom thresholds.",
         "class": "TestOrderbookImbalanceSignal"
       },
       {
         "name": "TestOrderbookImbalanceSignal::test_levels_config_passed_to_depth",
-        "line": 237,
+        "line": 216,
         "markers": [],
         "docstring": "Test that levels config is passed to get_depth.",
         "class": "TestOrderbookImbalanceSignal"
       },
       {
-        "name": "test_default_values",
-        "line": 37,
-        "markers": [],
-        "docstring": "Test default config values."
-      },
-      {
-        "name": "test_custom_values",
-        "line": 44,
-        "markers": [],
-        "docstring": "Test custom config values."
-      },
-      {
         "name": "test_no_market_data_returns_neutral",
-        "line": 76,
+        "line": 55,
         "markers": [],
         "docstring": "Test that missing market_data returns neutral signal."
       },
       {
         "name": "test_no_orderbook_returns_neutral",
-        "line": 88,
+        "line": 67,
         "markers": [],
         "docstring": "Test that missing orderbook returns neutral signal."
       },
       {
         "name": "test_bid_heavy_is_bullish",
-        "line": 98,
+        "line": 77,
         "markers": [],
         "docstring": "Test that bid-heavy orderbook generates bullish signal."
       },
       {
         "name": "test_ask_heavy_is_bearish",
-        "line": 116,
+        "line": 95,
         "markers": [],
         "docstring": "Test that ask-heavy orderbook generates bearish signal."
       },
       {
         "name": "test_balanced_is_neutral",
-        "line": 134,
+        "line": 113,
         "markers": [],
         "docstring": "Test that balanced orderbook generates neutral signal."
       },
       {
         "name": "test_wide_spread_reduces_confidence",
-        "line": 151,
+        "line": 130,
         "markers": [],
         "docstring": "Test that wide spread reduces confidence."
       },
       {
         "name": "test_strong_imbalance_increases_confidence",
-        "line": 175,
+        "line": 154,
         "markers": [],
         "docstring": "Test that stronger imbalance increases confidence."
       },
       {
         "name": "test_zero_depth_returns_neutral",
-        "line": 199,
+        "line": 178,
         "markers": [],
         "docstring": "Test that zero total depth returns neutral signal."
       },
       {
         "name": "test_custom_thresholds",
-        "line": 215,
+        "line": 194,
         "markers": [],
         "docstring": "Test signal with custom thresholds."
       },
       {
         "name": "test_levels_config_passed_to_depth",
-        "line": 237,
+        "line": 216,
         "markers": [],
         "docstring": "Test that levels config is passed to get_depth."
       }
@@ -69512,326 +69554,326 @@
     "tests/unit/gpt_trader/features/live_trade/risk/test_cfm_risk_config.py": [
       {
         "name": "TestCFMRiskConfigDefaults::test_cfm_max_leverage_default",
-        "line": 14,
+        "line": 12,
         "markers": [],
         "docstring": "Default CFM max leverage is 5.",
         "class": "TestCFMRiskConfigDefaults"
       },
       {
         "name": "TestCFMRiskConfigDefaults::test_cfm_min_liquidation_buffer_pct_default",
-        "line": 19,
+        "line": 17,
         "markers": [],
         "docstring": "Default CFM min liquidation buffer is 15%.",
         "class": "TestCFMRiskConfigDefaults"
       },
       {
         "name": "TestCFMRiskConfigDefaults::test_cfm_max_exposure_pct_default",
-        "line": 24,
+        "line": 22,
         "markers": [],
         "docstring": "Default CFM max exposure is 80%.",
         "class": "TestCFMRiskConfigDefaults"
       },
       {
         "name": "TestCFMRiskConfigDefaults::test_cfm_max_position_size_pct_default",
-        "line": 29,
+        "line": 27,
         "markers": [],
         "docstring": "Default CFM max position size is 25%.",
         "class": "TestCFMRiskConfigDefaults"
       },
       {
         "name": "TestCFMRiskConfigDefaults::test_cfm_leverage_max_per_symbol_default",
-        "line": 34,
+        "line": 32,
         "markers": [],
         "docstring": "Default CFM per-symbol leverage limits is empty.",
         "class": "TestCFMRiskConfigDefaults"
       },
       {
         "name": "TestCFMRiskConfigDefaults::test_cfm_max_notional_per_symbol_default",
-        "line": 39,
+        "line": 37,
         "markers": [],
         "docstring": "Default CFM per-symbol notional limits is empty.",
         "class": "TestCFMRiskConfigDefaults"
       },
       {
         "name": "TestCFMRiskConfigDefaults::test_cfm_day_leverage_max_per_symbol_default",
-        "line": 44,
+        "line": 42,
         "markers": [],
         "docstring": "Default CFM day leverage limits is empty.",
         "class": "TestCFMRiskConfigDefaults"
       },
       {
         "name": "TestCFMRiskConfigDefaults::test_cfm_night_leverage_max_per_symbol_default",
-        "line": 49,
+        "line": 47,
         "markers": [],
         "docstring": "Default CFM night leverage limits is empty.",
         "class": "TestCFMRiskConfigDefaults"
       },
       {
         "name": "TestCFMRiskConfigValues::test_set_cfm_max_leverage",
-        "line": 58,
+        "line": 56,
         "markers": [],
         "docstring": "Can set CFM max leverage.",
         "class": "TestCFMRiskConfigValues"
       },
       {
         "name": "TestCFMRiskConfigValues::test_set_cfm_min_liquidation_buffer_pct",
-        "line": 63,
+        "line": 61,
         "markers": [],
         "docstring": "Can set CFM min liquidation buffer.",
         "class": "TestCFMRiskConfigValues"
       },
       {
         "name": "TestCFMRiskConfigValues::test_set_cfm_max_exposure_pct",
-        "line": 68,
+        "line": 66,
         "markers": [],
         "docstring": "Can set CFM max exposure.",
         "class": "TestCFMRiskConfigValues"
       },
       {
         "name": "TestCFMRiskConfigValues::test_set_cfm_max_position_size_pct",
-        "line": 73,
+        "line": 71,
         "markers": [],
         "docstring": "Can set CFM max position size.",
         "class": "TestCFMRiskConfigValues"
       },
       {
         "name": "TestCFMRiskConfigValues::test_set_cfm_leverage_max_per_symbol",
-        "line": 78,
+        "line": 76,
         "markers": [],
         "docstring": "Can set CFM per-symbol leverage limits.",
         "class": "TestCFMRiskConfigValues"
       },
       {
         "name": "TestCFMRiskConfigValues::test_set_cfm_max_notional_per_symbol",
-        "line": 84,
+        "line": 82,
         "markers": [],
         "docstring": "Can set CFM per-symbol notional limits.",
         "class": "TestCFMRiskConfigValues"
       },
       {
         "name": "TestCFMRiskConfigValues::test_full_cfm_risk_config",
-        "line": 93,
+        "line": 91,
         "markers": [],
         "docstring": "Full CFM risk configuration works together.",
         "class": "TestCFMRiskConfigValues"
       },
       {
         "name": "TestCFMRiskConfigFromEnv::test_from_env_cfm_max_leverage",
-        "line": 116,
+        "line": 114,
         "markers": [],
         "docstring": "Loads CFM max leverage from env.",
         "class": "TestCFMRiskConfigFromEnv"
       },
       {
         "name": "TestCFMRiskConfigFromEnv::test_from_env_cfm_min_liquidation_buffer_pct",
-        "line": 122,
+        "line": 120,
         "markers": [],
         "docstring": "Loads CFM min liquidation buffer from env.",
         "class": "TestCFMRiskConfigFromEnv"
       },
       {
         "name": "TestCFMRiskConfigFromEnv::test_from_env_cfm_max_exposure_pct",
-        "line": 128,
+        "line": 126,
         "markers": [],
         "docstring": "Loads CFM max exposure from env.",
         "class": "TestCFMRiskConfigFromEnv"
       },
       {
         "name": "TestCFMRiskConfigFromEnv::test_from_env_cfm_max_position_size_pct",
-        "line": 134,
+        "line": 132,
         "markers": [],
         "docstring": "Loads CFM max position size from env.",
         "class": "TestCFMRiskConfigFromEnv"
       },
       {
         "name": "TestCFMRiskConfigFromEnv::test_from_env_defaults",
-        "line": 140,
+        "line": 138,
         "markers": [],
         "docstring": "Uses defaults when env vars not set.",
         "class": "TestCFMRiskConfigFromEnv"
       },
       {
         "name": "TestCFMRiskConfigFromJson::test_from_json_cfm_values",
-        "line": 152,
+        "line": 150,
         "markers": [],
         "docstring": "Loads CFM config values from JSON.",
         "class": "TestCFMRiskConfigFromJson"
       },
       {
         "name": "TestCFMRiskConfigFromJson::test_from_json_cfm_max_notional_per_symbol",
-        "line": 174,
+        "line": 168,
         "markers": [],
         "docstring": "Loads CFM notional limits with Decimal conversion.",
         "class": "TestCFMRiskConfigFromJson"
       },
       {
         "name": "TestCFMRiskConfigFromJson::test_from_json_cfm_leverage_per_symbol",
-        "line": 194,
+        "line": 184,
         "markers": [],
         "docstring": "Loads CFM leverage limits from JSON.",
         "class": "TestCFMRiskConfigFromJson"
       },
       {
         "name": "TestCFMRiskConfigToDict::test_to_dict_cfm_values",
-        "line": 221,
+        "line": 207,
         "markers": [],
         "docstring": "CFM values serialize correctly.",
         "class": "TestCFMRiskConfigToDict"
       },
       {
         "name": "TestCFMRiskConfigToDict::test_to_dict_cfm_notional_decimals",
-        "line": 235,
+        "line": 221,
         "markers": [],
         "docstring": "CFM notional Decimal values convert to strings.",
         "class": "TestCFMRiskConfigToDict"
       },
       {
         "name": "test_cfm_max_leverage_default",
-        "line": 14,
+        "line": 12,
         "markers": [],
         "docstring": "Default CFM max leverage is 5."
       },
       {
         "name": "test_cfm_min_liquidation_buffer_pct_default",
-        "line": 19,
+        "line": 17,
         "markers": [],
         "docstring": "Default CFM min liquidation buffer is 15%."
       },
       {
         "name": "test_cfm_max_exposure_pct_default",
-        "line": 24,
+        "line": 22,
         "markers": [],
         "docstring": "Default CFM max exposure is 80%."
       },
       {
         "name": "test_cfm_max_position_size_pct_default",
-        "line": 29,
+        "line": 27,
         "markers": [],
         "docstring": "Default CFM max position size is 25%."
       },
       {
         "name": "test_cfm_leverage_max_per_symbol_default",
-        "line": 34,
+        "line": 32,
         "markers": [],
         "docstring": "Default CFM per-symbol leverage limits is empty."
       },
       {
         "name": "test_cfm_max_notional_per_symbol_default",
-        "line": 39,
+        "line": 37,
         "markers": [],
         "docstring": "Default CFM per-symbol notional limits is empty."
       },
       {
         "name": "test_cfm_day_leverage_max_per_symbol_default",
-        "line": 44,
+        "line": 42,
         "markers": [],
         "docstring": "Default CFM day leverage limits is empty."
       },
       {
         "name": "test_cfm_night_leverage_max_per_symbol_default",
-        "line": 49,
+        "line": 47,
         "markers": [],
         "docstring": "Default CFM night leverage limits is empty."
       },
       {
         "name": "test_set_cfm_max_leverage",
-        "line": 58,
+        "line": 56,
         "markers": [],
         "docstring": "Can set CFM max leverage."
       },
       {
         "name": "test_set_cfm_min_liquidation_buffer_pct",
-        "line": 63,
+        "line": 61,
         "markers": [],
         "docstring": "Can set CFM min liquidation buffer."
       },
       {
         "name": "test_set_cfm_max_exposure_pct",
-        "line": 68,
+        "line": 66,
         "markers": [],
         "docstring": "Can set CFM max exposure."
       },
       {
         "name": "test_set_cfm_max_position_size_pct",
-        "line": 73,
+        "line": 71,
         "markers": [],
         "docstring": "Can set CFM max position size."
       },
       {
         "name": "test_set_cfm_leverage_max_per_symbol",
-        "line": 78,
+        "line": 76,
         "markers": [],
         "docstring": "Can set CFM per-symbol leverage limits."
       },
       {
         "name": "test_set_cfm_max_notional_per_symbol",
-        "line": 84,
+        "line": 82,
         "markers": [],
         "docstring": "Can set CFM per-symbol notional limits."
       },
       {
         "name": "test_full_cfm_risk_config",
-        "line": 93,
+        "line": 91,
         "markers": [],
         "docstring": "Full CFM risk configuration works together."
       },
       {
         "name": "test_from_env_cfm_max_leverage",
-        "line": 116,
+        "line": 114,
         "markers": [],
         "docstring": "Loads CFM max leverage from env."
       },
       {
         "name": "test_from_env_cfm_min_liquidation_buffer_pct",
-        "line": 122,
+        "line": 120,
         "markers": [],
         "docstring": "Loads CFM min liquidation buffer from env."
       },
       {
         "name": "test_from_env_cfm_max_exposure_pct",
-        "line": 128,
+        "line": 126,
         "markers": [],
         "docstring": "Loads CFM max exposure from env."
       },
       {
         "name": "test_from_env_cfm_max_position_size_pct",
-        "line": 134,
+        "line": 132,
         "markers": [],
         "docstring": "Loads CFM max position size from env."
       },
       {
         "name": "test_from_env_defaults",
-        "line": 140,
+        "line": 138,
         "markers": [],
         "docstring": "Uses defaults when env vars not set."
       },
       {
         "name": "test_from_json_cfm_values",
-        "line": 152,
+        "line": 150,
         "markers": [],
         "docstring": "Loads CFM config values from JSON."
       },
       {
         "name": "test_from_json_cfm_max_notional_per_symbol",
-        "line": 174,
+        "line": 168,
         "markers": [],
         "docstring": "Loads CFM notional limits with Decimal conversion."
       },
       {
         "name": "test_from_json_cfm_leverage_per_symbol",
-        "line": 194,
+        "line": 184,
         "markers": [],
         "docstring": "Loads CFM leverage limits from JSON."
       },
       {
         "name": "test_to_dict_cfm_values",
-        "line": 221,
+        "line": 207,
         "markers": [],
         "docstring": "CFM values serialize correctly."
       },
       {
         "name": "test_to_dict_cfm_notional_decimals",
-        "line": 235,
+        "line": 221,
         "markers": [],
         "docstring": "CFM notional Decimal values convert to strings."
       }
@@ -70999,318 +71041,244 @@
         "docstring": "Test apply command with missing run."
       }
     ],
-    "tests/unit/gpt_trader/cli/commands/optimize/test_config_loader.py": [
-      {
-        "name": "TestLoadConfigFile::test_loads_valid_yaml",
-        "line": 24,
-        "markers": [],
-        "docstring": "Test loading a valid YAML file.",
-        "class": "TestLoadConfigFile"
-      },
-      {
-        "name": "TestLoadConfigFile::test_raises_for_missing_file",
-        "line": 32,
-        "markers": [],
-        "docstring": "Test raises error for missing file.",
-        "class": "TestLoadConfigFile"
-      },
-      {
-        "name": "TestLoadConfigFile::test_raises_for_invalid_yaml",
-        "line": 39,
-        "markers": [],
-        "docstring": "Test raises error for invalid YAML.",
-        "class": "TestLoadConfigFile"
-      },
-      {
-        "name": "TestParseConfig::test_parses_minimal_config",
-        "line": 49,
-        "markers": [],
-        "docstring": "Test parsing minimal configuration.",
-        "class": "TestParseConfig"
-      },
-      {
-        "name": "TestParseConfig::test_parses_full_config",
-        "line": 58,
-        "markers": [],
-        "docstring": "Test parsing full configuration.",
-        "class": "TestParseConfig"
-      },
-      {
-        "name": "TestParseConfig::test_raises_for_missing_study_name",
-        "line": 83,
-        "markers": [],
-        "docstring": "Test raises error for missing study name.",
-        "class": "TestParseConfig"
-      },
-      {
-        "name": "TestMergeCliOverrides::test_overrides_trials",
-        "line": 92,
-        "markers": [],
-        "docstring": "Test CLI overrides trials.",
-        "class": "TestMergeCliOverrides"
-      },
-      {
-        "name": "TestMergeCliOverrides::test_overrides_objective",
-        "line": 102,
-        "markers": [],
-        "docstring": "Test CLI overrides objective.",
-        "class": "TestMergeCliOverrides"
-      },
-      {
-        "name": "TestMergeCliOverrides::test_overrides_symbols",
-        "line": 110,
-        "markers": [],
-        "docstring": "Test CLI overrides symbols.",
-        "class": "TestMergeCliOverrides"
-      },
-      {
-        "name": "TestCreateObjectiveFromPreset::test_creates_simple_objective",
-        "line": 120,
-        "markers": [],
-        "docstring": "Test creating simple objective.",
-        "class": "TestCreateObjectiveFromPreset"
-      },
-      {
-        "name": "TestCreateObjectiveFromPreset::test_creates_composite_objective",
-        "line": 125,
-        "markers": [],
-        "docstring": "Test creating composite objective with factory.",
-        "class": "TestCreateObjectiveFromPreset"
-      },
-      {
-        "name": "TestCreateObjectiveFromPreset::test_passes_kwargs_to_factory",
-        "line": 130,
-        "markers": [],
-        "docstring": "Test kwargs are passed to factory.",
-        "class": "TestCreateObjectiveFromPreset"
-      },
-      {
-        "name": "TestCreateObjectiveFromPreset::test_raises_for_unknown_preset",
-        "line": 137,
-        "markers": [],
-        "docstring": "Test raises error for unknown preset.",
-        "class": "TestCreateObjectiveFromPreset"
-      },
-      {
-        "name": "TestGetObjectiveDirection::test_maximize_presets",
-        "line": 144,
-        "markers": [],
-        "docstring": "Test maximize direction presets.",
-        "class": "TestGetObjectiveDirection"
-      },
-      {
-        "name": "TestGetObjectiveDirection::test_minimize_presets",
-        "line": 150,
-        "markers": [],
-        "docstring": "Test minimize direction presets.",
-        "class": "TestGetObjectiveDirection"
-      },
-      {
-        "name": "TestGetObjectiveDirection::test_raises_for_unknown_preset",
-        "line": 154,
-        "markers": [],
-        "docstring": "Test raises error for unknown preset.",
-        "class": "TestGetObjectiveDirection"
-      },
+    "tests/unit/gpt_trader/cli/commands/optimize/test_config_loader_builders.py": [
       {
         "name": "TestBuildParameterSpaceFromConfig::test_includes_strategy_parameters",
-        "line": 161,
+        "line": 15,
         "markers": [],
         "docstring": "Test includes strategy parameters.",
         "class": "TestBuildParameterSpaceFromConfig"
       },
       {
         "name": "TestBuildParameterSpaceFromConfig::test_includes_risk_parameters",
-        "line": 171,
+        "line": 25,
         "markers": [],
         "docstring": "Test includes risk parameters.",
         "class": "TestBuildParameterSpaceFromConfig"
       },
       {
         "name": "TestBuildParameterSpaceFromConfig::test_includes_all_groups",
-        "line": 180,
+        "line": 34,
         "markers": [],
         "docstring": "Test includes all parameter groups.",
         "class": "TestBuildParameterSpaceFromConfig"
       },
       {
         "name": "TestBuildOptimizationConfig::test_builds_valid_config",
-        "line": 193,
+        "line": 47,
         "markers": [],
         "docstring": "Test building valid optimization config.",
         "class": "TestBuildOptimizationConfig"
       },
       {
         "name": "TestCreateDefaultConfig::test_creates_with_minimal_args",
-        "line": 206,
+        "line": 60,
         "markers": [],
         "docstring": "Test creating default config with minimal arguments.",
         "class": "TestCreateDefaultConfig"
       },
       {
         "name": "TestCreateDefaultConfig::test_creates_with_all_args",
-        "line": 214,
+        "line": 68,
         "markers": [],
         "docstring": "Test creating default config with all arguments.",
         "class": "TestCreateDefaultConfig"
       },
       {
+        "name": "test_includes_strategy_parameters",
+        "line": 15,
+        "markers": [],
+        "docstring": "Test includes strategy parameters."
+      },
+      {
+        "name": "test_includes_risk_parameters",
+        "line": 25,
+        "markers": [],
+        "docstring": "Test includes risk parameters."
+      },
+      {
+        "name": "test_includes_all_groups",
+        "line": 34,
+        "markers": [],
+        "docstring": "Test includes all parameter groups."
+      },
+      {
+        "name": "test_builds_valid_config",
+        "line": 47,
+        "markers": [],
+        "docstring": "Test building valid optimization config."
+      },
+      {
+        "name": "test_creates_with_minimal_args",
+        "line": 60,
+        "markers": [],
+        "docstring": "Test creating default config with minimal arguments."
+      },
+      {
+        "name": "test_creates_with_all_args",
+        "line": 68,
+        "markers": [],
+        "docstring": "Test creating default config with all arguments."
+      }
+    ],
+    "tests/unit/gpt_trader/cli/commands/optimize/test_config_loader_objectives.py": [
+      {
+        "name": "TestCreateObjectiveFromPreset::test_creates_simple_objective",
+        "line": 16,
+        "markers": [],
+        "docstring": "Test creating simple objective.",
+        "class": "TestCreateObjectiveFromPreset"
+      },
+      {
+        "name": "TestCreateObjectiveFromPreset::test_creates_composite_objective",
+        "line": 21,
+        "markers": [],
+        "docstring": "Test creating composite objective with factory.",
+        "class": "TestCreateObjectiveFromPreset"
+      },
+      {
+        "name": "TestCreateObjectiveFromPreset::test_passes_kwargs_to_factory",
+        "line": 26,
+        "markers": [],
+        "docstring": "Test kwargs are passed to factory.",
+        "class": "TestCreateObjectiveFromPreset"
+      },
+      {
+        "name": "TestCreateObjectiveFromPreset::test_raises_for_unknown_preset",
+        "line": 32,
+        "markers": [],
+        "docstring": "Test raises error for unknown preset.",
+        "class": "TestCreateObjectiveFromPreset"
+      },
+      {
+        "name": "TestGetObjectiveDirection::test_maximize_presets",
+        "line": 39,
+        "markers": [],
+        "docstring": "Test maximize direction presets.",
+        "class": "TestGetObjectiveDirection"
+      },
+      {
+        "name": "TestGetObjectiveDirection::test_minimize_presets",
+        "line": 45,
+        "markers": [],
+        "docstring": "Test minimize direction presets.",
+        "class": "TestGetObjectiveDirection"
+      },
+      {
+        "name": "TestGetObjectiveDirection::test_raises_for_unknown_preset",
+        "line": 49,
+        "markers": [],
+        "docstring": "Test raises error for unknown preset.",
+        "class": "TestGetObjectiveDirection"
+      },
+      {
         "name": "TestObjectivePresets::test_all_presets_have_direction",
-        "line": 237,
+        "line": 56,
         "markers": [],
         "docstring": "Test all presets have a direction defined.",
         "class": "TestObjectivePresets"
       },
       {
         "name": "TestObjectivePresets::test_all_presets_can_be_created",
-        "line": 243,
+        "line": 62,
         "markers": [],
         "docstring": "Test all presets can be instantiated.",
         "class": "TestObjectivePresets"
       },
       {
-        "name": "test_loads_valid_yaml",
-        "line": 24,
-        "markers": [],
-        "docstring": "Test loading a valid YAML file."
-      },
-      {
-        "name": "test_raises_for_missing_file",
-        "line": 32,
-        "markers": [],
-        "docstring": "Test raises error for missing file."
-      },
-      {
-        "name": "test_raises_for_invalid_yaml",
-        "line": 39,
-        "markers": [],
-        "docstring": "Test raises error for invalid YAML."
-      },
-      {
-        "name": "test_parses_minimal_config",
-        "line": 49,
-        "markers": [],
-        "docstring": "Test parsing minimal configuration."
-      },
-      {
-        "name": "test_parses_full_config",
-        "line": 58,
-        "markers": [],
-        "docstring": "Test parsing full configuration."
-      },
-      {
-        "name": "test_raises_for_missing_study_name",
-        "line": 83,
-        "markers": [],
-        "docstring": "Test raises error for missing study name."
-      },
-      {
-        "name": "test_overrides_trials",
-        "line": 92,
-        "markers": [],
-        "docstring": "Test CLI overrides trials."
-      },
-      {
-        "name": "test_overrides_objective",
-        "line": 102,
-        "markers": [],
-        "docstring": "Test CLI overrides objective."
-      },
-      {
-        "name": "test_overrides_symbols",
-        "line": 110,
-        "markers": [],
-        "docstring": "Test CLI overrides symbols."
-      },
-      {
         "name": "test_creates_simple_objective",
-        "line": 120,
+        "line": 16,
         "markers": [],
         "docstring": "Test creating simple objective."
       },
       {
         "name": "test_creates_composite_objective",
-        "line": 125,
+        "line": 21,
         "markers": [],
         "docstring": "Test creating composite objective with factory."
       },
       {
         "name": "test_passes_kwargs_to_factory",
-        "line": 130,
+        "line": 26,
         "markers": [],
         "docstring": "Test kwargs are passed to factory."
       },
       {
         "name": "test_raises_for_unknown_preset",
-        "line": 137,
+        "line": 32,
         "markers": [],
         "docstring": "Test raises error for unknown preset."
       },
       {
         "name": "test_maximize_presets",
-        "line": 144,
+        "line": 39,
         "markers": [],
         "docstring": "Test maximize direction presets."
       },
       {
         "name": "test_minimize_presets",
-        "line": 150,
+        "line": 45,
         "markers": [],
         "docstring": "Test minimize direction presets."
       },
       {
         "name": "test_raises_for_unknown_preset",
-        "line": 154,
+        "line": 49,
         "markers": [],
         "docstring": "Test raises error for unknown preset."
       },
       {
-        "name": "test_includes_strategy_parameters",
-        "line": 161,
-        "markers": [],
-        "docstring": "Test includes strategy parameters."
-      },
-      {
-        "name": "test_includes_risk_parameters",
-        "line": 171,
-        "markers": [],
-        "docstring": "Test includes risk parameters."
-      },
-      {
-        "name": "test_includes_all_groups",
-        "line": 180,
-        "markers": [],
-        "docstring": "Test includes all parameter groups."
-      },
-      {
-        "name": "test_builds_valid_config",
-        "line": 193,
-        "markers": [],
-        "docstring": "Test building valid optimization config."
-      },
-      {
-        "name": "test_creates_with_minimal_args",
-        "line": 206,
-        "markers": [],
-        "docstring": "Test creating default config with minimal arguments."
-      },
-      {
-        "name": "test_creates_with_all_args",
-        "line": 214,
-        "markers": [],
-        "docstring": "Test creating default config with all arguments."
-      },
-      {
         "name": "test_all_presets_have_direction",
-        "line": 237,
+        "line": 56,
         "markers": [],
         "docstring": "Test all presets have a direction defined."
       },
       {
         "name": "test_all_presets_can_be_created",
-        "line": 243,
+        "line": 62,
         "markers": [],
         "docstring": "Test all presets can be instantiated."
+      }
+    ],
+    "tests/unit/gpt_trader/cli/commands/optimize/test_config_loader_file_loading.py": [
+      {
+        "name": "TestLoadConfigFile::test_loads_valid_yaml",
+        "line": 14,
+        "markers": [],
+        "docstring": "Test loading a valid YAML file.",
+        "class": "TestLoadConfigFile"
+      },
+      {
+        "name": "TestLoadConfigFile::test_raises_for_missing_file",
+        "line": 22,
+        "markers": [],
+        "docstring": "Test raises error for missing file.",
+        "class": "TestLoadConfigFile"
+      },
+      {
+        "name": "TestLoadConfigFile::test_raises_for_invalid_yaml",
+        "line": 29,
+        "markers": [],
+        "docstring": "Test raises error for invalid YAML.",
+        "class": "TestLoadConfigFile"
+      },
+      {
+        "name": "test_loads_valid_yaml",
+        "line": 14,
+        "markers": [],
+        "docstring": "Test loading a valid YAML file."
+      },
+      {
+        "name": "test_raises_for_missing_file",
+        "line": 22,
+        "markers": [],
+        "docstring": "Test raises error for missing file."
+      },
+      {
+        "name": "test_raises_for_invalid_yaml",
+        "line": 29,
+        "markers": [],
+        "docstring": "Test raises error for invalid YAML."
       }
     ],
     "tests/unit/gpt_trader/cli/commands/optimize/test_commands_registration.py": [
@@ -71404,6 +71372,86 @@
         "line": 58,
         "markers": [],
         "docstring": "Test apply subcommand registers."
+      }
+    ],
+    "tests/unit/gpt_trader/cli/commands/optimize/test_config_loader_parsing.py": [
+      {
+        "name": "TestParseConfig::test_parses_minimal_config",
+        "line": 16,
+        "markers": [],
+        "docstring": "Test parsing minimal configuration.",
+        "class": "TestParseConfig"
+      },
+      {
+        "name": "TestParseConfig::test_parses_full_config",
+        "line": 25,
+        "markers": [],
+        "docstring": "Test parsing full configuration.",
+        "class": "TestParseConfig"
+      },
+      {
+        "name": "TestParseConfig::test_raises_for_missing_study_name",
+        "line": 50,
+        "markers": [],
+        "docstring": "Test raises error for missing study name.",
+        "class": "TestParseConfig"
+      },
+      {
+        "name": "TestMergeCliOverrides::test_overrides_trials",
+        "line": 59,
+        "markers": [],
+        "docstring": "Test CLI overrides trials.",
+        "class": "TestMergeCliOverrides"
+      },
+      {
+        "name": "TestMergeCliOverrides::test_overrides_objective",
+        "line": 69,
+        "markers": [],
+        "docstring": "Test CLI overrides objective.",
+        "class": "TestMergeCliOverrides"
+      },
+      {
+        "name": "TestMergeCliOverrides::test_overrides_symbols",
+        "line": 77,
+        "markers": [],
+        "docstring": "Test CLI overrides symbols.",
+        "class": "TestMergeCliOverrides"
+      },
+      {
+        "name": "test_parses_minimal_config",
+        "line": 16,
+        "markers": [],
+        "docstring": "Test parsing minimal configuration."
+      },
+      {
+        "name": "test_parses_full_config",
+        "line": 25,
+        "markers": [],
+        "docstring": "Test parsing full configuration."
+      },
+      {
+        "name": "test_raises_for_missing_study_name",
+        "line": 50,
+        "markers": [],
+        "docstring": "Test raises error for missing study name."
+      },
+      {
+        "name": "test_overrides_trials",
+        "line": 59,
+        "markers": [],
+        "docstring": "Test CLI overrides trials."
+      },
+      {
+        "name": "test_overrides_objective",
+        "line": 69,
+        "markers": [],
+        "docstring": "Test CLI overrides objective."
+      },
+      {
+        "name": "test_overrides_symbols",
+        "line": 77,
+        "markers": [],
+        "docstring": "Test CLI overrides symbols."
       }
     ],
     "tests/unit/gpt_trader/cli/commands/optimize/test_formatters.py": [

@@ -15,29 +15,13 @@ UNIT_ALLOWED_PREFIXES = (
     "tests/unit/support/",
 )
 ALLOWLIST = {
-    "tests/unit/gpt_trader/monitoring/test_health_signals.py",  # health signal model contract coverage
-    "tests/unit/gpt_trader/validation/test_calculation_validator.py",  # calculation validator coverage
-    "tests/unit/gpt_trader/cli/test_commands_orders.py",  # 254 lines: comprehensive CLI orders command coverage
-    "tests/unit/gpt_trader/security/test_input_sanitizer.py",  # input sanitization edge cases
-    "tests/contract/test_coinbase_api_contract.py",  # API contract compliance suite
-    "tests/unit/gpt_trader/validation/test_composite_validators.py",  # composite validator chain permutations
     # Coverage expansion tests (C1 task)
     # Phase 2 pain points remediation: critical service coverage
     # Optimization and CLI test suites
-    "tests/unit/gpt_trader/features/optimize/objectives/test_constraints.py",  # constraint objective validation matrix
-    "tests/unit/gpt_trader/cli/commands/optimize/test_config_loader.py",  # config loader edge cases
-    # Intelligence and Strategy Dev tests (large modules)
-    "tests/unit/gpt_trader/features/intelligence/ensemble/test_voting.py",
     # TUI Phase 3.5 comprehensive test suites
-    "tests/unit/gpt_trader/features/live_trade/signals/test_orderbook_imbalance.py",  # orderbook imbalance signal comprehensive scenarios
-    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics.py",  # API metrics collection comprehensive scenarios
-    "tests/unit/gpt_trader/features/live_trade/risk/test_cfm_risk_config.py",  # CFM risk config validation matrix
     # TUI reliability/fault-injection tests
     # Architecture migration and observability tests
-    "tests/integration/test_crash_recovery.py",  # crash recovery scenarios and state restoration
     # Pre-existing TUI and feature test suites
-    "tests/unit/gpt_trader/backtesting/validation/test_decision_logger_logging_and_retrieval.py",  # decision logger modularized coverage (242 lines)
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_real_transport.py",  # transport layer coverage across real transport scenarios (272 lines)
 }
 
 SLEEP_ALLOWLIST = {
@@ -67,7 +51,12 @@ def scan(paths: Sequence[str]) -> int:
         rel = path.relative_to(root)
         rel_str = rel.as_posix()
         text = path.read_text(encoding="utf-8")
-        line_count = text.count("\n") + 1
+        if not text:
+            line_count = 0
+        else:
+            line_count = text.count("\n")
+            if not text.endswith("\n"):
+                line_count += 1
 
         if rel_str.startswith("tests/unit/") and not rel_str.startswith(UNIT_ALLOWED_PREFIXES):
             problems.append(

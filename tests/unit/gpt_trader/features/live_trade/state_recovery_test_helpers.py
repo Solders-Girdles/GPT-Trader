@@ -7,11 +7,6 @@ from unittest.mock import MagicMock
 import pytest
 
 from gpt_trader.app.config import BotConfig
-from gpt_trader.app.container import (
-    ApplicationContainer,
-    clear_application_container,
-    set_application_container,
-)
 from gpt_trader.features.live_trade.engines.base import CoordinatorContext
 from gpt_trader.features.live_trade.strategies.perps_baseline import PerpsStrategyConfig
 
@@ -35,6 +30,12 @@ def bot_config() -> BotConfig:
 
 
 @pytest.fixture
+def mock_config(bot_config: BotConfig) -> BotConfig:
+    """Alias for the shared tests/conftest.py application_container fixture."""
+    return bot_config
+
+
+@pytest.fixture
 def context_with_store(bot_config: BotConfig, mock_event_store: MagicMock) -> CoordinatorContext:
     """Create a context with event store."""
     return CoordinatorContext(
@@ -51,12 +52,3 @@ def context_without_store(bot_config: BotConfig) -> CoordinatorContext:
         config=bot_config,
         bot_id="test-bot",
     )
-
-
-@pytest.fixture
-def application_container(bot_config: BotConfig):
-    """Set up application container for TradingEngine tests."""
-    container = ApplicationContainer(bot_config)
-    set_application_container(container)
-    yield container
-    clear_application_container()

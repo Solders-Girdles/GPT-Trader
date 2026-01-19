@@ -13,6 +13,8 @@ from gpt_trader.features.live_trade.engines.strategy import (
 )
 from gpt_trader.persistence.orders_store import OrderRecord, OrdersStore, OrderStatus
 
+pytest_plugins = ["tests.unit.gpt_trader.features.live_trade.state_recovery_test_helpers"]
+
 
 class TestTradingEngineRehydration:
     """Tests for TradingEngine state recovery."""

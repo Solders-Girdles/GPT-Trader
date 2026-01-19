@@ -11,6 +11,8 @@ from gpt_trader.features.live_trade.engines.strategy import (
     TradingEngine,
 )
 
+pytest_plugins = ["tests.unit.gpt_trader.features.live_trade.state_recovery_test_helpers"]
+
 
 class TestTradingEngineRecordPriceTick:
     """Tests for TradingEngine price tick recording."""

@@ -229,5 +229,5 @@
       "description": "Additional metadata key-value pairs"
     }
   },
-  "description": "Bot configuration with nested strategy and risk configs.\n\n    Supports both:\n    - Nested access: config.strategy.short_ma_period, config.risk.max_leverage\n    - Flat access (backward compat): config.short_ma, config.max_leverage"
+  "description": "Bot configuration with nested strategy and risk configs.\n\n    Supports nested access:\n    - Strategy: config.strategy.short_ma_period, config.strategy.long_ma_period, etc.\n    - Risk: config.risk.max_leverage, config.risk.position_fraction, etc."
 }

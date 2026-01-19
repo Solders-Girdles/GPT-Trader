@@ -91,6 +91,8 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
             item.add_marker(pytest.mark.unit)
         elif rel.startswith("tests/integration/"):
             item.add_marker(pytest.mark.integration)
+        elif rel.startswith("tests/property/"):
+            item.add_marker(pytest.mark.property)
         elif rel.startswith("tests/contract/"):
             item.add_marker(pytest.mark.contract)
         elif rel.startswith("tests/real_api/"):

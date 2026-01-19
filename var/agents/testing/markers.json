@@ -95,16 +95,20 @@
     ]
   },
   "counts": {
+    "unit": 11482,
+    "asyncio": 676,
+    "integration": 139,
     "endpoints": 136,
-    "integration": 99,
-    "parametrize": 93,
+    "parametrize": 96,
+    "property": 92,
     "skipif": 16,
-    "property": 10,
+    "slow": 5,
     "perps": 5,
+    "contract": 3,
+    "anyio": 3,
     "uses_real_preferences": 2,
-    "slow": 2,
-    "real_api": 1,
     "requires_network": 1,
+    "real_api": 1,
     "requires_secrets": 1
   },
   "usage": {

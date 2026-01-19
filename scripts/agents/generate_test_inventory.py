@@ -104,7 +104,9 @@ def extract_test_info(file_path: Path) -> list[dict[str, Any]]:
                     file_markers.update(extract_pytestmark_markers(node.value))
 
     for node in ast.walk(tree):
-        if isinstance(node, ast.FunctionDef) and node.name.startswith("test_"):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name.startswith(
+            "test_"
+        ):
             test_info = {
                 "name": node.name,
                 "line": node.lineno,
@@ -130,7 +132,9 @@ def extract_test_info(file_path: Path) -> list[dict[str, Any]]:
 
             # Extract methods from test class
             for item in node.body:
-                if isinstance(item, ast.FunctionDef) and item.name.startswith("test_"):
+                if isinstance(
+                    item, (ast.FunctionDef, ast.AsyncFunctionDef)
+                ) and item.name.startswith("test_"):
                     test_info = {
                         "name": f"{node.name}::{item.name}",
                         "line": item.lineno,
@@ -195,6 +199,33 @@ def extract_marker(decorator: ast.expr) -> str | None:
     return None
 
 
+def dedupe_preserve_order(values: list[str]) -> list[str]:
+    """Return list with duplicates removed (stable order)."""
+    seen: set[str] = set()
+    deduped: list[str] = []
+    for value in values:
+        if value in seen:
+            continue
+        seen.add(value)
+        deduped.append(value)
+    return deduped
+
+
+def infer_suite_markers(rel_path: str) -> list[str]:
+    """Infer suite/type markers based on test file path conventions."""
+    if rel_path.startswith("tests/unit/"):
+        return ["unit"]
+    if rel_path.startswith("tests/integration/"):
+        return ["integration"]
+    if rel_path.startswith("tests/property/"):
+        return ["property"]
+    if rel_path.startswith("tests/contract/"):
+        return ["contract"]
+    if rel_path.startswith("tests/real_api/"):
+        return ["real_api"]
+    return []
+
+
 def module_to_path(module_name: str) -> str | None:
     """Resolve a module name to a source path (if it exists)."""
     if not module_name.startswith("gpt_trader"):
@@ -221,9 +252,16 @@ def scan_test_files(test_dir: Path) -> dict[str, Any]:
         if "__pycache__" in str(test_file):
             continue
 
-        rel_path = str(test_file.relative_to(PROJECT_ROOT))
+        rel_path = test_file.relative_to(PROJECT_ROOT).as_posix()
         tests = extract_test_info(test_file)
         imports = extract_test_imports(test_file)
+
+        inferred_markers = infer_suite_markers(rel_path)
+        if inferred_markers:
+            for test in tests:
+                test["markers"] = dedupe_preserve_order(
+                    [*test.get("markers", []), *inferred_markers]
+                )
 
         if tests:
             inventory[rel_path] = tests

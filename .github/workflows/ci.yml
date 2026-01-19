@@ -230,6 +230,35 @@ jobs:
       - name: Check TUI CSS is up to date
         run: python scripts/ci/check_tui_css_up_to_date.py
 
+  test-guardrails:
+    name: Test Guardrails
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: ".python-version"
+
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Check test hygiene
+        run: uv run python scripts/ci/check_test_hygiene.py
+
+      - name: Check legacy triage alignment
+        run: uv run python scripts/ci/check_legacy_test_triage.py
+
+      - name: Check triage backlog
+        run: make test-triage-check
+
   unit-tests:
     name: Unit Tests (Core)
     runs-on: ubuntu-latest

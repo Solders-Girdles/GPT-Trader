@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 11103,
-    "total_files": 714,
+    "total_tests": 11056,
+    "total_files": 733,
     "markers_used": 9
   },
   "marker_definitions": {
@@ -104,8 +104,8 @@
   "marker_counts": {
     "parametrize": 94,
     "skipif": 16,
-    "property": 11,
     "integration": 11,
+    "property": 10,
     "perps": 5,
     "perf": 4,
     "uses_real_preferences": 2,
@@ -274,6 +274,7 @@
       "tests/unit/gpt_trader/tui/test_state_cfm_and_data_staleness.py",
       "tests/unit/gpt_trader/tui/test_market_widget.py",
       "tests/unit/gpt_trader/tui/test_new_widgets.py",
+      "tests/unit/gpt_trader/tui/test_events_documentation.py",
       "tests/unit/gpt_trader/tui/test_error_indicator.py",
       "tests/unit/gpt_trader/tui/test_snapshots_portfolio_overlays.py",
       "tests/unit/gpt_trader/tui/test_tui_factories.py",
@@ -287,7 +288,9 @@
       "tests/unit/gpt_trader/tui/test_risk_preview_preview_and_scenarios.py",
       "tests/unit/gpt_trader/tui/test_trade_matcher.py",
       "tests/unit/gpt_trader/tui/test_log_manager_formatters_compact.py",
+      "tests/unit/gpt_trader/tui/test_events_bot_and_ui.py",
       "tests/unit/gpt_trader/tui/test_log_manager_entries.py",
+      "tests/unit/gpt_trader/tui/test_events_state_updates.py",
       "tests/unit/gpt_trader/tui/test_log_manager_handler_widget_controls.py",
       "tests/unit/gpt_trader/tui/test_formatting.py",
       "tests/unit/gpt_trader/tui/test_staleness_helpers_freshness_label_and_display.py",
@@ -298,7 +301,7 @@
       "tests/unit/gpt_trader/tui/test_helpers.py",
       "tests/unit/gpt_trader/tui/test_risk_preview_models.py",
       "tests/unit/gpt_trader/tui/test_staleness_helpers_data_age_and_severity.py",
-      "tests/unit/gpt_trader/tui/test_events.py",
+      "tests/unit/gpt_trader/tui/test_events_trade_and_notifications.py",
       "tests/unit/gpt_trader/tui/test_credential_cache.py",
       "tests/unit/gpt_trader/tui/test_snapshots_execution_issues_modal.py",
       "tests/unit/gpt_trader/tui/test_staleness_helpers_execution_health.py",
@@ -322,23 +325,27 @@
       "tests/unit/gpt_trader/tui/state_management/test_delta_updater_compare_market_and_positions.py",
       "tests/unit/gpt_trader/tui/state_management/test_delta_updater_compare_orders_and_trades.py",
       "tests/unit/gpt_trader/tui/services/test_config_service.py",
+      "tests/unit/gpt_trader/tui/services/test_trading_stats_service_compute_stats.py",
       "tests/unit/gpt_trader/tui/services/test_state_registry.py",
       "tests/unit/gpt_trader/tui/services/test_execution_telemetry_submission_record.py",
       "tests/unit/gpt_trader/tui/services/test_credential_validator_key_format_and_compatibility.py",
       "tests/unit/gpt_trader/tui/services/test_theme_service.py",
       "tests/unit/gpt_trader/tui/services/test_alert_manager_validation.py",
       "tests/unit/gpt_trader/tui/services/test_execution_telemetry_collector_core.py",
+      "tests/unit/gpt_trader/tui/services/test_trading_stats_service_model.py",
+      "tests/unit/gpt_trader/tui/services/test_trading_stats_service_trade_matching.py",
       "tests/unit/gpt_trader/tui/services/test_execution_telemetry_reason_tracking.py",
+      "tests/unit/gpt_trader/tui/services/test_trading_stats_service_singleton.py",
       "tests/unit/gpt_trader/tui/services/test_performance_service.py",
       "tests/unit/gpt_trader/tui/services/test_state_registry_broadcast.py",
       "tests/unit/gpt_trader/tui/services/test_execution_telemetry_execution_metrics.py",
       "tests/unit/gpt_trader/tui/services/test_alert_manager_core.py",
+      "tests/unit/gpt_trader/tui/services/test_trading_stats_service_windows.py",
       "tests/unit/gpt_trader/tui/services/test_onboarding_service.py",
       "tests/unit/gpt_trader/tui/services/test_credential_validator_mode_requirements.py",
       "tests/unit/gpt_trader/tui/services/test_alert_manager_categories.py",
       "tests/unit/gpt_trader/tui/services/test_alert_manager_execution_health.py",
       "tests/unit/gpt_trader/tui/services/test_alert_manager_trade_stale_orders.py",
-      "tests/unit/gpt_trader/tui/services/test_trading_stats_service.py",
       "tests/unit/gpt_trader/tui/services/test_preferences_watchlist.py",
       "tests/unit/gpt_trader/tui/services/test_alert_manager_trade_orders.py",
       "tests/unit/gpt_trader/tui/services/test_mode_service.py",
@@ -722,7 +729,6 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_close_position.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_cfm_portfolio.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_find_existing_order_by_client_id.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_intx_portfolio.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_place_and_cancel.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_product_service_tradeable_products.py",
@@ -777,12 +783,14 @@
       "tests/unit/gpt_trader/features/live_trade/engines/test_price_tick_store_edges.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_position_state.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_health_checks.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_update_mark_and_metrics.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_extract_mark.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_emit_and_enable.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_schedule_and_start_stop.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_background_restart.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_risk_format.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_edges.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_health_check.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_task_completion_and_async_loop.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_order_quantity.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_run_loop.py",
@@ -855,174 +863,27 @@
       "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_collect_snapshot.py",
       "tests/unit/gpt_trader/features/live_trade/risk/test_reduce_only_backward_compatibility.py",
       "tests/unit/gpt_trader/features/live_trade/risk/test_cfm_risk_config.py",
-      "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator.py",
+      "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_class_structure.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy_safety_and_recovery.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy_zscore_and_signals.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy_sizing_and_trend_filter.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy_exit_logic_and_cooldown.py",
-      "tests/unit/gpt_trader/features/live_trade/strategies/hybrid/test_base.py",
+      "tests/unit/gpt_trader/features/live_trade/strategies/hybrid/test_base_initialization.py",
+      "tests/unit/gpt_trader/features/live_trade/strategies/hybrid/test_base_decision_helpers.py",
+      "tests/unit/gpt_trader/features/live_trade/strategies/hybrid/test_base_position_sizing.py",
+      "tests/unit/gpt_trader/features/live_trade/strategies/hybrid/test_base_position_state.py",
+      "tests/unit/gpt_trader/features/live_trade/strategies/hybrid/test_base_decide.py",
+      "tests/unit/gpt_trader/features/live_trade/strategies/hybrid/test_base_serialization.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/hybrid/test_types.py"
     ]
   },
   "tests_by_file": {
-    "tests/property/test_coinbase_invariants.py": [
-      {
-        "name": "test_quantize_size_never_exceeds_input",
-        "line": 41,
-        "markers": [],
-        "docstring": ""
-      },
-      {
-        "name": "test_quantize_price_respects_increment",
-        "line": 61,
-        "markers": [],
-        "docstring": ""
-      },
+    "tests/property/test_coinbase_invariants_pagination.py": [
       {
         "name": "test_paginate_yields_all_items_in_order",
-        "line": 128,
+        "line": 65,
         "markers": [],
         "docstring": ""
-      },
-      {
-        "name": "test_calculate_safe_position_size_invariants",
-        "line": 162,
-        "markers": [],
-        "docstring": "Property-based test for safe position sizing invariants."
-      },
-      {
-        "name": "test_validate_order_invariants",
-        "line": 253,
-        "markers": [],
-        "docstring": "Property-based test for order validation invariants."
-      },
-      {
-        "name": "test_order_lifecycle_invariants",
-        "line": 364,
-        "markers": [],
-        "docstring": "Property-based test for order lifecycle invariants."
-      }
-    ],
-    "tests/property/test_fee_invariants.py": [
-      {
-        "name": "test_fee_non_negative",
-        "line": 41,
-        "markers": [],
-        "docstring": "Property: Fees should always be non-negative.\n\nNo matter the input, fees should never be negative."
-      },
-      {
-        "name": "test_fee_proportional_to_notional",
-        "line": 66,
-        "markers": [],
-        "docstring": "Property: Fees should be proportional to notional value.\n\nfee = notional * rate_bps / 10000\nDoubling notional should double the fee."
-      },
-      {
-        "name": "test_maker_fee_leq_taker_fee",
-        "line": 99,
-        "markers": [],
-        "docstring": "Property: Maker fees should always be less than or equal to taker fees.\n\nThis is a fundamental market structure property - makers add liquidity\nand should be rewarded with lower fees."
-      },
-      {
-        "name": "test_fee_tiers_monotonically_decrease",
-        "line": 124,
-        "markers": [],
-        "docstring": "Property: Higher volume tiers should have lower or equal fees.\n\nAs volume increases, traders get better rates."
-      },
-      {
-        "name": "test_fee_formula_correctness",
-        "line": 170,
-        "markers": [],
-        "docstring": "Property: Fee calculation should match the formula: fee = notional * rate_bps / 10000."
-      },
-      {
-        "name": "test_volume_tracking_tier_upgrades",
-        "line": 207,
-        "markers": [],
-        "docstring": "Property: Volume tracking should correctly upgrade tiers as volume accumulates.\n\nTier thresholds:\n- TIER_0: < $10K\n- TIER_1: $10K-$50K\n- TIER_2: $50K-$100K\n- TIER_3: $100K-$1M\n- etc."
-      },
-      {
-        "name": "test_rate_percentage_conversion",
-        "line": 264,
-        "markers": [],
-        "docstring": "Property: Rate percentage should be correctly converted from basis points.\n\nrate_pct = rate_bps / 100\ne.g., 25 bps = 0.25%"
-      },
-      {
-        "name": "test_volume_reset_clears_tracking",
-        "line": 295,
-        "markers": [],
-        "docstring": "Property: Resetting volume should clear the tracker and potentially change tier."
-      },
-      {
-        "name": "test_zero_notional_zero_fee",
-        "line": 321,
-        "markers": [],
-        "docstring": "Property: Zero notional should result in zero fee."
-      },
-      {
-        "name": "test_fee_additivity",
-        "line": 345,
-        "markers": [],
-        "docstring": "Property: Fee of sum equals sum of fees.\n\nfee(a + b) = fee(a) + fee(b)\nThis property enables accurate aggregation of fees."
-      },
-      {
-        "name": "TestFeePropertyBased::test_fee_tier_rates_consistency",
-        "line": 375,
-        "markers": [
-          "property"
-        ],
-        "docstring": "Verify fee tier rates are internally consistent.",
-        "class": "TestFeePropertyBased"
-      },
-      {
-        "name": "TestFeePropertyBased::test_highest_tier_lowest_rates",
-        "line": 389,
-        "markers": [
-          "property"
-        ],
-        "docstring": "Verify TIER_7 has the lowest rates.",
-        "class": "TestFeePropertyBased"
-      },
-      {
-        "name": "TestFeePropertyBased::test_fee_calculation_example",
-        "line": 399,
-        "markers": [
-          "property"
-        ],
-        "docstring": "Verify fee calculation matches documented example.",
-        "class": "TestFeePropertyBased"
-      },
-      {
-        "name": "TestFeePropertyBased::test_volume_tracking_disabled_no_tier_change",
-        "line": 413,
-        "markers": [
-          "property"
-        ],
-        "docstring": "Verify volume tracking disabled keeps tier constant.",
-        "class": "TestFeePropertyBased"
-      },
-      {
-        "name": "test_fee_tier_rates_consistency",
-        "line": 375,
-        "markers": [],
-        "docstring": "Verify fee tier rates are internally consistent."
-      },
-      {
-        "name": "test_highest_tier_lowest_rates",
-        "line": 389,
-        "markers": [],
-        "docstring": "Verify TIER_7 has the lowest rates."
-      },
-      {
-        "name": "test_fee_calculation_example",
-        "line": 399,
-        "markers": [],
-        "docstring": "Verify fee calculation matches documented example."
-      },
-      {
-        "name": "test_volume_tracking_disabled_no_tier_change",
-        "line": 413,
-        "markers": [],
-        "docstring": "Verify volume tracking disabled keeps tier constant."
       }
     ],
     "tests/property/test_degradation_invariants_pause_behavior.py": [
@@ -1069,6 +930,22 @@
         "docstring": "Property: Multiple symbol pauses should be independent.\n\nEach symbol can be paused/unpaused independently."
       }
     ],
+    "tests/property/test_coinbase_invariants_order_lifecycle.py": [
+      {
+        "name": "test_order_lifecycle_invariants",
+        "line": 34,
+        "markers": [],
+        "docstring": "Property-based test for order lifecycle invariants."
+      }
+    ],
+    "tests/property/test_coinbase_invariants_validate_order.py": [
+      {
+        "name": "test_validate_order_invariants",
+        "line": 38,
+        "markers": [],
+        "docstring": "Property-based test for order validation invariants."
+      }
+    ],
     "tests/property/test_degradation_invariants_failure_counters.py": [
       {
         "name": "test_slippage_failure_escalation",
@@ -1107,6 +984,58 @@
         "line": 57,
         "markers": [],
         "docstring": "Property: get_status should accurately reflect current degradation state."
+      }
+    ],
+    "tests/property/test_fee_invariants_calculation.py": [
+      {
+        "name": "test_fee_non_negative",
+        "line": 26,
+        "markers": [],
+        "docstring": "Property: Fees should always be non-negative.\n\nNo matter the input, fees should never be negative."
+      },
+      {
+        "name": "test_fee_proportional_to_notional",
+        "line": 51,
+        "markers": [],
+        "docstring": "Property: Fees should be proportional to notional value.\n\nfee = notional * rate_bps / 10000\nDoubling notional should double the fee."
+      },
+      {
+        "name": "test_fee_formula_correctness",
+        "line": 86,
+        "markers": [],
+        "docstring": "Property: Fee calculation should match the formula: fee = notional * rate_bps / 10000."
+      },
+      {
+        "name": "test_zero_notional_zero_fee",
+        "line": 118,
+        "markers": [],
+        "docstring": "Property: Zero notional should result in zero fee."
+      },
+      {
+        "name": "test_fee_additivity",
+        "line": 142,
+        "markers": [],
+        "docstring": "Property: Fee of sum equals sum of fees.\n\nfee(a + b) = fee(a) + fee(b)\nThis property enables accurate aggregation of fees."
+      }
+    ],
+    "tests/property/test_fee_invariants_volume_tracking.py": [
+      {
+        "name": "test_volume_tracking_tier_upgrades",
+        "line": 30,
+        "markers": [],
+        "docstring": "Property: Volume tracking should correctly upgrade tiers as volume accumulates.\n\nTier thresholds:\n- TIER_0: < $10K\n- TIER_1: $10K-$50K\n- TIER_2: $50K-$100K\n- TIER_3: $100K-$1M\n- etc."
+      },
+      {
+        "name": "test_volume_reset_clears_tracking",
+        "line": 70,
+        "markers": [],
+        "docstring": "Property: Resetting volume should clear the tracker and potentially change tier."
+      },
+      {
+        "name": "test_volume_tracking_disabled_no_tier_change",
+        "line": 86,
+        "markers": [],
+        "docstring": "Verify volume tracking disabled keeps tier constant."
       }
     ],
     "tests/property/test_liquidation_invariants_distance_and_risk.py": [
@@ -1203,6 +1132,71 @@
         "docstring": "Property: record_failure returns True at threshold even without callback."
       }
     ],
+    "tests/property/test_fee_invariants_tiers.py": [
+      {
+        "name": "test_maker_fee_leq_taker_fee",
+        "line": 26,
+        "markers": [],
+        "docstring": "Property: Maker fees should always be less than or equal to taker fees.\n\nThis is a fundamental market structure property - makers add liquidity\nand should be rewarded with lower fees."
+      },
+      {
+        "name": "test_fee_tiers_monotonically_decrease",
+        "line": 51,
+        "markers": [],
+        "docstring": "Property: Higher volume tiers should have lower or equal fees.\n\nAs volume increases, traders get better rates."
+      },
+      {
+        "name": "test_rate_percentage_conversion",
+        "line": 85,
+        "markers": [],
+        "docstring": "Property: Rate percentage should be correctly converted from basis points.\n\nrate_pct = rate_bps / 100\ne.g., 25 bps = 0.25%"
+      },
+      {
+        "name": "TestFeeRatesConsistency::test_fee_tier_rates_consistency",
+        "line": 112,
+        "markers": [
+          "property"
+        ],
+        "docstring": "Verify fee tier rates are internally consistent.",
+        "class": "TestFeeRatesConsistency"
+      },
+      {
+        "name": "TestFeeRatesConsistency::test_highest_tier_lowest_rates",
+        "line": 126,
+        "markers": [
+          "property"
+        ],
+        "docstring": "Verify TIER_7 has the lowest rates.",
+        "class": "TestFeeRatesConsistency"
+      },
+      {
+        "name": "TestFeeRatesConsistency::test_fee_calculation_example",
+        "line": 136,
+        "markers": [
+          "property"
+        ],
+        "docstring": "Verify fee calculation matches documented example.",
+        "class": "TestFeeRatesConsistency"
+      },
+      {
+        "name": "test_fee_tier_rates_consistency",
+        "line": 112,
+        "markers": [],
+        "docstring": "Verify fee tier rates are internally consistent."
+      },
+      {
+        "name": "test_highest_tier_lowest_rates",
+        "line": 126,
+        "markers": [],
+        "docstring": "Verify TIER_7 has the lowest rates."
+      },
+      {
+        "name": "test_fee_calculation_example",
+        "line": 136,
+        "markers": [],
+        "docstring": "Verify fee calculation matches documented example."
+      }
+    ],
     "tests/property/test_pnl_invariants_pnl_metrics.py": [
       {
         "name": "test_total_pnl_is_sum_of_components",
@@ -1242,6 +1236,20 @@
         "line": 135,
         "markers": [],
         "docstring": "Verify empty events return sensible defaults."
+      }
+    ],
+    "tests/property/test_coinbase_invariants_quantization.py": [
+      {
+        "name": "test_quantize_size_never_exceeds_input",
+        "line": 34,
+        "markers": [],
+        "docstring": ""
+      },
+      {
+        "name": "test_quantize_price_respects_increment",
+        "line": 54,
+        "markers": [],
+        "docstring": ""
       }
     ],
     "tests/property/test_margin_invariants_window_policy.py": [
@@ -1321,6 +1329,14 @@
         "line": 95,
         "markers": [],
         "docstring": "Verify the liquidation formula matches documentation."
+      }
+    ],
+    "tests/property/test_coinbase_invariants_safe_position_size.py": [
+      {
+        "name": "test_calculate_safe_position_size_invariants",
+        "line": 37,
+        "markers": [],
+        "docstring": "Property-based test for safe position sizing invariants."
       }
     ],
     "tests/property/test_liquidation_invariants_symmetry_and_leverage.py": [
@@ -5357,6 +5373,34 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/tui/test_events_documentation.py": [
+      {
+        "name": "TestEventDocumentation::test_all_events_have_docstrings",
+        "line": 34,
+        "markers": [],
+        "docstring": "Verify all event classes have docstrings.",
+        "class": "TestEventDocumentation"
+      },
+      {
+        "name": "TestEventDocumentation::test_dataclass_events_have_field_docs",
+        "line": 65,
+        "markers": [],
+        "docstring": "Verify dataclass events document their fields.",
+        "class": "TestEventDocumentation"
+      },
+      {
+        "name": "test_all_events_have_docstrings",
+        "line": 34,
+        "markers": [],
+        "docstring": "Verify all event classes have docstrings."
+      },
+      {
+        "name": "test_dataclass_events_have_field_docs",
+        "line": 65,
+        "markers": [],
+        "docstring": "Verify dataclass events document their fields."
+      }
+    ],
     "tests/unit/gpt_trader/tui/test_error_indicator.py": [
       {
         "name": "test_error_entry_creation",
@@ -6382,105 +6426,105 @@
     "tests/unit/gpt_trader/tui/test_risk_preview_preview_and_scenarios.py": [
       {
         "name": "TestComputePreview::test_positive_shock_no_increase",
-        "line": 27,
+        "line": 30,
         "markers": [],
         "docstring": "Positive shock doesn't increase loss.",
         "class": "TestComputePreview"
       },
       {
         "name": "TestComputePreview::test_negative_shock_increases_loss",
-        "line": 34,
+        "line": 37,
         "markers": [],
         "docstring": "Negative shock increases loss with leverage.",
         "class": "TestComputePreview"
       },
       {
         "name": "TestComputePreview::test_shock_triggers_warning_and_critical",
-        "line": 41,
+        "line": 44,
         "markers": [],
         "docstring": "Large shocks can trigger warning and critical status.",
         "class": "TestComputePreview"
       },
       {
         "name": "TestComputePreview::test_leverage_fallback_and_no_limit",
-        "line": 58,
+        "line": 61,
         "markers": [],
         "docstring": "Falls back to 1.0 leverage; returns OK when no limit configured.",
         "class": "TestComputePreview"
       },
       {
         "name": "TestGetDefaultScenarios::test_returns_all_scenarios",
-        "line": 76,
+        "line": 79,
         "markers": [],
         "docstring": "Returns all standard shock scenarios with correct structure.",
         "class": "TestGetDefaultScenarios"
       },
       {
         "name": "TestComputeAllPreviews::test_returns_all_scenario_results",
-        "line": 102,
+        "line": 105,
         "markers": [],
         "docstring": "Returns results for all default scenarios.",
         "class": "TestComputeAllPreviews"
       },
       {
         "name": "TestComputeAllPreviews::test_negative_scenarios_have_higher_loss",
-        "line": 110,
+        "line": 113,
         "markers": [],
         "docstring": "Negative shocks should have higher loss than positive.",
         "class": "TestComputeAllPreviews"
       },
       {
         "name": "TestShockScenariosConstant::test_standard_scenarios",
-        "line": 124,
+        "line": 127,
         "markers": [],
         "docstring": "Contains standard symmetric \u00b12%, \u00b15%, \u00b110% scenarios in order.",
         "class": "TestShockScenariosConstant"
       },
       {
         "name": "test_positive_shock_no_increase",
-        "line": 27,
+        "line": 30,
         "markers": [],
         "docstring": "Positive shock doesn't increase loss."
       },
       {
         "name": "test_negative_shock_increases_loss",
-        "line": 34,
+        "line": 37,
         "markers": [],
         "docstring": "Negative shock increases loss with leverage."
       },
       {
         "name": "test_shock_triggers_warning_and_critical",
-        "line": 41,
+        "line": 44,
         "markers": [],
         "docstring": "Large shocks can trigger warning and critical status."
       },
       {
         "name": "test_leverage_fallback_and_no_limit",
-        "line": 58,
+        "line": 61,
         "markers": [],
         "docstring": "Falls back to 1.0 leverage; returns OK when no limit configured."
       },
       {
         "name": "test_returns_all_scenarios",
-        "line": 76,
+        "line": 79,
         "markers": [],
         "docstring": "Returns all standard shock scenarios with correct structure."
       },
       {
         "name": "test_returns_all_scenario_results",
-        "line": 102,
+        "line": 105,
         "markers": [],
         "docstring": "Returns results for all default scenarios."
       },
       {
         "name": "test_negative_scenarios_have_higher_loss",
-        "line": 110,
+        "line": 113,
         "markers": [],
         "docstring": "Negative shocks should have higher loss than positive."
       },
       {
         "name": "test_standard_scenarios",
-        "line": 124,
+        "line": 127,
         "markers": [],
         "docstring": "Contains standard symmetric \u00b12%, \u00b15%, \u00b110% scenarios in order."
       }
@@ -6697,6 +6741,190 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/tui/test_events_bot_and_ui.py": [
+      {
+        "name": "TestBotLifecycleEvents::test_bot_start_requested_creation",
+        "line": 29,
+        "markers": [],
+        "docstring": "Test BotStartRequested event creation.",
+        "class": "TestBotLifecycleEvents"
+      },
+      {
+        "name": "TestBotLifecycleEvents::test_bot_stop_requested_creation",
+        "line": 34,
+        "markers": [],
+        "docstring": "Test BotStopRequested event creation.",
+        "class": "TestBotLifecycleEvents"
+      },
+      {
+        "name": "TestBotLifecycleEvents::test_bot_state_changed_creation",
+        "line": 39,
+        "markers": [],
+        "docstring": "Test BotStateChanged event creation with attributes.",
+        "class": "TestBotLifecycleEvents"
+      },
+      {
+        "name": "TestBotLifecycleEvents::test_bot_state_changed_default_uptime",
+        "line": 46,
+        "markers": [],
+        "docstring": "Test BotStateChanged with default uptime.",
+        "class": "TestBotLifecycleEvents"
+      },
+      {
+        "name": "TestBotLifecycleEvents::test_bot_mode_change_requested_creation",
+        "line": 52,
+        "markers": [],
+        "docstring": "Test BotModeChangeRequested event creation.",
+        "class": "TestBotLifecycleEvents"
+      },
+      {
+        "name": "TestBotLifecycleEvents::test_bot_mode_changed_creation",
+        "line": 58,
+        "markers": [],
+        "docstring": "Test BotModeChanged event creation.",
+        "class": "TestBotLifecycleEvents"
+      },
+      {
+        "name": "TestUICoordinationEvents::test_ui_refresh_requested_creation",
+        "line": 69,
+        "markers": [],
+        "docstring": "Test UIRefreshRequested event creation.",
+        "class": "TestUICoordinationEvents"
+      },
+      {
+        "name": "TestUICoordinationEvents::test_heartbeat_tick_creation",
+        "line": 74,
+        "markers": [],
+        "docstring": "Test HeartbeatTick event creation.",
+        "class": "TestUICoordinationEvents"
+      },
+      {
+        "name": "TestUICoordinationEvents::test_heartbeat_tick_default_pulse",
+        "line": 80,
+        "markers": [],
+        "docstring": "Test HeartbeatTick with default pulse value.",
+        "class": "TestUICoordinationEvents"
+      },
+      {
+        "name": "TestUICoordinationEvents::test_responsive_state_changed_creation",
+        "line": 85,
+        "markers": [],
+        "docstring": "Test ResponsiveStateChanged event creation.",
+        "class": "TestUICoordinationEvents"
+      },
+      {
+        "name": "TestConfigurationEvents::test_config_reload_requested_creation",
+        "line": 96,
+        "markers": [],
+        "docstring": "Test ConfigReloadRequested event creation.",
+        "class": "TestConfigurationEvents"
+      },
+      {
+        "name": "TestConfigurationEvents::test_config_changed_creation",
+        "line": 101,
+        "markers": [],
+        "docstring": "Test ConfigChanged event creation.",
+        "class": "TestConfigurationEvents"
+      },
+      {
+        "name": "TestThemeEvents::test_theme_change_requested_creation",
+        "line": 112,
+        "markers": [],
+        "docstring": "Test ThemeChangeRequested event creation.",
+        "class": "TestThemeEvents"
+      },
+      {
+        "name": "TestThemeEvents::test_theme_changed_creation",
+        "line": 118,
+        "markers": [],
+        "docstring": "Test ThemeChanged event creation.",
+        "class": "TestThemeEvents"
+      },
+      {
+        "name": "test_bot_start_requested_creation",
+        "line": 29,
+        "markers": [],
+        "docstring": "Test BotStartRequested event creation."
+      },
+      {
+        "name": "test_bot_stop_requested_creation",
+        "line": 34,
+        "markers": [],
+        "docstring": "Test BotStopRequested event creation."
+      },
+      {
+        "name": "test_bot_state_changed_creation",
+        "line": 39,
+        "markers": [],
+        "docstring": "Test BotStateChanged event creation with attributes."
+      },
+      {
+        "name": "test_bot_state_changed_default_uptime",
+        "line": 46,
+        "markers": [],
+        "docstring": "Test BotStateChanged with default uptime."
+      },
+      {
+        "name": "test_bot_mode_change_requested_creation",
+        "line": 52,
+        "markers": [],
+        "docstring": "Test BotModeChangeRequested event creation."
+      },
+      {
+        "name": "test_bot_mode_changed_creation",
+        "line": 58,
+        "markers": [],
+        "docstring": "Test BotModeChanged event creation."
+      },
+      {
+        "name": "test_ui_refresh_requested_creation",
+        "line": 69,
+        "markers": [],
+        "docstring": "Test UIRefreshRequested event creation."
+      },
+      {
+        "name": "test_heartbeat_tick_creation",
+        "line": 74,
+        "markers": [],
+        "docstring": "Test HeartbeatTick event creation."
+      },
+      {
+        "name": "test_heartbeat_tick_default_pulse",
+        "line": 80,
+        "markers": [],
+        "docstring": "Test HeartbeatTick with default pulse value."
+      },
+      {
+        "name": "test_responsive_state_changed_creation",
+        "line": 85,
+        "markers": [],
+        "docstring": "Test ResponsiveStateChanged event creation."
+      },
+      {
+        "name": "test_config_reload_requested_creation",
+        "line": 96,
+        "markers": [],
+        "docstring": "Test ConfigReloadRequested event creation."
+      },
+      {
+        "name": "test_config_changed_creation",
+        "line": 101,
+        "markers": [],
+        "docstring": "Test ConfigChanged event creation."
+      },
+      {
+        "name": "test_theme_change_requested_creation",
+        "line": 112,
+        "markers": [],
+        "docstring": "Test ThemeChangeRequested event creation."
+      },
+      {
+        "name": "test_theme_changed_creation",
+        "line": 118,
+        "markers": [],
+        "docstring": "Test ThemeChanged event creation."
+      }
+    ],
     "tests/unit/gpt_trader/tui/test_log_manager_entries.py": [
       {
         "name": "TestTuiLogManagerEntries::test_error_tracking_counts_errors",
@@ -6749,6 +6977,125 @@
         "line": 79,
         "markers": [],
         "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/tui/test_events_state_updates.py": [
+      {
+        "name": "TestStateUpdateEvents::test_state_update_received_creation",
+        "line": 21,
+        "markers": [],
+        "docstring": "Test StateUpdateReceived event creation.",
+        "class": "TestStateUpdateEvents"
+      },
+      {
+        "name": "TestStateUpdateEvents::test_state_update_received_without_runtime",
+        "line": 30,
+        "markers": [],
+        "docstring": "Test StateUpdateReceived without runtime state.",
+        "class": "TestStateUpdateEvents"
+      },
+      {
+        "name": "TestStateUpdateEvents::test_field_validation_error_creation",
+        "line": 37,
+        "markers": [],
+        "docstring": "Test FieldValidationError event creation.",
+        "class": "TestStateUpdateEvents"
+      },
+      {
+        "name": "TestStateUpdateEvents::test_field_validation_error_default_severity",
+        "line": 48,
+        "markers": [],
+        "docstring": "Test FieldValidationError with default severity.",
+        "class": "TestStateUpdateEvents"
+      },
+      {
+        "name": "TestStateUpdateEvents::test_state_validation_failed_creation",
+        "line": 54,
+        "markers": [],
+        "docstring": "Test StateValidationFailed event creation.",
+        "class": "TestStateUpdateEvents"
+      },
+      {
+        "name": "TestStateUpdateEvents::test_state_validation_failed_default_component",
+        "line": 65,
+        "markers": [],
+        "docstring": "Test StateValidationFailed with default component.",
+        "class": "TestStateUpdateEvents"
+      },
+      {
+        "name": "TestStateUpdateEvents::test_state_validation_passed_creation",
+        "line": 70,
+        "markers": [],
+        "docstring": "Test StateValidationPassed event creation.",
+        "class": "TestStateUpdateEvents"
+      },
+      {
+        "name": "TestStateUpdateEvents::test_state_delta_update_applied_creation",
+        "line": 75,
+        "markers": [],
+        "docstring": "Test StateDeltaUpdateApplied event creation.",
+        "class": "TestStateUpdateEvents"
+      },
+      {
+        "name": "TestStateUpdateEvents::test_state_delta_update_applied_full_update",
+        "line": 83,
+        "markers": [],
+        "docstring": "Test StateDeltaUpdateApplied with full update fallback.",
+        "class": "TestStateUpdateEvents"
+      },
+      {
+        "name": "test_state_update_received_creation",
+        "line": 21,
+        "markers": [],
+        "docstring": "Test StateUpdateReceived event creation."
+      },
+      {
+        "name": "test_state_update_received_without_runtime",
+        "line": 30,
+        "markers": [],
+        "docstring": "Test StateUpdateReceived without runtime state."
+      },
+      {
+        "name": "test_field_validation_error_creation",
+        "line": 37,
+        "markers": [],
+        "docstring": "Test FieldValidationError event creation."
+      },
+      {
+        "name": "test_field_validation_error_default_severity",
+        "line": 48,
+        "markers": [],
+        "docstring": "Test FieldValidationError with default severity."
+      },
+      {
+        "name": "test_state_validation_failed_creation",
+        "line": 54,
+        "markers": [],
+        "docstring": "Test StateValidationFailed event creation."
+      },
+      {
+        "name": "test_state_validation_failed_default_component",
+        "line": 65,
+        "markers": [],
+        "docstring": "Test StateValidationFailed with default component."
+      },
+      {
+        "name": "test_state_validation_passed_creation",
+        "line": 70,
+        "markers": [],
+        "docstring": "Test StateValidationPassed event creation."
+      },
+      {
+        "name": "test_state_delta_update_applied_creation",
+        "line": 75,
+        "markers": [],
+        "docstring": "Test StateDeltaUpdateApplied event creation."
+      },
+      {
+        "name": "test_state_delta_update_applied_full_update",
+        "line": 83,
+        "markers": [],
+        "docstring": "Test StateDeltaUpdateApplied with full update fallback."
       }
     ],
     "tests/unit/gpt_trader/tui/test_log_manager_handler_widget_controls.py": [
@@ -7388,40 +7735,40 @@
     "tests/unit/gpt_trader/tui/test_risk_preview_models.py": [
       {
         "name": "TestRiskPreviewScenario::test_scenario_creation_and_immutability",
-        "line": 19,
+        "line": 17,
         "markers": [],
         "docstring": "Scenario stores label and shock percentage, is immutable.",
         "class": "TestRiskPreviewScenario"
       },
       {
         "name": "TestRiskPreviewResult::test_result_creation",
-        "line": 31,
+        "line": 29,
         "markers": [],
         "docstring": "Result stores all preview fields with defaults.",
         "class": "TestRiskPreviewResult"
       },
       {
         "name": "TestGuardPositionImpact::test_guard_position_impact_dataclass",
-        "line": 53,
+        "line": 51,
         "markers": [],
         "docstring": "GuardPositionImpact stores all fields correctly.",
         "class": "TestGuardPositionImpact"
       },
       {
         "name": "test_scenario_creation_and_immutability",
-        "line": 19,
+        "line": 17,
         "markers": [],
         "docstring": "Scenario stores label and shock percentage, is immutable."
       },
       {
         "name": "test_result_creation",
-        "line": 31,
+        "line": 29,
         "markers": [],
         "docstring": "Result stores all preview fields with defaults."
       },
       {
         "name": "test_guard_position_impact_dataclass",
-        "line": 53,
+        "line": 51,
         "markers": [],
         "docstring": "GuardPositionImpact stores all fields correctly."
       }
@@ -7532,422 +7879,97 @@
         "docstring": "Should return critical when data is >30s old."
       }
     ],
-    "tests/unit/gpt_trader/tui/test_events.py": [
-      {
-        "name": "TestBotLifecycleEvents::test_bot_start_requested_creation",
-        "line": 50,
-        "markers": [],
-        "docstring": "Test BotStartRequested event creation.",
-        "class": "TestBotLifecycleEvents"
-      },
-      {
-        "name": "TestBotLifecycleEvents::test_bot_stop_requested_creation",
-        "line": 55,
-        "markers": [],
-        "docstring": "Test BotStopRequested event creation.",
-        "class": "TestBotLifecycleEvents"
-      },
-      {
-        "name": "TestBotLifecycleEvents::test_bot_state_changed_creation",
-        "line": 60,
-        "markers": [],
-        "docstring": "Test BotStateChanged event creation with attributes.",
-        "class": "TestBotLifecycleEvents"
-      },
-      {
-        "name": "TestBotLifecycleEvents::test_bot_state_changed_default_uptime",
-        "line": 67,
-        "markers": [],
-        "docstring": "Test BotStateChanged with default uptime.",
-        "class": "TestBotLifecycleEvents"
-      },
-      {
-        "name": "TestBotLifecycleEvents::test_bot_mode_change_requested_creation",
-        "line": 73,
-        "markers": [],
-        "docstring": "Test BotModeChangeRequested event creation.",
-        "class": "TestBotLifecycleEvents"
-      },
-      {
-        "name": "TestBotLifecycleEvents::test_bot_mode_changed_creation",
-        "line": 79,
-        "markers": [],
-        "docstring": "Test BotModeChanged event creation.",
-        "class": "TestBotLifecycleEvents"
-      },
-      {
-        "name": "TestStateUpdateEvents::test_state_update_received_creation",
-        "line": 90,
-        "markers": [],
-        "docstring": "Test StateUpdateReceived event creation.",
-        "class": "TestStateUpdateEvents"
-      },
-      {
-        "name": "TestStateUpdateEvents::test_state_update_received_without_runtime",
-        "line": 99,
-        "markers": [],
-        "docstring": "Test StateUpdateReceived without runtime state.",
-        "class": "TestStateUpdateEvents"
-      },
-      {
-        "name": "TestStateUpdateEvents::test_field_validation_error_creation",
-        "line": 106,
-        "markers": [],
-        "docstring": "Test FieldValidationError event creation.",
-        "class": "TestStateUpdateEvents"
-      },
-      {
-        "name": "TestStateUpdateEvents::test_field_validation_error_default_severity",
-        "line": 117,
-        "markers": [],
-        "docstring": "Test FieldValidationError with default severity.",
-        "class": "TestStateUpdateEvents"
-      },
-      {
-        "name": "TestStateUpdateEvents::test_state_validation_failed_creation",
-        "line": 123,
-        "markers": [],
-        "docstring": "Test StateValidationFailed event creation.",
-        "class": "TestStateUpdateEvents"
-      },
-      {
-        "name": "TestStateUpdateEvents::test_state_validation_failed_default_component",
-        "line": 134,
-        "markers": [],
-        "docstring": "Test StateValidationFailed with default component.",
-        "class": "TestStateUpdateEvents"
-      },
-      {
-        "name": "TestStateUpdateEvents::test_state_validation_passed_creation",
-        "line": 139,
-        "markers": [],
-        "docstring": "Test StateValidationPassed event creation.",
-        "class": "TestStateUpdateEvents"
-      },
-      {
-        "name": "TestStateUpdateEvents::test_state_delta_update_applied_creation",
-        "line": 144,
-        "markers": [],
-        "docstring": "Test StateDeltaUpdateApplied event creation.",
-        "class": "TestStateUpdateEvents"
-      },
-      {
-        "name": "TestStateUpdateEvents::test_state_delta_update_applied_full_update",
-        "line": 152,
-        "markers": [],
-        "docstring": "Test StateDeltaUpdateApplied with full update fallback.",
-        "class": "TestStateUpdateEvents"
-      },
-      {
-        "name": "TestUICoordinationEvents::test_ui_refresh_requested_creation",
-        "line": 161,
-        "markers": [],
-        "docstring": "Test UIRefreshRequested event creation.",
-        "class": "TestUICoordinationEvents"
-      },
-      {
-        "name": "TestUICoordinationEvents::test_heartbeat_tick_creation",
-        "line": 166,
-        "markers": [],
-        "docstring": "Test HeartbeatTick event creation.",
-        "class": "TestUICoordinationEvents"
-      },
-      {
-        "name": "TestUICoordinationEvents::test_heartbeat_tick_default_pulse",
-        "line": 172,
-        "markers": [],
-        "docstring": "Test HeartbeatTick with default pulse value.",
-        "class": "TestUICoordinationEvents"
-      },
-      {
-        "name": "TestUICoordinationEvents::test_responsive_state_changed_creation",
-        "line": 177,
-        "markers": [],
-        "docstring": "Test ResponsiveStateChanged event creation.",
-        "class": "TestUICoordinationEvents"
-      },
+    "tests/unit/gpt_trader/tui/test_events_trade_and_notifications.py": [
       {
         "name": "TestTradeMatchingEvents::test_trade_matcher_reset_requested_creation",
-        "line": 188,
+        "line": 19,
         "markers": [],
         "docstring": "Test TradeMatcherResetRequested event creation.",
         "class": "TestTradeMatchingEvents"
       },
       {
         "name": "TestTradeMatchingEvents::test_trade_matcher_state_request_creation",
-        "line": 193,
+        "line": 24,
         "markers": [],
         "docstring": "Test TradeMatcherStateRequest event creation.",
         "class": "TestTradeMatchingEvents"
       },
       {
         "name": "TestTradeMatchingEvents::test_trade_matcher_state_response_creation",
-        "line": 199,
+        "line": 30,
         "markers": [],
         "docstring": "Test TradeMatcherStateResponse event creation.",
         "class": "TestTradeMatchingEvents"
       },
       {
         "name": "TestErrorNotificationEvents::test_error_occurred_creation",
-        "line": 211,
+        "line": 42,
         "markers": [],
         "docstring": "Test ErrorOccurred event creation.",
         "class": "TestErrorNotificationEvents"
       },
       {
         "name": "TestErrorNotificationEvents::test_error_occurred_defaults",
-        "line": 223,
+        "line": 54,
         "markers": [],
         "docstring": "Test ErrorOccurred with default values.",
         "class": "TestErrorNotificationEvents"
       },
       {
         "name": "TestErrorNotificationEvents::test_notification_requested_creation",
-        "line": 230,
+        "line": 61,
         "markers": [],
         "docstring": "Test NotificationRequested event creation.",
         "class": "TestErrorNotificationEvents"
       },
       {
         "name": "TestErrorNotificationEvents::test_notification_requested_defaults",
-        "line": 241,
+        "line": 72,
         "markers": [],
         "docstring": "Test NotificationRequested with defaults.",
         "class": "TestErrorNotificationEvents"
       },
       {
-        "name": "TestConfigurationEvents::test_config_reload_requested_creation",
-        "line": 252,
-        "markers": [],
-        "docstring": "Test ConfigReloadRequested event creation.",
-        "class": "TestConfigurationEvents"
-      },
-      {
-        "name": "TestConfigurationEvents::test_config_changed_creation",
-        "line": 257,
-        "markers": [],
-        "docstring": "Test ConfigChanged event creation.",
-        "class": "TestConfigurationEvents"
-      },
-      {
-        "name": "TestThemeEvents::test_theme_change_requested_creation",
-        "line": 268,
-        "markers": [],
-        "docstring": "Test ThemeChangeRequested event creation.",
-        "class": "TestThemeEvents"
-      },
-      {
-        "name": "TestThemeEvents::test_theme_changed_creation",
-        "line": 274,
-        "markers": [],
-        "docstring": "Test ThemeChanged event creation.",
-        "class": "TestThemeEvents"
-      },
-      {
-        "name": "TestEventDocumentation::test_all_events_have_docstrings",
-        "line": 367,
-        "markers": [],
-        "docstring": "Verify all event classes have docstrings.",
-        "class": "TestEventDocumentation"
-      },
-      {
-        "name": "TestEventDocumentation::test_dataclass_events_have_field_docs",
-        "line": 398,
-        "markers": [],
-        "docstring": "Verify dataclass events document their fields.",
-        "class": "TestEventDocumentation"
-      },
-      {
-        "name": "test_bot_start_requested_creation",
-        "line": 50,
-        "markers": [],
-        "docstring": "Test BotStartRequested event creation."
-      },
-      {
-        "name": "test_bot_stop_requested_creation",
-        "line": 55,
-        "markers": [],
-        "docstring": "Test BotStopRequested event creation."
-      },
-      {
-        "name": "test_bot_state_changed_creation",
-        "line": 60,
-        "markers": [],
-        "docstring": "Test BotStateChanged event creation with attributes."
-      },
-      {
-        "name": "test_bot_state_changed_default_uptime",
-        "line": 67,
-        "markers": [],
-        "docstring": "Test BotStateChanged with default uptime."
-      },
-      {
-        "name": "test_bot_mode_change_requested_creation",
-        "line": 73,
-        "markers": [],
-        "docstring": "Test BotModeChangeRequested event creation."
-      },
-      {
-        "name": "test_bot_mode_changed_creation",
-        "line": 79,
-        "markers": [],
-        "docstring": "Test BotModeChanged event creation."
-      },
-      {
-        "name": "test_state_update_received_creation",
-        "line": 90,
-        "markers": [],
-        "docstring": "Test StateUpdateReceived event creation."
-      },
-      {
-        "name": "test_state_update_received_without_runtime",
-        "line": 99,
-        "markers": [],
-        "docstring": "Test StateUpdateReceived without runtime state."
-      },
-      {
-        "name": "test_field_validation_error_creation",
-        "line": 106,
-        "markers": [],
-        "docstring": "Test FieldValidationError event creation."
-      },
-      {
-        "name": "test_field_validation_error_default_severity",
-        "line": 117,
-        "markers": [],
-        "docstring": "Test FieldValidationError with default severity."
-      },
-      {
-        "name": "test_state_validation_failed_creation",
-        "line": 123,
-        "markers": [],
-        "docstring": "Test StateValidationFailed event creation."
-      },
-      {
-        "name": "test_state_validation_failed_default_component",
-        "line": 134,
-        "markers": [],
-        "docstring": "Test StateValidationFailed with default component."
-      },
-      {
-        "name": "test_state_validation_passed_creation",
-        "line": 139,
-        "markers": [],
-        "docstring": "Test StateValidationPassed event creation."
-      },
-      {
-        "name": "test_state_delta_update_applied_creation",
-        "line": 144,
-        "markers": [],
-        "docstring": "Test StateDeltaUpdateApplied event creation."
-      },
-      {
-        "name": "test_state_delta_update_applied_full_update",
-        "line": 152,
-        "markers": [],
-        "docstring": "Test StateDeltaUpdateApplied with full update fallback."
-      },
-      {
-        "name": "test_ui_refresh_requested_creation",
-        "line": 161,
-        "markers": [],
-        "docstring": "Test UIRefreshRequested event creation."
-      },
-      {
-        "name": "test_heartbeat_tick_creation",
-        "line": 166,
-        "markers": [],
-        "docstring": "Test HeartbeatTick event creation."
-      },
-      {
-        "name": "test_heartbeat_tick_default_pulse",
-        "line": 172,
-        "markers": [],
-        "docstring": "Test HeartbeatTick with default pulse value."
-      },
-      {
-        "name": "test_responsive_state_changed_creation",
-        "line": 177,
-        "markers": [],
-        "docstring": "Test ResponsiveStateChanged event creation."
-      },
-      {
         "name": "test_trade_matcher_reset_requested_creation",
-        "line": 188,
+        "line": 19,
         "markers": [],
         "docstring": "Test TradeMatcherResetRequested event creation."
       },
       {
         "name": "test_trade_matcher_state_request_creation",
-        "line": 193,
+        "line": 24,
         "markers": [],
         "docstring": "Test TradeMatcherStateRequest event creation."
       },
       {
         "name": "test_trade_matcher_state_response_creation",
-        "line": 199,
+        "line": 30,
         "markers": [],
         "docstring": "Test TradeMatcherStateResponse event creation."
       },
       {
         "name": "test_error_occurred_creation",
-        "line": 211,
+        "line": 42,
         "markers": [],
         "docstring": "Test ErrorOccurred event creation."
       },
       {
         "name": "test_error_occurred_defaults",
-        "line": 223,
+        "line": 54,
         "markers": [],
         "docstring": "Test ErrorOccurred with default values."
       },
       {
         "name": "test_notification_requested_creation",
-        "line": 230,
+        "line": 61,
         "markers": [],
         "docstring": "Test NotificationRequested event creation."
       },
       {
         "name": "test_notification_requested_defaults",
-        "line": 241,
+        "line": 72,
         "markers": [],
         "docstring": "Test NotificationRequested with defaults."
-      },
-      {
-        "name": "test_config_reload_requested_creation",
-        "line": 252,
-        "markers": [],
-        "docstring": "Test ConfigReloadRequested event creation."
-      },
-      {
-        "name": "test_config_changed_creation",
-        "line": 257,
-        "markers": [],
-        "docstring": "Test ConfigChanged event creation."
-      },
-      {
-        "name": "test_theme_change_requested_creation",
-        "line": 268,
-        "markers": [],
-        "docstring": "Test ThemeChangeRequested event creation."
-      },
-      {
-        "name": "test_theme_changed_creation",
-        "line": 274,
-        "markers": [],
-        "docstring": "Test ThemeChanged event creation."
-      },
-      {
-        "name": "test_all_events_have_docstrings",
-        "line": 367,
-        "markers": [],
-        "docstring": "Verify all event classes have docstrings."
-      },
-      {
-        "name": "test_dataclass_events_have_field_docs",
-        "line": 398,
-        "markers": [],
-        "docstring": "Verify dataclass events document their fields."
       }
     ],
     "tests/unit/gpt_trader/tui/test_credential_cache.py": [
@@ -37189,6 +37211,86 @@
         "docstring": "Test notify_config_changed posts ConfigChanged event."
       }
     ],
+    "tests/unit/gpt_trader/tui/services/test_trading_stats_service_compute_stats.py": [
+      {
+        "name": "TestTradingStatsComputation::test_empty_trades_returns_default_stats",
+        "line": 12,
+        "markers": [],
+        "docstring": "Test empty trade list returns default TradingStats.",
+        "class": "TestTradingStatsComputation"
+      },
+      {
+        "name": "TestTradingStatsComputation::test_single_buy_trade_no_match",
+        "line": 22,
+        "markers": [],
+        "docstring": "Test single buy trade shows raw trade count (no exit pair).",
+        "class": "TestTradingStatsComputation"
+      },
+      {
+        "name": "TestTradingStatsComputation::test_buy_and_sell_creates_matched_trade",
+        "line": 43,
+        "markers": [],
+        "docstring": "Test buy followed by sell creates a matched trade pair.",
+        "class": "TestTradingStatsComputation"
+      },
+      {
+        "name": "TestTradingStatsComputation::test_losing_trade_calculation",
+        "line": 76,
+        "markers": [],
+        "docstring": "Test losing trade P&L calculation.",
+        "class": "TestTradingStatsComputation"
+      },
+      {
+        "name": "TestTradingStatsComputation::test_profit_factor_calculation",
+        "line": 108,
+        "markers": [],
+        "docstring": "Test profit factor = gross_profit / gross_loss.",
+        "class": "TestTradingStatsComputation"
+      },
+      {
+        "name": "TestTradingStatsComputation::test_profit_factor_infinity_when_no_losses",
+        "line": 163,
+        "markers": [],
+        "docstring": "Test profit factor is infinity when there are no losses.",
+        "class": "TestTradingStatsComputation"
+      },
+      {
+        "name": "test_empty_trades_returns_default_stats",
+        "line": 12,
+        "markers": [],
+        "docstring": "Test empty trade list returns default TradingStats."
+      },
+      {
+        "name": "test_single_buy_trade_no_match",
+        "line": 22,
+        "markers": [],
+        "docstring": "Test single buy trade shows raw trade count (no exit pair)."
+      },
+      {
+        "name": "test_buy_and_sell_creates_matched_trade",
+        "line": 43,
+        "markers": [],
+        "docstring": "Test buy followed by sell creates a matched trade pair."
+      },
+      {
+        "name": "test_losing_trade_calculation",
+        "line": 76,
+        "markers": [],
+        "docstring": "Test losing trade P&L calculation."
+      },
+      {
+        "name": "test_profit_factor_calculation",
+        "line": 108,
+        "markers": [],
+        "docstring": "Test profit factor = gross_profit / gross_loss."
+      },
+      {
+        "name": "test_profit_factor_infinity_when_no_losses",
+        "line": 163,
+        "markers": [],
+        "docstring": "Test profit factor is infinity when there are no losses."
+      }
+    ],
     "tests/unit/gpt_trader/tui/services/test_state_registry.py": [
       {
         "name": "TestStateRegistryPriority::test_observers_receive_updates_in_priority_order",
@@ -37851,6 +37953,101 @@
         "docstring": "Test that collector is thread-safe."
       }
     ],
+    "tests/unit/gpt_trader/tui/services/test_trading_stats_service_model.py": [
+      {
+        "name": "TestTradingStatsSampleSize::test_sample_label_format",
+        "line": 9,
+        "markers": [],
+        "docstring": "Test sample_label property format.",
+        "class": "TestTradingStatsSampleSize"
+      },
+      {
+        "name": "TestTradingStatsSampleSize::test_has_sufficient_data_below_threshold",
+        "line": 14,
+        "markers": [],
+        "docstring": "Test has_sufficient_data returns False below threshold.",
+        "class": "TestTradingStatsSampleSize"
+      },
+      {
+        "name": "TestTradingStatsSampleSize::test_has_sufficient_data_at_threshold",
+        "line": 19,
+        "markers": [],
+        "docstring": "Test has_sufficient_data returns True at threshold.",
+        "class": "TestTradingStatsSampleSize"
+      },
+      {
+        "name": "TestTradingStatsSampleSize::test_has_sufficient_data_above_threshold",
+        "line": 24,
+        "markers": [],
+        "docstring": "Test has_sufficient_data returns True above threshold.",
+        "class": "TestTradingStatsSampleSize"
+      },
+      {
+        "name": "test_sample_label_format",
+        "line": 9,
+        "markers": [],
+        "docstring": "Test sample_label property format."
+      },
+      {
+        "name": "test_has_sufficient_data_below_threshold",
+        "line": 14,
+        "markers": [],
+        "docstring": "Test has_sufficient_data returns False below threshold."
+      },
+      {
+        "name": "test_has_sufficient_data_at_threshold",
+        "line": 19,
+        "markers": [],
+        "docstring": "Test has_sufficient_data returns True at threshold."
+      },
+      {
+        "name": "test_has_sufficient_data_above_threshold",
+        "line": 24,
+        "markers": [],
+        "docstring": "Test has_sufficient_data returns True above threshold."
+      }
+    ],
+    "tests/unit/gpt_trader/tui/services/test_trading_stats_service_trade_matching.py": [
+      {
+        "name": "TestTradeMatching::test_fifo_order_matching",
+        "line": 12,
+        "markers": [],
+        "docstring": "Test trades are matched in FIFO order.",
+        "class": "TestTradeMatching"
+      },
+      {
+        "name": "TestTradeMatching::test_partial_fill_matching",
+        "line": 54,
+        "markers": [],
+        "docstring": "Test partial fill matching splits quantities correctly.",
+        "class": "TestTradeMatching"
+      },
+      {
+        "name": "TestTradeMatching::test_multiple_symbols_matched_separately",
+        "line": 88,
+        "markers": [],
+        "docstring": "Test different symbols are matched separately.",
+        "class": "TestTradeMatching"
+      },
+      {
+        "name": "test_fifo_order_matching",
+        "line": 12,
+        "markers": [],
+        "docstring": "Test trades are matched in FIFO order."
+      },
+      {
+        "name": "test_partial_fill_matching",
+        "line": 54,
+        "markers": [],
+        "docstring": "Test partial fill matching splits quantities correctly."
+      },
+      {
+        "name": "test_multiple_symbols_matched_separately",
+        "line": 88,
+        "markers": [],
+        "docstring": "Test different symbols are matched separately."
+      }
+    ],
     "tests/unit/gpt_trader/tui/services/test_execution_telemetry_reason_tracking.py": [
       {
         "name": "TestReasonTracking::test_record_rejection_reason",
@@ -37942,6 +38139,34 @@
         "line": 122,
         "markers": [],
         "docstring": "Test that clear() also clears reason tracking."
+      }
+    ],
+    "tests/unit/gpt_trader/tui/services/test_trading_stats_service_singleton.py": [
+      {
+        "name": "TestTradingStatsServiceSingleton::test_get_returns_same_instance",
+        "line": 12,
+        "markers": [],
+        "docstring": "Test get_trading_stats_service returns same instance.",
+        "class": "TestTradingStatsServiceSingleton"
+      },
+      {
+        "name": "TestTradingStatsServiceSingleton::test_clear_creates_new_instance",
+        "line": 19,
+        "markers": [],
+        "docstring": "Test clear_trading_stats_service creates new instance.",
+        "class": "TestTradingStatsServiceSingleton"
+      },
+      {
+        "name": "test_get_returns_same_instance",
+        "line": 12,
+        "markers": [],
+        "docstring": "Test get_trading_stats_service returns same instance."
+      },
+      {
+        "name": "test_clear_creates_new_instance",
+        "line": 19,
+        "markers": [],
+        "docstring": "Test clear_trading_stats_service creates new instance."
       }
     ],
     "tests/unit/gpt_trader/tui/services/test_performance_service.py": [
@@ -38600,6 +38825,60 @@
         "line": 196,
         "markers": [],
         "docstring": "Test that disabled rules are not checked."
+      }
+    ],
+    "tests/unit/gpt_trader/tui/services/test_trading_stats_service_windows.py": [
+      {
+        "name": "TestTradingStatsService::test_initial_window_is_all_session",
+        "line": 9,
+        "markers": [],
+        "docstring": "Test service starts with 'All Session' window.",
+        "class": "TestTradingStatsService"
+      },
+      {
+        "name": "TestTradingStatsService::test_cycle_window_advances",
+        "line": 16,
+        "markers": [],
+        "docstring": "Test cycle_window advances through windows.",
+        "class": "TestTradingStatsService"
+      },
+      {
+        "name": "TestTradingStatsService::test_cycle_window_wraps_around",
+        "line": 33,
+        "markers": [],
+        "docstring": "Test cycle_window wraps back to start.",
+        "class": "TestTradingStatsService"
+      },
+      {
+        "name": "TestTradingStatsService::test_reset_window_returns_to_all_session",
+        "line": 44,
+        "markers": [],
+        "docstring": "Test reset_window returns to 'All Session'.",
+        "class": "TestTradingStatsService"
+      },
+      {
+        "name": "test_initial_window_is_all_session",
+        "line": 9,
+        "markers": [],
+        "docstring": "Test service starts with 'All Session' window."
+      },
+      {
+        "name": "test_cycle_window_advances",
+        "line": 16,
+        "markers": [],
+        "docstring": "Test cycle_window advances through windows."
+      },
+      {
+        "name": "test_cycle_window_wraps_around",
+        "line": 33,
+        "markers": [],
+        "docstring": "Test cycle_window wraps back to start."
+      },
+      {
+        "name": "test_reset_window_returns_to_all_session",
+        "line": 44,
+        "markers": [],
+        "docstring": "Test reset_window returns to 'All Session'."
       }
     ],
     "tests/unit/gpt_trader/tui/services/test_onboarding_service.py": [
@@ -39351,255 +39630,6 @@
         "line": 94,
         "markers": [],
         "docstring": "Test stale orders alert ignores non-open orders."
-      }
-    ],
-    "tests/unit/gpt_trader/tui/services/test_trading_stats_service.py": [
-      {
-        "name": "TestTradingStatsService::test_initial_window_is_all_session",
-        "line": 17,
-        "markers": [],
-        "docstring": "Test service starts with 'All Session' window.",
-        "class": "TestTradingStatsService"
-      },
-      {
-        "name": "TestTradingStatsService::test_cycle_window_advances",
-        "line": 24,
-        "markers": [],
-        "docstring": "Test cycle_window advances through windows.",
-        "class": "TestTradingStatsService"
-      },
-      {
-        "name": "TestTradingStatsService::test_cycle_window_wraps_around",
-        "line": 41,
-        "markers": [],
-        "docstring": "Test cycle_window wraps back to start.",
-        "class": "TestTradingStatsService"
-      },
-      {
-        "name": "TestTradingStatsService::test_reset_window_returns_to_all_session",
-        "line": 52,
-        "markers": [],
-        "docstring": "Test reset_window returns to 'All Session'.",
-        "class": "TestTradingStatsService"
-      },
-      {
-        "name": "TestTradingStatsComputation::test_empty_trades_returns_default_stats",
-        "line": 70,
-        "markers": [],
-        "docstring": "Test empty trade list returns default TradingStats.",
-        "class": "TestTradingStatsComputation"
-      },
-      {
-        "name": "TestTradingStatsComputation::test_single_buy_trade_no_match",
-        "line": 80,
-        "markers": [],
-        "docstring": "Test single buy trade shows raw trade count (no exit pair).",
-        "class": "TestTradingStatsComputation"
-      },
-      {
-        "name": "TestTradingStatsComputation::test_buy_and_sell_creates_matched_trade",
-        "line": 101,
-        "markers": [],
-        "docstring": "Test buy followed by sell creates a matched trade pair.",
-        "class": "TestTradingStatsComputation"
-      },
-      {
-        "name": "TestTradingStatsComputation::test_losing_trade_calculation",
-        "line": 134,
-        "markers": [],
-        "docstring": "Test losing trade P&L calculation.",
-        "class": "TestTradingStatsComputation"
-      },
-      {
-        "name": "TestTradingStatsComputation::test_profit_factor_calculation",
-        "line": 166,
-        "markers": [],
-        "docstring": "Test profit factor = gross_profit / gross_loss.",
-        "class": "TestTradingStatsComputation"
-      },
-      {
-        "name": "TestTradingStatsComputation::test_profit_factor_infinity_when_no_losses",
-        "line": 221,
-        "markers": [],
-        "docstring": "Test profit factor is infinity when there are no losses.",
-        "class": "TestTradingStatsComputation"
-      },
-      {
-        "name": "TestTradingStatsSampleSize::test_sample_label_format",
-        "line": 254,
-        "markers": [],
-        "docstring": "Test sample_label property format.",
-        "class": "TestTradingStatsSampleSize"
-      },
-      {
-        "name": "TestTradingStatsSampleSize::test_has_sufficient_data_below_threshold",
-        "line": 259,
-        "markers": [],
-        "docstring": "Test has_sufficient_data returns False below threshold.",
-        "class": "TestTradingStatsSampleSize"
-      },
-      {
-        "name": "TestTradingStatsSampleSize::test_has_sufficient_data_at_threshold",
-        "line": 264,
-        "markers": [],
-        "docstring": "Test has_sufficient_data returns True at threshold.",
-        "class": "TestTradingStatsSampleSize"
-      },
-      {
-        "name": "TestTradingStatsSampleSize::test_has_sufficient_data_above_threshold",
-        "line": 269,
-        "markers": [],
-        "docstring": "Test has_sufficient_data returns True above threshold.",
-        "class": "TestTradingStatsSampleSize"
-      },
-      {
-        "name": "TestTradingStatsServiceSingleton::test_get_returns_same_instance",
-        "line": 278,
-        "markers": [],
-        "docstring": "Test get_trading_stats_service returns same instance.",
-        "class": "TestTradingStatsServiceSingleton"
-      },
-      {
-        "name": "TestTradingStatsServiceSingleton::test_clear_creates_new_instance",
-        "line": 285,
-        "markers": [],
-        "docstring": "Test clear_trading_stats_service creates new instance.",
-        "class": "TestTradingStatsServiceSingleton"
-      },
-      {
-        "name": "TestTradeMatching::test_fifo_order_matching",
-        "line": 297,
-        "markers": [],
-        "docstring": "Test trades are matched in FIFO order.",
-        "class": "TestTradeMatching"
-      },
-      {
-        "name": "TestTradeMatching::test_partial_fill_matching",
-        "line": 339,
-        "markers": [],
-        "docstring": "Test partial fill matching splits quantities correctly.",
-        "class": "TestTradeMatching"
-      },
-      {
-        "name": "TestTradeMatching::test_multiple_symbols_matched_separately",
-        "line": 373,
-        "markers": [],
-        "docstring": "Test different symbols are matched separately.",
-        "class": "TestTradeMatching"
-      },
-      {
-        "name": "test_initial_window_is_all_session",
-        "line": 17,
-        "markers": [],
-        "docstring": "Test service starts with 'All Session' window."
-      },
-      {
-        "name": "test_cycle_window_advances",
-        "line": 24,
-        "markers": [],
-        "docstring": "Test cycle_window advances through windows."
-      },
-      {
-        "name": "test_cycle_window_wraps_around",
-        "line": 41,
-        "markers": [],
-        "docstring": "Test cycle_window wraps back to start."
-      },
-      {
-        "name": "test_reset_window_returns_to_all_session",
-        "line": 52,
-        "markers": [],
-        "docstring": "Test reset_window returns to 'All Session'."
-      },
-      {
-        "name": "test_empty_trades_returns_default_stats",
-        "line": 70,
-        "markers": [],
-        "docstring": "Test empty trade list returns default TradingStats."
-      },
-      {
-        "name": "test_single_buy_trade_no_match",
-        "line": 80,
-        "markers": [],
-        "docstring": "Test single buy trade shows raw trade count (no exit pair)."
-      },
-      {
-        "name": "test_buy_and_sell_creates_matched_trade",
-        "line": 101,
-        "markers": [],
-        "docstring": "Test buy followed by sell creates a matched trade pair."
-      },
-      {
-        "name": "test_losing_trade_calculation",
-        "line": 134,
-        "markers": [],
-        "docstring": "Test losing trade P&L calculation."
-      },
-      {
-        "name": "test_profit_factor_calculation",
-        "line": 166,
-        "markers": [],
-        "docstring": "Test profit factor = gross_profit / gross_loss."
-      },
-      {
-        "name": "test_profit_factor_infinity_when_no_losses",
-        "line": 221,
-        "markers": [],
-        "docstring": "Test profit factor is infinity when there are no losses."
-      },
-      {
-        "name": "test_sample_label_format",
-        "line": 254,
-        "markers": [],
-        "docstring": "Test sample_label property format."
-      },
-      {
-        "name": "test_has_sufficient_data_below_threshold",
-        "line": 259,
-        "markers": [],
-        "docstring": "Test has_sufficient_data returns False below threshold."
-      },
-      {
-        "name": "test_has_sufficient_data_at_threshold",
-        "line": 264,
-        "markers": [],
-        "docstring": "Test has_sufficient_data returns True at threshold."
-      },
-      {
-        "name": "test_has_sufficient_data_above_threshold",
-        "line": 269,
-        "markers": [],
-        "docstring": "Test has_sufficient_data returns True above threshold."
-      },
-      {
-        "name": "test_get_returns_same_instance",
-        "line": 278,
-        "markers": [],
-        "docstring": "Test get_trading_stats_service returns same instance."
-      },
-      {
-        "name": "test_clear_creates_new_instance",
-        "line": 285,
-        "markers": [],
-        "docstring": "Test clear_trading_stats_service creates new instance."
-      },
-      {
-        "name": "test_fifo_order_matching",
-        "line": 297,
-        "markers": [],
-        "docstring": "Test trades are matched in FIFO order."
-      },
-      {
-        "name": "test_partial_fill_matching",
-        "line": 339,
-        "markers": [],
-        "docstring": "Test partial fill matching splits quantities correctly."
-      },
-      {
-        "name": "test_multiple_symbols_matched_separately",
-        "line": 373,
-        "markers": [],
-        "docstring": "Test different symbols are matched separately."
       }
     ],
     "tests/unit/gpt_trader/tui/services/test_preferences_watchlist.py": [
@@ -58731,6 +58761,13 @@
         "class": "TestListFills"
       },
       {
+        "name": "TestListFills::test_list_fills_re_raises_brokerage_error",
+        "line": 92,
+        "markers": [],
+        "docstring": "Test that BrokerageError isn't wrapped.",
+        "class": "TestListFills"
+      },
+      {
         "name": "test_list_fills_returns_fills",
         "line": 19,
         "markers": [],
@@ -58759,6 +58796,12 @@
         "line": 81,
         "markers": [],
         "docstring": "Test that exceptions raise OrderQueryError."
+      },
+      {
+        "name": "test_list_fills_re_raises_brokerage_error",
+        "line": 92,
+        "markers": [],
+        "docstring": "Test that BrokerageError isn't wrapped."
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_unified_edges.py": [
@@ -58889,42 +58932,68 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_get_order.py": [
       {
         "name": "TestGetOrder::test_get_order_returns_order",
-        "line": 20,
+        "line": 24,
         "markers": [],
         "docstring": "Test that get_order returns an Order object.",
         "class": "TestGetOrder"
       },
       {
         "name": "TestGetOrder::test_get_order_not_found",
-        "line": 34,
+        "line": 38,
         "markers": [],
         "docstring": "Test that None is returned when order not found.",
         "class": "TestGetOrder"
       },
       {
+        "name": "TestGetOrder::test_get_order_not_found_error_returns_none",
+        "line": 50,
+        "markers": [],
+        "docstring": "Test that NotFoundError results in None.",
+        "class": "TestGetOrder"
+      },
+      {
         "name": "TestGetOrder::test_get_order_handles_exception",
-        "line": 46,
+        "line": 62,
         "markers": [],
         "docstring": "Test that exceptions raise OrderQueryError.",
         "class": "TestGetOrder"
       },
       {
+        "name": "TestGetOrder::test_get_order_re_raises_brokerage_error",
+        "line": 73,
+        "markers": [],
+        "docstring": "Test that BrokerageError isn't wrapped.",
+        "class": "TestGetOrder"
+      },
+      {
         "name": "test_get_order_returns_order",
-        "line": 20,
+        "line": 24,
         "markers": [],
         "docstring": "Test that get_order returns an Order object."
       },
       {
         "name": "test_get_order_not_found",
-        "line": 34,
+        "line": 38,
         "markers": [],
         "docstring": "Test that None is returned when order not found."
       },
       {
+        "name": "test_get_order_not_found_error_returns_none",
+        "line": 50,
+        "markers": [],
+        "docstring": "Test that NotFoundError results in None."
+      },
+      {
         "name": "test_get_order_handles_exception",
-        "line": 46,
+        "line": 62,
         "markers": [],
         "docstring": "Test that exceptions raise OrderQueryError."
+      },
+      {
+        "name": "test_get_order_re_raises_brokerage_error",
+        "line": 73,
+        "markers": [],
+        "docstring": "Test that BrokerageError isn't wrapped."
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_initialization.py": [
@@ -59604,359 +59673,6 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service.py": [
-      {
-        "name": "TestOrderService::test_service_init",
-        "line": 48,
-        "markers": [],
-        "docstring": "Test service initialization.",
-        "class": "TestOrderService"
-      },
-      {
-        "name": "TestOrderService::test_place_order_delegates_to_builder_and_executor",
-        "line": 55,
-        "markers": [],
-        "docstring": "Test place_order delegates to payload builder and executor.",
-        "class": "TestOrderService"
-      },
-      {
-        "name": "TestOrderService::test_place_order_with_reduce_only",
-        "line": 92,
-        "markers": [],
-        "docstring": "Test place_order with reduce_only flag.",
-        "class": "TestOrderService"
-      },
-      {
-        "name": "TestOrderService::test_cancel_order_success",
-        "line": 111,
-        "markers": [],
-        "docstring": "Test successful order cancellation.",
-        "class": "TestOrderService"
-      },
-      {
-        "name": "TestOrderService::test_cancel_order_failure",
-        "line": 122,
-        "markers": [],
-        "docstring": "Test failed order cancellation raises OrderCancellationError.",
-        "class": "TestOrderService"
-      },
-      {
-        "name": "TestOrderService::test_cancel_order_not_found_in_results",
-        "line": 131,
-        "markers": [],
-        "docstring": "Test cancellation raises when order not in results.",
-        "class": "TestOrderService"
-      },
-      {
-        "name": "TestOrderService::test_cancel_order_exception",
-        "line": 140,
-        "markers": [],
-        "docstring": "Test cancellation raises OrderCancellationError on exception.",
-        "class": "TestOrderService"
-      },
-      {
-        "name": "TestOrderService::test_list_orders_returns_orders",
-        "line": 147,
-        "markers": [],
-        "docstring": "Test listing orders returns parsed orders.",
-        "class": "TestOrderService"
-      },
-      {
-        "name": "TestOrderService::test_list_orders_with_pagination",
-        "line": 173,
-        "markers": [],
-        "docstring": "Test listing orders handles pagination.",
-        "class": "TestOrderService"
-      },
-      {
-        "name": "TestOrderService::test_list_orders_passes_status_filter",
-        "line": 216,
-        "markers": [],
-        "docstring": "Test list_orders passes status filter to client.",
-        "class": "TestOrderService"
-      },
-      {
-        "name": "TestOrderService::test_list_orders_exception_raises_query_error",
-        "line": 225,
-        "markers": [],
-        "docstring": "Test list orders raises OrderQueryError on exception.",
-        "class": "TestOrderService"
-      },
-      {
-        "name": "TestOrderService::test_list_orders_brokerage_error_re_raises",
-        "line": 232,
-        "markers": [],
-        "docstring": "Test list orders re-raises BrokerageError.",
-        "class": "TestOrderService"
-      },
-      {
-        "name": "TestOrderService::test_get_order_returns_order",
-        "line": 239,
-        "markers": [],
-        "docstring": "Test getting a single order.",
-        "class": "TestOrderService"
-      },
-      {
-        "name": "TestOrderService::test_get_order_not_found",
-        "line": 261,
-        "markers": [],
-        "docstring": "Test getting non-existent order.",
-        "class": "TestOrderService"
-      },
-      {
-        "name": "TestOrderService::test_get_order_exception",
-        "line": 269,
-        "markers": [],
-        "docstring": "Test get_order raises OrderQueryError on exception.",
-        "class": "TestOrderService"
-      },
-      {
-        "name": "TestOrderService::test_get_order_not_found_error_returns_none",
-        "line": 276,
-        "markers": [],
-        "docstring": "Test get_order returns None on NotFoundError.",
-        "class": "TestOrderService"
-      },
-      {
-        "name": "TestOrderService::test_get_order_brokerage_error_re_raises",
-        "line": 284,
-        "markers": [],
-        "docstring": "Test get_order re-raises BrokerageError.",
-        "class": "TestOrderService"
-      },
-      {
-        "name": "TestOrderService::test_list_fills_returns_fills",
-        "line": 291,
-        "markers": [],
-        "docstring": "Test listing fills.",
-        "class": "TestOrderService"
-      },
-      {
-        "name": "TestOrderService::test_list_fills_passes_order_id_filter",
-        "line": 306,
-        "markers": [],
-        "docstring": "Test list_fills passes order_id filter to client.",
-        "class": "TestOrderService"
-      },
-      {
-        "name": "TestOrderService::test_list_fills_with_pagination",
-        "line": 315,
-        "markers": [],
-        "docstring": "Test listing fills handles pagination.",
-        "class": "TestOrderService"
-      },
-      {
-        "name": "TestOrderService::test_list_fills_brokerage_error_re_raises",
-        "line": 327,
-        "markers": [],
-        "docstring": "Test list fills re-raises BrokerageError.",
-        "class": "TestOrderService"
-      },
-      {
-        "name": "TestOrderService::test_close_position_success",
-        "line": 334,
-        "markers": [],
-        "docstring": "Test successful position close.",
-        "class": "TestOrderService"
-      },
-      {
-        "name": "TestOrderService::test_close_position_includes_client_order_id",
-        "line": 360,
-        "markers": [],
-        "docstring": "Test close_position passes client order id.",
-        "class": "TestOrderService"
-      },
-      {
-        "name": "TestOrderService::test_close_position_no_position_raises",
-        "line": 374,
-        "markers": [],
-        "docstring": "Test close_position raises when no position exists.",
-        "class": "TestOrderService"
-      },
-      {
-        "name": "TestOrderService::test_close_position_zero_quantity_raises",
-        "line": 381,
-        "markers": [],
-        "docstring": "Test close_position raises when position has zero quantity.",
-        "class": "TestOrderService"
-      },
-      {
-        "name": "TestOrderService::test_close_position_uses_fallback_on_error",
-        "line": 392,
-        "markers": [],
-        "docstring": "Test close_position uses fallback on API error.",
-        "class": "TestOrderService"
-      },
-      {
-        "name": "TestOrderService::test_close_position_raises_without_fallback",
-        "line": 408,
-        "markers": [],
-        "docstring": "Test close_position raises when no fallback provided.",
-        "class": "TestOrderService"
-      },
-      {
-        "name": "test_service_init",
-        "line": 48,
-        "markers": [],
-        "docstring": "Test service initialization."
-      },
-      {
-        "name": "test_place_order_delegates_to_builder_and_executor",
-        "line": 55,
-        "markers": [],
-        "docstring": "Test place_order delegates to payload builder and executor."
-      },
-      {
-        "name": "test_place_order_with_reduce_only",
-        "line": 92,
-        "markers": [],
-        "docstring": "Test place_order with reduce_only flag."
-      },
-      {
-        "name": "test_cancel_order_success",
-        "line": 111,
-        "markers": [],
-        "docstring": "Test successful order cancellation."
-      },
-      {
-        "name": "test_cancel_order_failure",
-        "line": 122,
-        "markers": [],
-        "docstring": "Test failed order cancellation raises OrderCancellationError."
-      },
-      {
-        "name": "test_cancel_order_not_found_in_results",
-        "line": 131,
-        "markers": [],
-        "docstring": "Test cancellation raises when order not in results."
-      },
-      {
-        "name": "test_cancel_order_exception",
-        "line": 140,
-        "markers": [],
-        "docstring": "Test cancellation raises OrderCancellationError on exception."
-      },
-      {
-        "name": "test_list_orders_returns_orders",
-        "line": 147,
-        "markers": [],
-        "docstring": "Test listing orders returns parsed orders."
-      },
-      {
-        "name": "test_list_orders_with_pagination",
-        "line": 173,
-        "markers": [],
-        "docstring": "Test listing orders handles pagination."
-      },
-      {
-        "name": "test_list_orders_passes_status_filter",
-        "line": 216,
-        "markers": [],
-        "docstring": "Test list_orders passes status filter to client."
-      },
-      {
-        "name": "test_list_orders_exception_raises_query_error",
-        "line": 225,
-        "markers": [],
-        "docstring": "Test list orders raises OrderQueryError on exception."
-      },
-      {
-        "name": "test_list_orders_brokerage_error_re_raises",
-        "line": 232,
-        "markers": [],
-        "docstring": "Test list orders re-raises BrokerageError."
-      },
-      {
-        "name": "test_get_order_returns_order",
-        "line": 239,
-        "markers": [],
-        "docstring": "Test getting a single order."
-      },
-      {
-        "name": "test_get_order_not_found",
-        "line": 261,
-        "markers": [],
-        "docstring": "Test getting non-existent order."
-      },
-      {
-        "name": "test_get_order_exception",
-        "line": 269,
-        "markers": [],
-        "docstring": "Test get_order raises OrderQueryError on exception."
-      },
-      {
-        "name": "test_get_order_not_found_error_returns_none",
-        "line": 276,
-        "markers": [],
-        "docstring": "Test get_order returns None on NotFoundError."
-      },
-      {
-        "name": "test_get_order_brokerage_error_re_raises",
-        "line": 284,
-        "markers": [],
-        "docstring": "Test get_order re-raises BrokerageError."
-      },
-      {
-        "name": "test_list_fills_returns_fills",
-        "line": 291,
-        "markers": [],
-        "docstring": "Test listing fills."
-      },
-      {
-        "name": "test_list_fills_passes_order_id_filter",
-        "line": 306,
-        "markers": [],
-        "docstring": "Test list_fills passes order_id filter to client."
-      },
-      {
-        "name": "test_list_fills_with_pagination",
-        "line": 315,
-        "markers": [],
-        "docstring": "Test listing fills handles pagination."
-      },
-      {
-        "name": "test_list_fills_brokerage_error_re_raises",
-        "line": 327,
-        "markers": [],
-        "docstring": "Test list fills re-raises BrokerageError."
-      },
-      {
-        "name": "test_close_position_success",
-        "line": 334,
-        "markers": [],
-        "docstring": "Test successful position close."
-      },
-      {
-        "name": "test_close_position_includes_client_order_id",
-        "line": 360,
-        "markers": [],
-        "docstring": "Test close_position passes client order id."
-      },
-      {
-        "name": "test_close_position_no_position_raises",
-        "line": 374,
-        "markers": [],
-        "docstring": "Test close_position raises when no position exists."
-      },
-      {
-        "name": "test_close_position_zero_quantity_raises",
-        "line": 381,
-        "markers": [],
-        "docstring": "Test close_position raises when position has zero quantity."
-      },
-      {
-        "name": "test_close_position_uses_fallback_on_error",
-        "line": 392,
-        "markers": [],
-        "docstring": "Test close_position uses fallback on API error."
-      },
-      {
-        "name": "test_close_position_raises_without_fallback",
-        "line": 408,
-        "markers": [],
-        "docstring": "Test close_position raises when no fallback provided."
-      }
-    ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_intx_portfolio.py": [
       {
         "name": "test_intx_allocate_normalises_and_emits_metric",
@@ -60464,8 +60180,15 @@
         "class": "TestListOrders"
       },
       {
-        "name": "TestListOrders::test_list_orders_respects_limit",
+        "name": "TestListOrders::test_list_orders_re_raises_brokerage_error",
         "line": 96,
+        "markers": [],
+        "docstring": "Test that BrokerageError isn't wrapped.",
+        "class": "TestListOrders"
+      },
+      {
+        "name": "TestListOrders::test_list_orders_respects_limit",
+        "line": 107,
         "markers": [],
         "docstring": "Test that limit is passed to API.",
         "class": "TestListOrders"
@@ -60501,8 +60224,14 @@
         "docstring": "Test that exceptions raise OrderQueryError."
       },
       {
-        "name": "test_list_orders_respects_limit",
+        "name": "test_list_orders_re_raises_brokerage_error",
         "line": 96,
+        "markers": [],
+        "docstring": "Test that BrokerageError isn't wrapped."
+      },
+      {
+        "name": "test_list_orders_respects_limit",
+        "line": 107,
         "markers": [],
         "docstring": "Test that limit is passed to API."
       }
@@ -64749,435 +64478,294 @@
         "docstring": "Test that health check runner is initialized with engine."
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health.py": [
-      {
-        "name": "TestExtractMarkFromMessage::test_extracts_from_bid_ask",
-        "line": 24,
-        "markers": [],
-        "docstring": "Test extracts mark from bid/ask midpoint.",
-        "class": "TestExtractMarkFromMessage"
-      },
-      {
-        "name": "TestExtractMarkFromMessage::test_extracts_from_bid_ask_strings",
-        "line": 31,
-        "markers": [],
-        "docstring": "Test extracts from bid/ask as string keys.",
-        "class": "TestExtractMarkFromMessage"
-      },
-      {
-        "name": "TestExtractMarkFromMessage::test_prefers_best_bid_over_bid",
-        "line": 38,
-        "markers": [],
-        "docstring": "Test prefers best_bid over bid key.",
-        "class": "TestExtractMarkFromMessage"
-      },
-      {
-        "name": "TestExtractMarkFromMessage::test_extracts_from_last_price",
-        "line": 46,
-        "markers": [],
-        "docstring": "Test extracts from last price when no bid/ask.",
-        "class": "TestExtractMarkFromMessage"
-      },
-      {
-        "name": "TestExtractMarkFromMessage::test_extracts_from_price_key",
-        "line": 53,
-        "markers": [],
-        "docstring": "Test extracts from price key when no bid/ask/last.",
-        "class": "TestExtractMarkFromMessage"
-      },
-      {
-        "name": "TestExtractMarkFromMessage::test_returns_none_for_empty_message",
-        "line": 60,
-        "markers": [],
-        "docstring": "Test returns None for empty message.",
-        "class": "TestExtractMarkFromMessage"
-      },
-      {
-        "name": "TestExtractMarkFromMessage::test_returns_none_for_zero_mark",
-        "line": 67,
-        "markers": [],
-        "docstring": "Test returns None when mark is zero.",
-        "class": "TestExtractMarkFromMessage"
-      },
-      {
-        "name": "TestExtractMarkFromMessage::test_returns_none_for_negative_mark",
-        "line": 74,
-        "markers": [],
-        "docstring": "Test returns None when mark is negative.",
-        "class": "TestExtractMarkFromMessage"
-      },
-      {
-        "name": "TestExtractMarkFromMessage::test_returns_none_for_zero_bid_ask_average",
-        "line": 81,
-        "markers": [],
-        "docstring": "Test returns None when bid/ask average is zero.",
-        "class": "TestExtractMarkFromMessage"
-      },
-      {
-        "name": "TestExtractMarkFromMessage::test_returns_none_for_invalid_decimal",
-        "line": 88,
-        "markers": [],
-        "docstring": "Test returns None for invalid decimal string.",
-        "class": "TestExtractMarkFromMessage"
-      },
-      {
-        "name": "TestExtractMarkFromMessage::test_handles_bid_only",
-        "line": 95,
-        "markers": [],
-        "docstring": "Test returns None when only bid is present.",
-        "class": "TestExtractMarkFromMessage"
-      },
-      {
-        "name": "TestExtractMarkFromMessage::test_handles_ask_only",
-        "line": 103,
-        "markers": [],
-        "docstring": "Test returns None when only ask is present.",
-        "class": "TestExtractMarkFromMessage"
-      },
+    "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_update_mark_and_metrics.py": [
       {
         "name": "TestUpdateMarkAndMetrics::test_updates_strategy_coordinator_mark_window",
-        "line": 131,
+        "line": 26,
         "markers": [],
         "docstring": "Test updates mark window via strategy_coordinator.",
         "class": "TestUpdateMarkAndMetrics"
       },
       {
         "name": "TestUpdateMarkAndMetrics::test_updates_runtime_state_mark_window",
-        "line": 144,
+        "line": 39,
         "markers": [],
         "docstring": "Test updates mark window via runtime_state.",
         "class": "TestUpdateMarkAndMetrics"
       },
       {
         "name": "TestUpdateMarkAndMetrics::test_prunes_mark_window_when_exceeds_max_size",
-        "line": 161,
+        "line": 56,
         "markers": [],
         "docstring": "Test prunes mark window when it exceeds max size.",
         "class": "TestUpdateMarkAndMetrics"
       },
       {
         "name": "TestUpdateMarkAndMetrics::test_records_market_update_via_extras_monitor",
-        "line": 179,
+        "line": 73,
         "markers": [],
         "docstring": "Test records update via market_monitor from extras.",
         "class": "TestUpdateMarkAndMetrics"
       },
       {
         "name": "TestUpdateMarkAndMetrics::test_records_market_update_via_coordinator_monitor",
-        "line": 192,
+        "line": 86,
         "markers": [],
         "docstring": "Test records update via coordinator._market_monitor.",
         "class": "TestUpdateMarkAndMetrics"
       },
       {
         "name": "TestUpdateMarkAndMetrics::test_records_risk_manager_mark_update",
-        "line": 204,
+        "line": 98,
         "markers": [],
         "docstring": "Test records mark update to risk_manager.",
         "class": "TestUpdateMarkAndMetrics"
       },
       {
         "name": "TestUpdateMarkAndMetrics::test_creates_last_mark_update_dict_if_missing",
-        "line": 218,
+        "line": 112,
         "markers": [],
         "docstring": "Test creates last_mark_update dict if not present.",
         "class": "TestUpdateMarkAndMetrics"
       },
       {
         "name": "TestUpdateMarkAndMetrics::test_handles_strategy_coordinator_error",
-        "line": 231,
+        "line": 124,
         "markers": [],
         "docstring": "Test handles error from strategy_coordinator gracefully.",
         "class": "TestUpdateMarkAndMetrics"
       },
       {
         "name": "TestUpdateMarkAndMetrics::test_handles_market_monitor_error",
-        "line": 248,
+        "line": 141,
         "markers": [],
         "docstring": "Test handles error from market_monitor gracefully.",
         "class": "TestUpdateMarkAndMetrics"
       },
       {
         "name": "TestUpdateMarkAndMetrics::test_handles_non_dict_extras",
-        "line": 264,
+        "line": 157,
         "markers": [],
         "docstring": "Test handles non-dict extras gracefully.",
         "class": "TestUpdateMarkAndMetrics"
       },
       {
-        "name": "TestHealthCheck::test_healthy_when_market_monitor_present",
-        "line": 295,
-        "markers": [],
-        "docstring": "Test returns healthy when market_monitor is present.",
-        "class": "TestHealthCheck"
-      },
-      {
-        "name": "TestHealthCheck::test_unhealthy_when_no_monitor_or_streaming",
-        "line": 306,
-        "markers": [],
-        "docstring": "Test returns unhealthy when no market_monitor and no streaming.",
-        "class": "TestHealthCheck"
-      },
-      {
-        "name": "TestHealthCheck::test_healthy_when_streaming_active",
-        "line": 316,
-        "markers": [],
-        "docstring": "Test returns healthy when streaming is active (even without monitor).",
-        "class": "TestHealthCheck"
-      },
-      {
-        "name": "TestHealthCheck::test_detects_market_monitor_from_coordinator",
-        "line": 328,
-        "markers": [],
-        "docstring": "Test detects market_monitor from coordinator attribute.",
-        "class": "TestHealthCheck"
-      },
-      {
-        "name": "TestHealthCheck::test_no_market_monitor",
-        "line": 337,
-        "markers": [],
-        "docstring": "Test reports no market_monitor when missing.",
-        "class": "TestHealthCheck"
-      },
-      {
-        "name": "TestHealthCheck::test_streaming_active_when_task_running",
-        "line": 345,
-        "markers": [],
-        "docstring": "Test reports streaming_active when task is running.",
-        "class": "TestHealthCheck"
-      },
-      {
-        "name": "TestHealthCheck::test_streaming_inactive_when_task_done",
-        "line": 356,
-        "markers": [],
-        "docstring": "Test reports streaming_inactive when task is done.",
-        "class": "TestHealthCheck"
-      },
-      {
-        "name": "TestHealthCheck::test_streaming_inactive_when_no_task",
-        "line": 367,
-        "markers": [],
-        "docstring": "Test reports streaming_inactive when no task.",
-        "class": "TestHealthCheck"
-      },
-      {
-        "name": "TestHealthCheck::test_counts_background_tasks",
-        "line": 375,
-        "markers": [],
-        "docstring": "Test counts background tasks.",
-        "class": "TestHealthCheck"
-      },
-      {
-        "name": "TestHealthCheck::test_health_with_both_monitor_and_streaming",
-        "line": 384,
-        "markers": [],
-        "docstring": "Test health when both market_monitor and streaming are present.",
-        "class": "TestHealthCheck"
-      },
-      {
-        "name": "TestHealthCheck::test_health_details_always_present",
-        "line": 398,
-        "markers": [],
-        "docstring": "Test that all expected keys are present in details.",
-        "class": "TestHealthCheck"
-      },
-      {
-        "name": "test_extracts_from_bid_ask",
-        "line": 24,
-        "markers": [],
-        "docstring": "Test extracts mark from bid/ask midpoint."
-      },
-      {
-        "name": "test_extracts_from_bid_ask_strings",
-        "line": 31,
-        "markers": [],
-        "docstring": "Test extracts from bid/ask as string keys."
-      },
-      {
-        "name": "test_prefers_best_bid_over_bid",
-        "line": 38,
-        "markers": [],
-        "docstring": "Test prefers best_bid over bid key."
-      },
-      {
-        "name": "test_extracts_from_last_price",
-        "line": 46,
-        "markers": [],
-        "docstring": "Test extracts from last price when no bid/ask."
-      },
-      {
-        "name": "test_extracts_from_price_key",
-        "line": 53,
-        "markers": [],
-        "docstring": "Test extracts from price key when no bid/ask/last."
-      },
-      {
-        "name": "test_returns_none_for_empty_message",
-        "line": 60,
-        "markers": [],
-        "docstring": "Test returns None for empty message."
-      },
-      {
-        "name": "test_returns_none_for_zero_mark",
-        "line": 67,
-        "markers": [],
-        "docstring": "Test returns None when mark is zero."
-      },
-      {
-        "name": "test_returns_none_for_negative_mark",
-        "line": 74,
-        "markers": [],
-        "docstring": "Test returns None when mark is negative."
-      },
-      {
-        "name": "test_returns_none_for_zero_bid_ask_average",
-        "line": 81,
-        "markers": [],
-        "docstring": "Test returns None when bid/ask average is zero."
-      },
-      {
-        "name": "test_returns_none_for_invalid_decimal",
-        "line": 88,
-        "markers": [],
-        "docstring": "Test returns None for invalid decimal string."
-      },
-      {
-        "name": "test_handles_bid_only",
-        "line": 95,
-        "markers": [],
-        "docstring": "Test returns None when only bid is present."
-      },
-      {
-        "name": "test_handles_ask_only",
-        "line": 103,
-        "markers": [],
-        "docstring": "Test returns None when only ask is present."
-      },
-      {
         "name": "test_updates_strategy_coordinator_mark_window",
-        "line": 131,
+        "line": 26,
         "markers": [],
         "docstring": "Test updates mark window via strategy_coordinator."
       },
       {
         "name": "test_updates_runtime_state_mark_window",
-        "line": 144,
+        "line": 39,
         "markers": [],
         "docstring": "Test updates mark window via runtime_state."
       },
       {
         "name": "test_prunes_mark_window_when_exceeds_max_size",
-        "line": 161,
+        "line": 56,
         "markers": [],
         "docstring": "Test prunes mark window when it exceeds max size."
       },
       {
         "name": "test_records_market_update_via_extras_monitor",
-        "line": 179,
+        "line": 73,
         "markers": [],
         "docstring": "Test records update via market_monitor from extras."
       },
       {
         "name": "test_records_market_update_via_coordinator_monitor",
-        "line": 192,
+        "line": 86,
         "markers": [],
         "docstring": "Test records update via coordinator._market_monitor."
       },
       {
         "name": "test_records_risk_manager_mark_update",
-        "line": 204,
+        "line": 98,
         "markers": [],
         "docstring": "Test records mark update to risk_manager."
       },
       {
         "name": "test_creates_last_mark_update_dict_if_missing",
-        "line": 218,
+        "line": 112,
         "markers": [],
         "docstring": "Test creates last_mark_update dict if not present."
       },
       {
         "name": "test_handles_strategy_coordinator_error",
-        "line": 231,
+        "line": 124,
         "markers": [],
         "docstring": "Test handles error from strategy_coordinator gracefully."
       },
       {
         "name": "test_handles_market_monitor_error",
-        "line": 248,
+        "line": 141,
         "markers": [],
         "docstring": "Test handles error from market_monitor gracefully."
       },
       {
         "name": "test_handles_non_dict_extras",
-        "line": 264,
+        "line": 157,
         "markers": [],
         "docstring": "Test handles non-dict extras gracefully."
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_extract_mark.py": [
+      {
+        "name": "TestExtractMarkFromMessage::test_extracts_from_bid_ask",
+        "line": 14,
+        "markers": [],
+        "docstring": "Test extracts mark from bid/ask midpoint.",
+        "class": "TestExtractMarkFromMessage"
       },
       {
-        "name": "test_healthy_when_market_monitor_present",
-        "line": 295,
+        "name": "TestExtractMarkFromMessage::test_extracts_from_bid_ask_strings",
+        "line": 21,
         "markers": [],
-        "docstring": "Test returns healthy when market_monitor is present."
+        "docstring": "Test extracts from bid/ask as string keys.",
+        "class": "TestExtractMarkFromMessage"
       },
       {
-        "name": "test_unhealthy_when_no_monitor_or_streaming",
-        "line": 306,
+        "name": "TestExtractMarkFromMessage::test_prefers_best_bid_over_bid",
+        "line": 28,
         "markers": [],
-        "docstring": "Test returns unhealthy when no market_monitor and no streaming."
+        "docstring": "Test prefers best_bid over bid key.",
+        "class": "TestExtractMarkFromMessage"
       },
       {
-        "name": "test_healthy_when_streaming_active",
-        "line": 316,
+        "name": "TestExtractMarkFromMessage::test_extracts_from_last_price",
+        "line": 36,
         "markers": [],
-        "docstring": "Test returns healthy when streaming is active (even without monitor)."
+        "docstring": "Test extracts from last price when no bid/ask.",
+        "class": "TestExtractMarkFromMessage"
       },
       {
-        "name": "test_detects_market_monitor_from_coordinator",
-        "line": 328,
+        "name": "TestExtractMarkFromMessage::test_extracts_from_price_key",
+        "line": 43,
         "markers": [],
-        "docstring": "Test detects market_monitor from coordinator attribute."
+        "docstring": "Test extracts from price key when no bid/ask/last.",
+        "class": "TestExtractMarkFromMessage"
       },
       {
-        "name": "test_no_market_monitor",
-        "line": 337,
+        "name": "TestExtractMarkFromMessage::test_returns_none_for_empty_message",
+        "line": 50,
         "markers": [],
-        "docstring": "Test reports no market_monitor when missing."
+        "docstring": "Test returns None for empty message.",
+        "class": "TestExtractMarkFromMessage"
       },
       {
-        "name": "test_streaming_active_when_task_running",
-        "line": 345,
+        "name": "TestExtractMarkFromMessage::test_returns_none_for_zero_mark",
+        "line": 57,
         "markers": [],
-        "docstring": "Test reports streaming_active when task is running."
+        "docstring": "Test returns None when mark is zero.",
+        "class": "TestExtractMarkFromMessage"
       },
       {
-        "name": "test_streaming_inactive_when_task_done",
-        "line": 356,
+        "name": "TestExtractMarkFromMessage::test_returns_none_for_negative_mark",
+        "line": 64,
         "markers": [],
-        "docstring": "Test reports streaming_inactive when task is done."
+        "docstring": "Test returns None when mark is negative.",
+        "class": "TestExtractMarkFromMessage"
       },
       {
-        "name": "test_streaming_inactive_when_no_task",
-        "line": 367,
+        "name": "TestExtractMarkFromMessage::test_returns_none_for_zero_bid_ask_average",
+        "line": 71,
         "markers": [],
-        "docstring": "Test reports streaming_inactive when no task."
+        "docstring": "Test returns None when bid/ask average is zero.",
+        "class": "TestExtractMarkFromMessage"
       },
       {
-        "name": "test_counts_background_tasks",
-        "line": 375,
+        "name": "TestExtractMarkFromMessage::test_returns_none_for_invalid_decimal",
+        "line": 78,
         "markers": [],
-        "docstring": "Test counts background tasks."
+        "docstring": "Test returns None for invalid decimal string.",
+        "class": "TestExtractMarkFromMessage"
       },
       {
-        "name": "test_health_with_both_monitor_and_streaming",
-        "line": 384,
+        "name": "TestExtractMarkFromMessage::test_handles_bid_only",
+        "line": 85,
         "markers": [],
-        "docstring": "Test health when both market_monitor and streaming are present."
+        "docstring": "Test returns None when only bid is present.",
+        "class": "TestExtractMarkFromMessage"
       },
       {
-        "name": "test_health_details_always_present",
-        "line": 398,
+        "name": "TestExtractMarkFromMessage::test_handles_ask_only",
+        "line": 93,
         "markers": [],
-        "docstring": "Test that all expected keys are present in details."
+        "docstring": "Test returns None when only ask is present.",
+        "class": "TestExtractMarkFromMessage"
+      },
+      {
+        "name": "test_extracts_from_bid_ask",
+        "line": 14,
+        "markers": [],
+        "docstring": "Test extracts mark from bid/ask midpoint."
+      },
+      {
+        "name": "test_extracts_from_bid_ask_strings",
+        "line": 21,
+        "markers": [],
+        "docstring": "Test extracts from bid/ask as string keys."
+      },
+      {
+        "name": "test_prefers_best_bid_over_bid",
+        "line": 28,
+        "markers": [],
+        "docstring": "Test prefers best_bid over bid key."
+      },
+      {
+        "name": "test_extracts_from_last_price",
+        "line": 36,
+        "markers": [],
+        "docstring": "Test extracts from last price when no bid/ask."
+      },
+      {
+        "name": "test_extracts_from_price_key",
+        "line": 43,
+        "markers": [],
+        "docstring": "Test extracts from price key when no bid/ask/last."
+      },
+      {
+        "name": "test_returns_none_for_empty_message",
+        "line": 50,
+        "markers": [],
+        "docstring": "Test returns None for empty message."
+      },
+      {
+        "name": "test_returns_none_for_zero_mark",
+        "line": 57,
+        "markers": [],
+        "docstring": "Test returns None when mark is zero."
+      },
+      {
+        "name": "test_returns_none_for_negative_mark",
+        "line": 64,
+        "markers": [],
+        "docstring": "Test returns None when mark is negative."
+      },
+      {
+        "name": "test_returns_none_for_zero_bid_ask_average",
+        "line": 71,
+        "markers": [],
+        "docstring": "Test returns None when bid/ask average is zero."
+      },
+      {
+        "name": "test_returns_none_for_invalid_decimal",
+        "line": 78,
+        "markers": [],
+        "docstring": "Test returns None for invalid decimal string."
+      },
+      {
+        "name": "test_handles_bid_only",
+        "line": 85,
+        "markers": [],
+        "docstring": "Test returns None when only bid is present."
+      },
+      {
+        "name": "test_handles_ask_only",
+        "line": 93,
+        "markers": [],
+        "docstring": "Test returns None when only ask is present."
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_emit_and_enable.py": [
@@ -65501,6 +65089,151 @@
         "line": 208,
         "markers": [],
         "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_health_check.py": [
+      {
+        "name": "TestHealthCheck::test_healthy_when_market_monitor_present",
+        "line": 23,
+        "markers": [],
+        "docstring": "Test returns healthy when market_monitor is present.",
+        "class": "TestHealthCheck"
+      },
+      {
+        "name": "TestHealthCheck::test_unhealthy_when_no_monitor_or_streaming",
+        "line": 34,
+        "markers": [],
+        "docstring": "Test returns unhealthy when no market_monitor and no streaming.",
+        "class": "TestHealthCheck"
+      },
+      {
+        "name": "TestHealthCheck::test_healthy_when_streaming_active",
+        "line": 44,
+        "markers": [],
+        "docstring": "Test returns healthy when streaming is active (even without monitor).",
+        "class": "TestHealthCheck"
+      },
+      {
+        "name": "TestHealthCheck::test_detects_market_monitor_from_coordinator",
+        "line": 56,
+        "markers": [],
+        "docstring": "Test detects market_monitor from coordinator attribute.",
+        "class": "TestHealthCheck"
+      },
+      {
+        "name": "TestHealthCheck::test_no_market_monitor",
+        "line": 65,
+        "markers": [],
+        "docstring": "Test reports no market_monitor when missing.",
+        "class": "TestHealthCheck"
+      },
+      {
+        "name": "TestHealthCheck::test_streaming_active_when_task_running",
+        "line": 73,
+        "markers": [],
+        "docstring": "Test reports streaming_active when task is running.",
+        "class": "TestHealthCheck"
+      },
+      {
+        "name": "TestHealthCheck::test_streaming_inactive_when_task_done",
+        "line": 84,
+        "markers": [],
+        "docstring": "Test reports streaming_inactive when task is done.",
+        "class": "TestHealthCheck"
+      },
+      {
+        "name": "TestHealthCheck::test_streaming_inactive_when_no_task",
+        "line": 95,
+        "markers": [],
+        "docstring": "Test reports streaming_inactive when no task.",
+        "class": "TestHealthCheck"
+      },
+      {
+        "name": "TestHealthCheck::test_counts_background_tasks",
+        "line": 103,
+        "markers": [],
+        "docstring": "Test counts background tasks.",
+        "class": "TestHealthCheck"
+      },
+      {
+        "name": "TestHealthCheck::test_health_with_both_monitor_and_streaming",
+        "line": 112,
+        "markers": [],
+        "docstring": "Test health when both market_monitor and streaming are present.",
+        "class": "TestHealthCheck"
+      },
+      {
+        "name": "TestHealthCheck::test_health_details_always_present",
+        "line": 126,
+        "markers": [],
+        "docstring": "Test that all expected keys are present in details.",
+        "class": "TestHealthCheck"
+      },
+      {
+        "name": "test_healthy_when_market_monitor_present",
+        "line": 23,
+        "markers": [],
+        "docstring": "Test returns healthy when market_monitor is present."
+      },
+      {
+        "name": "test_unhealthy_when_no_monitor_or_streaming",
+        "line": 34,
+        "markers": [],
+        "docstring": "Test returns unhealthy when no market_monitor and no streaming."
+      },
+      {
+        "name": "test_healthy_when_streaming_active",
+        "line": 44,
+        "markers": [],
+        "docstring": "Test returns healthy when streaming is active (even without monitor)."
+      },
+      {
+        "name": "test_detects_market_monitor_from_coordinator",
+        "line": 56,
+        "markers": [],
+        "docstring": "Test detects market_monitor from coordinator attribute."
+      },
+      {
+        "name": "test_no_market_monitor",
+        "line": 65,
+        "markers": [],
+        "docstring": "Test reports no market_monitor when missing."
+      },
+      {
+        "name": "test_streaming_active_when_task_running",
+        "line": 73,
+        "markers": [],
+        "docstring": "Test reports streaming_active when task is running."
+      },
+      {
+        "name": "test_streaming_inactive_when_task_done",
+        "line": 84,
+        "markers": [],
+        "docstring": "Test reports streaming_inactive when task is done."
+      },
+      {
+        "name": "test_streaming_inactive_when_no_task",
+        "line": 95,
+        "markers": [],
+        "docstring": "Test reports streaming_inactive when no task."
+      },
+      {
+        "name": "test_counts_background_tasks",
+        "line": 103,
+        "markers": [],
+        "docstring": "Test counts background tasks."
+      },
+      {
+        "name": "test_health_with_both_monitor_and_streaming",
+        "line": 112,
+        "markers": [],
+        "docstring": "Test health when both market_monitor and streaming are present."
+      },
+      {
+        "name": "test_health_details_always_present",
+        "line": 126,
+        "markers": [],
+        "docstring": "Test that all expected keys are present in details."
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_task_completion_and_async_loop.py": [
@@ -69693,30 +69426,30 @@
         "docstring": "CFM notional Decimal values convert to strings."
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator.py": [
+    "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_class_structure.py": [
       {
         "name": "TestStrategyOrchestratorClassStructure::test_requires_context_attribute",
-        "line": 16,
+        "line": 11,
         "markers": [],
         "docstring": "Test that requires_context is True.",
         "class": "TestStrategyOrchestratorClassStructure"
       },
       {
         "name": "TestStrategyOrchestratorClassStructure::test_inherits_from_mixins",
-        "line": 20,
+        "line": 15,
         "markers": [],
         "docstring": "Test that StrategyOrchestrator inherits from expected mixins.",
         "class": "TestStrategyOrchestratorClassStructure"
       },
       {
         "name": "test_requires_context_attribute",
-        "line": 16,
+        "line": 11,
         "markers": [],
         "docstring": "Test that requires_context is True."
       },
       {
         "name": "test_inherits_from_mixins",
-        "line": 20,
+        "line": 15,
         "markers": [],
         "docstring": "Test that StrategyOrchestrator inherits from expected mixins."
       }
@@ -70015,279 +69748,289 @@
         "docstring": "Cooldown prevents new entries until it expires."
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/strategies/hybrid/test_base.py": [
+    "tests/unit/gpt_trader/features/live_trade/strategies/hybrid/test_base_initialization.py": [
       {
         "name": "TestHybridStrategyBaseInit::test_init_default_config",
-        "line": 35,
+        "line": 14,
         "markers": [],
         "docstring": "Initializes with default config.",
         "class": "TestHybridStrategyBaseInit"
       },
       {
         "name": "TestHybridStrategyBaseInit::test_init_custom_symbols",
-        "line": 43,
+        "line": 22,
         "markers": [],
         "docstring": "Initializes with custom symbols.",
         "class": "TestHybridStrategyBaseInit"
       },
       {
         "name": "TestHybridStrategyBaseInit::test_init_explicit_cfm_symbol",
-        "line": 53,
+        "line": 32,
         "markers": [],
         "docstring": "Uses explicit CFM symbol if provided.",
         "class": "TestHybridStrategyBaseInit"
       },
       {
         "name": "TestHybridStrategyBaseInit::test_init_position_state",
-        "line": 61,
+        "line": 40,
         "markers": [],
         "docstring": "Initializes with empty position state.",
         "class": "TestHybridStrategyBaseInit"
       },
       {
-        "name": "TestHybridStrategyBaseDecide::test_decide_hold_when_no_decisions",
-        "line": 72,
+        "name": "test_init_default_config",
+        "line": 14,
         "markers": [],
-        "docstring": "Returns HOLD when decide_hybrid returns empty list.",
-        "class": "TestHybridStrategyBaseDecide"
+        "docstring": "Initializes with default config."
       },
       {
-        "name": "TestHybridStrategyBaseDecide::test_decide_converts_buy",
-        "line": 92,
+        "name": "test_init_custom_symbols",
+        "line": 22,
         "markers": [],
-        "docstring": "Converts BUY action correctly.",
-        "class": "TestHybridStrategyBaseDecide"
+        "docstring": "Initializes with custom symbols."
       },
       {
-        "name": "TestHybridStrategyBaseDecide::test_decide_converts_sell",
-        "line": 124,
+        "name": "test_init_explicit_cfm_symbol",
+        "line": 32,
         "markers": [],
-        "docstring": "Converts SELL action correctly.",
-        "class": "TestHybridStrategyBaseDecide"
+        "docstring": "Uses explicit CFM symbol if provided."
       },
       {
-        "name": "TestHybridStrategyBaseDecide::test_decide_skips_hold_decisions",
-        "line": 151,
+        "name": "test_init_position_state",
+        "line": 40,
         "markers": [],
-        "docstring": "Skips HOLD decisions to find actionable one.",
-        "class": "TestHybridStrategyBaseDecide"
-      },
-      {
-        "name": "TestHybridStrategyBasePositionState::test_update_from_spot_position_dict",
-        "line": 189,
-        "markers": [],
-        "docstring": "Updates position state from spot position dict.",
-        "class": "TestHybridStrategyBasePositionState"
-      },
-      {
-        "name": "TestHybridStrategyBasePositionState::test_update_from_cfm_position_dict",
-        "line": 207,
-        "markers": [],
-        "docstring": "Updates position state from CFM position dict.",
-        "class": "TestHybridStrategyBasePositionState"
-      },
-      {
-        "name": "TestHybridStrategyBasePositionState::test_update_from_flat_dict_spot",
-        "line": 227,
-        "markers": [],
-        "docstring": "Updates from flat dict format with SPOT type.",
-        "class": "TestHybridStrategyBasePositionState"
-      },
-      {
-        "name": "TestHybridStrategyBasePositionState::test_update_from_flat_dict_futures",
-        "line": 242,
-        "markers": [],
-        "docstring": "Updates from flat dict format with FUTURE type.",
-        "class": "TestHybridStrategyBasePositionState"
-      },
-      {
-        "name": "TestHybridStrategyBasePositionSizing::test_calculate_spot_position_size",
-        "line": 263,
-        "markers": [],
-        "docstring": "Calculates spot position size correctly.",
-        "class": "TestHybridStrategyBasePositionSizing"
-      },
-      {
-        "name": "TestHybridStrategyBasePositionSizing::test_calculate_cfm_position_size",
-        "line": 275,
-        "markers": [],
-        "docstring": "Calculates CFM position size correctly.",
-        "class": "TestHybridStrategyBasePositionSizing"
-      },
-      {
-        "name": "TestHybridStrategyBasePositionSizing::test_calculate_cfm_position_size_with_leverage",
-        "line": 287,
-        "markers": [],
-        "docstring": "Calculates CFM position size with leverage.",
-        "class": "TestHybridStrategyBasePositionSizing"
-      },
-      {
-        "name": "TestHybridStrategyBasePositionSizing::test_calculate_hybrid_position_size",
-        "line": 300,
-        "markers": [],
-        "docstring": "Calculates hybrid position size (average).",
-        "class": "TestHybridStrategyBasePositionSizing"
-      },
-      {
-        "name": "TestHybridStrategyBaseSerialization::test_serialize_state",
-        "line": 319,
-        "markers": [],
-        "docstring": "Serializes state correctly.",
-        "class": "TestHybridStrategyBaseSerialization"
-      },
-      {
-        "name": "TestHybridStrategyBaseSerialization::test_deserialize_state",
-        "line": 332,
-        "markers": [],
-        "docstring": "Deserializes state correctly.",
-        "class": "TestHybridStrategyBaseSerialization"
-      },
+        "docstring": "Initializes with empty position state."
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/strategies/hybrid/test_base_decision_helpers.py": [
       {
         "name": "TestHybridStrategyBaseHelpers::test_create_spot_decision",
-        "line": 361,
+        "line": 18,
         "markers": [],
         "docstring": "Creates spot decision correctly.",
         "class": "TestHybridStrategyBaseHelpers"
       },
       {
         "name": "TestHybridStrategyBaseHelpers::test_create_cfm_decision",
-        "line": 381,
+        "line": 38,
         "markers": [],
         "docstring": "Creates CFM decision correctly.",
         "class": "TestHybridStrategyBaseHelpers"
       },
       {
         "name": "TestHybridStrategyBaseHelpers::test_create_cfm_decision_with_custom_leverage",
-        "line": 398,
+        "line": 55,
         "markers": [],
         "docstring": "Creates CFM decision with custom leverage.",
         "class": "TestHybridStrategyBaseHelpers"
       },
       {
-        "name": "test_init_default_config",
-        "line": 35,
-        "markers": [],
-        "docstring": "Initializes with default config."
-      },
-      {
-        "name": "test_init_custom_symbols",
-        "line": 43,
-        "markers": [],
-        "docstring": "Initializes with custom symbols."
-      },
-      {
-        "name": "test_init_explicit_cfm_symbol",
-        "line": 53,
-        "markers": [],
-        "docstring": "Uses explicit CFM symbol if provided."
-      },
-      {
-        "name": "test_init_position_state",
-        "line": 61,
-        "markers": [],
-        "docstring": "Initializes with empty position state."
-      },
-      {
-        "name": "test_decide_hold_when_no_decisions",
-        "line": 72,
-        "markers": [],
-        "docstring": "Returns HOLD when decide_hybrid returns empty list."
-      },
-      {
-        "name": "test_decide_converts_buy",
-        "line": 92,
-        "markers": [],
-        "docstring": "Converts BUY action correctly."
-      },
-      {
-        "name": "test_decide_converts_sell",
-        "line": 124,
-        "markers": [],
-        "docstring": "Converts SELL action correctly."
-      },
-      {
-        "name": "test_decide_skips_hold_decisions",
-        "line": 151,
-        "markers": [],
-        "docstring": "Skips HOLD decisions to find actionable one."
-      },
-      {
-        "name": "test_update_from_spot_position_dict",
-        "line": 189,
-        "markers": [],
-        "docstring": "Updates position state from spot position dict."
-      },
-      {
-        "name": "test_update_from_cfm_position_dict",
-        "line": 207,
-        "markers": [],
-        "docstring": "Updates position state from CFM position dict."
-      },
-      {
-        "name": "test_update_from_flat_dict_spot",
-        "line": 227,
-        "markers": [],
-        "docstring": "Updates from flat dict format with SPOT type."
-      },
-      {
-        "name": "test_update_from_flat_dict_futures",
-        "line": 242,
-        "markers": [],
-        "docstring": "Updates from flat dict format with FUTURE type."
-      },
-      {
-        "name": "test_calculate_spot_position_size",
-        "line": 263,
-        "markers": [],
-        "docstring": "Calculates spot position size correctly."
-      },
-      {
-        "name": "test_calculate_cfm_position_size",
-        "line": 275,
-        "markers": [],
-        "docstring": "Calculates CFM position size correctly."
-      },
-      {
-        "name": "test_calculate_cfm_position_size_with_leverage",
-        "line": 287,
-        "markers": [],
-        "docstring": "Calculates CFM position size with leverage."
-      },
-      {
-        "name": "test_calculate_hybrid_position_size",
-        "line": 300,
-        "markers": [],
-        "docstring": "Calculates hybrid position size (average)."
-      },
-      {
-        "name": "test_serialize_state",
-        "line": 319,
-        "markers": [],
-        "docstring": "Serializes state correctly."
-      },
-      {
-        "name": "test_deserialize_state",
-        "line": 332,
-        "markers": [],
-        "docstring": "Deserializes state correctly."
-      },
-      {
         "name": "test_create_spot_decision",
-        "line": 361,
+        "line": 18,
         "markers": [],
         "docstring": "Creates spot decision correctly."
       },
       {
         "name": "test_create_cfm_decision",
-        "line": 381,
+        "line": 38,
         "markers": [],
         "docstring": "Creates CFM decision correctly."
       },
       {
         "name": "test_create_cfm_decision_with_custom_leverage",
-        "line": 398,
+        "line": 55,
         "markers": [],
         "docstring": "Creates CFM decision with custom leverage."
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/strategies/hybrid/test_base_position_sizing.py": [
+      {
+        "name": "TestHybridStrategyBasePositionSizing::test_calculate_spot_position_size",
+        "line": 17,
+        "markers": [],
+        "docstring": "Calculates spot position size correctly.",
+        "class": "TestHybridStrategyBasePositionSizing"
+      },
+      {
+        "name": "TestHybridStrategyBasePositionSizing::test_calculate_cfm_position_size",
+        "line": 29,
+        "markers": [],
+        "docstring": "Calculates CFM position size correctly.",
+        "class": "TestHybridStrategyBasePositionSizing"
+      },
+      {
+        "name": "TestHybridStrategyBasePositionSizing::test_calculate_cfm_position_size_with_leverage",
+        "line": 41,
+        "markers": [],
+        "docstring": "Calculates CFM position size with leverage.",
+        "class": "TestHybridStrategyBasePositionSizing"
+      },
+      {
+        "name": "TestHybridStrategyBasePositionSizing::test_calculate_hybrid_position_size",
+        "line": 54,
+        "markers": [],
+        "docstring": "Calculates hybrid position size (average).",
+        "class": "TestHybridStrategyBasePositionSizing"
+      },
+      {
+        "name": "test_calculate_spot_position_size",
+        "line": 17,
+        "markers": [],
+        "docstring": "Calculates spot position size correctly."
+      },
+      {
+        "name": "test_calculate_cfm_position_size",
+        "line": 29,
+        "markers": [],
+        "docstring": "Calculates CFM position size correctly."
+      },
+      {
+        "name": "test_calculate_cfm_position_size_with_leverage",
+        "line": 41,
+        "markers": [],
+        "docstring": "Calculates CFM position size with leverage."
+      },
+      {
+        "name": "test_calculate_hybrid_position_size",
+        "line": 54,
+        "markers": [],
+        "docstring": "Calculates hybrid position size (average)."
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/strategies/hybrid/test_base_position_state.py": [
+      {
+        "name": "TestHybridStrategyBasePositionState::test_update_from_spot_position_dict",
+        "line": 14,
+        "markers": [],
+        "docstring": "Updates position state from spot position dict.",
+        "class": "TestHybridStrategyBasePositionState"
+      },
+      {
+        "name": "TestHybridStrategyBasePositionState::test_update_from_cfm_position_dict",
+        "line": 32,
+        "markers": [],
+        "docstring": "Updates position state from CFM position dict.",
+        "class": "TestHybridStrategyBasePositionState"
+      },
+      {
+        "name": "TestHybridStrategyBasePositionState::test_update_from_flat_dict_spot",
+        "line": 52,
+        "markers": [],
+        "docstring": "Updates from flat dict format with SPOT type.",
+        "class": "TestHybridStrategyBasePositionState"
+      },
+      {
+        "name": "TestHybridStrategyBasePositionState::test_update_from_flat_dict_futures",
+        "line": 67,
+        "markers": [],
+        "docstring": "Updates from flat dict format with FUTURE type.",
+        "class": "TestHybridStrategyBasePositionState"
+      },
+      {
+        "name": "test_update_from_spot_position_dict",
+        "line": 14,
+        "markers": [],
+        "docstring": "Updates position state from spot position dict."
+      },
+      {
+        "name": "test_update_from_cfm_position_dict",
+        "line": 32,
+        "markers": [],
+        "docstring": "Updates position state from CFM position dict."
+      },
+      {
+        "name": "test_update_from_flat_dict_spot",
+        "line": 52,
+        "markers": [],
+        "docstring": "Updates from flat dict format with SPOT type."
+      },
+      {
+        "name": "test_update_from_flat_dict_futures",
+        "line": 67,
+        "markers": [],
+        "docstring": "Updates from flat dict format with FUTURE type."
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/strategies/hybrid/test_base_decide.py": [
+      {
+        "name": "TestHybridStrategyBaseDecide::test_decide_hold_when_no_decisions",
+        "line": 19,
+        "markers": [],
+        "docstring": "Returns HOLD when decide_hybrid returns empty list.",
+        "class": "TestHybridStrategyBaseDecide"
+      },
+      {
+        "name": "TestHybridStrategyBaseDecide::test_decide_converts_buy",
+        "line": 39,
+        "markers": [],
+        "docstring": "Converts BUY action correctly.",
+        "class": "TestHybridStrategyBaseDecide"
+      },
+      {
+        "name": "TestHybridStrategyBaseDecide::test_decide_converts_sell",
+        "line": 71,
+        "markers": [],
+        "docstring": "Converts SELL action correctly.",
+        "class": "TestHybridStrategyBaseDecide"
+      },
+      {
+        "name": "TestHybridStrategyBaseDecide::test_decide_skips_hold_decisions",
+        "line": 98,
+        "markers": [],
+        "docstring": "Skips HOLD decisions to find actionable one.",
+        "class": "TestHybridStrategyBaseDecide"
+      },
+      {
+        "name": "test_decide_hold_when_no_decisions",
+        "line": 19,
+        "markers": [],
+        "docstring": "Returns HOLD when decide_hybrid returns empty list."
+      },
+      {
+        "name": "test_decide_converts_buy",
+        "line": 39,
+        "markers": [],
+        "docstring": "Converts BUY action correctly."
+      },
+      {
+        "name": "test_decide_converts_sell",
+        "line": 71,
+        "markers": [],
+        "docstring": "Converts SELL action correctly."
+      },
+      {
+        "name": "test_decide_skips_hold_decisions",
+        "line": 98,
+        "markers": [],
+        "docstring": "Skips HOLD decisions to find actionable one."
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/strategies/hybrid/test_base_serialization.py": [
+      {
+        "name": "TestHybridStrategyBaseSerialization::test_serialize_state",
+        "line": 14,
+        "markers": [],
+        "docstring": "Serializes state correctly.",
+        "class": "TestHybridStrategyBaseSerialization"
+      },
+      {
+        "name": "TestHybridStrategyBaseSerialization::test_deserialize_state",
+        "line": 27,
+        "markers": [],
+        "docstring": "Deserializes state correctly.",
+        "class": "TestHybridStrategyBaseSerialization"
+      },
+      {
+        "name": "test_serialize_state",
+        "line": 14,
+        "markers": [],
+        "docstring": "Serializes state correctly."
+      },
+      {
+        "name": "test_deserialize_state",
+        "line": 27,
+        "markers": [],
+        "docstring": "Deserializes state correctly."
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/strategies/hybrid/test_types.py": [

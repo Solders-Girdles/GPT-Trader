@@ -97,8 +97,8 @@
   "counts": {
     "parametrize": 94,
     "skipif": 16,
-    "property": 11,
     "integration": 11,
+    "property": 10,
     "perps": 5,
     "perf": 4,
     "uses_real_preferences": 2,

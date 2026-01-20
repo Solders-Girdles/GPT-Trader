@@ -32993,7 +32993,7 @@
     "tests/unit/gpt_trader/monitoring/configuration_guardian/test_detector_edges.py": [
       {
         "name": "test_configuration_issue_serialization_and_repr",
-        "line": 25,
+        "line": 28,
         "markers": [
           "unit"
         ],
@@ -33001,7 +33001,7 @@
       },
       {
         "name": "test_detector_returns_empty_when_no_validators_fail",
-        "line": 43,
+        "line": 46,
         "markers": [
           "unit"
         ],
@@ -33009,7 +33009,7 @@
       },
       {
         "name": "test_detector_continues_when_validator_raises",
-        "line": 49,
+        "line": 52,
         "markers": [
           "unit"
         ],
@@ -33017,7 +33017,7 @@
       },
       {
         "name": "test_response_payload_includes_required_fields",
-        "line": 67,
+        "line": 72,
         "markers": [
           "unit"
         ],
@@ -33027,7 +33027,7 @@
     "tests/unit/gpt_trader/monitoring/configuration_guardian/test_drift_detector_edges.py": [
       {
         "name": "test_drift_summary_empty_and_state_mirror",
-        "line": 12,
+        "line": 15,
         "markers": [
           "unit"
         ],
@@ -33035,7 +33035,7 @@
       },
       {
         "name": "test_record_drift_events_logs_only_when_non_empty",
-        "line": 26,
+        "line": 29,
         "markers": [
           "unit"
         ],
@@ -33043,7 +33043,7 @@
       },
       {
         "name": "test_drift_summary_counts_and_last_event_fields",
-        "line": 43,
+        "line": 50,
         "markers": [
           "unit"
         ],
@@ -35582,7 +35582,7 @@
     "tests/unit/gpt_trader/monitoring/test_health_checks_broker_ping.py": [
       {
         "name": "TestCheckBrokerPing::test_success_with_get_time",
-        "line": 13,
+        "line": 17,
         "markers": [
           "unit"
         ],
@@ -35591,7 +35591,7 @@
       },
       {
         "name": "TestCheckBrokerPing::test_success_fallback_to_list_balances",
-        "line": 26,
+        "line": 30,
         "markers": [
           "unit"
         ],
@@ -35600,7 +35600,7 @@
       },
       {
         "name": "TestCheckBrokerPing::test_failure_on_exception",
-        "line": 37,
+        "line": 41,
         "markers": [
           "unit"
         ],
@@ -35609,7 +35609,7 @@
       },
       {
         "name": "TestCheckBrokerPing::test_high_latency_warning",
-        "line": 49,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -36952,7 +36952,7 @@
       },
       {
         "name": "test_serialize_status_includes_expected_keys",
-        "line": 58,
+        "line": 61,
         "markers": [
           "unit"
         ],
@@ -37024,7 +37024,7 @@
     "tests/unit/gpt_trader/monitoring/test_status_reporter_limits_edges.py": [
       {
         "name": "test_add_trade_caps_recent_trades",
-        "line": 20,
+        "line": 22,
         "markers": [
           "unit"
         ],
@@ -37032,7 +37032,7 @@
       },
       {
         "name": "test_update_strategy_caps_decisions",
-        "line": 44,
+        "line": 47,
         "markers": [
           "unit"
         ],
@@ -37040,7 +37040,7 @@
       },
       {
         "name": "test_update_account_accepts_object_balances_and_coerces_invalid",
-        "line": 56,
+        "line": 59,
         "markers": [
           "unit"
         ],
@@ -37239,7 +37239,7 @@
     "tests/unit/gpt_trader/monitoring/two_person_rule/test_manager_edges.py": [
       {
         "name": "test_create_request_sets_pending_and_uses_window",
-        "line": 20,
+        "line": 23,
         "markers": [
           "unit"
         ],
@@ -37247,7 +37247,7 @@
       },
       {
         "name": "test_approve_request_rejects_same_user_and_allows_different_user",
-        "line": 31,
+        "line": 34,
         "markers": [
           "unit"
         ],
@@ -37255,7 +37255,7 @@
       },
       {
         "name": "test_mark_applied_only_succeeds_from_approved",
-        "line": 49,
+        "line": 52,
         "markers": [
           "unit"
         ],
@@ -37263,7 +37263,7 @@
       },
       {
         "name": "test_get_pending_requests_marks_expired",
-        "line": 66,
+        "line": 69,
         "markers": [
           "unit"
         ],
@@ -37271,7 +37271,7 @@
       },
       {
         "name": "test_requires_approval_filters_critical_fields",
-        "line": 84,
+        "line": 87,
         "markers": [
           "unit"
         ],
@@ -37279,7 +37279,7 @@
       },
       {
         "name": "test_log_config_delta_emits_metric_payload",
-        "line": 97,
+        "line": 100,
         "markers": [
           "unit"
         ],

@@ -1243,21 +1243,17 @@ clusters:
     type: similar_names
     description: 8 test files match pattern test_logging_patterns_* in tests/unit/gpt_trader/utilities
     files:
-    - tests/unit/gpt_trader/utilities/test_logging_patterns_decorator.py
-    - tests/unit/gpt_trader/utilities/test_logging_patterns_error_and_config_change.py
-    - tests/unit/gpt_trader/utilities/test_logging_patterns_execution.py
-    - tests/unit/gpt_trader/utilities/test_logging_patterns_log_operation.py
-    - tests/unit/gpt_trader/utilities/test_logging_patterns_market_data.py
-    - tests/unit/gpt_trader/utilities/test_logging_patterns_structured_logger.py
-    - tests/unit/gpt_trader/utilities/test_logging_patterns_system_health.py
-    - tests/unit/gpt_trader/utilities/test_logging_patterns_trade_and_position.py
+    - tests/unit/gpt_trader/utilities/test_logging_patterns.py
+    - tests/unit/gpt_trader/utilities/test_logging_patterns_domain.py
+    - tests/unit/gpt_trader/utilities/test_logging_patterns_health.py
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/utilities/test_logging_patterns.py
-    expected_file_delta: -7
+    expected_file_delta: -5
     priority: medium
-    rationale: Consolidate 8 test files into single parametrized file
-    status: pending
+    rationale: Consolidate 8 test files into 3 files (<=240 lines each)
+    status: in_progress
+    owner: claude
     added: '2026-01-20'
   8e99233214a1:
     type: similar_names

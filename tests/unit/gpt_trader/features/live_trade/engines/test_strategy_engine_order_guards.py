@@ -3,16 +3,17 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
+import gpt_trader.security.security_validator as security_validator_module
 from gpt_trader.core import Balance, Product
 from gpt_trader.features.live_trade.strategies.perps_baseline import Action, Decision
 
 
 @pytest.mark.asyncio
-async def test_exchange_rules_blocks_small_order(engine):
+async def test_exchange_rules_blocks_small_order(engine, monkeypatch: pytest.MonkeyPatch):
     """Test that exchange rules guard blocks orders below min size."""
     from gpt_trader.core import MarketType
     from gpt_trader.features.live_trade.risk.manager import ValidationError
@@ -45,19 +46,18 @@ async def test_exchange_rules_blocks_small_order(engine):
 
     engine._order_submitter = MagicMock()
 
-    with patch("gpt_trader.security.security_validator.get_validator") as mock_get_validator:
-        mock_validator = MagicMock()
-        mock_validator.validate_order_request.return_value.is_valid = True
-        mock_get_validator.return_value = mock_validator
+    mock_validator = MagicMock()
+    mock_validator.validate_order_request.return_value.is_valid = True
+    monkeypatch.setattr(security_validator_module, "get_validator", lambda: mock_validator)
 
-        await engine._cycle()
+    await engine._cycle()
 
     engine.context.broker.place_order.assert_not_called()
     engine._order_submitter.record_rejection.assert_called_once()
 
 
 @pytest.mark.asyncio
-async def test_slippage_guard_blocks_order(engine):
+async def test_slippage_guard_blocks_order(engine, monkeypatch: pytest.MonkeyPatch):
     """Test that slippage guard blocks orders with excessive expected slippage."""
     from gpt_trader.core import MarketType
     from gpt_trader.features.live_trade.risk.manager import ValidationError
@@ -94,12 +94,11 @@ async def test_slippage_guard_blocks_order(engine):
 
     engine._order_submitter = MagicMock()
 
-    with patch("gpt_trader.security.security_validator.get_validator") as mock_get_validator:
-        mock_validator = MagicMock()
-        mock_validator.validate_order_request.return_value.is_valid = True
-        mock_get_validator.return_value = mock_validator
+    mock_validator = MagicMock()
+    mock_validator.validate_order_request.return_value.is_valid = True
+    monkeypatch.setattr(security_validator_module, "get_validator", lambda: mock_validator)
 
-        await engine._cycle()
+    await engine._cycle()
 
     engine.context.broker.place_order.assert_not_called()
     engine._order_submitter.record_rejection.assert_called_once()

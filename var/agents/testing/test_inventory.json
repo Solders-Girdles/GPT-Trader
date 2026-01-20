@@ -35582,7 +35582,7 @@
     "tests/unit/gpt_trader/monitoring/test_health_checks_broker_ping.py": [
       {
         "name": "TestCheckBrokerPing::test_success_with_get_time",
-        "line": 17,
+        "line": 16,
         "markers": [
           "unit"
         ],
@@ -35591,7 +35591,7 @@
       },
       {
         "name": "TestCheckBrokerPing::test_success_fallback_to_list_balances",
-        "line": 30,
+        "line": 29,
         "markers": [
           "unit"
         ],
@@ -35600,7 +35600,7 @@
       },
       {
         "name": "TestCheckBrokerPing::test_failure_on_exception",
-        "line": 41,
+        "line": 40,
         "markers": [
           "unit"
         ],
@@ -35609,7 +35609,7 @@
       },
       {
         "name": "TestCheckBrokerPing::test_high_latency_warning",
-        "line": 53,
+        "line": 52,
         "markers": [
           "unit"
         ],
@@ -36926,7 +36926,7 @@
     "tests/unit/gpt_trader/monitoring/test_status_reporter_io_edges.py": [
       {
         "name": "test_write_status_creates_directories_and_writes_json",
-        "line": 16,
+        "line": 15,
         "markers": [
           "asyncio",
           "unit"
@@ -36935,7 +36935,7 @@
       },
       {
         "name": "test_decimal_encoder_handles_nested_decimals",
-        "line": 28,
+        "line": 27,
         "markers": [
           "unit"
         ],
@@ -36943,7 +36943,7 @@
       },
       {
         "name": "test_write_status_handles_write_errors",
-        "line": 48,
+        "line": 47,
         "markers": [
           "asyncio",
           "unit"
@@ -36952,7 +36952,7 @@
       },
       {
         "name": "test_serialize_status_includes_expected_keys",
-        "line": 61,
+        "line": 62,
         "markers": [
           "unit"
         ],
@@ -37024,7 +37024,7 @@
     "tests/unit/gpt_trader/monitoring/test_status_reporter_limits_edges.py": [
       {
         "name": "test_add_trade_caps_recent_trades",
-        "line": 22,
+        "line": 21,
         "markers": [
           "unit"
         ],
@@ -37032,7 +37032,7 @@
       },
       {
         "name": "test_update_strategy_caps_decisions",
-        "line": 47,
+        "line": 46,
         "markers": [
           "unit"
         ],
@@ -37040,7 +37040,7 @@
       },
       {
         "name": "test_update_account_accepts_object_balances_and_coerces_invalid",
-        "line": 59,
+        "line": 58,
         "markers": [
           "unit"
         ],
@@ -47211,7 +47211,7 @@
       },
       {
         "name": "TestResourceCleanup::test_websocket_reconnect_limit_configurable",
-        "line": 121,
+        "line": 119,
         "markers": [
           "unit"
         ],

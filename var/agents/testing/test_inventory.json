@@ -3668,7 +3668,7 @@
       },
       {
         "name": "TestApplicationContainerBotCreation::test_create_bot_includes_notification_service",
-        "line": 54,
+        "line": 52,
         "markers": [
           "unit"
         ],
@@ -5150,7 +5150,7 @@
     "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_backtest_report.py": [
       {
         "name": "TestGenerateBacktestReportFunction::test_returns_backtest_result",
-        "line": 20,
+        "line": 23,
         "markers": [
           "unit"
         ],
@@ -13008,7 +13008,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_find_existing_order_by_client_id.py": [
       {
         "name": "TestCoinbaseRestServiceCoreFindExistingOrderByClientId::test_find_existing_order_by_client_id_success",
-        "line": 15,
+        "line": 18,
         "markers": [
           "unit"
         ],
@@ -13017,7 +13017,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCoreFindExistingOrderByClientId::test_find_existing_order_by_client_id_no_client_id",
-        "line": 35,
+        "line": 39,
         "markers": [
           "unit"
         ],
@@ -13026,7 +13026,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCoreFindExistingOrderByClientId::test_find_existing_order_by_client_id_no_matches",
-        "line": 41,
+        "line": 45,
         "markers": [
           "unit"
         ],
@@ -13035,7 +13035,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCoreFindExistingOrderByClientId::test_find_existing_order_by_client_id_multiple_matches",
-        "line": 48,
+        "line": 52,
         "markers": [
           "unit"
         ],
@@ -13044,7 +13044,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCoreFindExistingOrderByClientId::test_find_existing_order_by_client_id_api_error",
-        "line": 72,
+        "line": 77,
         "markers": [
           "unit"
         ],
@@ -13053,7 +13053,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCoreFindExistingOrderByClientId::test_find_existing_order_by_client_id_network_error",
-        "line": 79,
+        "line": 84,
         "markers": [
           "unit"
         ],
@@ -13062,7 +13062,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCoreFindExistingOrderByClientId::test_find_existing_order_by_client_id_value_error",
-        "line": 86,
+        "line": 91,
         "markers": [
           "unit"
         ],
@@ -13293,7 +13293,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_queries_and_fills.py": [
       {
         "name": "TestCoinbaseRestContractSuiteOrderServiceQueriesAndFills::test_list_orders_with_pagination",
-        "line": 17,
+        "line": 18,
         "markers": [
           "unit"
         ],
@@ -13320,7 +13320,7 @@
       },
       {
         "name": "TestCoinbaseRestContractSuiteOrderServiceQueriesAndFills::test_get_order_not_found",
-        "line": 53,
+        "line": 50,
         "markers": [
           "unit"
         ],
@@ -13329,7 +13329,7 @@
       },
       {
         "name": "TestCoinbaseRestContractSuiteOrderServiceQueriesAndFills::test_list_fills_with_pagination",
-        "line": 60,
+        "line": 57,
         "markers": [
           "unit"
         ],
@@ -13338,7 +13338,7 @@
       },
       {
         "name": "TestCoinbaseRestContractSuiteOrderServiceQueriesAndFills::test_list_fills_error_handling",
-        "line": 71,
+        "line": 68,
         "markers": [
           "unit"
         ],
@@ -18367,7 +18367,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_reset.py": [
       {
         "name": "TestWebSocketReconnectionReset::test_attempts_reset_after_stable_period",
-        "line": 14,
+        "line": 16,
         "markers": [
           "unit"
         ],

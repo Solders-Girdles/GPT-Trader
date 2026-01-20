@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
+import gpt_trader.features.live_trade.execution.broker_executor as broker_executor_module
 from gpt_trader.core import (
     Order,
     OrderSide,
@@ -60,7 +61,9 @@ class TestBrokerExecutorResilienceRetry:
         assert injecting.get_call_count("place_order") == 3  # 2 failures + 1 success
         assert len(get_sleeps()) == 2  # 2 delays before retries
 
-    def test_timeout_path_triggers_retry_with_classification(self, sample_order: Order) -> None:
+    def test_timeout_path_triggers_retry_with_classification(
+        self, sample_order: Order, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test that timeout triggers retry and is classified correctly."""
         from tests.fixtures.failure_injection import (
             FailureScript,
@@ -79,22 +82,22 @@ class TestBrokerExecutorResilienceRetry:
             sleep_fn=no_op_sleep,
         )
 
-        with patch(
-            "gpt_trader.features.live_trade.execution.broker_executor._record_broker_call_latency"
-        ) as mock_record:
-            result = executor.execute_order(
-                submit_id="timeout-test-1",
-                symbol="BTC-USD",
-                side=OrderSide.BUY,
-                order_type=OrderType.MARKET,
-                quantity=Decimal("1.0"),
-                price=None,
-                stop_price=None,
-                tif=None,
-                reduce_only=False,
-                leverage=None,
-                use_retry=True,
-            )
+        mock_record = MagicMock()
+        monkeypatch.setattr(broker_executor_module, "_record_broker_call_latency", mock_record)
+
+        result = executor.execute_order(
+            submit_id="timeout-test-1",
+            symbol="BTC-USD",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("1.0"),
+            price=None,
+            stop_price=None,
+            tif=None,
+            reduce_only=False,
+            leverage=None,
+            use_retry=True,
+        )
 
         assert result is sample_order
         assert injecting.get_call_count("place_order") == 2

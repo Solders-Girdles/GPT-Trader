@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
+import pytest
+
+import gpt_trader.monitoring.configuration_guardian.detector as detector_module
 from gpt_trader.monitoring.configuration_guardian.detector import DriftDetector
 from gpt_trader.monitoring.configuration_guardian.models import BaselineSnapshot, DriftEvent
 
@@ -23,7 +26,9 @@ def test_drift_summary_empty_and_state_mirror() -> None:
     assert detector.get_current_state() == summary
 
 
-def test_record_drift_events_logs_only_when_non_empty() -> None:
+def test_record_drift_events_logs_only_when_non_empty(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     detector = DriftDetector(BaselineSnapshot())
     event = DriftEvent(
         timestamp=datetime(2024, 1, 1, tzinfo=timezone.utc),
@@ -32,9 +37,11 @@ def test_record_drift_events_logs_only_when_non_empty() -> None:
         severity="critical",
     )
 
-    with patch("gpt_trader.monitoring.configuration_guardian.detector.logger") as mock_logger:
-        detector.record_drift_events([])
-        detector.record_drift_events([event])
+    mock_logger = MagicMock()
+    monkeypatch.setattr(detector_module, "logger", mock_logger)
+
+    detector.record_drift_events([])
+    detector.record_drift_events([event])
 
     assert detector.drift_history == [event]
     mock_logger.info.assert_called_once()

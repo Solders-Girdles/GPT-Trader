@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
+import gpt_trader.security.security_validator as security_validator_module
 from gpt_trader.core import Balance, Position
 from gpt_trader.features.live_trade.strategies.perps_baseline import Action, Decision
 
@@ -33,7 +34,7 @@ def test_positions_to_risk_format(engine):
 
 
 @pytest.mark.asyncio
-async def test_risk_manager_receives_dict_format(engine):
+async def test_risk_manager_receives_dict_format(engine, monkeypatch: pytest.MonkeyPatch):
     """Test that risk manager receives correctly formatted dicts."""
     mock_risk_manager = MagicMock()
     mock_risk_manager._start_of_day_equity = Decimal("1000.0")
@@ -43,35 +44,32 @@ async def test_risk_manager_receives_dict_format(engine):
     mock_risk_manager.check_order.return_value = True
     engine.context.risk_manager = mock_risk_manager
 
-    with patch("gpt_trader.security.security_validator.get_validator") as mock_get_validator:
-        mock_validator = MagicMock()
-        mock_validator.validate_order_request.return_value.is_valid = True
-        mock_get_validator.return_value = mock_validator
+    mock_validator = MagicMock()
+    mock_validator.validate_order_request.return_value.is_valid = True
+    monkeypatch.setattr(security_validator_module, "get_validator", lambda: mock_validator)
 
-        engine.strategy.decide.return_value = Decision(Action.BUY, "test")
-        engine.strategy.config.position_fraction = Decimal("0.1")
+    engine.strategy.decide.return_value = Decision(Action.BUY, "test")
+    engine.strategy.config.position_fraction = Decimal("0.1")
 
-        engine.context.broker.list_positions.return_value = [
-            Position(
-                symbol="BTC-USD",
-                quantity=Decimal("1.0"),
-                entry_price=Decimal("40000"),
-                mark_price=Decimal("50000"),
-                unrealized_pnl=Decimal("0"),
-                realized_pnl=Decimal("0"),
-                side="long",
-            )
-        ]
-        engine.context.broker.list_balances.return_value = [
-            Balance(asset="USD", total=Decimal("10000"), available=Decimal("10000"))
-        ]
-        engine._state_collector.build_positions_dict.side_effect = (
-            lambda positions: engine._positions_to_risk_format(
-                {pos.symbol: pos for pos in positions}
-            )
+    engine.context.broker.list_positions.return_value = [
+        Position(
+            symbol="BTC-USD",
+            quantity=Decimal("1.0"),
+            entry_price=Decimal("40000"),
+            mark_price=Decimal("50000"),
+            unrealized_pnl=Decimal("0"),
+            realized_pnl=Decimal("0"),
+            side="long",
         )
+    ]
+    engine.context.broker.list_balances.return_value = [
+        Balance(asset="USD", total=Decimal("10000"), available=Decimal("10000"))
+    ]
+    engine._state_collector.build_positions_dict.side_effect = (
+        lambda positions: engine._positions_to_risk_format({pos.symbol: pos for pos in positions})
+    )
 
-        await engine._cycle()
+    await engine._cycle()
 
     engine._order_validator.run_pre_trade_validation.assert_called_once()
     call_args = engine._order_validator.run_pre_trade_validation.call_args

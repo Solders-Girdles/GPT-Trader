@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 from decimal import Decimal
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 
@@ -45,12 +44,17 @@ def test_decimal_encoder_handles_nested_decimals() -> None:
 
 
 @pytest.mark.asyncio
-async def test_write_status_handles_write_errors(tmp_path: Path) -> None:
+async def test_write_status_handles_write_errors(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     status_file = tmp_path / "status.json"
     reporter = StatusReporter(status_file=str(status_file))
 
-    with patch("gpt_trader.monitoring.status_reporter.json.dump", side_effect=OSError("boom")):
-        await reporter._write_status_to_file()
+    monkeypatch.setattr(
+        json, "dump", lambda *args, **kwargs: (_ for _ in ()).throw(OSError("boom"))
+    )
+
+    await reporter._write_status_to_file()
 
     assert not status_file.exists()
 

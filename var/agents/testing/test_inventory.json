@@ -3847,7 +3847,7 @@
     "tests/unit/gpt_trader/app/test_bootstrap.py": [
       {
         "name": "TestNormaliseSymbols::test_normalise_with_valid_symbols",
-        "line": 56,
+        "line": 58,
         "markers": [
           "unit"
         ],
@@ -3856,7 +3856,7 @@
       },
       {
         "name": "TestNormaliseSymbols::test_normalise_empty_list_uses_fallback",
-        "line": 62,
+        "line": 64,
         "markers": [
           "unit"
         ],
@@ -3865,7 +3865,7 @@
       },
       {
         "name": "TestNormaliseSymbols::test_normalise_none_uses_fallback",
-        "line": 68,
+        "line": 70,
         "markers": [
           "unit"
         ],
@@ -3874,7 +3874,7 @@
       },
       {
         "name": "TestNormaliseSymbols::test_normalise_logs_are_bootstrap_log_records",
-        "line": 74,
+        "line": 76,
         "markers": [
           "unit"
         ],
@@ -3883,7 +3883,7 @@
       },
       {
         "name": "TestResolveRuntimePaths::test_resolve_paths_returns_runtime_paths",
-        "line": 86,
+        "line": 88,
         "markers": [
           "unit"
         ],
@@ -3892,7 +3892,7 @@
       },
       {
         "name": "TestResolveRuntimePaths::test_resolve_paths_creates_directories",
-        "line": 92,
+        "line": 94,
         "markers": [
           "unit"
         ],
@@ -3901,7 +3901,7 @@
       },
       {
         "name": "TestResolveRuntimePaths::test_different_profiles_have_different_paths",
-        "line": 98,
+        "line": 100,
         "markers": [
           "unit"
         ],
@@ -3910,7 +3910,7 @@
       },
       {
         "name": "TestBuildBot::test_build_bot_returns_trading_bot",
-        "line": 110,
+        "line": 112,
         "markers": [
           "unit"
         ],
@@ -3919,7 +3919,7 @@
       },
       {
         "name": "TestBuildBot::test_build_bot_uses_container",
-        "line": 117,
+        "line": 119,
         "markers": [
           "unit"
         ],
@@ -3928,7 +3928,7 @@
       },
       {
         "name": "TestBuildBot::test_build_bot_with_webhook_logs_message",
-        "line": 123,
+        "line": 125,
         "markers": [
           "unit"
         ],
@@ -3937,7 +3937,7 @@
       },
       {
         "name": "TestBotFromProfile::test_bot_from_profile_dev",
-        "line": 141,
+        "line": 144,
         "markers": [
           "unit"
         ],
@@ -3946,7 +3946,7 @@
       },
       {
         "name": "TestBotFromProfile::test_bot_from_profile_test",
-        "line": 148,
+        "line": 151,
         "markers": [
           "unit"
         ],
@@ -3955,7 +3955,7 @@
       },
       {
         "name": "TestBotFromProfile::test_bot_from_profile_case_insensitive",
-        "line": 154,
+        "line": 157,
         "markers": [
           "unit"
         ],
@@ -3964,7 +3964,7 @@
       },
       {
         "name": "TestBotFromProfile::test_bot_from_profile_invalid_raises",
-        "line": 161,
+        "line": 164,
         "markers": [
           "unit"
         ],
@@ -3973,7 +3973,7 @@
       },
       {
         "name": "TestBotFromProfile::test_mock_broker_profiles_create_bot",
-        "line": 169,
+        "line": 172,
         "markers": [
           "parametrize",
           "unit"
@@ -3983,7 +3983,7 @@
       },
       {
         "name": "TestBotFromProfile::test_non_mock_profiles_require_credentials",
-        "line": 175,
+        "line": 178,
         "markers": [
           "unit"
         ],
@@ -3992,7 +3992,7 @@
       },
       {
         "name": "TestBootstrapLogRecord::test_log_record_creation",
-        "line": 188,
+        "line": 192,
         "markers": [
           "unit"
         ],
@@ -4001,7 +4001,7 @@
       },
       {
         "name": "TestBootstrapLogRecord::test_log_record_default_args",
-        "line": 195,
+        "line": 199,
         "markers": [
           "unit"
         ],
@@ -4010,7 +4010,7 @@
       },
       {
         "name": "TestBootstrapLogRecord::test_log_record_is_frozen",
-        "line": 200,
+        "line": 204,
         "markers": [
           "unit"
         ],
@@ -4019,7 +4019,7 @@
       },
       {
         "name": "TestEnvironmentVariableHandling::test_config_respects_env_variables",
-        "line": 210,
+        "line": 214,
         "markers": [
           "unit"
         ],
@@ -30936,7 +30936,7 @@
     "tests/unit/gpt_trader/features/optimize/runner/test_batch_runner.py": [
       {
         "name": "TestBatchBacktestRunner::test_run_trial",
-        "line": 33,
+        "line": 34,
         "markers": [
           "asyncio",
           "unit"
@@ -30957,7 +30957,7 @@
       },
       {
         "name": "TestOptimizationStudyManager::test_suggest_parameters",
-        "line": 43,
+        "line": 44,
         "markers": [
           "unit"
         ],
@@ -37331,7 +37331,7 @@
     "tests/unit/gpt_trader/observability/test_tracing.py": [
       {
         "name": "TestInitTracing::test_disabled_tracing_returns_false",
-        "line": 30,
+        "line": 29,
         "markers": [
           "unit"
         ],
@@ -37340,7 +37340,7 @@
       },
       {
         "name": "TestInitTracing::test_without_otel_returns_false",
-        "line": 36,
+        "line": 35,
         "markers": [
           "unit"
         ],
@@ -37349,7 +37349,7 @@
       },
       {
         "name": "TestInitTracing::test_with_otel_returns_true",
-        "line": 43,
+        "line": 42,
         "markers": [
           "skipif",
           "unit"
@@ -37359,7 +37359,7 @@
       },
       {
         "name": "TestInitTracing::test_init_with_endpoint",
-        "line": 55,
+        "line": 54,
         "markers": [
           "skipif",
           "unit"
@@ -37369,7 +37369,7 @@
       },
       {
         "name": "TestTraceSpan::test_disabled_tracing_yields_none",
-        "line": 69,
+        "line": 68,
         "markers": [
           "unit"
         ],
@@ -37378,7 +37378,7 @@
       },
       {
         "name": "TestTraceSpan::test_disabled_tracing_executes_block",
-        "line": 76,
+        "line": 75,
         "markers": [
           "unit"
         ],
@@ -37387,7 +37387,7 @@
       },
       {
         "name": "TestTraceSpan::test_enabled_tracing_yields_span",
-        "line": 87,
+        "line": 86,
         "markers": [
           "skipif",
           "unit"
@@ -37397,7 +37397,7 @@
       },
       {
         "name": "TestTraceSpan::test_span_receives_attributes",
-        "line": 101,
+        "line": 100,
         "markers": [
           "skipif",
           "unit"
@@ -37407,7 +37407,7 @@
       },
       {
         "name": "TestTraceSpan::test_correlation_context_attached",
-        "line": 115,
+        "line": 114,
         "markers": [
           "skipif",
           "unit"
@@ -37417,7 +37417,7 @@
       },
       {
         "name": "TestGetTracer::test_returns_none_when_disabled",
-        "line": 134,
+        "line": 133,
         "markers": [
           "unit"
         ],
@@ -37426,7 +37426,7 @@
       },
       {
         "name": "TestGetTracer::test_returns_tracer_when_enabled",
-        "line": 140,
+        "line": 139,
         "markers": [
           "skipif",
           "unit"
@@ -37436,7 +37436,7 @@
       },
       {
         "name": "TestShutdownTracing::test_shutdown_when_disabled",
-        "line": 150,
+        "line": 149,
         "markers": [
           "unit"
         ],
@@ -37445,7 +37445,7 @@
       },
       {
         "name": "TestShutdownTracing::test_shutdown_clears_state",
-        "line": 157,
+        "line": 156,
         "markers": [
           "skipif",
           "unit"
@@ -37455,7 +37455,7 @@
       },
       {
         "name": "TestIsTracingEnabled::test_false_by_default",
-        "line": 171,
+        "line": 170,
         "markers": [
           "unit"
         ],
@@ -37464,7 +37464,7 @@
       },
       {
         "name": "TestIsTracingEnabled::test_false_when_explicitly_disabled",
-        "line": 176,
+        "line": 175,
         "markers": [
           "unit"
         ],
@@ -37473,7 +37473,7 @@
       },
       {
         "name": "TestIsTracingEnabled::test_true_when_enabled",
-        "line": 182,
+        "line": 181,
         "markers": [
           "skipif",
           "unit"
@@ -39665,7 +39665,7 @@
     "tests/unit/gpt_trader/preflight/test_core_delegations.py": [
       {
         "name": "TestPreflightCheckDelegations::test_delegations_call_module_function",
-        "line": 35,
+        "line": 36,
         "markers": [
           "parametrize",
           "unit"
@@ -54521,7 +54521,7 @@
     "tests/unit/gpt_trader/utilities/performance/test_timing.py": [
       {
         "name": "TestMeasurePerformance::test_records_metric",
-        "line": 26,
+        "line": 25,
         "markers": [
           "unit"
         ],
@@ -54530,7 +54530,7 @@
       },
       {
         "name": "TestMeasurePerformance::test_uses_provided_tags",
-        "line": 39,
+        "line": 38,
         "markers": [
           "unit"
         ],
@@ -54539,7 +54539,7 @@
       },
       {
         "name": "TestMeasurePerformance::test_default_tags_empty",
-        "line": 48,
+        "line": 47,
         "markers": [
           "unit"
         ],
@@ -54548,7 +54548,7 @@
       },
       {
         "name": "TestMeasurePerformance::test_uses_global_collector_when_none_provided",
-        "line": 57,
+        "line": 56,
         "markers": [
           "unit"
         ],
@@ -54557,7 +54557,7 @@
       },
       {
         "name": "TestMeasurePerformanceDecorator::test_calls_function",
-        "line": 71,
+        "line": 72,
         "markers": [
           "unit"
         ],
@@ -54566,7 +54566,7 @@
       },
       {
         "name": "TestMeasurePerformanceDecorator::test_records_metric",
-        "line": 81,
+        "line": 82,
         "markers": [
           "unit"
         ],
@@ -54575,7 +54575,7 @@
       },
       {
         "name": "TestMeasurePerformanceDecorator::test_uses_function_name_when_no_operation_name",
-        "line": 91,
+        "line": 92,
         "markers": [
           "unit"
         ],
@@ -54584,7 +54584,7 @@
       },
       {
         "name": "TestMeasurePerformanceDecorator::test_passes_tags",
-        "line": 102,
+        "line": 103,
         "markers": [
           "unit"
         ],
@@ -54593,7 +54593,7 @@
       },
       {
         "name": "TestPerformanceTimer::test_init",
-        "line": 117,
+        "line": 118,
         "markers": [
           "unit"
         ],
@@ -54602,7 +54602,7 @@
       },
       {
         "name": "TestPerformanceTimer::test_init_with_tags",
-        "line": 124,
+        "line": 125,
         "markers": [
           "unit"
         ],
@@ -54611,7 +54611,7 @@
       },
       {
         "name": "TestPerformanceTimer::test_start",
-        "line": 128,
+        "line": 129,
         "markers": [
           "unit"
         ],
@@ -54620,7 +54620,7 @@
       },
       {
         "name": "TestPerformanceTimer::test_stop_records_metric",
-        "line": 133,
+        "line": 134,
         "markers": [
           "unit"
         ],
@@ -54629,7 +54629,7 @@
       },
       {
         "name": "TestPerformanceTimer::test_stop_without_start_raises",
-        "line": 144,
+        "line": 145,
         "markers": [
           "unit"
         ],
@@ -54638,7 +54638,7 @@
       },
       {
         "name": "TestPerformanceTimer::test_context_manager_enter",
-        "line": 151,
+        "line": 152,
         "markers": [
           "unit"
         ],
@@ -54647,7 +54647,7 @@
       },
       {
         "name": "TestPerformanceTimer::test_context_manager_exit",
-        "line": 158,
+        "line": 159,
         "markers": [
           "unit"
         ],
@@ -56439,7 +56439,7 @@
       },
       {
         "name": "TestManualBacktestExample::test_manual_backtest_example_logging",
-        "line": 138,
+        "line": 137,
         "markers": [
           "unit"
         ],
@@ -56448,7 +56448,7 @@
       },
       {
         "name": "TestManualBacktestExample::test_manual_backtest_example_reproducibility",
-        "line": 153,
+        "line": 154,
         "markers": [
           "unit"
         ],
@@ -56457,7 +56457,7 @@
       },
       {
         "name": "TestManualBacktestExample::test_manual_backtest_example_ma_crossover_logic",
-        "line": 161,
+        "line": 162,
         "markers": [
           "unit"
         ],
@@ -56466,7 +56466,7 @@
       },
       {
         "name": "TestManualBacktestExample::test_manual_backtest_example_position_management",
-        "line": 183,
+        "line": 184,
         "markers": [
           "unit"
         ],
@@ -56475,7 +56475,7 @@
       },
       {
         "name": "TestManualBacktestExample::test_manual_backtest_example_cash_flow",
-        "line": 200,
+        "line": 201,
         "markers": [
           "unit"
         ],
@@ -56484,7 +56484,7 @@
       },
       {
         "name": "TestManualBacktestExample::test_manual_backtest_example_buy_hold_comparison",
-        "line": 222,
+        "line": 223,
         "markers": [
           "unit"
         ],

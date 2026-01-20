@@ -1,6 +1,6 @@
 """Unit tests for OptimizationStudyManager."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import optuna
 import pytest
@@ -28,17 +28,18 @@ def mock_config():
 
 
 class TestOptimizationStudyManager:
-    def test_create_study(self, mock_config):
+    def test_create_study(self, mock_config, monkeypatch: pytest.MonkeyPatch):
         """Test study creation."""
         manager = OptimizationStudyManager(mock_config)
 
-        with patch("optuna.create_study") as mock_create:
-            _study = manager.create_or_load_study()
+        mock_create = Mock()
+        monkeypatch.setattr(optuna, "create_study", mock_create)
+        _study = manager.create_or_load_study()
 
-            mock_create.assert_called_once()
-            call_kwargs = mock_create.call_args[1]
-            assert call_kwargs["study_name"] == "test_study"
-            assert call_kwargs["direction"] == "maximize"
+        mock_create.assert_called_once()
+        call_kwargs = mock_create.call_args[1]
+        assert call_kwargs["study_name"] == "test_study"
+        assert call_kwargs["direction"] == "maximize"
 
     def test_suggest_parameters(self, mock_config):
         """Test parameter suggestion."""

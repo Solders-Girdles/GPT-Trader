@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
+import gpt_trader.utilities.performance.timing as timing_module
 from gpt_trader.utilities.performance.timing import (
     PerformanceTimer,
     measure_performance,
@@ -14,8 +15,6 @@ from gpt_trader.utilities.performance.timing import (
 
 
 def _patch_time(monkeypatch, values: list[float]) -> None:
-    import gpt_trader.utilities.performance.timing as timing_module
-
     iterator = iter(values)
     monkeypatch.setattr(timing_module.time, "time", lambda: next(iterator))
 
@@ -54,15 +53,17 @@ class TestMeasurePerformance:
         metric = mock_collector.record.call_args[0][0]
         assert metric.tags == {}
 
-    def test_uses_global_collector_when_none_provided(self) -> None:
-        with patch("gpt_trader.utilities.performance.timing.get_collector") as mock_get_collector:
-            mock_collector = MagicMock()
-            mock_get_collector.return_value = mock_collector
+    def test_uses_global_collector_when_none_provided(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        mock_collector = MagicMock()
+        mock_get_collector = MagicMock(return_value=mock_collector)
+        monkeypatch.setattr(timing_module, "get_collector", mock_get_collector)
 
-            with measure_performance("test_op"):
-                pass
+        with measure_performance("test_op"):
+            pass
 
-            mock_collector.record.assert_called_once()
+        mock_collector.record.assert_called_once()
 
 
 class TestMeasurePerformanceDecorator:

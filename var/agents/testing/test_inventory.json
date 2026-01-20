@@ -22821,7 +22821,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_rejection.py": [
       {
         "name": "TestRecordRejection::test_record_rejection_emits_metric",
-        "line": 16,
+        "line": 31,
         "markers": [
           "unit"
         ],
@@ -22830,7 +22830,7 @@
       },
       {
         "name": "TestRecordRejection::test_record_rejection_logs_status_change",
-        "line": 45,
+        "line": 54,
         "markers": [
           "unit"
         ],
@@ -22839,7 +22839,7 @@
       },
       {
         "name": "TestRecordRejection::test_record_rejection_handles_none_price",
-        "line": 73,
+        "line": 77,
         "markers": [
           "unit"
         ],
@@ -22848,7 +22848,7 @@
       },
       {
         "name": "TestRecordRejection::test_record_rejection_handles_log_exception",
-        "line": 97,
+        "line": 95,
         "markers": [
           "unit"
         ],

@@ -1856,7 +1856,8 @@
       "tests/unit/gpt_trader/tui/mixins/test_event_handlers_utilities_and_docs.py"
     ],
     "gpt_trader.tui.mixins.event_handlers": [
-      "tests/unit/gpt_trader/tui/mixins/test_event_handlers_default_handlers.py"
+      "tests/unit/gpt_trader/tui/mixins/test_event_handlers_default_handlers.py",
+      "tests/unit/gpt_trader/tui/mixins/test_event_handlers_utilities_and_docs.py"
     ],
     "gpt_trader.tui.responsive_state": [
       "tests/unit/gpt_trader/tui/mixins/test_event_handlers_default_handlers.py",
@@ -5008,7 +5009,8 @@
     ],
     "tests/unit/gpt_trader/tui/mixins/test_event_handlers_utilities_and_docs.py": [
       "gpt_trader.tui.events",
-      "gpt_trader.tui.mixins"
+      "gpt_trader.tui.mixins",
+      "gpt_trader.tui.mixins.event_handlers"
     ],
     "tests/unit/gpt_trader/tui/screens/test_alert_history.py": [
       "gpt_trader.tui.screens.alert_history",

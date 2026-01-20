@@ -5161,7 +5161,7 @@
     "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_csv_row.py": [
       {
         "name": "TestBacktestReporterGenerateCsvRow::test_generate_csv_row_returns_dict",
-        "line": 21,
+        "line": 51,
         "markers": [
           "unit"
         ],
@@ -5170,7 +5170,7 @@
       },
       {
         "name": "TestBacktestReporterGenerateCsvRow::test_generate_csv_row_includes_all_keys",
-        "line": 41,
+        "line": 56,
         "markers": [
           "unit"
         ],
@@ -5188,7 +5188,7 @@
       },
       {
         "name": "TestBacktestReporterGenerateCsvRow::test_generate_csv_row_handles_none_sharpe",
-        "line": 104,
+        "line": 89,
         "markers": [
           "unit"
         ],

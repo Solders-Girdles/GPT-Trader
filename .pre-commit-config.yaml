@@ -44,10 +44,16 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
+    -   id: dedupe-manifest
+        name: dedupe-manifest
+        entry: uv run python scripts/ci/check_dedupe_manifest.py
+        language: system
+        pass_filenames: false
+        always_run: true
     -   id: naming-check
         name: naming-standards
-        entry: python scripts/agents/naming_inventory.py --strict --quiet
-        language: python
+        entry: uv run python scripts/agents/naming_inventory.py --strict --quiet
+        language: system
         pass_filenames: false
         always_run: true
     -   id: tui-guardrails

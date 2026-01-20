@@ -256,6 +256,9 @@ jobs:
       - name: Check legacy triage alignment
         run: uv run python scripts/ci/check_legacy_test_triage.py
 
+      - name: Check dedupe manifest
+        run: uv run python scripts/ci/check_dedupe_manifest.py --strict
+
       - name: Check triage backlog
         run: make test-triage-check
 

@@ -1450,61 +1450,58 @@ clusters:
     type: similar_names
     description: 7 test files match pattern test_hybrid_paper_* in tests/unit/gpt_trader/features/brokerages/paper
     files:
-    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_edges.py
-    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_init.py
     - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_market_data.py
-    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_order_execution.py
+    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_orders.py
     - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_position_updates.py
-    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_positions_and_balances.py
-    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_status.py
+    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_positions.py
+    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker.py
     source_modules: []
     decision: merge
-    target_location: tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper.py
-    expected_file_delta: -6
+    target_location: tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker.py
+    expected_file_delta: -2
     priority: medium
-    rationale: Consolidate 7 test files into single parametrized file
-    status: in_progress
+    rationale: Consolidate 7 test files into 5 files (<=240 lines each)
+    status: done
     owner: claude
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/303
     added: '2026-01-20'
   55e8e1dee506:
     type: similar_names
     description: 7 test files match pattern test_async_utils_* in tests/unit/gpt_trader/utilities
     files:
-    - tests/unit/gpt_trader/utilities/test_async_utils_core_concurrency.py
-    - tests/unit/gpt_trader/utilities/test_async_utils_core_rate_limiter_and_cache.py
-    - tests/unit/gpt_trader/utilities/test_async_utils_core_retry_and_edge_cases.py
-    - tests/unit/gpt_trader/utilities/test_async_utils_core_wrappers.py
-    - tests/unit/gpt_trader/utilities/test_async_utils_function_detection.py
-    - tests/unit/gpt_trader/utilities/test_async_utils_gather_and_wait.py
+    - tests/unit/gpt_trader/utilities/test_async_utils_cache_and_retry.py
+    - tests/unit/gpt_trader/utilities/test_async_utils_concurrency.py
+    - tests/unit/gpt_trader/utilities/test_async_utils_gather.py
     - tests/unit/gpt_trader/utilities/test_async_utils_scenarios.py
+    - tests/unit/gpt_trader/utilities/test_async_utils_wrappers.py
     source_modules: []
     decision: merge
-    target_location: tests/unit/gpt_trader/utilities/test_async_utils.py
-    expected_file_delta: -6
+    target_location: tests/unit/gpt_trader/utilities/test_async_utils_concurrency.py
+    expected_file_delta: -2
     priority: medium
-    rationale: Consolidate 7 test files into single parametrized file
-    status: in_progress
+    rationale: Consolidate 7 test files into 5 files (<=240 lines each)
+    status: done
     owner: claude
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/303
     added: '2026-01-20'
   d120b9cb7c95:
     type: similar_names
     description: 7 test files match pattern test_market_data_* in tests/unit/gpt_trader/features/brokerages/coinbase
     files:
     - tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_fallback.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_features_edges.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service_alias.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_features.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service.py
     - tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service_edges.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service_ticker.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service_ticker_cache.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service_ticker_service.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_ticker_cache.py
     source_modules: []
     decision: merge
-    target_location: tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data.py
-    expected_file_delta: -6
+    target_location: tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service.py
+    expected_file_delta: -2
     priority: medium
-    rationale: Consolidate 7 test files into single parametrized file
-    status: in_progress
+    rationale: Consolidate 7 test files into 5 files (<=240 lines each)
+    status: done
     owner: claude
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/303
     added: '2026-01-20'
   0d8f50fb7a4d:
     type: source_fanout
@@ -1550,22 +1547,21 @@ clusters:
     type: source_fanout
     description: 7 test files import gpt_trader.utilities.async_tools
     files:
-    - tests/unit/gpt_trader/utilities/test_async_utils_core_concurrency.py
-    - tests/unit/gpt_trader/utilities/test_async_utils_core_rate_limiter_and_cache.py
-    - tests/unit/gpt_trader/utilities/test_async_utils_core_retry_and_edge_cases.py
-    - tests/unit/gpt_trader/utilities/test_async_utils_core_wrappers.py
-    - tests/unit/gpt_trader/utilities/test_async_utils_function_detection.py
-    - tests/unit/gpt_trader/utilities/test_async_utils_gather_and_wait.py
+    - tests/unit/gpt_trader/utilities/test_async_utils_cache_and_retry.py
+    - tests/unit/gpt_trader/utilities/test_async_utils_concurrency.py
+    - tests/unit/gpt_trader/utilities/test_async_utils_gather.py
     - tests/unit/gpt_trader/utilities/test_async_utils_scenarios.py
+    - tests/unit/gpt_trader/utilities/test_async_utils_wrappers.py
     source_modules:
     - gpt_trader.utilities.async_tools
     decision: merge
-    target_location: tests/unit/gpt_trader/utilities/test_async_tools.py
-    expected_file_delta: -6
+    target_location: tests/unit/gpt_trader/utilities/test_async_utils_concurrency.py
+    expected_file_delta: -2
     priority: medium
-    rationale: Consolidate 7 test files into single parametrized file
-    status: in_progress
+    rationale: Consolidate 7 test files into 5 files (<=240 lines each)
+    status: done
     owner: claude
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/303
     added: '2026-01-20'
   7a9b6155b2a7:
     type: source_fanout
@@ -1631,22 +1627,21 @@ clusters:
     type: source_fanout
     description: 7 test files import gpt_trader.features.brokerages.paper.hybrid
     files:
-    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_edges.py
-    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_init.py
     - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_market_data.py
-    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_order_execution.py
+    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_orders.py
     - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_position_updates.py
-    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_positions_and_balances.py
-    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_status.py
+    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_positions.py
+    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker.py
     source_modules:
     - gpt_trader.features.brokerages.paper.hybrid
     decision: merge
-    target_location: tests/unit/gpt_trader/features/brokerages/paper/test_hybrid.py
-    expected_file_delta: -6
+    target_location: tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker.py
+    expected_file_delta: -2
     priority: medium
-    rationale: Consolidate 7 test files into single parametrized file
-    status: in_progress
+    rationale: Consolidate 7 test files into 5 files (<=240 lines each)
+    status: done
     owner: claude
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/303
     added: '2026-01-20'
   0a6ffd9f772e:
     type: similar_names
@@ -1670,39 +1665,38 @@ clusters:
     type: similar_names
     description: 6 test files match pattern test_alert_manager_* in tests/unit/gpt_trader/tui/services
     files:
+    - tests/unit/gpt_trader/tui/services/test_alert_manager.py
     - tests/unit/gpt_trader/tui/services/test_alert_manager_categories.py
-    - tests/unit/gpt_trader/tui/services/test_alert_manager_core.py
-    - tests/unit/gpt_trader/tui/services/test_alert_manager_execution_health.py
-    - tests/unit/gpt_trader/tui/services/test_alert_manager_trade_orders.py
-    - tests/unit/gpt_trader/tui/services/test_alert_manager_trade_stale_orders.py
-    - tests/unit/gpt_trader/tui/services/test_alert_manager_validation.py
+    - tests/unit/gpt_trader/tui/services/test_alert_manager_execution.py
+    - tests/unit/gpt_trader/tui/services/test_alert_manager_orders.py
+    - tests/unit/gpt_trader/tui/services/test_alert_manager_stale.py
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/tui/services/test_alert_manager.py
-    expected_file_delta: -5
+    expected_file_delta: -1
     priority: medium
-    rationale: Consolidate 6 test files into single parametrized file
-    status: in_progress
+    rationale: Consolidate 6 test files into 5 files (<=240 lines each)
+    status: done
     owner: claude
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/303
     added: '2026-01-20'
   1b083f952ad7:
     type: similar_names
     description: 6 test files match pattern test_log_manager_* in tests/unit/gpt_trader/tui
     files:
-    - tests/unit/gpt_trader/tui/test_log_manager_entries.py
-    - tests/unit/gpt_trader/tui/test_log_manager_formatters_compact.py
-    - tests/unit/gpt_trader/tui/test_log_manager_formatters_structured.py
-    - tests/unit/gpt_trader/tui/test_log_manager_handler_emit.py
-    - tests/unit/gpt_trader/tui/test_log_manager_handler_message_safety.py
-    - tests/unit/gpt_trader/tui/test_log_manager_handler_widget_controls.py
+    - tests/unit/gpt_trader/tui/test_log_manager.py
+    - tests/unit/gpt_trader/tui/test_log_manager_formatters.py
+    - tests/unit/gpt_trader/tui/test_log_manager_handler.py
+    - tests/unit/gpt_trader/tui/test_log_manager_widgets.py
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/tui/test_log_manager.py
-    expected_file_delta: -5
+    expected_file_delta: -2
     priority: medium
-    rationale: Consolidate 6 test files into single parametrized file
-    status: in_progress
+    rationale: Consolidate 6 test files into 4 files (<=240 lines each)
+    status: done
     owner: claude
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/303
     added: '2026-01-20'
   1ba93042953b:
     type: similar_names
@@ -1744,20 +1738,18 @@ clusters:
     type: similar_names
     description: 6 test files match pattern test_alert_inbox_* in tests/unit/gpt_trader/tui/widgets
     files:
-    - tests/unit/gpt_trader/tui/widgets/test_alert_inbox_alert_item.py
-    - tests/unit/gpt_trader/tui/widgets/test_alert_inbox_alert_list_render.py
-    - tests/unit/gpt_trader/tui/widgets/test_alert_inbox_clear_and_bindings.py
-    - tests/unit/gpt_trader/tui/widgets/test_alert_inbox_filter_actions.py
-    - tests/unit/gpt_trader/tui/widgets/test_alert_inbox_recovery_hint.py
-    - tests/unit/gpt_trader/tui/widgets/test_alert_inbox_refresh_and_empty_states.py
+    - tests/unit/gpt_trader/tui/widgets/test_alert_inbox.py
+    - tests/unit/gpt_trader/tui/widgets/test_alert_inbox_actions.py
+    - tests/unit/gpt_trader/tui/widgets/test_alert_inbox_rendering.py
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/tui/widgets/test_alert_inbox.py
-    expected_file_delta: -5
+    expected_file_delta: -3
     priority: medium
-    rationale: Consolidate 6 test files into single parametrized file
-    status: in_progress
+    rationale: Consolidate 6 test files into 3 files (<=240 lines each)
+    status: done
     owner: claude
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/303
     added: '2026-01-20'
   89ace0d7c06c:
     type: similar_names
@@ -1781,18 +1773,16 @@ clusters:
     type: similar_names
     description: 6 test files match pattern test_state_collection_* in tests/unit/gpt_trader/features/live_trade/execution
     files:
-    - tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_collect_account_state.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_equity_and_logging.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_init.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_positions_dict.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_require_product_and_flow.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_resolve_effective_price.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_state_collection.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_account.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_flow.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_price.py
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/features/live_trade/execution/test_state_collection.py
-    expected_file_delta: -5
+    expected_file_delta: -2
     priority: medium
-    rationale: Consolidate 6 test files into single parametrized file
+    rationale: Consolidate 6 test files into 4 files (<=240 lines each)
     status: done
     owner: claude
     pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/303
@@ -2010,19 +2000,16 @@ clusters:
     type: source_fanout
     description: 6 test files import gpt_trader.tui.widgets.alert_inbox
     files:
-    - tests/unit/gpt_trader/tui/widgets/test_alert_inbox_alert_item.py
-    - tests/unit/gpt_trader/tui/widgets/test_alert_inbox_alert_list_render.py
-    - tests/unit/gpt_trader/tui/widgets/test_alert_inbox_clear_and_bindings.py
-    - tests/unit/gpt_trader/tui/widgets/test_alert_inbox_filter_actions.py
-    - tests/unit/gpt_trader/tui/widgets/test_alert_inbox_recovery_hint.py
-    - tests/unit/gpt_trader/tui/widgets/test_alert_inbox_refresh_and_empty_states.py
+    - tests/unit/gpt_trader/tui/widgets/test_alert_inbox.py
+    - tests/unit/gpt_trader/tui/widgets/test_alert_inbox_actions.py
+    - tests/unit/gpt_trader/tui/widgets/test_alert_inbox_rendering.py
     source_modules:
     - gpt_trader.tui.widgets.alert_inbox
     decision: merge
     target_location: tests/unit/gpt_trader/tui/widgets/test_alert_inbox.py
-    expected_file_delta: -5
+    expected_file_delta: -3
     priority: medium
-    rationale: Consolidate 6 test files into single parametrized file
+    rationale: Consolidate 6 test files into 3 files (<=240 lines each)
     status: done
     owner: claude
     pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/303
@@ -2031,19 +2018,17 @@ clusters:
     type: source_fanout
     description: 6 test files import gpt_trader.features.live_trade.execution.state_collection
     files:
-    - tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_collect_account_state.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_equity_and_logging.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_init.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_positions_dict.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_require_product_and_flow.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_resolve_effective_price.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_state_collection.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_account.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_flow.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_price.py
     source_modules:
     - gpt_trader.features.live_trade.execution.state_collection
     decision: merge
     target_location: tests/unit/gpt_trader/features/live_trade/execution/test_state_collection.py
-    expected_file_delta: -5
+    expected_file_delta: -2
     priority: medium
-    rationale: Consolidate 6 test files into single parametrized file
+    rationale: Consolidate 6 test files into 4 files (<=240 lines each)
     status: done
     owner: claude
     pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/303

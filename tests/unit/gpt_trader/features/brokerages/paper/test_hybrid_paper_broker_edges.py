@@ -1,25 +1,26 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock
 
 import pytest
 
+import gpt_trader.features.brokerages.paper.hybrid as hybrid_module
 from gpt_trader.core import OrderSide, OrderType, Position
 from gpt_trader.features.brokerages.paper.hybrid import HybridPaperBroker
 
 
 @pytest.fixture
-def broker() -> HybridPaperBroker:
-    with patch("gpt_trader.features.brokerages.paper.hybrid.CoinbaseClient"):
-        with patch("gpt_trader.features.brokerages.paper.hybrid.SimpleAuth"):
-            broker = HybridPaperBroker(
-                api_key="test_key",
-                private_key="test_private_key",
-                slippage_bps=10,
-            )
-            broker._client = Mock()
-            return broker
+def broker(monkeypatch: pytest.MonkeyPatch) -> HybridPaperBroker:
+    monkeypatch.setattr(hybrid_module, "CoinbaseClient", MagicMock())
+    monkeypatch.setattr(hybrid_module, "SimpleAuth", MagicMock())
+    broker = HybridPaperBroker(
+        api_key="test_key",
+        private_key="test_private_key",
+        slippage_bps=10,
+    )
+    broker._client = Mock()
+    return broker
 
 
 def test_limit_buy_uses_limit_below_slippage(broker: HybridPaperBroker) -> None:

@@ -6,214 +6,18 @@
 # Priorities: high | medium | low
 #
 version: 1
-generated_at: '2026-01-20T18:30:31.187486+00:00'
+generated_at: '2026-01-20T18:42:48.228314+00:00'
 summary:
   total_clusters: 159
   by_priority:
-    high: 33
-    medium: 61
-    low: 65
+    high: 29
+    medium: 60
+    low: 70
   by_decision:
     delete: 0
     merge: 159
     modernize: 0
 clusters:
-  9155c0e0dd74:
-    type: source_fanout
-    description: 120 test files import gpt_trader.core
-    files:
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit_order_queue_priority.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit_orders.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_market_orders.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_queue_fill_estimation.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_spread_impact.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_stop_orders.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker_initialization_and_products.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker_margin_cancellation_and_account_info.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker_mark_price_and_snapshot.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker_market_data.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker_orders_and_chaos.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker_positions_metrics.py
-    - tests/unit/gpt_trader/backtesting/test_coinbase_historical_fetcher_edges.py
-    - tests/unit/gpt_trader/backtesting/test_guarded_backtest_flow.py
-    - tests/unit/gpt_trader/backtesting/test_historical_data_manager_edges.py
-    - tests/unit/gpt_trader/backtesting/test_historical_data_manager_quality_edges.py
-    - tests/unit/gpt_trader/backtesting/test_simulation_basics.py
-    - tests/unit/gpt_trader/backtesting/validation/test_guarded_execution.py
-    - tests/unit/gpt_trader/core/test_core_types.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_configurations.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_flags_and_coercion.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_validation.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_execute_order_payload.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_find_existing_order_by_client_id.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_cfm_portfolio.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_close_position.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_place_and_cancel.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_queries_and_fills.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_portfolio_service.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_retry_and_telemetry.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_intx_portfolio.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_close_position.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_edge_cases.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_get_order.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_list_orders.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_place_order.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_cfm.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_edges.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_intx.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_positions.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_unified_edges.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_product_service_listing_and_get_product.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_account_manager_snapshot.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_accounts_balances_and_products.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_accounts_positions_and_treasury.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_errors.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_data_endpoints.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_data_models.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_models.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_models_edges.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_perp_rules_and_quantize.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_product_catalog.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_system.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_exchange_specs.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_http_request_layer.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_intx_endpoints.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_retry_behaviour.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_enforce_perps_rules.py
-    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_edges.py
-    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_market_data.py
-    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_order_execution.py
-    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_position_updates.py
-    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_positions_and_balances.py
-    - tests/unit/gpt_trader/features/data/test_data_coinbase_edges.py
-    - tests/unit/gpt_trader/features/data/test_data_coinbase_runtime_edges.py
-    - tests/unit/gpt_trader/features/data/test_quality_candles.py
-    - tests/unit/gpt_trader/features/live_trade/engines/test_equity_calculator.py
-    - tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_daily_tracking.py
-    - tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_equity_and_positions.py
-    - tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_order_flow.py
-    - tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_order_guards.py
-    - tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_order_quantity.py
-    - tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_position_state.py
-    - tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_reduce_only.py
-    - tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_risk_format.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_order_edge_cases.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_order_normal.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_metrics.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_resilience_backoff.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_resilience_retry.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_with_retry.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_broker_rejection.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_edge_cases.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_failure.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_preview.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_submission_attempt.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_success.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_trade_event.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_execute_broker_order.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_handle_order_failure.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_handle_order_result.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_process_rejection.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_record_preview.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows_retry_idempotency.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows_submit_order.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows_transient_failure.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_correlation_context.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_latency_metrics.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_rejection_recording.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_submission_metrics.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_router_execute_async.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_router_order_result.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_collect_account_state.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_equity_and_logging.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_require_product_and_flow.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_resolve_effective_price.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_validation_async.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_validation_exchange_rules.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_validation_flow.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_validation_mark_staleness_and_slippage.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_validation_metrics_and_escalation.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_validation_order_preview.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_validation_order_validator_basic.py
-    - tests/unit/gpt_trader/features/live_trade/strategies/test_stateful.py
-    - tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop.py
-    - tests/unit/gpt_trader/features/live_trade/test_leverage_cap.py
-    - tests/unit/gpt_trader/features/live_trade/test_leverage_time_windows.py
-    - tests/unit/gpt_trader/features/live_trade/test_total_exposure_breach.py
-    - tests/unit/gpt_trader/tui/test_app_core.py
-    source_modules:
-    - gpt_trader.core
-    decision: merge
-    target_location: tests/unit/gpt_trader/backtesting/simulation/test_core.py
-    expected_file_delta: -119
-    priority: high
-    rationale: Consolidate 120 test files into single parametrized file
-    status: pending
-    added: '2026-01-20'
-  dd170c8ba364:
-    type: source_fanout
-    description: 50 test files import gpt_trader.tui.types
-    files:
-    - tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen_backtest_and_badges.py
-    - tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen_indicator_hints.py
-    - tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen_signal_detail_content.py
-    - tests/unit/gpt_trader/tui/services/test_alert_manager_core.py
-    - tests/unit/gpt_trader/tui/services/test_alert_manager_trade_orders.py
-    - tests/unit/gpt_trader/tui/services/test_alert_manager_trade_stale_orders.py
-    - tests/unit/gpt_trader/tui/services/test_execution_telemetry_execution_metrics.py
-    - tests/unit/gpt_trader/tui/services/test_trading_stats_service_compute_stats.py
-    - tests/unit/gpt_trader/tui/services/test_trading_stats_service_model.py
-    - tests/unit/gpt_trader/tui/services/test_trading_stats_service_trade_matching.py
-    - tests/unit/gpt_trader/tui/state_management/test_delta_updater_compare_account_risk_system.py
-    - tests/unit/gpt_trader/tui/state_management/test_delta_updater_compare_market_and_positions.py
-    - tests/unit/gpt_trader/tui/state_management/test_delta_updater_compare_orders_and_trades.py
-    - tests/unit/gpt_trader/tui/test_indicator_contributions.py
-    - tests/unit/gpt_trader/tui/test_market_widget.py
-    - tests/unit/gpt_trader/tui/test_new_widgets.py
-    - tests/unit/gpt_trader/tui/test_risk_guard_explanations.py
-    - tests/unit/gpt_trader/tui/test_risk_preview_position_impacts.py
-    - tests/unit/gpt_trader/tui/test_risk_preview_preview_and_scenarios.py
-    - tests/unit/gpt_trader/tui/test_snapshots_execution_issues_modal.py
-    - tests/unit/gpt_trader/tui/test_snapshots_risk_detail_modal.py
-    - tests/unit/gpt_trader/tui/test_snapshots_strategy_detail_screen.py
-    - tests/unit/gpt_trader/tui/widgets/test_account_widget_basic.py
-    - tests/unit/gpt_trader/tui/widgets/test_account_widget_partial_state.py
-    - tests/unit/gpt_trader/tui/widgets/test_account_widget_signature_caching.py
-    - tests/unit/gpt_trader/tui/widgets/test_execution_issues_modal.py
-    - tests/unit/gpt_trader/tui/widgets/test_order_detail_modal.py
-    - tests/unit/gpt_trader/tui/widgets/test_orders_widget_sorting.py
-    - tests/unit/gpt_trader/tui/widgets/test_orders_widget_update.py
-    - tests/unit/gpt_trader/tui/widgets/test_position_card_basic.py
-    - tests/unit/gpt_trader/tui/widgets/test_position_card_partial_state.py
-    - tests/unit/gpt_trader/tui/widgets/test_position_card_signature_caching.py
-    - tests/unit/gpt_trader/tui/widgets/test_position_detail_modal_calculations.py
-    - tests/unit/gpt_trader/tui/widgets/test_position_detail_modal_fill_quality.py
-    - tests/unit/gpt_trader/tui/widgets/test_position_detail_modal_init.py
-    - tests/unit/gpt_trader/tui/widgets/test_position_detail_modal_recent_fills.py
-    - tests/unit/gpt_trader/tui/widgets/test_position_detail_modal_trade_classification.py
-    - tests/unit/gpt_trader/tui/widgets/test_positions_widget.py
-    - tests/unit/gpt_trader/tui/widgets/test_risk.py
-    - tests/unit/gpt_trader/tui/widgets/test_risk_detail_modal_focus_preview.py
-    - tests/unit/gpt_trader/tui/widgets/test_risk_detail_modal_guard_visibility.py
-    - tests/unit/gpt_trader/tui/widgets/test_risk_detail_modal_score.py
-    - tests/unit/gpt_trader/tui/widgets/test_strategy_widget_core.py
-    - tests/unit/gpt_trader/tui/widgets/test_strategy_widget_decision_display.py
-    - tests/unit/gpt_trader/tui/widgets/test_system.py
-    - tests/unit/gpt_trader/tui/widgets/test_system_monitor_initial_state_and_updates.py
-    - tests/unit/gpt_trader/tui/widgets/test_system_monitor_partial_state.py
-    - tests/unit/gpt_trader/tui/widgets/test_system_monitor_signature_caching.py
-    - tests/unit/gpt_trader/tui/widgets/test_trades_widget_filters.py
-    - tests/unit/gpt_trader/tui/widgets/test_trades_widget_update.py
-    source_modules:
-    - gpt_trader.tui.types
-    decision: merge
-    target_location: tests/unit/gpt_trader/tui/screens/test_types.py
-    expected_file_delta: -49
-    priority: high
-    rationale: Consolidate 50 test files into single parametrized file
-    status: pending
-    added: '2026-01-20'
   48a4f2a72b11:
     type: source_fanout
     description: 29 test files import gpt_trader.features.live_trade.strategies.perps_baseline
@@ -254,44 +58,6 @@ clusters:
     expected_file_delta: -28
     priority: high
     rationale: Consolidate 29 test files into single parametrized file
-    status: pending
-    added: '2026-01-20'
-  fd4badaa5a85:
-    type: source_fanout
-    description: 25 test files import gpt_trader.app.config
-    files:
-    - tests/unit/gpt_trader/app/config/test_bot_config.py
-    - tests/unit/gpt_trader/app/config/test_bot_config_loading.py
-    - tests/unit/gpt_trader/app/config/test_profile_loader_container_api.py
-    - tests/unit/gpt_trader/app/containers/test_risk_validation.py
-    - tests/unit/gpt_trader/app/containers/test_risk_validation_kill_switch.py
-    - tests/unit/gpt_trader/app/test_application_container_bot_creation.py
-    - tests/unit/gpt_trader/app/test_application_container_registry.py
-    - tests/unit/gpt_trader/app/test_application_container_reset_and_services.py
-    - tests/unit/gpt_trader/app/test_application_container_resources.py
-    - tests/unit/gpt_trader/app/test_bootstrap.py
-    - tests/unit/gpt_trader/app/test_bootstrap_profile_loading.py
-    - tests/unit/gpt_trader/backtesting/test_guarded_backtest_flow.py
-    - tests/unit/gpt_trader/backtesting/validation/test_guarded_execution.py
-    - tests/unit/gpt_trader/cli/test_services.py
-    - tests/unit/gpt_trader/features/live_trade/engines/test_runtime_start_event.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_get_validation_metrics.py
-    - tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy_exit_logic_and_cooldown.py
-    - tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy_safety_and_recovery.py
-    - tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy_sizing_and_trend_filter.py
-    - tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy_zscore_and_signals.py
-    - tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop.py
-    - tests/unit/gpt_trader/features/live_trade/test_strategy_factory.py
-    - tests/unit/gpt_trader/features/live_trade/test_symbols_cfm.py
-    - tests/unit/gpt_trader/features/live_trade/test_trading_engine.py
-    - tests/unit/gpt_trader/preflight/test_checks_simulation.py
-    source_modules:
-    - gpt_trader.app.config
-    decision: merge
-    target_location: tests/unit/gpt_trader/app/config/test_config.py
-    expected_file_delta: -24
-    priority: high
-    rationale: Consolidate 25 test files into single parametrized file
     status: pending
     added: '2026-01-20'
   80d1701bb573:
@@ -671,34 +437,6 @@ clusters:
     - gpt_trader.monitoring.alert_types
     decision: merge
     target_location: tests/unit/gpt_trader/features/live_trade/test_alert_types.py
-    expected_file_delta: -14
-    priority: high
-    rationale: Consolidate 15 test files into single parametrized file
-    status: pending
-    added: '2026-01-20'
-  5fb99b468c7a:
-    type: source_fanout
-    description: 15 test files import gpt_trader.utilities.datetime_helpers
-    files:
-    - tests/unit/gpt_trader/backtesting/engine/test_clock_init.py
-    - tests/unit/gpt_trader/backtesting/validation/test_decision_logger_strategy_decision_create.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_accounts_balances_and_products.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_product_catalog.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service_ticker.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service_ticker_cache.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows_transient_failure.py
-    - tests/unit/gpt_trader/monitoring/notifications/test_notification_service_edges.py
-    - tests/unit/gpt_trader/monitoring/test_alert_types_alert_creation.py
-    - tests/unit/gpt_trader/monitoring/test_alert_types_alert_lifecycle.py
-    - tests/unit/gpt_trader/security/test_request_validator_success.py
-    - tests/unit/gpt_trader/utilities/test_datetime_helpers.py
-    - tests/unit/gpt_trader/utilities/test_datetime_helpers_normalize_to_utc.py
-    - tests/unit/gpt_trader/utilities/test_datetime_helpers_now.py
-    - tests/unit/gpt_trader/utilities/test_datetime_helpers_to_iso_utc.py
-    source_modules:
-    - gpt_trader.utilities.datetime_helpers
-    decision: merge
-    target_location: tests/unit/gpt_trader/backtesting/engine/test_datetime_helpers.py
     expected_file_delta: -14
     priority: high
     rationale: Consolidate 15 test files into single parametrized file
@@ -2086,25 +1824,6 @@ clusters:
     rationale: Consolidate 6 test files into single parametrized file
     status: pending
     added: '2026-01-20'
-  1c40f77686a8:
-    type: source_fanout
-    description: 6 test files import gpt_trader.core.account
-    files:
-    - tests/unit/gpt_trader/core/test_account_edges.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_edges.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_unified_edges.py
-    - tests/unit/gpt_trader/tui/test_state_cfm_and_data_staleness.py
-    - tests/unit/gpt_trader/tui/widgets/test_cfm_balance_basic.py
-    - tests/unit/gpt_trader/tui/widgets/test_cfm_balance_color_coding.py
-    source_modules:
-    - gpt_trader.core.account
-    decision: merge
-    target_location: tests/unit/gpt_trader/core/test_account.py
-    expected_file_delta: -5
-    priority: medium
-    rationale: Consolidate 6 test files into single parametrized file
-    status: pending
-    added: '2026-01-20'
   241c56b62618:
     type: source_fanout
     description: 6 test files import gpt_trader.monitoring.health_checks
@@ -2330,6 +2049,287 @@ clusters:
     target_location: tests/unit/gpt_trader/features/brokerages/coinbase/client/test_circuit_breaker.py
     expected_file_delta: -5
     priority: medium
+    rationale: Consolidate 6 test files into single parametrized file
+    status: pending
+    added: '2026-01-20'
+  9155c0e0dd74:
+    type: source_fanout
+    description: 120 test files import gpt_trader.core
+    files:
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit_order_queue_priority.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit_orders.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_market_orders.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_queue_fill_estimation.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_spread_impact.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_stop_orders.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker_initialization_and_products.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker_margin_cancellation_and_account_info.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker_mark_price_and_snapshot.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker_market_data.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker_orders_and_chaos.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker_positions_metrics.py
+    - tests/unit/gpt_trader/backtesting/test_coinbase_historical_fetcher_edges.py
+    - tests/unit/gpt_trader/backtesting/test_guarded_backtest_flow.py
+    - tests/unit/gpt_trader/backtesting/test_historical_data_manager_edges.py
+    - tests/unit/gpt_trader/backtesting/test_historical_data_manager_quality_edges.py
+    - tests/unit/gpt_trader/backtesting/test_simulation_basics.py
+    - tests/unit/gpt_trader/backtesting/validation/test_guarded_execution.py
+    - tests/unit/gpt_trader/core/test_core_types.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_configurations.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_flags_and_coercion.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_validation.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_execute_order_payload.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_find_existing_order_by_client_id.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_cfm_portfolio.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_close_position.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_place_and_cancel.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_queries_and_fills.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_portfolio_service.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_retry_and_telemetry.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_intx_portfolio.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_close_position.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_edge_cases.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_get_order.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_list_orders.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders_place_order.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_cfm.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_edges.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_intx.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_positions.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_unified_edges.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_product_service_listing_and_get_product.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_account_manager_snapshot.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_accounts_balances_and_products.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_accounts_positions_and_treasury.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_errors.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_data_endpoints.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_data_models.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_models.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_models_edges.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_perp_rules_and_quantize.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_product_catalog.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_system.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_exchange_specs.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_http_request_layer.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_intx_endpoints.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_retry_behaviour.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_enforce_perps_rules.py
+    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_edges.py
+    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_market_data.py
+    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_order_execution.py
+    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_position_updates.py
+    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_positions_and_balances.py
+    - tests/unit/gpt_trader/features/data/test_data_coinbase_edges.py
+    - tests/unit/gpt_trader/features/data/test_data_coinbase_runtime_edges.py
+    - tests/unit/gpt_trader/features/data/test_quality_candles.py
+    - tests/unit/gpt_trader/features/live_trade/engines/test_equity_calculator.py
+    - tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_daily_tracking.py
+    - tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_equity_and_positions.py
+    - tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_order_flow.py
+    - tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_order_guards.py
+    - tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_order_quantity.py
+    - tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_position_state.py
+    - tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_reduce_only.py
+    - tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_risk_format.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_order_edge_cases.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_order_normal.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_metrics.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_resilience_backoff.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_resilience_retry.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_with_retry.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_broker_rejection.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_edge_cases.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_failure.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_preview.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_submission_attempt.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_success.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_trade_event.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_execute_broker_order.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_handle_order_failure.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_handle_order_result.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_process_rejection.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_record_preview.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows_retry_idempotency.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows_submit_order.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows_transient_failure.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_correlation_context.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_latency_metrics.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_rejection_recording.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_submission_metrics.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_router_execute_async.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_router_order_result.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_collect_account_state.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_equity_and_logging.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_require_product_and_flow.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_resolve_effective_price.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_validation_async.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_validation_exchange_rules.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_validation_flow.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_validation_mark_staleness_and_slippage.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_validation_metrics_and_escalation.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_validation_order_preview.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_validation_order_validator_basic.py
+    - tests/unit/gpt_trader/features/live_trade/strategies/test_stateful.py
+    - tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop.py
+    - tests/unit/gpt_trader/features/live_trade/test_leverage_cap.py
+    - tests/unit/gpt_trader/features/live_trade/test_leverage_time_windows.py
+    - tests/unit/gpt_trader/features/live_trade/test_total_exposure_breach.py
+    - tests/unit/gpt_trader/tui/test_app_core.py
+    source_modules:
+    - gpt_trader.core
+    decision: merge
+    target_location: tests/unit/gpt_trader/backtesting/simulation/test_core.py
+    expected_file_delta: -119
+    priority: low
+    rationale: Consolidate 120 test files into single parametrized file
+    status: pending
+    added: '2026-01-20'
+  dd170c8ba364:
+    type: source_fanout
+    description: 50 test files import gpt_trader.tui.types
+    files:
+    - tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen_backtest_and_badges.py
+    - tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen_indicator_hints.py
+    - tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen_signal_detail_content.py
+    - tests/unit/gpt_trader/tui/services/test_alert_manager_core.py
+    - tests/unit/gpt_trader/tui/services/test_alert_manager_trade_orders.py
+    - tests/unit/gpt_trader/tui/services/test_alert_manager_trade_stale_orders.py
+    - tests/unit/gpt_trader/tui/services/test_execution_telemetry_execution_metrics.py
+    - tests/unit/gpt_trader/tui/services/test_trading_stats_service_compute_stats.py
+    - tests/unit/gpt_trader/tui/services/test_trading_stats_service_model.py
+    - tests/unit/gpt_trader/tui/services/test_trading_stats_service_trade_matching.py
+    - tests/unit/gpt_trader/tui/state_management/test_delta_updater_compare_account_risk_system.py
+    - tests/unit/gpt_trader/tui/state_management/test_delta_updater_compare_market_and_positions.py
+    - tests/unit/gpt_trader/tui/state_management/test_delta_updater_compare_orders_and_trades.py
+    - tests/unit/gpt_trader/tui/test_indicator_contributions.py
+    - tests/unit/gpt_trader/tui/test_market_widget.py
+    - tests/unit/gpt_trader/tui/test_new_widgets.py
+    - tests/unit/gpt_trader/tui/test_risk_guard_explanations.py
+    - tests/unit/gpt_trader/tui/test_risk_preview_position_impacts.py
+    - tests/unit/gpt_trader/tui/test_risk_preview_preview_and_scenarios.py
+    - tests/unit/gpt_trader/tui/test_snapshots_execution_issues_modal.py
+    - tests/unit/gpt_trader/tui/test_snapshots_risk_detail_modal.py
+    - tests/unit/gpt_trader/tui/test_snapshots_strategy_detail_screen.py
+    - tests/unit/gpt_trader/tui/widgets/test_account_widget_basic.py
+    - tests/unit/gpt_trader/tui/widgets/test_account_widget_partial_state.py
+    - tests/unit/gpt_trader/tui/widgets/test_account_widget_signature_caching.py
+    - tests/unit/gpt_trader/tui/widgets/test_execution_issues_modal.py
+    - tests/unit/gpt_trader/tui/widgets/test_order_detail_modal.py
+    - tests/unit/gpt_trader/tui/widgets/test_orders_widget_sorting.py
+    - tests/unit/gpt_trader/tui/widgets/test_orders_widget_update.py
+    - tests/unit/gpt_trader/tui/widgets/test_position_card_basic.py
+    - tests/unit/gpt_trader/tui/widgets/test_position_card_partial_state.py
+    - tests/unit/gpt_trader/tui/widgets/test_position_card_signature_caching.py
+    - tests/unit/gpt_trader/tui/widgets/test_position_detail_modal_calculations.py
+    - tests/unit/gpt_trader/tui/widgets/test_position_detail_modal_fill_quality.py
+    - tests/unit/gpt_trader/tui/widgets/test_position_detail_modal_init.py
+    - tests/unit/gpt_trader/tui/widgets/test_position_detail_modal_recent_fills.py
+    - tests/unit/gpt_trader/tui/widgets/test_position_detail_modal_trade_classification.py
+    - tests/unit/gpt_trader/tui/widgets/test_positions_widget.py
+    - tests/unit/gpt_trader/tui/widgets/test_risk.py
+    - tests/unit/gpt_trader/tui/widgets/test_risk_detail_modal_focus_preview.py
+    - tests/unit/gpt_trader/tui/widgets/test_risk_detail_modal_guard_visibility.py
+    - tests/unit/gpt_trader/tui/widgets/test_risk_detail_modal_score.py
+    - tests/unit/gpt_trader/tui/widgets/test_strategy_widget_core.py
+    - tests/unit/gpt_trader/tui/widgets/test_strategy_widget_decision_display.py
+    - tests/unit/gpt_trader/tui/widgets/test_system.py
+    - tests/unit/gpt_trader/tui/widgets/test_system_monitor_initial_state_and_updates.py
+    - tests/unit/gpt_trader/tui/widgets/test_system_monitor_partial_state.py
+    - tests/unit/gpt_trader/tui/widgets/test_system_monitor_signature_caching.py
+    - tests/unit/gpt_trader/tui/widgets/test_trades_widget_filters.py
+    - tests/unit/gpt_trader/tui/widgets/test_trades_widget_update.py
+    source_modules:
+    - gpt_trader.tui.types
+    decision: merge
+    target_location: tests/unit/gpt_trader/tui/screens/test_types.py
+    expected_file_delta: -49
+    priority: low
+    rationale: Consolidate 50 test files into single parametrized file
+    status: pending
+    added: '2026-01-20'
+  fd4badaa5a85:
+    type: source_fanout
+    description: 25 test files import gpt_trader.app.config
+    files:
+    - tests/unit/gpt_trader/app/config/test_bot_config.py
+    - tests/unit/gpt_trader/app/config/test_bot_config_loading.py
+    - tests/unit/gpt_trader/app/config/test_profile_loader_container_api.py
+    - tests/unit/gpt_trader/app/containers/test_risk_validation.py
+    - tests/unit/gpt_trader/app/containers/test_risk_validation_kill_switch.py
+    - tests/unit/gpt_trader/app/test_application_container_bot_creation.py
+    - tests/unit/gpt_trader/app/test_application_container_registry.py
+    - tests/unit/gpt_trader/app/test_application_container_reset_and_services.py
+    - tests/unit/gpt_trader/app/test_application_container_resources.py
+    - tests/unit/gpt_trader/app/test_bootstrap.py
+    - tests/unit/gpt_trader/app/test_bootstrap_profile_loading.py
+    - tests/unit/gpt_trader/backtesting/test_guarded_backtest_flow.py
+    - tests/unit/gpt_trader/backtesting/validation/test_guarded_execution.py
+    - tests/unit/gpt_trader/cli/test_services.py
+    - tests/unit/gpt_trader/features/live_trade/engines/test_runtime_start_event.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_get_validation_metrics.py
+    - tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy_exit_logic_and_cooldown.py
+    - tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy_safety_and_recovery.py
+    - tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy_sizing_and_trend_filter.py
+    - tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy_zscore_and_signals.py
+    - tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop.py
+    - tests/unit/gpt_trader/features/live_trade/test_strategy_factory.py
+    - tests/unit/gpt_trader/features/live_trade/test_symbols_cfm.py
+    - tests/unit/gpt_trader/features/live_trade/test_trading_engine.py
+    - tests/unit/gpt_trader/preflight/test_checks_simulation.py
+    source_modules:
+    - gpt_trader.app.config
+    decision: merge
+    target_location: tests/unit/gpt_trader/app/config/test_config.py
+    expected_file_delta: -24
+    priority: low
+    rationale: Consolidate 25 test files into single parametrized file
+    status: pending
+    added: '2026-01-20'
+  5fb99b468c7a:
+    type: source_fanout
+    description: 15 test files import gpt_trader.utilities.datetime_helpers
+    files:
+    - tests/unit/gpt_trader/backtesting/engine/test_clock_init.py
+    - tests/unit/gpt_trader/backtesting/validation/test_decision_logger_strategy_decision_create.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_accounts_balances_and_products.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_product_catalog.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service_ticker.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service_ticker_cache.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows_transient_failure.py
+    - tests/unit/gpt_trader/monitoring/notifications/test_notification_service_edges.py
+    - tests/unit/gpt_trader/monitoring/test_alert_types_alert_creation.py
+    - tests/unit/gpt_trader/monitoring/test_alert_types_alert_lifecycle.py
+    - tests/unit/gpt_trader/security/test_request_validator_success.py
+    - tests/unit/gpt_trader/utilities/test_datetime_helpers.py
+    - tests/unit/gpt_trader/utilities/test_datetime_helpers_normalize_to_utc.py
+    - tests/unit/gpt_trader/utilities/test_datetime_helpers_now.py
+    - tests/unit/gpt_trader/utilities/test_datetime_helpers_to_iso_utc.py
+    source_modules:
+    - gpt_trader.utilities.datetime_helpers
+    decision: merge
+    target_location: tests/unit/gpt_trader/backtesting/engine/test_datetime_helpers.py
+    expected_file_delta: -14
+    priority: low
+    rationale: Consolidate 15 test files into single parametrized file
+    status: pending
+    added: '2026-01-20'
+  1c40f77686a8:
+    type: source_fanout
+    description: 6 test files import gpt_trader.core.account
+    files:
+    - tests/unit/gpt_trader/core/test_account_edges.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_edges.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_unified_edges.py
+    - tests/unit/gpt_trader/tui/test_state_cfm_and_data_staleness.py
+    - tests/unit/gpt_trader/tui/widgets/test_cfm_balance_basic.py
+    - tests/unit/gpt_trader/tui/widgets/test_cfm_balance_color_coding.py
+    source_modules:
+    - gpt_trader.core.account
+    decision: merge
+    target_location: tests/unit/gpt_trader/core/test_account.py
+    expected_file_delta: -5
+    priority: low
     rationale: Consolidate 6 test files into single parametrized file
     status: pending
     added: '2026-01-20'

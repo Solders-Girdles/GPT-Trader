@@ -162,6 +162,26 @@ def infer_priority(cluster: dict[str, Any]) -> str:
     """Infer priority based on cluster characteristics."""
     file_count = cluster.get("file_count", 0)
 
+    if cluster.get("type") == "source_fanout":
+        source_modules = cluster.get("source_modules", [])
+        if any(
+            m == "gpt_trader.core" or str(m).startswith("gpt_trader.core.") for m in source_modules
+        ):
+            return "low"
+
+        # Broad fanout across many components is usually low-signal for dedupe work.
+        files = cluster.get("files", [])
+        components: set[str] = set()
+        for path in files:
+            parts = str(path).split("/")
+            if len(parts) >= 4 and parts[0] == "tests" and parts[1] == "unit":
+                if parts[2] == "gpt_trader":
+                    components.add("/".join(parts[2:4]))
+                else:
+                    components.add(parts[2])
+        if len(components) >= 5 or file_count >= 50:
+            return "low"
+
     if file_count > 10:
         return "high"
     if file_count > 5:
@@ -212,8 +232,21 @@ def build_manifest(
         existing = existing_clusters.get(cluster_id, {})
 
         decision = existing.get("decision") or infer_decision(cluster)
-        priority = existing.get("priority") or infer_priority(cluster)
-        target_location = existing.get("target_location") or infer_target_location(cluster)
+        frozen = (
+            existing.get("status") in {"in_progress", "done"}
+            or existing.get("owner")
+            or existing.get("pr_url")
+        )
+        priority = (
+            existing.get("priority")
+            if frozen and existing.get("priority")
+            else infer_priority(cluster)
+        )
+        target_location = (
+            existing.get("target_location")
+            if frozen and existing.get("target_location")
+            else infer_target_location(cluster)
+        )
 
         file_count = cluster.get("file_count", len(cluster.get("files", [])))
 
@@ -420,7 +453,7 @@ def show_stats() -> int:
 
 
 def suggest_next_pr() -> int:
-    """Suggest next PR packet (5-10 files, ordered by priority)."""
+    """Suggest next PR cluster (aim for ~5-10 files)."""
     if not MANIFEST_PATH.exists():
         print(f"Error: Manifest not found: {MANIFEST_PATH}", file=sys.stderr)
         return 1
@@ -449,31 +482,59 @@ def suggest_next_pr() -> int:
     print("Suggested Next PR Packet")
     print("=" * 40)
 
-    total_files = 0
-    selected = []
+    min_files = 5
+    max_files = 10
 
-    for cluster_id, cluster in pending:
-        file_count = len(cluster.get("files", []))
-        if total_files + file_count <= 10 or not selected:
-            selected.append((cluster_id, cluster))
-            total_files += file_count
-            if total_files >= 5:
-                break
+    def count_files(cluster: dict[str, Any]) -> int:
+        return len(cluster.get("files", []))
 
-    for cluster_id, cluster in selected:
-        print(f"\nCluster: {cluster_id}")
-        print(f"  Type: {cluster.get('type')}")
-        print(f"  Priority: {cluster.get('priority')}")
-        print(f"  Decision: {cluster.get('decision')}")
-        print(f"  Files ({len(cluster.get('files', []))}):")
-        for f in cluster.get("files", [])[:5]:
-            print(f"    - {f}")
-        if len(cluster.get("files", [])) > 5:
-            print(f"    ... and {len(cluster.get('files', [])) - 5} more")
-        print(f"  Target: {cluster.get('target_location')}")
+    def dir_count(cluster: dict[str, Any]) -> int:
+        return len({str(Path(path).parent) for path in cluster.get("files", [])})
 
-    print(f"\nTotal files in packet: {total_files}")
+    candidates = [
+        (cid, cluster) for cid, cluster in pending if min_files <= count_files(cluster) <= max_files
+    ]
+    if not candidates:
+        candidates = [
+            (cid, cluster) for cid, cluster in pending if 3 <= count_files(cluster) <= max_files
+        ]
+
+    if candidates:
+        selection = min(
+            candidates,
+            key=lambda item: (
+                priority_order.get(item[1].get("priority", "low"), 2),
+                dir_count(item[1]),
+                -count_files(item[1]),
+                item[0],
+            ),
+        )
+    else:
+        selection = pending[0]
+
+    cluster_id, cluster = selection
+    files = cluster.get("files", [])
+    file_count = len(files)
+
+    print(f"\nCluster: {cluster_id}")
+    print(f"  Type: {cluster.get('type')}")
+    print(f"  Priority: {cluster.get('priority')}")
+    print(f"  Decision: {cluster.get('decision')}")
+    print(f"  Dirs: {dir_count(cluster)}")
+    print(f"  Files ({file_count}):")
+    for file_path in files[:10]:
+        print(f"    - {file_path}")
+    if file_count > 10:
+        print(f"    ... and {file_count - 10} more")
+    print(f"  Target: {cluster.get('target_location')}")
+
+    if file_count > max_files:
+        print(
+            f"\nNote: This cluster includes {file_count} files (target is {min_files}-{max_files})."
+        )
+        print("Consider splitting the work into a smaller, single-component slice.")
     print("\nTo start work:")
+    print(f"  0. Inspect: uv run agent-dedupe --cluster {cluster_id}")
     print("  1. Update manifest: set status to 'in_progress', add owner")
     print("  2. Execute consolidation")
     print("  3. Run: uv run pytest -q <affected_files>")
@@ -504,7 +565,7 @@ def main() -> int:
     parser.add_argument(
         "--next-pr",
         action="store_true",
-        help="Suggest next PR packet (5-10 files)",
+        help="Suggest next PR cluster (~5-10 files)",
     )
     parser.add_argument(
         "--source-fanout-threshold",

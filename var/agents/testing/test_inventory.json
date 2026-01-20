@@ -5161,7 +5161,7 @@
     "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_csv_row.py": [
       {
         "name": "TestBacktestReporterGenerateCsvRow::test_generate_csv_row_returns_dict",
-        "line": 51,
+        "line": 48,
         "markers": [
           "unit"
         ],
@@ -5170,7 +5170,7 @@
       },
       {
         "name": "TestBacktestReporterGenerateCsvRow::test_generate_csv_row_includes_all_keys",
-        "line": 56,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -5179,7 +5179,7 @@
       },
       {
         "name": "TestBacktestReporterGenerateCsvRow::test_generate_csv_row_values_are_numeric",
-        "line": 81,
+        "line": 78,
         "markers": [
           "unit"
         ],
@@ -5188,7 +5188,7 @@
       },
       {
         "name": "TestBacktestReporterGenerateCsvRow::test_generate_csv_row_handles_none_sharpe",
-        "line": 89,
+        "line": 86,
         "markers": [
           "unit"
         ],
@@ -22656,7 +22656,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_broker_rejection.py": [
       {
         "name": "TestRecordBrokerRejection::test_record_broker_rejection_calls_record_rejection",
-        "line": 17,
+        "line": 32,
         "markers": [
           "unit"
         ],
@@ -22665,7 +22665,7 @@
       },
       {
         "name": "TestRecordBrokerRejection::test_record_broker_rejection_appends_error",
-        "line": 48,
+        "line": 57,
         "markers": [
           "unit"
         ],
@@ -22674,7 +22674,7 @@
       },
       {
         "name": "TestRecordBrokerRejection::test_record_broker_rejection_uses_effective_price_when_price_none",
-        "line": 82,
+        "line": 85,
         "markers": [
           "unit"
         ],
@@ -22683,7 +22683,7 @@
       },
       {
         "name": "TestRecordBrokerRejection::test_record_broker_rejection_handles_store_exception",
-        "line": 109,
+        "line": 106,
         "markers": [
           "unit"
         ],

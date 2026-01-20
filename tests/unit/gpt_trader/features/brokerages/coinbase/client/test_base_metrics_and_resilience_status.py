@@ -1,9 +1,11 @@
 """Tests for CoinbaseClientBase metrics recording and resilience status."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
+import pytest
 import requests
 
+import gpt_trader.features.brokerages.coinbase.client.base as client_base_module
 from gpt_trader.features.brokerages.coinbase.auth import SimpleAuth
 from gpt_trader.features.brokerages.coinbase.client.base import CoinbaseClientBase
 
@@ -29,21 +31,20 @@ class TestCoinbaseClientBaseMetricsAndResilienceStatus:
         client._circuit_breaker.record_success.assert_called_once_with("/api/v3/test")
         span.set_attribute.assert_called_once_with("http.status_code", 200)
 
-    def test_record_request_metrics_records_metrics_and_span(self) -> None:
+    def test_record_request_metrics_records_metrics_and_span(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test request metrics recording updates metrics and span attributes."""
         client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
         client._metrics = Mock()
         span = Mock()
 
-        with (
-            patch(
-                "gpt_trader.features.brokerages.coinbase.client.base.record_histogram"
-            ) as mock_hist,
-            patch(
-                "gpt_trader.features.brokerages.coinbase.client.base.record_counter"
-            ) as mock_counter,
-        ):
-            client._record_request_metrics("/api/v3/test", 0.25, True, False, span)
+        mock_hist = Mock()
+        mock_counter = Mock()
+        monkeypatch.setattr(client_base_module, "record_histogram", mock_hist)
+        monkeypatch.setattr(client_base_module, "record_counter", mock_counter)
+
+        client._record_request_metrics("/api/v3/test", 0.25, True, False, span)
 
         client._metrics.record_request.assert_called_once_with(
             "/api/v3/test",
@@ -56,7 +57,7 @@ class TestCoinbaseClientBaseMetricsAndResilienceStatus:
         span.set_attribute.assert_any_call("http.latency_ms", 250.0)
         span.set_attribute.assert_any_call("http.rate_limited", False)
 
-    def test_get_resilience_status_records_metrics(self) -> None:
+    def test_get_resilience_status_records_metrics(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test resilience status includes metrics and circuit breaker info."""
         client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
         client.get_rate_limit_usage = Mock(return_value=0.5)
@@ -69,10 +70,10 @@ class TestCoinbaseClientBaseMetricsAndResilienceStatus:
         client._priority_manager = Mock()
         client._priority_manager.get_stats.return_value = {"deferred": 2}
 
-        with patch(
-            "gpt_trader.features.brokerages.coinbase.client.base.record_gauge"
-        ) as mock_gauge:
-            status = client.get_resilience_status()
+        mock_gauge = Mock()
+        monkeypatch.setattr(client_base_module, "record_gauge", mock_gauge)
+
+        status = client.get_resilience_status()
 
         assert status["metrics"] == {"error_rate": 0.2}
         assert status["circuit_breakers"] == {"orders": {"state": "open"}}

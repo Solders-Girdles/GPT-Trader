@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 
+import gpt_trader.features.brokerages.coinbase.rest.base as rest_base_module
 from gpt_trader.core import (
     InsufficientFunds,
     InvalidRequestError,
@@ -18,21 +19,19 @@ from tests.unit.gpt_trader.features.brokerages.coinbase.rest.rest_service_core_t
 
 
 class TestCoinbaseRestServiceCoreExecuteOrderPayload(RestServiceCoreTestBase):
-    def test_execute_order_payload_success(self) -> None:
+    def test_execute_order_payload_success(self, monkeypatch: pytest.MonkeyPatch) -> None:
         payload = {"product_id": "BTC-USD", "side": "BUY"}
         mock_order = Mock(spec=Order)
         mock_order.id = "order_123"
         self.client.place_order.return_value = {"order_id": "order_123"}
+        monkeypatch.setattr(rest_base_module, "to_order", lambda x: mock_order)
 
-        with patch(
-            "gpt_trader.features.brokerages.coinbase.rest.base.to_order", return_value=mock_order
-        ):
-            result = self.service._execute_order_payload("BTC-USD", payload, "client_123")
+        result = self.service._execute_order_payload("BTC-USD", payload, "client_123")
 
         assert result == mock_order
         self.client.place_order.assert_called_once_with(payload)
 
-    def test_execute_order_payload_with_preview(self) -> None:
+    def test_execute_order_payload_with_preview(self, monkeypatch: pytest.MonkeyPatch) -> None:
         payload = {"product_id": "BTC-USD", "side": "BUY"}
         mock_order = Mock(spec=Order)
         self.client.preview_order.return_value = {"success": True}
@@ -42,16 +41,17 @@ class TestCoinbaseRestServiceCoreExecuteOrderPayload(RestServiceCoreTestBase):
         mock_bot_config.enable_order_preview = True
         self.service.bot_config = mock_bot_config
 
-        with patch(
-            "gpt_trader.features.brokerages.coinbase.rest.base.to_order", return_value=mock_order
-        ):
-            result = self.service._execute_order_payload("BTC-USD", payload, "client_123")
+        monkeypatch.setattr(rest_base_module, "to_order", lambda x: mock_order)
+
+        result = self.service._execute_order_payload("BTC-USD", payload, "client_123")
 
         assert result == mock_order
         self.client.preview_order.assert_called_once_with(payload)
         self.client.place_order.assert_called_once_with(payload)
 
-    def test_execute_order_payload_preview_failure_still_places(self) -> None:
+    def test_execute_order_payload_preview_failure_still_places(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         payload = {"product_id": "BTC-USD", "side": "BUY"}
         mock_order = Mock(spec=Order)
         self.client.preview_order.side_effect = Exception("preview failed")
@@ -61,10 +61,9 @@ class TestCoinbaseRestServiceCoreExecuteOrderPayload(RestServiceCoreTestBase):
         mock_bot_config.enable_order_preview = True
         self.service.bot_config = mock_bot_config
 
-        with patch(
-            "gpt_trader.features.brokerages.coinbase.rest.base.to_order", return_value=mock_order
-        ):
-            result = self.service._execute_order_payload("BTC-USD", payload, "client_123")
+        monkeypatch.setattr(rest_base_module, "to_order", lambda x: mock_order)
+
+        result = self.service._execute_order_payload("BTC-USD", payload, "client_123")
 
         assert result == mock_order
         self.client.preview_order.assert_called_once_with(payload)

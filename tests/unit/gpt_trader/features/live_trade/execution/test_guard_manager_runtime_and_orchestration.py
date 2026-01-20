@@ -1,19 +1,24 @@
 """Tests for GuardManager orchestration across guard phases."""
 
 import time
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
+import gpt_trader.features.live_trade.execution.guard_manager as guard_manager_module
 from gpt_trader.features.live_trade.guard_errors import (
     RiskGuardActionError,
     RiskGuardDataUnavailable,
 )
 
 
-def test_run_guards_for_state_calls_all_guards(guard_manager, sample_guard_state):
-    with patch.object(guard_manager, "run_guard_step") as mock_step:
-        guard_manager.run_guards_for_state(sample_guard_state, incremental=False)
+def test_run_guards_for_state_calls_all_guards(
+    guard_manager, sample_guard_state, monkeypatch: pytest.MonkeyPatch
+):
+    mock_step = MagicMock()
+    monkeypatch.setattr(guard_manager, "run_guard_step", mock_step)
+
+    guard_manager.run_guards_for_state(sample_guard_state, incremental=False)
 
     assert mock_step.call_count == 7
     guard_names = [call[0][0] for call in mock_step.call_args_list]
@@ -26,60 +31,61 @@ def test_run_guards_for_state_calls_all_guards(guard_manager, sample_guard_state
     assert "api_health" in guard_names
 
 
-def test_run_runtime_guards_first_run(guard_manager):
-    with (
-        patch.object(guard_manager, "collect_runtime_guard_state") as mock_collect,
-        patch.object(guard_manager, "run_guards_for_state") as mock_run_guards,
-    ):
-        mock_state = MagicMock()
-        mock_collect.return_value = mock_state
+def test_run_runtime_guards_first_run(guard_manager, monkeypatch: pytest.MonkeyPatch):
+    mock_state = MagicMock()
+    mock_collect = MagicMock(return_value=mock_state)
+    mock_run_guards = MagicMock()
+    monkeypatch.setattr(guard_manager, "collect_runtime_guard_state", mock_collect)
+    monkeypatch.setattr(guard_manager, "run_guards_for_state", mock_run_guards)
 
-        state = guard_manager.run_runtime_guards()
+    state = guard_manager.run_runtime_guards()
 
-        assert state == mock_state
-        mock_collect.assert_called_once()
-        mock_run_guards.assert_called_with(mock_state, False)
+    assert state == mock_state
+    mock_collect.assert_called_once()
+    mock_run_guards.assert_called_with(mock_state, False)
 
 
-def test_run_runtime_guards_incremental(guard_manager):
+def test_run_runtime_guards_incremental(guard_manager, monkeypatch: pytest.MonkeyPatch):
     mock_state = MagicMock()
     guard_manager._runtime_guard_state = mock_state
     guard_manager._runtime_guard_dirty = False
     guard_manager._runtime_guard_last_full_ts = time.time()
 
-    with (
-        patch.object(guard_manager, "collect_runtime_guard_state") as mock_collect,
-        patch.object(guard_manager, "run_guards_for_state") as mock_run_guards,
-    ):
-        state = guard_manager.run_runtime_guards()
+    mock_collect = MagicMock()
+    mock_run_guards = MagicMock()
+    monkeypatch.setattr(guard_manager, "collect_runtime_guard_state", mock_collect)
+    monkeypatch.setattr(guard_manager, "run_guards_for_state", mock_run_guards)
 
-        assert state == mock_state
-        mock_collect.assert_not_called()
-        mock_run_guards.assert_called_with(mock_state, True)
+    state = guard_manager.run_runtime_guards()
+
+    assert state == mock_state
+    mock_collect.assert_not_called()
+    mock_run_guards.assert_called_with(mock_state, True)
 
 
-def test_run_runtime_guards_force_full(guard_manager):
+def test_run_runtime_guards_force_full(guard_manager, monkeypatch: pytest.MonkeyPatch):
     mock_state = MagicMock()
     guard_manager._runtime_guard_state = mock_state
     guard_manager._runtime_guard_dirty = False
     guard_manager._runtime_guard_last_full_ts = time.time()
 
-    with (
-        patch.object(guard_manager, "collect_runtime_guard_state") as mock_collect,
-        patch.object(guard_manager, "run_guards_for_state") as mock_run_guards,
-    ):
-        new_state = MagicMock()
-        mock_collect.return_value = new_state
+    new_state = MagicMock()
+    mock_collect = MagicMock(return_value=new_state)
+    mock_run_guards = MagicMock()
+    monkeypatch.setattr(guard_manager, "collect_runtime_guard_state", mock_collect)
+    monkeypatch.setattr(guard_manager, "run_guards_for_state", mock_run_guards)
 
-        state = guard_manager.run_runtime_guards(force_full=True)
+    state = guard_manager.run_runtime_guards(force_full=True)
 
-        assert state == new_state
-        mock_collect.assert_called_once()
-        mock_run_guards.assert_called_with(new_state, False)
+    assert state == new_state
+    mock_collect.assert_called_once()
+    mock_run_guards.assert_called_with(new_state, False)
 
 
 class TestGuardManagerEdgeCases:
-    def test_data_unavailable_is_recorded_and_surfaces(self, guard_manager, sample_guard_state):
+    def test_data_unavailable_is_recorded_and_surfaces(
+        self, guard_manager, sample_guard_state, monkeypatch: pytest.MonkeyPatch
+    ):
         error = RiskGuardDataUnavailable(
             guard_name="test_guard",
             message="Data temporarily unavailable",
@@ -87,10 +93,10 @@ class TestGuardManagerEdgeCases:
         )
         func = MagicMock(side_effect=error)
 
-        with patch(
-            "gpt_trader.features.live_trade.execution.guard_manager.record_guard_failure"
-        ) as mock_record:
-            guard_manager.run_guard_step("test_guard", func)
+        mock_record = MagicMock()
+        monkeypatch.setattr(guard_manager_module, "record_guard_failure", mock_record)
+
+        guard_manager.run_guard_step("test_guard", func)
 
         mock_record.assert_called_once()
         recorded_error = mock_record.call_args[0][0]

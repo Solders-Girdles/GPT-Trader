@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
+import gpt_trader.features.live_trade.execution.broker_executor as broker_executor_module
 from gpt_trader.features.live_trade.execution.broker_executor import (
     RetryPolicy,
     execute_with_retry,
@@ -99,9 +100,11 @@ class TestExecuteWithRetry:
         assert result == "success"
         assert func.call_count == 2
 
-    @patch("gpt_trader.features.live_trade.execution.broker_executor.logger")
-    def test_client_order_id_logged_consistently(self, mock_logger: MagicMock) -> None:
+    def test_client_order_id_logged_consistently(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that the same client_order_id is used for all attempts."""
+        mock_logger = MagicMock()
+        monkeypatch.setattr(broker_executor_module, "logger", mock_logger)
+
         func = MagicMock(side_effect=[ConnectionError("fail"), "success"])
         policy = RetryPolicy(max_attempts=3, jitter=0)
 

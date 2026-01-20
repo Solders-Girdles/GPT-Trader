@@ -17826,7 +17826,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_stream_orderbook.py": [
       {
         "name": "TestStreamOrderbook::test_connects_and_subscribes_to_level2",
-        "line": 17,
+        "line": 26,
         "markers": [
           "unit"
         ],
@@ -17835,7 +17835,7 @@
       },
       {
         "name": "TestStreamOrderbook::test_subscribes_to_ticker_for_level1",
-        "line": 47,
+        "line": 55,
         "markers": [
           "unit"
         ],
@@ -17844,7 +17844,7 @@
       },
       {
         "name": "TestStreamOrderbook::test_include_trades_adds_channel",
-        "line": 73,
+        "line": 80,
         "markers": [
           "unit"
         ],
@@ -17853,7 +17853,7 @@
       },
       {
         "name": "TestStreamOrderbook::test_include_user_events_subscribes",
-        "line": 100,
+        "line": 106,
         "markers": [
           "unit"
         ],
@@ -17862,7 +17862,7 @@
       },
       {
         "name": "TestStreamOrderbook::test_yields_messages_from_callback",
-        "line": 126,
+        "line": 132,
         "markers": [
           "unit"
         ],
@@ -17938,7 +17938,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_ws_health.py": [
       {
         "name": "TestGetWSHealth::test_returns_empty_dict_when_no_ws",
-        "line": 17,
+        "line": 26,
         "markers": [
           "unit"
         ],
@@ -17947,7 +17947,7 @@
       },
       {
         "name": "TestGetWSHealth::test_returns_health_dict_from_ws",
-        "line": 28,
+        "line": 36,
         "markers": [
           "unit"
         ],
@@ -17956,7 +17956,7 @@
       },
       {
         "name": "TestGetWSHealth::test_returns_empty_dict_after_stop_streaming",
-        "line": 54,
+        "line": 61,
         "markers": [
           "unit"
         ],
@@ -17965,7 +17965,7 @@
       },
       {
         "name": "TestGetWSHealth::test_is_thread_safe",
-        "line": 72,
+        "line": 78,
         "markers": [
           "unit"
         ],

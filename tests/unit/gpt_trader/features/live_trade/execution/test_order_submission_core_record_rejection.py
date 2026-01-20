@@ -3,26 +3,37 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
+import pytest
+
+import gpt_trader.features.live_trade.execution.order_event_recorder as recorder_module
 from gpt_trader.features.live_trade.execution.order_submission import OrderSubmitter
+
+
+@pytest.fixture(autouse=True)
+def monitoring_logger(monkeypatch) -> MagicMock:
+    mock_logger = MagicMock()
+    monkeypatch.setattr(recorder_module, "get_monitoring_logger", lambda: mock_logger)
+    return mock_logger
+
+
+@pytest.fixture()
+def emit_metric_mock(monkeypatch) -> MagicMock:
+    mock_emit_metric = MagicMock()
+    monkeypatch.setattr(recorder_module, "emit_metric", mock_emit_metric)
+    return mock_emit_metric
 
 
 class TestRecordRejection:
     """Tests for record_rejection method."""
 
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.emit_metric")
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_record_rejection_logs_and_emits(
         self,
-        mock_get_logger: MagicMock,
-        mock_emit_metric: MagicMock,
+        emit_metric_mock: MagicMock,
         submitter: OrderSubmitter,
     ) -> None:
         """Test that rejection is logged and metric emitted."""
-        mock_logger = MagicMock()
-        mock_get_logger.return_value = mock_logger
-
         submitter.record_rejection(
             symbol="BTC-PERP",
             side="BUY",
@@ -31,24 +42,19 @@ class TestRecordRejection:
             reason="insufficient_margin",
         )
 
-        mock_emit_metric.assert_called_once()
-        call_args = mock_emit_metric.call_args[0]
+        emit_metric_mock.assert_called_once()
+        call_args = emit_metric_mock.call_args[0]
         assert call_args[2]["event_type"] == "order_rejected"
         assert call_args[2]["reason"] == "insufficient_funds"
         assert call_args[2]["reason_detail"] == "insufficient_margin"
 
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.emit_metric")
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_record_rejection_includes_client_order_id(
         self,
-        mock_get_logger: MagicMock,
-        mock_emit_metric: MagicMock,
+        emit_metric_mock: MagicMock,
         submitter: OrderSubmitter,
+        monitoring_logger: MagicMock,
     ) -> None:
         """Test that client_order_id is included in rejection telemetry."""
-        mock_logger = MagicMock()
-        mock_get_logger.return_value = mock_logger
-
         submitter.record_rejection(
             symbol="BTC-PERP",
             side="BUY",
@@ -58,27 +64,21 @@ class TestRecordRejection:
             client_order_id="custom-order-123",
         )
 
-        mock_emit_metric.assert_called_once()
-        call_args = mock_emit_metric.call_args[0]
+        emit_metric_mock.assert_called_once()
+        call_args = emit_metric_mock.call_args[0]
         assert call_args[2]["client_order_id"] == "custom-order-123"
 
-        mock_logger.log_order_status_change.assert_called_once()
-        log_call_kwargs = mock_logger.log_order_status_change.call_args[1]
+        monitoring_logger.log_order_status_change.assert_called_once()
+        log_call_kwargs = monitoring_logger.log_order_status_change.call_args[1]
         assert log_call_kwargs["client_order_id"] == "custom-order-123"
         assert log_call_kwargs["order_id"] == "custom-order-123"
 
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.emit_metric")
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_record_rejection_without_client_order_id_uses_empty_string(
         self,
-        mock_get_logger: MagicMock,
-        mock_emit_metric: MagicMock,
+        emit_metric_mock: MagicMock,
         submitter: OrderSubmitter,
     ) -> None:
         """Test that missing client_order_id defaults to empty string."""
-        mock_logger = MagicMock()
-        mock_get_logger.return_value = mock_logger
-
         submitter.record_rejection(
             symbol="BTC-PERP",
             side="BUY",
@@ -87,22 +87,16 @@ class TestRecordRejection:
             reason="insufficient_margin",
         )
 
-        mock_emit_metric.assert_called_once()
-        call_args = mock_emit_metric.call_args[0]
+        emit_metric_mock.assert_called_once()
+        call_args = emit_metric_mock.call_args[0]
         assert call_args[2]["client_order_id"] == ""
 
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.emit_metric")
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_record_rejection_with_none_price(
         self,
-        mock_get_logger: MagicMock,
-        mock_emit_metric: MagicMock,
+        emit_metric_mock: MagicMock,
         submitter: OrderSubmitter,
     ) -> None:
         """Test recording rejection with None price."""
-        mock_logger = MagicMock()
-        mock_get_logger.return_value = mock_logger
-
         submitter.record_rejection(
             symbol="BTC-PERP",
             side="BUY",
@@ -111,5 +105,5 @@ class TestRecordRejection:
             reason="min_notional",
         )
 
-        call_args = mock_emit_metric.call_args[0]
+        call_args = emit_metric_mock.call_args[0]
         assert call_args[2]["price"] == "market"

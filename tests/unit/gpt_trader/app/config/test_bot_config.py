@@ -4,13 +4,20 @@ from __future__ import annotations
 
 import os
 import warnings
-from unittest.mock import patch
 
 import pytest
 
 from gpt_trader.app.config import BotConfig
 from gpt_trader.app.config.bot_config import MeanReversionConfig
 from gpt_trader.features.live_trade.strategies.perps_baseline import PerpsStrategyConfig
+
+
+@pytest.fixture
+def clean_env(monkeypatch: pytest.MonkeyPatch):
+    """Clear all environment variables for isolated tests."""
+    for key in list(os.environ.keys()):
+        monkeypatch.delenv(key, raising=False)
+    return monkeypatch
 
 
 class TestEnableShortsCanonical:
@@ -95,70 +102,61 @@ class TestEnableShortsCanonical:
 class TestMockBrokerEnvParsing:
     """Test MOCK_BROKER env parsing."""
 
-    def test_mock_broker_env_true(self) -> None:
+    def test_mock_broker_env_true(self, clean_env: pytest.MonkeyPatch) -> None:
         """MOCK_BROKER=1 enables mock broker."""
-        with patch.dict(os.environ, {"MOCK_BROKER": "1"}, clear=True):
-            result = BotConfig.from_env().mock_broker
+        clean_env.setenv("MOCK_BROKER", "1")
+        result = BotConfig.from_env().mock_broker
         assert result is True
 
-    def test_mock_broker_env_default_false(self) -> None:
+    def test_mock_broker_env_default_false(self, clean_env: pytest.MonkeyPatch) -> None:
         """Defaults to False when MOCK_BROKER is unset."""
-        with patch.dict(os.environ, {}, clear=True):
-            result = BotConfig.from_env().mock_broker
+        result = BotConfig.from_env().mock_broker
         assert result is False
 
 
 class TestReduceOnlyModeEnvParsing:
     """Test reduce_only_mode env variable parsing."""
 
-    def test_risk_prefixed_enabled(self) -> None:
+    def test_risk_prefixed_enabled(self, clean_env: pytest.MonkeyPatch) -> None:
         """RISK_REDUCE_ONLY_MODE enables reduce-only mode."""
-        env = {
-            "RISK_REDUCE_ONLY_MODE": "1",
-        }
-        with patch.dict(os.environ, env, clear=True):
-            with patch.dict(os.environ, {"BROKER": "coinbase"}):
-                config = BotConfig.from_env()
+        clean_env.setenv("RISK_REDUCE_ONLY_MODE", "1")
+        clean_env.setenv("BROKER", "coinbase")
+        config = BotConfig.from_env()
         assert config.reduce_only_mode is True
 
-    def test_default_false(self) -> None:
+    def test_default_false(self, clean_env: pytest.MonkeyPatch) -> None:
         """Defaults to False when no env vars set."""
-        with patch.dict(os.environ, {"BROKER": "coinbase"}, clear=True):
-            config = BotConfig.from_env()
+        clean_env.setenv("BROKER", "coinbase")
+        config = BotConfig.from_env()
         assert config.reduce_only_mode is False
 
 
 class TestDerivativesEnvParsing:
     """Test derivatives/perps environment flag parsing."""
 
-    def test_derivatives_enabled_prefers_intx_perps_flag(self) -> None:
+    def test_derivatives_enabled_prefers_intx_perps_flag(
+        self, clean_env: pytest.MonkeyPatch
+    ) -> None:
         """COINBASE_ENABLE_INTX_PERPS overrides legacy COINBASE_ENABLE_DERIVATIVES."""
-        env = {
-            "COINBASE_ENABLE_INTX_PERPS": "1",
-            "COINBASE_ENABLE_DERIVATIVES": "0",
-        }
-        with patch.dict(os.environ, env, clear=True):
-            config = BotConfig.from_env()
+        clean_env.setenv("COINBASE_ENABLE_INTX_PERPS", "1")
+        clean_env.setenv("COINBASE_ENABLE_DERIVATIVES", "0")
+        config = BotConfig.from_env()
         assert config.derivatives_enabled is True
 
-    def test_derivatives_enabled_intx_perps_can_disable_legacy(self) -> None:
+    def test_derivatives_enabled_intx_perps_can_disable_legacy(
+        self, clean_env: pytest.MonkeyPatch
+    ) -> None:
         """COINBASE_ENABLE_INTX_PERPS=0 disables derivatives even if legacy is 1."""
-        env = {
-            "COINBASE_ENABLE_INTX_PERPS": "0",
-            "COINBASE_ENABLE_DERIVATIVES": "1",
-        }
-        with patch.dict(os.environ, env, clear=True):
-            config = BotConfig.from_env()
+        clean_env.setenv("COINBASE_ENABLE_INTX_PERPS", "0")
+        clean_env.setenv("COINBASE_ENABLE_DERIVATIVES", "1")
+        config = BotConfig.from_env()
         assert config.derivatives_enabled is False
 
-    def test_derivatives_enabled_falls_back_to_legacy(self) -> None:
+    def test_derivatives_enabled_falls_back_to_legacy(self, clean_env: pytest.MonkeyPatch) -> None:
         """When COINBASE_ENABLE_INTX_PERPS is unset, legacy flag still works."""
-        env = {
-            "COINBASE_ENABLE_DERIVATIVES": "1",
-        }
-        with patch.dict(os.environ, env, clear=True):
-            with pytest.warns(DeprecationWarning, match="COINBASE_ENABLE_DERIVATIVES"):
-                config = BotConfig.from_env()
+        clean_env.setenv("COINBASE_ENABLE_DERIVATIVES", "1")
+        with pytest.warns(DeprecationWarning, match="COINBASE_ENABLE_DERIVATIVES"):
+            config = BotConfig.from_env()
         assert config.derivatives_enabled is True
 
 

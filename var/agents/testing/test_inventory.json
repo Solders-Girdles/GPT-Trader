@@ -2713,7 +2713,7 @@
     "tests/unit/gpt_trader/app/config/test_bot_config.py": [
       {
         "name": "TestEnableShortsCanonical::test_active_enable_shorts_from_baseline_strategy",
-        "line": 19,
+        "line": 26,
         "markers": [
           "unit"
         ],
@@ -2722,7 +2722,7 @@
       },
       {
         "name": "TestEnableShortsCanonical::test_active_enable_shorts_from_mean_reversion",
-        "line": 31,
+        "line": 38,
         "markers": [
           "unit"
         ],
@@ -2731,7 +2731,7 @@
       },
       {
         "name": "TestEnableShortsCanonical::test_sync_warning_on_mismatch",
-        "line": 41,
+        "line": 48,
         "markers": [
           "unit"
         ],
@@ -2740,7 +2740,7 @@
       },
       {
         "name": "TestEnableShortsCanonical::test_no_warning_when_synced",
-        "line": 58,
+        "line": 65,
         "markers": [
           "unit"
         ],
@@ -2749,7 +2749,7 @@
       },
       {
         "name": "TestEnableShortsCanonical::test_warning_only_once_per_process",
-        "line": 73,
+        "line": 80,
         "markers": [
           "unit"
         ],
@@ -2758,7 +2758,7 @@
       },
       {
         "name": "TestMockBrokerEnvParsing::test_mock_broker_env_true",
-        "line": 98,
+        "line": 105,
         "markers": [
           "unit"
         ],
@@ -2767,7 +2767,7 @@
       },
       {
         "name": "TestMockBrokerEnvParsing::test_mock_broker_env_default_false",
-        "line": 104,
+        "line": 111,
         "markers": [
           "unit"
         ],
@@ -2776,7 +2776,7 @@
       },
       {
         "name": "TestReduceOnlyModeEnvParsing::test_risk_prefixed_enabled",
-        "line": 114,
+        "line": 120,
         "markers": [
           "unit"
         ],
@@ -2785,7 +2785,7 @@
       },
       {
         "name": "TestReduceOnlyModeEnvParsing::test_default_false",
-        "line": 124,
+        "line": 127,
         "markers": [
           "unit"
         ],
@@ -2794,7 +2794,7 @@
       },
       {
         "name": "TestDerivativesEnvParsing::test_derivatives_enabled_prefers_intx_perps_flag",
-        "line": 134,
+        "line": 137,
         "markers": [
           "unit"
         ],
@@ -2803,7 +2803,7 @@
       },
       {
         "name": "TestDerivativesEnvParsing::test_derivatives_enabled_intx_perps_can_disable_legacy",
-        "line": 144,
+        "line": 146,
         "markers": [
           "unit"
         ],
@@ -2812,7 +2812,7 @@
       },
       {
         "name": "TestDerivativesEnvParsing::test_derivatives_enabled_falls_back_to_legacy",
-        "line": 154,
+        "line": 155,
         "markers": [
           "unit"
         ],
@@ -9857,7 +9857,7 @@
     "tests/unit/gpt_trader/config/test_config_utilities.py": [
       {
         "name": "test_parse_list_env_success",
-        "line": 21,
+        "line": 28,
         "markers": [
           "unit"
         ],
@@ -9865,14 +9865,6 @@
       },
       {
         "name": "test_parse_mapping_env_wraps_errors",
-        "line": 27,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_numeric_env_helpers_handle_defaults",
         "line": 34,
         "markers": [
           "unit"
@@ -9880,8 +9872,16 @@
         "docstring": ""
       },
       {
+        "name": "test_numeric_env_helpers_handle_defaults",
+        "line": 41,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_validate_required_env_raises_when_missing",
-        "line": 51,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -9889,7 +9889,7 @@
       },
       {
         "name": "test_validate_required_env_passes_when_present",
-        "line": 57,
+        "line": 58,
         "markers": [
           "unit"
         ],
@@ -9897,7 +9897,7 @@
       },
       {
         "name": "test_parse_list_env_with_invalid_cast",
-        "line": 63,
+        "line": 64,
         "markers": [
           "unit"
         ],
@@ -9905,7 +9905,7 @@
       },
       {
         "name": "test_parse_bool_env_with_invalid_value",
-        "line": 70,
+        "line": 71,
         "markers": [
           "unit"
         ],
@@ -9913,7 +9913,7 @@
       },
       {
         "name": "test_parse_decimal_env_with_invalid_value",
-        "line": 77,
+        "line": 78,
         "markers": [
           "unit"
         ],
@@ -9921,7 +9921,7 @@
       },
       {
         "name": "test_parse_int_env_with_invalid_value",
-        "line": 84,
+        "line": 85,
         "markers": [
           "unit"
         ],
@@ -9929,7 +9929,7 @@
       },
       {
         "name": "test_parse_float_env_with_invalid_value",
-        "line": 91,
+        "line": 92,
         "markers": [
           "unit"
         ],

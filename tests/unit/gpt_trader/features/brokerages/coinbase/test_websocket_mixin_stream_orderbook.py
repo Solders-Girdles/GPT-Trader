@@ -3,21 +3,30 @@
 from __future__ import annotations
 
 import threading
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
+import pytest
+
+import gpt_trader.features.brokerages.coinbase.client.websocket_mixin as websocket_mixin_module
 from tests.unit.gpt_trader.features.brokerages.coinbase.websocket_mixin_test_helpers import (
     MockWebSocketClient,
 )
 
 
+@pytest.fixture
+def mock_websocket_class(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    mock_ws_class = MagicMock()
+    monkeypatch.setattr(websocket_mixin_module, "CoinbaseWebSocket", mock_ws_class)
+    return mock_ws_class
+
+
 class TestStreamOrderbook:
     """Tests for stream_orderbook method."""
 
-    @patch("gpt_trader.features.brokerages.coinbase.client.websocket_mixin.CoinbaseWebSocket")
-    def test_connects_and_subscribes_to_level2(self, mock_ws_class):
+    def test_connects_and_subscribes_to_level2(self, mock_websocket_class: MagicMock):
         """stream_orderbook with level>=2 should subscribe to level2 channel."""
         mock_ws = MagicMock()
-        mock_ws_class.return_value = mock_ws
+        mock_websocket_class.return_value = mock_ws
 
         client = MockWebSocketClient()
 
@@ -43,11 +52,10 @@ class TestStreamOrderbook:
         mock_ws.connect.assert_called_once()
         mock_ws.subscribe.assert_called_once_with(["BTC-USD", "ETH-USD"], ["level2"])
 
-    @patch("gpt_trader.features.brokerages.coinbase.client.websocket_mixin.CoinbaseWebSocket")
-    def test_subscribes_to_ticker_for_level1(self, mock_ws_class):
+    def test_subscribes_to_ticker_for_level1(self, mock_websocket_class: MagicMock):
         """stream_orderbook with level=1 should subscribe to ticker channel."""
         mock_ws = MagicMock()
-        mock_ws_class.return_value = mock_ws
+        mock_websocket_class.return_value = mock_ws
 
         client = MockWebSocketClient()
 
@@ -69,11 +77,10 @@ class TestStreamOrderbook:
 
         mock_ws.subscribe.assert_called_once_with(["BTC-USD"], ["ticker"])
 
-    @patch("gpt_trader.features.brokerages.coinbase.client.websocket_mixin.CoinbaseWebSocket")
-    def test_include_trades_adds_channel(self, mock_ws_class):
+    def test_include_trades_adds_channel(self, mock_websocket_class: MagicMock):
         """stream_orderbook should include market_trades when requested."""
         mock_ws = MagicMock()
-        mock_ws_class.return_value = mock_ws
+        mock_websocket_class.return_value = mock_ws
 
         client = MockWebSocketClient()
         stop_event = threading.Event()
@@ -96,11 +103,10 @@ class TestStreamOrderbook:
 
         mock_ws.subscribe.assert_called_once_with(["BTC-USD"], ["level2", "market_trades"])
 
-    @patch("gpt_trader.features.brokerages.coinbase.client.websocket_mixin.CoinbaseWebSocket")
-    def test_include_user_events_subscribes(self, mock_ws_class):
+    def test_include_user_events_subscribes(self, mock_websocket_class: MagicMock):
         """stream_orderbook should subscribe to user events when requested."""
         mock_ws = MagicMock()
-        mock_ws_class.return_value = mock_ws
+        mock_websocket_class.return_value = mock_ws
 
         client = MockWebSocketClient()
         stop_event = threading.Event()

@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 916,
+    "tests_scanned": 918,
     "source_modules": 350,
     "unresolved_modules": 3
   },
@@ -625,7 +625,9 @@
     ],
     "gpt_trader.features.brokerages.coinbase.client.websocket_mixin": [
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_init_and_get_websocket.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_stream_trades_and_control.py"
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_stream_orderbook.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_stream_trades_and_control.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_ws_health.py"
     ],
     "gpt_trader.features.brokerages.coinbase.credentials": [
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_credentials_resolution.py"
@@ -3447,7 +3449,13 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_init_and_get_websocket.py": [
       "gpt_trader.features.brokerages.coinbase.client.websocket_mixin"
     ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_stream_orderbook.py": [
+      "gpt_trader.features.brokerages.coinbase.client.websocket_mixin"
+    ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_stream_trades_and_control.py": [
+      "gpt_trader.features.brokerages.coinbase.client.websocket_mixin"
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_ws_health.py": [
       "gpt_trader.features.brokerages.coinbase.client.websocket_mixin"
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_dispatcher.py": [

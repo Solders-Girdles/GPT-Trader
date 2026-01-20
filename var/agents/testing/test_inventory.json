@@ -24071,7 +24071,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_validation_exchange_rules.py": [
       {
         "name": "TestValidateExchangeRules::test_market_order_uses_none_price",
-        "line": 17,
+        "line": 45,
         "markers": [
           "unit"
         ],
@@ -24080,7 +24080,7 @@
       },
       {
         "name": "TestValidateExchangeRules::test_limit_order_uses_provided_price",
-        "line": 44,
+        "line": 66,
         "markers": [
           "unit"
         ],
@@ -24089,7 +24089,7 @@
       },
       {
         "name": "TestValidateExchangeRules::test_limit_order_falls_back_to_effective_price",
-        "line": 71,
+        "line": 87,
         "markers": [
           "unit"
         ],
@@ -24098,7 +24098,7 @@
       },
       {
         "name": "TestValidateExchangeRules::test_validation_failure_raises_error",
-        "line": 98,
+        "line": 108,
         "markers": [
           "unit"
         ],
@@ -24107,7 +24107,7 @@
       },
       {
         "name": "TestValidateExchangeRules::test_validation_uses_adjusted_quantity",
-        "line": 123,
+        "line": 130,
         "markers": [
           "unit"
         ],
@@ -24116,7 +24116,7 @@
       },
       {
         "name": "TestValidateExchangeRules::test_validation_failure_with_none_reason",
-        "line": 150,
+        "line": 153,
         "markers": [
           "unit"
         ],
@@ -24125,7 +24125,7 @@
       },
       {
         "name": "TestValidateExchangeRules::test_limit_order_price_quantization",
-        "line": 176,
+        "line": 172,
         "markers": [
           "unit"
         ],
@@ -24134,7 +24134,7 @@
       },
       {
         "name": "TestValidateExchangeRules::test_adjusted_values_from_validation",
-        "line": 205,
+        "line": 195,
         "markers": [
           "unit"
         ],

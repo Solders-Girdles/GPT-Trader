@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -47,23 +47,27 @@ def mock_broker():
 
 @pytest.fixture
 def mock_risk_config():
-    c = MagicMock()
-    c.broker_outage_max_failures, c.broker_outage_cooldown_seconds = 3, 120
-    c.mark_staleness_cooldown_seconds, c.mark_staleness_allow_reduce_only = 60, True
-    c.slippage_failure_pause_after, c.slippage_pause_seconds = 3, 60
-    c.validation_failure_cooldown_seconds, c.preview_failure_disable_after = 180, 3
-    c.api_health_cooldown_seconds, c.api_error_rate_threshold, c.api_rate_limit_usage_threshold = (
+    config = MagicMock()
+    config.broker_outage_max_failures, config.broker_outage_cooldown_seconds = 3, 120
+    config.mark_staleness_cooldown_seconds, config.mark_staleness_allow_reduce_only = 60, True
+    config.slippage_failure_pause_after, config.slippage_pause_seconds = 3, 60
+    config.validation_failure_cooldown_seconds, config.preview_failure_disable_after = 180, 3
+    (
+        config.api_health_cooldown_seconds,
+        config.api_error_rate_threshold,
+        config.api_rate_limit_usage_threshold,
+    ) = (
         300,
         0.2,
         0.9,
     )
     # WS health config
-    c.ws_health_interval_seconds = 1  # Fast for tests
-    c.ws_message_stale_seconds = 15
-    c.ws_heartbeat_stale_seconds = 30
-    c.ws_reconnect_pause_seconds = 10
-    c.kill_switch_enabled = False
-    return c
+    config.ws_health_interval_seconds = 1  # Fast for tests
+    config.ws_message_stale_seconds = 15
+    config.ws_heartbeat_stale_seconds = 30
+    config.ws_reconnect_pause_seconds = 10
+    config.kill_switch_enabled = False
+    return config
 
 
 @pytest.fixture
@@ -86,42 +90,55 @@ def application_container(context):
 
 
 @pytest.fixture
-def mock_security_validator():
-    v, r = MagicMock(), MagicMock()
-    r.is_valid, r.errors = True, []
-    v.validate_order_request.return_value = r
-    with patch("gpt_trader.security.security_validator.get_validator", return_value=v):
-        yield v
+def mock_security_validator(monkeypatch):
+    validator = MagicMock()
+    result = MagicMock()
+    result.is_valid, result.errors = True, []
+    validator.validate_order_request.return_value = result
+
+    import gpt_trader.security.security_validator as security_validator_module
+
+    monkeypatch.setattr(
+        security_validator_module,
+        "get_validator",
+        MagicMock(return_value=validator),
+    )
+    return validator
 
 
 @pytest.fixture
-def engine(context, mock_security_validator, application_container):
+def engine(context, mock_security_validator, application_container, monkeypatch):
     strategy = MagicMock()
     strategy.decide.return_value, strategy.config.position_fraction = (
         Decision(Action.HOLD, "test"),
         Decimal("0.1"),
     )
-    with patch(
-        "gpt_trader.features.live_trade.engines.strategy.create_strategy", return_value=strategy
-    ):
-        eng = TradingEngine(context)
-        eng._state_collector = MagicMock()
-        eng._state_collector.require_product.return_value = MagicMock()
-        eng._state_collector.resolve_effective_price.return_value = Decimal("50000")
-        eng._state_collector.build_positions_dict.return_value = {}
-        eng._order_validator = MagicMock()
-        eng._order_validator.validate_exchange_rules.return_value = (Decimal("0.02"), None)
-        for attr in [
-            "enforce_slippage_guard",
-            "ensure_mark_is_fresh",
-            "run_pre_trade_validation",
-            "maybe_preview_order",
-        ]:
-            setattr(eng._order_validator, attr, MagicMock(return_value=None))
-        from unittest.mock import AsyncMock
+    import gpt_trader.features.live_trade.engines.strategy as strategy_module
 
-        eng._order_validator.maybe_preview_order_async = AsyncMock(return_value=None)
-        eng._order_validator.finalize_reduce_only_flag.return_value = False
-        eng._order_validator.enable_order_preview = True
-        eng._order_submitter = MagicMock()
-        yield eng
+    monkeypatch.setattr(
+        strategy_module,
+        "create_strategy",
+        MagicMock(return_value=strategy),
+    )
+
+    eng = TradingEngine(context)
+    eng._state_collector = MagicMock()
+    eng._state_collector.require_product.return_value = MagicMock()
+    eng._state_collector.resolve_effective_price.return_value = Decimal("50000")
+    eng._state_collector.build_positions_dict.return_value = {}
+    eng._order_validator = MagicMock()
+    eng._order_validator.validate_exchange_rules.return_value = (Decimal("0.02"), None)
+    for attr in [
+        "enforce_slippage_guard",
+        "ensure_mark_is_fresh",
+        "run_pre_trade_validation",
+        "maybe_preview_order",
+    ]:
+        setattr(eng._order_validator, attr, MagicMock(return_value=None))
+    from unittest.mock import AsyncMock
+
+    eng._order_validator.maybe_preview_order_async = AsyncMock(return_value=None)
+    eng._order_validator.finalize_reduce_only_flag.return_value = False
+    eng._order_validator.enable_order_preview = True
+    eng._order_submitter = MagicMock()
+    yield eng

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -78,31 +78,35 @@ def application_container(context):
 
 
 @pytest.fixture
-def engine(context, mock_strategy, application_container):
-    with patch(
-        "gpt_trader.features.live_trade.engines.strategy.create_strategy",
-        return_value=mock_strategy,
-    ):
-        engine = TradingEngine(context)
-        engine.strategy = mock_strategy
+def engine(context, mock_strategy, application_container, monkeypatch):
+    import gpt_trader.features.live_trade.engines.strategy as strategy_module
 
-        engine._state_collector = MagicMock()
-        engine._state_collector.require_product.return_value = MagicMock()
-        engine._state_collector.resolve_effective_price.return_value = Decimal("50000")
-        engine._state_collector.build_positions_dict.return_value = {}
+    monkeypatch.setattr(
+        strategy_module,
+        "create_strategy",
+        MagicMock(return_value=mock_strategy),
+    )
 
-        engine._order_validator = MagicMock()
-        engine._order_validator.validate_exchange_rules.return_value = (
-            Decimal("0.02"),
-            None,
-        )
-        engine._order_validator.enforce_slippage_guard.return_value = None
-        engine._order_validator.ensure_mark_is_fresh.return_value = None
-        engine._order_validator.run_pre_trade_validation.return_value = None
-        engine._order_validator.maybe_preview_order_async = AsyncMock(return_value=None)
-        engine._order_validator.maybe_preview_order.return_value = None
-        engine._order_validator.finalize_reduce_only_flag.return_value = False
+    engine = TradingEngine(context)
+    engine.strategy = mock_strategy
 
-        engine._order_submitter = MagicMock()
+    engine._state_collector = MagicMock()
+    engine._state_collector.require_product.return_value = MagicMock()
+    engine._state_collector.resolve_effective_price.return_value = Decimal("50000")
+    engine._state_collector.build_positions_dict.return_value = {}
 
-        return engine
+    engine._order_validator = MagicMock()
+    engine._order_validator.validate_exchange_rules.return_value = (
+        Decimal("0.02"),
+        None,
+    )
+    engine._order_validator.enforce_slippage_guard.return_value = None
+    engine._order_validator.ensure_mark_is_fresh.return_value = None
+    engine._order_validator.run_pre_trade_validation.return_value = None
+    engine._order_validator.maybe_preview_order_async = AsyncMock(return_value=None)
+    engine._order_validator.maybe_preview_order.return_value = None
+    engine._order_validator.finalize_reduce_only_flag.return_value = False
+
+    engine._order_submitter = MagicMock()
+
+    return engine

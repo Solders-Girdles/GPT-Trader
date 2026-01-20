@@ -36686,7 +36686,7 @@
     "tests/unit/gpt_trader/monitoring/test_profiling.py": [
       {
         "name": "TestProfileSample::test_profile_sample_creation",
-        "line": 20,
+        "line": 27,
         "markers": [
           "unit"
         ],
@@ -36695,7 +36695,7 @@
       },
       {
         "name": "TestProfileSample::test_profile_sample_with_labels",
-        "line": 28,
+        "line": 35,
         "markers": [
           "unit"
         ],
@@ -36704,7 +36704,7 @@
       },
       {
         "name": "TestProfileSample::test_profile_sample_to_dict",
-        "line": 35,
+        "line": 42,
         "markers": [
           "unit"
         ],
@@ -36713,7 +36713,7 @@
       },
       {
         "name": "TestRecordProfile::test_record_profile_calls_histogram",
-        "line": 54,
+        "line": 61,
         "markers": [
           "unit"
         ],
@@ -36722,7 +36722,7 @@
       },
       {
         "name": "TestRecordProfile::test_record_profile_with_labels",
-        "line": 67,
+        "line": 73,
         "markers": [
           "unit"
         ],
@@ -36731,7 +36731,7 @@
       },
       {
         "name": "TestProfileSpan::test_profile_span_records_duration",
-        "line": 87,
+        "line": 92,
         "markers": [
           "unit"
         ],
@@ -36740,7 +36740,7 @@
       },
       {
         "name": "TestProfileSpan::test_profile_span_with_labels",
-        "line": 104,
+        "line": 108,
         "markers": [
           "unit"
         ],
@@ -36749,7 +36749,7 @@
       },
       {
         "name": "TestProfileSpan::test_profile_span_tolerates_exceptions",
-        "line": 113,
+        "line": 116,
         "markers": [
           "unit"
         ],
@@ -36758,7 +36758,7 @@
       },
       {
         "name": "TestProfileSpan::test_profile_span_updates_sample_timestamp",
-        "line": 129,
+        "line": 140,
         "markers": [
           "unit"
         ],
@@ -36767,7 +36767,7 @@
       },
       {
         "name": "TestProfileSpan::test_profile_span_measures_duration",
-        "line": 141,
+        "line": 153,
         "markers": [
           "unit"
         ],

@@ -33659,7 +33659,7 @@
     "tests/unit/gpt_trader/monitoring/daily_report/test_generator_edges.py": [
       {
         "name": "test_generate_uses_expected_files_and_cutoff",
-        "line": 13,
+        "line": 103,
         "markers": [
           "unit"
         ],
@@ -33667,7 +33667,7 @@
       },
       {
         "name": "test_generate_liveness_uses_generated_at",
-        "line": 97,
+        "line": 122,
         "markers": [
           "unit"
         ],
@@ -33675,7 +33675,7 @@
       },
       {
         "name": "test_save_report_writes_json_and_text",
-        "line": 175,
+        "line": 139,
         "markers": [
           "unit"
         ],
@@ -55256,7 +55256,7 @@
     "tests/unit/gpt_trader/utilities/test_async_utils_scenarios.py": [
       {
         "name": "TestAsyncScenarios::test_rate_limiting_with_batch_processing",
-        "line": 44,
+        "line": 42,
         "markers": [
           "asyncio",
           "unit"
@@ -55266,7 +55266,7 @@
       },
       {
         "name": "TestAsyncScenarios::test_caching_with_retry",
-        "line": 65,
+        "line": 63,
         "markers": [
           "asyncio",
           "unit"
@@ -55276,7 +55276,7 @@
       },
       {
         "name": "TestAsyncScenarios::test_timeout_with_concurrency",
-        "line": 94,
+        "line": 92,
         "markers": [
           "asyncio",
           "unit"
@@ -55286,7 +55286,7 @@
       },
       {
         "name": "TestAsyncScenarios::test_complex_async_workflow",
-        "line": 109,
+        "line": 107,
         "markers": [
           "asyncio",
           "unit"

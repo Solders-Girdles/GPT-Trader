@@ -3,29 +3,40 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
+import gpt_trader.features.live_trade.execution.order_event_recorder as recorder_module
 from gpt_trader.core import Order, OrderSide, OrderType, TimeInForce
 from gpt_trader.features.live_trade.execution.order_submission import OrderSubmitter
+
+
+@pytest.fixture
+def monitoring_logger(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    mock_logger = MagicMock()
+    monkeypatch.setattr(recorder_module, "get_monitoring_logger", lambda: mock_logger)
+    return mock_logger
+
+
+@pytest.fixture
+def emit_metric_mock(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    mock_emit = MagicMock()
+    monkeypatch.setattr(recorder_module, "emit_metric", mock_emit)
+    return mock_emit
 
 
 class TestHandleOrderResult:
     """Tests for _handle_order_result method."""
 
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_successful_order_tracked(
         self,
-        mock_get_logger: MagicMock,
         submitter: OrderSubmitter,
         mock_order: Order,
         open_orders: list[str],
+        monitoring_logger: MagicMock,
     ) -> None:
         """Test that successful orders are tracked."""
-        mock_logger = MagicMock()
-        mock_get_logger.return_value = mock_logger
-
         result = submitter._handle_order_result(
             order=mock_order,
             symbol="BTC-PERP",
@@ -88,19 +99,14 @@ class TestHandleOrderResult:
 
         assert result is None
 
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.emit_metric")
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_rejected_status_raises_error(
         self,
-        mock_get_logger: MagicMock,
-        mock_emit_metric: MagicMock,
         submitter: OrderSubmitter,
         rejected_order: MagicMock,
+        emit_metric_mock: MagicMock,
+        monitoring_logger: MagicMock,
     ) -> None:
         """Test that rejected status raises RuntimeError."""
-        mock_logger = MagicMock()
-        mock_get_logger.return_value = mock_logger
-
         rejected_order.status = MagicMock()
         rejected_order.status.value = "REJECTED"
 
@@ -119,19 +125,15 @@ class TestHandleOrderResult:
                 submit_id="test-id",
             )
 
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_integration_mode_returns_order_object(
         self,
-        mock_get_logger: MagicMock,
         mock_broker: MagicMock,
         mock_event_store: MagicMock,
         open_orders: list[str],
         mock_order: Order,
+        monitoring_logger: MagicMock,
     ) -> None:
         """Test that integration mode returns the order object."""
-        mock_logger = MagicMock()
-        mock_get_logger.return_value = mock_logger
-
         submitter = OrderSubmitter(
             broker=mock_broker,
             event_store=mock_event_store,

@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import time
-from typing import Any
-from unittest.mock import patch
 
 import pytest
 
+import gpt_trader.features.live_trade.risk.manager as risk_manager_module
 from gpt_trader.features.live_trade.risk.manager import LiveRiskManager
 from tests.unit.gpt_trader.features.live_trade.risk_manager_test_utils import (  # naming: allow
     MockConfig,  # naming: allow
@@ -15,10 +14,9 @@ from tests.unit.gpt_trader.features.live_trade.risk_manager_test_utils import ( 
 
 
 @pytest.fixture(autouse=True)
-def mock_load_state():
+def mock_load_state(monkeypatch: pytest.MonkeyPatch) -> None:
     """Prevent LiveRiskManager from loading state during tests."""
-    with patch("gpt_trader.features.live_trade.risk.manager.LiveRiskManager._load_state"):
-        yield
+    monkeypatch.setattr(LiveRiskManager, "_load_state", lambda self: None)
 
 
 class TestCheckMarkStaleness:
@@ -61,10 +59,9 @@ class TestCheckMarkStaleness:
         # 100 < 120, so not stale
         assert manager.check_mark_staleness("BTC-USD") is False
 
-    @patch("time.time")
-    def test_exact_boundary(self, mock_time: Any) -> None:
+    def test_exact_boundary(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test behavior at exact threshold boundary."""
-        mock_time.return_value = 1000.0
+        monkeypatch.setattr(risk_manager_module.time, "time", lambda: 1000.0)
         manager = LiveRiskManager()
         manager.last_mark_update["BTC-USD"] = 880.0  # Exactly 120 seconds ago
 

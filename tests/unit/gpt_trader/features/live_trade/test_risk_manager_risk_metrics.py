@@ -3,28 +3,25 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Any
-from unittest.mock import patch
 
 import pytest
 
+import gpt_trader.features.live_trade.risk.manager as risk_manager_module
 from gpt_trader.features.live_trade.risk.manager import LiveRiskManager
 
 
 @pytest.fixture(autouse=True)
-def mock_load_state():
+def mock_load_state(monkeypatch: pytest.MonkeyPatch) -> None:
     """Prevent LiveRiskManager from loading state during tests."""
-    with patch("gpt_trader.features.live_trade.risk.manager.LiveRiskManager._load_state"):
-        yield
+    monkeypatch.setattr(LiveRiskManager, "_load_state", lambda self: None)
 
 
 class TestAppendRiskMetrics:
     """Tests for append_risk_metrics method."""
 
-    @patch("time.time")
-    def test_appends_metrics(self, mock_time: Any) -> None:
+    def test_appends_metrics(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test appends metrics with timestamp."""
-        mock_time.return_value = 12345.0
+        monkeypatch.setattr(risk_manager_module.time, "time", lambda: 12345.0)
         manager = LiveRiskManager()
 
         manager.append_risk_metrics(Decimal("10000"), {"BTC-USD": {"pnl": Decimal("100")}})

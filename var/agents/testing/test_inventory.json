@@ -18309,7 +18309,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_degradation_callback.py": [
       {
         "name": "TestWebSocketDegradationCallback::test_callback_triggered_on_max_attempts",
-        "line": 13,
+        "line": 14,
         "markers": [
           "unit"
         ],
@@ -18318,7 +18318,7 @@
       },
       {
         "name": "TestWebSocketDegradationCallback::test_callback_only_triggered_once",
-        "line": 43,
+        "line": 39,
         "markers": [
           "unit"
         ],
@@ -18327,7 +18327,7 @@
       },
       {
         "name": "TestWebSocketDegradationCallback::test_no_callback_when_none_provided",
-        "line": 72,
+        "line": 68,
         "markers": [
           "unit"
         ],
@@ -18336,7 +18336,7 @@
       },
       {
         "name": "TestWebSocketDegradationCallback::test_callback_exception_does_not_crash",
-        "line": 89,
+        "line": 85,
         "markers": [
           "unit"
         ],
@@ -27430,7 +27430,7 @@
     "tests/unit/gpt_trader/features/live_trade/test_bot_engine_delegation.py": [
       {
         "name": "TestTradingBotExecuteDecision::test_execute_decision_delegates_to_engine",
-        "line": 31,
+        "line": 38,
         "markers": [
           "unit"
         ],
@@ -27439,7 +27439,7 @@
       },
       {
         "name": "TestTradingBotExecuteDecision::test_execute_decision_returns_none_when_engine_lacks_method",
-        "line": 51,
+        "line": 58,
         "markers": [
           "unit"
         ],
@@ -27448,7 +27448,7 @@
       },
       {
         "name": "TestTradingBotExecuteDecision::test_execute_decision_with_minimal_args",
-        "line": 70,
+        "line": 79,
         "markers": [
           "unit"
         ],
@@ -27457,7 +27457,7 @@
       },
       {
         "name": "TestTradingBotGetProduct::test_get_product_with_broker",
-        "line": 88,
+        "line": 97,
         "markers": [
           "unit"
         ],
@@ -27466,7 +27466,7 @@
       },
       {
         "name": "TestTradingBotGetProduct::test_get_product_without_broker",
-        "line": 111,
+        "line": 119,
         "markers": [
           "unit"
         ],
@@ -27475,7 +27475,7 @@
       },
       {
         "name": "TestTradingBotGetProduct::test_get_product_broker_without_method",
-        "line": 132,
+        "line": 139,
         "markers": [
           "unit"
         ],

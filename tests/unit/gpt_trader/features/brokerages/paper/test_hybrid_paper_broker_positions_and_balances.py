@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import patch
+from unittest.mock import Mock
 
 import pytest
 
+import gpt_trader.features.brokerages.paper.hybrid as hybrid_module
 from gpt_trader.core import Balance, Position
 from gpt_trader.features.brokerages.paper.hybrid import HybridPaperBroker
 
@@ -15,15 +16,15 @@ class TestHybridPaperBrokerPositionsBalances:
     """Test HybridPaperBroker position and balance methods."""
 
     @pytest.fixture
-    def broker(self):
+    def broker(self, monkeypatch: pytest.MonkeyPatch):
         """Create broker fixture with mocked client."""
-        with patch("gpt_trader.features.brokerages.paper.hybrid.CoinbaseClient"):
-            with patch("gpt_trader.features.brokerages.paper.hybrid.SimpleAuth"):
-                return HybridPaperBroker(
-                    api_key="test_key",
-                    private_key="test_private_key",
-                    initial_equity=Decimal("10000"),
-                )
+        monkeypatch.setattr(hybrid_module, "CoinbaseClient", Mock())
+        monkeypatch.setattr(hybrid_module, "SimpleAuth", Mock())
+        return HybridPaperBroker(
+            api_key="test_key",
+            private_key="test_private_key",
+            initial_equity=Decimal("10000"),
+        )
 
     def test_list_positions_empty(self, broker) -> None:
         """Test list_positions returns empty list initially."""

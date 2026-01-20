@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 
+import gpt_trader.features.brokerages.paper.hybrid as hybrid_module
 from gpt_trader.features.brokerages.paper.hybrid import HybridPaperBroker
 
 
@@ -14,15 +15,15 @@ class TestHybridPaperBrokerStatus:
     """Test HybridPaperBroker status methods."""
 
     @pytest.fixture
-    def broker(self):
+    def broker(self, monkeypatch: pytest.MonkeyPatch):
         """Create broker fixture."""
-        with patch("gpt_trader.features.brokerages.paper.hybrid.CoinbaseClient"):
-            with patch("gpt_trader.features.brokerages.paper.hybrid.SimpleAuth"):
-                return HybridPaperBroker(
-                    api_key="test_key",
-                    private_key="test_private_key",
-                    initial_equity=Decimal("10000"),
-                )
+        monkeypatch.setattr(hybrid_module, "CoinbaseClient", Mock())
+        monkeypatch.setattr(hybrid_module, "SimpleAuth", Mock())
+        return HybridPaperBroker(
+            api_key="test_key",
+            private_key="test_private_key",
+            initial_equity=Decimal("10000"),
+        )
 
     def test_is_connected_always_true(self, broker) -> None:
         """Test is_connected returns True."""

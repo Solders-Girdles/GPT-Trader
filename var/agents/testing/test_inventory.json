@@ -20796,7 +20796,7 @@
     "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_order_flow.py": [
       {
         "name": "test_order_placed_with_dynamic_quantity",
-        "line": 15,
+        "line": 16,
         "markers": [
           "asyncio",
           "unit"
@@ -20901,7 +20901,7 @@
     "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_risk_format.py": [
       {
         "name": "test_positions_to_risk_format",
-        "line": 14,
+        "line": 15,
         "markers": [
           "unit"
         ],
@@ -20909,7 +20909,7 @@
       },
       {
         "name": "test_risk_manager_receives_dict_format",
-        "line": 36,
+        "line": 37,
         "markers": [
           "asyncio",
           "unit"
@@ -21426,7 +21426,7 @@
     "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_emit_and_enable.py": [
       {
         "name": "TestEmitMetric::test_emit_metric_calls_utility",
-        "line": 17,
+        "line": 19,
         "markers": [
           "unit"
         ],
@@ -21435,7 +21435,7 @@
       },
       {
         "name": "TestShouldEnableStreaming::test_returns_false_for_test_profile",
-        "line": 31,
+        "line": 36,
         "markers": [
           "unit"
         ],
@@ -21444,7 +21444,7 @@
       },
       {
         "name": "TestShouldEnableStreaming::test_returns_false_when_streaming_disabled",
-        "line": 40,
+        "line": 45,
         "markers": [
           "unit"
         ],
@@ -21453,7 +21453,7 @@
       },
       {
         "name": "TestShouldEnableStreaming::test_returns_true_for_prod_with_streaming_enabled",
-        "line": 49,
+        "line": 54,
         "markers": [
           "unit"
         ],
@@ -21462,7 +21462,7 @@
       },
       {
         "name": "TestShouldEnableStreaming::test_returns_true_for_canary_with_streaming_enabled",
-        "line": 58,
+        "line": 63,
         "markers": [
           "unit"
         ],
@@ -21471,7 +21471,7 @@
       },
       {
         "name": "TestShouldEnableStreaming::test_returns_false_for_dev_profile",
-        "line": 67,
+        "line": 72,
         "markers": [
           "unit"
         ],
@@ -21480,7 +21480,7 @@
       },
       {
         "name": "TestShouldEnableStreaming::test_handles_profile_with_value_attribute",
-        "line": 76,
+        "line": 81,
         "markers": [
           "unit"
         ],
@@ -21489,7 +21489,7 @@
       },
       {
         "name": "TestShouldEnableStreaming::test_handles_none_profile",
-        "line": 87,
+        "line": 92,
         "markers": [
           "unit"
         ],
@@ -21877,7 +21877,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_with_retry.py": [
       {
         "name": "TestExecuteWithRetry::test_success_on_first_attempt",
-        "line": 18,
+        "line": 19,
         "markers": [
           "unit"
         ],
@@ -21886,7 +21886,7 @@
       },
       {
         "name": "TestExecuteWithRetry::test_retry_on_retryable_exception",
-        "line": 35,
+        "line": 36,
         "markers": [
           "unit"
         ],
@@ -21895,7 +21895,7 @@
       },
       {
         "name": "TestExecuteWithRetry::test_max_attempts_respected",
-        "line": 52,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -21904,7 +21904,7 @@
       },
       {
         "name": "TestExecuteWithRetry::test_non_retryable_exception_not_retried",
-        "line": 69,
+        "line": 70,
         "markers": [
           "unit"
         ],
@@ -21913,7 +21913,7 @@
       },
       {
         "name": "TestExecuteWithRetry::test_timeout_error_is_retryable",
-        "line": 86,
+        "line": 87,
         "markers": [
           "unit"
         ],
@@ -22029,7 +22029,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_resilience_retry.py": [
       {
         "name": "TestBrokerExecutorResilienceRetry::test_retry_success_after_n_failures",
-        "line": 24,
+        "line": 25,
         "markers": [
           "unit"
         ],
@@ -22038,7 +22038,7 @@
       },
       {
         "name": "TestBrokerExecutorResilienceRetry::test_timeout_path_triggers_retry_with_classification",
-        "line": 63,
+        "line": 64,
         "markers": [
           "unit"
         ],
@@ -22047,7 +22047,7 @@
       },
       {
         "name": "TestBrokerExecutorResilienceRetry::test_non_retryable_error_short_circuits",
-        "line": 105,
+        "line": 108,
         "markers": [
           "unit"
         ],
@@ -22056,7 +22056,7 @@
       },
       {
         "name": "TestBrokerExecutorResilienceRetry::test_all_retries_exhausted_raises_last_exception",
-        "line": 142,
+        "line": 145,
         "markers": [
           "unit"
         ],
@@ -22392,7 +22392,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_runtime_and_orchestration.py": [
       {
         "name": "test_run_guards_for_state_calls_all_guards",
-        "line": 14,
+        "line": 15,
         "markers": [
           "unit"
         ],
@@ -22400,7 +22400,7 @@
       },
       {
         "name": "test_run_runtime_guards_first_run",
-        "line": 29,
+        "line": 34,
         "markers": [
           "unit"
         ],
@@ -22408,7 +22408,7 @@
       },
       {
         "name": "test_run_runtime_guards_incremental",
-        "line": 44,
+        "line": 48,
         "markers": [
           "unit"
         ],
@@ -22416,7 +22416,7 @@
       },
       {
         "name": "test_run_runtime_guards_force_full",
-        "line": 61,
+        "line": 66,
         "markers": [
           "unit"
         ],
@@ -22424,7 +22424,7 @@
       },
       {
         "name": "TestGuardManagerEdgeCases::test_data_unavailable_is_recorded_and_surfaces",
-        "line": 82,
+        "line": 86,
         "markers": [
           "unit"
         ],
@@ -22433,7 +22433,7 @@
       },
       {
         "name": "TestGuardManagerEdgeCases::test_guard_order_is_stable",
-        "line": 100,
+        "line": 106,
         "markers": [
           "unit"
         ],
@@ -22442,7 +22442,7 @@
       },
       {
         "name": "TestGuardManagerEdgeCases::test_run_guards_for_state_stops_on_unrecoverable_error",
-        "line": 114,
+        "line": 120,
         "markers": [
           "unit"
         ],
@@ -24146,7 +24146,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_validation_flow.py": [
       {
         "name": "TestValidationFlow::test_full_validation_flow",
-        "line": 14,
+        "line": 16,
         "markers": [
           "unit"
         ],

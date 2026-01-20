@@ -3,28 +3,34 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
+import pytest
+
+import gpt_trader.features.live_trade.execution.validation as validation_module
 from gpt_trader.core import OrderSide, OrderType, Product
 from gpt_trader.features.live_trade.execution.validation import OrderValidator
 
 
 class TestValidationFlow:
-    @patch("gpt_trader.features.live_trade.execution.validation.spec_validate_order")
     def test_full_validation_flow(
         self,
-        mock_spec_validate: MagicMock,
         mock_broker: MagicMock,
         mock_risk_manager: MagicMock,
         mock_product: Product,
         mock_failure_tracker: MagicMock,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        mock_spec_validate.return_value = MagicMock(
-            ok=True,
-            reason=None,
-            adjusted_quantity=Decimal("1.001"),
-            adjusted_price=None,
+        mock_spec_validate = MagicMock(
+            return_value=MagicMock(
+                ok=True,
+                reason=None,
+                adjusted_quantity=Decimal("1.001"),
+                adjusted_price=None,
+            )
         )
+        monkeypatch.setattr(validation_module, "spec_validate_order", mock_spec_validate)
+
         mock_broker.get_market_snapshot.return_value = {
             "spread_bps": 5,
             "depth_l1": 100000000,

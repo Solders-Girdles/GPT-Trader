@@ -18437,7 +18437,7 @@
     "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_init.py": [
       {
         "name": "TestHybridPaperBrokerInit::test_init_creates_client",
-        "line": 16,
+        "line": 29,
         "markers": [
           "unit"
         ],
@@ -18446,7 +18446,7 @@
       },
       {
         "name": "TestHybridPaperBrokerInit::test_init_with_custom_parameters",
-        "line": 31,
+        "line": 42,
         "markers": [
           "unit"
         ],
@@ -18455,7 +18455,7 @@
       },
       {
         "name": "TestHybridPaperBrokerInit::test_init_creates_usd_balance",
-        "line": 47,
+        "line": 56,
         "markers": [
           "unit"
         ],

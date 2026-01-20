@@ -27545,7 +27545,7 @@
     "tests/unit/gpt_trader/features/live_trade/test_bot_lifecycle.py": [
       {
         "name": "TestTradingBotRun::test_run_sets_running_flag",
-        "line": 34,
+        "line": 41,
         "markers": [
           "asyncio",
           "unit"
@@ -27555,7 +27555,7 @@
       },
       {
         "name": "TestTradingBotRun::test_run_single_cycle_calls_shutdown",
-        "line": 42,
+        "line": 49,
         "markers": [
           "asyncio",
           "unit"
@@ -27565,7 +27565,7 @@
       },
       {
         "name": "TestTradingBotRun::test_run_starts_background_tasks",
-        "line": 49,
+        "line": 56,
         "markers": [
           "asyncio",
           "unit"
@@ -27575,7 +27575,7 @@
       },
       {
         "name": "TestTradingBotRun::test_run_handles_cancellation",
-        "line": 56,
+        "line": 63,
         "markers": [
           "asyncio",
           "unit"
@@ -27585,7 +27585,7 @@
       },
       {
         "name": "TestTradingBotStop::test_stop_sets_running_false",
-        "line": 96,
+        "line": 102,
         "markers": [
           "asyncio",
           "unit"
@@ -27595,7 +27595,7 @@
       },
       {
         "name": "TestTradingBotStop::test_stop_calls_engine_shutdown",
-        "line": 103,
+        "line": 109,
         "markers": [
           "asyncio",
           "unit"
@@ -27605,7 +27605,7 @@
       },
       {
         "name": "TestTradingBotStop::test_shutdown_is_alias_for_stop",
-        "line": 110,
+        "line": 116,
         "markers": [
           "asyncio",
           "unit"
@@ -27615,7 +27615,7 @@
       },
       {
         "name": "TestTradingBotStateManagement::test_initial_state",
-        "line": 121,
+        "line": 127,
         "markers": [
           "unit"
         ],
@@ -27624,7 +27624,7 @@
       },
       {
         "name": "TestTradingBotStateManagement::test_running_state_during_execution",
-        "line": 135,
+        "line": 140,
         "markers": [
           "asyncio",
           "unit"
@@ -36234,7 +36234,7 @@
     "tests/unit/gpt_trader/monitoring/test_heartbeat_edges.py": [
       {
         "name": "test_start_disabled_does_not_schedule_task",
-        "line": 14,
+        "line": 15,
         "markers": [
           "asyncio",
           "unit"
@@ -36243,7 +36243,7 @@
       },
       {
         "name": "test_stop_idempotent_clears_task",
-        "line": 27,
+        "line": 31,
         "markers": [
           "asyncio",
           "unit"
@@ -36252,7 +36252,7 @@
       },
       {
         "name": "test_status_and_health_toggle_with_missed_heartbeat",
-        "line": 42,
+        "line": 46,
         "markers": [
           "unit"
         ],
@@ -36260,7 +36260,7 @@
       },
       {
         "name": "test_heartbeat_count_increments_on_send",
-        "line": 61,
+        "line": 67,
         "markers": [
           "asyncio",
           "unit"

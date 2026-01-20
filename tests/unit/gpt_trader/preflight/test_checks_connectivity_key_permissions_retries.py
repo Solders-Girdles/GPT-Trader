@@ -13,9 +13,24 @@ from gpt_trader.preflight.core import PreflightCheck
 
 
 class TestCheckKeyPermissionsRetries:
+    @pytest.fixture(autouse=True)
+    def isolate_preflight_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Isolate env-driven behavior for deterministic key-permissions tests."""
+        for key in (
+            "COINBASE_ENABLE_DERIVATIVES",
+            "COINBASE_ENABLE_INTX_PERPS",
+            "DRY_RUN",
+            "PAPER_MODE",
+            "PERPS_PAPER",
+            "TRADING_MODES",
+        ):
+            monkeypatch.delenv(key, raising=False)
+        monkeypatch.setenv("COINBASE_PREFLIGHT_FORCE_REMOTE", "1")
+        monkeypatch.setenv("COINBASE_ENABLE_DERIVATIVES", "0")
+        monkeypatch.setenv("COINBASE_ENABLE_INTX_PERPS", "0")
+
     def test_retries_on_transient_errors(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Should retry on transient network errors."""
-        monkeypatch.setenv("COINBASE_PREFLIGHT_FORCE_REMOTE", "1")
         monkeypatch.setattr(time, "sleep", lambda x: None)
 
         checker = PreflightCheck(profile="prod")
@@ -37,7 +52,6 @@ class TestCheckKeyPermissionsRetries:
 
     def test_fails_after_max_retries(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Should fail after max retry attempts."""
-        monkeypatch.setenv("COINBASE_PREFLIGHT_FORCE_REMOTE", "1")
         monkeypatch.setattr(time, "sleep", lambda x: None)
 
         checker = PreflightCheck(profile="prod")
@@ -54,8 +68,6 @@ class TestCheckKeyPermissionsRetries:
 
     def test_fails_on_non_transient_error(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Should fail immediately on non-transient errors."""
-        monkeypatch.setenv("COINBASE_PREFLIGHT_FORCE_REMOTE", "1")
-
         checker = PreflightCheck(profile="prod")
 
         mock_client = MagicMock()
@@ -72,8 +84,6 @@ class TestCheckKeyPermissionsRetries:
 
     def test_fails_on_empty_permissions_response(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Should fail when permissions response is empty/None."""
-        monkeypatch.setenv("COINBASE_PREFLIGHT_FORCE_REMOTE", "1")
-
         checker = PreflightCheck(profile="prod")
 
         mock_client = MagicMock()

@@ -1,8 +1,17 @@
-"""Tests for APIMetricsCollector."""
+"""Tests for APIMetricsCollector and RequestTimer."""
 
 from concurrent.futures import ThreadPoolExecutor
 
-from gpt_trader.features.brokerages.coinbase.client.metrics import APIMetricsCollector
+import pytest
+
+from gpt_trader.features.brokerages.coinbase.client.metrics import (
+    APIMetricsCollector,
+    RequestTimer,
+)
+
+# ============================================================================
+# APIMetricsCollector Tests
+# ============================================================================
 
 
 class TestAPIMetricsCollector:
@@ -35,11 +44,8 @@ class TestAPIMetricsCollector:
 
         summary = collector.get_summary()
 
-        # Orders should be in "orders" category
         assert "orders" in summary["endpoints"]
         assert summary["endpoints"]["orders"]["total_calls"] == 2
-
-        # Accounts should be in "accounts" category
         assert "accounts" in summary["endpoints"]
         assert summary["endpoints"]["accounts"]["total_calls"] == 1
 
@@ -53,7 +59,7 @@ class TestAPIMetricsCollector:
 
         summary = collector.get_summary()
         assert summary["total_requests"] == 3
-        assert summary["total_errors"] == 2  # Two requests marked as error
+        assert summary["total_errors"] == 2
         assert summary["rate_limit_hits"] == 1
 
     def test_disabled_collector(self) -> None:
@@ -103,3 +109,66 @@ class TestAPIMetricsCollector:
         assert len(errors) == 0
         summary = collector.get_summary()
         assert summary["total_requests"] == 1000
+
+
+# ============================================================================
+# RequestTimer Tests
+# ============================================================================
+
+
+class TestRequestTimer:
+    """Tests for RequestTimer context manager."""
+
+    def test_timer_records_latency(self) -> None:
+        """Test that timer records request latency."""
+        collector = APIMetricsCollector()
+
+        collector.record_request("/api/v3/test", 100.0)
+
+        summary = collector.get_summary()
+        assert summary["total_requests"] == 1
+        assert summary["avg_latency_ms"] == 100.0
+
+    def test_timer_context_manager_records(self) -> None:
+        """Test that RequestTimer context manager records on exit."""
+        collector = APIMetricsCollector()
+
+        with RequestTimer(collector, "/api/v3/test"):
+            pass
+
+        summary = collector.get_summary()
+        assert summary["total_requests"] == 1
+        assert summary["avg_latency_ms"] >= 0
+
+    def test_timer_marks_error(self) -> None:
+        """Test marking a request as error."""
+        collector = APIMetricsCollector()
+
+        with RequestTimer(collector, "/api/v3/test") as timer:
+            timer.mark_error()
+
+        summary = collector.get_summary()
+        assert summary["total_errors"] == 1
+
+    def test_timer_marks_rate_limited(self) -> None:
+        """Test marking a request as rate limited."""
+        collector = APIMetricsCollector()
+
+        with RequestTimer(collector, "/api/v3/test") as timer:
+            timer.mark_rate_limited()
+
+        summary = collector.get_summary()
+        assert summary["rate_limit_hits"] == 1
+        assert summary["total_errors"] == 1
+
+    def test_timer_records_on_exception(self) -> None:
+        """Test that timer records even when exception occurs."""
+        collector = APIMetricsCollector()
+
+        with pytest.raises(ValueError):
+            with RequestTimer(collector, "/api/v3/test"):
+                raise ValueError("Test error")
+
+        summary = collector.get_summary()
+        assert summary["total_requests"] == 1
+        assert summary["total_errors"] == 1

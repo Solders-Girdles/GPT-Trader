@@ -1243,21 +1243,18 @@ clusters:
     type: similar_names
     description: 8 test files match pattern test_logging_patterns_* in tests/unit/gpt_trader/utilities
     files:
-    - tests/unit/gpt_trader/utilities/test_logging_patterns_decorator.py
-    - tests/unit/gpt_trader/utilities/test_logging_patterns_error_and_config_change.py
-    - tests/unit/gpt_trader/utilities/test_logging_patterns_execution.py
-    - tests/unit/gpt_trader/utilities/test_logging_patterns_log_operation.py
-    - tests/unit/gpt_trader/utilities/test_logging_patterns_market_data.py
-    - tests/unit/gpt_trader/utilities/test_logging_patterns_structured_logger.py
-    - tests/unit/gpt_trader/utilities/test_logging_patterns_system_health.py
-    - tests/unit/gpt_trader/utilities/test_logging_patterns_trade_and_position.py
+    - tests/unit/gpt_trader/utilities/test_logging_patterns.py
+    - tests/unit/gpt_trader/utilities/test_logging_patterns_domain.py
+    - tests/unit/gpt_trader/utilities/test_logging_patterns_health.py
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/utilities/test_logging_patterns.py
-    expected_file_delta: -7
+    expected_file_delta: -5
     priority: medium
-    rationale: Consolidate 8 test files into single parametrized file
-    status: pending
+    rationale: Consolidate 8 test files into 3 files (<=240 lines each)
+    status: done
+    owner: claude
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/302
     added: '2026-01-20'
   8e99233214a1:
     type: similar_names
@@ -1277,7 +1274,9 @@ clusters:
     expected_file_delta: -7
     priority: medium
     rationale: Consolidate 8 test files into single parametrized file
-    status: pending
+    status: done
+    owner: claude
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/302
     added: '2026-01-20'
   4ee508135a69:
     type: source_fanout
@@ -1325,22 +1324,20 @@ clusters:
     type: source_fanout
     description: 8 test files import gpt_trader.features.brokerages.coinbase.client.metrics
     files:
-    - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_cache.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_flows.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_metrics_and_priority.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience.py
     - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_request_retries.py
     - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics.py
     - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics_collector.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics_edges.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics_request_timer.py
     source_modules:
     - gpt_trader.features.brokerages.coinbase.client.metrics
     decision: merge
     target_location: tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics.py
-    expected_file_delta: -7
+    expected_file_delta: -4
     priority: medium
-    rationale: Consolidate 8 test files into single parametrized file
-    status: pending
+    rationale: Consolidate 8 test files into 4 files (<=240 lines each)
+    status: done
+    owner: claude
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/302
     added: '2026-01-20'
   949efcf7e735:
     type: source_fanout
@@ -1424,7 +1421,9 @@ clusters:
     expected_file_delta: -7
     priority: medium
     rationale: Consolidate 8 test files into single parametrized file
-    status: pending
+    status: done
+    owner: claude
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/302
     added: '2026-01-20'
   ce4068fdc367:
     type: source_fanout

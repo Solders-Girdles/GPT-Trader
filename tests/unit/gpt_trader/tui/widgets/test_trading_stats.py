@@ -1,6 +1,8 @@
 """Tests for TradingStatsWidget."""
 
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock
+
+import pytest
 
 from gpt_trader.tui.services.focus_manager import FocusManager
 from gpt_trader.tui.widgets.trading_stats import TradingStatsWidget
@@ -44,7 +46,7 @@ class TestTradingStatsWidgetModes:
 class TestTradingStatsWidgetActions:
     """Tests for TradingStatsWidget action methods."""
 
-    def test_action_cycle_window_calls_service(self):
+    def test_action_cycle_window_calls_service(self, monkeypatch: pytest.MonkeyPatch):
         """Test action_cycle_window uses the service."""
         widget = TradingStatsWidget()
         mock_app = MagicMock()
@@ -53,15 +55,14 @@ class TestTradingStatsWidgetActions:
         mock_state_registry.get_state.return_value = None
         mock_app.state_registry = mock_state_registry
 
-        with patch.object(type(widget), "app", new_callable=PropertyMock, return_value=mock_app):
-            with patch.object(
-                widget._service, "cycle_window", return_value=(5, "Last 5 min")
-            ) as mock_cycle:
-                with patch.object(widget, "_update_window_chips"):
-                    widget.action_cycle_window()
-                    mock_cycle.assert_called_once()
+        monkeypatch.setattr(type(widget), "app", property(lambda self: mock_app))
+        mock_cycle = MagicMock(return_value=(5, "Last 5 min"))
+        monkeypatch.setattr(widget._service, "cycle_window", mock_cycle)
+        monkeypatch.setattr(widget, "_update_window_chips", lambda: None)
+        widget.action_cycle_window()
+        mock_cycle.assert_called_once()
 
-    def test_action_reset_window_calls_service(self):
+    def test_action_reset_window_calls_service(self, monkeypatch: pytest.MonkeyPatch):
         """Test action_reset_window uses the service."""
         widget = TradingStatsWidget()
         mock_app = MagicMock()
@@ -70,13 +71,12 @@ class TestTradingStatsWidgetActions:
         mock_state_registry.get_state.return_value = None
         mock_app.state_registry = mock_state_registry
 
-        with patch.object(type(widget), "app", new_callable=PropertyMock, return_value=mock_app):
-            with patch.object(
-                widget._service, "reset_window", return_value=(0, "All Session")
-            ) as mock_reset:
-                with patch.object(widget, "_update_window_chips"):
-                    widget.action_reset_window()
-                    mock_reset.assert_called_once()
+        monkeypatch.setattr(type(widget), "app", property(lambda self: mock_app))
+        mock_reset = MagicMock(return_value=(0, "All Session"))
+        monkeypatch.setattr(widget._service, "reset_window", mock_reset)
+        monkeypatch.setattr(widget, "_update_window_chips", lambda: None)
+        widget.action_reset_window()
+        mock_reset.assert_called_once()
 
 
 class TestTradingStatsWidgetStateUpdates:

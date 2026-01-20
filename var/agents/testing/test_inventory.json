@@ -38308,7 +38308,7 @@
     "tests/unit/gpt_trader/preflight/test_checks_connectivity_key_permissions_core.py": [
       {
         "name": "TestCheckKeyPermissionsCore::test_skips_when_remote_checks_bypassed",
-        "line": 27,
+        "line": 25,
         "markers": [
           "unit"
         ],
@@ -38317,7 +38317,7 @@
       },
       {
         "name": "TestCheckKeyPermissionsCore::test_fails_when_client_build_fails",
-        "line": 41,
+        "line": 37,
         "markers": [
           "unit"
         ],
@@ -38326,7 +38326,7 @@
       },
       {
         "name": "TestCheckKeyPermissionsCore::test_passes_with_full_permissions",
-        "line": 52,
+        "line": 48,
         "markers": [
           "unit"
         ],
@@ -38335,7 +38335,7 @@
       },
       {
         "name": "TestCheckKeyPermissionsCore::test_fails_without_trade_permission_when_derivatives_enabled",
-        "line": 78,
+        "line": 74,
         "markers": [
           "unit"
         ],
@@ -38344,7 +38344,7 @@
       },
       {
         "name": "TestCheckKeyPermissionsCore::test_fails_without_view_permission",
-        "line": 108,
+        "line": 104,
         "markers": [
           "unit"
         ],
@@ -38353,7 +38353,7 @@
       },
       {
         "name": "TestCheckKeyPermissionsCore::test_passes_with_view_only_key_when_live_orders_not_intended",
-        "line": 132,
+        "line": 128,
         "markers": [
           "unit"
         ],
@@ -38362,7 +38362,7 @@
       },
       {
         "name": "TestCheckKeyPermissionsCore::test_fails_with_view_only_key_when_live_spot_orders_intended",
-        "line": 166,
+        "line": 162,
         "markers": [
           "unit"
         ],
@@ -38371,7 +38371,7 @@
       },
       {
         "name": "TestCheckKeyPermissionsCore::test_warns_when_portfolio_uuid_missing",
-        "line": 196,
+        "line": 192,
         "markers": [
           "unit"
         ],
@@ -38380,7 +38380,7 @@
       },
       {
         "name": "TestCheckKeyPermissionsCore::test_prints_section_header",
-        "line": 223,
+        "line": 217,
         "markers": [
           "unit"
         ],
@@ -38391,7 +38391,7 @@
     "tests/unit/gpt_trader/preflight/test_checks_connectivity_key_permissions_intx.py": [
       {
         "name": "TestCheckKeyPermissionsIntx::test_passes_intx_check_when_derivatives_enabled",
-        "line": 25,
+        "line": 23,
         "markers": [
           "unit"
         ],
@@ -38400,7 +38400,7 @@
       },
       {
         "name": "TestCheckKeyPermissionsIntx::test_fails_intx_check_when_wrong_portfolio_type",
-        "line": 55,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -38409,7 +38409,7 @@
       },
       {
         "name": "TestCheckKeyPermissionsIntx::test_logs_intx_available_when_disabled",
-        "line": 85,
+        "line": 83,
         "markers": [
           "unit"
         ],
@@ -39488,7 +39488,7 @@
     "tests/unit/gpt_trader/preflight/test_context_credentials.py": [
       {
         "name": "TestPreflightContextCredentials::test_resolve_cdp_credentials_from_prod_env",
-        "line": 25,
+        "line": 23,
         "markers": [
           "unit"
         ],
@@ -39497,7 +39497,7 @@
       },
       {
         "name": "TestPreflightContextCredentials::test_resolve_cdp_credentials_fallback",
-        "line": 50,
+        "line": 46,
         "markers": [
           "unit"
         ],
@@ -39506,7 +39506,7 @@
       },
       {
         "name": "TestPreflightContextCredentials::test_resolve_cdp_credentials_returns_none_when_missing",
-        "line": 73,
+        "line": 67,
         "markers": [
           "unit"
         ],
@@ -39515,7 +39515,7 @@
       },
       {
         "name": "TestPreflightContextCredentials::test_has_real_cdp_credentials_valid",
-        "line": 87,
+        "line": 81,
         "markers": [
           "unit"
         ],
@@ -39524,7 +39524,7 @@
       },
       {
         "name": "TestPreflightContextCredentials::test_has_real_cdp_credentials_invalid_key_format",
-        "line": 101,
+        "line": 95,
         "markers": [
           "unit"
         ],
@@ -39533,7 +39533,7 @@
       },
       {
         "name": "TestPreflightContextCredentials::test_has_real_cdp_credentials_invalid_private_key_format",
-        "line": 117,
+        "line": 111,
         "markers": [
           "unit"
         ],
@@ -39542,7 +39542,7 @@
       },
       {
         "name": "TestPreflightContextCredentials::test_has_real_cdp_credentials_missing",
-        "line": 133,
+        "line": 127,
         "markers": [
           "unit"
         ],
@@ -43280,7 +43280,7 @@
       },
       {
         "name": "TestAlertHistoryScreen::test_action_reset_cooldowns_resets_alerts",
-        "line": 63,
+        "line": 65,
         "markers": [
           "unit"
         ],
@@ -43289,7 +43289,7 @@
       },
       {
         "name": "TestAlertHistoryScreen::test_button_pressed_clear_btn",
-        "line": 73,
+        "line": 77,
         "markers": [
           "unit"
         ],
@@ -43298,7 +43298,7 @@
       },
       {
         "name": "TestAlertHistoryScreen::test_button_pressed_reset_btn",
-        "line": 87,
+        "line": 92,
         "markers": [
           "unit"
         ],
@@ -43307,7 +43307,7 @@
       },
       {
         "name": "TestAlertHistoryScreen::test_button_pressed_close_btn",
-        "line": 101,
+        "line": 107,
         "markers": [
           "unit"
         ],
@@ -43316,7 +43316,7 @@
       },
       {
         "name": "TestAlertHistoryScreen::test_no_alert_manager_graceful_handling",
-        "line": 114,
+        "line": 120,
         "markers": [
           "unit"
         ],
@@ -43325,7 +43325,7 @@
       },
       {
         "name": "TestAlertHistoryFilterActions::test_cycle_filter_cycles_through_all_filters",
-        "line": 137,
+        "line": 143,
         "markers": [
           "unit"
         ],
@@ -43334,7 +43334,7 @@
       },
       {
         "name": "TestAlertHistoryFilterActions::test_cycle_filter_wraps_around",
-        "line": 148,
+        "line": 157,
         "markers": [
           "unit"
         ],
@@ -43343,7 +43343,7 @@
       },
       {
         "name": "TestAlertHistoryFilterActions::test_clear_filter_resets_to_all",
-        "line": 159,
+        "line": 171,
         "markers": [
           "unit"
         ],
@@ -43352,7 +43352,7 @@
       },
       {
         "name": "TestAlertHistoryFilterActions::test_filter_bindings_present",
-        "line": 169,
+        "line": 184,
         "markers": [
           "unit"
         ],
@@ -43361,7 +43361,7 @@
       },
       {
         "name": "TestAlertHistoryFilterActions::test_number_filter_bindings_present",
-        "line": 176,
+        "line": 191,
         "markers": [
           "unit"
         ],
@@ -53930,7 +53930,7 @@
     "tests/unit/gpt_trader/tui/widgets/test_trading_stats.py": [
       {
         "name": "TestTradingStatsWidgetBindings::test_window_bindings_present",
-        "line": 12,
+        "line": 14,
         "markers": [
           "unit"
         ],
@@ -53939,7 +53939,7 @@
       },
       {
         "name": "TestTradingStatsWidgetBindings::test_window_binding_actions_exist",
-        "line": 20,
+        "line": 22,
         "markers": [
           "unit"
         ],
@@ -53948,7 +53948,7 @@
       },
       {
         "name": "TestTradingStatsWidgetModes::test_compact_mode_initialization",
-        "line": 33,
+        "line": 35,
         "markers": [
           "unit"
         ],
@@ -53957,7 +53957,7 @@
       },
       {
         "name": "TestTradingStatsWidgetModes::test_default_mode_is_expanded",
-        "line": 38,
+        "line": 40,
         "markers": [
           "unit"
         ],
@@ -53966,7 +53966,7 @@
       },
       {
         "name": "TestTradingStatsWidgetActions::test_action_cycle_window_calls_service",
-        "line": 47,
+        "line": 49,
         "markers": [
           "unit"
         ],
@@ -53975,7 +53975,7 @@
       },
       {
         "name": "TestTradingStatsWidgetActions::test_action_reset_window_calls_service",
-        "line": 64,
+        "line": 65,
         "markers": [
           "unit"
         ],

@@ -1,9 +1,10 @@
 """Edge coverage for Coinbase REST OrderService error paths."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock
 
 import pytest
 
+import gpt_trader.features.brokerages.coinbase.rest.order_service as order_service_module
 from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.errors import BrokerageError, OrderQueryError
 from gpt_trader.features.brokerages.coinbase.rest.order_service import OrderService
@@ -35,12 +36,15 @@ def test_cancel_order_brokerage_error_reraises() -> None:
         service.cancel_order("order-1")
 
 
-def test_list_fills_exception_logs_and_raises_query_error() -> None:
+def test_list_fills_exception_logs_and_raises_query_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     service = _make_service()
     service._client.list_fills.side_effect = Exception("boom")
+    mock_logger = MagicMock()
+    monkeypatch.setattr(order_service_module, "logger", mock_logger)
 
-    with patch("gpt_trader.features.brokerages.coinbase.rest.order_service.logger") as mock_logger:
-        with pytest.raises(OrderQueryError, match="Failed to list fills"):
-            service.list_fills()
+    with pytest.raises(OrderQueryError, match="Failed to list fills"):
+        service.list_fills()
 
     mock_logger.error.assert_called_once()

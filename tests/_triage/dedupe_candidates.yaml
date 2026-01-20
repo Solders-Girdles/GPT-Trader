@@ -1793,7 +1793,9 @@ clusters:
     expected_file_delta: -5
     priority: medium
     rationale: Consolidate 6 test files into single parametrized file
-    status: pending
+    status: done
+    owner: claude
+    pr_url: pending-batch-2
     added: '2026-01-20'
   0bdbfcad487d:
     type: source_fanout
@@ -2021,8 +2023,9 @@ clusters:
     expected_file_delta: -5
     priority: medium
     rationale: Consolidate 6 test files into single parametrized file
-    status: in_progress
+    status: done
     owner: claude
+    pr_url: pending-batch-2
     added: '2026-01-20'
   d2e226ef4410:
     type: source_fanout
@@ -2041,7 +2044,9 @@ clusters:
     expected_file_delta: -5
     priority: medium
     rationale: Consolidate 6 test files into single parametrized file
-    status: pending
+    status: done
+    owner: claude
+    pr_url: pending-batch-2
     added: '2026-01-20'
   fb5cae8b4c58:
     type: source_fanout

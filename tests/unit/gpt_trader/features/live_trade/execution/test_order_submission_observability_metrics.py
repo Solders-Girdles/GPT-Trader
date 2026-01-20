@@ -1,4 +1,4 @@
-"""Order submission metrics recording tests."""
+"""Order submission counter metrics recording tests."""
 
 from __future__ import annotations
 
@@ -20,11 +20,25 @@ def monitoring_logger(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
     return mock_logger
 
 
+@pytest.fixture
+def emit_metric_mock(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    mock_emit = MagicMock()
+    monkeypatch.setattr(recorder_module, "emit_metric", mock_emit)
+    return mock_emit
+
+
+@pytest.fixture
+def record_metric_mock(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    mock_record = MagicMock()
+    monkeypatch.setattr(order_submission_module, "_record_order_submission_metric", mock_record)
+    return mock_record
+
+
 class TestOrderSubmissionMetrics:
     """Tests for order submission metrics recording."""
 
     @pytest.fixture(autouse=True)
-    def reset_metrics(self):
+    def reset_metrics(self) -> None:
         """Reset metrics before and after each test."""
         from gpt_trader.monitoring.metrics_collector import reset_all
 
@@ -114,18 +128,6 @@ class TestOrderSubmissionMetrics:
 
 class TestOrderSubmissionMetricLabels:
     """Tests for classification label propagation into metrics."""
-
-    @pytest.fixture
-    def emit_metric_mock(self, monkeypatch: pytest.MonkeyPatch) -> MagicMock:
-        mock_emit = MagicMock()
-        monkeypatch.setattr(recorder_module, "emit_metric", mock_emit)
-        return mock_emit
-
-    @pytest.fixture
-    def record_metric_mock(self, monkeypatch: pytest.MonkeyPatch) -> MagicMock:
-        mock_record = MagicMock()
-        monkeypatch.setattr(order_submission_module, "_record_order_submission_metric", mock_record)
-        return mock_record
 
     def test_classification_label_used_in_metrics(
         self,

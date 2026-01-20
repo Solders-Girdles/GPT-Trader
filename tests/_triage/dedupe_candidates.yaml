@@ -300,60 +300,52 @@ clusters:
     type: similar_names
     description: 17 test files match pattern test_order_submission_* in tests/unit/gpt_trader/features/live_trade/execution
     files:
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_execute_broker_order.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_generate_submit_id.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_handle_order_failure.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_handle_order_result.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_init.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_process_rejection.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_record_preview.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_record_rejection.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_failure.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_preview.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_rejection.py
     - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows_retry_idempotency.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows_submit_order.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows_transient_failure.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_classification.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_correlation_context.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_latency_metrics.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_rejection_recording.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_submission_metrics.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows_retry.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows_submit.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_correlation.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_latency.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_metrics.py
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/features/live_trade/execution/test_order_submission.py
-    expected_file_delta: -16
+    expected_file_delta: -6
     priority: high
-    rationale: Consolidate 17 test files into single parametrized file
-    status: pending
+    rationale: Consolidated 17 → 11 files (core + flows + observability)
+    status: done
+    owner: claude
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/305
     added: '2026-01-20'
   1b522be5396a:
     type: source_fanout
     description: 17 test files import gpt_trader.features.live_trade.execution.order_submission
     files:
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_execute_broker_order.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_generate_submit_id.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_handle_order_failure.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_handle_order_result.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_init.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_process_rejection.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_record_preview.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_record_rejection.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_failure.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_preview.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_rejection.py
     - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows_retry_idempotency.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows_submit_order.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows_transient_failure.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_classification.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_correlation_context.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_latency_metrics.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_rejection_recording.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_submission_metrics.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows_retry.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows_submit.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_correlation.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_latency.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_metrics.py
     source_modules:
     - gpt_trader.features.live_trade.execution.order_submission
     decision: merge
     target_location: tests/unit/gpt_trader/features/live_trade/execution/test_order_submission.py
-    expected_file_delta: -16
+    expected_file_delta: -6
     priority: high
-    rationale: Consolidate 17 test files into single parametrized file
-    status: pending
+    rationale: Consolidated 17 → 11 files (core + flows + observability)
+    status: done
+    owner: claude
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/305
     added: '2026-01-20'
   fdf6c2a996aa:
     type: source_fanout
@@ -696,50 +688,44 @@ clusters:
     added: '2026-01-20'
   c6bbc52b8b23:
     type: similar_names
-    description: 11 test files match pattern test_fill_model_* in tests/unit/gpt_trader/backtesting/simulation
+    description: 5 test files match pattern test_fill_model_* in tests/unit/gpt_trader/backtesting/simulation
     files:
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_fill_result.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit_order_queue_priority.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit_orders.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_market_orders.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_price_touch_logic.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_queue_fill_estimation.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_slippage.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_spread_impact.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_stop_orders.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_stop_trigger_logic.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_volume_threshold.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_market.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_queue.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_stop.py
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/backtesting/simulation/test_fill_model.py
-    expected_file_delta: -10
+    expected_file_delta: -6
     priority: high
-    rationale: Consolidate 11 test files into single parametrized file
-    status: pending
+    rationale: Consolidated 11 → 5 files (<=240 lines each)
+    status: done
+    owner: claude
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/305
     added: '2026-01-20'
   07ed801b7538:
     type: source_fanout
     description: 11 test files import gpt_trader.features.live_trade.risk
     files:
-    - tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_require_product_and_flow.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_validation.py
     - tests/unit/gpt_trader/features/live_trade/execution/test_validation_async.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_validation_exchange_rules.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_validation_mark_staleness_and_slippage.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_validation_order_preview.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_validation_order_validator_basic.py
-    - tests/unit/gpt_trader/features/live_trade/risk/test_reduce_only_backward_compatibility.py
-    - tests/unit/gpt_trader/features/live_trade/test_leverage_cap.py
-    - tests/unit/gpt_trader/features/live_trade/test_leverage_time_windows.py
-    - tests/unit/gpt_trader/features/live_trade/test_liq_price_buffer.py
-    - tests/unit/gpt_trader/features/live_trade/test_total_exposure_breach.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_validation_exchange.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_validation_preview.py
+    - tests/unit/gpt_trader/features/live_trade/risk/test_reduce_only.py
+    - tests/unit/gpt_trader/features/live_trade/test_risk.py
+    - tests/unit/gpt_trader/features/live_trade/test_risk_time_windows.py
     source_modules:
     - gpt_trader.features.live_trade.risk
     decision: merge
     target_location: tests/unit/gpt_trader/features/live_trade/execution/test_risk.py
-    expected_file_delta: -10
+    expected_file_delta: -4
     priority: high
-    rationale: Consolidate 11 test files into single parametrized file
-    status: pending
+    rationale: Consolidated 11 → 7 files (validation + leverage/exposure tests)
+    status: done
+    owner: claude
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/305
     added: '2026-01-20'
   20c6dd9ab9e0:
     type: source_fanout
@@ -767,27 +753,23 @@ clusters:
     added: '2026-01-20'
   21a3b31c1fec:
     type: source_fanout
-    description: 11 test files import gpt_trader.backtesting.simulation.fill_model
+    description: 5 test files import gpt_trader.backtesting.simulation.fill_model
     files:
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_fill_result.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit_order_queue_priority.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit_orders.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_market_orders.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_price_touch_logic.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_queue_fill_estimation.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_slippage.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_spread_impact.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_stop_orders.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_stop_trigger_logic.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_volume_threshold.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_market.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_queue.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_stop.py
     source_modules:
     - gpt_trader.backtesting.simulation.fill_model
     decision: merge
     target_location: tests/unit/gpt_trader/backtesting/simulation/test_fill_model.py
-    expected_file_delta: -10
+    expected_file_delta: -6
     priority: high
-    rationale: Consolidate 11 test files into single parametrized file
-    status: pending
+    rationale: Consolidated 11 → 5 files (<=240 lines each)
+    status: done
+    owner: claude
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/305
     added: '2026-01-20'
   46d16bee6c73:
     type: source_fanout

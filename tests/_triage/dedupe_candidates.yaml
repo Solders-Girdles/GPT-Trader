@@ -1418,7 +1418,8 @@ clusters:
     expected_file_delta: -7
     priority: medium
     rationale: Consolidate 8 test files into single parametrized file
-    status: pending
+    status: in_progress
+    owner: claude
     added: '2026-01-20'
   ce4068fdc367:
     type: source_fanout

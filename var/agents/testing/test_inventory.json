@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6310,
-    "total_files": 951,
+    "total_tests": 6309,
+    "total_files": 947,
     "markers_used": 15
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6145,
+    "unit": 6144,
     "asyncio": 371,
     "property": 82,
     "integration": 79,
@@ -296,24 +296,20 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_find_existing_order_by_client_id.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_initialization.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_position_metrics.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_cfm_portfolio.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_place_and_cancel.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_queries_fills_and_close_position.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_pnl_service.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_portfolio_service.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_retry_and_telemetry.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_intx_portfolio.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_close_position.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_fills.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_place_and_cancel.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_queries.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_pnl_service_edges.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_balances.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_cfm.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_intx.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_positions.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_unified_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_position_state_store_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_product_service_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_product_service_get_tickers.py",
@@ -7094,7 +7090,7 @@
     "tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker.py": [
       {
         "name": "TestSimulatedBrokerConnection::test_initial_connection_state",
-        "line": 20,
+        "line": 19,
         "markers": [
           "unit"
         ],
@@ -7103,7 +7099,7 @@
       },
       {
         "name": "TestSimulatedBrokerConnection::test_connect",
-        "line": 25,
+        "line": 24,
         "markers": [
           "unit"
         ],
@@ -7112,7 +7108,7 @@
       },
       {
         "name": "TestSimulatedBrokerConnection::test_disconnect",
-        "line": 32,
+        "line": 31,
         "markers": [
           "unit"
         ],
@@ -7121,7 +7117,7 @@
       },
       {
         "name": "TestSimulatedBrokerConnection::test_connect_disconnect_cycle",
-        "line": 39,
+        "line": 38,
         "markers": [
           "unit"
         ],
@@ -7130,7 +7126,7 @@
       },
       {
         "name": "TestSimulatedBrokerConnection::test_get_account_id",
-        "line": 48,
+        "line": 47,
         "markers": [
           "unit"
         ],
@@ -7139,7 +7135,7 @@
       },
       {
         "name": "TestSimulatedBrokerConnection::test_get_account_id_consistent",
-        "line": 52,
+        "line": 51,
         "markers": [
           "unit"
         ],
@@ -7148,7 +7144,7 @@
       },
       {
         "name": "TestSimulatedBrokerInitialization::test_default_initialization",
-        "line": 65,
+        "line": 64,
         "markers": [
           "unit"
         ],
@@ -7157,7 +7153,7 @@
       },
       {
         "name": "TestSimulatedBrokerInitialization::test_custom_equity_initialization",
-        "line": 73,
+        "line": 72,
         "markers": [
           "unit"
         ],
@@ -7166,7 +7162,7 @@
       },
       {
         "name": "TestSimulatedBrokerInitialization::test_custom_fee_tier_initialization",
-        "line": 78,
+        "line": 77,
         "markers": [
           "unit"
         ],
@@ -7175,7 +7171,7 @@
       },
       {
         "name": "TestSimulatedBrokerInitialization::test_initial_balance_matches_equity",
-        "line": 82,
+        "line": 81,
         "markers": [
           "unit"
         ],
@@ -7184,7 +7180,7 @@
       },
       {
         "name": "TestSimulatedBrokerAccountInfo::test_get_equity",
-        "line": 99,
+        "line": 98,
         "markers": [
           "unit"
         ],
@@ -7193,7 +7189,7 @@
       },
       {
         "name": "TestSimulatedBrokerAccountInfo::test_get_account_info",
-        "line": 103,
+        "line": 102,
         "markers": [
           "unit"
         ],
@@ -7202,7 +7198,7 @@
       },
       {
         "name": "TestSimulatedBrokerAccountInfo::test_list_balances_structure",
-        "line": 109,
+        "line": 108,
         "markers": [
           "unit"
         ],
@@ -7211,7 +7207,7 @@
       },
       {
         "name": "TestSimulatedBrokerAccountInfo::test_get_account_info_all_fields",
-        "line": 118,
+        "line": 117,
         "markers": [
           "unit"
         ],
@@ -7220,7 +7216,7 @@
       },
       {
         "name": "TestSimulatedBrokerPositions::test_list_positions_initially_empty",
-        "line": 136,
+        "line": 135,
         "markers": [
           "unit"
         ],
@@ -7229,7 +7225,7 @@
       },
       {
         "name": "TestSimulatedBrokerPositions::test_positions_dict_initially_empty",
-        "line": 142,
+        "line": 141,
         "markers": [
           "unit"
         ],
@@ -7238,7 +7234,7 @@
       },
       {
         "name": "TestSimulatedBrokerEdgeCases::test_zero_initial_equity",
-        "line": 155,
+        "line": 154,
         "markers": [
           "unit"
         ],
@@ -7247,7 +7243,7 @@
       },
       {
         "name": "TestSimulatedBrokerEdgeCases::test_very_large_equity",
-        "line": 162,
+        "line": 161,
         "markers": [
           "unit"
         ],
@@ -7256,7 +7252,7 @@
       },
       {
         "name": "TestSimulatedBrokerEdgeCases::test_fractional_equity",
-        "line": 168,
+        "line": 167,
         "markers": [
           "unit"
         ],
@@ -7265,7 +7261,7 @@
       },
       {
         "name": "TestSimulatedBrokerProductManagement::test_register_product",
-        "line": 195,
+        "line": 194,
         "markers": [
           "unit"
         ],
@@ -7274,7 +7270,7 @@
       },
       {
         "name": "TestSimulatedBrokerProductManagement::test_get_product_exists",
-        "line": 201,
+        "line": 200,
         "markers": [
           "unit"
         ],
@@ -7283,7 +7279,7 @@
       },
       {
         "name": "TestSimulatedBrokerProductManagement::test_get_product_not_exists",
-        "line": 209,
+        "line": 208,
         "markers": [
           "unit"
         ],
@@ -7422,7 +7418,7 @@
     "tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker_orders.py": [
       {
         "name": "TestSimulatedBrokerPlaceOrder::test_place_order_requires_quantity",
-        "line": 29,
+        "line": 28,
         "markers": [
           "unit"
         ],
@@ -7431,7 +7427,7 @@
       },
       {
         "name": "TestSimulatedBrokerPlaceOrder::test_place_limit_order_submitted",
-        "line": 40,
+        "line": 39,
         "markers": [
           "unit"
         ],
@@ -7440,7 +7436,7 @@
       },
       {
         "name": "TestSimulatedBrokerCancelOrder::test_cancel_nonexistent_order",
-        "line": 74,
+        "line": 73,
         "markers": [
           "unit"
         ],
@@ -7449,7 +7445,7 @@
       },
       {
         "name": "TestSimulatedBrokerCancelOrder::test_cancel_open_order",
-        "line": 79,
+        "line": 78,
         "markers": [
           "unit"
         ],
@@ -7458,7 +7454,7 @@
       },
       {
         "name": "TestSimulatedBrokerCancelOrder::test_cancel_open_order_direct",
-        "line": 104,
+        "line": 103,
         "markers": [
           "unit"
         ],
@@ -7467,7 +7463,7 @@
       },
       {
         "name": "TestSimulatedBrokerChaos::test_market_order_rejected_by_chaos",
-        "line": 134,
+        "line": 133,
         "markers": [
           "unit"
         ],
@@ -7476,7 +7472,7 @@
       },
       {
         "name": "TestSimulatedBrokerChaos::test_market_order_partial_fill_by_chaos",
-        "line": 166,
+        "line": 165,
         "markers": [
           "unit"
         ],
@@ -7505,7 +7501,7 @@
       },
       {
         "name": "TestSimulatedBrokerMarginCalculation::test_calculate_margin_used_multiple_positions",
-        "line": 26,
+        "line": 31,
         "markers": [
           "unit"
         ],
@@ -7514,7 +7510,7 @@
       },
       {
         "name": "TestSimulatedBrokerMarginCalculation::test_calculate_margin_used_default_leverage",
-        "line": 40,
+        "line": 55,
         "markers": [
           "unit"
         ],
@@ -7523,7 +7519,7 @@
       },
       {
         "name": "TestSimulatedBrokerPositionPnl::test_pnl_with_position",
-        "line": 54,
+        "line": 73,
         "markers": [
           "unit"
         ],
@@ -7532,7 +7528,7 @@
       },
       {
         "name": "TestSimulatedBrokerPositionPnl::test_pnl_no_position",
-        "line": 66,
+        "line": 90,
         "markers": [
           "unit"
         ],
@@ -7541,7 +7537,7 @@
       },
       {
         "name": "TestSimulatedBrokerPositionRisk::test_risk_with_long_position",
-        "line": 77,
+        "line": 101,
         "markers": [
           "unit"
         ],
@@ -7550,7 +7546,7 @@
       },
       {
         "name": "TestSimulatedBrokerPositionRisk::test_risk_no_position",
-        "line": 95,
+        "line": 127,
         "markers": [
           "unit"
         ],
@@ -7559,7 +7555,7 @@
       },
       {
         "name": "TestSimulatedBrokerAccountInfoWithPositions::test_get_account_info_with_unrealized_pnl",
-        "line": 103,
+        "line": 135,
         "markers": [
           "unit"
         ],
@@ -7568,7 +7564,7 @@
       },
       {
         "name": "TestSimulatedBrokerEquityTracking::test_equity_curve_initially_empty",
-        "line": 118,
+        "line": 155,
         "markers": [
           "unit"
         ],
@@ -7577,7 +7573,7 @@
       },
       {
         "name": "TestSimulatedBrokerEquityTracking::test_get_equity_curve",
-        "line": 121,
+        "line": 158,
         "markers": [
           "unit"
         ],
@@ -7586,7 +7582,7 @@
       },
       {
         "name": "TestSimulatedBrokerEquityTracking::test_peak_equity_initialized",
-        "line": 131,
+        "line": 168,
         "markers": [
           "unit"
         ],
@@ -7595,7 +7591,7 @@
       },
       {
         "name": "TestSimulatedBrokerEquityTracking::test_max_drawdown_initially_zero",
-        "line": 135,
+        "line": 172,
         "markers": [
           "unit"
         ],
@@ -7604,7 +7600,7 @@
       },
       {
         "name": "TestSimulatedBrokerStatistics::test_total_fees_initially_zero",
-        "line": 144,
+        "line": 181,
         "markers": [
           "unit"
         ],
@@ -7613,7 +7609,7 @@
       },
       {
         "name": "TestSimulatedBrokerStatistics::test_trade_counters_initially_zero",
-        "line": 147,
+        "line": 184,
         "markers": [
           "unit"
         ],
@@ -7622,7 +7618,7 @@
       },
       {
         "name": "TestSimulatedBrokerStatistics::test_slippage_initially_zero",
-        "line": 153,
+        "line": 190,
         "markers": [
           "unit"
         ],
@@ -7631,7 +7627,7 @@
       },
       {
         "name": "TestSimulatedBrokerGetPosition::test_get_position_no_position",
-        "line": 160,
+        "line": 197,
         "markers": [
           "unit"
         ],
@@ -7640,7 +7636,7 @@
       },
       {
         "name": "TestSimulatedBrokerGetPosition::test_get_position_with_position",
-        "line": 163,
+        "line": 200,
         "markers": [
           "unit"
         ],
@@ -13092,56 +13088,6 @@
         "class": "TestCoinbaseRestServiceCorePositionMetrics"
       }
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_cfm_portfolio.py": [
-      {
-        "name": "test_get_cfm_balance_summary_normalises_decimals_and_emits_metric",
-        "line": 26,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_list_cfm_sweeps_returns_empty_when_derivatives_disabled",
-        "line": 47,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_list_cfm_sweeps_normalises_entries",
-        "line": 57,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_get_cfm_margin_window_handles_errors",
-        "line": 74,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_update_cfm_margin_window_enforces_derivatives",
-        "line": 84,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_update_cfm_margin_window_calls_client_and_emits",
-        "line": 92,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_place_and_cancel.py": [
       {
         "name": "TestCoinbaseRestContractSuiteOrderServicePlaceAndCancel::test_place_order_quantity_resolution_success",
@@ -13503,72 +13449,6 @@
         "class": "TestCoinbaseRestContractSuiteRetryAndTelemetry"
       }
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_intx_portfolio.py": [
-      {
-        "name": "test_intx_allocate_normalises_and_emits_metric",
-        "line": 28,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_intx_allocate_requires_support",
-        "line": 42,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_get_intx_balances_normalises_entries",
-        "line": 50,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_get_intx_balances_handles_errors",
-        "line": 71,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_get_intx_portfolio_returns_normalised_dict",
-        "line": 82,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_list_intx_positions_returns_normalised_list",
-        "line": 94,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_get_intx_position_handles_missing",
-        "line": 116,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_get_intx_multi_asset_collateral_emits_metric",
-        "line": 126,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_close_position.py": [
       {
         "name": "TestClosePosition::test_close_position_success",
@@ -13886,32 +13766,32 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_balances.py": [
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service.py": [
       {
-        "name": "TestPortfolioServiceBalances::test_service_init",
-        "line": 12,
+        "name": "TestPortfolioServiceInit::test_service_init",
+        "line": 15,
         "markers": [
           "unit"
         ],
-        "docstring": "Test service initialization.",
-        "class": "TestPortfolioServiceBalances"
+        "docstring": "",
+        "class": "TestPortfolioServiceInit"
       },
       {
         "name": "TestPortfolioServiceBalances::test_list_balances_returns_balances",
-        "line": 24,
+        "line": 30,
         "markers": [
           "unit"
         ],
-        "docstring": "Test listing balances returns parsed balances.",
+        "docstring": "",
         "class": "TestPortfolioServiceBalances"
       },
       {
         "name": "TestPortfolioServiceBalances::test_list_balances_handles_list_response",
-        "line": 57,
+        "line": 60,
         "markers": [
           "unit"
         ],
-        "docstring": "Test listing balances handles list response shape.",
+        "docstring": "",
         "class": "TestPortfolioServiceBalances"
       },
       {
@@ -13920,288 +13800,410 @@
         "markers": [
           "unit"
         ],
-        "docstring": "Test list_balances calculates total from available + hold.",
+        "docstring": "",
         "class": "TestPortfolioServiceBalances"
       },
       {
         "name": "TestPortfolioServiceBalances::test_list_balances_handles_exception",
-        "line": 99,
+        "line": 96,
         "markers": [
           "unit"
         ],
-        "docstring": "Test list_balances handles API exception.",
+        "docstring": "",
         "class": "TestPortfolioServiceBalances"
       },
       {
         "name": "TestPortfolioServiceBalances::test_list_balances_skips_invalid_entries",
-        "line": 111,
+        "line": 105,
         "markers": [
           "unit"
         ],
-        "docstring": "Test list_balances skips entries that fail to parse.",
+        "docstring": "",
         "class": "TestPortfolioServiceBalances"
       },
       {
         "name": "TestPortfolioServiceBalances::test_get_portfolio_balances_delegates_to_list_balances",
-        "line": 137,
+        "line": 125,
         "markers": [
           "unit"
         ],
-        "docstring": "Test get_portfolio_balances delegates to list_balances.",
+        "docstring": "",
         "class": "TestPortfolioServiceBalances"
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_cfm.py": [
-      {
-        "name": "TestPortfolioServiceCfm::test_get_cfm_balance_summary_returns_summary",
-        "line": 15,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test getting CFM balance summary.",
-        "class": "TestPortfolioServiceCfm"
       },
-      {
-        "name": "TestPortfolioServiceCfm::test_get_cfm_balance_summary_returns_empty_when_not_supported",
-        "line": 36,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test CFM balance summary returns empty when derivatives not supported.",
-        "class": "TestPortfolioServiceCfm"
-      },
-      {
-        "name": "TestPortfolioServiceCfm::test_list_cfm_sweeps_returns_sweeps",
-        "line": 48,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test listing CFM sweeps.",
-        "class": "TestPortfolioServiceCfm"
-      },
-      {
-        "name": "TestPortfolioServiceCfm::test_get_cfm_sweeps_schedule_returns_schedule",
-        "line": 68,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test getting CFM sweeps schedule.",
-        "class": "TestPortfolioServiceCfm"
-      },
-      {
-        "name": "TestPortfolioServiceCfm::test_get_cfm_margin_window_returns_window",
-        "line": 84,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test getting CFM margin window.",
-        "class": "TestPortfolioServiceCfm"
-      },
-      {
-        "name": "TestPortfolioServiceCfm::test_update_cfm_margin_window_success",
-        "line": 101,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test updating CFM margin window.",
-        "class": "TestPortfolioServiceCfm"
-      },
-      {
-        "name": "TestPortfolioServiceCfm::test_update_cfm_margin_window_raises_when_not_supported",
-        "line": 120,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test update_cfm_margin_window raises when derivatives not supported.",
-        "class": "TestPortfolioServiceCfm"
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_edges.py": [
-      {
-        "name": "test_list_cfm_positions_invalid_expiry_sets_none",
-        "line": 23,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_list_spot_positions_skips_usd_and_zero",
-        "line": 47,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_get_unified_balance_combines_spot_and_cfm",
-        "line": 64,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_has_cfm_access_false_without_summary",
-        "line": 95,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_intx.py": [
-      {
-        "name": "TestPortfolioServiceIntx::test_intx_allocate_requires_advanced_mode",
-        "line": 15,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test intx_allocate raises when not in advanced mode.",
-        "class": "TestPortfolioServiceIntx"
-      },
-      {
-        "name": "TestPortfolioServiceIntx::test_intx_allocate_success",
-        "line": 26,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test successful INTX allocation.",
-        "class": "TestPortfolioServiceIntx"
-      },
-      {
-        "name": "TestPortfolioServiceIntx::test_get_intx_balances_returns_empty_when_not_advanced",
-        "line": 45,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test get_intx_balances returns empty when not in advanced mode.",
-        "class": "TestPortfolioServiceIntx"
-      },
-      {
-        "name": "TestPortfolioServiceIntx::test_get_intx_balances_returns_balances",
-        "line": 57,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test get_intx_balances returns balances.",
-        "class": "TestPortfolioServiceIntx"
-      },
-      {
-        "name": "TestPortfolioServiceIntx::test_get_intx_portfolio_returns_empty_when_not_advanced",
-        "line": 77,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test get_intx_portfolio returns empty when not in advanced mode.",
-        "class": "TestPortfolioServiceIntx"
-      },
-      {
-        "name": "TestPortfolioServiceIntx::test_get_intx_portfolio_success",
-        "line": 89,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test successful INTX portfolio retrieval.",
-        "class": "TestPortfolioServiceIntx"
-      },
-      {
-        "name": "TestPortfolioServiceIntx::test_list_intx_positions_returns_positions",
-        "line": 106,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test listing INTX positions.",
-        "class": "TestPortfolioServiceIntx"
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_positions.py": [
       {
         "name": "TestPortfolioServicePositions::test_list_positions_returns_positions",
-        "line": 12,
+        "line": 139,
         "markers": [
           "unit"
         ],
-        "docstring": "Test listing positions when derivatives are supported.",
+        "docstring": "",
         "class": "TestPortfolioServicePositions"
       },
       {
         "name": "TestPortfolioServicePositions::test_list_positions_returns_empty_when_derivatives_not_supported",
-        "line": 39,
+        "line": 161,
         "markers": [
           "unit"
         ],
-        "docstring": "Test list_positions returns empty when derivatives not supported.",
+        "docstring": "",
         "class": "TestPortfolioServicePositions"
       },
       {
         "name": "TestPortfolioServicePositions::test_list_positions_handles_exception",
-        "line": 53,
+        "line": 172,
         "markers": [
           "unit"
         ],
-        "docstring": "Test list_positions handles API exception.",
+        "docstring": "",
         "class": "TestPortfolioServicePositions"
       },
       {
         "name": "TestPortfolioServicePositions::test_get_position_returns_position",
-        "line": 67,
+        "line": 183,
         "markers": [
           "unit"
         ],
-        "docstring": "Test getting a single position.",
+        "docstring": "",
         "class": "TestPortfolioServicePositions"
       },
       {
         "name": "TestPortfolioServicePositions::test_get_position_returns_none_when_not_supported",
-        "line": 89,
+        "line": 202,
         "markers": [
           "unit"
         ],
-        "docstring": "Test get_position returns None when derivatives not supported.",
+        "docstring": "",
         "class": "TestPortfolioServicePositions"
       }
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_unified_edges.py": [
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_cfm.py": [
       {
-        "name": "test_get_cfm_balance_missing_or_empty_summary",
-        "line": 23,
+        "name": "TestCfmBalanceSummary::test_get_cfm_balance_summary_returns_summary",
+        "line": 17,
         "markers": [
           "unit"
         ],
-        "docstring": ""
+        "docstring": "",
+        "class": "TestCfmBalanceSummary"
       },
       {
-        "name": "test_get_cfm_balance_parses_nested_values",
-        "line": 34,
+        "name": "TestCfmBalanceSummary::test_get_cfm_balance_summary_returns_empty_when_not_supported",
+        "line": 32,
         "markers": [
           "unit"
         ],
-        "docstring": ""
+        "docstring": "",
+        "class": "TestCfmBalanceSummary"
       },
       {
-        "name": "test_list_all_positions_merges_spot_and_cfm",
+        "name": "TestCfmBalanceSummary::test_get_cfm_balance_summary_normalises_decimals_and_emits_metric",
+        "line": 41,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCfmBalanceSummary"
+      },
+      {
+        "name": "TestCfmSweeps::test_list_cfm_sweeps_returns_sweeps",
+        "line": 67,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCfmSweeps"
+      },
+      {
+        "name": "TestCfmSweeps::test_list_cfm_sweeps_returns_empty_when_derivatives_disabled",
+        "line": 84,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCfmSweeps"
+      },
+      {
+        "name": "TestCfmSweeps::test_list_cfm_sweeps_normalises_entries",
+        "line": 95,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCfmSweeps"
+      },
+      {
+        "name": "TestCfmSweeps::test_get_cfm_sweeps_schedule_returns_schedule",
+        "line": 111,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCfmSweeps"
+      },
+      {
+        "name": "TestCfmMarginWindow::test_get_cfm_margin_window_returns_window",
+        "line": 128,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCfmMarginWindow"
+      },
+      {
+        "name": "TestCfmMarginWindow::test_get_cfm_margin_window_handles_errors",
+        "line": 142,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCfmMarginWindow"
+      },
+      {
+        "name": "TestCfmMarginWindow::test_update_cfm_margin_window_success",
+        "line": 153,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCfmMarginWindow"
+      },
+      {
+        "name": "TestCfmMarginWindow::test_update_cfm_margin_window_raises_when_not_supported",
+        "line": 169,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCfmMarginWindow"
+      },
+      {
+        "name": "TestCfmMarginWindow::test_update_cfm_margin_window_enforces_derivatives",
+        "line": 178,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCfmMarginWindow"
+      },
+      {
+        "name": "TestCfmMarginWindow::test_update_cfm_margin_window_calls_client_and_emits",
+        "line": 187,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCfmMarginWindow"
+      }
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_edges.py": [
+      {
+        "name": "TestCfmPositionEdges::test_list_cfm_positions_invalid_expiry_sets_none",
+        "line": 24,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCfmPositionEdges"
+      },
+      {
+        "name": "TestSpotPositionEdges::test_list_spot_positions_skips_usd_and_zero",
+        "line": 49,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestSpotPositionEdges"
+      },
+      {
+        "name": "TestCfmBalanceEdges::test_get_cfm_balance_missing_or_empty_summary",
+        "line": 67,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCfmBalanceEdges"
+      },
+      {
+        "name": "TestCfmBalanceEdges::test_get_cfm_balance_parses_nested_values",
+        "line": 75,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCfmBalanceEdges"
+      },
+      {
+        "name": "TestCfmBalanceEdges::test_has_cfm_access_false_without_summary",
+        "line": 98,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCfmBalanceEdges"
+      },
+      {
+        "name": "TestUnifiedBalanceEdges::test_get_unified_balance_combines_spot_and_cfm",
+        "line": 108,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestUnifiedBalanceEdges"
+      },
+      {
+        "name": "TestUnifiedBalanceEdges::test_get_unified_balance_without_usd_spot",
+        "line": 136,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestUnifiedBalanceEdges"
+      },
+      {
+        "name": "TestAllPositionsEdges::test_list_all_positions_merges_spot_and_cfm",
+        "line": 165,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestAllPositionsEdges"
+      },
+      {
+        "name": "TestAllPositionsEdges::test_list_all_positions_spot_only_when_no_derivatives",
+        "line": 202,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestAllPositionsEdges"
+      }
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_intx.py": [
+      {
+        "name": "TestIntxAllocate::test_intx_allocate_requires_advanced_mode",
+        "line": 17,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestIntxAllocate"
+      },
+      {
+        "name": "TestIntxAllocate::test_intx_allocate_success",
+        "line": 26,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestIntxAllocate"
+      },
+      {
+        "name": "TestIntxAllocate::test_intx_allocate_normalises_and_emits_metric",
+        "line": 42,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestIntxAllocate"
+      },
+      {
+        "name": "TestIntxBalances::test_get_intx_balances_returns_empty_when_not_advanced",
         "line": 60,
         "markers": [
           "unit"
         ],
-        "docstring": ""
+        "docstring": "",
+        "class": "TestIntxBalances"
       },
       {
-        "name": "test_list_all_positions_spot_only_when_no_derivatives",
-        "line": 100,
+        "name": "TestIntxBalances::test_get_intx_balances_returns_balances",
+        "line": 69,
         "markers": [
           "unit"
         ],
-        "docstring": ""
+        "docstring": "",
+        "class": "TestIntxBalances"
       },
       {
-        "name": "test_get_unified_balance_without_usd_spot",
-        "line": 112,
+        "name": "TestIntxBalances::test_get_intx_balances_normalises_entries",
+        "line": 86,
         "markers": [
           "unit"
         ],
-        "docstring": ""
+        "docstring": "",
+        "class": "TestIntxBalances"
+      },
+      {
+        "name": "TestIntxBalances::test_get_intx_balances_handles_errors",
+        "line": 105,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestIntxBalances"
+      },
+      {
+        "name": "TestIntxPortfolio::test_get_intx_portfolio_returns_empty_when_not_advanced",
+        "line": 122,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestIntxPortfolio"
+      },
+      {
+        "name": "TestIntxPortfolio::test_get_intx_portfolio_success",
+        "line": 131,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestIntxPortfolio"
+      },
+      {
+        "name": "TestIntxPortfolio::test_get_intx_portfolio_returns_normalised_dict",
+        "line": 145,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestIntxPortfolio"
+      },
+      {
+        "name": "TestIntxPositions::test_list_intx_positions_returns_positions",
+        "line": 160,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestIntxPositions"
+      },
+      {
+        "name": "TestIntxPositions::test_list_intx_positions_returns_normalised_list",
+        "line": 180,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestIntxPositions"
+      },
+      {
+        "name": "TestIntxPositions::test_get_intx_position_handles_missing",
+        "line": 203,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestIntxPositions"
+      },
+      {
+        "name": "TestIntxCollateral::test_get_intx_multi_asset_collateral_emits_metric",
+        "line": 218,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestIntxCollateral"
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_position_state_store_edges.py": [

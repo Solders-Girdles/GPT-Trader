@@ -4,23 +4,25 @@ from __future__ import annotations
 
 import threading
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
+import pytest
+
+import gpt_trader.features.live_trade.engines.telemetry_streaming as telemetry_streaming_module
 from gpt_trader.features.live_trade.engines.telemetry_streaming import _run_stream_loop
 
 
 class TestRunStreamLoop:
     """Tests for _run_stream_loop function."""
 
-    def test_run_stream_loop_no_broker(self) -> None:
+    def test_run_stream_loop_no_broker(self, monkeypatch: pytest.MonkeyPatch) -> None:
         coordinator = Mock()
         coordinator.context.broker = None
+        mock_logger = Mock()
+        monkeypatch.setattr(telemetry_streaming_module, "logger", mock_logger)
 
-        with patch(
-            "gpt_trader.features.live_trade.engines.telemetry_streaming.logger"
-        ) as mock_logger:
-            _run_stream_loop(coordinator, ["BTC-PERP"], 1, None)
-            mock_logger.error.assert_called_once()
+        _run_stream_loop(coordinator, ["BTC-PERP"], 1, None)
+        mock_logger.error.assert_called_once()
 
     def test_run_stream_loop_processes_messages(self) -> None:
         coordinator = Mock()
@@ -173,18 +175,17 @@ class TestRunStreamLoop:
 
         coordinator._update_mark_and_metrics.assert_not_called()
 
-    def test_run_stream_loop_emits_exit_metric(self) -> None:
+    def test_run_stream_loop_emits_exit_metric(self, monkeypatch: pytest.MonkeyPatch) -> None:
         coordinator = Mock()
         broker = Mock()
         broker.stream_orderbook.return_value = []
         coordinator.context.broker = broker
         coordinator.context.event_store = Mock()
         coordinator.context.bot_id = "test"
+        mock_emit = Mock()
+        monkeypatch.setattr(telemetry_streaming_module, "_emit_metric", mock_emit)
 
-        with patch(
-            "gpt_trader.features.live_trade.engines.telemetry_streaming._emit_metric"
-        ) as mock_emit:
-            _run_stream_loop(coordinator, ["BTC-PERP"], 1, None)
+        _run_stream_loop(coordinator, ["BTC-PERP"], 1, None)
 
-            calls = mock_emit.call_args_list
-            assert any(call[0][2].get("event_type") == "ws_stream_exit" for call in calls)
+        calls = mock_emit.call_args_list
+        assert any(call[0][2].get("event_type") == "ws_stream_exit" for call in calls)

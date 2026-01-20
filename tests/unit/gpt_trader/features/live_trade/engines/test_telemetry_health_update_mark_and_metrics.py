@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import threading
 from decimal import Decimal
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
+import pytest
+
+import gpt_trader.features.live_trade.engines.telemetry_health as telemetry_health_module
 from gpt_trader.features.live_trade.engines.telemetry_health import update_mark_and_metrics
 
 
@@ -121,7 +124,7 @@ class TestUpdateMarkAndMetrics:
 
         assert hasattr(risk_manager, "last_mark_update")
 
-    def test_handles_strategy_coordinator_error(self) -> None:
+    def test_handles_strategy_coordinator_error(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test handles error from strategy_coordinator gracefully."""
         coordinator = Mock()
         coordinator._market_monitor = None
@@ -129,30 +132,31 @@ class TestUpdateMarkAndMetrics:
         strategy_coord = Mock()
         strategy_coord.update_mark_window.side_effect = RuntimeError("Failed")
         ctx.strategy_coordinator = strategy_coord
+        mock_logger = Mock()
+        monkeypatch.setattr(telemetry_health_module, "logger", mock_logger)
 
-        with patch("gpt_trader.features.live_trade.engines.telemetry_health.logger") as mock_logger:
-            update_mark_and_metrics(coordinator, ctx, "BTC-PERP", Decimal("50000"))
+        update_mark_and_metrics(coordinator, ctx, "BTC-PERP", Decimal("50000"))
 
-            assert any(
-                call.kwargs.get("stage") == "mark_window"
-                for call in mock_logger.debug.call_args_list
-            )
+        assert any(
+            call.kwargs.get("stage") == "mark_window" for call in mock_logger.debug.call_args_list
+        )
 
-    def test_handles_market_monitor_error(self) -> None:
+    def test_handles_market_monitor_error(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test handles error from market_monitor gracefully."""
         coordinator = Mock()
         monitor = Mock()
         monitor.record_update.side_effect = RuntimeError("Failed")
         coordinator._market_monitor = monitor
         ctx = self._create_mock_context()
+        mock_logger = Mock()
+        monkeypatch.setattr(telemetry_health_module, "logger", mock_logger)
 
-        with patch("gpt_trader.features.live_trade.engines.telemetry_health.logger") as mock_logger:
-            update_mark_and_metrics(coordinator, ctx, "BTC-PERP", Decimal("50000"))
+        update_mark_and_metrics(coordinator, ctx, "BTC-PERP", Decimal("50000"))
 
-            assert any(
-                call.kwargs.get("stage") == "market_monitor"
-                for call in mock_logger.debug.call_args_list
-            )
+        assert any(
+            call.kwargs.get("stage") == "market_monitor"
+            for call in mock_logger.debug.call_args_list
+        )
 
     def test_handles_non_dict_extras(self) -> None:
         """Test handles non-dict extras gracefully."""

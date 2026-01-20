@@ -38216,7 +38216,7 @@
     "tests/unit/gpt_trader/preflight/test_checks_connectivity_api_connectivity.py": [
       {
         "name": "TestCheckApiConnectivity::test_skips_when_remote_checks_bypassed",
-        "line": 17,
+        "line": 25,
         "markers": [
           "unit"
         ],
@@ -38225,7 +38225,7 @@
       },
       {
         "name": "TestCheckApiConnectivity::test_fails_when_client_build_fails",
-        "line": 29,
+        "line": 38,
         "markers": [
           "unit"
         ],
@@ -38234,7 +38234,7 @@
       },
       {
         "name": "TestCheckApiConnectivity::test_fails_on_jwt_generation_error",
-        "line": 43,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -38243,7 +38243,7 @@
       },
       {
         "name": "TestCheckApiConnectivity::test_passes_with_successful_api_calls",
-        "line": 64,
+        "line": 74,
         "markers": [
           "unit"
         ],
@@ -38252,7 +38252,7 @@
       },
       {
         "name": "TestCheckApiConnectivity::test_warns_on_empty_response",
-        "line": 89,
+        "line": 99,
         "markers": [
           "unit"
         ],
@@ -38261,7 +38261,7 @@
       },
       {
         "name": "TestCheckApiConnectivity::test_fails_on_api_error",
-        "line": 111,
+        "line": 121,
         "markers": [
           "unit"
         ],
@@ -38270,7 +38270,7 @@
       },
       {
         "name": "TestCheckApiConnectivity::test_fails_when_no_perps_found",
-        "line": 130,
+        "line": 140,
         "markers": [
           "unit"
         ],
@@ -38279,7 +38279,7 @@
       },
       {
         "name": "TestCheckApiConnectivity::test_logs_perp_count_when_found",
-        "line": 156,
+        "line": 166,
         "markers": [
           "unit"
         ],
@@ -38288,7 +38288,7 @@
       },
       {
         "name": "TestCheckApiConnectivity::test_logs_perp_names_when_verbose",
-        "line": 180,
+        "line": 190,
         "markers": [
           "unit"
         ],
@@ -38297,7 +38297,7 @@
       },
       {
         "name": "TestCheckApiConnectivity::test_prints_section_header",
-        "line": 203,
+        "line": 215,
         "markers": [
           "unit"
         ],
@@ -38308,7 +38308,7 @@
     "tests/unit/gpt_trader/preflight/test_checks_connectivity_key_permissions_core.py": [
       {
         "name": "TestCheckKeyPermissionsCore::test_skips_when_remote_checks_bypassed",
-        "line": 17,
+        "line": 27,
         "markers": [
           "unit"
         ],
@@ -38317,7 +38317,7 @@
       },
       {
         "name": "TestCheckKeyPermissionsCore::test_fails_when_client_build_fails",
-        "line": 28,
+        "line": 41,
         "markers": [
           "unit"
         ],
@@ -38326,7 +38326,7 @@
       },
       {
         "name": "TestCheckKeyPermissionsCore::test_passes_with_full_permissions",
-        "line": 38,
+        "line": 52,
         "markers": [
           "unit"
         ],
@@ -38335,7 +38335,7 @@
       },
       {
         "name": "TestCheckKeyPermissionsCore::test_fails_without_trade_permission_when_derivatives_enabled",
-        "line": 61,
+        "line": 78,
         "markers": [
           "unit"
         ],
@@ -38344,7 +38344,7 @@
       },
       {
         "name": "TestCheckKeyPermissionsCore::test_fails_without_view_permission",
-        "line": 86,
+        "line": 108,
         "markers": [
           "unit"
         ],
@@ -38353,7 +38353,7 @@
       },
       {
         "name": "TestCheckKeyPermissionsCore::test_passes_with_view_only_key_when_live_orders_not_intended",
-        "line": 107,
+        "line": 132,
         "markers": [
           "unit"
         ],
@@ -38362,7 +38362,7 @@
       },
       {
         "name": "TestCheckKeyPermissionsCore::test_fails_with_view_only_key_when_live_spot_orders_intended",
-        "line": 138,
+        "line": 166,
         "markers": [
           "unit"
         ],
@@ -38371,7 +38371,7 @@
       },
       {
         "name": "TestCheckKeyPermissionsCore::test_warns_when_portfolio_uuid_missing",
-        "line": 163,
+        "line": 196,
         "markers": [
           "unit"
         ],
@@ -38380,7 +38380,7 @@
       },
       {
         "name": "TestCheckKeyPermissionsCore::test_prints_section_header",
-        "line": 185,
+        "line": 223,
         "markers": [
           "unit"
         ],
@@ -38391,7 +38391,7 @@
     "tests/unit/gpt_trader/preflight/test_checks_connectivity_key_permissions_intx.py": [
       {
         "name": "TestCheckKeyPermissionsIntx::test_passes_intx_check_when_derivatives_enabled",
-        "line": 15,
+        "line": 25,
         "markers": [
           "unit"
         ],
@@ -38400,7 +38400,7 @@
       },
       {
         "name": "TestCheckKeyPermissionsIntx::test_fails_intx_check_when_wrong_portfolio_type",
-        "line": 40,
+        "line": 55,
         "markers": [
           "unit"
         ],
@@ -38409,7 +38409,7 @@
       },
       {
         "name": "TestCheckKeyPermissionsIntx::test_logs_intx_available_when_disabled",
-        "line": 65,
+        "line": 85,
         "markers": [
           "unit"
         ],
@@ -38467,7 +38467,7 @@
       },
       {
         "name": "TestCheckDependencies::test_fails_when_package_missing",
-        "line": 38,
+        "line": 41,
         "markers": [
           "unit"
         ],
@@ -38476,7 +38476,7 @@
       },
       {
         "name": "TestCheckDependencies::test_logs_found_packages_when_verbose",
-        "line": 56,
+        "line": 62,
         "markers": [
           "unit"
         ],
@@ -38485,7 +38485,7 @@
       },
       {
         "name": "TestCheckDependencies::test_prints_section_header",
-        "line": 76,
+        "line": 85,
         "markers": [
           "unit"
         ],
@@ -38494,7 +38494,7 @@
       },
       {
         "name": "TestCheckDependencies::test_checks_gpt_trader_package",
-        "line": 95,
+        "line": 107,
         "markers": [
           "unit"
         ],
@@ -38503,7 +38503,7 @@
       },
       {
         "name": "TestCheckDependencies::test_checks_cryptography_package",
-        "line": 114,
+        "line": 129,
         "markers": [
           "unit"
         ],
@@ -38627,7 +38627,7 @@
     "tests/unit/gpt_trader/preflight/test_checks_environment.py": [
       {
         "name": "TestCheckEnvironmentVariables::test_passes_with_correct_prod_config",
-        "line": 17,
+        "line": 24,
         "markers": [
           "unit"
         ],
@@ -38636,7 +38636,7 @@
       },
       {
         "name": "TestCheckEnvironmentVariables::test_fails_with_wrong_broker",
-        "line": 38,
+        "line": 46,
         "markers": [
           "unit"
         ],
@@ -38645,7 +38645,7 @@
       },
       {
         "name": "TestCheckEnvironmentVariables::test_fails_with_sandbox_in_prod",
-        "line": 55,
+        "line": 64,
         "markers": [
           "unit"
         ],
@@ -38654,7 +38654,7 @@
       },
       {
         "name": "TestCheckEnvironmentVariables::test_warns_with_wrong_config_in_dev",
-        "line": 72,
+        "line": 82,
         "markers": [
           "unit"
         ],
@@ -38663,7 +38663,7 @@
       },
       {
         "name": "TestCheckEnvironmentVariables::test_validates_cdp_api_key_format",
-        "line": 89,
+        "line": 100,
         "markers": [
           "unit"
         ],
@@ -38672,7 +38672,7 @@
       },
       {
         "name": "TestCheckEnvironmentVariables::test_validates_private_key_format",
-        "line": 108,
+        "line": 120,
         "markers": [
           "unit"
         ],
@@ -38681,7 +38681,7 @@
       },
       {
         "name": "TestCheckEnvironmentVariables::test_warns_about_missing_credentials_in_dev",
-        "line": 127,
+        "line": 140,
         "markers": [
           "unit"
         ],
@@ -38690,7 +38690,7 @@
       },
       {
         "name": "TestCheckEnvironmentVariables::test_validates_risk_variables_in_range",
-        "line": 142,
+        "line": 156,
         "markers": [
           "unit"
         ],
@@ -38699,7 +38699,7 @@
       },
       {
         "name": "TestCheckEnvironmentVariables::test_warns_about_out_of_range_risk_variables",
-        "line": 159,
+        "line": 176,
         "markers": [
           "unit"
         ],
@@ -38708,7 +38708,7 @@
       },
       {
         "name": "TestCheckEnvironmentVariables::test_fails_on_invalid_risk_variable_format",
-        "line": 173,
+        "line": 191,
         "markers": [
           "unit"
         ],
@@ -38717,7 +38717,7 @@
       },
       {
         "name": "TestCheckEnvironmentVariables::test_warns_about_missing_risk_variables",
-        "line": 188,
+        "line": 207,
         "markers": [
           "unit"
         ],
@@ -38726,7 +38726,7 @@
       },
       {
         "name": "TestCheckEnvironmentVariables::test_prints_section_header",
-        "line": 202,
+        "line": 222,
         "markers": [
           "unit"
         ],
@@ -39488,7 +39488,7 @@
     "tests/unit/gpt_trader/preflight/test_context_credentials.py": [
       {
         "name": "TestPreflightContextCredentials::test_resolve_cdp_credentials_from_prod_env",
-        "line": 14,
+        "line": 25,
         "markers": [
           "unit"
         ],
@@ -39497,7 +39497,7 @@
       },
       {
         "name": "TestPreflightContextCredentials::test_resolve_cdp_credentials_fallback",
-        "line": 36,
+        "line": 50,
         "markers": [
           "unit"
         ],
@@ -39506,7 +39506,7 @@
       },
       {
         "name": "TestPreflightContextCredentials::test_resolve_cdp_credentials_returns_none_when_missing",
-        "line": 56,
+        "line": 73,
         "markers": [
           "unit"
         ],
@@ -39515,7 +39515,7 @@
       },
       {
         "name": "TestPreflightContextCredentials::test_has_real_cdp_credentials_valid",
-        "line": 67,
+        "line": 87,
         "markers": [
           "unit"
         ],
@@ -39524,7 +39524,7 @@
       },
       {
         "name": "TestPreflightContextCredentials::test_has_real_cdp_credentials_invalid_key_format",
-        "line": 80,
+        "line": 101,
         "markers": [
           "unit"
         ],
@@ -39533,7 +39533,7 @@
       },
       {
         "name": "TestPreflightContextCredentials::test_has_real_cdp_credentials_invalid_private_key_format",
-        "line": 93,
+        "line": 117,
         "markers": [
           "unit"
         ],
@@ -39542,7 +39542,7 @@
       },
       {
         "name": "TestPreflightContextCredentials::test_has_real_cdp_credentials_missing",
-        "line": 106,
+        "line": 133,
         "markers": [
           "unit"
         ],

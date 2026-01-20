@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import builtins
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -14,7 +14,9 @@ from gpt_trader.preflight.core import PreflightCheck
 class TestCheckDependencies:
     """Test dependency verification check."""
 
-    def test_passes_when_all_packages_available(self, capsys: pytest.CaptureFixture) -> None:
+    def test_passes_when_all_packages_available(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture
+    ) -> None:
         """Should pass when all required packages are importable."""
         checker = PreflightCheck(verbose=True)
 
@@ -29,13 +31,16 @@ class TestCheckDependencies:
                 # If package not actually installed, return a mock
                 return MagicMock()
 
-        with patch.object(builtins, "__import__", mock_import):
+        with monkeypatch.context() as mp:
+            mp.setattr(builtins, "__import__", mock_import)
             result = check_dependencies(checker)
 
         assert result is True
         assert any("All required packages installed" in s for s in checker.successes)
 
-    def test_fails_when_package_missing(self, capsys: pytest.CaptureFixture) -> None:
+    def test_fails_when_package_missing(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture
+    ) -> None:
         """Should fail when a required package is missing."""
         checker = PreflightCheck()
 
@@ -47,13 +52,16 @@ class TestCheckDependencies:
                 raise ImportError("No module named 'jwt'")
             return original_import(name, *args, **kwargs)
 
-        with patch.object(builtins, "__import__", mock_import):
+        with monkeypatch.context() as mp:
+            mp.setattr(builtins, "__import__", mock_import)
             result = check_dependencies(checker)
 
         assert result is False
         assert any("Missing required package: jwt" in e for e in checker.errors)
 
-    def test_logs_found_packages_when_verbose(self, capsys: pytest.CaptureFixture) -> None:
+    def test_logs_found_packages_when_verbose(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture
+    ) -> None:
         """Should log found packages when verbose."""
         checker = PreflightCheck(verbose=True)
 
@@ -66,14 +74,17 @@ class TestCheckDependencies:
             except ImportError:
                 return MagicMock()
 
-        with patch.object(builtins, "__import__", mock_import):
+        with monkeypatch.context() as mp:
+            mp.setattr(builtins, "__import__", mock_import)
             check_dependencies(checker)
 
         captured = capsys.readouterr()
         # Should print info about found packages
         assert "Package" in captured.out
 
-    def test_prints_section_header(self, capsys: pytest.CaptureFixture) -> None:
+    def test_prints_section_header(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture
+    ) -> None:
         """Should print section header."""
         checker = PreflightCheck()
 
@@ -86,13 +97,16 @@ class TestCheckDependencies:
             except ImportError:
                 return MagicMock()
 
-        with patch.object(builtins, "__import__", mock_import):
+        with monkeypatch.context() as mp:
+            mp.setattr(builtins, "__import__", mock_import)
             check_dependencies(checker)
 
         captured = capsys.readouterr()
         assert "DEPENDENCY CHECK" in captured.out
 
-    def test_checks_gpt_trader_package(self, capsys: pytest.CaptureFixture) -> None:
+    def test_checks_gpt_trader_package(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture
+    ) -> None:
         """Should specifically check gpt_trader package."""
         checker = PreflightCheck(verbose=True)
 
@@ -105,13 +119,16 @@ class TestCheckDependencies:
             except ImportError:
                 return MagicMock()
 
-        with patch.object(builtins, "__import__", mock_import):
+        with monkeypatch.context() as mp:
+            mp.setattr(builtins, "__import__", mock_import)
             result = check_dependencies(checker)
 
         # If we're running tests, gpt_trader must be installed
         assert result is True
 
-    def test_checks_cryptography_package(self, capsys: pytest.CaptureFixture) -> None:
+    def test_checks_cryptography_package(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture
+    ) -> None:
         """Should check cryptography package is available."""
         checker = PreflightCheck()
 
@@ -123,7 +140,8 @@ class TestCheckDependencies:
                 raise ImportError("No module named 'cryptography'")
             return original_import(name, *args, **kwargs)
 
-        with patch.object(builtins, "__import__", mock_import):
+        with monkeypatch.context() as mp:
+            mp.setattr(builtins, "__import__", mock_import)
             result = check_dependencies(checker)
 
         assert result is False

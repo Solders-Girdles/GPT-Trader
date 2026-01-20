@@ -32858,7 +32858,7 @@
     "tests/unit/gpt_trader/logging/test_setup_configure_logging_env_overrides.py": [
       {
         "name": "TestConfigureLoggingEnvOverrides::test_configure_logging_respects_env_log_dir",
-        "line": 41,
+        "line": 65,
         "markers": [
           "unit"
         ],
@@ -32867,7 +32867,7 @@
       },
       {
         "name": "TestConfigureLoggingEnvOverrides::test_configure_logging_respects_max_bytes_env",
-        "line": 63,
+        "line": 81,
         "markers": [
           "unit"
         ],
@@ -32876,7 +32876,7 @@
       },
       {
         "name": "TestConfigureLoggingEnvOverrides::test_configure_logging_respects_backup_count_env",
-        "line": 87,
+        "line": 98,
         "markers": [
           "unit"
         ],
@@ -32885,7 +32885,7 @@
       },
       {
         "name": "TestConfigureLoggingEnvOverrides::test_configure_logging_enables_debug_with_env",
-        "line": 111,
+        "line": 115,
         "markers": [
           "unit"
         ],
@@ -39918,7 +39918,7 @@
       },
       {
         "name": "TestGenerateReport::test_prints_recommendations_for_ready",
-        "line": 94,
+        "line": 92,
         "markers": [
           "unit"
         ],
@@ -39927,7 +39927,7 @@
       },
       {
         "name": "TestGenerateReport::test_prints_recommendations_for_not_ready",
-        "line": 106,
+        "line": 104,
         "markers": [
           "unit"
         ],
@@ -39936,7 +39936,7 @@
       },
       {
         "name": "TestGenerateReport::test_saves_json_report",
-        "line": 118,
+        "line": 116,
         "markers": [
           "unit"
         ],
@@ -39945,7 +39945,7 @@
       },
       {
         "name": "TestGenerateReport::test_handles_file_save_error",
-        "line": 135,
+        "line": 133,
         "markers": [
           "unit"
         ],
@@ -39954,7 +39954,7 @@
       },
       {
         "name": "TestGenerateReport::test_prints_section_header",
-        "line": 155,
+        "line": 153,
         "markers": [
           "unit"
         ],
@@ -39963,7 +39963,7 @@
       },
       {
         "name": "TestReportCalculations::test_total_checks_calculated_correctly",
-        "line": 170,
+        "line": 166,
         "markers": [
           "unit"
         ],

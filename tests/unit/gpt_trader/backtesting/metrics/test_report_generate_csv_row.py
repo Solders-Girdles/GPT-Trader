@@ -3,47 +3,54 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import patch
 
+import pytest
 from tests.unit.gpt_trader.backtesting.metrics.report_test_utils import (  # naming: allow
     create_mock_broker,
     create_mock_risk_metrics,
     create_mock_trade_stats,
 )
 
+import gpt_trader.backtesting.metrics.report as report_module
 from gpt_trader.backtesting.metrics.report import BacktestReporter
 from gpt_trader.backtesting.metrics.risk import RiskMetrics
+
+
+@pytest.fixture()
+def broker():
+    return create_mock_broker()
+
+
+@pytest.fixture()
+def reporter(broker):
+    return BacktestReporter(broker)
+
+
+@pytest.fixture()
+def mock_stats():
+    return create_mock_trade_stats()
+
+
+@pytest.fixture()
+def mock_risk():
+    return create_mock_risk_metrics()
+
+
+@pytest.fixture(autouse=True)
+def stub_report_calculations(monkeypatch, mock_stats, mock_risk):
+    monkeypatch.setattr(report_module, "calculate_trade_statistics", lambda _broker: mock_stats)
+    monkeypatch.setattr(report_module, "calculate_risk_metrics", lambda _broker: mock_risk)
 
 
 class TestBacktestReporterGenerateCsvRow:
     """Tests for generate_csv_row method."""
 
-    def test_generate_csv_row_returns_dict(self) -> None:
-        broker = create_mock_broker()
-        reporter = BacktestReporter(broker)
-        mock_stats = create_mock_trade_stats()
-        mock_risk = create_mock_risk_metrics()
+    def test_generate_csv_row_returns_dict(self, reporter) -> None:
+        row = reporter.generate_csv_row()
 
-        with (
-            patch(
-                "gpt_trader.backtesting.metrics.report.calculate_trade_statistics",
-                return_value=mock_stats,
-            ),
-            patch(
-                "gpt_trader.backtesting.metrics.report.calculate_risk_metrics",
-                return_value=mock_risk,
-            ),
-        ):
-            row = reporter.generate_csv_row()
+        assert isinstance(row, dict)
 
-            assert isinstance(row, dict)
-
-    def test_generate_csv_row_includes_all_keys(self) -> None:
-        broker = create_mock_broker()
-        reporter = BacktestReporter(broker)
-        mock_stats = create_mock_trade_stats()
-        mock_risk = create_mock_risk_metrics()
-
+    def test_generate_csv_row_includes_all_keys(self, reporter) -> None:
         expected_keys = [
             "initial_equity",
             "final_equity",
@@ -63,49 +70,21 @@ class TestBacktestReporterGenerateCsvRow:
             "funding_pnl",
         ]
 
-        with (
-            patch(
-                "gpt_trader.backtesting.metrics.report.calculate_trade_statistics",
-                return_value=mock_stats,
-            ),
-            patch(
-                "gpt_trader.backtesting.metrics.report.calculate_risk_metrics",
-                return_value=mock_risk,
-            ),
-        ):
-            row = reporter.generate_csv_row()
+        row = reporter.generate_csv_row()
 
-            for key in expected_keys:
-                assert key in row, f"Missing key: {key}"
+        for key in expected_keys:
+            assert key in row, f"Missing key: {key}"
 
-    def test_generate_csv_row_values_are_numeric(self) -> None:
-        broker = create_mock_broker()
-        reporter = BacktestReporter(broker)
-        mock_stats = create_mock_trade_stats()
-        mock_risk = create_mock_risk_metrics()
+    def test_generate_csv_row_values_are_numeric(self, reporter) -> None:
+        row = reporter.generate_csv_row()
 
-        with (
-            patch(
-                "gpt_trader.backtesting.metrics.report.calculate_trade_statistics",
-                return_value=mock_stats,
-            ),
-            patch(
-                "gpt_trader.backtesting.metrics.report.calculate_risk_metrics",
-                return_value=mock_risk,
-            ),
-        ):
-            row = reporter.generate_csv_row()
+        for key, value in row.items():
+            assert isinstance(
+                value, (int, float)
+            ), f"Key {key} has non-numeric value: {type(value)}"
 
-            for key, value in row.items():
-                assert isinstance(
-                    value, (int, float)
-                ), f"Key {key} has non-numeric value: {type(value)}"
-
-    def test_generate_csv_row_handles_none_sharpe(self) -> None:
-        broker = create_mock_broker()
-        reporter = BacktestReporter(broker)
-        mock_stats = create_mock_trade_stats()
-        mock_risk = RiskMetrics(
+    def test_generate_csv_row_handles_none_sharpe(self, monkeypatch, reporter) -> None:
+        risk_metrics = RiskMetrics(
             max_drawdown_pct=Decimal("15"),
             max_drawdown_usd=Decimal("15000"),
             avg_drawdown_pct=Decimal("5"),
@@ -126,17 +105,9 @@ class TestBacktestReporterGenerateCsvRow:
             var_99_daily=Decimal("0"),
         )
 
-        with (
-            patch(
-                "gpt_trader.backtesting.metrics.report.calculate_trade_statistics",
-                return_value=mock_stats,
-            ),
-            patch(
-                "gpt_trader.backtesting.metrics.report.calculate_risk_metrics",
-                return_value=mock_risk,
-            ),
-        ):
-            row = reporter.generate_csv_row()
+        monkeypatch.setattr(report_module, "calculate_risk_metrics", lambda _broker: risk_metrics)
 
-            assert row["sharpe_ratio"] == 0.0
-            assert row["sortino_ratio"] == 0.0
+        row = reporter.generate_csv_row()
+
+        assert row["sharpe_ratio"] == 0.0
+        assert row["sortino_ratio"] == 0.0

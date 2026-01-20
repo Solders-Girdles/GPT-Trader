@@ -34862,7 +34862,7 @@
     "tests/unit/gpt_trader/monitoring/system/test_positions_reconciler_edges.py": [
       {
         "name": "test_normalize_positions_skips_missing_symbol_and_handles_quantity_errors",
-        "line": 13,
+        "line": 43,
         "markers": [
           "unit"
         ],
@@ -34870,7 +34870,7 @@
       },
       {
         "name": "test_calculate_diff_tracks_changed_added_removed",
-        "line": 33,
+        "line": 60,
         "markers": [
           "unit"
         ],
@@ -34878,7 +34878,7 @@
       },
       {
         "name": "test_fetch_positions_returns_empty_on_error",
-        "line": 55,
+        "line": 82,
         "markers": [
           "asyncio",
           "unit"
@@ -34887,7 +34887,7 @@
       },
       {
         "name": "test_emit_position_changes_success_calls_log_and_emit_metric",
-        "line": 66,
+        "line": 93,
         "markers": [
           "unit"
         ],
@@ -34895,7 +34895,7 @@
       },
       {
         "name": "test_emit_position_changes_logs_debug_on_failure_and_emits_metric",
-        "line": 86,
+        "line": 111,
         "markers": [
           "unit"
         ],
@@ -36686,7 +36686,7 @@
     "tests/unit/gpt_trader/monitoring/test_profiling.py": [
       {
         "name": "TestProfileSample::test_profile_sample_creation",
-        "line": 27,
+        "line": 28,
         "markers": [
           "unit"
         ],
@@ -36695,7 +36695,7 @@
       },
       {
         "name": "TestProfileSample::test_profile_sample_with_labels",
-        "line": 35,
+        "line": 36,
         "markers": [
           "unit"
         ],
@@ -36704,7 +36704,7 @@
       },
       {
         "name": "TestProfileSample::test_profile_sample_to_dict",
-        "line": 42,
+        "line": 43,
         "markers": [
           "unit"
         ],
@@ -36713,7 +36713,7 @@
       },
       {
         "name": "TestRecordProfile::test_record_profile_calls_histogram",
-        "line": 61,
+        "line": 62,
         "markers": [
           "unit"
         ],
@@ -36722,7 +36722,7 @@
       },
       {
         "name": "TestRecordProfile::test_record_profile_with_labels",
-        "line": 73,
+        "line": 74,
         "markers": [
           "unit"
         ],
@@ -36731,7 +36731,7 @@
       },
       {
         "name": "TestProfileSpan::test_profile_span_records_duration",
-        "line": 92,
+        "line": 93,
         "markers": [
           "unit"
         ],
@@ -36740,7 +36740,7 @@
       },
       {
         "name": "TestProfileSpan::test_profile_span_with_labels",
-        "line": 108,
+        "line": 109,
         "markers": [
           "unit"
         ],
@@ -36749,7 +36749,7 @@
       },
       {
         "name": "TestProfileSpan::test_profile_span_tolerates_exceptions",
-        "line": 116,
+        "line": 117,
         "markers": [
           "unit"
         ],
@@ -36758,7 +36758,7 @@
       },
       {
         "name": "TestProfileSpan::test_profile_span_updates_sample_timestamp",
-        "line": 140,
+        "line": 139,
         "markers": [
           "unit"
         ],
@@ -36767,7 +36767,7 @@
       },
       {
         "name": "TestProfileSpan::test_profile_span_measures_duration",
-        "line": 153,
+        "line": 150,
         "markers": [
           "unit"
         ],

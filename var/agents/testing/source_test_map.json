@@ -2,7 +2,7 @@
   "version": "1.0",
   "summary": {
     "tests_scanned": 915,
-    "source_modules": 348,
+    "source_modules": 349,
     "unresolved_modules": 3
   },
   "source_to_tests": {
@@ -1603,6 +1603,9 @@
       "tests/unit/gpt_trader/tui/test_app_core.py",
       "tests/unit/gpt_trader/tui/test_state_resilience_and_performance.py",
       "tests/unit/gpt_trader/tui/test_state_update_from_bot_status.py"
+    ],
+    "gpt_trader.monitoring.system": [
+      "tests/unit/gpt_trader/monitoring/system/test_positions_reconciler_edges.py"
     ],
     "gpt_trader.monitoring.system.metrics": [
       "tests/unit/gpt_trader/monitoring/system/test_metrics.py"
@@ -4612,6 +4615,7 @@
       "gpt_trader.monitoring.system.metrics"
     ],
     "tests/unit/gpt_trader/monitoring/system/test_positions_reconciler_edges.py": [
+      "gpt_trader.monitoring.system",
       "gpt_trader.monitoring.system.positions"
     ],
     "tests/unit/gpt_trader/monitoring/test_alert_types_alert_creation.py": [
@@ -5977,6 +5981,7 @@
     "gpt_trader.monitoring.notifications.backends": "src/gpt_trader/monitoring/notifications/backends.py",
     "gpt_trader.monitoring.notifications.service": "src/gpt_trader/monitoring/notifications/service.py",
     "gpt_trader.monitoring.system.metrics": "src/gpt_trader/monitoring/system/metrics.py",
+    "gpt_trader.monitoring.system": "src/gpt_trader/monitoring/system/__init__.py",
     "gpt_trader.monitoring.system.positions": "src/gpt_trader/monitoring/system/positions.py",
     "gpt_trader.monitoring.guards": "src/gpt_trader/monitoring/guards/__init__.py",
     "gpt_trader.monitoring.guards.manager": "src/gpt_trader/monitoring/guards/manager.py",

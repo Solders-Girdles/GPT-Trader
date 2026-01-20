@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 918,
+    "tests_scanned": 919,
     "source_modules": 352,
     "unresolved_modules": 3
   },
@@ -582,6 +582,7 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_market_mixin_requests.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_portfolio_mixin_aliases.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_portfolio_mixin_requests.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_retry_behaviour.py",
       "tests/unit/gpt_trader/tui/test_app_resource_cleanup.py"
     ],
     "gpt_trader.features.brokerages.coinbase.client.circuit_breaker": [
@@ -627,6 +628,7 @@
     ],
     "gpt_trader.features.brokerages.coinbase.client.websocket_mixin": [
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_init_and_get_websocket.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_message_filtering.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_stream_orderbook.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_stream_trades_and_control.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_ws_health.py"
@@ -3431,7 +3433,8 @@
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_retry_behaviour.py": [
       "gpt_trader.core",
-      "gpt_trader.features.brokerages.coinbase.client"
+      "gpt_trader.features.brokerages.coinbase.client",
+      "gpt_trader.features.brokerages.coinbase.client.base"
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_enforce_perps_rules.py": [
       "gpt_trader.core",
@@ -3473,6 +3476,9 @@
       "gpt_trader.persistence.orders_store"
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_init_and_get_websocket.py": [
+      "gpt_trader.features.brokerages.coinbase.client.websocket_mixin"
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_message_filtering.py": [
       "gpt_trader.features.brokerages.coinbase.client.websocket_mixin"
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_stream_orderbook.py": [

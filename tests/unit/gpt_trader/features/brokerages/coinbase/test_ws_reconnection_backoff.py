@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+import pytest
 
+import gpt_trader.features.brokerages.coinbase.ws as ws_module
 from gpt_trader.features.brokerages.coinbase.ws import calculate_backoff_with_jitter
 
 
@@ -81,10 +82,9 @@ class TestCalculateBackoffWithJitter:
         unique_delays = set(delays)
         assert len(unique_delays) > 1, "Jitter should produce varying delays"
 
-    @patch("gpt_trader.features.brokerages.coinbase.ws.random.uniform")
-    def test_jitter_uses_random_uniform(self, mock_uniform: MagicMock) -> None:
+    def test_jitter_uses_random_uniform(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that jitter uses random.uniform for deterministic testing."""
-        mock_uniform.return_value = 0.5  # Return positive jitter
+        monkeypatch.setattr(ws_module.random, "uniform", lambda a, b: 0.5)
 
         base = 10.0
         jitter_pct = 0.25
@@ -94,4 +94,3 @@ class TestCalculateBackoffWithJitter:
 
         # Should be base + jitter (0.5)
         assert delay == base + 0.5
-        mock_uniform.assert_called_once()

@@ -5150,7 +5150,7 @@
     "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_backtest_report.py": [
       {
         "name": "TestGenerateBacktestReportFunction::test_returns_backtest_result",
-        "line": 23,
+        "line": 22,
         "markers": [
           "unit"
         ],
@@ -16954,7 +16954,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_retry_behaviour.py": [
       {
         "name": "test_request_retries_on_429_and_5xx_then_succeeds",
-        "line": 18,
+        "line": 15,
         "markers": [
           "unit"
         ],
@@ -16962,7 +16962,7 @@
       },
       {
         "name": "test_request_fast_fails_on_auth_errors",
-        "line": 41,
+        "line": 40,
         "markers": [
           "unit"
         ],
@@ -16970,7 +16970,7 @@
       },
       {
         "name": "test_non_json_response_yields_brokerage_error",
-        "line": 58,
+        "line": 57,
         "markers": [
           "unit"
         ],
@@ -17797,7 +17797,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_message_filtering.py": [
       {
         "name": "TestMessageFiltering::test_ignores_non_dict_messages",
-        "line": 17,
+        "line": 19,
         "markers": [
           "unit"
         ],
@@ -17806,7 +17806,7 @@
       },
       {
         "name": "TestMessageFiltering::test_on_websocket_message_ignored_when_inactive",
-        "line": 53,
+        "line": 56,
         "markers": [
           "unit"
         ],
@@ -17815,7 +17815,7 @@
       },
       {
         "name": "TestMessageFiltering::test_clears_queue_before_streaming",
-        "line": 62,
+        "line": 65,
         "markers": [
           "unit"
         ],
@@ -18244,7 +18244,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_backoff.py": [
       {
         "name": "TestCalculateBackoffWithJitter::test_backoff_grows_exponentially",
-        "line": 13,
+        "line": 14,
         "markers": [
           "unit"
         ],
@@ -18253,7 +18253,7 @@
       },
       {
         "name": "TestCalculateBackoffWithJitter::test_backoff_respects_max",
-        "line": 22,
+        "line": 23,
         "markers": [
           "unit"
         ],
@@ -18262,7 +18262,7 @@
       },
       {
         "name": "TestCalculateBackoffWithJitter::test_backoff_uses_base_at_attempt_zero",
-        "line": 31,
+        "line": 32,
         "markers": [
           "unit"
         ],
@@ -18271,7 +18271,7 @@
       },
       {
         "name": "TestCalculateBackoffWithJitter::test_backoff_uses_multiplier",
-        "line": 37,
+        "line": 38,
         "markers": [
           "unit"
         ],
@@ -18280,7 +18280,7 @@
       },
       {
         "name": "TestCalculateBackoffWithJitter::test_jitter_within_bounds",
-        "line": 56,
+        "line": 57,
         "markers": [
           "unit"
         ],
@@ -18289,7 +18289,7 @@
       },
       {
         "name": "TestCalculateBackoffWithJitter::test_jitter_produces_different_values",
-        "line": 75,
+        "line": 76,
         "markers": [
           "unit"
         ],

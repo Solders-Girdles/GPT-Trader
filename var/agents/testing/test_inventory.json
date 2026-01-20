@@ -32774,7 +32774,7 @@
     "tests/unit/gpt_trader/logging/test_runtime_helpers.py": [
       {
         "name": "test_get_runtime_logger",
-        "line": 20,
+        "line": 69,
         "markers": [
           "unit"
         ],
@@ -32782,7 +32782,7 @@
       },
       {
         "name": "test_log_trading_operation",
-        "line": 31,
+        "line": 79,
         "markers": [
           "unit"
         ],
@@ -32790,7 +32790,7 @@
       },
       {
         "name": "test_log_order_event",
-        "line": 60,
+        "line": 105,
         "markers": [
           "unit"
         ],
@@ -32798,7 +32798,7 @@
       },
       {
         "name": "test_log_strategy_decision",
-        "line": 94,
+        "line": 133,
         "markers": [
           "unit"
         ],
@@ -32806,7 +32806,7 @@
       },
       {
         "name": "test_log_execution_error",
-        "line": 124,
+        "line": 157,
         "markers": [
           "unit"
         ],
@@ -32814,7 +32814,7 @@
       },
       {
         "name": "test_log_risk_event",
-        "line": 158,
+        "line": 185,
         "markers": [
           "unit"
         ],
@@ -32822,7 +32822,7 @@
       },
       {
         "name": "test_log_market_data_update",
-        "line": 190,
+        "line": 211,
         "markers": [
           "unit"
         ],
@@ -32979,7 +32979,7 @@
       },
       {
         "name": "TestConfigureLoggingModesAndIdempotency::test_configure_logging_cli_mode_creates_stream_handler",
-        "line": 91,
+        "line": 89,
         "markers": [
           "unit"
         ],
@@ -32988,7 +32988,7 @@
       },
       {
         "name": "TestConfigureLoggingModesAndIdempotency::test_configure_logging_file_handlers_present_in_both_modes",
-        "line": 102,
+        "line": 98,
         "markers": [
           "unit"
         ],

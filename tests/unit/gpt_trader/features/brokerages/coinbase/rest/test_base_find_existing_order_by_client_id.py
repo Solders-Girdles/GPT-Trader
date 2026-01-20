@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 from datetime import datetime
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
+import pytest
+
+import gpt_trader.features.brokerages.coinbase.rest.base as rest_base_module
 from gpt_trader.core import Order
 from tests.unit.gpt_trader.features.brokerages.coinbase.rest.rest_service_core_test_base import (
     RestServiceCoreTestBase,
@@ -12,7 +15,9 @@ from tests.unit.gpt_trader.features.brokerages.coinbase.rest.rest_service_core_t
 
 
 class TestCoinbaseRestServiceCoreFindExistingOrderByClientId(RestServiceCoreTestBase):
-    def test_find_existing_order_by_client_id_success(self) -> None:
+    def test_find_existing_order_by_client_id_success(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         mock_order_data = {
             "order_id": "order_123",
             "client_order_id": "client_123",
@@ -24,10 +29,9 @@ class TestCoinbaseRestServiceCoreFindExistingOrderByClientId(RestServiceCoreTest
         mock_order.client_id = "client_123"
         mock_order.created_at = datetime(2024, 1, 1)
 
-        with patch(
-            "gpt_trader.features.brokerages.coinbase.rest.base.to_order", return_value=mock_order
-        ):
-            result = self.service._find_existing_order_by_client_id("BTC-USD", "client_123")
+        monkeypatch.setattr(rest_base_module, "to_order", lambda x: mock_order)
+
+        result = self.service._find_existing_order_by_client_id("BTC-USD", "client_123")
 
         assert result == mock_order
         self.client.list_orders.assert_called_once_with(product_id="BTC-USD")
@@ -45,7 +49,9 @@ class TestCoinbaseRestServiceCoreFindExistingOrderByClientId(RestServiceCoreTest
 
         assert result is None
 
-    def test_find_existing_order_by_client_id_multiple_matches(self) -> None:
+    def test_find_existing_order_by_client_id_multiple_matches(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         order1 = {
             "order_id": "order_1",
             "client_order_id": "client_123",
@@ -62,10 +68,9 @@ class TestCoinbaseRestServiceCoreFindExistingOrderByClientId(RestServiceCoreTest
         mock_order.client_id = "client_123"
         mock_order.created_at = datetime(2024, 1, 1, 1)
 
-        with patch(
-            "gpt_trader.features.brokerages.coinbase.rest.base.to_order", return_value=mock_order
-        ):
-            result = self.service._find_existing_order_by_client_id("BTC-USD", "client_123")
+        monkeypatch.setattr(rest_base_module, "to_order", lambda x: mock_order)
+
+        result = self.service._find_existing_order_by_client_id("BTC-USD", "client_123")
 
         assert result == mock_order
 

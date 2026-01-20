@@ -3,15 +3,17 @@
 from __future__ import annotations
 
 import time
-from unittest.mock import patch
 
+import pytest
+
+import gpt_trader.features.brokerages.coinbase.ws as ws_module
 from gpt_trader.features.brokerages.coinbase.ws import CoinbaseWebSocket
 
 
 class TestWebSocketReconnectionReset:
     """Tests for reconnection attempt counter reset after stable connection."""
 
-    def test_attempts_reset_after_stable_period(self) -> None:
+    def test_attempts_reset_after_stable_period(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that reconnect counter resets after stable connection."""
         ws = CoinbaseWebSocket()
 
@@ -23,19 +25,17 @@ class TestWebSocketReconnectionReset:
         ws._connected_since = time.time() - 120.0
 
         # Patch WS_RECONNECT_RESET_SECONDS to 60 for test
-        with patch(
-            "gpt_trader.features.brokerages.coinbase.ws.WS_RECONNECT_RESET_SECONDS",
-            60.0,
-        ):
-            # Simulate _on_close being called (connection dropped)
-            # Don't actually reconnect - just test the reset logic
-            ws._shutdown.set()  # Prevent actual reconnection
-            ws._on_close(None, 1000, "Normal closure")
+        monkeypatch.setattr(ws_module, "WS_RECONNECT_RESET_SECONDS", 60.0)
+
+        # Simulate _on_close being called (connection dropped)
+        # Don't actually reconnect - just test the reset logic
+        ws._shutdown.set()  # Prevent actual reconnection
+        ws._on_close(None, 1000, "Normal closure")
 
         # Counter should be reset because connection was stable
         assert ws._reconnect_count == 0
 
-    def test_attempts_not_reset_if_unstable(self) -> None:
+    def test_attempts_not_reset_if_unstable(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that reconnect counter is NOT reset if connection was short-lived."""
         ws = CoinbaseWebSocket()
 
@@ -47,13 +47,11 @@ class TestWebSocketReconnectionReset:
         ws._connected_since = time.time() - 10.0
 
         # Patch WS_RECONNECT_RESET_SECONDS to 60 for test
-        with patch(
-            "gpt_trader.features.brokerages.coinbase.ws.WS_RECONNECT_RESET_SECONDS",
-            60.0,
-        ):
-            # Simulate _on_close being called
-            ws._shutdown.set()  # Prevent actual reconnection
-            ws._on_close(None, 1000, "Normal closure")
+        monkeypatch.setattr(ws_module, "WS_RECONNECT_RESET_SECONDS", 60.0)
+
+        # Simulate _on_close being called
+        ws._shutdown.set()  # Prevent actual reconnection
+        ws._on_close(None, 1000, "Normal closure")
 
         # Counter should NOT be reset (connection wasn't stable long enough)
         # Note: counter increments by 1 because of the close event

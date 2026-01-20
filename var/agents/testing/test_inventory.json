@@ -23207,7 +23207,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows.py": [
       {
         "name": "TestOrderSubmissionFlows::test_full_order_submission_flow",
-        "line": 21,
+        "line": 23,
         "markers": [
           "unit"
         ],
@@ -23216,7 +23216,7 @@
       },
       {
         "name": "TestOrderSubmissionFlows::test_rejection_flow",
-        "line": 62,
+        "line": 64,
         "markers": [
           "unit"
         ],
@@ -23361,7 +23361,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_correlation_context.py": [
       {
         "name": "TestCorrelationContextPropagation::test_order_context_set_during_submission",
-        "line": 17,
+        "line": 19,
         "markers": [
           "unit"
         ],
@@ -23370,7 +23370,7 @@
       },
       {
         "name": "TestCorrelationContextPropagation::test_correlation_context_preserved_during_submission",
-        "line": 61,
+        "line": 64,
         "markers": [
           "unit"
         ],
@@ -23379,7 +23379,7 @@
       },
       {
         "name": "TestCorrelationContextPropagation::test_order_context_cleared_after_submission",
-        "line": 107,
+        "line": 111,
         "markers": [
           "unit"
         ],
@@ -36302,7 +36302,7 @@
       },
       {
         "name": "TestMemoryGaugeEmission::test_event_store_metrics_handles_none_store",
-        "line": 63,
+        "line": 61,
         "markers": [
           "unit"
         ],
@@ -36311,7 +36311,7 @@
       },
       {
         "name": "TestMemoryGaugeEmission::test_event_store_metrics_handles_missing_methods",
-        "line": 83,
+        "line": 79,
         "markers": [
           "unit"
         ],
@@ -36320,7 +36320,7 @@
       },
       {
         "name": "TestEventStoreCacheMetrics::test_get_cache_size",
-        "line": 111,
+        "line": 107,
         "markers": [
           "unit"
         ],
@@ -36329,7 +36329,7 @@
       },
       {
         "name": "TestEventStoreCacheMetrics::test_get_cache_max_size",
-        "line": 126,
+        "line": 122,
         "markers": [
           "unit"
         ],
@@ -36338,7 +36338,7 @@
       },
       {
         "name": "TestEventStoreCacheMetrics::test_get_cache_fill_ratio",
-        "line": 133,
+        "line": 129,
         "markers": [
           "unit"
         ],
@@ -36347,7 +36347,7 @@
       },
       {
         "name": "TestEventStoreCacheMetrics::test_get_cache_fill_ratio_handles_zero_max",
-        "line": 149,
+        "line": 145,
         "markers": [
           "unit"
         ],

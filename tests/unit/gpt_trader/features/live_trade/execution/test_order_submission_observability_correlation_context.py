@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
+import pytest
+
+import gpt_trader.features.live_trade.execution.order_event_recorder as order_event_recorder_module
 from gpt_trader.core import Order, OrderSide, OrderType, TimeInForce
 from gpt_trader.features.live_trade.execution.order_submission import OrderSubmitter
 from gpt_trader.logging.correlation import correlation_context, get_domain_context
@@ -13,18 +16,19 @@ from gpt_trader.logging.correlation import correlation_context, get_domain_conte
 class TestCorrelationContextPropagation:
     """Tests for correlation context propagation during order submission."""
 
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_order_context_set_during_submission(
         self,
-        mock_get_logger: MagicMock,
         mock_broker: MagicMock,
         mock_event_store: MagicMock,
         open_orders: list[str],
         mock_order: Order,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Test that order context is set during order submission."""
         mock_logger = MagicMock()
-        mock_get_logger.return_value = mock_logger
+        monkeypatch.setattr(
+            order_event_recorder_module, "get_monitoring_logger", lambda: mock_logger
+        )
         captured_context: dict = {}
 
         def capture_context(*args, **kwargs):
@@ -57,18 +61,19 @@ class TestCorrelationContextPropagation:
         assert captured_context.get("order_id") == "test-order-id"
         assert captured_context.get("symbol") == "BTC-USD"
 
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_correlation_context_preserved_during_submission(
         self,
-        mock_get_logger: MagicMock,
         mock_broker: MagicMock,
         mock_event_store: MagicMock,
         open_orders: list[str],
         mock_order: Order,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Test that outer correlation context is preserved during submission."""
         mock_logger = MagicMock()
-        mock_get_logger.return_value = mock_logger
+        monkeypatch.setattr(
+            order_event_recorder_module, "get_monitoring_logger", lambda: mock_logger
+        )
         captured_context: dict = {}
 
         def capture_context(*args, **kwargs):
@@ -103,18 +108,19 @@ class TestCorrelationContextPropagation:
         assert captured_context.get("symbol") == "ETH-USD"
         assert "order_id" in captured_context
 
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_order_context_cleared_after_submission(
         self,
-        mock_get_logger: MagicMock,
         mock_broker: MagicMock,
         mock_event_store: MagicMock,
         open_orders: list[str],
         mock_order: Order,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Test that order context is cleared after submission completes."""
         mock_logger = MagicMock()
-        mock_get_logger.return_value = mock_logger
+        monkeypatch.setattr(
+            order_event_recorder_module, "get_monitoring_logger", lambda: mock_logger
+        )
         mock_broker.place_order.return_value = mock_order
 
         submitter = OrderSubmitter(

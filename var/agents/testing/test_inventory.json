@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6340,
+    "total_tests": 6334,
     "total_files": 977,
     "markers_used": 15
   },
@@ -102,12 +102,12 @@
     ]
   },
   "marker_counts": {
-    "unit": 6175,
-    "asyncio": 374,
+    "unit": 6169,
+    "asyncio": 371,
     "property": 82,
     "integration": 79,
     "endpoints": 78,
-    "parametrize": 62,
+    "parametrize": 64,
     "skipif": 8,
     "slow": 4,
     "anyio": 3,
@@ -5005,76 +5005,21 @@
     ],
     "tests/unit/gpt_trader/backtesting/engine/test_clock_delays.py": [
       {
-        "name": "TestSimulationClockDelays::test_instant_speed_no_delay",
-        "line": 17,
+        "name": "TestSimulationClockDelays::test_delay_by_speed",
+        "line": 48,
         "markers": [
+          "parametrize",
           "unit"
         ],
         "docstring": "",
         "class": "TestSimulationClockDelays"
       },
       {
-        "name": "TestSimulationClockDelays::test_real_time_speed_full_delay",
-        "line": 24,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSimulationClockDelays"
-      },
-      {
-        "name": "TestSimulationClockDelays::test_fast_10x_speed_reduced_delay",
-        "line": 31,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSimulationClockDelays"
-      },
-      {
-        "name": "TestSimulationClockDelays::test_fast_100x_speed_minimal_delay",
-        "line": 38,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSimulationClockDelays"
-      },
-      {
-        "name": "TestSimulationClockAsyncDelays::test_instant_speed_no_async_delay",
-        "line": 50,
+        "name": "TestSimulationClockAsyncDelays::test_delay_by_speed_async",
+        "line": 75,
         "markers": [
           "asyncio",
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSimulationClockAsyncDelays"
-      },
-      {
-        "name": "TestSimulationClockAsyncDelays::test_real_time_speed_async_delay",
-        "line": 58,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSimulationClockAsyncDelays"
-      },
-      {
-        "name": "TestSimulationClockAsyncDelays::test_fast_10x_speed_async_delay",
-        "line": 66,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSimulationClockAsyncDelays"
-      },
-      {
-        "name": "TestSimulationClockAsyncDelays::test_fast_100x_speed_async_delay",
-        "line": 74,
-        "markers": [
-          "asyncio",
+          "parametrize",
           "unit"
         ],
         "docstring": "",
@@ -55494,7 +55439,7 @@
     "tests/unit/gpt_trader/utilities/test_console_logging_functions_wrappers.py": [
       {
         "name": "TestGlobalConsoleFunctions::test_console_success_function",
-        "line": 43,
+        "line": 42,
         "markers": [
           "unit"
         ],
@@ -55503,7 +55448,7 @@
       },
       {
         "name": "TestGlobalConsoleFunctions::test_console_error_function",
-        "line": 48,
+        "line": 47,
         "markers": [
           "unit"
         ],
@@ -55512,7 +55457,7 @@
       },
       {
         "name": "TestGlobalConsoleFunctions::test_console_warning_function",
-        "line": 53,
+        "line": 52,
         "markers": [
           "unit"
         ],
@@ -55521,7 +55466,7 @@
       },
       {
         "name": "TestGlobalConsoleFunctions::test_console_info_function",
-        "line": 60,
+        "line": 59,
         "markers": [
           "unit"
         ],
@@ -55530,7 +55475,7 @@
       },
       {
         "name": "TestGlobalConsoleFunctions::test_context_specific_functions",
-        "line": 65,
+        "line": 64,
         "markers": [
           "unit"
         ],
@@ -55539,7 +55484,7 @@
       },
       {
         "name": "TestGlobalConsoleFunctions::test_console_section_function",
-        "line": 101,
+        "line": 100,
         "markers": [
           "unit"
         ],
@@ -55548,7 +55493,7 @@
       },
       {
         "name": "TestGlobalConsoleFunctions::test_console_table_function",
-        "line": 106,
+        "line": 105,
         "markers": [
           "unit"
         ],
@@ -55557,7 +55502,7 @@
       },
       {
         "name": "TestGlobalConsoleFunctions::test_console_key_value_function",
-        "line": 114,
+        "line": 113,
         "markers": [
           "unit"
         ],

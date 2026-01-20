@@ -3,77 +3,84 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from unittest.mock import patch
 
 import pytest
 
+import gpt_trader.backtesting.engine.clock as clock_module
 from gpt_trader.backtesting.engine.clock import SimulationClock
 from gpt_trader.backtesting.types import ClockSpeed
+
+
+@pytest.fixture()
+def sleep_calls(monkeypatch) -> list[float]:
+    calls: list[float] = []
+
+    def _sleep(seconds: float) -> None:
+        calls.append(seconds)
+
+    monkeypatch.setattr(clock_module.time, "sleep", _sleep)
+    return calls
+
+
+@pytest.fixture()
+def async_sleep_calls(monkeypatch) -> list[float]:
+    calls: list[float] = []
+
+    async def _sleep(seconds: float) -> None:
+        calls.append(seconds)
+
+    monkeypatch.setattr(clock_module.asyncio, "sleep", _sleep)
+    return calls
 
 
 class TestSimulationClockDelays:
     """Tests for delay application based on clock speed."""
 
-    def test_instant_speed_no_delay(self) -> None:
-        clock = SimulationClock(speed=ClockSpeed.INSTANT)
+    @pytest.mark.parametrize(
+        ("speed", "delta", "expected_calls"),
+        [
+            (ClockSpeed.INSTANT, timedelta(minutes=5), []),
+            (ClockSpeed.REAL_TIME, timedelta(seconds=1), [1.0]),
+            (ClockSpeed.FAST_10X, timedelta(seconds=10), [1.0]),
+            (ClockSpeed.FAST_100X, timedelta(seconds=100), [1.0]),
+        ],
+    )
+    def test_delay_by_speed(
+        self,
+        sleep_calls: list[float],
+        speed: ClockSpeed,
+        delta: timedelta,
+        expected_calls: list[float],
+    ) -> None:
+        clock = SimulationClock(speed=speed)
 
-        with patch("time.sleep") as mock_sleep:
-            clock.advance(timedelta(minutes=5))
-            mock_sleep.assert_not_called()
+        clock.advance(delta)
 
-    def test_real_time_speed_full_delay(self) -> None:
-        clock = SimulationClock(speed=ClockSpeed.REAL_TIME)
-
-        with patch("time.sleep") as mock_sleep:
-            clock.advance(timedelta(seconds=1))
-            mock_sleep.assert_called_once_with(1.0)
-
-    def test_fast_10x_speed_reduced_delay(self) -> None:
-        clock = SimulationClock(speed=ClockSpeed.FAST_10X)
-
-        with patch("time.sleep") as mock_sleep:
-            clock.advance(timedelta(seconds=10))
-            mock_sleep.assert_called_once_with(1.0)  # 10s / 10 = 1s
-
-    def test_fast_100x_speed_minimal_delay(self) -> None:
-        clock = SimulationClock(speed=ClockSpeed.FAST_100X)
-
-        with patch("time.sleep") as mock_sleep:
-            clock.advance(timedelta(seconds=100))
-            mock_sleep.assert_called_once_with(1.0)  # 100s / 100 = 1s
+        assert sleep_calls == expected_calls
 
 
 class TestSimulationClockAsyncDelays:
     """Tests for async delay application."""
 
     @pytest.mark.asyncio
-    async def test_instant_speed_no_async_delay(self) -> None:
-        clock = SimulationClock(speed=ClockSpeed.INSTANT)
+    @pytest.mark.parametrize(
+        ("speed", "delta", "expected_calls"),
+        [
+            (ClockSpeed.INSTANT, timedelta(minutes=5), []),
+            (ClockSpeed.REAL_TIME, timedelta(seconds=1), [1.0]),
+            (ClockSpeed.FAST_10X, timedelta(seconds=10), [1.0]),
+            (ClockSpeed.FAST_100X, timedelta(seconds=100), [1.0]),
+        ],
+    )
+    async def test_delay_by_speed_async(
+        self,
+        async_sleep_calls: list[float],
+        speed: ClockSpeed,
+        delta: timedelta,
+        expected_calls: list[float],
+    ) -> None:
+        clock = SimulationClock(speed=speed)
 
-        with patch("asyncio.sleep") as mock_sleep:
-            await clock.advance_async(timedelta(minutes=5))
-            mock_sleep.assert_not_called()
+        await clock.advance_async(delta)
 
-    @pytest.mark.asyncio
-    async def test_real_time_speed_async_delay(self) -> None:
-        clock = SimulationClock(speed=ClockSpeed.REAL_TIME)
-
-        with patch("asyncio.sleep") as mock_sleep:
-            await clock.advance_async(timedelta(seconds=1))
-            mock_sleep.assert_called_once_with(1.0)
-
-    @pytest.mark.asyncio
-    async def test_fast_10x_speed_async_delay(self) -> None:
-        clock = SimulationClock(speed=ClockSpeed.FAST_10X)
-
-        with patch("asyncio.sleep") as mock_sleep:
-            await clock.advance_async(timedelta(seconds=10))
-            mock_sleep.assert_called_once_with(1.0)
-
-    @pytest.mark.asyncio
-    async def test_fast_100x_speed_async_delay(self) -> None:
-        clock = SimulationClock(speed=ClockSpeed.FAST_100X)
-
-        with patch("asyncio.sleep") as mock_sleep:
-            await clock.advance_async(timedelta(seconds=100))
-            mock_sleep.assert_called_once_with(1.0)
+        assert async_sleep_calls == expected_calls

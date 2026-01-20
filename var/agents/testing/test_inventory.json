@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6352,
+    "total_tests": 6340,
     "total_files": 977,
     "markers_used": 15
   },
@@ -102,12 +102,12 @@
     ]
   },
   "marker_counts": {
-    "unit": 6187,
+    "unit": 6175,
     "asyncio": 374,
     "property": 82,
     "integration": 79,
     "endpoints": 78,
-    "parametrize": 61,
+    "parametrize": 62,
     "skipif": 8,
     "slow": 4,
     "anyio": 3,
@@ -38850,7 +38850,7 @@
     "tests/unit/gpt_trader/preflight/test_checks_profile.py": [
       {
         "name": "TestCheckProfileConfiguration::test_passes_when_profile_exists_and_valid",
-        "line": 16,
+        "line": 23,
         "markers": [
           "unit"
         ],
@@ -38859,7 +38859,7 @@
       },
       {
         "name": "TestCheckProfileConfiguration::test_passes_with_canary_profile_correct_settings",
-        "line": 35,
+        "line": 42,
         "markers": [
           "unit"
         ],
@@ -38868,7 +38868,7 @@
       },
       {
         "name": "TestCheckProfileConfiguration::test_warns_when_canary_has_wrong_values",
-        "line": 57,
+        "line": 64,
         "markers": [
           "unit"
         ],
@@ -38877,7 +38877,7 @@
       },
       {
         "name": "TestCheckProfileConfiguration::test_fails_when_yaml_parse_fails",
-        "line": 81,
+        "line": 88,
         "markers": [
           "unit"
         ],
@@ -38886,7 +38886,7 @@
       },
       {
         "name": "TestCheckProfileConfiguration::test_warns_when_profile_not_found",
-        "line": 95,
+        "line": 102,
         "markers": [
           "unit"
         ],
@@ -38895,7 +38895,7 @@
       },
       {
         "name": "TestCheckProfileConfiguration::test_shows_canary_defaults_when_missing",
-        "line": 106,
+        "line": 115,
         "markers": [
           "unit"
         ],
@@ -38904,7 +38904,7 @@
       },
       {
         "name": "TestCheckProfileConfiguration::test_shows_prod_warning_when_missing",
-        "line": 118,
+        "line": 129,
         "markers": [
           "unit"
         ],
@@ -38913,7 +38913,7 @@
       },
       {
         "name": "TestCheckProfileConfiguration::test_prints_section_header",
-        "line": 127,
+        "line": 140,
         "markers": [
           "unit"
         ],
@@ -38922,7 +38922,7 @@
       },
       {
         "name": "TestCheckProfileConfiguration::test_handles_nested_key_access_for_canary",
-        "line": 137,
+        "line": 152,
         "markers": [
           "unit"
         ],
@@ -39101,7 +39101,7 @@
     "tests/unit/gpt_trader/preflight/test_checks_simulation.py": [
       {
         "name": "TestSimulateDryRun::test_passes_when_simulation_succeeds",
-        "line": 16,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -39110,7 +39110,7 @@
       },
       {
         "name": "TestSimulateDryRun::test_passes_when_engine_is_none",
-        "line": 41,
+        "line": 65,
         "markers": [
           "unit"
         ],
@@ -39119,7 +39119,7 @@
       },
       {
         "name": "TestSimulateDryRun::test_fails_on_config_error",
-        "line": 64,
+        "line": 76,
         "markers": [
           "unit"
         ],
@@ -39128,7 +39128,7 @@
       },
       {
         "name": "TestSimulateDryRun::test_fails_on_container_error",
-        "line": 76,
+        "line": 86,
         "markers": [
           "unit"
         ],
@@ -39137,7 +39137,7 @@
       },
       {
         "name": "TestSimulateDryRun::test_fails_on_bot_creation_error",
-        "line": 94,
+        "line": 96,
         "markers": [
           "unit"
         ],
@@ -39146,7 +39146,7 @@
       },
       {
         "name": "TestSimulateDryRun::test_uses_correct_config_params",
-        "line": 114,
+        "line": 106,
         "markers": [
           "unit"
         ],
@@ -39155,7 +39155,7 @@
       },
       {
         "name": "TestSimulateDryRun::test_prints_section_header",
-        "line": 138,
+        "line": 116,
         "markers": [
           "unit"
         ],
@@ -39164,7 +39164,7 @@
       },
       {
         "name": "TestSimulateDryRun::test_logs_profile_info_when_verbose",
-        "line": 149,
+        "line": 130,
         "markers": [
           "unit"
         ],
@@ -39719,120 +39719,13 @@
     ],
     "tests/unit/gpt_trader/preflight/test_core_delegations.py": [
       {
-        "name": "TestPreflightCheckDelegations::test_check_python_version_delegates",
-        "line": 13,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "check_python_version should delegate to module function.",
-        "class": "TestPreflightCheckDelegations"
-      },
-      {
-        "name": "TestPreflightCheckDelegations::test_check_dependencies_delegates",
-        "line": 24,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "check_dependencies should delegate to module function.",
-        "class": "TestPreflightCheckDelegations"
-      },
-      {
-        "name": "TestPreflightCheckDelegations::test_check_environment_variables_delegates",
+        "name": "TestPreflightCheckDelegations::test_delegations_call_module_function",
         "line": 35,
         "markers": [
+          "parametrize",
           "unit"
         ],
-        "docstring": "check_environment_variables should delegate to module function.",
-        "class": "TestPreflightCheckDelegations"
-      },
-      {
-        "name": "TestPreflightCheckDelegations::test_check_api_connectivity_delegates",
-        "line": 46,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "check_api_connectivity should delegate to module function.",
-        "class": "TestPreflightCheckDelegations"
-      },
-      {
-        "name": "TestPreflightCheckDelegations::test_check_key_permissions_delegates",
-        "line": 56,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "check_key_permissions should delegate to module function.",
-        "class": "TestPreflightCheckDelegations"
-      },
-      {
-        "name": "TestPreflightCheckDelegations::test_check_risk_configuration_delegates",
-        "line": 66,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "check_risk_configuration should delegate to module function.",
-        "class": "TestPreflightCheckDelegations"
-      },
-      {
-        "name": "TestPreflightCheckDelegations::test_check_readiness_report_delegates",
-        "line": 76,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "check_readiness_report should delegate to module function.",
-        "class": "TestPreflightCheckDelegations"
-      },
-      {
-        "name": "TestPreflightCheckDelegations::test_check_test_suite_delegates",
-        "line": 86,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "check_test_suite should delegate to module function.",
-        "class": "TestPreflightCheckDelegations"
-      },
-      {
-        "name": "TestPreflightCheckDelegations::test_check_profile_configuration_delegates",
-        "line": 96,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "check_profile_configuration should delegate to module function.",
-        "class": "TestPreflightCheckDelegations"
-      },
-      {
-        "name": "TestPreflightCheckDelegations::test_check_system_time_delegates",
-        "line": 106,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "check_system_time should delegate to module function.",
-        "class": "TestPreflightCheckDelegations"
-      },
-      {
-        "name": "TestPreflightCheckDelegations::test_check_disk_space_delegates",
-        "line": 116,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "check_disk_space should delegate to module function.",
-        "class": "TestPreflightCheckDelegations"
-      },
-      {
-        "name": "TestPreflightCheckDelegations::test_simulate_dry_run_delegates",
-        "line": 126,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "simulate_dry_run should delegate to module function.",
-        "class": "TestPreflightCheckDelegations"
-      },
-      {
-        "name": "TestPreflightCheckDelegations::test_generate_report_delegates",
-        "line": 136,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "generate_report should delegate to module function.",
+        "docstring": "",
         "class": "TestPreflightCheckDelegations"
       }
     ],

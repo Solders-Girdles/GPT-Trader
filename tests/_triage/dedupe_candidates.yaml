@@ -947,8 +947,9 @@ clusters:
     expected_file_delta: -4
     priority: medium
     rationale: Consolidate 9 test files into 5 files (<=240 lines each)
-    status: in_progress
+    status: done
     owner: claude
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/304
     added: '2026-01-20'
   b13a6eabed19:
     type: source_fanout
@@ -1708,8 +1709,9 @@ clusters:
     expected_file_delta: -2
     priority: medium
     rationale: Consolidate 6 test files into 4 files (<=240 lines each)
-    status: in_progress
+    status: done
     owner: claude
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/304
     added: '2026-01-20'
   2793420ff8e6:
     type: similar_names
@@ -1725,8 +1727,9 @@ clusters:
     expected_file_delta: -2
     priority: medium
     rationale: Consolidate 6 test files into 4 files (<=240 lines each)
-    status: in_progress
+    status: done
     owner: claude
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/304
     added: '2026-01-20'
   4fd6a8824efa:
     type: similar_names
@@ -1759,8 +1762,9 @@ clusters:
     expected_file_delta: -2
     priority: medium
     rationale: Consolidate 6 test files into 4 files (<=240 lines each)
-    status: in_progress
+    status: done
     owner: claude
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/304
     added: '2026-01-20'
   ac7d20d54ee8:
     type: similar_names
@@ -1970,7 +1974,7 @@ clusters:
     rationale: Consolidate 6 test files into single parametrized file
     status: done
     owner: claude
-    pr_url: pending-batch-3
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/304
     added: '2026-01-20'
   c4731752fc43:
     type: source_fanout
@@ -1987,8 +1991,9 @@ clusters:
     expected_file_delta: -2
     priority: medium
     rationale: Consolidate 6 test files into 4 files (<=240 lines each)
-    status: in_progress
+    status: done
     owner: claude
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/304
     added: '2026-01-20'
   cd648425ded4:
     type: source_fanout
@@ -2046,7 +2051,7 @@ clusters:
     rationale: Consolidate 6 test files into single parametrized file
     status: done
     owner: claude
-    pr_url: pending-batch-3
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/304
     added: '2026-01-20'
   9155c0e0dd74:
     type: source_fanout

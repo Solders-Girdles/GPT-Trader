@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
+import pytest
+
+import gpt_trader.features.live_trade.execution.order_event_recorder as order_event_recorder_module
 from gpt_trader.core import (
     OrderSide,
     OrderType,
@@ -15,17 +18,18 @@ from gpt_trader.features.live_trade.execution.order_submission import OrderSubmi
 class TestRetryPathIdempotency:
     """Tests ensuring retry paths don't create duplicate client_order_ids."""
 
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_provided_client_order_id_is_reused_on_retry(
         self,
-        mock_get_logger: MagicMock,
+        monkeypatch: pytest.MonkeyPatch,
         mock_broker: MagicMock,
         mock_event_store: MagicMock,
         open_orders: list[str],
     ) -> None:
         """Test that a provided client_order_id is reused across retries."""
         mock_logger = MagicMock()
-        mock_get_logger.return_value = mock_logger
+        monkeypatch.setattr(
+            order_event_recorder_module, "get_monitoring_logger", lambda: mock_logger
+        )
 
         captured_client_ids: list[str] = []
 
@@ -75,17 +79,18 @@ class TestRetryPathIdempotency:
         assert captured_client_ids[1] == "retry-test-123"
         assert captured_client_ids[0] == captured_client_ids[1]
 
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_generated_client_order_id_differs_per_submission(
         self,
-        mock_get_logger: MagicMock,
+        monkeypatch: pytest.MonkeyPatch,
         mock_broker: MagicMock,
         mock_event_store: MagicMock,
         open_orders: list[str],
     ) -> None:
         """Test that auto-generated client_order_ids are unique per submission."""
         mock_logger = MagicMock()
-        mock_get_logger.return_value = mock_logger
+        monkeypatch.setattr(
+            order_event_recorder_module, "get_monitoring_logger", lambda: mock_logger
+        )
 
         captured_client_ids: list[str] = []
 

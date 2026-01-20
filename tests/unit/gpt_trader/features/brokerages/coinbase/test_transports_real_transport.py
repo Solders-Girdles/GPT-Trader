@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import json
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 
+import gpt_trader.features.brokerages.coinbase.transports as transports_module
 from gpt_trader.features.brokerages.coinbase.transports import RealTransport
 
 
@@ -27,36 +28,36 @@ class TestRealTransportCoverage:
 
         assert transport._config is mock_bot_config
 
-    def test_connect_success(self, mock_bot_config):
+    def test_connect_success(self, mock_bot_config, monkeypatch):
         """Test successful WebSocket connection."""
         transport = RealTransport(config=mock_bot_config)
 
-        with patch("websocket.create_connection") as mock_create:
-            mock_ws = Mock()
-            mock_create.return_value = mock_ws
+        mock_ws = Mock()
+        mock_create = Mock(return_value=mock_ws)
+        monkeypatch.setattr(transports_module.websocket, "create_connection", mock_create)
 
-            url = "wss://test.example.com"
-            headers = {"Authorization": "Bearer token"}
-            transport.connect(url, headers)
+        url = "wss://test.example.com"
+        headers = {"Authorization": "Bearer token"}
+        transport.connect(url, headers)
 
-            assert transport.url == url
-            assert transport.ws is mock_ws
-            mock_create.assert_called_once_with(url, header=headers)
+        assert transport.url == url
+        assert transport.ws is mock_ws
+        mock_create.assert_called_once_with(url, header=headers)
 
-    def test_connect_with_headers_dict_uses_existing_url(self, mock_bot_config):
+    def test_connect_with_headers_dict_uses_existing_url(self, mock_bot_config, monkeypatch):
         """Test connection when headers passed as first argument."""
         transport = RealTransport(config=mock_bot_config)
         transport.url = "wss://test.example.com"
 
-        with patch("websocket.create_connection") as mock_create:
-            mock_ws = Mock()
-            mock_create.return_value = mock_ws
-            headers = {"Authorization": "Bearer token"}
+        mock_ws = Mock()
+        mock_create = Mock(return_value=mock_ws)
+        monkeypatch.setattr(transports_module.websocket, "create_connection", mock_create)
+        headers = {"Authorization": "Bearer token"}
 
-            transport.connect(headers)
+        transport.connect(headers)
 
-            mock_create.assert_called_once_with("wss://test.example.com", header=headers)
-            assert transport.ws is mock_ws
+        mock_create.assert_called_once_with("wss://test.example.com", header=headers)
+        assert transport.ws is mock_ws
 
     def test_connect_headers_without_url_raises(self, mock_bot_config):
         """Test connection fails when url is missing and headers passed as first argument."""
@@ -73,22 +74,21 @@ class TestRealTransportCoverage:
 
         transport = RealTransport(config=mock_bot_config)
 
-        with (
-            patch("websocket.create_connection") as mock_create,
-            patch("websocket.enableTrace") as mock_trace,
-        ):
-            mock_ws = Mock()
-            mock_create.return_value = mock_ws
+        mock_ws = Mock()
+        mock_create = Mock(return_value=mock_ws)
+        mock_trace = Mock()
+        monkeypatch.setattr(transports_module.websocket, "create_connection", mock_create)
+        monkeypatch.setattr(transports_module.websocket, "enableTrace", mock_trace)
 
-            url = "wss://test.example.com"
-            transport.connect(url)
+        url = "wss://test.example.com"
+        transport.connect(url)
 
-            expected_options = {
-                "timeout": 30.0,
-                "subprotocols": ["v1", "v2"],
-            }
-            mock_create.assert_called_once_with(url, **expected_options)
-            mock_trace.assert_called_once_with(True)
+        expected_options = {
+            "timeout": 30.0,
+            "subprotocols": ["v1", "v2"],
+        }
+        mock_create.assert_called_once_with(url, **expected_options)
+        mock_trace.assert_called_once_with(True)
 
     def test_connect_invalid_timeout(self, mock_bot_config, monkeypatch, caplog):
         """Test connection with invalid timeout value."""
@@ -96,26 +96,28 @@ class TestRealTransportCoverage:
 
         transport = RealTransport(config=mock_bot_config)
 
-        with patch("websocket.create_connection") as mock_create:
-            mock_ws = Mock()
-            mock_create.return_value = mock_ws
+        mock_ws = Mock()
+        mock_create = Mock(return_value=mock_ws)
+        monkeypatch.setattr(transports_module.websocket, "create_connection", mock_create)
 
-            url = "wss://test.example.com"
-            transport.connect(url)
+        url = "wss://test.example.com"
+        transport.connect(url)
 
-            assert "Ignoring invalid COINBASE_WS_CONNECT_TIMEOUT" in caplog.text
-            mock_create.assert_called_once_with(url)
+        assert "Ignoring invalid COINBASE_WS_CONNECT_TIMEOUT" in caplog.text
+        mock_create.assert_called_once_with(url)
 
-    def test_connect_missing_websocket_client(self, mock_bot_config):
+    def test_connect_missing_websocket_client(self, mock_bot_config, monkeypatch):
         """Test connection when websocket-client is not installed."""
         transport = RealTransport(config=mock_bot_config)
 
-        with patch(
-            "gpt_trader.features.brokerages.coinbase.transports.websocket.create_connection",
-            side_effect=ModuleNotFoundError("No module named 'websocket'"),
-        ):
-            with pytest.raises(ImportError, match="websocket-client is not installed"):
-                transport.connect("wss://test.example.com")
+        monkeypatch.setattr(
+            transports_module.websocket,
+            "create_connection",
+            Mock(side_effect=ModuleNotFoundError("No module named 'websocket'")),
+        )
+
+        with pytest.raises(ImportError, match="websocket-client is not installed"):
+            transport.connect("wss://test.example.com")
 
     def test_connect_trace_enable_failure(self, mock_bot_config, monkeypatch, caplog):
         """Test connection when trace enable fails."""
@@ -123,16 +125,16 @@ class TestRealTransportCoverage:
 
         transport = RealTransport(config=mock_bot_config)
 
-        with (
-            patch("websocket.create_connection") as mock_create,
-            patch("websocket.enableTrace", side_effect=Exception("Trace failed")),
-        ):
-            mock_ws = Mock()
-            mock_create.return_value = mock_ws
+        mock_ws = Mock()
+        mock_create = Mock(return_value=mock_ws)
+        monkeypatch.setattr(transports_module.websocket, "create_connection", mock_create)
+        monkeypatch.setattr(
+            transports_module.websocket, "enableTrace", Mock(side_effect=Exception("Trace failed"))
+        )
 
-            transport.connect("wss://test.example.com")
+        transport.connect("wss://test.example.com")
 
-            assert "Unable to enable websocket trace output" in caplog.text
+        assert "Unable to enable websocket trace output" in caplog.text
 
     def test_disconnect_success(self, mock_bot_config):
         """Test successful WebSocket disconnection."""

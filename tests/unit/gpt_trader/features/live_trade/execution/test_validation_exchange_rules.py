@@ -3,29 +3,52 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
+import gpt_trader.features.live_trade.execution.validation as validation_module
 from gpt_trader.core import OrderSide, OrderType, Product
 from gpt_trader.features.live_trade.execution.validation import OrderValidator
 from gpt_trader.features.live_trade.risk import ValidationError
 
 
+def _make_validation_result(
+    ok: bool = True,
+    reason: str | None = None,
+    adjusted_quantity: Decimal | None = None,
+    adjusted_price: Decimal | None = None,
+) -> MagicMock:
+    return MagicMock(
+        ok=ok,
+        reason=reason,
+        adjusted_quantity=adjusted_quantity,
+        adjusted_price=adjusted_price,
+    )
+
+
+@pytest.fixture
+def spec_validate_mock(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    mock_validate = MagicMock()
+    monkeypatch.setattr(validation_module, "spec_validate_order", mock_validate)
+    return mock_validate
+
+
+@pytest.fixture
+def quantize_price_mock(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    mock_quantize = MagicMock()
+    monkeypatch.setattr(validation_module, "quantize_price_side_aware", mock_quantize)
+    return mock_quantize
+
+
 class TestValidateExchangeRules:
-    @patch("gpt_trader.features.live_trade.execution.validation.spec_validate_order")
     def test_market_order_uses_none_price(
         self,
-        mock_spec_validate: MagicMock,
         validator: OrderValidator,
         mock_product: Product,
+        spec_validate_mock: MagicMock,
     ) -> None:
-        mock_spec_validate.return_value = MagicMock(
-            ok=True,
-            reason=None,
-            adjusted_quantity=None,
-            adjusted_price=None,
-        )
+        spec_validate_mock.return_value = _make_validation_result()
 
         validator.validate_exchange_rules(
             symbol="BTC-PERP",
@@ -37,22 +60,16 @@ class TestValidateExchangeRules:
             product=mock_product,
         )
 
-        mock_spec_validate.assert_called_once()
-        assert mock_spec_validate.call_args.kwargs["price"] is None
+        spec_validate_mock.assert_called_once()
+        assert spec_validate_mock.call_args.kwargs["price"] is None
 
-    @patch("gpt_trader.features.live_trade.execution.validation.spec_validate_order")
     def test_limit_order_uses_provided_price(
         self,
-        mock_spec_validate: MagicMock,
         validator: OrderValidator,
         mock_product: Product,
+        spec_validate_mock: MagicMock,
     ) -> None:
-        mock_spec_validate.return_value = MagicMock(
-            ok=True,
-            reason=None,
-            adjusted_quantity=None,
-            adjusted_price=None,
-        )
+        spec_validate_mock.return_value = _make_validation_result()
 
         validator.validate_exchange_rules(
             symbol="BTC-PERP",
@@ -64,22 +81,16 @@ class TestValidateExchangeRules:
             product=mock_product,
         )
 
-        mock_spec_validate.assert_called_once()
-        assert mock_spec_validate.call_args.kwargs["price"] == Decimal("49000")
+        spec_validate_mock.assert_called_once()
+        assert spec_validate_mock.call_args.kwargs["price"] == Decimal("49000")
 
-    @patch("gpt_trader.features.live_trade.execution.validation.spec_validate_order")
     def test_limit_order_falls_back_to_effective_price(
         self,
-        mock_spec_validate: MagicMock,
         validator: OrderValidator,
         mock_product: Product,
+        spec_validate_mock: MagicMock,
     ) -> None:
-        mock_spec_validate.return_value = MagicMock(
-            ok=True,
-            reason=None,
-            adjusted_quantity=None,
-            adjusted_price=None,
-        )
+        spec_validate_mock.return_value = _make_validation_result()
 
         validator.validate_exchange_rules(
             symbol="BTC-PERP",
@@ -91,21 +102,18 @@ class TestValidateExchangeRules:
             product=mock_product,
         )
 
-        mock_spec_validate.assert_called_once()
-        assert mock_spec_validate.call_args.kwargs["price"] == Decimal("50000")
+        spec_validate_mock.assert_called_once()
+        assert spec_validate_mock.call_args.kwargs["price"] == Decimal("50000")
 
-    @patch("gpt_trader.features.live_trade.execution.validation.spec_validate_order")
     def test_validation_failure_raises_error(
         self,
-        mock_spec_validate: MagicMock,
         validator: OrderValidator,
         mock_product: Product,
+        spec_validate_mock: MagicMock,
     ) -> None:
-        mock_spec_validate.return_value = MagicMock(
+        spec_validate_mock.return_value = _make_validation_result(
             ok=False,
             reason="size_below_minimum",
-            adjusted_quantity=None,
-            adjusted_price=None,
         )
 
         with pytest.raises(ValidationError, match="size_below_minimum"):
@@ -119,19 +127,13 @@ class TestValidateExchangeRules:
                 product=mock_product,
             )
 
-    @patch("gpt_trader.features.live_trade.execution.validation.spec_validate_order")
     def test_validation_uses_adjusted_quantity(
         self,
-        mock_spec_validate: MagicMock,
         validator: OrderValidator,
         mock_product: Product,
+        spec_validate_mock: MagicMock,
     ) -> None:
-        mock_spec_validate.return_value = MagicMock(
-            ok=True,
-            reason=None,
-            adjusted_quantity=Decimal("0.5"),
-            adjusted_price=None,
-        )
+        spec_validate_mock.return_value = _make_validation_result(adjusted_quantity=Decimal("0.5"))
 
         adjusted_quantity, _ = validator.validate_exchange_rules(
             symbol="BTC-PERP",
@@ -146,19 +148,13 @@ class TestValidateExchangeRules:
         assert adjusted_quantity == Decimal("0.5")
         validator._record_rejection.assert_not_called()
 
-    @patch("gpt_trader.features.live_trade.execution.validation.spec_validate_order")
     def test_validation_failure_with_none_reason(
         self,
-        mock_spec_validate: MagicMock,
         validator: OrderValidator,
         mock_product: Product,
+        spec_validate_mock: MagicMock,
     ) -> None:
-        mock_spec_validate.return_value = MagicMock(
-            ok=False,
-            reason=None,
-            adjusted_quantity=None,
-            adjusted_price=None,
-        )
+        spec_validate_mock.return_value = _make_validation_result(ok=False)
 
         with pytest.raises(ValidationError, match="spec_violation"):
             validator.validate_exchange_rules(
@@ -171,22 +167,15 @@ class TestValidateExchangeRules:
                 product=mock_product,
             )
 
-    @patch("gpt_trader.features.live_trade.execution.validation.spec_validate_order")
-    @patch("gpt_trader.features.live_trade.execution.validation.quantize_price_side_aware")
     def test_limit_order_price_quantization(
         self,
-        mock_quantize: MagicMock,
-        mock_spec_validate: MagicMock,
         validator: OrderValidator,
         mock_product: Product,
+        spec_validate_mock: MagicMock,
+        quantize_price_mock: MagicMock,
     ) -> None:
-        mock_spec_validate.return_value = MagicMock(
-            ok=True,
-            reason=None,
-            adjusted_quantity=None,
-            adjusted_price=None,
-        )
-        mock_quantize.return_value = Decimal("49000.50")
+        spec_validate_mock.return_value = _make_validation_result()
+        quantize_price_mock.return_value = Decimal("49000.50")
 
         qty, price = validator.validate_exchange_rules(  # naming: allow
             symbol="BTC-PERP",
@@ -198,19 +187,16 @@ class TestValidateExchangeRules:
             product=mock_product,
         )
 
-        mock_quantize.assert_called_once()
+        quantize_price_mock.assert_called_once()
         assert price == Decimal("49000.50")
 
-    @patch("gpt_trader.features.live_trade.execution.validation.spec_validate_order")
     def test_adjusted_values_from_validation(
         self,
-        mock_spec_validate: MagicMock,
         validator: OrderValidator,
         mock_product: Product,
+        spec_validate_mock: MagicMock,
     ) -> None:
-        mock_spec_validate.return_value = MagicMock(
-            ok=True,
-            reason=None,
+        spec_validate_mock.return_value = _make_validation_result(
             adjusted_quantity=Decimal("1.001"),
             adjusted_price=Decimal("49000.00"),
         )

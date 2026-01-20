@@ -11674,7 +11674,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_request_retries.py": [
       {
         "name": "TestCoinbaseClientBaseRequestRetries::test_request_rate_limit_invalid_retry_after",
-        "line": 22,
+        "line": 30,
         "markers": [
           "unit"
         ],
@@ -11683,7 +11683,7 @@
       },
       {
         "name": "TestCoinbaseClientBaseRequestRetries::test_request_rate_limit_exhausts_retries",
-        "line": 38,
+        "line": 45,
         "markers": [
           "unit"
         ],
@@ -11692,7 +11692,7 @@
       },
       {
         "name": "TestCoinbaseClientBaseRequestRetries::test_request_5xx_error_with_retry",
-        "line": 49,
+        "line": 55,
         "markers": [
           "unit"
         ],
@@ -11701,7 +11701,7 @@
       },
       {
         "name": "TestCoinbaseClientBaseRequestRetries::test_request_rate_limit_error_with_retry_after",
-        "line": 69,
+        "line": 74,
         "markers": [
           "unit"
         ],
@@ -11710,7 +11710,7 @@
       },
       {
         "name": "TestCoinbaseClientBaseRequestRetries::test_request_network_error_with_retry",
-        "line": 85,
+        "line": 89,
         "markers": [
           "unit"
         ],
@@ -11719,7 +11719,7 @@
       },
       {
         "name": "TestCoinbaseClientBaseRequestRetries::test_request_max_retries_exceeded",
-        "line": 109,
+        "line": 112,
         "markers": [
           "unit"
         ],

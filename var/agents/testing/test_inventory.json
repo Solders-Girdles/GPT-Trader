@@ -23169,7 +23169,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_record_rejection.py": [
       {
         "name": "TestRecordRejection::test_record_rejection_logs_and_emits",
-        "line": 16,
+        "line": 31,
         "markers": [
           "unit"
         ],
@@ -23178,7 +23178,7 @@
       },
       {
         "name": "TestRecordRejection::test_record_rejection_includes_client_order_id",
-        "line": 42,
+        "line": 51,
         "markers": [
           "unit"
         ],
@@ -23187,7 +23187,7 @@
       },
       {
         "name": "TestRecordRejection::test_record_rejection_without_client_order_id_uses_empty_string",
-        "line": 72,
+        "line": 76,
         "markers": [
           "unit"
         ],
@@ -23196,7 +23196,7 @@
       },
       {
         "name": "TestRecordRejection::test_record_rejection_with_none_price",
-        "line": 96,
+        "line": 94,
         "markers": [
           "unit"
         ],

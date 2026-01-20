@@ -1,10 +1,10 @@
 """Tests for calculation validation helpers."""
 
-import logging
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
 import pytest
 
+import gpt_trader.validation.calculation_validator as calculation_validator_module
 from gpt_trader.validation.calculation_validator import manual_backtest_example
 
 
@@ -134,9 +134,10 @@ class TestManualBacktestExample:
         # Return percentage should be reasonable (not extreme)
         assert -100 <= return_pct <= 1000  # Allow for significant but not insane returns
 
-    @patch("gpt_trader.validation.calculation_validator.logger")
-    def test_manual_backtest_example_logging(self, mock_logger: logging.Logger) -> None:
+    def test_manual_backtest_example_logging(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that the function logs expected messages."""
+        mock_logger = MagicMock()
+        monkeypatch.setattr(calculation_validator_module, "logger", mock_logger)
         manual_backtest_example()
 
         # Check that logger.info was called multiple times

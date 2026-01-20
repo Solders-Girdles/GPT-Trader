@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
 import pytest
 
+import gpt_trader.app.bootstrap as bootstrap_module
 from gpt_trader.app.bootstrap import (
     BootstrapLogRecord,
     bot_from_profile,
@@ -120,7 +122,7 @@ class TestBuildBot:
         # Bot should have a container reference
         assert hasattr(bot, "container") or hasattr(bot, "_container")
 
-    def test_build_bot_with_webhook_logs_message(self) -> None:
+    def test_build_bot_with_webhook_logs_message(self, monkeypatch: pytest.MonkeyPatch) -> None:
         config = BotConfig(
             profile=Profile.TEST,
             symbols=["BTC-USD"],
@@ -128,11 +130,12 @@ class TestBuildBot:
             webhook_url="https://example.com/webhook",
         )
 
-        with patch("gpt_trader.app.bootstrap.logger") as mock_logger:
-            build_bot(config)
+        mock_logger = MagicMock()
+        monkeypatch.setattr(bootstrap_module, "logger", mock_logger)
+        build_bot(config)
 
-            # Should log webhook enabled
-            assert mock_logger.info.called
+        # Should log webhook enabled
+        assert mock_logger.info.called
 
 
 class TestBotFromProfile:
@@ -172,14 +175,15 @@ class TestBotFromProfile:
         assert bot is not None
         assert bot.config.mock_broker is True
 
-    def test_non_mock_profiles_require_credentials(self) -> None:
+    def test_non_mock_profiles_require_credentials(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that production profiles require Coinbase credentials."""
         # Ensure env vars are unset
-        with patch.dict("os.environ", {}, clear=True):
-            # These should raise without credentials
-            for profile_name in ["demo", "prod", "spot", "canary"]:
-                with pytest.raises(ValueError, match="Coinbase Credentials"):
-                    bot_from_profile(profile_name)
+        for key in list(os.environ.keys()):
+            monkeypatch.delenv(key, raising=False)
+        # These should raise without credentials
+        for profile_name in ["demo", "prod", "spot", "canary"]:
+            with pytest.raises(ValueError, match="Coinbase Credentials"):
+                bot_from_profile(profile_name)
 
 
 class TestBootstrapLogRecord:
@@ -207,19 +211,14 @@ class TestBootstrapLogRecord:
 class TestEnvironmentVariableHandling:
     """Tests for environment variable handling during bootstrap."""
 
-    def test_config_respects_env_variables(self) -> None:
+    def test_config_respects_env_variables(self, monkeypatch: pytest.MonkeyPatch) -> None:
         # Test that BotConfig picks up environment variables
-        with patch.dict(
-            "os.environ",
-            {
-                "GPT_TRADER_DRY_RUN": "1",
-            },
-        ):
-            config = BotConfig(
-                profile=Profile.TEST,
-                symbols=["BTC-USD"],
-                mock_broker=True,
-            )
+        monkeypatch.setenv("GPT_TRADER_DRY_RUN", "1")
+        config = BotConfig(
+            profile=Profile.TEST,
+            symbols=["BTC-USD"],
+            mock_broker=True,
+        )
 
-            # Config should be created successfully
-            assert config.profile == Profile.TEST
+        # Config should be created successfully
+        assert config.profile == Profile.TEST

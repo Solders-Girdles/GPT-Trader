@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import Mock
 
 import pytest
 
+import gpt_trader.preflight.core as preflight_core_module
 from gpt_trader.preflight.core import PreflightCheck
 
 
@@ -37,12 +38,13 @@ class TestPreflightCheckDelegations:
         method_name: str,
         function_name: str,
         return_value: object,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         check = PreflightCheck()
 
-        with patch(f"gpt_trader.preflight.core.{function_name}") as mock:
-            mock.return_value = return_value
-            result = getattr(check, method_name)()
+        mock = Mock(return_value=return_value)
+        monkeypatch.setattr(preflight_core_module, function_name, mock)
+        result = getattr(check, method_name)()
 
         mock.assert_called_once_with(check)
         assert result == return_value

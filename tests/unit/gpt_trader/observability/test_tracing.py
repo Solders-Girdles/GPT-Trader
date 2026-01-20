@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
-
 import pytest
 
+import gpt_trader.observability.tracing as tracing_module
 from gpt_trader.observability.tracing import (
     _OTEL_AVAILABLE,
     get_tracer,
@@ -33,11 +32,11 @@ class TestInitTracing:
         assert result is False
         assert is_tracing_enabled() is False
 
-    def test_without_otel_returns_false(self):
+    def test_without_otel_returns_false(self, monkeypatch: pytest.MonkeyPatch):
         """Test that tracing without OTel installed returns False."""
-        with patch("gpt_trader.observability.tracing._OTEL_AVAILABLE", False):
-            # When OTel is not available, init_tracing returns False
-            assert init_tracing(enabled=True) is False
+        monkeypatch.setattr(tracing_module, "_OTEL_AVAILABLE", False)
+        # When OTel is not available, init_tracing returns False
+        assert init_tracing(enabled=True) is False
 
     @pytest.mark.skipif(not _OTEL_AVAILABLE, reason="OTel not installed")
     def test_with_otel_returns_true(self):

@@ -32790,7 +32790,7 @@
       },
       {
         "name": "test_log_order_event",
-        "line": 105,
+        "line": 103,
         "markers": [
           "unit"
         ],
@@ -32798,7 +32798,7 @@
       },
       {
         "name": "test_log_strategy_decision",
-        "line": 133,
+        "line": 131,
         "markers": [
           "unit"
         ],
@@ -32806,7 +32806,7 @@
       },
       {
         "name": "test_log_execution_error",
-        "line": 157,
+        "line": 155,
         "markers": [
           "unit"
         ],
@@ -32814,7 +32814,7 @@
       },
       {
         "name": "test_log_risk_event",
-        "line": 185,
+        "line": 183,
         "markers": [
           "unit"
         ],
@@ -32822,7 +32822,7 @@
       },
       {
         "name": "test_log_market_data_update",
-        "line": 211,
+        "line": 209,
         "markers": [
           "unit"
         ],
@@ -38991,7 +38991,7 @@
     "tests/unit/gpt_trader/preflight/test_checks_risk.py": [
       {
         "name": "TestCheckRiskConfiguration::test_passes_with_valid_config",
-        "line": 17,
+        "line": 52,
         "markers": [
           "unit"
         ],
@@ -39000,7 +39000,7 @@
       },
       {
         "name": "TestCheckRiskConfiguration::test_fails_with_unsafe_leverage",
-        "line": 38,
+        "line": 61,
         "markers": [
           "unit"
         ],
@@ -39008,17 +39008,17 @@
         "class": "TestCheckRiskConfiguration"
       },
       {
-        "name": "TestCheckRiskConfiguration::test_fails_with_zero_daily_loss_limit",
-        "line": 59,
+        "name": "TestCheckRiskConfiguration::test_warns_when_no_daily_loss_limit_configured",
+        "line": 70,
         "markers": [
           "unit"
         ],
-        "docstring": "Should fail when daily loss limit is zero or negative.",
+        "docstring": "Should warn when neither pct nor absolute daily loss limit is configured.",
         "class": "TestCheckRiskConfiguration"
       },
       {
         "name": "TestCheckRiskConfiguration::test_fails_with_low_liquidation_buffer",
-        "line": 78,
+        "line": 81,
         "markers": [
           "unit"
         ],
@@ -39027,7 +39027,7 @@
       },
       {
         "name": "TestCheckRiskConfiguration::test_fails_with_excessive_position_size",
-        "line": 97,
+        "line": 89,
         "markers": [
           "unit"
         ],
@@ -39036,7 +39036,7 @@
       },
       {
         "name": "TestCheckRiskConfiguration::test_fails_with_slippage_guard_out_of_range",
-        "line": 116,
+        "line": 97,
         "markers": [
           "unit"
         ],
@@ -39045,7 +39045,7 @@
       },
       {
         "name": "TestCheckRiskConfiguration::test_warns_when_kill_switch_enabled",
-        "line": 135,
+        "line": 107,
         "markers": [
           "unit"
         ],
@@ -39054,7 +39054,7 @@
       },
       {
         "name": "TestCheckRiskConfiguration::test_warns_when_reduce_only_mode",
-        "line": 156,
+        "line": 116,
         "markers": [
           "unit"
         ],
@@ -39063,7 +39063,7 @@
       },
       {
         "name": "TestCheckRiskConfiguration::test_warns_on_high_daily_loss_limit",
-        "line": 177,
+        "line": 125,
         "markers": [
           "unit"
         ],
@@ -39072,7 +39072,7 @@
       },
       {
         "name": "TestCheckRiskConfiguration::test_warns_on_aggressive_leverage",
-        "line": 198,
+        "line": 134,
         "markers": [
           "unit"
         ],
@@ -39081,7 +39081,7 @@
       },
       {
         "name": "TestCheckRiskConfiguration::test_fails_on_exception",
-        "line": 219,
+        "line": 143,
         "markers": [
           "unit"
         ],
@@ -39090,7 +39090,7 @@
       },
       {
         "name": "TestCheckRiskConfiguration::test_prints_section_header",
-        "line": 230,
+        "line": 152,
         "markers": [
           "unit"
         ],

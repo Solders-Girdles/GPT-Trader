@@ -1117,7 +1117,8 @@
       "tests/unit/gpt_trader/features/live_trade/test_leverage_cap.py",
       "tests/unit/gpt_trader/features/live_trade/test_leverage_time_windows.py",
       "tests/unit/gpt_trader/features/live_trade/test_liq_price_buffer.py",
-      "tests/unit/gpt_trader/features/live_trade/test_total_exposure_breach.py"
+      "tests/unit/gpt_trader/features/live_trade/test_total_exposure_breach.py",
+      "tests/unit/gpt_trader/preflight/test_checks_risk.py"
     ],
     "gpt_trader.features.live_trade.risk.manager": [
       "tests/unit/gpt_trader/app/containers/test_risk_validation.py",
@@ -4816,6 +4817,7 @@
       "gpt_trader.preflight.core"
     ],
     "tests/unit/gpt_trader/preflight/test_checks_risk.py": [
+      "gpt_trader.features.live_trade.risk.config",
       "gpt_trader.preflight.checks.risk",
       "gpt_trader.preflight.core"
     ],

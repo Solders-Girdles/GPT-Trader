@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
+import pytest
 from textual.widgets import Static
 
+import gpt_trader.tui.mixins.event_handlers as event_handlers_module
 from gpt_trader.tui.events import BotStateChanged
 from gpt_trader.tui.mixins import EventHandlerMixin
 
@@ -26,24 +28,29 @@ class TestUtilityMethods:
         widget.post_event(event)
         widget.post_message.assert_called_once_with(event)
 
-    def test_post_event_when_not_mounted(self):
+    def test_post_event_when_not_mounted(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test post_event warns when post_message is unavailable."""
 
         class DummyHandler(EventHandlerMixin):
             pass
 
+        mock_logger = MagicMock()
+        monkeypatch.setattr(event_handlers_module, "logger", mock_logger)
+
         widget = DummyHandler()
         event = BotStateChanged(running=True)
-        with patch("gpt_trader.tui.mixins.event_handlers.logger") as mock_logger:
-            widget.post_event(event)
-            mock_logger.warning.assert_called_once()
 
-    @patch("gpt_trader.tui.mixins.event_handlers.logger")
-    def test_log_event_received_utility(self, mock_logger):
+        widget.post_event(event)
+        mock_logger.warning.assert_called_once()
+
+    def test_log_event_received_utility(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test log_event_received utility method."""
 
         class TestWidget(EventHandlerMixin, Static):
             pass
+
+        mock_logger = MagicMock()
+        monkeypatch.setattr(event_handlers_module, "logger", mock_logger)
 
         widget = TestWidget()
 
@@ -54,12 +61,14 @@ class TestUtilityMethods:
         assert "CustomEvent" in call_args
         assert "with details" in call_args
 
-    @patch("gpt_trader.tui.mixins.event_handlers.logger")
-    def test_log_event_received_without_details(self, mock_logger):
+    def test_log_event_received_without_details(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test log_event_received without details."""
 
         class TestWidget(EventHandlerMixin, Static):
             pass
+
+        mock_logger = MagicMock()
+        monkeypatch.setattr(event_handlers_module, "logger", mock_logger)
 
         widget = TestWidget()
 

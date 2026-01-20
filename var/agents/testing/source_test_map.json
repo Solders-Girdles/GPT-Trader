@@ -2,7 +2,7 @@
   "version": "1.0",
   "summary": {
     "tests_scanned": 918,
-    "source_modules": 350,
+    "source_modules": 351,
     "unresolved_modules": 3
   },
   "source_to_tests": {
@@ -698,6 +698,9 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_models.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_models_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_system.py"
+    ],
+    "gpt_trader.features.brokerages.coinbase.rest.base": [
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_execute_order_payload.py"
     ],
     "gpt_trader.features.brokerages.coinbase.rest.order_service": [
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_edges.py",
@@ -1856,7 +1859,8 @@
       "tests/unit/gpt_trader/tui/mixins/test_event_handlers_utilities_and_docs.py"
     ],
     "gpt_trader.tui.mixins.event_handlers": [
-      "tests/unit/gpt_trader/tui/mixins/test_event_handlers_default_handlers.py"
+      "tests/unit/gpt_trader/tui/mixins/test_event_handlers_default_handlers.py",
+      "tests/unit/gpt_trader/tui/mixins/test_event_handlers_utilities_and_docs.py"
     ],
     "gpt_trader.tui.responsive_state": [
       "tests/unit/gpt_trader/tui/mixins/test_event_handlers_default_handlers.py",
@@ -3156,7 +3160,8 @@
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_execute_order_payload.py": [
       "gpt_trader.core",
-      "gpt_trader.errors"
+      "gpt_trader.errors",
+      "gpt_trader.features.brokerages.coinbase.rest.base"
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_find_existing_order_by_client_id.py": [
       "gpt_trader.core"
@@ -5008,7 +5013,8 @@
     ],
     "tests/unit/gpt_trader/tui/mixins/test_event_handlers_utilities_and_docs.py": [
       "gpt_trader.tui.events",
-      "gpt_trader.tui.mixins"
+      "gpt_trader.tui.mixins",
+      "gpt_trader.tui.mixins.event_handlers"
     ],
     "tests/unit/gpt_trader/tui/screens/test_alert_history.py": [
       "gpt_trader.tui.screens.alert_history",
@@ -5898,6 +5904,7 @@
     "gpt_trader.features.brokerages.coinbase.client.market": "src/gpt_trader/features/brokerages/coinbase/client/market.py",
     "gpt_trader.features.brokerages.coinbase.client.orders": "src/gpt_trader/features/brokerages/coinbase/client/orders.py",
     "gpt_trader.features.brokerages.coinbase.client.portfolio": "src/gpt_trader/features/brokerages/coinbase/client/portfolio.py",
+    "gpt_trader.features.brokerages.coinbase.rest.base": "src/gpt_trader/features/brokerages/coinbase/rest/base.py",
     "gpt_trader.features.brokerages.coinbase.rest.portfolio_service": "src/gpt_trader/features/brokerages/coinbase/rest/portfolio_service.py",
     "gpt_trader.features.brokerages.coinbase.rest.pnl_service": "src/gpt_trader/features/brokerages/coinbase/rest/pnl_service.py",
     "gpt_trader.features.brokerages.coinbase.rest.order_service": "src/gpt_trader/features/brokerages/coinbase/rest/order_service.py",

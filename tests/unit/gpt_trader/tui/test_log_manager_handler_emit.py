@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import logging
-from unittest.mock import MagicMock, patch
+import threading
+from unittest.mock import MagicMock
 
+import pytest
 from rich.text import Text
 
 from gpt_trader.tui.log_manager import TuiLogHandler
@@ -182,7 +184,9 @@ class TestTuiLogHandlerEmit:
 
         mock_widget.write.assert_not_called()
 
-    def test_emit_uses_call_from_thread_on_background_thread(self) -> None:
+    def test_emit_uses_call_from_thread_on_background_thread(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         handler = TuiLogHandler()
         mock_widget = MagicMock()
         mock_widget.is_mounted = True
@@ -200,17 +204,15 @@ class TestTuiLogHandlerEmit:
             exc_info=None,
         )
 
-        with (
-            patch("threading.current_thread") as mock_thread,
-            patch("threading.main_thread") as mock_main_thread,
-        ):
-            mock_thread.return_value = MagicMock(name="background_thread")
-            mock_main_thread.return_value = MagicMock(name="main_thread")
+        mock_current = MagicMock(name="background_thread")
+        mock_main = MagicMock(name="main_thread")
+        monkeypatch.setattr(threading, "current_thread", lambda: mock_current)
+        monkeypatch.setattr(threading, "main_thread", lambda: mock_main)
 
-            handler.emit(record)
+        handler.emit(record)
 
-            mock_widget.app.call_from_thread.assert_called_once()
-            call_args = mock_widget.app.call_from_thread.call_args
-            assert call_args[0][0] == handler._write_to_widget
-            assert call_args[0][1] is mock_widget
-            assert isinstance(call_args[0][2], Text)
+        mock_widget.app.call_from_thread.assert_called_once()
+        call_args = mock_widget.app.call_from_thread.call_args
+        assert call_args[0][0] == handler._write_to_widget
+        assert call_args[0][1] is mock_widget
+        assert isinstance(call_args[0][2], Text)

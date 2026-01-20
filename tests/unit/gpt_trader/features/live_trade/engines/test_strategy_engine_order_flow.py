@@ -3,16 +3,17 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
+import gpt_trader.security.security_validator as security_validator_module
 from gpt_trader.core import Balance, OrderSide, OrderType
 from gpt_trader.features.live_trade.strategies.perps_baseline import Action, Decision
 
 
 @pytest.mark.asyncio
-async def test_order_placed_with_dynamic_quantity(engine):
+async def test_order_placed_with_dynamic_quantity(engine, monkeypatch: pytest.MonkeyPatch):
     """Test full flow from decision to order placement with calculated size."""
     engine.strategy.decide.return_value = Decision(Action.BUY, "test")
     engine.strategy.config.position_fraction = Decimal("0.1")
@@ -22,12 +23,11 @@ async def test_order_placed_with_dynamic_quantity(engine):
     ]
     engine.context.broker.list_positions.return_value = []
 
-    with patch("gpt_trader.security.security_validator.get_validator") as mock_get_validator:
-        mock_validator = MagicMock()
-        mock_validator.validate_order_request.return_value.is_valid = True
-        mock_get_validator.return_value = mock_validator
+    mock_validator = MagicMock()
+    mock_validator.validate_order_request.return_value.is_valid = True
+    monkeypatch.setattr(security_validator_module, "get_validator", lambda: mock_validator)
 
-        await engine._cycle()
+    await engine._cycle()
 
     engine._order_submitter.submit_order.assert_called_once()
     call_kwargs = engine._order_submitter.submit_order.call_args[1]

@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock
 
+import pytest
+
+import gpt_trader.utilities.telemetry as telemetry_module
 from gpt_trader.features.live_trade.engines.telemetry_streaming import (
     _emit_metric,
     _should_enable_streaming,
@@ -13,9 +16,11 @@ from gpt_trader.features.live_trade.engines.telemetry_streaming import (
 class TestEmitMetric:
     """Tests for _emit_metric function."""
 
-    @patch("gpt_trader.utilities.telemetry.emit_metric")
-    def test_emit_metric_calls_utility(self, mock_emit: Mock) -> None:
+    def test_emit_metric_calls_utility(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test _emit_metric calls the utility emit_metric."""
+        mock_emit = MagicMock()
+        monkeypatch.setattr(telemetry_module, "emit_metric", mock_emit)
+
         event_store = Mock()
         bot_id = "test_bot"
         payload = {"event_type": "test"}

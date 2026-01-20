@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -14,7 +14,7 @@ pytestmark = pytest.mark.integration
 
 
 @pytest.mark.asyncio
-async def test_end_to_end_buy_execution():
+async def test_end_to_end_buy_execution(monkeypatch: pytest.MonkeyPatch):
     """Test that the bot correctly executes a BUY when strategy signals.
 
     This tests the wiring between TradingBot -> TradingEngine -> Broker,
@@ -44,16 +44,20 @@ async def test_end_to_end_buy_execution():
         buy_decision = Decision(action=Action.BUY, reason="Test signal", confidence=0.8)
 
         # Mock the broker's place_order to verify it gets called
-        with patch.object(bot.broker, "place_order", wraps=bot.broker.place_order) as mock_place:
-            with patch.object(bot.engine.strategy, "decide", return_value=buy_decision):
-                await bot.engine._cycle()
+        # Create a wrapper to track calls while preserving original behavior
+        original_place_order = bot.broker.place_order
+        mock_place = MagicMock(wraps=original_place_order)
+        monkeypatch.setattr(bot.broker, "place_order", mock_place)
+        monkeypatch.setattr(bot.engine.strategy, "decide", lambda *args, **kwargs: buy_decision)
 
-            # 4. Verify Order Placement
-            mock_place.assert_called_once()
-            call_kwargs = mock_place.call_args.kwargs
-            assert call_kwargs["symbol"] == "BTC-USD"
-            from gpt_trader.core import OrderSide
+        await bot.engine._cycle()
 
-            assert call_kwargs["side"] == OrderSide.BUY
+        # 4. Verify Order Placement
+        mock_place.assert_called_once()
+        call_kwargs = mock_place.call_args.kwargs
+        assert call_kwargs["symbol"] == "BTC-USD"
+        from gpt_trader.core import OrderSide
+
+        assert call_kwargs["side"] == OrderSide.BUY
     finally:
         clear_application_container()

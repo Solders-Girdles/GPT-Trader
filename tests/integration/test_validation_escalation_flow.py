@@ -10,7 +10,7 @@ Tests the end-to-end safety loop:
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -87,22 +87,23 @@ class TestValidationEscalationFlow:
         self,
         validator,
         real_risk_manager: LiveRiskManager,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Test that 5 consecutive validation failures trigger reduce-only mode."""
         assert not real_risk_manager.is_reduce_only_mode()
 
-        with patch.object(
+        monkeypatch.setattr(
             real_risk_manager,
             "check_mark_staleness",
-            side_effect=RuntimeError("Simulated API failure"),
-        ):
-            for i in range(4):
-                validator.ensure_mark_is_fresh("BTC-USD")
-                assert (
-                    not real_risk_manager.is_reduce_only_mode()
-                ), f"Reduce-only triggered too early at failure {i + 1}"
-
+            MagicMock(side_effect=RuntimeError("Simulated API failure")),
+        )
+        for i in range(4):
             validator.ensure_mark_is_fresh("BTC-USD")
+            assert (
+                not real_risk_manager.is_reduce_only_mode()
+            ), f"Reduce-only triggered too early at failure {i + 1}"
+
+        validator.ensure_mark_is_fresh("BTC-USD")
 
         assert real_risk_manager.is_reduce_only_mode()
 
@@ -110,32 +111,36 @@ class TestValidationEscalationFlow:
         self,
         validator,
         real_risk_manager: LiveRiskManager,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Test that successful validations reset the failure counter."""
         assert not real_risk_manager.is_reduce_only_mode()
 
-        with patch.object(
+        # First 3 failures
+        monkeypatch.setattr(
             real_risk_manager,
             "check_mark_staleness",
-            side_effect=RuntimeError("API failure"),
-        ):
-            for _ in range(3):
-                validator.ensure_mark_is_fresh("BTC-USD")
-
-        with patch.object(
-            real_risk_manager,
-            "check_mark_staleness",
-            return_value=False,
-        ):
+            MagicMock(side_effect=RuntimeError("API failure")),
+        )
+        for _ in range(3):
             validator.ensure_mark_is_fresh("BTC-USD")
 
-        with patch.object(
+        # Successful validation resets counter
+        monkeypatch.setattr(
             real_risk_manager,
             "check_mark_staleness",
-            side_effect=RuntimeError("API failure"),
-        ):
-            for _ in range(4):
-                validator.ensure_mark_is_fresh("BTC-USD")
+            MagicMock(return_value=False),
+        )
+        validator.ensure_mark_is_fresh("BTC-USD")
+
+        # 4 more failures (not enough to trigger escalation after reset)
+        monkeypatch.setattr(
+            real_risk_manager,
+            "check_mark_staleness",
+            MagicMock(side_effect=RuntimeError("API failure")),
+        )
+        for _ in range(4):
+            validator.ensure_mark_is_fresh("BTC-USD")
 
         assert not real_risk_manager.is_reduce_only_mode()
 
@@ -165,17 +170,18 @@ class TestValidationEscalationFlow:
         validator,
         real_risk_manager: LiveRiskManager,
         mock_broker: MagicMock,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Test that different check types track failures independently."""
         assert not real_risk_manager.is_reduce_only_mode()
 
-        with patch.object(
+        monkeypatch.setattr(
             real_risk_manager,
             "check_mark_staleness",
-            side_effect=RuntimeError("API failure"),
-        ):
-            for _ in range(3):
-                validator.ensure_mark_is_fresh("BTC-USD")
+            MagicMock(side_effect=RuntimeError("API failure")),
+        )
+        for _ in range(3):
+            validator.ensure_mark_is_fresh("BTC-USD")
 
         mock_broker.get_market_snapshot.side_effect = RuntimeError("API failure")
         for _ in range(3):
@@ -189,7 +195,10 @@ class TestValidationEscalationFlow:
         assert not real_risk_manager.is_reduce_only_mode()
 
     def test_escalation_reason_is_correct(
-        self, mock_broker: MagicMock, bot_config: BotConfig
+        self,
+        mock_broker: MagicMock,
+        bot_config: BotConfig,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Test that escalation sets the correct reason on risk manager."""
         risk_manager = LiveRiskManager()
@@ -210,13 +219,13 @@ class TestValidationEscalationFlow:
             validator = engine._order_validator
             assert validator is not None
 
-            with patch.object(
+            monkeypatch.setattr(
                 risk_manager,
                 "check_mark_staleness",
-                side_effect=RuntimeError("API failure"),
-            ):
-                for _ in range(5):
-                    validator.ensure_mark_is_fresh("BTC-USD")
+                MagicMock(side_effect=RuntimeError("API failure")),
+            )
+            for _ in range(5):
+                validator.ensure_mark_is_fresh("BTC-USD")
         finally:
             clear_application_container()
 

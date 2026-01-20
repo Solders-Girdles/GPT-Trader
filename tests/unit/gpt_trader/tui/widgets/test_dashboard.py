@@ -1,12 +1,16 @@
-"""Tests for TUI dashboard widgets."""
+"""Tests for TUI dashboard widgets and SystemMonitorWidget StateRegistry integration."""
 
 from __future__ import annotations
 
 from decimal import Decimal
 
 import pytest
+from textual.app import App, ComposeResult
 
-from gpt_trader.tui.widgets.dashboard import calculate_price_change_percent
+from gpt_trader.tui.widgets.dashboard import (
+    SystemMonitorWidget,
+    calculate_price_change_percent,
+)
 
 
 class TestCalculatePriceChangePercent:
@@ -77,3 +81,36 @@ class TestCalculatePriceChangePercent:
         result = calculate_price_change_percent(0.38, [Decimal("0.35")])
         expected = ((0.38 - 0.35) / 0.35) * 100
         assert result == pytest.approx(expected)
+
+
+class TestSystemMonitorStateRegistry:
+    """Tests for StateRegistry integration."""
+
+    @pytest.mark.asyncio
+    async def test_mount_registers_with_state_registry(self) -> None:
+        """Test that widget registers with StateRegistry on mount."""
+
+        class MockStateRegistry:
+            def __init__(self):
+                self.registered = []
+
+            def register(self, widget):
+                self.registered.append(widget)
+
+            def unregister(self, widget):
+                if widget in self.registered:
+                    self.registered.remove(widget)
+
+        class TestAppWithRegistry(App):
+            def __init__(self):
+                super().__init__()
+                self.state_registry = MockStateRegistry()
+
+            def compose(self) -> ComposeResult:
+                yield SystemMonitorWidget(id="test-widget")
+
+        app = TestAppWithRegistry()
+
+        async with app.run_test():
+            widget = app.query_one(SystemMonitorWidget)
+            assert widget in app.state_registry.registered

@@ -933,26 +933,22 @@ clusters:
     added: '2026-01-20'
   97978043d552:
     type: source_fanout
-    description: 10 test files import gpt_trader.tui.thresholds
+    description: 5 test files import gpt_trader.tui.thresholds
     files:
-    - tests/unit/gpt_trader/tui/services/test_alert_manager_trade_stale_orders.py
-    - tests/unit/gpt_trader/tui/test_risk_preview_models.py
-    - tests/unit/gpt_trader/tui/test_risk_preview_position_impacts.py
-    - tests/unit/gpt_trader/tui/test_risk_preview_preview_and_scenarios.py
-    - tests/unit/gpt_trader/tui/test_risk_preview_threshold_helpers.py
-    - tests/unit/gpt_trader/tui/test_thresholds_confidence.py
-    - tests/unit/gpt_trader/tui/test_thresholds_performance_metrics.py
-    - tests/unit/gpt_trader/tui/test_thresholds_risk_loss_ratio.py
-    - tests/unit/gpt_trader/tui/test_thresholds_risk_score_and_order_status.py
-    - tests/unit/gpt_trader/tui/test_thresholds_status_level.py
+    - tests/unit/gpt_trader/tui/test_thresholds.py
+    - tests/unit/gpt_trader/tui/test_thresholds_risk.py
+    - tests/unit/gpt_trader/tui/test_risk_preview.py
+    - tests/unit/gpt_trader/tui/test_risk_preview_position.py
+    - tests/unit/gpt_trader/tui/test_risk_preview_scenarios.py
     source_modules:
     - gpt_trader.tui.thresholds
     decision: merge
-    target_location: tests/unit/gpt_trader/tui/services/test_thresholds.py
-    expected_file_delta: -9
+    target_location: tests/unit/gpt_trader/tui/test_thresholds.py
+    expected_file_delta: -4
     priority: medium
-    rationale: Consolidate 10 test files into single parametrized file
-    status: pending
+    rationale: Consolidate 9 test files into 5 files (<=240 lines each)
+    status: in_progress
+    owner: claude
     added: '2026-01-20'
   b13a6eabed19:
     type: source_fanout
@@ -1978,22 +1974,21 @@ clusters:
     added: '2026-01-20'
   c4731752fc43:
     type: source_fanout
-    description: 6 test files import gpt_trader.tui.widgets.dashboard
+    description: 4 test files import gpt_trader.tui.widgets.dashboard
     files:
     - tests/unit/gpt_trader/tui/widgets/test_dashboard.py
-    - tests/unit/gpt_trader/tui/widgets/test_system_monitor_initial_state_and_updates.py
-    - tests/unit/gpt_trader/tui/widgets/test_system_monitor_partial_state.py
-    - tests/unit/gpt_trader/tui/widgets/test_system_monitor_signature_caching.py
-    - tests/unit/gpt_trader/tui/widgets/test_system_monitor_state_registry.py
-    - tests/unit/gpt_trader/tui/widgets/test_system_monitor_watch_methods.py
+    - tests/unit/gpt_trader/tui/widgets/test_system_monitor.py
+    - tests/unit/gpt_trader/tui/widgets/test_system_monitor_caching.py
+    - tests/unit/gpt_trader/tui/widgets/test_system_monitor_watch.py
     source_modules:
     - gpt_trader.tui.widgets.dashboard
     decision: merge
     target_location: tests/unit/gpt_trader/tui/widgets/test_dashboard.py
-    expected_file_delta: -5
+    expected_file_delta: -2
     priority: medium
-    rationale: Consolidate 6 test files into single parametrized file
-    status: pending
+    rationale: Consolidate 6 test files into 4 files (<=240 lines each)
+    status: in_progress
+    owner: claude
     added: '2026-01-20'
   cd648425ded4:
     type: source_fanout

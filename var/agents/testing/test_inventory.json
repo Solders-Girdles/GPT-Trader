@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6325,
-    "total_files": 975,
+    "total_files": 970,
     "markers_used": 15
   },
   "marker_definitions": {
@@ -742,12 +742,7 @@
       "tests/unit/gpt_trader/monitoring/test_runtime_guards_base.py",
       "tests/unit/gpt_trader/monitoring/test_status_reporter_edges.py",
       "tests/unit/gpt_trader/monitoring/test_status_reporter_file_output.py",
-      "tests/unit/gpt_trader/monitoring/test_status_reporter_io_edges.py",
-      "tests/unit/gpt_trader/monitoring/test_status_reporter_lifecycle.py",
-      "tests/unit/gpt_trader/monitoring/test_status_reporter_limits_edges.py",
-      "tests/unit/gpt_trader/monitoring/test_status_reporter_metrics.py",
       "tests/unit/gpt_trader/monitoring/test_status_reporter_models_and_init.py",
-      "tests/unit/gpt_trader/monitoring/test_status_reporter_strategy_performance.py",
       "tests/unit/gpt_trader/monitoring/test_status_reporter_updates_and_health.py",
       "tests/unit/gpt_trader/monitoring/two_person_rule/test_manager_edges.py",
       "tests/unit/gpt_trader/monitoring/two_person_rule/test_models_edges.py"
@@ -36768,7 +36763,7 @@
     "tests/unit/gpt_trader/monitoring/test_status_reporter_edges.py": [
       {
         "name": "test_update_positions_coerces_invalid_and_skips_non_dict",
-        "line": 13,
+        "line": 22,
         "markers": [
           "unit"
         ],
@@ -36776,7 +36771,7 @@
       },
       {
         "name": "test_update_orders_invalid_fields_use_defaults",
-        "line": 40,
+        "line": 49,
         "markers": [
           "unit"
         ],
@@ -36784,7 +36779,7 @@
       },
       {
         "name": "test_update_account_skips_zero_or_invalid_balances",
-        "line": 74,
+        "line": 83,
         "markers": [
           "unit"
         ],
@@ -36792,7 +36787,7 @@
       },
       {
         "name": "test_update_strategy_generates_decision_id_and_handles_invalid_timestamp",
-        "line": 94,
+        "line": 103,
         "markers": [
           "unit"
         ],
@@ -36800,7 +36795,31 @@
       },
       {
         "name": "test_update_equity_swallows_record_gauge_exceptions",
-        "line": 117,
+        "line": 126,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_add_trade_caps_recent_trades",
+        "line": 139,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_update_strategy_caps_decisions",
+        "line": 164,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_update_account_accepts_object_balances_and_coerces_invalid",
+        "line": 176,
         "markers": [
           "unit"
         ],
@@ -36834,12 +36853,10 @@
           "unit"
         ],
         "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/monitoring/test_status_reporter_io_edges.py": [
+      },
       {
         "name": "test_write_status_creates_directories_and_writes_json",
-        "line": 15,
+        "line": 98,
         "markers": [
           "asyncio",
           "unit"
@@ -36848,7 +36865,7 @@
       },
       {
         "name": "test_decimal_encoder_handles_nested_decimals",
-        "line": 27,
+        "line": 110,
         "markers": [
           "unit"
         ],
@@ -36856,7 +36873,7 @@
       },
       {
         "name": "test_write_status_handles_write_errors",
-        "line": 47,
+        "line": 130,
         "markers": [
           "asyncio",
           "unit"
@@ -36865,134 +36882,17 @@
       },
       {
         "name": "test_serialize_status_includes_expected_keys",
-        "line": 62,
+        "line": 145,
         "markers": [
           "unit"
         ],
         "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/monitoring/test_status_reporter_lifecycle.py": [
-      {
-        "name": "TestStatusReporterStart::test_start_when_disabled",
-        "line": 18,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestStatusReporterStart"
-      },
-      {
-        "name": "TestStatusReporterStart::test_start_creates_task",
-        "line": 25,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestStatusReporterStart"
-      },
-      {
-        "name": "TestStatusReporterStart::test_start_writes_initial_status",
-        "line": 42,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestStatusReporterStart"
-      },
-      {
-        "name": "TestStatusReporterStart::test_start_creates_directory",
-        "line": 61,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestStatusReporterStart"
-      },
-      {
-        "name": "TestStatusReporterStop::test_stop_when_not_running",
-        "line": 79,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestStatusReporterStop"
-      },
-      {
-        "name": "TestStatusReporterStop::test_stop_cancels_task",
-        "line": 85,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestStatusReporterStop"
-      }
-    ],
-    "tests/unit/gpt_trader/monitoring/test_status_reporter_limits_edges.py": [
-      {
-        "name": "test_add_trade_caps_recent_trades",
-        "line": 21,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_update_strategy_caps_decisions",
-        "line": 46,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_update_account_accepts_object_balances_and_coerces_invalid",
-        "line": 58,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/monitoring/test_status_reporter_metrics.py": [
-      {
-        "name": "TestStatusReporterMetrics::test_update_equity_records_gauge",
-        "line": 25,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "update_equity records the equity gauge metric.",
-        "class": "TestStatusReporterMetrics"
-      },
-      {
-        "name": "TestStatusReporterMetrics::test_update_ws_health_records_gap_gauge",
-        "line": 36,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "update_ws_health records the WS gap count gauge metric.",
-        "class": "TestStatusReporterMetrics"
-      },
-      {
-        "name": "TestStatusReporterMetrics::test_equity_gauge_updates_on_change",
-        "line": 55,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "equity gauge updates when equity changes.",
-        "class": "TestStatusReporterMetrics"
       }
     ],
     "tests/unit/gpt_trader/monitoring/test_status_reporter_models_and_init.py": [
       {
         "name": "TestBotStatusDataclass::test_default_values",
-        "line": 19,
+        "line": 22,
         "markers": [
           "unit"
         ],
@@ -37001,7 +36901,7 @@
       },
       {
         "name": "TestBotStatusDataclass::test_engine_status_defaults",
-        "line": 27,
+        "line": 30,
         "markers": [
           "unit"
         ],
@@ -37010,7 +36910,7 @@
       },
       {
         "name": "TestBotStatusDataclass::test_market_status_defaults",
-        "line": 33,
+        "line": 36,
         "markers": [
           "unit"
         ],
@@ -37019,7 +36919,7 @@
       },
       {
         "name": "TestBotStatusDataclass::test_position_status_defaults",
-        "line": 38,
+        "line": 41,
         "markers": [
           "unit"
         ],
@@ -37028,7 +36928,7 @@
       },
       {
         "name": "TestStatusReporterInit::test_default_values",
-        "line": 48,
+        "line": 51,
         "markers": [
           "unit"
         ],
@@ -37037,18 +36937,43 @@
       },
       {
         "name": "TestStatusReporterInit::test_custom_values",
-        "line": 56,
+        "line": 59,
         "markers": [
           "unit"
         ],
         "docstring": "",
         "class": "TestStatusReporterInit"
-      }
-    ],
-    "tests/unit/gpt_trader/monitoring/test_status_reporter_strategy_performance.py": [
+      },
+      {
+        "name": "TestStatusReporterMetrics::test_update_equity_records_gauge",
+        "line": 83,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "update_equity records the equity gauge metric.",
+        "class": "TestStatusReporterMetrics"
+      },
+      {
+        "name": "TestStatusReporterMetrics::test_update_ws_health_records_gap_gauge",
+        "line": 94,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "update_ws_health records the WS gap count gauge metric.",
+        "class": "TestStatusReporterMetrics"
+      },
+      {
+        "name": "TestStatusReporterMetrics::test_equity_gauge_updates_on_change",
+        "line": 113,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "equity gauge updates when equity changes.",
+        "class": "TestStatusReporterMetrics"
+      },
       {
         "name": "TestStatusReporterStrategyPerformance::test_update_strategy_performance_sets_performance",
-        "line": 11,
+        "line": 128,
         "markers": [
           "unit"
         ],
@@ -37057,7 +36982,7 @@
       },
       {
         "name": "TestStatusReporterStrategyPerformance::test_update_strategy_performance_sets_backtest",
-        "line": 28,
+        "line": 145,
         "markers": [
           "unit"
         ],
@@ -37066,7 +36991,7 @@
       },
       {
         "name": "TestStatusReporterStrategyPerformance::test_update_strategy_performance_sets_both",
-        "line": 45,
+        "line": 162,
         "markers": [
           "unit"
         ],
@@ -37077,7 +37002,7 @@
     "tests/unit/gpt_trader/monitoring/test_status_reporter_updates_and_health.py": [
       {
         "name": "TestStatusReporterUpdates::test_record_cycle",
-        "line": 20,
+        "line": 21,
         "markers": [
           "unit"
         ],
@@ -37086,7 +37011,7 @@
       },
       {
         "name": "TestStatusReporterUpdates::test_record_error",
-        "line": 30,
+        "line": 31,
         "markers": [
           "unit"
         ],
@@ -37095,7 +37020,7 @@
       },
       {
         "name": "TestStatusReporterUpdates::test_update_price",
-        "line": 40,
+        "line": 41,
         "markers": [
           "unit"
         ],
@@ -37104,7 +37029,7 @@
       },
       {
         "name": "TestStatusReporterUpdates::test_update_positions",
-        "line": 48,
+        "line": 49,
         "markers": [
           "unit"
         ],
@@ -37113,7 +37038,7 @@
       },
       {
         "name": "TestStatusReporterUpdates::test_set_heartbeat_service",
-        "line": 61,
+        "line": 62,
         "markers": [
           "unit"
         ],
@@ -37122,7 +37047,7 @@
       },
       {
         "name": "TestStatusReporterHealth::test_healthy_status",
-        "line": 75,
+        "line": 76,
         "markers": [
           "asyncio",
           "unit"
@@ -37132,7 +37057,7 @@
       },
       {
         "name": "TestStatusReporterHealth::test_unhealthy_recent_error",
-        "line": 91,
+        "line": 92,
         "markers": [
           "unit"
         ],
@@ -37141,12 +37066,72 @@
       },
       {
         "name": "TestStatusReporterHealth::test_unhealthy_stale_prices",
-        "line": 103,
+        "line": 104,
         "markers": [
           "unit"
         ],
         "docstring": "",
         "class": "TestStatusReporterHealth"
+      },
+      {
+        "name": "TestStatusReporterStart::test_start_when_disabled",
+        "line": 121,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestStatusReporterStart"
+      },
+      {
+        "name": "TestStatusReporterStart::test_start_creates_task",
+        "line": 128,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestStatusReporterStart"
+      },
+      {
+        "name": "TestStatusReporterStart::test_start_writes_initial_status",
+        "line": 145,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestStatusReporterStart"
+      },
+      {
+        "name": "TestStatusReporterStart::test_start_creates_directory",
+        "line": 163,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestStatusReporterStart"
+      },
+      {
+        "name": "TestStatusReporterStop::test_stop_when_not_running",
+        "line": 181,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestStatusReporterStop"
+      },
+      {
+        "name": "TestStatusReporterStop::test_stop_cancels_task",
+        "line": 187,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestStatusReporterStop"
       }
     ],
     "tests/unit/gpt_trader/monitoring/two_person_rule/test_manager_edges.py": [

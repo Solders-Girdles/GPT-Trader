@@ -15133,7 +15133,7 @@
       },
       {
         "name": "test_408_timeout_does_not_retry",
-        "line": 141,
+        "line": 144,
         "markers": [
           "unit"
         ],
@@ -15414,7 +15414,7 @@
       },
       {
         "name": "test_to_quote_uses_trade_fallback",
-        "line": 50,
+        "line": 54,
         "markers": [
           "unit"
         ],
@@ -15422,7 +15422,7 @@
       },
       {
         "name": "test_to_quote_logs_bad_trade_payload",
-        "line": 66,
+        "line": 70,
         "markers": [
           "unit"
         ],
@@ -15430,7 +15430,7 @@
       },
       {
         "name": "test_to_order_stop_limit_with_ioc",
-        "line": 80,
+        "line": 86,
         "markers": [
           "unit"
         ],
@@ -15438,7 +15438,7 @@
       },
       {
         "name": "test_to_order_contracts_quantity_fallback",
-        "line": 109,
+        "line": 115,
         "markers": [
           "unit"
         ],
@@ -15446,7 +15446,7 @@
       },
       {
         "name": "test_to_position_side_from_quantity",
-        "line": 125,
+        "line": 131,
         "markers": [
           "unit"
         ],
@@ -15454,7 +15454,7 @@
       },
       {
         "name": "test_to_position_respects_side_override",
-        "line": 143,
+        "line": 149,
         "markers": [
           "unit"
         ],
@@ -15462,7 +15462,7 @@
       },
       {
         "name": "test_to_candle_uses_ts_field",
-        "line": 162,
+        "line": 168,
         "markers": [
           "unit"
         ],

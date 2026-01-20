@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from unittest.mock import patch
+import time
 
 import pytest
 
@@ -117,7 +117,7 @@ def test_network_errors_retry(fake_clock):
     assert result.get("connected") is True
 
 
-def test_jitter_applied_to_retry_delay(fake_clock):
+def test_jitter_applied_to_retry_delay(fake_clock, monkeypatch: pytest.MonkeyPatch) -> None:
     client = make_client()
     delays: list[float] = []
 
@@ -130,9 +130,10 @@ def test_jitter_applied_to_retry_delay(fake_clock):
         delays.append(seconds)
         fake_clock.sleep(seconds)
 
-    with patch("time.sleep", side_effect=capture_sleep):
-        with pytest.raises(RateLimitError):
-            client.get_products()
+    monkeypatch.setattr(time, "sleep", capture_sleep)
+
+    with pytest.raises(RateLimitError):
+        client.get_products()
 
     if len(delays) > 1:
         assert len(set(delays)) > 1 or all(delay > 0 for delay in delays)

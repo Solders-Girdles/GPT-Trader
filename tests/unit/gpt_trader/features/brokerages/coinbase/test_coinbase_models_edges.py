@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import UTC
 from datetime import datetime as real_datetime
 from decimal import Decimal
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -20,7 +20,12 @@ from gpt_trader.features.brokerages.coinbase.models import (
 )
 
 
-def test_to_product_perpetual_logs_invalid_funding_time() -> None:
+def test_to_product_perpetual_logs_invalid_funding_time(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    mock_logger = MagicMock()
+    monkeypatch.setattr(models, "logger", mock_logger)
+
     payload = {
         "product_id": "btc-perp",
         "base_currency": "BTC",
@@ -35,8 +40,7 @@ def test_to_product_perpetual_logs_invalid_funding_time() -> None:
         "quote_increment": "0.1",
     }
 
-    with patch("gpt_trader.features.brokerages.coinbase.models.logger") as mock_logger:
-        product = to_product(payload)
+    product = to_product(payload)
 
     assert product.symbol == "BTC-PERP"
     assert product.market_type == MarketType.PERPETUAL
@@ -67,10 +71,12 @@ def test_to_quote_logs_bad_trade_payload(monkeypatch: pytest.MonkeyPatch) -> Non
     fixed_time = real_datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
     monkeypatch.setattr(models, "utc_now", lambda: fixed_time)
 
+    mock_logger = MagicMock()
+    monkeypatch.setattr(models, "logger", mock_logger)
+
     payload = {"product_id": "BTC-USD", "trades": ["bad"]}
 
-    with patch("gpt_trader.features.brokerages.coinbase.models.logger") as mock_logger:
-        quote = to_quote(payload)
+    quote = to_quote(payload)
 
     assert quote.last == Decimal("0")
     assert quote.ts == fixed_time

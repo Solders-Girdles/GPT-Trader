@@ -111,6 +111,15 @@ def validate_manifest(manifest: dict[str, Any]) -> list[str]:
         if status and status not in {"pending", "in_progress", "done"}:
             problems.append(f"Cluster {cluster_id}: invalid status '{status}'")
 
+        if status == "in_progress" and not cluster.get("owner"):
+            problems.append(f"Cluster {cluster_id}: in_progress cluster missing 'owner'")
+
+        if status == "done":
+            if not cluster.get("owner"):
+                problems.append(f"Cluster {cluster_id}: done cluster missing 'owner'")
+            if not cluster.get("pr_url"):
+                problems.append(f"Cluster {cluster_id}: done cluster missing 'pr_url'")
+
         # Validate type
         cluster_type = cluster.get("type")
         if cluster_type and cluster_type not in {

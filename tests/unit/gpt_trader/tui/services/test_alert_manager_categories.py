@@ -1,3 +1,5 @@
+"""Tests for alert categories and validation alerts."""
+
 from __future__ import annotations
 
 from decimal import Decimal
@@ -48,36 +50,28 @@ class TestAlertCategories:
     def test_alert_has_category(self, alert_manager, sample_state):
         """Test that triggered alerts have a category."""
         sample_state.system_data.connection_status = "DISCONNECTED"
-
         alerts = alert_manager.check_alerts(sample_state)
-
         assert len(alerts) == 1
         assert alerts[0].category == AlertCategory.SYSTEM
 
     def test_default_rules_have_categories(self, alert_manager):
         """Test that all default rules have appropriate categories."""
         status = alert_manager.get_rule_status()
-
         assert "connection_lost" in status
         assert "rate_limit_high" in status
         assert "bot_stopped" in status
-
         assert "reduce_only_active" in status
         assert "daily_loss_warning" in status
-
         assert "large_unrealized_loss" in status
 
     def test_filter_history_by_category(self, alert_manager, sample_state):
         """Test filtering alert history by category."""
         sample_state.system_data.connection_status = "DISCONNECTED"
         alert_manager.check_alerts(sample_state)
-
         all_history = alert_manager.get_history()
         assert len(all_history) == 1
-
         system_history = alert_manager.get_history(categories={AlertCategory.SYSTEM})
         assert len(system_history) == 1
-
         trade_history = alert_manager.get_history(categories={AlertCategory.TRADE})
         assert len(trade_history) == 0
 
@@ -85,14 +79,11 @@ class TestAlertCategories:
         """Test filtering alert history by minimum severity."""
         sample_state.system_data.connection_status = "DISCONNECTED"
         alert_manager.check_alerts(sample_state)
-
         all_history = alert_manager.get_history()
         assert len(all_history) == 1
         assert all_history[0].severity == AlertSeverity.ERROR
-
         error_history = alert_manager.get_history(min_severity=AlertSeverity.ERROR)
         assert len(error_history) == 1
-
         warning_history = alert_manager.get_history(min_severity=AlertSeverity.WARNING)
         assert len(warning_history) == 1
 
@@ -100,10 +91,8 @@ class TestAlertCategories:
         """Test get_history_by_category convenience method."""
         sample_state.system_data.connection_status = "DISCONNECTED"
         alert_manager.check_alerts(sample_state)
-
         system_alerts = alert_manager.get_history_by_category(AlertCategory.SYSTEM)
         assert len(system_alerts) == 1
-
         trade_alerts = alert_manager.get_history_by_category(AlertCategory.TRADE)
         assert len(trade_alerts) == 0
 
@@ -111,10 +100,8 @@ class TestAlertCategories:
         """Test get_category_counts method."""
         counts = alert_manager.get_category_counts()
         assert all(count == 0 for count in counts.values())
-
         sample_state.system_data.connection_status = "DISCONNECTED"
         alert_manager.check_alerts(sample_state)
-
         counts = alert_manager.get_category_counts()
         assert counts[AlertCategory.SYSTEM] == 1
         assert counts[AlertCategory.TRADE] == 0
@@ -129,7 +116,6 @@ class TestAlertCategories:
             category=AlertCategory.TRADE,
         )
         alert_manager.add_rule(custom_rule)
-
         status = alert_manager.get_rule_status()
         assert "custom_trade" in status
 
@@ -137,17 +123,89 @@ class TestAlertCategories:
         """Test that risk alerts have RISK category."""
         sample_state.risk_data.reduce_only_mode = True
         sample_state.risk_data.reduce_only_reason = "Test reason"
-
         alerts = alert_manager.check_alerts(sample_state)
-
         risk_alerts = [a for a in alerts if a.category == AlertCategory.RISK]
         assert len(risk_alerts) == 1
 
     def test_position_alert_category(self, alert_manager, sample_state):
         """Test that position alerts have POSITION category."""
         sample_state.position_data.total_unrealized_pnl = Decimal("-600")
-
         alerts = alert_manager.check_alerts(sample_state)
-
         position_alerts = [a for a in alerts if a.category == AlertCategory.POSITION]
         assert len(position_alerts) == 1
+
+
+class TestValidationAlerts:
+    """Test suite for validation failure alert rules."""
+
+    def test_validation_rules_registered(self, alert_manager):
+        """Test that validation alert rules are registered."""
+        status = alert_manager.get_rule_status()
+        assert "validation_escalation" in status
+        assert "validation_failures" in status
+
+    def test_validation_escalation_alert_triggers(self, alert_manager, mock_app, sample_state):
+        """Test validation escalation alert triggers when escalated."""
+        sample_state.system_data.validation_escalated = True
+        sample_state.system_data.validation_failures = {"mark_staleness": 5}
+        alerts = alert_manager.check_alerts(sample_state)
+        escalation_alerts = [a for a in alerts if a.rule_id == "validation_escalation"]
+        assert len(escalation_alerts) == 1
+        assert escalation_alerts[0].severity == AlertSeverity.ERROR
+        assert escalation_alerts[0].category == AlertCategory.RISK
+        assert "5" in escalation_alerts[0].message
+        assert "reduce-only" in escalation_alerts[0].message.lower()
+
+    def test_validation_escalation_no_alert_when_not_escalated(
+        self, alert_manager, mock_app, sample_state
+    ):
+        """Test no validation escalation alert when not escalated."""
+        sample_state.system_data.validation_escalated = False
+        sample_state.system_data.validation_failures = {"mark_staleness": 2}
+        alerts = alert_manager.check_alerts(sample_state)
+        escalation_alerts = [a for a in alerts if a.rule_id == "validation_escalation"]
+        assert len(escalation_alerts) == 0
+
+    def test_validation_failures_alert_triggers_at_threshold(
+        self, alert_manager, mock_app, sample_state
+    ):
+        """Test validation failures warning triggers at 2+ failures."""
+        sample_state.system_data.validation_escalated = False
+        sample_state.system_data.validation_failures = {"mark_staleness": 2, "slippage_guard": 1}
+        alerts = alert_manager.check_alerts(sample_state)
+        failure_alerts = [a for a in alerts if a.rule_id == "validation_failures"]
+        assert len(failure_alerts) == 1
+        assert failure_alerts[0].severity == AlertSeverity.WARNING
+        assert failure_alerts[0].category == AlertCategory.SYSTEM
+        assert "3 validation failures" in failure_alerts[0].message
+        assert "mark_staleness" in failure_alerts[0].message
+
+    def test_validation_failures_no_alert_below_threshold(
+        self, alert_manager, mock_app, sample_state
+    ):
+        """Test no validation failures alert below 2 failures."""
+        sample_state.system_data.validation_escalated = False
+        sample_state.system_data.validation_failures = {"mark_staleness": 1}
+        alerts = alert_manager.check_alerts(sample_state)
+        failure_alerts = [a for a in alerts if a.rule_id == "validation_failures"]
+        assert len(failure_alerts) == 0
+
+    def test_validation_failures_no_alert_when_escalated(
+        self, alert_manager, mock_app, sample_state
+    ):
+        """Test validation failures warning doesn't fire when already escalated."""
+        sample_state.system_data.validation_escalated = True
+        sample_state.system_data.validation_failures = {"mark_staleness": 5}
+        alerts = alert_manager.check_alerts(sample_state)
+        escalation_alerts = [a for a in alerts if a.rule_id == "validation_escalation"]
+        failure_alerts = [a for a in alerts if a.rule_id == "validation_failures"]
+        assert len(escalation_alerts) == 1
+        assert len(failure_alerts) == 0
+
+    def test_validation_alerts_handle_missing_data(self, alert_manager, mock_app, sample_state):
+        """Test validation alerts gracefully handle missing data."""
+        alerts = alert_manager.check_alerts(sample_state)
+        validation_alerts = [
+            a for a in alerts if a.rule_id in {"validation_escalation", "validation_failures"}
+        ]
+        assert len(validation_alerts) == 0

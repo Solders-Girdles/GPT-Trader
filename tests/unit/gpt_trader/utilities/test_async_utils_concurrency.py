@@ -1,4 +1,4 @@
-"""Tests for core async concurrency helpers."""
+"""Tests for async concurrency helpers."""
 
 from __future__ import annotations
 

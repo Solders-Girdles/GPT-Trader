@@ -1,8 +1,79 @@
-"""Tests for `CoinbaseTickerService` in `coinbase/market_data_service.py`."""
+"""Tests for CoinbaseTickerService and related market data service components."""
 
 from __future__ import annotations
 
-from gpt_trader.features.brokerages.coinbase.market_data_service import CoinbaseTickerService
+from gpt_trader.features.brokerages.coinbase.market_data_service import (
+    CoinbaseTickerService,
+    MarketDataService,
+    Ticker,
+)
+from gpt_trader.utilities.datetime_helpers import utc_now
+
+
+class TestMarketDataServiceAlias:
+    """Tests for MarketDataService alias."""
+
+    def test_alias_is_coinbase_ticker_service(self) -> None:
+        """Test that MarketDataService is an alias for CoinbaseTickerService."""
+        assert MarketDataService is CoinbaseTickerService
+
+    def test_alias_instantiation(self) -> None:
+        """Test that MarketDataService can be instantiated."""
+        service = MarketDataService(symbols=["BTC-USD"])
+
+        assert isinstance(service, CoinbaseTickerService)
+        assert service._symbols == ["BTC-USD"]
+
+
+class TestTicker:
+    """Tests for Ticker dataclass."""
+
+    def test_ticker_creation(self) -> None:
+        """Test creating a Ticker instance."""
+        now = utc_now()
+        ticker = Ticker(
+            symbol="BTC-USD",
+            bid=49900.0,
+            ask=50100.0,
+            last=50000.0,
+            ts=now,
+        )
+
+        assert ticker.symbol == "BTC-USD"
+        assert ticker.bid == 49900.0
+        assert ticker.ask == 50100.0
+        assert ticker.last == 50000.0
+        assert ticker.ts == now
+
+    def test_ticker_equality(self) -> None:
+        """Test Ticker equality based on dataclass behavior."""
+        ts = utc_now()
+        ticker1 = Ticker(symbol="BTC-USD", bid=100.0, ask=101.0, last=100.5, ts=ts)
+        ticker2 = Ticker(symbol="BTC-USD", bid=100.0, ask=101.0, last=100.5, ts=ts)
+
+        assert ticker1 == ticker2
+
+    def test_ticker_different_symbols(self) -> None:
+        """Test Tickers with different symbols are not equal."""
+        ts = utc_now()
+        ticker1 = Ticker(symbol="BTC-USD", bid=100.0, ask=101.0, last=100.5, ts=ts)
+        ticker2 = Ticker(symbol="ETH-USD", bid=100.0, ask=101.0, last=100.5, ts=ts)
+
+        assert ticker1 != ticker2
+
+    def test_ticker_with_zero_values(self) -> None:
+        """Test ticker with zero bid/ask/last."""
+        ticker = Ticker(symbol="TEST", bid=0.0, ask=0.0, last=0.0, ts=utc_now())
+
+        assert ticker.bid == 0.0
+        assert ticker.ask == 0.0
+        assert ticker.last == 0.0
+
+    def test_ticker_with_negative_values(self) -> None:
+        """Test ticker with negative values (edge case, shouldn't happen in practice)."""
+        ticker = Ticker(symbol="TEST", bid=-1.0, ask=-0.5, last=-0.75, ts=utc_now())
+
+        assert ticker.bid == -1.0
 
 
 class TestCoinbaseTickerService:
@@ -32,7 +103,6 @@ class TestCoinbaseTickerService:
     def test_start_sets_running(self) -> None:
         """Test that start sets running flag and creates thread."""
         service = CoinbaseTickerService()
-
         service.start()
 
         assert service._running is True
@@ -44,7 +114,6 @@ class TestCoinbaseTickerService:
         """Test that stop clears running flag."""
         service = CoinbaseTickerService()
         service.start()
-
         service.stop()
 
         assert service._running is False
@@ -52,7 +121,6 @@ class TestCoinbaseTickerService:
     def test_stop_without_start(self) -> None:
         """Test that stop handles case where thread was never started."""
         service = CoinbaseTickerService()
-
         service.stop()
 
         assert service._running is False
@@ -72,7 +140,6 @@ class TestCoinbaseTickerService:
         service.start()
         assert service._running is True
         assert service._thread is not None
-        assert service._thread.is_alive() or not service._thread.is_alive()
 
         service.stop()
         assert service._running is False
@@ -80,8 +147,8 @@ class TestCoinbaseTickerService:
     def test_run_method_does_nothing(self) -> None:
         """Test that _run method is a no-op (stub)."""
         service = CoinbaseTickerService()
-
         service._run()
+
         assert service._running is False
         assert service._thread is None
 

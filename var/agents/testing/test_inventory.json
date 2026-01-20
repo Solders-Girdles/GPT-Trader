@@ -11345,7 +11345,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_metrics_and_resilience_status.py": [
       {
         "name": "TestCoinbaseClientBaseMetricsAndResilienceStatus::test_record_success_sets_span_and_breaker",
-        "line": 19,
+        "line": 21,
         "markers": [
           "unit"
         ],
@@ -11354,7 +11354,7 @@
       },
       {
         "name": "TestCoinbaseClientBaseMetricsAndResilienceStatus::test_record_request_metrics_records_metrics_and_span",
-        "line": 32,
+        "line": 34,
         "markers": [
           "unit"
         ],
@@ -11363,7 +11363,7 @@
       },
       {
         "name": "TestCoinbaseClientBaseMetricsAndResilienceStatus::test_get_resilience_status_records_metrics",
-        "line": 59,
+        "line": 60,
         "markers": [
           "unit"
         ],
@@ -12925,7 +12925,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_execute_order_payload.py": [
       {
         "name": "TestCoinbaseRestServiceCoreExecuteOrderPayload::test_execute_order_payload_success",
-        "line": 21,
+        "line": 22,
         "markers": [
           "unit"
         ],
@@ -12934,7 +12934,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCoreExecuteOrderPayload::test_execute_order_payload_with_preview",
-        "line": 35,
+        "line": 36,
         "markers": [
           "unit"
         ],
@@ -12943,7 +12943,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCoreExecuteOrderPayload::test_execute_order_payload_preview_failure_still_places",
-        "line": 54,
+        "line": 56,
         "markers": [
           "unit"
         ],
@@ -12952,7 +12952,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCoreExecuteOrderPayload::test_execute_order_payload_insufficient_funds",
-        "line": 73,
+        "line": 76,
         "markers": [
           "unit"
         ],
@@ -12961,7 +12961,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCoreExecuteOrderPayload::test_execute_order_payload_validation_error",
-        "line": 80,
+        "line": 83,
         "markers": [
           "unit"
         ],
@@ -12970,7 +12970,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCoreExecuteOrderPayload::test_execute_order_payload_duplicate_client_id",
-        "line": 87,
+        "line": 90,
         "markers": [
           "unit"
         ],
@@ -12979,7 +12979,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCoreExecuteOrderPayload::test_execute_order_payload_duplicate_client_id_retry_failure",
-        "line": 102,
+        "line": 105,
         "markers": [
           "unit"
         ],
@@ -12988,7 +12988,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCoreExecuteOrderPayload::test_execute_order_payload_network_error",
-        "line": 117,
+        "line": 120,
         "markers": [
           "unit"
         ],
@@ -12997,7 +12997,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCoreExecuteOrderPayload::test_execute_order_payload_unexpected_error",
-        "line": 124,
+        "line": 127,
         "markers": [
           "unit"
         ],

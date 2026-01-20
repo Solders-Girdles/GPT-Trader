@@ -2821,7 +2821,7 @@
       },
       {
         "name": "TestFromDictLegacyProfileMapping::test_profile_style_emits_deprecation_warning",
-        "line": 168,
+        "line": 166,
         "markers": [
           "unit"
         ],
@@ -20492,7 +20492,7 @@
       },
       {
         "name": "TestGuardFailureDegradation::test_api_outage_scenario_triggers_degradation",
-        "line": 41,
+        "line": 44,
         "markers": [
           "asyncio",
           "unit"
@@ -20502,7 +20502,7 @@
       },
       {
         "name": "TestGuardFailureDegradation::test_api_health_guard_emits_api_error_event",
-        "line": 69,
+        "line": 73,
         "markers": [
           "asyncio",
           "unit"
@@ -20512,7 +20512,7 @@
       },
       {
         "name": "test_kill_switch_blocks_submission",
-        "line": 87,
+        "line": 91,
         "markers": [
           "asyncio",
           "unit"
@@ -20649,7 +20649,7 @@
       },
       {
         "name": "TestWSHealthDegradation::test_ws_stale_heartbeat_triggers_pause",
-        "line": 55,
+        "line": 56,
         "markers": [
           "asyncio",
           "unit"
@@ -20659,7 +20659,7 @@
       },
       {
         "name": "TestWSHealthDegradation::test_ws_reconnect_triggers_pause_for_sync",
-        "line": 81,
+        "line": 83,
         "markers": [
           "asyncio",
           "unit"
@@ -20669,7 +20669,7 @@
       },
       {
         "name": "TestWSHealthDegradation::test_ws_disconnect_with_stale_timestamps_triggers_degradation",
-        "line": 111,
+        "line": 114,
         "markers": [
           "asyncio",
           "unit"
@@ -20679,7 +20679,7 @@
       },
       {
         "name": "TestWSHealthDegradation::test_ws_gap_count_tracked_in_status",
-        "line": 136,
+        "line": 140,
         "markers": [
           "asyncio",
           "unit"
@@ -20689,7 +20689,7 @@
       },
       {
         "name": "TestWSHealthDegradation::test_no_degradation_when_broker_lacks_ws_health",
-        "line": 168,
+        "line": 173,
         "markers": [
           "asyncio",
           "unit"
@@ -20699,7 +20699,7 @@
       },
       {
         "name": "TestWSHealthDegradation::test_ws_health_exception_handled_gracefully",
-        "line": 191,
+        "line": 197,
         "markers": [
           "asyncio",
           "unit"
@@ -22302,7 +22302,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_cancel_and_safe_run.py": [
       {
         "name": "test_cancel_all_orders_success",
-        "line": 12,
+        "line": 14,
         "markers": [
           "unit"
         ],
@@ -22310,7 +22310,7 @@
       },
       {
         "name": "test_cancel_all_orders_partial_failure",
-        "line": 23,
+        "line": 25,
         "markers": [
           "unit"
         ],
@@ -22318,7 +22318,7 @@
       },
       {
         "name": "test_cancel_all_orders_none_cancelled",
-        "line": 33,
+        "line": 35,
         "markers": [
           "unit"
         ],
@@ -22326,7 +22326,7 @@
       },
       {
         "name": "test_cancel_all_orders_empty_list",
-        "line": 42,
+        "line": 44,
         "markers": [
           "unit"
         ],
@@ -22334,7 +22334,7 @@
       },
       {
         "name": "test_cancel_all_orders_uses_broker_list_orders",
-        "line": 57,
+        "line": 59,
         "markers": [
           "unit"
         ],
@@ -22342,7 +22342,7 @@
       },
       {
         "name": "test_safe_run_runtime_guards_success",
-        "line": 71,
+        "line": 73,
         "markers": [
           "unit"
         ],
@@ -22350,7 +22350,7 @@
       },
       {
         "name": "test_safe_run_runtime_guards_force_full",
-        "line": 77,
+        "line": 82,
         "markers": [
           "unit"
         ],
@@ -22358,7 +22358,7 @@
       },
       {
         "name": "test_safe_run_runtime_guards_recoverable_error",
-        "line": 83,
+        "line": 91,
         "markers": [
           "unit"
         ],
@@ -22366,14 +22366,6 @@
       },
       {
         "name": "test_safe_run_runtime_guards_unrecoverable_error",
-        "line": 92,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_safe_run_runtime_guards_unexpected_error",
         "line": 102,
         "markers": [
           "unit"
@@ -22381,8 +22373,16 @@
         "docstring": ""
       },
       {
+        "name": "test_safe_run_runtime_guards_unexpected_error",
+        "line": 114,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_safe_run_runtime_guards_reduce_only_failure",
-        "line": 110,
+        "line": 123,
         "markers": [
           "unit"
         ],
@@ -43280,7 +43280,7 @@
       },
       {
         "name": "TestAlertHistoryScreen::test_action_reset_cooldowns_resets_alerts",
-        "line": 65,
+        "line": 63,
         "markers": [
           "unit"
         ],
@@ -43289,7 +43289,7 @@
       },
       {
         "name": "TestAlertHistoryScreen::test_button_pressed_clear_btn",
-        "line": 77,
+        "line": 73,
         "markers": [
           "unit"
         ],
@@ -43298,7 +43298,7 @@
       },
       {
         "name": "TestAlertHistoryScreen::test_button_pressed_reset_btn",
-        "line": 92,
+        "line": 88,
         "markers": [
           "unit"
         ],
@@ -43307,7 +43307,7 @@
       },
       {
         "name": "TestAlertHistoryScreen::test_button_pressed_close_btn",
-        "line": 107,
+        "line": 103,
         "markers": [
           "unit"
         ],
@@ -43316,7 +43316,7 @@
       },
       {
         "name": "TestAlertHistoryScreen::test_no_alert_manager_graceful_handling",
-        "line": 120,
+        "line": 116,
         "markers": [
           "unit"
         ],
@@ -43325,7 +43325,7 @@
       },
       {
         "name": "TestAlertHistoryFilterActions::test_cycle_filter_cycles_through_all_filters",
-        "line": 143,
+        "line": 139,
         "markers": [
           "unit"
         ],
@@ -43334,7 +43334,7 @@
       },
       {
         "name": "TestAlertHistoryFilterActions::test_cycle_filter_wraps_around",
-        "line": 157,
+        "line": 153,
         "markers": [
           "unit"
         ],
@@ -43343,7 +43343,7 @@
       },
       {
         "name": "TestAlertHistoryFilterActions::test_clear_filter_resets_to_all",
-        "line": 171,
+        "line": 165,
         "markers": [
           "unit"
         ],
@@ -43352,7 +43352,7 @@
       },
       {
         "name": "TestAlertHistoryFilterActions::test_filter_bindings_present",
-        "line": 184,
+        "line": 176,
         "markers": [
           "unit"
         ],
@@ -43361,7 +43361,7 @@
       },
       {
         "name": "TestAlertHistoryFilterActions::test_number_filter_bindings_present",
-        "line": 191,
+        "line": 183,
         "markers": [
           "unit"
         ],

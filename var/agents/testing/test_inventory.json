@@ -39882,47 +39882,47 @@
     "tests/unit/gpt_trader/preflight/test_report.py": [
       {
         "name": "TestGenerateReport::test_returns_ready_status_with_no_errors_few_warnings",
-        "line": 18,
+        "line": 31,
         "markers": [
           "unit"
         ],
-        "docstring": "Should return READY status with no errors and few warnings.",
+        "docstring": "",
         "class": "TestGenerateReport"
       },
       {
         "name": "TestGenerateReport::test_returns_review_status_with_many_warnings",
-        "line": 37,
+        "line": 47,
         "markers": [
           "unit"
         ],
-        "docstring": "Should return REVIEW status with >3 warnings but no errors.",
+        "docstring": "",
         "class": "TestGenerateReport"
       },
       {
         "name": "TestGenerateReport::test_returns_not_ready_status_with_errors",
-        "line": 56,
+        "line": 63,
         "markers": [
           "unit"
         ],
-        "docstring": "Should return NOT READY status with any errors.",
+        "docstring": "",
         "class": "TestGenerateReport"
       },
       {
         "name": "TestGenerateReport::test_prints_summary_counts",
-        "line": 75,
+        "line": 79,
         "markers": [
           "unit"
         ],
-        "docstring": "Should print summary of passed/warnings/failed counts.",
+        "docstring": "",
         "class": "TestGenerateReport"
       },
       {
         "name": "TestGenerateReport::test_prints_recommendations_for_ready",
-        "line": 91,
+        "line": 94,
         "markers": [
           "unit"
         ],
-        "docstring": "Should print appropriate recommendations for READY status.",
+        "docstring": "",
         "class": "TestGenerateReport"
       },
       {
@@ -39931,43 +39931,43 @@
         "markers": [
           "unit"
         ],
-        "docstring": "Should print appropriate recommendations for NOT READY status.",
+        "docstring": "",
         "class": "TestGenerateReport"
       },
       {
         "name": "TestGenerateReport::test_saves_json_report",
-        "line": 121,
+        "line": 118,
         "markers": [
           "unit"
         ],
-        "docstring": "Should save JSON report to file.",
+        "docstring": "",
         "class": "TestGenerateReport"
       },
       {
         "name": "TestGenerateReport::test_handles_file_save_error",
-        "line": 149,
+        "line": 135,
         "markers": [
           "unit"
         ],
-        "docstring": "Should handle file save errors gracefully.",
+        "docstring": "",
         "class": "TestGenerateReport"
       },
       {
         "name": "TestGenerateReport::test_prints_section_header",
-        "line": 166,
+        "line": 155,
         "markers": [
           "unit"
         ],
-        "docstring": "Should print section header.",
+        "docstring": "",
         "class": "TestGenerateReport"
       },
       {
         "name": "TestReportCalculations::test_total_checks_calculated_correctly",
-        "line": 182,
+        "line": 170,
         "markers": [
           "unit"
         ],
-        "docstring": "Total checks should be sum of successes + warnings + errors.",
+        "docstring": "",
         "class": "TestReportCalculations"
       }
     ],

@@ -55494,7 +55494,7 @@
     "tests/unit/gpt_trader/utilities/test_console_logging_functions_wrappers.py": [
       {
         "name": "TestGlobalConsoleFunctions::test_console_success_function",
-        "line": 29,
+        "line": 43,
         "markers": [
           "unit"
         ],
@@ -55503,7 +55503,7 @@
       },
       {
         "name": "TestGlobalConsoleFunctions::test_console_error_function",
-        "line": 38,
+        "line": 48,
         "markers": [
           "unit"
         ],
@@ -55512,7 +55512,7 @@
       },
       {
         "name": "TestGlobalConsoleFunctions::test_console_warning_function",
-        "line": 47,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -55521,7 +55521,7 @@
       },
       {
         "name": "TestGlobalConsoleFunctions::test_console_info_function",
-        "line": 56,
+        "line": 60,
         "markers": [
           "unit"
         ],
@@ -55539,7 +55539,7 @@
       },
       {
         "name": "TestGlobalConsoleFunctions::test_console_section_function",
-        "line": 105,
+        "line": 101,
         "markers": [
           "unit"
         ],
@@ -55548,7 +55548,7 @@
       },
       {
         "name": "TestGlobalConsoleFunctions::test_console_table_function",
-        "line": 114,
+        "line": 106,
         "markers": [
           "unit"
         ],
@@ -55557,7 +55557,7 @@
       },
       {
         "name": "TestGlobalConsoleFunctions::test_console_key_value_function",
-        "line": 126,
+        "line": 114,
         "markers": [
           "unit"
         ],

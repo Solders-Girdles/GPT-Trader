@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
+
+import pytest
 
 from gpt_trader.features.live_trade.execution.order_submission import OrderSubmitter
 
@@ -27,14 +29,15 @@ class TestGenerateSubmitId:
         assert result.startswith("test-bot-123_")
         assert len(result) > len("test-bot-123_")
 
-    @patch.dict("os.environ", {"INTEGRATION_TEST_ORDER_ID": "forced-id"})
     def test_integration_mode_uses_env_override(
         self,
+        monkeypatch: pytest.MonkeyPatch,
         mock_broker: MagicMock,
         mock_event_store: MagicMock,
         open_orders: list[str],
     ) -> None:
         """Test that integration mode uses environment override."""
+        monkeypatch.setenv("INTEGRATION_TEST_ORDER_ID", "forced-id")
         submitter = OrderSubmitter(
             broker=mock_broker,
             event_store=mock_event_store,

@@ -5,8 +5,8 @@ from __future__ import annotations
 import tempfile
 from decimal import Decimal
 from pathlib import Path
-from unittest.mock import patch
 
+import pytest
 import yaml
 
 from gpt_trader.features.brokerages.coinbase.specs import SpecsService
@@ -90,7 +90,7 @@ class TestSpecsService:
         spec2 = service.build_spec("BTC-PERP")
         assert spec1 is spec2  # Same object reference
 
-    def test_service_env_config_path(self):
+    def test_service_env_config_path(self, monkeypatch: pytest.MonkeyPatch):
         """Test service uses environment variable for config path."""
         with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             yaml_content = {"products": {"ETH-PERP": {"min_size": 0.002}}}
@@ -98,10 +98,10 @@ class TestSpecsService:
             config_path = f.name
 
         try:
-            with patch.dict("os.environ", {"PERPS_SPECS_PATH": config_path}):
-                service = SpecsService()
-                assert "ETH-PERP" in service.overrides
-                assert service.overrides["ETH-PERP"]["min_size"] == 0.002
+            monkeypatch.setenv("PERPS_SPECS_PATH", config_path)
+            service = SpecsService()
+            assert "ETH-PERP" in service.overrides
+            assert service.overrides["ETH-PERP"]["min_size"] == 0.002
         finally:
             Path(config_path).unlink()
 

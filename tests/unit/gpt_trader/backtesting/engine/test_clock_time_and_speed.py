@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from unittest.mock import patch
+
+import pytest
 
 from gpt_trader.backtesting.engine.clock import SimulationClock
 from gpt_trader.backtesting.types import ClockSpeed
@@ -54,11 +55,13 @@ class TestSimulationClockElapsedTime:
 class TestSimulationClockSpeedupRatio:
     """Tests for speedup ratio calculation."""
 
-    def test_speedup_ratio_inf_when_wall_time_is_zero(self) -> None:
+    def test_speedup_ratio_inf_when_wall_time_is_zero(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         clock = SimulationClock()
-        with patch.object(clock, "elapsed_wall_time", return_value=0):
-            ratio = clock.speedup_ratio()
-            assert ratio == float("inf")
+        monkeypatch.setattr(clock, "elapsed_wall_time", lambda: 0)
+        ratio = clock.speedup_ratio()
+        assert ratio == float("inf")
 
     def test_speedup_ratio_zero_when_no_sim_advance(self) -> None:
         clock = SimulationClock()

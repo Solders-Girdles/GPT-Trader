@@ -1235,8 +1235,9 @@ clusters:
     expected_file_delta: -4
     priority: medium
     rationale: Consolidate 9 test files into 5 focused modules (each <=240 lines)
-    status: in_progress
+    status: done
     owner: rj
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/299
     added: '2026-01-20'
   2a83957b1884:
     type: similar_names

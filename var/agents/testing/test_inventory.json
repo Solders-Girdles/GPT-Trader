@@ -27498,7 +27498,7 @@
     "tests/unit/gpt_trader/features/live_trade/test_bot_initialization.py": [
       {
         "name": "TestTradingBotInitialization::test_init_with_config_only",
-        "line": 23,
+        "line": 36,
         "markers": [
           "unit"
         ],
@@ -27507,7 +27507,7 @@
       },
       {
         "name": "TestTradingBotInitialization::test_init_with_container",
-        "line": 47,
+        "line": 59,
         "markers": [
           "unit"
         ],
@@ -27516,7 +27516,7 @@
       },
       {
         "name": "TestTradingBotInitialization::test_init_creates_context",
-        "line": 57,
+        "line": 68,
         "markers": [
           "unit"
         ],
@@ -27525,7 +27525,7 @@
       },
       {
         "name": "TestTradingBotInitialization::test_init_creates_engine",
-        "line": 88,
+        "line": 100,
         "markers": [
           "unit"
         ],
@@ -27534,7 +27534,7 @@
       },
       {
         "name": "TestTradingBotInitialization::test_init_container_missing_optional_attributes",
-        "line": 98,
+        "line": 109,
         "markers": [
           "unit"
         ],

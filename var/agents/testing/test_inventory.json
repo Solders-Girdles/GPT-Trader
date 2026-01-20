@@ -11577,7 +11577,7 @@
       },
       {
         "name": "TestCoinbaseClientBaseRateLimiting::test_check_rate_limit_exceeded",
-        "line": 85,
+        "line": 83,
         "markers": [
           "unit"
         ],
@@ -11586,7 +11586,7 @@
       },
       {
         "name": "TestCoinbaseClientBaseRateLimiting::test_check_rate_limit_window_cleanup",
-        "line": 104,
+        "line": 102,
         "markers": [
           "unit"
         ],
@@ -43160,7 +43160,7 @@
     "tests/unit/gpt_trader/tui/mixins/test_event_handlers_default_handlers.py": [
       {
         "name": "TestDefaultEventHandlers::test_on_bot_state_changed_logs_default",
-        "line": 28,
+        "line": 45,
         "markers": [
           "unit"
         ],
@@ -43169,7 +43169,7 @@
       },
       {
         "name": "TestDefaultEventHandlers::test_on_bot_mode_changed_logs_default",
-        "line": 47,
+        "line": 58,
         "markers": [
           "unit"
         ],
@@ -43178,7 +43178,7 @@
       },
       {
         "name": "TestDefaultEventHandlers::test_on_state_update_received_logs_default",
-        "line": 66,
+        "line": 71,
         "markers": [
           "unit"
         ],
@@ -43187,7 +43187,7 @@
       },
       {
         "name": "TestDefaultEventHandlers::test_on_state_validation_failed_logs_warnings",
-        "line": 84,
+        "line": 83,
         "markers": [
           "unit"
         ],
@@ -43196,7 +43196,7 @@
       },
       {
         "name": "TestDefaultEventHandlers::test_on_state_validation_passed_logs_default",
-        "line": 103,
+        "line": 97,
         "markers": [
           "unit"
         ],
@@ -43205,7 +43205,7 @@
       },
       {
         "name": "TestDefaultEventHandlers::test_on_state_delta_update_applied_logs_default",
-        "line": 117,
+        "line": 105,
         "markers": [
           "unit"
         ],
@@ -43214,7 +43214,7 @@
       },
       {
         "name": "TestDefaultEventHandlers::test_on_responsive_state_changed_logs_default",
-        "line": 136,
+        "line": 118,
         "markers": [
           "unit"
         ],
@@ -43223,7 +43223,7 @@
       },
       {
         "name": "TestDefaultEventHandlers::test_on_theme_changed_logs_default",
-        "line": 153,
+        "line": 129,
         "markers": [
           "unit"
         ],
@@ -43232,7 +43232,7 @@
       },
       {
         "name": "TestDefaultEventHandlers::test_on_error_occurred_logs_error_severity",
-        "line": 169,
+        "line": 139,
         "markers": [
           "unit"
         ],
@@ -43241,7 +43241,7 @@
       },
       {
         "name": "TestDefaultEventHandlers::test_on_error_occurred_logs_warning_severity",
-        "line": 183,
+        "line": 147,
         "markers": [
           "unit"
         ],

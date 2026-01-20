@@ -2,7 +2,7 @@
   "version": "1.0",
   "summary": {
     "tests_scanned": 918,
-    "source_modules": 351,
+    "source_modules": 352,
     "unresolved_modules": 3
   },
   "source_to_tests": {
@@ -1480,6 +1480,9 @@
       "tests/unit/gpt_trader/monitoring/test_guard_manager_e2e_runtime.py",
       "tests/unit/gpt_trader/monitoring/test_guard_manager_edges.py",
       "tests/unit/gpt_trader/monitoring/test_runtime_guards_base.py"
+    ],
+    "gpt_trader.monitoring.configuration_guardian": [
+      "tests/unit/gpt_trader/monitoring/configuration_guardian/test_guardian_edges.py"
     ],
     "gpt_trader.monitoring.configuration_guardian.detector": [
       "tests/unit/gpt_trader/monitoring/configuration_guardian/test_detector_edges.py",
@@ -4576,6 +4579,7 @@
       "gpt_trader.monitoring.configuration_guardian.responses"
     ],
     "tests/unit/gpt_trader/monitoring/configuration_guardian/test_guardian_edges.py": [
+      "gpt_trader.monitoring.configuration_guardian",
       "gpt_trader.monitoring.configuration_guardian.guardian",
       "gpt_trader.monitoring.configuration_guardian.models"
     ],
@@ -6019,6 +6023,7 @@
     "gpt_trader.monitoring.configuration_guardian.models": "src/gpt_trader/monitoring/configuration_guardian/models.py",
     "gpt_trader.monitoring.configuration_guardian.environment": "src/gpt_trader/monitoring/configuration_guardian/environment.py",
     "gpt_trader.monitoring.configuration_guardian.responses": "src/gpt_trader/monitoring/configuration_guardian/responses.py",
+    "gpt_trader.monitoring.configuration_guardian": "src/gpt_trader/monitoring/configuration_guardian/__init__.py",
     "gpt_trader.monitoring.configuration_guardian.guardian": "src/gpt_trader/monitoring/configuration_guardian/guardian.py",
     "gpt_trader.monitoring.configuration_guardian.state_validator": "src/gpt_trader/monitoring/configuration_guardian/state_validator.py",
     "gpt_trader.monitoring.daily_report.generator": "src/gpt_trader/monitoring/daily_report/generator.py",

@@ -3,16 +3,19 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
+import gpt_trader.security.security_validator as security_validator_module
 from gpt_trader.core import Balance, OrderSide, OrderType, Position
 from gpt_trader.features.live_trade.strategies.perps_baseline import Action, Decision
 
 
 @pytest.mark.asyncio
-async def test_reduce_only_clamps_quantity_to_prevent_position_flip(engine):
+async def test_reduce_only_clamps_quantity_to_prevent_position_flip(
+    engine, monkeypatch: pytest.MonkeyPatch
+):
     """Test that reduce-only mode clamps order quantity to prevent position flip."""
     engine.strategy.decide.return_value = Decision(Action.SELL, "test")
     engine.strategy.config.position_fraction = Decimal("0.2")
@@ -41,12 +44,11 @@ async def test_reduce_only_clamps_quantity_to_prevent_position_flip(engine):
         None,
     )
 
-    with patch("gpt_trader.security.security_validator.get_validator") as mock_get_validator:
-        mock_validator = MagicMock()
-        mock_validator.validate_order_request.return_value.is_valid = True
-        mock_get_validator.return_value = mock_validator
+    mock_validator = MagicMock()
+    mock_validator.validate_order_request.return_value.is_valid = True
+    monkeypatch.setattr(security_validator_module, "get_validator", lambda: mock_validator)
 
-        await engine._cycle()
+    await engine._cycle()
 
     engine._order_submitter.submit_order.assert_called_once()
     call_kwargs = engine._order_submitter.submit_order.call_args[1]
@@ -57,7 +59,9 @@ async def test_reduce_only_clamps_quantity_to_prevent_position_flip(engine):
 
 
 @pytest.mark.asyncio
-async def test_reduce_only_blocks_new_position_on_empty_symbol(engine):
+async def test_reduce_only_blocks_new_position_on_empty_symbol(
+    engine, monkeypatch: pytest.MonkeyPatch
+):
     """Test that reduce-only mode blocks orders for symbols with no position."""
     engine.strategy.decide.return_value = Decision(Action.BUY, "test")
     engine.strategy.config.position_fraction = Decimal("0.1")
@@ -71,11 +75,10 @@ async def test_reduce_only_blocks_new_position_on_empty_symbol(engine):
     engine.context.risk_manager._daily_pnl_triggered = False
     engine.context.risk_manager.check_order.return_value = False
 
-    with patch("gpt_trader.security.security_validator.get_validator") as mock_get_validator:
-        mock_validator = MagicMock()
-        mock_validator.validate_order_request.return_value.is_valid = True
-        mock_get_validator.return_value = mock_validator
+    mock_validator = MagicMock()
+    mock_validator.validate_order_request.return_value.is_valid = True
+    monkeypatch.setattr(security_validator_module, "get_validator", lambda: mock_validator)
 
-        await engine._cycle()
+    await engine._cycle()
 
     engine.context.broker.place_order.assert_not_called()

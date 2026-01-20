@@ -38420,7 +38420,7 @@
     "tests/unit/gpt_trader/preflight/test_checks_connectivity_key_permissions_retries.py": [
       {
         "name": "TestCheckKeyPermissionsRetries::test_retries_on_transient_errors",
-        "line": 14,
+        "line": 32,
         "markers": [
           "unit"
         ],
@@ -38429,7 +38429,7 @@
       },
       {
         "name": "TestCheckKeyPermissionsRetries::test_fails_after_max_retries",
-        "line": 38,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -38438,7 +38438,7 @@
       },
       {
         "name": "TestCheckKeyPermissionsRetries::test_fails_on_non_transient_error",
-        "line": 57,
+        "line": 69,
         "markers": [
           "unit"
         ],
@@ -38447,7 +38447,7 @@
       },
       {
         "name": "TestCheckKeyPermissionsRetries::test_fails_on_empty_permissions_response",
-        "line": 77,
+        "line": 85,
         "markers": [
           "unit"
         ],
@@ -45527,7 +45527,7 @@
     "tests/unit/gpt_trader/tui/services/test_mode_service_create_bot.py": [
       {
         "name": "TestCreateBotForMode::test_demo_mode_creates_demo_bot",
-        "line": 15,
+        "line": 16,
         "markers": [
           "unit"
         ],
@@ -45536,7 +45536,7 @@
       },
       {
         "name": "TestCreateBotForMode::test_unknown_mode_raises_error",
-        "line": 21,
+        "line": 22,
         "markers": [
           "unit"
         ],
@@ -45545,7 +45545,7 @@
       },
       {
         "name": "TestCreateBotForMode::test_paper_mode_loads_paper_config",
-        "line": 28,
+        "line": 27,
         "markers": [
           "unit"
         ],

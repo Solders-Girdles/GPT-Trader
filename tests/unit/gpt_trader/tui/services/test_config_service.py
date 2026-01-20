@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
+import pytest
+
+import gpt_trader.tui.widgets.config as config_widget_module
 from gpt_trader.tui.services.config_service import ConfigService
 
 
@@ -17,13 +20,13 @@ class TestConfigService:
 
         assert service.app == mock_app
 
-    @patch("gpt_trader.tui.widgets.config.ConfigModal")
-    def test_show_config_modal_pushes_screen(self, mock_modal_class):
+    def test_show_config_modal_pushes_screen(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test show_config_modal pushes ConfigModal screen."""
         mock_app = MagicMock()
         mock_config = MagicMock()
         mock_modal = MagicMock()
-        mock_modal_class.return_value = mock_modal
+        mock_modal_class = MagicMock(return_value=mock_modal)
+        monkeypatch.setattr(config_widget_module, "ConfigModal", mock_modal_class)
 
         service = ConfigService(mock_app)
         service.show_config_modal(mock_config)
@@ -31,11 +34,12 @@ class TestConfigService:
         mock_modal_class.assert_called_once_with(mock_config)
         mock_app.push_screen.assert_called_once_with(mock_modal)
 
-    @patch("gpt_trader.tui.widgets.config.ConfigModal")
-    def test_show_config_modal_handles_error(self, mock_modal_class):
+    def test_show_config_modal_handles_error(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test show_config_modal handles errors gracefully."""
         mock_app = MagicMock()
         mock_app.push_screen.side_effect = Exception("Test error")
+        mock_modal_class = MagicMock()
+        monkeypatch.setattr(config_widget_module, "ConfigModal", mock_modal_class)
 
         service = ConfigService(mock_app)
         # Should not raise

@@ -3,11 +3,25 @@
 import tempfile
 import time
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 
 from gpt_trader.tui.services.preferences_service import PreferencesService
+
+_COINBASE_CREDENTIAL_ENV_VARS = (
+    "COINBASE_CREDENTIALS_FILE",
+    "COINBASE_PROD_CDP_API_KEY",
+    "COINBASE_PROD_CDP_PRIVATE_KEY",
+    "COINBASE_CDP_API_KEY",
+    "COINBASE_CDP_PRIVATE_KEY",
+    "COINBASE_API_KEY_NAME",
+    "COINBASE_PRIVATE_KEY",
+)
+
+
+def _clear_coinbase_credential_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    for var in _COINBASE_CREDENTIAL_ENV_VARS:
+        monkeypatch.delenv(var, raising=False)
 
 
 class TestCredentialCache:
@@ -132,44 +146,43 @@ class TestCredentialCache:
 class TestCredentialFingerprint:
     """Tests for credential fingerprint generation."""
 
-    def test_fingerprint_generation(self) -> None:
+    def test_fingerprint_generation(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test fingerprint is generated from API key."""
         from gpt_trader.tui.services.credential_validator import CredentialValidator
 
-        with patch.dict(
-            "os.environ",
-            {
-                "COINBASE_CDP_API_KEY": "organizations/abc12345/apiKeys/xyz98765",
-                "COINBASE_CDP_PRIVATE_KEY": "-----BEGIN EC PRIVATE KEY-----\nKEY\n-----END EC PRIVATE KEY-----",
-            },
-            clear=True,
-        ):
-            validator = CredentialValidator()
-            fp = validator.compute_credential_fingerprint()
+        _clear_coinbase_credential_env(monkeypatch)
 
-            assert fp is not None
-            assert fp.startswith("organiza")  # First 8 chars
-            assert fp.endswith("xyz98765")  # Last 8 chars
-            assert "..." in fp
+        monkeypatch.setenv("COINBASE_CDP_API_KEY", "organizations/abc12345/apiKeys/xyz98765")
+        monkeypatch.setenv(
+            "COINBASE_CDP_PRIVATE_KEY",
+            "-----BEGIN EC PRIVATE KEY-----\nKEY\n-----END EC PRIVATE KEY-----",
+        )
 
-    def test_fingerprint_none_when_no_key(self) -> None:
+        validator = CredentialValidator()
+        fp = validator.compute_credential_fingerprint()
+
+        assert fp is not None
+        assert fp.startswith("organiza")  # First 8 chars
+        assert fp.endswith("xyz98765")  # Last 8 chars
+        assert "..." in fp
+
+    def test_fingerprint_none_when_no_key(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test fingerprint is None when no API key configured."""
         from gpt_trader.tui.services.credential_validator import CredentialValidator
 
-        with patch.dict(
-            "os.environ",
-            {"COINBASE_CDP_API_KEY": "", "COINBASE_PROD_CDP_API_KEY": ""},
-            clear=True,
-        ):
-            validator = CredentialValidator()
-            fp = validator.compute_credential_fingerprint()
-            assert fp is None
+        _clear_coinbase_credential_env(monkeypatch)
 
-    def test_fingerprint_none_for_short_key(self) -> None:
+        validator = CredentialValidator()
+        fp = validator.compute_credential_fingerprint()
+        assert fp is None
+
+    def test_fingerprint_none_for_short_key(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test fingerprint is None for keys shorter than 16 chars."""
         from gpt_trader.tui.services.credential_validator import CredentialValidator
 
-        with patch.dict("os.environ", {"COINBASE_CDP_API_KEY": "short"}):
-            validator = CredentialValidator()
-            fp = validator.compute_credential_fingerprint()
-            assert fp is None
+        _clear_coinbase_credential_env(monkeypatch)
+        monkeypatch.setenv("COINBASE_CDP_API_KEY", "short")
+
+        validator = CredentialValidator()
+        fp = validator.compute_credential_fingerprint()
+        assert fp is None

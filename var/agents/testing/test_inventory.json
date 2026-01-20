@@ -22829,7 +22829,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_preview.py": [
       {
         "name": "TestRecordPreview::test_record_preview_skips_when_preview_is_none",
-        "line": 20,
+        "line": 35,
         "markers": [
           "unit"
         ],
@@ -22838,7 +22838,7 @@
       },
       {
         "name": "TestRecordPreview::test_record_preview_emits_metric",
-        "line": 41,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -22847,7 +22847,7 @@
       },
       {
         "name": "TestRecordPreview::test_record_preview_uses_market_for_none_price",
-        "line": 77,
+        "line": 85,
         "markers": [
           "unit"
         ],
@@ -22856,7 +22856,7 @@
       },
       {
         "name": "TestRecordPreview::test_record_preview_logs_event",
-        "line": 102,
+        "line": 104,
         "markers": [
           "unit"
         ],
@@ -22865,7 +22865,7 @@
       },
       {
         "name": "TestRecordPreview::test_record_preview_handles_log_exception",
-        "line": 130,
+        "line": 127,
         "markers": [
           "unit"
         ],

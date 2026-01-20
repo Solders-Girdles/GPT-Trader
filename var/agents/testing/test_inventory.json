@@ -5302,7 +5302,7 @@
     "tests/unit/gpt_trader/backtesting/metrics/test_report_reporter_basics.py": [
       {
         "name": "TestBacktestReporterInit::test_init_stores_broker",
-        "line": 19,
+        "line": 36,
         "markers": [
           "unit"
         ],
@@ -5311,7 +5311,7 @@
       },
       {
         "name": "TestBacktestReporterInit::test_init_stats_are_none",
-        "line": 25,
+        "line": 42,
         "markers": [
           "unit"
         ],
@@ -5320,7 +5320,7 @@
       },
       {
         "name": "TestBacktestReporterTradeStatistics::test_trade_statistics_lazy_loads",
-        "line": 36,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -5329,7 +5329,7 @@
       },
       {
         "name": "TestBacktestReporterTradeStatistics::test_trade_statistics_caches_result",
-        "line": 50,
+        "line": 67,
         "markers": [
           "unit"
         ],
@@ -5338,7 +5338,7 @@
       },
       {
         "name": "TestBacktestReporterRiskMetrics::test_risk_metrics_lazy_loads",
-        "line": 70,
+        "line": 87,
         "markers": [
           "unit"
         ],
@@ -5347,7 +5347,7 @@
       },
       {
         "name": "TestBacktestReporterRiskMetrics::test_risk_metrics_caches_result",
-        "line": 84,
+        "line": 101,
         "markers": [
           "unit"
         ],
@@ -55383,7 +55383,7 @@
     "tests/unit/gpt_trader/utilities/test_console_logging_functions.py": [
       {
         "name": "TestConsoleLoggingFunctions::test_end_to_end_logging_workflow",
-        "line": 25,
+        "line": 42,
         "markers": [
           "unit"
         ],
@@ -55392,7 +55392,7 @@
       },
       {
         "name": "TestConsoleLoggingFunctions::test_all_context_methods",
-        "line": 56,
+        "line": 67,
         "markers": [
           "unit"
         ],
@@ -55401,7 +55401,7 @@
       },
       {
         "name": "TestConsoleLoggingFunctions::test_table_formatting_complex_data",
-        "line": 76,
+        "line": 85,
         "markers": [
           "unit"
         ],
@@ -55410,7 +55410,7 @@
       },
       {
         "name": "TestConsoleLoggingFunctions::test_error_handling_in_global_functions",
-        "line": 101,
+        "line": 106,
         "markers": [
           "unit"
         ],
@@ -55419,7 +55419,7 @@
       },
       {
         "name": "TestConsoleLoggingFunctions::test_function_parameter_passing",
-        "line": 115,
+        "line": 118,
         "markers": [
           "unit"
         ],
@@ -55428,7 +55428,7 @@
       },
       {
         "name": "TestConsoleLoggingFunctions::test_multiple_function_calls",
-        "line": 135,
+        "line": 134,
         "markers": [
           "unit"
         ],

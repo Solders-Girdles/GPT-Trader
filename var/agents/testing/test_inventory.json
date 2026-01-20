@@ -17723,7 +17723,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_init_and_get_websocket.py": [
       {
         "name": "TestWebSocketClientMixinInitialization::test_initialization_creates_attributes",
-        "line": 16,
+        "line": 26,
         "markers": [
           "unit"
         ],
@@ -17732,7 +17732,7 @@
       },
       {
         "name": "TestWebSocketClientMixinInitialization::test_initialization_with_auth",
-        "line": 25,
+        "line": 35,
         "markers": [
           "unit"
         ],
@@ -17741,7 +17741,7 @@
       },
       {
         "name": "TestWebSocketClientMixinGetWebSocket::test_creates_websocket_on_first_call",
-        "line": 40,
+        "line": 49,
         "markers": [
           "unit"
         ],
@@ -17750,7 +17750,7 @@
       },
       {
         "name": "TestWebSocketClientMixinGetWebSocket::test_returns_same_websocket_on_subsequent_calls",
-        "line": 53,
+        "line": 61,
         "markers": [
           "unit"
         ],
@@ -17759,7 +17759,7 @@
       },
       {
         "name": "TestWebSocketClientMixinGetWebSocket::test_passes_auth_credentials_to_websocket",
-        "line": 68,
+        "line": 75,
         "markers": [
           "unit"
         ],
@@ -17768,7 +17768,7 @@
       },
       {
         "name": "TestWebSocketClientMixinGetWebSocket::test_handles_no_auth",
-        "line": 83,
+        "line": 89,
         "markers": [
           "unit"
         ],
@@ -17777,7 +17777,7 @@
       },
       {
         "name": "TestWebSocketClientMixinNonCooperativeInit::test_lazy_initializes_state_when_mixin_init_not_called",
-        "line": 95,
+        "line": 101,
         "markers": [
           "unit"
         ],
@@ -17786,7 +17786,7 @@
       },
       {
         "name": "TestWebSocketClientMixinNonCooperativeInit::test_stop_streaming_safe_when_mixin_init_not_called",
-        "line": 113,
+        "line": 118,
         "markers": [
           "unit"
         ],
@@ -17873,7 +17873,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_stream_trades_and_control.py": [
       {
         "name": "TestStreamTrades::test_connects_and_subscribes_to_market_trades",
-        "line": 18,
+        "line": 27,
         "markers": [
           "unit"
         ],
@@ -17882,7 +17882,7 @@
       },
       {
         "name": "TestStreamTrades::test_yields_trade_messages",
-        "line": 45,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -17891,7 +17891,7 @@
       },
       {
         "name": "TestStreamControl::test_stop_streaming_disconnects_websocket",
-        "line": 70,
+        "line": 77,
         "markers": [
           "unit"
         ],
@@ -17900,7 +17900,7 @@
       },
       {
         "name": "TestStreamControl::test_stop_streaming_handles_disconnect_error",
-        "line": 101,
+        "line": 107,
         "markers": [
           "unit"
         ],
@@ -17909,7 +17909,7 @@
       },
       {
         "name": "TestStreamControl::test_is_streaming_returns_correct_state",
-        "line": 115,
+        "line": 121,
         "markers": [
           "unit"
         ],
@@ -17918,7 +17918,7 @@
       },
       {
         "name": "TestStreamMessageControl::test_stream_messages_stop_event_breaks",
-        "line": 134,
+        "line": 140,
         "markers": [
           "unit"
         ],
@@ -17927,7 +17927,7 @@
       },
       {
         "name": "TestStreamMessageControl::test_stream_messages_stop_sentinel_breaks",
-        "line": 148,
+        "line": 151,
         "markers": [
           "unit"
         ],
@@ -23448,7 +23448,7 @@
       },
       {
         "name": "TestOrderSubmissionMetricLabels::test_classification_label_used_in_metrics",
-        "line": 132,
+        "line": 130,
         "markers": [
           "unit"
         ],

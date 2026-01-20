@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-import os
-from unittest.mock import patch
+import pytest
 
 from gpt_trader.preflight.context import PreflightContext
 
@@ -11,37 +10,53 @@ from gpt_trader.preflight.context import PreflightContext
 class TestPreflightContextSkipRemoteChecks:
     """Test remote check skip logic."""
 
-    def test_force_remote_overrides_skip(self) -> None:
+    def test_force_remote_overrides_skip(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
         """COINBASE_PREFLIGHT_FORCE_REMOTE=1 should force remote checks."""
-        with patch.dict(
-            os.environ,
-            {"COINBASE_PREFLIGHT_FORCE_REMOTE": "1"},
-            clear=True,
-        ):
-            ctx = PreflightContext(profile="dev")
-            assert ctx.should_skip_remote_checks() is False
+        monkeypatch.delenv("COINBASE_PREFLIGHT_SKIP_REMOTE", raising=False)
+        monkeypatch.setenv("COINBASE_PREFLIGHT_FORCE_REMOTE", "1")
 
-    def test_skip_remote_env_var(self) -> None:
+        ctx = PreflightContext(profile="dev")
+        assert ctx.should_skip_remote_checks() is False
+
+    def test_skip_remote_env_var(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
         """COINBASE_PREFLIGHT_SKIP_REMOTE=1 should skip remote checks."""
-        with patch.dict(
-            os.environ,
-            {"COINBASE_PREFLIGHT_SKIP_REMOTE": "1"},
-            clear=True,
-        ):
-            ctx = PreflightContext()
-            assert ctx.should_skip_remote_checks() is True
+        monkeypatch.delenv("COINBASE_PREFLIGHT_FORCE_REMOTE", raising=False)
+        monkeypatch.setenv("COINBASE_PREFLIGHT_SKIP_REMOTE", "1")
 
-    def test_dev_profile_without_credentials_skips(self) -> None:
+        ctx = PreflightContext()
+        assert ctx.should_skip_remote_checks() is True
+
+    def test_dev_profile_without_credentials_skips(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
         """Dev profile without real credentials should skip remote checks."""
-        with patch.dict(os.environ, {}, clear=True):
-            ctx = PreflightContext(profile="dev")
-            assert ctx.should_skip_remote_checks() is True
+        monkeypatch.delenv("COINBASE_PREFLIGHT_FORCE_REMOTE", raising=False)
+        monkeypatch.delenv("COINBASE_PREFLIGHT_SKIP_REMOTE", raising=False)
+        monkeypatch.delenv("COINBASE_CDP_API_KEY", raising=False)
+        monkeypatch.delenv("COINBASE_CDP_PRIVATE_KEY", raising=False)
 
-    def test_prod_profile_without_credentials_does_not_skip(self) -> None:
+        ctx = PreflightContext(profile="dev")
+        assert ctx.should_skip_remote_checks() is True
+
+    def test_prod_profile_without_credentials_does_not_skip(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
         """Prod profile without credentials should NOT skip (will fail later)."""
-        with patch.dict(os.environ, {}, clear=True):
-            ctx = PreflightContext(profile="prod")
-            assert ctx.should_skip_remote_checks() is False
+        monkeypatch.delenv("COINBASE_PREFLIGHT_FORCE_REMOTE", raising=False)
+        monkeypatch.delenv("COINBASE_PREFLIGHT_SKIP_REMOTE", raising=False)
+        monkeypatch.delenv("COINBASE_CDP_API_KEY", raising=False)
+        monkeypatch.delenv("COINBASE_CDP_PRIVATE_KEY", raising=False)
+
+        ctx = PreflightContext(profile="prod")
+        assert ctx.should_skip_remote_checks() is False
 
 
 class TestPreflightContextEnvDefaults:

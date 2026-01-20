@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
+import gpt_trader.cli.commands.run as run_module
+import gpt_trader.cli.services as services_module
 from gpt_trader.app.config import BotConfig
 from gpt_trader.app.container import (
     ApplicationContainer,
@@ -37,18 +39,18 @@ def clean_container():
 class TestInstantiateBot:
     """Test cases for instantiate_bot function."""
 
-    @patch("gpt_trader.cli.services.create_application_container")
     def test_sets_container_when_none_present(
         self,
-        mock_create_container: MagicMock,
         mock_config: BotConfig,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Test that instantiate_bot sets the container when none is present."""
         # Setup mock container
         mock_container = MagicMock(spec=ApplicationContainer)
         mock_bot = MagicMock()
         mock_container.create_bot.return_value = mock_bot
-        mock_create_container.return_value = mock_container
+        mock_create_container = MagicMock(return_value=mock_container)
+        monkeypatch.setattr(services_module, "create_application_container", mock_create_container)
 
         # Verify no container initially
         assert get_application_container() is None
@@ -64,7 +66,11 @@ class TestInstantiateBot:
         mock_container.create_bot.assert_called_once()
         assert bot is mock_bot
 
-    def test_uses_existing_container(self, mock_config: BotConfig) -> None:
+    def test_uses_existing_container(
+        self,
+        mock_config: BotConfig,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
         """Test that instantiate_bot uses existing container if already set."""
         # Setup existing container
         existing_container = MagicMock(spec=ApplicationContainer)
@@ -72,12 +78,14 @@ class TestInstantiateBot:
         existing_container.create_bot.return_value = mock_bot
         set_application_container(existing_container)
 
-        # Call instantiate_bot
-        with patch("gpt_trader.cli.services.create_application_container") as mock_create:
-            bot = instantiate_bot(mock_config)
+        # Patch to verify no new container is created
+        mock_create = MagicMock()
+        monkeypatch.setattr(services_module, "create_application_container", mock_create)
 
-            # Verify no new container was created
-            mock_create.assert_not_called()
+        bot = instantiate_bot(mock_config)
+
+        # Verify no new container was created
+        mock_create.assert_not_called()
 
         # Verify existing container was used
         existing_container.create_bot.assert_called_once()
@@ -88,7 +96,10 @@ class TestInstantiateBot:
 class TestRunBotCleanup:
     """Test cases for _run_bot cleanup behavior."""
 
-    def test_clears_container_on_shutdown(self) -> None:
+    def test_clears_container_on_shutdown(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
         """Test that _run_bot clears the container in finally block."""
         # Setup: Create a mock bot and set a container
         mock_bot = MagicMock()
@@ -101,22 +112,28 @@ class TestRunBotCleanup:
         assert get_application_container() is mock_container
 
         # Run bot (will exit immediately since running=False)
-        with patch("gpt_trader.cli.commands.run.asyncio.run"):
-            _run_bot(mock_bot, single_cycle=True)
+        monkeypatch.setattr(run_module, "asyncio", MagicMock())
+        _run_bot(mock_bot, single_cycle=True)
 
         # Verify container was cleared in finally block
         assert get_application_container() is None
 
-    def test_clears_container_even_on_exception(self) -> None:
+    def test_clears_container_even_on_exception(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
         """Test that container is cleared even if bot.run() raises."""
         mock_bot = MagicMock()
         mock_container = MagicMock(spec=ApplicationContainer)
         set_application_container(mock_container)
 
         # Make asyncio.run raise an exception
-        with patch("gpt_trader.cli.commands.run.asyncio.run", side_effect=RuntimeError("test")):
-            with pytest.raises(RuntimeError, match="test"):
-                _run_bot(mock_bot, single_cycle=True)
+        mock_asyncio = MagicMock()
+        mock_asyncio.run.side_effect = RuntimeError("test")
+        monkeypatch.setattr(run_module, "asyncio", mock_asyncio)
+
+        with pytest.raises(RuntimeError, match="test"):
+            _run_bot(mock_bot, single_cycle=True)
 
         # Verify container was still cleared
         assert get_application_container() is None

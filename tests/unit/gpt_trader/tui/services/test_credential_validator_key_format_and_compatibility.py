@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-import os
-from unittest.mock import patch
-
 import pytest
 
 from gpt_trader.preflight.validation_result import ValidationSeverity
@@ -28,9 +25,14 @@ class TestCredentialValidatorKeyFormatAndCompatibility:
         assert "does not require" in result.findings[0].message
 
     @pytest.mark.asyncio
-    @patch.dict(os.environ, {}, clear=True)
-    async def test_missing_credentials_fails(self) -> None:
+    async def test_missing_credentials_fails(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
         """Modes requiring credentials should fail if none configured."""
+        monkeypatch.delenv("COINBASE_CDP_API_KEY", raising=False)
+        monkeypatch.delenv("COINBASE_CDP_PRIVATE_KEY", raising=False)
+
         validator = CredentialValidator()
         result = await validator.validate_for_mode("paper")
 
@@ -38,16 +40,17 @@ class TestCredentialValidatorKeyFormatAndCompatibility:
         assert result.credentials_configured is False
         assert result.has_errors is True
 
-    @patch.dict(
-        os.environ,
-        {
-            "COINBASE_CDP_API_KEY": "organizations/123/apiKeys/456",
-            "COINBASE_CDP_PRIVATE_KEY": "-----BEGIN EC PRIVATE KEY-----\ntest\n-----END EC PRIVATE KEY-----",
-        },
-        clear=True,
-    )
-    def test_valid_key_format(self) -> None:
+    def test_valid_key_format(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
         """Valid key format should pass format validation."""
+        monkeypatch.setenv("COINBASE_CDP_API_KEY", "organizations/123/apiKeys/456")
+        monkeypatch.setenv(
+            "COINBASE_CDP_PRIVATE_KEY",
+            "-----BEGIN EC PRIVATE KEY-----\ntest\n-----END EC PRIVATE KEY-----",
+        )
+
         validator = CredentialValidator()
 
         from gpt_trader.preflight.validation_result import CredentialValidationResult
@@ -62,16 +65,17 @@ class TestCredentialValidatorKeyFormatAndCompatibility:
         ]
         assert len(success_findings) == 2
 
-    @patch.dict(
-        os.environ,
-        {
-            "COINBASE_CDP_API_KEY": "invalid-key-format",
-            "COINBASE_CDP_PRIVATE_KEY": "-----BEGIN EC PRIVATE KEY-----\ntest\n-----END EC PRIVATE KEY-----",
-        },
-        clear=True,
-    )
-    def test_invalid_key_format(self) -> None:
+    def test_invalid_key_format(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
         """Invalid key format should fail validation with legacy detection."""
+        monkeypatch.setenv("COINBASE_CDP_API_KEY", "invalid-key-format")
+        monkeypatch.setenv(
+            "COINBASE_CDP_PRIVATE_KEY",
+            "-----BEGIN EC PRIVATE KEY-----\ntest\n-----END EC PRIVATE KEY-----",
+        )
+
         validator = CredentialValidator()
 
         from gpt_trader.preflight.validation_result import CredentialValidationResult
@@ -85,16 +89,14 @@ class TestCredentialValidatorKeyFormatAndCompatibility:
         assert len(error_findings) == 1
         assert "Legacy API key format detected" in error_findings[0].message
 
-    @patch.dict(
-        os.environ,
-        {
-            "COINBASE_CDP_API_KEY": "organizations/123/apiKeys/456",
-            "COINBASE_CDP_PRIVATE_KEY": "invalid-private-key",
-        },
-        clear=True,
-    )
-    def test_invalid_private_key_format(self) -> None:
+    def test_invalid_private_key_format(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
         """Invalid private key format should fail validation with specific error."""
+        monkeypatch.setenv("COINBASE_CDP_API_KEY", "organizations/123/apiKeys/456")
+        monkeypatch.setenv("COINBASE_CDP_PRIVATE_KEY", "invalid-private-key")
+
         validator = CredentialValidator()
 
         from gpt_trader.preflight.validation_result import CredentialValidationResult

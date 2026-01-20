@@ -5302,7 +5302,7 @@
     "tests/unit/gpt_trader/backtesting/metrics/test_report_reporter_basics.py": [
       {
         "name": "TestBacktestReporterInit::test_init_stores_broker",
-        "line": 36,
+        "line": 35,
         "markers": [
           "unit"
         ],
@@ -5311,7 +5311,7 @@
       },
       {
         "name": "TestBacktestReporterInit::test_init_stats_are_none",
-        "line": 42,
+        "line": 41,
         "markers": [
           "unit"
         ],
@@ -5320,7 +5320,7 @@
       },
       {
         "name": "TestBacktestReporterTradeStatistics::test_trade_statistics_lazy_loads",
-        "line": 53,
+        "line": 52,
         "markers": [
           "unit"
         ],
@@ -5329,7 +5329,7 @@
       },
       {
         "name": "TestBacktestReporterTradeStatistics::test_trade_statistics_caches_result",
-        "line": 67,
+        "line": 66,
         "markers": [
           "unit"
         ],
@@ -5338,7 +5338,7 @@
       },
       {
         "name": "TestBacktestReporterRiskMetrics::test_risk_metrics_lazy_loads",
-        "line": 87,
+        "line": 86,
         "markers": [
           "unit"
         ],
@@ -5347,7 +5347,7 @@
       },
       {
         "name": "TestBacktestReporterRiskMetrics::test_risk_metrics_caches_result",
-        "line": 101,
+        "line": 100,
         "markers": [
           "unit"
         ],
@@ -9647,7 +9647,7 @@
     "tests/unit/gpt_trader/cli/test_services.py": [
       {
         "name": "TestInstantiateBot::test_sets_container_when_none_present",
-        "line": 41,
+        "line": 42,
         "markers": [
           "unit"
         ],
@@ -9656,7 +9656,7 @@
       },
       {
         "name": "TestInstantiateBot::test_uses_existing_container",
-        "line": 67,
+        "line": 71,
         "markers": [
           "unit"
         ],
@@ -9665,7 +9665,7 @@
       },
       {
         "name": "TestRunBotCleanup::test_clears_container_on_shutdown",
-        "line": 91,
+        "line": 101,
         "markers": [
           "unit"
         ],
@@ -9674,7 +9674,7 @@
       },
       {
         "name": "TestRunBotCleanup::test_clears_container_even_on_exception",
-        "line": 110,
+        "line": 123,
         "markers": [
           "unit"
         ],
@@ -15492,7 +15492,7 @@
       },
       {
         "name": "test_get_key_permissions_propagates_errors",
-        "line": 88,
+        "line": 93,
         "markers": [
           "parametrize",
           "unit"
@@ -15501,7 +15501,7 @@
       },
       {
         "name": "test_get_key_permissions_includes_portfolio_metadata",
-        "line": 97,
+        "line": 106,
         "markers": [
           "unit"
         ],
@@ -15509,7 +15509,7 @@
       },
       {
         "name": "test_portfolio_type_passthrough",
-        "line": 123,
+        "line": 134,
         "markers": [
           "parametrize",
           "unit"
@@ -27331,7 +27331,7 @@
     "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_publish_snapshot.py": [
       {
         "name": "TestPublishSnapshot::test_publish_snapshot_emits_metric",
-        "line": 15,
+        "line": 16,
         "markers": [
           "unit"
         ],
@@ -27340,7 +27340,7 @@
       },
       {
         "name": "TestPublishSnapshot::test_publish_snapshot_file_write_error",
-        "line": 48,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -38514,7 +38514,7 @@
     "tests/unit/gpt_trader/preflight/test_checks_diagnostics.py": [
       {
         "name": "TestCheckPretradeDiagnostics::test_skips_when_remote_checks_bypassed",
-        "line": 42,
+        "line": 50,
         "markers": [
           "unit"
         ],
@@ -38523,7 +38523,7 @@
       },
       {
         "name": "TestCheckPretradeDiagnostics::test_fails_when_client_build_fails",
-        "line": 49,
+        "line": 61,
         "markers": [
           "unit"
         ],
@@ -38532,7 +38532,7 @@
       },
       {
         "name": "TestCheckPretradeDiagnostics::test_warn_only_returns_true_when_client_build_fails",
-        "line": 54,
+        "line": 73,
         "markers": [
           "unit"
         ],
@@ -38541,7 +38541,7 @@
       },
       {
         "name": "TestApiHealthCheck::test_triggers_on_api_degradation",
-        "line": 86,
+        "line": 112,
         "markers": [
           "parametrize",
           "unit"
@@ -38551,7 +38551,7 @@
       },
       {
         "name": "TestApiHealthCheck::test_skips_without_resilience_status",
-        "line": 101,
+        "line": 131,
         "markers": [
           "unit"
         ],
@@ -38560,7 +38560,7 @@
       },
       {
         "name": "TestBrokerReadinessCheck::test_fails_on_empty_data",
-        "line": 127,
+        "line": 160,
         "markers": [
           "parametrize",
           "unit"
@@ -38570,7 +38570,7 @@
       },
       {
         "name": "TestBrokerReadinessCheck::test_fails_on_invalid_product_specs",
-        "line": 141,
+        "line": 180,
         "markers": [
           "unit"
         ],
@@ -38579,7 +38579,7 @@
       },
       {
         "name": "TestMarketDataCheck::test_fails_on_bad_ticker",
-        "line": 167,
+        "line": 210,
         "markers": [
           "parametrize",
           "unit"
@@ -38589,7 +38589,7 @@
       },
       {
         "name": "TestMarketDataCheck::test_passes_with_valid_ticker",
-        "line": 182,
+        "line": 229,
         "markers": [
           "unit"
         ],
@@ -38598,7 +38598,7 @@
       },
       {
         "name": "TestWarnOnlyMode::test_warn_only_converts_errors_to_warnings",
-        "line": 198,
+        "line": 249,
         "markers": [
           "unit"
         ],
@@ -38607,7 +38607,7 @@
       },
       {
         "name": "TestWarnOnlyMode::test_warn_only_returns_true_on_failure",
-        "line": 215,
+        "line": 270,
         "markers": [
           "unit"
         ],
@@ -38616,7 +38616,7 @@
       },
       {
         "name": "TestSectionHeader::test_prints_section_header",
-        "line": 233,
+        "line": 292,
         "markers": [
           "unit"
         ],
@@ -39600,7 +39600,7 @@
     "tests/unit/gpt_trader/preflight/test_context_remote_checks.py": [
       {
         "name": "TestPreflightContextSkipRemoteChecks::test_force_remote_overrides_skip",
-        "line": 14,
+        "line": 13,
         "markers": [
           "unit"
         ],
@@ -39618,7 +39618,7 @@
       },
       {
         "name": "TestPreflightContextSkipRemoteChecks::test_dev_profile_without_credentials_skips",
-        "line": 34,
+        "line": 35,
         "markers": [
           "unit"
         ],
@@ -39627,7 +39627,7 @@
       },
       {
         "name": "TestPreflightContextSkipRemoteChecks::test_prod_profile_without_credentials_does_not_skip",
-        "line": 40,
+        "line": 48,
         "markers": [
           "unit"
         ],
@@ -39636,7 +39636,7 @@
       },
       {
         "name": "TestPreflightContextEnvDefaults::test_dev_profile_defaults",
-        "line": 50,
+        "line": 65,
         "markers": [
           "unit"
         ],
@@ -39645,7 +39645,7 @@
       },
       {
         "name": "TestPreflightContextEnvDefaults::test_prod_profile_defaults",
-        "line": 59,
+        "line": 74,
         "markers": [
           "unit"
         ],
@@ -39654,7 +39654,7 @@
       },
       {
         "name": "TestPreflightContextEnvDefaults::test_canary_profile_uses_prod_defaults",
-        "line": 68,
+        "line": 83,
         "markers": [
           "unit"
         ],
@@ -44672,7 +44672,7 @@
     "tests/unit/gpt_trader/tui/services/test_credential_validator_connectivity.py": [
       {
         "name": "TestCredentialValidatorConnectivity::test_connectivity_success",
-        "line": 23,
+        "line": 15,
         "markers": [
           "asyncio",
           "unit"
@@ -44682,7 +44682,7 @@
       },
       {
         "name": "TestCredentialValidatorConnectivity::test_jwt_generation_failure",
-        "line": 63,
+        "line": 50,
         "markers": [
           "asyncio",
           "unit"
@@ -44694,7 +44694,7 @@
     "tests/unit/gpt_trader/tui/services/test_credential_validator_key_format_and_compatibility.py": [
       {
         "name": "TestCredentialValidatorKeyFormatAndCompatibility::test_demo_mode_skips_validation",
-        "line": 19,
+        "line": 16,
         "markers": [
           "asyncio",
           "unit"
@@ -44704,7 +44704,7 @@
       },
       {
         "name": "TestCredentialValidatorKeyFormatAndCompatibility::test_missing_credentials_fails",
-        "line": 32,
+        "line": 28,
         "markers": [
           "asyncio",
           "unit"
@@ -44714,7 +44714,7 @@
       },
       {
         "name": "TestCredentialValidatorKeyFormatAndCompatibility::test_valid_key_format",
-        "line": 49,
+        "line": 43,
         "markers": [
           "unit"
         ],
@@ -44723,7 +44723,7 @@
       },
       {
         "name": "TestCredentialValidatorKeyFormatAndCompatibility::test_invalid_key_format",
-        "line": 73,
+        "line": 68,
         "markers": [
           "unit"
         ],
@@ -44732,7 +44732,7 @@
       },
       {
         "name": "TestCredentialValidatorKeyFormatAndCompatibility::test_invalid_private_key_format",
-        "line": 96,
+        "line": 92,
         "markers": [
           "unit"
         ],
@@ -44741,7 +44741,7 @@
       },
       {
         "name": "TestCredentialValidatorKeyFormatAndCompatibility::test_evaluate_mode_compatibility_live_without_trade",
-        "line": 109,
+        "line": 111,
         "markers": [
           "unit"
         ],
@@ -44750,7 +44750,7 @@
       },
       {
         "name": "TestCredentialValidatorKeyFormatAndCompatibility::test_evaluate_mode_compatibility_paper_with_view_only",
-        "line": 132,
+        "line": 134,
         "markers": [
           "unit"
         ],
@@ -44759,7 +44759,7 @@
       },
       {
         "name": "TestCredentialValidatorKeyFormatAndCompatibility::test_evaluate_mode_compatibility_read_only_with_view",
-        "line": 153,
+        "line": 155,
         "markers": [
           "unit"
         ],
@@ -44768,7 +44768,7 @@
       },
       {
         "name": "TestCredentialValidatorKeyFormatAndCompatibility::test_evaluate_mode_compatibility_without_connectivity",
-        "line": 173,
+        "line": 175,
         "markers": [
           "unit"
         ],
@@ -44777,7 +44777,7 @@
       },
       {
         "name": "TestCredentialValidatorKeyFormatAndCompatibility::test_get_mode_requirements",
-        "line": 193,
+        "line": 195,
         "markers": [
           "unit"
         ],
@@ -56958,7 +56958,7 @@
     "tests/unit/gpt_trader/validation/test_config_validators.py": [
       {
         "name": "TestValidateConfig::test_validates_simple_config",
-        "line": 18,
+        "line": 19,
         "markers": [
           "unit"
         ],
@@ -56967,7 +56967,7 @@
       },
       {
         "name": "TestValidateConfig::test_validates_with_transforming_validators",
-        "line": 30,
+        "line": 31,
         "markers": [
           "unit"
         ],
@@ -56976,7 +56976,7 @@
       },
       {
         "name": "TestValidateConfig::test_raises_for_missing_required_key",
-        "line": 42,
+        "line": 43,
         "markers": [
           "unit"
         ],
@@ -56985,7 +56985,7 @@
       },
       {
         "name": "TestValidateConfig::test_error_contains_field_name",
-        "line": 52,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -56994,7 +56994,7 @@
       },
       {
         "name": "TestValidateConfig::test_raises_for_invalid_value",
-        "line": 64,
+        "line": 65,
         "markers": [
           "unit"
         ],
@@ -57003,7 +57003,7 @@
       },
       {
         "name": "TestValidateConfig::test_logs_warning_for_extra_keys",
-        "line": 77,
+        "line": 78,
         "markers": [
           "unit"
         ],
@@ -57012,7 +57012,7 @@
       },
       {
         "name": "TestValidateConfig::test_returns_only_schema_keys",
-        "line": 101,
+        "line": 106,
         "markers": [
           "unit"
         ],
@@ -57021,7 +57021,7 @@
       },
       {
         "name": "TestValidateConfig::test_empty_schema_with_empty_config",
-        "line": 119,
+        "line": 127,
         "markers": [
           "unit"
         ],
@@ -57030,7 +57030,7 @@
       },
       {
         "name": "TestValidateConfig::test_empty_schema_with_extra_config",
-        "line": 128,
+        "line": 136,
         "markers": [
           "unit"
         ],

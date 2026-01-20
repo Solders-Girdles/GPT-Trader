@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
 import pytest
 
+import gpt_trader.validation.config_validators as config_validators_module
 from gpt_trader.errors import ValidationError
 from gpt_trader.validation.base_validators import Validator
 from gpt_trader.validation.config_validators import validate_config
@@ -74,7 +75,10 @@ class TestValidateConfig:
         with pytest.raises(ValidationError, match="Port must be integer"):
             validate_config(config, schema)
 
-    def test_logs_warning_for_extra_keys(self) -> None:
+    def test_logs_warning_for_extra_keys(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
         """Test that extra keys in config trigger a warning."""
         schema = {
             "name": Validator(),
@@ -85,20 +89,24 @@ class TestValidateConfig:
             "another_extra": 123,
         }
 
-        with patch("gpt_trader.validation.config_validators._get_logger") as mock_get_logger:
-            mock_logger = mock_get_logger.return_value
+        mock_logger = MagicMock()
+        mock_get_logger = MagicMock(return_value=mock_logger)
+        monkeypatch.setattr(config_validators_module, "_get_logger", mock_get_logger)
 
-            result = validate_config(config, schema)
+        result = validate_config(config, schema)
 
-            # Should still return validated config
-            assert result == {"name": "test"}
+        # Should still return validated config
+        assert result == {"name": "test"}
 
-            # Should log warning about extra keys
-            mock_logger.warning.assert_called_once()
-            warning_message = mock_logger.warning.call_args[0][0]
-            assert "extra_key" in warning_message or "another_extra" in warning_message
+        # Should log warning about extra keys
+        mock_logger.warning.assert_called_once()
+        warning_message = mock_logger.warning.call_args[0][0]
+        assert "extra_key" in warning_message or "another_extra" in warning_message
 
-    def test_returns_only_schema_keys(self) -> None:
+    def test_returns_only_schema_keys(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
         """Test that result only contains keys from schema."""
         schema = {
             "a": Validator(),
@@ -110,8 +118,8 @@ class TestValidateConfig:
             "c": 3,  # Extra key
         }
 
-        with patch("gpt_trader.validation.config_validators._get_logger"):
-            result = validate_config(config, schema)
+        monkeypatch.setattr(config_validators_module, "_get_logger", MagicMock())
+        result = validate_config(config, schema)
 
         assert set(result.keys()) == {"a", "b"}
         assert "c" not in result
@@ -125,13 +133,19 @@ class TestValidateConfig:
 
         assert result == {}
 
-    def test_empty_schema_with_extra_config(self) -> None:
+    def test_empty_schema_with_extra_config(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
         """Test validation with empty schema but extra config keys."""
         schema: dict[str, Validator] = {}
         config = {"extra": "value"}
 
-        with patch("gpt_trader.validation.config_validators._get_logger") as mock_get_logger:
-            result = validate_config(config, schema)
+        mock_logger = MagicMock()
+        mock_get_logger = MagicMock(return_value=mock_logger)
+        monkeypatch.setattr(config_validators_module, "_get_logger", mock_get_logger)
+
+        result = validate_config(config, schema)
 
         assert result == {}
-        mock_get_logger.return_value.warning.assert_called_once()
+        mock_logger.warning.assert_called_once()

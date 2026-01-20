@@ -23390,7 +23390,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_latency_metrics.py": [
       {
         "name": "TestOrderSubmissionLatencyMetrics::test_successful_submission_records_latency_histogram",
-        "line": 23,
+        "line": 42,
         "markers": [
           "unit"
         ],
@@ -23399,7 +23399,7 @@
       },
       {
         "name": "TestOrderSubmissionLatencyMetrics::test_failed_submission_records_latency_with_failure_result",
-        "line": 74,
+        "line": 80,
         "markers": [
           "unit"
         ],

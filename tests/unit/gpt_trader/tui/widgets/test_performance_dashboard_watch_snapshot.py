@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
+import pytest
+
+import gpt_trader.tui.widgets.performance_dashboard as perf_dashboard_module
 from gpt_trader.tui.services.performance_service import PerformanceSnapshot
 from gpt_trader.tui.widgets.performance_dashboard import PerformanceDashboardWidget
 
@@ -109,7 +112,7 @@ class TestPerformanceDashboardWidgetWatchSnapshot:
         mock_latency_label.set_classes.assert_called_once_with("perf-value status-critical")
         mock_memory_label.set_classes.assert_called_once_with("perf-value status-critical")
 
-    def test_refresh_metrics_gets_snapshot(self) -> None:
+    def test_refresh_metrics_gets_snapshot(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that _refresh_metrics fetches snapshot from service."""
         widget = PerformanceDashboardWidget()
 
@@ -119,18 +122,16 @@ class TestPerformanceDashboardWidgetWatchSnapshot:
         widget._budget_label = MagicMock()
 
         mock_snapshot = PerformanceSnapshot(fps=1.0)
+        mock_service = MagicMock()
+        mock_service.get_snapshot.return_value = mock_snapshot
+        monkeypatch.setattr(
+            perf_dashboard_module, "get_tui_performance_service", lambda: mock_service
+        )
 
-        with patch(
-            "gpt_trader.tui.widgets.performance_dashboard.get_tui_performance_service"
-        ) as mock_get_service:
-            mock_service = MagicMock()
-            mock_service.get_snapshot.return_value = mock_snapshot
-            mock_get_service.return_value = mock_service
+        widget._refresh_metrics()
 
-            widget._refresh_metrics()
-
-            mock_service.get_snapshot.assert_called_once()
-            assert widget.snapshot == mock_snapshot
+        mock_service.get_snapshot.assert_called_once()
+        assert widget.snapshot == mock_snapshot
 
     def test_compact_mode_skips_expanded_metrics(self) -> None:
         """Test that compact mode doesn't update expanded-only metrics."""

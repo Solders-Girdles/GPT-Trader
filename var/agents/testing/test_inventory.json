@@ -43085,7 +43085,7 @@
     "tests/unit/gpt_trader/tui/mixins/test_event_handlers_custom_overrides.py": [
       {
         "name": "TestCustomEventHandlers::test_custom_handler_overrides_default",
-        "line": 17,
+        "line": 18,
         "markers": [
           "unit"
         ],
@@ -43094,7 +43094,7 @@
       },
       {
         "name": "TestCustomEventHandlers::test_custom_handler_without_super_call",
-        "line": 37,
+        "line": 40,
         "markers": [
           "unit"
         ],
@@ -45871,7 +45871,7 @@
     "tests/unit/gpt_trader/tui/services/test_performance_service_core.py": [
       {
         "name": "TestTuiPerformanceService::test_init_enabled",
-        "line": 37,
+        "line": 38,
         "markers": [
           "unit"
         ],
@@ -45880,7 +45880,7 @@
       },
       {
         "name": "TestTuiPerformanceService::test_init_disabled",
-        "line": 41,
+        "line": 42,
         "markers": [
           "unit"
         ],
@@ -45889,7 +45889,7 @@
       },
       {
         "name": "TestTuiPerformanceService::test_time_operation_enabled",
-        "line": 44,
+        "line": 45,
         "markers": [
           "unit"
         ],
@@ -45898,7 +45898,7 @@
       },
       {
         "name": "TestTuiPerformanceService::test_time_operation_disabled",
-        "line": 54,
+        "line": 55,
         "markers": [
           "unit"
         ],
@@ -45907,7 +45907,7 @@
       },
       {
         "name": "TestTuiPerformanceService::test_record_frame",
-        "line": 58,
+        "line": 59,
         "markers": [
           "unit"
         ],
@@ -45916,7 +45916,7 @@
       },
       {
         "name": "TestTuiPerformanceService::test_record_frame_disabled",
-        "line": 71,
+        "line": 72,
         "markers": [
           "unit"
         ],
@@ -45925,7 +45925,7 @@
       },
       {
         "name": "TestTuiPerformanceService::test_fps_calculation",
-        "line": 78,
+        "line": 79,
         "markers": [
           "unit"
         ],
@@ -45934,7 +45934,7 @@
       },
       {
         "name": "TestTuiPerformanceService::test_frame_time_statistics",
-        "line": 92,
+        "line": 93,
         "markers": [
           "unit"
         ],
@@ -45943,7 +45943,7 @@
       },
       {
         "name": "TestTuiPerformanceService::test_slow_operation_tracking",
-        "line": 108,
+        "line": 109,
         "markers": [
           "unit"
         ],
@@ -45952,7 +45952,7 @@
       },
       {
         "name": "TestTuiPerformanceService::test_slow_operation_not_tracked_below_threshold",
-        "line": 117,
+        "line": 118,
         "markers": [
           "unit"
         ],
@@ -45961,7 +45961,7 @@
       },
       {
         "name": "TestTuiPerformanceService::test_slow_operation_disabled",
-        "line": 126,
+        "line": 127,
         "markers": [
           "unit"
         ],
@@ -45970,7 +45970,7 @@
       },
       {
         "name": "TestTuiPerformanceService::test_get_operation_stats",
-        "line": 131,
+        "line": 132,
         "markers": [
           "unit"
         ],
@@ -45979,7 +45979,7 @@
       },
       {
         "name": "TestTuiPerformanceService::test_reset",
-        "line": 141,
+        "line": 142,
         "markers": [
           "unit"
         ],
@@ -45988,7 +45988,7 @@
       },
       {
         "name": "TestTuiPerformanceService::test_snapshot_with_app_reference",
-        "line": 154,
+        "line": 155,
         "markers": [
           "unit"
         ],
@@ -47121,7 +47121,7 @@
     "tests/unit/gpt_trader/tui/test_app_resource_cleanup.py": [
       {
         "name": "TestResourceCleanup::test_coinbase_client_has_close_method",
-        "line": 9,
+        "line": 12,
         "markers": [
           "unit"
         ],
@@ -47130,7 +47130,7 @@
       },
       {
         "name": "TestResourceCleanup::test_coinbase_client_context_manager",
-        "line": 19,
+        "line": 22,
         "markers": [
           "unit"
         ],
@@ -47139,7 +47139,7 @@
       },
       {
         "name": "TestResourceCleanup::test_websocket_has_close_method",
-        "line": 25,
+        "line": 28,
         "markers": [
           "unit"
         ],
@@ -47148,7 +47148,7 @@
       },
       {
         "name": "TestResourceCleanup::test_websocket_close_is_idempotent",
-        "line": 36,
+        "line": 39,
         "markers": [
           "unit"
         ],
@@ -47157,7 +47157,7 @@
       },
       {
         "name": "TestResourceCleanup::test_performance_service_cleanup",
-        "line": 47,
+        "line": 50,
         "markers": [
           "unit"
         ],
@@ -47166,7 +47166,7 @@
       },
       {
         "name": "TestResourceCleanup::test_app_cleanup_bot_resources_closes_client",
-        "line": 66,
+        "line": 69,
         "markers": [
           "unit"
         ],
@@ -47175,7 +47175,7 @@
       },
       {
         "name": "TestResourceCleanup::test_app_cleanup_bot_resources_closes_websocket",
-        "line": 75,
+        "line": 78,
         "markers": [
           "unit"
         ],
@@ -47184,7 +47184,7 @@
       },
       {
         "name": "TestResourceCleanup::test_app_cleanup_bot_resources_closes_engine_client",
-        "line": 84,
+        "line": 87,
         "markers": [
           "unit"
         ],
@@ -47193,7 +47193,7 @@
       },
       {
         "name": "TestResourceCleanup::test_app_cleanup_handles_missing_resources",
-        "line": 93,
+        "line": 96,
         "markers": [
           "unit"
         ],
@@ -47202,7 +47202,7 @@
       },
       {
         "name": "TestResourceCleanup::test_app_cleanup_handles_close_errors",
-        "line": 104,
+        "line": 107,
         "markers": [
           "unit"
         ],
@@ -47211,7 +47211,7 @@
       },
       {
         "name": "TestResourceCleanup::test_websocket_reconnect_limit_configurable",
-        "line": 114,
+        "line": 121,
         "markers": [
           "unit"
         ],
@@ -48840,7 +48840,7 @@
     "tests/unit/gpt_trader/tui/test_screen_flows_log_focus.py": [
       {
         "name": "TestLogFocusFlow::test_logs_focus_on_l",
-        "line": 20,
+        "line": 21,
         "markers": [
           "asyncio",
           "unit"
@@ -51084,7 +51084,7 @@
     "tests/unit/gpt_trader/tui/utilities/test_table_formatting_clipboard.py": [
       {
         "name": "TestCopyToClipboard::test_copy_on_macos",
-        "line": 12,
+        "line": 14,
         "markers": [
           "unit"
         ],
@@ -51093,7 +51093,7 @@
       },
       {
         "name": "TestCopyToClipboard::test_copy_empty_string",
-        "line": 20,
+        "line": 24,
         "markers": [
           "unit"
         ],
@@ -51924,7 +51924,7 @@
     "tests/unit/gpt_trader/tui/widgets/test_config_modal.py": [
       {
         "name": "test_config_modal_save_updates_risk_config",
-        "line": 10,
+        "line": 12,
         "markers": [
           "unit"
         ],
@@ -52118,7 +52118,7 @@
     "tests/unit/gpt_trader/tui/widgets/test_logs.py": [
       {
         "name": "TestLogWidgetFilterChips::test_filter_bindings_present",
-        "line": 12,
+        "line": 16,
         "markers": [
           "unit"
         ],
@@ -52127,7 +52127,7 @@
       },
       {
         "name": "TestLogWidgetFilterChips::test_action_filter_all_sets_debug_level",
-        "line": 25,
+        "line": 29,
         "markers": [
           "unit"
         ],
@@ -52136,7 +52136,7 @@
       },
       {
         "name": "TestLogWidgetFilterChips::test_action_filter_error_sets_error_level",
-        "line": 36,
+        "line": 42,
         "markers": [
           "unit"
         ],
@@ -52145,7 +52145,7 @@
       },
       {
         "name": "TestLogWidgetFilterChips::test_action_filter_warning_sets_warning_level",
-        "line": 47,
+        "line": 55,
         "markers": [
           "unit"
         ],
@@ -52154,7 +52154,7 @@
       },
       {
         "name": "TestLogWidgetFilterChips::test_action_filter_info_sets_info_level",
-        "line": 58,
+        "line": 68,
         "markers": [
           "unit"
         ],
@@ -52163,7 +52163,7 @@
       },
       {
         "name": "TestLogWidgetFilterChips::test_action_filter_debug_sets_debug_level",
-        "line": 69,
+        "line": 81,
         "markers": [
           "unit"
         ],
@@ -52172,7 +52172,7 @@
       },
       {
         "name": "TestLogWidgetCycleFilter::test_cycle_level_filter_cycles_through_levels",
-        "line": 84,
+        "line": 98,
         "markers": [
           "unit"
         ],
@@ -52181,7 +52181,7 @@
       },
       {
         "name": "TestLogWidgetCycleFilter::test_cycle_level_filter_wraps_around",
-        "line": 97,
+        "line": 113,
         "markers": [
           "unit"
         ],
@@ -52190,7 +52190,7 @@
       },
       {
         "name": "TestLogWidgetCycleFilter::test_clear_filters_binding_exists",
-        "line": 110,
+        "line": 128,
         "markers": [
           "unit"
         ],
@@ -52199,7 +52199,7 @@
       },
       {
         "name": "TestLogWidgetCycleFilter::test_clear_filters_resets_state",
-        "line": 120,
+        "line": 138,
         "markers": [
           "unit"
         ],
@@ -52208,7 +52208,7 @@
       },
       {
         "name": "TestLogWidgetSetLevel::test_set_level_delegates_to_set_level_filter",
-        "line": 168,
+        "line": 174,
         "markers": [
           "unit"
         ],
@@ -52217,7 +52217,7 @@
       },
       {
         "name": "TestLogWidgetSetLevel::test_set_level_maps_all_standard_levels",
-        "line": 176,
+        "line": 184,
         "markers": [
           "unit"
         ],
@@ -52629,7 +52629,7 @@
     "tests/unit/gpt_trader/tui/widgets/test_performance_dashboard_watch_snapshot.py": [
       {
         "name": "TestPerformanceDashboardWidgetWatchSnapshot::test_watch_snapshot_none",
-        "line": 12,
+        "line": 15,
         "markers": [
           "unit"
         ],
@@ -52638,7 +52638,7 @@
       },
       {
         "name": "TestPerformanceDashboardWidgetWatchSnapshot::test_watch_snapshot_updates_cached_labels",
-        "line": 23,
+        "line": 26,
         "markers": [
           "unit"
         ],
@@ -52647,7 +52647,7 @@
       },
       {
         "name": "TestPerformanceDashboardWidgetWatchSnapshot::test_watch_snapshot_applies_warning_classes",
-        "line": 56,
+        "line": 59,
         "markers": [
           "unit"
         ],
@@ -52656,7 +52656,7 @@
       },
       {
         "name": "TestPerformanceDashboardWidgetWatchSnapshot::test_watch_snapshot_applies_bad_classes",
-        "line": 84,
+        "line": 87,
         "markers": [
           "unit"
         ],
@@ -52665,7 +52665,7 @@
       },
       {
         "name": "TestPerformanceDashboardWidgetWatchSnapshot::test_refresh_metrics_gets_snapshot",
-        "line": 112,
+        "line": 115,
         "markers": [
           "unit"
         ],
@@ -52674,7 +52674,7 @@
       },
       {
         "name": "TestPerformanceDashboardWidgetWatchSnapshot::test_compact_mode_skips_expanded_metrics",
-        "line": 135,
+        "line": 136,
         "markers": [
           "unit"
         ],

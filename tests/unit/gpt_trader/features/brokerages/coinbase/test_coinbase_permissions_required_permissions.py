@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -77,7 +77,9 @@ def test_check_required_permissions_missing(
     assert missing == expected_missing
 
 
-def test_stubbed_permission_response_satisfies_required_keys() -> None:
+def test_stubbed_permission_response_satisfies_required_keys(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     client = make_client()
     response = {
         "can_view": True,
@@ -87,8 +89,9 @@ def test_stubbed_permission_response_satisfies_required_keys() -> None:
         "portfolio_type": "DEFAULT",
     }
 
-    with patch.object(client, "_request", return_value=response):
-        permissions = client.get_key_permissions()
+    request_mock = MagicMock(return_value=response)
+    monkeypatch.setattr(client, "_request", request_mock)
+    permissions = client.get_key_permissions()
 
     required_keys = ("can_view", "can_trade", "can_transfer", "portfolio_uuid", "portfolio_type")
     for key in required_keys:

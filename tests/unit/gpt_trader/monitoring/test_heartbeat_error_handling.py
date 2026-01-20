@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -36,17 +36,17 @@ class TestHeartbeatServiceErrorHandling:
         assert calls["count"] == 2
 
     @pytest.mark.asyncio
-    async def test_continues_on_ping_error(self) -> None:
+    async def test_continues_on_ping_error(self, monkeypatch: pytest.MonkeyPatch) -> None:
         service = HeartbeatService(
             ping_url="https://hc-ping.com/test",
             interval_seconds=1,
         )
 
-        with patch.object(service, "_ping_external", new_callable=AsyncMock) as mock_ping:
-            mock_ping.return_value = False
+        ping_mock = AsyncMock(return_value=False)
+        monkeypatch.setattr(service, "_ping_external", ping_mock)
 
-            await service._send_heartbeat()
-            await service._send_heartbeat()
+        await service._send_heartbeat()
+        await service._send_heartbeat()
 
-            assert service._heartbeat_count == 2
-            assert mock_ping.call_count == 2
+        assert service._heartbeat_count == 2
+        assert ping_mock.call_count == 2

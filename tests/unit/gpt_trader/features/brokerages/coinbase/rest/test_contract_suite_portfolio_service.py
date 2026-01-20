@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 
@@ -56,15 +56,17 @@ class TestCoinbaseRestContractSuitePortfolioService(CoinbaseRestContractSuiteBas
 
         assert len(balances) == 0
 
-    def test_get_portfolio_balances_fallback(self, portfolio_service, mock_client):
+    def test_get_portfolio_balances_fallback(
+        self, monkeypatch: pytest.MonkeyPatch, portfolio_service, mock_client
+    ):
         """Test portfolio balances fallback to account balances."""
         mock_client.get_accounts.return_value = {"accounts": []}
 
-        with patch.object(portfolio_service, "list_balances") as mock_list_balances:
-            mock_list_balances.return_value = [Mock(spec=Balance)]
-            _ = portfolio_service.get_portfolio_balances()
+        list_balances_mock = Mock(return_value=[Mock(spec=Balance)])
+        monkeypatch.setattr(portfolio_service, "list_balances", list_balances_mock)
+        _ = portfolio_service.get_portfolio_balances()
 
-        mock_list_balances.assert_called_once()
+        list_balances_mock.assert_called_once()
 
     def test_list_positions_success(self, portfolio_service, mock_endpoints, mock_client):
         """Test successful position listing."""

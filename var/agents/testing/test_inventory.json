@@ -5076,7 +5076,7 @@
     "tests/unit/gpt_trader/backtesting/engine/test_clock_time_and_speed.py": [
       {
         "name": "TestSimulationClockSetTime::test_set_time_updates_current_time",
-        "line": 15,
+        "line": 16,
         "markers": [
           "unit"
         ],
@@ -5085,7 +5085,7 @@
       },
       {
         "name": "TestSimulationClockSetTime::test_set_time_can_go_backwards",
-        "line": 23,
+        "line": 24,
         "markers": [
           "unit"
         ],
@@ -5094,7 +5094,7 @@
       },
       {
         "name": "TestSimulationClockElapsedTime::test_elapsed_sim_time_starts_at_zero",
-        "line": 36,
+        "line": 37,
         "markers": [
           "unit"
         ],
@@ -5103,7 +5103,7 @@
       },
       {
         "name": "TestSimulationClockElapsedTime::test_elapsed_sim_time_after_advance",
-        "line": 40,
+        "line": 41,
         "markers": [
           "unit"
         ],
@@ -5112,7 +5112,7 @@
       },
       {
         "name": "TestSimulationClockElapsedTime::test_elapsed_wall_time_is_non_negative",
-        "line": 48,
+        "line": 49,
         "markers": [
           "unit"
         ],
@@ -5121,7 +5121,7 @@
       },
       {
         "name": "TestSimulationClockSpeedupRatio::test_speedup_ratio_inf_when_wall_time_is_zero",
-        "line": 57,
+        "line": 58,
         "markers": [
           "unit"
         ],
@@ -5130,7 +5130,7 @@
       },
       {
         "name": "TestSimulationClockSpeedupRatio::test_speedup_ratio_zero_when_no_sim_advance",
-        "line": 63,
+        "line": 66,
         "markers": [
           "unit"
         ],
@@ -5139,7 +5139,7 @@
       },
       {
         "name": "TestSimulationClockSpeedupRatio::test_speedup_ratio_after_advance",
-        "line": 70,
+        "line": 73,
         "markers": [
           "unit"
         ],
@@ -13084,7 +13084,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_position_metrics.py": [
       {
         "name": "TestCoinbaseRestServiceCorePositionMetrics::test_update_position_metrics_no_position",
-        "line": 15,
+        "line": 17,
         "markers": [
           "unit"
         ],
@@ -13093,7 +13093,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCorePositionMetrics::test_update_position_metrics_no_mark_price",
-        "line": 20,
+        "line": 22,
         "markers": [
           "unit"
         ],
@@ -13102,7 +13102,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCorePositionMetrics::test_update_position_metrics_missing_position_entry",
-        "line": 33,
+        "line": 35,
         "markers": [
           "unit"
         ],
@@ -13111,7 +13111,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCorePositionMetrics::test_update_position_metrics_success",
-        "line": 46,
+        "line": 51,
         "markers": [
           "unit"
         ],
@@ -13120,7 +13120,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCorePositionMetrics::test_update_position_metrics_with_funding",
-        "line": 69,
+        "line": 74,
         "markers": [
           "unit"
         ],
@@ -13129,7 +13129,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCorePositionMetrics::test_update_position_metrics_skips_funding_when_none",
-        "line": 93,
+        "line": 97,
         "markers": [
           "unit"
         ],
@@ -13138,7 +13138,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCorePositionMetrics::test_positions_property",
-        "line": 108,
+        "line": 112,
         "markers": [
           "unit"
         ],
@@ -13147,7 +13147,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCorePositionMetrics::test_update_position_metrics_public_method",
-        "line": 122,
+        "line": 126,
         "markers": [
           "unit"
         ],
@@ -13459,7 +13459,7 @@
       },
       {
         "name": "TestCoinbaseRestContractSuitePortfolioService::test_list_positions_success",
-        "line": 69,
+        "line": 71,
         "markers": [
           "unit"
         ],
@@ -13468,7 +13468,7 @@
       },
       {
         "name": "TestCoinbaseRestContractSuitePortfolioService::test_list_positions_error_handling",
-        "line": 94,
+        "line": 96,
         "markers": [
           "unit"
         ],
@@ -13477,7 +13477,7 @@
       },
       {
         "name": "TestCoinbaseRestContractSuitePortfolioService::test_get_position_success",
-        "line": 103,
+        "line": 105,
         "markers": [
           "unit"
         ],
@@ -13486,7 +13486,7 @@
       },
       {
         "name": "TestCoinbaseRestContractSuitePortfolioService::test_get_position_not_found",
-        "line": 119,
+        "line": 121,
         "markers": [
           "unit"
         ],
@@ -13495,7 +13495,7 @@
       },
       {
         "name": "TestCoinbaseRestContractSuitePortfolioService::test_intx_allocate_success",
-        "line": 128,
+        "line": 130,
         "markers": [
           "unit"
         ],
@@ -13504,7 +13504,7 @@
       },
       {
         "name": "TestCoinbaseRestContractSuitePortfolioService::test_intx_allocate_error_handling",
-        "line": 139,
+        "line": 141,
         "markers": [
           "unit"
         ],
@@ -13513,7 +13513,7 @@
       },
       {
         "name": "TestCoinbaseRestContractSuitePortfolioService::test_cfm_balance_summary_telemetry",
-        "line": 147,
+        "line": 149,
         "markers": [
           "unit"
         ],
@@ -13522,7 +13522,7 @@
       },
       {
         "name": "TestCoinbaseRestContractSuitePortfolioService::test_cfm_sweeps_telemetry",
-        "line": 162,
+        "line": 164,
         "markers": [
           "unit"
         ],
@@ -13531,7 +13531,7 @@
       },
       {
         "name": "TestCoinbaseRestContractSuitePortfolioService::test_update_cfm_margin_window_success",
-        "line": 177,
+        "line": 179,
         "markers": [
           "unit"
         ],
@@ -22995,7 +22995,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_generate_submit_id.py": [
       {
         "name": "TestGenerateSubmitId::test_uses_provided_client_order_id",
-        "line": 13,
+        "line": 15,
         "markers": [
           "unit"
         ],
@@ -23004,7 +23004,7 @@
       },
       {
         "name": "TestGenerateSubmitId::test_generates_id_when_none",
-        "line": 21,
+        "line": 23,
         "markers": [
           "unit"
         ],
@@ -23013,7 +23013,7 @@
       },
       {
         "name": "TestGenerateSubmitId::test_integration_mode_uses_env_override",
-        "line": 31,
+        "line": 32,
         "markers": [
           "unit"
         ],
@@ -36068,7 +36068,7 @@
     "tests/unit/gpt_trader/monitoring/test_heartbeat.py": [
       {
         "name": "TestHeartbeatServiceInit::test_default_values",
-        "line": 29,
+        "line": 30,
         "markers": [
           "unit"
         ],
@@ -36077,7 +36077,7 @@
       },
       {
         "name": "TestHeartbeatServiceInit::test_custom_values",
-        "line": 40,
+        "line": 41,
         "markers": [
           "unit"
         ],
@@ -36086,7 +36086,7 @@
       },
       {
         "name": "TestHeartbeatServiceStart::test_start_when_disabled",
-        "line": 58,
+        "line": 59,
         "markers": [
           "asyncio",
           "unit"
@@ -36096,7 +36096,7 @@
       },
       {
         "name": "TestHeartbeatServiceStart::test_start_creates_task",
-        "line": 65,
+        "line": 66,
         "markers": [
           "asyncio",
           "unit"
@@ -36106,7 +36106,7 @@
       },
       {
         "name": "TestHeartbeatServiceStart::test_start_when_already_running",
-        "line": 82,
+        "line": 83,
         "markers": [
           "asyncio",
           "unit"
@@ -36116,7 +36116,7 @@
       },
       {
         "name": "TestHeartbeatServiceStop::test_stop_when_not_running",
-        "line": 101,
+        "line": 102,
         "markers": [
           "asyncio",
           "unit"
@@ -36126,7 +36126,7 @@
       },
       {
         "name": "TestHeartbeatServiceStop::test_stop_cancels_task",
-        "line": 107,
+        "line": 108,
         "markers": [
           "asyncio",
           "unit"
@@ -36136,7 +36136,7 @@
       },
       {
         "name": "TestHeartbeatServiceSendHeartbeat::test_records_to_event_store",
-        "line": 126,
+        "line": 127,
         "markers": [
           "asyncio",
           "unit"
@@ -36146,7 +36146,7 @@
       },
       {
         "name": "TestHeartbeatServiceSendHeartbeat::test_increments_heartbeat_count",
-        "line": 144,
+        "line": 145,
         "markers": [
           "asyncio",
           "unit"
@@ -36156,7 +36156,7 @@
       },
       {
         "name": "TestHeartbeatServiceSendHeartbeat::test_updates_last_heartbeat_timestamp",
-        "line": 155,
+        "line": 156,
         "markers": [
           "asyncio",
           "unit"
@@ -36166,7 +36166,7 @@
       },
       {
         "name": "TestHeartbeatServiceExternalPing::test_ping_external_no_url",
-        "line": 166,
+        "line": 167,
         "markers": [
           "asyncio",
           "unit"
@@ -36176,7 +36176,7 @@
       },
       {
         "name": "TestHeartbeatServiceExternalPing::test_ping_external_handles_import_error",
-        "line": 172,
+        "line": 173,
         "markers": [
           "asyncio",
           "unit"
@@ -36186,7 +36186,7 @@
       },
       {
         "name": "TestHeartbeatServiceStatus::test_get_status_initial",
-        "line": 182,
+        "line": 185,
         "markers": [
           "unit"
         ],
@@ -36195,7 +36195,7 @@
       },
       {
         "name": "TestHeartbeatServiceStatus::test_get_status_after_heartbeat",
-        "line": 199,
+        "line": 202,
         "markers": [
           "asyncio",
           "unit"
@@ -36205,7 +36205,7 @@
       },
       {
         "name": "TestHeartbeatServiceStatus::test_is_healthy_when_not_running",
-        "line": 214,
+        "line": 217,
         "markers": [
           "unit"
         ],
@@ -36214,7 +36214,7 @@
       },
       {
         "name": "TestHeartbeatServiceStatus::test_is_healthy_just_started",
-        "line": 218,
+        "line": 221,
         "markers": [
           "unit"
         ],
@@ -36223,7 +36223,7 @@
       },
       {
         "name": "TestHeartbeatServiceStatus::test_is_healthy_after_heartbeat",
-        "line": 226,
+        "line": 229,
         "markers": [
           "unit"
         ],
@@ -41149,7 +41149,7 @@
     "tests/unit/gpt_trader/security/security_validator/test_numeric_edge_behaviour.py": [
       {
         "name": "TestNumericEdgeBehaviour::test_invalid_numeric_values",
-        "line": 30,
+        "line": 31,
         "markers": [
           "parametrize",
           "unit"
@@ -41159,7 +41159,7 @@
       },
       {
         "name": "TestNumericEdgeBehaviour::test_numeric_with_leading_trailing_whitespace",
-        "line": 36,
+        "line": 37,
         "markers": [
           "unit"
         ],
@@ -41168,7 +41168,7 @@
       },
       {
         "name": "TestNumericEdgeBehaviour::test_numeric_with_plus_sign",
-        "line": 42,
+        "line": 43,
         "markers": [
           "unit"
         ],
@@ -41177,7 +41177,7 @@
       },
       {
         "name": "TestNumericEdgeBehaviour::test_numeric_boundary_values",
-        "line": 47,
+        "line": 48,
         "markers": [
           "unit"
         ],
@@ -41186,7 +41186,7 @@
       },
       {
         "name": "TestNumericEdgeBehaviour::test_numeric_type_conversion",
-        "line": 51,
+        "line": 52,
         "markers": [
           "unit"
         ],
@@ -41195,7 +41195,7 @@
       },
       {
         "name": "TestNumericEdgeBehaviour::test_numeric_error_messages",
-        "line": 56,
+        "line": 57,
         "markers": [
           "unit"
         ],
@@ -41204,7 +41204,7 @@
       },
       {
         "name": "TestNumericEdgeBehaviour::test_numeric_validation_with_decimal_input",
-        "line": 69,
+        "line": 70,
         "markers": [
           "unit"
         ],
@@ -41213,7 +41213,7 @@
       },
       {
         "name": "TestNumericEdgeBehaviour::test_numeric_validation_consistency",
-        "line": 74,
+        "line": 75,
         "markers": [
           "unit"
         ],
@@ -41222,7 +41222,7 @@
       },
       {
         "name": "TestNumericEdgeBehaviour::test_numeric_validation_performance",
-        "line": 83,
+        "line": 84,
         "markers": [
           "unit"
         ],
@@ -41231,7 +41231,7 @@
       },
       {
         "name": "TestNumericEdgeBehaviour::test_numeric_validation_with_extreme_ranges",
-        "line": 87,
+        "line": 88,
         "markers": [
           "unit"
         ],
@@ -41240,7 +41240,7 @@
       },
       {
         "name": "TestNumericEdgeBehaviour::test_numeric_validation_with_floating_point_edge_cases",
-        "line": 91,
+        "line": 92,
         "markers": [
           "unit"
         ],
@@ -41249,7 +41249,7 @@
       },
       {
         "name": "TestNumericEdgeBehaviour::test_numeric_validation_rejects_non_finite",
-        "line": 106,
+        "line": 107,
         "markers": [
           "parametrize",
           "unit"
@@ -41259,7 +41259,7 @@
       },
       {
         "name": "TestNumericValidationExceptionHandling::test_numeric_validation_non_decimal_return",
-        "line": 117,
+        "line": 118,
         "markers": [
           "unit"
         ],
@@ -42088,7 +42088,7 @@
     "tests/unit/gpt_trader/security/security_validator/test_symbol_validation_exception_handling.py": [
       {
         "name": "TestSymbolValidationExceptionHandling::test_symbol_validation_generic_exception",
-        "line": 9,
+        "line": 13,
         "markers": [
           "unit"
         ],
@@ -54040,7 +54040,7 @@
     "tests/unit/gpt_trader/tui/widgets/test_validation_indicator.py": [
       {
         "name": "TestValidationIndicatorWidget::test_init_creates_empty_state",
-        "line": 14,
+        "line": 16,
         "markers": [
           "unit"
         ],
@@ -54049,7 +54049,7 @@
       },
       {
         "name": "TestValidationIndicatorWidget::test_on_state_validation_failed_updates_counts",
-        "line": 22,
+        "line": 24,
         "markers": [
           "unit"
         ],
@@ -54058,7 +54058,7 @@
       },
       {
         "name": "TestValidationIndicatorWidget::test_on_state_validation_failed_stores_errors",
-        "line": 38,
+        "line": 40,
         "markers": [
           "unit"
         ],
@@ -54067,7 +54067,7 @@
       },
       {
         "name": "TestValidationIndicatorWidget::test_on_state_validation_passed_clears_counts",
-        "line": 52,
+        "line": 54,
         "markers": [
           "unit"
         ],
@@ -54076,7 +54076,7 @@
       },
       {
         "name": "TestValidationIndicatorWidget::test_format_error_message_single_error",
-        "line": 67,
+        "line": 70,
         "markers": [
           "unit"
         ],
@@ -54085,7 +54085,7 @@
       },
       {
         "name": "TestValidationIndicatorWidget::test_format_error_message_multiple_errors",
-        "line": 80,
+        "line": 83,
         "markers": [
           "unit"
         ],
@@ -54094,7 +54094,7 @@
       },
       {
         "name": "TestValidationIndicatorWidget::test_format_warning_message_single_warning",
-        "line": 91,
+        "line": 94,
         "markers": [
           "unit"
         ],
@@ -54103,7 +54103,7 @@
       },
       {
         "name": "TestValidationIndicatorWidget::test_get_validation_summary_with_errors",
-        "line": 104,
+        "line": 107,
         "markers": [
           "unit"
         ],
@@ -54112,7 +54112,7 @@
       },
       {
         "name": "TestValidationIndicatorWidget::test_get_validation_summary_warnings_only",
-        "line": 115,
+        "line": 118,
         "markers": [
           "unit"
         ],
@@ -54121,7 +54121,7 @@
       },
       {
         "name": "TestValidationIndicatorWidget::test_get_validation_summary_valid",
-        "line": 125,
+        "line": 128,
         "markers": [
           "unit"
         ],
@@ -54130,7 +54130,7 @@
       },
       {
         "name": "TestValidationIndicatorWidget::test_get_error_details",
-        "line": 135,
+        "line": 138,
         "markers": [
           "unit"
         ],
@@ -54139,7 +54139,7 @@
       },
       {
         "name": "TestValidationIndicatorWidget::test_update_display_with_errors",
-        "line": 155,
+        "line": 158,
         "markers": [
           "unit"
         ],
@@ -54148,7 +54148,7 @@
       },
       {
         "name": "TestValidationIndicatorWidget::test_update_display_with_warnings",
-        "line": 165,
+        "line": 168,
         "markers": [
           "unit"
         ],
@@ -54157,7 +54157,7 @@
       },
       {
         "name": "TestValidationIndicatorWidget::test_update_display_valid",
-        "line": 176,
+        "line": 179,
         "markers": [
           "unit"
         ],

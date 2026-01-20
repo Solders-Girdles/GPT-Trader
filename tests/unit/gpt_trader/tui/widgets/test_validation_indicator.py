@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
+
+import pytest
 
 from gpt_trader.tui.events import FieldValidationError, StateValidationFailed, StateValidationPassed
 from gpt_trader.tui.widgets.validation_indicator import ValidationIndicatorWidget
@@ -49,16 +51,17 @@ class TestValidationIndicatorWidget:
         assert widget.last_errors[0].field == "market.price"
         assert widget.last_errors[0].message == "Invalid price"
 
-    def test_on_state_validation_passed_clears_counts(self):
+    def test_on_state_validation_passed_clears_counts(self, monkeypatch: pytest.MonkeyPatch):
         """Test handling validation success clears counts."""
         widget = ValidationIndicatorWidget()
         widget.error_count = 5
         widget.warning_count = 3
 
         # Patch set_timer to avoid needing event loop
-        with patch.object(widget, "set_timer", return_value=MagicMock()):
-            event = StateValidationPassed()
-            widget.on_state_validation_passed(event)
+        set_timer_mock = MagicMock(return_value=MagicMock())
+        monkeypatch.setattr(widget, "set_timer", set_timer_mock)
+        event = StateValidationPassed()
+        widget.on_state_validation_passed(event)
 
         assert widget.error_count == 0
         assert widget.warning_count == 0

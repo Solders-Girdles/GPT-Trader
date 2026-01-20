@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+import sys
 from collections.abc import Callable
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 
@@ -169,13 +170,15 @@ class TestHeartbeatServiceExternalPing:
         assert result is False
 
     @pytest.mark.asyncio
-    async def test_ping_external_handles_import_error(self) -> None:
+    async def test_ping_external_handles_import_error(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test that ping handles missing aiohttp gracefully."""
         service = HeartbeatService(ping_url="https://hc-ping.com/test")
 
-        with patch.dict("sys.modules", {"aiohttp": None}):
-            result = await service._ping_external()
-            assert result is False
+        monkeypatch.setitem(sys.modules, "aiohttp", None)
+        result = await service._ping_external()
+        assert result is False
 
 
 class TestHeartbeatServiceStatus:

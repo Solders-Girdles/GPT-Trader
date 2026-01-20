@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
-from unittest.mock import patch
+from unittest.mock import MagicMock
+
+import pytest
 
 from tests.unit.gpt_trader.features.brokerages.coinbase.rest.rest_service_core_test_base import (
     RestServiceCoreTestBase,
@@ -30,7 +32,9 @@ class TestCoinbaseRestServiceCorePositionMetrics(RestServiceCoreTestBase):
 
         self.event_store.append_position.assert_not_called()
 
-    def test_update_position_metrics_missing_position_entry(self) -> None:
+    def test_update_position_metrics_missing_position_entry(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         from gpt_trader.features.brokerages.coinbase.utilities import PositionState
 
         position = PositionState(
@@ -38,8 +42,9 @@ class TestCoinbaseRestServiceCorePositionMetrics(RestServiceCoreTestBase):
         )
         self.position_store.set("BTC-USD", position)
 
-        with patch.object(self.position_store, "get", return_value=None):
-            self.service.update_position_metrics("BTC-USD")
+        get_mock = MagicMock(return_value=None)
+        monkeypatch.setattr(self.position_store, "get", get_mock)
+        self.service.update_position_metrics("BTC-USD")
 
         self.market_data.get_mark.assert_not_called()
 
@@ -66,7 +71,7 @@ class TestCoinbaseRestServiceCorePositionMetrics(RestServiceCoreTestBase):
         assert position_call[1]["position"]["symbol"] == "BTC-USD"
         assert position_call[1]["position"]["mark_price"] == "51000"
 
-    def test_update_position_metrics_with_funding(self) -> None:
+    def test_update_position_metrics_with_funding(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from gpt_trader.features.brokerages.coinbase.utilities import PositionState
 
         position = PositionState(
@@ -79,10 +84,9 @@ class TestCoinbaseRestServiceCorePositionMetrics(RestServiceCoreTestBase):
             datetime(2024, 1, 1, 12, 0, 0),
         )
 
-        with patch.object(
-            self.service._funding_calculator, "accrue_if_due", return_value=Decimal("5.0")
-        ):
-            self.service.update_position_metrics("BTC-USD")
+        accrue_mock = MagicMock(return_value=Decimal("5.0"))
+        monkeypatch.setattr(self.service._funding_calculator, "accrue_if_due", accrue_mock)
+        self.service.update_position_metrics("BTC-USD")
 
         assert self.event_store.append_metric.call_count >= 1
         funding_call = self.event_store.append_metric.call_args_list[0]

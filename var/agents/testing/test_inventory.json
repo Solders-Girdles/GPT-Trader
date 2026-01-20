@@ -21962,7 +21962,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_metrics.py": [
       {
         "name": "TestBrokerCallMetrics::test_successful_call_records_latency_with_success_outcome",
-        "line": 21,
+        "line": 32,
         "markers": [
           "unit"
         ],
@@ -21971,7 +21971,7 @@
       },
       {
         "name": "TestBrokerCallMetrics::test_failed_call_records_latency_with_failure_outcome",
-        "line": 52,
+        "line": 62,
         "markers": [
           "unit"
         ],
@@ -21980,7 +21980,7 @@
       },
       {
         "name": "TestBrokerCallMetrics::test_timeout_error_classified_correctly",
-        "line": 82,
+        "line": 91,
         "markers": [
           "unit"
         ],
@@ -21989,7 +21989,7 @@
       },
       {
         "name": "TestBrokerCallMetrics::test_rate_limit_error_classified_correctly",
-        "line": 109,
+        "line": 117,
         "markers": [
           "unit"
         ],
@@ -21998,7 +21998,7 @@
       },
       {
         "name": "TestBrokerCallMetrics::test_network_error_classified_correctly",
-        "line": 136,
+        "line": 143,
         "markers": [
           "unit"
         ],
@@ -23430,7 +23430,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_submission_metrics.py": [
       {
         "name": "TestOrderSubmissionMetrics::test_successful_order_records_metric",
-        "line": 27,
+        "line": 35,
         "markers": [
           "unit"
         ],
@@ -23439,7 +23439,7 @@
       },
       {
         "name": "TestOrderSubmissionMetrics::test_failed_order_records_metric_with_reason",
-        "line": 69,
+        "line": 74,
         "markers": [
           "unit"
         ],
@@ -23448,7 +23448,7 @@
       },
       {
         "name": "TestOrderSubmissionMetricLabels::test_classification_label_used_in_metrics",
-        "line": 120,
+        "line": 132,
         "markers": [
           "unit"
         ],

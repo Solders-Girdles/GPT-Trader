@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
+import gpt_trader.features.live_trade.execution.broker_executor as broker_executor_module
 from gpt_trader.core import (
     OrderSide,
     OrderType,
@@ -14,13 +15,23 @@ from gpt_trader.core import (
 from gpt_trader.features.live_trade.execution.broker_executor import BrokerExecutor
 
 
+@pytest.fixture
+def record_latency_mock(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    mock_record_latency = MagicMock()
+    monkeypatch.setattr(
+        broker_executor_module,
+        "_record_broker_call_latency",
+        mock_record_latency,
+    )
+    return mock_record_latency
+
+
 class TestBrokerCallMetrics:
     """Tests for broker call metrics recording."""
 
-    @patch("gpt_trader.features.live_trade.execution.broker_executor._record_broker_call_latency")
     def test_successful_call_records_latency_with_success_outcome(
         self,
-        mock_record_latency: MagicMock,
+        record_latency_mock: MagicMock,
         mock_broker: MagicMock,
     ) -> None:
         """Test that successful broker call records latency with success outcome."""
@@ -42,16 +53,15 @@ class TestBrokerCallMetrics:
             leverage=None,
         )
 
-        mock_record_latency.assert_called_once()
-        call_kwargs = mock_record_latency.call_args[1]
+        record_latency_mock.assert_called_once()
+        call_kwargs = record_latency_mock.call_args[1]
         assert call_kwargs["operation"] == "submit"
         assert call_kwargs["outcome"] == "success"
         assert call_kwargs["latency_seconds"] >= 0
 
-    @patch("gpt_trader.features.live_trade.execution.broker_executor._record_broker_call_latency")
     def test_failed_call_records_latency_with_failure_outcome(
         self,
-        mock_record_latency: MagicMock,
+        record_latency_mock: MagicMock,
         mock_broker: MagicMock,
     ) -> None:
         """Test that failed broker call records latency with failure outcome."""
@@ -72,16 +82,15 @@ class TestBrokerCallMetrics:
                 leverage=None,
             )
 
-        mock_record_latency.assert_called_once()
-        call_kwargs = mock_record_latency.call_args[1]
+        record_latency_mock.assert_called_once()
+        call_kwargs = record_latency_mock.call_args[1]
         assert call_kwargs["operation"] == "submit"
         assert call_kwargs["outcome"] == "failure"
         assert call_kwargs["reason"] == "error"
 
-    @patch("gpt_trader.features.live_trade.execution.broker_executor._record_broker_call_latency")
     def test_timeout_error_classified_correctly(
         self,
-        mock_record_latency: MagicMock,
+        record_latency_mock: MagicMock,
         mock_broker: MagicMock,
     ) -> None:
         """Test that timeout errors are classified correctly in metrics."""
@@ -102,13 +111,12 @@ class TestBrokerCallMetrics:
                 leverage=None,
             )
 
-        call_kwargs = mock_record_latency.call_args[1]
+        call_kwargs = record_latency_mock.call_args[1]
         assert call_kwargs["reason"] == "timeout"
 
-    @patch("gpt_trader.features.live_trade.execution.broker_executor._record_broker_call_latency")
     def test_rate_limit_error_classified_correctly(
         self,
-        mock_record_latency: MagicMock,
+        record_latency_mock: MagicMock,
         mock_broker: MagicMock,
     ) -> None:
         """Test that rate limit errors are classified correctly in metrics."""
@@ -129,13 +137,12 @@ class TestBrokerCallMetrics:
                 leverage=None,
             )
 
-        call_kwargs = mock_record_latency.call_args[1]
+        call_kwargs = record_latency_mock.call_args[1]
         assert call_kwargs["reason"] == "rate_limit"
 
-    @patch("gpt_trader.features.live_trade.execution.broker_executor._record_broker_call_latency")
     def test_network_error_classified_correctly(
         self,
-        mock_record_latency: MagicMock,
+        record_latency_mock: MagicMock,
         mock_broker: MagicMock,
     ) -> None:
         """Test that network errors are classified correctly in metrics."""
@@ -156,5 +163,5 @@ class TestBrokerCallMetrics:
                 leverage=None,
             )
 
-        call_kwargs = mock_record_latency.call_args[1]
+        call_kwargs = record_latency_mock.call_args[1]
         assert call_kwargs["reason"] == "network"

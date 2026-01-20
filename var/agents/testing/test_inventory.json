@@ -9656,7 +9656,7 @@
       },
       {
         "name": "TestInstantiateBot::test_uses_existing_container",
-        "line": 71,
+        "line": 69,
         "markers": [
           "unit"
         ],
@@ -9665,7 +9665,7 @@
       },
       {
         "name": "TestRunBotCleanup::test_clears_container_on_shutdown",
-        "line": 101,
+        "line": 99,
         "markers": [
           "unit"
         ],
@@ -9674,7 +9674,7 @@
       },
       {
         "name": "TestRunBotCleanup::test_clears_container_even_on_exception",
-        "line": 123,
+        "line": 121,
         "markers": [
           "unit"
         ],
@@ -36293,7 +36293,7 @@
     "tests/unit/gpt_trader/monitoring/test_memory_metrics.py": [
       {
         "name": "TestMemoryGaugeEmission::test_event_store_cache_gauges_emitted",
-        "line": 11,
+        "line": 22,
         "markers": [
           "unit"
         ],
@@ -36302,7 +36302,7 @@
       },
       {
         "name": "TestMemoryGaugeEmission::test_event_store_metrics_handles_none_store",
-        "line": 53,
+        "line": 63,
         "markers": [
           "unit"
         ],
@@ -36311,7 +36311,7 @@
       },
       {
         "name": "TestMemoryGaugeEmission::test_event_store_metrics_handles_missing_methods",
-        "line": 74,
+        "line": 83,
         "markers": [
           "unit"
         ],
@@ -36320,7 +36320,7 @@
       },
       {
         "name": "TestEventStoreCacheMetrics::test_get_cache_size",
-        "line": 103,
+        "line": 111,
         "markers": [
           "unit"
         ],
@@ -36329,7 +36329,7 @@
       },
       {
         "name": "TestEventStoreCacheMetrics::test_get_cache_max_size",
-        "line": 118,
+        "line": 126,
         "markers": [
           "unit"
         ],
@@ -36338,7 +36338,7 @@
       },
       {
         "name": "TestEventStoreCacheMetrics::test_get_cache_fill_ratio",
-        "line": 125,
+        "line": 133,
         "markers": [
           "unit"
         ],
@@ -36347,7 +36347,7 @@
       },
       {
         "name": "TestEventStoreCacheMetrics::test_get_cache_fill_ratio_handles_zero_max",
-        "line": 141,
+        "line": 149,
         "markers": [
           "unit"
         ],
@@ -36778,7 +36778,7 @@
     "tests/unit/gpt_trader/monitoring/test_resource_metrics_edges.py": [
       {
         "name": "test_collect_process_metrics_missing_psutil_returns_na",
-        "line": 44,
+        "line": 54,
         "markers": [
           "unit"
         ],
@@ -36786,7 +36786,7 @@
       },
       {
         "name": "test_collect_process_metrics_handles_read_errors",
-        "line": 61,
+        "line": 73,
         "markers": [
           "unit"
         ],
@@ -36794,7 +36794,7 @@
       },
       {
         "name": "test_collect_process_metrics_formats_memory_bounds",
-        "line": 79,
+        "line": 93,
         "markers": [
           "parametrize",
           "unit"
@@ -36803,7 +36803,7 @@
       },
       {
         "name": "test_collect_process_metrics_invalid_cpu_percent_falls_back",
-        "line": 97,
+        "line": 113,
         "markers": [
           "unit"
         ],
@@ -36811,7 +36811,7 @@
       },
       {
         "name": "test_collect_process_metrics_invalid_memory_value_falls_back",
-        "line": 110,
+        "line": 128,
         "markers": [
           "unit"
         ],

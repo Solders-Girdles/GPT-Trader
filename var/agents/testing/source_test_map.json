@@ -907,7 +907,9 @@
       "tests/unit/gpt_trader/features/live_trade/test_degradation_status_and_clear_all.py"
     ],
     "gpt_trader.features.live_trade.engines": [
-      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_edges.py"
+      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_edges.py",
+      "tests/unit/gpt_trader/monitoring/test_memory_metrics.py",
+      "tests/unit/gpt_trader/monitoring/test_resource_metrics_edges.py"
     ],
     "gpt_trader.features.live_trade.engines.base": [
       "tests/integration/test_crash_recovery.py",
@@ -4725,6 +4727,7 @@
       "gpt_trader.monitoring.heartbeat"
     ],
     "tests/unit/gpt_trader/monitoring/test_memory_metrics.py": [
+      "gpt_trader.features.live_trade.engines",
       "gpt_trader.features.live_trade.engines.system_maintenance",
       "gpt_trader.persistence.event_store"
     ],
@@ -4744,6 +4747,7 @@
       "gpt_trader.monitoring.profiling"
     ],
     "tests/unit/gpt_trader/monitoring/test_resource_metrics_edges.py": [
+      "gpt_trader.features.live_trade.engines",
       "gpt_trader.features.live_trade.engines.system_maintenance"
     ],
     "tests/unit/gpt_trader/monitoring/test_runtime_guards_base.py": [

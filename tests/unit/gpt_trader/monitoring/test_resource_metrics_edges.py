@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import builtins
+import sys
 from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -29,6 +30,15 @@ class _ErrorProcess:
         raise RuntimeError("cpu_percent failed")
 
 
+@pytest.fixture
+def record_gauge_mock(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    from gpt_trader.features.live_trade.engines import system_maintenance
+
+    mock = MagicMock()
+    monkeypatch.setattr(system_maintenance, "record_gauge", mock)
+    return mock
+
+
 def _build_service():
     from gpt_trader.features.live_trade.engines.system_maintenance import (
         SystemMaintenanceService,
@@ -41,7 +51,9 @@ def _psutil_stub(process: object) -> SimpleNamespace:
     return SimpleNamespace(Process=lambda: process)
 
 
-def test_collect_process_metrics_missing_psutil_returns_na() -> None:
+def test_collect_process_metrics_missing_psutil_returns_na(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     service = _build_service()
 
     original_import = builtins.__import__
@@ -51,19 +63,21 @@ def test_collect_process_metrics_missing_psutil_returns_na() -> None:
             raise ImportError("missing psutil")
         return original_import(name, *args, **kwargs)
 
-    with patch.object(builtins, "__import__", mock_import):
-        memory_usage, cpu_usage = service._collect_process_metrics()
+    monkeypatch.setattr(builtins, "__import__", mock_import)
+    memory_usage, cpu_usage = service._collect_process_metrics()
 
     assert memory_usage == "N/A"
     assert cpu_usage == "N/A"
 
 
-def test_collect_process_metrics_handles_read_errors() -> None:
+def test_collect_process_metrics_handles_read_errors(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     service = _build_service()
     psutil_stub = _psutil_stub(_ErrorProcess())
 
-    with patch.dict("sys.modules", {"psutil": psutil_stub}):
-        memory_usage, cpu_usage = service._collect_process_metrics()
+    monkeypatch.setitem(sys.modules, "psutil", psutil_stub)
+    memory_usage, cpu_usage = service._collect_process_metrics()
 
     assert memory_usage == "Unknown"
     assert cpu_usage == "Unknown"
@@ -77,47 +91,51 @@ def test_collect_process_metrics_handles_read_errors() -> None:
     ],
 )
 def test_collect_process_metrics_formats_memory_bounds(
-    rss_bytes: float, expected_memory: str
+    rss_bytes: float,
+    expected_memory: str,
+    monkeypatch: pytest.MonkeyPatch,
+    record_gauge_mock: MagicMock,
 ) -> None:
     service = _build_service()
     process = _StubProcess(rss_bytes=rss_bytes, cpu_percent=12.5)
     psutil_stub = _psutil_stub(process)
 
-    with patch.dict("sys.modules", {"psutil": psutil_stub}):
-        with patch(
-            "gpt_trader.features.live_trade.engines.system_maintenance.record_gauge"
-        ) as mock_gauge:
-            memory_usage, cpu_usage = service._collect_process_metrics()
+    monkeypatch.setitem(sys.modules, "psutil", psutil_stub)
+    memory_usage, cpu_usage = service._collect_process_metrics()
 
     assert memory_usage == expected_memory
     assert cpu_usage == "12.5%"
-    mock_gauge.assert_called_once_with("gpt_trader_process_memory_mb", rss_bytes / 1024 / 1024)
+    record_gauge_mock.assert_called_once_with(
+        "gpt_trader_process_memory_mb", rss_bytes / 1024 / 1024
+    )
 
 
-def test_collect_process_metrics_invalid_cpu_percent_falls_back() -> None:
+def test_collect_process_metrics_invalid_cpu_percent_falls_back(
+    monkeypatch: pytest.MonkeyPatch,
+    record_gauge_mock: MagicMock,
+) -> None:
     service = _build_service()
     process = _StubProcess(rss_bytes=1024.0 * 1024.0, cpu_percent=None)
     psutil_stub = _psutil_stub(process)
 
-    with patch.dict("sys.modules", {"psutil": psutil_stub}):
-        with patch("gpt_trader.features.live_trade.engines.system_maintenance.record_gauge"):
-            memory_usage, cpu_usage = service._collect_process_metrics()
+    monkeypatch.setitem(sys.modules, "psutil", psutil_stub)
+    memory_usage, cpu_usage = service._collect_process_metrics()
 
     assert memory_usage == "1.0MB"
     assert cpu_usage == "Unknown"
 
 
-def test_collect_process_metrics_invalid_memory_value_falls_back() -> None:
+def test_collect_process_metrics_invalid_memory_value_falls_back(
+    monkeypatch: pytest.MonkeyPatch,
+    record_gauge_mock: MagicMock,
+) -> None:
     service = _build_service()
     process = _StubProcess(rss_bytes=-1.0, cpu_percent=5.0)
     psutil_stub = _psutil_stub(process)
 
-    with patch.dict("sys.modules", {"psutil": psutil_stub}):
-        with patch(
-            "gpt_trader.features.live_trade.engines.system_maintenance.record_gauge"
-        ) as mock_gauge:
-            memory_usage, cpu_usage = service._collect_process_metrics()
+    monkeypatch.setitem(sys.modules, "psutil", psutil_stub)
+    memory_usage, cpu_usage = service._collect_process_metrics()
 
     assert memory_usage == "Unknown"
     assert cpu_usage == "5.0%"
-    assert not mock_gauge.called
+    assert not record_gauge_mock.called

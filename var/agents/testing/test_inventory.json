@@ -17496,7 +17496,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_real_transport.py": [
       {
         "name": "TestRealTransportCoverage::test_real_transport_initialization_default",
-        "line": 16,
+        "line": 17,
         "markers": [
           "unit"
         ],
@@ -17505,7 +17505,7 @@
       },
       {
         "name": "TestRealTransportCoverage::test_real_transport_initialization_with_config",
-        "line": 24,
+        "line": 25,
         "markers": [
           "unit"
         ],
@@ -17514,7 +17514,7 @@
       },
       {
         "name": "TestRealTransportCoverage::test_connect_success",
-        "line": 30,
+        "line": 31,
         "markers": [
           "unit"
         ],
@@ -17523,7 +17523,7 @@
       },
       {
         "name": "TestRealTransportCoverage::test_connect_with_headers_dict_uses_existing_url",
-        "line": 46,
+        "line": 47,
         "markers": [
           "unit"
         ],
@@ -17532,7 +17532,7 @@
       },
       {
         "name": "TestRealTransportCoverage::test_connect_headers_without_url_raises",
-        "line": 61,
+        "line": 62,
         "markers": [
           "unit"
         ],
@@ -17541,7 +17541,7 @@
       },
       {
         "name": "TestRealTransportCoverage::test_connect_with_environment_options",
-        "line": 68,
+        "line": 69,
         "markers": [
           "unit"
         ],
@@ -17568,7 +17568,7 @@
       },
       {
         "name": "TestRealTransportCoverage::test_connect_trace_enable_failure",
-        "line": 120,
+        "line": 122,
         "markers": [
           "unit"
         ],
@@ -17577,7 +17577,7 @@
       },
       {
         "name": "TestRealTransportCoverage::test_disconnect_success",
-        "line": 137,
+        "line": 139,
         "markers": [
           "unit"
         ],
@@ -17586,7 +17586,7 @@
       },
       {
         "name": "TestRealTransportCoverage::test_disconnect_with_error",
-        "line": 148,
+        "line": 150,
         "markers": [
           "unit"
         ],
@@ -17595,7 +17595,7 @@
       },
       {
         "name": "TestRealTransportCoverage::test_disconnect_no_websocket",
-        "line": 160,
+        "line": 162,
         "markers": [
           "unit"
         ],
@@ -17604,7 +17604,7 @@
       },
       {
         "name": "TestRealTransportCoverage::test_subscribe_success",
-        "line": 168,
+        "line": 170,
         "markers": [
           "unit"
         ],
@@ -17613,7 +17613,7 @@
       },
       {
         "name": "TestRealTransportCoverage::test_subscribe_not_connected",
-        "line": 179,
+        "line": 181,
         "markers": [
           "unit"
         ],
@@ -17622,7 +17622,7 @@
       },
       {
         "name": "TestRealTransportCoverage::test_stream_success",
-        "line": 188,
+        "line": 190,
         "markers": [
           "unit"
         ],
@@ -17631,7 +17631,7 @@
       },
       {
         "name": "TestRealTransportCoverage::test_stream_handles_stop_iteration",
-        "line": 206,
+        "line": 208,
         "markers": [
           "unit"
         ],
@@ -17640,7 +17640,7 @@
       },
       {
         "name": "TestRealTransportCoverage::test_stream_not_connected",
-        "line": 217,
+        "line": 219,
         "markers": [
           "unit"
         ],
@@ -17649,7 +17649,7 @@
       },
       {
         "name": "TestRealTransportCoverage::test_stream_with_error",
-        "line": 224,
+        "line": 226,
         "markers": [
           "unit"
         ],
@@ -23390,7 +23390,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_latency_metrics.py": [
       {
         "name": "TestOrderSubmissionLatencyMetrics::test_successful_submission_records_latency_histogram",
-        "line": 42,
+        "line": 41,
         "markers": [
           "unit"
         ],
@@ -23399,7 +23399,7 @@
       },
       {
         "name": "TestOrderSubmissionLatencyMetrics::test_failed_submission_records_latency_with_failure_result",
-        "line": 80,
+        "line": 79,
         "markers": [
           "unit"
         ],

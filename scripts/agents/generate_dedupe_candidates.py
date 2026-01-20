@@ -222,8 +222,6 @@ def build_manifest(
     existing_clusters = existing_manifest.get("clusters", {})
 
     pending_clusters: list[tuple[str, dict[str, Any]]] = []
-    by_priority = {"high": 0, "medium": 0, "low": 0}
-    by_decision = {"delete": 0, "merge": 0, "modernize": 0}
 
     for cluster in clusters:
         cluster_id = cluster["id"]
@@ -274,9 +272,6 @@ def build_manifest(
 
         pending_clusters.append((cluster_id, new_cluster))
 
-        by_priority[priority] = by_priority.get(priority, 0) + 1
-        by_decision[decision] = by_decision.get(decision, 0) + 1
-
     priority_order = {"high": 0, "medium": 1, "low": 2}
     pending_clusters.sort(
         key=lambda item: (
@@ -286,7 +281,31 @@ def build_manifest(
             item[0],
         )
     )
-    new_clusters = dict(pending_clusters)
+    new_clusters: dict[str, dict[str, Any]] = dict(pending_clusters)
+
+    # Preserve completed/in-progress work even if it drops below detection thresholds.
+    # This keeps a durable audit trail of what has already been consolidated.
+    archived: list[tuple[str, dict[str, Any]]] = []
+    for cluster_id, existing in existing_clusters.items():
+        if cluster_id in new_clusters:
+            continue
+        if not isinstance(existing, dict):
+            continue
+        if existing.get("status") not in {"in_progress", "done"}:
+            continue
+        archived.append((cluster_id, {k: v for k, v in existing.items() if v is not None}))
+    for cluster_id, existing in sorted(archived, key=lambda item: item[0]):
+        new_clusters[cluster_id] = existing
+
+    by_priority = {"high": 0, "medium": 0, "low": 0}
+    by_decision = {"delete": 0, "merge": 0, "modernize": 0}
+    for cluster in new_clusters.values():
+        priority = cluster.get("priority")
+        decision = cluster.get("decision")
+        if priority in by_priority:
+            by_priority[priority] += 1
+        if decision in by_decision:
+            by_decision[decision] += 1
 
     return {
         "version": 1,

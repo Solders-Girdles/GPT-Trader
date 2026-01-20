@@ -2,13 +2,24 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
+
+import pytest
+
+
+@pytest.fixture
+def record_gauge_mock(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    from gpt_trader.features.live_trade.engines import system_maintenance
+
+    mock = MagicMock()
+    monkeypatch.setattr(system_maintenance, "record_gauge", mock)
+    return mock
 
 
 class TestMemoryGaugeEmission:
     """Tests for memory gauge emission."""
 
-    def test_event_store_cache_gauges_emitted(self) -> None:
+    def test_event_store_cache_gauges_emitted(self, record_gauge_mock: MagicMock) -> None:
         """Test that event store cache gauges are emitted via _collect_event_store_metrics."""
         from gpt_trader.features.live_trade.engines.system_maintenance import (
             SystemMaintenanceService,
@@ -26,31 +37,28 @@ class TestMemoryGaugeEmission:
             event_store=mock_event_store,
         )
 
-        with patch(
-            "gpt_trader.features.live_trade.engines.system_maintenance.record_gauge"
-        ) as mock_gauge:
-            # Call the method directly to test it
-            service._collect_event_store_metrics()
+        # Call the method directly to test it
+        service._collect_event_store_metrics()
 
-            # Check event store gauges were recorded
-            gauge_calls = mock_gauge.call_args_list
-            gauge_names = [c[0][0] for c in gauge_calls]
+        # Check event store gauges were recorded
+        gauge_calls = record_gauge_mock.call_args_list
+        gauge_names = [c[0][0] for c in gauge_calls]
 
-            assert "gpt_trader_event_store_cache_size" in gauge_names
-            assert "gpt_trader_deque_cache_fill_ratio" in gauge_names
+        assert "gpt_trader_event_store_cache_size" in gauge_names
+        assert "gpt_trader_deque_cache_fill_ratio" in gauge_names
 
-            # Check values
-            cache_size_call = next(
-                c for c in gauge_calls if c[0][0] == "gpt_trader_event_store_cache_size"
-            )
-            assert cache_size_call[0][1] == 500.0
+        # Check values
+        cache_size_call = next(
+            c for c in gauge_calls if c[0][0] == "gpt_trader_event_store_cache_size"
+        )
+        assert cache_size_call[0][1] == 500.0
 
-            fill_ratio_call = next(
-                c for c in gauge_calls if c[0][0] == "gpt_trader_deque_cache_fill_ratio"
-            )
-            assert fill_ratio_call[0][1] == 0.05
+        fill_ratio_call = next(
+            c for c in gauge_calls if c[0][0] == "gpt_trader_deque_cache_fill_ratio"
+        )
+        assert fill_ratio_call[0][1] == 0.05
 
-    def test_event_store_metrics_handles_none_store(self) -> None:
+    def test_event_store_metrics_handles_none_store(self, record_gauge_mock: MagicMock) -> None:
         """Test that _collect_event_store_metrics handles None event store."""
         from gpt_trader.features.live_trade.engines.system_maintenance import (
             SystemMaintenanceService,
@@ -62,16 +70,15 @@ class TestMemoryGaugeEmission:
             event_store=None,
         )
 
-        with patch(
-            "gpt_trader.features.live_trade.engines.system_maintenance.record_gauge"
-        ) as mock_gauge:
-            # Should not raise
-            service._collect_event_store_metrics()
+        # Should not raise
+        service._collect_event_store_metrics()
 
-            # Should not record any gauges
-            assert not mock_gauge.called
+        # Should not record any gauges
+        assert not record_gauge_mock.called
 
-    def test_event_store_metrics_handles_missing_methods(self) -> None:
+    def test_event_store_metrics_handles_missing_methods(
+        self, record_gauge_mock: MagicMock
+    ) -> None:
         """Test graceful handling when event store lacks cache methods."""
         from gpt_trader.features.live_trade.engines.system_maintenance import (
             SystemMaintenanceService,
@@ -87,14 +94,11 @@ class TestMemoryGaugeEmission:
             event_store=mock_event_store,
         )
 
-        with patch(
-            "gpt_trader.features.live_trade.engines.system_maintenance.record_gauge"
-        ) as mock_gauge:
-            # Should not raise
-            service._collect_event_store_metrics()
+        # Should not raise
+        service._collect_event_store_metrics()
 
-            # Should not record any gauges (methods don't exist)
-            assert not mock_gauge.called
+        # Should not record any gauges (methods don't exist)
+        assert not record_gauge_mock.called
 
 
 class TestEventStoreCacheMetrics:

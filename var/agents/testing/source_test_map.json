@@ -2,7 +2,7 @@
   "version": "1.0",
   "summary": {
     "tests_scanned": 919,
-    "source_modules": 353,
+    "source_modules": 354,
     "unresolved_modules": 3
   },
   "source_to_tests": {
@@ -1837,6 +1837,9 @@
       "tests/unit/gpt_trader/tui/test_widget_interactions_keyboard.py",
       "tests/unit/gpt_trader/tui/test_widget_interactions_widgets.py"
     ],
+    "gpt_trader.tui.app_lifecycle": [
+      "tests/unit/gpt_trader/tui/test_app_resource_cleanup.py"
+    ],
     "gpt_trader.tui.demo.demo_bot": [
       "tests/unit/gpt_trader/tui/demo/test_mock_data.py"
     ],
@@ -1866,7 +1869,8 @@
       "tests/unit/gpt_trader/tui/test_log_manager_formatters_structured.py",
       "tests/unit/gpt_trader/tui/test_log_manager_handler_emit.py",
       "tests/unit/gpt_trader/tui/test_log_manager_handler_message_safety.py",
-      "tests/unit/gpt_trader/tui/test_log_manager_handler_widget_controls.py"
+      "tests/unit/gpt_trader/tui/test_log_manager_handler_widget_controls.py",
+      "tests/unit/gpt_trader/tui/widgets/test_logs.py"
     ],
     "gpt_trader.tui.managers.ui_coordinator": [
       "tests/unit/gpt_trader/tui/services/test_state_registry.py",
@@ -1879,6 +1883,7 @@
       "tests/unit/gpt_trader/tui/mixins/test_event_handlers_utilities_and_docs.py"
     ],
     "gpt_trader.tui.mixins.event_handlers": [
+      "tests/unit/gpt_trader/tui/mixins/test_event_handlers_custom_overrides.py",
       "tests/unit/gpt_trader/tui/mixins/test_event_handlers_default_handlers.py",
       "tests/unit/gpt_trader/tui/mixins/test_event_handlers_utilities_and_docs.py"
     ],
@@ -1927,7 +1932,8 @@
     ],
     "gpt_trader.tui.services.action_dispatcher": [
       "tests/unit/gpt_trader/tui/services/test_action_dispatcher_core.py",
-      "tests/unit/gpt_trader/tui/services/test_action_dispatcher_refresh.py"
+      "tests/unit/gpt_trader/tui/services/test_action_dispatcher_refresh.py",
+      "tests/unit/gpt_trader/tui/test_screen_flows_log_focus.py"
     ],
     "gpt_trader.tui.services.alert_manager": [
       "tests/unit/gpt_trader/tui/screens/test_alert_history.py",
@@ -5040,7 +5046,8 @@
     ],
     "tests/unit/gpt_trader/tui/mixins/test_event_handlers_custom_overrides.py": [
       "gpt_trader.tui.events",
-      "gpt_trader.tui.mixins"
+      "gpt_trader.tui.mixins",
+      "gpt_trader.tui.mixins.event_handlers"
     ],
     "tests/unit/gpt_trader/tui/mixins/test_event_handlers_default_handlers.py": [
       "gpt_trader.tui.events",
@@ -5244,6 +5251,7 @@
       "gpt_trader.features.brokerages.coinbase.client.base",
       "gpt_trader.features.brokerages.coinbase.ws",
       "gpt_trader.tui.app",
+      "gpt_trader.tui.app_lifecycle",
       "gpt_trader.tui.services.performance_service"
     ],
     "tests/unit/gpt_trader/tui/test_app_widgets.py": [
@@ -5347,7 +5355,8 @@
     ],
     "tests/unit/gpt_trader/tui/test_screen_flows_log_focus.py": [
       "gpt_trader.tui.app",
-      "gpt_trader.tui.screens"
+      "gpt_trader.tui.screens",
+      "gpt_trader.tui.services.action_dispatcher"
     ],
     "tests/unit/gpt_trader/tui/test_screen_flows_quick_navigation_and_state.py": [
       "gpt_trader.tui.app",
@@ -5528,6 +5537,7 @@
       "gpt_trader.tui.widgets.execution_issues_modal"
     ],
     "tests/unit/gpt_trader/tui/widgets/test_logs.py": [
+      "gpt_trader.tui.log_manager",
       "gpt_trader.tui.widgets.logs"
     ],
     "tests/unit/gpt_trader/tui/widgets/test_order_detail_modal.py": [
@@ -6147,6 +6157,7 @@
     "gpt_trader.tui.state_management.delta_updater": "src/gpt_trader/tui/state_management/delta_updater.py",
     "gpt_trader.tui.state_management.validators": "src/gpt_trader/tui/state_management/validators.py",
     "gpt_trader.tui.app": "src/gpt_trader/tui/app.py",
+    "gpt_trader.tui.app_lifecycle": "src/gpt_trader/tui/app_lifecycle.py",
     "gpt_trader.tui.log_manager": "src/gpt_trader/tui/log_manager.py",
     "gpt_trader.tui.widgets": "src/gpt_trader/tui/widgets/__init__.py",
     "gpt_trader.tui.widgets.error_indicator": "src/gpt_trader/tui/widgets/error_indicator.py",

@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
+import pytest
 from textual.widgets import Static
 
+import gpt_trader.tui.mixins.event_handlers as event_handlers_module
 from gpt_trader.tui.events import BotStateChanged
 from gpt_trader.tui.mixins import EventHandlerMixin
 
@@ -13,9 +15,10 @@ from gpt_trader.tui.mixins import EventHandlerMixin
 class TestCustomEventHandlers:
     """Test that custom handlers can override defaults."""
 
-    @patch("gpt_trader.tui.mixins.event_handlers.logger")
-    def test_custom_handler_overrides_default(self, mock_logger):
+    def test_custom_handler_overrides_default(self, monkeypatch: pytest.MonkeyPatch):
         """Test that custom handler can override mixin default."""
+        mock_logger = MagicMock()
+        monkeypatch.setattr(event_handlers_module, "logger", mock_logger)
 
         class CustomWidget(EventHandlerMixin, Static):
             def __init__(self):

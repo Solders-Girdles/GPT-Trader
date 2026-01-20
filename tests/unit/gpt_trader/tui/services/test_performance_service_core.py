@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import time
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
+import gpt_trader.tui.services.performance_service as perf_service_module
 from gpt_trader.tui.services.performance_service import (
     FrameMetrics,
     TuiPerformanceService,
@@ -164,8 +165,7 @@ class TestTuiPerformanceService:
         assert snapshot.throttler_batch_size == 2.5
         assert snapshot.throttler_queue_depth == 3
 
-    @patch("gpt_trader.tui.services.performance_service.get_resource_monitor")
-    def test_snapshot_memory_metrics(self, mock_get_monitor) -> None:
+    def test_snapshot_memory_metrics(self, monkeypatch: pytest.MonkeyPatch) -> None:
         mock_monitor = MagicMock()
         mock_monitor.is_available.return_value = True
         mock_monitor.get_memory_usage.return_value = {
@@ -173,7 +173,7 @@ class TestTuiPerformanceService:
             "percent": 25.0,
         }
         mock_monitor.get_cpu_usage.return_value = {"cpu_percent": 15.0}
-        mock_get_monitor.return_value = mock_monitor
+        monkeypatch.setattr(perf_service_module, "get_resource_monitor", lambda: mock_monitor)
 
         service = TuiPerformanceService(app=None, enabled=True)
         snapshot = service.get_snapshot()

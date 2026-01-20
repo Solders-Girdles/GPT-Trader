@@ -5254,7 +5254,7 @@
     "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_result.py": [
       {
         "name": "TestBacktestReporterGenerateResult::test_generate_result_returns_backtest_result",
-        "line": 21,
+        "line": 51,
         "markers": [
           "unit"
         ],
@@ -5263,7 +5263,7 @@
       },
       {
         "name": "TestBacktestReporterGenerateResult::test_generate_result_populates_performance",
-        "line": 46,
+        "line": 64,
         "markers": [
           "unit"
         ],
@@ -5272,7 +5272,7 @@
       },
       {
         "name": "TestBacktestReporterGenerateResult::test_generate_result_populates_trade_stats",
-        "line": 77,
+        "line": 83,
         "markers": [
           "unit"
         ],
@@ -5281,7 +5281,7 @@
       },
       {
         "name": "TestBacktestReporterGenerateResult::test_generate_result_populates_risk_metrics",
-        "line": 103,
+        "line": 97,
         "markers": [
           "unit"
         ],
@@ -5290,7 +5290,7 @@
       },
       {
         "name": "TestBacktestReporterGenerateResult::test_generate_result_calculates_unrealized_pnl",
-        "line": 129,
+        "line": 111,
         "markers": [
           "unit"
         ],

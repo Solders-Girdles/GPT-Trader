@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+import gpt_trader.features.live_trade.bot as bot_module
 from gpt_trader.features.live_trade.bot import TradingBot
 
 
@@ -13,7 +14,9 @@ class TestTradingBotFlattenAndStop:
     """Tests for the emergency flatten-and-stop flow."""
 
     @pytest.mark.asyncio
-    async def test_flatten_and_stop_closes_positions_and_shuts_down(self) -> None:
+    async def test_flatten_and_stop_closes_positions_and_shuts_down(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         from decimal import Decimal
         from types import SimpleNamespace
         from unittest.mock import Mock
@@ -40,12 +43,12 @@ class TestTradingBotFlattenAndStop:
             notification_service=Mock(),
         )
 
-        with patch("gpt_trader.features.live_trade.bot.TradingEngine") as mock_engine:
-            engine = AsyncMock()
-            engine.shutdown = AsyncMock()
-            mock_engine.return_value = engine
-            bot = TradingBot(config=config, container=container)
+        engine = AsyncMock()
+        engine.shutdown = AsyncMock()
+        mock_engine = MagicMock(return_value=engine)
+        monkeypatch.setattr(bot_module, "TradingEngine", mock_engine)
 
+        bot = TradingBot(config=config, container=container)
         bot._broker_calls = _DirectBrokerCalls()
 
         messages = await bot.flatten_and_stop()

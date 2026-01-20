@@ -27486,7 +27486,7 @@
     "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop.py": [
       {
         "name": "TestTradingBotFlattenAndStop::test_flatten_and_stop_closes_positions_and_shuts_down",
-        "line": 16,
+        "line": 17,
         "markers": [
           "asyncio",
           "unit"
@@ -28743,7 +28743,7 @@
     "tests/unit/gpt_trader/features/live_trade/test_risk_manager_daily_pnl.py": [
       {
         "name": "TestTrackDailyPnl::test_first_call_sets_start_equity",
-        "line": 26,
+        "line": 24,
         "markers": [
           "unit"
         ],
@@ -28752,7 +28752,7 @@
       },
       {
         "name": "TestTrackDailyPnl::test_no_config_returns_false",
-        "line": 35,
+        "line": 33,
         "markers": [
           "unit"
         ],
@@ -28761,7 +28761,7 @@
       },
       {
         "name": "TestTrackDailyPnl::test_no_daily_loss_limit_returns_false",
-        "line": 44,
+        "line": 42,
         "markers": [
           "unit"
         ],
@@ -28770,7 +28770,7 @@
       },
       {
         "name": "TestTrackDailyPnl::test_loss_within_limit",
-        "line": 54,
+        "line": 52,
         "markers": [
           "unit"
         ],
@@ -28779,7 +28779,7 @@
       },
       {
         "name": "TestTrackDailyPnl::test_loss_exceeds_limit_triggers",
-        "line": 66,
+        "line": 64,
         "markers": [
           "unit"
         ],
@@ -28788,7 +28788,7 @@
       },
       {
         "name": "TestTrackDailyPnl::test_profit_does_not_trigger",
-        "line": 80,
+        "line": 78,
         "markers": [
           "unit"
         ],
@@ -28797,7 +28797,7 @@
       },
       {
         "name": "TestTrackDailyPnl::test_zero_start_equity_skips",
-        "line": 91,
+        "line": 89,
         "markers": [
           "unit"
         ],
@@ -28808,7 +28808,7 @@
     "tests/unit/gpt_trader/features/live_trade/test_risk_manager_init_and_stubs.py": [
       {
         "name": "TestLiveRiskManagerInit::test_init_no_config",
-        "line": 22,
+        "line": 19,
         "markers": [
           "unit"
         ],
@@ -28817,7 +28817,7 @@
       },
       {
         "name": "TestLiveRiskManagerInit::test_init_with_config",
-        "line": 34,
+        "line": 31,
         "markers": [
           "unit"
         ],
@@ -28826,7 +28826,7 @@
       },
       {
         "name": "TestLiveRiskManagerInit::test_init_with_event_store",
-        "line": 41,
+        "line": 38,
         "markers": [
           "unit"
         ],
@@ -28835,7 +28835,7 @@
       },
       {
         "name": "TestLiveRiskManagerInit::test_positions_default_dict",
-        "line": 48,
+        "line": 45,
         "markers": [
           "unit"
         ],
@@ -28844,7 +28844,7 @@
       },
       {
         "name": "TestLiveRiskManagerInit::test_last_mark_update_empty",
-        "line": 55,
+        "line": 52,
         "markers": [
           "unit"
         ],
@@ -28853,7 +28853,7 @@
       },
       {
         "name": "TestLiveRiskManagerStubs::test_check_order_returns_true",
-        "line": 65,
+        "line": 62,
         "markers": [
           "unit"
         ],
@@ -28862,7 +28862,7 @@
       },
       {
         "name": "TestLiveRiskManagerStubs::test_update_position_is_noop",
-        "line": 73,
+        "line": 70,
         "markers": [
           "unit"
         ],
@@ -28873,7 +28873,7 @@
     "tests/unit/gpt_trader/features/live_trade/test_risk_manager_liquidation_buffer.py": [
       {
         "name": "TestCheckLiquidationBuffer::test_no_config_returns_false",
-        "line": 27,
+        "line": 25,
         "markers": [
           "unit"
         ],
@@ -28882,7 +28882,7 @@
       },
       {
         "name": "TestCheckLiquidationBuffer::test_dict_position_no_liquidation_price",
-        "line": 37,
+        "line": 35,
         "markers": [
           "unit"
         ],
@@ -28891,7 +28891,7 @@
       },
       {
         "name": "TestCheckLiquidationBuffer::test_dict_position_no_mark_price",
-        "line": 46,
+        "line": 44,
         "markers": [
           "unit"
         ],
@@ -28900,7 +28900,7 @@
       },
       {
         "name": "TestCheckLiquidationBuffer::test_dict_position_with_mark_key",
-        "line": 57,
+        "line": 55,
         "markers": [
           "unit"
         ],
@@ -28909,7 +28909,7 @@
       },
       {
         "name": "TestCheckLiquidationBuffer::test_dict_position_with_mark_price_key",
-        "line": 69,
+        "line": 67,
         "markers": [
           "unit"
         ],
@@ -28918,7 +28918,7 @@
       },
       {
         "name": "TestCheckLiquidationBuffer::test_object_position_with_mark_price",
-        "line": 80,
+        "line": 78,
         "markers": [
           "unit"
         ],
@@ -28927,7 +28927,7 @@
       },
       {
         "name": "TestCheckLiquidationBuffer::test_object_position_with_mark_fallback",
-        "line": 90,
+        "line": 88,
         "markers": [
           "unit"
         ],
@@ -28936,7 +28936,7 @@
       },
       {
         "name": "TestCheckLiquidationBuffer::test_triggers_reduce_only_when_buffer_too_small",
-        "line": 100,
+        "line": 98,
         "markers": [
           "unit"
         ],
@@ -28945,7 +28945,7 @@
       },
       {
         "name": "TestCheckLiquidationBuffer::test_zero_mark_price_returns_false",
-        "line": 113,
+        "line": 111,
         "markers": [
           "unit"
         ],
@@ -28954,7 +28954,7 @@
       },
       {
         "name": "TestCheckLiquidationBuffer::test_handles_attribute_error",
-        "line": 124,
+        "line": 122,
         "markers": [
           "unit"
         ],
@@ -28963,7 +28963,7 @@
       },
       {
         "name": "TestCheckLiquidationBuffer::test_handles_none_values",
-        "line": 134,
+        "line": 132,
         "markers": [
           "unit"
         ],
@@ -28972,7 +28972,7 @@
       },
       {
         "name": "TestCheckLiquidationBuffer::test_handles_value_error",
-        "line": 146,
+        "line": 144,
         "markers": [
           "unit"
         ],
@@ -29039,7 +29039,7 @@
     "tests/unit/gpt_trader/features/live_trade/test_risk_manager_pre_trade_validate.py": [
       {
         "name": "TestPreTradeValidate::test_no_config_passes",
-        "line": 26,
+        "line": 24,
         "markers": [
           "unit"
         ],
@@ -29048,7 +29048,7 @@
       },
       {
         "name": "TestPreTradeValidate::test_leverage_within_limit",
-        "line": 41,
+        "line": 39,
         "markers": [
           "unit"
         ],
@@ -29057,7 +29057,7 @@
       },
       {
         "name": "TestPreTradeValidate::test_leverage_exceeds_limit_raises",
-        "line": 58,
+        "line": 56,
         "markers": [
           "unit"
         ],
@@ -29066,7 +29066,7 @@
       },
       {
         "name": "TestPreTradeValidate::test_zero_equity_skips_validation",
-        "line": 75,
+        "line": 73,
         "markers": [
           "unit"
         ],
@@ -29075,7 +29075,7 @@
       },
       {
         "name": "TestPreTradeValidate::test_negative_equity_skips_validation",
-        "line": 92,
+        "line": 90,
         "markers": [
           "unit"
         ],
@@ -29086,7 +29086,7 @@
     "tests/unit/gpt_trader/features/live_trade/test_risk_manager_reduce_only_mode.py": [
       {
         "name": "TestReduceOnlyMode::test_default_not_reduce_only",
-        "line": 22,
+        "line": 19,
         "markers": [
           "unit"
         ],
@@ -29095,7 +29095,7 @@
       },
       {
         "name": "TestReduceOnlyMode::test_set_reduce_only_true",
-        "line": 28,
+        "line": 25,
         "markers": [
           "unit"
         ],
@@ -29104,7 +29104,7 @@
       },
       {
         "name": "TestReduceOnlyMode::test_set_reduce_only_false",
-        "line": 36,
+        "line": 33,
         "markers": [
           "unit"
         ],
@@ -29113,7 +29113,7 @@
       },
       {
         "name": "TestReduceOnlyMode::test_set_reduce_only_with_reason",
-        "line": 45,
+        "line": 42,
         "markers": [
           "unit"
         ],
@@ -29122,7 +29122,7 @@
       },
       {
         "name": "TestReduceOnlyMode::test_set_reduce_only_clears_reason_when_false",
-        "line": 54,
+        "line": 51,
         "markers": [
           "unit"
         ],
@@ -29133,7 +29133,7 @@
     "tests/unit/gpt_trader/features/live_trade/test_risk_manager_reset_daily_tracking.py": [
       {
         "name": "TestResetDailyTracking::test_resets_all_daily_state",
-        "line": 23,
+        "line": 21,
         "markers": [
           "unit"
         ],
@@ -29142,7 +29142,7 @@
       },
       {
         "name": "TestResetDailyTracking::test_reset_is_idempotent",
-        "line": 38,
+        "line": 36,
         "markers": [
           "unit"
         ],
@@ -29191,7 +29191,7 @@
     "tests/unit/gpt_trader/features/live_trade/test_risk_manager_validation_error.py": [
       {
         "name": "TestValidationError::test_validation_error_is_exception",
-        "line": 22,
+        "line": 19,
         "markers": [
           "unit"
         ],
@@ -29200,7 +29200,7 @@
       },
       {
         "name": "TestValidationError::test_validation_error_with_message",
-        "line": 26,
+        "line": 23,
         "markers": [
           "unit"
         ],
@@ -29209,7 +29209,7 @@
       },
       {
         "name": "TestValidationError::test_validation_error_without_message",
-        "line": 31,
+        "line": 28,
         "markers": [
           "unit"
         ],
@@ -29220,7 +29220,7 @@
     "tests/unit/gpt_trader/features/live_trade/test_risk_manager_volatility_breaker.py": [
       {
         "name": "TestCheckVolatilityCircuitBreaker::test_empty_closes_not_triggered",
-        "line": 26,
+        "line": 24,
         "markers": [
           "unit"
         ],
@@ -29229,7 +29229,7 @@
       },
       {
         "name": "TestCheckVolatilityCircuitBreaker::test_too_few_closes_not_triggered",
-        "line": 35,
+        "line": 33,
         "markers": [
           "unit"
         ],
@@ -29238,7 +29238,7 @@
       },
       {
         "name": "TestCheckVolatilityCircuitBreaker::test_no_config_not_triggered",
-        "line": 44,
+        "line": 42,
         "markers": [
           "unit"
         ],
@@ -29247,7 +29247,7 @@
       },
       {
         "name": "TestCheckVolatilityCircuitBreaker::test_no_volatility_threshold_not_triggered",
-        "line": 53,
+        "line": 51,
         "markers": [
           "unit"
         ],
@@ -29256,7 +29256,7 @@
       },
       {
         "name": "TestCheckVolatilityCircuitBreaker::test_low_volatility_not_triggered",
-        "line": 63,
+        "line": 61,
         "markers": [
           "unit"
         ],
@@ -29265,7 +29265,7 @@
       },
       {
         "name": "TestCheckVolatilityCircuitBreaker::test_high_volatility_triggers",
-        "line": 74,
+        "line": 72,
         "markers": [
           "unit"
         ],
@@ -29274,7 +29274,7 @@
       },
       {
         "name": "TestCheckVolatilityCircuitBreaker::test_zero_average_not_triggered",
-        "line": 90,
+        "line": 88,
         "markers": [
           "unit"
         ],
@@ -29285,7 +29285,7 @@
     "tests/unit/gpt_trader/features/live_trade/test_risk_manager_volatility_check_outcome.py": [
       {
         "name": "TestVolatilityCheckOutcome::test_default_values",
-        "line": 22,
+        "line": 19,
         "markers": [
           "unit"
         ],
@@ -29294,7 +29294,7 @@
       },
       {
         "name": "TestVolatilityCheckOutcome::test_custom_values",
-        "line": 30,
+        "line": 27,
         "markers": [
           "unit"
         ],
@@ -29303,7 +29303,7 @@
       },
       {
         "name": "TestVolatilityCheckOutcome::test_to_payload_not_triggered",
-        "line": 42,
+        "line": 39,
         "markers": [
           "unit"
         ],
@@ -29312,7 +29312,7 @@
       },
       {
         "name": "TestVolatilityCheckOutcome::test_to_payload_triggered",
-        "line": 53,
+        "line": 50,
         "markers": [
           "unit"
         ],
@@ -29323,7 +29323,7 @@
     "tests/unit/gpt_trader/features/live_trade/test_risk_manager_workflows.py": [
       {
         "name": "TestLiveRiskManagerWorkflows::test_daily_workflow",
-        "line": 26,
+        "line": 24,
         "markers": [
           "unit"
         ],
@@ -29332,7 +29332,7 @@
       },
       {
         "name": "TestLiveRiskManagerWorkflows::test_volatility_triggers_reduce_only",
-        "line": 69,
+        "line": 67,
         "markers": [
           "unit"
         ],
@@ -29341,7 +29341,7 @@
       },
       {
         "name": "TestLiveRiskManagerWorkflows::test_liquidation_buffer_triggers_reduce_only",
-        "line": 84,
+        "line": 82,
         "markers": [
           "unit"
         ],

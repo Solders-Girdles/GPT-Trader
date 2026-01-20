@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import patch
 
 import pytest
 
@@ -14,10 +13,9 @@ from tests.unit.gpt_trader.features.live_trade.risk_manager_test_utils import ( 
 
 
 @pytest.fixture(autouse=True)
-def mock_load_state():
+def mock_load_state(monkeypatch: pytest.MonkeyPatch):
     """Prevent LiveRiskManager from loading state during tests."""
-    with patch("gpt_trader.features.live_trade.risk.manager.LiveRiskManager._load_state"):
-        yield
+    monkeypatch.setattr(LiveRiskManager, "_load_state", lambda self: None)
 
 
 class TestCheckVolatilityCircuitBreaker:

@@ -2,7 +2,7 @@
   "version": "1.0",
   "summary": {
     "tests_scanned": 915,
-    "source_modules": 349,
+    "source_modules": 350,
     "unresolved_modules": 3
   },
   "source_to_tests": {
@@ -963,7 +963,8 @@
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_guard_failures.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_api_health_guard.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_cache.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_cancel_and_safe_run.py"
+      "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_cancel_and_safe_run.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_steps_and_telemetry.py"
     ],
     "gpt_trader.features.live_trade.execution.guards": [
       "tests/unit/gpt_trader/features/live_trade/execution/test_daily_loss_guard.py",
@@ -976,6 +977,9 @@
     ],
     "gpt_trader.features.live_trade.execution.guards.liquidation_buffer": [
       "tests/unit/gpt_trader/features/live_trade/execution/test_liquidation_buffer_guard.py"
+    ],
+    "gpt_trader.features.live_trade.execution.guards.pnl_telemetry": [
+      "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_steps_and_telemetry.py"
     ],
     "gpt_trader.features.live_trade.execution.guards.volatility": [
       "tests/unit/gpt_trader/features/live_trade/execution/test_volatility_guard.py"
@@ -3768,6 +3772,8 @@
       "gpt_trader.features.live_trade.execution.guards"
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_steps_and_telemetry.py": [
+      "gpt_trader.features.live_trade.execution.guard_manager",
+      "gpt_trader.features.live_trade.execution.guards.pnl_telemetry",
       "gpt_trader.features.live_trade.guard_errors"
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_liquidation_buffer_guard.py": [
@@ -5906,6 +5912,7 @@
     "gpt_trader.features.live_trade.execution.broker_executor": "src/gpt_trader/features/live_trade/execution/broker_executor.py",
     "gpt_trader.features.live_trade.execution.guards": "src/gpt_trader/features/live_trade/execution/guards/__init__.py",
     "gpt_trader.features.live_trade.execution.guards.daily_loss": "src/gpt_trader/features/live_trade/execution/guards/daily_loss.py",
+    "gpt_trader.features.live_trade.execution.guards.pnl_telemetry": "src/gpt_trader/features/live_trade/execution/guards/pnl_telemetry.py",
     "gpt_trader.features.live_trade.execution.guards.liquidation_buffer": "src/gpt_trader/features/live_trade/execution/guards/liquidation_buffer.py",
     "gpt_trader.features.live_trade.execution.order_event_recorder": "src/gpt_trader/features/live_trade/execution/order_event_recorder.py",
     "gpt_trader.features.live_trade.execution.decision_trace": "src/gpt_trader/features/live_trade/execution/decision_trace.py",

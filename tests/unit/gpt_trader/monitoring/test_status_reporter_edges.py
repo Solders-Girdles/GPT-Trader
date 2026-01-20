@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
+import pytest
+
+import gpt_trader.monitoring.status_reporter as status_reporter_module
 from gpt_trader.monitoring.status_reporter import StatusReporter
 
 
@@ -35,8 +38,11 @@ def test_update_positions_coerces_invalid_and_skips_non_dict() -> None:
     assert position["side"] == "LONG"
 
 
-@patch("gpt_trader.monitoring.status_reporter.time.time", return_value=123.45)
-def test_update_orders_invalid_fields_use_defaults(mock_time) -> None:
+def test_update_orders_invalid_fields_use_defaults(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(status_reporter_module.time, "time", lambda: 123.45)
+
     reporter = StatusReporter()
 
     reporter.update_orders(
@@ -110,8 +116,12 @@ def test_update_strategy_generates_decision_id_and_handles_invalid_timestamp() -
     assert second.decision_id == ""
 
 
-@patch("gpt_trader.monitoring.status_reporter.record_gauge", side_effect=RuntimeError("boom"))
-def test_update_equity_swallows_record_gauge_exceptions(mock_record_gauge) -> None:
+def test_update_equity_swallows_record_gauge_exceptions(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    mock_record_gauge = MagicMock(side_effect=RuntimeError("boom"))
+    monkeypatch.setattr(status_reporter_module, "record_gauge", mock_record_gauge)
+
     reporter = StatusReporter()
 
     reporter.update_equity(Decimal("123.45"))

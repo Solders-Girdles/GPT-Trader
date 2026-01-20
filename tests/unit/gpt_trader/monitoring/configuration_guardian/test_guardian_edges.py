@@ -4,8 +4,11 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from types import SimpleNamespace
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock
 
+import pytest
+
+import gpt_trader.monitoring.configuration_guardian.guardian as guardian_module
 from gpt_trader.monitoring.configuration_guardian.guardian import ConfigurationGuardian
 from gpt_trader.monitoring.configuration_guardian.models import BaselineSnapshot, DriftEvent
 
@@ -47,7 +50,9 @@ class _DetectorStub:
         return dict(self.summary)
 
 
-def test_monitor_exception_logged_and_other_monitors_continue() -> None:
+def test_monitor_exception_logged_and_other_monitors_continue(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     baseline = BaselineSnapshot()
     good_event = DriftEvent(
         timestamp=datetime(2024, 1, 1, tzinfo=timezone.utc),
@@ -64,8 +69,10 @@ def test_monitor_exception_logged_and_other_monitors_continue() -> None:
         detector=detector,
     )
 
-    with patch("gpt_trader.monitoring.configuration_guardian.guardian.logger") as mock_logger:
-        events = guardian.check()
+    mock_logger = MagicMock()
+    monkeypatch.setattr(guardian_module, "logger", mock_logger)
+
+    events = guardian.check()
 
     assert events == [good_event]
     assert failing_monitor.called == 1
@@ -102,7 +109,9 @@ def test_check_records_events_only_when_present() -> None:
     assert detector_with_events.recorded == [[event]]
 
 
-def test_reset_baseline_updates_monitors_and_logs_user() -> None:
+def test_reset_baseline_updates_monitors_and_logs_user(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     baseline = BaselineSnapshot(timestamp=datetime(2024, 1, 1, tzinfo=timezone.utc))
     new_baseline = BaselineSnapshot(timestamp=datetime(2024, 1, 2, tzinfo=timezone.utc))
     detector = _DetectorStub()
@@ -116,8 +125,10 @@ def test_reset_baseline_updates_monitors_and_logs_user() -> None:
         detector=detector,
     )
 
-    with patch("gpt_trader.monitoring.configuration_guardian.guardian.logger") as mock_logger:
-        guardian.reset_baseline(new_baseline, user_id="user-1")
+    mock_logger = MagicMock()
+    monkeypatch.setattr(guardian_module, "logger", mock_logger)
+
+    guardian.reset_baseline(new_baseline, user_id="user-1")
 
     monitor_with_update.update_baseline.assert_called_once_with(new_baseline)
     assert not hasattr(monitor_without_update, "update_baseline")

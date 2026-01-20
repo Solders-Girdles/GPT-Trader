@@ -1252,8 +1252,9 @@ clusters:
     expected_file_delta: -5
     priority: medium
     rationale: Consolidate 8 test files into 3 files (<=240 lines each)
-    status: in_progress
+    status: done
     owner: claude
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/302
     added: '2026-01-20'
   8e99233214a1:
     type: similar_names
@@ -1273,8 +1274,9 @@ clusters:
     expected_file_delta: -7
     priority: medium
     rationale: Consolidate 8 test files into single parametrized file
-    status: in_progress
+    status: done
     owner: claude
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/302
     added: '2026-01-20'
   4ee508135a69:
     type: source_fanout
@@ -1333,8 +1335,9 @@ clusters:
     expected_file_delta: -4
     priority: medium
     rationale: Consolidate 8 test files into 4 files (<=240 lines each)
-    status: in_progress
+    status: done
     owner: claude
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/302
     added: '2026-01-20'
   949efcf7e735:
     type: source_fanout
@@ -1418,8 +1421,9 @@ clusters:
     expected_file_delta: -7
     priority: medium
     rationale: Consolidate 8 test files into single parametrized file
-    status: in_progress
+    status: done
     owner: claude
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/302
     added: '2026-01-20'
   ce4068fdc367:
     type: source_fanout

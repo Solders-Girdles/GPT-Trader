@@ -23131,7 +23131,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_record_preview.py": [
       {
         "name": "TestRecordPreview::test_record_preview_with_preview_data",
-        "line": 17,
+        "line": 32,
         "markers": [
           "unit"
         ],
@@ -23140,7 +23140,7 @@
       },
       {
         "name": "TestRecordPreview::test_record_preview_with_none_preview_skips",
-        "line": 42,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -23149,7 +23149,7 @@
       },
       {
         "name": "TestRecordPreview::test_record_preview_market_price",
-        "line": 61,
+        "line": 70,
         "markers": [
           "unit"
         ],
@@ -23158,7 +23158,7 @@
       },
       {
         "name": "TestRecordPreview::test_record_preview_handles_logger_exception",
-        "line": 85,
+        "line": 89,
         "markers": [
           "unit"
         ],

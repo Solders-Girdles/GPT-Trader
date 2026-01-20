@@ -45,7 +45,8 @@
       "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop.py",
       "tests/unit/gpt_trader/features/live_trade/test_strategy_factory.py",
       "tests/unit/gpt_trader/features/live_trade/test_symbols_cfm.py",
-      "tests/unit/gpt_trader/features/live_trade/test_trading_engine.py"
+      "tests/unit/gpt_trader/features/live_trade/test_trading_engine.py",
+      "tests/unit/gpt_trader/preflight/test_checks_simulation.py"
     ],
     "gpt_trader.app.config.bot_config": [
       "tests/unit/gpt_trader/app/config/test_bot_config.py",
@@ -92,7 +93,8 @@
       "tests/unit/gpt_trader/cli/test_services.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_runtime_start_event.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_get_validation_metrics.py",
-      "tests/unit/gpt_trader/features/live_trade/test_trading_engine.py"
+      "tests/unit/gpt_trader/features/live_trade/test_trading_engine.py",
+      "tests/unit/gpt_trader/preflight/test_checks_simulation.py"
     ],
     "gpt_trader.app.containers.brokerage": [
       "tests/unit/gpt_trader/app/test_application_container_bot_creation.py",
@@ -4818,6 +4820,8 @@
       "gpt_trader.preflight.core"
     ],
     "tests/unit/gpt_trader/preflight/test_checks_simulation.py": [
+      "gpt_trader.app.config",
+      "gpt_trader.app.container",
       "gpt_trader.preflight.checks.simulation",
       "gpt_trader.preflight.core"
     ],

@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 
+import gpt_trader.features.brokerages.coinbase.rest.order_service as order_service_module
 from gpt_trader.core import Order
 from gpt_trader.features.brokerages.coinbase.errors import OrderQueryError
 from tests.unit.gpt_trader.features.brokerages.coinbase.rest.contract_suite_test_base import (
@@ -14,18 +15,17 @@ from tests.unit.gpt_trader.features.brokerages.coinbase.rest.contract_suite_test
 
 
 class TestCoinbaseRestContractSuiteOrderServiceQueriesAndFills(CoinbaseRestContractSuiteBase):
-    def test_list_orders_with_pagination(self, order_service, mock_client):
+    def test_list_orders_with_pagination(
+        self, order_service, mock_client, monkeypatch: pytest.MonkeyPatch
+    ):
         """Test order listing with pagination handling."""
         mock_client.list_orders.side_effect = [
             {"orders": [{"order_id": "1"}, {"order_id": "2"}], "cursor": "next_page"},
             {"orders": [{"order_id": "3"}]},
         ]
 
-        with patch(
-            "gpt_trader.features.brokerages.coinbase.rest.order_service.to_order"
-        ) as mock_to_order:
-            mock_to_order.return_value = Mock(spec=Order)
-            orders = order_service.list_orders()
+        monkeypatch.setattr(order_service_module, "to_order", lambda x: Mock(spec=Order))
+        orders = order_service.list_orders()
 
         assert len(orders) == 3
         assert mock_client.list_orders.call_count == 2
@@ -37,16 +37,13 @@ class TestCoinbaseRestContractSuiteOrderServiceQueriesAndFills(CoinbaseRestContr
         with pytest.raises(OrderQueryError, match="Failed to list orders"):
             order_service.list_orders()
 
-    def test_get_order_success(self, order_service, mock_client):
+    def test_get_order_success(self, order_service, mock_client, monkeypatch: pytest.MonkeyPatch):
         """Test successful order retrieval."""
         mock_order_data = {"order_id": "test_123", "status": "filled"}
         mock_client.get_order_historical.return_value = {"order": mock_order_data}
 
-        with patch(
-            "gpt_trader.features.brokerages.coinbase.rest.order_service.to_order"
-        ) as mock_to_order:
-            mock_to_order.return_value = Mock(spec=Order)
-            order = order_service.get_order("test_123")
+        monkeypatch.setattr(order_service_module, "to_order", lambda x: Mock(spec=Order))
+        order = order_service.get_order("test_123")
 
         assert order is not None
 

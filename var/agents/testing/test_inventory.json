@@ -32982,7 +32982,7 @@
     "tests/unit/gpt_trader/logging/test_setup_smoke.py": [
       {
         "name": "TestLoggingSetupSmoke::test_logging_works_after_configuration",
-        "line": 42,
+        "line": 39,
         "markers": [
           "unit"
         ],
@@ -36302,7 +36302,7 @@
       },
       {
         "name": "TestMemoryGaugeEmission::test_event_store_metrics_handles_none_store",
-        "line": 63,
+        "line": 61,
         "markers": [
           "unit"
         ],
@@ -36311,7 +36311,7 @@
       },
       {
         "name": "TestMemoryGaugeEmission::test_event_store_metrics_handles_missing_methods",
-        "line": 83,
+        "line": 79,
         "markers": [
           "unit"
         ],
@@ -36320,7 +36320,7 @@
       },
       {
         "name": "TestEventStoreCacheMetrics::test_get_cache_size",
-        "line": 111,
+        "line": 107,
         "markers": [
           "unit"
         ],
@@ -36329,7 +36329,7 @@
       },
       {
         "name": "TestEventStoreCacheMetrics::test_get_cache_max_size",
-        "line": 126,
+        "line": 122,
         "markers": [
           "unit"
         ],
@@ -36338,7 +36338,7 @@
       },
       {
         "name": "TestEventStoreCacheMetrics::test_get_cache_fill_ratio",
-        "line": 133,
+        "line": 129,
         "markers": [
           "unit"
         ],
@@ -36347,7 +36347,7 @@
       },
       {
         "name": "TestEventStoreCacheMetrics::test_get_cache_fill_ratio_handles_zero_max",
-        "line": 149,
+        "line": 145,
         "markers": [
           "unit"
         ],

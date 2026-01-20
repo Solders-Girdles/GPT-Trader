@@ -1,20 +1,37 @@
-"""Order submission flow tests for OrderSubmitter."""
+"""Order submission flow tests including transient failures and retry behavior."""
 
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
 
-import gpt_trader.features.live_trade.execution.order_event_recorder as order_event_recorder_module
+import gpt_trader.features.live_trade.execution.order_event_recorder as recorder_module
 from gpt_trader.core import (
     Order,
     OrderSide,
+    OrderStatus,
     OrderType,
     TimeInForce,
 )
 from gpt_trader.features.live_trade.execution.order_submission import OrderSubmitter
+from gpt_trader.utilities.datetime_helpers import utc_now
+
+
+@pytest.fixture
+def monitoring_logger(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    mock_logger = MagicMock()
+    monkeypatch.setattr(recorder_module, "get_monitoring_logger", lambda: mock_logger)
+    return mock_logger
+
+
+@pytest.fixture
+def emit_metric_mock(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    mock_emit = MagicMock()
+    monkeypatch.setattr(recorder_module, "emit_metric", mock_emit)
+    return mock_emit
 
 
 class TestOrderSubmissionFlows:
@@ -26,13 +43,9 @@ class TestOrderSubmissionFlows:
         mock_event_store: MagicMock,
         open_orders: list[str],
         mock_order: Order,
-        monkeypatch: pytest.MonkeyPatch,
+        monitoring_logger: MagicMock,
     ) -> None:
         """Test complete order submission flow."""
-        mock_logger = MagicMock()
-        monkeypatch.setattr(
-            order_event_recorder_module, "get_monitoring_logger", lambda: mock_logger
-        )
         mock_broker.place_order.return_value = mock_order
 
         submitter = OrderSubmitter(
@@ -66,16 +79,10 @@ class TestOrderSubmissionFlows:
         mock_broker: MagicMock,
         mock_event_store: MagicMock,
         open_orders: list[str],
-        monkeypatch: pytest.MonkeyPatch,
+        monitoring_logger: MagicMock,
+        emit_metric_mock: MagicMock,
     ) -> None:
         """Test order rejection flow."""
-        mock_logger = MagicMock()
-        monkeypatch.setattr(
-            order_event_recorder_module, "get_monitoring_logger", lambda: mock_logger
-        )
-        mock_emit_metric = MagicMock()
-        monkeypatch.setattr(order_event_recorder_module, "emit_metric", mock_emit_metric)
-
         rejected_order = MagicMock()
         rejected_order.id = "rejected-order"
         rejected_order.status = MagicMock()
@@ -107,4 +114,95 @@ class TestOrderSubmissionFlows:
 
         assert result is None
         assert "rejected-order" not in open_orders
-        mock_emit_metric.assert_called()
+        emit_metric_mock.assert_called()
+
+
+class TestTransientFailureWithClientOrderIdReuse:
+    """Integration test for transient failure followed by success."""
+
+    def test_transient_failure_then_success_reuses_client_order_id(
+        self,
+        monitoring_logger: MagicMock,
+        emit_metric_mock: MagicMock,
+    ) -> None:
+        """Test that transient failure followed by success reuses client_order_id."""
+        captured_client_ids: list[str] = []
+        call_count = [0]
+
+        def capture_and_respond(**kwargs: Any) -> Order:
+            """Capture client_id, fail first, succeed second."""
+            captured_client_ids.append(kwargs.get("client_id", ""))
+            call_count[0] += 1
+
+            if call_count[0] == 1:
+                raise ConnectionError("transient network error")
+
+            return Order(
+                id="order-success-123",
+                client_id=kwargs.get("client_id", ""),
+                symbol=kwargs.get("symbol", "BTC-USD"),
+                side=kwargs.get("side", OrderSide.BUY),
+                type=kwargs.get("order_type", OrderType.MARKET),
+                quantity=kwargs.get("quantity", Decimal("1.0")),
+                price=None,
+                stop_price=None,
+                tif=TimeInForce.GTC,
+                status=OrderStatus.PENDING,
+                submitted_at=utc_now(),
+                updated_at=utc_now(),
+            )
+
+        mock_broker = MagicMock()
+        mock_broker.place_order = capture_and_respond
+        mock_event_store = MagicMock()
+
+        open_orders: list[str] = []
+        fixed_client_id = "idempotent-order-abc123"
+
+        submitter = OrderSubmitter(
+            broker=mock_broker,
+            event_store=mock_event_store,
+            bot_id="test-bot",
+            open_orders=open_orders,
+        )
+
+        result1 = submitter.submit_order(
+            symbol="BTC-USD",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            order_quantity=Decimal("1.0"),
+            price=None,
+            effective_price=Decimal("50000"),
+            stop_price=None,
+            tif=None,
+            reduce_only=False,
+            leverage=None,
+            client_order_id=fixed_client_id,
+        )
+
+        assert result1 is None
+        assert fixed_client_id not in open_orders
+
+        result2 = submitter.submit_order(
+            symbol="BTC-USD",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            order_quantity=Decimal("1.0"),
+            price=None,
+            effective_price=Decimal("50000"),
+            stop_price=None,
+            tif=None,
+            reduce_only=False,
+            leverage=None,
+            client_order_id=fixed_client_id,
+        )
+
+        assert result2 is not None
+        assert result2 == "order-success-123"
+
+        assert len(captured_client_ids) == 2
+        assert captured_client_ids[0] == fixed_client_id
+        assert captured_client_ids[1] == fixed_client_id
+
+        assert len(open_orders) == 1
+        assert open_orders[0] == "order-success-123"

@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
+import pytest
+
+import gpt_trader.features.live_trade.execution.order_event_recorder as recorder_module
 from gpt_trader.core import (
     Order,
     OrderSide,
@@ -17,21 +20,32 @@ from gpt_trader.persistence.orders_store import OrdersStore
 from gpt_trader.persistence.orders_store import OrderStatus as StoreOrderStatus
 
 
+@pytest.fixture
+def monitoring_logger(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    mock_logger = MagicMock()
+    monkeypatch.setattr(recorder_module, "get_monitoring_logger", lambda: mock_logger)
+    return mock_logger
+
+
+@pytest.fixture
+def emit_metric_mock(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    mock_emit = MagicMock()
+    monkeypatch.setattr(recorder_module, "emit_metric", mock_emit)
+    return mock_emit
+
+
 class TestSubmitOrder:
     """Tests for submit_order method."""
 
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_successful_order_submission(
         self,
-        mock_get_logger: MagicMock,
         submitter: OrderSubmitter,
         mock_broker: MagicMock,
         mock_order: Order,
         open_orders: list[str],
+        monitoring_logger: MagicMock,
     ) -> None:
         """Test successful order submission."""
-        mock_logger = MagicMock()
-        mock_get_logger.return_value = mock_logger
         mock_broker.place_order.return_value = mock_order
 
         result = submitter.submit_order(
@@ -51,21 +65,16 @@ class TestSubmitOrder:
         assert result == "order-123"
         assert "order-123" in open_orders
 
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.emit_metric")
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_rejected_order_returns_none(
         self,
-        mock_get_logger: MagicMock,
-        mock_emit_metric: MagicMock,
         submitter: OrderSubmitter,
         mock_broker: MagicMock,
         mock_event_store: MagicMock,
         open_orders: list[str],
+        monitoring_logger: MagicMock,
+        emit_metric_mock: MagicMock,
     ) -> None:
         """Test that rejected orders return None (error is caught internally)."""
-        mock_logger = MagicMock()
-        mock_get_logger.return_value = mock_logger
-
         rejected_order = MagicMock()
         rejected_order.id = "order-rejected"
         rejected_order.status = OrderStatus.CANCELLED
@@ -88,16 +97,13 @@ class TestSubmitOrder:
         assert result is None
         assert "order-rejected" not in open_orders
 
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_broker_exception_returns_none(
         self,
-        mock_get_logger: MagicMock,
         submitter: OrderSubmitter,
         mock_broker: MagicMock,
+        monitoring_logger: MagicMock,
     ) -> None:
         """Test that broker exceptions result in None return."""
-        mock_logger = MagicMock()
-        mock_get_logger.return_value = mock_logger
         mock_broker.place_order.side_effect = RuntimeError("API error")
 
         result = submitter.submit_order(
@@ -116,16 +122,13 @@ class TestSubmitOrder:
 
         assert result is None
 
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_order_with_none_result_returns_none(
         self,
-        mock_get_logger: MagicMock,
         submitter: OrderSubmitter,
         mock_broker: MagicMock,
+        monitoring_logger: MagicMock,
     ) -> None:
         """Test that None order result returns None."""
-        mock_logger = MagicMock()
-        mock_get_logger.return_value = mock_logger
         mock_broker.place_order.return_value = None
 
         result = submitter.submit_order(
@@ -144,18 +147,15 @@ class TestSubmitOrder:
 
         assert result is None
 
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_order_with_none_result_persists_terminal_status(
         self,
-        mock_get_logger: MagicMock,
         mock_broker: MagicMock,
         mock_event_store: MagicMock,
         open_orders: list[str],
         tmp_path,
+        monitoring_logger: MagicMock,
     ) -> None:
         """Test that None order result persists a terminal status."""
-        mock_logger = MagicMock()
-        mock_get_logger.return_value = mock_logger
         mock_broker.place_order.return_value = None
 
         orders_store = OrdersStore(tmp_path)

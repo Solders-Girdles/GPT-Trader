@@ -1210,7 +1210,7 @@
     "tests/integration/test_container_lifecycle_runtime.py": [
       {
         "name": "TestContainerLifecycleTUI::test_tui_unmount_clears_container",
-        "line": 43,
+        "line": 44,
         "markers": [
           "integration",
           "asyncio"
@@ -1220,7 +1220,7 @@
       },
       {
         "name": "TestContainerLifecycleTUI::test_tui_lifecycle_integration",
-        "line": 54,
+        "line": 55,
         "markers": [
           "integration",
           "asyncio"
@@ -1230,7 +1230,7 @@
       },
       {
         "name": "TestContainerLifecycleMultipleCycles::test_multiple_bot_cycles_no_leak",
-        "line": 72,
+        "line": 73,
         "markers": [
           "integration"
         ],
@@ -1239,7 +1239,7 @@
       },
       {
         "name": "TestContainerLifecycleMultipleCycles::test_container_services_are_fresh_each_cycle",
-        "line": 85,
+        "line": 86,
         "markers": [
           "integration"
         ],
@@ -1248,7 +1248,7 @@
       },
       {
         "name": "TestContainerLifecycleErrorPaths::test_container_cleared_when_bot_creation_fails",
-        "line": 105,
+        "line": 106,
         "markers": [
           "integration"
         ],
@@ -1257,7 +1257,7 @@
       },
       {
         "name": "TestContainerLifecycleErrorPaths::test_container_cleared_on_async_error",
-        "line": 119,
+        "line": 120,
         "markers": [
           "integration",
           "asyncio"
@@ -1267,7 +1267,7 @@
       },
       {
         "name": "TestContainerServiceAccess::test_services_accessible_after_registration",
-        "line": 139,
+        "line": 140,
         "markers": [
           "integration"
         ],
@@ -1276,7 +1276,7 @@
       },
       {
         "name": "TestContainerServiceAccess::test_services_not_accessible_after_clear",
-        "line": 150,
+        "line": 151,
         "markers": [
           "integration"
         ],
@@ -1285,7 +1285,7 @@
       },
       {
         "name": "TestContainerServiceAccess::test_service_resolution_functions_handle_missing_container",
-        "line": 159,
+        "line": 160,
         "markers": [
           "integration"
         ],
@@ -1294,7 +1294,7 @@
       },
       {
         "name": "TestContainerDebugLogging::test_set_container_logs_debug",
-        "line": 174,
+        "line": 175,
         "markers": [
           "integration"
         ],
@@ -1303,7 +1303,7 @@
       },
       {
         "name": "TestContainerDebugLogging::test_clear_container_logs_debug",
-        "line": 182,
+        "line": 186,
         "markers": [
           "integration"
         ],
@@ -3659,7 +3659,7 @@
     "tests/unit/gpt_trader/app/test_application_container_bot_creation.py": [
       {
         "name": "TestApplicationContainerBotCreation::test_create_bot",
-        "line": 15,
+        "line": 17,
         "markers": [
           "unit"
         ],
@@ -3668,7 +3668,7 @@
       },
       {
         "name": "TestApplicationContainerBotCreation::test_create_bot_includes_notification_service",
-        "line": 50,
+        "line": 54,
         "markers": [
           "unit"
         ],
@@ -3782,7 +3782,7 @@
     "tests/unit/gpt_trader/app/test_application_container_resources.py": [
       {
         "name": "TestApplicationContainerResources::test_container_initialization",
-        "line": 16,
+        "line": 19,
         "markers": [
           "unit"
         ],
@@ -3791,7 +3791,7 @@
       },
       {
         "name": "TestApplicationContainerResources::test_config_controller_creation",
-        "line": 33,
+        "line": 36,
         "markers": [
           "unit"
         ],
@@ -3800,7 +3800,7 @@
       },
       {
         "name": "TestApplicationContainerResources::test_event_store_creation",
-        "line": 46,
+        "line": 49,
         "markers": [
           "unit"
         ],
@@ -3809,7 +3809,7 @@
       },
       {
         "name": "TestApplicationContainerResources::test_orders_store_creation",
-        "line": 58,
+        "line": 61,
         "markers": [
           "unit"
         ],
@@ -3818,7 +3818,7 @@
       },
       {
         "name": "TestApplicationContainerResources::test_market_data_service_creation",
-        "line": 71,
+        "line": 73,
         "markers": [
           "unit"
         ],
@@ -3827,7 +3827,7 @@
       },
       {
         "name": "TestApplicationContainerResources::test_product_catalog_creation",
-        "line": 90,
+        "line": 92,
         "markers": [
           "unit"
         ],
@@ -3836,7 +3836,7 @@
       },
       {
         "name": "TestApplicationContainerResources::test_broker_creation",
-        "line": 108,
+        "line": 111,
         "markers": [
           "unit"
         ],

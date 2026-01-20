@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
+import pytest
+
+import gpt_trader.app.containers.brokerage as brokerage_module
 from gpt_trader.app.config import BotConfig
 from gpt_trader.app.container import ApplicationContainer
 from gpt_trader.persistence.event_store import EventStore
@@ -67,13 +70,13 @@ class TestApplicationContainerResources:
         orders_store2 = container.orders_store
         assert orders_store is orders_store2
 
-    @patch("gpt_trader.app.containers.brokerage.MarketDataService")
     def test_market_data_service_creation(
-        self, mock_market_data_service: MagicMock, mock_config: BotConfig
+        self, mock_config: BotConfig, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Test that market data service is created correctly."""
         mock_instance = MagicMock()
-        mock_market_data_service.return_value = mock_instance
+        mock_market_data_service = MagicMock(return_value=mock_instance)
+        monkeypatch.setattr(brokerage_module, "MarketDataService", mock_market_data_service)
 
         container = ApplicationContainer(mock_config)
 
@@ -86,13 +89,13 @@ class TestApplicationContainerResources:
         market_data_service2 = container.market_data_service
         assert market_data_service is market_data_service2
 
-    @patch("gpt_trader.app.containers.brokerage.ProductCatalog")
     def test_product_catalog_creation(
-        self, mock_product_catalog: MagicMock, mock_config: BotConfig
+        self, mock_config: BotConfig, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Test that product catalog is created correctly."""
         mock_instance = MagicMock()
-        mock_product_catalog.return_value = mock_instance
+        mock_product_catalog = MagicMock(return_value=mock_instance)
+        monkeypatch.setattr(brokerage_module, "ProductCatalog", mock_product_catalog)
 
         container = ApplicationContainer(mock_config)
 

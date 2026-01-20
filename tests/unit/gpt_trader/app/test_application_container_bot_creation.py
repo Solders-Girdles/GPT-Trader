@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
+import pytest
+
+import gpt_trader.features.live_trade.bot as bot_module
 from gpt_trader.app.config import BotConfig
 from gpt_trader.app.container import ApplicationContainer
 
@@ -11,8 +14,7 @@ from gpt_trader.app.container import ApplicationContainer
 class TestApplicationContainerBotCreation:
     """Test cases for ApplicationContainer.create_bot()."""
 
-    @patch("gpt_trader.features.live_trade.bot.TradingBot")
-    def test_create_bot(self, mock_bot_class: MagicMock, mock_config: BotConfig) -> None:
+    def test_create_bot(self, mock_config: BotConfig, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that TradingBot is created correctly from container."""
         from gpt_trader.app.containers.brokerage import BrokerageContainer
 
@@ -25,7 +27,8 @@ class TestApplicationContainerBotCreation:
             MagicMock(),
             MagicMock(),
         )
-        mock_bot_class.return_value = mock_bot
+        mock_bot_class = MagicMock(return_value=mock_bot)
+        monkeypatch.setattr(bot_module, "TradingBot", mock_bot_class)
 
         container = ApplicationContainer(mock_config)
         container._brokerage = BrokerageContainer(
@@ -46,9 +49,8 @@ class TestApplicationContainerBotCreation:
 
         assert bot == mock_bot
 
-    @patch("gpt_trader.features.live_trade.bot.TradingBot")
     def test_create_bot_includes_notification_service(
-        self, mock_bot_class: MagicMock, mock_config: BotConfig
+        self, mock_config: BotConfig, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Test that TradingBot is created with notification service."""
         from gpt_trader.app.containers.brokerage import BrokerageContainer
@@ -62,7 +64,8 @@ class TestApplicationContainerBotCreation:
             MagicMock(),
             MagicMock(),
         )
-        mock_bot_class.return_value = mock_bot
+        mock_bot_class = MagicMock(return_value=mock_bot)
+        monkeypatch.setattr(bot_module, "TradingBot", mock_bot_class)
 
         container = ApplicationContainer(mock_config)
         container._brokerage = BrokerageContainer(

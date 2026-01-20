@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import sys
 from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
+import gpt_trader.preflight.checks.system as system_checks
 from gpt_trader.preflight.checks.system import (
     check_disk_space,
     check_python_version,
@@ -65,60 +66,77 @@ class TestCheckPythonVersion:
 class TestCheckDiskSpace:
     """Test disk space check."""
 
-    def test_passes_with_plenty_of_space(self, capsys: pytest.CaptureFixture) -> None:
+    @pytest.fixture
+    def disk_usage_stub(self, monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+        stub = MagicMock()
+        monkeypatch.setattr(system_checks.shutil, "disk_usage", stub)
+        return stub
+
+    def test_passes_with_plenty_of_space(
+        self, capsys: pytest.CaptureFixture, disk_usage_stub: MagicMock
+    ) -> None:
         """Should pass with >1GB free."""
         checker = PreflightCheck()
 
         # Mock 100GB total, 50GB free
-        mock_usage = MagicMock()
-        mock_usage.total = 100 * 1024**3
-        mock_usage.free = 50 * 1024**3
-        mock_usage.used = 50 * 1024**3
+        mock_usage = MagicMock(
+            total=100 * 1024**3,
+            free=50 * 1024**3,
+            used=50 * 1024**3,
+        )
 
-        with patch("shutil.disk_usage", return_value=mock_usage):
-            result = check_disk_space(checker)
+        disk_usage_stub.return_value = mock_usage
+        result = check_disk_space(checker)
 
         assert result is True
         assert any("Disk space" in s for s in checker.successes)
 
-    def test_warns_with_low_space(self, capsys: pytest.CaptureFixture) -> None:
+    def test_warns_with_low_space(
+        self, capsys: pytest.CaptureFixture, disk_usage_stub: MagicMock
+    ) -> None:
         """Should warn with 0.5-1GB free."""
         checker = PreflightCheck()
 
         # Mock 100GB total, 0.7GB free
-        mock_usage = MagicMock()
-        mock_usage.total = 100 * 1024**3
-        mock_usage.free = int(0.7 * 1024**3)
-        mock_usage.used = int(99.3 * 1024**3)
+        mock_usage = MagicMock(
+            total=100 * 1024**3,
+            free=int(0.7 * 1024**3),
+            used=int(99.3 * 1024**3),
+        )
 
-        with patch("shutil.disk_usage", return_value=mock_usage):
-            result = check_disk_space(checker)
+        disk_usage_stub.return_value = mock_usage
+        result = check_disk_space(checker)
 
         assert result is True  # Still passes but with warning
         assert any("Low disk space" in w for w in checker.warnings)
 
-    def test_fails_with_critical_space(self, capsys: pytest.CaptureFixture) -> None:
+    def test_fails_with_critical_space(
+        self, capsys: pytest.CaptureFixture, disk_usage_stub: MagicMock
+    ) -> None:
         """Should fail with <0.5GB free."""
         checker = PreflightCheck()
 
         # Mock 100GB total, 0.3GB free
-        mock_usage = MagicMock()
-        mock_usage.total = 100 * 1024**3
-        mock_usage.free = int(0.3 * 1024**3)
-        mock_usage.used = int(99.7 * 1024**3)
+        mock_usage = MagicMock(
+            total=100 * 1024**3,
+            free=int(0.3 * 1024**3),
+            used=int(99.7 * 1024**3),
+        )
 
-        with patch("shutil.disk_usage", return_value=mock_usage):
-            result = check_disk_space(checker)
+        disk_usage_stub.return_value = mock_usage
+        result = check_disk_space(checker)
 
         assert result is False
         assert any("Critical" in e for e in checker.errors)
 
-    def test_handles_exception(self, capsys: pytest.CaptureFixture) -> None:
+    def test_handles_exception(
+        self, capsys: pytest.CaptureFixture, disk_usage_stub: MagicMock
+    ) -> None:
         """Should handle exceptions gracefully."""
         checker = PreflightCheck()
 
-        with patch("shutil.disk_usage", side_effect=OSError("Permission denied")):
-            result = check_disk_space(checker)
+        disk_usage_stub.side_effect = OSError("Permission denied")
+        result = check_disk_space(checker)
 
         assert result is False
         assert any("Failed to check disk space" in e for e in checker.errors)
@@ -127,57 +145,83 @@ class TestCheckDiskSpace:
 class TestCheckSystemTime:
     """Test system time synchronization check."""
 
+    @pytest.fixture
+    def mock_datetime(self, monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+        stub = MagicMock()
+        stub.fromisoformat = datetime.fromisoformat
+        monkeypatch.setattr(system_checks, "datetime", stub)
+        return stub
+
+    @pytest.fixture
+    def cleared_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        for key in (
+            "COINBASE_CREDENTIALS_FILE",
+            "COINBASE_PROD_CDP_API_KEY",
+            "COINBASE_CDP_API_KEY",
+            "COINBASE_API_KEY_NAME",
+            "COINBASE_PROD_CDP_PRIVATE_KEY",
+            "COINBASE_CDP_PRIVATE_KEY",
+            "COINBASE_PRIVATE_KEY",
+        ):
+            monkeypatch.delenv(key, raising=False)
+
     def test_passes_with_reasonable_time_no_credentials(
-        self, capsys: pytest.CaptureFixture
+        self,
+        capsys: pytest.CaptureFixture,
+        mock_datetime: MagicMock,
+        cleared_env: None,
     ) -> None:
         """Should pass with reasonable time when no credentials available."""
         checker = PreflightCheck(profile="dev")
 
-        with patch.dict("os.environ", {}, clear=True):
-            # Mock datetime to return a reasonable time
-            mock_now = datetime(2025, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
-            with patch("gpt_trader.preflight.checks.system.datetime") as mock_datetime:
-                mock_datetime.now.return_value = mock_now
-                mock_datetime.fromisoformat = datetime.fromisoformat
-                result = check_system_time(checker)
+        mock_now = datetime(2025, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
+        mock_datetime.now.return_value = mock_now
+        result = check_system_time(checker)
 
         assert result is True
         assert any("seems reasonable" in w for w in checker.warnings)
 
-    def test_fails_with_unreasonable_time(self, capsys: pytest.CaptureFixture) -> None:
+    def test_fails_with_unreasonable_time(
+        self,
+        capsys: pytest.CaptureFixture,
+        mock_datetime: MagicMock,
+        cleared_env: None,
+    ) -> None:
         """Should fail with clearly wrong system time."""
         checker = PreflightCheck(profile="dev")
 
-        with patch.dict("os.environ", {}, clear=True):
-            # Mock datetime to return an unreasonable time (year 2015)
-            mock_now = datetime(2015, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
-            with patch("gpt_trader.preflight.checks.system.datetime") as mock_datetime:
-                mock_datetime.now.return_value = mock_now
-                result = check_system_time(checker)
+        # Mock datetime to return an unreasonable time (year 2015)
+        mock_now = datetime(2015, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
+        mock_datetime.now.return_value = mock_now
+        result = check_system_time(checker)
 
         assert result is False
         assert any("seems wrong" in e for e in checker.errors)
 
-    def test_handles_exception(self, capsys: pytest.CaptureFixture) -> None:
+    def test_handles_exception(
+        self, capsys: pytest.CaptureFixture, mock_datetime: MagicMock
+    ) -> None:
         """Should handle exceptions gracefully."""
         checker = PreflightCheck()
 
-        with patch("gpt_trader.preflight.checks.system.datetime") as mock_datetime:
-            mock_datetime.now.side_effect = Exception("Time error")
-            result = check_system_time(checker)
+        mock_datetime.now.side_effect = Exception("Time error")
+        result = check_system_time(checker)
 
         assert result is False
         assert any("Failed to check system time" in e for e in checker.errors)
 
-    def test_prints_section_header(self, capsys: pytest.CaptureFixture) -> None:
+    def test_prints_section_header(
+        self,
+        capsys: pytest.CaptureFixture,
+        mock_datetime: MagicMock,
+        cleared_env: None,
+    ) -> None:
         """Should print section header."""
         checker = PreflightCheck(profile="dev")
 
-        with patch.dict("os.environ", {}, clear=True):
-            mock_now = datetime(2025, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
-            with patch("gpt_trader.preflight.checks.system.datetime") as mock_datetime:
-                mock_datetime.now.return_value = mock_now
-                check_system_time(checker)
+        mock_now = datetime(2025, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
+        mock_datetime.now.return_value = mock_now
+        check_system_time(checker)
 
         captured = capsys.readouterr()
         assert "SYSTEM TIME SYNC" in captured.out

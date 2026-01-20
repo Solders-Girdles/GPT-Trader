@@ -24116,7 +24116,7 @@
       },
       {
         "name": "TestValidateExchangeRules::test_validation_failure_with_none_reason",
-        "line": 153,
+        "line": 151,
         "markers": [
           "unit"
         ],
@@ -24125,7 +24125,7 @@
       },
       {
         "name": "TestValidateExchangeRules::test_limit_order_price_quantization",
-        "line": 172,
+        "line": 170,
         "markers": [
           "unit"
         ],
@@ -24134,7 +24134,7 @@
       },
       {
         "name": "TestValidateExchangeRules::test_adjusted_values_from_validation",
-        "line": 195,
+        "line": 193,
         "markers": [
           "unit"
         ],
@@ -39175,7 +39175,7 @@
     "tests/unit/gpt_trader/preflight/test_checks_system.py": [
       {
         "name": "TestCheckPythonVersion::test_passes_on_python_312_or_higher",
-        "line": 22,
+        "line": 23,
         "markers": [
           "unit"
         ],
@@ -39184,7 +39184,7 @@
       },
       {
         "name": "TestCheckPythonVersion::test_passes_on_current_python",
-        "line": 34,
+        "line": 35,
         "markers": [
           "unit"
         ],
@@ -39193,7 +39193,7 @@
       },
       {
         "name": "TestCheckPythonVersion::test_logs_python_version",
-        "line": 42,
+        "line": 43,
         "markers": [
           "unit"
         ],
@@ -39202,7 +39202,7 @@
       },
       {
         "name": "TestCheckPythonVersion::test_version_check_logic",
-        "line": 50,
+        "line": 51,
         "markers": [
           "unit"
         ],
@@ -39211,7 +39211,7 @@
       },
       {
         "name": "TestCheckPythonVersion::test_prints_section_header",
-        "line": 56,
+        "line": 57,
         "markers": [
           "unit"
         ],
@@ -39220,7 +39220,7 @@
       },
       {
         "name": "TestCheckDiskSpace::test_passes_with_plenty_of_space",
-        "line": 68,
+        "line": 75,
         "markers": [
           "unit"
         ],
@@ -39229,7 +39229,7 @@
       },
       {
         "name": "TestCheckDiskSpace::test_warns_with_low_space",
-        "line": 84,
+        "line": 94,
         "markers": [
           "unit"
         ],
@@ -39238,7 +39238,7 @@
       },
       {
         "name": "TestCheckDiskSpace::test_fails_with_critical_space",
-        "line": 100,
+        "line": 113,
         "markers": [
           "unit"
         ],
@@ -39247,7 +39247,7 @@
       },
       {
         "name": "TestCheckDiskSpace::test_handles_exception",
-        "line": 116,
+        "line": 132,
         "markers": [
           "unit"
         ],
@@ -39256,7 +39256,7 @@
       },
       {
         "name": "TestCheckSystemTime::test_passes_with_reasonable_time_no_credentials",
-        "line": 130,
+        "line": 168,
         "markers": [
           "unit"
         ],
@@ -39265,7 +39265,7 @@
       },
       {
         "name": "TestCheckSystemTime::test_fails_with_unreasonable_time",
-        "line": 147,
+        "line": 184,
         "markers": [
           "unit"
         ],
@@ -39274,7 +39274,7 @@
       },
       {
         "name": "TestCheckSystemTime::test_handles_exception",
-        "line": 161,
+        "line": 201,
         "markers": [
           "unit"
         ],
@@ -39283,7 +39283,7 @@
       },
       {
         "name": "TestCheckSystemTime::test_prints_section_header",
-        "line": 172,
+        "line": 213,
         "markers": [
           "unit"
         ],

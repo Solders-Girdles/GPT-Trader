@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 from datetime import datetime
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
+import pytest
+
+import gpt_trader.monitoring.guards.manager as manager_module
 from gpt_trader.monitoring.alert_types import AlertSeverity
 from gpt_trader.monitoring.guards.base import Alert, GuardConfig
 from gpt_trader.monitoring.guards.manager import RuntimeGuardManager
@@ -31,38 +34,54 @@ class _GuardStub:
         return self._result
 
 
-def test_guard_manager_skips_disabled_guards() -> None:
+@pytest.fixture
+def record_counter_mock(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    mock_counter = MagicMock()
+    monkeypatch.setattr(manager_module, "record_counter", mock_counter)
+    return mock_counter
+
+
+@pytest.fixture
+def guard_logger(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    mock_logger = MagicMock()
+    monkeypatch.setattr(manager_module, "logger", mock_logger)
+    return mock_logger
+
+
+def test_guard_manager_skips_disabled_guards(record_counter_mock: MagicMock) -> None:
     manager = RuntimeGuardManager()
     guard = _GuardStub("disabled_guard", enabled=False)
     manager.add_guard(guard)
 
-    with patch("gpt_trader.monitoring.guards.manager.record_counter") as mock_counter:
-        alerts = manager.check_all({})
+    alerts = manager.check_all({})
 
     assert alerts == []
     assert guard.check_calls == 0
-    mock_counter.assert_not_called()
+    record_counter_mock.assert_not_called()
 
 
-def test_guard_manager_catches_guard_exceptions_and_records() -> None:
+def test_guard_manager_catches_guard_exceptions_and_records(
+    guard_logger: MagicMock,
+    record_counter_mock: MagicMock,
+) -> None:
     manager = RuntimeGuardManager()
     guard = _GuardStub("exploding_guard", raise_exc=True)
     manager.add_guard(guard)
 
-    with patch("gpt_trader.monitoring.guards.manager.logger") as mock_logger:
-        with patch("gpt_trader.monitoring.guards.manager.record_counter") as mock_counter:
-            alerts = manager.check_all({"metric": 1})
+    alerts = manager.check_all({"metric": 1})
 
     assert alerts == []
     assert guard.check_calls == 1
-    mock_logger.error.assert_called_once()
-    mock_counter.assert_called_once_with(
+    guard_logger.error.assert_called_once()
+    record_counter_mock.assert_called_once_with(
         "gpt_trader_guard_checks_total",
         labels={"guard": "exploding_guard", "result": "error"},
     )
 
 
-def test_guard_manager_records_execution_metrics() -> None:
+def test_guard_manager_records_execution_metrics(
+    record_counter_mock: MagicMock,
+) -> None:
     manager = RuntimeGuardManager()
     alert = Alert(
         timestamp=datetime(2024, 1, 1, 0, 0, 0),
@@ -73,24 +92,24 @@ def test_guard_manager_records_execution_metrics() -> None:
     guard = _GuardStub("latency_guard", result=alert)
     manager.add_guard(guard)
 
-    with patch("gpt_trader.monitoring.guards.manager.record_counter") as mock_counter:
-        alerts = manager.check_all({"latency": 5})
+    alerts = manager.check_all({"latency": 5})
 
     assert len(alerts) == 1
-    mock_counter.assert_called_once_with(
+    record_counter_mock.assert_called_once_with(
         "gpt_trader_guard_checks_total",
         labels={"guard": "latency_guard", "result": "success"},
     )
 
 
-def test_guard_manager_empty_guard_list_no_side_effects() -> None:
+def test_guard_manager_empty_guard_list_no_side_effects(
+    record_counter_mock: MagicMock,
+) -> None:
     manager = RuntimeGuardManager()
     handler = MagicMock()
     manager.add_alert_handler(handler)
 
-    with patch("gpt_trader.monitoring.guards.manager.record_counter") as mock_counter:
-        alerts = manager.check_all({"metric": 1})
+    alerts = manager.check_all({"metric": 1})
 
     assert alerts == []
-    mock_counter.assert_not_called()
+    record_counter_mock.assert_not_called()
     handler.assert_not_called()

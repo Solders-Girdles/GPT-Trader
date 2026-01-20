@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
+import smtplib
 from datetime import datetime
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock
 
+import pytest
+import requests
+
+import gpt_trader.monitoring.guards.manager as manager_module
 from gpt_trader.monitoring.alert_types import AlertSeverity
 from gpt_trader.monitoring.guards.base import Alert
 from gpt_trader.monitoring.guards.manager import (
@@ -16,6 +21,24 @@ from gpt_trader.monitoring.guards.manager import (
 
 class TestAlertHandlers:
     """Test alert handler implementations."""
+
+    @pytest.fixture
+    def requests_post(self, monkeypatch: pytest.MonkeyPatch) -> Mock:
+        mock_post = Mock()
+        monkeypatch.setattr(requests, "post", mock_post)
+        return mock_post
+
+    @pytest.fixture
+    def smtp_class(self, monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+        mock_smtp_class = MagicMock()
+        monkeypatch.setattr(smtplib, "SMTP", mock_smtp_class)
+        return mock_smtp_class
+
+    @pytest.fixture
+    def manager_logger(self, monkeypatch: pytest.MonkeyPatch) -> Mock:
+        mock_logger = Mock()
+        monkeypatch.setattr(manager_module, "logger", mock_logger)
+        return mock_logger
 
     def test_log_alert_handler_formats_correctly(self, caplog):
         """Test log alert handler formats alerts correctly."""
@@ -53,12 +76,11 @@ class TestAlertHandlers:
             # If not, we assume the call succeeded if we got here.
             pass
 
-    @patch("requests.post")
-    def test_slack_alert_handler_success(self, mock_post):
+    def test_slack_alert_handler_success(self, requests_post: Mock):
         """Test Slack alert handler success."""
         mock_response = Mock()
         mock_response.raise_for_status.return_value = None
-        mock_post.return_value = mock_response
+        requests_post.return_value = mock_response
 
         alert = Alert(
             timestamp=datetime(2024, 1, 1, 12, 0, 0),
@@ -70,18 +92,17 @@ class TestAlertHandlers:
         slack_alert_handler(alert, "https://hooks.slack.com/test")
 
         # Verify request was made
-        mock_post.assert_called_once()
-        call_args = mock_post.call_args
+        requests_post.assert_called_once()
+        call_args = requests_post.call_args
         payload = call_args[1]["json"]
 
         assert payload["attachments"][0]["title"] == "🚨 test_guard"
         assert payload["attachments"][0]["text"] == "Critical alert"
         assert payload["attachments"][0]["color"] == "#8B0000"  # Critical color
 
-    @patch("requests.post")
-    def test_slack_alert_handler_failure(self, mock_post):
+    def test_slack_alert_handler_failure(self, requests_post: Mock):
         """Test Slack alert handler failure."""
-        mock_post.side_effect = Exception("Network error")
+        requests_post.side_effect = Exception("Network error")
 
         alert = Alert(
             timestamp=datetime(2024, 1, 1, 12, 0, 0),
@@ -93,13 +114,12 @@ class TestAlertHandlers:
         # Should not raise exception
         slack_alert_handler(alert, "https://hooks.slack.com/test")
 
-        mock_post.assert_called_once()
+        requests_post.assert_called_once()
 
-    @patch("smtplib.SMTP")
-    def test_email_alert_handler_success(self, mock_smtp_class):
+    def test_email_alert_handler_success(self, smtp_class: Mock):
         """Test email alert handler success."""
         mock_smtp = Mock()
-        mock_smtp_class.return_value.__enter__.return_value = mock_smtp
+        smtp_class.return_value.__enter__.return_value = mock_smtp
 
         alert = Alert(
             timestamp=datetime(2024, 1, 1, 12, 0, 0),
@@ -126,8 +146,7 @@ class TestAlertHandlers:
         mock_smtp.login.assert_called_once_with("user", "pass")
         mock_smtp.send_message.assert_called_once()
 
-    @patch("smtplib.SMTP")
-    def test_email_alert_handler_non_critical_filtered(self, mock_smtp_class):
+    def test_email_alert_handler_non_critical_filtered(self, smtp_class: Mock):
         """Test that non-critical alerts are filtered out."""
         alert = Alert(
             timestamp=datetime(2024, 1, 1, 12, 0, 0),
@@ -146,13 +165,11 @@ class TestAlertHandlers:
         email_alert_handler(alert, smtp_config)
 
         # Should not have created SMTP connection
-        mock_smtp_class.assert_not_called()
+        smtp_class.assert_not_called()
 
-    @patch("gpt_trader.monitoring.guards.manager.logger")
-    @patch("smtplib.SMTP")
-    def test_email_alert_handler_failure(self, mock_smtp_class, mock_logger):
+    def test_email_alert_handler_failure(self, smtp_class: Mock, manager_logger: Mock):
         """Test email alert handler failure."""
-        mock_smtp_class.side_effect = Exception("SMTP error")
+        smtp_class.side_effect = Exception("SMTP error")
 
         alert = Alert(
             timestamp=datetime(2024, 1, 1, 12, 0, 0),
@@ -170,4 +187,4 @@ class TestAlertHandlers:
 
         # Should not raise exception
         email_alert_handler(alert, smtp_config)
-        mock_logger.error.assert_called_once()
+        manager_logger.error.assert_called_once()

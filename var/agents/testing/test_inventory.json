@@ -18455,7 +18455,7 @@
       },
       {
         "name": "TestHybridPaperBrokerInit::test_init_creates_usd_balance",
-        "line": 56,
+        "line": 58,
         "markers": [
           "unit"
         ],
@@ -35342,7 +35342,7 @@
     "tests/unit/gpt_trader/monitoring/test_guard_manager_e2e_alert_handlers.py": [
       {
         "name": "TestAlertHandlers::test_log_alert_handler_formats_correctly",
-        "line": 20,
+        "line": 43,
         "markers": [
           "unit"
         ],
@@ -35351,7 +35351,7 @@
       },
       {
         "name": "TestAlertHandlers::test_slack_alert_handler_success",
-        "line": 57,
+        "line": 79,
         "markers": [
           "unit"
         ],
@@ -35360,7 +35360,7 @@
       },
       {
         "name": "TestAlertHandlers::test_slack_alert_handler_failure",
-        "line": 82,
+        "line": 103,
         "markers": [
           "unit"
         ],
@@ -35369,7 +35369,7 @@
       },
       {
         "name": "TestAlertHandlers::test_email_alert_handler_success",
-        "line": 99,
+        "line": 119,
         "markers": [
           "unit"
         ],
@@ -35378,7 +35378,7 @@
       },
       {
         "name": "TestAlertHandlers::test_email_alert_handler_non_critical_filtered",
-        "line": 130,
+        "line": 149,
         "markers": [
           "unit"
         ],
@@ -35387,7 +35387,7 @@
       },
       {
         "name": "TestAlertHandlers::test_email_alert_handler_failure",
-        "line": 153,
+        "line": 170,
         "markers": [
           "unit"
         ],
@@ -35548,7 +35548,7 @@
     "tests/unit/gpt_trader/monitoring/test_guard_manager_edges.py": [
       {
         "name": "test_guard_manager_skips_disabled_guards",
-        "line": 34,
+        "line": 51,
         "markers": [
           "unit"
         ],
@@ -35556,7 +35556,7 @@
       },
       {
         "name": "test_guard_manager_catches_guard_exceptions_and_records",
-        "line": 47,
+        "line": 63,
         "markers": [
           "unit"
         ],
@@ -35564,7 +35564,7 @@
       },
       {
         "name": "test_guard_manager_records_execution_metrics",
-        "line": 65,
+        "line": 82,
         "markers": [
           "unit"
         ],
@@ -35572,7 +35572,7 @@
       },
       {
         "name": "test_guard_manager_empty_guard_list_no_side_effects",
-        "line": 86,
+        "line": 104,
         "markers": [
           "unit"
         ],

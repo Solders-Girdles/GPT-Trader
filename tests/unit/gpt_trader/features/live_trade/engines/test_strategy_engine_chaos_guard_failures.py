@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 from tests.support.chaos import ChaosBroker, api_outage_scenario
@@ -18,7 +18,9 @@ pytest_plugins = ["strategy_engine_chaos_fixtures"]
 
 class TestGuardFailureDegradation:
     @pytest.mark.asyncio
-    async def test_guard_failure_triggers_pause_and_reduce_only(self, engine, mock_broker) -> None:
+    async def test_guard_failure_triggers_pause_and_reduce_only(
+        self, engine, mock_broker, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         guard_manager = MagicMock()
         guard_manager.run_runtime_guards.side_effect = GuardError(
             guard_name="api_health", message="degraded"
@@ -30,7 +32,8 @@ class TestGuardFailureDegradation:
             engine.running = False
             raise asyncio.CancelledError()
 
-        with patch.object(asyncio, "sleep", stop), pytest.raises(asyncio.CancelledError):
+        monkeypatch.setattr(asyncio, "sleep", stop)
+        with pytest.raises(asyncio.CancelledError):
             await engine._runtime_guard_sweep()
         assert engine._degradation.is_paused()
         engine.context.risk_manager.set_reduce_only_mode.assert_called_with(
@@ -39,7 +42,7 @@ class TestGuardFailureDegradation:
 
     @pytest.mark.asyncio
     async def test_api_outage_scenario_triggers_degradation(
-        self, engine, mock_broker, mock_risk_config
+        self, engine, mock_broker, mock_risk_config, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         from gpt_trader.features.live_trade.execution.guard_manager import GuardManager
 
@@ -59,7 +62,8 @@ class TestGuardFailureDegradation:
             engine.running = False
             raise asyncio.CancelledError()
 
-        with patch.object(asyncio, "sleep", stop), pytest.raises(asyncio.CancelledError):
+        monkeypatch.setattr(asyncio, "sleep", stop)
+        with pytest.raises(asyncio.CancelledError):
             await engine._runtime_guard_sweep()
         assert engine._degradation.is_paused()
         events = engine._event_store.list_events()

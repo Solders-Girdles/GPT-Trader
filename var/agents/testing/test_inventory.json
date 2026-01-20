@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6325,
-    "total_files": 968,
+    "total_tests": 6317,
+    "total_files": 964,
     "markers_used": 15
   },
   "marker_definitions": {
@@ -102,12 +102,12 @@
     ]
   },
   "marker_counts": {
-    "unit": 6160,
+    "unit": 6152,
     "asyncio": 371,
     "property": 82,
     "integration": 79,
     "endpoints": 78,
-    "parametrize": 68,
+    "parametrize": 70,
     "skipif": 8,
     "slow": 4,
     "anyio": 3,
@@ -465,14 +465,10 @@
       "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_schedule_and_start_stop.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_task_completion_and_async_loop.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_api_health_guard.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_order_edge_cases.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_order_normal.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_with_retry.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_init.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_metrics.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_resilience_backoff.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_resilience_retry.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_retry_policy.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_order.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_init_and_metrics.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_resilience.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_retry_helpers.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_with_retry.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_daily_loss_guard.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_get_validation_metrics.py",
@@ -6988,7 +6984,7 @@
       },
       {
         "name": "TestMultiSymbolTracking::test_total_funding_pnl_across_symbols",
-        "line": 102,
+        "line": 100,
         "markers": [
           "unit"
         ],
@@ -6997,7 +6993,7 @@
       },
       {
         "name": "TestGetAccruedAndTotalPaid::test_get_accrued_unknown_symbol",
-        "line": 140,
+        "line": 138,
         "markers": [
           "unit"
         ],
@@ -7006,7 +7002,7 @@
       },
       {
         "name": "TestGetAccruedAndTotalPaid::test_get_total_paid_unknown_symbol",
-        "line": 145,
+        "line": 143,
         "markers": [
           "unit"
         ],
@@ -7015,7 +7011,7 @@
       },
       {
         "name": "TestGetAccruedAndTotalPaid::test_get_total_funding_pnl_empty",
-        "line": 150,
+        "line": 148,
         "markers": [
           "unit"
         ],
@@ -21700,344 +21696,257 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_order_edge_cases.py": [
+    "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_order.py": [
       {
-        "name": "TestBrokerExecutorEdgeCases::test_execute_order_with_all_none_optional_params",
-        "line": 22,
+        "name": "TestBrokerExecutorExecuteOrder::test_calls_broker_with_correct_args",
+        "line": 50,
         "markers": [
           "unit"
         ],
-        "docstring": "Test execution with all optional params as None.",
-        "class": "TestBrokerExecutorEdgeCases"
+        "docstring": "",
+        "class": "TestBrokerExecutorExecuteOrder"
       },
       {
-        "name": "TestBrokerExecutorEdgeCases::test_execute_order_with_decimal_precision",
-        "line": 51,
+        "name": "TestBrokerExecutorExecuteOrder::test_passes_through_fields",
+        "line": 101,
         "markers": [
+          "parametrize",
           "unit"
         ],
-        "docstring": "Test that decimal precision is preserved.",
-        "class": "TestBrokerExecutorEdgeCases"
+        "docstring": "",
+        "class": "TestBrokerExecutorExecuteOrder"
       },
       {
-        "name": "TestBrokerExecutorEdgeCases::test_execute_order_propagates_broker_exception",
-        "line": 80,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that broker exceptions are propagated.",
-        "class": "TestBrokerExecutorEdgeCases"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_order_normal.py": [
-      {
-        "name": "TestExecuteOrderNormal::test_execute_order_calls_broker_with_correct_args",
-        "line": 20,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that execute_order calls broker.place_order with correct arguments.",
-        "class": "TestExecuteOrderNormal"
-      },
-      {
-        "name": "TestExecuteOrderNormal::test_execute_order_passes_market_order_with_none_price",
-        "line": 56,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that market orders can pass None as price.",
-        "class": "TestExecuteOrderNormal"
-      },
-      {
-        "name": "TestExecuteOrderNormal::test_execute_order_passes_reduce_only_flag",
-        "line": 82,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that reduce_only flag is passed correctly.",
-        "class": "TestExecuteOrderNormal"
-      },
-      {
-        "name": "TestExecuteOrderNormal::test_execute_order_passes_leverage",
-        "line": 107,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that leverage is passed correctly.",
-        "class": "TestExecuteOrderNormal"
-      },
-      {
-        "name": "TestExecuteOrderNormal::test_execute_order_passes_stop_price",
-        "line": 132,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that stop_price is passed for stop orders.",
-        "class": "TestExecuteOrderNormal"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_with_retry.py": [
-      {
-        "name": "TestExecuteWithRetry::test_success_on_first_attempt",
-        "line": 19,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test successful execution on first attempt.",
-        "class": "TestExecuteWithRetry"
-      },
-      {
-        "name": "TestExecuteWithRetry::test_retry_on_retryable_exception",
-        "line": 36,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test retry occurs on retryable exception.",
-        "class": "TestExecuteWithRetry"
-      },
-      {
-        "name": "TestExecuteWithRetry::test_max_attempts_respected",
-        "line": 53,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that max_attempts is respected.",
-        "class": "TestExecuteWithRetry"
-      },
-      {
-        "name": "TestExecuteWithRetry::test_non_retryable_exception_not_retried",
-        "line": 70,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that non-retryable exceptions are not retried.",
-        "class": "TestExecuteWithRetry"
-      },
-      {
-        "name": "TestExecuteWithRetry::test_timeout_error_is_retryable",
-        "line": 87,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that TimeoutError triggers retry.",
-        "class": "TestExecuteWithRetry"
-      },
-      {
-        "name": "TestExecuteWithRetry::test_client_order_id_logged_consistently",
-        "line": 103,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that the same client_order_id is used for all attempts.",
-        "class": "TestExecuteWithRetry"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_init.py": [
-      {
-        "name": "TestBrokerExecutorInit::test_init_stores_broker",
-        "line": 13,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that broker is stored correctly.",
-        "class": "TestBrokerExecutorInit"
-      },
-      {
-        "name": "TestBrokerExecutorInit::test_init_defaults_integration_mode_false",
-        "line": 18,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that integration_mode defaults to False.",
-        "class": "TestBrokerExecutorInit"
-      },
-      {
-        "name": "TestBrokerExecutorInit::test_init_accepts_integration_mode_true",
-        "line": 23,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that integration_mode can be set to True.",
-        "class": "TestBrokerExecutorInit"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_metrics.py": [
-      {
-        "name": "TestBrokerCallMetrics::test_successful_call_records_latency_with_success_outcome",
-        "line": 32,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that successful broker call records latency with success outcome.",
-        "class": "TestBrokerCallMetrics"
-      },
-      {
-        "name": "TestBrokerCallMetrics::test_failed_call_records_latency_with_failure_outcome",
-        "line": 62,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that failed broker call records latency with failure outcome.",
-        "class": "TestBrokerCallMetrics"
-      },
-      {
-        "name": "TestBrokerCallMetrics::test_timeout_error_classified_correctly",
-        "line": 91,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that timeout errors are classified correctly in metrics.",
-        "class": "TestBrokerCallMetrics"
-      },
-      {
-        "name": "TestBrokerCallMetrics::test_rate_limit_error_classified_correctly",
+        "name": "TestBrokerExecutorExecuteOrder::test_preserves_decimal_precision",
         "line": 117,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that rate limit errors are classified correctly in metrics.",
-        "class": "TestBrokerCallMetrics"
+        "docstring": "",
+        "class": "TestBrokerExecutorExecuteOrder"
       },
       {
-        "name": "TestBrokerCallMetrics::test_network_error_classified_correctly",
-        "line": 143,
+        "name": "TestBrokerExecutorExecuteOrder::test_propagates_broker_exception",
+        "line": 139,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that network errors are classified correctly in metrics.",
-        "class": "TestBrokerCallMetrics"
+        "docstring": "",
+        "class": "TestBrokerExecutorExecuteOrder"
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_resilience_backoff.py": [
+    "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_init_and_metrics.py": [
       {
-        "name": "TestBrokerExecutorResilienceBackoff::test_exponential_backoff_delays",
-        "line": 24,
+        "name": "test_init_stores_broker",
+        "line": 26,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that retry delays follow exponential backoff.",
-        "class": "TestBrokerExecutorResilienceBackoff"
+        "docstring": ""
       },
       {
-        "name": "TestBrokerExecutorResilienceBackoff::test_non_retryable_mid_sequence_stops_immediately",
-        "line": 70,
+        "name": "test_init_defaults_integration_mode_false",
+        "line": 31,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that non-retryable error mid-sequence stops retries immediately.",
-        "class": "TestBrokerExecutorResilienceBackoff"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_resilience_retry.py": [
-      {
-        "name": "TestBrokerExecutorResilienceRetry::test_retry_success_after_n_failures",
-        "line": 25,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that retry succeeds after N transient failures.",
-        "class": "TestBrokerExecutorResilienceRetry"
+        "docstring": ""
       },
       {
-        "name": "TestBrokerExecutorResilienceRetry::test_timeout_path_triggers_retry_with_classification",
-        "line": 64,
+        "name": "test_init_accepts_integration_mode_true",
+        "line": 36,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that timeout triggers retry and is classified correctly.",
-        "class": "TestBrokerExecutorResilienceRetry"
+        "docstring": ""
       },
       {
-        "name": "TestBrokerExecutorResilienceRetry::test_non_retryable_error_short_circuits",
-        "line": 108,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that non-retryable errors abort immediately without retries.",
-        "class": "TestBrokerExecutorResilienceRetry"
-      },
-      {
-        "name": "TestBrokerExecutorResilienceRetry::test_all_retries_exhausted_raises_last_exception",
-        "line": 145,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that exhausting all retries raises the last exception.",
-        "class": "TestBrokerExecutorResilienceRetry"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_retry_policy.py": [
-      {
-        "name": "TestRetryPolicy::test_default_values",
-        "line": 11,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test default retry policy values.",
-        "class": "TestRetryPolicy"
-      },
-      {
-        "name": "TestRetryPolicy::test_calculate_delay_first_attempt_is_zero",
-        "line": 20,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that first attempt has no delay.",
-        "class": "TestRetryPolicy"
-      },
-      {
-        "name": "TestRetryPolicy::test_calculate_delay_exponential_backoff",
-        "line": 25,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test exponential backoff calculation.",
-        "class": "TestRetryPolicy"
-      },
-      {
-        "name": "TestRetryPolicy::test_calculate_delay_respects_max_delay",
-        "line": 32,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that delay is capped at max_delay.",
-        "class": "TestRetryPolicy"
-      },
-      {
-        "name": "TestRetryPolicy::test_jitter_clamped_negative_to_zero",
-        "line": 37,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that negative jitter is clamped to 0.0.",
-        "class": "TestRetryPolicy"
-      },
-      {
-        "name": "TestRetryPolicy::test_jitter_clamped_above_one_to_one",
+        "name": "TestBrokerCallMetrics::test_successful_call_records_latency_with_success_outcome",
         "line": 42,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that jitter > 1.0 is clamped to 1.0.",
+        "docstring": "",
+        "class": "TestBrokerCallMetrics"
+      },
+      {
+        "name": "TestBrokerCallMetrics::test_failed_call_records_latency_with_failure_outcome",
+        "line": 70,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestBrokerCallMetrics"
+      },
+      {
+        "name": "TestBrokerCallMetrics::test_error_reason_classification",
+        "line": 106,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestBrokerCallMetrics"
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_resilience.py": [
+      {
+        "name": "test_retry_success_after_n_failures",
+        "line": 54,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_timeout_path_triggers_retry_with_classification",
+        "line": 71,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_non_retryable_error_short_circuits",
+        "line": 92,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_all_retries_exhausted_raises_last_exception",
+        "line": 106,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_exponential_backoff_delays",
+        "line": 122,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_non_retryable_mid_sequence_stops_immediately",
+        "line": 137,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_retry_helpers.py": [
+      {
+        "name": "TestRetryPolicy::test_default_values",
+        "line": 17,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestRetryPolicy"
+      },
+      {
+        "name": "TestRetryPolicy::test_calculate_delay_first_attempt_is_zero",
+        "line": 25,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestRetryPolicy"
+      },
+      {
+        "name": "TestRetryPolicy::test_calculate_delay_exponential_backoff",
+        "line": 29,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestRetryPolicy"
+      },
+      {
+        "name": "TestRetryPolicy::test_calculate_delay_respects_max_delay",
+        "line": 35,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestRetryPolicy"
+      },
+      {
+        "name": "TestRetryPolicy::test_jitter_clamping",
+        "line": 39,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
         "class": "TestRetryPolicy"
       },
       {
         "name": "TestRetryPolicy::test_jitter_valid_range_unchanged",
-        "line": 47,
+        "line": 43,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that jitter in [0.0, 1.0] is preserved.",
+        "docstring": "",
         "class": "TestRetryPolicy"
       },
       {
-        "name": "TestRetryPolicy::test_jitter_boundary_values",
-        "line": 53,
+        "name": "TestExecuteWithRetry::test_success_on_first_attempt",
+        "line": 49,
         "markers": [
           "unit"
         ],
-        "docstring": "Test jitter at exact boundaries.",
-        "class": "TestRetryPolicy"
+        "docstring": "",
+        "class": "TestExecuteWithRetry"
+      },
+      {
+        "name": "TestExecuteWithRetry::test_retry_on_retryable_exception",
+        "line": 65,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestExecuteWithRetry"
+      },
+      {
+        "name": "TestExecuteWithRetry::test_max_attempts_respected",
+        "line": 81,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestExecuteWithRetry"
+      },
+      {
+        "name": "TestExecuteWithRetry::test_non_retryable_exception_not_retried",
+        "line": 97,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestExecuteWithRetry"
+      },
+      {
+        "name": "TestExecuteWithRetry::test_timeout_error_is_retryable",
+        "line": 113,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestExecuteWithRetry"
+      },
+      {
+        "name": "TestExecuteWithRetry::test_client_order_id_logged_consistently",
+        "line": 128,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestExecuteWithRetry"
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_with_retry.py": [

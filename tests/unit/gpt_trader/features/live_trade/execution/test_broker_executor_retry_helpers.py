@@ -1,4 +1,4 @@
-"""Tests for execute_with_retry helper."""
+"""Tests for BrokerExecutor retry primitives (RetryPolicy + execute_with_retry)."""
 
 from __future__ import annotations
 
@@ -13,11 +13,40 @@ from gpt_trader.features.live_trade.execution.broker_executor import (
 )
 
 
-class TestExecuteWithRetry:
-    """Tests for execute_with_retry function."""
+class TestRetryPolicy:
+    def test_default_values(self) -> None:
+        policy = RetryPolicy()
+        assert policy.max_attempts == 3
+        assert policy.base_delay == 0.5
+        assert policy.max_delay == 5.0
+        assert policy.timeout_seconds == 30.0
+        assert policy.jitter == 0.1
 
+    def test_calculate_delay_first_attempt_is_zero(self) -> None:
+        policy = RetryPolicy(jitter=0)
+        assert policy.calculate_delay(1) == 0.0
+
+    def test_calculate_delay_exponential_backoff(self) -> None:
+        policy = RetryPolicy(base_delay=1.0, max_delay=10.0, jitter=0)
+        assert policy.calculate_delay(2) == 1.0
+        assert policy.calculate_delay(3) == 2.0
+        assert policy.calculate_delay(4) == 4.0
+
+    def test_calculate_delay_respects_max_delay(self) -> None:
+        policy = RetryPolicy(base_delay=1.0, max_delay=2.0, jitter=0)
+        assert policy.calculate_delay(10) == 2.0
+
+    def test_jitter_clamping(self) -> None:
+        assert RetryPolicy(jitter=-0.5).jitter == 0.0
+        assert RetryPolicy(jitter=1.5).jitter == 1.0
+
+    def test_jitter_valid_range_unchanged(self) -> None:
+        for jitter_val in [0.0, 0.1, 0.5, 1.0]:
+            assert RetryPolicy(jitter=jitter_val).jitter == jitter_val
+
+
+class TestExecuteWithRetry:
     def test_success_on_first_attempt(self) -> None:
-        """Test successful execution on first attempt."""
         func = MagicMock(return_value="success")
         policy = RetryPolicy(max_attempts=3)
         sleep_calls: list[float] = []
@@ -31,10 +60,9 @@ class TestExecuteWithRetry:
 
         assert result == "success"
         func.assert_called_once()
-        assert len(sleep_calls) == 0  # No sleep on first attempt
+        assert len(sleep_calls) == 0
 
     def test_retry_on_retryable_exception(self) -> None:
-        """Test retry occurs on retryable exception."""
         func = MagicMock(side_effect=[ConnectionError("failed"), "success"])
         policy = RetryPolicy(max_attempts=3, jitter=0)
         sleep_calls: list[float] = []
@@ -48,10 +76,9 @@ class TestExecuteWithRetry:
 
         assert result == "success"
         assert func.call_count == 2
-        assert len(sleep_calls) == 1  # One delay before retry
+        assert len(sleep_calls) == 1
 
     def test_max_attempts_respected(self) -> None:
-        """Test that max_attempts is respected."""
         func = MagicMock(side_effect=ConnectionError("always fails"))
         policy = RetryPolicy(max_attempts=3, jitter=0)
         sleep_calls: list[float] = []
@@ -65,10 +92,9 @@ class TestExecuteWithRetry:
             )
 
         assert func.call_count == 3
-        assert len(sleep_calls) == 2  # Delays before attempts 2 and 3
+        assert len(sleep_calls) == 2
 
     def test_non_retryable_exception_not_retried(self) -> None:
-        """Test that non-retryable exceptions are not retried."""
         func = MagicMock(side_effect=ValueError("bad input"))
         policy = RetryPolicy(max_attempts=3)
         sleep_calls: list[float] = []
@@ -81,11 +107,10 @@ class TestExecuteWithRetry:
                 sleep_fn=sleep_calls.append,
             )
 
-        func.assert_called_once()  # No retries
+        func.assert_called_once()
         assert len(sleep_calls) == 0
 
     def test_timeout_error_is_retryable(self) -> None:
-        """Test that TimeoutError triggers retry."""
         func = MagicMock(side_effect=[TimeoutError("timed out"), "success"])
         policy = RetryPolicy(max_attempts=3, jitter=0)
         sleep_calls: list[float] = []
@@ -101,7 +126,6 @@ class TestExecuteWithRetry:
         assert func.call_count == 2
 
     def test_client_order_id_logged_consistently(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        """Test that the same client_order_id is used for all attempts."""
         mock_logger = MagicMock()
         monkeypatch.setattr(broker_executor_module, "logger", mock_logger)
 
@@ -119,10 +143,7 @@ class TestExecuteWithRetry:
         assert result == "success"
         assert func.call_count == 2
 
-        warning_kwargs = mock_logger.warning.call_args.kwargs
-        assert warning_kwargs["client_order_id"] == "stable-id-123"
-
+        assert mock_logger.warning.call_args.kwargs["client_order_id"] == "stable-id-123"
         for call in mock_logger.info.call_args_list:
-            call_kwargs = call.kwargs
-            if "client_order_id" in call_kwargs:
-                assert call_kwargs["client_order_id"] == "stable-id-123"
+            if "client_order_id" in call.kwargs:
+                assert call.kwargs["client_order_id"] == "stable-id-123"

@@ -22937,7 +22937,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_trade_event.py": [
       {
         "name": "TestRecordTradeEvent::test_record_trade_event_logs_status_change",
-        "line": 16,
+        "line": 25,
         "markers": [
           "unit"
         ],
@@ -22946,7 +22946,7 @@
       },
       {
         "name": "TestRecordTradeEvent::test_record_trade_event_appends_to_event_store",
-        "line": 44,
+        "line": 49,
         "markers": [
           "unit"
         ],
@@ -22955,7 +22955,7 @@
       },
       {
         "name": "TestRecordTradeEvent::test_record_trade_event_handles_log_exception",
-        "line": 74,
+        "line": 75,
         "markers": [
           "unit"
         ],
@@ -22964,7 +22964,7 @@
       },
       {
         "name": "TestRecordTradeEvent::test_record_trade_event_handles_store_exception",
-        "line": 101,
+        "line": 99,
         "markers": [
           "unit"
         ],
@@ -23044,7 +23044,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_handle_order_result.py": [
       {
         "name": "TestHandleOrderResult::test_successful_order_tracked",
-        "line": 18,
+        "line": 32,
         "markers": [
           "unit"
         ],
@@ -23053,7 +23053,7 @@
       },
       {
         "name": "TestHandleOrderResult::test_none_order_returns_none",
-        "line": 46,
+        "line": 57,
         "markers": [
           "unit"
         ],
@@ -23062,7 +23062,7 @@
       },
       {
         "name": "TestHandleOrderResult::test_order_without_id_returns_none",
-        "line": 67,
+        "line": 78,
         "markers": [
           "unit"
         ],
@@ -23071,7 +23071,7 @@
       },
       {
         "name": "TestHandleOrderResult::test_rejected_status_raises_error",
-        "line": 93,
+        "line": 102,
         "markers": [
           "unit"
         ],
@@ -23080,7 +23080,7 @@
       },
       {
         "name": "TestHandleOrderResult::test_integration_mode_returns_order_object",
-        "line": 123,
+        "line": 128,
         "markers": [
           "unit"
         ],

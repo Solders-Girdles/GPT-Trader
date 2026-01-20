@@ -2,7 +2,7 @@
   "version": "1.0",
   "summary": {
     "tests_scanned": 919,
-    "source_modules": 354,
+    "source_modules": 355,
     "unresolved_modules": 3
   },
   "source_to_tests": {

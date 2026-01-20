@@ -11,6 +11,8 @@ from gpt_trader.utilities.async_tools import gather_with_concurrency, wait_for_f
 
 
 class TestGatherWithConcurrency:
+    """Test gather_with_concurrency functionality."""
+
     @pytest.mark.asyncio
     async def test_gather_with_concurrency(self) -> None:
         async def slow_operation(x: int) -> int:
@@ -73,6 +75,8 @@ class TestGatherWithConcurrency:
 
 
 class TestWaitForFirst:
+    """Test wait_for_first functionality."""
+
     @pytest.mark.asyncio
     async def test_wait_for_first(self) -> None:
         async def fast_operation():
@@ -143,6 +147,8 @@ class TestWaitForFirst:
 
 
 class TestAsyncPerformance:
+    """Test async performance characteristics."""
+
     @pytest.mark.asyncio
     async def test_concurrent_execution_performance(self) -> None:
         async def slow_operation(x: int) -> int:

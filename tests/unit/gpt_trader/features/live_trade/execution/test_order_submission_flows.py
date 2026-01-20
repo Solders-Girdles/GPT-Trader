@@ -1,4 +1,4 @@
-"""Order submission flow integration tests for OrderSubmitter."""
+"""Order submission flow tests for OrderSubmitter."""
 
 from __future__ import annotations
 
@@ -14,8 +14,8 @@ from gpt_trader.core import (
 from gpt_trader.features.live_trade.execution.order_submission import OrderSubmitter
 
 
-class TestOrderSubmissionIntegration:
-    """Integration tests for order submission workflows."""
+class TestOrderSubmissionFlows:
+    """Order submission workflow tests."""
 
     @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_full_order_submission_flow(

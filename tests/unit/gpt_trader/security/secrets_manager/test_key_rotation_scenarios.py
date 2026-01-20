@@ -1,4 +1,4 @@
-"""Integration-style key rotation tests for SecretsManager."""
+"""Key rotation scenario tests for SecretsManager."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from typing import Any
 import pytest
 
 
-class TestKeyRotationIntegrations:
+class TestKeyRotationScenarios:
     """Cover vault, concurrency, and complex secret scenarios."""
 
     def test_rotate_key_with_vault_storage(

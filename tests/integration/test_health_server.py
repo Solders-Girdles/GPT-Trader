@@ -16,6 +16,8 @@ from gpt_trader.app.health_server import (
     mark_ready,
 )
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def health_state() -> HealthState:

@@ -1,4 +1,4 @@
-"""Integration-style tests for Coinbase client resilience components together."""
+"""Resilience flow tests for Coinbase client components together."""
 
 from gpt_trader.features.brokerages.coinbase.client.circuit_breaker import (
     CircuitBreakerRegistry,
@@ -9,7 +9,7 @@ from gpt_trader.features.brokerages.coinbase.client.priority import PriorityMana
 from gpt_trader.features.brokerages.coinbase.client.response_cache import ResponseCache
 
 
-class TestAPIResilienceIntegrationFlows:
+class TestAPIResilienceFlows:
     def test_full_request_flow_simulation(self, monkeypatch) -> None:
         """Test a complete request flow through all resilience components."""
         import gpt_trader.features.brokerages.coinbase.client.circuit_breaker as cb_module

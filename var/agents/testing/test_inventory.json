@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6351,
+    "total_tests": 6352,
     "total_files": 977,
     "markers_used": 15
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6186,
+    "unit": 6187,
     "asyncio": 374,
     "property": 82,
     "integration": 79,
@@ -33675,7 +33675,7 @@
       },
       {
         "name": "test_save_report_writes_json_and_text",
-        "line": 139,
+        "line": 137,
         "markers": [
           "unit"
         ],
@@ -39377,7 +39377,7 @@
     "tests/unit/gpt_trader/preflight/test_cli.py": [
       {
         "name": "TestHeader::test_prints_header_with_profile",
-        "line": 15,
+        "line": 37,
         "markers": [
           "unit"
         ],
@@ -39386,7 +39386,7 @@
       },
       {
         "name": "TestHeader::test_prints_timestamp",
-        "line": 23,
+        "line": 45,
         "markers": [
           "unit"
         ],
@@ -39395,7 +39395,7 @@
       },
       {
         "name": "TestHeader::test_prints_separators",
-        "line": 30,
+        "line": 52,
         "markers": [
           "unit"
         ],
@@ -39404,7 +39404,7 @@
       },
       {
         "name": "TestMain::test_returns_zero_on_success",
-        "line": 41,
+        "line": 67,
         "markers": [
           "unit"
         ],
@@ -39413,7 +39413,7 @@
       },
       {
         "name": "TestMain::test_returns_one_on_failure",
-        "line": 54,
+        "line": 73,
         "markers": [
           "unit"
         ],
@@ -39422,7 +39422,7 @@
       },
       {
         "name": "TestMain::test_passes_verbose_flag",
-        "line": 67,
+        "line": 79,
         "markers": [
           "unit"
         ],
@@ -39431,7 +39431,7 @@
       },
       {
         "name": "TestMain::test_passes_profile_flag",
-        "line": 82,
+        "line": 85,
         "markers": [
           "unit"
         ],
@@ -39440,7 +39440,7 @@
       },
       {
         "name": "TestMain::test_uses_canary_profile_by_default",
-        "line": 97,
+        "line": 91,
         "markers": [
           "unit"
         ],
@@ -39449,7 +39449,7 @@
       },
       {
         "name": "TestMain::test_runs_all_check_functions",
-        "line": 112,
+        "line": 97,
         "markers": [
           "unit"
         ],
@@ -39458,7 +39458,7 @@
       },
       {
         "name": "TestMain::test_handles_check_exception_gracefully",
-        "line": 137,
+        "line": 117,
         "markers": [
           "unit"
         ],
@@ -39467,7 +39467,7 @@
       },
       {
         "name": "TestMain::test_calls_header_with_profile",
-        "line": 153,
+        "line": 126,
         "markers": [
           "unit"
         ],
@@ -39476,11 +39476,20 @@
       },
       {
         "name": "TestMain::test_short_flags_work",
-        "line": 166,
+        "line": 134,
         "markers": [
           "unit"
         ],
         "docstring": "Should accept short flag versions.",
+        "class": "TestMain"
+      },
+      {
+        "name": "TestMain::test_warn_only_sets_env_var",
+        "line": 140,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
         "class": "TestMain"
       }
     ],

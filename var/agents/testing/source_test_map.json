@@ -994,6 +994,7 @@
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_trade_event.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_record_preview.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_record_rejection.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows_submit_order.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_latency_metrics.py"
     ],
     "gpt_trader.features.live_trade.execution.order_submission": [
@@ -3860,6 +3861,7 @@
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows_submit_order.py": [
       "gpt_trader.core",
+      "gpt_trader.features.live_trade.execution.order_event_recorder",
       "gpt_trader.features.live_trade.execution.order_submission",
       "gpt_trader.persistence.orders_store"
     ],

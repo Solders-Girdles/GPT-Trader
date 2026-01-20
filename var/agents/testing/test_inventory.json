@@ -23247,7 +23247,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows_submit_order.py": [
       {
         "name": "TestSubmitOrder::test_successful_order_submission",
-        "line": 24,
+        "line": 40,
         "markers": [
           "unit"
         ],
@@ -23256,7 +23256,7 @@
       },
       {
         "name": "TestSubmitOrder::test_rejected_order_returns_none",
-        "line": 56,
+        "line": 68,
         "markers": [
           "unit"
         ],
@@ -23265,7 +23265,7 @@
       },
       {
         "name": "TestSubmitOrder::test_broker_exception_returns_none",
-        "line": 92,
+        "line": 100,
         "markers": [
           "unit"
         ],
@@ -23274,7 +23274,7 @@
       },
       {
         "name": "TestSubmitOrder::test_order_with_none_result_returns_none",
-        "line": 120,
+        "line": 125,
         "markers": [
           "unit"
         ],
@@ -23283,7 +23283,7 @@
       },
       {
         "name": "TestSubmitOrder::test_order_with_none_result_persists_terminal_status",
-        "line": 148,
+        "line": 150,
         "markers": [
           "unit"
         ],

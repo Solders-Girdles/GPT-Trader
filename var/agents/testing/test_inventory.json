@@ -11345,7 +11345,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_metrics_and_resilience_status.py": [
       {
         "name": "TestCoinbaseClientBaseMetricsAndResilienceStatus::test_record_success_sets_span_and_breaker",
-        "line": 19,
+        "line": 21,
         "markers": [
           "unit"
         ],
@@ -11354,7 +11354,7 @@
       },
       {
         "name": "TestCoinbaseClientBaseMetricsAndResilienceStatus::test_record_request_metrics_records_metrics_and_span",
-        "line": 32,
+        "line": 34,
         "markers": [
           "unit"
         ],
@@ -11363,7 +11363,7 @@
       },
       {
         "name": "TestCoinbaseClientBaseMetricsAndResilienceStatus::test_get_resilience_status_records_metrics",
-        "line": 59,
+        "line": 60,
         "markers": [
           "unit"
         ],
@@ -12925,7 +12925,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_execute_order_payload.py": [
       {
         "name": "TestCoinbaseRestServiceCoreExecuteOrderPayload::test_execute_order_payload_success",
-        "line": 21,
+        "line": 22,
         "markers": [
           "unit"
         ],
@@ -12934,7 +12934,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCoreExecuteOrderPayload::test_execute_order_payload_with_preview",
-        "line": 35,
+        "line": 36,
         "markers": [
           "unit"
         ],
@@ -12943,7 +12943,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCoreExecuteOrderPayload::test_execute_order_payload_preview_failure_still_places",
-        "line": 54,
+        "line": 56,
         "markers": [
           "unit"
         ],
@@ -12952,7 +12952,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCoreExecuteOrderPayload::test_execute_order_payload_insufficient_funds",
-        "line": 73,
+        "line": 76,
         "markers": [
           "unit"
         ],
@@ -12961,7 +12961,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCoreExecuteOrderPayload::test_execute_order_payload_validation_error",
-        "line": 80,
+        "line": 83,
         "markers": [
           "unit"
         ],
@@ -12970,7 +12970,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCoreExecuteOrderPayload::test_execute_order_payload_duplicate_client_id",
-        "line": 87,
+        "line": 90,
         "markers": [
           "unit"
         ],
@@ -12979,7 +12979,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCoreExecuteOrderPayload::test_execute_order_payload_duplicate_client_id_retry_failure",
-        "line": 102,
+        "line": 105,
         "markers": [
           "unit"
         ],
@@ -12988,7 +12988,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCoreExecuteOrderPayload::test_execute_order_payload_network_error",
-        "line": 117,
+        "line": 120,
         "markers": [
           "unit"
         ],
@@ -12997,7 +12997,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCoreExecuteOrderPayload::test_execute_order_payload_unexpected_error",
-        "line": 124,
+        "line": 127,
         "markers": [
           "unit"
         ],
@@ -47251,7 +47251,7 @@
     "tests/unit/gpt_trader/tui/test_credential_cache.py": [
       {
         "name": "TestCredentialCache::test_set_and_get_credential_cache",
-        "line": 42,
+        "line": 41,
         "markers": [
           "unit"
         ],
@@ -47260,7 +47260,7 @@
       },
       {
         "name": "TestCredentialCache::test_invalidate_credential_cache",
-        "line": 55,
+        "line": 54,
         "markers": [
           "unit"
         ],
@@ -47269,7 +47269,7 @@
       },
       {
         "name": "TestCredentialCache::test_cache_valid_same_fingerprint",
-        "line": 65,
+        "line": 64,
         "markers": [
           "unit"
         ],
@@ -47278,7 +47278,7 @@
       },
       {
         "name": "TestCredentialCache::test_cache_invalid_fingerprint_mismatch",
-        "line": 73,
+        "line": 72,
         "markers": [
           "unit"
         ],
@@ -47287,7 +47287,7 @@
       },
       {
         "name": "TestCredentialCache::test_cache_invalid_mode_not_validated",
-        "line": 80,
+        "line": 79,
         "markers": [
           "unit"
         ],
@@ -47296,7 +47296,7 @@
       },
       {
         "name": "TestCredentialCache::test_cache_invalid_expired",
-        "line": 89,
+        "line": 88,
         "markers": [
           "unit"
         ],
@@ -47305,7 +47305,7 @@
       },
       {
         "name": "TestCredentialCache::test_cache_valid_within_age_limit",
-        "line": 100,
+        "line": 99,
         "markers": [
           "unit"
         ],
@@ -47314,7 +47314,7 @@
       },
       {
         "name": "TestCredentialCache::test_cache_persists_across_sessions",
-        "line": 111,
+        "line": 110,
         "markers": [
           "unit"
         ],
@@ -47323,7 +47323,7 @@
       },
       {
         "name": "TestCredentialCache::test_update_existing_cache_modes",
-        "line": 128,
+        "line": 127,
         "markers": [
           "unit"
         ],
@@ -47332,7 +47332,7 @@
       },
       {
         "name": "TestCredentialFingerprint::test_fingerprint_generation",
-        "line": 150,
+        "line": 149,
         "markers": [
           "unit"
         ],
@@ -47341,7 +47341,7 @@
       },
       {
         "name": "TestCredentialFingerprint::test_fingerprint_none_when_no_key",
-        "line": 170,
+        "line": 169,
         "markers": [
           "unit"
         ],
@@ -47350,7 +47350,7 @@
       },
       {
         "name": "TestCredentialFingerprint::test_fingerprint_none_for_short_key",
-        "line": 180,
+        "line": 179,
         "markers": [
           "unit"
         ],

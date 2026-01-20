@@ -5150,7 +5150,7 @@
     "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_backtest_report.py": [
       {
         "name": "TestGenerateBacktestReportFunction::test_returns_backtest_result",
-        "line": 23,
+        "line": 22,
         "markers": [
           "unit"
         ],
@@ -13208,7 +13208,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_close_position.py": [
       {
         "name": "TestCoinbaseRestContractSuiteOrderServiceClosePosition::test_close_position_success",
-        "line": 18,
+        "line": 19,
         "markers": [
           "unit"
         ],
@@ -13217,7 +13217,7 @@
       },
       {
         "name": "TestCoinbaseRestContractSuiteOrderServiceClosePosition::test_close_position_no_position",
-        "line": 35,
+        "line": 38,
         "markers": [
           "unit"
         ],
@@ -13226,7 +13226,7 @@
       },
       {
         "name": "TestCoinbaseRestContractSuiteOrderServiceClosePosition::test_close_position_fallback",
-        "line": 41,
+        "line": 47,
         "markers": [
           "unit"
         ],
@@ -13237,7 +13237,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_place_and_cancel.py": [
       {
         "name": "TestCoinbaseRestContractSuiteOrderServicePlaceAndCancel::test_place_order_quantity_resolution_success",
-        "line": 19,
+        "line": 20,
         "markers": [
           "unit"
         ],
@@ -13246,7 +13246,7 @@
       },
       {
         "name": "TestCoinbaseRestContractSuiteOrderServicePlaceAndCancel::test_place_order_quantity_resolution_error_branch",
-        "line": 46,
+        "line": 51,
         "markers": [
           "unit"
         ],
@@ -13255,7 +13255,7 @@
       },
       {
         "name": "TestCoinbaseRestContractSuiteOrderServicePlaceAndCancel::test_place_order_error_branch_insufficient_funds",
-        "line": 61,
+        "line": 66,
         "markers": [
           "unit"
         ],
@@ -13264,7 +13264,7 @@
       },
       {
         "name": "TestCoinbaseRestContractSuiteOrderServicePlaceAndCancel::test_place_order_error_branch_validation_error",
-        "line": 77,
+        "line": 82,
         "markers": [
           "unit"
         ],
@@ -13273,7 +13273,7 @@
       },
       {
         "name": "TestCoinbaseRestContractSuiteOrderServicePlaceAndCancel::test_cancel_order_success",
-        "line": 93,
+        "line": 98,
         "markers": [
           "unit"
         ],
@@ -13282,7 +13282,7 @@
       },
       {
         "name": "TestCoinbaseRestContractSuiteOrderServicePlaceAndCancel::test_cancel_order_failure",
-        "line": 103,
+        "line": 108,
         "markers": [
           "unit"
         ],
@@ -13542,7 +13542,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_retry_and_telemetry.py": [
       {
         "name": "TestCoinbaseRestContractSuiteRetryAndTelemetry::test_order_retry_on_duplicate_client_id",
-        "line": 15,
+        "line": 18,
         "markers": [
           "unit"
         ],
@@ -13551,7 +13551,7 @@
       },
       {
         "name": "TestCoinbaseRestContractSuiteRetryAndTelemetry::test_telemetry_logging_on_api_calls",
-        "line": 41,
+        "line": 48,
         "markers": [
           "unit"
         ],
@@ -13560,7 +13560,7 @@
       },
       {
         "name": "TestCoinbaseRestContractSuiteRetryAndTelemetry::test_pagination_cursor_handling",
-        "line": 54,
+        "line": 61,
         "markers": [
           "unit"
         ],
@@ -13637,7 +13637,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_edges.py": [
       {
         "name": "test_cancel_order_brokerage_error_reraises",
-        "line": 30,
+        "line": 31,
         "markers": [
           "unit"
         ],
@@ -13645,7 +13645,7 @@
       },
       {
         "name": "test_list_fills_exception_logs_and_raises_query_error",
-        "line": 38,
+        "line": 39,
         "markers": [
           "unit"
         ],

@@ -484,13 +484,29 @@ def suggest_next_pr() -> int:
 
     # Filter pending clusters and sort by priority
     priority_order = {"high": 0, "medium": 1, "low": 2}
-    pending = [
-        (cid, cluster) for cid, cluster in clusters.items() if cluster.get("status") == "pending"
-    ]
+    pending: list[tuple[str, dict[str, Any], list[str], list[str]]] = []
+    for cid, cluster in clusters.items():
+        if cluster.get("status") != "pending":
+            continue
+        files = cluster.get("files", [])
+        if not isinstance(files, list):
+            continue
+        existing: list[str] = []
+        missing: list[str] = []
+        for file_path in files:
+            if not isinstance(file_path, str):
+                continue
+            if (PROJECT_ROOT / file_path).exists():
+                existing.append(file_path)
+            else:
+                missing.append(file_path)
+        pending.append((cid, cluster, existing, missing))
+
     pending.sort(
-        key=lambda x: (
-            priority_order.get(x[1].get("priority", "low"), 2),
-            -len(x[1].get("files", [])),
+        key=lambda item: (
+            priority_order.get(item[1].get("priority", "low"), 2),
+            -len(item[2]),
+            item[0],
         )
     )
 
@@ -504,48 +520,79 @@ def suggest_next_pr() -> int:
     min_files = 5
     max_files = 10
 
-    def count_files(cluster: dict[str, Any]) -> int:
-        return len(cluster.get("files", []))
+    def dir_count(files: list[str]) -> int:
+        return len({str(Path(path).parent) for path in files})
 
-    def dir_count(cluster: dict[str, Any]) -> int:
-        return len({str(Path(path).parent) for path in cluster.get("files", [])})
+    def missing_ratio(cluster_files: list[str], missing_files: list[str]) -> float:
+        if not cluster_files:
+            return 1.0
+        return len(missing_files) / len(cluster_files)
 
-    candidates = [
-        (cid, cluster) for cid, cluster in pending if min_files <= count_files(cluster) <= max_files
-    ]
+    def candidate_subset(
+        *,
+        min_existing: int,
+        max_existing: int,
+        max_missing_ratio: float,
+    ) -> list[tuple[str, dict[str, Any], list[str], list[str]]]:
+        candidates: list[tuple[str, dict[str, Any], list[str], list[str]]] = []
+        for cid, cluster, existing, missing in pending:
+            cluster_files = cluster.get("files", [])
+            if not isinstance(cluster_files, list):
+                continue
+            if len(existing) < min_existing or len(existing) > max_existing:
+                continue
+            if missing and missing_ratio(cluster_files, missing) > max_missing_ratio:
+                continue
+            candidates.append((cid, cluster, existing, missing))
+        return candidates
+
+    candidates = candidate_subset(
+        min_existing=min_files, max_existing=max_files, max_missing_ratio=0.2
+    )
     if not candidates:
-        candidates = [
-            (cid, cluster) for cid, cluster in pending if 3 <= count_files(cluster) <= max_files
-        ]
+        candidates = candidate_subset(min_existing=3, max_existing=max_files, max_missing_ratio=0.2)
+    if not candidates:
+        candidates = candidate_subset(
+            min_existing=min_files, max_existing=max_files, max_missing_ratio=0.5
+        )
+    if not candidates:
+        candidates = candidate_subset(min_existing=3, max_existing=max_files, max_missing_ratio=0.5)
 
     if candidates:
         selection = min(
             candidates,
             key=lambda item: (
                 priority_order.get(item[1].get("priority", "low"), 2),
-                dir_count(item[1]),
-                -count_files(item[1]),
+                dir_count(item[2]),
+                -len(item[2]),
                 item[0],
             ),
         )
     else:
         selection = pending[0]
 
-    cluster_id, cluster = selection
-    files = cluster.get("files", [])
-    file_count = len(files)
+    cluster_id, cluster, existing_files, missing_files = selection
+    all_files = cluster.get("files", [])
+    file_count = len(existing_files)
 
     print(f"\nCluster: {cluster_id}")
     print(f"  Type: {cluster.get('type')}")
     print(f"  Priority: {cluster.get('priority')}")
     print(f"  Decision: {cluster.get('decision')}")
-    print(f"  Dirs: {dir_count(cluster)}")
+    print(f"  Dirs: {dir_count(existing_files)}")
     print(f"  Files ({file_count}):")
-    for file_path in files[:10]:
+    for file_path in existing_files[:10]:
         print(f"    - {file_path}")
     if file_count > 10:
         print(f"    ... and {file_count - 10} more")
     print(f"  Target: {cluster.get('target_location')}")
+
+    if missing_files:
+        total = len(all_files) if isinstance(all_files, list) else file_count + len(missing_files)
+        print(
+            f"\nNote: {len(missing_files)}/{total} files listed in the manifest are missing on disk."
+        )
+        print("Run: uv run agent-dedupe  # to refresh pending clusters")
 
     if file_count > max_files:
         print(

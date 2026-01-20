@@ -558,7 +558,8 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_accounts_positions_and_treasury.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_http_request_layer.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_fallback.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_retry_behaviour.py"
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_retry_behaviour.py",
+      "tests/unit/gpt_trader/tui/services/test_credential_validator_connectivity.py"
     ],
     "gpt_trader.features.brokerages.coinbase.client.accounts": [
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_accounts_mixin.py"
@@ -5052,6 +5053,7 @@
       "gpt_trader.tui.services.config_service"
     ],
     "tests/unit/gpt_trader/tui/services/test_credential_validator_connectivity.py": [
+      "gpt_trader.features.brokerages.coinbase.client",
       "gpt_trader.preflight.validation_result",
       "gpt_trader.tui.services.credential_validator"
     ],

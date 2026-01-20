@@ -2,28 +2,35 @@
 
 from __future__ import annotations
 
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
+import pytest
+
+import gpt_trader.features.live_trade.telemetry.account as account_module
 from gpt_trader.features.live_trade.telemetry.account import AccountTelemetryService
 
 
 class TestPublishSnapshot:
     """Tests for _publish_snapshot method."""
 
-    @patch("gpt_trader.features.live_trade.telemetry.account.emit_metric")
-    @patch("gpt_trader.features.live_trade.telemetry.account.RUNTIME_DATA_DIR")
     def test_publish_snapshot_emits_metric(
-        self, mock_runtime_dir: Mock, mock_emit_metric: Mock
+        self,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Test _publish_snapshot emits metric to event store."""
-        event_store = Mock()
+        mock_emit_metric = Mock()
+        monkeypatch.setattr(account_module, "emit_metric", mock_emit_metric)
+
+        mock_runtime_dir = Mock()
         mock_runtime_dir.__truediv__ = Mock(return_value=Mock())
         mock_runtime_dir.__truediv__.return_value.__truediv__ = Mock(return_value=Mock())
         mock_file_path = Mock()
         mock_file_path.parent.mkdir = Mock()
         mock_file_path.open = Mock()
         mock_runtime_dir.__truediv__.return_value.__truediv__.return_value = mock_file_path
+        monkeypatch.setattr(account_module, "RUNTIME_DATA_DIR", mock_runtime_dir)
 
+        event_store = Mock()
         service = AccountTelemetryService(
             broker=Mock(),
             account_manager=Mock(),
@@ -43,16 +50,20 @@ class TestPublishSnapshot:
         assert call_args[0][2]["event_type"] == "account_snapshot"
         assert call_args[0][2]["balance"] == "1000"
 
-    @patch("gpt_trader.features.live_trade.telemetry.account.emit_metric")
-    @patch("gpt_trader.features.live_trade.telemetry.account.RUNTIME_DATA_DIR")
     def test_publish_snapshot_file_write_error(
-        self, mock_runtime_dir: Mock, mock_emit_metric: Mock
+        self,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Test _publish_snapshot handles file write errors gracefully."""
+        mock_emit_metric = Mock()
+        monkeypatch.setattr(account_module, "emit_metric", mock_emit_metric)
+
         mock_path = Mock()
         mock_path.parent.mkdir.side_effect = PermissionError("No write access")
+        mock_runtime_dir = Mock()
         mock_runtime_dir.__truediv__ = Mock(return_value=Mock())
         mock_runtime_dir.__truediv__.return_value.__truediv__ = Mock(return_value=mock_path)
+        monkeypatch.setattr(account_module, "RUNTIME_DATA_DIR", mock_runtime_dir)
 
         service = AccountTelemetryService(
             broker=Mock(),

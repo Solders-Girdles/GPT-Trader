@@ -25,6 +25,8 @@ ALLOWLIST = {
     # TUI reliability/fault-injection tests
     # Architecture migration and observability tests
     # Pre-existing TUI and feature test suites
+    # Patch density reduction: monkeypatch conversion adds fixture parameters
+    "tests/unit/gpt_trader/preflight/test_checks_diagnostics.py",
 }
 
 SLEEP_ALLOWLIST: set[str] = set()

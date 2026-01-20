@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import threading
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
+import pytest
+
+import gpt_trader.features.brokerages.coinbase.client.websocket_mixin as ws_mixin_module
 from tests.unit.gpt_trader.features.brokerages.coinbase.websocket_mixin_test_helpers import (
     MockWebSocketClient,
 )
@@ -13,11 +16,11 @@ from tests.unit.gpt_trader.features.brokerages.coinbase.websocket_mixin_test_hel
 class TestMessageFiltering:
     """Tests for message filtering behavior."""
 
-    @patch("gpt_trader.features.brokerages.coinbase.client.websocket_mixin.CoinbaseWebSocket")
-    def test_ignores_non_dict_messages(self, mock_ws_class):
+    def test_ignores_non_dict_messages(self, monkeypatch: pytest.MonkeyPatch):
         """Non-dict messages should be ignored."""
         mock_ws = MagicMock()
-        mock_ws_class.return_value = mock_ws
+        mock_ws_class = MagicMock(return_value=mock_ws)
+        monkeypatch.setattr(ws_mixin_module, "CoinbaseWebSocket", mock_ws_class)
 
         client = MockWebSocketClient()
         received_messages = []

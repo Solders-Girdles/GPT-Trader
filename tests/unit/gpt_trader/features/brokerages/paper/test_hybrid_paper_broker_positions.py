@@ -1,4 +1,4 @@
-"""Tests for `HybridPaperBroker` position and balance methods."""
+"""Tests for HybridPaperBroker position and balance methods."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ class TestHybridPaperBrokerPositionsBalances:
     """Test HybridPaperBroker position and balance methods."""
 
     @pytest.fixture
-    def broker(self, monkeypatch: pytest.MonkeyPatch):
+    def broker(self, monkeypatch: pytest.MonkeyPatch) -> HybridPaperBroker:
         """Create broker fixture with mocked client."""
         monkeypatch.setattr(hybrid_module, "CoinbaseClient", Mock())
         monkeypatch.setattr(hybrid_module, "SimpleAuth", Mock())
@@ -26,13 +26,13 @@ class TestHybridPaperBrokerPositionsBalances:
             initial_equity=Decimal("10000"),
         )
 
-    def test_list_positions_empty(self, broker) -> None:
+    def test_list_positions_empty(self, broker: HybridPaperBroker) -> None:
         """Test list_positions returns empty list initially."""
         result = broker.list_positions()
 
         assert result == []
 
-    def test_list_positions_returns_positions(self, broker) -> None:
+    def test_list_positions_returns_positions(self, broker: HybridPaperBroker) -> None:
         """Test list_positions returns stored positions."""
         broker._positions["BTC-USD"] = Position(
             symbol="BTC-USD",
@@ -50,7 +50,7 @@ class TestHybridPaperBrokerPositionsBalances:
         assert len(result) == 1
         assert result[0].symbol == "BTC-USD"
 
-    def test_get_positions_alias(self, broker) -> None:
+    def test_get_positions_alias(self, broker: HybridPaperBroker) -> None:
         """Test get_positions is alias for list_positions."""
         broker._positions["BTC-USD"] = Position(
             symbol="BTC-USD",
@@ -67,7 +67,7 @@ class TestHybridPaperBrokerPositionsBalances:
 
         assert len(result) == 1
 
-    def test_list_balances_returns_balances(self, broker) -> None:
+    def test_list_balances_returns_balances(self, broker: HybridPaperBroker) -> None:
         """Test list_balances returns balances."""
         result = broker.list_balances()
 
@@ -75,19 +75,19 @@ class TestHybridPaperBrokerPositionsBalances:
         assert result[0].asset == "USD"
         assert result[0].total == Decimal("10000")
 
-    def test_get_balances_alias(self, broker) -> None:
+    def test_get_balances_alias(self, broker: HybridPaperBroker) -> None:
         """Test get_balances is alias for list_balances."""
         result = broker.get_balances()
 
         assert len(result) == 1
 
-    def test_get_equity_cash_only(self, broker) -> None:
+    def test_get_equity_cash_only(self, broker: HybridPaperBroker) -> None:
         """Test get_equity with cash only."""
         result = broker.get_equity()
 
         assert result == Decimal("10000")
 
-    def test_get_equity_with_long_position(self, broker) -> None:
+    def test_get_equity_with_long_position(self, broker: HybridPaperBroker) -> None:
         """Test get_equity includes unrealized PnL from long position."""
         broker._positions["BTC-USD"] = Position(
             symbol="BTC-USD",
@@ -109,7 +109,7 @@ class TestHybridPaperBrokerPositionsBalances:
         # 5000 cash + (51000 - 50000) * 0.1 = 5000 + 100 = 5100
         assert result == Decimal("5100")
 
-    def test_get_equity_with_short_position(self, broker) -> None:
+    def test_get_equity_with_short_position(self, broker: HybridPaperBroker) -> None:
         """Test get_equity includes unrealized PnL from short position."""
         broker._positions["BTC-USD"] = Position(
             symbol="BTC-USD",

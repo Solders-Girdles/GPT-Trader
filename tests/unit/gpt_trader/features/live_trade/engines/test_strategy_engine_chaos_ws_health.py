@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 from tests.support.chaos import (
@@ -23,7 +23,7 @@ class TestWSHealthDegradation:
 
     @pytest.mark.asyncio
     async def test_ws_stale_messages_triggers_pause_and_reduce_only(
-        self, engine, mock_broker, mock_risk_config
+        self, engine, mock_broker, mock_risk_config, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Stale WS messages should trigger pause + reduce-only mode."""
         # Set up chaos broker that returns stale message health
@@ -41,7 +41,8 @@ class TestWSHealthDegradation:
                 engine.running = False
                 raise asyncio.CancelledError()
 
-        with patch.object(asyncio, "sleep", stop_after_one), pytest.raises(asyncio.CancelledError):
+        monkeypatch.setattr(asyncio, "sleep", stop_after_one)
+        with pytest.raises(asyncio.CancelledError):
             await engine._monitor_ws_health()
 
         # Verify degradation was triggered
@@ -53,7 +54,7 @@ class TestWSHealthDegradation:
 
     @pytest.mark.asyncio
     async def test_ws_stale_heartbeat_triggers_pause(
-        self, engine, mock_broker, mock_risk_config
+        self, engine, mock_broker, mock_risk_config, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Stale WS heartbeat should trigger pause + reduce-only mode."""
         engine.context.broker = ChaosBroker(
@@ -70,7 +71,8 @@ class TestWSHealthDegradation:
                 engine.running = False
                 raise asyncio.CancelledError()
 
-        with patch.object(asyncio, "sleep", stop_after_one), pytest.raises(asyncio.CancelledError):
+        monkeypatch.setattr(asyncio, "sleep", stop_after_one)
+        with pytest.raises(asyncio.CancelledError):
             await engine._monitor_ws_health()
 
         # Verify degradation was triggered
@@ -79,7 +81,7 @@ class TestWSHealthDegradation:
 
     @pytest.mark.asyncio
     async def test_ws_reconnect_triggers_pause_for_sync(
-        self, engine, mock_broker, mock_risk_config
+        self, engine, mock_broker, mock_risk_config, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """WS reconnect should trigger a brief pause for state synchronization."""
         engine.context.broker = ChaosBroker(
@@ -96,7 +98,8 @@ class TestWSHealthDegradation:
                 engine.running = False
                 raise asyncio.CancelledError()
 
-        with patch.object(asyncio, "sleep", stop_after_one), pytest.raises(asyncio.CancelledError):
+        monkeypatch.setattr(asyncio, "sleep", stop_after_one)
+        with pytest.raises(asyncio.CancelledError):
             await engine._monitor_ws_health()
 
         # Verify pause was triggered for sync
@@ -109,7 +112,7 @@ class TestWSHealthDegradation:
 
     @pytest.mark.asyncio
     async def test_ws_disconnect_with_stale_timestamps_triggers_degradation(
-        self, engine, mock_broker, mock_risk_config
+        self, engine, mock_broker, mock_risk_config, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """WS disconnect (with stale timestamps) should trigger degradation."""
         engine.context.broker = ChaosBroker(
@@ -126,7 +129,8 @@ class TestWSHealthDegradation:
                 engine.running = False
                 raise asyncio.CancelledError()
 
-        with patch.object(asyncio, "sleep", stop_after_one), pytest.raises(asyncio.CancelledError):
+        monkeypatch.setattr(asyncio, "sleep", stop_after_one)
+        with pytest.raises(asyncio.CancelledError):
             await engine._monitor_ws_health()
 
         # Verify degradation was triggered (due to stale timestamps)
@@ -134,7 +138,7 @@ class TestWSHealthDegradation:
 
     @pytest.mark.asyncio
     async def test_ws_gap_count_tracked_in_status(
-        self, engine, mock_broker, mock_risk_config
+        self, engine, mock_broker, mock_risk_config, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """WS gaps should be tracked and reported in status."""
         engine.context.broker = ChaosBroker(
@@ -156,7 +160,8 @@ class TestWSHealthDegradation:
                 engine.running = False
                 raise asyncio.CancelledError()
 
-        with patch.object(asyncio, "sleep", stop_after_one), pytest.raises(asyncio.CancelledError):
+        monkeypatch.setattr(asyncio, "sleep", stop_after_one)
+        with pytest.raises(asyncio.CancelledError):
             await engine._monitor_ws_health()
 
         # Verify status reporter was updated with gap count
@@ -166,7 +171,7 @@ class TestWSHealthDegradation:
 
     @pytest.mark.asyncio
     async def test_no_degradation_when_broker_lacks_ws_health(
-        self, engine, mock_broker, mock_risk_config
+        self, engine, mock_broker, mock_risk_config, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """No degradation when broker doesn't support get_ws_health."""
         # Remove get_ws_health method
@@ -181,7 +186,8 @@ class TestWSHealthDegradation:
                 engine.running = False
                 raise asyncio.CancelledError()
 
-        with patch.object(asyncio, "sleep", stop_after_one), pytest.raises(asyncio.CancelledError):
+        monkeypatch.setattr(asyncio, "sleep", stop_after_one)
+        with pytest.raises(asyncio.CancelledError):
             await engine._monitor_ws_health()
 
         # No degradation should have been triggered
@@ -189,7 +195,7 @@ class TestWSHealthDegradation:
 
     @pytest.mark.asyncio
     async def test_ws_health_exception_handled_gracefully(
-        self, engine, mock_broker, mock_risk_config
+        self, engine, mock_broker, mock_risk_config, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Exceptions in get_ws_health should be handled gracefully."""
         mock_broker.get_ws_health.side_effect = Exception("WS health error")
@@ -204,7 +210,8 @@ class TestWSHealthDegradation:
                 raise asyncio.CancelledError()
 
         # Should not raise, exception should be caught
-        with patch.object(asyncio, "sleep", stop_after_one), pytest.raises(asyncio.CancelledError):
+        monkeypatch.setattr(asyncio, "sleep", stop_after_one)
+        with pytest.raises(asyncio.CancelledError):
             await engine._monitor_ws_health()
 
         # No degradation from the exception itself

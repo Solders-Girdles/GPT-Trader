@@ -4,8 +4,11 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
+import pytest
+
+import gpt_trader.monitoring.two_person_rule.manager as manager_module
 from gpt_trader.monitoring.two_person_rule.manager import (
     TwoPersonRule,
     log_config_delta,
@@ -94,19 +97,21 @@ def test_requires_approval_filters_critical_fields() -> None:
     assert set(required) == {"max_leverage", "daily_loss_limit"}
 
 
-def test_log_config_delta_emits_metric_payload() -> None:
+def test_log_config_delta_emits_metric_payload(monkeypatch: pytest.MonkeyPatch) -> None:
     event_store = MagicMock()
     changes = {"max_leverage": (3, 5)}
 
-    with patch("gpt_trader.monitoring.two_person_rule.manager.emit_metric") as mock_emit:
-        log_config_delta(
-            change_type="risk_limit_update",
-            changes=changes,
-            user_id="admin-1",
-            metadata={"ticket": "RISK-1234"},
-            event_store=event_store,
-            bot_id="config_guardian",
-        )
+    mock_emit = MagicMock()
+    monkeypatch.setattr(manager_module, "emit_metric", mock_emit)
+
+    log_config_delta(
+        change_type="risk_limit_update",
+        changes=changes,
+        user_id="admin-1",
+        metadata={"ticket": "RISK-1234"},
+        event_store=event_store,
+        bot_id="config_guardian",
+    )
 
     mock_emit.assert_called_once()
     assert mock_emit.call_args[0][0] is event_store

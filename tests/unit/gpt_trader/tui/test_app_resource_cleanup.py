@@ -1,5 +1,8 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
+import pytest
+
+import gpt_trader.tui.app_lifecycle as app_lifecycle_module
 from gpt_trader.tui.app import TraderApp
 
 
@@ -101,15 +104,17 @@ class TestResourceCleanup:
         assert not hasattr(mock_bot, "client")
         assert not hasattr(mock_bot, "websocket")
 
-    def test_app_cleanup_handles_close_errors(self, mock_bot):
+    def test_app_cleanup_handles_close_errors(self, mock_bot, monkeypatch: pytest.MonkeyPatch):
         mock_client = MagicMock()
         mock_client.close.side_effect = RuntimeError("Close failed")
         mock_bot.client = mock_client
+        mock_logger = MagicMock()
+        monkeypatch.setattr(app_lifecycle_module, "logger", mock_logger)
 
         app = TraderApp(mock_bot)
-        with patch("gpt_trader.tui.app_lifecycle.logger") as mock_logger:
-            app._cleanup_bot_resources()
-            mock_logger.warning.assert_called_once()
+        app._cleanup_bot_resources()
+
+        mock_logger.warning.assert_called_once()
 
     def test_websocket_reconnect_limit_configurable(self):
         from gpt_trader.config.constants import MAX_WS_RECONNECT_ATTEMPTS

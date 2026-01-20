@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import time
 from decimal import Decimal
-from unittest.mock import patch
+
+import pytest
 
 from gpt_trader.monitoring.status_reporter import StatusReporter
 
@@ -16,8 +18,8 @@ class _BalanceStub:
         self.hold = hold
 
 
-@patch("gpt_trader.monitoring.status_reporter.time.time", return_value=123.0)
-def test_add_trade_caps_recent_trades(mock_time) -> None:
+def test_add_trade_caps_recent_trades(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(time, "time", lambda: 123.0)
     reporter = StatusReporter()
 
     for i in range(52):

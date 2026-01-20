@@ -696,26 +696,21 @@ clusters:
     added: '2026-01-20'
   c6bbc52b8b23:
     type: similar_names
-    description: 11 test files match pattern test_fill_model_* in tests/unit/gpt_trader/backtesting/simulation
+    description: 5 test files match pattern test_fill_model_* in tests/unit/gpt_trader/backtesting/simulation
     files:
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_fill_result.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit_order_queue_priority.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit_orders.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_market_orders.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_price_touch_logic.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_queue_fill_estimation.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_slippage.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_spread_impact.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_stop_orders.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_stop_trigger_logic.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_volume_threshold.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_market.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_queue.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_stop.py
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/backtesting/simulation/test_fill_model.py
-    expected_file_delta: -10
+    expected_file_delta: -6
     priority: high
-    rationale: Consolidate 11 test files into single parametrized file
-    status: pending
+    rationale: Consolidate 11 test files into 5 files (<=240 lines each)
+    status: in_progress
+    owner: claude
     added: '2026-01-20'
   07ed801b7538:
     type: source_fanout
@@ -767,27 +762,22 @@ clusters:
     added: '2026-01-20'
   21a3b31c1fec:
     type: source_fanout
-    description: 11 test files import gpt_trader.backtesting.simulation.fill_model
+    description: 5 test files import gpt_trader.backtesting.simulation.fill_model
     files:
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_fill_result.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit_order_queue_priority.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit_orders.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_market_orders.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_price_touch_logic.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_queue_fill_estimation.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_slippage.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_spread_impact.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_stop_orders.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_stop_trigger_logic.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_volume_threshold.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_market.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_queue.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_stop.py
     source_modules:
     - gpt_trader.backtesting.simulation.fill_model
     decision: merge
     target_location: tests/unit/gpt_trader/backtesting/simulation/test_fill_model.py
-    expected_file_delta: -10
+    expected_file_delta: -6
     priority: high
-    rationale: Consolidate 11 test files into single parametrized file
-    status: pending
+    rationale: Consolidate 11 test files into 5 files (<=240 lines each)
+    status: in_progress
+    owner: claude
     added: '2026-01-20'
   46d16bee6c73:
     type: source_fanout

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import asyncio
+import difflib
 import inspect
+import itertools
 import pickle  # noqa: S403 - Required for pytest-textual-snapshot report format
 import re
 from collections.abc import Awaitable, Callable, Iterable
@@ -175,6 +177,23 @@ def snap_compare(
         p_app = pts.PseudoApp(pts.PseudoConsole(console.legacy_windows, console.size))
 
         result = snapshot == actual_screenshot
+        expected_svg_text = str(snapshot)
+
+        if not result:
+            expected_lines = expected_svg_text.splitlines()
+            actual_lines = actual_screenshot.splitlines()
+            diff_iter = difflib.unified_diff(
+                expected_lines,
+                actual_lines,
+                fromfile="expected",
+                tofile="actual",
+                lineterm="",
+                n=2,
+            )
+            diff_excerpt = "\n".join(itertools.islice(diff_iter, 120))
+            if diff_excerpt:
+                print("\nSnapshot mismatch diff (truncated):\n")
+                print(diff_excerpt)
 
         # Store data for report generation (matches plugin behavior)
         execution_index = (

@@ -38886,7 +38886,7 @@
       },
       {
         "name": "TestCheckProfileConfiguration::test_warns_when_profile_not_found",
-        "line": 101,
+        "line": 102,
         "markers": [
           "unit"
         ],
@@ -38895,7 +38895,7 @@
       },
       {
         "name": "TestCheckProfileConfiguration::test_shows_canary_defaults_when_missing",
-        "line": 114,
+        "line": 115,
         "markers": [
           "unit"
         ],
@@ -38904,7 +38904,7 @@
       },
       {
         "name": "TestCheckProfileConfiguration::test_shows_prod_warning_when_missing",
-        "line": 128,
+        "line": 129,
         "markers": [
           "unit"
         ],
@@ -38913,7 +38913,7 @@
       },
       {
         "name": "TestCheckProfileConfiguration::test_prints_section_header",
-        "line": 139,
+        "line": 140,
         "markers": [
           "unit"
         ],
@@ -38922,7 +38922,7 @@
       },
       {
         "name": "TestCheckProfileConfiguration::test_handles_nested_key_access_for_canary",
-        "line": 151,
+        "line": 152,
         "markers": [
           "unit"
         ],

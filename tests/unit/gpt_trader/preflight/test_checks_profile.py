@@ -92,7 +92,8 @@ risk_management:
         monkeypatch.chdir(tmp_path)
         checker = PreflightCheck(profile="dev")
 
-        _write_profile(tmp_path, "dev", "invalid: yaml: content: [")
+        # Invalid YAML (unterminated flow sequence).
+        _write_profile(tmp_path, "dev", "trading: [")
         result = check_profile_configuration(checker)
 
         assert result is False

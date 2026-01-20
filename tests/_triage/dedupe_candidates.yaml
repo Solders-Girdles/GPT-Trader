@@ -1756,7 +1756,8 @@ clusters:
     expected_file_delta: -5
     priority: medium
     rationale: Consolidate 6 test files into single parametrized file
-    status: pending
+    status: in_progress
+    owner: claude
     added: '2026-01-20'
   89ace0d7c06c:
     type: similar_names
@@ -2020,7 +2021,8 @@ clusters:
     expected_file_delta: -5
     priority: medium
     rationale: Consolidate 6 test files into single parametrized file
-    status: pending
+    status: in_progress
+    owner: claude
     added: '2026-01-20'
   d2e226ef4410:
     type: source_fanout

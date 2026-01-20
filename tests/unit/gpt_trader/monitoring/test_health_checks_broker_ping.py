@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+import time
+from unittest.mock import MagicMock
+
+import pytest
 
 from gpt_trader.monitoring.health_checks import check_broker_ping
 
@@ -46,16 +49,17 @@ class TestCheckBrokerPing:
         assert details["error_type"] == "ConnectionError"
         assert details["severity"] == "critical"
 
-    def test_high_latency_warning(self) -> None:
+    def test_high_latency_warning(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that high latency sets severity to warning."""
         broker = MagicMock()
 
         # Simulate slow response by mocking time
-        with patch("gpt_trader.monitoring.health_checks.time.perf_counter") as mock_time:
-            # First call returns 0, second returns 2.5 (2500ms latency)
-            mock_time.side_effect = [0, 2.5]
+        mock_time = MagicMock()
+        # First call returns 0, second returns 2.5 (2500ms latency)
+        mock_time.side_effect = [0, 2.5]
+        monkeypatch.setattr(time, "perf_counter", mock_time)
 
-            healthy, details = check_broker_ping(broker)
+        healthy, details = check_broker_ping(broker)
 
         assert healthy is True
         assert details["latency_ms"] == 2500.0

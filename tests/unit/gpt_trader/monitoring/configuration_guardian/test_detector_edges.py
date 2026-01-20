@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
+import pytest
+
+import gpt_trader.monitoring.configuration_guardian.detector as detector_module
 from gpt_trader.monitoring.configuration_guardian.detector import (
     ConfigurationGuardianDetector,
 )
@@ -46,7 +49,7 @@ def test_detector_returns_empty_when_no_validators_fail() -> None:
     assert detector.detect() == []
 
 
-def test_detector_continues_when_validator_raises() -> None:
+def test_detector_continues_when_validator_raises(monkeypatch: pytest.MonkeyPatch) -> None:
     issue = ConfigurationIssue(
         category="config",
         severity="warning",
@@ -57,8 +60,10 @@ def test_detector_continues_when_validator_raises() -> None:
         validators=[_Validator(raise_exc=True), _Validator([issue])]
     )
 
-    with patch("gpt_trader.monitoring.configuration_guardian.detector.logger") as mock_logger:
-        issues = detector.detect()
+    mock_logger = MagicMock()
+    monkeypatch.setattr(detector_module, "logger", mock_logger)
+
+    issues = detector.detect()
 
     assert issues == [issue]
     mock_logger.warning.assert_called_once()

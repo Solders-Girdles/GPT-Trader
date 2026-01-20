@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import ast
 import argparse
 import pathlib
 import sys
@@ -18,26 +19,56 @@ INTEGRATION_TEST_PREFIX = "tests/integration/"
 CONTRACT_TEST_PREFIX = "tests/contract/"
 REAL_API_TEST_PREFIX = "tests/real_api/"
 ALLOWLIST: set[str] = set()
+PATCH_ALLOWLIST: set[str] = set()
 
 SLEEP_ALLOWLIST: set[str] = set()
+
+
+def _is_patch_callable(node: ast.expr) -> bool:
+    if isinstance(node, ast.Name):
+        return node.id == "patch"
+    if isinstance(node, ast.Attribute):
+        if node.attr == "patch":
+            return True
+        if node.attr in {"dict", "multiple", "object"}:
+            return _is_patch_callable(node.value)
+    return False
+
+
+def _first_patch_call_line(text: str) -> int | None:
+    if "patch" not in text:
+        return None
+    try:
+        tree = ast.parse(text)
+    except SyntaxError:
+        return None
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call) and _is_patch_callable(node.func):
+            return getattr(node, "lineno", None)
+    return None
 
 
 def scan(paths: Sequence[str]) -> int:
     root = pathlib.Path.cwd()
     test_files: list[pathlib.Path] = []
+    python_files: list[pathlib.Path] = []
     if paths:
         for entry in paths:
             p = pathlib.Path(entry)
             if p.is_dir():
                 test_files.extend(p.rglob("test_*.py"))
+                python_files.extend(p.rglob("*.py"))
             elif p.name.startswith("test_") and p.suffix == ".py":
                 test_files.append(p)
+                python_files.append(p)
     else:
         test_files = list(pathlib.Path("tests").rglob("test_*.py"))
+        python_files = list(pathlib.Path("tests").rglob("*.py"))
 
     problems: list[str] = []
 
     normalized = [path.resolve() for path in test_files]
+    python_normalized = sorted({path.resolve() for path in python_files})
 
     for path in normalized:
         rel = path.relative_to(root)
@@ -90,6 +121,18 @@ def scan(paths: Sequence[str]) -> int:
         if "time.sleep(" in text and "fake_clock" not in text and rel_str not in SLEEP_ALLOWLIST:
             problems.append(
                 f"{rel} calls time.sleep without using fake_clock fixture. Use fake_clock or justify with an explicit helper."
+            )
+
+    for path in python_normalized:
+        rel = path.relative_to(root)
+        rel_str = rel.as_posix()
+        if not rel_str.startswith("tests/") or rel_str in PATCH_ALLOWLIST:
+            continue
+        text = path.read_text(encoding="utf-8")
+        patch_line = _first_patch_call_line(text)
+        if patch_line is not None:
+            problems.append(
+                f"{rel}:{patch_line} uses patch(...). Prefer pytest's monkeypatch fixture to avoid stacked patching."
             )
 
     if problems:

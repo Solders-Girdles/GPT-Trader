@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6334,
-    "total_files": 977,
+    "total_files": 980,
     "markers_used": 15
   },
   "marker_definitions": {
@@ -778,7 +778,10 @@
       "tests/unit/gpt_trader/preflight/test_checks_connectivity_key_permissions_intx.py",
       "tests/unit/gpt_trader/preflight/test_checks_connectivity_key_permissions_retries.py",
       "tests/unit/gpt_trader/preflight/test_checks_dependencies.py",
-      "tests/unit/gpt_trader/preflight/test_checks_diagnostics.py",
+      "tests/unit/gpt_trader/preflight/test_checks_diagnostics_api_health.py",
+      "tests/unit/gpt_trader/preflight/test_checks_diagnostics_basic.py",
+      "tests/unit/gpt_trader/preflight/test_checks_diagnostics_broker.py",
+      "tests/unit/gpt_trader/preflight/test_checks_diagnostics_market.py",
       "tests/unit/gpt_trader/preflight/test_checks_environment.py",
       "tests/unit/gpt_trader/preflight/test_checks_event_store.py",
       "tests/unit/gpt_trader/preflight/test_checks_profile.py",
@@ -38511,37 +38514,10 @@
         "class": "TestCheckDependencies"
       }
     ],
-    "tests/unit/gpt_trader/preflight/test_checks_diagnostics.py": [
-      {
-        "name": "TestCheckPretradeDiagnostics::test_skips_when_remote_checks_bypassed",
-        "line": 50,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should skip and succeed when remote checks are bypassed.",
-        "class": "TestCheckPretradeDiagnostics"
-      },
-      {
-        "name": "TestCheckPretradeDiagnostics::test_fails_when_client_build_fails",
-        "line": 61,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should fail when CDP client cannot be built.",
-        "class": "TestCheckPretradeDiagnostics"
-      },
-      {
-        "name": "TestCheckPretradeDiagnostics::test_warn_only_returns_true_when_client_build_fails",
-        "line": 73,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return True in warn-only mode when client build fails.",
-        "class": "TestCheckPretradeDiagnostics"
-      },
+    "tests/unit/gpt_trader/preflight/test_checks_diagnostics_api_health.py": [
       {
         "name": "TestApiHealthCheck::test_triggers_on_api_degradation",
-        "line": 112,
+        "line": 37,
         "markers": [
           "parametrize",
           "unit"
@@ -38551,16 +38527,56 @@
       },
       {
         "name": "TestApiHealthCheck::test_skips_without_resilience_status",
-        "line": 131,
+        "line": 55,
         "markers": [
           "unit"
         ],
         "docstring": "Should skip API health check when resilience status not available.",
         "class": "TestApiHealthCheck"
+      }
+    ],
+    "tests/unit/gpt_trader/preflight/test_checks_diagnostics_basic.py": [
+      {
+        "name": "TestCheckPretradeDiagnostics::test_skips_when_remote_checks_bypassed",
+        "line": 14,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should skip and succeed when remote checks are bypassed.",
+        "class": "TestCheckPretradeDiagnostics"
       },
       {
+        "name": "TestCheckPretradeDiagnostics::test_fails_when_client_build_fails",
+        "line": 25,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should fail when CDP client cannot be built.",
+        "class": "TestCheckPretradeDiagnostics"
+      },
+      {
+        "name": "TestCheckPretradeDiagnostics::test_warn_only_returns_true_when_client_build_fails",
+        "line": 36,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should return True in warn-only mode when client build fails.",
+        "class": "TestCheckPretradeDiagnostics"
+      },
+      {
+        "name": "TestSectionHeader::test_prints_section_header",
+        "line": 52,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should print section header.",
+        "class": "TestSectionHeader"
+      }
+    ],
+    "tests/unit/gpt_trader/preflight/test_checks_diagnostics_broker.py": [
+      {
         "name": "TestBrokerReadinessCheck::test_fails_on_empty_data",
-        "line": 160,
+        "line": 20,
         "markers": [
           "parametrize",
           "unit"
@@ -38570,16 +38586,18 @@
       },
       {
         "name": "TestBrokerReadinessCheck::test_fails_on_invalid_product_specs",
-        "line": 180,
+        "line": 39,
         "markers": [
           "unit"
         ],
         "docstring": "Should fail when product has invalid specs.",
         "class": "TestBrokerReadinessCheck"
-      },
+      }
+    ],
+    "tests/unit/gpt_trader/preflight/test_checks_diagnostics_market.py": [
       {
         "name": "TestMarketDataCheck::test_fails_on_bad_ticker",
-        "line": 210,
+        "line": 20,
         "markers": [
           "parametrize",
           "unit"
@@ -38589,7 +38607,7 @@
       },
       {
         "name": "TestMarketDataCheck::test_passes_with_valid_ticker",
-        "line": 229,
+        "line": 38,
         "markers": [
           "unit"
         ],
@@ -38598,7 +38616,7 @@
       },
       {
         "name": "TestWarnOnlyMode::test_warn_only_converts_errors_to_warnings",
-        "line": 249,
+        "line": 57,
         "markers": [
           "unit"
         ],
@@ -38607,21 +38625,12 @@
       },
       {
         "name": "TestWarnOnlyMode::test_warn_only_returns_true_on_failure",
-        "line": 270,
+        "line": 77,
         "markers": [
           "unit"
         ],
         "docstring": "Should return True in warn-only mode even when checks fail.",
         "class": "TestWarnOnlyMode"
-      },
-      {
-        "name": "TestSectionHeader::test_prints_section_header",
-        "line": 292,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should print section header.",
-        "class": "TestSectionHeader"
       }
     ],
     "tests/unit/gpt_trader/preflight/test_checks_environment.py": [

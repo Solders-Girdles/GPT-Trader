@@ -15133,7 +15133,7 @@
       },
       {
         "name": "test_408_timeout_does_not_retry",
-        "line": 144,
+        "line": 142,
         "markers": [
           "unit"
         ],
@@ -44625,7 +44625,7 @@
     "tests/unit/gpt_trader/tui/services/test_config_service.py": [
       {
         "name": "TestConfigService::test_init_sets_app",
-        "line": 13,
+        "line": 16,
         "markers": [
           "unit"
         ],
@@ -44634,7 +44634,7 @@
       },
       {
         "name": "TestConfigService::test_show_config_modal_pushes_screen",
-        "line": 21,
+        "line": 23,
         "markers": [
           "unit"
         ],
@@ -44643,7 +44643,7 @@
       },
       {
         "name": "TestConfigService::test_show_config_modal_handles_error",
-        "line": 35,
+        "line": 39,
         "markers": [
           "unit"
         ],
@@ -44652,7 +44652,7 @@
       },
       {
         "name": "TestConfigService::test_request_reload_posts_event",
-        "line": 47,
+        "line": 55,
         "markers": [
           "unit"
         ],
@@ -44661,7 +44661,7 @@
       },
       {
         "name": "TestConfigService::test_notify_config_changed_posts_event",
-        "line": 56,
+        "line": 64,
         "markers": [
           "unit"
         ],
@@ -47251,7 +47251,7 @@
     "tests/unit/gpt_trader/tui/test_credential_cache.py": [
       {
         "name": "TestCredentialCache::test_set_and_get_credential_cache",
-        "line": 27,
+        "line": 26,
         "markers": [
           "unit"
         ],
@@ -47260,7 +47260,7 @@
       },
       {
         "name": "TestCredentialCache::test_invalidate_credential_cache",
-        "line": 40,
+        "line": 39,
         "markers": [
           "unit"
         ],
@@ -47269,7 +47269,7 @@
       },
       {
         "name": "TestCredentialCache::test_cache_valid_same_fingerprint",
-        "line": 50,
+        "line": 49,
         "markers": [
           "unit"
         ],
@@ -47278,7 +47278,7 @@
       },
       {
         "name": "TestCredentialCache::test_cache_invalid_fingerprint_mismatch",
-        "line": 58,
+        "line": 57,
         "markers": [
           "unit"
         ],
@@ -47287,7 +47287,7 @@
       },
       {
         "name": "TestCredentialCache::test_cache_invalid_mode_not_validated",
-        "line": 65,
+        "line": 64,
         "markers": [
           "unit"
         ],
@@ -47296,7 +47296,7 @@
       },
       {
         "name": "TestCredentialCache::test_cache_invalid_expired",
-        "line": 74,
+        "line": 73,
         "markers": [
           "unit"
         ],
@@ -47305,7 +47305,7 @@
       },
       {
         "name": "TestCredentialCache::test_cache_valid_within_age_limit",
-        "line": 85,
+        "line": 84,
         "markers": [
           "unit"
         ],
@@ -47314,7 +47314,7 @@
       },
       {
         "name": "TestCredentialCache::test_cache_persists_across_sessions",
-        "line": 96,
+        "line": 95,
         "markers": [
           "unit"
         ],
@@ -47323,7 +47323,7 @@
       },
       {
         "name": "TestCredentialCache::test_update_existing_cache_modes",
-        "line": 113,
+        "line": 112,
         "markers": [
           "unit"
         ],
@@ -47332,7 +47332,7 @@
       },
       {
         "name": "TestCredentialFingerprint::test_fingerprint_generation",
-        "line": 135,
+        "line": 134,
         "markers": [
           "unit"
         ],
@@ -47341,7 +47341,7 @@
       },
       {
         "name": "TestCredentialFingerprint::test_fingerprint_none_when_no_key",
-        "line": 155,
+        "line": 160,
         "markers": [
           "unit"
         ],
@@ -47350,7 +47350,7 @@
       },
       {
         "name": "TestCredentialFingerprint::test_fingerprint_none_for_short_key",
-        "line": 168,
+        "line": 177,
         "markers": [
           "unit"
         ],

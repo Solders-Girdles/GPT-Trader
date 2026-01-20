@@ -2123,6 +2123,7 @@
       "tests/unit/gpt_trader/tui/widgets/test_cfm_balance_unavailable.py"
     ],
     "gpt_trader.tui.widgets.config": [
+      "tests/unit/gpt_trader/tui/services/test_config_service.py",
       "tests/unit/gpt_trader/tui/widgets/test_config_modal.py"
     ],
     "gpt_trader.tui.widgets.dashboard": [
@@ -5058,7 +5059,8 @@
       "gpt_trader.tui.services.alert_manager"
     ],
     "tests/unit/gpt_trader/tui/services/test_config_service.py": [
-      "gpt_trader.tui.services.config_service"
+      "gpt_trader.tui.services.config_service",
+      "gpt_trader.tui.widgets.config"
     ],
     "tests/unit/gpt_trader/tui/services/test_credential_validator_connectivity.py": [
       "gpt_trader.features.brokerages.coinbase.client",
@@ -6077,6 +6079,7 @@
     "gpt_trader.tui.services.action_dispatcher": "src/gpt_trader/tui/services/action_dispatcher.py",
     "gpt_trader.tui.thresholds": "src/gpt_trader/tui/thresholds.py",
     "gpt_trader.tui.services.config_service": "src/gpt_trader/tui/services/config_service.py",
+    "gpt_trader.tui.widgets.config": "src/gpt_trader/tui/widgets/config.py",
     "gpt_trader.tui.services.credential_validator": "src/gpt_trader/tui/services/credential_validator.py",
     "gpt_trader.tui.services.execution_telemetry": "src/gpt_trader/tui/services/execution_telemetry.py",
     "gpt_trader.tui.services.focus_manager": "src/gpt_trader/tui/services/focus_manager.py",
@@ -6116,7 +6119,6 @@
     "gpt_trader.tui.widgets.alert_inbox": "src/gpt_trader/tui/widgets/alert_inbox.py",
     "gpt_trader.tui.widgets.tile_states": "src/gpt_trader/tui/widgets/tile_states.py",
     "gpt_trader.tui.widgets.cfm_balance": "src/gpt_trader/tui/widgets/cfm_balance.py",
-    "gpt_trader.tui.widgets.config": "src/gpt_trader/tui/widgets/config.py",
     "gpt_trader.tui.widgets.dashboard": "src/gpt_trader/tui/widgets/dashboard.py",
     "gpt_trader.tui.widgets.logs": "src/gpt_trader/tui/widgets/logs.py",
     "gpt_trader.tui.widgets.portfolio.order_detail_modal": "src/gpt_trader/tui/widgets/portfolio/order_detail_modal.py",

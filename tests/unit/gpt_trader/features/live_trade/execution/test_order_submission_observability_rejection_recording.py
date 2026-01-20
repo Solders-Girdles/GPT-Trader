@@ -3,32 +3,42 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
+import gpt_trader.features.live_trade.execution.order_event_recorder as recorder_module
 from gpt_trader.core import OrderSide, OrderType
 from gpt_trader.features.live_trade.execution.order_submission import OrderSubmitter
 from gpt_trader.persistence.orders_store import OrderStatus as StoreOrderStatus
 
 
+@pytest.fixture
+def monitoring_logger(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    mock_logger = MagicMock()
+    monkeypatch.setattr(recorder_module, "get_monitoring_logger", lambda: mock_logger)
+    return mock_logger
+
+
+@pytest.fixture
+def emit_metric_mock(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    mock_emit = MagicMock()
+    monkeypatch.setattr(recorder_module, "emit_metric", mock_emit)
+    return mock_emit
+
+
 class TestRecordRejectionConsistency:
     """Tests for consistent record_rejection calls with reason and client_order_id."""
 
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.emit_metric")
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_rejection_from_broker_status_includes_classified_reason(
         self,
-        mock_get_logger: MagicMock,
-        mock_emit_metric: MagicMock,
         mock_broker: MagicMock,
         mock_event_store: MagicMock,
         open_orders: list[str],
+        emit_metric_mock: MagicMock,
+        monitoring_logger: MagicMock,
     ) -> None:
         """Test that broker rejections use classified reasons in telemetry."""
-        mock_logger = MagicMock()
-        mock_get_logger.return_value = mock_logger
-
         submitter = OrderSubmitter(
             broker=mock_broker,
             event_store=mock_event_store,
@@ -62,7 +72,7 @@ class TestRecordRejectionConsistency:
                 store_status=StoreOrderStatus.REJECTED,
             )
 
-        calls = mock_emit_metric.call_args_list
+        calls = emit_metric_mock.call_args_list
         rejection_calls = [c for c in calls if c[0][2].get("event_type") == "order_rejected"]
         assert len(rejection_calls) >= 1
 
@@ -70,19 +80,15 @@ class TestRecordRejectionConsistency:
         assert rejection_data["reason"] == "broker_status"
         assert rejection_data["reason_detail"] == "REJECTED"
 
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.emit_metric")
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_exception_rejection_uses_classified_reason(
         self,
-        mock_get_logger: MagicMock,
-        mock_emit_metric: MagicMock,
         mock_broker: MagicMock,
         mock_event_store: MagicMock,
         open_orders: list[str],
+        emit_metric_mock: MagicMock,
+        monitoring_logger: MagicMock,
     ) -> None:
         """Test that exception-based rejections use classified reasons."""
-        mock_logger = MagicMock()
-        mock_get_logger.return_value = mock_logger
         mock_broker.place_order.side_effect = RuntimeError("Insufficient balance for order")
 
         submitter = OrderSubmitter(

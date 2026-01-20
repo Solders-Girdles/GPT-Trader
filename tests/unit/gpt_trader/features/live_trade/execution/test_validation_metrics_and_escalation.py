@@ -3,17 +3,27 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
+import pytest
+
+import gpt_trader.features.live_trade.execution.validation as validation_module
 from gpt_trader.core import OrderSide, OrderType, TimeInForce
 from gpt_trader.features.live_trade.execution.validation import OrderValidator
 
 
+@pytest.fixture
+def record_counter_mock(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    mock_record = MagicMock()
+    monkeypatch.setattr(validation_module, "record_counter", mock_record)
+    return mock_record
+
+
 class TestMetricsRecording:
-    @patch("gpt_trader.features.live_trade.execution.validation.record_counter")
+
     def test_mark_staleness_failure_records_metric(
         self,
-        mock_record_counter: MagicMock,
+        record_counter_mock: MagicMock,
         mock_broker: MagicMock,
         mock_risk_manager: MagicMock,
     ) -> None:
@@ -36,12 +46,11 @@ class TestMetricsRecording:
 
         validator.ensure_mark_is_fresh("BTC-PERP")
 
-        mock_record_counter.assert_called_with(METRIC_MARK_STALENESS_CHECK_FAILED)
+        record_counter_mock.assert_called_with(METRIC_MARK_STALENESS_CHECK_FAILED)
 
-    @patch("gpt_trader.features.live_trade.execution.validation.record_counter")
     def test_slippage_guard_failure_records_metric(
         self,
-        mock_record_counter: MagicMock,
+        record_counter_mock: MagicMock,
         mock_broker: MagicMock,
         mock_risk_manager: MagicMock,
     ) -> None:
@@ -69,12 +78,11 @@ class TestMetricsRecording:
             effective_price=Decimal("50000"),
         )
 
-        mock_record_counter.assert_called_with(METRIC_SLIPPAGE_GUARD_CHECK_FAILED)
+        record_counter_mock.assert_called_with(METRIC_SLIPPAGE_GUARD_CHECK_FAILED)
 
-    @patch("gpt_trader.features.live_trade.execution.validation.record_counter")
     def test_preview_failure_records_metric(
         self,
-        mock_record_counter: MagicMock,
+        record_counter_mock: MagicMock,
         mock_risk_manager: MagicMock,
     ) -> None:
         from gpt_trader.features.live_trade.execution.validation import (
@@ -108,7 +116,7 @@ class TestMetricsRecording:
             leverage=10,
         )
 
-        mock_record_counter.assert_called_with(METRIC_ORDER_PREVIEW_FAILED)
+        record_counter_mock.assert_called_with(METRIC_ORDER_PREVIEW_FAILED)
 
 
 class TestFailureTrackerIntegration:
@@ -176,10 +184,9 @@ class TestFailureTrackerIntegration:
 
         assert tracker.get_failure_count("slippage_guard") == 2
 
-    @patch("gpt_trader.features.live_trade.execution.validation.record_counter")
     def test_escalation_triggered_after_repeated_failures(
         self,
-        mock_record_counter: MagicMock,
+        record_counter_mock: MagicMock,
         mock_broker: MagicMock,
         mock_risk_manager: MagicMock,
     ) -> None:
@@ -212,4 +219,4 @@ class TestFailureTrackerIntegration:
         validator.ensure_mark_is_fresh("BTC-PERP")
         assert len(escalation_called) == 1
 
-        mock_record_counter.assert_any_call(METRIC_CONSECUTIVE_FAILURES_ESCALATION)
+        record_counter_mock.assert_any_call(METRIC_CONSECUTIVE_FAILURES_ESCALATION)

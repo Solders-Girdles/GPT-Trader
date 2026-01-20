@@ -23410,7 +23410,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_rejection_recording.py": [
       {
         "name": "TestRecordRejectionConsistency::test_rejection_from_broker_status_includes_classified_reason",
-        "line": 20,
+        "line": 33,
         "markers": [
           "unit"
         ],
@@ -23419,7 +23419,7 @@
       },
       {
         "name": "TestRecordRejectionConsistency::test_exception_rejection_uses_classified_reason",
-        "line": 75,
+        "line": 83,
         "markers": [
           "unit"
         ],
@@ -24249,7 +24249,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_validation_metrics_and_escalation.py": [
       {
         "name": "TestMetricsRecording::test_mark_staleness_failure_records_metric",
-        "line": 14,
+        "line": 24,
         "markers": [
           "unit"
         ],
@@ -24258,7 +24258,7 @@
       },
       {
         "name": "TestMetricsRecording::test_slippage_guard_failure_records_metric",
-        "line": 42,
+        "line": 51,
         "markers": [
           "unit"
         ],
@@ -24267,7 +24267,7 @@
       },
       {
         "name": "TestMetricsRecording::test_preview_failure_records_metric",
-        "line": 75,
+        "line": 83,
         "markers": [
           "unit"
         ],
@@ -24276,7 +24276,7 @@
       },
       {
         "name": "TestFailureTrackerIntegration::test_success_resets_mark_staleness_counter",
-        "line": 115,
+        "line": 123,
         "markers": [
           "unit"
         ],
@@ -24285,7 +24285,7 @@
       },
       {
         "name": "TestFailureTrackerIntegration::test_failure_increments_slippage_counter",
-        "line": 142,
+        "line": 150,
         "markers": [
           "unit"
         ],
@@ -24294,7 +24294,7 @@
       },
       {
         "name": "TestFailureTrackerIntegration::test_escalation_triggered_after_repeated_failures",
-        "line": 180,
+        "line": 187,
         "markers": [
           "unit"
         ],

@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 917,
+    "tests_scanned": 912,
     "source_modules": 355,
     "unresolved_modules": 3
   },
@@ -1598,7 +1598,7 @@
       "tests/unit/gpt_trader/monitoring/test_metrics_collector.py",
       "tests/unit/gpt_trader/monitoring/test_metrics_collector_edges.py",
       "tests/unit/gpt_trader/monitoring/test_metrics_collector_histograms.py",
-      "tests/unit/gpt_trader/monitoring/test_status_reporter_metrics.py",
+      "tests/unit/gpt_trader/monitoring/test_status_reporter_models_and_init.py",
       "tests/unit/gpt_trader/monitoring/test_status_reporter_updates_and_health.py"
     ],
     "gpt_trader.monitoring.metrics_exporter": [
@@ -1619,12 +1619,7 @@
     "gpt_trader.monitoring.status_reporter": [
       "tests/unit/gpt_trader/monitoring/test_status_reporter_edges.py",
       "tests/unit/gpt_trader/monitoring/test_status_reporter_file_output.py",
-      "tests/unit/gpt_trader/monitoring/test_status_reporter_io_edges.py",
-      "tests/unit/gpt_trader/monitoring/test_status_reporter_lifecycle.py",
-      "tests/unit/gpt_trader/monitoring/test_status_reporter_limits_edges.py",
-      "tests/unit/gpt_trader/monitoring/test_status_reporter_metrics.py",
       "tests/unit/gpt_trader/monitoring/test_status_reporter_models_and_init.py",
-      "tests/unit/gpt_trader/monitoring/test_status_reporter_strategy_performance.py",
       "tests/unit/gpt_trader/monitoring/test_status_reporter_updates_and_health.py",
       "tests/unit/gpt_trader/tui/test_app_core.py",
       "tests/unit/gpt_trader/tui/test_state_resilience_and_performance.py",
@@ -4792,23 +4787,8 @@
     "tests/unit/gpt_trader/monitoring/test_status_reporter_file_output.py": [
       "gpt_trader.monitoring.status_reporter"
     ],
-    "tests/unit/gpt_trader/monitoring/test_status_reporter_io_edges.py": [
-      "gpt_trader.monitoring.status_reporter"
-    ],
-    "tests/unit/gpt_trader/monitoring/test_status_reporter_lifecycle.py": [
-      "gpt_trader.monitoring.status_reporter"
-    ],
-    "tests/unit/gpt_trader/monitoring/test_status_reporter_limits_edges.py": [
-      "gpt_trader.monitoring.status_reporter"
-    ],
-    "tests/unit/gpt_trader/monitoring/test_status_reporter_metrics.py": [
-      "gpt_trader.monitoring.metrics_collector",
-      "gpt_trader.monitoring.status_reporter"
-    ],
     "tests/unit/gpt_trader/monitoring/test_status_reporter_models_and_init.py": [
-      "gpt_trader.monitoring.status_reporter"
-    ],
-    "tests/unit/gpt_trader/monitoring/test_status_reporter_strategy_performance.py": [
+      "gpt_trader.monitoring.metrics_collector",
       "gpt_trader.monitoring.status_reporter"
     ],
     "tests/unit/gpt_trader/monitoring/test_status_reporter_updates_and_health.py": [

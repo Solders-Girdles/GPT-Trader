@@ -1015,11 +1015,12 @@ clusters:
     - tests/unit/gpt_trader/monitoring/test_status_reporter_updates_and_health.py
     source_modules: []
     decision: merge
-    target_location: tests/unit/gpt_trader/monitoring/test_status_reporter.py
-    expected_file_delta: -8
+    target_location: tests/unit/gpt_trader/monitoring/test_status_reporter_models_and_init.py
+    expected_file_delta: -5
     priority: medium
-    rationale: Consolidate 9 test files into single parametrized file
-    status: pending
+    rationale: Consolidate 9 status reporter files into 4 focused modules (each <=240 lines)
+    status: in_progress
+    owner: rj
     added: '2026-01-20'
   a66307ab8c32:
     type: similar_names

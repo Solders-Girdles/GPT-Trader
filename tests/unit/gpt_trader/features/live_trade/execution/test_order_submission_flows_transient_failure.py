@@ -4,8 +4,11 @@ from __future__ import annotations
 
 from decimal import Decimal
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
+import pytest
+
+import gpt_trader.features.live_trade.execution.order_event_recorder as recorder_module
 from gpt_trader.core import (
     Order,
     OrderSide,
@@ -17,20 +20,29 @@ from gpt_trader.features.live_trade.execution.order_submission import OrderSubmi
 from gpt_trader.utilities.datetime_helpers import utc_now
 
 
+@pytest.fixture
+def monitoring_logger(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    mock_logger = MagicMock()
+    monkeypatch.setattr(recorder_module, "get_monitoring_logger", lambda: mock_logger)
+    return mock_logger
+
+
+@pytest.fixture
+def emit_metric_mock(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    mock_emit = MagicMock()
+    monkeypatch.setattr(recorder_module, "emit_metric", mock_emit)
+    return mock_emit
+
+
 class TestTransientFailureWithClientOrderIdReuse:
     """Integration test for transient failure followed by success."""
 
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.emit_metric")
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_transient_failure_then_success_reuses_client_order_id(
         self,
-        mock_get_logger: MagicMock,
-        mock_emit_metric: MagicMock,
+        monitoring_logger: MagicMock,
+        emit_metric_mock: MagicMock,
     ) -> None:
         """Test that transient failure followed by success reuses client_order_id."""
-        mock_logger = MagicMock()
-        mock_get_logger.return_value = mock_logger
-
         captured_client_ids: list[str] = []
         call_count = [0]
 

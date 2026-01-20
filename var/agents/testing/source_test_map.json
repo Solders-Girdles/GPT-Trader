@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 912,
+    "tests_scanned": 910,
     "source_modules": 355,
     "unresolved_modules": 3
   },
@@ -232,15 +232,13 @@
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_volume_threshold.py"
     ],
     "gpt_trader.backtesting.simulation.funding_tracker": [
-      "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_accrual_custom_intervals.py",
-      "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_accrual_signs_and_accumulation.py",
-      "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_accrual_timing.py",
+      "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_accrual_init.py",
+      "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_accrual_scenarios.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_edge_cases.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_events.py",
-      "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_initialization.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_multi_symbol.py",
-      "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_settlement.py",
-      "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_should_settle.py"
+      "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_settlement_basic.py",
+      "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_settlement_timing.py"
     ],
     "gpt_trader.backtesting.types": [
       "tests/integration/test_funding_pnl_simulation_config.py",
@@ -2792,13 +2790,10 @@
     "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_volume_threshold.py": [
       "gpt_trader.backtesting.simulation.fill_model"
     ],
-    "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_accrual_custom_intervals.py": [
+    "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_accrual_init.py": [
       "gpt_trader.backtesting.simulation.funding_tracker"
     ],
-    "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_accrual_signs_and_accumulation.py": [
-      "gpt_trader.backtesting.simulation.funding_tracker"
-    ],
-    "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_accrual_timing.py": [
+    "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_accrual_scenarios.py": [
       "gpt_trader.backtesting.simulation.funding_tracker"
     ],
     "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_edge_cases.py": [
@@ -2807,16 +2802,13 @@
     "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_events.py": [
       "gpt_trader.backtesting.simulation.funding_tracker"
     ],
-    "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_initialization.py": [
-      "gpt_trader.backtesting.simulation.funding_tracker"
-    ],
     "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_multi_symbol.py": [
       "gpt_trader.backtesting.simulation.funding_tracker"
     ],
-    "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_settlement.py": [
+    "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_settlement_basic.py": [
       "gpt_trader.backtesting.simulation.funding_tracker"
     ],
-    "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_should_settle.py": [
+    "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_settlement_timing.py": [
       "gpt_trader.backtesting.simulation.funding_tracker"
     ],
     "tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker_connection_and_account.py": [

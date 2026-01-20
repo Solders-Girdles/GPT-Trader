@@ -1,4 +1,4 @@
-"""Tests for FundingPnLTracker settlement behavior."""
+"""Tests for FundingPnLTracker basic settlement behavior."""
 
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -166,52 +166,3 @@ class TestFundingSettlement:
         assert events[0].symbol == "BTC-PERP-USDC"
         assert events[0].timestamp == settle_time
         assert events[0].amount == Decimal("4")
-
-
-class TestFundingSettlementCustomInterval:
-    """Test settlement with custom interval."""
-
-    def test_custom_settlement_interval_24_hours(self) -> None:
-        """Test settlement with 24-hour interval."""
-        tracker = FundingPnLTracker(settlement_interval_hours=24)
-        base_time = datetime(2024, 1, 1, 0, 0, 0)
-
-        # Initialize and accrue
-        tracker.accrue(
-            symbol="BTC-PERP-USDC",
-            position_size=Decimal("1"),
-            mark_price=Decimal("40000"),
-            funding_rate_8h=Decimal("0.0008"),
-            current_time=base_time,
-        )
-
-        for i in range(1, 9):
-            tracker.accrue(
-                symbol="BTC-PERP-USDC",
-                position_size=Decimal("1"),
-                mark_price=Decimal("40000"),
-                funding_rate_8h=Decimal("0.0008"),
-                current_time=base_time + timedelta(hours=i),
-            )
-
-        # First settlement
-        first = tracker.settle("BTC-PERP-USDC", base_time + timedelta(hours=12))
-        assert first == Decimal("32")  # 8 * 4 = 32
-
-        # More accruals
-        for i in range(13, 21):
-            tracker.accrue(
-                symbol="BTC-PERP-USDC",
-                position_size=Decimal("1"),
-                mark_price=Decimal("40000"),
-                funding_rate_8h=Decimal("0.0008"),
-                current_time=base_time + timedelta(hours=i),
-            )
-
-        # Try at 20 hours (only 8 hours since first settlement) - should fail
-        result = tracker.settle("BTC-PERP-USDC", base_time + timedelta(hours=20))
-        assert result == Decimal("0")
-
-        # At 36 hours (24 hours after first settlement) - should work
-        result = tracker.settle("BTC-PERP-USDC", base_time + timedelta(hours=36))
-        assert result == Decimal("32")  # 8 * 4 = 32

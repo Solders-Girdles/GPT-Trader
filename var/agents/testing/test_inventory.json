@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6325,
-    "total_files": 970,
+    "total_files": 968,
     "markers_used": 15
   },
   "marker_definitions": {
@@ -186,15 +186,13 @@
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_stop_orders.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_stop_trigger_logic.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_volume_threshold.py",
-      "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_accrual_custom_intervals.py",
-      "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_accrual_signs_and_accumulation.py",
-      "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_accrual_timing.py",
+      "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_accrual_init.py",
+      "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_accrual_scenarios.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_edge_cases.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_events.py",
-      "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_initialization.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_multi_symbol.py",
-      "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_settlement.py",
-      "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_should_settle.py",
+      "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_settlement_basic.py",
+      "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_settlement_timing.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker_connection_and_account.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker_equity_and_statistics.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker_initialization_and_products.py",
@@ -6691,10 +6689,73 @@
         "class": "TestVolumeThreshold"
       }
     ],
-    "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_accrual_custom_intervals.py": [
+    "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_accrual_init.py": [
+      {
+        "name": "TestFundingPnLTrackerInitialization::test_default_initialization",
+        "line": 14,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test default initialization parameters.",
+        "class": "TestFundingPnLTrackerInitialization"
+      },
+      {
+        "name": "TestFundingPnLTrackerInitialization::test_custom_accrual_interval",
+        "line": 22,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test initialization with custom accrual interval.",
+        "class": "TestFundingPnLTrackerInitialization"
+      },
+      {
+        "name": "TestFundingPnLTrackerInitialization::test_custom_settlement_interval",
+        "line": 29,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test initialization with custom settlement interval.",
+        "class": "TestFundingPnLTrackerInitialization"
+      },
+      {
+        "name": "TestFundingPnLTrackerInitialization::test_both_custom_intervals",
+        "line": 36,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test initialization with both custom intervals.",
+        "class": "TestFundingPnLTrackerInitialization"
+      },
+      {
+        "name": "TestFundingAccrualTiming::test_first_accrual_initializes_and_returns_zero",
+        "line": 60,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that first accrual initializes tracking and returns zero.",
+        "class": "TestFundingAccrualTiming"
+      },
+      {
+        "name": "TestFundingAccrualTiming::test_accrual_before_interval_returns_zero",
+        "line": 75,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that accrual before interval elapsed returns zero.",
+        "class": "TestFundingAccrualTiming"
+      },
+      {
+        "name": "TestFundingAccrualTiming::test_accrual_after_interval_calculates_funding",
+        "line": 99,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that accrual after interval calculates correct funding.",
+        "class": "TestFundingAccrualTiming"
+      },
       {
         "name": "TestFundingAccrualCustomIntervals::test_custom_accrual_interval_4_hours",
-        "line": 12,
+        "line": 128,
         "markers": [
           "unit"
         ],
@@ -6702,7 +6763,7 @@
         "class": "TestFundingAccrualCustomIntervals"
       }
     ],
-    "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_accrual_signs_and_accumulation.py": [
+    "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_accrual_scenarios.py": [
       {
         "name": "TestFundingAccrualSignsAndAccumulation::test_long_position_positive_rate_pays_funding",
         "line": 24,
@@ -6765,35 +6826,6 @@
         ],
         "docstring": "Test that zero funding rate results in no funding.",
         "class": "TestFundingAccrualSignsAndAccumulation"
-      }
-    ],
-    "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_accrual_timing.py": [
-      {
-        "name": "TestFundingAccrualTiming::test_first_accrual_initializes_and_returns_zero",
-        "line": 24,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that first accrual initializes tracking and returns zero.",
-        "class": "TestFundingAccrualTiming"
-      },
-      {
-        "name": "TestFundingAccrualTiming::test_accrual_before_interval_returns_zero",
-        "line": 39,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that accrual before interval elapsed returns zero.",
-        "class": "TestFundingAccrualTiming"
-      },
-      {
-        "name": "TestFundingAccrualTiming::test_accrual_after_interval_calculates_funding",
-        "line": 63,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that accrual after interval calculates correct funding.",
-        "class": "TestFundingAccrualTiming"
       }
     ],
     "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_edge_cases.py": [
@@ -6935,44 +6967,6 @@
         "class": "TestFundingEvent"
       }
     ],
-    "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_initialization.py": [
-      {
-        "name": "TestFundingPnLTrackerInitialization::test_default_initialization",
-        "line": 11,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test default initialization parameters.",
-        "class": "TestFundingPnLTrackerInitialization"
-      },
-      {
-        "name": "TestFundingPnLTrackerInitialization::test_custom_accrual_interval",
-        "line": 19,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test initialization with custom accrual interval.",
-        "class": "TestFundingPnLTrackerInitialization"
-      },
-      {
-        "name": "TestFundingPnLTrackerInitialization::test_custom_settlement_interval",
-        "line": 26,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test initialization with custom settlement interval.",
-        "class": "TestFundingPnLTrackerInitialization"
-      },
-      {
-        "name": "TestFundingPnLTrackerInitialization::test_both_custom_intervals",
-        "line": 33,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test initialization with both custom intervals.",
-        "class": "TestFundingPnLTrackerInitialization"
-      }
-    ],
     "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_multi_symbol.py": [
       {
         "name": "TestMultiSymbolTracking::test_independent_symbol_tracking",
@@ -6994,7 +6988,7 @@
       },
       {
         "name": "TestMultiSymbolTracking::test_total_funding_pnl_across_symbols",
-        "line": 100,
+        "line": 102,
         "markers": [
           "unit"
         ],
@@ -7003,7 +6997,7 @@
       },
       {
         "name": "TestGetAccruedAndTotalPaid::test_get_accrued_unknown_symbol",
-        "line": 138,
+        "line": 140,
         "markers": [
           "unit"
         ],
@@ -7012,7 +7006,7 @@
       },
       {
         "name": "TestGetAccruedAndTotalPaid::test_get_total_paid_unknown_symbol",
-        "line": 143,
+        "line": 145,
         "markers": [
           "unit"
         ],
@@ -7021,7 +7015,7 @@
       },
       {
         "name": "TestGetAccruedAndTotalPaid::test_get_total_funding_pnl_empty",
-        "line": 148,
+        "line": 150,
         "markers": [
           "unit"
         ],
@@ -7029,7 +7023,7 @@
         "class": "TestGetAccruedAndTotalPaid"
       }
     ],
-    "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_settlement.py": [
+    "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_settlement_basic.py": [
       {
         "name": "TestFundingSettlement::test_settle_unknown_symbol_returns_zero",
         "line": 24,
@@ -7074,21 +7068,21 @@
         ],
         "docstring": "Test that settlement creates a funding event.",
         "class": "TestFundingSettlement"
-      },
+      }
+    ],
+    "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_settlement_timing.py": [
       {
         "name": "TestFundingSettlementCustomInterval::test_custom_settlement_interval_24_hours",
-        "line": 174,
+        "line": 14,
         "markers": [
           "unit"
         ],
         "docstring": "Test settlement with 24-hour interval.",
         "class": "TestFundingSettlementCustomInterval"
-      }
-    ],
-    "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_should_settle.py": [
+      },
       {
         "name": "TestShouldSettle::test_should_settle_first_time",
-        "line": 24,
+        "line": 73,
         "markers": [
           "unit"
         ],
@@ -7097,7 +7091,7 @@
       },
       {
         "name": "TestShouldSettle::test_should_settle_after_interval",
-        "line": 30,
+        "line": 79,
         "markers": [
           "unit"
         ],
@@ -7106,7 +7100,7 @@
       },
       {
         "name": "TestShouldSettle::test_should_settle_before_interval",
-        "line": 49,
+        "line": 98,
         "markers": [
           "unit"
         ],

@@ -1135,23 +1135,22 @@ clusters:
     type: source_fanout
     description: 9 test files import gpt_trader.backtesting.simulation.funding_tracker
     files:
-    - tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_accrual_custom_intervals.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_accrual_signs_and_accumulation.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_accrual_timing.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_accrual_init.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_accrual_scenarios.py
     - tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_edge_cases.py
     - tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_events.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_initialization.py
     - tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_multi_symbol.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_settlement.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_should_settle.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_settlement_basic.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_settlement_timing.py
     source_modules:
     - gpt_trader.backtesting.simulation.funding_tracker
     decision: merge
-    target_location: tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker.py
-    expected_file_delta: -8
+    target_location: tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_accrual.py
+    expected_file_delta: -2
     priority: medium
-    rationale: Consolidate 9 test files into single parametrized file
-    status: pending
+    rationale: Consolidated 9 test files into 7 focused modules (each <=240 lines)
+    status: in_progress
+    owner: rj
     added: '2026-01-20'
   5bf64ae1fbc8:
     type: source_fanout

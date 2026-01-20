@@ -1,4 +1,4 @@
-"""Tests for FundingPnLTracker funding accrual sign and accumulation behavior."""
+"""Tests for FundingPnLTracker accrual sign and accumulation behavior."""
 
 from datetime import datetime, timedelta
 from decimal import Decimal

@@ -1,4 +1,4 @@
-"""Tests for FundingPnLTracker multi-symbol tracking and totals."""
+"""Tests for FundingPnLTracker multi-symbol tracking."""
 
 from datetime import datetime, timedelta
 from decimal import Decimal

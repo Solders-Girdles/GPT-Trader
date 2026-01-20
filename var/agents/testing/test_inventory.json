@@ -11550,7 +11550,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_rate_limiting.py": [
       {
         "name": "TestCoinbaseClientBaseRateLimiting::test_check_rate_limit_disabled",
-        "line": 18,
+        "line": 43,
         "markers": [
           "unit"
         ],
@@ -11559,7 +11559,7 @@
       },
       {
         "name": "TestCoinbaseClientBaseRateLimiting::test_check_rate_limit_normal_usage",
-        "line": 31,
+        "line": 52,
         "markers": [
           "unit"
         ],
@@ -11568,7 +11568,7 @@
       },
       {
         "name": "TestCoinbaseClientBaseRateLimiting::test_check_rate_limit_warning_threshold",
-        "line": 50,
+        "line": 66,
         "markers": [
           "unit"
         ],
@@ -11577,7 +11577,7 @@
       },
       {
         "name": "TestCoinbaseClientBaseRateLimiting::test_check_rate_limit_exceeded",
-        "line": 73,
+        "line": 85,
         "markers": [
           "unit"
         ],
@@ -11586,7 +11586,7 @@
       },
       {
         "name": "TestCoinbaseClientBaseRateLimiting::test_check_rate_limit_window_cleanup",
-        "line": 99,
+        "line": 104,
         "markers": [
           "unit"
         ],

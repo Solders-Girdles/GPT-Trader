@@ -39294,7 +39294,7 @@
     "tests/unit/gpt_trader/preflight/test_checks_test_suite.py": [
       {
         "name": "TestCheckTestSuite::test_passes_when_all_tests_pass",
-        "line": 17,
+        "line": 31,
         "markers": [
           "unit"
         ],
@@ -39303,7 +39303,7 @@
       },
       {
         "name": "TestCheckTestSuite::test_fails_when_tests_fail",
-        "line": 31,
+        "line": 41,
         "markers": [
           "unit"
         ],
@@ -39312,7 +39312,7 @@
       },
       {
         "name": "TestCheckTestSuite::test_fails_when_no_passed_in_output",
-        "line": 45,
+        "line": 51,
         "markers": [
           "unit"
         ],
@@ -39321,7 +39321,7 @@
       },
       {
         "name": "TestCheckTestSuite::test_fails_on_timeout",
-        "line": 59,
+        "line": 61,
         "markers": [
           "unit"
         ],
@@ -39330,7 +39330,7 @@
       },
       {
         "name": "TestCheckTestSuite::test_fails_on_exception",
-        "line": 69,
+        "line": 71,
         "markers": [
           "unit"
         ],
@@ -39339,7 +39339,7 @@
       },
       {
         "name": "TestCheckTestSuite::test_shows_output_when_verbose",
-        "line": 79,
+        "line": 81,
         "markers": [
           "unit"
         ],
@@ -39357,7 +39357,7 @@
       },
       {
         "name": "TestCheckTestSuite::test_parses_passed_count_correctly",
-        "line": 107,
+        "line": 105,
         "markers": [
           "unit"
         ],
@@ -39366,7 +39366,7 @@
       },
       {
         "name": "TestCheckTestSuite::test_handles_passed_without_count",
-        "line": 121,
+        "line": 115,
         "markers": [
           "unit"
         ],

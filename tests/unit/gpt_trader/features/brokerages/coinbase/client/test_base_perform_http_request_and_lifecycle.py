@@ -1,7 +1,7 @@
 """Tests for CoinbaseClientBase low-level HTTP + lifecycle helpers."""
 
 import time
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock
 
 import pytest
 import requests
@@ -93,13 +93,14 @@ class TestCoinbaseClientBasePerformHttpRequestAndLifecycle:
 
         client.close.assert_called_once()
 
-    def test_close_handles_session_error(self) -> None:
+    def test_close_handles_session_error(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test close logs warning on session close error."""
         client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
         client.session.close = Mock(side_effect=RuntimeError("boom"))
+        mock_logger = MagicMock()
+        monkeypatch.setattr(base_module, "logger", mock_logger)
 
-        with patch("gpt_trader.features.brokerages.coinbase.client.base.logger") as mock_logger:
-            client.close()
+        client.close()
 
         mock_logger.warning.assert_called_once()
 

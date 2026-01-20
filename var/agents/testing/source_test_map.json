@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 919,
+    "tests_scanned": 922,
     "source_modules": 356,
     "unresolved_modules": 3
   },
@@ -1712,7 +1712,10 @@
       "tests/unit/gpt_trader/preflight/test_checks_dependencies.py"
     ],
     "gpt_trader.preflight.checks.diagnostics": [
-      "tests/unit/gpt_trader/preflight/test_checks_diagnostics.py"
+      "tests/unit/gpt_trader/preflight/test_checks_diagnostics_api_health.py",
+      "tests/unit/gpt_trader/preflight/test_checks_diagnostics_basic.py",
+      "tests/unit/gpt_trader/preflight/test_checks_diagnostics_broker.py",
+      "tests/unit/gpt_trader/preflight/test_checks_diagnostics_market.py"
     ],
     "gpt_trader.preflight.checks.environment": [
       "tests/unit/gpt_trader/preflight/test_checks_environment.py"
@@ -1753,7 +1756,7 @@
       "tests/unit/gpt_trader/preflight/test_checks_connectivity_key_permissions_intx.py",
       "tests/unit/gpt_trader/preflight/test_checks_connectivity_key_permissions_retries.py",
       "tests/unit/gpt_trader/preflight/test_checks_dependencies.py",
-      "tests/unit/gpt_trader/preflight/test_checks_diagnostics.py",
+      "tests/unit/gpt_trader/preflight/test_checks_diagnostics_basic.py",
       "tests/unit/gpt_trader/preflight/test_checks_environment.py",
       "tests/unit/gpt_trader/preflight/test_checks_event_store.py",
       "tests/unit/gpt_trader/preflight/test_checks_profile.py",
@@ -4913,9 +4916,18 @@
       "gpt_trader.preflight.checks.dependencies",
       "gpt_trader.preflight.core"
     ],
-    "tests/unit/gpt_trader/preflight/test_checks_diagnostics.py": [
+    "tests/unit/gpt_trader/preflight/test_checks_diagnostics_api_health.py": [
+      "gpt_trader.preflight.checks.diagnostics"
+    ],
+    "tests/unit/gpt_trader/preflight/test_checks_diagnostics_basic.py": [
       "gpt_trader.preflight.checks.diagnostics",
       "gpt_trader.preflight.core"
+    ],
+    "tests/unit/gpt_trader/preflight/test_checks_diagnostics_broker.py": [
+      "gpt_trader.preflight.checks.diagnostics"
+    ],
+    "tests/unit/gpt_trader/preflight/test_checks_diagnostics_market.py": [
+      "gpt_trader.preflight.checks.diagnostics"
     ],
     "tests/unit/gpt_trader/preflight/test_checks_environment.py": [
       "gpt_trader.preflight.checks.environment",

@@ -17,17 +17,7 @@ UNIT_ALLOWED_PREFIXES = (
 INTEGRATION_TEST_PREFIX = "tests/integration/"
 CONTRACT_TEST_PREFIX = "tests/contract/"
 REAL_API_TEST_PREFIX = "tests/real_api/"
-ALLOWLIST = {
-    # Coverage expansion tests (C1 task)
-    # Phase 2 pain points remediation: critical service coverage
-    # Optimization and CLI test suites
-    # TUI Phase 3.5 comprehensive test suites
-    # TUI reliability/fault-injection tests
-    # Architecture migration and observability tests
-    # Pre-existing TUI and feature test suites
-    # Patch density reduction: monkeypatch conversion adds fixture parameters
-    "tests/unit/gpt_trader/preflight/test_checks_diagnostics.py",
-}
+ALLOWLIST: set[str] = set()
 
 SLEEP_ALLOWLIST: set[str] = set()
 

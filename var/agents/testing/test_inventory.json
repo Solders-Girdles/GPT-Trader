@@ -34761,7 +34761,7 @@
     "tests/unit/gpt_trader/monitoring/system/test_metrics.py": [
       {
         "name": "TestMetricsPublisherInit::test_stores_config",
-        "line": 15,
+        "line": 50,
         "markers": [
           "unit"
         ],
@@ -34770,7 +34770,7 @@
       },
       {
         "name": "TestMetricsPublisherPublish::test_publishes_to_event_store",
-        "line": 30,
+        "line": 65,
         "markers": [
           "unit"
         ],
@@ -34779,7 +34779,7 @@
       },
       {
         "name": "TestMetricsPublisherPublish::test_writes_snapshot",
-        "line": 49,
+        "line": 80,
         "markers": [
           "unit"
         ],
@@ -34788,7 +34788,7 @@
       },
       {
         "name": "TestMetricsPublisherWriteSnapshot::test_creates_directories",
-        "line": 75,
+        "line": 102,
         "markers": [
           "unit"
         ],
@@ -34797,7 +34797,7 @@
       },
       {
         "name": "TestMetricsPublisherWriteSnapshot::test_handles_write_errors",
-        "line": 89,
+        "line": 108,
         "markers": [
           "unit"
         ],
@@ -34806,7 +34806,7 @@
       },
       {
         "name": "TestMetricsPublisherLogUpdate::test_logs_metrics",
-        "line": 109,
+        "line": 124,
         "markers": [
           "unit"
         ],
@@ -34815,7 +34815,7 @@
       },
       {
         "name": "TestMetricsPublisherLogUpdate::test_filters_large_fields",
-        "line": 126,
+        "line": 129,
         "markers": [
           "unit"
         ],
@@ -34824,7 +34824,7 @@
       },
       {
         "name": "TestMetricsPublisherLogUpdate::test_handles_log_errors",
-        "line": 154,
+        "line": 145,
         "markers": [
           "unit"
         ],
@@ -34833,7 +34833,7 @@
       },
       {
         "name": "TestMetricsPublisherWriteHealthStatus::test_writes_health_status",
-        "line": 176,
+        "line": 160,
         "markers": [
           "unit"
         ],
@@ -34842,7 +34842,7 @@
       },
       {
         "name": "TestMetricsPublisherWriteHealthStatus::test_writes_unhealthy_status",
-        "line": 197,
+        "line": 173,
         "markers": [
           "unit"
         ],
@@ -34851,7 +34851,7 @@
       },
       {
         "name": "TestTargetDirs::test_returns_profile_specific_path",
-        "line": 219,
+        "line": 187,
         "markers": [
           "unit"
         ],

@@ -1870,7 +1870,7 @@
       },
       {
         "name": "TestValidationEscalationFlow::test_successful_validation_resets_failure_counter",
-        "line": 109,
+        "line": 110,
         "markers": [
           "integration"
         ],
@@ -1879,7 +1879,7 @@
       },
       {
         "name": "TestValidationEscalationFlow::test_slippage_guard_failures_also_trigger_escalation",
-        "line": 142,
+        "line": 147,
         "markers": [
           "integration"
         ],
@@ -1888,7 +1888,7 @@
       },
       {
         "name": "TestValidationEscalationFlow::test_different_check_types_have_independent_counters",
-        "line": 163,
+        "line": 168,
         "markers": [
           "integration"
         ],
@@ -1897,7 +1897,7 @@
       },
       {
         "name": "TestValidationEscalationFlow::test_escalation_reason_is_correct",
-        "line": 191,
+        "line": 197,
         "markers": [
           "integration"
         ],
@@ -2821,7 +2821,7 @@
       },
       {
         "name": "TestFromDictLegacyProfileMapping::test_profile_style_emits_deprecation_warning",
-        "line": 168,
+        "line": 166,
         "markers": [
           "unit"
         ],
@@ -43280,7 +43280,7 @@
       },
       {
         "name": "TestAlertHistoryScreen::test_action_reset_cooldowns_resets_alerts",
-        "line": 65,
+        "line": 63,
         "markers": [
           "unit"
         ],
@@ -43289,7 +43289,7 @@
       },
       {
         "name": "TestAlertHistoryScreen::test_button_pressed_clear_btn",
-        "line": 77,
+        "line": 73,
         "markers": [
           "unit"
         ],
@@ -43298,7 +43298,7 @@
       },
       {
         "name": "TestAlertHistoryScreen::test_button_pressed_reset_btn",
-        "line": 92,
+        "line": 88,
         "markers": [
           "unit"
         ],
@@ -43307,7 +43307,7 @@
       },
       {
         "name": "TestAlertHistoryScreen::test_button_pressed_close_btn",
-        "line": 107,
+        "line": 103,
         "markers": [
           "unit"
         ],
@@ -43316,7 +43316,7 @@
       },
       {
         "name": "TestAlertHistoryScreen::test_no_alert_manager_graceful_handling",
-        "line": 120,
+        "line": 116,
         "markers": [
           "unit"
         ],
@@ -43325,7 +43325,7 @@
       },
       {
         "name": "TestAlertHistoryFilterActions::test_cycle_filter_cycles_through_all_filters",
-        "line": 143,
+        "line": 139,
         "markers": [
           "unit"
         ],
@@ -43334,7 +43334,7 @@
       },
       {
         "name": "TestAlertHistoryFilterActions::test_cycle_filter_wraps_around",
-        "line": 157,
+        "line": 153,
         "markers": [
           "unit"
         ],
@@ -43343,7 +43343,7 @@
       },
       {
         "name": "TestAlertHistoryFilterActions::test_clear_filter_resets_to_all",
-        "line": 171,
+        "line": 165,
         "markers": [
           "unit"
         ],
@@ -43352,7 +43352,7 @@
       },
       {
         "name": "TestAlertHistoryFilterActions::test_filter_bindings_present",
-        "line": 184,
+        "line": 176,
         "markers": [
           "unit"
         ],
@@ -43361,7 +43361,7 @@
       },
       {
         "name": "TestAlertHistoryFilterActions::test_number_filter_bindings_present",
-        "line": 191,
+        "line": 183,
         "markers": [
           "unit"
         ],

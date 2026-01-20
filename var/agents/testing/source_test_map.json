@@ -2,7 +2,7 @@
   "version": "1.0",
   "summary": {
     "tests_scanned": 919,
-    "source_modules": 352,
+    "source_modules": 353,
     "unresolved_modules": 3
   },
   "source_to_tests": {
@@ -592,6 +592,9 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_circuit_breaker_core.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_circuit_breaker_error.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_circuit_breaker_registry.py"
+    ],
+    "gpt_trader.features.brokerages.coinbase.client.client": [
+      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_coinbase_client.py"
     ],
     "gpt_trader.features.brokerages.coinbase.client.market": [
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_coinbase_client.py",
@@ -3118,6 +3121,7 @@
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_coinbase_client.py": [
       "gpt_trader.features.brokerages.coinbase.client",
+      "gpt_trader.features.brokerages.coinbase.client.client",
       "gpt_trader.features.brokerages.coinbase.client.market",
       "gpt_trader.features.brokerages.coinbase.errors"
     ],
@@ -5929,6 +5933,7 @@
     "gpt_trader.features.brokerages.coinbase.client.response_cache": "src/gpt_trader/features/brokerages/coinbase/client/response_cache.py",
     "gpt_trader.features.brokerages.coinbase.client.circuit_breaker": "src/gpt_trader/features/brokerages/coinbase/client/circuit_breaker.py",
     "gpt_trader.features.brokerages.coinbase.client.priority": "src/gpt_trader/features/brokerages/coinbase/client/priority.py",
+    "gpt_trader.features.brokerages.coinbase.client.client": "src/gpt_trader/features/brokerages/coinbase/client/client.py",
     "gpt_trader.features.brokerages.coinbase.client.market": "src/gpt_trader/features/brokerages/coinbase/client/market.py",
     "gpt_trader.features.brokerages.coinbase.client.orders": "src/gpt_trader/features/brokerages/coinbase/client/orders.py",
     "gpt_trader.features.brokerages.coinbase.client.portfolio": "src/gpt_trader/features/brokerages/coinbase/client/portfolio.py",

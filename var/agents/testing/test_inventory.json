@@ -11484,7 +11484,7 @@
       },
       {
         "name": "TestCoinbaseClientBasePerformHttpRequestAndLifecycle::test_del_suppresses_close_errors",
-        "line": 106,
+        "line": 107,
         "markers": [
           "unit"
         ],
@@ -11636,7 +11636,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_request_happy_path.py": [
       {
         "name": "TestCoinbaseClientBaseRequestHappyPath::test_request_success",
-        "line": 18,
+        "line": 21,
         "markers": [
           "unit"
         ],
@@ -11645,7 +11645,7 @@
       },
       {
         "name": "TestCoinbaseClientBaseRequestHappyPath::test_request_with_body",
-        "line": 40,
+        "line": 43,
         "markers": [
           "unit"
         ],
@@ -11654,7 +11654,7 @@
       },
       {
         "name": "TestCoinbaseClientBaseRequestHappyPath::test_request_no_auth",
-        "line": 61,
+        "line": 64,
         "markers": [
           "unit"
         ],
@@ -11663,7 +11663,7 @@
       },
       {
         "name": "TestCoinbaseClientBaseRequestHappyPath::test_request_with_correlation_id",
-        "line": 76,
+        "line": 78,
         "markers": [
           "unit"
         ],
@@ -11889,7 +11889,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_coinbase_client.py": [
       {
         "name": "test_list_positions_filters_zero_and_maps_side",
-        "line": 21,
+        "line": 22,
         "markers": [
           "unit"
         ],
@@ -11897,7 +11897,7 @@
       },
       {
         "name": "test_list_balances_warns_when_accounts_missing",
-        "line": 64,
+        "line": 65,
         "markers": [
           "unit"
         ],
@@ -11905,7 +11905,7 @@
       },
       {
         "name": "test_list_balances_maps_totals",
-        "line": 75,
+        "line": 76,
         "markers": [
           "unit"
         ],
@@ -11913,7 +11913,7 @@
       },
       {
         "name": "test_warn_public_market_fallback_only_once",
-        "line": 101,
+        "line": 102,
         "markers": [
           "unit"
         ],
@@ -11929,7 +11929,7 @@
       },
       {
         "name": "test_get_ticker_invalid_request_falls_back_to_authenticated",
-        "line": 132,
+        "line": 133,
         "markers": [
           "unit"
         ],
@@ -11937,7 +11937,7 @@
       },
       {
         "name": "test_get_ticker_normalizes_from_trades_and_best_bid_ask",
-        "line": 154,
+        "line": 149,
         "markers": [
           "unit"
         ],
@@ -11945,7 +11945,7 @@
       },
       {
         "name": "test_get_ticker_auth_error_raises_in_non_advanced",
-        "line": 172,
+        "line": 171,
         "markers": [
           "unit"
         ],
@@ -11953,7 +11953,7 @@
       },
       {
         "name": "test_get_candles_permission_denied_falls_back_to_public",
-        "line": 180,
+        "line": 183,
         "markers": [
           "unit"
         ],
@@ -11961,7 +11961,7 @@
       },
       {
         "name": "test_get_candles_permission_denied_raises_in_non_advanced",
-        "line": 201,
+        "line": 204,
         "markers": [
           "unit"
         ],

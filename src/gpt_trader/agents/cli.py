@@ -175,3 +175,21 @@ def regenerate() -> int:
         uv run agent-regenerate --verify      # Check freshness only
     """
     return _run_script("regenerate_all.py")
+
+
+def dedupe() -> int:
+    """Generate test deduplication candidates.
+
+    Entry point: agent-dedupe
+
+    Analyzes the test suite to identify clusters of test files that could
+    benefit from consolidation, merging, or cleanup.
+
+    Examples:
+        uv run agent-dedupe                   # Generate/update manifest
+        uv run agent-dedupe --verify          # Check freshness (for CI)
+        uv run agent-dedupe --cluster abc123  # Show cluster details
+        uv run agent-dedupe --stats           # Summary statistics
+        uv run agent-dedupe --next-pr         # Suggest next PR packet
+    """
+    return _run_script("generate_dedupe_candidates.py")

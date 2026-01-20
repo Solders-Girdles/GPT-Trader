@@ -67,6 +67,7 @@ def _coerce_token(value: Any, fallback: str) -> str:
 _CONFIG = load_config()
 DEFAULT_PATTERNS = _coerce_sequence(_CONFIG.get("banned_patterns"), FALLBACK_PATTERNS)
 DEFAULT_PATHS = _coerce_sequence(_CONFIG.get("scan_paths"), FALLBACK_PATHS)
+SKIP_PATHS = _coerce_sequence(_CONFIG.get("skip_paths"), ())
 SKIP_LINE_TOKEN = _coerce_token(_CONFIG.get("skip_line_token"), FALLBACK_SKIP_LINE_TOKEN)
 
 
@@ -143,6 +144,20 @@ def compile_patterns(patterns: Sequence[str]) -> dict[str, re.Pattern[str]]:
     return compiled
 
 
+def _is_under_skip_path(path: Path) -> bool:
+    """Check if path is under a configured skip path."""
+    if not SKIP_PATHS:
+        return False
+    try:
+        relative_path = path.relative_to(REPO_ROOT).as_posix()
+        for skip_path in SKIP_PATHS:
+            if relative_path.startswith(skip_path.rstrip("/") + "/") or relative_path == skip_path:
+                return True
+    except ValueError:
+        pass  # Path not relative to REPO_ROOT
+    return False
+
+
 def iter_files(paths: Sequence[str]) -> Iterator[Path]:
     def should_skip(path: Path) -> bool:
         if any(part.endswith(".egg-info") for part in path.parts):
@@ -155,6 +170,9 @@ def iter_files(paths: Sequence[str]) -> Iterator[Path]:
             return True
         # Skip markdown files - they're documentation and often reference existing filenames
         if path.suffix in {".md", ".rst"}:
+            return True
+        # Skip paths from config (e.g., tests/_triage contains manifests with existing paths)
+        if _is_under_skip_path(path):
             return True
         return False
 

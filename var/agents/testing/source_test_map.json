@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 901,
+    "tests_scanned": 897,
     "source_modules": 355,
     "unresolved_modules": 3
   },
@@ -578,8 +578,8 @@
       "tests/unit/gpt_trader/tui/test_app_resource_cleanup.py"
     ],
     "gpt_trader.features.brokerages.coinbase.client.circuit_breaker": [
+      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_circuit_breaker.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_flows.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_request_cache_priority_and_circuit.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_circuit_breaker_core.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_circuit_breaker_error.py",
@@ -593,14 +593,10 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_market_mixin_requests.py"
     ],
     "gpt_trader.features.brokerages.coinbase.client.metrics": [
-      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_cache.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_flows.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_metrics_and_priority.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_request_retries.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics_collector.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics_edges.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics_request_timer.py"
+      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics_collector.py"
     ],
     "gpt_trader.features.brokerages.coinbase.client.orders": [
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_orders_mixin.py"
@@ -610,14 +606,12 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_portfolio_mixin_requests.py"
     ],
     "gpt_trader.features.brokerages.coinbase.client.priority": [
-      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_flows.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_metrics_and_priority.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_request_cache_priority_and_circuit.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_priority.py"
     ],
     "gpt_trader.features.brokerages.coinbase.client.response_cache": [
-      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_cache.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_flows.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_request_cache_priority_and_circuit.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_response_cache.py"
     ],
@@ -3020,22 +3014,14 @@
       "gpt_trader.features.brokerages.coinbase.client.accounts",
       "gpt_trader.features.brokerages.coinbase.errors"
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_cache.py": [
-      "gpt_trader.features.brokerages.coinbase.client.metrics",
-      "gpt_trader.features.brokerages.coinbase.client.response_cache"
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_circuit_breaker.py": [
-      "gpt_trader.features.brokerages.coinbase.client.circuit_breaker"
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_flows.py": [
+    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience.py": [
       "gpt_trader.features.brokerages.coinbase.client.circuit_breaker",
       "gpt_trader.features.brokerages.coinbase.client.metrics",
       "gpt_trader.features.brokerages.coinbase.client.priority",
       "gpt_trader.features.brokerages.coinbase.client.response_cache"
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_metrics_and_priority.py": [
-      "gpt_trader.features.brokerages.coinbase.client.metrics",
-      "gpt_trader.features.brokerages.coinbase.client.priority"
+    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_circuit_breaker.py": [
+      "gpt_trader.features.brokerages.coinbase.client.circuit_breaker"
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_auth_headers.py": [
       "gpt_trader.features.brokerages.coinbase.auth",
@@ -3120,12 +3106,6 @@
       "gpt_trader.features.brokerages.coinbase.client.metrics"
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics_collector.py": [
-      "gpt_trader.features.brokerages.coinbase.client.metrics"
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics_edges.py": [
-      "gpt_trader.features.brokerages.coinbase.client.metrics"
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics_request_timer.py": [
       "gpt_trader.features.brokerages.coinbase.client.metrics"
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_orders_mixin.py": [
@@ -5866,10 +5846,10 @@
     "gpt_trader.errors.handler": "src/gpt_trader/errors/handler.py",
     "gpt_trader.features.brokerages.coinbase.client.accounts": "src/gpt_trader/features/brokerages/coinbase/client/accounts.py",
     "gpt_trader.features.brokerages.coinbase.errors": "src/gpt_trader/features/brokerages/coinbase/errors.py",
-    "gpt_trader.features.brokerages.coinbase.client.metrics": "src/gpt_trader/features/brokerages/coinbase/client/metrics.py",
-    "gpt_trader.features.brokerages.coinbase.client.response_cache": "src/gpt_trader/features/brokerages/coinbase/client/response_cache.py",
     "gpt_trader.features.brokerages.coinbase.client.circuit_breaker": "src/gpt_trader/features/brokerages/coinbase/client/circuit_breaker.py",
+    "gpt_trader.features.brokerages.coinbase.client.metrics": "src/gpt_trader/features/brokerages/coinbase/client/metrics.py",
     "gpt_trader.features.brokerages.coinbase.client.priority": "src/gpt_trader/features/brokerages/coinbase/client/priority.py",
+    "gpt_trader.features.brokerages.coinbase.client.response_cache": "src/gpt_trader/features/brokerages/coinbase/client/response_cache.py",
     "gpt_trader.features.brokerages.coinbase.client.client": "src/gpt_trader/features/brokerages/coinbase/client/client.py",
     "gpt_trader.features.brokerages.coinbase.client.market": "src/gpt_trader/features/brokerages/coinbase/client/market.py",
     "gpt_trader.features.brokerages.coinbase.client.orders": "src/gpt_trader/features/brokerages/coinbase/client/orders.py",

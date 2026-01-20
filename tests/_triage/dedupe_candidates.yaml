@@ -1321,22 +1321,19 @@ clusters:
     type: source_fanout
     description: 8 test files import gpt_trader.features.brokerages.coinbase.client.metrics
     files:
-    - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_cache.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_flows.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_metrics_and_priority.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience.py
     - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_request_retries.py
     - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics.py
     - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics_collector.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics_edges.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics_request_timer.py
     source_modules:
     - gpt_trader.features.brokerages.coinbase.client.metrics
     decision: merge
     target_location: tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics.py
-    expected_file_delta: -7
+    expected_file_delta: -4
     priority: medium
-    rationale: Consolidate 8 test files into single parametrized file
-    status: pending
+    rationale: Consolidate 8 test files into 4 files (<=240 lines each)
+    status: in_progress
+    owner: claude
     added: '2026-01-20'
   949efcf7e735:
     type: source_fanout

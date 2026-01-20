@@ -1,10 +1,15 @@
-"""Tests for API Metrics Collection."""
+"""Tests for EndpointMetrics and endpoint categorization."""
 
 import pytest
 
 from gpt_trader.features.brokerages.coinbase.client.metrics import (
     EndpointMetrics,
+    categorize_endpoint,
 )
+
+# ============================================================================
+# EndpointMetrics Tests
+# ============================================================================
 
 
 class TestEndpointMetrics:
@@ -53,17 +58,11 @@ class TestEndpointMetrics:
         """Test latency percentile calculations."""
         metrics = EndpointMetrics()
 
-        # Record latencies 1-100
         for i in range(1, 101):
             metrics.record(float(i))
 
-        # P50 should be around 50
         assert 49 <= metrics.p50_latency_ms <= 51
-
-        # P95 should be around 95
         assert 94 <= metrics.p95_latency_ms <= 96
-
-        # P99 should be around 99
         assert 98 <= metrics.p99_latency_ms <= 100
 
     def test_to_dict(self) -> None:
@@ -78,3 +77,32 @@ class TestEndpointMetrics:
         assert result["total_errors"] == 1
         assert result["error_rate"] == 0.5
         assert result["avg_latency_ms"] == 150.0
+
+    def test_to_dict_zeroed_defaults(self) -> None:
+        """Test dictionary serialization with default values."""
+        metrics = EndpointMetrics()
+        data = metrics.to_dict()
+
+        assert data["total_calls"] == 0
+        assert data["total_errors"] == 0
+        assert data["error_rate"] == 0.0
+        assert data["avg_latency_ms"] == 0.0
+        assert data["last_latency_ms"] == 0.0
+        assert data["min_latency_ms"] == 0.0
+        assert data["max_latency_ms"] == 0.0
+        assert data["p50_latency_ms"] == 0.0
+        assert data["p95_latency_ms"] == 0.0
+        assert data["p99_latency_ms"] == 0.0
+
+
+# ============================================================================
+# categorize_endpoint Tests
+# ============================================================================
+
+
+def test_categorize_endpoint_case_insensitive() -> None:
+    """Test endpoint categorization is case insensitive."""
+    assert categorize_endpoint("/API/V3/BROKERAGE/ORDERS") == "orders"
+    assert categorize_endpoint("/api/v3/brokerage/MARKET/TICKER") == "market"
+    assert categorize_endpoint("/api/v3/brokerage/positions") == "positions"
+    assert categorize_endpoint("/api/v3/brokerage/unknown") == "other"

@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6312,
-    "total_files": 959,
+    "total_files": 955,
     "markers_used": 15
   },
   "marker_definitions": {
@@ -265,10 +265,8 @@
     ],
     "features": [
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_accounts_mixin.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_cache.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_circuit_breaker.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_flows.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_metrics_and_priority.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_auth_headers.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_convenience_and_transport.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_endpoints_and_paths.py",
@@ -289,8 +287,6 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_market_mixin_requests.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics_collector.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics_edges.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics_request_timer.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_orders_mixin.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_portfolio_mixin.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_portfolio_mixin_aliases.py",
@@ -10998,10 +10994,10 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_cache.py": [
+    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience.py": [
       {
         "name": "TestAPIResilienceCache::test_cache_prevents_duplicate_calls",
-        "line": 10,
+        "line": 23,
         "markers": [
           "unit"
         ],
@@ -11010,12 +11006,66 @@
       },
       {
         "name": "TestAPIResilienceCache::test_cache_invalidation_after_mutation",
-        "line": 29,
+        "line": 42,
         "markers": [
           "unit"
         ],
         "docstring": "Test that cache is invalidated after mutation operations.",
         "class": "TestAPIResilienceCache"
+      },
+      {
+        "name": "TestAPIResilienceFlows::test_full_request_flow_simulation",
+        "line": 70,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test a complete request flow through all resilience components.",
+        "class": "TestAPIResilienceFlows"
+      },
+      {
+        "name": "TestAPIResilienceFlows::test_disabled_components_allow_all",
+        "line": 122,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that disabled components don't interfere with requests.",
+        "class": "TestAPIResilienceFlows"
+      },
+      {
+        "name": "TestAPIResilienceFlows::test_error_handling_updates_metrics_and_circuit",
+        "line": 143,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that errors properly update both metrics and circuit breaker.",
+        "class": "TestAPIResilienceFlows"
+      },
+      {
+        "name": "TestAPIResilienceMetricsAndPriority::test_priority_blocks_low_under_pressure",
+        "line": 174,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that low priority requests are blocked under rate limit pressure.",
+        "class": "TestAPIResilienceMetricsAndPriority"
+      },
+      {
+        "name": "TestAPIResilienceMetricsAndPriority::test_metrics_tracks_across_endpoints",
+        "line": 191,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that metrics correctly aggregate across different endpoints.",
+        "class": "TestAPIResilienceMetricsAndPriority"
+      },
+      {
+        "name": "TestAPIResilienceMetricsAndPriority::test_rate_limit_tracking",
+        "line": 211,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that rate limit hits are tracked in metrics.",
+        "class": "TestAPIResilienceMetricsAndPriority"
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_circuit_breaker.py": [
@@ -11036,64 +11086,6 @@
         ],
         "docstring": "Test that circuit breaker transitions through half-open to closed.",
         "class": "TestAPIResilienceCircuitBreaker"
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_flows.py": [
-      {
-        "name": "TestAPIResilienceFlows::test_full_request_flow_simulation",
-        "line": 13,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test a complete request flow through all resilience components.",
-        "class": "TestAPIResilienceFlows"
-      },
-      {
-        "name": "TestAPIResilienceFlows::test_disabled_components_allow_all",
-        "line": 65,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that disabled components don't interfere with requests.",
-        "class": "TestAPIResilienceFlows"
-      },
-      {
-        "name": "TestAPIResilienceFlows::test_error_handling_updates_metrics_and_circuit",
-        "line": 86,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that errors properly update both metrics and circuit breaker.",
-        "class": "TestAPIResilienceFlows"
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_metrics_and_priority.py": [
-      {
-        "name": "TestAPIResilienceMetricsAndPriority::test_priority_blocks_low_under_pressure",
-        "line": 11,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that low priority requests are blocked under rate limit pressure.",
-        "class": "TestAPIResilienceMetricsAndPriority"
-      },
-      {
-        "name": "TestAPIResilienceMetricsAndPriority::test_metrics_tracks_across_endpoints",
-        "line": 28,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that metrics correctly aggregate across different endpoints.",
-        "class": "TestAPIResilienceMetricsAndPriority"
-      },
-      {
-        "name": "TestAPIResilienceMetricsAndPriority::test_rate_limit_tracking",
-        "line": 48,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that rate limit hits are tracked in metrics.",
-        "class": "TestAPIResilienceMetricsAndPriority"
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_auth_headers.py": [
@@ -12105,7 +12097,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics.py": [
       {
         "name": "TestEndpointMetrics::test_initial_values",
-        "line": 13,
+        "line": 19,
         "markers": [
           "unit"
         ],
@@ -12114,7 +12106,7 @@
       },
       {
         "name": "TestEndpointMetrics::test_record_updates_metrics",
-        "line": 22,
+        "line": 28,
         "markers": [
           "unit"
         ],
@@ -12123,7 +12115,7 @@
       },
       {
         "name": "TestEndpointMetrics::test_error_tracking",
-        "line": 40,
+        "line": 46,
         "markers": [
           "unit"
         ],
@@ -12132,7 +12124,7 @@
       },
       {
         "name": "TestEndpointMetrics::test_percentile_calculations",
-        "line": 52,
+        "line": 58,
         "markers": [
           "unit"
         ],
@@ -12147,12 +12139,29 @@
         ],
         "docstring": "Test dictionary serialization.",
         "class": "TestEndpointMetrics"
+      },
+      {
+        "name": "TestEndpointMetrics::test_to_dict_zeroed_defaults",
+        "line": 82,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test dictionary serialization with default values.",
+        "class": "TestEndpointMetrics"
+      },
+      {
+        "name": "test_categorize_endpoint_case_insensitive",
+        "line": 104,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test endpoint categorization is case insensitive."
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics_collector.py": [
       {
         "name": "TestAPIMetricsCollector::test_initial_state",
-        "line": 11,
+        "line": 21,
         "markers": [
           "unit"
         ],
@@ -12161,7 +12170,7 @@
       },
       {
         "name": "TestAPIMetricsCollector::test_record_request",
-        "line": 18,
+        "line": 28,
         "markers": [
           "unit"
         ],
@@ -12170,7 +12179,7 @@
       },
       {
         "name": "TestAPIMetricsCollector::test_endpoint_categorization",
-        "line": 28,
+        "line": 38,
         "markers": [
           "unit"
         ],
@@ -12179,7 +12188,7 @@
       },
       {
         "name": "TestAPIMetricsCollector::test_error_and_rate_limit_tracking",
-        "line": 46,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -12188,7 +12197,7 @@
       },
       {
         "name": "TestAPIMetricsCollector::test_disabled_collector",
-        "line": 59,
+        "line": 66,
         "markers": [
           "unit"
         ],
@@ -12197,7 +12206,7 @@
       },
       {
         "name": "TestAPIMetricsCollector::test_reset",
-        "line": 68,
+        "line": 75,
         "markers": [
           "unit"
         ],
@@ -12206,7 +12215,7 @@
       },
       {
         "name": "TestAPIMetricsCollector::test_rate_limit_usage_display",
-        "line": 79,
+        "line": 86,
         "markers": [
           "unit"
         ],
@@ -12215,54 +12224,34 @@
       },
       {
         "name": "TestAPIMetricsCollector::test_thread_safety",
-        "line": 86,
+        "line": 93,
         "markers": [
           "unit"
         ],
         "docstring": "Test that collector is thread-safe.",
         "class": "TestAPIMetricsCollector"
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics_edges.py": [
-      {
-        "name": "test_categorize_endpoint_case_insensitive",
-        "line": 11,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
       },
       {
-        "name": "test_endpoint_metrics_to_dict_zeroed_defaults",
-        "line": 18,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics_request_timer.py": [
-      {
         "name": "TestRequestTimer::test_timer_records_latency",
-        "line": 14,
+        "line": 123,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that timer records request latency.\n\nNote: We can't use time.sleep here because the coinbase conftest\nhas autouse=True for fast_retry_sleep which mocks time.sleep.\nInstead, we test that the timer correctly records elapsed time\nby verifying the record_request method works.",
+        "docstring": "Test that timer records request latency.",
         "class": "TestRequestTimer"
       },
       {
         "name": "TestRequestTimer::test_timer_context_manager_records",
-        "line": 31,
+        "line": 133,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that RequestTimer context manager records on exit.\n\nThis verifies the context manager protocol works correctly,\nthough actual timing may be near-zero due to mocked time.sleep.",
+        "docstring": "Test that RequestTimer context manager records on exit.",
         "class": "TestRequestTimer"
       },
       {
         "name": "TestRequestTimer::test_timer_marks_error",
-        "line": 47,
+        "line": 144,
         "markers": [
           "unit"
         ],
@@ -12271,7 +12260,7 @@
       },
       {
         "name": "TestRequestTimer::test_timer_marks_rate_limited",
-        "line": 57,
+        "line": 154,
         "markers": [
           "unit"
         ],
@@ -12280,7 +12269,7 @@
       },
       {
         "name": "TestRequestTimer::test_timer_records_on_exception",
-        "line": 68,
+        "line": 165,
         "markers": [
           "unit"
         ],
@@ -55577,7 +55566,7 @@
     "tests/unit/gpt_trader/utilities/test_logging_patterns.py": [
       {
         "name": "test_structured_logger_methods_apply_component",
-        "line": 21,
+        "line": 20,
         "markers": [
           "unit"
         ],
@@ -55585,7 +55574,7 @@
       },
       {
         "name": "test_get_logger_returns_structured_logger",
-        "line": 36,
+        "line": 35,
         "markers": [
           "unit"
         ],
@@ -55593,7 +55582,7 @@
       },
       {
         "name": "test_log_operation_with_plain_logger",
-        "line": 50,
+        "line": 49,
         "markers": [
           "unit"
         ],
@@ -55601,7 +55590,7 @@
       },
       {
         "name": "test_log_operation_with_default_logger",
-        "line": 66,
+        "line": 65,
         "markers": [
           "unit"
         ],
@@ -55609,7 +55598,7 @@
       },
       {
         "name": "test_log_execution_includes_args_and_result",
-        "line": 81,
+        "line": 80,
         "markers": [
           "unit"
         ],
@@ -55617,7 +55606,7 @@
       },
       {
         "name": "test_log_execution_uses_module_logger_when_none",
-        "line": 100,
+        "line": 99,
         "markers": [
           "unit"
         ],
@@ -55625,7 +55614,7 @@
       },
       {
         "name": "test_log_execution_with_structured_logger",
-        "line": 114,
+        "line": 113,
         "markers": [
           "unit"
         ],
@@ -55633,7 +55622,7 @@
       },
       {
         "name": "test_log_execution_excludes_callable_args",
-        "line": 128,
+        "line": 127,
         "markers": [
           "unit"
         ],
@@ -55641,7 +55630,7 @@
       },
       {
         "name": "test_log_execution_no_result_logging_when_none",
-        "line": 153,
+        "line": 152,
         "markers": [
           "unit"
         ],
@@ -55651,7 +55640,7 @@
     "tests/unit/gpt_trader/utilities/test_logging_patterns_domain.py": [
       {
         "name": "test_log_trade_event_includes_all_context",
-        "line": 20,
+        "line": 19,
         "markers": [
           "unit"
         ],
@@ -55659,7 +55648,7 @@
       },
       {
         "name": "test_log_trade_event_defaults_to_structured_logger",
-        "line": 41,
+        "line": 40,
         "markers": [
           "unit"
         ],
@@ -55667,7 +55656,7 @@
       },
       {
         "name": "test_log_trade_event_with_structured_logger",
-        "line": 50,
+        "line": 49,
         "markers": [
           "unit"
         ],
@@ -55675,7 +55664,7 @@
       },
       {
         "name": "test_log_position_update_adds_metrics",
-        "line": 66,
+        "line": 65,
         "markers": [
           "unit"
         ],
@@ -55683,7 +55672,7 @@
       },
       {
         "name": "test_log_position_update_defaults_to_structured_logger",
-        "line": 85,
+        "line": 84,
         "markers": [
           "unit"
         ],
@@ -55691,7 +55680,7 @@
       },
       {
         "name": "test_log_position_update_with_plain_logger",
-        "line": 93,
+        "line": 92,
         "markers": [
           "unit"
         ],
@@ -55699,7 +55688,7 @@
       },
       {
         "name": "test_log_position_update_wraps_logging_logger",
-        "line": 102,
+        "line": 101,
         "markers": [
           "unit"
         ],
@@ -55707,7 +55696,7 @@
       },
       {
         "name": "test_log_market_data_update_supports_optional_fields",
-        "line": 124,
+        "line": 123,
         "markers": [
           "unit"
         ],
@@ -55715,7 +55704,7 @@
       },
       {
         "name": "test_log_market_data_update_without_optional_fields",
-        "line": 139,
+        "line": 138,
         "markers": [
           "unit"
         ],
@@ -55723,7 +55712,7 @@
       },
       {
         "name": "test_log_market_data_update_with_plain_logger",
-        "line": 150,
+        "line": 149,
         "markers": [
           "unit"
         ],
@@ -55731,7 +55720,7 @@
       },
       {
         "name": "test_log_market_data_update_wraps_logging_logger",
-        "line": 166,
+        "line": 165,
         "markers": [
           "unit"
         ],
@@ -55741,7 +55730,7 @@
     "tests/unit/gpt_trader/utilities/test_logging_patterns_health.py": [
       {
         "name": "test_log_system_health_warns_on_non_healthy",
-        "line": 20,
+        "line": 19,
         "markers": [
           "unit"
         ],
@@ -55749,7 +55738,7 @@
       },
       {
         "name": "test_log_system_health_wraps_logging_logger",
-        "line": 35,
+        "line": 34,
         "markers": [
           "unit"
         ],
@@ -55757,7 +55746,7 @@
       },
       {
         "name": "test_log_system_health_defaults_to_structured_logger",
-        "line": 65,
+        "line": 64,
         "markers": [
           "unit"
         ],
@@ -55765,7 +55754,7 @@
       },
       {
         "name": "test_log_configuration_change_includes_component",
-        "line": 79,
+        "line": 78,
         "markers": [
           "unit"
         ],
@@ -55773,7 +55762,7 @@
       },
       {
         "name": "test_log_configuration_change_without_component",
-        "line": 88,
+        "line": 87,
         "markers": [
           "unit"
         ],
@@ -55781,7 +55770,7 @@
       },
       {
         "name": "test_log_configuration_change_with_plain_logger",
-        "line": 97,
+        "line": 96,
         "markers": [
           "unit"
         ],
@@ -55789,7 +55778,7 @@
       },
       {
         "name": "test_log_configuration_change_wraps_logging_logger",
-        "line": 106,
+        "line": 105,
         "markers": [
           "unit"
         ],
@@ -55797,7 +55786,7 @@
       },
       {
         "name": "test_log_error_with_context",
-        "line": 128,
+        "line": 127,
         "markers": [
           "unit"
         ],
@@ -55805,7 +55794,7 @@
       },
       {
         "name": "test_log_error_with_context_without_component",
-        "line": 142,
+        "line": 141,
         "markers": [
           "unit"
         ],

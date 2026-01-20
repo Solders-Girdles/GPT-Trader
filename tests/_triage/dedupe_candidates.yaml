@@ -1223,23 +1223,21 @@ clusters:
     type: source_fanout
     description: 9 test files import gpt_trader.features.live_trade.execution.broker_executor
     files:
-    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_order_edge_cases.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_order_normal.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_with_retry.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_init.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_metrics.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_resilience_backoff.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_resilience_retry.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_retry_policy.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_order.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_init_and_metrics.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_resilience.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_retry_helpers.py
     - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_with_retry.py
     source_modules:
     - gpt_trader.features.live_trade.execution.broker_executor
     decision: merge
-    target_location: tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor.py
-    expected_file_delta: -8
+    target_location: tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_order.py
+    expected_file_delta: -4
     priority: medium
-    rationale: Consolidate 9 test files into single parametrized file
-    status: pending
+    rationale: Consolidate 9 test files into 5 focused modules (each <=240 lines)
+    status: done
+    owner: rj
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/299
     added: '2026-01-20'
   2a83957b1884:
     type: similar_names

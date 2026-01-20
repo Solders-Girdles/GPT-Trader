@@ -3,30 +3,37 @@
 from __future__ import annotations
 
 import asyncio
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
+import gpt_trader.features.live_trade.bot as bot_module
 from gpt_trader.features.live_trade.bot import TradingBot
+
+
+@pytest.fixture
+def mock_engine_class(monkeypatch: pytest.MonkeyPatch) -> Mock:
+    mock_engine_class = Mock()
+    monkeypatch.setattr(bot_module, "TradingEngine", mock_engine_class)
+    return mock_engine_class
 
 
 class TestTradingBotRun:
     """Test TradingBot run method."""
 
     @pytest.fixture
-    def bot(self) -> TradingBot:
+    def bot(self, mock_engine_class: Mock) -> TradingBot:
         """Create a TradingBot with mocked engine."""
         config = Mock()
         config.symbols = ["BTC-PERP-USDC"]
         config.interval = 1  # Short interval for testing
         mock_container = Mock()
 
-        with patch("gpt_trader.features.live_trade.bot.TradingEngine") as mock_engine:
-            engine = AsyncMock()
-            engine.start_background_tasks = AsyncMock(return_value=[])
-            engine.shutdown = AsyncMock()
-            mock_engine.return_value = engine
-            bot = TradingBot(config=config, container=mock_container)
+        engine = AsyncMock()
+        engine.start_background_tasks = AsyncMock(return_value=[])
+        engine.shutdown = AsyncMock()
+        mock_engine_class.return_value = engine
+        bot = TradingBot(config=config, container=mock_container)
 
         return bot
 
@@ -76,19 +83,18 @@ class TestTradingBotStop:
     """Test TradingBot stop/shutdown methods."""
 
     @pytest.fixture
-    def bot(self) -> TradingBot:
+    def bot(self, mock_engine_class: Mock) -> TradingBot:
         """Create a TradingBot with mocked engine."""
         config = Mock()
         config.symbols = ["BTC-PERP-USDC"]
         config.interval = 60
         mock_container = Mock()
 
-        with patch("gpt_trader.features.live_trade.bot.TradingEngine") as mock_engine:
-            engine = AsyncMock()
-            engine.shutdown = AsyncMock()
-            mock_engine.return_value = engine
-            bot = TradingBot(config=config, container=mock_container)
-            bot.running = True
+        engine = AsyncMock()
+        engine.shutdown = AsyncMock()
+        mock_engine_class.return_value = engine
+        bot = TradingBot(config=config, container=mock_container)
+        bot.running = True
 
         return bot
 
@@ -118,21 +124,20 @@ class TestTradingBotStop:
 class TestTradingBotStateManagement:
     """Test TradingBot state management."""
 
-    def test_initial_state(self) -> None:
+    def test_initial_state(self, mock_engine_class: Mock) -> None:
         """Test initial state of TradingBot."""
         config = Mock()
         config.symbols = ["BTC-PERP-USDC"]
         config.interval = 60
         mock_container = Mock()
 
-        with patch("gpt_trader.features.live_trade.bot.TradingEngine") as mock_engine:
-            mock_engine.return_value = Mock()
-            bot = TradingBot(config=config, container=mock_container)
+        mock_engine_class.return_value = Mock()
+        bot = TradingBot(config=config, container=mock_container)
 
         assert bot.running is False
 
     @pytest.mark.asyncio
-    async def test_running_state_during_execution(self) -> None:
+    async def test_running_state_during_execution(self, mock_engine_class: Mock) -> None:
         """Test running state changes during execution."""
         config = Mock()
         config.symbols = ["BTC-PERP-USDC"]
@@ -147,12 +152,11 @@ class TestTradingBotStateManagement:
             running_states.append(bot.running)
             return []
 
-        with patch("gpt_trader.features.live_trade.bot.TradingEngine") as mock_engine:
-            engine = AsyncMock()
-            engine.start_background_tasks = capture_state
-            engine.shutdown = AsyncMock()
-            mock_engine.return_value = engine
-            bot = TradingBot(config=config, container=mock_container)
+        engine = AsyncMock()
+        engine.start_background_tasks = capture_state
+        engine.shutdown = AsyncMock()
+        mock_engine_class.return_value = engine
+        bot = TradingBot(config=config, container=mock_container)
 
         # Before run
         assert bot.running is False

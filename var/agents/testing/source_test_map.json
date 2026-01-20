@@ -2,7 +2,7 @@
   "version": "1.0",
   "summary": {
     "tests_scanned": 919,
-    "source_modules": 355,
+    "source_modules": 356,
     "unresolved_modules": 3
   },
   "source_to_tests": {
@@ -965,6 +965,9 @@
       "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_run_loop.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_schedule_and_start_stop.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_task_completion_and_async_loop.py"
+    ],
+    "gpt_trader.features.live_trade.execution": [
+      "tests/integration/test_validation_escalation_metrics.py"
     ],
     "gpt_trader.features.live_trade.execution.broker_executor": [
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_order_edge_cases.py",
@@ -2481,6 +2484,7 @@
       "gpt_trader.app.container",
       "gpt_trader.features.live_trade.engines.base",
       "gpt_trader.features.live_trade.engines.strategy",
+      "gpt_trader.features.live_trade.execution",
       "gpt_trader.features.live_trade.risk"
     ],
     "tests/property/test_coinbase_invariants_order_lifecycle.py": [
@@ -5902,6 +5906,7 @@
     "gpt_trader.features.optimize.types": "src/gpt_trader/features/optimize/types.py",
     "gpt_trader.monitoring.metrics_collector": "src/gpt_trader/monitoring/metrics_collector.py",
     "gpt_trader.features.live_trade.risk": "src/gpt_trader/features/live_trade/risk/__init__.py",
+    "gpt_trader.features.live_trade.execution": "src/gpt_trader/features/live_trade/execution/__init__.py",
     "gpt_trader.features.brokerages.coinbase.specs": "src/gpt_trader/features/brokerages/coinbase/specs.py",
     "gpt_trader.features.brokerages.coinbase.client.base": "src/gpt_trader/features/brokerages/coinbase/client/base.py",
     "gpt_trader.features.live_trade.degradation": "src/gpt_trader/features/live_trade/degradation.py",

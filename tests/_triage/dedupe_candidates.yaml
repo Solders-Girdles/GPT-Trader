@@ -1935,8 +1935,9 @@ clusters:
     expected_file_delta: -5
     priority: medium
     rationale: Consolidated 6 → 4 files (guard_errors + symbols split)
-    status: in_progress
+    status: done
     owner: claude
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/307
     added: '2026-01-20'
   acb92ca7c206:
     type: source_fanout

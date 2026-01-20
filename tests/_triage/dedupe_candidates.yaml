@@ -900,11 +900,13 @@ clusters:
     source_modules:
     - gpt_trader.features.brokerages.coinbase.rest.order_service
     decision: merge
-    target_location: tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service.py
-    expected_file_delta: -9
+    target_location: tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_place_and_cancel.py
+    expected_file_delta: -5
     priority: medium
-    rationale: Consolidate 10 test files into single parametrized file
-    status: pending
+    rationale: Consolidate 10 test files into 5 focused modules (each <=240 lines)
+    status: done
+    owner: rj
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/295
     added: '2026-01-20'
   8ca59d3ba931:
     type: source_fanout

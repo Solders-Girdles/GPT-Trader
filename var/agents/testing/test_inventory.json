@@ -22705,7 +22705,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_edge_cases.py": [
       {
         "name": "TestOrderEventRecorderEdgeCases::test_recorder_with_empty_bot_id",
-        "line": 14,
+        "line": 17,
         "markers": [
           "unit"
         ],
@@ -22714,7 +22714,7 @@
       },
       {
         "name": "TestOrderEventRecorderEdgeCases::test_record_rejection_with_decimal_quantity",
-        "line": 21,
+        "line": 22,
         "markers": [
           "unit"
         ],
@@ -22723,7 +22723,7 @@
       },
       {
         "name": "TestOrderEventRecorderEdgeCases::test_record_trade_event_uses_order_quantity_when_available",
-        "line": 44,
+        "line": 47,
         "markers": [
           "unit"
         ],
@@ -22879,7 +22879,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_submission_attempt.py": [
       {
         "name": "TestRecordSubmissionAttempt::test_record_submission_attempt_logs_correctly",
-        "line": 16,
+        "line": 18,
         "markers": [
           "unit"
         ],
@@ -22888,7 +22888,7 @@
       },
       {
         "name": "TestRecordSubmissionAttempt::test_record_submission_attempt_handles_none_price",
-        "line": 44,
+        "line": 47,
         "markers": [
           "unit"
         ],
@@ -22897,7 +22897,7 @@
       },
       {
         "name": "TestRecordSubmissionAttempt::test_record_submission_attempt_handles_exception",
-        "line": 66,
+        "line": 70,
         "markers": [
           "unit"
         ],
@@ -22908,7 +22908,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_success.py": [
       {
         "name": "TestRecordSuccess::test_record_success_logs_order_info",
-        "line": 16,
+        "line": 18,
         "markers": [
           "unit"
         ],
@@ -22917,7 +22917,7 @@
       },
       {
         "name": "TestRecordSuccess::test_record_success_handles_reduce_only",
-        "line": 39,
+        "line": 43,
         "markers": [
           "unit"
         ],
@@ -22926,7 +22926,7 @@
       },
       {
         "name": "TestRecordSuccess::test_record_success_handles_market_price",
-        "line": 59,
+        "line": 65,
         "markers": [
           "unit"
         ],

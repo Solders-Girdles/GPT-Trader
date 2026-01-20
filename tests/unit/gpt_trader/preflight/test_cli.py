@@ -2,11 +2,33 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+import os
+from dataclasses import dataclass
+from unittest.mock import MagicMock
 
 import pytest
 
 from gpt_trader.preflight.cli import _header, main
+
+
+@dataclass(frozen=True)
+class CLIMocks:
+    checker: MagicMock
+    preflight_class: MagicMock
+    header: MagicMock
+
+
+@pytest.fixture
+def cli_mocks(monkeypatch: pytest.MonkeyPatch) -> CLIMocks:
+    checker = MagicMock()
+    checker.generate_report.return_value = (True, "READY")
+    preflight_class = MagicMock(return_value=checker)
+    header = MagicMock()
+
+    monkeypatch.setattr("gpt_trader.preflight.cli.PreflightCheck", preflight_class)
+    monkeypatch.setattr("gpt_trader.preflight.cli._header", header)
+
+    return CLIMocks(checker=checker, preflight_class=preflight_class, header=header)
 
 
 class TestHeader:
@@ -38,142 +60,84 @@ class TestHeader:
 class TestMain:
     """Test main CLI entry point."""
 
-    def test_returns_zero_on_success(self) -> None:
+    @pytest.fixture(autouse=True)
+    def _clear_warn_only_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.delenv("GPT_TRADER_PREFLIGHT_WARN_ONLY", raising=False)
+
+    def test_returns_zero_on_success(self, cli_mocks: CLIMocks) -> None:
         """Should return 0 when all checks pass."""
-        mock_checker = MagicMock()
-        mock_checker.generate_report.return_value = (True, "READY")
+        cli_mocks.checker.generate_report.return_value = (True, "READY")
 
-        with (
-            patch("gpt_trader.preflight.cli.PreflightCheck", return_value=mock_checker),
-            patch("gpt_trader.preflight.cli._header"),
-        ):
-            result = main(["--profile", "dev"])
+        assert main(["--profile", "dev"]) == 0
 
-        assert result == 0
-
-    def test_returns_one_on_failure(self) -> None:
+    def test_returns_one_on_failure(self, cli_mocks: CLIMocks) -> None:
         """Should return 1 when checks fail."""
-        mock_checker = MagicMock()
-        mock_checker.generate_report.return_value = (False, "NOT_READY")
+        cli_mocks.checker.generate_report.return_value = (False, "NOT_READY")
 
-        with (
-            patch("gpt_trader.preflight.cli.PreflightCheck", return_value=mock_checker),
-            patch("gpt_trader.preflight.cli._header"),
-        ):
-            result = main(["--profile", "prod"])
+        assert main(["--profile", "prod"]) == 1
 
-        assert result == 1
-
-    def test_passes_verbose_flag(self) -> None:
+    def test_passes_verbose_flag(self, cli_mocks: CLIMocks) -> None:
         """Should pass verbose flag to PreflightCheck."""
-        mock_checker = MagicMock()
-        mock_checker.generate_report.return_value = (True, "READY")
+        main(["--verbose"])
 
-        with (
-            patch(
-                "gpt_trader.preflight.cli.PreflightCheck", return_value=mock_checker
-            ) as mock_class,
-            patch("gpt_trader.preflight.cli._header"),
-        ):
-            main(["--verbose"])
+        cli_mocks.preflight_class.assert_called_once_with(verbose=True, profile="canary")
 
-            mock_class.assert_called_once_with(verbose=True, profile="canary")
-
-    def test_passes_profile_flag(self) -> None:
+    def test_passes_profile_flag(self, cli_mocks: CLIMocks) -> None:
         """Should pass profile flag to PreflightCheck."""
-        mock_checker = MagicMock()
-        mock_checker.generate_report.return_value = (True, "READY")
+        main(["--profile", "prod"])
 
-        with (
-            patch(
-                "gpt_trader.preflight.cli.PreflightCheck", return_value=mock_checker
-            ) as mock_class,
-            patch("gpt_trader.preflight.cli._header"),
-        ):
-            main(["--profile", "prod"])
+        cli_mocks.preflight_class.assert_called_once_with(verbose=False, profile="prod")
 
-            mock_class.assert_called_once_with(verbose=False, profile="prod")
-
-    def test_uses_canary_profile_by_default(self) -> None:
+    def test_uses_canary_profile_by_default(self, cli_mocks: CLIMocks) -> None:
         """Should use canary profile when not specified."""
-        mock_checker = MagicMock()
-        mock_checker.generate_report.return_value = (True, "READY")
+        main([])
 
-        with (
-            patch(
-                "gpt_trader.preflight.cli.PreflightCheck", return_value=mock_checker
-            ) as mock_class,
-            patch("gpt_trader.preflight.cli._header"),
-        ):
-            main([])
+        cli_mocks.preflight_class.assert_called_once_with(verbose=False, profile="canary")
 
-            mock_class.assert_called_once_with(verbose=False, profile="canary")
-
-    def test_runs_all_check_functions(self) -> None:
+    def test_runs_all_check_functions(self, cli_mocks: CLIMocks) -> None:
         """Should call all check functions."""
-        mock_checker = MagicMock()
-        mock_checker.generate_report.return_value = (True, "READY")
+        main([])
 
-        with (
-            patch("gpt_trader.preflight.cli.PreflightCheck", return_value=mock_checker),
-            patch("gpt_trader.preflight.cli._header"),
-        ):
-            main([])
+        # Verify all checks were called
+        cli_mocks.checker.check_python_version.assert_called_once()
+        cli_mocks.checker.check_dependencies.assert_called_once()
+        cli_mocks.checker.check_environment_variables.assert_called_once()
+        cli_mocks.checker.check_api_connectivity.assert_called_once()
+        cli_mocks.checker.check_key_permissions.assert_called_once()
+        cli_mocks.checker.check_risk_configuration.assert_called_once()
+        cli_mocks.checker.check_pretrade_diagnostics.assert_called_once()
+        cli_mocks.checker.check_test_suite.assert_called_once()
+        cli_mocks.checker.check_profile_configuration.assert_called_once()
+        cli_mocks.checker.check_system_time.assert_called_once()
+        cli_mocks.checker.check_disk_space.assert_called_once()
+        cli_mocks.checker.simulate_dry_run.assert_called_once()
+        cli_mocks.checker.check_event_store_redaction.assert_called_once()
+        cli_mocks.checker.check_readiness_report.assert_called_once()
 
-            # Verify all checks were called
-            mock_checker.check_python_version.assert_called_once()
-            mock_checker.check_dependencies.assert_called_once()
-            mock_checker.check_environment_variables.assert_called_once()
-            mock_checker.check_api_connectivity.assert_called_once()
-            mock_checker.check_key_permissions.assert_called_once()
-            mock_checker.check_risk_configuration.assert_called_once()
-            mock_checker.check_test_suite.assert_called_once()
-            mock_checker.check_profile_configuration.assert_called_once()
-            mock_checker.check_system_time.assert_called_once()
-            mock_checker.check_disk_space.assert_called_once()
-            mock_checker.simulate_dry_run.assert_called_once()
-            mock_checker.check_readiness_report.assert_called_once()
-
-    def test_handles_check_exception_gracefully(self) -> None:
+    def test_handles_check_exception_gracefully(self, cli_mocks: CLIMocks) -> None:
         """Should handle exceptions from checks gracefully."""
-        mock_checker = MagicMock()
-        mock_checker.check_python_version.side_effect = Exception("Test exception")
-        mock_checker.generate_report.return_value = (True, "READY")
+        cli_mocks.checker.check_python_version.side_effect = Exception("Test exception")
+        cli_mocks.checker.generate_report.return_value = (True, "READY")
 
-        with (
-            patch("gpt_trader.preflight.cli.PreflightCheck", return_value=mock_checker),
-            patch("gpt_trader.preflight.cli._header"),
-        ):
-            # Should not raise, should handle gracefully
-            result = main([])
+        # Should not raise, should handle gracefully
+        assert main([]) == 0
+        cli_mocks.checker.log_error.assert_called_once()
 
-            # Should still complete and return based on report
-            assert result == 0
-
-    def test_calls_header_with_profile(self) -> None:
+    def test_calls_header_with_profile(self, cli_mocks: CLIMocks) -> None:
         """Should call header with correct profile."""
-        mock_checker = MagicMock()
-        mock_checker.generate_report.return_value = (True, "READY")
+        cli_mocks.checker.generate_report.return_value = (True, "READY")
 
-        with (
-            patch("gpt_trader.preflight.cli.PreflightCheck", return_value=mock_checker),
-            patch("gpt_trader.preflight.cli._header") as mock_header,
-        ):
-            main(["--profile", "prod"])
+        main(["--profile", "prod"])
 
-            mock_header.assert_called_once_with("prod")
+        cli_mocks.header.assert_called_once_with("prod")
 
-    def test_short_flags_work(self) -> None:
+    def test_short_flags_work(self, cli_mocks: CLIMocks) -> None:
         """Should accept short flag versions."""
-        mock_checker = MagicMock()
-        mock_checker.generate_report.return_value = (True, "READY")
+        main(["-v", "-p", "prod"])
 
-        with (
-            patch(
-                "gpt_trader.preflight.cli.PreflightCheck", return_value=mock_checker
-            ) as mock_class,
-            patch("gpt_trader.preflight.cli._header"),
-        ):
-            main(["-v", "-p", "prod"])
+        cli_mocks.preflight_class.assert_called_once_with(verbose=True, profile="prod")
 
-            mock_class.assert_called_once_with(verbose=True, profile="prod")
+    def test_warn_only_sets_env_var(self, cli_mocks: CLIMocks) -> None:
+        main(["--warn-only"])
+
+        assert os.environ.get("GPT_TRADER_PREFLIGHT_WARN_ONLY") == "1"

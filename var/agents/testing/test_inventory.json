@@ -5301,7 +5301,7 @@
     "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_summary.py": [
       {
         "name": "TestBacktestReporterGenerateSummary::test_generate_summary_returns_string",
-        "line": 21,
+        "line": 62,
         "markers": [
           "unit"
         ],
@@ -5310,7 +5310,7 @@
       },
       {
         "name": "TestBacktestReporterGenerateSummary::test_generate_summary_includes_performance_section",
-        "line": 42,
+        "line": 70,
         "markers": [
           "unit"
         ],
@@ -5319,7 +5319,7 @@
       },
       {
         "name": "TestBacktestReporterGenerateSummary::test_generate_summary_includes_risk_metrics_section",
-        "line": 65,
+        "line": 80,
         "markers": [
           "unit"
         ],
@@ -5328,7 +5328,7 @@
       },
       {
         "name": "TestBacktestReporterGenerateSummary::test_generate_summary_includes_trade_statistics_section",
-        "line": 88,
+        "line": 90,
         "markers": [
           "unit"
         ],
@@ -5337,7 +5337,7 @@
       },
       {
         "name": "TestBacktestReporterGenerateSummary::test_generate_summary_includes_costs_section",
-        "line": 111,
+        "line": 100,
         "markers": [
           "unit"
         ],
@@ -5346,7 +5346,7 @@
       },
       {
         "name": "TestBacktestReporterGenerateSummary::test_generate_summary_handles_none_sharpe",
-        "line": 134,
+        "line": 110,
         "markers": [
           "unit"
         ],
@@ -39045,7 +39045,7 @@
       },
       {
         "name": "TestCheckRiskConfiguration::test_warns_when_kill_switch_enabled",
-        "line": 107,
+        "line": 105,
         "markers": [
           "unit"
         ],
@@ -39054,7 +39054,7 @@
       },
       {
         "name": "TestCheckRiskConfiguration::test_warns_when_reduce_only_mode",
-        "line": 116,
+        "line": 114,
         "markers": [
           "unit"
         ],
@@ -39063,7 +39063,7 @@
       },
       {
         "name": "TestCheckRiskConfiguration::test_warns_on_high_daily_loss_limit",
-        "line": 125,
+        "line": 123,
         "markers": [
           "unit"
         ],
@@ -39072,7 +39072,7 @@
       },
       {
         "name": "TestCheckRiskConfiguration::test_warns_on_aggressive_leverage",
-        "line": 134,
+        "line": 132,
         "markers": [
           "unit"
         ],
@@ -39081,7 +39081,7 @@
       },
       {
         "name": "TestCheckRiskConfiguration::test_fails_on_exception",
-        "line": 143,
+        "line": 141,
         "markers": [
           "unit"
         ],
@@ -39090,7 +39090,7 @@
       },
       {
         "name": "TestCheckRiskConfiguration::test_prints_section_header",
-        "line": 152,
+        "line": 150,
         "markers": [
           "unit"
         ],

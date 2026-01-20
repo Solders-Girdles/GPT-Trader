@@ -32841,7 +32841,7 @@
     "tests/unit/gpt_trader/logging/test_setup_configure_logging_handlers.py": [
       {
         "name": "TestConfigureLoggingHandlers::test_configure_logging_creates_directories",
-        "line": 66,
+        "line": 72,
         "markers": [
           "unit"
         ],
@@ -32850,7 +32850,7 @@
       },
       {
         "name": "TestConfigureLoggingHandlers::test_configure_logging_creates_console_handler",
-        "line": 74,
+        "line": 78,
         "markers": [
           "unit"
         ],
@@ -32859,7 +32859,7 @@
       },
       {
         "name": "TestConfigureLoggingHandlers::test_configure_logging_creates_file_handlers",
-        "line": 86,
+        "line": 89,
         "markers": [
           "unit"
         ],
@@ -32868,7 +32868,7 @@
       },
       {
         "name": "TestConfigureLoggingHandlers::test_configure_logging_creates_json_logger",
-        "line": 98,
+        "line": 100,
         "markers": [
           "unit"
         ],
@@ -32877,7 +32877,7 @@
       },
       {
         "name": "TestConfigureLoggingHandlers::test_configure_logging_json_handlers",
-        "line": 108,
+        "line": 109,
         "markers": [
           "unit"
         ],
@@ -32895,7 +32895,7 @@
       },
       {
         "name": "TestConfigureLoggingHandlers::test_configure_logging_handler_formatters",
-        "line": 140,
+        "line": 139,
         "markers": [
           "unit"
         ],

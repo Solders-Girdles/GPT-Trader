@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6317,
-    "total_files": 964,
+    "total_tests": 6312,
+    "total_files": 959,
     "markers_used": 15
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6152,
+    "unit": 6147,
     "asyncio": 371,
     "property": 82,
     "integration": 79,
@@ -1031,14 +1031,9 @@
       "tests/unit/gpt_trader/utilities/test_datetime_helpers_now.py",
       "tests/unit/gpt_trader/utilities/test_datetime_helpers_to_iso_utc.py",
       "tests/unit/gpt_trader/utilities/test_iterators.py",
-      "tests/unit/gpt_trader/utilities/test_logging_patterns_decorator.py",
-      "tests/unit/gpt_trader/utilities/test_logging_patterns_error_and_config_change.py",
-      "tests/unit/gpt_trader/utilities/test_logging_patterns_execution.py",
-      "tests/unit/gpt_trader/utilities/test_logging_patterns_log_operation.py",
-      "tests/unit/gpt_trader/utilities/test_logging_patterns_market_data.py",
-      "tests/unit/gpt_trader/utilities/test_logging_patterns_structured_logger.py",
-      "tests/unit/gpt_trader/utilities/test_logging_patterns_system_health.py",
-      "tests/unit/gpt_trader/utilities/test_logging_patterns_trade_and_position.py",
+      "tests/unit/gpt_trader/utilities/test_logging_patterns.py",
+      "tests/unit/gpt_trader/utilities/test_logging_patterns_domain.py",
+      "tests/unit/gpt_trader/utilities/test_logging_patterns_health.py",
       "tests/unit/gpt_trader/utilities/test_parsing.py",
       "tests/unit/gpt_trader/utilities/test_performance_monitor.py",
       "tests/unit/gpt_trader/utilities/test_quantization.py"
@@ -55579,180 +55574,10 @@
         "class": "TestEmptyStream"
       }
     ],
-    "tests/unit/gpt_trader/utilities/test_logging_patterns_decorator.py": [
-      {
-        "name": "test_log_execution_includes_args_and_result",
-        "line": 9,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_execution_uses_module_logger_when_none",
-        "line": 28,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_execution_with_structured_logger",
-        "line": 42,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_execution_excludes_callable_args",
-        "line": 56,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_execution_no_result_logging_when_none",
-        "line": 81,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/utilities/test_logging_patterns_error_and_config_change.py": [
-      {
-        "name": "test_log_error_with_context",
-        "line": 13,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_error_with_context_without_component",
-        "line": 27,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_configuration_change_includes_component",
-        "line": 39,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_configuration_change_without_component",
-        "line": 48,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_configuration_change_with_plain_logger",
-        "line": 57,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_configuration_change_wraps_logging_logger",
-        "line": 66,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_configuration_change_plain_logger_branch",
-        "line": 83,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/utilities/test_logging_patterns_execution.py": [
-      {
-        "name": "test_log_execution_includes_args_and_result",
-        "line": 19,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that log_execution decorator captures args and results."
-      }
-    ],
-    "tests/unit/gpt_trader/utilities/test_logging_patterns_log_operation.py": [
-      {
-        "name": "test_log_operation_with_plain_logger",
-        "line": 11,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_operation_with_default_logger",
-        "line": 27,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/utilities/test_logging_patterns_market_data.py": [
-      {
-        "name": "test_log_market_data_update_supports_optional_fields",
-        "line": 14,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_market_data_update_without_optional_fields",
-        "line": 29,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_market_data_update_with_plain_logger_and_optional_fields",
-        "line": 40,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_market_data_update_plain_logger_branch",
-        "line": 56,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_market_data_update_wraps_logging_logger",
-        "line": 69,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/utilities/test_logging_patterns_structured_logger.py": [
+    "tests/unit/gpt_trader/utilities/test_logging_patterns.py": [
       {
         "name": "test_structured_logger_methods_apply_component",
-        "line": 12,
+        "line": 21,
         "markers": [
           "unit"
         ],
@@ -55760,51 +55585,73 @@
       },
       {
         "name": "test_get_logger_returns_structured_logger",
-        "line": 27,
+        "line": 36,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_operation_with_plain_logger",
+        "line": 50,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_operation_with_default_logger",
+        "line": 66,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_execution_includes_args_and_result",
+        "line": 81,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_execution_uses_module_logger_when_none",
+        "line": 100,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_execution_with_structured_logger",
+        "line": 114,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_execution_excludes_callable_args",
+        "line": 128,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_execution_no_result_logging_when_none",
+        "line": 153,
         "markers": [
           "unit"
         ],
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/utilities/test_logging_patterns_system_health.py": [
-      {
-        "name": "test_log_system_health_warns_on_non_healthy",
-        "line": 13,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_system_health_wraps_logging_logger",
-        "line": 28,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_system_health_defaults_to_structured_logger",
-        "line": 58,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_system_health_plain_logger_branch",
-        "line": 67,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/utilities/test_logging_patterns_trade_and_position.py": [
+    "tests/unit/gpt_trader/utilities/test_logging_patterns_domain.py": [
       {
         "name": "test_log_trade_event_includes_all_context",
-        "line": 14,
+        "line": 20,
         "markers": [
           "unit"
         ],
@@ -55812,7 +55659,7 @@
       },
       {
         "name": "test_log_trade_event_defaults_to_structured_logger",
-        "line": 35,
+        "line": 41,
         "markers": [
           "unit"
         ],
@@ -55820,7 +55667,7 @@
       },
       {
         "name": "test_log_trade_event_with_structured_logger",
-        "line": 44,
+        "line": 50,
         "markers": [
           "unit"
         ],
@@ -55828,7 +55675,7 @@
       },
       {
         "name": "test_log_position_update_adds_metrics",
-        "line": 55,
+        "line": 66,
         "markers": [
           "unit"
         ],
@@ -55836,7 +55683,7 @@
       },
       {
         "name": "test_log_position_update_defaults_to_structured_logger",
-        "line": 74,
+        "line": 85,
         "markers": [
           "unit"
         ],
@@ -55844,15 +55691,7 @@
       },
       {
         "name": "test_log_position_update_with_plain_logger",
-        "line": 82,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_position_update_plain_logger_branch",
-        "line": 91,
+        "line": 93,
         "markers": [
           "unit"
         ],
@@ -55861,6 +55700,112 @@
       {
         "name": "test_log_position_update_wraps_logging_logger",
         "line": 102,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_market_data_update_supports_optional_fields",
+        "line": 124,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_market_data_update_without_optional_fields",
+        "line": 139,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_market_data_update_with_plain_logger",
+        "line": 150,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_market_data_update_wraps_logging_logger",
+        "line": 166,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/utilities/test_logging_patterns_health.py": [
+      {
+        "name": "test_log_system_health_warns_on_non_healthy",
+        "line": 20,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_system_health_wraps_logging_logger",
+        "line": 35,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_system_health_defaults_to_structured_logger",
+        "line": 65,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_configuration_change_includes_component",
+        "line": 79,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_configuration_change_without_component",
+        "line": 88,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_configuration_change_with_plain_logger",
+        "line": 97,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_configuration_change_wraps_logging_logger",
+        "line": 106,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_error_with_context",
+        "line": 128,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_error_with_context_without_component",
+        "line": 142,
         "markers": [
           "unit"
         ],

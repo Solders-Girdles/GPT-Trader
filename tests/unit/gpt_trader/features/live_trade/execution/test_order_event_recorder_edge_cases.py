@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
+import pytest
+
+import gpt_trader.features.live_trade.execution.order_event_recorder as order_event_recorder_module
 from gpt_trader.features.live_trade.execution.order_event_recorder import OrderEventRecorder
 
 
@@ -16,17 +19,18 @@ class TestOrderEventRecorderEdgeCases:
         recorder = OrderEventRecorder(event_store=mock_event_store, bot_id="")
         assert recorder._bot_id == ""
 
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.emit_metric")
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_record_rejection_with_decimal_quantity(
         self,
-        mock_get_logger: MagicMock,
-        mock_emit_metric: MagicMock,
         order_event_recorder: OrderEventRecorder,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Test rejection with high precision decimal quantity."""
         mock_logger = MagicMock()
-        mock_get_logger.return_value = mock_logger
+        mock_emit_metric = MagicMock()
+        monkeypatch.setattr(
+            order_event_recorder_module, "get_monitoring_logger", lambda: mock_logger
+        )
+        monkeypatch.setattr(order_event_recorder_module, "emit_metric", mock_emit_metric)
 
         order_event_recorder.record_rejection(
             symbol="BTC-USD",
@@ -40,18 +44,19 @@ class TestOrderEventRecorderEdgeCases:
         metric_data = call_args[0][2]
         assert metric_data["quantity"] == "0.00123456789"
 
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_record_trade_event_uses_order_quantity_when_available(
         self,
-        mock_get_logger: MagicMock,
         order_event_recorder: OrderEventRecorder,
         mock_event_store: MagicMock,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Test that order.quantity is used when available."""
         from gpt_trader.core import OrderSide
 
         mock_logger = MagicMock()
-        mock_get_logger.return_value = mock_logger
+        monkeypatch.setattr(
+            order_event_recorder_module, "get_monitoring_logger", lambda: mock_logger
+        )
 
         order = MagicMock()
         order.id = "order-123"

@@ -23111,7 +23111,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_process_rejection.py": [
       {
         "name": "TestProcessRejection::test_integration_mode_stores_event",
-        "line": 18,
+        "line": 33,
         "markers": [
           "unit"
         ],
@@ -23120,7 +23120,7 @@
       },
       {
         "name": "TestProcessRejection::test_normal_mode_raises_error",
-        "line": 65,
+        "line": 78,
         "markers": [
           "unit"
         ],
@@ -23227,7 +23227,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows_retry_idempotency.py": [
       {
         "name": "TestRetryPathIdempotency::test_provided_client_order_id_is_reused_on_retry",
-        "line": 19,
+        "line": 28,
         "markers": [
           "unit"
         ],
@@ -23236,7 +23236,7 @@
       },
       {
         "name": "TestRetryPathIdempotency::test_generated_client_order_id_differs_per_submission",
-        "line": 79,
+        "line": 84,
         "markers": [
           "unit"
         ],
@@ -23294,7 +23294,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows_transient_failure.py": [
       {
         "name": "TestTransientFailureWithClientOrderIdReuse::test_transient_failure_then_success_reuses_client_order_id",
-        "line": 25,
+        "line": 40,
         "markers": [
           "unit"
         ],
@@ -28983,7 +28983,7 @@
     "tests/unit/gpt_trader/features/live_trade/test_risk_manager_mark_staleness.py": [
       {
         "name": "TestCheckMarkStaleness::test_no_update_is_stale",
-        "line": 27,
+        "line": 25,
         "markers": [
           "unit"
         ],
@@ -28992,7 +28992,7 @@
       },
       {
         "name": "TestCheckMarkStaleness::test_recent_update_not_stale",
-        "line": 33,
+        "line": 31,
         "markers": [
           "unit"
         ],
@@ -29001,7 +29001,7 @@
       },
       {
         "name": "TestCheckMarkStaleness::test_old_update_is_stale",
-        "line": 40,
+        "line": 38,
         "markers": [
           "unit"
         ],
@@ -29010,7 +29010,7 @@
       },
       {
         "name": "TestCheckMarkStaleness::test_custom_staleness_threshold",
-        "line": 47,
+        "line": 45,
         "markers": [
           "unit"
         ],
@@ -29019,7 +29019,7 @@
       },
       {
         "name": "TestCheckMarkStaleness::test_default_threshold_without_config",
-        "line": 56,
+        "line": 54,
         "markers": [
           "unit"
         ],
@@ -29028,7 +29028,7 @@
       },
       {
         "name": "TestCheckMarkStaleness::test_exact_boundary",
-        "line": 65,
+        "line": 62,
         "markers": [
           "unit"
         ],
@@ -29153,7 +29153,7 @@
     "tests/unit/gpt_trader/features/live_trade/test_risk_manager_risk_metrics.py": [
       {
         "name": "TestAppendRiskMetrics::test_appends_metrics",
-        "line": 25,
+        "line": 23,
         "markers": [
           "unit"
         ],
@@ -29162,7 +29162,7 @@
       },
       {
         "name": "TestAppendRiskMetrics::test_captures_reduce_only_mode",
-        "line": 38,
+        "line": 36,
         "markers": [
           "unit"
         ],
@@ -29171,7 +29171,7 @@
       },
       {
         "name": "TestAppendRiskMetrics::test_limits_to_100_metrics",
-        "line": 47,
+        "line": 45,
         "markers": [
           "unit"
         ],
@@ -29180,7 +29180,7 @@
       },
       {
         "name": "TestAppendRiskMetrics::test_converts_nested_decimals_to_strings",
-        "line": 59,
+        "line": 57,
         "markers": [
           "unit"
         ],

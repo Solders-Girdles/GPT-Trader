@@ -3,13 +3,28 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
+import gpt_trader.features.live_trade.execution.order_event_recorder as recorder_module
 from gpt_trader.core import OrderSide, OrderType, TimeInForce
 from gpt_trader.features.live_trade.execution.order_submission import OrderSubmitter
 from gpt_trader.persistence.orders_store import OrderStatus as StoreOrderStatus
+
+
+@pytest.fixture
+def monitoring_logger(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    mock_logger = MagicMock()
+    monkeypatch.setattr(recorder_module, "get_monitoring_logger", lambda: mock_logger)
+    return mock_logger
+
+
+@pytest.fixture
+def emit_metric_mock(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    mock_emit = MagicMock()
+    monkeypatch.setattr(recorder_module, "emit_metric", mock_emit)
+    return mock_emit
 
 
 class TestProcessRejection:
@@ -60,19 +75,14 @@ class TestProcessRejection:
             },
         )
 
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.emit_metric")
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_normal_mode_raises_error(
         self,
-        mock_get_logger: MagicMock,
-        mock_emit_metric: MagicMock,
         submitter: OrderSubmitter,
         rejected_order: MagicMock,
+        monitoring_logger: MagicMock,
+        emit_metric_mock: MagicMock,
     ) -> None:
         """Test that normal mode raises RuntimeError."""
-        mock_logger = MagicMock()
-        mock_get_logger.return_value = mock_logger
-
         rejected_order.status = MagicMock()
         rejected_order.status.value = "CANCELLED"
 

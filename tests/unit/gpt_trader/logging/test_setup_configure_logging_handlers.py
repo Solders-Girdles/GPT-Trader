@@ -5,16 +5,22 @@ from __future__ import annotations
 import logging
 import logging.handlers
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 
+import gpt_trader.logging.setup as logging_setup
 from gpt_trader.logging.json_formatter import StructuredJSONFormatterWithTimestamp
 from gpt_trader.logging.setup import configure_logging
 
 
 class TestConfigureLoggingHandlers:
     """Test handler creation and formatter behavior in configure_logging."""
+
+    @pytest.fixture
+    def log_dir(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+        log_dir = tmp_path / "logs"
+        monkeypatch.setattr(logging_setup, "LOG_DIR", log_dir)
+        return log_dir
 
     @pytest.fixture(autouse=True)
     def clean_logging_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -63,18 +69,15 @@ class TestConfigureLoggingHandlers:
             json_logger.removeHandler(handler)
             handler.close()
 
-    def test_configure_logging_creates_directories(self, tmp_path: Path) -> None:
+    def test_configure_logging_creates_directories(self, log_dir: Path) -> None:
         """Test that logging directories are created in the configured log dir."""
-        log_dir = tmp_path / "logs"
-        with patch("gpt_trader.logging.setup.LOG_DIR", log_dir):
-            configure_logging()
+        configure_logging()
 
         assert log_dir.exists()
 
-    def test_configure_logging_creates_console_handler(self, tmp_path: Path) -> None:
+    def test_configure_logging_creates_console_handler(self, log_dir: Path) -> None:
         """Test that console handler is created."""
-        with patch("gpt_trader.logging.setup.LOG_DIR", tmp_path / "logs"):
-            configure_logging()
+        configure_logging()
 
         root_logger = logging.getLogger()
         # Check that we have stream handlers (console or otherwise)
@@ -83,10 +86,9 @@ class TestConfigureLoggingHandlers:
         # At least one should be configured for INFO level (root logger is INFO)
         assert root_logger.level == logging.INFO
 
-    def test_configure_logging_creates_file_handlers(self, tmp_path: Path) -> None:
+    def test_configure_logging_creates_file_handlers(self, log_dir: Path) -> None:
         """Test that file handlers are created."""
-        with patch("gpt_trader.logging.setup.LOG_DIR", tmp_path / "logs"):
-            configure_logging()
+        configure_logging()
 
         root_logger = logging.getLogger()
         file_handlers = [
@@ -95,20 +97,18 @@ class TestConfigureLoggingHandlers:
         # Should have at least 2 file handlers (general + critical)
         assert len(file_handlers) >= 2
 
-    def test_configure_logging_creates_json_logger(self, tmp_path: Path) -> None:
+    def test_configure_logging_creates_json_logger(self, log_dir: Path) -> None:
         """Test that JSON logger is configured."""
-        with patch("gpt_trader.logging.setup.LOG_DIR", tmp_path / "logs"):
-            configure_logging()
+        configure_logging()
 
         json_logger = logging.getLogger("gpt_trader.json")
         assert json_logger.level == logging.DEBUG
         assert json_logger.propagate is False
         assert len(json_logger.handlers) >= 2  # general + critical
 
-    def test_configure_logging_json_handlers(self, tmp_path: Path) -> None:
+    def test_configure_logging_json_handlers(self, log_dir: Path) -> None:
         """Test that JSON logger handlers are properly configured."""
-        with patch("gpt_trader.logging.setup.LOG_DIR", tmp_path / "logs"):
-            configure_logging()
+        configure_logging()
 
         json_logger = logging.getLogger("gpt_trader.json")
         handlers = json_logger.handlers
@@ -123,10 +123,9 @@ class TestConfigureLoggingHandlers:
         for handler in rotating_handlers:
             assert isinstance(handler.formatter, StructuredJSONFormatterWithTimestamp)
 
-    def test_configure_logging_critical_handler_level(self, tmp_path: Path) -> None:
+    def test_configure_logging_critical_handler_level(self, log_dir: Path) -> None:
         """Test that critical handler is set to WARNING level."""
-        with patch("gpt_trader.logging.setup.LOG_DIR", tmp_path / "logs"):
-            configure_logging()
+        configure_logging()
 
         root_logger = logging.getLogger()
         rotating_handlers = [
@@ -137,10 +136,9 @@ class TestConfigureLoggingHandlers:
         warning_handlers = [h for h in rotating_handlers if h.level == logging.WARNING]
         assert len(warning_handlers) >= 1
 
-    def test_configure_logging_handler_formatters(self, tmp_path: Path) -> None:
+    def test_configure_logging_handler_formatters(self, log_dir: Path) -> None:
         """Test that handlers have formatters configured."""
-        with patch("gpt_trader.logging.setup.LOG_DIR", tmp_path / "logs"):
-            configure_logging()
+        configure_logging()
 
         root_logger = logging.getLogger()
         for handler in root_logger.handlers:

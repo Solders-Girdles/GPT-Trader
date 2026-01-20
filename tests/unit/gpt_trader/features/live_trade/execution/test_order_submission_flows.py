@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
+import pytest
+
+import gpt_trader.features.live_trade.execution.order_event_recorder as order_event_recorder_module
 from gpt_trader.core import (
     Order,
     OrderSide,
@@ -17,18 +20,19 @@ from gpt_trader.features.live_trade.execution.order_submission import OrderSubmi
 class TestOrderSubmissionFlows:
     """Order submission workflow tests."""
 
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_full_order_submission_flow(
         self,
-        mock_get_logger: MagicMock,
         mock_broker: MagicMock,
         mock_event_store: MagicMock,
         open_orders: list[str],
         mock_order: Order,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Test complete order submission flow."""
         mock_logger = MagicMock()
-        mock_get_logger.return_value = mock_logger
+        monkeypatch.setattr(
+            order_event_recorder_module, "get_monitoring_logger", lambda: mock_logger
+        )
         mock_broker.place_order.return_value = mock_order
 
         submitter = OrderSubmitter(
@@ -57,19 +61,20 @@ class TestOrderSubmissionFlows:
         mock_broker.place_order.assert_called_once()
         mock_event_store.append_trade.assert_called_once()
 
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.emit_metric")
-    @patch("gpt_trader.features.live_trade.execution.order_event_recorder.get_monitoring_logger")
     def test_rejection_flow(
         self,
-        mock_get_logger: MagicMock,
-        mock_emit_metric: MagicMock,
         mock_broker: MagicMock,
         mock_event_store: MagicMock,
         open_orders: list[str],
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Test order rejection flow."""
         mock_logger = MagicMock()
-        mock_get_logger.return_value = mock_logger
+        monkeypatch.setattr(
+            order_event_recorder_module, "get_monitoring_logger", lambda: mock_logger
+        )
+        mock_emit_metric = MagicMock()
+        monkeypatch.setattr(order_event_recorder_module, "emit_metric", mock_emit_metric)
 
         rejected_order = MagicMock()
         rejected_order.id = "rejected-order"

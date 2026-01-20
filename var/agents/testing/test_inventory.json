@@ -23207,7 +23207,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows.py": [
       {
         "name": "TestOrderSubmissionFlows::test_full_order_submission_flow",
-        "line": 21,
+        "line": 23,
         "markers": [
           "unit"
         ],
@@ -23216,7 +23216,7 @@
       },
       {
         "name": "TestOrderSubmissionFlows::test_rejection_flow",
-        "line": 62,
+        "line": 64,
         "markers": [
           "unit"
         ],
@@ -23361,7 +23361,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_correlation_context.py": [
       {
         "name": "TestCorrelationContextPropagation::test_order_context_set_during_submission",
-        "line": 17,
+        "line": 19,
         "markers": [
           "unit"
         ],
@@ -23370,7 +23370,7 @@
       },
       {
         "name": "TestCorrelationContextPropagation::test_correlation_context_preserved_during_submission",
-        "line": 61,
+        "line": 64,
         "markers": [
           "unit"
         ],
@@ -23379,7 +23379,7 @@
       },
       {
         "name": "TestCorrelationContextPropagation::test_order_context_cleared_after_submission",
-        "line": 107,
+        "line": 111,
         "markers": [
           "unit"
         ],

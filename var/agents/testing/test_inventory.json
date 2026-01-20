@@ -15875,7 +15875,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_websocket_edges.py": [
       {
         "name": "test_subscribe_user_events_without_credentials_logs_warning",
-        "line": 11,
+        "line": 14,
         "markers": [
           "unit"
         ],
@@ -15883,7 +15883,7 @@
       },
       {
         "name": "test_on_message_heartbeat_updates_timestamps",
-        "line": 23,
+        "line": 29,
         "markers": [
           "unit"
         ],
@@ -15891,7 +15891,7 @@
       },
       {
         "name": "test_on_message_sequence_gap_increments_and_passes_flag",
-        "line": 36,
+        "line": 42,
         "markers": [
           "unit"
         ],
@@ -15899,7 +15899,7 @@
       },
       {
         "name": "test_invalid_json_logs_error_and_preserves_last_message_ts",
-        "line": 52,
+        "line": 60,
         "markers": [
           "unit"
         ],
@@ -17319,7 +17319,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_environment_options.py": [
       {
         "name": "TestTransportEnvironmentOptions::test_transport_environment_variable_parsing",
-        "line": 13,
+        "line": 16,
         "markers": [
           "unit"
         ],
@@ -17328,7 +17328,7 @@
       },
       {
         "name": "TestTransportEnvironmentOptions::test_transport_empty_subprotocols",
-        "line": 30,
+        "line": 33,
         "markers": [
           "unit"
         ],
@@ -17337,7 +17337,7 @@
       },
       {
         "name": "TestTransportEnvironmentOptions::test_transport_mixed_whitespace_subprotocols",
-        "line": 45,
+        "line": 54,
         "markers": [
           "unit"
         ],

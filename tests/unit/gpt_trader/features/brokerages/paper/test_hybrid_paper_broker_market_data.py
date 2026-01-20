@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock
 
 import pytest
 
+import gpt_trader.features.brokerages.paper.hybrid as hybrid_module
 from gpt_trader.core import MarketType
 from gpt_trader.features.brokerages.paper.hybrid import HybridPaperBroker
 
@@ -15,16 +16,16 @@ class TestHybridPaperBrokerMarketData:
     """Test HybridPaperBroker market data methods."""
 
     @pytest.fixture
-    def broker(self):
+    def broker(self, monkeypatch: pytest.MonkeyPatch) -> HybridPaperBroker:
         """Create broker fixture with mocked client."""
-        with patch("gpt_trader.features.brokerages.paper.hybrid.CoinbaseClient"):
-            with patch("gpt_trader.features.brokerages.paper.hybrid.SimpleAuth"):
-                broker = HybridPaperBroker(
-                    api_key="test_key",
-                    private_key="test_private_key",
-                )
-                broker._client = Mock()
-                return broker
+        monkeypatch.setattr(hybrid_module, "CoinbaseClient", MagicMock())
+        monkeypatch.setattr(hybrid_module, "SimpleAuth", MagicMock())
+        broker = HybridPaperBroker(
+            api_key="test_key",
+            private_key="test_private_key",
+        )
+        broker._client = Mock()
+        return broker
 
     def test_get_product_from_cache(self, broker) -> None:
         """Test get_product returns cached product."""

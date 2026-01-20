@@ -18387,7 +18387,7 @@
     "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_edges.py": [
       {
         "name": "test_limit_buy_uses_limit_below_slippage",
-        "line": 25,
+        "line": 26,
         "markers": [
           "unit"
         ],
@@ -18395,7 +18395,7 @@
       },
       {
         "name": "test_limit_sell_uses_limit_above_slippage",
-        "line": 39,
+        "line": 40,
         "markers": [
           "unit"
         ],
@@ -18403,7 +18403,7 @@
       },
       {
         "name": "test_quote_size_payload_computes_quantity",
-        "line": 53,
+        "line": 54,
         "markers": [
           "unit"
         ],
@@ -18411,7 +18411,7 @@
       },
       {
         "name": "test_short_position_add_recalculates_average",
-        "line": 67,
+        "line": 68,
         "markers": [
           "unit"
         ],
@@ -18419,7 +18419,7 @@
       },
       {
         "name": "test_short_position_reduce_keeps_entry_price",
-        "line": 86,
+        "line": 87,
         "markers": [
           "unit"
         ],
@@ -18427,7 +18427,7 @@
       },
       {
         "name": "test_synthetic_product_default_quote_asset",
-        "line": 105,
+        "line": 106,
         "markers": [
           "unit"
         ],
@@ -18466,7 +18466,7 @@
     "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_market_data.py": [
       {
         "name": "TestHybridPaperBrokerMarketData::test_get_product_from_cache",
-        "line": 29,
+        "line": 30,
         "markers": [
           "unit"
         ],
@@ -18475,7 +18475,7 @@
       },
       {
         "name": "TestHybridPaperBrokerMarketData::test_get_product_from_api",
-        "line": 51,
+        "line": 52,
         "markers": [
           "unit"
         ],
@@ -18484,7 +18484,7 @@
       },
       {
         "name": "TestHybridPaperBrokerMarketData::test_get_product_api_error_returns_synthetic",
-        "line": 70,
+        "line": 71,
         "markers": [
           "unit"
         ],
@@ -18493,7 +18493,7 @@
       },
       {
         "name": "TestHybridPaperBrokerMarketData::test_get_quote_returns_quote",
-        "line": 80,
+        "line": 81,
         "markers": [
           "unit"
         ],
@@ -18502,7 +18502,7 @@
       },
       {
         "name": "TestHybridPaperBrokerMarketData::test_get_quote_calculates_mid_when_no_trades",
-        "line": 96,
+        "line": 97,
         "markers": [
           "unit"
         ],
@@ -18511,7 +18511,7 @@
       },
       {
         "name": "TestHybridPaperBrokerMarketData::test_get_quote_api_error",
-        "line": 108,
+        "line": 109,
         "markers": [
           "unit"
         ],
@@ -18520,7 +18520,7 @@
       },
       {
         "name": "TestHybridPaperBrokerMarketData::test_get_ticker_returns_ticker",
-        "line": 116,
+        "line": 117,
         "markers": [
           "unit"
         ],
@@ -18529,7 +18529,7 @@
       },
       {
         "name": "TestHybridPaperBrokerMarketData::test_get_ticker_api_error",
-        "line": 127,
+        "line": 128,
         "markers": [
           "unit"
         ],
@@ -18538,7 +18538,7 @@
       },
       {
         "name": "TestHybridPaperBrokerMarketData::test_get_candles_returns_candles",
-        "line": 135,
+        "line": 136,
         "markers": [
           "unit"
         ],
@@ -18547,7 +18547,7 @@
       },
       {
         "name": "TestHybridPaperBrokerMarketData::test_get_candles_api_error",
-        "line": 164,
+        "line": 165,
         "markers": [
           "unit"
         ],
@@ -18556,7 +18556,7 @@
       },
       {
         "name": "TestHybridPaperBrokerMarketData::test_list_products_returns_products",
-        "line": 172,
+        "line": 173,
         "markers": [
           "unit"
         ],
@@ -18565,7 +18565,7 @@
       },
       {
         "name": "TestHybridPaperBrokerMarketData::test_list_products_filters_by_type",
-        "line": 185,
+        "line": 186,
         "markers": [
           "unit"
         ],
@@ -18576,7 +18576,7 @@
     "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_order_execution.py": [
       {
         "name": "TestHybridPaperBrokerOrderExecution::test_place_order_buy_market",
-        "line": 32,
+        "line": 33,
         "markers": [
           "unit"
         ],
@@ -18585,7 +18585,7 @@
       },
       {
         "name": "TestHybridPaperBrokerOrderExecution::test_place_order_sell_market",
-        "line": 50,
+        "line": 51,
         "markers": [
           "unit"
         ],
@@ -18594,7 +18594,7 @@
       },
       {
         "name": "TestHybridPaperBrokerOrderExecution::test_place_order_updates_position",
-        "line": 66,
+        "line": 67,
         "markers": [
           "unit"
         ],
@@ -18603,7 +18603,7 @@
       },
       {
         "name": "TestHybridPaperBrokerOrderExecution::test_place_order_updates_balance",
-        "line": 80,
+        "line": 81,
         "markers": [
           "unit"
         ],
@@ -18612,7 +18612,7 @@
       },
       {
         "name": "TestHybridPaperBrokerOrderExecution::test_place_order_with_dict_payload",
-        "line": 95,
+        "line": 96,
         "markers": [
           "unit"
         ],
@@ -18621,7 +18621,7 @@
       },
       {
         "name": "TestHybridPaperBrokerOrderExecution::test_place_order_rejected_when_no_price",
-        "line": 110,
+        "line": 111,
         "markers": [
           "unit"
         ],
@@ -18630,7 +18630,7 @@
       },
       {
         "name": "TestHybridPaperBrokerOrderExecution::test_cancel_order_success",
-        "line": 123,
+        "line": 124,
         "markers": [
           "unit"
         ],
@@ -18639,7 +18639,7 @@
       },
       {
         "name": "TestHybridPaperBrokerOrderExecution::test_cancel_order_not_found",
-        "line": 138,
+        "line": 139,
         "markers": [
           "unit"
         ],
@@ -18648,7 +18648,7 @@
       },
       {
         "name": "TestHybridPaperBrokerOrderExecution::test_get_order_returns_order",
-        "line": 144,
+        "line": 145,
         "markers": [
           "unit"
         ],
@@ -18657,7 +18657,7 @@
       },
       {
         "name": "TestHybridPaperBrokerOrderExecution::test_get_order_not_found",
-        "line": 158,
+        "line": 159,
         "markers": [
           "unit"
         ],
@@ -18668,7 +18668,7 @@
     "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_position_updates.py": [
       {
         "name": "TestHybridPaperBrokerPositionUpdates::test_update_position_creates_new_long",
-        "line": 27,
+        "line": 28,
         "markers": [
           "unit"
         ],
@@ -18677,7 +18677,7 @@
       },
       {
         "name": "TestHybridPaperBrokerPositionUpdates::test_update_position_creates_new_short",
-        "line": 36,
+        "line": 37,
         "markers": [
           "unit"
         ],
@@ -18686,7 +18686,7 @@
       },
       {
         "name": "TestHybridPaperBrokerPositionUpdates::test_update_position_adds_to_long",
-        "line": 44,
+        "line": 45,
         "markers": [
           "unit"
         ],
@@ -18695,7 +18695,7 @@
       },
       {
         "name": "TestHybridPaperBrokerPositionUpdates::test_update_position_reduces_long",
-        "line": 64,
+        "line": 65,
         "markers": [
           "unit"
         ],
@@ -18704,7 +18704,7 @@
       },
       {
         "name": "TestHybridPaperBrokerPositionUpdates::test_update_position_closes_position",
-        "line": 83,
+        "line": 84,
         "markers": [
           "unit"
         ],
@@ -18715,7 +18715,7 @@
     "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_positions_and_balances.py": [
       {
         "name": "TestHybridPaperBrokerPositionsBalances::test_list_positions_empty",
-        "line": 28,
+        "line": 29,
         "markers": [
           "unit"
         ],
@@ -18724,7 +18724,7 @@
       },
       {
         "name": "TestHybridPaperBrokerPositionsBalances::test_list_positions_returns_positions",
-        "line": 34,
+        "line": 35,
         "markers": [
           "unit"
         ],
@@ -18733,7 +18733,7 @@
       },
       {
         "name": "TestHybridPaperBrokerPositionsBalances::test_get_positions_alias",
-        "line": 52,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -18742,7 +18742,7 @@
       },
       {
         "name": "TestHybridPaperBrokerPositionsBalances::test_list_balances_returns_balances",
-        "line": 69,
+        "line": 70,
         "markers": [
           "unit"
         ],
@@ -18751,7 +18751,7 @@
       },
       {
         "name": "TestHybridPaperBrokerPositionsBalances::test_get_balances_alias",
-        "line": 77,
+        "line": 78,
         "markers": [
           "unit"
         ],
@@ -18760,7 +18760,7 @@
       },
       {
         "name": "TestHybridPaperBrokerPositionsBalances::test_get_equity_cash_only",
-        "line": 83,
+        "line": 84,
         "markers": [
           "unit"
         ],
@@ -18769,7 +18769,7 @@
       },
       {
         "name": "TestHybridPaperBrokerPositionsBalances::test_get_equity_with_long_position",
-        "line": 89,
+        "line": 90,
         "markers": [
           "unit"
         ],
@@ -18778,7 +18778,7 @@
       },
       {
         "name": "TestHybridPaperBrokerPositionsBalances::test_get_equity_with_short_position",
-        "line": 111,
+        "line": 112,
         "markers": [
           "unit"
         ],
@@ -18789,7 +18789,7 @@
     "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_status.py": [
       {
         "name": "TestHybridPaperBrokerStatus::test_is_connected_always_true",
-        "line": 27,
+        "line": 28,
         "markers": [
           "unit"
         ],
@@ -18798,7 +18798,7 @@
       },
       {
         "name": "TestHybridPaperBrokerStatus::test_is_stale_always_false",
-        "line": 31,
+        "line": 32,
         "markers": [
           "unit"
         ],
@@ -18807,7 +18807,7 @@
       },
       {
         "name": "TestHybridPaperBrokerStatus::test_start_market_data_prefetches_quotes",
-        "line": 35,
+        "line": 36,
         "markers": [
           "unit"
         ],
@@ -18816,7 +18816,7 @@
       },
       {
         "name": "TestHybridPaperBrokerStatus::test_stop_market_data_noop",
-        "line": 48,
+        "line": 49,
         "markers": [
           "unit"
         ],
@@ -18825,7 +18825,7 @@
       },
       {
         "name": "TestHybridPaperBrokerStatus::test_get_status_returns_status",
-        "line": 57,
+        "line": 58,
         "markers": [
           "unit"
         ],
@@ -20816,7 +20816,7 @@
     "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_order_guards.py": [
       {
         "name": "test_exchange_rules_blocks_small_order",
-        "line": 15,
+        "line": 16,
         "markers": [
           "asyncio",
           "unit"
@@ -20881,7 +20881,7 @@
     "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_reduce_only.py": [
       {
         "name": "test_reduce_only_clamps_quantity_to_prevent_position_flip",
-        "line": 15,
+        "line": 16,
         "markers": [
           "asyncio",
           "unit"
@@ -20890,7 +20890,7 @@
       },
       {
         "name": "test_reduce_only_blocks_new_position_on_empty_symbol",
-        "line": 60,
+        "line": 62,
         "markers": [
           "asyncio",
           "unit"
@@ -21251,7 +21251,7 @@
     "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_update_mark_and_metrics.py": [
       {
         "name": "TestUpdateMarkAndMetrics::test_updates_strategy_coordinator_mark_window",
-        "line": 26,
+        "line": 29,
         "markers": [
           "unit"
         ],
@@ -21260,7 +21260,7 @@
       },
       {
         "name": "TestUpdateMarkAndMetrics::test_updates_runtime_state_mark_window",
-        "line": 39,
+        "line": 42,
         "markers": [
           "unit"
         ],
@@ -21269,7 +21269,7 @@
       },
       {
         "name": "TestUpdateMarkAndMetrics::test_prunes_mark_window_when_exceeds_max_size",
-        "line": 56,
+        "line": 59,
         "markers": [
           "unit"
         ],
@@ -21278,7 +21278,7 @@
       },
       {
         "name": "TestUpdateMarkAndMetrics::test_records_market_update_via_extras_monitor",
-        "line": 73,
+        "line": 76,
         "markers": [
           "unit"
         ],
@@ -21287,7 +21287,7 @@
       },
       {
         "name": "TestUpdateMarkAndMetrics::test_records_market_update_via_coordinator_monitor",
-        "line": 86,
+        "line": 89,
         "markers": [
           "unit"
         ],
@@ -21296,7 +21296,7 @@
       },
       {
         "name": "TestUpdateMarkAndMetrics::test_records_risk_manager_mark_update",
-        "line": 98,
+        "line": 101,
         "markers": [
           "unit"
         ],
@@ -21305,7 +21305,7 @@
       },
       {
         "name": "TestUpdateMarkAndMetrics::test_creates_last_mark_update_dict_if_missing",
-        "line": 112,
+        "line": 115,
         "markers": [
           "unit"
         ],
@@ -21314,7 +21314,7 @@
       },
       {
         "name": "TestUpdateMarkAndMetrics::test_handles_strategy_coordinator_error",
-        "line": 124,
+        "line": 127,
         "markers": [
           "unit"
         ],
@@ -21323,7 +21323,7 @@
       },
       {
         "name": "TestUpdateMarkAndMetrics::test_handles_market_monitor_error",
-        "line": 141,
+        "line": 144,
         "markers": [
           "unit"
         ],
@@ -21332,7 +21332,7 @@
       },
       {
         "name": "TestUpdateMarkAndMetrics::test_handles_non_dict_extras",
-        "line": 157,
+        "line": 161,
         "markers": [
           "unit"
         ],
@@ -21500,7 +21500,7 @@
     "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_run_loop.py": [
       {
         "name": "TestRunStreamLoop::test_run_stream_loop_no_broker",
-        "line": 15,
+        "line": 18,
         "markers": [
           "unit"
         ],
@@ -21509,7 +21509,7 @@
       },
       {
         "name": "TestRunStreamLoop::test_run_stream_loop_processes_messages",
-        "line": 25,
+        "line": 27,
         "markers": [
           "unit"
         ],
@@ -21518,7 +21518,7 @@
       },
       {
         "name": "TestRunStreamLoop::test_run_stream_loop_routes_user_events",
-        "line": 42,
+        "line": 44,
         "markers": [
           "unit"
         ],
@@ -21527,7 +21527,7 @@
       },
       {
         "name": "TestRunStreamLoop::test_run_stream_loop_triggers_backfill_on_gap",
-        "line": 57,
+        "line": 59,
         "markers": [
           "unit"
         ],
@@ -21536,7 +21536,7 @@
       },
       {
         "name": "TestRunStreamLoop::test_run_stream_loop_stops_on_signal",
-        "line": 76,
+        "line": 78,
         "markers": [
           "unit"
         ],
@@ -21545,7 +21545,7 @@
       },
       {
         "name": "TestRunStreamLoop::test_run_stream_loop_falls_back_to_trades",
-        "line": 98,
+        "line": 100,
         "markers": [
           "unit"
         ],
@@ -21554,7 +21554,7 @@
       },
       {
         "name": "TestRunStreamLoop::test_run_stream_loop_skips_non_dict_messages",
-        "line": 111,
+        "line": 113,
         "markers": [
           "unit"
         ],
@@ -21563,7 +21563,7 @@
       },
       {
         "name": "TestRunStreamLoop::test_run_stream_loop_skips_messages_without_symbol",
-        "line": 130,
+        "line": 132,
         "markers": [
           "unit"
         ],
@@ -21572,7 +21572,7 @@
       },
       {
         "name": "TestRunStreamLoop::test_run_stream_loop_skips_invalid_mark",
-        "line": 146,
+        "line": 148,
         "markers": [
           "unit"
         ],
@@ -21581,7 +21581,7 @@
       },
       {
         "name": "TestRunStreamLoop::test_run_stream_loop_skips_zero_mark",
-        "line": 161,
+        "line": 163,
         "markers": [
           "unit"
         ],
@@ -21590,7 +21590,7 @@
       },
       {
         "name": "TestRunStreamLoop::test_run_stream_loop_emits_exit_metric",
-        "line": 176,
+        "line": 178,
         "markers": [
           "unit"
         ],

@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock
 
 import pytest
 
+import gpt_trader.features.brokerages.paper.hybrid as hybrid_module
 from gpt_trader.core import OrderSide, OrderStatus, OrderType
 from gpt_trader.features.brokerages.paper.hybrid import HybridPaperBroker
 
@@ -15,19 +16,19 @@ class TestHybridPaperBrokerOrderExecution:
     """Test HybridPaperBroker order execution."""
 
     @pytest.fixture
-    def broker(self):
+    def broker(self, monkeypatch: pytest.MonkeyPatch) -> HybridPaperBroker:
         """Create broker fixture with mocked client."""
-        with patch("gpt_trader.features.brokerages.paper.hybrid.CoinbaseClient"):
-            with patch("gpt_trader.features.brokerages.paper.hybrid.SimpleAuth"):
-                broker = HybridPaperBroker(
-                    api_key="test_key",
-                    private_key="test_private_key",
-                    initial_equity=Decimal("10000"),
-                    slippage_bps=10,
-                    commission_bps=Decimal("10"),
-                )
-                broker._client = Mock()
-                return broker
+        monkeypatch.setattr(hybrid_module, "CoinbaseClient", MagicMock())
+        monkeypatch.setattr(hybrid_module, "SimpleAuth", MagicMock())
+        broker = HybridPaperBroker(
+            api_key="test_key",
+            private_key="test_private_key",
+            initial_equity=Decimal("10000"),
+            slippage_bps=10,
+            commission_bps=Decimal("10"),
+        )
+        broker._client = Mock()
+        return broker
 
     def test_place_order_buy_market(self, broker) -> None:
         """Test placing a buy market order."""

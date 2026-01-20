@@ -12934,7 +12934,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCoreExecuteOrderPayload::test_execute_order_payload_with_preview",
-        "line": 36,
+        "line": 34,
         "markers": [
           "unit"
         ],
@@ -12943,7 +12943,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCoreExecuteOrderPayload::test_execute_order_payload_preview_failure_still_places",
-        "line": 56,
+        "line": 52,
         "markers": [
           "unit"
         ],
@@ -12952,7 +12952,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCoreExecuteOrderPayload::test_execute_order_payload_insufficient_funds",
-        "line": 76,
+        "line": 72,
         "markers": [
           "unit"
         ],
@@ -12961,7 +12961,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCoreExecuteOrderPayload::test_execute_order_payload_validation_error",
-        "line": 83,
+        "line": 79,
         "markers": [
           "unit"
         ],
@@ -12970,7 +12970,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCoreExecuteOrderPayload::test_execute_order_payload_duplicate_client_id",
-        "line": 90,
+        "line": 86,
         "markers": [
           "unit"
         ],
@@ -12979,7 +12979,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCoreExecuteOrderPayload::test_execute_order_payload_duplicate_client_id_retry_failure",
-        "line": 105,
+        "line": 101,
         "markers": [
           "unit"
         ],
@@ -12988,7 +12988,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCoreExecuteOrderPayload::test_execute_order_payload_network_error",
-        "line": 120,
+        "line": 116,
         "markers": [
           "unit"
         ],
@@ -12997,7 +12997,7 @@
       },
       {
         "name": "TestCoinbaseRestServiceCoreExecuteOrderPayload::test_execute_order_payload_unexpected_error",
-        "line": 127,
+        "line": 123,
         "markers": [
           "unit"
         ],
@@ -43197,7 +43197,7 @@
     "tests/unit/gpt_trader/tui/mixins/test_event_handlers_utilities_and_docs.py": [
       {
         "name": "TestUtilityMethods::test_post_event_when_mounted",
-        "line": 19,
+        "line": 18,
         "markers": [
           "unit"
         ],
@@ -43206,7 +43206,7 @@
       },
       {
         "name": "TestUtilityMethods::test_post_event_when_not_mounted",
-        "line": 32,
+        "line": 31,
         "markers": [
           "unit"
         ],
@@ -43215,7 +43215,7 @@
       },
       {
         "name": "TestUtilityMethods::test_log_event_received_utility",
-        "line": 49,
+        "line": 46,
         "markers": [
           "unit"
         ],
@@ -43224,7 +43224,7 @@
       },
       {
         "name": "TestUtilityMethods::test_log_event_received_without_details",
-        "line": 67,
+        "line": 64,
         "markers": [
           "unit"
         ],
@@ -43233,7 +43233,7 @@
       },
       {
         "name": "TestMixinDocumentation::test_mixin_has_docstring",
-        "line": 90,
+        "line": 85,
         "markers": [
           "unit"
         ],
@@ -43242,7 +43242,7 @@
       },
       {
         "name": "TestMixinDocumentation::test_all_handler_methods_have_docstrings",
-        "line": 95,
+        "line": 90,
         "markers": [
           "unit"
         ],
@@ -43251,7 +43251,7 @@
       },
       {
         "name": "TestMixinDocumentation::test_utility_methods_have_docstrings",
-        "line": 114,
+        "line": 109,
         "markers": [
           "unit"
         ],

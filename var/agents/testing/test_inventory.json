@@ -8706,7 +8706,7 @@
     "tests/unit/gpt_trader/cli/commands/optimize/test_commands_execution.py": [
       {
         "name": "TestRunCommand::test_dry_run_returns_success",
-        "line": 15,
+        "line": 17,
         "markers": [
           "unit"
         ],
@@ -8715,7 +8715,7 @@
       },
       {
         "name": "TestListCommand::test_execute_with_no_runs",
-        "line": 42,
+        "line": 44,
         "markers": [
           "unit"
         ],
@@ -8724,7 +8724,7 @@
       },
       {
         "name": "TestListCommand::test_execute_with_runs",
-        "line": 53,
+        "line": 55,
         "markers": [
           "unit"
         ],
@@ -8733,7 +8733,7 @@
       },
       {
         "name": "TestViewCommand::test_execute_with_missing_run",
-        "line": 75,
+        "line": 77,
         "markers": [
           "unit"
         ],
@@ -8742,7 +8742,7 @@
       },
       {
         "name": "TestCompareCommand::test_execute_requires_two_runs",
-        "line": 92,
+        "line": 94,
         "markers": [
           "unit"
         ],
@@ -8751,7 +8751,7 @@
       },
       {
         "name": "TestExportCommand::test_execute_with_missing_run",
-        "line": 102,
+        "line": 104,
         "markers": [
           "unit"
         ],
@@ -8760,7 +8760,7 @@
       },
       {
         "name": "TestApplyCommand::test_execute_with_missing_run",
-        "line": 123,
+        "line": 125,
         "markers": [
           "unit"
         ],
@@ -9703,7 +9703,7 @@
       },
       {
         "name": "TestBotConfigEnvAliasing::test_risk_daily_loss_limit_pct",
-        "line": 29,
+        "line": 31,
         "markers": [
           "unit"
         ],
@@ -9712,7 +9712,7 @@
       },
       {
         "name": "TestBotConfigEnvAliasing::test_trading_symbols_alias",
-        "line": 37,
+        "line": 39,
         "markers": [
           "unit"
         ],

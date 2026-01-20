@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from argparse import Namespace
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
+
+import pytest
 
 from gpt_trader.cli.commands.optimize import apply, compare, export, run, view
 from gpt_trader.cli.commands.optimize import list as list_cmd
@@ -39,18 +41,18 @@ class TestRunCommand:
 class TestListCommand:
     """Test list command functionality."""
 
-    def test_execute_with_no_runs(self, tmp_path, monkeypatch):
+    def test_execute_with_no_runs(self, tmp_path, monkeypatch: pytest.MonkeyPatch):
         """Test list command with no runs."""
         mock_storage = MagicMock()
         mock_storage.list_runs.return_value = []
 
-        with patch.object(list_cmd, "OptimizationStorage", return_value=mock_storage):
-            args = Namespace(format="text", limit=20, study=None)
-            result = list_cmd.execute(args)
+        monkeypatch.setattr(list_cmd, "OptimizationStorage", MagicMock(return_value=mock_storage))
+        args = Namespace(format="text", limit=20, study=None)
+        result = list_cmd.execute(args)
 
         assert result == 0
 
-    def test_execute_with_runs(self, monkeypatch):
+    def test_execute_with_runs(self, monkeypatch: pytest.MonkeyPatch):
         """Test list command with runs."""
         mock_storage = MagicMock()
         mock_storage.list_runs.return_value = [
@@ -62,9 +64,9 @@ class TestListCommand:
             }
         ]
 
-        with patch.object(list_cmd, "OptimizationStorage", return_value=mock_storage):
-            args = Namespace(format="text", limit=20, study=None)
-            result = list_cmd.execute(args)
+        monkeypatch.setattr(list_cmd, "OptimizationStorage", MagicMock(return_value=mock_storage))
+        args = Namespace(format="text", limit=20, study=None)
+        result = list_cmd.execute(args)
 
         assert result == 0
 
@@ -72,16 +74,16 @@ class TestListCommand:
 class TestViewCommand:
     """Test view command functionality."""
 
-    def test_execute_with_missing_run(self, monkeypatch):
+    def test_execute_with_missing_run(self, monkeypatch: pytest.MonkeyPatch):
         """Test view command with missing run."""
         mock_storage = MagicMock()
         mock_storage.list_runs.return_value = []
 
-        with patch.object(view, "OptimizationStorage", return_value=mock_storage):
-            args = Namespace(
-                run_id="latest", format="text", trials=10, show_params=False, summary_only=False
-            )
-            result = view.execute(args)
+        monkeypatch.setattr(view, "OptimizationStorage", MagicMock(return_value=mock_storage))
+        args = Namespace(
+            run_id="latest", format="text", trials=10, show_params=False, summary_only=False
+        )
+        result = view.execute(args)
 
         assert result == 1  # Error: no runs found
 
@@ -99,20 +101,20 @@ class TestCompareCommand:
 class TestExportCommand:
     """Test export command functionality."""
 
-    def test_execute_with_missing_run(self, monkeypatch):
+    def test_execute_with_missing_run(self, monkeypatch: pytest.MonkeyPatch):
         """Test export command with missing run."""
         mock_storage = MagicMock()
         mock_storage.list_runs.return_value = []
 
-        with patch.object(export, "OptimizationStorage", return_value=mock_storage):
-            args = Namespace(
-                run_id="latest",
-                format="json",
-                output=None,
-                best_only=False,
-                include_trials=False,
-            )
-            result = export.execute(args)
+        monkeypatch.setattr(export, "OptimizationStorage", MagicMock(return_value=mock_storage))
+        args = Namespace(
+            run_id="latest",
+            format="json",
+            output=None,
+            best_only=False,
+            include_trials=False,
+        )
+        result = export.execute(args)
 
         assert result == 1  # Error: no runs found
 
@@ -120,20 +122,20 @@ class TestExportCommand:
 class TestApplyCommand:
     """Test apply command functionality."""
 
-    def test_execute_with_missing_run(self, monkeypatch):
+    def test_execute_with_missing_run(self, monkeypatch: pytest.MonkeyPatch):
         """Test apply command with missing run."""
         mock_storage = MagicMock()
         mock_storage.list_runs.return_value = []
 
-        with patch.object(apply, "OptimizationStorage", return_value=mock_storage):
-            args = Namespace(
-                run_id="latest",
-                output=None,
-                profile="optimized",
-                base_config=None,
-                strategy_only=False,
-                dry_run=False,
-            )
-            result = apply.execute(args)
+        monkeypatch.setattr(apply, "OptimizationStorage", MagicMock(return_value=mock_storage))
+        args = Namespace(
+            run_id="latest",
+            output=None,
+            profile="optimized",
+            base_config=None,
+            strategy_only=False,
+            dry_run=False,
+        )
+        result = apply.execute(args)
 
         assert result == 1  # Error: no runs found

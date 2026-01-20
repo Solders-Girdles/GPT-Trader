@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from types import SimpleNamespace
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock
+
+import pytest
 
 from gpt_trader.monitoring.configuration_guardian.guardian import ConfigurationGuardian
 from gpt_trader.monitoring.configuration_guardian.models import BaselineSnapshot, DriftEvent
@@ -47,7 +49,18 @@ class _DetectorStub:
         return dict(self.summary)
 
 
-def test_monitor_exception_logged_and_other_monitors_continue() -> None:
+@pytest.fixture
+def guardian_logger_mock(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    from gpt_trader.monitoring.configuration_guardian import guardian as guardian_module
+
+    mock = MagicMock()
+    monkeypatch.setattr(guardian_module, "logger", mock)
+    return mock
+
+
+def test_monitor_exception_logged_and_other_monitors_continue(
+    guardian_logger_mock: MagicMock,
+) -> None:
     baseline = BaselineSnapshot()
     good_event = DriftEvent(
         timestamp=datetime(2024, 1, 1, tzinfo=timezone.utc),
@@ -64,13 +77,12 @@ def test_monitor_exception_logged_and_other_monitors_continue() -> None:
         detector=detector,
     )
 
-    with patch("gpt_trader.monitoring.configuration_guardian.guardian.logger") as mock_logger:
-        events = guardian.check()
+    events = guardian.check()
 
     assert events == [good_event]
     assert failing_monitor.called == 1
     assert good_monitor.called == 1
-    mock_logger.warning.assert_called_once()
+    guardian_logger_mock.warning.assert_called_once()
 
 
 def test_check_records_events_only_when_present() -> None:
@@ -102,7 +114,9 @@ def test_check_records_events_only_when_present() -> None:
     assert detector_with_events.recorded == [[event]]
 
 
-def test_reset_baseline_updates_monitors_and_logs_user() -> None:
+def test_reset_baseline_updates_monitors_and_logs_user(
+    guardian_logger_mock: MagicMock,
+) -> None:
     baseline = BaselineSnapshot(timestamp=datetime(2024, 1, 1, tzinfo=timezone.utc))
     new_baseline = BaselineSnapshot(timestamp=datetime(2024, 1, 2, tzinfo=timezone.utc))
     detector = _DetectorStub()
@@ -116,12 +130,11 @@ def test_reset_baseline_updates_monitors_and_logs_user() -> None:
         detector=detector,
     )
 
-    with patch("gpt_trader.monitoring.configuration_guardian.guardian.logger") as mock_logger:
-        guardian.reset_baseline(new_baseline, user_id="user-1")
+    guardian.reset_baseline(new_baseline, user_id="user-1")
 
     monitor_with_update.update_baseline.assert_called_once_with(new_baseline)
     assert not hasattr(monitor_without_update, "update_baseline")
-    mock_logger.info.assert_called_once()
+    guardian_logger_mock.info.assert_called_once()
 
 
 def test_get_state_includes_baseline_monitor_count_and_summary() -> None:

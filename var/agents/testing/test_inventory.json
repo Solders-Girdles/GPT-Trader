@@ -33095,7 +33095,7 @@
     "tests/unit/gpt_trader/monitoring/configuration_guardian/test_guardian_edges.py": [
       {
         "name": "test_monitor_exception_logged_and_other_monitors_continue",
-        "line": 50,
+        "line": 61,
         "markers": [
           "unit"
         ],
@@ -33103,7 +33103,7 @@
       },
       {
         "name": "test_check_records_events_only_when_present",
-        "line": 76,
+        "line": 88,
         "markers": [
           "unit"
         ],
@@ -33111,7 +33111,7 @@
       },
       {
         "name": "test_reset_baseline_updates_monitors_and_logs_user",
-        "line": 105,
+        "line": 117,
         "markers": [
           "unit"
         ],
@@ -33119,7 +33119,7 @@
       },
       {
         "name": "test_get_state_includes_baseline_monitor_count_and_summary",
-        "line": 127,
+        "line": 140,
         "markers": [
           "unit"
         ],
@@ -36855,7 +36855,7 @@
     "tests/unit/gpt_trader/monitoring/test_status_reporter_edges.py": [
       {
         "name": "test_update_positions_coerces_invalid_and_skips_non_dict",
-        "line": 11,
+        "line": 13,
         "markers": [
           "unit"
         ],
@@ -36863,7 +36863,7 @@
       },
       {
         "name": "test_update_orders_invalid_fields_use_defaults",
-        "line": 39,
+        "line": 40,
         "markers": [
           "unit"
         ],
@@ -36871,7 +36871,7 @@
       },
       {
         "name": "test_update_account_skips_zero_or_invalid_balances",
-        "line": 70,
+        "line": 74,
         "markers": [
           "unit"
         ],
@@ -36879,7 +36879,7 @@
       },
       {
         "name": "test_update_strategy_generates_decision_id_and_handles_invalid_timestamp",
-        "line": 90,
+        "line": 94,
         "markers": [
           "unit"
         ],
@@ -36887,7 +36887,7 @@
       },
       {
         "name": "test_update_equity_swallows_record_gauge_exceptions",
-        "line": 114,
+        "line": 117,
         "markers": [
           "unit"
         ],

@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
+import pytest
+
+import gpt_trader.features.brokerages.coinbase.models as models_module
 from gpt_trader.core import InvalidRequestError, Order, OrderSide, OrderType
 from tests.unit.gpt_trader.features.brokerages.coinbase.rest.contract_suite_test_base import (
     CoinbaseRestContractSuiteBase,
@@ -13,7 +16,12 @@ from tests.unit.gpt_trader.features.brokerages.coinbase.rest.contract_suite_test
 
 class TestCoinbaseRestContractSuiteRetryAndTelemetry(CoinbaseRestContractSuiteBase):
     def test_order_retry_on_duplicate_client_id(
-        self, order_service, mock_product_catalog, mock_product, mock_client
+        self,
+        order_service,
+        mock_product_catalog,
+        mock_product,
+        mock_client,
+        monkeypatch: pytest.MonkeyPatch,
     ):
         """Test order retry logic on duplicate client ID error."""
         mock_product_catalog.get.return_value = mock_product
@@ -23,17 +31,16 @@ class TestCoinbaseRestContractSuiteRetryAndTelemetry(CoinbaseRestContractSuiteBa
             {"order_id": "retry_success_123"},
         ]
         mock_client.list_orders.return_value = {"orders": []}
+        monkeypatch.setattr(models_module, "to_order", Mock(return_value=Mock(spec=Order)))
 
-        with patch("gpt_trader.features.brokerages.coinbase.models.to_order") as mock_to_order:
-            mock_to_order.return_value = Mock(spec=Order)
-            order = order_service.place_order(
-                symbol="BTC-USD",
-                side=OrderSide.BUY,
-                order_type=OrderType.LIMIT,
-                quantity=Decimal("0.1"),
-                price=Decimal("50000.00"),
-                client_id="duplicate_id",
-            )
+        order = order_service.place_order(
+            symbol="BTC-USD",
+            side=OrderSide.BUY,
+            order_type=OrderType.LIMIT,
+            quantity=Decimal("0.1"),
+            price=Decimal("50000.00"),
+            client_id="duplicate_id",
+        )
 
         assert order is not None
         assert mock_client.place_order.call_count == 2

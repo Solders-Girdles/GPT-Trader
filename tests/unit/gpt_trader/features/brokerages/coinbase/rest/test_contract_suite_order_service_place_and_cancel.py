@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 
+import gpt_trader.features.brokerages.coinbase.rest.base as rest_base_module
 from gpt_trader.core import InsufficientFunds, InvalidRequestError, Order, OrderSide, OrderType
 from gpt_trader.errors import ValidationError
 from gpt_trader.features.brokerages.coinbase.errors import OrderCancellationError
@@ -17,31 +18,35 @@ from tests.unit.gpt_trader.features.brokerages.coinbase.rest.contract_suite_test
 
 class TestCoinbaseRestContractSuiteOrderServicePlaceAndCancel(CoinbaseRestContractSuiteBase):
     def test_place_order_quantity_resolution_success(
-        self, order_service, service_core, mock_product_catalog, mock_product, mock_client
+        self,
+        order_service,
+        service_core,
+        mock_product_catalog,
+        mock_product,
+        mock_client,
+        monkeypatch: pytest.MonkeyPatch,
     ):
         """Test successful order placement with quantity resolution."""
         mock_product_catalog.get.return_value = mock_product
         mock_client.place_order.return_value = {"order_id": "test_123"}
 
-        with patch.object(
-            service_core, "execute_order_payload", side_effect=service_core.execute_order_payload
-        ) as mock_execute:
-            with patch(
-                "gpt_trader.features.brokerages.coinbase.rest.base.to_order",
-                return_value=Mock(spec=Order),
-            ):
-                order = order_service.place_order(
-                    symbol="BTC-USD",
-                    side=OrderSide.BUY,
-                    order_type=OrderType.LIMIT,
-                    quantity=Decimal("0.123456789"),
-                    price=Decimal("50000.00"),
-                )
+        original_execute = service_core.execute_order_payload
+        mock_execute = Mock(side_effect=original_execute)
+        monkeypatch.setattr(service_core, "execute_order_payload", mock_execute)
+        monkeypatch.setattr(rest_base_module, "to_order", Mock(return_value=Mock(spec=Order)))
 
-            assert order is not None
-            call_args = mock_execute.call_args
-            payload = call_args[0][1]
-            assert payload["order_configuration"]["limit_limit_gtc"]["base_size"] == "0.12345678"
+        order = order_service.place_order(
+            symbol="BTC-USD",
+            side=OrderSide.BUY,
+            order_type=OrderType.LIMIT,
+            quantity=Decimal("0.123456789"),
+            price=Decimal("50000.00"),
+        )
+
+        assert order is not None
+        call_args = mock_execute.call_args
+        payload = call_args[0][1]
+        assert payload["order_configuration"]["limit_limit_gtc"]["base_size"] == "0.12345678"
 
     def test_place_order_quantity_resolution_error_branch(
         self, order_service, mock_product_catalog, mock_product

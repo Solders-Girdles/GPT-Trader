@@ -889,6 +889,7 @@
     "gpt_trader.features.live_trade.bot": [
       "tests/integration/test_core_validation.py",
       "tests/integration/test_paper_mode.py",
+      "tests/unit/gpt_trader/app/test_application_container_bot_creation.py",
       "tests/unit/gpt_trader/app/test_bootstrap.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_engine_delegation.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop.py",
@@ -2591,7 +2592,8 @@
     "tests/unit/gpt_trader/app/test_application_container_bot_creation.py": [
       "gpt_trader.app.config",
       "gpt_trader.app.container",
-      "gpt_trader.app.containers.brokerage"
+      "gpt_trader.app.containers.brokerage",
+      "gpt_trader.features.live_trade.bot"
     ],
     "tests/unit/gpt_trader/app/test_application_container_registry.py": [
       "gpt_trader.app.config",

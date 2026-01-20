@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
 import pytest
 
+import gpt_trader.app.container as container_module
 from gpt_trader.app.config import BotConfig
 from gpt_trader.app.container import (
     ApplicationContainer,
@@ -171,19 +172,25 @@ class TestContainerServiceAccess:
 class TestContainerDebugLogging:
     """Test container lifecycle debug logging."""
 
-    def test_set_container_logs_debug(self, mock_config: BotConfig) -> None:
+    def test_set_container_logs_debug(
+        self, mock_config: BotConfig, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         container = ApplicationContainer(mock_config)
+        mock_logger = MagicMock()
+        monkeypatch.setattr(container_module, "logger", mock_logger)
 
-        with patch("gpt_trader.app.container.logger") as mock_logger:
-            set_application_container(container)
-
-            mock_logger.debug.assert_called()
-
-    def test_clear_container_logs_debug(self, mock_config: BotConfig) -> None:
-        container = ApplicationContainer(mock_config)
         set_application_container(container)
 
-        with patch("gpt_trader.app.container.logger") as mock_logger:
-            clear_application_container()
+        mock_logger.debug.assert_called()
 
-            mock_logger.debug.assert_called()
+    def test_clear_container_logs_debug(
+        self, mock_config: BotConfig, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        container = ApplicationContainer(mock_config)
+        set_application_container(container)
+        mock_logger = MagicMock()
+        monkeypatch.setattr(container_module, "logger", mock_logger)
+
+        clear_application_container()
+
+        mock_logger.debug.assert_called()

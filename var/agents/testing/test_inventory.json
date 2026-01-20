@@ -32961,7 +32961,7 @@
     "tests/unit/gpt_trader/logging/test_setup_configure_logging_modes_and_idempotency.py": [
       {
         "name": "TestConfigureLoggingModesAndIdempotency::test_configure_logging_idempotent",
-        "line": 42,
+        "line": 69,
         "markers": [
           "unit"
         ],
@@ -32970,7 +32970,7 @@
       },
       {
         "name": "TestConfigureLoggingModesAndIdempotency::test_configure_logging_tui_mode_suppresses_stream_handler",
-        "line": 59,
+        "line": 80,
         "markers": [
           "unit"
         ],
@@ -32979,7 +32979,7 @@
       },
       {
         "name": "TestConfigureLoggingModesAndIdempotency::test_configure_logging_cli_mode_creates_stream_handler",
-        "line": 81,
+        "line": 91,
         "markers": [
           "unit"
         ],
@@ -32988,7 +32988,7 @@
       },
       {
         "name": "TestConfigureLoggingModesAndIdempotency::test_configure_logging_file_handlers_present_in_both_modes",
-        "line": 103,
+        "line": 102,
         "markers": [
           "unit"
         ],

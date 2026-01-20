@@ -72,8 +72,8 @@ class TestRequireProduct:
         assert result.quote_asset == "USD"
 
 
-class TestStateCollectionIntegration:
-    """Integration tests for state collection workflows."""
+class TestStateCollectionFlow:
+    """State collection workflow tests."""
 
     def test_full_state_collection_flow(
         self, mock_broker: MagicMock, mock_config, monkeypatch

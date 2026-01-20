@@ -1,4 +1,4 @@
-"""Integration tests for logging setup."""
+"""Smoke tests for logging setup."""
 
 from __future__ import annotations
 
@@ -12,8 +12,8 @@ import pytest
 from gpt_trader.logging.setup import configure_logging
 
 
-class TestLoggingIntegration:
-    """Integration tests for logging functionality."""
+class TestLoggingSetupSmoke:
+    """Smoke tests for logging functionality."""
 
     @pytest.fixture(autouse=True)
     def reset_logging(self) -> None:

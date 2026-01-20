@@ -102,11 +102,11 @@
     ]
   },
   "marker_counts": {
-    "unit": 6194,
+    "unit": 6186,
     "asyncio": 374,
     "property": 82,
+    "integration": 79,
     "endpoints": 78,
-    "integration": 71,
     "parametrize": 61,
     "skipif": 8,
     "slow": 4,
@@ -141,7 +141,6 @@
       "tests/unit/gpt_trader/app/test_bootstrap.py",
       "tests/unit/gpt_trader/app/test_bootstrap_profile_loading.py",
       "tests/unit/gpt_trader/app/test_health_server_helpers.py",
-      "tests/unit/gpt_trader/app/test_health_server_integration.py",
       "tests/unit/gpt_trader/app/test_health_server_state.py"
     ],
     "backtesting": [
@@ -270,7 +269,7 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_accounts_mixin.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_cache.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_circuit_breaker.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_integration_flows.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_flows.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_metrics_and_priority.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_auth_headers.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_convenience_and_transport.py",
@@ -496,9 +495,9 @@
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_edge_cases.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_failure.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_init.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_integration_rejection.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_preview.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_rejection.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_rejection_recording.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_submission_attempt.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_success.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_trade_event.py",
@@ -510,7 +509,7 @@
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_process_rejection.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_record_preview.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_record_rejection.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows_integration.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows_retry_idempotency.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows_submit_order.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows_transient_failure.py",
@@ -526,12 +525,12 @@
       "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_equity_and_logging.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_init.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_positions_dict.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_require_product_and_integration.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_require_product_and_flow.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_resolve_effective_price.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_validation_async.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_validation_exchange_rules.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_validation_failure_tracker.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_validation_integration_flow.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_validation_flow.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_validation_mark_staleness_and_slippage.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_validation_metrics_and_escalation.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_validation_order_preview.py",
@@ -614,7 +613,6 @@
       "tests/unit/gpt_trader/features/live_trade/test_liq_price_buffer.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager_daily_pnl.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager_init_and_stubs.py",
-      "tests/unit/gpt_trader/features/live_trade/test_risk_manager_integration.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager_liquidation_buffer.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager_mark_staleness.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager_pre_trade_validate.py",
@@ -624,6 +622,7 @@
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager_validation_error.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager_volatility_breaker.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager_volatility_check_outcome.py",
+      "tests/unit/gpt_trader/features/live_trade/test_risk_manager_workflows.py",
       "tests/unit/gpt_trader/features/live_trade/test_state_recovery_price_tick_recording.py",
       "tests/unit/gpt_trader/features/live_trade/test_state_recovery_rehydration.py",
       "tests/unit/gpt_trader/features/live_trade/test_state_recovery_strategy_rehydrate.py",
@@ -687,7 +686,7 @@
       "tests/unit/gpt_trader/logging/test_setup_configure_logging_handlers.py",
       "tests/unit/gpt_trader/logging/test_setup_configure_logging_modes_and_idempotency.py",
       "tests/unit/gpt_trader/logging/test_setup_env_flag.py",
-      "tests/unit/gpt_trader/logging/test_setup_integration.py"
+      "tests/unit/gpt_trader/logging/test_setup_smoke.py"
     ],
     "monitoring": [
       "tests/unit/gpt_trader/monitoring/configuration_guardian/test_detector_edges.py",
@@ -814,7 +813,7 @@
       "tests/unit/gpt_trader/security/secrets_manager/test_file_basic.py",
       "tests/unit/gpt_trader/security/secrets_manager/test_file_concurrency.py",
       "tests/unit/gpt_trader/security/secrets_manager/test_key_rotation_basic.py",
-      "tests/unit/gpt_trader/security/secrets_manager/test_key_rotation_integrations.py",
+      "tests/unit/gpt_trader/security/secrets_manager/test_key_rotation_scenarios.py",
       "tests/unit/gpt_trader/security/secrets_manager/test_vault_basic.py",
       "tests/unit/gpt_trader/security/secrets_manager/test_vault_failures.py",
       "tests/unit/gpt_trader/security/security_validator/test_convenience_wrappers.py",
@@ -915,9 +914,9 @@
       "tests/unit/gpt_trader/tui/test_error_indicator.py",
       "tests/unit/gpt_trader/tui/test_events_bot_and_ui.py",
       "tests/unit/gpt_trader/tui/test_events_documentation.py",
-      "tests/unit/gpt_trader/tui/test_events_integration.py",
       "tests/unit/gpt_trader/tui/test_events_state_updates.py",
       "tests/unit/gpt_trader/tui/test_events_trade_and_notifications.py",
+      "tests/unit/gpt_trader/tui/test_events_widget_handlers.py",
       "tests/unit/gpt_trader/tui/test_formatting.py",
       "tests/unit/gpt_trader/tui/test_helpers.py",
       "tests/unit/gpt_trader/tui/test_indicator_contributions.py",
@@ -1035,7 +1034,7 @@
       "tests/unit/gpt_trader/utilities/test_async_utils_core_wrappers.py",
       "tests/unit/gpt_trader/utilities/test_async_utils_function_detection.py",
       "tests/unit/gpt_trader/utilities/test_async_utils_gather_and_wait.py",
-      "tests/unit/gpt_trader/utilities/test_async_utils_integration_scenarios.py",
+      "tests/unit/gpt_trader/utilities/test_async_utils_scenarios.py",
       "tests/unit/gpt_trader/utilities/test_console_logging_core_basic.py",
       "tests/unit/gpt_trader/utilities/test_console_logging_core_fallbacks.py",
       "tests/unit/gpt_trader/utilities/test_console_logging_functions.py",
@@ -1522,6 +1521,88 @@
         ],
         "docstring": "Verify default settlement interval is 8 hours (Coinbase standard).",
         "class": "TestFundingWithSimulationConfig"
+      }
+    ],
+    "tests/integration/test_health_server.py": [
+      {
+        "name": "TestHealthServerIntegration::test_server_starts_and_stops",
+        "line": 40,
+        "markers": [
+          "integration",
+          "asyncio"
+        ],
+        "docstring": "",
+        "class": "TestHealthServerIntegration"
+      },
+      {
+        "name": "TestHealthServerIntegration::test_health_endpoint_healthy",
+        "line": 52,
+        "markers": [
+          "integration",
+          "asyncio"
+        ],
+        "docstring": "",
+        "class": "TestHealthServerIntegration"
+      },
+      {
+        "name": "TestHealthServerIntegration::test_health_endpoint_not_ready",
+        "line": 62,
+        "markers": [
+          "integration",
+          "asyncio"
+        ],
+        "docstring": "",
+        "class": "TestHealthServerIntegration"
+      },
+      {
+        "name": "TestHealthServerIntegration::test_live_endpoint",
+        "line": 68,
+        "markers": [
+          "integration",
+          "asyncio"
+        ],
+        "docstring": "",
+        "class": "TestHealthServerIntegration"
+      },
+      {
+        "name": "TestHealthServerIntegration::test_live_endpoint_not_live",
+        "line": 74,
+        "markers": [
+          "integration",
+          "asyncio"
+        ],
+        "docstring": "",
+        "class": "TestHealthServerIntegration"
+      },
+      {
+        "name": "TestHealthServerIntegration::test_ready_endpoint",
+        "line": 83,
+        "markers": [
+          "integration",
+          "asyncio"
+        ],
+        "docstring": "",
+        "class": "TestHealthServerIntegration"
+      },
+      {
+        "name": "TestHealthServerIntegration::test_ready_endpoint_not_ready",
+        "line": 91,
+        "markers": [
+          "integration",
+          "asyncio"
+        ],
+        "docstring": "",
+        "class": "TestHealthServerIntegration"
+      },
+      {
+        "name": "TestHealthServerIntegration::test_not_found_endpoint",
+        "line": 97,
+        "markers": [
+          "integration",
+          "asyncio"
+        ],
+        "docstring": "",
+        "class": "TestHealthServerIntegration"
       }
     ],
     "tests/integration/test_optimize_feature_end_to_end.py": [
@@ -4039,88 +4120,6 @@
         ],
         "docstring": "",
         "class": "TestHealthCheckFunctions"
-      }
-    ],
-    "tests/unit/gpt_trader/app/test_health_server_integration.py": [
-      {
-        "name": "TestHealthServerIntegration::test_server_starts_and_stops",
-        "line": 38,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestHealthServerIntegration"
-      },
-      {
-        "name": "TestHealthServerIntegration::test_health_endpoint_healthy",
-        "line": 50,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestHealthServerIntegration"
-      },
-      {
-        "name": "TestHealthServerIntegration::test_health_endpoint_not_ready",
-        "line": 60,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestHealthServerIntegration"
-      },
-      {
-        "name": "TestHealthServerIntegration::test_live_endpoint",
-        "line": 66,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestHealthServerIntegration"
-      },
-      {
-        "name": "TestHealthServerIntegration::test_live_endpoint_not_live",
-        "line": 72,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestHealthServerIntegration"
-      },
-      {
-        "name": "TestHealthServerIntegration::test_ready_endpoint",
-        "line": 81,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestHealthServerIntegration"
-      },
-      {
-        "name": "TestHealthServerIntegration::test_ready_endpoint_not_ready",
-        "line": 89,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestHealthServerIntegration"
-      },
-      {
-        "name": "TestHealthServerIntegration::test_not_found_endpoint",
-        "line": 95,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestHealthServerIntegration"
       }
     ],
     "tests/unit/gpt_trader/app/test_health_server_state.py": [
@@ -11116,33 +11115,33 @@
         "class": "TestAPIResilienceCircuitBreaker"
       }
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_integration_flows.py": [
+    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_flows.py": [
       {
-        "name": "TestAPIResilienceIntegrationFlows::test_full_request_flow_simulation",
+        "name": "TestAPIResilienceFlows::test_full_request_flow_simulation",
         "line": 13,
         "markers": [
           "unit"
         ],
         "docstring": "Test a complete request flow through all resilience components.",
-        "class": "TestAPIResilienceIntegrationFlows"
+        "class": "TestAPIResilienceFlows"
       },
       {
-        "name": "TestAPIResilienceIntegrationFlows::test_disabled_components_allow_all",
+        "name": "TestAPIResilienceFlows::test_disabled_components_allow_all",
         "line": 65,
         "markers": [
           "unit"
         ],
         "docstring": "Test that disabled components don't interfere with requests.",
-        "class": "TestAPIResilienceIntegrationFlows"
+        "class": "TestAPIResilienceFlows"
       },
       {
-        "name": "TestAPIResilienceIntegrationFlows::test_error_handling_updates_metrics_and_circuit",
+        "name": "TestAPIResilienceFlows::test_error_handling_updates_metrics_and_circuit",
         "line": 86,
         "markers": [
           "unit"
         ],
         "docstring": "Test that errors properly update both metrics and circuit breaker.",
-        "class": "TestAPIResilienceIntegrationFlows"
+        "class": "TestAPIResilienceFlows"
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience_metrics_and_priority.py": [
@@ -22827,26 +22826,6 @@
         "class": "TestOrderEventRecorderInit"
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_integration_rejection.py": [
-      {
-        "name": "TestRecordIntegrationRejection::test_record_integration_rejection_stores_event",
-        "line": 13,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that integration rejection stores event.",
-        "class": "TestRecordIntegrationRejection"
-      },
-      {
-        "name": "TestRecordIntegrationRejection::test_record_integration_rejection_with_different_status",
-        "line": 35,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that different status names are handled.",
-        "class": "TestRecordIntegrationRejection"
-      }
-    ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_preview.py": [
       {
         "name": "TestRecordPreview::test_record_preview_skips_when_preview_is_none",
@@ -22930,6 +22909,26 @@
         ],
         "docstring": "Test that record_rejection handles logging exceptions.",
         "class": "TestRecordRejection"
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_rejection_recording.py": [
+      {
+        "name": "TestRecordIntegrationRejection::test_record_integration_rejection_stores_event",
+        "line": 13,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that integration rejection stores event.",
+        "class": "TestRecordIntegrationRejection"
+      },
+      {
+        "name": "TestRecordIntegrationRejection::test_record_integration_rejection_with_different_status",
+        "line": 35,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that different status names are handled.",
+        "class": "TestRecordIntegrationRejection"
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_submission_attempt.py": [
@@ -23260,24 +23259,24 @@
         "class": "TestRecordRejection"
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows_integration.py": [
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows.py": [
       {
-        "name": "TestOrderSubmissionIntegration::test_full_order_submission_flow",
+        "name": "TestOrderSubmissionFlows::test_full_order_submission_flow",
         "line": 21,
         "markers": [
           "unit"
         ],
         "docstring": "Test complete order submission flow.",
-        "class": "TestOrderSubmissionIntegration"
+        "class": "TestOrderSubmissionFlows"
       },
       {
-        "name": "TestOrderSubmissionIntegration::test_rejection_flow",
+        "name": "TestOrderSubmissionFlows::test_rejection_flow",
         "line": 62,
         "markers": [
           "unit"
         ],
         "docstring": "Test order rejection flow.",
-        "class": "TestOrderSubmissionIntegration"
+        "class": "TestOrderSubmissionFlows"
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows_retry_idempotency.py": [
@@ -23901,7 +23900,7 @@
         "class": "TestBuildPositionsDict"
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_require_product_and_integration.py": [
+    "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_require_product_and_flow.py": [
       {
         "name": "TestRequireProduct::test_returns_provided_product",
         "line": 19,
@@ -23948,13 +23947,13 @@
         "class": "TestRequireProduct"
       },
       {
-        "name": "TestStateCollectionIntegration::test_full_state_collection_flow",
+        "name": "TestStateCollectionFlow::test_full_state_collection_flow",
         "line": 78,
         "markers": [
           "unit"
         ],
         "docstring": "Test complete state collection flow.",
-        "class": "TestStateCollectionIntegration"
+        "class": "TestStateCollectionFlow"
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_resolve_effective_price.py": [
@@ -24199,15 +24198,15 @@
         "class": "TestValidationFailureTracker"
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_validation_integration_flow.py": [
+    "tests/unit/gpt_trader/features/live_trade/execution/test_validation_flow.py": [
       {
-        "name": "TestValidationIntegration::test_full_validation_flow",
+        "name": "TestValidationFlow::test_full_validation_flow",
         "line": 14,
         "markers": [
           "unit"
         ],
         "docstring": "",
-        "class": "TestValidationIntegration"
+        "class": "TestValidationFlow"
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_validation_mark_staleness_and_slippage.py": [
@@ -28926,35 +28925,6 @@
         "class": "TestLiveRiskManagerStubs"
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/test_risk_manager_integration.py": [
-      {
-        "name": "TestLiveRiskManagerIntegration::test_daily_workflow",
-        "line": 26,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test typical daily workflow.",
-        "class": "TestLiveRiskManagerIntegration"
-      },
-      {
-        "name": "TestLiveRiskManagerIntegration::test_volatility_triggers_reduce_only",
-        "line": 69,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test volatility breaker triggers reduce-only mode.",
-        "class": "TestLiveRiskManagerIntegration"
-      },
-      {
-        "name": "TestLiveRiskManagerIntegration::test_liquidation_buffer_triggers_reduce_only",
-        "line": 84,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test liquidation buffer check triggers reduce-only for symbol.",
-        "class": "TestLiveRiskManagerIntegration"
-      }
-    ],
     "tests/unit/gpt_trader/features/live_trade/test_risk_manager_liquidation_buffer.py": [
       {
         "name": "TestCheckLiquidationBuffer::test_no_config_returns_false",
@@ -29403,6 +29373,35 @@
         ],
         "docstring": "Test to_payload for triggered outcome.",
         "class": "TestVolatilityCheckOutcome"
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/test_risk_manager_workflows.py": [
+      {
+        "name": "TestLiveRiskManagerWorkflows::test_daily_workflow",
+        "line": 26,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test typical daily workflow.",
+        "class": "TestLiveRiskManagerWorkflows"
+      },
+      {
+        "name": "TestLiveRiskManagerWorkflows::test_volatility_triggers_reduce_only",
+        "line": 69,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test volatility breaker triggers reduce-only mode.",
+        "class": "TestLiveRiskManagerWorkflows"
+      },
+      {
+        "name": "TestLiveRiskManagerWorkflows::test_liquidation_buffer_triggers_reduce_only",
+        "line": 84,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test liquidation buffer check triggers reduce-only for symbol.",
+        "class": "TestLiveRiskManagerWorkflows"
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/test_state_recovery_price_tick_recording.py": [
@@ -33035,15 +33034,15 @@
         "class": "TestEnvFlag"
       }
     ],
-    "tests/unit/gpt_trader/logging/test_setup_integration.py": [
+    "tests/unit/gpt_trader/logging/test_setup_smoke.py": [
       {
-        "name": "TestLoggingIntegration::test_logging_works_after_configuration",
+        "name": "TestLoggingSetupSmoke::test_logging_works_after_configuration",
         "line": 42,
         "markers": [
           "unit"
         ],
         "docstring": "Test that logging actually works after configuration.",
-        "class": "TestLoggingIntegration"
+        "class": "TestLoggingSetupSmoke"
       }
     ],
     "tests/unit/gpt_trader/monitoring/configuration_guardian/test_detector_edges.py": [
@@ -40809,60 +40808,60 @@
         "class": "TestKeyRotationBasics"
       }
     ],
-    "tests/unit/gpt_trader/security/secrets_manager/test_key_rotation_integrations.py": [
+    "tests/unit/gpt_trader/security/secrets_manager/test_key_rotation_scenarios.py": [
       {
-        "name": "TestKeyRotationIntegrations::test_rotate_key_with_vault_storage",
+        "name": "TestKeyRotationScenarios::test_rotate_key_with_vault_storage",
         "line": 13,
         "markers": [
           "unit"
         ],
         "docstring": "",
-        "class": "TestKeyRotationIntegrations"
+        "class": "TestKeyRotationScenarios"
       },
       {
-        "name": "TestKeyRotationIntegrations::test_rotate_key_concurrent_access",
+        "name": "TestKeyRotationScenarios::test_rotate_key_concurrent_access",
         "line": 30,
         "markers": [
           "unit"
         ],
         "docstring": "",
-        "class": "TestKeyRotationIntegrations"
+        "class": "TestKeyRotationScenarios"
       },
       {
-        "name": "TestKeyRotationIntegrations::test_rotate_key_error_handling",
+        "name": "TestKeyRotationScenarios::test_rotate_key_error_handling",
         "line": 52,
         "markers": [
           "unit"
         ],
         "docstring": "",
-        "class": "TestKeyRotationIntegrations"
+        "class": "TestKeyRotationScenarios"
       },
       {
-        "name": "TestKeyRotationIntegrations::test_rotate_key_with_cache",
+        "name": "TestKeyRotationScenarios::test_rotate_key_with_cache",
         "line": 70,
         "markers": [
           "unit"
         ],
         "docstring": "",
-        "class": "TestKeyRotationIntegrations"
+        "class": "TestKeyRotationScenarios"
       },
       {
-        "name": "TestKeyRotationIntegrations::test_rotate_key_idempotent",
+        "name": "TestKeyRotationScenarios::test_rotate_key_idempotent",
         "line": 79,
         "markers": [
           "unit"
         ],
         "docstring": "",
-        "class": "TestKeyRotationIntegrations"
+        "class": "TestKeyRotationScenarios"
       },
       {
-        "name": "TestKeyRotationIntegrations::test_rotate_key_with_complex_secret",
+        "name": "TestKeyRotationScenarios::test_rotate_key_with_complex_secret",
         "line": 91,
         "markers": [
           "unit"
         ],
         "docstring": "",
-        "class": "TestKeyRotationIntegrations"
+        "class": "TestKeyRotationScenarios"
       }
     ],
     "tests/unit/gpt_trader/security/secrets_manager/test_vault_basic.py": [
@@ -47851,28 +47850,6 @@
         "class": "TestEventDocumentation"
       }
     ],
-    "tests/unit/gpt_trader/tui/test_events_integration.py": [
-      {
-        "name": "TestEventIntegration::test_event_posting_and_receiving",
-        "line": 16,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that events can be posted and received in Textual app.",
-        "class": "TestEventIntegration"
-      },
-      {
-        "name": "TestEventIntegration::test_event_handler_invocation",
-        "line": 48,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that event handlers are properly invoked.",
-        "class": "TestEventIntegration"
-      }
-    ],
     "tests/unit/gpt_trader/tui/test_events_state_updates.py": [
       {
         "name": "TestStateUpdateEvents::test_state_update_received_creation",
@@ -48019,6 +47996,28 @@
         ],
         "docstring": "Test NotificationRequested with defaults.",
         "class": "TestErrorNotificationEvents"
+      }
+    ],
+    "tests/unit/gpt_trader/tui/test_events_widget_handlers.py": [
+      {
+        "name": "TestEventHandlers::test_event_posting_and_receiving",
+        "line": 16,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "Test that events can be posted and received in Textual app.",
+        "class": "TestEventHandlers"
+      },
+      {
+        "name": "TestEventHandlers::test_event_handler_invocation",
+        "line": 48,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "Test that event handlers are properly invoked.",
+        "class": "TestEventHandlers"
       }
     ],
     "tests/unit/gpt_trader/tui/test_formatting.py": [
@@ -55254,46 +55253,46 @@
         "class": "TestAsyncPerformance"
       }
     ],
-    "tests/unit/gpt_trader/utilities/test_async_utils_integration_scenarios.py": [
+    "tests/unit/gpt_trader/utilities/test_async_utils_scenarios.py": [
       {
-        "name": "TestAsyncIntegrationScenarios::test_rate_limiting_with_batch_processing",
+        "name": "TestAsyncScenarios::test_rate_limiting_with_batch_processing",
         "line": 44,
         "markers": [
           "asyncio",
           "unit"
         ],
         "docstring": "",
-        "class": "TestAsyncIntegrationScenarios"
+        "class": "TestAsyncScenarios"
       },
       {
-        "name": "TestAsyncIntegrationScenarios::test_caching_with_retry",
+        "name": "TestAsyncScenarios::test_caching_with_retry",
         "line": 65,
         "markers": [
           "asyncio",
           "unit"
         ],
         "docstring": "",
-        "class": "TestAsyncIntegrationScenarios"
+        "class": "TestAsyncScenarios"
       },
       {
-        "name": "TestAsyncIntegrationScenarios::test_timeout_with_concurrency",
+        "name": "TestAsyncScenarios::test_timeout_with_concurrency",
         "line": 94,
         "markers": [
           "asyncio",
           "unit"
         ],
         "docstring": "",
-        "class": "TestAsyncIntegrationScenarios"
+        "class": "TestAsyncScenarios"
       },
       {
-        "name": "TestAsyncIntegrationScenarios::test_complex_async_workflow",
+        "name": "TestAsyncScenarios::test_complex_async_workflow",
         "line": 109,
         "markers": [
           "asyncio",
           "unit"
         ],
         "docstring": "",
-        "class": "TestAsyncIntegrationScenarios"
+        "class": "TestAsyncScenarios"
       }
     ],
     "tests/unit/gpt_trader/utilities/test_console_logging_core_basic.py": [

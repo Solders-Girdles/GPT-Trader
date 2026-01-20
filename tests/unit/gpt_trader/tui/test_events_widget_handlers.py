@@ -1,4 +1,4 @@
-"""Integration tests for posting and handling TUI events in Textual."""
+"""Tests for posting and handling TUI events in Textual."""
 
 from __future__ import annotations
 
@@ -9,8 +9,8 @@ from textual.widgets import Static
 from gpt_trader.tui.events import BotStateChanged
 
 
-class TestEventIntegration:
-    """Integration tests for event posting and handling."""
+class TestEventHandlers:
+    """Tests for event posting and handling."""
 
     @pytest.mark.asyncio
     async def test_event_posting_and_receiving(self):

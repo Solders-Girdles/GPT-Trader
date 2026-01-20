@@ -12,7 +12,7 @@ import pytest
 from gpt_trader.utilities.async_tools import gather_with_concurrency
 
 
-class TestAsyncIntegrationScenarios:
+class TestAsyncScenarios:
     @dataclass
     class FakeClock:
         current: float = 1_000_000.0
@@ -24,9 +24,7 @@ class TestAsyncIntegrationScenarios:
             self.current += seconds
 
     @pytest.fixture(autouse=True)
-    def _deterministic_time(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> TestAsyncIntegrationScenarios.FakeClock:
+    def _deterministic_time(self, monkeypatch: pytest.MonkeyPatch) -> TestAsyncScenarios.FakeClock:
         clock = self.FakeClock()
         monkeypatch.setattr(time, "time", clock.time)
 

@@ -1,4 +1,4 @@
-"""Integration-style tests for LiveRiskManager workflows."""
+"""Workflow tests for LiveRiskManager."""
 
 from __future__ import annotations
 
@@ -20,8 +20,8 @@ def mock_load_state():
         yield
 
 
-class TestLiveRiskManagerIntegration:
-    """Integration tests for LiveRiskManager."""
+class TestLiveRiskManagerWorkflows:
+    """Workflow tests for LiveRiskManager."""
 
     def test_daily_workflow(self) -> None:
         """Test typical daily workflow."""

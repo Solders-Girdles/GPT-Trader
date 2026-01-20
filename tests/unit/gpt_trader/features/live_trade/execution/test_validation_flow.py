@@ -1,4 +1,4 @@
-"""Tests for full validation workflows (integration-style)."""
+"""Tests for full validation workflows."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from gpt_trader.core import OrderSide, OrderType, Product
 from gpt_trader.features.live_trade.execution.validation import OrderValidator
 
 
-class TestValidationIntegration:
+class TestValidationFlow:
     @patch("gpt_trader.features.live_trade.execution.validation.spec_validate_order")
     def test_full_validation_flow(
         self,

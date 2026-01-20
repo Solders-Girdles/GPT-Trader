@@ -8,35 +8,26 @@ from unittest.mock import MagicMock
 import pytest
 
 import gpt_trader.features.live_trade.execution.order_event_recorder as recorder_module
-import gpt_trader.features.live_trade.execution.order_submission as submission_module
+import gpt_trader.features.live_trade.execution.order_submission as order_submission_module
 from gpt_trader.core import Order, OrderSide, OrderType
 from gpt_trader.features.live_trade.execution.order_submission import OrderSubmitter
 
 
-@pytest.fixture(autouse=True)
-def monitoring_logger(monkeypatch) -> MagicMock:
-    mock_logger = MagicMock()
-    monkeypatch.setattr(recorder_module, "get_monitoring_logger", lambda: mock_logger)
-    monkeypatch.setattr(recorder_module, "emit_metric", MagicMock())
-    return mock_logger
-
-
-@pytest.fixture()
-def record_latency_mock(monkeypatch) -> MagicMock:
+@pytest.fixture
+def record_latency_mock(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
     mock_latency = MagicMock()
-    monkeypatch.setattr(submission_module, "_record_order_submission_latency", mock_latency)
+    monkeypatch.setattr(order_submission_module, "_record_order_submission_latency", mock_latency)
     return mock_latency
-
-
-@pytest.fixture(autouse=True)
-def record_metric_mock(monkeypatch) -> MagicMock:
-    mock_metric = MagicMock()
-    monkeypatch.setattr(submission_module, "_record_order_submission_metric", mock_metric)
-    return mock_metric
 
 
 class TestOrderSubmissionLatencyMetrics:
     """Tests for order submission latency metrics recording."""
+
+    @pytest.fixture(autouse=True)
+    def _setup_mocks(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(recorder_module, "get_monitoring_logger", lambda: MagicMock())
+        monkeypatch.setattr(recorder_module, "emit_metric", MagicMock())
+        monkeypatch.setattr(order_submission_module, "_record_order_submission_metric", MagicMock())
 
     def test_successful_submission_records_latency_histogram(
         self,

@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import patch
+from unittest.mock import MagicMock, Mock
 
 import pytest
 
+import gpt_trader.features.brokerages.coinbase.client.client as client_module
 from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.client.market import MarketDataClientMixin
 from gpt_trader.features.brokerages.coinbase.errors import (
@@ -98,60 +99,56 @@ def test_list_balances_maps_totals() -> None:
     assert data["USDC"].total == Decimal("50")
 
 
-def test_warn_public_market_fallback_only_once() -> None:
+def test_warn_public_market_fallback_only_once(monkeypatch: pytest.MonkeyPatch) -> None:
     client = _make_client()
+    mock_logger = MagicMock()
+    monkeypatch.setattr(client_module, "logger", mock_logger)
 
-    with patch(
-        "gpt_trader.features.brokerages.coinbase.client.client.logger.warning"
-    ) as mock_warning:
-        client._warn_public_market_fallback("ticker", Exception("unauthorized"))
-        client._warn_public_market_fallback("ticker", Exception("unauthorized"))
+    client._warn_public_market_fallback("ticker", Exception("unauthorized"))
+    client._warn_public_market_fallback("ticker", Exception("unauthorized"))
 
-    assert mock_warning.call_count == 1
+    assert mock_logger.warning.call_count == 1
 
 
-def test_get_ticker_auth_error_falls_back_to_public(caplog: pytest.LogCaptureFixture) -> None:
+def test_get_ticker_auth_error_falls_back_to_public(
+    caplog: pytest.LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
+) -> None:
     client = _make_client()
-
-    caplog.set_level("WARNING")
-    with patch.object(
-        MarketDataClientMixin,
-        "get_market_product_ticker",
+    mock_public = Mock(
         side_effect=[
             AuthError("unauthorized"),
             {"price": "101", "bid": "100", "ask": "102"},
-        ],
-    ) as mock_public:
-        result = client.get_ticker("BTC-USD")
+        ]
+    )
+    monkeypatch.setattr(MarketDataClientMixin, "get_market_product_ticker", mock_public)
+
+    caplog.set_level("WARNING")
+    result = client.get_ticker("BTC-USD")
 
     assert result["price"] == "101"
     assert mock_public.call_count == 2
     assert "Falling back to public market endpoints" in caplog.text
 
 
-def test_get_ticker_invalid_request_falls_back_to_authenticated() -> None:
+def test_get_ticker_invalid_request_falls_back_to_authenticated(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     client = _make_client()
+    mock_public = Mock(side_effect=InvalidRequestError("unsupported"))
+    mock_private = Mock(return_value={"price": "99", "bid": "98", "ask": "100"})
+    monkeypatch.setattr(MarketDataClientMixin, "get_market_product_ticker", mock_public)
+    monkeypatch.setattr(MarketDataClientMixin, "get_ticker", mock_private)
 
-    with (
-        patch.object(
-            MarketDataClientMixin,
-            "get_market_product_ticker",
-            side_effect=InvalidRequestError("unsupported"),
-        ) as mock_public,
-        patch.object(
-            MarketDataClientMixin,
-            "get_ticker",
-            return_value={"price": "99", "bid": "98", "ask": "100"},
-        ) as mock_private,
-    ):
-        result = client.get_ticker("BTC-USD")
+    result = client.get_ticker("BTC-USD")
 
     assert result["price"] == "99"
     mock_public.assert_called_once()
     mock_private.assert_called_once()
 
 
-def test_get_ticker_normalizes_from_trades_and_best_bid_ask() -> None:
+def test_get_ticker_normalizes_from_trades_and_best_bid_ask(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     client = _make_client()
 
     response = {
@@ -159,9 +156,11 @@ def test_get_ticker_normalizes_from_trades_and_best_bid_ask() -> None:
         "best_bid": "100",
         "best_ask": "102",
     }
+    monkeypatch.setattr(
+        MarketDataClientMixin, "get_market_product_ticker", Mock(return_value=response)
+    )
 
-    with patch.object(MarketDataClientMixin, "get_market_product_ticker", return_value=response):
-        result = client.get_ticker("BTC-USD")
+    result = client.get_ticker("BTC-USD")
 
     assert result["price"] == "101"
     assert result["bid"] == "100"
@@ -169,42 +168,48 @@ def test_get_ticker_normalizes_from_trades_and_best_bid_ask() -> None:
     assert result["time"] == "2024-01-01T00:00:00Z"
 
 
-def test_get_ticker_auth_error_raises_in_non_advanced() -> None:
+def test_get_ticker_auth_error_raises_in_non_advanced(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     client = _make_client(api_mode="exchange")
+    monkeypatch.setattr(
+        MarketDataClientMixin, "get_ticker", Mock(side_effect=AuthError("unauthorized"))
+    )
 
-    with patch.object(MarketDataClientMixin, "get_ticker", side_effect=AuthError("unauthorized")):
-        with pytest.raises(AuthError):
-            client.get_ticker("BTC-USD")
+    with pytest.raises(AuthError):
+        client.get_ticker("BTC-USD")
 
 
 def test_get_candles_permission_denied_falls_back_to_public(
     caplog: pytest.LogCaptureFixture,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     client = _make_client()
-
-    caplog.set_level("WARNING")
-    with patch.object(
-        MarketDataClientMixin,
-        "get_market_product_candles",
+    mock_public = Mock(
         side_effect=[
             PermissionDeniedError("denied"),
             {"candles": [{"open": "1"}]},
-        ],
-    ) as mock_public:
-        result = client.get_candles("BTC-USD", "1H", limit=1)
+        ]
+    )
+    monkeypatch.setattr(MarketDataClientMixin, "get_market_product_candles", mock_public)
+
+    caplog.set_level("WARNING")
+    result = client.get_candles("BTC-USD", "1H", limit=1)
 
     assert result["candles"] == [{"open": "1"}]
     assert mock_public.call_count == 2
     assert "Falling back to public market endpoints" in caplog.text
 
 
-def test_get_candles_permission_denied_raises_in_non_advanced() -> None:
+def test_get_candles_permission_denied_raises_in_non_advanced(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     client = _make_client(api_mode="exchange")
-
-    with patch.object(
+    monkeypatch.setattr(
         MarketDataClientMixin,
         "get_candles",
-        side_effect=PermissionDeniedError("denied"),
-    ):
-        with pytest.raises(PermissionDeniedError):
-            client.get_candles("BTC-USD", "1H", limit=1)
+        Mock(side_effect=PermissionDeniedError("denied")),
+    )
+
+    with pytest.raises(PermissionDeniedError):
+        client.get_candles("BTC-USD", "1H", limit=1)

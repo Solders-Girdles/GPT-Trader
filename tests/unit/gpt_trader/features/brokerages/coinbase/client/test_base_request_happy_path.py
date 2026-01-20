@@ -1,8 +1,11 @@
 """Tests for CoinbaseClientBase request happy-path behavior."""
 
 import json
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
+import pytest
+
+import gpt_trader.features.brokerages.coinbase.client.base as base_module
 from gpt_trader.features.brokerages.coinbase.auth import SimpleAuth
 from gpt_trader.features.brokerages.coinbase.client.base import CoinbaseClientBase
 
@@ -72,10 +75,9 @@ class TestCoinbaseClientBaseRequestHappyPath:
         headers = call_args[0][2]
         assert "Authorization" not in headers
 
-    @patch("gpt_trader.features.brokerages.coinbase.client.base.get_correlation_id")
-    def test_request_with_correlation_id(self, mock_get_correlation_id: Mock) -> None:
+    def test_request_with_correlation_id(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test request with correlation ID."""
-        mock_get_correlation_id.return_value = "test-correlation-123"
+        monkeypatch.setattr(base_module, "get_correlation_id", lambda: "test-correlation-123")
         client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
         mock_transport = Mock()
         mock_transport.return_value = (200, {}, '{"success": true}')

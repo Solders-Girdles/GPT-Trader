@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 800,
+    "tests_scanned": 793,
     "source_modules": 355,
     "unresolved_modules": 3
   },
@@ -407,13 +407,10 @@
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_init_and_metrics.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_resilience.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_with_retry.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_broker_rejection.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_edge_cases.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_failure.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_preview.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_submission_attempt.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_success.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_trade_event.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_rejection.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_submission.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_failure.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_preview.py",
@@ -898,7 +895,7 @@
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_with_retry.py"
     ],
     "gpt_trader.features.live_trade.execution.decision_trace": [
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_decision_trace.py"
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder.py"
     ],
     "gpt_trader.features.live_trade.execution.guard_manager": [
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py",
@@ -926,17 +923,10 @@
       "tests/unit/gpt_trader/features/live_trade/execution/test_volatility_guard.py"
     ],
     "gpt_trader.features.live_trade.execution.order_event_recorder": [
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_broker_rejection.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_decision_trace.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_edge_cases.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_failure.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_init.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_preview.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_rejection.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_rejection_recording.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_submission_attempt.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_success.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_trade_event.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_submission.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_failure.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_preview.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_rejection.py",
@@ -3508,23 +3498,9 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_mark_staleness_and_risk_metrics_guard.py": [
       "gpt_trader.features.live_trade.guard_errors"
     ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_broker_rejection.py": [
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder.py": [
       "gpt_trader.core",
-      "gpt_trader.features.live_trade.execution.order_event_recorder"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_decision_trace.py": [
       "gpt_trader.features.live_trade.execution.decision_trace",
-      "gpt_trader.features.live_trade.execution.order_event_recorder"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_edge_cases.py": [
-      "gpt_trader.core",
-      "gpt_trader.features.live_trade.execution.order_event_recorder"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_failure.py": [
-      "gpt_trader.core",
-      "gpt_trader.features.live_trade.execution.order_event_recorder"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_init.py": [
       "gpt_trader.features.live_trade.execution.order_event_recorder"
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_preview.py": [
@@ -3532,20 +3508,10 @@
       "gpt_trader.features.live_trade.execution.order_event_recorder"
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_rejection.py": [
-      "gpt_trader.features.live_trade.execution.order_event_recorder"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_rejection_recording.py": [
-      "gpt_trader.features.live_trade.execution.order_event_recorder"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_submission_attempt.py": [
       "gpt_trader.core",
       "gpt_trader.features.live_trade.execution.order_event_recorder"
     ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_success.py": [
-      "gpt_trader.core",
-      "gpt_trader.features.live_trade.execution.order_event_recorder"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_trade_event.py": [
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_submission.py": [
       "gpt_trader.core",
       "gpt_trader.features.live_trade.execution.order_event_recorder"
     ],
@@ -5454,8 +5420,8 @@
     "gpt_trader.features.live_trade.execution.guards.daily_loss": "src/gpt_trader/features/live_trade/execution/guards/daily_loss.py",
     "gpt_trader.features.live_trade.execution.guards.pnl_telemetry": "src/gpt_trader/features/live_trade/execution/guards/pnl_telemetry.py",
     "gpt_trader.features.live_trade.execution.guards.liquidation_buffer": "src/gpt_trader/features/live_trade/execution/guards/liquidation_buffer.py",
-    "gpt_trader.features.live_trade.execution.order_event_recorder": "src/gpt_trader/features/live_trade/execution/order_event_recorder.py",
     "gpt_trader.features.live_trade.execution.decision_trace": "src/gpt_trader/features/live_trade/execution/decision_trace.py",
+    "gpt_trader.features.live_trade.execution.order_event_recorder": "src/gpt_trader/features/live_trade/execution/order_event_recorder.py",
     "gpt_trader.features.live_trade.execution.order_submission": "src/gpt_trader/features/live_trade/execution/order_submission.py",
     "gpt_trader.logging.correlation": "src/gpt_trader/logging/correlation.py",
     "gpt_trader.features.live_trade.execution.router": "src/gpt_trader/features/live_trade/execution/router.py",

@@ -6,7 +6,7 @@
 #   deferred: maybe later (hide from suggestions)
 #
 version: 1
-generated_at: '2026-01-21T01:19:09.058968+00:00'
+generated_at: '2026-01-21T02:08:42.807494+00:00'
 clusters:
   0bdbfcad487d:
     state: rejected
@@ -71,3 +71,9 @@ clusters:
     reason: 'False positive: source_fanout based on shared utilities import. Files
       test distinct functionality (PnL, positions, REST, perps, catalog) - unrelated
       concerns.'
+  5e44d0f2947f:
+    state: rejected
+    owner: claude
+    updated: '2026-01-21'
+    reason: 'source_fanout false positive: files share regime import but test distinct
+      functionality'

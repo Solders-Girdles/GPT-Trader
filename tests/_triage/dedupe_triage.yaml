@@ -6,8 +6,50 @@
 #   deferred: maybe later (hide from suggestions)
 #
 version: 1
-generated_at: '2026-01-21T01:13:28.459963+00:00'
+generated_at: '2026-01-21T01:19:09.058968+00:00'
 clusters:
+  0bdbfcad487d:
+    state: rejected
+    owner: claude
+    updated: '2026-01-21'
+    reason: 'False positive: source_fanout mixing signals tests (order_flow, orderbook,
+      spread, vwap) with optimize runner - distinct modules, good organization.'
+  0f050387a99b:
+    state: rejected
+    owner: claude
+    updated: '2026-01-21'
+    reason: 'False positive: source_fanout mixing backtesting/, ensemble/, and sizing/
+      subdirectories - different modules.'
+  1707c929251f:
+    state: rejected
+    owner: claude
+    updated: '2026-01-21'
+    reason: 'False positive: source_fanout mixing app container test with secrets
+      manager tests - completely unrelated modules.'
+  46ca5ed2c6a3:
+    state: rejected
+    owner: claude
+    updated: '2026-01-21'
+    reason: 'False positive: source_fanout mixing app/ tests with features/live_trade/
+      tests - different directories and concerns.'
+  526ecb32ccb9:
+    state: rejected
+    owner: claude
+    updated: '2026-01-21'
+    reason: 'False positive: source_fanout mixing equity_calculator with degradation
+      tests. Use similar_names cluster for degradation tests instead.'
+  6004380ab8e4:
+    state: rejected
+    owner: claude
+    updated: '2026-01-21'
+    reason: 'False positive: source_fanout mixing logging/, observability/, and features/
+      directories - completely different modules.'
+  3771bda18d26:
+    state: rejected
+    owner: claude
+    updated: '2026-01-21'
+    reason: 'False positive: source_fanout mixing combiners/, signals/, and strategies/
+      - different subsystems.'
   72948f9bf0a3:
     state: rejected
     owner: claude
@@ -15,13 +57,6 @@ clusters:
     reason: 'False positive: source_fanout based on shared models import. Files test
       distinct functionality (auth, system, REST, market data) - 1005 lines total
       would require 5+ files anyway.'
-  ce4068fdc367:
-    state: rejected
-    owner: claude
-    updated: '2026-01-21'
-    reason: 'False positive: source_fanout based on shared utilities import. Files
-      test distinct functionality (PnL, positions, REST, perps, catalog) - unrelated
-      concerns.'
   7a9b6155b2a7:
     state: rejected
     owner: claude
@@ -29,15 +64,10 @@ clusters:
     reason: 'False positive: source_fanout based on validation import. Tests distinct
       rule types (boolean, numeric, collection, string) in separate modules - good
       organization.'
-  0bdbfcad487d:
+  ce4068fdc367:
     state: rejected
     owner: claude
     updated: '2026-01-21'
-    reason: 'False positive: source_fanout mixing signals tests (order_flow, orderbook,
-      spread, vwap) with optimize runner - distinct modules, good organization.'
-  1707c929251f:
-    state: rejected
-    owner: claude
-    updated: '2026-01-21'
-    reason: 'False positive: source_fanout mixing app container test with secrets
-      manager tests - completely unrelated modules.'
+    reason: 'False positive: source_fanout based on shared utilities import. Files
+      test distinct functionality (PnL, positions, REST, perps, catalog) - unrelated
+      concerns.'

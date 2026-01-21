@@ -2330,10 +2330,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/monitoring/test_health_checks.py
-    expected_file_delta: -4
+    expected_file_delta: -1
     priority: low
-    rationale: Consolidate 5 test files into single parametrized file
-    status: pending
+    rationale: Consolidated 5 → 4 files (broker_ping + degradation_state merged)
+    status: done
+    owner: claude
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/308
     added: '2026-01-20'
   2a2b4d1c902b:
     type: similar_names

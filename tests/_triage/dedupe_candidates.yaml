@@ -2362,10 +2362,11 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry.py
-    expected_file_delta: -4
+    expected_file_delta: -2
     priority: low
-    rationale: Consolidate 5 test files into single parametrized file
-    status: pending
+    rationale: Consolidated 5 → 3 files (init+supports+publish, collect, run)
+    status: in_progress
+    owner: claude
     added: '2026-01-20'
   4583486c212b:
     type: similar_names

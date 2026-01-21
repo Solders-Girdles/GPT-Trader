@@ -2349,10 +2349,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin.py
-    expected_file_delta: -4
+    expected_file_delta: -2
     priority: low
-    rationale: Consolidate 5 test files into single parametrized file
-    status: pending
+    rationale: Consolidated 5 → 3 files (init+health, orderbook+filtering, trades)
+    status: done
+    owner: claude
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/309
     added: '2026-01-20'
   310214e39620:
     type: similar_names

@@ -1,4 +1,4 @@
-"""Tests for LiveRiskManager.check_liquidation_buffer."""
+"""Tests for LiveRiskManager protection: liquidation buffer and reduce-only mode."""
 
 from __future__ import annotations
 
@@ -19,11 +19,58 @@ def mock_load_state(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(LiveRiskManager, "_load_state", lambda self: None)
 
 
+class TestReduceOnlyMode:
+    """Tests for reduce-only mode methods."""
+
+    def test_default_not_reduce_only(self) -> None:
+        """Should default to not reduce-only."""
+        manager = LiveRiskManager()
+
+        assert manager.is_reduce_only_mode() is False
+
+    def test_set_reduce_only_true(self) -> None:
+        """Should set reduce-only to True."""
+        manager = LiveRiskManager()
+
+        manager.set_reduce_only_mode(True)
+
+        assert manager.is_reduce_only_mode() is True
+
+    def test_set_reduce_only_false(self) -> None:
+        """Should set reduce-only to False."""
+        manager = LiveRiskManager()
+        manager._reduce_only_mode = True
+
+        manager.set_reduce_only_mode(False)
+
+        assert manager.is_reduce_only_mode() is False
+
+    def test_set_reduce_only_with_reason(self) -> None:
+        """Should accept reason when setting reduce-only."""
+        manager = LiveRiskManager()
+
+        manager.set_reduce_only_mode(True, reason="liquidation_warning")
+
+        assert manager._reduce_only_mode is True
+        assert manager._reduce_only_reason == "liquidation_warning"
+
+    def test_set_reduce_only_clears_reason_when_false(self) -> None:
+        """Should clear reason when disabling reduce-only."""
+        manager = LiveRiskManager()
+        manager._reduce_only_mode = True
+        manager._reduce_only_reason = "some_reason"
+
+        manager.set_reduce_only_mode(False, reason="")
+
+        assert manager._reduce_only_mode is False
+        assert manager._reduce_only_reason == ""
+
+
 class TestCheckLiquidationBuffer:
     """Tests for check_liquidation_buffer method."""
 
     def test_no_config_returns_false(self) -> None:
-        """Test returns False when no config."""
+        """Should return False when no config."""
         manager = LiveRiskManager()
 
         result = manager.check_liquidation_buffer(
@@ -33,7 +80,7 @@ class TestCheckLiquidationBuffer:
         assert result is False
 
     def test_dict_position_no_liquidation_price(self) -> None:
-        """Test with dict position missing liquidation_price."""
+        """Should return False when liquidation_price missing."""
         config = MockConfig()
         manager = LiveRiskManager(config=config)
 
@@ -42,7 +89,7 @@ class TestCheckLiquidationBuffer:
         assert result is False
 
     def test_dict_position_no_mark_price(self) -> None:
-        """Test with dict position missing mark price."""
+        """Should return False when mark price missing."""
         config = MockConfig()
         manager = LiveRiskManager(config=config)
 
@@ -53,11 +100,11 @@ class TestCheckLiquidationBuffer:
         assert result is False
 
     def test_dict_position_with_mark_key(self) -> None:
-        """Test dict position using 'mark' key."""
+        """Should work with 'mark' key in dict."""
         config = MockConfig(min_liquidation_buffer_pct=Decimal("0.05"))
         manager = LiveRiskManager(config=config)
 
-        # Buffer = |110 - 100| / 110 = 0.0909... (9.09%), threshold 5%
+        # Buffer = |110 - 100| / 110 = 0.0909 (9.09%), threshold 5%
         result = manager.check_liquidation_buffer(
             "BTC-USD", {"liquidation_price": 100, "mark": 110}, Decimal("1000")
         )
@@ -65,7 +112,7 @@ class TestCheckLiquidationBuffer:
         assert result is False  # Buffer > threshold, not dangerous
 
     def test_dict_position_with_mark_price_key(self) -> None:
-        """Test dict position using 'mark_price' key."""
+        """Should work with 'mark_price' key in dict."""
         config = MockConfig(min_liquidation_buffer_pct=Decimal("0.05"))
         manager = LiveRiskManager(config=config)
 
@@ -76,7 +123,7 @@ class TestCheckLiquidationBuffer:
         assert result is False
 
     def test_object_position_with_mark_price(self) -> None:
-        """Test object position with mark_price attribute."""
+        """Should work with object having mark_price attribute."""
         config = MockConfig(min_liquidation_buffer_pct=Decimal("0.05"))
         manager = LiveRiskManager(config=config)
         position = MockPosition(liquidation_price=Decimal("100"), mark_price=Decimal("110"))
@@ -86,7 +133,7 @@ class TestCheckLiquidationBuffer:
         assert result is False
 
     def test_object_position_with_mark_fallback(self) -> None:
-        """Test object position falling back to mark attribute."""
+        """Should fall back to mark attribute."""
         config = MockConfig(min_liquidation_buffer_pct=Decimal("0.05"))
         manager = LiveRiskManager(config=config)
         position = MockPosition(liquidation_price=Decimal("100"), mark=Decimal("110"))
@@ -96,11 +143,11 @@ class TestCheckLiquidationBuffer:
         assert result is False
 
     def test_triggers_reduce_only_when_buffer_too_small(self) -> None:
-        """Test triggers reduce_only when buffer is below threshold."""
+        """Should trigger reduce_only when buffer below threshold."""
         config = MockConfig(min_liquidation_buffer_pct=Decimal("0.15"))
         manager = LiveRiskManager(config=config)
 
-        # Buffer = |110 - 100| / 110 = 0.0909... (9.09%), threshold 15%
+        # Buffer = |110 - 100| / 110 = 0.0909 (9.09%), threshold 15%
         result = manager.check_liquidation_buffer(
             "BTC-USD", {"liquidation_price": 100, "mark": 110}, Decimal("1000")
         )
@@ -109,7 +156,7 @@ class TestCheckLiquidationBuffer:
         assert manager.positions["BTC-USD"]["reduce_only"] is True
 
     def test_zero_mark_price_returns_false(self) -> None:
-        """Test returns False when mark price is zero."""
+        """Should return False when mark price is zero."""
         config = MockConfig()
         manager = LiveRiskManager(config=config)
 
@@ -120,21 +167,19 @@ class TestCheckLiquidationBuffer:
         assert result is False
 
     def test_handles_attribute_error(self) -> None:
-        """Test handles AttributeError gracefully."""
+        """Should handle AttributeError gracefully."""
         config = MockConfig()
         manager = LiveRiskManager(config=config)
 
-        # Object without expected attributes
         result = manager.check_liquidation_buffer("BTC-USD", object(), Decimal("1000"))
 
         assert result is False
 
     def test_handles_none_values(self) -> None:
-        """Test handles None values gracefully."""
+        """Should handle None values gracefully."""
         config = MockConfig()
         manager = LiveRiskManager(config=config)
 
-        # Position with None liquidation_price
         result = manager.check_liquidation_buffer(
             "BTC-USD", {"liquidation_price": None, "mark": 110}, Decimal("1000")
         )
@@ -142,12 +187,10 @@ class TestCheckLiquidationBuffer:
         assert result is False
 
     def test_handles_value_error(self) -> None:
-        """Test handles ValueError gracefully (empty string conversion)."""
+        """Should handle ValueError gracefully."""
         config = MockConfig()
         manager = LiveRiskManager(config=config)
 
-        # Empty strings that pass the falsy check but fail Decimal conversion
-        # Note: empty string is falsy, so this hits the early return
         result = manager.check_liquidation_buffer(
             "BTC-USD", {"liquidation_price": "", "mark": 110}, Decimal("1000")
         )

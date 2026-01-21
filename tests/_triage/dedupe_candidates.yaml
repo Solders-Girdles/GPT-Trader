@@ -2365,8 +2365,9 @@ clusters:
     expected_file_delta: -2
     priority: low
     rationale: Consolidated 5 → 3 files (init+supports+publish, collect, run)
-    status: in_progress
+    status: done
     owner: claude
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/310
     added: '2026-01-20'
   4583486c212b:
     type: similar_names

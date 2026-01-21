@@ -193,3 +193,16 @@ def dedupe() -> int:
         uv run agent-dedupe --next-pr         # Suggest next PR packet
     """
     return _run_script("generate_dedupe_candidates.py")
+
+
+def dedupe_triage() -> int:
+    """Triage dedupe clusters (accept/reject/defer).
+
+    Entry point: agent-dedupe-triage
+
+    Examples:
+        uv run agent-dedupe-triage --list
+        uv run agent-dedupe-triage --show 72948f9bf0a3
+        uv run agent-dedupe-triage --set 72948f9bf0a3 rejected --owner rj --reason "Not redundant"
+    """
+    return _run_script("dedupe_triage.py")

@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6309,
-    "total_files": 902,
+    "total_tests": 6310,
+    "total_files": 872,
     "markers_used": 15
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6144,
+    "unit": 6145,
     "asyncio": 371,
     "property": 82,
     "integration": 79,
@@ -329,9 +329,7 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_websocket_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_conversion_endpoints.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_credentials_resolution.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery_both.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery_discovery_data.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery_eligibility_and_none.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery_intx.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery_us.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_endpoint_chains.py",
@@ -355,16 +353,13 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_real_transport.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_real_transport_edge_cases.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_user_event_handler.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_init_and_get_websocket.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_message_filtering.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_stream_orderbook.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_stream_trades_and_control.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_ws_health.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_streaming.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_trades.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_dispatcher.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_edges.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_health.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_edge.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_parsing.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_types_and_sequence_guard.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_backoff.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_degradation_callback.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_health.py",
@@ -429,11 +424,10 @@
       "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_extract_mark.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_health_check.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_update_mark_and_metrics.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_background_restart.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_emit_and_enable.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_run_loop.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_schedule_and_start_stop.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_task_completion_and_async_loop.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_lifecycle.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_loop.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_restart.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_api_health_guard.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_order.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_init_and_metrics.py",
@@ -442,11 +436,9 @@
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_with_retry.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_daily_loss_guard.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_get_validation_metrics.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_cache.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_cancel_and_safe_run.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_runtime_and_orchestration.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_state_collection.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_steps_and_telemetry.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_execution.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_runtime.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_liquidation_buffer_guard.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_mark_staleness_and_risk_metrics_guard.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_broker_rejection.py",
@@ -522,24 +514,18 @@
       "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_profile_strategy.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_strategy.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_strategy_edges.py",
-      "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_baseline_strategy_init_and_guards.py",
-      "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_entry_and_exit_signals.py",
-      "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_indicators_and_confidence.py",
-      "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_models.py",
-      "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_spot_and_perps_strategies.py",
+      "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline.py",
+      "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_signals.py",
+      "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_strategies.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_regime_switcher.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful.py",
-      "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_bundle_and_performance.py",
-      "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_rsi.py",
-      "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_sma_and_ema.py",
-      "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_welford_and_window.py",
-      "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_zscore.py",
+      "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators.py",
+      "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_algorithm.py",
+      "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_primitives.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_perps_baseline_edges.py",
-      "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_collect_snapshot.py",
-      "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_init_and_profile.py",
-      "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_publish_snapshot.py",
-      "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_run.py",
-      "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_supports_and_latest_snapshot.py",
+      "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry.py",
+      "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_collect.py",
+      "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_lifecycle.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_engine_delegation.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_initialization.py",
@@ -576,11 +562,9 @@
       "tests/unit/gpt_trader/features/live_trade/test_state_recovery_rehydration.py",
       "tests/unit/gpt_trader/features/live_trade/test_state_recovery_strategy_rehydrate.py",
       "tests/unit/gpt_trader/features/live_trade/test_strategy_factory.py",
-      "tests/unit/gpt_trader/features/live_trade/test_symbols_cfm.py",
-      "tests/unit/gpt_trader/features/live_trade/test_symbols_derivatives_enabled.py",
-      "tests/unit/gpt_trader/features/live_trade/test_symbols_derivatives_modes_and_constants.py",
-      "tests/unit/gpt_trader/features/live_trade/test_symbols_normalize_symbol_list.py",
-      "tests/unit/gpt_trader/features/live_trade/test_symbols_normalize_symbols.py",
+      "tests/unit/gpt_trader/features/live_trade/test_symbols.py",
+      "tests/unit/gpt_trader/features/live_trade/test_symbols_derivatives.py",
+      "tests/unit/gpt_trader/features/live_trade/test_symbols_normalization.py",
       "tests/unit/gpt_trader/features/live_trade/test_trading_engine.py",
       "tests/unit/gpt_trader/features/optimize/objectives/test_composite_edges.py",
       "tests/unit/gpt_trader/features/optimize/objectives/test_constraints.py",
@@ -672,11 +656,10 @@
       "tests/unit/gpt_trader/monitoring/test_guard_manager_e2e.py",
       "tests/unit/gpt_trader/monitoring/test_guard_manager_handlers.py",
       "tests/unit/gpt_trader/monitoring/test_guard_manager_runtime.py",
-      "tests/unit/gpt_trader/monitoring/test_health_checks_broker_ping.py",
-      "tests/unit/gpt_trader/monitoring/test_health_checks_degradation_state.py",
-      "tests/unit/gpt_trader/monitoring/test_health_checks_execution_signals.py",
-      "tests/unit/gpt_trader/monitoring/test_health_checks_runner_and_result.py",
-      "tests/unit/gpt_trader/monitoring/test_health_checks_ws_freshness.py",
+      "tests/unit/gpt_trader/monitoring/test_health_checks.py",
+      "tests/unit/gpt_trader/monitoring/test_health_checks_runner.py",
+      "tests/unit/gpt_trader/monitoring/test_health_checks_signals.py",
+      "tests/unit/gpt_trader/monitoring/test_health_checks_websocket.py",
       "tests/unit/gpt_trader/monitoring/test_health_signals.py",
       "tests/unit/gpt_trader/monitoring/test_health_signals_summary.py",
       "tests/unit/gpt_trader/monitoring/test_health_signals_thresholds.py",
@@ -786,11 +769,8 @@
       "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer_logging.py",
       "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer_rules.py",
       "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer_validation.py",
-      "tests/unit/gpt_trader/security/test_request_validator_edge_cases.py",
-      "tests/unit/gpt_trader/security/test_request_validator_invalid_action.py",
-      "tests/unit/gpt_trader/security/test_request_validator_missing_fields.py",
-      "tests/unit/gpt_trader/security/test_request_validator_size_limits.py",
-      "tests/unit/gpt_trader/security/test_request_validator_success.py"
+      "tests/unit/gpt_trader/security/test_request_validator.py",
+      "tests/unit/gpt_trader/security/test_request_validator_limits.py"
     ],
     "tui": [
       "tests/unit/gpt_trader/tui/adapters/test_null_status_reporter.py",
@@ -816,11 +796,9 @@
       "tests/unit/gpt_trader/tui/services/test_credential_validator_key_format_and_compatibility.py",
       "tests/unit/gpt_trader/tui/services/test_credential_validator_key_type_detection.py",
       "tests/unit/gpt_trader/tui/services/test_credential_validator_mode_requirements.py",
-      "tests/unit/gpt_trader/tui/services/test_execution_telemetry_collector_core.py",
-      "tests/unit/gpt_trader/tui/services/test_execution_telemetry_execution_metrics.py",
-      "tests/unit/gpt_trader/tui/services/test_execution_telemetry_issue_tracking.py",
-      "tests/unit/gpt_trader/tui/services/test_execution_telemetry_reason_tracking.py",
-      "tests/unit/gpt_trader/tui/services/test_execution_telemetry_submission_record.py",
+      "tests/unit/gpt_trader/tui/services/test_execution_telemetry.py",
+      "tests/unit/gpt_trader/tui/services/test_execution_telemetry_metrics.py",
+      "tests/unit/gpt_trader/tui/services/test_execution_telemetry_reason.py",
       "tests/unit/gpt_trader/tui/services/test_focus_manager.py",
       "tests/unit/gpt_trader/tui/services/test_mode_service_core.py",
       "tests/unit/gpt_trader/tui/services/test_mode_service_create_bot.py",
@@ -835,11 +813,9 @@
       "tests/unit/gpt_trader/tui/services/test_state_registry.py",
       "tests/unit/gpt_trader/tui/services/test_state_registry_broadcast.py",
       "tests/unit/gpt_trader/tui/services/test_theme_service.py",
-      "tests/unit/gpt_trader/tui/services/test_trading_stats_service_compute_stats.py",
-      "tests/unit/gpt_trader/tui/services/test_trading_stats_service_model.py",
-      "tests/unit/gpt_trader/tui/services/test_trading_stats_service_singleton.py",
-      "tests/unit/gpt_trader/tui/services/test_trading_stats_service_trade_matching.py",
-      "tests/unit/gpt_trader/tui/services/test_trading_stats_service_windows.py",
+      "tests/unit/gpt_trader/tui/services/test_trading_stats.py",
+      "tests/unit/gpt_trader/tui/services/test_trading_stats_compute.py",
+      "tests/unit/gpt_trader/tui/services/test_trading_stats_matching.py",
       "tests/unit/gpt_trader/tui/state_management/test_delta_updater_compare_account_risk_system.py",
       "tests/unit/gpt_trader/tui/state_management/test_delta_updater_compare_market_and_positions.py",
       "tests/unit/gpt_trader/tui/state_management/test_delta_updater_compare_orders_and_trades.py",
@@ -886,11 +862,10 @@
       "tests/unit/gpt_trader/tui/test_snapshots_risk_detail_modal.py",
       "tests/unit/gpt_trader/tui/test_snapshots_strategy_detail_screen.py",
       "tests/unit/gpt_trader/tui/test_snapshots_system_indicators.py",
-      "tests/unit/gpt_trader/tui/test_staleness_helpers_banners_and_empty_state.py",
-      "tests/unit/gpt_trader/tui/test_staleness_helpers_data_age_and_severity.py",
-      "tests/unit/gpt_trader/tui/test_staleness_helpers_edge_cases.py",
-      "tests/unit/gpt_trader/tui/test_staleness_helpers_execution_health.py",
-      "tests/unit/gpt_trader/tui/test_staleness_helpers_freshness_label_and_display.py",
+      "tests/unit/gpt_trader/tui/test_staleness_helpers.py",
+      "tests/unit/gpt_trader/tui/test_staleness_helpers_banners.py",
+      "tests/unit/gpt_trader/tui/test_staleness_helpers_edge.py",
+      "tests/unit/gpt_trader/tui/test_staleness_helpers_execution.py",
       "tests/unit/gpt_trader/tui/test_state_cfm_and_data_staleness.py",
       "tests/unit/gpt_trader/tui/test_state_resilience_and_performance.py",
       "tests/unit/gpt_trader/tui/test_state_update_from_bot_status.py",
@@ -902,11 +877,8 @@
       "tests/unit/gpt_trader/tui/test_widget_interactions_keyboard.py",
       "tests/unit/gpt_trader/tui/test_widget_interactions_widgets.py",
       "tests/unit/gpt_trader/tui/utilities/test_pnl_formatting.py",
-      "tests/unit/gpt_trader/tui/utilities/test_table_formatting_cells.py",
-      "tests/unit/gpt_trader/tui/utilities/test_table_formatting_clipboard.py",
-      "tests/unit/gpt_trader/tui/utilities/test_table_formatting_sorting.py",
-      "tests/unit/gpt_trader/tui/utilities/test_table_formatting_timestamp.py",
-      "tests/unit/gpt_trader/tui/utilities/test_table_formatting_truncate_id.py",
+      "tests/unit/gpt_trader/tui/utilities/test_table_formatting.py",
+      "tests/unit/gpt_trader/tui/utilities/test_table_formatting_data.py",
       "tests/unit/gpt_trader/tui/widgets/test_account_widget_basic.py",
       "tests/unit/gpt_trader/tui/widgets/test_account_widget_partial_state.py",
       "tests/unit/gpt_trader/tui/widgets/test_account_widget_signature_caching.py",
@@ -931,11 +903,9 @@
       "tests/unit/gpt_trader/tui/widgets/test_position_card_partial_state.py",
       "tests/unit/gpt_trader/tui/widgets/test_position_card_signature_caching.py",
       "tests/unit/gpt_trader/tui/widgets/test_position_card_state_registry.py",
-      "tests/unit/gpt_trader/tui/widgets/test_position_detail_modal_calculations.py",
-      "tests/unit/gpt_trader/tui/widgets/test_position_detail_modal_fill_quality.py",
-      "tests/unit/gpt_trader/tui/widgets/test_position_detail_modal_init.py",
-      "tests/unit/gpt_trader/tui/widgets/test_position_detail_modal_recent_fills.py",
-      "tests/unit/gpt_trader/tui/widgets/test_position_detail_modal_trade_classification.py",
+      "tests/unit/gpt_trader/tui/widgets/test_position_detail.py",
+      "tests/unit/gpt_trader/tui/widgets/test_position_detail_calculations.py",
+      "tests/unit/gpt_trader/tui/widgets/test_position_detail_classification.py",
       "tests/unit/gpt_trader/tui/widgets/test_positions_widget.py",
       "tests/unit/gpt_trader/tui/widgets/test_responsive_widgets.py",
       "tests/unit/gpt_trader/tui/widgets/test_risk.py",
@@ -15770,83 +15740,7 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery_both.py": [
-      {
-        "name": "TestDiscoverDerivativesBoth::test_both_markets_accessible",
-        "line": 15,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test when both markets are accessible.",
-        "class": "TestDiscoverDerivativesBoth"
-      },
-      {
-        "name": "TestDiscoverDerivativesBoth::test_both_markets_us_only_accessible",
-        "line": 33,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test when only US market is accessible.",
-        "class": "TestDiscoverDerivativesBoth"
-      },
-      {
-        "name": "TestDiscoverDerivativesBoth::test_both_markets_intx_only_accessible",
-        "line": 45,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test when only INTX market is accessible.",
-        "class": "TestDiscoverDerivativesBoth"
-      },
-      {
-        "name": "TestDiscoverDerivativesBoth::test_both_markets_neither_accessible",
-        "line": 60,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test when neither market is accessible.",
-        "class": "TestDiscoverDerivativesBoth"
-      },
-      {
-        "name": "TestDiscoverDerivativesBoth::test_both_markets_errors_combined",
-        "line": 72,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that errors from both discoveries are combined.",
-        "class": "TestDiscoverDerivativesBoth"
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery_discovery_data.py": [
-      {
-        "name": "TestDiscoveryData::test_discovery_data_contains_us_details",
-        "line": 15,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that discovery_data includes US discovery details.",
-        "class": "TestDiscoveryData"
-      },
-      {
-        "name": "TestDiscoveryData::test_discovery_data_contains_intx_details",
-        "line": 27,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that discovery_data includes INTX discovery details.",
-        "class": "TestDiscoveryData"
-      },
-      {
-        "name": "TestDiscoveryData::test_discovery_data_contains_error_details",
-        "line": 42,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that discovery_data includes error details.",
-        "class": "TestDiscoveryData"
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery_eligibility_and_none.py": [
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery.py": [
       {
         "name": "TestDerivativesEligibility::test_eligibility_creation",
         "line": 18,
@@ -15866,13 +15760,85 @@
         "class": "TestDerivativesEligibility"
       },
       {
-        "name": "TestDiscoverDerivativesNone::test_none_market_skips_discovery",
+        "name": "TestDiscoveryData::test_discovery_data_contains_us_details",
         "line": 57,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that discovery_data includes US discovery details.",
+        "class": "TestDiscoveryData"
+      },
+      {
+        "name": "TestDiscoveryData::test_discovery_data_contains_intx_details",
+        "line": 69,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that discovery_data includes INTX discovery details.",
+        "class": "TestDiscoveryData"
+      },
+      {
+        "name": "TestDiscoveryData::test_discovery_data_contains_error_details",
+        "line": 84,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that discovery_data includes error details.",
+        "class": "TestDiscoveryData"
+      },
+      {
+        "name": "TestDiscoverDerivativesNone::test_none_market_skips_discovery",
+        "line": 98,
         "markers": [
           "unit"
         ],
         "docstring": "Test that NONE market skips all discovery.",
         "class": "TestDiscoverDerivativesNone"
+      },
+      {
+        "name": "TestDiscoverDerivativesBoth::test_both_markets_accessible",
+        "line": 119,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test when both markets are accessible.",
+        "class": "TestDiscoverDerivativesBoth"
+      },
+      {
+        "name": "TestDiscoverDerivativesBoth::test_both_markets_us_only_accessible",
+        "line": 137,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test when only US market is accessible.",
+        "class": "TestDiscoverDerivativesBoth"
+      },
+      {
+        "name": "TestDiscoverDerivativesBoth::test_both_markets_intx_only_accessible",
+        "line": 149,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test when only INTX market is accessible.",
+        "class": "TestDiscoverDerivativesBoth"
+      },
+      {
+        "name": "TestDiscoverDerivativesBoth::test_both_markets_neither_accessible",
+        "line": 164,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test when neither market is accessible.",
+        "class": "TestDiscoverDerivativesBoth"
+      },
+      {
+        "name": "TestDiscoverDerivativesBoth::test_both_markets_errors_combined",
+        "line": 176,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that errors from both discoveries are combined.",
+        "class": "TestDiscoverDerivativesBoth"
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery_intx.py": [
@@ -17501,10 +17467,10 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_init_and_get_websocket.py": [
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin.py": [
       {
         "name": "TestWebSocketClientMixinInitialization::test_initialization_creates_attributes",
-        "line": 26,
+        "line": 27,
         "markers": [
           "unit"
         ],
@@ -17522,7 +17488,7 @@
       },
       {
         "name": "TestWebSocketClientMixinGetWebSocket::test_creates_websocket_on_first_call",
-        "line": 49,
+        "line": 47,
         "markers": [
           "unit"
         ],
@@ -17531,7 +17497,7 @@
       },
       {
         "name": "TestWebSocketClientMixinGetWebSocket::test_returns_same_websocket_on_subsequent_calls",
-        "line": 61,
+        "line": 57,
         "markers": [
           "unit"
         ],
@@ -17540,7 +17506,7 @@
       },
       {
         "name": "TestWebSocketClientMixinGetWebSocket::test_passes_auth_credentials_to_websocket",
-        "line": 75,
+        "line": 67,
         "markers": [
           "unit"
         ],
@@ -17549,7 +17515,7 @@
       },
       {
         "name": "TestWebSocketClientMixinGetWebSocket::test_handles_no_auth",
-        "line": 89,
+        "line": 79,
         "markers": [
           "unit"
         ],
@@ -17558,7 +17524,7 @@
       },
       {
         "name": "TestWebSocketClientMixinNonCooperativeInit::test_lazy_initializes_state_when_mixin_init_not_called",
-        "line": 101,
+        "line": 90,
         "markers": [
           "unit"
         ],
@@ -17567,44 +17533,51 @@
       },
       {
         "name": "TestWebSocketClientMixinNonCooperativeInit::test_stop_streaming_safe_when_mixin_init_not_called",
-        "line": 118,
+        "line": 104,
         "markers": [
           "unit"
         ],
         "docstring": "",
         "class": "TestWebSocketClientMixinNonCooperativeInit"
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_message_filtering.py": [
-      {
-        "name": "TestMessageFiltering::test_ignores_non_dict_messages",
-        "line": 19,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Non-dict messages should be ignored.",
-        "class": "TestMessageFiltering"
       },
       {
-        "name": "TestMessageFiltering::test_on_websocket_message_ignored_when_inactive",
-        "line": 56,
+        "name": "TestGetWSHealth::test_returns_empty_dict_when_no_ws",
+        "line": 112,
         "markers": [
           "unit"
         ],
-        "docstring": "Messages should be ignored when stream is inactive.",
-        "class": "TestMessageFiltering"
+        "docstring": "get_ws_health should return empty dict when no WebSocket exists.",
+        "class": "TestGetWSHealth"
       },
       {
-        "name": "TestMessageFiltering::test_clears_queue_before_streaming",
-        "line": 65,
+        "name": "TestGetWSHealth::test_returns_health_dict_from_ws",
+        "line": 119,
         "markers": [
           "unit"
         ],
-        "docstring": "_clear_queue should remove all pending messages.",
-        "class": "TestMessageFiltering"
+        "docstring": "get_ws_health should return health dict from underlying WebSocket.",
+        "class": "TestGetWSHealth"
+      },
+      {
+        "name": "TestGetWSHealth::test_returns_empty_dict_after_stop_streaming",
+        "line": 139,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "get_ws_health should return empty dict after WebSocket is cleaned up.",
+        "class": "TestGetWSHealth"
+      },
+      {
+        "name": "TestGetWSHealth::test_is_thread_safe",
+        "line": 151,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "get_ws_health should be thread-safe using the lock.",
+        "class": "TestGetWSHealth"
       }
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_stream_orderbook.py": [
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_streaming.py": [
       {
         "name": "TestStreamOrderbook::test_connects_and_subscribes_to_level2",
         "line": 26,
@@ -17616,7 +17589,7 @@
       },
       {
         "name": "TestStreamOrderbook::test_subscribes_to_ticker_for_level1",
-        "line": 55,
+        "line": 50,
         "markers": [
           "unit"
         ],
@@ -17625,7 +17598,7 @@
       },
       {
         "name": "TestStreamOrderbook::test_include_trades_adds_channel",
-        "line": 80,
+        "line": 71,
         "markers": [
           "unit"
         ],
@@ -17634,7 +17607,7 @@
       },
       {
         "name": "TestStreamOrderbook::test_include_user_events_subscribes",
-        "line": 106,
+        "line": 94,
         "markers": [
           "unit"
         ],
@@ -17643,15 +17616,42 @@
       },
       {
         "name": "TestStreamOrderbook::test_yields_messages_from_callback",
-        "line": 132,
+        "line": 117,
         "markers": [
           "unit"
         ],
         "docstring": "Messages pushed via callback should be yielded by stream.",
         "class": "TestStreamOrderbook"
+      },
+      {
+        "name": "TestMessageFiltering::test_ignores_non_dict_messages",
+        "line": 132,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Non-dict messages should be ignored.",
+        "class": "TestMessageFiltering"
+      },
+      {
+        "name": "TestMessageFiltering::test_on_websocket_message_ignored_when_inactive",
+        "line": 161,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Messages should be ignored when stream is inactive.",
+        "class": "TestMessageFiltering"
+      },
+      {
+        "name": "TestMessageFiltering::test_clears_queue_before_streaming",
+        "line": 168,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "_clear_queue should remove all pending messages.",
+        "class": "TestMessageFiltering"
       }
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_stream_trades_and_control.py": [
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_trades.py": [
       {
         "name": "TestStreamTrades::test_connects_and_subscribes_to_market_trades",
         "line": 27,
@@ -17716,42 +17716,96 @@
         "class": "TestStreamMessageControl"
       }
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_ws_health.py": [
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events.py": [
       {
-        "name": "TestGetWSHealth::test_returns_empty_dict_when_no_ws",
-        "line": 26,
+        "name": "TestEventType::test_event_types_values",
+        "line": 11,
         "markers": [
           "unit"
         ],
-        "docstring": "get_ws_health should return empty dict when no WebSocket exists.",
-        "class": "TestGetWSHealth"
+        "docstring": "",
+        "class": "TestEventType"
       },
       {
-        "name": "TestGetWSHealth::test_returns_health_dict_from_ws",
-        "line": 36,
+        "name": "TestSequenceGuard::test_annotate_returns_message_unchanged_without_sequence",
+        "line": 21,
         "markers": [
           "unit"
         ],
-        "docstring": "get_ws_health should return health dict from underlying WebSocket.",
-        "class": "TestGetWSHealth"
+        "docstring": "",
+        "class": "TestSequenceGuard"
       },
       {
-        "name": "TestGetWSHealth::test_returns_empty_dict_after_stop_streaming",
-        "line": 61,
+        "name": "TestSequenceGuard::test_annotate_first_message_no_gap",
+        "line": 32,
         "markers": [
           "unit"
         ],
-        "docstring": "get_ws_health should return empty dict after WebSocket is cleaned up.",
-        "class": "TestGetWSHealth"
+        "docstring": "",
+        "class": "TestSequenceGuard"
       },
       {
-        "name": "TestGetWSHealth::test_is_thread_safe",
-        "line": 78,
+        "name": "TestSequenceGuard::test_annotate_sequential_messages_no_gap",
+        "line": 42,
         "markers": [
           "unit"
         ],
-        "docstring": "get_ws_health should be thread-safe using the lock.",
-        "class": "TestGetWSHealth"
+        "docstring": "",
+        "class": "TestSequenceGuard"
+      },
+      {
+        "name": "TestSequenceGuard::test_annotate_gap_detected",
+        "line": 55,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestSequenceGuard"
+      },
+      {
+        "name": "TestSequenceGuard::test_reset_clears_state",
+        "line": 65,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestSequenceGuard"
+      },
+      {
+        "name": "TestCoinbaseWebSocketHealth::test_get_health_returns_all_fields",
+        "line": 81,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCoinbaseWebSocketHealth"
+      },
+      {
+        "name": "TestCoinbaseWebSocketHealth::test_get_health_initial_state",
+        "line": 96,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCoinbaseWebSocketHealth"
+      },
+      {
+        "name": "TestCoinbaseWebSocketHealth::test_get_health_reflects_gap_count",
+        "line": 111,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCoinbaseWebSocketHealth"
+      },
+      {
+        "name": "TestCoinbaseWebSocketHealth::test_get_health_reflects_reconnect_count",
+        "line": 121,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCoinbaseWebSocketHealth"
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_dispatcher.py": [
@@ -17819,7 +17873,7 @@
         "class": "TestEventDispatcher"
       }
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_edges.py": [
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_edge.py": [
       {
         "name": "test_ticker_event_defaults_when_events_missing",
         "line": 26,
@@ -17870,44 +17924,6 @@
           "unit"
         ],
         "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_health.py": [
-      {
-        "name": "TestCoinbaseWebSocketHealth::test_get_health_returns_all_fields",
-        "line": 9,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestCoinbaseWebSocketHealth"
-      },
-      {
-        "name": "TestCoinbaseWebSocketHealth::test_get_health_initial_state",
-        "line": 24,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestCoinbaseWebSocketHealth"
-      },
-      {
-        "name": "TestCoinbaseWebSocketHealth::test_get_health_reflects_gap_count",
-        "line": 39,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestCoinbaseWebSocketHealth"
-      },
-      {
-        "name": "TestCoinbaseWebSocketHealth::test_get_health_reflects_reconnect_count",
-        "line": 49,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestCoinbaseWebSocketHealth"
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_parsing.py": [
@@ -17964,62 +17980,6 @@
         ],
         "docstring": "",
         "class": "TestOrderUpdateEvent"
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_types_and_sequence_guard.py": [
-      {
-        "name": "TestEventType::test_event_types_values",
-        "line": 11,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestEventType"
-      },
-      {
-        "name": "TestSequenceGuard::test_annotate_returns_message_unchanged_without_sequence",
-        "line": 21,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSequenceGuard"
-      },
-      {
-        "name": "TestSequenceGuard::test_annotate_first_message_no_gap",
-        "line": 32,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSequenceGuard"
-      },
-      {
-        "name": "TestSequenceGuard::test_annotate_sequential_messages_no_gap",
-        "line": 42,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSequenceGuard"
-      },
-      {
-        "name": "TestSequenceGuard::test_annotate_gap_detected",
-        "line": 55,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSequenceGuard"
-      },
-      {
-        "name": "TestSequenceGuard::test_reset_clears_state",
-        "line": 65,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSequenceGuard"
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_backoff.py": [
@@ -21123,93 +21083,10 @@
         "class": "TestUpdateMarkAndMetrics"
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_background_restart.py": [
-      {
-        "name": "TestStreamingBackground::test_start_streaming_background_when_disabled",
-        "line": 20,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestStreamingBackground"
-      },
-      {
-        "name": "TestStreamingBackground::test_start_streaming_background_when_enabled",
-        "line": 28,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestStreamingBackground"
-      },
-      {
-        "name": "TestStreamingBackground::test_stop_streaming_background_schedules_stop",
-        "line": 37,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestStreamingBackground"
-      },
-      {
-        "name": "TestRestartStreamingIfNeeded::test_no_restart_for_irrelevant_diff",
-        "line": 49,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestRestartStreamingIfNeeded"
-      },
-      {
-        "name": "TestRestartStreamingIfNeeded::test_restart_for_streaming_enable_change",
-        "line": 56,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestRestartStreamingIfNeeded"
-      },
-      {
-        "name": "TestRestartStreamingIfNeeded::test_restart_for_symbols_change",
-        "line": 67,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestRestartStreamingIfNeeded"
-      },
-      {
-        "name": "TestRestartStreamingIfNeeded::test_restart_for_stream_level_change",
-        "line": 79,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestRestartStreamingIfNeeded"
-      },
-      {
-        "name": "TestRestartStreamingIfNeeded::test_handles_runtime_error_with_asyncio_run",
-        "line": 90,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestRestartStreamingIfNeeded"
-      },
-      {
-        "name": "TestRestartStreamingIfNeeded::test_reraises_other_runtime_errors",
-        "line": 104,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestRestartStreamingIfNeeded"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_emit_and_enable.py": [
+    "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming.py": [
       {
         "name": "TestEmitMetric::test_emit_metric_calls_utility",
-        "line": 19,
+        "line": 24,
         "markers": [
           "unit"
         ],
@@ -21218,7 +21095,7 @@
       },
       {
         "name": "TestShouldEnableStreaming::test_returns_false_for_test_profile",
-        "line": 36,
+        "line": 41,
         "markers": [
           "unit"
         ],
@@ -21227,7 +21104,7 @@
       },
       {
         "name": "TestShouldEnableStreaming::test_returns_false_when_streaming_disabled",
-        "line": 45,
+        "line": 50,
         "markers": [
           "unit"
         ],
@@ -21236,7 +21113,7 @@
       },
       {
         "name": "TestShouldEnableStreaming::test_returns_true_for_prod_with_streaming_enabled",
-        "line": 54,
+        "line": 59,
         "markers": [
           "unit"
         ],
@@ -21245,7 +21122,7 @@
       },
       {
         "name": "TestShouldEnableStreaming::test_returns_true_for_canary_with_streaming_enabled",
-        "line": 63,
+        "line": 68,
         "markers": [
           "unit"
         ],
@@ -21254,7 +21131,7 @@
       },
       {
         "name": "TestShouldEnableStreaming::test_returns_false_for_dev_profile",
-        "line": 72,
+        "line": 77,
         "markers": [
           "unit"
         ],
@@ -21263,7 +21140,7 @@
       },
       {
         "name": "TestShouldEnableStreaming::test_handles_profile_with_value_attribute",
-        "line": 81,
+        "line": 86,
         "markers": [
           "unit"
         ],
@@ -21272,116 +21149,53 @@
       },
       {
         "name": "TestShouldEnableStreaming::test_handles_none_profile",
-        "line": 92,
+        "line": 97,
         "markers": [
           "unit"
         ],
         "docstring": "",
         "class": "TestShouldEnableStreaming"
+      },
+      {
+        "name": "TestHandleStreamTaskCompletion::test_clears_coordinator_state",
+        "line": 110,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestHandleStreamTaskCompletion"
+      },
+      {
+        "name": "TestHandleStreamTaskCompletion::test_handles_cancelled_error",
+        "line": 123,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestHandleStreamTaskCompletion"
+      },
+      {
+        "name": "TestRunStreamLoopAsync::test_run_stream_loop_async_calls_sync_version",
+        "line": 138,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestRunStreamLoopAsync"
+      },
+      {
+        "name": "TestRunStreamLoopAsync::test_run_stream_loop_async_handles_cancellation",
+        "line": 152,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestRunStreamLoopAsync"
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_run_loop.py": [
-      {
-        "name": "TestRunStreamLoop::test_run_stream_loop_no_broker",
-        "line": 18,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestRunStreamLoop"
-      },
-      {
-        "name": "TestRunStreamLoop::test_run_stream_loop_processes_messages",
-        "line": 27,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestRunStreamLoop"
-      },
-      {
-        "name": "TestRunStreamLoop::test_run_stream_loop_routes_user_events",
-        "line": 44,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestRunStreamLoop"
-      },
-      {
-        "name": "TestRunStreamLoop::test_run_stream_loop_triggers_backfill_on_gap",
-        "line": 59,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestRunStreamLoop"
-      },
-      {
-        "name": "TestRunStreamLoop::test_run_stream_loop_stops_on_signal",
-        "line": 78,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestRunStreamLoop"
-      },
-      {
-        "name": "TestRunStreamLoop::test_run_stream_loop_falls_back_to_trades",
-        "line": 100,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestRunStreamLoop"
-      },
-      {
-        "name": "TestRunStreamLoop::test_run_stream_loop_skips_non_dict_messages",
-        "line": 113,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestRunStreamLoop"
-      },
-      {
-        "name": "TestRunStreamLoop::test_run_stream_loop_skips_messages_without_symbol",
-        "line": 132,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestRunStreamLoop"
-      },
-      {
-        "name": "TestRunStreamLoop::test_run_stream_loop_skips_invalid_mark",
-        "line": 148,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestRunStreamLoop"
-      },
-      {
-        "name": "TestRunStreamLoop::test_run_stream_loop_skips_zero_mark",
-        "line": 163,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestRunStreamLoop"
-      },
-      {
-        "name": "TestRunStreamLoop::test_run_stream_loop_emits_exit_metric",
-        "line": 178,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestRunStreamLoop"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_schedule_and_start_stop.py": [
+    "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_lifecycle.py": [
       {
         "name": "TestScheduleCoroutine::test_schedule_coroutine_with_running_loop",
         "line": 22,
@@ -21491,44 +21305,188 @@
         "class": "TestStopStreaming"
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_task_completion_and_async_loop.py": [
+    "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_loop.py": [
       {
-        "name": "TestHandleStreamTaskCompletion::test_clears_coordinator_state",
-        "line": 21,
+        "name": "TestRunStreamLoop::test_run_stream_loop_no_broker",
+        "line": 18,
         "markers": [
           "unit"
         ],
         "docstring": "",
-        "class": "TestHandleStreamTaskCompletion"
+        "class": "TestRunStreamLoop"
       },
       {
-        "name": "TestHandleStreamTaskCompletion::test_handles_cancelled_error",
-        "line": 34,
+        "name": "TestRunStreamLoop::test_run_stream_loop_processes_messages",
+        "line": 27,
         "markers": [
           "unit"
         ],
         "docstring": "",
-        "class": "TestHandleStreamTaskCompletion"
+        "class": "TestRunStreamLoop"
       },
       {
-        "name": "TestRunStreamLoopAsync::test_run_stream_loop_async_calls_sync_version",
+        "name": "TestRunStreamLoop::test_run_stream_loop_routes_user_events",
+        "line": 44,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestRunStreamLoop"
+      },
+      {
+        "name": "TestRunStreamLoop::test_run_stream_loop_triggers_backfill_on_gap",
+        "line": 59,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestRunStreamLoop"
+      },
+      {
+        "name": "TestRunStreamLoop::test_run_stream_loop_stops_on_signal",
+        "line": 78,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestRunStreamLoop"
+      },
+      {
+        "name": "TestRunStreamLoop::test_run_stream_loop_falls_back_to_trades",
+        "line": 100,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestRunStreamLoop"
+      },
+      {
+        "name": "TestRunStreamLoop::test_run_stream_loop_skips_non_dict_messages",
+        "line": 113,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestRunStreamLoop"
+      },
+      {
+        "name": "TestRunStreamLoop::test_run_stream_loop_skips_messages_without_symbol",
+        "line": 132,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestRunStreamLoop"
+      },
+      {
+        "name": "TestRunStreamLoop::test_run_stream_loop_skips_invalid_mark",
+        "line": 148,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestRunStreamLoop"
+      },
+      {
+        "name": "TestRunStreamLoop::test_run_stream_loop_skips_zero_mark",
+        "line": 163,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestRunStreamLoop"
+      },
+      {
+        "name": "TestRunStreamLoop::test_run_stream_loop_emits_exit_metric",
+        "line": 178,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestRunStreamLoop"
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_restart.py": [
+      {
+        "name": "TestStreamingBackground::test_start_streaming_background_when_disabled",
+        "line": 20,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestStreamingBackground"
+      },
+      {
+        "name": "TestStreamingBackground::test_start_streaming_background_when_enabled",
+        "line": 28,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestStreamingBackground"
+      },
+      {
+        "name": "TestStreamingBackground::test_stop_streaming_background_schedules_stop",
+        "line": 37,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestStreamingBackground"
+      },
+      {
+        "name": "TestRestartStreamingIfNeeded::test_no_restart_for_irrelevant_diff",
         "line": 49,
         "markers": [
-          "asyncio",
           "unit"
         ],
         "docstring": "",
-        "class": "TestRunStreamLoopAsync"
+        "class": "TestRestartStreamingIfNeeded"
       },
       {
-        "name": "TestRunStreamLoopAsync::test_run_stream_loop_async_handles_cancellation",
-        "line": 63,
+        "name": "TestRestartStreamingIfNeeded::test_restart_for_streaming_enable_change",
+        "line": 56,
         "markers": [
-          "asyncio",
           "unit"
         ],
         "docstring": "",
-        "class": "TestRunStreamLoopAsync"
+        "class": "TestRestartStreamingIfNeeded"
+      },
+      {
+        "name": "TestRestartStreamingIfNeeded::test_restart_for_symbols_change",
+        "line": 67,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestRestartStreamingIfNeeded"
+      },
+      {
+        "name": "TestRestartStreamingIfNeeded::test_restart_for_stream_level_change",
+        "line": 79,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestRestartStreamingIfNeeded"
+      },
+      {
+        "name": "TestRestartStreamingIfNeeded::test_handles_runtime_error_with_asyncio_run",
+        "line": 90,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestRestartStreamingIfNeeded"
+      },
+      {
+        "name": "TestRestartStreamingIfNeeded::test_reraises_other_runtime_errors",
+        "line": 104,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestRestartStreamingIfNeeded"
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_api_health_guard.py": [
@@ -21945,10 +21903,10 @@
         "class": "TestGetValidationMetrics"
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_cache.py": [
+    "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager.py": [
       {
         "name": "test_invalidate_cache_clears_state",
-        "line": 9,
+        "line": 11,
         "markers": [
           "unit"
         ],
@@ -21956,7 +21914,7 @@
       },
       {
         "name": "test_invalidate_cache_handles_no_callback",
-        "line": 20,
+        "line": 22,
         "markers": [
           "unit"
         ],
@@ -21964,7 +21922,7 @@
       },
       {
         "name": "test_should_run_full_guard_when_dirty",
-        "line": 36,
+        "line": 38,
         "markers": [
           "unit"
         ],
@@ -21972,7 +21930,7 @@
       },
       {
         "name": "test_should_run_full_guard_when_no_state",
-        "line": 41,
+        "line": 43,
         "markers": [
           "unit"
         ],
@@ -21980,7 +21938,7 @@
       },
       {
         "name": "test_should_run_full_guard_when_interval_elapsed",
-        "line": 47,
+        "line": 49,
         "markers": [
           "unit"
         ],
@@ -21988,96 +21946,46 @@
       },
       {
         "name": "test_should_run_full_guard_returns_false_within_interval",
-        "line": 56,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_cancel_and_safe_run.py": [
-      {
-        "name": "test_cancel_all_orders_success",
-        "line": 14,
+        "line": 58,
         "markers": [
           "unit"
         ],
         "docstring": ""
       },
       {
-        "name": "test_cancel_all_orders_partial_failure",
-        "line": 25,
+        "name": "test_collect_runtime_guard_state_basic",
+        "line": 67,
         "markers": [
           "unit"
         ],
         "docstring": ""
       },
       {
-        "name": "test_cancel_all_orders_none_cancelled",
-        "line": 35,
+        "name": "test_collect_runtime_guard_state_with_positions",
+        "line": 83,
         "markers": [
           "unit"
         ],
         "docstring": ""
       },
       {
-        "name": "test_cancel_all_orders_empty_list",
-        "line": 44,
+        "name": "test_collect_runtime_guard_state_uses_broker_pnl",
+        "line": 94,
         "markers": [
           "unit"
         ],
         "docstring": ""
       },
       {
-        "name": "test_cancel_all_orders_uses_broker_list_orders",
-        "line": 59,
+        "name": "test_collect_runtime_guard_state_fallback_equity",
+        "line": 108,
         "markers": [
           "unit"
         ],
         "docstring": ""
       },
       {
-        "name": "test_safe_run_runtime_guards_success",
-        "line": 73,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_safe_run_runtime_guards_force_full",
-        "line": 80,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_safe_run_runtime_guards_recoverable_error",
-        "line": 87,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_safe_run_runtime_guards_unrecoverable_error",
-        "line": 99,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_safe_run_runtime_guards_unexpected_error",
-        "line": 112,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_safe_run_runtime_guards_reduce_only_failure",
+        "name": "test_collect_runtime_guard_state_handles_position_errors",
         "line": 119,
         "markers": [
           "unit"
@@ -22085,7 +21993,145 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_runtime_and_orchestration.py": [
+    "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_execution.py": [
+      {
+        "name": "test_cancel_all_orders_success",
+        "line": 17,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_cancel_all_orders_partial_failure",
+        "line": 28,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_cancel_all_orders_none_cancelled",
+        "line": 38,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_cancel_all_orders_empty_list",
+        "line": 47,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_cancel_all_orders_uses_broker_list_orders",
+        "line": 62,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_safe_run_runtime_guards_success",
+        "line": 76,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_safe_run_runtime_guards_force_full",
+        "line": 83,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_safe_run_runtime_guards_recoverable_error",
+        "line": 90,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_safe_run_runtime_guards_unrecoverable_error",
+        "line": 102,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_safe_run_runtime_guards_unexpected_error",
+        "line": 115,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_safe_run_runtime_guards_reduce_only_failure",
+        "line": 122,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_run_guard_step_success",
+        "line": 156,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_run_guard_step_recoverable_error",
+        "line": 165,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_run_guard_step_unrecoverable_error",
+        "line": 178,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_run_guard_step_unexpected_error",
+        "line": 190,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_guard_telemetry_success",
+        "line": 199,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_guard_telemetry_failure_raises",
+        "line": 205,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_runtime.py": [
       {
         "name": "test_run_guards_for_state_calls_all_guards",
         "line": 15,
@@ -22144,98 +22190,6 @@
         ],
         "docstring": "",
         "class": "TestGuardManagerEdgeCases"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_state_collection.py": [
-      {
-        "name": "test_collect_runtime_guard_state_basic",
-        "line": 9,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_collect_runtime_guard_state_with_positions",
-        "line": 25,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_collect_runtime_guard_state_uses_broker_pnl",
-        "line": 36,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_collect_runtime_guard_state_fallback_equity",
-        "line": 50,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_collect_runtime_guard_state_handles_position_errors",
-        "line": 61,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_steps_and_telemetry.py": [
-      {
-        "name": "test_run_guard_step_success",
-        "line": 37,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_run_guard_step_recoverable_error",
-        "line": 46,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_run_guard_step_unrecoverable_error",
-        "line": 59,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_run_guard_step_unexpected_error",
-        "line": 71,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_guard_telemetry_success",
-        "line": 80,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_guard_telemetry_failure_raises",
-        "line": 86,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_liquidation_buffer_guard.py": [
@@ -26233,10 +26187,64 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_baseline_strategy_init_and_guards.py": [
+    "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline.py": [
+      {
+        "name": "TestPerpsStrategyConfig::test_default_values",
+        "line": 22,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestPerpsStrategyConfig"
+      },
+      {
+        "name": "TestPerpsStrategyConfig::test_custom_values",
+        "line": 32,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestPerpsStrategyConfig"
+      },
+      {
+        "name": "TestDecision::test_basic_decision",
+        "line": 46,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestDecision"
+      },
+      {
+        "name": "TestDecision::test_decision_with_indicators",
+        "line": 52,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestDecision"
+      },
+      {
+        "name": "TestIndicatorState::test_default_state",
+        "line": 62,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestIndicatorState"
+      },
+      {
+        "name": "TestIndicatorState::test_state_assignment",
+        "line": 71,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestIndicatorState"
+      },
       {
         "name": "TestBaselinePerpsStrategyInit::test_default_config",
-        "line": 20,
+        "line": 87,
         "markers": [
           "unit"
         ],
@@ -26245,7 +26253,7 @@
       },
       {
         "name": "TestBaselinePerpsStrategyInit::test_custom_config",
-        "line": 25,
+        "line": 92,
         "markers": [
           "unit"
         ],
@@ -26254,7 +26262,7 @@
       },
       {
         "name": "TestStrategyInsufficientData::test_empty_marks_returns_hold",
-        "line": 35,
+        "line": 102,
         "markers": [
           "unit"
         ],
@@ -26263,7 +26271,7 @@
       },
       {
         "name": "TestStrategyInsufficientData::test_few_marks_returns_hold",
-        "line": 48,
+        "line": 115,
         "markers": [
           "unit"
         ],
@@ -26272,7 +26280,7 @@
       },
       {
         "name": "TestStrategyKillSwitch::test_kill_switch_returns_hold",
-        "line": 65,
+        "line": 132,
         "markers": [
           "unit"
         ],
@@ -26280,7 +26288,7 @@
         "class": "TestStrategyKillSwitch"
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_entry_and_exit_signals.py": [
+    "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_signals.py": [
       {
         "name": "TestStrategyEntrySignals::test_bullish_trend_generates_buy",
         "line": 22,
@@ -26334,12 +26342,10 @@
         ],
         "docstring": "",
         "class": "TestStrategyExitSignals"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_indicators_and_confidence.py": [
+      },
       {
         "name": "TestStrategyIndicatorCalculation::test_indicators_populated_in_decision",
-        "line": 19,
+        "line": 129,
         "markers": [
           "unit"
         ],
@@ -26348,7 +26354,7 @@
       },
       {
         "name": "TestStrategyIndicatorCalculation::test_rsi_signal_oversold",
-        "line": 37,
+        "line": 147,
         "markers": [
           "unit"
         ],
@@ -26357,7 +26363,7 @@
       },
       {
         "name": "TestStrategyIndicatorCalculation::test_rsi_signal_overbought",
-        "line": 54,
+        "line": 164,
         "markers": [
           "unit"
         ],
@@ -26366,7 +26372,7 @@
       },
       {
         "name": "TestStrategyConfidence::test_multiple_bullish_signals_high_confidence",
-        "line": 75,
+        "line": 185,
         "markers": [
           "unit"
         ],
@@ -26375,7 +26381,7 @@
       },
       {
         "name": "TestStrategyConfidence::test_weak_signals_low_confidence",
-        "line": 91,
+        "line": 201,
         "markers": [
           "unit"
         ],
@@ -26383,63 +26389,7 @@
         "class": "TestStrategyConfidence"
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_models.py": [
-      {
-        "name": "TestPerpsStrategyConfig::test_default_values",
-        "line": 18,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestPerpsStrategyConfig"
-      },
-      {
-        "name": "TestPerpsStrategyConfig::test_custom_values",
-        "line": 28,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestPerpsStrategyConfig"
-      },
-      {
-        "name": "TestDecision::test_basic_decision",
-        "line": 42,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestDecision"
-      },
-      {
-        "name": "TestDecision::test_decision_with_indicators",
-        "line": 48,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestDecision"
-      },
-      {
-        "name": "TestIndicatorState::test_default_state",
-        "line": 58,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestIndicatorState"
-      },
-      {
-        "name": "TestIndicatorState::test_state_assignment",
-        "line": 67,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestIndicatorState"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_spot_and_perps_strategies.py": [
+    "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_strategies.py": [
       {
         "name": "TestSpotStrategy::test_spot_strategy_uses_spot_config",
         "line": 17,
@@ -26562,10 +26512,10 @@
         "class": "TestStatefulStrategy"
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_bundle_and_performance.py": [
+    "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators.py": [
       {
         "name": "TestIndicatorBundle::test_create_with_defaults",
-        "line": 13,
+        "line": 18,
         "markers": [
           "unit"
         ],
@@ -26574,7 +26524,7 @@
       },
       {
         "name": "TestIndicatorBundle::test_create_with_custom_params",
-        "line": 22,
+        "line": 27,
         "markers": [
           "unit"
         ],
@@ -26583,7 +26533,7 @@
       },
       {
         "name": "TestIndicatorBundle::test_update_returns_all_values",
-        "line": 35,
+        "line": 40,
         "markers": [
           "unit"
         ],
@@ -26592,7 +26542,7 @@
       },
       {
         "name": "TestIndicatorBundle::test_serialize_deserialize_roundtrip",
-        "line": 46,
+        "line": 51,
         "markers": [
           "unit"
         ],
@@ -26601,16 +26551,52 @@
       },
       {
         "name": "TestPerformanceComparison::test_large_dataset_efficiency",
-        "line": 74,
+        "line": 79,
         "markers": [
           "slow",
           "unit"
         ],
-        "docstring": "Test that stateful indicators don't recompute history.\n\nThis test verifies the fundamental advantage of stateful indicators:\nthey maintain running state rather than recomputing from scratch.",
+        "docstring": "Test that stateful indicators don't recompute history.",
         "class": "TestPerformanceComparison"
+      },
+      {
+        "name": "TestOnlineZScore::test_insufficient_data_returns_none",
+        "line": 101,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test Z-Score returns None with insufficient data.",
+        "class": "TestOnlineZScore"
+      },
+      {
+        "name": "TestOnlineZScore::test_z_score_calculation",
+        "line": 106,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test Z-Score is calculated correctly.",
+        "class": "TestOnlineZScore"
+      },
+      {
+        "name": "TestOnlineZScore::test_windowed_z_score",
+        "line": 119,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test Z-Score with rolling window.",
+        "class": "TestOnlineZScore"
+      },
+      {
+        "name": "TestOnlineZScore::test_serialize_deserialize_roundtrip",
+        "line": 134,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test serialization preserves Z-Score state.",
+        "class": "TestOnlineZScore"
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_rsi.py": [
+    "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_algorithm.py": [
       {
         "name": "TestOnlineRSI::test_first_price_returns_none",
         "line": 12,
@@ -26664,12 +26650,10 @@
         ],
         "docstring": "Test serialization preserves RSI state.",
         "class": "TestOnlineRSI"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_sma_and_ema.py": [
+      },
       {
         "name": "TestOnlineSMA::test_warmup_period",
-        "line": 12,
+        "line": 105,
         "markers": [
           "unit"
         ],
@@ -26678,7 +26662,7 @@
       },
       {
         "name": "TestOnlineSMA::test_full_window",
-        "line": 19,
+        "line": 112,
         "markers": [
           "unit"
         ],
@@ -26687,7 +26671,7 @@
       },
       {
         "name": "TestOnlineSMA::test_matches_stateless_sma",
-        "line": 29,
+        "line": 122,
         "markers": [
           "unit"
         ],
@@ -26696,7 +26680,7 @@
       },
       {
         "name": "TestOnlineSMA::test_serialize_deserialize_roundtrip",
-        "line": 48,
+        "line": 141,
         "markers": [
           "unit"
         ],
@@ -26705,7 +26689,7 @@
       },
       {
         "name": "TestOnlineEMA::test_warmup_period",
-        "line": 66,
+        "line": 159,
         "markers": [
           "unit"
         ],
@@ -26714,7 +26698,7 @@
       },
       {
         "name": "TestOnlineEMA::test_initialization",
-        "line": 73,
+        "line": 166,
         "markers": [
           "unit"
         ],
@@ -26723,7 +26707,7 @@
       },
       {
         "name": "TestOnlineEMA::test_subsequent_updates",
-        "line": 84,
+        "line": 177,
         "markers": [
           "unit"
         ],
@@ -26732,7 +26716,7 @@
       },
       {
         "name": "TestOnlineEMA::test_serialize_deserialize_roundtrip",
-        "line": 97,
+        "line": 190,
         "markers": [
           "unit"
         ],
@@ -26740,7 +26724,7 @@
         "class": "TestOnlineEMA"
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_welford_and_window.py": [
+    "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_primitives.py": [
       {
         "name": "TestWelfordState::test_empty_state",
         "line": 13,
@@ -26832,44 +26816,6 @@
         "class": "TestRollingWindow"
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_zscore.py": [
-      {
-        "name": "TestOnlineZScore::test_insufficient_data_returns_none",
-        "line": 11,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test Z-Score returns None with insufficient data.",
-        "class": "TestOnlineZScore"
-      },
-      {
-        "name": "TestOnlineZScore::test_z_score_calculation",
-        "line": 16,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test Z-Score is calculated correctly.",
-        "class": "TestOnlineZScore"
-      },
-      {
-        "name": "TestOnlineZScore::test_windowed_z_score",
-        "line": 29,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test Z-Score with rolling window.",
-        "class": "TestOnlineZScore"
-      },
-      {
-        "name": "TestOnlineZScore::test_serialize_deserialize_roundtrip",
-        "line": 44,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test serialization preserves Z-Score state.",
-        "class": "TestOnlineZScore"
-      }
-    ],
     "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_perps_baseline_edges.py": [
       {
         "name": "test_parse_config_from_object",
@@ -26912,7 +26858,99 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_collect_snapshot.py": [
+    "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry.py": [
+      {
+        "name": "TestAccountTelemetryServiceInit::test_init_stores_dependencies",
+        "line": 16,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test initialization stores all dependencies.",
+        "class": "TestAccountTelemetryServiceInit"
+      },
+      {
+        "name": "TestUpdateProfile::test_update_profile_changes_profile",
+        "line": 39,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test update_profile changes the profile.",
+        "class": "TestUpdateProfile"
+      },
+      {
+        "name": "TestAccountTelemetryProfileEdgeCases::test_multiple_profile_updates",
+        "line": 55,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test multiple profile updates.",
+        "class": "TestAccountTelemetryProfileEdgeCases"
+      },
+      {
+        "name": "TestSupportsSnapshots::test_supports_snapshots_all_methods_present",
+        "line": 73,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test returns True when broker has all required methods.",
+        "class": "TestSupportsSnapshots"
+      },
+      {
+        "name": "TestSupportsSnapshots::test_supports_snapshots_missing_method",
+        "line": 91,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test returns False when broker lacks a required method.",
+        "class": "TestSupportsSnapshots"
+      },
+      {
+        "name": "TestSupportsSnapshots::test_supports_snapshots_empty_broker",
+        "line": 103,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test returns False when broker has no methods.",
+        "class": "TestSupportsSnapshots"
+      },
+      {
+        "name": "TestLatestSnapshot::test_latest_snapshot_returns_copy",
+        "line": 119,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test latest_snapshot returns a copy, not the original.",
+        "class": "TestLatestSnapshot"
+      },
+      {
+        "name": "TestLatestSnapshot::test_latest_snapshot_empty_initially",
+        "line": 133,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test latest_snapshot is empty initially.",
+        "class": "TestLatestSnapshot"
+      },
+      {
+        "name": "TestPublishSnapshot::test_publish_snapshot_emits_metric",
+        "line": 148,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test _publish_snapshot emits metric to event store.",
+        "class": "TestPublishSnapshot"
+      },
+      {
+        "name": "TestPublishSnapshot::test_publish_snapshot_file_write_error",
+        "line": 177,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test _publish_snapshot handles file write errors gracefully.",
+        "class": "TestPublishSnapshot"
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_collect.py": [
       {
         "name": "TestCollectSnapshot::test_collect_snapshot_success",
         "line": 14,
@@ -26977,56 +27015,7 @@
         "class": "TestAccountTelemetrySnapshotEdgeCases"
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_init_and_profile.py": [
-      {
-        "name": "TestAccountTelemetryServiceInit::test_init_stores_dependencies",
-        "line": 13,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test initialization stores all dependencies.",
-        "class": "TestAccountTelemetryServiceInit"
-      },
-      {
-        "name": "TestUpdateProfile::test_update_profile_changes_profile",
-        "line": 38,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test update_profile changes the profile.",
-        "class": "TestUpdateProfile"
-      },
-      {
-        "name": "TestAccountTelemetryProfileEdgeCases::test_multiple_profile_updates",
-        "line": 56,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test multiple profile updates.",
-        "class": "TestAccountTelemetryProfileEdgeCases"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_publish_snapshot.py": [
-      {
-        "name": "TestPublishSnapshot::test_publish_snapshot_emits_metric",
-        "line": 16,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test _publish_snapshot emits metric to event store.",
-        "class": "TestPublishSnapshot"
-      },
-      {
-        "name": "TestPublishSnapshot::test_publish_snapshot_file_write_error",
-        "line": 53,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test _publish_snapshot handles file write errors gracefully.",
-        "class": "TestPublishSnapshot"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_run.py": [
+    "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_lifecycle.py": [
       {
         "name": "TestRunAsync::test_run_exits_when_snapshots_not_supported",
         "line": 17,
@@ -27056,53 +27045,6 @@
         ],
         "docstring": "Test run handles errors during collection gracefully.",
         "class": "TestRunAsync"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_supports_and_latest_snapshot.py": [
-      {
-        "name": "TestSupportsSnapshots::test_supports_snapshots_all_methods_present",
-        "line": 13,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test returns True when broker has all required methods.",
-        "class": "TestSupportsSnapshots"
-      },
-      {
-        "name": "TestSupportsSnapshots::test_supports_snapshots_missing_method",
-        "line": 33,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test returns False when broker lacks a required method.",
-        "class": "TestSupportsSnapshots"
-      },
-      {
-        "name": "TestSupportsSnapshots::test_supports_snapshots_empty_broker",
-        "line": 47,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test returns False when broker has no methods.",
-        "class": "TestSupportsSnapshots"
-      },
-      {
-        "name": "TestLatestSnapshot::test_latest_snapshot_returns_copy",
-        "line": 65,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test latest_snapshot returns a copy, not the original.",
-        "class": "TestLatestSnapshot"
-      },
-      {
-        "name": "TestLatestSnapshot::test_latest_snapshot_empty_initially",
-        "line": 81,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test latest_snapshot is empty initially.",
-        "class": "TestLatestSnapshot"
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/test_bot_engine_delegation.py": [
@@ -29169,7 +29111,7 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/test_symbols_cfm.py": [
+    "tests/unit/gpt_trader/features/live_trade/test_symbols.py": [
       {
         "name": "TestCfmEnabled::test_returns_false_by_default",
         "line": 12,
@@ -29441,60 +29383,73 @@
         "class": "TestCfmSymbolMapping"
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/test_symbols_derivatives_enabled.py": [
+    "tests/unit/gpt_trader/features/live_trade/test_symbols_derivatives.py": [
       {
-        "name": "test_derivatives_enabled_with_spot_profile",
-        "line": 12,
+        "name": "TestDerivativesEnabled::test_derivatives_enabled_with_spot_profile",
+        "line": 19,
         "markers": [
           "unit"
         ],
-        "docstring": "Test derivatives_enabled returns False for SPOT profile."
+        "docstring": "Test derivatives_enabled returns False for SPOT profile.",
+        "class": "TestDerivativesEnabled"
       },
       {
-        "name": "test_derivatives_enabled_with_config_override",
-        "line": 30,
+        "name": "TestDerivativesEnabled::test_derivatives_enabled_with_config_override",
+        "line": 33,
         "markers": [
           "unit"
         ],
-        "docstring": "Test derivatives_enabled respects config setting."
+        "docstring": "Test derivatives_enabled respects config setting.",
+        "class": "TestDerivativesEnabled"
       },
       {
-        "name": "test_derivatives_enabled_edge_cases",
+        "name": "TestDerivativesEnabled::test_derivatives_enabled_edge_cases",
         "line": 43,
         "markers": [
           "unit"
         ],
-        "docstring": "Test derivatives_enabled with edge cases and import failures."
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/test_symbols_derivatives_modes_and_constants.py": [
-      {
-        "name": "test_symbol_normalization_log_dataclass",
-        "line": 14,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test SymbolNormalizationLog dataclass."
+        "docstring": "Test derivatives_enabled with edge cases and import failures.",
+        "class": "TestDerivativesEnabled"
       },
       {
-        "name": "test_perps_allowlist_constant",
-        "line": 30,
+        "name": "TestSymbolNormalizationLog::test_dataclass_fields",
+        "line": 59,
         "markers": [
           "unit"
         ],
-        "docstring": "Test PERPS_ALLOWLIST constant contains expected symbols."
+        "docstring": "",
+        "class": "TestSymbolNormalizationLog"
       },
       {
-        "name": "test_us_futures_allowlist_constant",
-        "line": 37,
+        "name": "TestSymbolNormalizationLog::test_default_args",
+        "line": 67,
         "markers": [
           "unit"
         ],
-        "docstring": "Test US_FUTURES_ALLOWLIST constant contains expected symbols."
+        "docstring": "",
+        "class": "TestSymbolNormalizationLog"
+      },
+      {
+        "name": "TestAllowlistConstants::test_perps_allowlist_constant",
+        "line": 75,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestAllowlistConstants"
+      },
+      {
+        "name": "TestAllowlistConstants::test_us_futures_allowlist_constant",
+        "line": 80,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestAllowlistConstants"
       },
       {
         "name": "TestUsFuturesEnabled::test_returns_false_when_derivatives_disabled",
-        "line": 46,
+        "line": 88,
         "markers": [
           "unit"
         ],
@@ -29503,7 +29458,7 @@
       },
       {
         "name": "TestUsFuturesEnabled::test_returns_true_when_us_futures_flag_enabled",
-        "line": 51,
+        "line": 93,
         "markers": [
           "unit"
         ],
@@ -29512,7 +29467,7 @@
       },
       {
         "name": "TestUsFuturesEnabled::test_returns_true_when_derivatives_type_is_us_futures",
-        "line": 59,
+        "line": 101,
         "markers": [
           "unit"
         ],
@@ -29521,7 +29476,7 @@
       },
       {
         "name": "TestUsFuturesEnabled::test_returns_false_by_default",
-        "line": 67,
+        "line": 109,
         "markers": [
           "unit"
         ],
@@ -29530,7 +29485,7 @@
       },
       {
         "name": "TestIntxPerpetualsEnabled::test_returns_false_when_derivatives_disabled",
-        "line": 76,
+        "line": 118,
         "markers": [
           "unit"
         ],
@@ -29539,7 +29494,7 @@
       },
       {
         "name": "TestIntxPerpetualsEnabled::test_returns_true_when_intx_flag_enabled",
-        "line": 81,
+        "line": 123,
         "markers": [
           "unit"
         ],
@@ -29548,7 +29503,7 @@
       },
       {
         "name": "TestIntxPerpetualsEnabled::test_returns_true_when_derivatives_type_is_intx_perps",
-        "line": 89,
+        "line": 131,
         "markers": [
           "unit"
         ],
@@ -29557,7 +29512,7 @@
       },
       {
         "name": "TestIntxPerpetualsEnabled::test_returns_true_when_derivatives_type_is_perpetuals",
-        "line": 97,
+        "line": 139,
         "markers": [
           "unit"
         ],
@@ -29566,7 +29521,7 @@
       },
       {
         "name": "TestIntxPerpetualsEnabled::test_returns_true_by_default",
-        "line": 105,
+        "line": 147,
         "markers": [
           "unit"
         ],
@@ -29574,58 +29529,64 @@
         "class": "TestIntxPerpetualsEnabled"
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/test_symbols_normalize_symbol_list.py": [
+    "tests/unit/gpt_trader/features/live_trade/test_symbols_normalization.py": [
       {
-        "name": "test_normalize_symbol_list_with_derivatives_enabled",
-        "line": 10,
+        "name": "TestNormalizeSymbolListDerivatives::test_with_derivatives_enabled",
+        "line": 18,
         "markers": [
           "unit"
         ],
-        "docstring": "Test normalize_symbol_list with derivatives allowed."
+        "docstring": "",
+        "class": "TestNormalizeSymbolListDerivatives"
       },
       {
-        "name": "test_normalize_symbol_list_with_derivatives_disabled",
-        "line": 25,
+        "name": "TestNormalizeSymbolListDerivatives::test_with_derivatives_disabled",
+        "line": 32,
         "markers": [
           "unit"
         ],
-        "docstring": "Test normalize_symbol_list with derivatives disabled."
+        "docstring": "",
+        "class": "TestNormalizeSymbolListDerivatives"
       },
       {
-        "name": "test_normalize_symbol_list_empty_and_whitespace",
-        "line": 37,
+        "name": "TestNormalizeSymbolListEmpty::test_empty_and_whitespace",
+        "line": 47,
         "markers": [
           "unit"
         ],
-        "docstring": "Test normalize_symbol_list with empty and whitespace inputs."
+        "docstring": "",
+        "class": "TestNormalizeSymbolListEmpty"
       },
       {
-        "name": "test_normalize_symbol_list_case_and_whitespace_normalization",
-        "line": 60,
+        "name": "TestNormalizeSymbolListFormatting::test_case_and_whitespace_normalization",
+        "line": 65,
         "markers": [
           "unit"
         ],
-        "docstring": "Test symbol normalization with various cases and whitespace."
+        "docstring": "",
+        "class": "TestNormalizeSymbolListFormatting"
       },
       {
-        "name": "test_normalize_symbol_list_custom_fallback_bases",
-        "line": 69,
+        "name": "TestNormalizeSymbolListFormatting::test_custom_fallback_bases",
+        "line": 73,
         "markers": [
           "unit"
         ],
-        "docstring": "Test normalize_symbol_list with custom fallback bases."
+        "docstring": "",
+        "class": "TestNormalizeSymbolListFormatting"
       },
       {
-        "name": "test_normalize_symbol_list_duplicate_removal",
-        "line": 85,
+        "name": "TestNormalizeSymbolListFormatting::test_duplicate_removal",
+        "line": 82,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that duplicate symbols are removed while preserving order."
+        "docstring": "",
+        "class": "TestNormalizeSymbolListFormatting"
       },
       {
         "name": "TestNormalizeSymbolListUsFutures::test_allows_valid_us_futures",
-        "line": 97,
+        "line": 93,
         "markers": [
           "unit"
         ],
@@ -29634,7 +29595,7 @@
       },
       {
         "name": "TestNormalizeSymbolListUsFutures::test_filters_unsupported_us_futures",
-        "line": 108,
+        "line": 104,
         "markers": [
           "unit"
         ],
@@ -29643,30 +29604,30 @@
       },
       {
         "name": "TestNormalizeSymbolListFallback::test_uses_default_fallback_bases_when_none",
-        "line": 124,
+        "line": 120,
         "markers": [
           "unit"
         ],
         "docstring": "",
         "class": "TestNormalizeSymbolListFallback"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/test_symbols_normalize_symbols.py": [
-      {
-        "name": "test_normalize_symbols_integration",
-        "line": 14,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test normalize_symbols function with logging integration."
       },
       {
-        "name": "test_normalize_symbols_custom_quote_and_config",
-        "line": 39,
+        "name": "TestNormalizeSymbolsIntegration::test_normalize_symbols_integration",
+        "line": 132,
         "markers": [
           "unit"
         ],
-        "docstring": "Test normalize_symbols with custom quote and config."
+        "docstring": "",
+        "class": "TestNormalizeSymbolsIntegration"
+      },
+      {
+        "name": "TestNormalizeSymbolsIntegration::test_normalize_symbols_custom_quote_and_config",
+        "line": 146,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestNormalizeSymbolsIntegration"
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/test_trading_engine.py": [
@@ -35260,7 +35221,7 @@
         "class": "TestRuntimeGuardManagerE2E"
       }
     ],
-    "tests/unit/gpt_trader/monitoring/test_health_checks_broker_ping.py": [
+    "tests/unit/gpt_trader/monitoring/test_health_checks.py": [
       {
         "name": "TestCheckBrokerPing::test_success_with_get_time",
         "line": 16,
@@ -35272,7 +35233,7 @@
       },
       {
         "name": "TestCheckBrokerPing::test_success_fallback_to_list_balances",
-        "line": 29,
+        "line": 27,
         "markers": [
           "unit"
         ],
@@ -35281,7 +35242,7 @@
       },
       {
         "name": "TestCheckBrokerPing::test_failure_on_exception",
-        "line": 40,
+        "line": 36,
         "markers": [
           "unit"
         ],
@@ -35290,18 +35251,16 @@
       },
       {
         "name": "TestCheckBrokerPing::test_high_latency_warning",
-        "line": 52,
+        "line": 46,
         "markers": [
           "unit"
         ],
         "docstring": "Test that high latency sets severity to warning.",
         "class": "TestCheckBrokerPing"
-      }
-    ],
-    "tests/unit/gpt_trader/monitoring/test_health_checks_degradation_state.py": [
+      },
       {
         "name": "TestCheckDegradationState::test_normal_operation",
-        "line": 13,
+        "line": 62,
         "markers": [
           "unit"
         ],
@@ -35310,7 +35269,7 @@
       },
       {
         "name": "TestCheckDegradationState::test_global_paused",
-        "line": 29,
+        "line": 76,
         "markers": [
           "unit"
         ],
@@ -35319,7 +35278,7 @@
       },
       {
         "name": "TestCheckDegradationState::test_reduce_only_mode",
-        "line": 45,
+        "line": 90,
         "markers": [
           "unit"
         ],
@@ -35328,7 +35287,7 @@
       },
       {
         "name": "TestCheckDegradationState::test_symbol_paused",
-        "line": 71,
+        "line": 111,
         "markers": [
           "unit"
         ],
@@ -35336,7 +35295,83 @@
         "class": "TestCheckDegradationState"
       }
     ],
-    "tests/unit/gpt_trader/monitoring/test_health_checks_execution_signals.py": [
+    "tests/unit/gpt_trader/monitoring/test_health_checks_runner.py": [
+      {
+        "name": "TestHealthCheckRunner::test_initialization",
+        "line": 16,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test runner initialization with default values.",
+        "class": "TestHealthCheckRunner"
+      },
+      {
+        "name": "TestHealthCheckRunner::test_set_broker",
+        "line": 28,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test setting broker after initialization.",
+        "class": "TestHealthCheckRunner"
+      },
+      {
+        "name": "TestHealthCheckRunner::test_set_degradation_state",
+        "line": 37,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test setting degradation state.",
+        "class": "TestHealthCheckRunner"
+      },
+      {
+        "name": "TestHealthCheckRunner::test_run_checks_sync",
+        "line": 46,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test synchronous check execution.",
+        "class": "TestHealthCheckRunner"
+      },
+      {
+        "name": "TestHealthCheckRunner::test_start_and_stop",
+        "line": 75,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "Test async start and stop.",
+        "class": "TestHealthCheckRunner"
+      },
+      {
+        "name": "TestHealthCheckRunner::test_execute_checks_updates_health_state",
+        "line": 96,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "Test that execute_checks updates the global health state.",
+        "class": "TestHealthCheckRunner"
+      },
+      {
+        "name": "TestHealthCheckResult::test_creation",
+        "line": 121,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test creating a health check result.",
+        "class": "TestHealthCheckResult"
+      },
+      {
+        "name": "TestHealthCheckResult::test_unhealthy_result",
+        "line": 128,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test creating an unhealthy result.",
+        "class": "TestHealthCheckResult"
+      }
+    ],
+    "tests/unit/gpt_trader/monitoring/test_health_checks_signals.py": [
       {
         "name": "TestComputeExecutionHealthSignals::test_returns_health_summary",
         "line": 11,
@@ -35437,83 +35472,7 @@
         "class": "TestCheckWsStalenessSignal"
       }
     ],
-    "tests/unit/gpt_trader/monitoring/test_health_checks_runner_and_result.py": [
-      {
-        "name": "TestHealthCheckRunner::test_initialization",
-        "line": 16,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test runner initialization with default values.",
-        "class": "TestHealthCheckRunner"
-      },
-      {
-        "name": "TestHealthCheckRunner::test_set_broker",
-        "line": 28,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test setting broker after initialization.",
-        "class": "TestHealthCheckRunner"
-      },
-      {
-        "name": "TestHealthCheckRunner::test_set_degradation_state",
-        "line": 37,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test setting degradation state.",
-        "class": "TestHealthCheckRunner"
-      },
-      {
-        "name": "TestHealthCheckRunner::test_run_checks_sync",
-        "line": 46,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test synchronous check execution.",
-        "class": "TestHealthCheckRunner"
-      },
-      {
-        "name": "TestHealthCheckRunner::test_start_and_stop",
-        "line": 75,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test async start and stop.",
-        "class": "TestHealthCheckRunner"
-      },
-      {
-        "name": "TestHealthCheckRunner::test_execute_checks_updates_health_state",
-        "line": 96,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that execute_checks updates the global health state.",
-        "class": "TestHealthCheckRunner"
-      },
-      {
-        "name": "TestHealthCheckResult::test_creation",
-        "line": 121,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test creating a health check result.",
-        "class": "TestHealthCheckResult"
-      },
-      {
-        "name": "TestHealthCheckResult::test_unhealthy_result",
-        "line": 128,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test creating an unhealthy result.",
-        "class": "TestHealthCheckResult"
-      }
-    ],
-    "tests/unit/gpt_trader/monitoring/test_health_checks_ws_freshness.py": [
+    "tests/unit/gpt_trader/monitoring/test_health_checks_websocket.py": [
       {
         "name": "TestCheckWsFreshness::test_broker_without_ws_support",
         "line": 13,
@@ -42372,48 +42331,37 @@
         "docstring": "Test validation with disabled rule and log_validation=False."
       }
     ],
-    "tests/unit/gpt_trader/security/test_request_validator_edge_cases.py": [
+    "tests/unit/gpt_trader/security/test_request_validator.py": [
       {
-        "name": "TestValidateRequestEdgeCases::test_validate_request_action_with_spaces",
-        "line": 11,
+        "name": "TestValidateRequestSuccess::test_validate_request_with_required_fields",
+        "line": 14,
         "markers": [
           "unit"
         ],
-        "docstring": "Test action with spaces.",
-        "class": "TestValidateRequestEdgeCases"
+        "docstring": "Test valid request with action and timestamp passes.",
+        "class": "TestValidateRequestSuccess"
       },
       {
-        "name": "TestValidateRequestEdgeCases::test_validate_request_numeric_timestamp",
-        "line": 23,
+        "name": "TestValidateRequestSuccess::test_validate_request_with_extra_fields",
+        "line": 27,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that numeric timestamp value is acceptable.",
-        "class": "TestValidateRequestEdgeCases"
+        "docstring": "Test that extra fields are allowed.",
+        "class": "TestValidateRequestSuccess"
       },
       {
-        "name": "TestValidateRequestEdgeCases::test_validate_request_none_values",
-        "line": 35,
+        "name": "TestValidateRequestSuccess::test_validate_request_with_underscore_action",
+        "line": 42,
         "markers": [
           "unit"
         ],
-        "docstring": "Test request with None values for required fields.",
-        "class": "TestValidateRequestEdgeCases"
+        "docstring": "Test action with underscores is valid.",
+        "class": "TestValidateRequestSuccess"
       },
-      {
-        "name": "TestValidateRequestEdgeCases::test_validate_request_whitespace_action",
-        "line": 49,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test action that is only whitespace.\n\nNote: The InputSanitizer allows whitespace-only strings through\nas it focuses on detecting malicious patterns (SQL injection, XSS, etc.)\nrather than enforcing non-empty content. Whitespace validation should\nbe handled at the application layer if required.",
-        "class": "TestValidateRequestEdgeCases"
-      }
-    ],
-    "tests/unit/gpt_trader/security/test_request_validator_invalid_action.py": [
       {
         "name": "TestValidateRequestInvalidAction::test_validate_request_sql_injection_action",
-        "line": 11,
+        "line": 57,
         "markers": [
           "unit"
         ],
@@ -42422,7 +42370,7 @@
       },
       {
         "name": "TestValidateRequestInvalidAction::test_validate_request_xss_action",
-        "line": 23,
+        "line": 69,
         "markers": [
           "unit"
         ],
@@ -42431,7 +42379,7 @@
       },
       {
         "name": "TestValidateRequestInvalidAction::test_validate_request_action_too_long",
-        "line": 34,
+        "line": 80,
         "markers": [
           "unit"
         ],
@@ -42440,18 +42388,16 @@
       },
       {
         "name": "TestValidateRequestInvalidAction::test_validate_request_path_traversal_action",
-        "line": 48,
+        "line": 94,
         "markers": [
           "unit"
         ],
         "docstring": "Test that path traversal in action is detected.",
         "class": "TestValidateRequestInvalidAction"
-      }
-    ],
-    "tests/unit/gpt_trader/security/test_request_validator_missing_fields.py": [
+      },
       {
         "name": "TestValidateRequestMissingFields::test_validate_request_missing_action",
-        "line": 13,
+        "line": 109,
         "markers": [
           "unit"
         ],
@@ -42460,7 +42406,7 @@
       },
       {
         "name": "TestValidateRequestMissingFields::test_validate_request_missing_timestamp",
-        "line": 25,
+        "line": 121,
         "markers": [
           "unit"
         ],
@@ -42469,7 +42415,7 @@
       },
       {
         "name": "TestValidateRequestMissingFields::test_validate_request_missing_both_fields",
-        "line": 37,
+        "line": 133,
         "markers": [
           "unit"
         ],
@@ -42478,15 +42424,51 @@
       },
       {
         "name": "TestValidateRequestMissingFields::test_validate_request_empty_dict",
-        "line": 50,
+        "line": 146,
         "markers": [
           "unit"
         ],
         "docstring": "Test that empty dict returns errors for both required fields.",
         "class": "TestValidateRequestMissingFields"
+      },
+      {
+        "name": "TestValidateRequestEdgeCases::test_validate_request_action_with_spaces",
+        "line": 159,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test action with spaces.",
+        "class": "TestValidateRequestEdgeCases"
+      },
+      {
+        "name": "TestValidateRequestEdgeCases::test_validate_request_numeric_timestamp",
+        "line": 171,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that numeric timestamp value is acceptable.",
+        "class": "TestValidateRequestEdgeCases"
+      },
+      {
+        "name": "TestValidateRequestEdgeCases::test_validate_request_none_values",
+        "line": 183,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test request with None values for required fields.",
+        "class": "TestValidateRequestEdgeCases"
+      },
+      {
+        "name": "TestValidateRequestEdgeCases::test_validate_request_whitespace_action",
+        "line": 197,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test action that is only whitespace.\n\nNote: The InputSanitizer allows whitespace-only strings through\nas it focuses on detecting malicious patterns (SQL injection, XSS, etc.)\nrather than enforcing non-empty content. Whitespace validation should\nbe handled at the application layer if required.",
+        "class": "TestValidateRequestEdgeCases"
       }
     ],
-    "tests/unit/gpt_trader/security/test_request_validator_size_limits.py": [
+    "tests/unit/gpt_trader/security/test_request_validator_limits.py": [
       {
         "name": "TestValidateRequestSizeLimit::test_validate_request_within_size_limit",
         "line": 11,
@@ -42513,35 +42495,6 @@
         ],
         "docstring": "Test that request with unserializable content skips size check gracefully.",
         "class": "TestValidateRequestSizeLimit"
-      }
-    ],
-    "tests/unit/gpt_trader/security/test_request_validator_success.py": [
-      {
-        "name": "TestValidateRequestSuccess::test_validate_request_with_required_fields",
-        "line": 12,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test valid request with action and timestamp passes.",
-        "class": "TestValidateRequestSuccess"
-      },
-      {
-        "name": "TestValidateRequestSuccess::test_validate_request_with_extra_fields",
-        "line": 25,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that extra fields are allowed.",
-        "class": "TestValidateRequestSuccess"
-      },
-      {
-        "name": "TestValidateRequestSuccess::test_validate_request_with_underscore_action",
-        "line": 40,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test action with underscores is valid.",
-        "class": "TestValidateRequestSuccess"
       }
     ],
     "tests/unit/gpt_trader/tui/adapters/test_null_status_reporter.py": [
@@ -44572,10 +44525,37 @@
         "class": "TestModeRequirements"
       }
     ],
-    "tests/unit/gpt_trader/tui/services/test_execution_telemetry_collector_core.py": [
+    "tests/unit/gpt_trader/tui/services/test_execution_telemetry.py": [
+      {
+        "name": "TestSubmissionRecord::test_successful_submission",
+        "line": 16,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test creating a successful submission record.",
+        "class": "TestSubmissionRecord"
+      },
+      {
+        "name": "TestSubmissionRecord::test_failed_submission",
+        "line": 28,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test creating a failed submission record.",
+        "class": "TestSubmissionRecord"
+      },
+      {
+        "name": "TestSubmissionRecord::test_rejected_submission",
+        "line": 39,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test creating a rejected submission record.",
+        "class": "TestSubmissionRecord"
+      },
       {
         "name": "TestExecutionTelemetryCollector::test_singleton_pattern",
-        "line": 22,
+        "line": 61,
         "markers": [
           "unit"
         ],
@@ -44584,7 +44564,7 @@
       },
       {
         "name": "TestExecutionTelemetryCollector::test_clear_singleton",
-        "line": 28,
+        "line": 67,
         "markers": [
           "unit"
         ],
@@ -44593,7 +44573,7 @@
       },
       {
         "name": "TestExecutionTelemetryCollector::test_empty_metrics",
-        "line": 35,
+        "line": 74,
         "markers": [
           "unit"
         ],
@@ -44602,7 +44582,7 @@
       },
       {
         "name": "TestExecutionTelemetryCollector::test_record_successful_submission",
-        "line": 42,
+        "line": 81,
         "markers": [
           "unit"
         ],
@@ -44611,7 +44591,7 @@
       },
       {
         "name": "TestExecutionTelemetryCollector::test_record_failed_submission",
-        "line": 53,
+        "line": 92,
         "markers": [
           "unit"
         ],
@@ -44620,7 +44600,7 @@
       },
       {
         "name": "TestExecutionTelemetryCollector::test_record_rejected_submission",
-        "line": 68,
+        "line": 107,
         "markers": [
           "unit"
         ],
@@ -44629,7 +44609,7 @@
       },
       {
         "name": "TestExecutionTelemetryCollector::test_multiple_submissions",
-        "line": 81,
+        "line": 120,
         "markers": [
           "unit"
         ],
@@ -44638,7 +44618,7 @@
       },
       {
         "name": "TestExecutionTelemetryCollector::test_mixed_success_and_failure",
-        "line": 94,
+        "line": 133,
         "markers": [
           "unit"
         ],
@@ -44647,7 +44627,7 @@
       },
       {
         "name": "TestExecutionTelemetryCollector::test_retry_tracking",
-        "line": 108,
+        "line": 147,
         "markers": [
           "unit"
         ],
@@ -44656,7 +44636,7 @@
       },
       {
         "name": "TestExecutionTelemetryCollector::test_rolling_window",
-        "line": 119,
+        "line": 158,
         "markers": [
           "unit"
         ],
@@ -44665,7 +44645,7 @@
       },
       {
         "name": "TestExecutionTelemetryCollector::test_clear",
-        "line": 134,
+        "line": 173,
         "markers": [
           "unit"
         ],
@@ -44674,7 +44654,7 @@
       },
       {
         "name": "TestExecutionTelemetryCollector::test_latency_percentiles",
-        "line": 145,
+        "line": 184,
         "markers": [
           "unit"
         ],
@@ -44683,7 +44663,7 @@
       },
       {
         "name": "TestExecutionTelemetryCollector::test_thread_safety",
-        "line": 157,
+        "line": 196,
         "markers": [
           "unit"
         ],
@@ -44691,10 +44671,10 @@
         "class": "TestExecutionTelemetryCollector"
       }
     ],
-    "tests/unit/gpt_trader/tui/services/test_execution_telemetry_execution_metrics.py": [
+    "tests/unit/gpt_trader/tui/services/test_execution_telemetry_metrics.py": [
       {
         "name": "TestExecutionMetrics::test_default_values",
-        "line": 9,
+        "line": 15,
         "markers": [
           "unit"
         ],
@@ -44703,7 +44683,7 @@
       },
       {
         "name": "TestExecutionMetrics::test_success_rate_calculation",
-        "line": 21,
+        "line": 27,
         "markers": [
           "unit"
         ],
@@ -44712,7 +44692,7 @@
       },
       {
         "name": "TestExecutionMetrics::test_success_rate_zero_submissions",
-        "line": 29,
+        "line": 35,
         "markers": [
           "unit"
         ],
@@ -44721,7 +44701,7 @@
       },
       {
         "name": "TestExecutionMetrics::test_is_healthy_good_metrics",
-        "line": 34,
+        "line": 40,
         "markers": [
           "unit"
         ],
@@ -44730,7 +44710,7 @@
       },
       {
         "name": "TestExecutionMetrics::test_is_healthy_low_success_rate",
-        "line": 43,
+        "line": 49,
         "markers": [
           "unit"
         ],
@@ -44739,7 +44719,7 @@
       },
       {
         "name": "TestExecutionMetrics::test_is_healthy_high_retry_rate",
-        "line": 52,
+        "line": 58,
         "markers": [
           "unit"
         ],
@@ -44748,7 +44728,7 @@
       },
       {
         "name": "TestExecutionMetrics::test_top_rejection_reasons_sorted",
-        "line": 61,
+        "line": 67,
         "markers": [
           "unit"
         ],
@@ -44757,7 +44737,7 @@
       },
       {
         "name": "TestExecutionMetrics::test_top_rejection_reasons_empty",
-        "line": 71,
+        "line": 77,
         "markers": [
           "unit"
         ],
@@ -44766,18 +44746,16 @@
       },
       {
         "name": "TestExecutionMetrics::test_top_retry_reasons_sorted",
-        "line": 76,
+        "line": 82,
         "markers": [
           "unit"
         ],
         "docstring": "Test top_retry_reasons returns sorted by count.",
         "class": "TestExecutionMetrics"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/services/test_execution_telemetry_issue_tracking.py": [
+      },
       {
         "name": "TestIssueTracking::test_rejection_issue_records_context",
-        "line": 21,
+        "line": 101,
         "markers": [
           "unit"
         ],
@@ -44786,7 +44764,7 @@
       },
       {
         "name": "TestIssueTracking::test_failed_submission_records_issue",
-        "line": 45,
+        "line": 125,
         "markers": [
           "unit"
         ],
@@ -44795,7 +44773,7 @@
       },
       {
         "name": "TestIssueTracking::test_retry_issue_records_context",
-        "line": 62,
+        "line": 142,
         "markers": [
           "unit"
         ],
@@ -44804,7 +44782,7 @@
       },
       {
         "name": "TestIssueTracking::test_issue_ordering_is_most_recent_first",
-        "line": 84,
+        "line": 164,
         "markers": [
           "unit"
         ],
@@ -44813,7 +44791,7 @@
       },
       {
         "name": "TestIssueTracking::test_empty_retry_reason_skips_issue",
-        "line": 104,
+        "line": 184,
         "markers": [
           "unit"
         ],
@@ -44821,7 +44799,7 @@
         "class": "TestIssueTracking"
       }
     ],
-    "tests/unit/gpt_trader/tui/services/test_execution_telemetry_reason_tracking.py": [
+    "tests/unit/gpt_trader/tui/services/test_execution_telemetry_reason.py": [
       {
         "name": "TestReasonTracking::test_record_rejection_reason",
         "line": 21,
@@ -44884,35 +44862,6 @@
         ],
         "docstring": "Test that clear() also clears reason tracking.",
         "class": "TestReasonTracking"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/services/test_execution_telemetry_submission_record.py": [
-      {
-        "name": "TestSubmissionRecord::test_successful_submission",
-        "line": 9,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test creating a successful submission record.",
-        "class": "TestSubmissionRecord"
-      },
-      {
-        "name": "TestSubmissionRecord::test_failed_submission",
-        "line": 21,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test creating a failed submission record.",
-        "class": "TestSubmissionRecord"
-      },
-      {
-        "name": "TestSubmissionRecord::test_rejected_submission",
-        "line": 32,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test creating a rejected submission record.",
-        "class": "TestSubmissionRecord"
       }
     ],
     "tests/unit/gpt_trader/tui/services/test_focus_manager.py": [
@@ -46151,7 +46100,99 @@
         "class": "TestThemeService"
       }
     ],
-    "tests/unit/gpt_trader/tui/services/test_trading_stats_service_compute_stats.py": [
+    "tests/unit/gpt_trader/tui/services/test_trading_stats.py": [
+      {
+        "name": "TestTradingStatsSampleSize::test_sample_label_format",
+        "line": 15,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test sample_label property format.",
+        "class": "TestTradingStatsSampleSize"
+      },
+      {
+        "name": "TestTradingStatsSampleSize::test_has_sufficient_data_below_threshold",
+        "line": 20,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test has_sufficient_data returns False below threshold.",
+        "class": "TestTradingStatsSampleSize"
+      },
+      {
+        "name": "TestTradingStatsSampleSize::test_has_sufficient_data_at_threshold",
+        "line": 25,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test has_sufficient_data returns True at threshold.",
+        "class": "TestTradingStatsSampleSize"
+      },
+      {
+        "name": "TestTradingStatsSampleSize::test_has_sufficient_data_above_threshold",
+        "line": 30,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test has_sufficient_data returns True above threshold.",
+        "class": "TestTradingStatsSampleSize"
+      },
+      {
+        "name": "TestTradingStatsServiceSingleton::test_get_returns_same_instance",
+        "line": 39,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test get_trading_stats_service returns same instance.",
+        "class": "TestTradingStatsServiceSingleton"
+      },
+      {
+        "name": "TestTradingStatsServiceSingleton::test_clear_creates_new_instance",
+        "line": 46,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test clear_trading_stats_service creates new instance.",
+        "class": "TestTradingStatsServiceSingleton"
+      },
+      {
+        "name": "TestTradingStatsService::test_initial_window_is_all_session",
+        "line": 58,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test service starts with 'All Session' window.",
+        "class": "TestTradingStatsService"
+      },
+      {
+        "name": "TestTradingStatsService::test_cycle_window_advances",
+        "line": 65,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test cycle_window advances through windows.",
+        "class": "TestTradingStatsService"
+      },
+      {
+        "name": "TestTradingStatsService::test_cycle_window_wraps_around",
+        "line": 82,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test cycle_window wraps back to start.",
+        "class": "TestTradingStatsService"
+      },
+      {
+        "name": "TestTradingStatsService::test_reset_window_returns_to_all_session",
+        "line": 93,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test reset_window returns to 'All Session'.",
+        "class": "TestTradingStatsService"
+      }
+    ],
+    "tests/unit/gpt_trader/tui/services/test_trading_stats_compute.py": [
       {
         "name": "TestTradingStatsComputation::test_empty_trades_returns_default_stats",
         "line": 12,
@@ -46207,65 +46248,7 @@
         "class": "TestTradingStatsComputation"
       }
     ],
-    "tests/unit/gpt_trader/tui/services/test_trading_stats_service_model.py": [
-      {
-        "name": "TestTradingStatsSampleSize::test_sample_label_format",
-        "line": 9,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test sample_label property format.",
-        "class": "TestTradingStatsSampleSize"
-      },
-      {
-        "name": "TestTradingStatsSampleSize::test_has_sufficient_data_below_threshold",
-        "line": 14,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test has_sufficient_data returns False below threshold.",
-        "class": "TestTradingStatsSampleSize"
-      },
-      {
-        "name": "TestTradingStatsSampleSize::test_has_sufficient_data_at_threshold",
-        "line": 19,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test has_sufficient_data returns True at threshold.",
-        "class": "TestTradingStatsSampleSize"
-      },
-      {
-        "name": "TestTradingStatsSampleSize::test_has_sufficient_data_above_threshold",
-        "line": 24,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test has_sufficient_data returns True above threshold.",
-        "class": "TestTradingStatsSampleSize"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/services/test_trading_stats_service_singleton.py": [
-      {
-        "name": "TestTradingStatsServiceSingleton::test_get_returns_same_instance",
-        "line": 12,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test get_trading_stats_service returns same instance.",
-        "class": "TestTradingStatsServiceSingleton"
-      },
-      {
-        "name": "TestTradingStatsServiceSingleton::test_clear_creates_new_instance",
-        "line": 19,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test clear_trading_stats_service creates new instance.",
-        "class": "TestTradingStatsServiceSingleton"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/services/test_trading_stats_service_trade_matching.py": [
+    "tests/unit/gpt_trader/tui/services/test_trading_stats_matching.py": [
       {
         "name": "TestTradeMatching::test_fifo_order_matching",
         "line": 12,
@@ -46292,44 +46275,6 @@
         ],
         "docstring": "Test different symbols are matched separately.",
         "class": "TestTradeMatching"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/services/test_trading_stats_service_windows.py": [
-      {
-        "name": "TestTradingStatsService::test_initial_window_is_all_session",
-        "line": 9,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test service starts with 'All Session' window.",
-        "class": "TestTradingStatsService"
-      },
-      {
-        "name": "TestTradingStatsService::test_cycle_window_advances",
-        "line": 16,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test cycle_window advances through windows.",
-        "class": "TestTradingStatsService"
-      },
-      {
-        "name": "TestTradingStatsService::test_cycle_window_wraps_around",
-        "line": 33,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test cycle_window wraps back to start.",
-        "class": "TestTradingStatsService"
-      },
-      {
-        "name": "TestTradingStatsService::test_reset_window_returns_to_all_session",
-        "line": 44,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test reset_window returns to 'All Session'.",
-        "class": "TestTradingStatsService"
       }
     ],
     "tests/unit/gpt_trader/tui/state_management/test_delta_updater_compare_account_risk_system.py": [
@@ -48959,7 +48904,153 @@
         "class": "TestDegradedStateSnapshots"
       }
     ],
-    "tests/unit/gpt_trader/tui/test_staleness_helpers_banners_and_empty_state.py": [
+    "tests/unit/gpt_trader/tui/test_staleness_helpers.py": [
+      {
+        "name": "TestGetDataAgeSeconds::test_returns_none_when_no_data_available",
+        "line": 19,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should return None when data_available is False.",
+        "class": "TestGetDataAgeSeconds"
+      },
+      {
+        "name": "TestGetDataAgeSeconds::test_returns_none_when_last_fetch_zero",
+        "line": 27,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should return None when last_data_fetch is 0.",
+        "class": "TestGetDataAgeSeconds"
+      },
+      {
+        "name": "TestGetDataAgeSeconds::test_returns_age_when_data_available",
+        "line": 35,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should return age in seconds when data is available.",
+        "class": "TestGetDataAgeSeconds"
+      },
+      {
+        "name": "TestGetStalenessSeverity::test_returns_critical_when_connection_unhealthy",
+        "line": 49,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should return critical when connection_healthy is False.",
+        "class": "TestGetStalenessSeverity"
+      },
+      {
+        "name": "TestGetStalenessSeverity::test_returns_fresh_when_no_data_yet",
+        "line": 58,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should return fresh when no data has been fetched.",
+        "class": "TestGetStalenessSeverity"
+      },
+      {
+        "name": "TestGetStalenessSeverity::test_returns_fresh_for_recent_data",
+        "line": 67,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should return fresh when data is less than 10s old.",
+        "class": "TestGetStalenessSeverity"
+      },
+      {
+        "name": "TestGetStalenessSeverity::test_returns_stale_for_aging_data",
+        "line": 76,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should return stale when data is 10-30s old.",
+        "class": "TestGetStalenessSeverity"
+      },
+      {
+        "name": "TestGetStalenessSeverity::test_returns_critical_for_old_data",
+        "line": 85,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should return critical when data is >30s old.",
+        "class": "TestGetStalenessSeverity"
+      },
+      {
+        "name": "TestFormatFreshnessLabel::test_formats_seconds",
+        "line": 98,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should format as seconds for age < 60.",
+        "class": "TestFormatFreshnessLabel"
+      },
+      {
+        "name": "TestFormatFreshnessLabel::test_formats_minutes",
+        "line": 103,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should format as minutes for age 60-3600.",
+        "class": "TestFormatFreshnessLabel"
+      },
+      {
+        "name": "TestFormatFreshnessLabel::test_formats_hours",
+        "line": 108,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should format as hours for age >= 3600.",
+        "class": "TestFormatFreshnessLabel"
+      },
+      {
+        "name": "TestGetFreshnessDisplay::test_returns_syncing_when_fetching",
+        "line": 117,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should return syncing when data_fetching is True.",
+        "class": "TestGetFreshnessDisplay"
+      },
+      {
+        "name": "TestGetFreshnessDisplay::test_returns_none_when_no_data",
+        "line": 128,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should return None when no data has been fetched.",
+        "class": "TestGetFreshnessDisplay"
+      },
+      {
+        "name": "TestGetFreshnessDisplay::test_returns_dim_for_fresh_data",
+        "line": 137,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should return dim styling for fresh data.",
+        "class": "TestGetFreshnessDisplay"
+      },
+      {
+        "name": "TestGetFreshnessDisplay::test_returns_yellow_for_stale_data",
+        "line": 151,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should return yellow styling for stale data.",
+        "class": "TestGetFreshnessDisplay"
+      },
+      {
+        "name": "TestGetFreshnessDisplay::test_returns_red_for_critical_data",
+        "line": 165,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should return red styling for critical data.",
+        "class": "TestGetFreshnessDisplay"
+      }
+    ],
+    "tests/unit/gpt_trader/tui/test_staleness_helpers_banners.py": [
       {
         "name": "TestGetStalenessBanner::test_returns_reconnecting_when_fetching",
         "line": 18,
@@ -49087,81 +49178,7 @@
         "class": "TestGetEmptyStateConfig"
       }
     ],
-    "tests/unit/gpt_trader/tui/test_staleness_helpers_data_age_and_severity.py": [
-      {
-        "name": "TestGetDataAgeSeconds::test_returns_none_when_no_data_available",
-        "line": 17,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return None when data_available is False.",
-        "class": "TestGetDataAgeSeconds"
-      },
-      {
-        "name": "TestGetDataAgeSeconds::test_returns_none_when_last_fetch_zero",
-        "line": 25,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return None when last_data_fetch is 0.",
-        "class": "TestGetDataAgeSeconds"
-      },
-      {
-        "name": "TestGetDataAgeSeconds::test_returns_age_when_data_available",
-        "line": 33,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return age in seconds when data is available.",
-        "class": "TestGetDataAgeSeconds"
-      },
-      {
-        "name": "TestGetStalenessSeverity::test_returns_critical_when_connection_unhealthy",
-        "line": 47,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return critical when connection_healthy is False.",
-        "class": "TestGetStalenessSeverity"
-      },
-      {
-        "name": "TestGetStalenessSeverity::test_returns_fresh_when_no_data_yet",
-        "line": 56,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return fresh when no data has been fetched.",
-        "class": "TestGetStalenessSeverity"
-      },
-      {
-        "name": "TestGetStalenessSeverity::test_returns_fresh_for_recent_data",
-        "line": 65,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return fresh when data is less than 10s old.",
-        "class": "TestGetStalenessSeverity"
-      },
-      {
-        "name": "TestGetStalenessSeverity::test_returns_stale_for_aging_data",
-        "line": 74,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return stale when data is 10-30s old.",
-        "class": "TestGetStalenessSeverity"
-      },
-      {
-        "name": "TestGetStalenessSeverity::test_returns_critical_for_old_data",
-        "line": 83,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return critical when data is >30s old.",
-        "class": "TestGetStalenessSeverity"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/test_staleness_helpers_edge_cases.py": [
+    "tests/unit/gpt_trader/tui/test_staleness_helpers_edge.py": [
       {
         "name": "TestStalenessEdgeCases::test_get_data_age_with_negative_last_fetch",
         "line": 21,
@@ -49244,7 +49261,7 @@
         "class": "TestStalenessEdgeCases"
       }
     ],
-    "tests/unit/gpt_trader/tui/test_staleness_helpers_execution_health.py": [
+    "tests/unit/gpt_trader/tui/test_staleness_helpers_execution.py": [
       {
         "name": "TestGetExecutionHealthBanner::test_returns_none_when_healthy",
         "line": 17,
@@ -49343,80 +49360,6 @@
         ],
         "docstring": "Critical execution should show instead of stale warning.",
         "class": "TestExecutionHealthBannerIntegration"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/test_staleness_helpers_freshness_label_and_display.py": [
-      {
-        "name": "TestFormatFreshnessLabel::test_formats_seconds",
-        "line": 17,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should format as seconds for age < 60.",
-        "class": "TestFormatFreshnessLabel"
-      },
-      {
-        "name": "TestFormatFreshnessLabel::test_formats_minutes",
-        "line": 22,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should format as minutes for age 60-3600.",
-        "class": "TestFormatFreshnessLabel"
-      },
-      {
-        "name": "TestFormatFreshnessLabel::test_formats_hours",
-        "line": 27,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should format as hours for age >= 3600.",
-        "class": "TestFormatFreshnessLabel"
-      },
-      {
-        "name": "TestGetFreshnessDisplay::test_returns_syncing_when_fetching",
-        "line": 36,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return syncing when data_fetching is True.",
-        "class": "TestGetFreshnessDisplay"
-      },
-      {
-        "name": "TestGetFreshnessDisplay::test_returns_none_when_no_data",
-        "line": 47,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return None when no data has been fetched.",
-        "class": "TestGetFreshnessDisplay"
-      },
-      {
-        "name": "TestGetFreshnessDisplay::test_returns_dim_for_fresh_data",
-        "line": 56,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return dim styling for fresh data.",
-        "class": "TestGetFreshnessDisplay"
-      },
-      {
-        "name": "TestGetFreshnessDisplay::test_returns_yellow_for_stale_data",
-        "line": 70,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return yellow styling for stale data.",
-        "class": "TestGetFreshnessDisplay"
-      },
-      {
-        "name": "TestGetFreshnessDisplay::test_returns_red_for_critical_data",
-        "line": 84,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return red styling for critical data.",
-        "class": "TestGetFreshnessDisplay"
       }
     ],
     "tests/unit/gpt_trader/tui/test_state_cfm_and_data_staleness.py": [
@@ -50634,10 +50577,10 @@
         "class": "TestGetSparklineColor"
       }
     ],
-    "tests/unit/gpt_trader/tui/utilities/test_table_formatting_cells.py": [
+    "tests/unit/gpt_trader/tui/utilities/test_table_formatting.py": [
       {
         "name": "TestCreateNumericCell::test_basic_value",
-        "line": 13,
+        "line": 21,
         "markers": [
           "unit"
         ],
@@ -50646,7 +50589,7 @@
       },
       {
         "name": "TestCreateNumericCell::test_with_format_function",
-        "line": 20,
+        "line": 28,
         "markers": [
           "unit"
         ],
@@ -50655,7 +50598,7 @@
       },
       {
         "name": "TestCreateNumericCell::test_custom_justify",
-        "line": 25,
+        "line": 33,
         "markers": [
           "unit"
         ],
@@ -50664,7 +50607,7 @@
       },
       {
         "name": "TestCreateNumericCell::test_float_value",
-        "line": 30,
+        "line": 38,
         "markers": [
           "unit"
         ],
@@ -50673,7 +50616,7 @@
       },
       {
         "name": "TestCreateNumericCell::test_string_value",
-        "line": 35,
+        "line": 43,
         "markers": [
           "unit"
         ],
@@ -50682,7 +50625,7 @@
       },
       {
         "name": "TestFormatTableCell::test_format_text",
-        "line": 44,
+        "line": 52,
         "markers": [
           "unit"
         ],
@@ -50691,7 +50634,7 @@
       },
       {
         "name": "TestFormatTableCell::test_format_currency",
-        "line": 49,
+        "line": 57,
         "markers": [
           "unit"
         ],
@@ -50700,7 +50643,7 @@
       },
       {
         "name": "TestFormatTableCell::test_format_percentage",
-        "line": 55,
+        "line": 63,
         "markers": [
           "unit"
         ],
@@ -50709,7 +50652,7 @@
       },
       {
         "name": "TestFormatTableCell::test_format_number",
-        "line": 62,
+        "line": 70,
         "markers": [
           "unit"
         ],
@@ -50718,7 +50661,7 @@
       },
       {
         "name": "TestFormatTableCell::test_format_decimal",
-        "line": 67,
+        "line": 75,
         "markers": [
           "unit"
         ],
@@ -50727,7 +50670,7 @@
       },
       {
         "name": "TestFormatTableCell::test_format_with_max_length",
-        "line": 72,
+        "line": 80,
         "markers": [
           "unit"
         ],
@@ -50736,18 +50679,16 @@
       },
       {
         "name": "TestFormatTableCell::test_format_none",
-        "line": 77,
+        "line": 85,
         "markers": [
           "unit"
         ],
         "docstring": "Format None value.",
         "class": "TestFormatTableCell"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/utilities/test_table_formatting_clipboard.py": [
+      },
       {
         "name": "TestCopyToClipboard::test_copy_on_macos",
-        "line": 14,
+        "line": 94,
         "markers": [
           "unit"
         ],
@@ -50756,292 +50697,16 @@
       },
       {
         "name": "TestCopyToClipboard::test_copy_empty_string",
-        "line": 24,
+        "line": 104,
         "markers": [
           "unit"
         ],
         "docstring": "Copy empty string doesn't crash.",
         "class": "TestCopyToClipboard"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/utilities/test_table_formatting_sorting.py": [
-      {
-        "name": "TestSortTableData::test_sort_by_string_column_ascending",
-        "line": 11,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Sort by string column ascending.",
-        "class": "TestSortTableData"
       },
-      {
-        "name": "TestSortTableData::test_sort_by_string_column_descending",
-        "line": 23,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Sort by string column descending.",
-        "class": "TestSortTableData"
-      },
-      {
-        "name": "TestSortTableData::test_sort_by_numeric_column",
-        "line": 35,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Sort by numeric column.",
-        "class": "TestSortTableData"
-      },
-      {
-        "name": "TestSortTableData::test_sort_empty_list",
-        "line": 47,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Sort empty list returns empty list.",
-        "class": "TestSortTableData"
-      },
-      {
-        "name": "TestSortTableData::test_sort_missing_column",
-        "line": 52,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Sort by missing column doesn't crash.",
-        "class": "TestSortTableData"
-      },
-      {
-        "name": "TestSortTableData::test_sort_decimal_values",
-        "line": 58,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Sort Decimal values correctly.",
-        "class": "TestSortTableData"
-      },
-      {
-        "name": "TestGetSortIndicator::test_no_sort",
-        "line": 73,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "No sort indicator when column not sorted.",
-        "class": "TestGetSortIndicator"
-      },
-      {
-        "name": "TestGetSortIndicator::test_ascending_indicator",
-        "line": 78,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Ascending indicator for sorted column.",
-        "class": "TestGetSortIndicator"
-      },
-      {
-        "name": "TestGetSortIndicator::test_descending_indicator",
-        "line": 83,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Descending indicator for sorted column.",
-        "class": "TestGetSortIndicator"
-      },
-      {
-        "name": "TestGetSortIndicator::test_different_column_no_indicator",
-        "line": 88,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "No indicator when different column is sorted.",
-        "class": "TestGetSortIndicator"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/utilities/test_table_formatting_timestamp.py": [
-      {
-        "name": "TestFormatTimestamp::test_iso_with_milliseconds_and_z",
-        "line": 13,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Parse full ISO 8601 format with Z suffix.",
-        "class": "TestFormatTimestamp"
-      },
-      {
-        "name": "TestFormatTimestamp::test_iso_with_milliseconds",
-        "line": 18,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Parse ISO format with milliseconds.",
-        "class": "TestFormatTimestamp"
-      },
-      {
-        "name": "TestFormatTimestamp::test_iso_without_milliseconds",
-        "line": 23,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Parse ISO format without milliseconds.",
-        "class": "TestFormatTimestamp"
-      },
-      {
-        "name": "TestFormatTimestamp::test_empty_string",
-        "line": 28,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Empty string returns empty string.",
-        "class": "TestFormatTimestamp"
-      },
-      {
-        "name": "TestFormatTimestamp::test_no_t_separator",
-        "line": 33,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "String without T returns original if parsing fails.",
-        "class": "TestFormatTimestamp"
-      },
-      {
-        "name": "TestFormatTimestamp::test_already_formatted_time",
-        "line": 38,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Already formatted time returns as-is if no T.",
-        "class": "TestFormatTimestamp"
-      },
-      {
-        "name": "TestParseTimestampToEpoch::test_float_passthrough",
-        "line": 47,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Float epoch timestamp passes through unchanged.",
-        "class": "TestParseTimestampToEpoch"
-      },
-      {
-        "name": "TestParseTimestampToEpoch::test_int_passthrough",
-        "line": 52,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Int epoch timestamp converts to float.",
-        "class": "TestParseTimestampToEpoch"
-      },
-      {
-        "name": "TestParseTimestampToEpoch::test_iso_with_z_suffix",
-        "line": 57,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Parse ISO timestamp with Z suffix.",
-        "class": "TestParseTimestampToEpoch"
-      },
-      {
-        "name": "TestParseTimestampToEpoch::test_iso_with_microseconds_and_z",
-        "line": 65,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Parse ISO timestamp with microseconds and Z suffix.",
-        "class": "TestParseTimestampToEpoch"
-      },
-      {
-        "name": "TestParseTimestampToEpoch::test_iso_without_z",
-        "line": 71,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Parse ISO timestamp without Z suffix.",
-        "class": "TestParseTimestampToEpoch"
-      },
-      {
-        "name": "TestParseTimestampToEpoch::test_none_returns_none",
-        "line": 77,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "None input returns None.",
-        "class": "TestParseTimestampToEpoch"
-      },
-      {
-        "name": "TestParseTimestampToEpoch::test_empty_string_returns_none",
-        "line": 82,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Empty string returns None.",
-        "class": "TestParseTimestampToEpoch"
-      },
-      {
-        "name": "TestParseTimestampToEpoch::test_invalid_string_returns_none",
-        "line": 87,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Invalid string returns None.",
-        "class": "TestParseTimestampToEpoch"
-      },
-      {
-        "name": "TestGetAgeSeconds::test_recent_timestamp",
-        "line": 96,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Recent timestamp returns small positive age.",
-        "class": "TestGetAgeSeconds"
-      },
-      {
-        "name": "TestGetAgeSeconds::test_old_timestamp",
-        "line": 106,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Old timestamp returns correct age.",
-        "class": "TestGetAgeSeconds"
-      },
-      {
-        "name": "TestGetAgeSeconds::test_none_returns_none",
-        "line": 116,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "None input returns None.",
-        "class": "TestGetAgeSeconds"
-      },
-      {
-        "name": "TestGetAgeSeconds::test_zero_returns_none",
-        "line": 121,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Zero timestamp returns None (invalid).",
-        "class": "TestGetAgeSeconds"
-      },
-      {
-        "name": "TestGetAgeSeconds::test_negative_returns_none",
-        "line": 126,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Negative timestamp returns None (invalid).",
-        "class": "TestGetAgeSeconds"
-      },
-      {
-        "name": "TestGetAgeSeconds::test_future_timestamp_returns_zero",
-        "line": 131,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Future timestamp returns 0 (not negative).",
-        "class": "TestGetAgeSeconds"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/utilities/test_table_formatting_truncate_id.py": [
       {
         "name": "TestTruncateId::test_long_id_truncated",
-        "line": 9,
+        "line": 113,
         "markers": [
           "unit"
         ],
@@ -51050,7 +50715,7 @@
       },
       {
         "name": "TestTruncateId::test_short_id_unchanged",
-        "line": 14,
+        "line": 118,
         "markers": [
           "unit"
         ],
@@ -51059,7 +50724,7 @@
       },
       {
         "name": "TestTruncateId::test_exact_length_unchanged",
-        "line": 19,
+        "line": 123,
         "markers": [
           "unit"
         ],
@@ -51068,7 +50733,7 @@
       },
       {
         "name": "TestTruncateId::test_empty_string",
-        "line": 24,
+        "line": 128,
         "markers": [
           "unit"
         ],
@@ -51077,7 +50742,7 @@
       },
       {
         "name": "TestTruncateId::test_none_returns_empty",
-        "line": 29,
+        "line": 133,
         "markers": [
           "unit"
         ],
@@ -51086,12 +50751,284 @@
       },
       {
         "name": "TestTruncateId::test_default_length",
-        "line": 34,
+        "line": 138,
         "markers": [
           "unit"
         ],
         "docstring": "Default length is 8.",
         "class": "TestTruncateId"
+      }
+    ],
+    "tests/unit/gpt_trader/tui/utilities/test_table_formatting_data.py": [
+      {
+        "name": "TestSortTableData::test_sort_by_string_column_ascending",
+        "line": 17,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Sort by string column ascending.",
+        "class": "TestSortTableData"
+      },
+      {
+        "name": "TestSortTableData::test_sort_by_string_column_descending",
+        "line": 29,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Sort by string column descending.",
+        "class": "TestSortTableData"
+      },
+      {
+        "name": "TestSortTableData::test_sort_by_numeric_column",
+        "line": 41,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Sort by numeric column.",
+        "class": "TestSortTableData"
+      },
+      {
+        "name": "TestSortTableData::test_sort_empty_list",
+        "line": 53,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Sort empty list returns empty list.",
+        "class": "TestSortTableData"
+      },
+      {
+        "name": "TestSortTableData::test_sort_missing_column",
+        "line": 58,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Sort by missing column doesn't crash.",
+        "class": "TestSortTableData"
+      },
+      {
+        "name": "TestSortTableData::test_sort_decimal_values",
+        "line": 64,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Sort Decimal values correctly.",
+        "class": "TestSortTableData"
+      },
+      {
+        "name": "TestGetSortIndicator::test_no_sort",
+        "line": 79,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "No sort indicator when column not sorted.",
+        "class": "TestGetSortIndicator"
+      },
+      {
+        "name": "TestGetSortIndicator::test_ascending_indicator",
+        "line": 84,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Ascending indicator for sorted column.",
+        "class": "TestGetSortIndicator"
+      },
+      {
+        "name": "TestGetSortIndicator::test_descending_indicator",
+        "line": 89,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Descending indicator for sorted column.",
+        "class": "TestGetSortIndicator"
+      },
+      {
+        "name": "TestGetSortIndicator::test_different_column_no_indicator",
+        "line": 94,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "No indicator when different column is sorted.",
+        "class": "TestGetSortIndicator"
+      },
+      {
+        "name": "TestFormatTimestamp::test_iso_with_milliseconds_and_z",
+        "line": 103,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Parse full ISO 8601 format with Z suffix.",
+        "class": "TestFormatTimestamp"
+      },
+      {
+        "name": "TestFormatTimestamp::test_iso_with_milliseconds",
+        "line": 108,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Parse ISO format with milliseconds.",
+        "class": "TestFormatTimestamp"
+      },
+      {
+        "name": "TestFormatTimestamp::test_iso_without_milliseconds",
+        "line": 113,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Parse ISO format without milliseconds.",
+        "class": "TestFormatTimestamp"
+      },
+      {
+        "name": "TestFormatTimestamp::test_empty_string",
+        "line": 118,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Empty string returns empty string.",
+        "class": "TestFormatTimestamp"
+      },
+      {
+        "name": "TestFormatTimestamp::test_no_t_separator",
+        "line": 123,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "String without T returns original if parsing fails.",
+        "class": "TestFormatTimestamp"
+      },
+      {
+        "name": "TestFormatTimestamp::test_already_formatted_time",
+        "line": 128,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Already formatted time returns as-is if no T.",
+        "class": "TestFormatTimestamp"
+      },
+      {
+        "name": "TestParseTimestampToEpoch::test_float_passthrough",
+        "line": 137,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Float epoch timestamp passes through unchanged.",
+        "class": "TestParseTimestampToEpoch"
+      },
+      {
+        "name": "TestParseTimestampToEpoch::test_int_passthrough",
+        "line": 142,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Int epoch timestamp converts to float.",
+        "class": "TestParseTimestampToEpoch"
+      },
+      {
+        "name": "TestParseTimestampToEpoch::test_iso_with_z_suffix",
+        "line": 147,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Parse ISO timestamp with Z suffix.",
+        "class": "TestParseTimestampToEpoch"
+      },
+      {
+        "name": "TestParseTimestampToEpoch::test_iso_with_microseconds_and_z",
+        "line": 155,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Parse ISO timestamp with microseconds and Z suffix.",
+        "class": "TestParseTimestampToEpoch"
+      },
+      {
+        "name": "TestParseTimestampToEpoch::test_iso_without_z",
+        "line": 161,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Parse ISO timestamp without Z suffix.",
+        "class": "TestParseTimestampToEpoch"
+      },
+      {
+        "name": "TestParseTimestampToEpoch::test_none_returns_none",
+        "line": 167,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "None input returns None.",
+        "class": "TestParseTimestampToEpoch"
+      },
+      {
+        "name": "TestParseTimestampToEpoch::test_empty_string_returns_none",
+        "line": 172,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Empty string returns None.",
+        "class": "TestParseTimestampToEpoch"
+      },
+      {
+        "name": "TestParseTimestampToEpoch::test_invalid_string_returns_none",
+        "line": 177,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Invalid string returns None.",
+        "class": "TestParseTimestampToEpoch"
+      },
+      {
+        "name": "TestGetAgeSeconds::test_recent_timestamp",
+        "line": 186,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Recent timestamp returns small positive age.",
+        "class": "TestGetAgeSeconds"
+      },
+      {
+        "name": "TestGetAgeSeconds::test_old_timestamp",
+        "line": 196,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Old timestamp returns correct age.",
+        "class": "TestGetAgeSeconds"
+      },
+      {
+        "name": "TestGetAgeSeconds::test_none_returns_none",
+        "line": 206,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "None input returns None.",
+        "class": "TestGetAgeSeconds"
+      },
+      {
+        "name": "TestGetAgeSeconds::test_zero_returns_none",
+        "line": 211,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Zero timestamp returns None (invalid).",
+        "class": "TestGetAgeSeconds"
+      },
+      {
+        "name": "TestGetAgeSeconds::test_negative_returns_none",
+        "line": 216,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Negative timestamp returns None (invalid).",
+        "class": "TestGetAgeSeconds"
+      },
+      {
+        "name": "TestGetAgeSeconds::test_future_timestamp_returns_zero",
+        "line": 221,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Future timestamp returns 0 (not negative).",
+        "class": "TestGetAgeSeconds"
       }
     ],
     "tests/unit/gpt_trader/tui/widgets/test_account_widget_basic.py": [
@@ -52467,68 +52404,10 @@
         "class": "TestPositionCardStateRegistry"
       }
     ],
-    "tests/unit/gpt_trader/tui/widgets/test_position_detail_modal_calculations.py": [
-      {
-        "name": "TestPositionDetailModalCalculations::test_calculate_total_fees",
-        "line": 10,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestPositionDetailModalCalculations"
-      },
-      {
-        "name": "TestPositionDetailModalCalculations::test_calculate_realized_pnl_long_position",
-        "line": 50,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestPositionDetailModalCalculations"
-      },
-      {
-        "name": "TestPositionDetailModalCalculations::test_calculate_realized_pnl_short_position",
-        "line": 88,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestPositionDetailModalCalculations"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/widgets/test_position_detail_modal_fill_quality.py": [
-      {
-        "name": "TestPositionDetailModalFillQuality::test_build_fill_quality_line_no_trades",
-        "line": 10,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestPositionDetailModalFillQuality"
-      },
-      {
-        "name": "TestPositionDetailModalFillQuality::test_build_fill_quality_line_formats_values",
-        "line": 24,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestPositionDetailModalFillQuality"
-      },
-      {
-        "name": "TestPositionDetailModalFillQuality::test_build_fill_quality_line_single_trade_zero_range",
-        "line": 67,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestPositionDetailModalFillQuality"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/widgets/test_position_detail_modal_init.py": [
+    "tests/unit/gpt_trader/tui/widgets/test_position_detail.py": [
       {
         "name": "TestPositionDetailModalInit::test_init_with_position",
-        "line": 10,
+        "line": 12,
         "markers": [
           "unit"
         ],
@@ -52537,7 +52416,7 @@
       },
       {
         "name": "TestPositionDetailModalInit::test_init_with_trades",
-        "line": 26,
+        "line": 28,
         "markers": [
           "unit"
         ],
@@ -52546,18 +52425,16 @@
       },
       {
         "name": "TestPositionDetailModalInit::test_filters_trades_by_symbol",
-        "line": 64,
+        "line": 66,
         "markers": [
           "unit"
         ],
         "docstring": "",
         "class": "TestPositionDetailModalInit"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/widgets/test_position_detail_modal_recent_fills.py": [
+      },
       {
         "name": "TestPositionDetailModalRecentFills::test_get_recent_fills_ordering_and_limit",
-        "line": 10,
+        "line": 114,
         "markers": [
           "unit"
         ],
@@ -52566,7 +52443,7 @@
       },
       {
         "name": "TestPositionDetailModalRecentFills::test_format_recent_fill_row_contains_all_fields",
-        "line": 69,
+        "line": 173,
         "markers": [
           "unit"
         ],
@@ -52574,7 +52451,63 @@
         "class": "TestPositionDetailModalRecentFills"
       }
     ],
-    "tests/unit/gpt_trader/tui/widgets/test_position_detail_modal_trade_classification.py": [
+    "tests/unit/gpt_trader/tui/widgets/test_position_detail_calculations.py": [
+      {
+        "name": "TestPositionDetailModalCalculations::test_calculate_total_fees",
+        "line": 12,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestPositionDetailModalCalculations"
+      },
+      {
+        "name": "TestPositionDetailModalCalculations::test_calculate_realized_pnl_long_position",
+        "line": 52,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestPositionDetailModalCalculations"
+      },
+      {
+        "name": "TestPositionDetailModalCalculations::test_calculate_realized_pnl_short_position",
+        "line": 90,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestPositionDetailModalCalculations"
+      },
+      {
+        "name": "TestPositionDetailModalFillQuality::test_build_fill_quality_line_no_trades",
+        "line": 130,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestPositionDetailModalFillQuality"
+      },
+      {
+        "name": "TestPositionDetailModalFillQuality::test_build_fill_quality_line_formats_values",
+        "line": 144,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestPositionDetailModalFillQuality"
+      },
+      {
+        "name": "TestPositionDetailModalFillQuality::test_build_fill_quality_line_single_trade_zero_range",
+        "line": 187,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestPositionDetailModalFillQuality"
+      }
+    ],
+    "tests/unit/gpt_trader/tui/widgets/test_position_detail_classification.py": [
       {
         "name": "TestPositionDetailModalTradeClassification::test_categorize_trades_long",
         "line": 10,

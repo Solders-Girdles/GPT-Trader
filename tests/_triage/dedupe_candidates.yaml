@@ -684,11 +684,13 @@ clusters:
     - tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_trade_event.py
     source_modules: []
     decision: merge
-    target_location: tests/unit/gpt_trader/features/live_trade/execution/test_order_event.py
-    expected_file_delta: -10
+    target_location: tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder.py
+    expected_file_delta: -7
     priority: high
-    rationale: Consolidate 11 test files into single parametrized file
-    status: pending
+    rationale: Consolidated 11 → 4 files (<=240 lines each)
+    status: done
+    owner: claude
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/328
     added: '2026-01-20'
   c6bbc52b8b23:
     type: similar_names

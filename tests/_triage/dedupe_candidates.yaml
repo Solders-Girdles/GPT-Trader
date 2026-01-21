@@ -2502,7 +2502,9 @@ clusters:
     expected_file_delta: -4
     priority: low
     rationale: Consolidate 5 test files into single parametrized file
-    status: pending
+    status: done
+    owner: claude
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/316
     added: '2026-01-20'
   c00dd1e7c53c:
     type: similar_names

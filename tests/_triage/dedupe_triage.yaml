@@ -1,0 +1,13 @@
+# Test Deduplication Triage
+#
+# This file stores human triage decisions for clusters in:
+#   tests/_triage/dedupe_candidates.yaml
+#
+# States:
+#   accepted: worth doing (keep surfaced)
+#   rejected: false positive / not worth doing
+#   deferred: maybe later (hide from suggestions)
+#
+version: 1
+generated_at: null
+clusters: {}

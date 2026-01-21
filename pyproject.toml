@@ -58,6 +58,7 @@ agent-naming = "gpt_trader.agents.cli:naming"
 agent-health = "gpt_trader.agents.cli:health"
 agent-regenerate = "gpt_trader.agents.cli:regenerate"
 agent-dedupe = "gpt_trader.agents.cli:dedupe"
+agent-dedupe-triage = "gpt_trader.agents.cli:dedupe_triage"
 
 [build-system]
 requires = ["setuptools>=69", "wheel"]

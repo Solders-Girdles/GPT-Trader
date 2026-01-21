@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 793,
+    "tests_scanned": 788,
     "source_modules": 355,
     "unresolved_modules": 3
   },
@@ -1566,23 +1566,22 @@
     "gpt_trader.preflight.checks.connectivity": [
       "tests/unit/gpt_trader/preflight/test_checks_connectivity_api_connectivity.py",
       "tests/unit/gpt_trader/preflight/test_checks_connectivity_key_permissions_core.py",
-      "tests/unit/gpt_trader/preflight/test_checks_connectivity_key_permissions_intx.py",
-      "tests/unit/gpt_trader/preflight/test_checks_connectivity_key_permissions_retries.py"
+      "tests/unit/gpt_trader/preflight/test_checks_connectivity_keys.py"
     ],
     "gpt_trader.preflight.checks.dependencies": [
-      "tests/unit/gpt_trader/preflight/test_checks_dependencies.py"
+      "tests/unit/gpt_trader/preflight/test_checks_startup.py"
     ],
     "gpt_trader.preflight.checks.diagnostics": [
       "tests/unit/gpt_trader/preflight/test_checks_diagnostics_api_health.py",
-      "tests/unit/gpt_trader/preflight/test_checks_diagnostics_basic.py",
       "tests/unit/gpt_trader/preflight/test_checks_diagnostics_broker.py",
-      "tests/unit/gpt_trader/preflight/test_checks_diagnostics_market.py"
+      "tests/unit/gpt_trader/preflight/test_checks_diagnostics_market.py",
+      "tests/unit/gpt_trader/preflight/test_checks_startup.py"
     ],
     "gpt_trader.preflight.checks.environment": [
       "tests/unit/gpt_trader/preflight/test_checks_environment.py"
     ],
     "gpt_trader.preflight.checks.event_store": [
-      "tests/unit/gpt_trader/preflight/test_checks_event_store.py"
+      "tests/unit/gpt_trader/preflight/test_checks_validation.py"
     ],
     "gpt_trader.preflight.checks.profile": [
       "tests/unit/gpt_trader/preflight/test_checks_profile.py"
@@ -1600,7 +1599,7 @@
       "tests/unit/gpt_trader/preflight/test_checks_system.py"
     ],
     "gpt_trader.preflight.checks.test_suite": [
-      "tests/unit/gpt_trader/preflight/test_checks_test_suite.py"
+      "tests/unit/gpt_trader/preflight/test_checks_validation.py"
     ],
     "gpt_trader.preflight.cli": [
       "tests/unit/gpt_trader/preflight/test_cli.py"
@@ -1614,21 +1613,16 @@
     "gpt_trader.preflight.core": [
       "tests/unit/gpt_trader/preflight/test_checks_connectivity_api_connectivity.py",
       "tests/unit/gpt_trader/preflight/test_checks_connectivity_key_permissions_core.py",
-      "tests/unit/gpt_trader/preflight/test_checks_connectivity_key_permissions_intx.py",
-      "tests/unit/gpt_trader/preflight/test_checks_connectivity_key_permissions_retries.py",
-      "tests/unit/gpt_trader/preflight/test_checks_dependencies.py",
-      "tests/unit/gpt_trader/preflight/test_checks_diagnostics_basic.py",
+      "tests/unit/gpt_trader/preflight/test_checks_connectivity_keys.py",
       "tests/unit/gpt_trader/preflight/test_checks_environment.py",
-      "tests/unit/gpt_trader/preflight/test_checks_event_store.py",
       "tests/unit/gpt_trader/preflight/test_checks_profile.py",
       "tests/unit/gpt_trader/preflight/test_checks_readiness.py",
       "tests/unit/gpt_trader/preflight/test_checks_risk.py",
       "tests/unit/gpt_trader/preflight/test_checks_simulation.py",
+      "tests/unit/gpt_trader/preflight/test_checks_startup.py",
       "tests/unit/gpt_trader/preflight/test_checks_system.py",
-      "tests/unit/gpt_trader/preflight/test_checks_test_suite.py",
-      "tests/unit/gpt_trader/preflight/test_core_delegations.py",
-      "tests/unit/gpt_trader/preflight/test_core_helpers.py",
-      "tests/unit/gpt_trader/preflight/test_core_init.py",
+      "tests/unit/gpt_trader/preflight/test_checks_validation.py",
+      "tests/unit/gpt_trader/preflight/test_core.py",
       "tests/unit/gpt_trader/preflight/test_report.py"
     ],
     "gpt_trader.preflight.report": [
@@ -4396,24 +4390,12 @@
       "gpt_trader.preflight.checks.connectivity",
       "gpt_trader.preflight.core"
     ],
-    "tests/unit/gpt_trader/preflight/test_checks_connectivity_key_permissions_intx.py": [
+    "tests/unit/gpt_trader/preflight/test_checks_connectivity_keys.py": [
       "gpt_trader.preflight.checks.connectivity",
-      "gpt_trader.preflight.core"
-    ],
-    "tests/unit/gpt_trader/preflight/test_checks_connectivity_key_permissions_retries.py": [
-      "gpt_trader.preflight.checks.connectivity",
-      "gpt_trader.preflight.core"
-    ],
-    "tests/unit/gpt_trader/preflight/test_checks_dependencies.py": [
-      "gpt_trader.preflight.checks.dependencies",
       "gpt_trader.preflight.core"
     ],
     "tests/unit/gpt_trader/preflight/test_checks_diagnostics_api_health.py": [
       "gpt_trader.preflight.checks.diagnostics"
-    ],
-    "tests/unit/gpt_trader/preflight/test_checks_diagnostics_basic.py": [
-      "gpt_trader.preflight.checks.diagnostics",
-      "gpt_trader.preflight.core"
     ],
     "tests/unit/gpt_trader/preflight/test_checks_diagnostics_broker.py": [
       "gpt_trader.preflight.checks.diagnostics"
@@ -4423,10 +4405,6 @@
     ],
     "tests/unit/gpt_trader/preflight/test_checks_environment.py": [
       "gpt_trader.preflight.checks.environment",
-      "gpt_trader.preflight.core"
-    ],
-    "tests/unit/gpt_trader/preflight/test_checks_event_store.py": [
-      "gpt_trader.preflight.checks.event_store",
       "gpt_trader.preflight.core"
     ],
     "tests/unit/gpt_trader/preflight/test_checks_profile.py": [
@@ -4448,11 +4426,17 @@
       "gpt_trader.preflight.checks.simulation",
       "gpt_trader.preflight.core"
     ],
+    "tests/unit/gpt_trader/preflight/test_checks_startup.py": [
+      "gpt_trader.preflight.checks.dependencies",
+      "gpt_trader.preflight.checks.diagnostics",
+      "gpt_trader.preflight.core"
+    ],
     "tests/unit/gpt_trader/preflight/test_checks_system.py": [
       "gpt_trader.preflight.checks.system",
       "gpt_trader.preflight.core"
     ],
-    "tests/unit/gpt_trader/preflight/test_checks_test_suite.py": [
+    "tests/unit/gpt_trader/preflight/test_checks_validation.py": [
+      "gpt_trader.preflight.checks.event_store",
       "gpt_trader.preflight.checks.test_suite",
       "gpt_trader.preflight.core"
     ],
@@ -4471,13 +4455,7 @@
     "tests/unit/gpt_trader/preflight/test_context_remote_checks.py": [
       "gpt_trader.preflight.context"
     ],
-    "tests/unit/gpt_trader/preflight/test_core_delegations.py": [
-      "gpt_trader.preflight.core"
-    ],
-    "tests/unit/gpt_trader/preflight/test_core_helpers.py": [
-      "gpt_trader.preflight.core"
-    ],
-    "tests/unit/gpt_trader/preflight/test_core_init.py": [
+    "tests/unit/gpt_trader/preflight/test_core.py": [
       "gpt_trader.preflight.core"
     ],
     "tests/unit/gpt_trader/preflight/test_permissions_backoff.py": [
@@ -5517,15 +5495,15 @@
     "gpt_trader.persistence.durability": "src/gpt_trader/persistence/durability.py",
     "gpt_trader.preflight.checks.connectivity": "src/gpt_trader/preflight/checks/connectivity.py",
     "gpt_trader.preflight.core": "src/gpt_trader/preflight/core.py",
-    "gpt_trader.preflight.checks.dependencies": "src/gpt_trader/preflight/checks/dependencies.py",
     "gpt_trader.preflight.checks.diagnostics": "src/gpt_trader/preflight/checks/diagnostics.py",
     "gpt_trader.preflight.checks.environment": "src/gpt_trader/preflight/checks/environment.py",
-    "gpt_trader.preflight.checks.event_store": "src/gpt_trader/preflight/checks/event_store.py",
     "gpt_trader.preflight.checks.profile": "src/gpt_trader/preflight/checks/profile.py",
     "gpt_trader.preflight.checks.readiness": "src/gpt_trader/preflight/checks/readiness.py",
     "gpt_trader.preflight.checks.risk": "src/gpt_trader/preflight/checks/risk.py",
     "gpt_trader.preflight.checks.simulation": "src/gpt_trader/preflight/checks/simulation.py",
+    "gpt_trader.preflight.checks.dependencies": "src/gpt_trader/preflight/checks/dependencies.py",
     "gpt_trader.preflight.checks.system": "src/gpt_trader/preflight/checks/system.py",
+    "gpt_trader.preflight.checks.event_store": "src/gpt_trader/preflight/checks/event_store.py",
     "gpt_trader.preflight.checks.test_suite": "src/gpt_trader/preflight/checks/test_suite.py",
     "gpt_trader.preflight.cli": "src/gpt_trader/preflight/cli.py",
     "gpt_trader.preflight.context": "src/gpt_trader/preflight/context.py",

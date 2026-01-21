@@ -291,10 +291,12 @@ clusters:
     - gpt_trader.preflight.core
     decision: merge
     target_location: tests/unit/gpt_trader/preflight/test_core.py
-    expected_file_delta: -17
+    expected_file_delta: -5
     priority: high
-    rationale: Consolidate 18 test files into single parametrized file
-    status: pending
+    rationale: Consolidated 18 → 13 files (core + checks, <=240 lines each)
+    status: done
+    owner: claude
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/331
     added: '2026-01-20'
   14389b2ace72:
     type: similar_names

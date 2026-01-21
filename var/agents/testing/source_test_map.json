@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 814,
+    "tests_scanned": 800,
     "source_modules": 355,
     "unresolved_modules": 3
   },
@@ -400,14 +400,9 @@
       "tests/unit/gpt_trader/features/data/test_data_coinbase_runtime_edges.py",
       "tests/unit/gpt_trader/features/data/test_quality_candles.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_equity_calculator.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_daily_tracking.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_equity_and_positions.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_order_flow.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_order_guards.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_order_quantity.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_position_state.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_reduce_only.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_risk_format.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_health.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_orders.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_state.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_order.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_init_and_metrics.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_resilience.py",
@@ -906,7 +901,7 @@
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_decision_trace.py"
     ],
     "gpt_trader.features.live_trade.execution.guard_manager": [
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_guard_failures.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_api_health_guard.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_execution.py",
@@ -978,9 +973,8 @@
       "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_price.py"
     ],
     "gpt_trader.features.live_trade.execution.submission_result": [
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_guard_failures.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_mark_slippage_preview.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_pause_rejection_and_invariants.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_misc.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_router_execute_async.py"
     ],
     "gpt_trader.features.live_trade.execution.validation": [
@@ -991,7 +985,7 @@
       "tests/unit/gpt_trader/app/containers/test_risk_validation.py",
       "tests/unit/gpt_trader/app/test_application_container_registry.py",
       "tests/unit/gpt_trader/app/test_application_container_reset_and_services.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_mark_slippage_preview.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_misc.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_get_validation_metrics.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_validation.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_validation_async.py",
@@ -1005,7 +999,7 @@
       "tests/unit/gpt_trader/features/live_trade/test_strategy_factory.py"
     ],
     "gpt_trader.features.live_trade.guard_errors": [
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_guard_failures.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_api_health_guard.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_daily_loss_guard.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_execution.py",
@@ -1070,26 +1064,19 @@
       "tests/unit/gpt_trader/app/containers/test_risk_validation.py",
       "tests/unit/gpt_trader/config/test_bot_config_mark_staleness_guard.py",
       "tests/unit/gpt_trader/config/test_bot_config_reduce_only_enforcement.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_mark_slippage_preview.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_pause_rejection_and_invariants.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_order_guards.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_misc.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_orders.py",
       "tests/unit/gpt_trader/features/live_trade/risk/test_reduce_only.py",
       "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_exposure.py",
       "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_leverage_and_summary.py",
       "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_liquidation_buffer_and_reduce_only.py",
       "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_models.py",
-      "tests/unit/gpt_trader/features/live_trade/test_risk_manager_daily_pnl.py",
-      "tests/unit/gpt_trader/features/live_trade/test_risk_manager_init_and_stubs.py",
-      "tests/unit/gpt_trader/features/live_trade/test_risk_manager_liquidation_buffer.py",
-      "tests/unit/gpt_trader/features/live_trade/test_risk_manager_mark_staleness.py",
-      "tests/unit/gpt_trader/features/live_trade/test_risk_manager_pre_trade_validate.py",
-      "tests/unit/gpt_trader/features/live_trade/test_risk_manager_reduce_only_mode.py",
-      "tests/unit/gpt_trader/features/live_trade/test_risk_manager_reset_daily_tracking.py",
-      "tests/unit/gpt_trader/features/live_trade/test_risk_manager_risk_metrics.py",
-      "tests/unit/gpt_trader/features/live_trade/test_risk_manager_validation_error.py",
-      "tests/unit/gpt_trader/features/live_trade/test_risk_manager_volatility_breaker.py",
-      "tests/unit/gpt_trader/features/live_trade/test_risk_manager_volatility_check_outcome.py",
-      "tests/unit/gpt_trader/features/live_trade/test_risk_manager_workflows.py"
+      "tests/unit/gpt_trader/features/live_trade/test_risk_manager.py",
+      "tests/unit/gpt_trader/features/live_trade/test_risk_manager_daily.py",
+      "tests/unit/gpt_trader/features/live_trade/test_risk_manager_protection.py",
+      "tests/unit/gpt_trader/features/live_trade/test_risk_manager_validation.py",
+      "tests/unit/gpt_trader/features/live_trade/test_risk_manager_volatility.py"
     ],
     "gpt_trader.features.live_trade.signals.mean_reversion": [
       "tests/unit/gpt_trader/features/live_trade/signals/test_mean_reversion_signal_edges.py",
@@ -1203,13 +1190,11 @@
       "tests/unit/gpt_trader/features/intelligence/ensemble/test_voting_confidence_leader.py",
       "tests/unit/gpt_trader/features/intelligence/ensemble/test_voting_strategy_vote.py",
       "tests/unit/gpt_trader/features/intelligence/ensemble/test_voting_weighted_majority.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_guard_failures.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_mark_slippage_preview.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_pause_rejection_and_invariants.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_order_flow.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_order_guards.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_reduce_only.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_risk_format.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_misc.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_health.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_orders.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_state.py",
       "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_process_symbol_control_flow.py",
       "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_process_symbol_error_handling.py",
       "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_process_symbol_execution.py",
@@ -1481,7 +1466,7 @@
       "tests/unit/gpt_trader/monitoring/test_guard_manager_runtime.py"
     ],
     "gpt_trader.monitoring.health_checks": [
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_health_checks.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_health.py",
       "tests/unit/gpt_trader/monitoring/test_health_checks.py",
       "tests/unit/gpt_trader/monitoring/test_health_checks_runner.py",
       "tests/unit/gpt_trader/monitoring/test_health_checks_signals.py",
@@ -1695,10 +1680,9 @@
       "tests/unit/gpt_trader/security/secrets_manager/test_vault_failures.py"
     ],
     "gpt_trader.security.security_validator": [
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_order_flow.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_order_guards.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_reduce_only.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_risk_format.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_health.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_orders.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_state.py",
       "tests/unit/gpt_trader/security/security_validator/test_convenience_wrappers.py"
     ],
     "gpt_trader.security.symbol_validator": [
@@ -3414,55 +3398,32 @@
       "gpt_trader.features.live_trade.engines.base",
       "gpt_trader.features.live_trade.engines.strategy"
     ],
-    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_guard_failures.py": [
+    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py": [
       "gpt_trader.features.live_trade.execution.guard_manager",
       "gpt_trader.features.live_trade.execution.submission_result",
       "gpt_trader.features.live_trade.guard_errors",
+      "gpt_trader.features.live_trade.risk.manager",
       "gpt_trader.features.live_trade.strategies.perps_baseline"
     ],
-    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_mark_slippage_preview.py": [
+    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_misc.py": [
       "gpt_trader.features.live_trade.execution.submission_result",
       "gpt_trader.features.live_trade.execution.validation",
       "gpt_trader.features.live_trade.risk.manager",
       "gpt_trader.features.live_trade.strategies.perps_baseline"
     ],
-    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_pause_rejection_and_invariants.py": [
-      "gpt_trader.features.live_trade.execution.submission_result",
-      "gpt_trader.features.live_trade.risk.manager",
-      "gpt_trader.features.live_trade.strategies.perps_baseline"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_daily_tracking.py": [
-      "gpt_trader.core"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_equity_and_positions.py": [
-      "gpt_trader.core"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_health_checks.py": [
-      "gpt_trader.monitoring.health_checks"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_order_flow.py": [
+    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_health.py": [
       "gpt_trader.core",
       "gpt_trader.features.live_trade.strategies.perps_baseline",
+      "gpt_trader.monitoring.health_checks",
       "gpt_trader.security.security_validator"
     ],
-    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_order_guards.py": [
+    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_orders.py": [
       "gpt_trader.core",
       "gpt_trader.features.live_trade.risk.manager",
       "gpt_trader.features.live_trade.strategies.perps_baseline",
       "gpt_trader.security.security_validator"
     ],
-    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_order_quantity.py": [
-      "gpt_trader.core"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_position_state.py": [
-      "gpt_trader.core"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_reduce_only.py": [
-      "gpt_trader.core",
-      "gpt_trader.features.live_trade.strategies.perps_baseline",
-      "gpt_trader.security.security_validator"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_risk_format.py": [
+    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_state.py": [
       "gpt_trader.core",
       "gpt_trader.features.live_trade.strategies.perps_baseline",
       "gpt_trader.security.security_validator"
@@ -3972,40 +3933,19 @@
       "gpt_trader.features.live_trade.risk",
       "gpt_trader.features.live_trade.risk.config"
     ],
-    "tests/unit/gpt_trader/features/live_trade/test_risk_manager_daily_pnl.py": [
+    "tests/unit/gpt_trader/features/live_trade/test_risk_manager.py": [
       "gpt_trader.features.live_trade.risk.manager"
     ],
-    "tests/unit/gpt_trader/features/live_trade/test_risk_manager_init_and_stubs.py": [
+    "tests/unit/gpt_trader/features/live_trade/test_risk_manager_daily.py": [
       "gpt_trader.features.live_trade.risk.manager"
     ],
-    "tests/unit/gpt_trader/features/live_trade/test_risk_manager_liquidation_buffer.py": [
+    "tests/unit/gpt_trader/features/live_trade/test_risk_manager_protection.py": [
       "gpt_trader.features.live_trade.risk.manager"
     ],
-    "tests/unit/gpt_trader/features/live_trade/test_risk_manager_mark_staleness.py": [
+    "tests/unit/gpt_trader/features/live_trade/test_risk_manager_validation.py": [
       "gpt_trader.features.live_trade.risk.manager"
     ],
-    "tests/unit/gpt_trader/features/live_trade/test_risk_manager_pre_trade_validate.py": [
-      "gpt_trader.features.live_trade.risk.manager"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/test_risk_manager_reduce_only_mode.py": [
-      "gpt_trader.features.live_trade.risk.manager"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/test_risk_manager_reset_daily_tracking.py": [
-      "gpt_trader.features.live_trade.risk.manager"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/test_risk_manager_risk_metrics.py": [
-      "gpt_trader.features.live_trade.risk.manager"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/test_risk_manager_validation_error.py": [
-      "gpt_trader.features.live_trade.risk.manager"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/test_risk_manager_volatility_breaker.py": [
-      "gpt_trader.features.live_trade.risk.manager"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/test_risk_manager_volatility_check_outcome.py": [
-      "gpt_trader.features.live_trade.risk.manager"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/test_risk_manager_workflows.py": [
+    "tests/unit/gpt_trader/features/live_trade/test_risk_manager_volatility.py": [
       "gpt_trader.features.live_trade.risk.manager"
     ],
     "tests/unit/gpt_trader/features/live_trade/test_risk_time_windows.py": [

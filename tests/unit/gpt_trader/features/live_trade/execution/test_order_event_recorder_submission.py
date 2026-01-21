@@ -1,4 +1,4 @@
-"""Tests for OrderEventRecorder.record_broker_rejection."""
+"""Tests for OrderEventRecorder submission methods: broker_rejection and submission_attempt."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 import pytest
 
 import gpt_trader.features.live_trade.execution.order_event_recorder as recorder_module
-from gpt_trader.core import OrderSide
+from gpt_trader.core import OrderSide, OrderType
 from gpt_trader.features.live_trade.execution.order_event_recorder import OrderEventRecorder
 
 
@@ -125,3 +125,68 @@ class TestRecordBrokerRejection:
         )
         emit_metric_mock.assert_called_once()
         mock_event_store.append_error.assert_called_once()
+
+
+class TestRecordSubmissionAttempt:
+    """Tests for record_submission_attempt method."""
+
+    def test_record_submission_attempt_logs_correctly(
+        self,
+        order_event_recorder: OrderEventRecorder,
+        monitoring_logger: MagicMock,
+    ) -> None:
+        """Test that submission attempt is logged correctly."""
+        order_event_recorder.record_submission_attempt(
+            submit_id="client-123",
+            symbol="BTC-USD",
+            side=OrderSide.BUY,
+            order_type=OrderType.LIMIT,
+            quantity=Decimal("1.5"),
+            price=Decimal("50000"),
+        )
+
+        monitoring_logger.log_order_submission.assert_called_once_with(
+            client_order_id="client-123",
+            symbol="BTC-USD",
+            side="BUY",
+            order_type="LIMIT",
+            quantity=1.5,
+            price=50000.0,
+        )
+
+    def test_record_submission_attempt_handles_none_price(
+        self,
+        order_event_recorder: OrderEventRecorder,
+        monitoring_logger: MagicMock,
+    ) -> None:
+        """Test that submission attempt handles None price."""
+        order_event_recorder.record_submission_attempt(
+            submit_id="client-123",
+            symbol="BTC-USD",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("1.0"),
+            price=None,
+        )
+
+        call_kwargs = monitoring_logger.log_order_submission.call_args.kwargs
+        assert call_kwargs["price"] is None
+
+    def test_record_submission_attempt_handles_exception(
+        self,
+        order_event_recorder: OrderEventRecorder,
+        monitoring_logger: MagicMock,
+    ) -> None:
+        """Test that submission attempt handles exceptions gracefully."""
+        monitoring_logger.log_order_submission.side_effect = RuntimeError("Log failure")
+
+        # Should not raise
+        order_event_recorder.record_submission_attempt(
+            submit_id="client-123",
+            symbol="BTC-USD",
+            side=OrderSide.BUY,
+            order_type=OrderType.LIMIT,
+            quantity=Decimal("1.0"),
+            price=Decimal("50000"),
+        )
+        monitoring_logger.log_order_submission.assert_called_once()

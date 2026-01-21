@@ -1,4 +1,4 @@
-"""Tests for OrderEventRecorder.record_rejection."""
+"""Tests for OrderEventRecorder rejection methods: record_rejection, integration_rejection, failure."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ from unittest.mock import MagicMock
 import pytest
 
 import gpt_trader.features.live_trade.execution.order_event_recorder as recorder_module
+from gpt_trader.core import OrderSide
 from gpt_trader.features.live_trade.execution.order_event_recorder import OrderEventRecorder
 
 
@@ -111,3 +112,100 @@ class TestRecordRejection:
         )
         emit_metric_mock.assert_called_once()
         monitoring_logger.log_order_status_change.assert_called_once()
+
+
+class TestRecordIntegrationRejection:
+    """Tests for record_integration_rejection method."""
+
+    def test_record_integration_rejection_stores_event(
+        self,
+        order_event_recorder: OrderEventRecorder,
+        order_event_mock_order: MagicMock,
+        mock_event_store: MagicMock,
+    ) -> None:
+        """Test that integration rejection stores event."""
+        order_event_recorder.record_integration_rejection(
+            order=order_event_mock_order,
+            symbol="BTC-USD",
+            status_name="CANCELLED",
+        )
+
+        mock_event_store.store_event.assert_called_once_with(
+            "order_rejected",
+            {
+                "order_id": "order-123",
+                "symbol": "BTC-USD",
+                "status": "CANCELLED",
+            },
+        )
+
+    def test_record_integration_rejection_with_different_status(
+        self,
+        order_event_recorder: OrderEventRecorder,
+        order_event_mock_order: MagicMock,
+        mock_event_store: MagicMock,
+    ) -> None:
+        """Test that different status names are handled."""
+        order_event_mock_order.id = "order-456"
+
+        order_event_recorder.record_integration_rejection(
+            order=order_event_mock_order,
+            symbol="ETH-USD",
+            status_name="FAILED",
+        )
+
+        mock_event_store.store_event.assert_called_once_with(
+            "order_rejected",
+            {
+                "order_id": "order-456",
+                "symbol": "ETH-USD",
+                "status": "FAILED",
+            },
+        )
+
+
+class TestRecordFailure:
+    """Tests for record_failure method."""
+
+    def test_record_failure_appends_error_to_event_store(
+        self,
+        order_event_recorder: OrderEventRecorder,
+        mock_event_store: MagicMock,
+    ) -> None:
+        """Test that failure is recorded to event store."""
+        exc = RuntimeError("Order failed")
+
+        order_event_recorder.record_failure(
+            exc=exc,
+            symbol="BTC-USD",
+            side=OrderSide.BUY,
+            quantity=Decimal("1.0"),
+        )
+
+        mock_event_store.append_error.assert_called_once_with(
+            bot_id="test-bot-123",
+            message="order_placement_failed",
+            context={
+                "symbol": "BTC-USD",
+                "side": "BUY",
+                "quantity": "1.0",
+            },
+        )
+
+    def test_record_failure_handles_store_exception(
+        self,
+        order_event_recorder: OrderEventRecorder,
+        mock_event_store: MagicMock,
+    ) -> None:
+        """Test that record_failure handles store exceptions."""
+        mock_event_store.append_error.side_effect = RuntimeError("Store failure")
+        exc = RuntimeError("Order failed")
+
+        # Should not raise
+        order_event_recorder.record_failure(
+            exc=exc,
+            symbol="BTC-USD",
+            side=OrderSide.BUY,
+            quantity=Decimal("1.0"),
+        )
+        mock_event_store.append_error.assert_called_once()

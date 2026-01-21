@@ -3,41 +3,83 @@
 from __future__ import annotations
 
 import logging
+from unittest.mock import Mock
 
 from gpt_trader.config.types import Profile
 from gpt_trader.features.live_trade import symbols
 from tests.unit.gpt_trader.features.live_trade.symbols_test_helpers import (
+    make_bot_config,
     make_bot_config_extended,
 )
 
 
-def test_symbol_normalization_log_dataclass() -> None:
-    """Test SymbolNormalizationLog dataclass."""
-    log = symbols.SymbolNormalizationLog(
-        level=logging.WARNING, message="Test message %s", args=("test_arg",)
-    )
+class TestDerivativesEnabled:
+    """Tests for derivatives_enabled function."""
 
-    assert log.level == logging.WARNING
-    assert log.message == "Test message %s"
-    assert log.args == ("test_arg",)
+    def test_derivatives_enabled_with_spot_profile(self) -> None:
+        """Test derivatives_enabled returns False for SPOT profile."""
+        config = make_bot_config(derivatives_enabled=False)
+        result = symbols.derivatives_enabled(Profile.SPOT, config=config)
+        assert result is False
 
-    # Test with default args
-    log_default = symbols.SymbolNormalizationLog(level=logging.INFO, message="Test message")
+        string_profile = Mock()
+        string_profile.value = "spot"
+        result = symbols.derivatives_enabled(string_profile, config=config)
+        assert result is False
 
-    assert log_default.args == ()
+        result = symbols.derivatives_enabled("spot", config=config)
+        assert result is False
+
+    def test_derivatives_enabled_with_config_override(self) -> None:
+        """Test derivatives_enabled respects config setting."""
+        config = make_bot_config(derivatives_enabled=True)
+        result = symbols.derivatives_enabled(Profile.PROD, config=config)
+        assert result is True
+
+        config = make_bot_config(derivatives_enabled=False)
+        result = symbols.derivatives_enabled(Profile.PROD, config=config)
+        assert result is False
+
+    def test_derivatives_enabled_edge_cases(self) -> None:
+        """Test derivatives_enabled with edge cases and import failures."""
+        config = make_bot_config(derivatives_enabled=False)
+
+        result = symbols.derivatives_enabled(None, config=config)
+        assert result is False
+
+        profile_no_value = Mock()
+        del profile_no_value.value
+        result = symbols.derivatives_enabled(profile_no_value, config=config)
+        assert result is False
 
 
-def test_perps_allowlist_constant() -> None:
-    """Test PERPS_ALLOWLIST constant contains expected symbols."""
-    expected_symbols = {"BTC-PERP", "ETH-PERP", "SOL-PERP", "XRP-PERP"}
-    assert symbols.PERPS_ALLOWLIST == expected_symbols
-    assert isinstance(symbols.PERPS_ALLOWLIST, frozenset)
+class TestSymbolNormalizationLog:
+    """Tests for SymbolNormalizationLog dataclass."""
+
+    def test_dataclass_fields(self) -> None:
+        log = symbols.SymbolNormalizationLog(
+            level=logging.WARNING, message="Test message %s", args=("test_arg",)
+        )
+        assert log.level == logging.WARNING
+        assert log.message == "Test message %s"
+        assert log.args == ("test_arg",)
+
+    def test_default_args(self) -> None:
+        log_default = symbols.SymbolNormalizationLog(level=logging.INFO, message="Test message")
+        assert log_default.args == ()
 
 
-def test_us_futures_allowlist_constant() -> None:
-    """Test US_FUTURES_ALLOWLIST constant contains expected symbols."""
-    expected_symbols = {"BTC-FUTURES", "ETH-FUTURES", "SOL-FUTURES", "XRP-FUTURES"}
-    assert symbols.US_FUTURES_ALLOWLIST == expected_symbols
+class TestAllowlistConstants:
+    """Tests for allowlist constants."""
+
+    def test_perps_allowlist_constant(self) -> None:
+        expected_symbols = {"BTC-PERP", "ETH-PERP", "SOL-PERP", "XRP-PERP"}
+        assert symbols.PERPS_ALLOWLIST == expected_symbols
+        assert isinstance(symbols.PERPS_ALLOWLIST, frozenset)
+
+    def test_us_futures_allowlist_constant(self) -> None:
+        expected_symbols = {"BTC-FUTURES", "ETH-FUTURES", "SOL-FUTURES", "XRP-FUTURES"}
+        assert symbols.US_FUTURES_ALLOWLIST == expected_symbols
 
 
 class TestUsFuturesEnabled:

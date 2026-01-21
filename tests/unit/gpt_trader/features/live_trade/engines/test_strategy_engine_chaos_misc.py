@@ -1,16 +1,40 @@
-"""Chaos tests for TradingEngine symbol-level degradation cases."""
+"""Chaos tests for TradingEngine: broker outage, mark staleness, slippage, preview, order audit."""
 
 from __future__ import annotations
 
+import time
 from decimal import Decimal
 
 import pytest
 from strategy_engine_chaos_fixtures import make_position
+from tests.support.chaos import ChaosBroker, broker_read_failures_scenario
 
 from gpt_trader.features.live_trade.execution.submission_result import OrderSubmissionStatus
 from gpt_trader.features.live_trade.strategies.perps_baseline import Action, Decision
 
 pytest_plugins = ["strategy_engine_chaos_fixtures"]
+
+
+class TestBrokerOutageDegradation:
+    @pytest.mark.asyncio
+    async def test_broker_failures_trigger_pause_after_threshold(
+        self, engine, mock_broker, mock_risk_config
+    ) -> None:
+        engine.context.broker = ChaosBroker(mock_broker, broker_read_failures_scenario(times=3))
+        await engine._fetch_total_equity({})
+        assert engine._degradation._broker_failures == 1
+        await engine._fetch_total_equity({})
+        assert engine._degradation._broker_failures == 2
+        await engine._fetch_total_equity({})
+        assert engine._degradation.is_paused() and "broker_outage" in (
+            engine._degradation.get_pause_reason() or ""
+        )
+
+    @pytest.mark.asyncio
+    async def test_successful_broker_call_resets_counter(self, engine, mock_broker) -> None:
+        engine._degradation._broker_failures = 2
+        await engine._fetch_total_equity({})
+        assert engine._degradation._broker_failures == 0
 
 
 class TestMarkStalenessDegradation:
@@ -75,3 +99,30 @@ class TestPreviewDisableDegradation:
         )
         assert result.status in (OrderSubmissionStatus.SUCCESS, OrderSubmissionStatus.BLOCKED)
         assert engine._order_validator.enable_order_preview is False
+
+
+class TestOrderAuditAlerts:
+    @pytest.mark.asyncio
+    async def test_unfilled_order_alert_emitted_once(self, engine) -> None:
+        engine.context.risk_manager.config.unfilled_order_alert_seconds = 1
+        engine.context.broker.list_orders.return_value = {
+            "orders": [
+                {
+                    "order_id": "order-1",
+                    "product_id": "BTC-USD",
+                    "side": "BUY",
+                    "status": "OPEN",
+                    "created_time": time.time() - 10,
+                }
+            ]
+        }
+
+        await engine._audit_orders()
+        events = engine._event_store.list_events()
+        alert_events = [e for e in events if e.get("type") == "unfilled_order_alert"]
+        assert len(alert_events) == 1
+
+        await engine._audit_orders()
+        events = engine._event_store.list_events()
+        alert_events = [e for e in events if e.get("type") == "unfilled_order_alert"]
+        assert len(alert_events) == 1

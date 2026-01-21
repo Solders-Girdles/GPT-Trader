@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6310,
-    "total_files": 855,
+    "total_files": 848,
     "markers_used": 15
   },
   "marker_definitions": {
@@ -431,17 +431,10 @@
       "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_runtime.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_liquidation_buffer_guard.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_mark_staleness_and_risk_metrics_guard.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_broker_rejection.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_decision_trace.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_edge_cases.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_failure.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_init.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_preview.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_rejection.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_rejection_recording.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_submission_attempt.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_success.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_trade_event.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_submission.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_failure.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_preview.py",
@@ -22266,7 +22259,247 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_broker_rejection.py": [
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder.py": [
+      {
+        "name": "TestOrderEventRecorderInit::test_init_stores_event_store",
+        "line": 19,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that event_store is stored correctly.",
+        "class": "TestOrderEventRecorderInit"
+      },
+      {
+        "name": "TestOrderEventRecorderInit::test_init_stores_bot_id",
+        "line": 24,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that bot_id is stored correctly.",
+        "class": "TestOrderEventRecorderInit"
+      },
+      {
+        "name": "TestRecordDecisionTrace::test_record_decision_trace_includes_decision_id",
+        "line": 33,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestRecordDecisionTrace"
+      },
+      {
+        "name": "TestOrderEventRecorderEdgeCases::test_recorder_with_empty_bot_id",
+        "line": 61,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test recorder with empty bot_id.",
+        "class": "TestOrderEventRecorderEdgeCases"
+      },
+      {
+        "name": "TestOrderEventRecorderEdgeCases::test_record_rejection_with_decimal_quantity",
+        "line": 66,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test rejection with high precision decimal quantity.",
+        "class": "TestOrderEventRecorderEdgeCases"
+      },
+      {
+        "name": "TestOrderEventRecorderEdgeCases::test_record_trade_event_uses_order_quantity_when_available",
+        "line": 89,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that order.quantity is used when available.",
+        "class": "TestOrderEventRecorderEdgeCases"
+      },
+      {
+        "name": "TestRecordTradeEvent::test_record_trade_event_logs_status_change",
+        "line": 131,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that trade event logs status change.",
+        "class": "TestRecordTradeEvent"
+      },
+      {
+        "name": "TestRecordTradeEvent::test_record_trade_event_appends_to_event_store",
+        "line": 155,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that trade event is appended to event store.",
+        "class": "TestRecordTradeEvent"
+      },
+      {
+        "name": "TestRecordTradeEvent::test_record_trade_event_handles_log_exception",
+        "line": 181,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that trade event handles log exceptions.",
+        "class": "TestRecordTradeEvent"
+      },
+      {
+        "name": "TestRecordTradeEvent::test_record_trade_event_handles_store_exception",
+        "line": 205,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that trade event handles event store exceptions.",
+        "class": "TestRecordTradeEvent"
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_preview.py": [
+      {
+        "name": "TestRecordPreview::test_record_preview_skips_when_preview_is_none",
+        "line": 32,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that record_preview does nothing when preview is None.",
+        "class": "TestRecordPreview"
+      },
+      {
+        "name": "TestRecordPreview::test_record_preview_emits_metric",
+        "line": 50,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that record_preview emits metric with correct data.",
+        "class": "TestRecordPreview"
+      },
+      {
+        "name": "TestRecordPreview::test_record_preview_uses_market_for_none_price",
+        "line": 82,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that 'market' is used when price is None.",
+        "class": "TestRecordPreview"
+      },
+      {
+        "name": "TestRecordPreview::test_record_preview_logs_event",
+        "line": 101,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that record_preview logs to monitoring logger.",
+        "class": "TestRecordPreview"
+      },
+      {
+        "name": "TestRecordPreview::test_record_preview_handles_log_exception",
+        "line": 124,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that record_preview handles logging exceptions gracefully.",
+        "class": "TestRecordPreview"
+      },
+      {
+        "name": "TestRecordSuccess::test_record_success_logs_order_info",
+        "line": 149,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that successful order is logged.",
+        "class": "TestRecordSuccess"
+      },
+      {
+        "name": "TestRecordSuccess::test_record_success_handles_reduce_only",
+        "line": 174,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that reduce_only flag is handled.",
+        "class": "TestRecordSuccess"
+      },
+      {
+        "name": "TestRecordSuccess::test_record_success_handles_market_price",
+        "line": 196,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that 'market' as display_price is handled.",
+        "class": "TestRecordSuccess"
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_rejection.py": [
+      {
+        "name": "TestRecordRejection::test_record_rejection_emits_metric",
+        "line": 32,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that record_rejection emits metric with correct data.",
+        "class": "TestRecordRejection"
+      },
+      {
+        "name": "TestRecordRejection::test_record_rejection_logs_status_change",
+        "line": 55,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that record_rejection logs order status change.",
+        "class": "TestRecordRejection"
+      },
+      {
+        "name": "TestRecordRejection::test_record_rejection_handles_none_price",
+        "line": 78,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that record_rejection handles None price.",
+        "class": "TestRecordRejection"
+      },
+      {
+        "name": "TestRecordRejection::test_record_rejection_handles_log_exception",
+        "line": 96,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that record_rejection handles logging exceptions.",
+        "class": "TestRecordRejection"
+      },
+      {
+        "name": "TestRecordIntegrationRejection::test_record_integration_rejection_stores_event",
+        "line": 120,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that integration rejection stores event.",
+        "class": "TestRecordIntegrationRejection"
+      },
+      {
+        "name": "TestRecordIntegrationRejection::test_record_integration_rejection_with_different_status",
+        "line": 142,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that different status names are handled.",
+        "class": "TestRecordIntegrationRejection"
+      },
+      {
+        "name": "TestRecordFailure::test_record_failure_appends_error_to_event_store",
+        "line": 170,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that failure is recorded to event store.",
+        "class": "TestRecordFailure"
+      },
+      {
+        "name": "TestRecordFailure::test_record_failure_handles_store_exception",
+        "line": 195,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that record_failure handles store exceptions.",
+        "class": "TestRecordFailure"
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_submission.py": [
       {
         "name": "TestRecordBrokerRejection::test_record_broker_rejection_calls_record_rejection",
         "line": 32,
@@ -22302,197 +22535,10 @@
         ],
         "docstring": "Test that broker rejection handles store exceptions.",
         "class": "TestRecordBrokerRejection"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_decision_trace.py": [
-      {
-        "name": "TestRecordDecisionTrace::test_record_decision_trace_includes_decision_id",
-        "line": 15,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestRecordDecisionTrace"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_edge_cases.py": [
-      {
-        "name": "TestOrderEventRecorderEdgeCases::test_recorder_with_empty_bot_id",
-        "line": 17,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test recorder with empty bot_id.",
-        "class": "TestOrderEventRecorderEdgeCases"
       },
-      {
-        "name": "TestOrderEventRecorderEdgeCases::test_record_rejection_with_decimal_quantity",
-        "line": 22,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test rejection with high precision decimal quantity.",
-        "class": "TestOrderEventRecorderEdgeCases"
-      },
-      {
-        "name": "TestOrderEventRecorderEdgeCases::test_record_trade_event_uses_order_quantity_when_available",
-        "line": 47,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that order.quantity is used when available.",
-        "class": "TestOrderEventRecorderEdgeCases"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_failure.py": [
-      {
-        "name": "TestRecordFailure::test_record_failure_appends_error_to_event_store",
-        "line": 15,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that failure is recorded to event store.",
-        "class": "TestRecordFailure"
-      },
-      {
-        "name": "TestRecordFailure::test_record_failure_handles_store_exception",
-        "line": 40,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that record_failure handles store exceptions.",
-        "class": "TestRecordFailure"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_init.py": [
-      {
-        "name": "TestOrderEventRecorderInit::test_init_stores_event_store",
-        "line": 13,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that event_store is stored correctly.",
-        "class": "TestOrderEventRecorderInit"
-      },
-      {
-        "name": "TestOrderEventRecorderInit::test_init_stores_bot_id",
-        "line": 18,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that bot_id is stored correctly.",
-        "class": "TestOrderEventRecorderInit"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_preview.py": [
-      {
-        "name": "TestRecordPreview::test_record_preview_skips_when_preview_is_none",
-        "line": 35,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that record_preview does nothing when preview is None.",
-        "class": "TestRecordPreview"
-      },
-      {
-        "name": "TestRecordPreview::test_record_preview_emits_metric",
-        "line": 53,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that record_preview emits metric with correct data.",
-        "class": "TestRecordPreview"
-      },
-      {
-        "name": "TestRecordPreview::test_record_preview_uses_market_for_none_price",
-        "line": 85,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that 'market' is used when price is None.",
-        "class": "TestRecordPreview"
-      },
-      {
-        "name": "TestRecordPreview::test_record_preview_logs_event",
-        "line": 104,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that record_preview logs to monitoring logger.",
-        "class": "TestRecordPreview"
-      },
-      {
-        "name": "TestRecordPreview::test_record_preview_handles_log_exception",
-        "line": 127,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that record_preview handles logging exceptions gracefully.",
-        "class": "TestRecordPreview"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_rejection.py": [
-      {
-        "name": "TestRecordRejection::test_record_rejection_emits_metric",
-        "line": 31,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that record_rejection emits metric with correct data.",
-        "class": "TestRecordRejection"
-      },
-      {
-        "name": "TestRecordRejection::test_record_rejection_logs_status_change",
-        "line": 54,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that record_rejection logs order status change.",
-        "class": "TestRecordRejection"
-      },
-      {
-        "name": "TestRecordRejection::test_record_rejection_handles_none_price",
-        "line": 77,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that record_rejection handles None price.",
-        "class": "TestRecordRejection"
-      },
-      {
-        "name": "TestRecordRejection::test_record_rejection_handles_log_exception",
-        "line": 95,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that record_rejection handles logging exceptions.",
-        "class": "TestRecordRejection"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_rejection_recording.py": [
-      {
-        "name": "TestRecordIntegrationRejection::test_record_integration_rejection_stores_event",
-        "line": 13,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that integration rejection stores event.",
-        "class": "TestRecordIntegrationRejection"
-      },
-      {
-        "name": "TestRecordIntegrationRejection::test_record_integration_rejection_with_different_status",
-        "line": 35,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that different status names are handled.",
-        "class": "TestRecordIntegrationRejection"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_submission_attempt.py": [
       {
         "name": "TestRecordSubmissionAttempt::test_record_submission_attempt_logs_correctly",
-        "line": 18,
+        "line": 133,
         "markers": [
           "unit"
         ],
@@ -22501,7 +22547,7 @@
       },
       {
         "name": "TestRecordSubmissionAttempt::test_record_submission_attempt_handles_none_price",
-        "line": 47,
+        "line": 157,
         "markers": [
           "unit"
         ],
@@ -22510,79 +22556,12 @@
       },
       {
         "name": "TestRecordSubmissionAttempt::test_record_submission_attempt_handles_exception",
-        "line": 70,
+        "line": 175,
         "markers": [
           "unit"
         ],
         "docstring": "Test that submission attempt handles exceptions gracefully.",
         "class": "TestRecordSubmissionAttempt"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_success.py": [
-      {
-        "name": "TestRecordSuccess::test_record_success_logs_order_info",
-        "line": 18,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that successful order is logged.",
-        "class": "TestRecordSuccess"
-      },
-      {
-        "name": "TestRecordSuccess::test_record_success_handles_reduce_only",
-        "line": 43,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that reduce_only flag is handled.",
-        "class": "TestRecordSuccess"
-      },
-      {
-        "name": "TestRecordSuccess::test_record_success_handles_market_price",
-        "line": 65,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that 'market' as display_price is handled.",
-        "class": "TestRecordSuccess"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_trade_event.py": [
-      {
-        "name": "TestRecordTradeEvent::test_record_trade_event_logs_status_change",
-        "line": 25,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that trade event logs status change.",
-        "class": "TestRecordTradeEvent"
-      },
-      {
-        "name": "TestRecordTradeEvent::test_record_trade_event_appends_to_event_store",
-        "line": 49,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that trade event is appended to event store.",
-        "class": "TestRecordTradeEvent"
-      },
-      {
-        "name": "TestRecordTradeEvent::test_record_trade_event_handles_log_exception",
-        "line": 75,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that trade event handles log exceptions.",
-        "class": "TestRecordTradeEvent"
-      },
-      {
-        "name": "TestRecordTradeEvent::test_record_trade_event_handles_store_exception",
-        "line": 99,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that trade event handles event store exceptions.",
-        "class": "TestRecordTradeEvent"
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core.py": [

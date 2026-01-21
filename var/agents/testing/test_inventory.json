@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6310,
-    "total_files": 848,
+    "total_files": 843,
     "markers_used": 15
   },
   "marker_definitions": {
@@ -675,29 +675,24 @@
     "preflight": [
       "tests/unit/gpt_trader/preflight/test_checks_connectivity_api_connectivity.py",
       "tests/unit/gpt_trader/preflight/test_checks_connectivity_key_permissions_core.py",
-      "tests/unit/gpt_trader/preflight/test_checks_connectivity_key_permissions_intx.py",
-      "tests/unit/gpt_trader/preflight/test_checks_connectivity_key_permissions_retries.py",
-      "tests/unit/gpt_trader/preflight/test_checks_dependencies.py",
+      "tests/unit/gpt_trader/preflight/test_checks_connectivity_keys.py",
       "tests/unit/gpt_trader/preflight/test_checks_diagnostics_api_health.py",
-      "tests/unit/gpt_trader/preflight/test_checks_diagnostics_basic.py",
       "tests/unit/gpt_trader/preflight/test_checks_diagnostics_broker.py",
       "tests/unit/gpt_trader/preflight/test_checks_diagnostics_market.py",
       "tests/unit/gpt_trader/preflight/test_checks_environment.py",
-      "tests/unit/gpt_trader/preflight/test_checks_event_store.py",
       "tests/unit/gpt_trader/preflight/test_checks_profile.py",
       "tests/unit/gpt_trader/preflight/test_checks_readiness.py",
       "tests/unit/gpt_trader/preflight/test_checks_risk.py",
       "tests/unit/gpt_trader/preflight/test_checks_simulation.py",
+      "tests/unit/gpt_trader/preflight/test_checks_startup.py",
       "tests/unit/gpt_trader/preflight/test_checks_system.py",
-      "tests/unit/gpt_trader/preflight/test_checks_test_suite.py",
+      "tests/unit/gpt_trader/preflight/test_checks_validation.py",
       "tests/unit/gpt_trader/preflight/test_cli.py",
       "tests/unit/gpt_trader/preflight/test_context_colors_and_init.py",
       "tests/unit/gpt_trader/preflight/test_context_credentials.py",
       "tests/unit/gpt_trader/preflight/test_context_logging.py",
       "tests/unit/gpt_trader/preflight/test_context_remote_checks.py",
-      "tests/unit/gpt_trader/preflight/test_core_delegations.py",
-      "tests/unit/gpt_trader/preflight/test_core_helpers.py",
-      "tests/unit/gpt_trader/preflight/test_core_init.py",
+      "tests/unit/gpt_trader/preflight/test_core.py",
       "tests/unit/gpt_trader/preflight/test_permissions_backoff.py",
       "tests/unit/gpt_trader/preflight/test_report.py",
       "tests/unit/gpt_trader/preflight/test_validation_result.py"
@@ -37946,10 +37941,10 @@
         "class": "TestCheckKeyPermissionsCore"
       }
     ],
-    "tests/unit/gpt_trader/preflight/test_checks_connectivity_key_permissions_intx.py": [
+    "tests/unit/gpt_trader/preflight/test_checks_connectivity_keys.py": [
       {
         "name": "TestCheckKeyPermissionsIntx::test_passes_intx_check_when_derivatives_enabled",
-        "line": 23,
+        "line": 27,
         "markers": [
           "unit"
         ],
@@ -37958,7 +37953,7 @@
       },
       {
         "name": "TestCheckKeyPermissionsIntx::test_fails_intx_check_when_wrong_portfolio_type",
-        "line": 53,
+        "line": 57,
         "markers": [
           "unit"
         ],
@@ -37967,18 +37962,16 @@
       },
       {
         "name": "TestCheckKeyPermissionsIntx::test_logs_intx_available_when_disabled",
-        "line": 83,
+        "line": 87,
         "markers": [
           "unit"
         ],
         "docstring": "Should log INTX available when derivatives disabled but INTX portfolio.",
         "class": "TestCheckKeyPermissionsIntx"
-      }
-    ],
-    "tests/unit/gpt_trader/preflight/test_checks_connectivity_key_permissions_retries.py": [
+      },
       {
         "name": "TestCheckKeyPermissionsRetries::test_retries_on_transient_errors",
-        "line": 32,
+        "line": 138,
         "markers": [
           "unit"
         ],
@@ -37987,7 +37980,7 @@
       },
       {
         "name": "TestCheckKeyPermissionsRetries::test_fails_after_max_retries",
-        "line": 53,
+        "line": 159,
         "markers": [
           "unit"
         ],
@@ -37996,7 +37989,7 @@
       },
       {
         "name": "TestCheckKeyPermissionsRetries::test_fails_on_non_transient_error",
-        "line": 69,
+        "line": 175,
         "markers": [
           "unit"
         ],
@@ -38005,68 +37998,12 @@
       },
       {
         "name": "TestCheckKeyPermissionsRetries::test_fails_on_empty_permissions_response",
-        "line": 85,
+        "line": 191,
         "markers": [
           "unit"
         ],
         "docstring": "Should fail when permissions response is empty/None.",
         "class": "TestCheckKeyPermissionsRetries"
-      }
-    ],
-    "tests/unit/gpt_trader/preflight/test_checks_dependencies.py": [
-      {
-        "name": "TestCheckDependencies::test_passes_when_all_packages_available",
-        "line": 17,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should pass when all required packages are importable.",
-        "class": "TestCheckDependencies"
-      },
-      {
-        "name": "TestCheckDependencies::test_fails_when_package_missing",
-        "line": 41,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should fail when a required package is missing.",
-        "class": "TestCheckDependencies"
-      },
-      {
-        "name": "TestCheckDependencies::test_logs_found_packages_when_verbose",
-        "line": 62,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should log found packages when verbose.",
-        "class": "TestCheckDependencies"
-      },
-      {
-        "name": "TestCheckDependencies::test_prints_section_header",
-        "line": 85,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should print section header.",
-        "class": "TestCheckDependencies"
-      },
-      {
-        "name": "TestCheckDependencies::test_checks_gpt_trader_package",
-        "line": 107,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should specifically check gpt_trader package.",
-        "class": "TestCheckDependencies"
-      },
-      {
-        "name": "TestCheckDependencies::test_checks_cryptography_package",
-        "line": 129,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should check cryptography package is available.",
-        "class": "TestCheckDependencies"
       }
     ],
     "tests/unit/gpt_trader/preflight/test_checks_diagnostics_api_health.py": [
@@ -38088,44 +38025,6 @@
         ],
         "docstring": "Should skip API health check when resilience status not available.",
         "class": "TestApiHealthCheck"
-      }
-    ],
-    "tests/unit/gpt_trader/preflight/test_checks_diagnostics_basic.py": [
-      {
-        "name": "TestCheckPretradeDiagnostics::test_skips_when_remote_checks_bypassed",
-        "line": 14,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should skip and succeed when remote checks are bypassed.",
-        "class": "TestCheckPretradeDiagnostics"
-      },
-      {
-        "name": "TestCheckPretradeDiagnostics::test_fails_when_client_build_fails",
-        "line": 25,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should fail when CDP client cannot be built.",
-        "class": "TestCheckPretradeDiagnostics"
-      },
-      {
-        "name": "TestCheckPretradeDiagnostics::test_warn_only_returns_true_when_client_build_fails",
-        "line": 36,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return True in warn-only mode when client build fails.",
-        "class": "TestCheckPretradeDiagnostics"
-      },
-      {
-        "name": "TestSectionHeader::test_prints_section_header",
-        "line": 52,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should print section header.",
-        "class": "TestSectionHeader"
       }
     ],
     "tests/unit/gpt_trader/preflight/test_checks_diagnostics_broker.py": [
@@ -38296,64 +38195,6 @@
         ],
         "docstring": "Should print section header.",
         "class": "TestCheckEnvironmentVariables"
-      }
-    ],
-    "tests/unit/gpt_trader/preflight/test_checks_event_store.py": [
-      {
-        "name": "test_passes_when_no_sensitive_keys",
-        "line": 27,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_passes_when_redacted_values_present",
-        "line": 40,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_fails_on_pem_private_key",
-        "line": 55,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_fails_on_unredacted_authorization",
-        "line": 71,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_missing_events_db_warns_in_dev",
-        "line": 86,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_missing_events_db_errors_in_prod",
-        "line": 94,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_missing_events_db_warn_only_in_prod",
-        "line": 102,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/preflight/test_checks_profile.py": [
@@ -38681,6 +38522,98 @@
         "class": "TestSimulateDryRun"
       }
     ],
+    "tests/unit/gpt_trader/preflight/test_checks_startup.py": [
+      {
+        "name": "TestCheckDependencies::test_passes_when_all_packages_available",
+        "line": 18,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should pass when all required packages are importable.",
+        "class": "TestCheckDependencies"
+      },
+      {
+        "name": "TestCheckDependencies::test_fails_when_package_missing",
+        "line": 42,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should fail when a required package is missing.",
+        "class": "TestCheckDependencies"
+      },
+      {
+        "name": "TestCheckDependencies::test_logs_found_packages_when_verbose",
+        "line": 63,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should log found packages when verbose.",
+        "class": "TestCheckDependencies"
+      },
+      {
+        "name": "TestCheckDependencies::test_prints_section_header",
+        "line": 86,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should print section header.",
+        "class": "TestCheckDependencies"
+      },
+      {
+        "name": "TestCheckDependencies::test_checks_gpt_trader_package",
+        "line": 108,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should specifically check gpt_trader package.",
+        "class": "TestCheckDependencies"
+      },
+      {
+        "name": "TestCheckDependencies::test_checks_cryptography_package",
+        "line": 130,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should check cryptography package is available.",
+        "class": "TestCheckDependencies"
+      },
+      {
+        "name": "TestCheckPretradeDiagnostics::test_skips_when_remote_checks_bypassed",
+        "line": 155,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should skip and succeed when remote checks are bypassed.",
+        "class": "TestCheckPretradeDiagnostics"
+      },
+      {
+        "name": "TestCheckPretradeDiagnostics::test_fails_when_client_build_fails",
+        "line": 166,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should fail when CDP client cannot be built.",
+        "class": "TestCheckPretradeDiagnostics"
+      },
+      {
+        "name": "TestCheckPretradeDiagnostics::test_warn_only_returns_true_when_client_build_fails",
+        "line": 177,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should return True in warn-only mode when client build fails.",
+        "class": "TestCheckPretradeDiagnostics"
+      },
+      {
+        "name": "TestDiagnosticsSectionHeader::test_prints_section_header",
+        "line": 193,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should print section header.",
+        "class": "TestDiagnosticsSectionHeader"
+      }
+    ],
     "tests/unit/gpt_trader/preflight/test_checks_system.py": [
       {
         "name": "TestCheckPythonVersion::test_passes_on_python_312_or_higher",
@@ -38800,10 +38733,73 @@
         "class": "TestCheckSystemTime"
       }
     ],
-    "tests/unit/gpt_trader/preflight/test_checks_test_suite.py": [
+    "tests/unit/gpt_trader/preflight/test_checks_validation.py": [
+      {
+        "name": "TestCheckEventStoreRedaction::test_passes_when_no_sensitive_keys",
+        "line": 35,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCheckEventStoreRedaction"
+      },
+      {
+        "name": "TestCheckEventStoreRedaction::test_passes_when_redacted_values_present",
+        "line": 49,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCheckEventStoreRedaction"
+      },
+      {
+        "name": "TestCheckEventStoreRedaction::test_fails_on_pem_private_key",
+        "line": 63,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCheckEventStoreRedaction"
+      },
+      {
+        "name": "TestCheckEventStoreRedaction::test_fails_on_unredacted_authorization",
+        "line": 80,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCheckEventStoreRedaction"
+      },
+      {
+        "name": "TestCheckEventStoreRedaction::test_missing_events_db_warns_in_dev",
+        "line": 96,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCheckEventStoreRedaction"
+      },
+      {
+        "name": "TestCheckEventStoreRedaction::test_missing_events_db_errors_in_prod",
+        "line": 105,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCheckEventStoreRedaction"
+      },
+      {
+        "name": "TestCheckEventStoreRedaction::test_missing_events_db_warn_only_in_prod",
+        "line": 114,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCheckEventStoreRedaction"
+      },
       {
         "name": "TestCheckTestSuite::test_passes_when_all_tests_pass",
-        "line": 31,
+        "line": 142,
         "markers": [
           "unit"
         ],
@@ -38812,7 +38808,7 @@
       },
       {
         "name": "TestCheckTestSuite::test_fails_when_tests_fail",
-        "line": 41,
+        "line": 152,
         "markers": [
           "unit"
         ],
@@ -38821,7 +38817,7 @@
       },
       {
         "name": "TestCheckTestSuite::test_fails_when_no_passed_in_output",
-        "line": 51,
+        "line": 162,
         "markers": [
           "unit"
         ],
@@ -38830,7 +38826,7 @@
       },
       {
         "name": "TestCheckTestSuite::test_fails_on_timeout",
-        "line": 61,
+        "line": 172,
         "markers": [
           "unit"
         ],
@@ -38839,7 +38835,7 @@
       },
       {
         "name": "TestCheckTestSuite::test_fails_on_exception",
-        "line": 71,
+        "line": 182,
         "markers": [
           "unit"
         ],
@@ -38848,7 +38844,7 @@
       },
       {
         "name": "TestCheckTestSuite::test_shows_output_when_verbose",
-        "line": 81,
+        "line": 192,
         "markers": [
           "unit"
         ],
@@ -38857,7 +38853,7 @@
       },
       {
         "name": "TestCheckTestSuite::test_prints_section_header",
-        "line": 93,
+        "line": 204,
         "markers": [
           "unit"
         ],
@@ -38866,7 +38862,7 @@
       },
       {
         "name": "TestCheckTestSuite::test_parses_passed_count_correctly",
-        "line": 105,
+        "line": 216,
         "markers": [
           "unit"
         ],
@@ -38875,7 +38871,7 @@
       },
       {
         "name": "TestCheckTestSuite::test_handles_passed_without_count",
-        "line": 115,
+        "line": 226,
         "markers": [
           "unit"
         ],
@@ -39226,105 +39222,10 @@
         "class": "TestPreflightContextEnvDefaults"
       }
     ],
-    "tests/unit/gpt_trader/preflight/test_core_delegations.py": [
-      {
-        "name": "TestPreflightCheckDelegations::test_delegations_call_module_function",
-        "line": 36,
-        "markers": [
-          "parametrize",
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestPreflightCheckDelegations"
-      }
-    ],
-    "tests/unit/gpt_trader/preflight/test_core_helpers.py": [
-      {
-        "name": "TestPreflightCheckLoggingHelpers::test_log_success_delegates_to_context",
-        "line": 13,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "log_success should delegate to context.",
-        "class": "TestPreflightCheckLoggingHelpers"
-      },
-      {
-        "name": "TestPreflightCheckLoggingHelpers::test_log_warning_delegates_to_context",
-        "line": 22,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "log_warning should delegate to context.",
-        "class": "TestPreflightCheckLoggingHelpers"
-      },
-      {
-        "name": "TestPreflightCheckLoggingHelpers::test_log_error_delegates_to_context",
-        "line": 29,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "log_error should delegate to context.",
-        "class": "TestPreflightCheckLoggingHelpers"
-      },
-      {
-        "name": "TestPreflightCheckLoggingHelpers::test_log_info_delegates_to_context",
-        "line": 36,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "log_info should delegate to context.",
-        "class": "TestPreflightCheckLoggingHelpers"
-      },
-      {
-        "name": "TestPreflightCheckLoggingHelpers::test_section_header_delegates_to_context",
-        "line": 44,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "section_header should delegate to context.",
-        "class": "TestPreflightCheckLoggingHelpers"
-      },
-      {
-        "name": "TestPreflightCheckEnvironmentHelpers::test_resolve_cdp_credentials_delegates",
-        "line": 60,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "_resolve_cdp_credentials should return same as context.",
-        "class": "TestPreflightCheckEnvironmentHelpers"
-      },
-      {
-        "name": "TestPreflightCheckEnvironmentHelpers::test_has_real_cdp_credentials_delegates",
-        "line": 70,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "_has_real_cdp_credentials should return same as context.",
-        "class": "TestPreflightCheckEnvironmentHelpers"
-      },
-      {
-        "name": "TestPreflightCheckEnvironmentHelpers::test_should_skip_remote_checks_delegates",
-        "line": 79,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "_should_skip_remote_checks should return same as context.",
-        "class": "TestPreflightCheckEnvironmentHelpers"
-      },
-      {
-        "name": "TestPreflightCheckEnvironmentHelpers::test_expected_env_defaults_delegates",
-        "line": 88,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "_expected_env_defaults should return same as context.",
-        "class": "TestPreflightCheckEnvironmentHelpers"
-      }
-    ],
-    "tests/unit/gpt_trader/preflight/test_core_init.py": [
+    "tests/unit/gpt_trader/preflight/test_core.py": [
       {
         "name": "TestPreflightCheckInit::test_default_initialization",
-        "line": 11,
+        "line": 16,
         "markers": [
           "unit"
         ],
@@ -39333,7 +39234,7 @@
       },
       {
         "name": "TestPreflightCheckInit::test_custom_initialization",
-        "line": 20,
+        "line": 25,
         "markers": [
           "unit"
         ],
@@ -39342,7 +39243,7 @@
       },
       {
         "name": "TestPreflightCheckCompatibilityMirrors::test_errors_mirrors_context",
-        "line": 33,
+        "line": 38,
         "markers": [
           "unit"
         ],
@@ -39351,7 +39252,7 @@
       },
       {
         "name": "TestPreflightCheckCompatibilityMirrors::test_warnings_mirrors_context",
-        "line": 41,
+        "line": 46,
         "markers": [
           "unit"
         ],
@@ -39360,7 +39261,7 @@
       },
       {
         "name": "TestPreflightCheckCompatibilityMirrors::test_successes_mirrors_context",
-        "line": 48,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -39369,12 +39270,103 @@
       },
       {
         "name": "TestPreflightCheckCompatibilityMirrors::test_config_mirrors_context",
-        "line": 55,
+        "line": 60,
         "markers": [
           "unit"
         ],
         "docstring": "config property should mirror context.config.",
         "class": "TestPreflightCheckCompatibilityMirrors"
+      },
+      {
+        "name": "TestPreflightCheckDelegations::test_delegations_call_module_function",
+        "line": 91,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestPreflightCheckDelegations"
+      },
+      {
+        "name": "TestPreflightCheckLoggingHelpers::test_log_success_delegates_to_context",
+        "line": 111,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "log_success should delegate to context.",
+        "class": "TestPreflightCheckLoggingHelpers"
+      },
+      {
+        "name": "TestPreflightCheckLoggingHelpers::test_log_warning_delegates_to_context",
+        "line": 120,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "log_warning should delegate to context.",
+        "class": "TestPreflightCheckLoggingHelpers"
+      },
+      {
+        "name": "TestPreflightCheckLoggingHelpers::test_log_error_delegates_to_context",
+        "line": 127,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "log_error should delegate to context.",
+        "class": "TestPreflightCheckLoggingHelpers"
+      },
+      {
+        "name": "TestPreflightCheckLoggingHelpers::test_log_info_delegates_to_context",
+        "line": 134,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "log_info should delegate to context.",
+        "class": "TestPreflightCheckLoggingHelpers"
+      },
+      {
+        "name": "TestPreflightCheckLoggingHelpers::test_section_header_delegates_to_context",
+        "line": 142,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "section_header should delegate to context.",
+        "class": "TestPreflightCheckLoggingHelpers"
+      },
+      {
+        "name": "TestPreflightCheckEnvironmentHelpers::test_resolve_cdp_credentials_delegates",
+        "line": 158,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "_resolve_cdp_credentials should return same as context.",
+        "class": "TestPreflightCheckEnvironmentHelpers"
+      },
+      {
+        "name": "TestPreflightCheckEnvironmentHelpers::test_has_real_cdp_credentials_delegates",
+        "line": 168,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "_has_real_cdp_credentials should return same as context.",
+        "class": "TestPreflightCheckEnvironmentHelpers"
+      },
+      {
+        "name": "TestPreflightCheckEnvironmentHelpers::test_should_skip_remote_checks_delegates",
+        "line": 177,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "_should_skip_remote_checks should return same as context.",
+        "class": "TestPreflightCheckEnvironmentHelpers"
+      },
+      {
+        "name": "TestPreflightCheckEnvironmentHelpers::test_expected_env_defaults_delegates",
+        "line": 186,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "_expected_env_defaults should return same as context.",
+        "class": "TestPreflightCheckEnvironmentHelpers"
       }
     ],
     "tests/unit/gpt_trader/preflight/test_permissions_backoff.py": [

@@ -1618,8 +1618,10 @@ clusters:
     target_location: tests/unit/gpt_trader/monitoring/test_health_checks.py
     expected_file_delta: -3
     priority: low
-    rationale: Consolidate 4 test files into single parametrized file
-    status: pending
+    rationale: Consolidated portfolio service suites into one module via shared helpers
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/343
     added: '2026-01-21'
   4d20aae790b1:
     type: similar_names

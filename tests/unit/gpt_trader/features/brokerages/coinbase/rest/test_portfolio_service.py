@@ -1,209 +1,198 @@
-"""Tests for PortfolioService core: balances and positions."""
+from __future__ import annotations
 
-from decimal import Decimal
-from unittest.mock import Mock
-
-from gpt_trader.core import Position
-from gpt_trader.features.brokerages.coinbase.rest.portfolio_service import PortfolioService
-
-from .portfolio_service_test_base import PortfolioServiceTestBase
+from tests.unit.gpt_trader.features.brokerages.coinbase.rest import (
+    portfolio_service_test_base as helpers,
+)
 
 
-class TestPortfolioServiceInit(PortfolioServiceTestBase):
-    """Test service initialization."""
-
+class TestPortfolioServiceInit(helpers.PortfolioServiceTestBase):
     def test_service_init(
-        self,
-        portfolio_service: PortfolioService,
-        mock_client: Mock,
-        mock_endpoints: Mock,
-        mock_event_store: Mock,
+        self, portfolio_service, mock_client, mock_endpoints, mock_event_store
     ) -> None:
-        assert portfolio_service._client == mock_client
-        assert portfolio_service._endpoints == mock_endpoints
-        assert portfolio_service._event_store == mock_event_store
+        helpers.assert_service_init(
+            portfolio_service, mock_client, mock_endpoints, mock_event_store
+        )
 
 
-class TestPortfolioServiceBalances(PortfolioServiceTestBase):
-    """Tests for balance-related operations."""
+class TestPortfolioServiceBalances(helpers.PortfolioServiceTestBase):
+    def test_balances(self, portfolio_service, mock_client) -> None:
+        helpers.assert_get_portfolio_balances_delegates_to_list_balances(
+            portfolio_service, mock_client
+        )
+        helpers.assert_list_balances_returns_balances(portfolio_service, mock_client)
+        helpers.assert_list_balances_handles_list_response(portfolio_service, mock_client)
+        helpers.assert_list_balances_calculates_total_when_missing(portfolio_service, mock_client)
+        helpers.assert_list_balances_skips_invalid_entries(portfolio_service, mock_client)
+        helpers.assert_list_balances_handles_exception(portfolio_service, mock_client)
 
-    def test_list_balances_returns_balances(
-        self,
-        portfolio_service: PortfolioService,
-        mock_client: Mock,
+
+class TestPortfolioServicePositions(helpers.PortfolioServiceTestBase):
+    def test_positions(self, portfolio_service, mock_client, mock_endpoints) -> None:
+        helpers.assert_list_positions_returns_empty_when_derivatives_not_supported(
+            portfolio_service, mock_client, mock_endpoints
+        )
+        helpers.assert_list_positions_returns_positions(
+            portfolio_service, mock_client, mock_endpoints
+        )
+        helpers.assert_list_positions_handles_exception(
+            portfolio_service, mock_client, mock_endpoints
+        )
+        helpers.assert_get_position_returns_position(portfolio_service, mock_client, mock_endpoints)
+        helpers.assert_get_position_returns_none_when_not_supported(
+            portfolio_service, mock_endpoints
+        )
+
+
+class TestCfmBalanceSummary(helpers.PortfolioServiceTestBase):
+    def test_cfm_balance_summary(
+        self, portfolio_service, mock_client, mock_endpoints, mock_event_store
     ) -> None:
-        mock_client.get_accounts.return_value = {
-            "accounts": [
-                {
-                    "uuid": "acc_1",
-                    "currency": "BTC",
-                    "available_balance": {"value": "1.5"},
-                    "hold": {"value": "0.1"},
-                    "balance": {"value": "1.6"},
-                },
-                {
-                    "uuid": "acc_2",
-                    "currency": "USD",
-                    "available_balance": {"value": "10000.00"},
-                    "hold": {"value": "500.00"},
-                    "balance": {"value": "10500.00"},
-                },
-            ]
-        }
-        result = portfolio_service.list_balances()
-        assert len(result) == 2
-        assert result[0].asset == "BTC"
-        assert result[0].available == Decimal("1.5")
-        assert result[0].hold == Decimal("0.1")
-        assert result[0].total == Decimal("1.6")
+        helpers.assert_get_cfm_balance_summary_returns_empty_when_not_supported(
+            portfolio_service, mock_endpoints
+        )
+        helpers.assert_get_cfm_balance_summary_returns_summary(
+            portfolio_service, mock_client, mock_endpoints, mock_event_store
+        )
+        mock_event_store.append_metric.reset_mock()
+        helpers.assert_get_cfm_balance_summary_normalises_decimals_and_emits_metric(
+            portfolio_service, mock_client, mock_endpoints, mock_event_store
+        )
 
-    def test_list_balances_handles_list_response(
-        self,
-        portfolio_service: PortfolioService,
-        mock_client: Mock,
+
+class TestCfmSweeps(helpers.PortfolioServiceTestBase):
+    def test_cfm_sweeps(
+        self, portfolio_service, mock_client, mock_endpoints, mock_event_store
     ) -> None:
-        mock_client.get_accounts.return_value = [
-            {
-                "uuid": "acc_1",
-                "currency": "BTC",
-                "available": "1.5",
-                "hold": "0.1",
-                "balance": "1.6",
-            }
-        ]
-        result = portfolio_service.list_balances()
-        assert len(result) == 1
-        assert result[0].asset == "BTC"
+        helpers.assert_list_cfm_sweeps_returns_empty_when_derivatives_disabled(
+            portfolio_service, mock_client, mock_endpoints
+        )
+        helpers.assert_list_cfm_sweeps_returns_sweeps(
+            portfolio_service, mock_client, mock_endpoints
+        )
+        helpers.assert_list_cfm_sweeps_normalises_entries(
+            portfolio_service, mock_client, mock_endpoints, mock_event_store
+        )
+        helpers.assert_get_cfm_sweeps_schedule_returns_schedule(
+            portfolio_service, mock_client, mock_endpoints
+        )
 
-    def test_list_balances_calculates_total_when_missing(
-        self,
-        portfolio_service: PortfolioService,
-        mock_client: Mock,
+
+class TestCfmMarginWindow(helpers.PortfolioServiceTestBase):
+    def test_cfm_margin_window(
+        self, portfolio_service, mock_client, mock_endpoints, mock_event_store
     ) -> None:
-        mock_client.get_accounts.return_value = {
-            "accounts": [
-                {
-                    "uuid": "acc_1",
-                    "currency": "ETH",
-                    "available_balance": {"value": "5.0"},
-                    "hold": {"value": "1.0"},
-                }
-            ]
-        }
-        result = portfolio_service.list_balances()
-        assert result[0].total == Decimal("6.0")
+        helpers.assert_get_cfm_margin_window_returns_window(
+            portfolio_service, mock_client, mock_endpoints
+        )
+        helpers.assert_get_cfm_margin_window_handles_errors(
+            portfolio_service, mock_client, mock_endpoints
+        )
+        helpers.assert_update_cfm_margin_window_raises_when_not_supported(
+            portfolio_service, mock_endpoints
+        )
+        helpers.assert_update_cfm_margin_window_enforces_derivatives(
+            portfolio_service, mock_endpoints
+        )
+        helpers.assert_update_cfm_margin_window_success(
+            portfolio_service, mock_client, mock_endpoints, mock_event_store
+        )
+        mock_client.cfm_intraday_margin_setting.reset_mock()
+        mock_event_store.append_metric.reset_mock()
+        helpers.assert_update_cfm_margin_window_calls_client_and_emits(
+            portfolio_service, mock_client, mock_endpoints, mock_event_store
+        )
 
-    def test_list_balances_handles_exception(
-        self,
-        portfolio_service: PortfolioService,
-        mock_client: Mock,
+
+class TestIntxAllocate(helpers.PortfolioServiceTestBase):
+    def test_intx_allocate(
+        self, portfolio_service, mock_client, mock_endpoints, mock_event_store
     ) -> None:
-        mock_client.get_accounts.side_effect = Exception("API error")
-        result = portfolio_service.list_balances()
-        assert result == []
+        helpers.assert_intx_allocate_requires_advanced_mode(portfolio_service, mock_endpoints)
+        helpers.assert_intx_allocate_success(
+            portfolio_service, mock_client, mock_endpoints, mock_event_store
+        )
+        mock_event_store.append_metric.reset_mock()
+        helpers.assert_intx_allocate_normalises_and_emits_metric(
+            portfolio_service, mock_client, mock_endpoints, mock_event_store
+        )
 
-    def test_list_balances_skips_invalid_entries(
-        self,
-        portfolio_service: PortfolioService,
-        mock_client: Mock,
+
+class TestIntxBalances(helpers.PortfolioServiceTestBase):
+    def test_intx_balances(
+        self, portfolio_service, mock_client, mock_endpoints, mock_event_store
     ) -> None:
-        mock_client.get_accounts.return_value = {
-            "accounts": [
-                {
-                    "uuid": "acc_1",
-                    "currency": "BTC",
-                    "available_balance": {"value": "1.5"},
-                    "hold": {"value": "0.1"},
-                    "balance": {"value": "1.6"},
-                },
-                {"uuid": "acc_2", "currency": None},
-            ]
-        }
-        result = portfolio_service.list_balances()
-        assert len(result) >= 1
+        helpers.assert_get_intx_balances_returns_empty_when_not_advanced(
+            portfolio_service, mock_endpoints
+        )
+        helpers.assert_get_intx_balances_returns_balances(
+            portfolio_service, mock_client, mock_endpoints
+        )
+        helpers.assert_get_intx_balances_normalises_entries(
+            portfolio_service, mock_client, mock_endpoints, mock_event_store
+        )
+        mock_event_store.append_metric.reset_mock()
+        helpers.assert_get_intx_balances_handles_errors(
+            portfolio_service, mock_client, mock_endpoints, mock_event_store
+        )
 
-    def test_get_portfolio_balances_delegates_to_list_balances(
-        self,
-        portfolio_service: PortfolioService,
-        mock_client: Mock,
+
+class TestIntxPortfolio(helpers.PortfolioServiceTestBase):
+    def test_intx_portfolio(self, portfolio_service, mock_client, mock_endpoints) -> None:
+        helpers.assert_get_intx_portfolio_returns_empty_when_not_advanced(
+            portfolio_service, mock_endpoints
+        )
+        helpers.assert_get_intx_portfolio_success(portfolio_service, mock_client, mock_endpoints)
+        helpers.assert_get_intx_portfolio_returns_normalised_dict(
+            portfolio_service, mock_client, mock_endpoints
+        )
+
+
+class TestIntxPositions(helpers.PortfolioServiceTestBase):
+    def test_intx_positions(self, portfolio_service, mock_client, mock_endpoints) -> None:
+        helpers.assert_list_intx_positions_returns_positions(
+            portfolio_service, mock_client, mock_endpoints
+        )
+        helpers.assert_list_intx_positions_returns_normalised_list(
+            portfolio_service, mock_client, mock_endpoints
+        )
+        helpers.assert_get_intx_position_handles_missing(
+            portfolio_service, mock_client, mock_endpoints
+        )
+
+
+class TestIntxCollateral(helpers.PortfolioServiceTestBase):
+    def test_intx_multi_asset_collateral(
+        self, portfolio_service, mock_client, mock_endpoints, mock_event_store
     ) -> None:
-        mock_client.get_accounts.return_value = {"accounts": []}
-        result = portfolio_service.get_portfolio_balances()
-        assert result == []
-        mock_client.get_accounts.assert_called_once()
+        helpers.assert_get_intx_multi_asset_collateral_emits_metric(
+            portfolio_service, mock_client, mock_endpoints, mock_event_store
+        )
 
 
-class TestPortfolioServicePositions(PortfolioServiceTestBase):
-    """Tests for position-related operations."""
+class TestCfmPositionEdges:
+    def test_list_cfm_positions_invalid_expiry_sets_none(self) -> None:
+        helpers.assert_list_cfm_positions_invalid_expiry_sets_none()
 
-    def test_list_positions_returns_positions(
-        self,
-        portfolio_service: PortfolioService,
-        mock_client: Mock,
-        mock_endpoints: Mock,
-    ) -> None:
-        mock_endpoints.supports_derivatives.return_value = True
-        mock_client.list_positions.return_value = [
-            Position(
-                symbol="BTC-PERP",
-                quantity=Decimal("0.5"),
-                entry_price=Decimal("50000.00"),
-                unrealized_pnl=Decimal("100.00"),
-                mark_price=Decimal("51000.00"),
-                realized_pnl=Decimal("0.00"),
-                side="LONG",
-            )
-        ]
-        result = portfolio_service.list_positions()
-        assert len(result) == 1
-        assert result[0].symbol == "BTC-PERP"
 
-    def test_list_positions_returns_empty_when_derivatives_not_supported(
-        self,
-        portfolio_service: PortfolioService,
-        mock_client: Mock,
-        mock_endpoints: Mock,
-    ) -> None:
-        mock_endpoints.supports_derivatives.return_value = False
-        result = portfolio_service.list_positions()
-        assert result == []
-        mock_client.list_positions.assert_not_called()
+class TestSpotPositionEdges:
+    def test_list_spot_positions_skips_usd_and_zero(self) -> None:
+        helpers.assert_list_spot_positions_skips_usd_and_zero()
 
-    def test_list_positions_handles_exception(
-        self,
-        portfolio_service: PortfolioService,
-        mock_client: Mock,
-        mock_endpoints: Mock,
-    ) -> None:
-        mock_endpoints.supports_derivatives.return_value = True
-        mock_client.list_positions.side_effect = Exception("API error")
-        result = portfolio_service.list_positions()
-        assert result == []
 
-    def test_get_position_returns_position(
-        self,
-        portfolio_service: PortfolioService,
-        mock_client: Mock,
-        mock_endpoints: Mock,
-    ) -> None:
-        mock_endpoints.supports_derivatives.return_value = True
-        mock_client.get_cfm_position.return_value = {
-            "product_id": "BTC-PERP",
-            "side": "LONG",
-            "contracts": "0.5",
-            "entry_price": "50000.00",
-            "unrealized_pnl": "100.00",
-            "realized_pnl": "100.00",
-        }
-        result = portfolio_service.get_position("BTC-PERP")
-        assert result is not None
-        assert result.symbol == "BTC-PERP"
+class TestCfmBalanceEdges:
+    def test_cfm_balance_edges(self) -> None:
+        helpers.assert_get_cfm_balance_missing_or_empty_summary()
+        helpers.assert_get_cfm_balance_parses_nested_values()
+        helpers.assert_has_cfm_access_false_without_summary()
 
-    def test_get_position_returns_none_when_not_supported(
-        self,
-        portfolio_service: PortfolioService,
-        mock_endpoints: Mock,
-    ) -> None:
-        mock_endpoints.supports_derivatives.return_value = False
-        result = portfolio_service.get_position("BTC-PERP")
-        assert result is None
+
+class TestUnifiedBalanceEdges:
+    def test_unified_balance_edges(self) -> None:
+        helpers.assert_get_unified_balance_combines_spot_and_cfm()
+        helpers.assert_get_unified_balance_without_usd_spot()
+
+
+class TestAllPositionsEdges:
+    def test_all_positions_edges(self) -> None:
+        helpers.assert_list_all_positions_merges_spot_and_cfm()
+        helpers.assert_list_all_positions_spot_only_when_no_derivatives()

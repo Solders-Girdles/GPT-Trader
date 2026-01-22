@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6150,
-    "total_files": 777,
+    "total_files": 774,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -223,11 +223,8 @@
       "tests/unit/gpt_trader/cli/test_services.py"
     ],
     "config": [
-      "tests/unit/gpt_trader/config/test_bot_config_env_aliasing.py",
-      "tests/unit/gpt_trader/config/test_bot_config_mark_staleness_guard.py",
+      "tests/unit/gpt_trader/config/test_bot_config.py",
       "tests/unit/gpt_trader/config/test_bot_config_position_object_handling.py",
-      "tests/unit/gpt_trader/config/test_bot_config_profile_strategy_hydration.py",
-      "tests/unit/gpt_trader/config/test_bot_config_reduce_only_enforcement.py",
       "tests/unit/gpt_trader/config/test_config_utilities.py",
       "tests/unit/gpt_trader/config/test_env_utils.py"
     ],
@@ -9252,71 +9249,141 @@
         "class": "TestRunBotCleanup"
       }
     ],
-    "tests/unit/gpt_trader/config/test_bot_config_env_aliasing.py": [
+    "tests/unit/gpt_trader/config/test_bot_config.py": [
       {
         "name": "TestBotConfigEnvAliasing::test_risk_max_leverage_with_prefix",
         "line": 13,
         "markers": [
           "unit"
         ],
-        "docstring": "Test RISK_MAX_LEVERAGE is read correctly.",
+        "docstring": "",
         "class": "TestBotConfigEnvAliasing"
       },
       {
         "name": "TestBotConfigEnvAliasing::test_risk_position_fraction_from_pct_per_symbol",
-        "line": 21,
+        "line": 20,
         "markers": [
           "unit"
         ],
-        "docstring": "Test RISK_MAX_POSITION_PCT_PER_SYMBOL maps to position_fraction.",
+        "docstring": "",
         "class": "TestBotConfigEnvAliasing"
       },
       {
         "name": "TestBotConfigEnvAliasing::test_risk_daily_loss_limit_pct",
-        "line": 31,
+        "line": 29,
         "markers": [
           "unit"
         ],
-        "docstring": "Test RISK_DAILY_LOSS_LIMIT_PCT is read correctly.",
+        "docstring": "",
         "class": "TestBotConfigEnvAliasing"
       },
       {
         "name": "TestBotConfigEnvAliasing::test_trading_symbols_alias",
-        "line": 39,
+        "line": 36,
         "markers": [
           "unit"
         ],
-        "docstring": "Test TRADING_SYMBOLS is read correctly.",
+        "docstring": "",
         "class": "TestBotConfigEnvAliasing"
-      }
-    ],
-    "tests/unit/gpt_trader/config/test_bot_config_mark_staleness_guard.py": [
+      },
       {
         "name": "TestMarkStalenessGuard::test_check_mark_staleness_returns_true_when_no_update",
-        "line": 9,
+        "line": 47,
         "markers": [
           "unit"
         ],
-        "docstring": "Test check_mark_staleness returns True when no mark update recorded.",
+        "docstring": "",
         "class": "TestMarkStalenessGuard"
       },
       {
         "name": "TestMarkStalenessGuard::test_check_mark_staleness_returns_false_when_fresh",
-        "line": 21,
+        "line": 57,
         "markers": [
           "unit"
         ],
-        "docstring": "Test check_mark_staleness returns False when mark is fresh.",
+        "docstring": "",
         "class": "TestMarkStalenessGuard"
       },
       {
         "name": "TestMarkStalenessGuard::test_check_mark_staleness_returns_true_when_expired",
-        "line": 37,
+        "line": 71,
         "markers": [
           "unit"
         ],
-        "docstring": "Test check_mark_staleness returns True when mark is too old.",
+        "docstring": "",
         "class": "TestMarkStalenessGuard"
+      },
+      {
+        "name": "TestProfileStrategyHydration::test_profile_loader_builds_strategy_config",
+        "line": 89,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestProfileStrategyHydration"
+      },
+      {
+        "name": "TestProfileStrategyHydration::test_profile_loader_builds_risk_config",
+        "line": 106,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestProfileStrategyHydration"
+      },
+      {
+        "name": "TestProfileStrategyHydration::test_paper_profile_exists",
+        "line": 119,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestProfileStrategyHydration"
+      },
+      {
+        "name": "TestProfileStrategyHydration::test_paper_profile_loads",
+        "line": 125,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestProfileStrategyHydration"
+      },
+      {
+        "name": "TestProfileStrategyHydration::test_profile_daily_loss_limit_pct_from_yaml",
+        "line": 133,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestProfileStrategyHydration"
+      },
+      {
+        "name": "TestReduceOnlyEnforcement::test_check_order_blocks_new_position_in_reduce_only",
+        "line": 145,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestReduceOnlyEnforcement"
+      },
+      {
+        "name": "TestReduceOnlyEnforcement::test_check_order_allows_reduce_only_order",
+        "line": 157,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestReduceOnlyEnforcement"
+      },
+      {
+        "name": "TestReduceOnlyEnforcement::test_daily_loss_triggers_reduce_only",
+        "line": 169,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestReduceOnlyEnforcement"
       }
     ],
     "tests/unit/gpt_trader/config/test_bot_config_position_object_handling.py": [
@@ -9346,82 +9413,6 @@
         ],
         "docstring": "Test that buying more of a long Position is NOT reducing.",
         "class": "TestPositionObjectHandling"
-      }
-    ],
-    "tests/unit/gpt_trader/config/test_bot_config_profile_strategy_hydration.py": [
-      {
-        "name": "TestProfileStrategyHydration::test_profile_loader_builds_strategy_config",
-        "line": 9,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test ProfileLoader builds PerpsStrategyConfig from schema.",
-        "class": "TestProfileStrategyHydration"
-      },
-      {
-        "name": "TestProfileStrategyHydration::test_profile_loader_builds_risk_config",
-        "line": 29,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test ProfileLoader builds BotRiskConfig from schema.",
-        "class": "TestProfileStrategyHydration"
-      },
-      {
-        "name": "TestProfileStrategyHydration::test_paper_profile_exists",
-        "line": 45,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test PAPER profile is in Profile enum.",
-        "class": "TestProfileStrategyHydration"
-      },
-      {
-        "name": "TestProfileStrategyHydration::test_paper_profile_loads",
-        "line": 52,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test PAPER profile can be loaded.",
-        "class": "TestProfileStrategyHydration"
-      },
-      {
-        "name": "TestProfileStrategyHydration::test_profile_daily_loss_limit_pct_from_yaml",
-        "line": 63,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test daily_loss_limit_pct is parsed from profile YAML.",
-        "class": "TestProfileStrategyHydration"
-      }
-    ],
-    "tests/unit/gpt_trader/config/test_bot_config_reduce_only_enforcement.py": [
-      {
-        "name": "TestReduceOnlyEnforcement::test_check_order_blocks_new_position_in_reduce_only",
-        "line": 9,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test check_order blocks new positions when in reduce-only mode.",
-        "class": "TestReduceOnlyEnforcement"
-      },
-      {
-        "name": "TestReduceOnlyEnforcement::test_check_order_allows_reduce_only_order",
-        "line": 24,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test check_order allows reduce-only orders when in reduce-only mode.",
-        "class": "TestReduceOnlyEnforcement"
-      },
-      {
-        "name": "TestReduceOnlyEnforcement::test_daily_loss_triggers_reduce_only",
-        "line": 39,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test daily loss limit triggers reduce-only mode.",
-        "class": "TestReduceOnlyEnforcement"
       }
     ],
     "tests/unit/gpt_trader/config/test_config_utilities.py": [

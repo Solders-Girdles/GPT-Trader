@@ -1,14 +1,17 @@
-"""Tests for LiveRiskManager initialization, ValidationError, stubs, and risk metrics."""
+"""Tests for LiveRiskManager core behavior, validation, and staleness."""
 
 from __future__ import annotations
 
+import time
 from decimal import Decimal
 from unittest.mock import MagicMock
 
 import pytest
 
-import gpt_trader.features.live_trade.risk.manager as risk_manager_module
 from gpt_trader.features.live_trade.risk.manager import LiveRiskManager, ValidationError
+from tests.unit.gpt_trader.features.live_trade.risk_manager_test_utils import (  # naming: allow
+    MockConfig,  # naming: allow
+)
 
 
 @pytest.fixture(autouse=True)
@@ -97,58 +100,133 @@ class TestLiveRiskManagerStubs:
         assert manager.positions == {}
 
 
-class TestAppendRiskMetrics:
-    """Tests for append_risk_metrics method."""
+class TestPreTradeValidate:
+    """Tests for pre_trade_validate method."""
 
-    def test_appends_metrics(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        """Should append metrics with timestamp."""
-        monkeypatch.setattr(risk_manager_module.time, "time", lambda: 12345.0)
+    def test_no_config_passes(self) -> None:
+        """Should pass validation when no config."""
         manager = LiveRiskManager()
 
-        manager.append_risk_metrics(Decimal("10000"), {"BTC-USD": {"pnl": Decimal("100")}})
+        result = manager.pre_trade_validate(
+            symbol="BTC-USD",
+            side="buy",
+            quantity=Decimal("1"),
+            price=Decimal("50000"),
+            product=None,
+            equity=Decimal("10000"),
+            current_positions={},
+        )
+        assert result is None
 
-        assert len(manager._risk_metrics) == 1
-        assert manager._risk_metrics[0]["timestamp"] == 12345.0
-        assert manager._risk_metrics[0]["equity"] == "10000"
-        assert manager._risk_metrics[0]["positions"] == {"BTC-USD": {"pnl": "100"}}
-        assert manager._risk_metrics[0]["reduce_only_mode"] is False
+    def test_leverage_within_limit(self) -> None:
+        """Should pass when leverage within limit."""
+        config = MockConfig(max_leverage=Decimal("10"))
+        manager = LiveRiskManager(config=config)
 
-    def test_captures_reduce_only_mode(self) -> None:
-        """Should capture reduce_only_mode state."""
+        # Notional = 1 * 50000 = 50000, Leverage = 50000 / 10000 = 5x
+        result = manager.pre_trade_validate(
+            symbol="BTC-USD",
+            side="buy",
+            quantity=Decimal("1"),
+            price=Decimal("50000"),
+            product=None,
+            equity=Decimal("10000"),
+            current_positions={},
+        )
+        assert result is None
+
+    def test_leverage_exceeds_limit_raises(self) -> None:
+        """Should raise when leverage exceeds limit."""
+        config = MockConfig(max_leverage=Decimal("5"))
+        manager = LiveRiskManager(config=config)
+
+        # Notional = 2 * 50000 = 100000, Leverage = 100000 / 10000 = 10x
+        with pytest.raises(ValidationError, match="Leverage .* exceeds max 5"):
+            manager.pre_trade_validate(
+                symbol="BTC-USD",
+                side="buy",
+                quantity=Decimal("2"),
+                price=Decimal("50000"),
+                product=None,
+                equity=Decimal("10000"),
+                current_positions={},
+            )
+
+    def test_zero_equity_skips_validation(self) -> None:
+        """Should skip validation when equity is zero."""
+        config = MockConfig(max_leverage=Decimal("5"))
+        manager = LiveRiskManager(config=config)
+
+        result = manager.pre_trade_validate(
+            symbol="BTC-USD",
+            side="buy",
+            quantity=Decimal("100"),
+            price=Decimal("50000"),
+            product=None,
+            equity=Decimal("0"),
+            current_positions={},
+        )
+        assert result is None
+
+    def test_negative_equity_skips_validation(self) -> None:
+        """Should skip validation when equity is negative."""
+        config = MockConfig(max_leverage=Decimal("5"))
+        manager = LiveRiskManager(config=config)
+
+        result = manager.pre_trade_validate(
+            symbol="BTC-USD",
+            side="buy",
+            quantity=Decimal("100"),
+            price=Decimal("50000"),
+            product=None,
+            equity=Decimal("-1000"),
+            current_positions={},
+        )
+        assert result is None
+
+
+class TestCheckMarkStaleness:
+    """Tests for check_mark_staleness method."""
+
+    def test_no_update_is_stale(self) -> None:
+        """Should return True when no update recorded."""
         manager = LiveRiskManager()
-        manager._reduce_only_mode = True
 
-        manager.append_risk_metrics(Decimal("10000"), {})
+        assert manager.check_mark_staleness("BTC-USD") is True
 
-        assert manager._risk_metrics[0]["reduce_only_mode"] is True
-
-    def test_limits_to_100_metrics(self) -> None:
-        """Should keep only last 100 metrics."""
+    def test_recent_update_not_stale(self) -> None:
+        """Should return False when update is recent."""
         manager = LiveRiskManager()
+        manager.last_mark_update["BTC-USD"] = time.time()
 
-        for i in range(150):
-            manager.append_risk_metrics(Decimal(str(i)), {})
+        assert manager.check_mark_staleness("BTC-USD") is False
 
-        assert len(manager._risk_metrics) == 100
-        assert manager._risk_metrics[0]["equity"] == "50"
-        assert manager._risk_metrics[-1]["equity"] == "149"
-
-    def test_converts_nested_decimals_to_strings(self) -> None:
-        """Should convert nested Decimal values to strings."""
+    def test_old_update_is_stale(self) -> None:
+        """Should return True when update is old."""
         manager = LiveRiskManager()
-        positions = {
-            "BTC-USD": {
-                "pnl": Decimal("123.456"),
-                "size": Decimal("-0.5"),
-            },
-            "ETH-USD": {
-                "pnl": Decimal("0"),
-            },
-        }
+        manager.last_mark_update["BTC-USD"] = time.time() - 200
 
-        manager.append_risk_metrics(Decimal("9999.99"), positions)
+        assert manager.check_mark_staleness("BTC-USD") is True
 
-        result_positions = manager._risk_metrics[0]["positions"]
-        assert result_positions["BTC-USD"]["pnl"] == "123.456"
-        assert result_positions["BTC-USD"]["size"] == "-0.5"
-        assert result_positions["ETH-USD"]["pnl"] == "0"
+    def test_custom_staleness_threshold(self) -> None:
+        """Should use config staleness threshold."""
+        config = MockConfig(mark_staleness_threshold=30.0)
+        manager = LiveRiskManager(config=config)
+        manager.last_mark_update["BTC-USD"] = time.time() - 50
+
+        assert manager.check_mark_staleness("BTC-USD") is True  # 50 > 30
+
+    def test_default_threshold_without_config(self) -> None:
+        """Should use default 120 second threshold."""
+        manager = LiveRiskManager()
+        manager.last_mark_update["BTC-USD"] = time.time() - 100
+
+        assert manager.check_mark_staleness("BTC-USD") is False  # 100 < 120
+
+    def test_exact_boundary(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Should handle exact threshold boundary."""
+        monkeypatch.setattr(time, "time", lambda: 1000.0)
+        manager = LiveRiskManager()
+        manager.last_mark_update["BTC-USD"] = 880.0  # Exactly 120 seconds ago
+
+        assert manager.check_mark_staleness("BTC-USD") is False  # 120 > 120 is False

@@ -1289,10 +1289,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/features/live_trade/test_risk_manager.py
-    expected_file_delta: -4
+    expected_file_delta: -1
     priority: low
-    rationale: Consolidate 5 test files into single parametrized file
-    status: pending
+    rationale: Consolidated validation coverage into core modules to stay within hygiene cap
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/357
     added: '2026-01-21'
   8d5415a3e817:
     type: similar_names

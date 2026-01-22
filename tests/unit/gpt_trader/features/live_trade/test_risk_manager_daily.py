@@ -1,13 +1,13 @@
-"""Tests for LiveRiskManager daily tracking: PnL, staleness, and reset."""
+"""Tests for LiveRiskManager daily tracking, metrics, and reset."""
 
 from __future__ import annotations
 
-import time
 from decimal import Decimal
 from unittest.mock import MagicMock
 
 import pytest
 
+import gpt_trader.features.live_trade.risk.manager as risk_manager_module
 from gpt_trader.features.live_trade.risk.manager import LiveRiskManager
 from tests.unit.gpt_trader.features.live_trade.risk_manager_test_utils import (  # naming: allow
     MockConfig,  # naming: allow
@@ -124,48 +124,87 @@ class TestResetDailyTracking:
         assert manager._start_of_day_equity is None
 
 
-class TestCheckMarkStaleness:
-    """Tests for check_mark_staleness method."""
+class TestAppendRiskMetrics:
+    """Tests for append_risk_metrics method."""
 
-    def test_no_update_is_stale(self) -> None:
-        """Should return True when no update recorded."""
+    def test_appends_metrics(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Should append metrics with timestamp."""
+        monkeypatch.setattr(risk_manager_module.time, "time", lambda: 12345.0)
         manager = LiveRiskManager()
 
-        assert manager.check_mark_staleness("BTC-USD") is True
+        manager.append_risk_metrics(Decimal("10000"), {"BTC-USD": {"pnl": Decimal("100")}})
 
-    def test_recent_update_not_stale(self) -> None:
-        """Should return False when update is recent."""
+        assert len(manager._risk_metrics) == 1
+        assert manager._risk_metrics[0]["timestamp"] == 12345.0
+        assert manager._risk_metrics[0]["equity"] == "10000"
+        assert manager._risk_metrics[0]["positions"] == {"BTC-USD": {"pnl": "100"}}
+        assert manager._risk_metrics[0]["reduce_only_mode"] is False
+
+    def test_captures_reduce_only_mode(self) -> None:
+        """Should capture reduce_only_mode state."""
         manager = LiveRiskManager()
-        manager.last_mark_update["BTC-USD"] = time.time()
+        manager._reduce_only_mode = True
 
-        assert manager.check_mark_staleness("BTC-USD") is False
+        manager.append_risk_metrics(Decimal("10000"), {})
 
-    def test_old_update_is_stale(self) -> None:
-        """Should return True when update is old."""
+        assert manager._risk_metrics[0]["reduce_only_mode"] is True
+
+    def test_limits_to_100_metrics(self) -> None:
+        """Should keep only last 100 metrics."""
         manager = LiveRiskManager()
-        manager.last_mark_update["BTC-USD"] = time.time() - 200
 
-        assert manager.check_mark_staleness("BTC-USD") is True
+        for i in range(150):
+            manager.append_risk_metrics(Decimal(str(i)), {})
 
-    def test_custom_staleness_threshold(self) -> None:
-        """Should use config staleness threshold."""
-        config = MockConfig(mark_staleness_threshold=30.0)
+        assert len(manager._risk_metrics) == 100
+        assert manager._risk_metrics[0]["equity"] == "50"
+        assert manager._risk_metrics[-1]["equity"] == "149"
+
+    def test_converts_nested_decimals_to_strings(self) -> None:
+        """Should convert nested Decimal values to strings."""
+        manager = LiveRiskManager()
+        positions = {
+            "BTC-USD": {
+                "pnl": Decimal("123.456"),
+                "size": Decimal("-0.5"),
+            },
+            "ETH-USD": {
+                "pnl": Decimal("0"),
+            },
+        }
+
+        manager.append_risk_metrics(Decimal("9999.99"), positions)
+
+        result_positions = manager._risk_metrics[0]["positions"]
+        assert result_positions["BTC-USD"]["pnl"] == "123.456"
+        assert result_positions["BTC-USD"]["size"] == "-0.5"
+        assert result_positions["ETH-USD"]["pnl"] == "0"
+
+
+class TestDailyWorkflow:
+    """Workflow tests for daily tracking and metrics."""
+
+    def test_daily_workflow(self) -> None:
+        """Should handle typical daily workflow."""
+        config = MockConfig(
+            max_leverage=Decimal("10"),
+            daily_loss_limit_pct=Decimal("0.05"),
+            min_liquidation_buffer_pct=Decimal("0.10"),
+        )
         manager = LiveRiskManager(config=config)
-        manager.last_mark_update["BTC-USD"] = time.time() - 50
 
-        assert manager.check_mark_staleness("BTC-USD") is True  # 50 > 30
+        manager.reset_daily_tracking()
+        assert manager._start_of_day_equity is None
 
-    def test_default_threshold_without_config(self) -> None:
-        """Should use default 120 second threshold."""
-        manager = LiveRiskManager()
-        manager.last_mark_update["BTC-USD"] = time.time() - 100
+        manager.track_daily_pnl(Decimal("10000"), {})
+        assert manager._start_of_day_equity == Decimal("10000")
 
-        assert manager.check_mark_staleness("BTC-USD") is False  # 100 < 120
+        manager.append_risk_metrics(Decimal("10000"), {})
+        assert len(manager._risk_metrics) == 1
 
-    def test_exact_boundary(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        """Should handle exact threshold boundary."""
-        monkeypatch.setattr(time, "time", lambda: 1000.0)
-        manager = LiveRiskManager()
-        manager.last_mark_update["BTC-USD"] = 880.0  # Exactly 120 seconds ago
+        assert manager.track_daily_pnl(Decimal("9800"), {}) is False
+        assert manager.track_daily_pnl(Decimal("9000"), {}) is True
+        assert manager.is_reduce_only_mode() is True
 
-        assert manager.check_mark_staleness("BTC-USD") is False  # 120 > 120 is False
+        manager.reset_daily_tracking()
+        assert manager.is_reduce_only_mode() is False

@@ -135,6 +135,26 @@ class TestCheckVolatilityCircuitBreaker:
         assert manager._reduce_only_mode is True
         assert "volatility_breaker_BTC-USD" in manager._reduce_only_reason
 
+    def test_volatility_triggers_reduce_only(self) -> None:
+        """Should trigger reduce-only mode on high volatility."""
+        config = MockConfig(volatility_threshold_pct=Decimal("0.05"))
+        manager = LiveRiskManager(config=config)
+
+        assert manager.is_reduce_only_mode() is False
+
+        closes = [
+            Decimal("100"),
+            Decimal("100"),
+            Decimal("100"),
+            Decimal("100"),
+            Decimal("200"),
+        ]
+
+        result = manager.check_volatility_circuit_breaker("BTC-USD", closes)
+
+        assert result.triggered is True
+        assert manager.is_reduce_only_mode() is True
+
     def test_zero_average_not_triggered(self) -> None:
         """Should not trigger when average is zero."""
         config = MockConfig(volatility_threshold_pct=Decimal("0.05"))

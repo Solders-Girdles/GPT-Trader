@@ -155,6 +155,21 @@ class TestCheckLiquidationBuffer:
         assert result is True
         assert manager.positions["BTC-USD"]["reduce_only"] is True
 
+    def test_liquidation_buffer_triggers_reduce_only(self) -> None:
+        """Should trigger reduce-only for symbol when buffer low."""
+        config = MockConfig(min_liquidation_buffer_pct=Decimal("0.20"))
+        manager = LiveRiskManager(config=config)
+
+        # Buffer = |105 - 100| / 105 ≈ 4.76%, threshold 20%
+        triggered = manager.check_liquidation_buffer(
+            "BTC-PERP",
+            {"liquidation_price": 100, "mark": 105},
+            Decimal("1000"),
+        )
+
+        assert triggered is True
+        assert manager.positions["BTC-PERP"]["reduce_only"] is True
+
     def test_zero_mark_price_returns_false(self) -> None:
         """Should return False when mark price is zero."""
         config = MockConfig()

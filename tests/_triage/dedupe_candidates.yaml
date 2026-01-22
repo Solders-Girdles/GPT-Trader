@@ -8,28 +8,27 @@
 # Priorities: high | medium | low
 #
 version: 1
-generated_at: '2026-01-22T02:09:49.194063+00:00'
+generated_at: '2026-01-22T06:44:11.312818+00:00'
 summary:
   total_clusters: 188
   by_priority:
     high: 29
-    medium: 59
-    low: 100
+    medium: 57
+    low: 102
   by_decision:
     delete: 0
     merge: 188
     modernize: 0
 clusters:
-  9fb68df1afde:
+  4dddd33a4143:
     type: source_fanout
-    description: 40 test files import gpt_trader.tui.types
+    description: 39 test files import gpt_trader.tui.types
     files:
     - tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen_backtest_and_badges.py
     - tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen_indicator_hints.py
     - tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen_signal_detail_content.py
     - tests/unit/gpt_trader/tui/services/test_alert_manager.py
     - tests/unit/gpt_trader/tui/services/test_alert_manager_orders.py
-    - tests/unit/gpt_trader/tui/services/test_alert_manager_stale.py
     - tests/unit/gpt_trader/tui/services/test_execution_telemetry_metrics.py
     - tests/unit/gpt_trader/tui/services/test_trading_stats.py
     - tests/unit/gpt_trader/tui/services/test_trading_stats_compute.py
@@ -68,9 +67,9 @@ clusters:
     - gpt_trader.tui.types
     decision: merge
     target_location: tests/unit/gpt_trader/tui/screens/test_types.py
-    expected_file_delta: -39
+    expected_file_delta: -38
     priority: high
-    rationale: Consolidate 40 test files into single parametrized file
+    rationale: Consolidate 39 test files into single parametrized file
     status: pending
     added: '2026-01-22'
   8e91c83ef6d3:
@@ -113,40 +112,6 @@ clusters:
     rationale: Consolidate 27 test files into single parametrized file
     status: pending
     added: '2026-01-21'
-  5493b0081810:
-    type: source_fanout
-    description: 21 test files import gpt_trader.errors
-    files:
-    - tests/unit/gpt_trader/errors/test_base_specific_errors.py
-    - tests/unit/gpt_trader/errors/test_base_trading_and_hierarchy.py
-    - tests/unit/gpt_trader/errors/test_error_patterns_sync.py
-    - tests/unit/gpt_trader/errors/test_handler.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_validation.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_execute_order_payload.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_place_and_cancel.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_queries_fills_and_close_position.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_close_position.py
-    - tests/unit/gpt_trader/validation/test_base_validator.py
-    - tests/unit/gpt_trader/validation/test_composite_validators.py
-    - tests/unit/gpt_trader/validation/test_config_validators.py
-    - tests/unit/gpt_trader/validation/test_config_validators_edge_cases.py
-    - tests/unit/gpt_trader/validation/test_data_validators_dataframe.py
-    - tests/unit/gpt_trader/validation/test_data_validators_ohlc.py
-    - tests/unit/gpt_trader/validation/test_data_validators_series.py
-    - tests/unit/gpt_trader/validation/test_decorators.py
-    - tests/unit/gpt_trader/validation/test_numeric_validators.py
-    - tests/unit/gpt_trader/validation/test_pattern_validators.py
-    - tests/unit/gpt_trader/validation/test_temporal_validators.py
-    - tests/unit/gpt_trader/validation/test_type_validators.py
-    source_modules:
-    - gpt_trader.errors
-    decision: merge
-    target_location: tests/unit/gpt_trader/errors/test_errors.py
-    expected_file_delta: -20
-    priority: high
-    rationale: Consolidate 21 test files into single parametrized file
-    status: pending
-    added: '2026-01-21'
   ec9c7f7f07fc:
     type: source_fanout
     description: 21 test files import gpt_trader.backtesting.types
@@ -181,33 +146,35 @@ clusters:
     rationale: Consolidate 21 test files into single parametrized file
     status: pending
     added: '2026-01-21'
-  0b0b33cdd4c7:
+  fec6f0cad78c:
     type: source_fanout
-    description: 16 test files import gpt_trader.features.brokerages.coinbase.errors
+    description: 18 test files import gpt_trader.errors
     files:
-    - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_accounts_mixin.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_endpoints_and_paths.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_perform_http_request_and_lifecycle.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_request.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_coinbase_client.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_market_mixin_requests.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_orders_mixin.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_portfolio_mixin.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_place_and_cancel.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_queries_fills_and_close_position.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_fills.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_place_and_cancel.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_queries.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_cfm_endpoints.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_permissions_client_endpoint.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_system.py
+    - tests/unit/gpt_trader/errors/test_base_specific_errors.py
+    - tests/unit/gpt_trader/errors/test_base_trading_and_hierarchy.py
+    - tests/unit/gpt_trader/errors/test_error_patterns_sync.py
+    - tests/unit/gpt_trader/errors/test_handler.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_execute_order_payload.py
+    - tests/unit/gpt_trader/validation/test_base_validator.py
+    - tests/unit/gpt_trader/validation/test_composite_validators.py
+    - tests/unit/gpt_trader/validation/test_config_validators.py
+    - tests/unit/gpt_trader/validation/test_config_validators_edge_cases.py
+    - tests/unit/gpt_trader/validation/test_data_validators_dataframe.py
+    - tests/unit/gpt_trader/validation/test_data_validators_ohlc.py
+    - tests/unit/gpt_trader/validation/test_data_validators_series.py
+    - tests/unit/gpt_trader/validation/test_decorators.py
+    - tests/unit/gpt_trader/validation/test_numeric_validators.py
+    - tests/unit/gpt_trader/validation/test_pattern_validators.py
+    - tests/unit/gpt_trader/validation/test_temporal_validators.py
+    - tests/unit/gpt_trader/validation/test_type_validators.py
     source_modules:
-    - gpt_trader.features.brokerages.coinbase.errors
+    - gpt_trader.errors
     decision: merge
-    target_location: tests/unit/gpt_trader/features/brokerages/coinbase/client/test_errors.py
-    expected_file_delta: -15
+    target_location: tests/unit/gpt_trader/errors/test_errors.py
+    expected_file_delta: -17
     priority: high
-    rationale: Consolidate 16 test files into single parametrized file
+    rationale: Consolidate 18 test files into single parametrized file
     status: pending
     added: '2026-01-22'
   de9414d77913:
@@ -520,6 +487,30 @@ clusters:
     rationale: Consolidate 11 test files into single parametrized file
     status: pending
     added: '2026-01-22'
+  c1ad21138bd6:
+    type: source_fanout
+    description: 11 test files import gpt_trader.features.brokerages.coinbase.errors
+    files:
+    - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_accounts_mixin.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_endpoints_and_paths.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_perform_http_request_and_lifecycle.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_request.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_coinbase_client.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_market_mixin_requests.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_orders_mixin.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/client/test_portfolio_mixin.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_cfm_endpoints.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_permissions_client_endpoint.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_system.py
+    source_modules:
+    - gpt_trader.features.brokerages.coinbase.errors
+    decision: merge
+    target_location: tests/unit/gpt_trader/features/brokerages/coinbase/client/test_errors.py
+    expected_file_delta: -10
+    priority: high
+    rationale: Consolidate 11 test files into single parametrized file
+    status: pending
+    added: '2026-01-22'
   e20133734994:
     type: source_fanout
     description: 11 test files import gpt_trader.features.live_trade.strategies.hybrid.types
@@ -634,7 +625,7 @@ clusters:
     rationale: Consolidate 9 test files into single parametrized file
     status: pending
     added: '2026-01-20'
-  4d69d2208d4d:
+  bce7e1128b86:
     type: source_fanout
     description: 9 test files import gpt_trader.features.brokerages.coinbase.client
     files:
@@ -644,7 +635,7 @@ clusters:
     - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_rest_service_edges.py
     - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_accounts_positions_and_treasury.py
     - tests/unit/gpt_trader/features/brokerages/coinbase/test_http_request_layer.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_fallback.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_features.py
     - tests/unit/gpt_trader/features/brokerages/coinbase/test_retry_behaviour.py
     - tests/unit/gpt_trader/tui/services/test_credential_validator_connectivity.py
     source_modules:
@@ -655,51 +646,7 @@ clusters:
     priority: medium
     rationale: Consolidate 9 test files into single parametrized file
     status: pending
-    added: '2026-01-21'
-  528e7708d867:
-    type: source_fanout
-    description: 9 test files import gpt_trader.tui.services.alert_manager
-    files:
-    - tests/unit/gpt_trader/tui/screens/test_alert_history.py
-    - tests/unit/gpt_trader/tui/services/test_alert_manager.py
-    - tests/unit/gpt_trader/tui/services/test_alert_manager_categories.py
-    - tests/unit/gpt_trader/tui/services/test_alert_manager_execution.py
-    - tests/unit/gpt_trader/tui/services/test_alert_manager_orders.py
-    - tests/unit/gpt_trader/tui/services/test_alert_manager_stale.py
-    - tests/unit/gpt_trader/tui/widgets/test_alert_inbox.py
-    - tests/unit/gpt_trader/tui/widgets/test_alert_inbox_actions.py
-    - tests/unit/gpt_trader/tui/widgets/test_alert_inbox_rendering.py
-    source_modules:
-    - gpt_trader.tui.services.alert_manager
-    decision: merge
-    target_location: tests/unit/gpt_trader/tui/screens/test_alert_manager.py
-    expected_file_delta: -8
-    priority: medium
-    rationale: Consolidate 9 test files into single parametrized file
-    status: pending
-    added: '2026-01-21'
-  72948f9bf0a3:
-    type: source_fanout
-    description: 9 test files import gpt_trader.features.brokerages.coinbase.models
-    files:
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_retry_and_telemetry.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_rest_service_edges.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_accounts_positions_and_treasury.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_auth.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_data_models.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_data_staleness.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_models.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_models_edges.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_system.py
-    source_modules:
-    - gpt_trader.features.brokerages.coinbase.models
-    decision: merge
-    target_location: tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_models.py
-    expected_file_delta: -8
-    priority: medium
-    rationale: Consolidate 9 test files into single parametrized file
-    status: pending
-    added: '2026-01-20'
+    added: '2026-01-22'
   1e1b3faa9432:
     type: source_fanout
     description: 8 test files import gpt_trader.features.live_trade.guard_errors
@@ -742,6 +689,27 @@ clusters:
     rationale: Consolidate 8 test files into single parametrized file
     status: pending
     added: '2026-01-21'
+  49b6b1139e94:
+    type: source_fanout
+    description: 8 test files import gpt_trader.features.brokerages.coinbase.models
+    files:
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_rest_service_edges.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_accounts_positions_and_treasury.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_auth.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_data_models.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_data_staleness.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_models.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_models_edges.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_system.py
+    source_modules:
+    - gpt_trader.features.brokerages.coinbase.models
+    decision: merge
+    target_location: tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_models.py
+    expected_file_delta: -7
+    priority: medium
+    rationale: Consolidate 8 test files into single parametrized file
+    status: pending
+    added: '2026-01-22'
   5e44d0f2947f:
     type: source_fanout
     description: 8 test files import gpt_trader.features.intelligence.regime
@@ -826,50 +794,27 @@ clusters:
     rationale: Consolidate 8 test files into single parametrized file
     status: pending
     added: '2026-01-21'
-  95eb387c57c5:
+  e81300e18990:
     type: source_fanout
-    description: 8 test files import gpt_trader.features.brokerages.coinbase.ws
+    description: 8 test files import gpt_trader.tui.services.alert_manager
     files:
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_websocket.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_websocket_edges.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_backoff.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_degradation_callback.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_health.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_reset.py
-    - tests/unit/gpt_trader/tui/test_app_core.py
+    - tests/unit/gpt_trader/tui/screens/test_alert_history.py
+    - tests/unit/gpt_trader/tui/services/test_alert_manager.py
+    - tests/unit/gpt_trader/tui/services/test_alert_manager_categories.py
+    - tests/unit/gpt_trader/tui/services/test_alert_manager_execution.py
+    - tests/unit/gpt_trader/tui/services/test_alert_manager_orders.py
+    - tests/unit/gpt_trader/tui/widgets/test_alert_inbox.py
+    - tests/unit/gpt_trader/tui/widgets/test_alert_inbox_actions.py
+    - tests/unit/gpt_trader/tui/widgets/test_alert_inbox_rendering.py
     source_modules:
-    - gpt_trader.features.brokerages.coinbase.ws
+    - gpt_trader.tui.services.alert_manager
     decision: merge
-    target_location: tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_websocket.py
-    expected_file_delta: -3
-    priority: medium
-    rationale: Consolidated websocket + reconnection suites; kept ws_events separate
-    status: done
-    owner: codex
-    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/340
-    added: '2026-01-22'
-  ce4068fdc367:
-    type: source_fanout
-    description: 8 test files import gpt_trader.features.brokerages.coinbase.utilities
-    files:
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_position_metrics.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_pnl_service.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_pnl_service_edges.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_position_state_store_edges.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_rest_service_edges.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_perp_rules_and_quantize.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_product_catalog.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_enforce_perps_rules.py
-    source_modules:
-    - gpt_trader.features.brokerages.coinbase.utilities
-    decision: merge
-    target_location: tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_utilities.py
+    target_location: tests/unit/gpt_trader/tui/screens/test_alert_manager.py
     expected_file_delta: -7
     priority: medium
     rationale: Consolidate 8 test files into single parametrized file
     status: pending
-    added: '2026-01-20'
+    added: '2026-01-22'
   582004a85380:
     type: similar_names
     description: 7 test files match pattern test_funding_tracker_* in tests/unit/gpt_trader/backtesting/simulation
@@ -929,6 +874,26 @@ clusters:
     rationale: Consolidate 7 test files into single parametrized file
     status: pending
     added: '2026-01-21'
+  c621055da2fc:
+    type: source_fanout
+    description: 7 test files import gpt_trader.features.brokerages.coinbase.utilities
+    files:
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_position_metrics.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_pnl_service_edges.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_position_state_store_edges.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_rest_service_edges.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_perp_rules_and_quantize.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_product_catalog.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_enforce_perps_rules.py
+    source_modules:
+    - gpt_trader.features.brokerages.coinbase.utilities
+    decision: merge
+    target_location: tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_utilities.py
+    expected_file_delta: -6
+    priority: medium
+    rationale: Consolidate 7 test files into single parametrized file
+    status: pending
+    added: '2026-01-22'
   d2b78c2ed05c:
     type: source_fanout
     description: 7 test files import gpt_trader.monitoring.status_reporter
@@ -968,27 +933,6 @@ clusters:
     priority: medium
     rationale: Consolidate 7 test files into single parametrized file
     status: pending
-    added: '2026-01-21'
-  02a49ca5317d:
-    type: source_fanout
-    description: 6 test files import gpt_trader.tui.log_manager
-    files:
-    - tests/unit/gpt_trader/tui/test_app_widgets.py
-    - tests/unit/gpt_trader/tui/test_log_manager.py
-    - tests/unit/gpt_trader/tui/test_log_manager_formatters.py
-    - tests/unit/gpt_trader/tui/test_log_manager_handler.py
-    - tests/unit/gpt_trader/tui/test_log_manager_widgets.py
-    - tests/unit/gpt_trader/tui/widgets/test_logs.py
-    source_modules:
-    - gpt_trader.tui.log_manager
-    decision: merge
-    target_location: tests/unit/gpt_trader/tui/test_log_manager.py
-    expected_file_delta: -3
-    priority: medium
-    rationale: Consolidated log manager handler coverage and re-homed non-log widgets into existing suites
-    status: done
-    owner: codex
-    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/348
     added: '2026-01-21'
   0a76c33c609a:
     type: source_fanout
@@ -1104,25 +1048,6 @@ clusters:
     rationale: Consolidate 6 test files into single parametrized file
     status: pending
     added: '2026-01-20'
-  4bded001ecd6:
-    type: source_fanout
-    description: 6 test files import gpt_trader.features.brokerages.coinbase.market_data_service
-    files:
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_pnl_service_edges.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_product_service_edges.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_rest_service_edges.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service_edges.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_ticker_cache.py
-    source_modules:
-    - gpt_trader.features.brokerages.coinbase.market_data_service
-    decision: merge
-    target_location: tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_market_data_service.py
-    expected_file_delta: -5
-    priority: medium
-    rationale: Consolidate 6 test files into single parametrized file
-    status: pending
-    added: '2026-01-21'
   526ecb32ccb9:
     type: source_fanout
     description: 6 test files import gpt_trader.features.live_trade.degradation
@@ -1180,32 +1105,12 @@ clusters:
     rationale: Consolidate 6 test files into single parametrized file
     status: pending
     added: '2026-01-21'
-  d431f44c0fdb:
+  886ba5bfa6ac:
     type: source_fanout
-    description: 6 test files import gpt_trader.persistence.event_store
-    files:
-    - tests/unit/gpt_trader/app/test_application_container_resources.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_edges.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_rest_service_edges.py
-    - tests/unit/gpt_trader/monitoring/test_memory_metrics.py
-    - tests/unit/gpt_trader/persistence/test_event_store.py
-    - tests/unit/gpt_trader/persistence/test_event_store_edges.py
-    source_modules:
-    - gpt_trader.persistence.event_store
-    decision: merge
-    target_location: tests/unit/gpt_trader/app/test_event_store.py
-    expected_file_delta: -5
-    priority: medium
-    rationale: Consolidate 6 test files into single parametrized file
-    status: pending
-    added: '2026-01-21'
-  d1d0efef45e2:
-    type: source_fanout
-    description: 89 test files import gpt_trader.core
+    description: 74 test files import gpt_trader.core
     files:
     - tests/unit/gpt_trader/backtesting/simulation/test_fill_model.py
     - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_market.py
     - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_queue.py
     - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_stop.py
     - tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker.py
@@ -1219,22 +1124,9 @@ clusters:
     - tests/unit/gpt_trader/backtesting/test_simulation_basics.py
     - tests/unit/gpt_trader/backtesting/validation/test_guarded_execution.py
     - tests/unit/gpt_trader/core/test_core_types.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_configurations.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_flags_and_coercion.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_validation.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build.py
     - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_execute_order_payload.py
     - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_find_existing_order_by_client_id.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_place_and_cancel.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_queries_fills_and_close_position.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_portfolio_service.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_retry_and_telemetry.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_close_position.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_place_and_cancel.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_queries.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_cfm.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_edges.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_intx.py
     - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_product_service_listing_and_get_product.py
     - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_account_manager_snapshot.py
     - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_accounts_balances_and_products.py
@@ -1252,10 +1144,10 @@ clusters:
     - tests/unit/gpt_trader/features/brokerages/coinbase/test_retry_behaviour.py
     - tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_enforce_perps_rules.py
     - tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_service.py
+    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker.py
     - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_market_data.py
     - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_orders.py
     - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_position_updates.py
-    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_positions.py
     - tests/unit/gpt_trader/features/data/test_data_coinbase_edges.py
     - tests/unit/gpt_trader/features/data/test_data_coinbase_runtime_edges.py
     - tests/unit/gpt_trader/features/data/test_quality_candles.py
@@ -1265,8 +1157,7 @@ clusters:
     - tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_state.py
     - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_order.py
     - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_init_and_metrics.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_resilience.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_with_retry.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_retry_flows.py
     - tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder.py
     - tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_preview.py
     - tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_rejection.py
@@ -1296,9 +1187,9 @@ clusters:
     - gpt_trader.core
     decision: merge
     target_location: tests/unit/gpt_trader/backtesting/simulation/test_core.py
-    expected_file_delta: -88
+    expected_file_delta: -73
     priority: low
-    rationale: Consolidate 89 test files into single parametrized file
+    rationale: Consolidate 74 test files into single parametrized file
     status: pending
     added: '2026-01-22'
   815eedeb4ab0:
@@ -1367,82 +1258,6 @@ clusters:
     rationale: Consolidate 15 test files into single parametrized file
     status: pending
     added: '2026-01-21'
-  0e3fd1462c0c:
-    type: similar_names
-    description: 5 test files match pattern test_contract_suite_* in tests/unit/gpt_trader/features/brokerages/coinbase/rest
-    files:
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_place_and_cancel.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_queries_fills_and_close_position.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_pnl_service.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_portfolio_service.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_retry_and_telemetry.py
-    source_modules: []
-    decision: merge
-    target_location: tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite.py
-    expected_file_delta: -4
-    priority: low
-    rationale: Consolidated contract suite shards into test_contract_suite with shared helpers
-    status: done
-    owner: codex
-    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/341
-    added: '2026-01-21'
-  13570f162254:
-    type: similar_names
-    description: 5 test files match pattern test_broker_executor_* in tests/unit/gpt_trader/features/live_trade/execution
-    files:
-    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_order.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_init_and_metrics.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_resilience.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_retry_helpers.py
-    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_with_retry.py
-    source_modules: []
-    decision: merge
-    target_location: tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor.py
-    expected_file_delta: -1
-    priority: low
-    rationale: Consolidated broker executor retry coverage into fewer cohesive modules
-    status: done
-    owner: codex
-    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/345
-    added: '2026-01-21'
-  1828c35d1207:
-    type: similar_names
-    description: 5 test files match pattern test_alert_manager_* in tests/unit/gpt_trader/tui/services
-    files:
-    - tests/unit/gpt_trader/tui/services/test_alert_manager.py
-    - tests/unit/gpt_trader/tui/services/test_alert_manager_categories.py
-    - tests/unit/gpt_trader/tui/services/test_alert_manager_execution.py
-    - tests/unit/gpt_trader/tui/services/test_alert_manager_orders.py
-    - tests/unit/gpt_trader/tui/services/test_alert_manager_stale.py
-    source_modules: []
-    decision: merge
-    target_location: tests/unit/gpt_trader/tui/services/test_alert_manager.py
-    expected_file_delta: -1
-    priority: low
-    rationale: Consolidated alert manager shards into fewer cohesive modules
-    status: done
-    owner: codex
-    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/349
-    added: '2026-01-21'
-  1ddeaae0a707:
-    type: similar_names
-    description: 5 test files match pattern test_hybrid_paper_* in tests/unit/gpt_trader/features/brokerages/paper
-    files:
-    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker.py
-    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_market_data.py
-    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_orders.py
-    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_position_updates.py
-    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_positions.py
-    source_modules: []
-    decision: merge
-    target_location: tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper.py
-    expected_file_delta: -1
-    priority: low
-    rationale: Consolidated hybrid paper broker shards into fewer cohesive modules
-    status: done
-    owner: codex
-    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/350
-    added: '2026-01-21'
   52946e567f9f:
     type: similar_names
     description: 5 test files match pattern test_strategy_engine_* in tests/unit/gpt_trader/features/live_trade/engines
@@ -1459,25 +1274,6 @@ clusters:
     priority: low
     rationale: Consolidate 5 test files into single parametrized file
     status: pending
-    added: '2026-01-21'
-  5a8749976a2e:
-    type: similar_names
-    description: 5 test files match pattern test_market_data_* in tests/unit/gpt_trader/features/brokerages/coinbase
-    files:
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_fallback.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_features.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service_edges.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_ticker_cache.py
-    source_modules: []
-    decision: merge
-    target_location: tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data.py
-    expected_file_delta: -1
-    priority: low
-    rationale: Consolidated market data shards into fewer cohesive modules
-    status: done
-    owner: codex
-    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/353
     added: '2026-01-21'
   7dd7f1b90ccb:
     type: similar_names
@@ -1530,61 +1326,6 @@ clusters:
     rationale: Consolidate 5 test files into single parametrized file
     status: pending
     added: '2026-01-21'
-  cc5aea60ee1b:
-    type: similar_names
-    description: 5 test files match pattern test_fill_model_* in tests/unit/gpt_trader/backtesting/simulation
-    files:
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_market.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_queue.py
-    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_stop.py
-    source_modules: []
-    decision: merge
-    target_location: tests/unit/gpt_trader/backtesting/simulation/test_fill_model.py
-    expected_file_delta: -1
-    priority: low
-    rationale: Consolidated fill model coverage into fewer cohesive modules
-    status: done
-    owner: codex
-    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/346
-    added: '2026-01-21'
-  033123dabd72:
-    type: similar_names
-    description: 4 test files match pattern test_order_service_* in tests/unit/gpt_trader/features/brokerages/coinbase/rest
-    files:
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_close_position.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_fills.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_place_and_cancel.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_queries.py
-    source_modules: []
-    decision: merge
-    target_location: tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service.py
-    expected_file_delta: -3
-    priority: low
-    rationale: Consolidated order service suites into a single module with shared helpers
-    status: done
-    owner: codex
-    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/342
-    added: '2026-01-21'
-  17fece0a22bc:
-    type: similar_names
-    description: 4 test files match pattern test_ws_reconnection_* in tests/unit/gpt_trader/features/brokerages/coinbase
-    files:
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_backoff.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_degradation_callback.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_health.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_reset.py
-    source_modules: []
-    decision: merge
-    target_location: tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection.py
-    expected_file_delta: -3
-    priority: low
-    rationale: Consolidated 4 -> 1 file
-    status: done
-    owner: codex
-    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/336
-    added: '2026-01-20'
   1cf535f58810:
     type: similar_names
     description: 4 test files match pattern test_fee_calculator_* in tests/unit/gpt_trader/backtesting/simulation
@@ -1635,6 +1376,22 @@ clusters:
     owner: codex
     pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/343
     added: '2026-01-21'
+  4ad11115861b:
+    type: similar_names
+    description: 4 test files match pattern test_hybrid_paper_* in tests/unit/gpt_trader/features/brokerages/paper
+    files:
+    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker.py
+    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_market_data.py
+    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_orders.py
+    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_position_updates.py
+    source_modules: []
+    decision: merge
+    target_location: tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper.py
+    expected_file_delta: -3
+    priority: low
+    rationale: Consolidate 4 test files into single parametrized file
+    status: pending
+    added: '2026-01-22'
   4d20aae790b1:
     type: similar_names
     description: 4 test files match pattern test_event_handlers_* in tests/unit/gpt_trader/tui/mixins
@@ -1971,6 +1728,22 @@ clusters:
     rationale: Consolidate 4 test files into single parametrized file
     status: pending
     added: '2026-01-20'
+  a8b68bb428de:
+    type: similar_names
+    description: 4 test files match pattern test_broker_executor_* in tests/unit/gpt_trader/features/live_trade/execution
+    files:
+    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_order.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_init_and_metrics.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_retry_flows.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_retry_helpers.py
+    source_modules: []
+    decision: merge
+    target_location: tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor.py
+    expected_file_delta: -3
+    priority: low
+    rationale: Consolidate 4 test files into single parametrized file
+    status: pending
+    added: '2026-01-22'
   b515e554aeda:
     type: similar_names
     description: 4 test files match pattern test_order_event_* in tests/unit/gpt_trader/features/live_trade/execution
@@ -2003,22 +1776,6 @@ clusters:
     rationale: Consolidate 4 test files into single parametrized file
     status: pending
     added: '2026-01-20'
-  d0fca0ffbc15:
-    type: similar_names
-    description: 4 test files match pattern test_portfolio_service_* in tests/unit/gpt_trader/features/brokerages/coinbase/rest
-    files:
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_cfm.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_edges.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_intx.py
-    source_modules: []
-    decision: merge
-    target_location: tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service.py
-    expected_file_delta: -3
-    priority: low
-    rationale: Consolidate 4 test files into single parametrized file
-    status: pending
-    added: '2026-01-21'
   d461eb374bb2:
     type: similar_names
     description: 4 test files match pattern test_orders_store_* in tests/unit/gpt_trader/persistence
@@ -2035,6 +1792,38 @@ clusters:
     rationale: Consolidate 4 test files into single parametrized file
     status: pending
     added: '2026-01-20'
+  d622238858da:
+    type: similar_names
+    description: 4 test files match pattern test_fill_model_* in tests/unit/gpt_trader/backtesting/simulation
+    files:
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_queue.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_stop.py
+    source_modules: []
+    decision: merge
+    target_location: tests/unit/gpt_trader/backtesting/simulation/test_fill_model.py
+    expected_file_delta: -3
+    priority: low
+    rationale: Consolidate 4 test files into single parametrized file
+    status: pending
+    added: '2026-01-22'
+  d9defbdf8ba3:
+    type: similar_names
+    description: 4 test files match pattern test_alert_manager_* in tests/unit/gpt_trader/tui/services
+    files:
+    - tests/unit/gpt_trader/tui/services/test_alert_manager.py
+    - tests/unit/gpt_trader/tui/services/test_alert_manager_categories.py
+    - tests/unit/gpt_trader/tui/services/test_alert_manager_execution.py
+    - tests/unit/gpt_trader/tui/services/test_alert_manager_orders.py
+    source_modules: []
+    decision: merge
+    target_location: tests/unit/gpt_trader/tui/services/test_alert_manager.py
+    expected_file_delta: -3
+    priority: low
+    rationale: Consolidate 4 test files into single parametrized file
+    status: pending
+    added: '2026-01-22'
   de08eabdc085:
     type: similar_names
     description: 4 test files match pattern test_delta_updater_* in tests/unit/gpt_trader/tui/state_management
@@ -2051,22 +1840,6 @@ clusters:
     rationale: Consolidate 4 test files into single parametrized file
     status: pending
     added: '2026-01-20'
-  f736238d3d15:
-    type: similar_names
-    description: 4 test files match pattern test_log_manager_* in tests/unit/gpt_trader/tui
-    files:
-    - tests/unit/gpt_trader/tui/test_log_manager.py
-    - tests/unit/gpt_trader/tui/test_log_manager_formatters.py
-    - tests/unit/gpt_trader/tui/test_log_manager_handler.py
-    - tests/unit/gpt_trader/tui/test_log_manager_widgets.py
-    source_modules: []
-    decision: merge
-    target_location: tests/unit/gpt_trader/tui/test_log_manager.py
-    expected_file_delta: -3
-    priority: low
-    rationale: Consolidate 4 test files into single parametrized file
-    status: pending
-    added: '2026-01-21'
   15c2ae7a8003:
     type: similar_names
     description: 3 test files match pattern test_alert_types_* in tests/unit/gpt_trader/monitoring
@@ -2116,6 +1889,21 @@ clusters:
     rationale: Consolidate 3 test files into single parametrized file
     status: pending
     added: '2026-01-21'
+  1aceb62afe0f:
+    type: similar_names
+    description: 3 test files match pattern test_market_data_* in tests/unit/gpt_trader/features/brokerages/coinbase
+    files:
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_features.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_ticker_cache.py
+    source_modules: []
+    decision: merge
+    target_location: tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data.py
+    expected_file_delta: -2
+    priority: low
+    rationale: Consolidate 3 test files into single parametrized file
+    status: pending
+    added: '2026-01-22'
   224e07597e52:
     type: similar_names
     description: 3 test files match pattern test_data_validators_* in tests/unit/gpt_trader/validation
@@ -2326,21 +2114,6 @@ clusters:
     rationale: Consolidate 3 test files into single parametrized file
     status: pending
     added: '2026-01-21'
-  796b9750ee76:
-    type: similar_names
-    description: 3 test files match pattern test_base_build_* in tests/unit/gpt_trader/features/brokerages/coinbase/rest
-    files:
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_configurations.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_flags_and_coercion.py
-    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_validation.py
-    source_modules: []
-    decision: merge
-    target_location: tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build.py
-    expected_file_delta: -2
-    priority: low
-    rationale: Consolidate 3 test files into single parametrized file
-    status: pending
-    added: '2026-01-20'
   8073d799fbaa:
     type: similar_names
     description: 3 test files match pattern test_setup_configure_* in tests/unit/gpt_trader/logging
@@ -2596,6 +2369,47 @@ clusters:
     rationale: Consolidate 3 test files into single parametrized file
     status: pending
     added: '2026-01-20'
+  02a49ca5317d:
+    type: source_fanout
+    description: 6 test files import gpt_trader.tui.log_manager
+    files:
+    - tests/unit/gpt_trader/tui/test_app_widgets.py
+    - tests/unit/gpt_trader/tui/test_log_manager.py
+    - tests/unit/gpt_trader/tui/test_log_manager_formatters.py
+    - tests/unit/gpt_trader/tui/test_log_manager_handler.py
+    - tests/unit/gpt_trader/tui/test_log_manager_widgets.py
+    - tests/unit/gpt_trader/tui/widgets/test_logs.py
+    source_modules:
+    - gpt_trader.tui.log_manager
+    decision: merge
+    target_location: tests/unit/gpt_trader/tui/test_log_manager.py
+    expected_file_delta: -3
+    priority: medium
+    rationale: Consolidated log manager handler coverage and re-homed non-log widgets
+      into existing suites
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/348
+    added: '2026-01-21'
+  033123dabd72:
+    type: similar_names
+    description: 4 test files match pattern test_order_service_* in tests/unit/gpt_trader/features/brokerages/coinbase/rest
+    files:
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_close_position.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_fills.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_place_and_cancel.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_queries.py
+    source_modules: []
+    decision: merge
+    target_location: tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service.py
+    expected_file_delta: -3
+    priority: low
+    rationale: Consolidated order service suites into a single module with shared
+      helpers
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/342
+    added: '2026-01-21'
   07116d624c54:
     type: similar_names
     description: 11 test files match pattern test_order_event_* in tests/unit/gpt_trader/features/live_trade/execution
@@ -2674,6 +2488,26 @@ clusters:
     owner: codex
     pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/335
     added: '2026-01-20'
+  0e3fd1462c0c:
+    type: similar_names
+    description: 5 test files match pattern test_contract_suite_* in tests/unit/gpt_trader/features/brokerages/coinbase/rest
+    files:
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_place_and_cancel.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_queries_fills_and_close_position.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_pnl_service.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_portfolio_service.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_retry_and_telemetry.py
+    source_modules: []
+    decision: merge
+    target_location: tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite.py
+    expected_file_delta: -4
+    priority: low
+    rationale: Consolidated contract suite shards into test_contract_suite with shared
+      helpers
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/341
+    added: '2026-01-21'
   10f0d3fb855f:
     type: similar_names
     description: 11 test files match pattern test_order_submission_* in tests/unit/gpt_trader/features/live_trade/execution
@@ -2734,6 +2568,25 @@ clusters:
     owner: codex
     pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/336
     added: '2026-01-20'
+  13570f162254:
+    type: similar_names
+    description: 5 test files match pattern test_broker_executor_* in tests/unit/gpt_trader/features/live_trade/execution
+    files:
+    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_order.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_init_and_metrics.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_resilience.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_retry_helpers.py
+    - tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_with_retry.py
+    source_modules: []
+    decision: merge
+    target_location: tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor.py
+    expected_file_delta: -1
+    priority: low
+    rationale: Consolidated broker executor retry coverage into fewer cohesive modules
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/345
+    added: '2026-01-21'
   14389b2ace72:
     type: similar_names
     description: 17 test files match pattern test_order_submission_* in tests/unit/gpt_trader/features/live_trade/execution
@@ -2778,6 +2631,43 @@ clusters:
     owner: claude
     pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/303
     added: '2026-01-20'
+  17fece0a22bc:
+    type: similar_names
+    description: 4 test files match pattern test_ws_reconnection_* in tests/unit/gpt_trader/features/brokerages/coinbase
+    files:
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_backoff.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_degradation_callback.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_health.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_reset.py
+    source_modules: []
+    decision: merge
+    target_location: tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection.py
+    expected_file_delta: -3
+    priority: low
+    rationale: Consolidated 4 -> 1 file
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/336
+    added: '2026-01-20'
+  1828c35d1207:
+    type: similar_names
+    description: 5 test files match pattern test_alert_manager_* in tests/unit/gpt_trader/tui/services
+    files:
+    - tests/unit/gpt_trader/tui/services/test_alert_manager.py
+    - tests/unit/gpt_trader/tui/services/test_alert_manager_categories.py
+    - tests/unit/gpt_trader/tui/services/test_alert_manager_execution.py
+    - tests/unit/gpt_trader/tui/services/test_alert_manager_orders.py
+    - tests/unit/gpt_trader/tui/services/test_alert_manager_stale.py
+    source_modules: []
+    decision: merge
+    target_location: tests/unit/gpt_trader/tui/services/test_alert_manager.py
+    expected_file_delta: -1
+    priority: low
+    rationale: Consolidated alert manager shards into fewer cohesive modules
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/349
+    added: '2026-01-21'
   1b083f952ad7:
     type: similar_names
     description: 6 test files match pattern test_log_manager_* in tests/unit/gpt_trader/tui
@@ -2859,6 +2749,25 @@ clusters:
     owner: claude
     pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/308
     added: '2026-01-20'
+  1ddeaae0a707:
+    type: similar_names
+    description: 5 test files match pattern test_hybrid_paper_* in tests/unit/gpt_trader/features/brokerages/paper
+    files:
+    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker.py
+    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_market_data.py
+    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_orders.py
+    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_position_updates.py
+    - tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_positions.py
+    source_modules: []
+    decision: merge
+    target_location: tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper.py
+    expected_file_delta: -1
+    priority: low
+    rationale: Consolidated hybrid paper broker shards into fewer cohesive modules
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/350
+    added: '2026-01-21'
   21a3b31c1fec:
     type: source_fanout
     description: 5 test files import gpt_trader.backtesting.simulation.fill_model
@@ -3072,6 +2981,25 @@ clusters:
     owner: claude
     pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/303
     added: '2026-01-20'
+  5a8749976a2e:
+    type: similar_names
+    description: 5 test files match pattern test_market_data_* in tests/unit/gpt_trader/features/brokerages/coinbase
+    files:
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_fallback.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_features.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service_edges.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_ticker_cache.py
+    source_modules: []
+    decision: merge
+    target_location: tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data.py
+    expected_file_delta: -1
+    priority: low
+    rationale: Consolidated market data shards into fewer cohesive modules
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/353
+    added: '2026-01-21'
   5b3d06876e1e:
     type: similar_names
     description: 5 test files match pattern test_trading_stats_* in tests/unit/gpt_trader/tui/services
@@ -3307,6 +3235,29 @@ clusters:
     owner: claude
     pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/302
     added: '2026-01-20'
+  95eb387c57c5:
+    type: source_fanout
+    description: 8 test files import gpt_trader.features.brokerages.coinbase.ws
+    files:
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_websocket.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_websocket_edges.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_backoff.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_degradation_callback.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_health.py
+    - tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_reset.py
+    - tests/unit/gpt_trader/tui/test_app_core.py
+    source_modules:
+    - gpt_trader.features.brokerages.coinbase.ws
+    decision: merge
+    target_location: tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_websocket.py
+    expected_file_delta: -3
+    priority: medium
+    rationale: Consolidated websocket + reconnection suites; kept ws_events separate
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/340
+    added: '2026-01-22'
   97978043d552:
     type: source_fanout
     description: 5 test files import gpt_trader.tui.thresholds
@@ -3538,6 +3489,25 @@ clusters:
     owner: codex
     pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/336
     added: '2026-01-20'
+  cc5aea60ee1b:
+    type: similar_names
+    description: 5 test files match pattern test_fill_model_* in tests/unit/gpt_trader/backtesting/simulation
+    files:
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_market.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_queue.py
+    - tests/unit/gpt_trader/backtesting/simulation/test_fill_model_stop.py
+    source_modules: []
+    decision: merge
+    target_location: tests/unit/gpt_trader/backtesting/simulation/test_fill_model.py
+    expected_file_delta: -1
+    priority: low
+    rationale: Consolidated fill model coverage into fewer cohesive modules
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/346
+    added: '2026-01-21'
   cd648425ded4:
     type: source_fanout
     description: 6 test files import gpt_trader.tui.widgets.alert_inbox

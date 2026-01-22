@@ -1550,8 +1550,10 @@ clusters:
     target_location: tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service.py
     expected_file_delta: -3
     priority: low
-    rationale: Consolidate 4 test files into single parametrized file
-    status: pending
+    rationale: Consolidated order service suites into a single module with shared helpers
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/342
     added: '2026-01-21'
   17fece0a22bc:
     type: similar_names

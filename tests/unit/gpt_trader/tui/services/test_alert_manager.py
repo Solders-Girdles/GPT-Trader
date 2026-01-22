@@ -1,37 +1,6 @@
 from __future__ import annotations
 
-from unittest.mock import MagicMock
-
-import pytest
-from tests.unit.gpt_trader.tui.services.alert_manager_test_utils import (  # naming: allow
-    create_alert_manager,
-    create_mock_app,
-    create_sample_state,
-)
-
-from gpt_trader.tui.services.alert_manager import (
-    AlertManager,
-    AlertRule,
-    AlertSeverity,
-)
-
-
-@pytest.fixture
-def mock_app() -> MagicMock:
-    """Create a mock TraderApp."""
-    return create_mock_app()
-
-
-@pytest.fixture
-def alert_manager(mock_app: MagicMock) -> AlertManager:
-    """Create an AlertManager with mock app."""
-    return create_alert_manager(mock_app)
-
-
-@pytest.fixture
-def sample_state():
-    """Create a test TuiState."""
-    return create_sample_state()
+from gpt_trader.tui.services.alert_manager import AlertRule, AlertSeverity
 
 
 class TestAlertManager:

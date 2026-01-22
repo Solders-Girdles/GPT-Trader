@@ -736,7 +736,6 @@
       "tests/unit/gpt_trader/tui/services/test_alert_manager_categories.py",
       "tests/unit/gpt_trader/tui/services/test_alert_manager_execution.py",
       "tests/unit/gpt_trader/tui/services/test_alert_manager_orders.py",
-      "tests/unit/gpt_trader/tui/services/test_alert_manager_stale.py",
       "tests/unit/gpt_trader/tui/services/test_config_service.py",
       "tests/unit/gpt_trader/tui/services/test_credential_validator_connectivity.py",
       "tests/unit/gpt_trader/tui/services/test_credential_validator_key_format_and_compatibility.py",
@@ -42704,7 +42703,7 @@
     "tests/unit/gpt_trader/tui/services/test_alert_manager.py": [
       {
         "name": "TestAlertManager::test_default_rules_registered",
-        "line": 40,
+        "line": 9,
         "markers": [
           "unit"
         ],
@@ -42713,7 +42712,7 @@
       },
       {
         "name": "TestAlertManager::test_add_custom_rule",
-        "line": 50,
+        "line": 19,
         "markers": [
           "unit"
         ],
@@ -42722,7 +42721,7 @@
       },
       {
         "name": "TestAlertManager::test_remove_rule",
-        "line": 64,
+        "line": 33,
         "markers": [
           "unit"
         ],
@@ -42731,7 +42730,7 @@
       },
       {
         "name": "TestAlertManager::test_remove_nonexistent_rule",
-        "line": 72,
+        "line": 41,
         "markers": [
           "unit"
         ],
@@ -42740,7 +42739,7 @@
       },
       {
         "name": "TestAlertManager::test_enable_disable_rule",
-        "line": 77,
+        "line": 46,
         "markers": [
           "unit"
         ],
@@ -42749,7 +42748,7 @@
       },
       {
         "name": "TestAlertManager::test_alert_triggered_on_condition",
-        "line": 87,
+        "line": 56,
         "markers": [
           "unit"
         ],
@@ -42758,7 +42757,7 @@
       },
       {
         "name": "TestAlertManager::test_alert_cooldown",
-        "line": 98,
+        "line": 67,
         "markers": [
           "unit"
         ],
@@ -42767,7 +42766,7 @@
       },
       {
         "name": "TestAlertManager::test_no_alert_when_condition_not_met",
-        "line": 110,
+        "line": 79,
         "markers": [
           "unit"
         ],
@@ -42776,7 +42775,7 @@
       },
       {
         "name": "TestAlertManager::test_rate_limit_alert",
-        "line": 117,
+        "line": 86,
         "markers": [
           "unit"
         ],
@@ -42785,7 +42784,7 @@
       },
       {
         "name": "TestAlertManager::test_reduce_only_alert",
-        "line": 126,
+        "line": 95,
         "markers": [
           "unit"
         ],
@@ -42794,7 +42793,7 @@
       },
       {
         "name": "TestAlertManager::test_daily_loss_warning",
-        "line": 137,
+        "line": 106,
         "markers": [
           "unit"
         ],
@@ -42803,7 +42802,7 @@
       },
       {
         "name": "TestAlertManager::test_bot_stopped_with_positions_alert",
-        "line": 147,
+        "line": 116,
         "markers": [
           "unit"
         ],
@@ -42812,7 +42811,7 @@
       },
       {
         "name": "TestAlertManager::test_alert_history",
-        "line": 164,
+        "line": 133,
         "markers": [
           "unit"
         ],
@@ -42821,7 +42820,7 @@
       },
       {
         "name": "TestAlertManager::test_clear_history",
-        "line": 174,
+        "line": 143,
         "markers": [
           "unit"
         ],
@@ -42830,7 +42829,7 @@
       },
       {
         "name": "TestAlertManager::test_reset_cooldowns",
-        "line": 184,
+        "line": 153,
         "markers": [
           "unit"
         ],
@@ -42839,7 +42838,7 @@
       },
       {
         "name": "TestAlertManager::test_disabled_rule_not_checked",
-        "line": 196,
+        "line": 165,
         "markers": [
           "unit"
         ],
@@ -42850,7 +42849,7 @@
     "tests/unit/gpt_trader/tui/services/test_alert_manager_categories.py": [
       {
         "name": "TestAlertCategories::test_alert_category_values",
-        "line": 41,
+        "line": 16,
         "markers": [
           "unit"
         ],
@@ -42859,7 +42858,7 @@
       },
       {
         "name": "TestAlertCategories::test_alert_has_category",
-        "line": 50,
+        "line": 25,
         "markers": [
           "unit"
         ],
@@ -42868,7 +42867,7 @@
       },
       {
         "name": "TestAlertCategories::test_default_rules_have_categories",
-        "line": 57,
+        "line": 32,
         "markers": [
           "unit"
         ],
@@ -42877,7 +42876,7 @@
       },
       {
         "name": "TestAlertCategories::test_filter_history_by_category",
-        "line": 67,
+        "line": 42,
         "markers": [
           "unit"
         ],
@@ -42886,7 +42885,7 @@
       },
       {
         "name": "TestAlertCategories::test_filter_history_by_severity",
-        "line": 78,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -42895,7 +42894,7 @@
       },
       {
         "name": "TestAlertCategories::test_get_history_by_category",
-        "line": 90,
+        "line": 65,
         "markers": [
           "unit"
         ],
@@ -42904,7 +42903,7 @@
       },
       {
         "name": "TestAlertCategories::test_get_category_counts",
-        "line": 99,
+        "line": 74,
         "markers": [
           "unit"
         ],
@@ -42913,7 +42912,7 @@
       },
       {
         "name": "TestAlertCategories::test_custom_rule_with_category",
-        "line": 109,
+        "line": 84,
         "markers": [
           "unit"
         ],
@@ -42922,7 +42921,7 @@
       },
       {
         "name": "TestAlertCategories::test_risk_alert_category",
-        "line": 122,
+        "line": 97,
         "markers": [
           "unit"
         ],
@@ -42931,7 +42930,7 @@
       },
       {
         "name": "TestAlertCategories::test_position_alert_category",
-        "line": 130,
+        "line": 105,
         "markers": [
           "unit"
         ],
@@ -42940,7 +42939,7 @@
       },
       {
         "name": "TestValidationAlerts::test_validation_rules_registered",
-        "line": 141,
+        "line": 116,
         "markers": [
           "unit"
         ],
@@ -42949,7 +42948,7 @@
       },
       {
         "name": "TestValidationAlerts::test_validation_escalation_alert_triggers",
-        "line": 147,
+        "line": 122,
         "markers": [
           "unit"
         ],
@@ -42958,7 +42957,7 @@
       },
       {
         "name": "TestValidationAlerts::test_validation_escalation_no_alert_when_not_escalated",
-        "line": 159,
+        "line": 134,
         "markers": [
           "unit"
         ],
@@ -42967,7 +42966,7 @@
       },
       {
         "name": "TestValidationAlerts::test_validation_failures_alert_triggers_at_threshold",
-        "line": 169,
+        "line": 144,
         "markers": [
           "unit"
         ],
@@ -42976,7 +42975,7 @@
       },
       {
         "name": "TestValidationAlerts::test_validation_failures_no_alert_below_threshold",
-        "line": 183,
+        "line": 158,
         "markers": [
           "unit"
         ],
@@ -42985,7 +42984,7 @@
       },
       {
         "name": "TestValidationAlerts::test_validation_failures_no_alert_when_escalated",
-        "line": 193,
+        "line": 168,
         "markers": [
           "unit"
         ],
@@ -42994,7 +42993,7 @@
       },
       {
         "name": "TestValidationAlerts::test_validation_alerts_handle_missing_data",
-        "line": 205,
+        "line": 180,
         "markers": [
           "unit"
         ],
@@ -43005,7 +43004,7 @@
     "tests/unit/gpt_trader/tui/services/test_alert_manager_execution.py": [
       {
         "name": "TestExecutionHealthAlerts::test_execution_rules_registered",
-        "line": 37,
+        "line": 11,
         "markers": [
           "unit"
         ],
@@ -43014,7 +43013,7 @@
       },
       {
         "name": "TestExecutionHealthAlerts::test_circuit_breaker_alert",
-        "line": 46,
+        "line": 20,
         "markers": [
           "unit"
         ],
@@ -43023,7 +43022,7 @@
       },
       {
         "name": "TestExecutionHealthAlerts::test_circuit_breaker_no_alert_when_closed",
-        "line": 58,
+        "line": 32,
         "markers": [
           "unit"
         ],
@@ -43032,7 +43031,7 @@
       },
       {
         "name": "TestExecutionHealthAlerts::test_execution_critical_alert",
-        "line": 68,
+        "line": 42,
         "markers": [
           "unit"
         ],
@@ -43041,7 +43040,7 @@
       },
       {
         "name": "TestExecutionHealthAlerts::test_execution_critical_requires_sample_size",
-        "line": 83,
+        "line": 57,
         "markers": [
           "unit"
         ],
@@ -43050,7 +43049,7 @@
       },
       {
         "name": "TestExecutionHealthAlerts::test_execution_degraded_alert",
-        "line": 96,
+        "line": 70,
         "markers": [
           "unit"
         ],
@@ -43059,7 +43058,7 @@
       },
       {
         "name": "TestExecutionHealthAlerts::test_execution_degraded_not_triggered_when_critical",
-        "line": 111,
+        "line": 85,
         "markers": [
           "unit"
         ],
@@ -43068,7 +43067,7 @@
       },
       {
         "name": "TestExecutionHealthAlerts::test_execution_degraded_requires_sample_size",
-        "line": 128,
+        "line": 102,
         "markers": [
           "unit"
         ],
@@ -43077,7 +43076,7 @@
       },
       {
         "name": "TestExecutionHealthAlerts::test_p95_latency_alert",
-        "line": 141,
+        "line": 115,
         "markers": [
           "unit"
         ],
@@ -43086,7 +43085,7 @@
       },
       {
         "name": "TestExecutionHealthAlerts::test_p95_latency_no_alert_when_normal",
-        "line": 157,
+        "line": 131,
         "markers": [
           "unit"
         ],
@@ -43095,7 +43094,7 @@
       },
       {
         "name": "TestExecutionHealthAlerts::test_retry_rate_alert",
-        "line": 171,
+        "line": 145,
         "markers": [
           "unit"
         ],
@@ -43104,7 +43103,7 @@
       },
       {
         "name": "TestExecutionHealthAlerts::test_retry_rate_no_alert_when_normal",
-        "line": 188,
+        "line": 162,
         "markers": [
           "unit"
         ],
@@ -43113,7 +43112,7 @@
       },
       {
         "name": "TestExecutionHealthAlerts::test_execution_alerts_handle_missing_data",
-        "line": 203,
+        "line": 177,
         "markers": [
           "unit"
         ],
@@ -43122,7 +43121,7 @@
       },
       {
         "name": "TestExecutionHealthAlerts::test_execution_alerts_have_system_category",
-        "line": 221,
+        "line": 195,
         "markers": [
           "unit"
         ],
@@ -43133,7 +43132,7 @@
     "tests/unit/gpt_trader/tui/services/test_alert_manager_orders.py": [
       {
         "name": "TestTradeAlertsOrders::test_failed_orders_alert_triggers",
-        "line": 38,
+        "line": 11,
         "markers": [
           "unit"
         ],
@@ -43142,7 +43141,7 @@
       },
       {
         "name": "TestTradeAlertsOrders::test_failed_orders_alert_triggers_on_failed_status",
-        "line": 61,
+        "line": 34,
         "markers": [
           "unit"
         ],
@@ -43151,7 +43150,7 @@
       },
       {
         "name": "TestTradeAlertsOrders::test_failed_orders_no_alert_on_cancelled",
-        "line": 83,
+        "line": 56,
         "markers": [
           "unit"
         ],
@@ -43160,7 +43159,7 @@
       },
       {
         "name": "TestTradeAlertsOrders::test_expired_orders_alert_triggers",
-        "line": 102,
+        "line": 75,
         "markers": [
           "unit"
         ],
@@ -43169,7 +43168,7 @@
       },
       {
         "name": "TestTradeAlertsOrders::test_expired_orders_no_alert_when_none_expired",
-        "line": 125,
+        "line": 98,
         "markers": [
           "unit"
         ],
@@ -43178,18 +43177,16 @@
       },
       {
         "name": "TestTradeAlertsOrders::test_multiple_expired_orders_message",
-        "line": 144,
+        "line": 117,
         "markers": [
           "unit"
         ],
         "docstring": "Test expired orders alert message when multiple orders expired.",
         "class": "TestTradeAlertsOrders"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/services/test_alert_manager_stale.py": [
+      },
       {
         "name": "TestTradeAlertsStaleOrders::test_stale_orders_rules_registered",
-        "line": 38,
+        "line": 151,
         "markers": [
           "unit"
         ],
@@ -43198,7 +43195,7 @@
       },
       {
         "name": "TestTradeAlertsStaleOrders::test_stale_orders_alert_triggers",
-        "line": 45,
+        "line": 158,
         "markers": [
           "unit"
         ],
@@ -43207,7 +43204,7 @@
       },
       {
         "name": "TestTradeAlertsStaleOrders::test_stale_orders_no_alert_when_fresh",
-        "line": 72,
+        "line": 185,
         "markers": [
           "unit"
         ],
@@ -43216,7 +43213,7 @@
       },
       {
         "name": "TestTradeAlertsStaleOrders::test_stale_orders_ignores_filled_orders",
-        "line": 94,
+        "line": 207,
         "markers": [
           "unit"
         ],

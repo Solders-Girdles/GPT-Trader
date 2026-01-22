@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6031,
-    "total_files": 721,
+    "total_files": 719,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -602,9 +602,7 @@
       "tests/unit/gpt_trader/preflight/test_checks_connectivity_api_connectivity.py",
       "tests/unit/gpt_trader/preflight/test_checks_connectivity_key_permissions_core.py",
       "tests/unit/gpt_trader/preflight/test_checks_connectivity_keys.py",
-      "tests/unit/gpt_trader/preflight/test_checks_diagnostics_api_health.py",
-      "tests/unit/gpt_trader/preflight/test_checks_diagnostics_broker.py",
-      "tests/unit/gpt_trader/preflight/test_checks_diagnostics_market.py",
+      "tests/unit/gpt_trader/preflight/test_checks_diagnostics.py",
       "tests/unit/gpt_trader/preflight/test_checks_environment.py",
       "tests/unit/gpt_trader/preflight/test_checks_profile.py",
       "tests/unit/gpt_trader/preflight/test_checks_readiness.py",
@@ -24587,7 +24585,7 @@
     "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators.py": [
       {
         "name": "TestIndicatorBundle::test_create_with_defaults",
-        "line": 19,
+        "line": 17,
         "markers": [
           "unit"
         ],
@@ -24596,7 +24594,7 @@
       },
       {
         "name": "TestIndicatorBundle::test_create_with_custom_params",
-        "line": 28,
+        "line": 26,
         "markers": [
           "unit"
         ],
@@ -24605,7 +24603,7 @@
       },
       {
         "name": "TestIndicatorBundle::test_update_returns_all_values",
-        "line": 41,
+        "line": 39,
         "markers": [
           "unit"
         ],
@@ -24614,7 +24612,7 @@
       },
       {
         "name": "TestIndicatorBundle::test_serialize_deserialize_roundtrip",
-        "line": 52,
+        "line": 50,
         "markers": [
           "unit"
         ],
@@ -24623,7 +24621,7 @@
       },
       {
         "name": "TestOnlineZScore::test_insufficient_data_returns_none",
-        "line": 79,
+        "line": 77,
         "markers": [
           "unit"
         ],
@@ -24632,7 +24630,7 @@
       },
       {
         "name": "TestOnlineZScore::test_z_score_calculation",
-        "line": 84,
+        "line": 82,
         "markers": [
           "unit"
         ],
@@ -24641,7 +24639,7 @@
       },
       {
         "name": "TestOnlineZScore::test_windowed_z_score",
-        "line": 97,
+        "line": 95,
         "markers": [
           "unit"
         ],
@@ -24650,7 +24648,7 @@
       },
       {
         "name": "TestOnlineZScore::test_serialize_deserialize_roundtrip",
-        "line": 112,
+        "line": 110,
         "markers": [
           "unit"
         ],
@@ -24659,7 +24657,7 @@
       },
       {
         "name": "TestOnlineSMA::test_warmup_period",
-        "line": 128,
+        "line": 126,
         "markers": [
           "unit"
         ],
@@ -24668,7 +24666,7 @@
       },
       {
         "name": "TestOnlineSMA::test_full_window",
-        "line": 135,
+        "line": 133,
         "markers": [
           "unit"
         ],
@@ -24677,7 +24675,7 @@
       },
       {
         "name": "TestOnlineSMA::test_matches_stateless_sma",
-        "line": 145,
+        "line": 143,
         "markers": [
           "unit"
         ],
@@ -24686,7 +24684,7 @@
       },
       {
         "name": "TestOnlineSMA::test_serialize_deserialize_roundtrip",
-        "line": 164,
+        "line": 162,
         "markers": [
           "unit"
         ],
@@ -24695,7 +24693,7 @@
       },
       {
         "name": "TestOnlineEMA::test_warmup_period",
-        "line": 182,
+        "line": 180,
         "markers": [
           "unit"
         ],
@@ -24704,7 +24702,7 @@
       },
       {
         "name": "TestOnlineEMA::test_initialization",
-        "line": 189,
+        "line": 187,
         "markers": [
           "unit"
         ],
@@ -24713,7 +24711,7 @@
       },
       {
         "name": "TestOnlineEMA::test_subsequent_updates",
-        "line": 200,
+        "line": 198,
         "markers": [
           "unit"
         ],
@@ -24722,7 +24720,7 @@
       },
       {
         "name": "TestOnlineEMA::test_serialize_deserialize_roundtrip",
-        "line": 213,
+        "line": 211,
         "markers": [
           "unit"
         ],
@@ -36075,7 +36073,7 @@
         "class": "TestCheckKeyPermissionsRetries"
       }
     ],
-    "tests/unit/gpt_trader/preflight/test_checks_diagnostics_api_health.py": [
+    "tests/unit/gpt_trader/preflight/test_checks_diagnostics.py": [
       {
         "name": "TestApiHealthCheck::test_triggers_on_api_degradation",
         "line": 37,
@@ -36094,12 +36092,10 @@
         ],
         "docstring": "Should skip API health check when resilience status not available.",
         "class": "TestApiHealthCheck"
-      }
-    ],
-    "tests/unit/gpt_trader/preflight/test_checks_diagnostics_broker.py": [
+      },
       {
         "name": "TestBrokerReadinessCheck::test_fails_on_empty_data",
-        "line": 20,
+        "line": 83,
         "markers": [
           "parametrize",
           "unit"
@@ -36109,18 +36105,16 @@
       },
       {
         "name": "TestBrokerReadinessCheck::test_fails_on_invalid_product_specs",
-        "line": 39,
+        "line": 102,
         "markers": [
           "unit"
         ],
         "docstring": "Should fail when product has invalid specs.",
         "class": "TestBrokerReadinessCheck"
-      }
-    ],
-    "tests/unit/gpt_trader/preflight/test_checks_diagnostics_market.py": [
+      },
       {
         "name": "TestMarketDataCheck::test_fails_on_bad_ticker",
-        "line": 20,
+        "line": 131,
         "markers": [
           "parametrize",
           "unit"
@@ -36130,7 +36124,7 @@
       },
       {
         "name": "TestMarketDataCheck::test_passes_with_valid_ticker",
-        "line": 38,
+        "line": 149,
         "markers": [
           "unit"
         ],
@@ -36139,7 +36133,7 @@
       },
       {
         "name": "TestWarnOnlyMode::test_warn_only_converts_errors_to_warnings",
-        "line": 57,
+        "line": 168,
         "markers": [
           "unit"
         ],
@@ -36148,7 +36142,7 @@
       },
       {
         "name": "TestWarnOnlyMode::test_warn_only_returns_true_on_failure",
-        "line": 77,
+        "line": 188,
         "markers": [
           "unit"
         ],

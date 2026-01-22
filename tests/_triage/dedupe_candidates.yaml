@@ -566,11 +566,13 @@ clusters:
     - tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_metrics.py
     source_modules: []
     decision: merge
-    target_location: tests/unit/gpt_trader/features/live_trade/execution/test_order_submission.py
-    expected_file_delta: -10
+    target_location: tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core.py
+    expected_file_delta: -6
     priority: high
-    rationale: Consolidate 11 test files into single parametrized file
-    status: pending
+    rationale: Consolidated 11 -> 5 files (core, results, flows, observability, metrics)
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/337
     added: '2026-01-21'
   20c6dd9ab9e0:
     type: source_fanout

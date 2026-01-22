@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6112,
-    "total_files": 760,
+    "total_tests": 6105,
+    "total_files": 759,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 5947,
+    "unit": 5940,
     "asyncio": 344,
-    "parametrize": 124,
+    "parametrize": 125,
     "property": 82,
     "integration": 79,
     "endpoints": 78,
@@ -406,7 +406,6 @@
       "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_account.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_flow.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_price.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_validation.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_validation_async.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_validation_exchange.py",
@@ -22054,131 +22053,66 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_flow.py": [
       {
         "name": "TestRequireProduct::test_returns_provided_product",
-        "line": 19,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that provided product is returned directly.",
-        "class": "TestRequireProduct"
-      },
-      {
-        "name": "TestRequireProduct::test_fetches_from_broker_when_none",
-        "line": 27,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that product is fetched from broker when None.",
-        "class": "TestRequireProduct"
-      },
-      {
-        "name": "TestRequireProduct::test_raises_validation_error_when_not_found",
-        "line": 38,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that ValidationError is raised when product not found.",
-        "class": "TestRequireProduct"
-      },
-      {
-        "name": "TestRequireProduct::test_provides_synthetic_product_in_integration_mode",
         "line": 47,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that synthetic product is provided in integration mode.",
+        "docstring": "",
+        "class": "TestRequireProduct"
+      },
+      {
+        "name": "TestRequireProduct::test_fetches_from_broker_when_none",
+        "line": 51,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestRequireProduct"
+      },
+      {
+        "name": "TestRequireProduct::test_raises_validation_error_when_not_found",
+        "line": 59,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestRequireProduct"
+      },
+      {
+        "name": "TestRequireProduct::test_provides_synthetic_product_in_integration_mode",
+        "line": 66,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
         "class": "TestRequireProduct"
       },
       {
         "name": "TestRequireProduct::test_synthetic_product_parses_symbol_without_dash",
-        "line": 61,
+        "line": 77,
         "markers": [
           "unit"
         ],
-        "docstring": "Test synthetic product parsing when symbol has no dash.",
+        "docstring": "",
         "class": "TestRequireProduct"
       },
       {
+        "name": "test_resolve_effective_price",
+        "line": 101,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "TestStateCollectionFlow::test_full_state_collection_flow",
-        "line": 78,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test complete state collection flow.",
-        "class": "TestStateCollectionFlow"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_price.py": [
-      {
-        "name": "TestResolveEffectivePrice::test_returns_provided_price",
-        "line": 16,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that provided price is returned directly.",
-        "class": "TestResolveEffectivePrice"
-      },
-      {
-        "name": "TestResolveEffectivePrice::test_uses_mark_price_for_market_orders",
-        "line": 27,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that mark price is used for market orders.",
-        "class": "TestResolveEffectivePrice"
-      },
-      {
-        "name": "TestResolveEffectivePrice::test_uses_mid_price_fallback",
-        "line": 42,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test fallback to bid/ask mid-price.",
-        "class": "TestResolveEffectivePrice"
-      },
-      {
-        "name": "TestResolveEffectivePrice::test_uses_broker_quote_fallback",
-        "line": 65,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test fallback to broker quote.",
-        "class": "TestResolveEffectivePrice"
-      },
-      {
-        "name": "TestResolveEffectivePrice::test_uses_product_price_fallback",
-        "line": 81,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test fallback to product price.",
-        "class": "TestResolveEffectivePrice"
-      },
-      {
-        "name": "TestResolveEffectivePrice::test_uses_quote_increment_as_last_resort",
-        "line": 104,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test last resort uses quote_increment * 100.",
-        "class": "TestResolveEffectivePrice"
-      },
-      {
-        "name": "TestResolveEffectivePrice::test_handles_zero_price_as_none",
         "line": 126,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that zero price is treated as None.",
-        "class": "TestResolveEffectivePrice"
-      },
-      {
-        "name": "TestResolveEffectivePrice::test_handles_mark_price_exception",
-        "line": 142,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that mark price exceptions are handled.",
-        "class": "TestResolveEffectivePrice"
+        "docstring": "",
+        "class": "TestStateCollectionFlow"
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_validation.py": [
@@ -47173,7 +47107,7 @@
     "tests/unit/gpt_trader/tui/test_staleness_helpers.py": [
       {
         "name": "test_get_data_age_seconds_returns_none",
-        "line": 33,
+        "line": 34,
         "markers": [
           "parametrize",
           "unit"
@@ -47182,7 +47116,7 @@
       },
       {
         "name": "test_get_data_age_seconds_returns_age_when_available",
-        "line": 39,
+        "line": 40,
         "markers": [
           "unit"
         ],
@@ -47190,7 +47124,7 @@
       },
       {
         "name": "test_get_staleness_severity_cases",
-        "line": 60,
+        "line": 61,
         "markers": [
           "parametrize",
           "unit"
@@ -47199,7 +47133,7 @@
       },
       {
         "name": "test_format_freshness_label",
-        "line": 87,
+        "line": 88,
         "markers": [
           "parametrize",
           "unit"
@@ -47208,7 +47142,7 @@
       },
       {
         "name": "test_get_freshness_display_returns_syncing_when_fetching",
-        "line": 91,
+        "line": 92,
         "markers": [
           "unit"
         ],
@@ -47216,7 +47150,7 @@
       },
       {
         "name": "test_get_freshness_display_returns_none_when_no_data",
-        "line": 102,
+        "line": 103,
         "markers": [
           "unit"
         ],
@@ -47224,7 +47158,7 @@
       },
       {
         "name": "test_get_freshness_display_styles",
-        "line": 121,
+        "line": 122,
         "markers": [
           "parametrize",
           "unit"

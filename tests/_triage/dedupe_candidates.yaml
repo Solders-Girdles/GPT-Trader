@@ -1434,7 +1434,8 @@ clusters:
     expected_file_delta: -3
     priority: low
     rationale: Consolidate 4 test files into single parametrized file
-    status: pending
+    status: in_progress
+    owner: codex
     added: '2026-01-20'
   54256db34e4d:
     type: similar_names

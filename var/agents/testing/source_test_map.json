@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 726,
+    "tests_scanned": 724,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -151,15 +151,11 @@
       "tests/unit/gpt_trader/backtesting/validation/test_guarded_execution.py"
     ],
     "gpt_trader.backtesting.metrics.report": [
-      "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_backtest_report.py",
-      "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_csv_row.py",
-      "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_result.py",
+      "tests/unit/gpt_trader/backtesting/metrics/test_report_generate.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_summary.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_report_reporter_basics.py"
     ],
     "gpt_trader.backtesting.metrics.risk": [
-      "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_csv_row.py",
-      "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_result.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_summary.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_risk_calculate_risk_metrics.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_risk_drawdown_metrics.py",
@@ -174,7 +170,7 @@
       "tests/unit/gpt_trader/features/optimize/objectives/test_single_trade_quality_objectives.py"
     ],
     "gpt_trader.backtesting.metrics.statistics": [
-      "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_result.py",
+      "tests/unit/gpt_trader/backtesting/metrics/test_report_generate.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_statistics_calculate_trade_statistics.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_statistics_pnl_metrics.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_statistics_position_metrics.py",
@@ -2384,16 +2380,8 @@
       "gpt_trader.backtesting.engine.clock",
       "gpt_trader.backtesting.types"
     ],
-    "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_backtest_report.py": [
-      "gpt_trader.backtesting.metrics.report"
-    ],
-    "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_csv_row.py": [
+    "tests/unit/gpt_trader/backtesting/metrics/test_report_generate.py": [
       "gpt_trader.backtesting.metrics.report",
-      "gpt_trader.backtesting.metrics.risk"
-    ],
-    "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_result.py": [
-      "gpt_trader.backtesting.metrics.report",
-      "gpt_trader.backtesting.metrics.risk",
       "gpt_trader.backtesting.metrics.statistics"
     ],
     "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_summary.py": [
@@ -4929,8 +4917,8 @@
     "gpt_trader.backtesting.chaos.scenarios": "src/gpt_trader/backtesting/chaos/scenarios.py",
     "gpt_trader.backtesting.engine.clock": "src/gpt_trader/backtesting/engine/clock.py",
     "gpt_trader.backtesting.metrics.report": "src/gpt_trader/backtesting/metrics/report.py",
-    "gpt_trader.backtesting.metrics.risk": "src/gpt_trader/backtesting/metrics/risk.py",
     "gpt_trader.backtesting.metrics.statistics": "src/gpt_trader/backtesting/metrics/statistics.py",
+    "gpt_trader.backtesting.metrics.risk": "src/gpt_trader/backtesting/metrics/risk.py",
     "gpt_trader.backtesting.simulation.fill_model": "src/gpt_trader/backtesting/simulation/fill_model.py",
     "gpt_trader.backtesting.simulation.funding_tracker": "src/gpt_trader/backtesting/simulation/funding_tracker.py",
     "gpt_trader.backtesting.chaos.engine": "src/gpt_trader/backtesting/chaos/engine.py",

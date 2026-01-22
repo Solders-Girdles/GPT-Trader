@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6165,
-    "total_files": 784,
+    "total_files": 782,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -154,9 +154,7 @@
       "tests/unit/gpt_trader/backtesting/engine/test_clock_delays.py",
       "tests/unit/gpt_trader/backtesting/engine/test_clock_init.py",
       "tests/unit/gpt_trader/backtesting/engine/test_clock_time_and_speed.py",
-      "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_backtest_report.py",
-      "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_csv_row.py",
-      "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_result.py",
+      "tests/unit/gpt_trader/backtesting/metrics/test_report_generate.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_summary.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_report_reporter_basics.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_risk_calculate_risk_metrics.py",
@@ -4951,59 +4949,19 @@
         "class": "TestSimulationClockSpeedupRatio"
       }
     ],
-    "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_backtest_report.py": [
+    "tests/unit/gpt_trader/backtesting/metrics/test_report_generate.py": [
       {
         "name": "TestGenerateBacktestReportFunction::test_returns_backtest_result",
-        "line": 22,
+        "line": 54,
         "markers": [
           "unit"
         ],
         "docstring": "",
         "class": "TestGenerateBacktestReportFunction"
-      }
-    ],
-    "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_csv_row.py": [
-      {
-        "name": "TestBacktestReporterGenerateCsvRow::test_generate_csv_row_returns_dict",
-        "line": 48,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestBacktestReporterGenerateCsvRow"
       },
-      {
-        "name": "TestBacktestReporterGenerateCsvRow::test_generate_csv_row_includes_all_keys",
-        "line": 53,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestBacktestReporterGenerateCsvRow"
-      },
-      {
-        "name": "TestBacktestReporterGenerateCsvRow::test_generate_csv_row_values_are_numeric",
-        "line": 78,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestBacktestReporterGenerateCsvRow"
-      },
-      {
-        "name": "TestBacktestReporterGenerateCsvRow::test_generate_csv_row_handles_none_sharpe",
-        "line": 86,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestBacktestReporterGenerateCsvRow"
-      }
-    ],
-    "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_result.py": [
       {
         "name": "TestBacktestReporterGenerateResult::test_generate_result_returns_backtest_result",
-        "line": 51,
+        "line": 89,
         "markers": [
           "unit"
         ],
@@ -5012,7 +4970,7 @@
       },
       {
         "name": "TestBacktestReporterGenerateResult::test_generate_result_populates_performance",
-        "line": 64,
+        "line": 102,
         "markers": [
           "unit"
         ],
@@ -5021,7 +4979,7 @@
       },
       {
         "name": "TestBacktestReporterGenerateResult::test_generate_result_populates_trade_stats",
-        "line": 83,
+        "line": 121,
         "markers": [
           "unit"
         ],
@@ -5030,7 +4988,7 @@
       },
       {
         "name": "TestBacktestReporterGenerateResult::test_generate_result_populates_risk_metrics",
-        "line": 97,
+        "line": 135,
         "markers": [
           "unit"
         ],
@@ -5039,7 +4997,7 @@
       },
       {
         "name": "TestBacktestReporterGenerateResult::test_generate_result_calculates_unrealized_pnl",
-        "line": 111,
+        "line": 149,
         "markers": [
           "unit"
         ],
@@ -5049,8 +5007,44 @@
     ],
     "tests/unit/gpt_trader/backtesting/metrics/test_report_generate_summary.py": [
       {
+        "name": "TestBacktestReporterGenerateCsvRow::test_generate_csv_row_returns_dict",
+        "line": 45,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestBacktestReporterGenerateCsvRow"
+      },
+      {
+        "name": "TestBacktestReporterGenerateCsvRow::test_generate_csv_row_includes_all_keys",
+        "line": 50,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestBacktestReporterGenerateCsvRow"
+      },
+      {
+        "name": "TestBacktestReporterGenerateCsvRow::test_generate_csv_row_values_are_numeric",
+        "line": 75,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestBacktestReporterGenerateCsvRow"
+      },
+      {
+        "name": "TestBacktestReporterGenerateCsvRow::test_generate_csv_row_handles_none_sharpe",
+        "line": 83,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestBacktestReporterGenerateCsvRow"
+      },
+      {
         "name": "TestBacktestReporterGenerateSummary::test_generate_summary_returns_string",
-        "line": 62,
+        "line": 118,
         "markers": [
           "unit"
         ],
@@ -5059,7 +5053,7 @@
       },
       {
         "name": "TestBacktestReporterGenerateSummary::test_generate_summary_includes_performance_section",
-        "line": 70,
+        "line": 124,
         "markers": [
           "unit"
         ],
@@ -5068,7 +5062,7 @@
       },
       {
         "name": "TestBacktestReporterGenerateSummary::test_generate_summary_includes_risk_metrics_section",
-        "line": 80,
+        "line": 134,
         "markers": [
           "unit"
         ],
@@ -5077,7 +5071,7 @@
       },
       {
         "name": "TestBacktestReporterGenerateSummary::test_generate_summary_includes_trade_statistics_section",
-        "line": 90,
+        "line": 144,
         "markers": [
           "unit"
         ],
@@ -5086,7 +5080,7 @@
       },
       {
         "name": "TestBacktestReporterGenerateSummary::test_generate_summary_includes_costs_section",
-        "line": 100,
+        "line": 154,
         "markers": [
           "unit"
         ],
@@ -5095,7 +5089,7 @@
       },
       {
         "name": "TestBacktestReporterGenerateSummary::test_generate_summary_handles_none_sharpe",
-        "line": 110,
+        "line": 164,
         "markers": [
           "unit"
         ],

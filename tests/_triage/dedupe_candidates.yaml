@@ -1623,7 +1623,7 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/cli/commands/optimize/test_config_loader.py
-    expected_file_delta: -2
+    expected_file_delta: -3
     priority: low
     rationale: Consolidated into single module under hygiene cap
     status: done
@@ -1659,7 +1659,7 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_profile.py
-    expected_file_delta: -3
+    expected_file_delta: -2
     priority: low
     rationale: Consolidated into two modules to stay under hygiene cap
     status: done

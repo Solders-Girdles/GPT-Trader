@@ -1,4 +1,4 @@
-"""Tests for FeeCalculator tier rates and fee calculation."""
+"""Tests for FeeCalculator initialization, rates, and precision."""
 
 from decimal import Decimal
 
@@ -6,6 +6,33 @@ import pytest
 
 from gpt_trader.backtesting.simulation.fee_calculator import FeeCalculator
 from gpt_trader.backtesting.types import FeeTier
+
+
+class TestFeeCalculatorInitialization:
+    """Test FeeCalculator initialization."""
+
+    def test_default_initialization(self) -> None:
+        """Test default initialization parameters."""
+        calculator = FeeCalculator()
+
+        assert calculator.tier == FeeTier.TIER_2  # Default tier
+        assert calculator.volume_tracking is False
+        assert calculator.current_volume == Decimal("0")
+
+    def test_custom_tier_initialization(self) -> None:
+        """Test initialization with custom tier."""
+        calculator = FeeCalculator(tier=FeeTier.TIER_5)
+
+        assert calculator.tier == FeeTier.TIER_5
+        assert calculator.maker_bps == Decimal("5")
+        assert calculator.taker_bps == Decimal("15")
+
+    def test_volume_tracking_initialization(self) -> None:
+        """Test initialization with volume tracking enabled."""
+        calculator = FeeCalculator(tier=FeeTier.TIER_0, volume_tracking=True)
+
+        assert calculator.volume_tracking is True
+        assert calculator.current_volume == Decimal("0")
 
 
 class TestFeeCalculatorAllTiers:
@@ -87,3 +114,35 @@ class TestFeeCalculatorRateConversion:
 
         assert calculator.get_rate_pct(is_maker=True) == expected_maker_pct
         assert calculator.get_rate_pct(is_maker=False) == expected_taker_pct
+
+
+class TestFeeCalculatorDecimalPrecision:
+    """Test decimal precision handling in fee calculations."""
+
+    def test_fractional_notional(self) -> None:
+        """Test fee calculation with fractional notional values."""
+        calculator = FeeCalculator(tier=FeeTier.TIER_2)  # 0.25% maker
+
+        fee = calculator.calculate(Decimal("1234.56"), is_maker=True)
+        assert fee == Decimal("3.0864")
+
+    def test_small_notional(self) -> None:
+        """Test fee calculation with small notional values."""
+        calculator = FeeCalculator(tier=FeeTier.TIER_2)
+
+        fee = calculator.calculate(Decimal("10"), is_maker=True)
+        assert fee == Decimal("0.025")
+
+    def test_very_large_notional(self) -> None:
+        """Test fee calculation with very large notional values."""
+        calculator = FeeCalculator(tier=FeeTier.TIER_3)  # 0.15% maker
+
+        fee = calculator.calculate(Decimal("10000000"), is_maker=True)
+        assert fee == Decimal("15000")
+
+    def test_zero_notional(self) -> None:
+        """Test fee calculation with zero notional."""
+        calculator = FeeCalculator(tier=FeeTier.TIER_2)
+
+        fee = calculator.calculate(Decimal("0"), is_maker=True)
+        assert fee == Decimal("0")

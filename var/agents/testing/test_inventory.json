@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6165,
-    "total_files": 790,
+    "total_files": 788,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -170,10 +170,8 @@
       "tests/unit/gpt_trader/backtesting/metrics/test_statistics_streak_metrics.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_statistics_timing_metrics.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_statistics_trade_statistics_dataclass.py",
-      "tests/unit/gpt_trader/backtesting/simulation/test_fee_calculator_boundaries_and_initialization.py",
-      "tests/unit/gpt_trader/backtesting/simulation/test_fee_calculator_precision.py",
-      "tests/unit/gpt_trader/backtesting/simulation/test_fee_calculator_rates.py",
-      "tests/unit/gpt_trader/backtesting/simulation/test_fee_calculator_volume_tracking.py",
+      "tests/unit/gpt_trader/backtesting/simulation/test_fee_calculator.py",
+      "tests/unit/gpt_trader/backtesting/simulation/test_fee_calculator_volume.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_queue.py",
@@ -5817,7 +5815,102 @@
         "class": "TestTradeStatisticsDataclass"
       }
     ],
-    "tests/unit/gpt_trader/backtesting/simulation/test_fee_calculator_boundaries_and_initialization.py": [
+    "tests/unit/gpt_trader/backtesting/simulation/test_fee_calculator.py": [
+      {
+        "name": "TestFeeCalculatorInitialization::test_default_initialization",
+        "line": 14,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test default initialization parameters.",
+        "class": "TestFeeCalculatorInitialization"
+      },
+      {
+        "name": "TestFeeCalculatorInitialization::test_custom_tier_initialization",
+        "line": 22,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test initialization with custom tier.",
+        "class": "TestFeeCalculatorInitialization"
+      },
+      {
+        "name": "TestFeeCalculatorInitialization::test_volume_tracking_initialization",
+        "line": 30,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test initialization with volume tracking enabled.",
+        "class": "TestFeeCalculatorInitialization"
+      },
+      {
+        "name": "TestFeeCalculatorAllTiers::test_tier_rates_match_spec",
+        "line": 54,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": "Verify each tier has correct maker/taker rates.",
+        "class": "TestFeeCalculatorAllTiers"
+      },
+      {
+        "name": "TestFeeCalculatorAllTiers::test_fee_calculation_accuracy",
+        "line": 78,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": "Test fee calculation for various notional amounts.",
+        "class": "TestFeeCalculatorAllTiers"
+      },
+      {
+        "name": "TestFeeCalculatorRateConversion::test_get_rate_pct",
+        "line": 106,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": "Test get_rate_pct returns correct percentage values.",
+        "class": "TestFeeCalculatorRateConversion"
+      },
+      {
+        "name": "TestFeeCalculatorDecimalPrecision::test_fractional_notional",
+        "line": 122,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test fee calculation with fractional notional values.",
+        "class": "TestFeeCalculatorDecimalPrecision"
+      },
+      {
+        "name": "TestFeeCalculatorDecimalPrecision::test_small_notional",
+        "line": 129,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test fee calculation with small notional values.",
+        "class": "TestFeeCalculatorDecimalPrecision"
+      },
+      {
+        "name": "TestFeeCalculatorDecimalPrecision::test_very_large_notional",
+        "line": 136,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test fee calculation with very large notional values.",
+        "class": "TestFeeCalculatorDecimalPrecision"
+      },
+      {
+        "name": "TestFeeCalculatorDecimalPrecision::test_zero_notional",
+        "line": 143,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test fee calculation with zero notional.",
+        "class": "TestFeeCalculatorDecimalPrecision"
+      }
+    ],
+    "tests/unit/gpt_trader/backtesting/simulation/test_fee_calculator_volume.py": [
       {
         "name": "TestFeeCalculatorVolumeBoundaries::test_volume_tier_boundaries",
         "line": 35,
@@ -5829,134 +5922,8 @@
         "class": "TestFeeCalculatorVolumeBoundaries"
       },
       {
-        "name": "TestFeeCalculatorInitialization::test_default_initialization",
-        "line": 46,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test default initialization parameters.",
-        "class": "TestFeeCalculatorInitialization"
-      },
-      {
-        "name": "TestFeeCalculatorInitialization::test_custom_tier_initialization",
-        "line": 54,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test initialization with custom tier.",
-        "class": "TestFeeCalculatorInitialization"
-      },
-      {
-        "name": "TestFeeCalculatorInitialization::test_volume_tracking_initialization",
-        "line": 62,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test initialization with volume tracking enabled.",
-        "class": "TestFeeCalculatorInitialization"
-      },
-      {
-        "name": "TestFeeCalculatorEdgeCases::test_multiple_trades_same_tier",
-        "line": 73,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test multiple trades that don't trigger tier change.",
-        "class": "TestFeeCalculatorEdgeCases"
-      },
-      {
-        "name": "TestFeeCalculatorEdgeCases::test_rapid_tier_progression",
-        "line": 83,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test rapid progression through multiple tiers.",
-        "class": "TestFeeCalculatorEdgeCases"
-      },
-      {
-        "name": "TestFeeCalculatorEdgeCases::test_fee_rates_stay_consistent_after_update",
-        "line": 91,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that fee rates are consistent after tier update.",
-        "class": "TestFeeCalculatorEdgeCases"
-      }
-    ],
-    "tests/unit/gpt_trader/backtesting/simulation/test_fee_calculator_precision.py": [
-      {
-        "name": "TestFeeCalculatorDecimalPrecision::test_fractional_notional",
-        "line": 12,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test fee calculation with fractional notional values.",
-        "class": "TestFeeCalculatorDecimalPrecision"
-      },
-      {
-        "name": "TestFeeCalculatorDecimalPrecision::test_small_notional",
-        "line": 19,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test fee calculation with small notional values.",
-        "class": "TestFeeCalculatorDecimalPrecision"
-      },
-      {
-        "name": "TestFeeCalculatorDecimalPrecision::test_very_large_notional",
-        "line": 26,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test fee calculation with very large notional values.",
-        "class": "TestFeeCalculatorDecimalPrecision"
-      },
-      {
-        "name": "TestFeeCalculatorDecimalPrecision::test_zero_notional",
-        "line": 33,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test fee calculation with zero notional.",
-        "class": "TestFeeCalculatorDecimalPrecision"
-      }
-    ],
-    "tests/unit/gpt_trader/backtesting/simulation/test_fee_calculator_rates.py": [
-      {
-        "name": "TestFeeCalculatorAllTiers::test_tier_rates_match_spec",
-        "line": 27,
-        "markers": [
-          "parametrize",
-          "unit"
-        ],
-        "docstring": "Verify each tier has correct maker/taker rates.",
-        "class": "TestFeeCalculatorAllTiers"
-      },
-      {
-        "name": "TestFeeCalculatorAllTiers::test_fee_calculation_accuracy",
-        "line": 51,
-        "markers": [
-          "parametrize",
-          "unit"
-        ],
-        "docstring": "Test fee calculation for various notional amounts.",
-        "class": "TestFeeCalculatorAllTiers"
-      },
-      {
-        "name": "TestFeeCalculatorRateConversion::test_get_rate_pct",
-        "line": 79,
-        "markers": [
-          "parametrize",
-          "unit"
-        ],
-        "docstring": "Test get_rate_pct returns correct percentage values.",
-        "class": "TestFeeCalculatorRateConversion"
-      }
-    ],
-    "tests/unit/gpt_trader/backtesting/simulation/test_fee_calculator_volume_tracking.py": [
-      {
         "name": "TestFeeCalculatorVolumeTracking::test_volume_tracking_disabled_by_default",
-        "line": 12,
+        "line": 46,
         "markers": [
           "unit"
         ],
@@ -5965,7 +5932,7 @@
       },
       {
         "name": "TestFeeCalculatorVolumeTracking::test_volume_tracking_enabled_accumulates",
-        "line": 22,
+        "line": 56,
         "markers": [
           "unit"
         ],
@@ -5974,7 +5941,7 @@
       },
       {
         "name": "TestFeeCalculatorVolumeTracking::test_tier_upgrade_at_10k",
-        "line": 32,
+        "line": 66,
         "markers": [
           "unit"
         ],
@@ -5983,7 +5950,7 @@
       },
       {
         "name": "TestFeeCalculatorVolumeTracking::test_tier_upgrade_at_50k",
-        "line": 44,
+        "line": 78,
         "markers": [
           "unit"
         ],
@@ -5992,7 +5959,7 @@
       },
       {
         "name": "TestFeeCalculatorVolumeTracking::test_tier_upgrade_at_100k",
-        "line": 54,
+        "line": 88,
         "markers": [
           "unit"
         ],
@@ -6001,7 +5968,7 @@
       },
       {
         "name": "TestFeeCalculatorVolumeTracking::test_tier_upgrade_at_1m",
-        "line": 61,
+        "line": 95,
         "markers": [
           "unit"
         ],
@@ -6010,7 +5977,7 @@
       },
       {
         "name": "TestFeeCalculatorVolumeTracking::test_tier_upgrade_at_15m",
-        "line": 68,
+        "line": 102,
         "markers": [
           "unit"
         ],
@@ -6019,7 +5986,7 @@
       },
       {
         "name": "TestFeeCalculatorVolumeTracking::test_tier_upgrade_at_75m",
-        "line": 75,
+        "line": 109,
         "markers": [
           "unit"
         ],
@@ -6028,7 +5995,7 @@
       },
       {
         "name": "TestFeeCalculatorVolumeTracking::test_tier_upgrade_at_250m",
-        "line": 82,
+        "line": 116,
         "markers": [
           "unit"
         ],
@@ -6037,7 +6004,7 @@
       },
       {
         "name": "TestFeeCalculatorVolumeTracking::test_tier_7_maker_fee_is_zero",
-        "line": 89,
+        "line": 123,
         "markers": [
           "unit"
         ],
@@ -6045,8 +6012,35 @@
         "class": "TestFeeCalculatorVolumeTracking"
       },
       {
+        "name": "TestFeeCalculatorEdgeCases::test_multiple_trades_same_tier",
+        "line": 137,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test multiple trades that don't trigger tier change.",
+        "class": "TestFeeCalculatorEdgeCases"
+      },
+      {
+        "name": "TestFeeCalculatorEdgeCases::test_rapid_tier_progression",
+        "line": 147,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test rapid progression through multiple tiers.",
+        "class": "TestFeeCalculatorEdgeCases"
+      },
+      {
+        "name": "TestFeeCalculatorEdgeCases::test_fee_rates_stay_consistent_after_update",
+        "line": 155,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that fee rates are consistent after tier update.",
+        "class": "TestFeeCalculatorEdgeCases"
+      },
+      {
         "name": "TestFeeCalculatorVolumeReset::test_reset_volume_clears_accumulator",
-        "line": 103,
+        "line": 170,
         "markers": [
           "unit"
         ],
@@ -6055,7 +6049,7 @@
       },
       {
         "name": "TestFeeCalculatorVolumeReset::test_reset_does_not_change_tier",
-        "line": 113,
+        "line": 180,
         "markers": [
           "unit"
         ],

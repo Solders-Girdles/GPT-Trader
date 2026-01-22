@@ -1,4 +1,4 @@
-"""Tests for OrderFillModel limit order fill simulation."""
+"""Tests for OrderFillModel limit and stop order handling."""
 
 from decimal import Decimal
 
@@ -10,201 +10,186 @@ from tests.unit.gpt_trader.backtesting.simulation.fill_model_test_utils import (
 from gpt_trader.backtesting.simulation.fill_model import OrderFillModel
 from gpt_trader.core import Candle, OrderSide, OrderType
 
+BID = Decimal("50100")
+ASK = Decimal("50150")
 
-class TestLimitOrderFill:
-    """Test limit order fill simulation."""
 
-    def test_buy_limit_price_touched_sufficient_volume(
-        self, fill_model: OrderFillModel, current_bar: Candle
-    ) -> None:
-        """Test buy limit order fills when price drops to limit and volume is sufficient."""
-        # Limit price within bar's low range
-        order = make_order(
-            side=OrderSide.BUY,
-            order_type=OrderType.LIMIT,
-            quantity=Decimal("10"),  # Volume threshold: 10 * 2 = 20, bar has 100
-            price=Decimal("49600"),  # Below bar high, at/below bar low
-        )
+@pytest.mark.parametrize(
+    ("side", "price", "expected_filled", "expected_reason"),
+    [
+        (OrderSide.BUY, Decimal("49600"), True, None),
+        (OrderSide.BUY, Decimal("49000"), False, "Price not touched"),
+        (OrderSide.SELL, Decimal("50400"), True, None),
+        (OrderSide.SELL, Decimal("51000"), False, "Price not touched"),
+    ],
+)
+def test_limit_order_price_touch(
+    fill_model: OrderFillModel,
+    current_bar: Candle,
+    side: OrderSide,
+    price: Decimal,
+    expected_filled: bool,
+    expected_reason: str | None,
+) -> None:
+    order = make_order(
+        side=side,
+        order_type=OrderType.LIMIT,
+        quantity=Decimal("10"),
+        price=price,
+    )
 
-        result = fill_model.try_fill_limit_order(
-            order=order,
-            current_bar=current_bar,
-            best_bid=Decimal("50100"),
-            best_ask=Decimal("50150"),
-        )
+    result = fill_model.try_fill_limit_order(
+        order=order,
+        current_bar=current_bar,
+        best_bid=BID,
+        best_ask=ASK,
+    )
 
-        assert result.filled is True
-        assert result.fill_price == Decimal("49600")
-        assert result.is_maker is True  # Limit orders are maker
+    assert result.filled is expected_filled
+    if expected_filled:
+        assert result.fill_price == price
+        assert result.is_maker is True
         assert result.slippage_bps == Decimal("0")
+    else:
+        assert expected_reason in result.reason
 
-    def test_buy_limit_price_not_touched(
-        self, fill_model: OrderFillModel, current_bar: Candle
-    ) -> None:
-        """Test buy limit order not filled when price doesn't drop to limit."""
-        order = make_order(
-            side=OrderSide.BUY,
-            order_type=OrderType.LIMIT,
-            price=Decimal("49000"),  # Below bar's low of 49500
-        )
 
-        result = fill_model.try_fill_limit_order(
+def test_limit_order_insufficient_volume(fill_model: OrderFillModel, current_bar: Candle) -> None:
+    order = make_order(
+        side=OrderSide.BUY,
+        order_type=OrderType.LIMIT,
+        quantity=Decimal("100"),
+        price=Decimal("49600"),
+    )
+
+    result = fill_model.try_fill_limit_order(
+        order=order,
+        current_bar=current_bar,
+        best_bid=BID,
+        best_ask=ASK,
+    )
+
+    assert result.filled is False
+    assert "Insufficient volume" in result.reason
+
+
+def test_limit_order_without_price_raises(fill_model: OrderFillModel, current_bar: Candle) -> None:
+    order = make_order(
+        side=OrderSide.BUY,
+        order_type=OrderType.LIMIT,
+        price=None,
+    )
+
+    with pytest.raises(ValueError, match="Limit order must have price"):
+        fill_model.try_fill_limit_order(
             order=order,
             current_bar=current_bar,
-            best_bid=Decimal("50100"),
-            best_ask=Decimal("50150"),
+            best_bid=BID,
+            best_ask=ASK,
         )
 
-        assert result.filled is False
-        assert "Price not touched" in result.reason
 
-    def test_sell_limit_price_touched(
-        self, fill_model: OrderFillModel, current_bar: Candle
-    ) -> None:
-        """Test sell limit order fills when price rises to limit."""
-        order = make_order(
-            side=OrderSide.SELL,
-            order_type=OrderType.LIMIT,
-            quantity=Decimal("10"),
-            price=Decimal("50400"),  # At/above bar high of 50500
+@pytest.mark.parametrize(
+    ("limit_price", "is_buy", "expected"),
+    [
+        (Decimal("100"), True, True),
+        (Decimal("105"), True, True),
+        (Decimal("99"), True, False),
+        (Decimal("110"), False, True),
+        (Decimal("105"), False, True),
+        (Decimal("115"), False, False),
+    ],
+)
+def test_limit_price_touch_logic(limit_price: Decimal, is_buy: bool, expected: bool) -> None:
+    model = OrderFillModel()
+    assert (
+        model._is_price_touched(
+            limit_price=limit_price,
+            is_buy=is_buy,
+            bar_high=Decimal("110"),
+            bar_low=Decimal("100"),
         )
+        is expected
+    )
 
-        result = fill_model.try_fill_limit_order(
+
+@pytest.mark.parametrize(
+    ("side", "stop_price", "expected_filled", "expected_reason"),
+    [
+        (OrderSide.BUY, Decimal("50400"), True, None),
+        (OrderSide.BUY, Decimal("51000"), False, "Stop not triggered"),
+        (OrderSide.SELL, Decimal("49600"), True, None),
+        (OrderSide.SELL, Decimal("49000"), False, "Stop not triggered"),
+    ],
+)
+def test_stop_order_triggering(
+    fill_model: OrderFillModel,
+    current_bar: Candle,
+    next_bar: Candle,
+    side: OrderSide,
+    stop_price: Decimal,
+    expected_filled: bool,
+    expected_reason: str | None,
+) -> None:
+    order = make_order(
+        side=side,
+        order_type=OrderType.STOP,
+        quantity=Decimal("1"),
+        stop_price=stop_price,
+    )
+
+    result = fill_model.try_fill_stop_order(
+        order=order,
+        current_bar=current_bar,
+        best_bid=BID,
+        best_ask=ASK,
+        next_bar=next_bar,
+    )
+
+    assert result.filled is expected_filled
+    if expected_filled:
+        assert result.is_maker is False
+    else:
+        assert expected_reason in result.reason
+
+
+def test_stop_order_without_stop_price_raises(
+    fill_model: OrderFillModel, current_bar: Candle
+) -> None:
+    order = make_order(
+        side=OrderSide.SELL,
+        order_type=OrderType.STOP,
+        stop_price=None,
+    )
+
+    with pytest.raises(ValueError, match="Stop order must have stop_price"):
+        fill_model.try_fill_stop_order(
             order=order,
             current_bar=current_bar,
-            best_bid=Decimal("50100"),
-            best_ask=Decimal("50150"),
+            best_bid=BID,
+            best_ask=ASK,
         )
 
-        assert result.filled is True
-        assert result.fill_price == Decimal("50400")
 
-    def test_sell_limit_price_not_touched(
-        self, fill_model: OrderFillModel, current_bar: Candle
-    ) -> None:
-        """Test sell limit order not filled when price doesn't reach limit."""
-        order = make_order(
-            side=OrderSide.SELL,
-            order_type=OrderType.LIMIT,
-            price=Decimal("51000"),  # Above bar's high of 50500
-        )
-
-        result = fill_model.try_fill_limit_order(
-            order=order,
-            current_bar=current_bar,
-            best_bid=Decimal("50100"),
-            best_ask=Decimal("50150"),
-        )
-
-        assert result.filled is False
-        assert "Price not touched" in result.reason
-
-    def test_limit_order_insufficient_volume(
-        self, fill_model: OrderFillModel, current_bar: Candle
-    ) -> None:
-        """Test limit order not filled when bar volume is insufficient."""
-        # Order size 100, threshold 2x = 200, bar volume is 100
-        order = make_order(
-            side=OrderSide.BUY,
-            order_type=OrderType.LIMIT,
-            quantity=Decimal("100"),
-            price=Decimal("49600"),
-        )
-
-        result = fill_model.try_fill_limit_order(
-            order=order,
-            current_bar=current_bar,
-            best_bid=Decimal("50100"),
-            best_ask=Decimal("50150"),
-        )
-
-        assert result.filled is False
-        assert "Insufficient volume" in result.reason
-
-    def test_limit_order_without_price_raises(
-        self, fill_model: OrderFillModel, current_bar: Candle
-    ) -> None:
-        """Test that limit order without price raises ValueError."""
-        order = make_order(
-            side=OrderSide.BUY,
-            order_type=OrderType.LIMIT,
-            price=None,
-        )
-
-        with pytest.raises(ValueError, match="Limit order must have price"):
-            fill_model.try_fill_limit_order(
-                order=order,
-                current_bar=current_bar,
-                best_bid=Decimal("50100"),
-                best_ask=Decimal("50150"),
-            )
-
-
-class TestPriceTouchLogic:
-    """Test price touch detection for limit orders."""
-
-    def test_buy_limit_touched_at_exact_low(self) -> None:
-        """Test buy limit touched when limit equals bar low."""
-        model = OrderFillModel()
-        touched = model._is_price_touched(
-            limit_price=Decimal("100"),
-            is_buy=True,
+@pytest.mark.parametrize(
+    ("stop_price", "is_buy_stop", "expected"),
+    [
+        (Decimal("110"), True, True),
+        (Decimal("105"), True, True),
+        (Decimal("115"), True, False),
+        (Decimal("100"), False, True),
+        (Decimal("105"), False, True),
+        (Decimal("95"), False, False),
+    ],
+)
+def test_stop_trigger_logic(stop_price: Decimal, is_buy_stop: bool, expected: bool) -> None:
+    model = OrderFillModel()
+    assert (
+        model._is_stop_triggered(
+            stop_price=stop_price,
+            is_buy_stop=is_buy_stop,
             bar_high=Decimal("110"),
             bar_low=Decimal("100"),
         )
-        assert touched is True
-
-    def test_buy_limit_touched_above_low(self) -> None:
-        """Test buy limit touched when limit is above bar low."""
-        model = OrderFillModel()
-        touched = model._is_price_touched(
-            limit_price=Decimal("105"),
-            is_buy=True,
-            bar_high=Decimal("110"),
-            bar_low=Decimal("100"),
-        )
-        assert touched is True
-
-    def test_buy_limit_not_touched_below_low(self) -> None:
-        """Test buy limit not touched when limit is below bar low."""
-        model = OrderFillModel()
-        touched = model._is_price_touched(
-            limit_price=Decimal("99"),
-            is_buy=True,
-            bar_high=Decimal("110"),
-            bar_low=Decimal("100"),
-        )
-        assert touched is False
-
-    def test_sell_limit_touched_at_exact_high(self) -> None:
-        """Test sell limit touched when limit equals bar high."""
-        model = OrderFillModel()
-        touched = model._is_price_touched(
-            limit_price=Decimal("110"),
-            is_buy=False,
-            bar_high=Decimal("110"),
-            bar_low=Decimal("100"),
-        )
-        assert touched is True
-
-    def test_sell_limit_touched_below_high(self) -> None:
-        """Test sell limit touched when limit is below bar high."""
-        model = OrderFillModel()
-        touched = model._is_price_touched(
-            limit_price=Decimal("105"),
-            is_buy=False,
-            bar_high=Decimal("110"),
-            bar_low=Decimal("100"),
-        )
-        assert touched is True
-
-    def test_sell_limit_not_touched_above_high(self) -> None:
-        """Test sell limit not touched when limit is above bar high."""
-        model = OrderFillModel()
-        touched = model._is_price_touched(
-            limit_price=Decimal("115"),
-            is_buy=False,
-            bar_high=Decimal("110"),
-            bar_low=Decimal("100"),
-        )
-        assert touched is False
+        is expected
+    )

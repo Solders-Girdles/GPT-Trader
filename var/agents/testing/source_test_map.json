@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 690,
+    "tests_scanned": 689,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -200,8 +200,7 @@
     "gpt_trader.backtesting.simulation.fill_model": [
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit.py",
-      "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_queue.py",
-      "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_stop.py"
+      "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_queue.py"
     ],
     "gpt_trader.backtesting.simulation.funding_tracker": [
       "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_accrual_init.py",
@@ -324,7 +323,6 @@
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_queue.py",
-      "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_stop.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker_market.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker_trading.py",
@@ -2383,10 +2381,6 @@
       "gpt_trader.core"
     ],
     "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_queue.py": [
-      "gpt_trader.backtesting.simulation.fill_model",
-      "gpt_trader.core"
-    ],
-    "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_stop.py": [
       "gpt_trader.backtesting.simulation.fill_model",
       "gpt_trader.core"
     ],

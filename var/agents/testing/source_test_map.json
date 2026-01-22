@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 743,
+    "tests_scanned": 742,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -392,8 +392,7 @@
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_state.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_order.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_init_and_metrics.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_resilience.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_with_retry.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_retry_flows.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_preview.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_rejection.py",
@@ -836,9 +835,8 @@
     "gpt_trader.features.live_trade.execution.broker_executor": [
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_order.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_init_and_metrics.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_resilience.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_retry_helpers.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_with_retry.py"
+      "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_retry_flows.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_retry_helpers.py"
     ],
     "gpt_trader.features.live_trade.execution.decision_trace": [
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder.py"
@@ -3260,15 +3258,11 @@
       "gpt_trader.core",
       "gpt_trader.features.live_trade.execution.broker_executor"
     ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_resilience.py": [
+    "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_retry_flows.py": [
       "gpt_trader.core",
       "gpt_trader.features.live_trade.execution.broker_executor"
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_retry_helpers.py": [
-      "gpt_trader.features.live_trade.execution.broker_executor"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_with_retry.py": [
-      "gpt_trader.core",
       "gpt_trader.features.live_trade.execution.broker_executor"
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_daily_loss_guard.py": [

@@ -13,7 +13,10 @@ from gpt_trader.core import (
     OrderType,
     TimeInForce,
 )
-from gpt_trader.features.live_trade.execution.broker_executor import BrokerExecutor
+from gpt_trader.features.live_trade.execution.broker_executor import (
+    BrokerExecutor,
+    RetryPolicy,
+)
 
 
 def _execute_order(
@@ -150,3 +153,68 @@ class TestBrokerExecutorExecuteOrder:
                 price=Decimal("50000"),
                 tif=TimeInForce.GTC,
             )
+
+    @pytest.mark.parametrize(
+        ("policy", "use_retry", "side_effect", "expected_calls", "expect_error"),
+        [
+            (None, False, "transient", 1, True),
+            (RetryPolicy(max_attempts=3, jitter=0), True, "transient", 2, False),
+            (RetryPolicy(max_attempts=2, base_delay=0.1, jitter=0), True, "always_fail", 2, True),
+        ],
+    )
+    def test_execute_order_retry_modes(
+        self,
+        mock_broker: MagicMock,
+        sample_order: Order,
+        policy: RetryPolicy | None,
+        use_retry: bool,
+        side_effect: str,
+        expected_calls: int,
+        expect_error: bool,
+    ) -> None:
+        if side_effect == "transient":
+            mock_broker.place_order.side_effect = [ConnectionError("fail"), sample_order]
+        else:
+            mock_broker.place_order.side_effect = ConnectionError("always fails")
+
+        executor_kwargs = {"broker": mock_broker}
+        if policy is not None:
+            executor_kwargs.update({"retry_policy": policy, "sleep_fn": lambda _: None})
+        retrying_executor = BrokerExecutor(**executor_kwargs)
+
+        if expect_error:
+            with pytest.raises(ConnectionError):
+                _execute_order(retrying_executor, use_retry=use_retry)
+        else:
+            result = _execute_order(retrying_executor, use_retry=use_retry)
+            assert result is sample_order
+
+        assert mock_broker.place_order.call_count == expected_calls
+
+    def test_retry_uses_same_client_order_id(
+        self,
+        mock_broker: MagicMock,
+        sample_order: Order,
+    ) -> None:
+        captured_client_ids: list[str] = []
+
+        def capture_and_fail(**kwargs):
+            captured_client_ids.append(kwargs.get("client_id", ""))
+            if len(captured_client_ids) < 2:
+                raise ConnectionError("transient failure")
+            return sample_order
+
+        mock_broker.place_order.side_effect = capture_and_fail
+        retrying_executor = BrokerExecutor(
+            broker=mock_broker,
+            retry_policy=RetryPolicy(max_attempts=3, jitter=0),
+            sleep_fn=lambda _: None,
+        )
+
+        _execute_order(
+            retrying_executor,
+            submit_id="idempotent-id-456",
+            use_retry=True,
+        )
+
+        assert captured_client_ids == ["idempotent-id-456", "idempotent-id-456"]

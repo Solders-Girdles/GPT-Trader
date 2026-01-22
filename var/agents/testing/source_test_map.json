@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 712,
+    "tests_scanned": 711,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -1382,8 +1382,8 @@
       "tests/unit/gpt_trader/monitoring/test_metrics_collector.py",
       "tests/unit/gpt_trader/monitoring/test_metrics_collector_edges.py",
       "tests/unit/gpt_trader/monitoring/test_metrics_collector_histograms.py",
-      "tests/unit/gpt_trader/monitoring/test_status_reporter_models_and_init.py",
-      "tests/unit/gpt_trader/monitoring/test_status_reporter_updates_and_health.py"
+      "tests/unit/gpt_trader/monitoring/test_status_reporter.py",
+      "tests/unit/gpt_trader/monitoring/test_status_reporter_health.py"
     ],
     "gpt_trader.monitoring.metrics_exporter": [
       "tests/unit/gpt_trader/monitoring/test_metrics_exporter.py"
@@ -1401,10 +1401,9 @@
       "tests/unit/gpt_trader/monitoring/test_profiling.py"
     ],
     "gpt_trader.monitoring.status_reporter": [
-      "tests/unit/gpt_trader/monitoring/test_status_reporter_edges.py",
+      "tests/unit/gpt_trader/monitoring/test_status_reporter.py",
       "tests/unit/gpt_trader/monitoring/test_status_reporter_file_output.py",
-      "tests/unit/gpt_trader/monitoring/test_status_reporter_models_and_init.py",
-      "tests/unit/gpt_trader/monitoring/test_status_reporter_updates_and_health.py",
+      "tests/unit/gpt_trader/monitoring/test_status_reporter_health.py",
       "tests/unit/gpt_trader/tui/test_app_core.py",
       "tests/unit/gpt_trader/tui/test_state_resilience_and_performance.py",
       "tests/unit/gpt_trader/tui/test_state_update_from_bot_status.py"
@@ -3987,17 +3986,14 @@
       "gpt_trader.monitoring.alert_types",
       "gpt_trader.monitoring.guards"
     ],
-    "tests/unit/gpt_trader/monitoring/test_status_reporter_edges.py": [
+    "tests/unit/gpt_trader/monitoring/test_status_reporter.py": [
+      "gpt_trader.monitoring.metrics_collector",
       "gpt_trader.monitoring.status_reporter"
     ],
     "tests/unit/gpt_trader/monitoring/test_status_reporter_file_output.py": [
       "gpt_trader.monitoring.status_reporter"
     ],
-    "tests/unit/gpt_trader/monitoring/test_status_reporter_models_and_init.py": [
-      "gpt_trader.monitoring.metrics_collector",
-      "gpt_trader.monitoring.status_reporter"
-    ],
-    "tests/unit/gpt_trader/monitoring/test_status_reporter_updates_and_health.py": [
+    "tests/unit/gpt_trader/monitoring/test_status_reporter_health.py": [
       "gpt_trader.monitoring.metrics_collector",
       "gpt_trader.monitoring.status_reporter"
     ],

@@ -1,9 +1,10 @@
-"""Unit tests for status reporter models and initialization."""
+"""Unit tests for status reporter models, init, metrics, and updates."""
 
 from __future__ import annotations
 
 import time
 from decimal import Decimal
+from unittest.mock import Mock
 
 import pytest
 
@@ -171,3 +172,67 @@ class TestStatusReporterStrategyPerformance:
         status = reporter.get_status()
         assert status.strategy.performance["win_rate"] == 0.58
         assert status.strategy.backtest_performance["win_rate"] == 0.56
+
+
+class TestStatusReporterUpdates:
+    """Tests for StatusReporter update methods."""
+
+    def test_record_cycle(self) -> None:
+        reporter = StatusReporter()
+        assert reporter._cycle_count == 0
+
+        reporter.record_cycle()
+        assert reporter._cycle_count == 1
+
+        reporter.record_cycle()
+        assert reporter._cycle_count == 2
+
+    def test_record_error(self) -> None:
+        reporter = StatusReporter()
+        assert reporter._errors_count == 0
+        assert reporter._last_error is None
+
+        reporter.record_error("Test error")
+        assert reporter._errors_count == 1
+        assert reporter._last_error == "Test error"
+        assert reporter._last_error_time is not None
+
+    def test_update_price(self) -> None:
+        reporter = StatusReporter()
+        assert len(reporter._last_prices) == 0
+
+        reporter.update_price("BTC-USD", Decimal("50000.00"))
+        assert reporter._last_prices["BTC-USD"] == Decimal("50000.00")
+        assert reporter._last_price_update is not None
+
+    def test_update_positions(self) -> None:
+        reporter = StatusReporter()
+        assert len(reporter._positions) == 0
+
+        positions = {
+            "BTC-PERP": {"quantity": Decimal("1.5"), "unrealized_pnl": Decimal("100")},
+            "ETH-PERP": {"quantity": Decimal("10"), "unrealized_pnl": Decimal("-50")},
+        }
+        reporter.update_positions(positions)
+
+        assert len(reporter._positions) == 2
+        assert "BTC-PERP" in reporter._positions
+
+    def test_set_heartbeat_service(self) -> None:
+        reporter = StatusReporter()
+        mock_heartbeat = Mock()
+        mock_heartbeat.get_status.return_value = {"enabled": True, "running": True}
+        mock_heartbeat.is_healthy = True
+
+        reporter.set_heartbeat_service(mock_heartbeat)
+        assert reporter._heartbeat_service is mock_heartbeat
+
+
+class TestStatusReporterStop:
+    """Tests for StatusReporter stop method."""
+
+    @pytest.mark.asyncio
+    async def test_stop_when_not_running(self) -> None:
+        reporter = StatusReporter()
+        await reporter.stop()
+        assert reporter._running is False

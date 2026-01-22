@@ -293,7 +293,8 @@ clusters:
     expected_file_delta: -13
     priority: high
     rationale: Consolidate 14 test files into single parametrized file
-    status: pending
+    status: in_progress
+    owner: codex
     added: '2026-01-20'
   80ba0a3672df:
     type: source_fanout
@@ -319,7 +320,8 @@ clusters:
     expected_file_delta: -12
     priority: high
     rationale: Consolidate 13 test files into single parametrized file
-    status: pending
+    status: in_progress
+    owner: codex
     added: '2026-01-20'
   8ac1470c0e4c:
     type: source_fanout
@@ -1384,7 +1386,7 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/monitoring/test_health_checks.py
-    expected_file_delta: -3
+    expected_file_delta: -1
     priority: low
     rationale: Consolidated portfolio service suites into one module via shared helpers
     status: done
@@ -1600,10 +1602,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/monitoring/test_status_reporter.py
-    expected_file_delta: -3
+    expected_file_delta: -1
     priority: low
-    rationale: Consolidate 4 test files into single parametrized file
-    status: pending
+    rationale: Consolidated into three modules to stay under hygiene cap
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/372
     added: '2026-01-21'
   8883d635b021:
     type: similar_names

@@ -1981,7 +1981,8 @@ clusters:
     expected_file_delta: -2
     priority: low
     rationale: Consolidate 3 test files into single parametrized file
-    status: pending
+    status: in_progress
+    owner: codex
     added: '2026-01-20'
   24df30e9af97:
     type: similar_names
@@ -2405,7 +2406,8 @@ clusters:
     expected_file_delta: -2
     priority: low
     rationale: Consolidate 3 test files into single parametrized file
-    status: pending
+    status: in_progress
+    owner: codex
     added: '2026-01-20'
   f9cf9481c6bd:
     type: similar_names

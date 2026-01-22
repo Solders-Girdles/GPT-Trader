@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 719,
+    "tests_scanned": 716,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -52,8 +52,7 @@
       "tests/unit/gpt_trader/app/config/test_bot_config.py",
       "tests/unit/gpt_trader/app/config/test_cfm_config.py",
       "tests/unit/gpt_trader/app/containers/test_risk_validation_kill_switch.py",
-      "tests/unit/gpt_trader/config/test_bot_config_env_aliasing.py",
-      "tests/unit/gpt_trader/config/test_bot_config_profile_strategy_hydration.py",
+      "tests/unit/gpt_trader/config/test_bot_config.py",
       "tests/unit/scripts/test_backtest_runner_pillar2_gates.py"
     ],
     "gpt_trader.app.config.defaults": [
@@ -65,7 +64,7 @@
       "tests/unit/gpt_trader/app/config/test_profile_loader_container_api.py",
       "tests/unit/gpt_trader/app/test_application_container_registry.py",
       "tests/unit/gpt_trader/app/test_application_container_reset_and_services.py",
-      "tests/unit/gpt_trader/config/test_bot_config_profile_strategy_hydration.py"
+      "tests/unit/gpt_trader/config/test_bot_config.py"
     ],
     "gpt_trader.app.config.validation": [
       "tests/unit/gpt_trader/app/config/test_bot_config_loading.py",
@@ -320,7 +319,7 @@
       "tests/unit/gpt_trader/app/containers/test_risk_validation.py",
       "tests/unit/gpt_trader/app/test_bootstrap.py",
       "tests/unit/gpt_trader/app/test_bootstrap_profile_loading.py",
-      "tests/unit/gpt_trader/config/test_bot_config_profile_strategy_hydration.py",
+      "tests/unit/gpt_trader/config/test_bot_config.py",
       "tests/unit/gpt_trader/features/live_trade/test_symbols_derivatives.py",
       "tests/unit/gpt_trader/features/live_trade/test_symbols_normalization.py"
     ],
@@ -949,8 +948,7 @@
     "gpt_trader.features.live_trade.risk.config": [
       "tests/property/test_degradation_invariants_failure_counters.py",
       "tests/property/test_degradation_invariants_status_and_clear_all.py",
-      "tests/unit/gpt_trader/config/test_bot_config_mark_staleness_guard.py",
-      "tests/unit/gpt_trader/config/test_bot_config_reduce_only_enforcement.py",
+      "tests/unit/gpt_trader/config/test_bot_config.py",
       "tests/unit/gpt_trader/features/live_trade/risk/test_cfm_risk_config.py",
       "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_exposure.py",
       "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_leverage_and_summary.py",
@@ -962,8 +960,7 @@
     ],
     "gpt_trader.features.live_trade.risk.manager": [
       "tests/unit/gpt_trader/app/containers/test_risk_validation.py",
-      "tests/unit/gpt_trader/config/test_bot_config_mark_staleness_guard.py",
-      "tests/unit/gpt_trader/config/test_bot_config_reduce_only_enforcement.py",
+      "tests/unit/gpt_trader/config/test_bot_config.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_orders.py",
       "tests/unit/gpt_trader/features/live_trade/risk/test_reduce_only.py",
@@ -1081,7 +1078,7 @@
       "tests/integration/test_order_flow.py",
       "tests/unit/gpt_trader/app/config/test_bot_config.py",
       "tests/unit/gpt_trader/app/containers/test_risk_validation_kill_switch.py",
-      "tests/unit/gpt_trader/config/test_bot_config_profile_strategy_hydration.py",
+      "tests/unit/gpt_trader/config/test_bot_config.py",
       "tests/unit/gpt_trader/features/intelligence/ensemble/test_orchestrator_crisis_mode.py",
       "tests/unit/gpt_trader/features/intelligence/ensemble/test_orchestrator_decision.py",
       "tests/unit/gpt_trader/features/intelligence/ensemble/test_orchestrator_serialization.py",
@@ -2604,22 +2601,13 @@
       "gpt_trader.cli.commands.run",
       "gpt_trader.cli.services"
     ],
-    "tests/unit/gpt_trader/config/test_bot_config_env_aliasing.py": [
-      "gpt_trader.app.config.bot_config"
-    ],
-    "tests/unit/gpt_trader/config/test_bot_config_mark_staleness_guard.py": [
-      "gpt_trader.features.live_trade.risk.config",
-      "gpt_trader.features.live_trade.risk.manager"
-    ],
-    "tests/unit/gpt_trader/config/test_bot_config_profile_strategy_hydration.py": [
+    "tests/unit/gpt_trader/config/test_bot_config.py": [
       "gpt_trader.app.config.bot_config",
       "gpt_trader.app.config.profile_loader",
       "gpt_trader.config.types",
-      "gpt_trader.features.live_trade.strategies.perps_baseline"
-    ],
-    "tests/unit/gpt_trader/config/test_bot_config_reduce_only_enforcement.py": [
       "gpt_trader.features.live_trade.risk.config",
-      "gpt_trader.features.live_trade.risk.manager"
+      "gpt_trader.features.live_trade.risk.manager",
+      "gpt_trader.features.live_trade.strategies.perps_baseline"
     ],
     "tests/unit/gpt_trader/config/test_config_utilities.py": [
       "gpt_trader.config.config_utilities"

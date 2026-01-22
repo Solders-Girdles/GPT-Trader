@@ -92,6 +92,11 @@ clusters:
     owner: codex
     updated: '2026-01-22'
     reason: cross-dir shared-import fanout; not a cohesive dedupe target
+  d2b78c2ed05c:
+    state: rejected
+    owner: codex
+    updated: '2026-01-22'
+    reason: cross-dir shared-import fanout (monitoring + tui); not a cohesive dedupe target
   89424704f490:
     state: rejected
     owner: codex

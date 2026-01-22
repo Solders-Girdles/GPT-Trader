@@ -1,9 +1,15 @@
-"""Tests for CFM exposure tracking and limit checks in LiveRiskManager."""
+"""Tests for CFM risk exposure, leverage, and summaries."""
 
 from decimal import Decimal
 
+import pytest
+
 from gpt_trader.features.live_trade.risk.config import RiskConfig
-from gpt_trader.features.live_trade.risk.manager import LiveRiskManager, RiskWarningLevel
+from gpt_trader.features.live_trade.risk.manager import (
+    LiveRiskManager,
+    RiskWarningLevel,
+    ValidationError,
+)
 
 
 class TestLiveRiskManagerCFMExposure:
@@ -122,7 +128,6 @@ class TestLiveRiskManagerCFMExposureLimits:
         config = RiskConfig(cfm_max_exposure_pct=0.8)
         manager = LiveRiskManager(config=config, state_file=None)
 
-        # Set up 50% exposure
         positions = [
             {"quantity": "1", "mark_price": "50000", "product_type": "FUTURE", "leverage": 1},
         ]
@@ -137,7 +142,6 @@ class TestLiveRiskManagerCFMExposureLimits:
         config = RiskConfig(cfm_max_exposure_pct=0.5)
         manager = LiveRiskManager(config=config, state_file=None)
 
-        # Set up 75% exposure
         positions = [
             {"quantity": "1.5", "mark_price": "50000", "product_type": "FUTURE", "leverage": 1},
         ]
@@ -157,3 +161,42 @@ class TestLiveRiskManagerCFMExposureLimits:
         warnings = manager.check_cfm_exposure_limits(equity=Decimal("0"))
 
         assert warnings == []
+
+
+class TestLiveRiskManagerCFMLeverageValidation:
+    """Tests for CFM leverage validation."""
+
+    def test_validate_cfm_leverage_ok(self):
+        """No error when leverage within limit."""
+        config = RiskConfig(cfm_max_leverage=5)
+        manager = LiveRiskManager(config=config, state_file=None)
+
+        result = manager.validate_cfm_leverage("BTC-20DEC30-CDE", requested_leverage=3)
+        assert result is None
+
+    def test_validate_cfm_leverage_at_limit(self):
+        """No error when leverage at limit."""
+        config = RiskConfig(cfm_max_leverage=5)
+        manager = LiveRiskManager(config=config, state_file=None)
+
+        result = manager.validate_cfm_leverage("BTC-20DEC30-CDE", requested_leverage=5)
+        assert result is None
+
+    def test_validate_cfm_leverage_exceeded(self):
+        """Error when leverage exceeds limit."""
+        config = RiskConfig(cfm_max_leverage=5)
+        manager = LiveRiskManager(config=config, state_file=None)
+
+        with pytest.raises(ValidationError) as exc_info:
+            manager.validate_cfm_leverage("BTC-20DEC30-CDE", requested_leverage=10)
+
+        assert "10x exceeds CFM limit 5x" in str(exc_info.value)
+
+    def test_validate_cfm_leverage_default(self):
+        """Uses default 5x when no config."""
+        manager = LiveRiskManager(state_file=None)
+
+        with pytest.raises(ValidationError):
+            manager.validate_cfm_leverage("BTC-20DEC30-CDE", requested_leverage=10)
+
+        manager.validate_cfm_leverage("BTC-20DEC30-CDE", requested_leverage=5)

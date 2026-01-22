@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 705,
+    "tests_scanned": 704,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -944,9 +944,8 @@
       "tests/property/test_degradation_invariants_status_and_clear_all.py",
       "tests/unit/gpt_trader/config/test_bot_config.py",
       "tests/unit/gpt_trader/features/live_trade/risk/test_cfm_risk_config.py",
-      "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_exposure.py",
-      "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_leverage_and_summary.py",
-      "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_liquidation_buffer_and_reduce_only.py",
+      "tests/unit/gpt_trader/features/live_trade/test_cfm_risk.py",
+      "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_liquidation.py",
       "tests/unit/gpt_trader/features/live_trade/test_config_dict_json.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_time_windows.py",
@@ -958,10 +957,9 @@
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_orders.py",
       "tests/unit/gpt_trader/features/live_trade/risk/test_reduce_only.py",
-      "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_exposure.py",
-      "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_leverage_and_summary.py",
-      "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_liquidation_buffer_and_reduce_only.py",
-      "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_models.py",
+      "tests/unit/gpt_trader/features/live_trade/test_cfm_risk.py",
+      "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_liquidation.py",
+      "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_models.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager_daily.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager_protection.py",
@@ -3479,19 +3477,15 @@
     "tests/unit/gpt_trader/features/live_trade/test_bot_lifecycle.py": [
       "gpt_trader.features.live_trade.bot"
     ],
-    "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_exposure.py": [
+    "tests/unit/gpt_trader/features/live_trade/test_cfm_risk.py": [
       "gpt_trader.features.live_trade.risk.config",
       "gpt_trader.features.live_trade.risk.manager"
     ],
-    "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_leverage_and_summary.py": [
+    "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_liquidation.py": [
       "gpt_trader.features.live_trade.risk.config",
       "gpt_trader.features.live_trade.risk.manager"
     ],
-    "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_liquidation_buffer_and_reduce_only.py": [
-      "gpt_trader.features.live_trade.risk.config",
-      "gpt_trader.features.live_trade.risk.manager"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_models.py": [
+    "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_models.py": [
       "gpt_trader.features.live_trade.risk.manager"
     ],
     "tests/unit/gpt_trader/features/live_trade/test_config_dict_json.py": [

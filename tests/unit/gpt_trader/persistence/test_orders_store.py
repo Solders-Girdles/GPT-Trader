@@ -48,7 +48,6 @@ class TestOrdersStore:
                 order = create_test_order(status=OrderStatus.PENDING)
                 store.save_order(order)
 
-                # Update the same order
                 order.status = OrderStatus.FILLED
                 order.filled_quantity = order.quantity
                 store.save_order(order)
@@ -82,7 +81,6 @@ class TestOrdersStore:
     def test_get_pending_orders(self) -> None:
         with TemporaryDirectory() as tmpdir:
             with OrdersStore(tmpdir) as store:
-                # Create orders in various states
                 pending = create_test_order(order_id="pending-1", status=OrderStatus.PENDING)
                 open_order = create_test_order(order_id="open-1", status=OrderStatus.OPEN)
                 filled = create_test_order(order_id="filled-1", status=OrderStatus.FILLED)
@@ -159,17 +157,11 @@ class TestOrdersStore:
     def test_cleanup_old_orders(self) -> None:
         with TemporaryDirectory() as tmpdir:
             with OrdersStore(tmpdir) as store:
-                # Create a filled order
                 order = create_test_order(status=OrderStatus.FILLED)
                 store.save_order(order)
 
-                # Cleanup with 0 days should delete all terminal orders
-                # Note: This test uses SQLite datetime functions
                 deleted = store.cleanup_old_orders(days=0)
 
-                # The order was just created, so it won't be deleted with days=0
-                # because SQLite compares against 'now'
-                # This tests that the method runs without error
                 assert deleted >= 0
 
     def test_context_manager(self) -> None:
@@ -178,7 +170,6 @@ class TestOrdersStore:
                 order = create_test_order()
                 store.save_order(order)
 
-            # After context exit, can create new store and read
             store2 = OrdersStore(tmpdir)
             store2.initialize()
             retrieved = store2.get_order(order.order_id)

@@ -2097,11 +2097,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry.py
-    expected_file_delta: -2
+    expected_file_delta: -1
     priority: low
-    rationale: Consolidate 3 test files into single parametrized file
-    status: in_progress
+    rationale: Consolidated collection coverage into core while keeping lifecycle separate for hygiene cap
+    status: done
     owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/396
     added: '2026-01-21'
   5382ed5f2cfa:
     type: similar_names

@@ -138,6 +138,11 @@ clusters:
     reason: 'source_fanout false positive: mixes decision_logger unit tests with guarded
       execution/backtest flow tests; wrong inferred target_location; already right-sized
       under 240-line cap'
+  b515e554aeda:
+    state: deferred
+    owner: codex
+    updated: '2026-01-22'
+    reason: already right-sized under 240-line cap; further merge not worth it
   20c6dd9ab9e0:
     state: rejected
     owner: codex

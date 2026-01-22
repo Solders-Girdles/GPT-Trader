@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6031,
-    "total_files": 727,
+    "total_files": 725,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -459,9 +459,8 @@
       "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_models.py",
       "tests/unit/gpt_trader/features/live_trade/test_config_dict_json.py",
       "tests/unit/gpt_trader/features/live_trade/test_degradation_failure_tracking.py",
+      "tests/unit/gpt_trader/features/live_trade/test_degradation_pause.py",
       "tests/unit/gpt_trader/features/live_trade/test_degradation_pause_expiry_and_recovery.py",
-      "tests/unit/gpt_trader/features/live_trade/test_degradation_pause_monotonicity.py",
-      "tests/unit/gpt_trader/features/live_trade/test_degradation_pause_records_and_basic_pause.py",
       "tests/unit/gpt_trader/features/live_trade/test_degradation_status_and_clear_all.py",
       "tests/unit/gpt_trader/features/live_trade/test_guard_errors.py",
       "tests/unit/gpt_trader/features/live_trade/test_indicators.py",
@@ -473,9 +472,8 @@
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager_protection.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager_volatility.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_time_windows.py",
-      "tests/unit/gpt_trader/features/live_trade/test_state_recovery_price_tick_recording.py",
+      "tests/unit/gpt_trader/features/live_trade/test_state_recovery.py",
       "tests/unit/gpt_trader/features/live_trade/test_state_recovery_rehydration.py",
-      "tests/unit/gpt_trader/features/live_trade/test_state_recovery_strategy_rehydrate.py",
       "tests/unit/gpt_trader/features/live_trade/test_strategy_factory.py",
       "tests/unit/gpt_trader/features/live_trade/test_symbols.py",
       "tests/unit/gpt_trader/features/live_trade/test_symbols_derivatives.py",
@@ -25033,7 +25031,7 @@
     "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_lifecycle.py": [
       {
         "name": "TestSupportsSnapshots::test_supports_snapshots_all_methods_present",
-        "line": 16,
+        "line": 17,
         "markers": [
           "unit"
         ],
@@ -25042,7 +25040,7 @@
       },
       {
         "name": "TestSupportsSnapshots::test_supports_snapshots_missing_method",
-        "line": 34,
+        "line": 35,
         "markers": [
           "unit"
         ],
@@ -25051,7 +25049,7 @@
       },
       {
         "name": "TestSupportsSnapshots::test_supports_snapshots_empty_broker",
-        "line": 46,
+        "line": 47,
         "markers": [
           "unit"
         ],
@@ -25060,7 +25058,7 @@
       },
       {
         "name": "TestLatestSnapshot::test_latest_snapshot_returns_copy",
-        "line": 62,
+        "line": 63,
         "markers": [
           "unit"
         ],
@@ -25069,7 +25067,7 @@
       },
       {
         "name": "TestLatestSnapshot::test_latest_snapshot_empty_initially",
-        "line": 76,
+        "line": 77,
         "markers": [
           "unit"
         ],
@@ -25078,7 +25076,7 @@
       },
       {
         "name": "TestPublishSnapshot::test_publish_snapshot_emits_metric",
-        "line": 91,
+        "line": 92,
         "markers": [
           "unit"
         ],
@@ -25087,7 +25085,7 @@
       },
       {
         "name": "TestPublishSnapshot::test_publish_snapshot_file_write_error",
-        "line": 120,
+        "line": 121,
         "markers": [
           "unit"
         ],
@@ -25096,7 +25094,7 @@
       },
       {
         "name": "TestRunAsync::test_run_exits_when_snapshots_not_supported",
-        "line": 145,
+        "line": 144,
         "markers": [
           "asyncio",
           "unit"
@@ -25106,7 +25104,7 @@
       },
       {
         "name": "TestRunAsync::test_run_collects_and_publishes",
-        "line": 161,
+        "line": 160,
         "markers": [
           "asyncio",
           "unit"
@@ -25116,7 +25114,7 @@
       },
       {
         "name": "TestRunAsync::test_run_handles_collection_error",
-        "line": 202,
+        "line": 201,
         "markers": [
           "asyncio",
           "unit"
@@ -25770,119 +25768,7 @@
         "class": "TestGuardFailureTelemetry"
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/test_degradation_pause_expiry_and_recovery.py": [
-      {
-        "name": "TestPauseExpiryRecovery::test_global_pause_expires_and_trading_resumes",
-        "line": 14,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that global pause expires and is_paused returns False.",
-        "class": "TestPauseExpiryRecovery"
-      },
-      {
-        "name": "TestPauseExpiryRecovery::test_symbol_pause_expires_and_trading_resumes",
-        "line": 28,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that symbol-specific pause expires correctly.",
-        "class": "TestPauseExpiryRecovery"
-      },
-      {
-        "name": "TestPauseExpiryRecovery::test_reduce_only_allowed_during_pause",
-        "line": 42,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that reduce-only orders are allowed when configured.",
-        "class": "TestPauseExpiryRecovery"
-      },
-      {
-        "name": "TestPauseExpiryRecovery::test_pause_then_recovery_sequence",
-        "line": 54,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test a complete pause -> recovery sequence.",
-        "class": "TestPauseExpiryRecovery"
-      },
-      {
-        "name": "TestPauseExpiryRecovery::test_multiple_symbol_pauses_expire_independently",
-        "line": 73,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that each symbol's pause expires independently.",
-        "class": "TestPauseExpiryRecovery"
-      },
-      {
-        "name": "TestPauseExpiryRecovery::test_guard_error_triggers_pause_via_record_broker_failure",
-        "line": 94,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that guard/broker errors trigger pause when threshold reached.",
-        "class": "TestPauseExpiryRecovery"
-      },
-      {
-        "name": "TestPauseExpiryRecovery::test_pause_allows_trading_after_cooldown",
-        "line": 110,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that trading is allowed after cooldown period.",
-        "class": "TestPauseExpiryRecovery"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/test_degradation_pause_monotonicity.py": [
-      {
-        "name": "TestPauseMonotonicity::test_global_pause_does_not_shorten_existing_pause",
-        "line": 11,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "A shorter pause request should not shorten an existing longer pause.",
-        "class": "TestPauseMonotonicity"
-      },
-      {
-        "name": "TestPauseMonotonicity::test_global_pause_extends_existing_pause",
-        "line": 22,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "A longer pause request should extend an existing shorter pause.",
-        "class": "TestPauseMonotonicity"
-      },
-      {
-        "name": "TestPauseMonotonicity::test_symbol_pause_does_not_shorten_existing_pause",
-        "line": 33,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "A shorter symbol pause should not shorten an existing longer pause.",
-        "class": "TestPauseMonotonicity"
-      },
-      {
-        "name": "TestPauseMonotonicity::test_symbol_pause_extends_existing_pause",
-        "line": 44,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "A longer symbol pause request should extend an existing shorter pause.",
-        "class": "TestPauseMonotonicity"
-      },
-      {
-        "name": "TestPauseMonotonicity::test_symbol_pause_monotonicity_independent_per_symbol",
-        "line": 55,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Monotonicity is enforced independently for each symbol.",
-        "class": "TestPauseMonotonicity"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/test_degradation_pause_records_and_basic_pause.py": [
+    "tests/unit/gpt_trader/features/live_trade/test_degradation_pause.py": [
       {
         "name": "TestPauseRecord::test_pause_record_creation",
         "line": 13,
@@ -25999,6 +25885,116 @@
         ],
         "docstring": "",
         "class": "TestGetPauseReason"
+      },
+      {
+        "name": "TestPauseMonotonicity::test_global_pause_does_not_shorten_existing_pause",
+        "line": 104,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "A shorter pause request should not shorten an existing longer pause.",
+        "class": "TestPauseMonotonicity"
+      },
+      {
+        "name": "TestPauseMonotonicity::test_global_pause_extends_existing_pause",
+        "line": 115,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "A longer pause request should extend an existing shorter pause.",
+        "class": "TestPauseMonotonicity"
+      },
+      {
+        "name": "TestPauseMonotonicity::test_symbol_pause_does_not_shorten_existing_pause",
+        "line": 126,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "A shorter symbol pause should not shorten an existing longer pause.",
+        "class": "TestPauseMonotonicity"
+      },
+      {
+        "name": "TestPauseMonotonicity::test_symbol_pause_extends_existing_pause",
+        "line": 137,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "A longer symbol pause request should extend an existing shorter pause.",
+        "class": "TestPauseMonotonicity"
+      },
+      {
+        "name": "TestPauseMonotonicity::test_symbol_pause_monotonicity_independent_per_symbol",
+        "line": 148,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Monotonicity is enforced independently for each symbol.",
+        "class": "TestPauseMonotonicity"
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/test_degradation_pause_expiry_and_recovery.py": [
+      {
+        "name": "TestPauseExpiryRecovery::test_global_pause_expires_and_trading_resumes",
+        "line": 14,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that global pause expires and is_paused returns False.",
+        "class": "TestPauseExpiryRecovery"
+      },
+      {
+        "name": "TestPauseExpiryRecovery::test_symbol_pause_expires_and_trading_resumes",
+        "line": 28,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that symbol-specific pause expires correctly.",
+        "class": "TestPauseExpiryRecovery"
+      },
+      {
+        "name": "TestPauseExpiryRecovery::test_reduce_only_allowed_during_pause",
+        "line": 42,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that reduce-only orders are allowed when configured.",
+        "class": "TestPauseExpiryRecovery"
+      },
+      {
+        "name": "TestPauseExpiryRecovery::test_pause_then_recovery_sequence",
+        "line": 54,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test a complete pause -> recovery sequence.",
+        "class": "TestPauseExpiryRecovery"
+      },
+      {
+        "name": "TestPauseExpiryRecovery::test_multiple_symbol_pauses_expire_independently",
+        "line": 73,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that each symbol's pause expires independently.",
+        "class": "TestPauseExpiryRecovery"
+      },
+      {
+        "name": "TestPauseExpiryRecovery::test_guard_error_triggers_pause_via_record_broker_failure",
+        "line": 94,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that guard/broker errors trigger pause when threshold reached.",
+        "class": "TestPauseExpiryRecovery"
+      },
+      {
+        "name": "TestPauseExpiryRecovery::test_pause_allows_trading_after_cooldown",
+        "line": 110,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that trading is allowed after cooldown period.",
+        "class": "TestPauseExpiryRecovery"
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/test_degradation_status_and_clear_all.py": [
@@ -27039,10 +27035,10 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/test_state_recovery_price_tick_recording.py": [
+    "tests/unit/gpt_trader/features/live_trade/test_state_recovery.py": [
       {
         "name": "TestTradingEngineRecordPriceTick::test_record_price_tick_stores_event",
-        "line": 20,
+        "line": 21,
         "markers": [
           "unit"
         ],
@@ -27051,12 +27047,21 @@
       },
       {
         "name": "TestTradingEngineRecordPriceTick::test_record_price_tick_without_store",
-        "line": 39,
+        "line": 40,
         "markers": [
           "unit"
         ],
         "docstring": "Test that price tick recording is skipped without event store.",
         "class": "TestTradingEngineRecordPriceTick"
+      },
+      {
+        "name": "TestStrategyRehydrate::test_baseline_strategy_rehydrate_returns_zero",
+        "line": 54,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that BaselinePerpsStrategy.rehydrate returns 0 (stateless).",
+        "class": "TestStrategyRehydrate"
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/test_state_recovery_rehydration.py": [
@@ -27140,17 +27145,6 @@
         ],
         "docstring": "Test rehydration handles events with missing fields.",
         "class": "TestTradingEngineRehydration"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/test_state_recovery_strategy_rehydrate.py": [
-      {
-        "name": "TestStrategyRehydrate::test_baseline_strategy_rehydrate_returns_zero",
-        "line": 12,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that BaselinePerpsStrategy.rehydrate returns 0 (stateless).",
-        "class": "TestStrategyRehydrate"
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/test_strategy_factory.py": [

@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6105,
-    "total_files": 755,
+    "total_tests": 6084,
+    "total_files": 753,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 5940,
+    "unit": 5919,
     "asyncio": 344,
-    "parametrize": 125,
+    "parametrize": 130,
     "property": 82,
     "integration": 79,
     "endpoints": 78,
@@ -821,10 +821,8 @@
       "tests/unit/gpt_trader/utilities/test_async_utils_gather.py",
       "tests/unit/gpt_trader/utilities/test_async_utils_scenarios.py",
       "tests/unit/gpt_trader/utilities/test_async_utils_wrappers.py",
-      "tests/unit/gpt_trader/utilities/test_console_logging_core_basic.py",
-      "tests/unit/gpt_trader/utilities/test_console_logging_core_fallbacks.py",
+      "tests/unit/gpt_trader/utilities/test_console_logging.py",
       "tests/unit/gpt_trader/utilities/test_console_logging_functions.py",
-      "tests/unit/gpt_trader/utilities/test_console_logging_functions_wrappers.py",
       "tests/unit/gpt_trader/utilities/test_datetime_helpers.py",
       "tests/unit/gpt_trader/utilities/test_datetime_helpers_now.py",
       "tests/unit/gpt_trader/utilities/test_iterators.py",
@@ -52466,372 +52464,165 @@
         "class": "TestRunAsyncIfNeeded"
       }
     ],
-    "tests/unit/gpt_trader/utilities/test_console_logging_core_basic.py": [
+    "tests/unit/gpt_trader/utilities/test_console_logging.py": [
       {
-        "name": "TestConsoleLoggerCore::test_init_default",
-        "line": 24,
+        "name": "test_init_default",
+        "line": 33,
         "markers": [
           "unit"
         ],
-        "docstring": "",
-        "class": "TestConsoleLoggerCore"
+        "docstring": ""
       },
       {
-        "name": "TestConsoleLoggerCore::test_init_custom",
-        "line": 30,
+        "name": "test_init_custom",
+        "line": 40,
         "markers": [
           "unit"
         ],
-        "docstring": "",
-        "class": "TestConsoleLoggerCore"
+        "docstring": ""
       },
       {
-        "name": "TestConsoleLoggerCore::test_success_logging",
-        "line": 36,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestConsoleLoggerCore"
-      },
-      {
-        "name": "TestConsoleLoggerCore::test_error_logging",
-        "line": 42,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestConsoleLoggerCore"
-      },
-      {
-        "name": "TestConsoleLoggerCore::test_warning_logging",
-        "line": 48,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestConsoleLoggerCore"
-      },
-      {
-        "name": "TestConsoleLoggerCore::test_info_logging",
-        "line": 54,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestConsoleLoggerCore"
-      },
-      {
-        "name": "TestConsoleLoggerCore::test_context_specific_logging",
+        "name": "test_logging_methods",
         "line": 60,
         "markers": [
+          "parametrize",
           "unit"
         ],
-        "docstring": "",
-        "class": "TestConsoleLoggerCore"
+        "docstring": ""
       },
       {
-        "name": "TestConsoleLoggerCore::test_disabled_console_logging",
-        "line": 86,
+        "name": "test_all_methods_when_console_disabled",
+        "line": 74,
         "markers": [
           "unit"
         ],
-        "docstring": "",
-        "class": "TestConsoleLoggerCore"
+        "docstring": ""
       },
       {
-        "name": "TestConsoleLoggerCore::test_all_methods_when_console_disabled",
-        "line": 94,
+        "name": "test_print_section_variants",
+        "line": 104,
         "markers": [
+          "parametrize",
           "unit"
         ],
-        "docstring": "",
-        "class": "TestConsoleLoggerCore"
+        "docstring": ""
       },
       {
-        "name": "TestConsoleLoggerCore::test_print_section",
-        "line": 115,
+        "name": "test_print_table_variants",
+        "line": 139,
         "markers": [
+          "parametrize",
           "unit"
         ],
-        "docstring": "",
-        "class": "TestConsoleLoggerCore"
+        "docstring": ""
       },
       {
-        "name": "TestConsoleLoggerCore::test_print_section_no_title",
-        "line": 122,
+        "name": "test_print_key_value_variants",
+        "line": 165,
         "markers": [
+          "parametrize",
           "unit"
         ],
-        "docstring": "",
-        "class": "TestConsoleLoggerCore"
+        "docstring": ""
       },
       {
-        "name": "TestConsoleLoggerCore::test_print_section_disabled",
-        "line": 128,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestConsoleLoggerCore"
-      },
-      {
-        "name": "TestConsoleLoggerCore::test_print_table",
-        "line": 133,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestConsoleLoggerCore"
-      },
-      {
-        "name": "TestConsoleLoggerCore::test_print_table_empty_rows",
-        "line": 151,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestConsoleLoggerCore"
-      },
-      {
-        "name": "TestConsoleLoggerCore::test_print_table_disabled",
-        "line": 160,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestConsoleLoggerCore"
-      },
-      {
-        "name": "TestConsoleLoggerCore::test_print_key_value",
-        "line": 171,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestConsoleLoggerCore"
-      },
-      {
-        "name": "TestConsoleLoggerCore::test_print_key_value_with_indent",
-        "line": 177,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestConsoleLoggerCore"
-      },
-      {
-        "name": "TestConsoleLoggerCore::test_print_key_value_disabled",
+        "name": "test_structured_logging_integration",
         "line": 183,
         "markers": [
           "unit"
         ],
-        "docstring": "",
-        "class": "TestConsoleLoggerCore"
-      }
-    ],
-    "tests/unit/gpt_trader/utilities/test_console_logging_core_fallbacks.py": [
-      {
-        "name": "TestConsoleLoggerFallbacks::test_structured_logging_integration",
-        "line": 30,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestConsoleLoggerFallbacks"
+        "docstring": ""
       },
       {
-        "name": "TestConsoleLoggerFallbacks::test_output_stream_error_handling",
-        "line": 41,
+        "name": "test_output_stream_error_handling",
+        "line": 195,
         "markers": [
           "unit"
         ],
-        "docstring": "",
-        "class": "TestConsoleLoggerFallbacks"
-      },
-      {
-        "name": "TestConsoleLoggerFallbacks::test_print_section_fallback_on_failure",
-        "line": 50,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestConsoleLoggerFallbacks"
-      },
-      {
-        "name": "TestConsoleLoggerFallbacks::test_print_table_fallback_on_failure",
-        "line": 67,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestConsoleLoggerFallbacks"
-      },
-      {
-        "name": "TestConsoleLoggerFallbacks::test_print_key_value_fallback_on_failure",
-        "line": 88,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestConsoleLoggerFallbacks"
-      },
-      {
-        "name": "TestGlobalConsoleLogger::test_get_console_logger_singleton",
-        "line": 112,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestGlobalConsoleLogger"
-      },
-      {
-        "name": "TestGlobalConsoleLogger::test_get_console_logger_custom_settings",
-        "line": 118,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestGlobalConsoleLogger"
-      },
-      {
-        "name": "TestGlobalConsoleLogger::test_get_console_logger_preserves_existing_instance",
-        "line": 123,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestGlobalConsoleLogger"
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/utilities/test_console_logging_functions.py": [
       {
-        "name": "TestConsoleLoggingFunctions::test_end_to_end_logging_workflow",
-        "line": 42,
+        "name": "test_end_to_end_logging_workflow",
+        "line": 55,
         "markers": [
           "unit"
         ],
-        "docstring": "Test complete logging workflow.",
-        "class": "TestConsoleLoggingFunctions"
+        "docstring": "Test complete logging workflow."
       },
       {
-        "name": "TestConsoleLoggingFunctions::test_all_context_methods",
-        "line": 67,
+        "name": "test_table_formatting_complex_data",
+        "line": 79,
         "markers": [
           "unit"
         ],
-        "docstring": "Test all context-specific methods work without errors.",
-        "class": "TestConsoleLoggingFunctions"
+        "docstring": "Test table formatting with complex data."
       },
       {
-        "name": "TestConsoleLoggingFunctions::test_table_formatting_complex_data",
-        "line": 85,
+        "name": "test_error_handling_in_global_functions",
+        "line": 99,
         "markers": [
           "unit"
         ],
-        "docstring": "Test table formatting with complex data.",
-        "class": "TestConsoleLoggingFunctions"
+        "docstring": ""
       },
       {
-        "name": "TestConsoleLoggingFunctions::test_error_handling_in_global_functions",
-        "line": 106,
+        "name": "test_function_parameter_passing",
+        "line": 109,
         "markers": [
           "unit"
         ],
-        "docstring": "Test error handling in global console functions.",
-        "class": "TestConsoleLoggingFunctions"
+        "docstring": "Test that parameters are correctly passed to underlying logger."
       },
       {
-        "name": "TestConsoleLoggingFunctions::test_function_parameter_passing",
-        "line": 118,
+        "name": "test_multiple_function_calls",
+        "line": 126,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that parameters are correctly passed to underlying logger.",
-        "class": "TestConsoleLoggingFunctions"
+        "docstring": ""
       },
       {
-        "name": "TestConsoleLoggingFunctions::test_multiple_function_calls",
-        "line": 134,
+        "name": "test_console_wrapper_functions",
+        "line": 174,
         "markers": [
+          "parametrize",
           "unit"
         ],
-        "docstring": "Test multiple calls to console functions.",
-        "class": "TestConsoleLoggingFunctions"
-      }
-    ],
-    "tests/unit/gpt_trader/utilities/test_console_logging_functions_wrappers.py": [
-      {
-        "name": "TestGlobalConsoleFunctions::test_console_success_function",
-        "line": 42,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestGlobalConsoleFunctions"
+        "docstring": ""
       },
       {
-        "name": "TestGlobalConsoleFunctions::test_console_error_function",
-        "line": 47,
+        "name": "test_print_section_fallback_on_failure",
+        "line": 197,
         "markers": [
           "unit"
         ],
-        "docstring": "",
-        "class": "TestGlobalConsoleFunctions"
+        "docstring": ""
       },
       {
-        "name": "TestGlobalConsoleFunctions::test_console_warning_function",
-        "line": 52,
+        "name": "test_print_table_fallback_on_failure",
+        "line": 208,
         "markers": [
           "unit"
         ],
-        "docstring": "",
-        "class": "TestGlobalConsoleFunctions"
+        "docstring": ""
       },
       {
-        "name": "TestGlobalConsoleFunctions::test_console_info_function",
-        "line": 59,
+        "name": "test_print_key_value_fallback_on_failure",
+        "line": 223,
         "markers": [
           "unit"
         ],
-        "docstring": "",
-        "class": "TestGlobalConsoleFunctions"
+        "docstring": ""
       },
       {
-        "name": "TestGlobalConsoleFunctions::test_context_specific_functions",
-        "line": 64,
+        "name": "test_get_console_logger_singleton_behavior",
+        "line": 233,
         "markers": [
           "unit"
         ],
-        "docstring": "",
-        "class": "TestGlobalConsoleFunctions"
-      },
-      {
-        "name": "TestGlobalConsoleFunctions::test_console_section_function",
-        "line": 100,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestGlobalConsoleFunctions"
-      },
-      {
-        "name": "TestGlobalConsoleFunctions::test_console_table_function",
-        "line": 105,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestGlobalConsoleFunctions"
-      },
-      {
-        "name": "TestGlobalConsoleFunctions::test_console_key_value_function",
-        "line": 113,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestGlobalConsoleFunctions"
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/utilities/test_datetime_helpers.py": [

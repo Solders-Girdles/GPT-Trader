@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 697,
+    "tests_scanned": 695,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -1922,10 +1922,8 @@
       "tests/unit/gpt_trader/utilities/test_async_utils_wrappers.py"
     ],
     "gpt_trader.utilities.console_logging": [
-      "tests/unit/gpt_trader/utilities/test_console_logging_core_basic.py",
-      "tests/unit/gpt_trader/utilities/test_console_logging_core_fallbacks.py",
-      "tests/unit/gpt_trader/utilities/test_console_logging_functions.py",
-      "tests/unit/gpt_trader/utilities/test_console_logging_functions_wrappers.py"
+      "tests/unit/gpt_trader/utilities/test_console_logging.py",
+      "tests/unit/gpt_trader/utilities/test_console_logging_functions.py"
     ],
     "gpt_trader.utilities.datetime_helpers": [
       "tests/contract/test_coinbase_api_contract.py",
@@ -4610,16 +4608,10 @@
     "tests/unit/gpt_trader/utilities/test_async_utils_wrappers.py": [
       "gpt_trader.utilities.async_tools"
     ],
-    "tests/unit/gpt_trader/utilities/test_console_logging_core_basic.py": [
-      "gpt_trader.utilities.console_logging"
-    ],
-    "tests/unit/gpt_trader/utilities/test_console_logging_core_fallbacks.py": [
+    "tests/unit/gpt_trader/utilities/test_console_logging.py": [
       "gpt_trader.utilities.console_logging"
     ],
     "tests/unit/gpt_trader/utilities/test_console_logging_functions.py": [
-      "gpt_trader.utilities.console_logging"
-    ],
-    "tests/unit/gpt_trader/utilities/test_console_logging_functions_wrappers.py": [
       "gpt_trader.utilities.console_logging"
     ],
     "tests/unit/gpt_trader/utilities/test_datetime_helpers.py": [

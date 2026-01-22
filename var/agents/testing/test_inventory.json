@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6170,
-    "total_files": 796,
+    "total_tests": 6169,
+    "total_files": 795,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6005,
+    "unit": 6004,
     "asyncio": 345,
     "parametrize": 101,
     "property": 82,
@@ -351,7 +351,6 @@
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_market_data.py",
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_orders.py",
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_position_updates.py",
-      "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_positions.py",
       "tests/unit/gpt_trader/features/data/test_cache.py",
       "tests/unit/gpt_trader/features/data/test_data_coinbase_edges.py",
       "tests/unit/gpt_trader/features/data/test_data_coinbase_runtime_edges.py",
@@ -17297,7 +17296,7 @@
     "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker.py": [
       {
         "name": "TestHybridPaperBrokerInit::test_init_creates_client",
-        "line": 29,
+        "line": 30,
         "markers": [
           "unit"
         ],
@@ -17306,7 +17305,7 @@
       },
       {
         "name": "TestHybridPaperBrokerInit::test_init_with_custom_parameters",
-        "line": 42,
+        "line": 43,
         "markers": [
           "unit"
         ],
@@ -17315,7 +17314,7 @@
       },
       {
         "name": "TestHybridPaperBrokerInit::test_init_creates_usd_balance",
-        "line": 58,
+        "line": 59,
         "markers": [
           "unit"
         ],
@@ -17324,7 +17323,7 @@
       },
       {
         "name": "TestHybridPaperBrokerStatus::test_is_connected_always_true",
-        "line": 85,
+        "line": 80,
         "markers": [
           "unit"
         ],
@@ -17333,7 +17332,7 @@
       },
       {
         "name": "TestHybridPaperBrokerStatus::test_is_stale_always_false",
-        "line": 89,
+        "line": 84,
         "markers": [
           "unit"
         ],
@@ -17341,37 +17340,109 @@
         "class": "TestHybridPaperBrokerStatus"
       },
       {
-        "name": "TestHybridPaperBrokerStatus::test_start_market_data_prefetches_quotes",
-        "line": 93,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test start_market_data prefetches quotes.",
-        "class": "TestHybridPaperBrokerStatus"
-      },
-      {
-        "name": "TestHybridPaperBrokerStatus::test_stop_market_data_noop",
-        "line": 106,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test stop_market_data is no-op.",
-        "class": "TestHybridPaperBrokerStatus"
-      },
-      {
         "name": "TestHybridPaperBrokerStatus::test_get_status_returns_status",
-        "line": 115,
+        "line": 88,
         "markers": [
           "unit"
         ],
         "docstring": "Test get_status returns status dict.",
         "class": "TestHybridPaperBrokerStatus"
+      },
+      {
+        "name": "TestHybridPaperBrokerPositionsBalances::test_list_positions_empty",
+        "line": 107,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test list_positions returns empty list initially.",
+        "class": "TestHybridPaperBrokerPositionsBalances"
+      },
+      {
+        "name": "TestHybridPaperBrokerPositionsBalances::test_list_positions_returns_positions",
+        "line": 113,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test list_positions returns stored positions.",
+        "class": "TestHybridPaperBrokerPositionsBalances"
+      },
+      {
+        "name": "TestHybridPaperBrokerPositionsBalances::test_get_positions_alias",
+        "line": 131,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test get_positions is alias for list_positions.",
+        "class": "TestHybridPaperBrokerPositionsBalances"
+      },
+      {
+        "name": "TestHybridPaperBrokerPositionsBalances::test_list_balances_returns_balances",
+        "line": 148,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test list_balances returns balances.",
+        "class": "TestHybridPaperBrokerPositionsBalances"
+      },
+      {
+        "name": "TestHybridPaperBrokerPositionsBalances::test_get_balances_alias",
+        "line": 156,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test get_balances is alias for list_balances.",
+        "class": "TestHybridPaperBrokerPositionsBalances"
+      },
+      {
+        "name": "TestHybridPaperBrokerPositionsBalances::test_get_equity_cash_only",
+        "line": 162,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test get_equity with cash only.",
+        "class": "TestHybridPaperBrokerPositionsBalances"
+      },
+      {
+        "name": "TestHybridPaperBrokerPositionsBalances::test_get_equity_with_long_position",
+        "line": 168,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test get_equity includes unrealized PnL from long position.",
+        "class": "TestHybridPaperBrokerPositionsBalances"
+      },
+      {
+        "name": "TestHybridPaperBrokerPositionsBalances::test_get_equity_with_short_position",
+        "line": 190,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test get_equity includes unrealized PnL from short position.",
+        "class": "TestHybridPaperBrokerPositionsBalances"
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_market_data.py": [
       {
+        "name": "TestHybridPaperBrokerMarketData::test_start_market_data_prefetches_quotes",
+        "line": 21,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test start_market_data prefetches quotes.",
+        "class": "TestHybridPaperBrokerMarketData"
+      },
+      {
+        "name": "TestHybridPaperBrokerMarketData::test_stop_market_data_noop",
+        "line": 33,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test stop_market_data is no-op.",
+        "class": "TestHybridPaperBrokerMarketData"
+      },
+      {
         "name": "TestHybridPaperBrokerMarketData::test_get_product_from_cache",
-        "line": 30,
+        "line": 42,
         "markers": [
           "unit"
         ],
@@ -17380,7 +17451,7 @@
       },
       {
         "name": "TestHybridPaperBrokerMarketData::test_get_product_from_api",
-        "line": 52,
+        "line": 64,
         "markers": [
           "unit"
         ],
@@ -17389,7 +17460,7 @@
       },
       {
         "name": "TestHybridPaperBrokerMarketData::test_get_product_api_error_returns_synthetic",
-        "line": 71,
+        "line": 83,
         "markers": [
           "unit"
         ],
@@ -17398,7 +17469,7 @@
       },
       {
         "name": "TestHybridPaperBrokerMarketData::test_get_quote_returns_quote",
-        "line": 81,
+        "line": 93,
         "markers": [
           "unit"
         ],
@@ -17407,7 +17478,7 @@
       },
       {
         "name": "TestHybridPaperBrokerMarketData::test_get_quote_calculates_mid_when_no_trades",
-        "line": 97,
+        "line": 109,
         "markers": [
           "unit"
         ],
@@ -17416,7 +17487,7 @@
       },
       {
         "name": "TestHybridPaperBrokerMarketData::test_get_quote_api_error",
-        "line": 109,
+        "line": 121,
         "markers": [
           "unit"
         ],
@@ -17425,7 +17496,7 @@
       },
       {
         "name": "TestHybridPaperBrokerMarketData::test_get_ticker_returns_ticker",
-        "line": 117,
+        "line": 129,
         "markers": [
           "unit"
         ],
@@ -17434,7 +17505,7 @@
       },
       {
         "name": "TestHybridPaperBrokerMarketData::test_get_ticker_api_error",
-        "line": 128,
+        "line": 140,
         "markers": [
           "unit"
         ],
@@ -17443,7 +17514,7 @@
       },
       {
         "name": "TestHybridPaperBrokerMarketData::test_get_candles_returns_candles",
-        "line": 136,
+        "line": 148,
         "markers": [
           "unit"
         ],
@@ -17452,7 +17523,7 @@
       },
       {
         "name": "TestHybridPaperBrokerMarketData::test_get_candles_api_error",
-        "line": 165,
+        "line": 177,
         "markers": [
           "unit"
         ],
@@ -17461,7 +17532,7 @@
       },
       {
         "name": "TestHybridPaperBrokerMarketData::test_list_products_returns_products",
-        "line": 173,
+        "line": 185,
         "markers": [
           "unit"
         ],
@@ -17470,7 +17541,7 @@
       },
       {
         "name": "TestHybridPaperBrokerMarketData::test_list_products_filters_by_type",
-        "line": 186,
+        "line": 198,
         "markers": [
           "unit"
         ],
@@ -17479,7 +17550,7 @@
       },
       {
         "name": "TestHybridPaperBrokerMarketData::test_synthetic_product_default_quote_asset",
-        "line": 201,
+        "line": 213,
         "markers": [
           "unit"
         ],
@@ -17490,7 +17561,7 @@
     "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_orders.py": [
       {
         "name": "TestHybridPaperBrokerOrderExecution::test_place_order_buy_market",
-        "line": 33,
+        "line": 25,
         "markers": [
           "unit"
         ],
@@ -17499,7 +17570,7 @@
       },
       {
         "name": "TestHybridPaperBrokerOrderExecution::test_place_order_sell_market",
-        "line": 51,
+        "line": 43,
         "markers": [
           "unit"
         ],
@@ -17508,7 +17579,7 @@
       },
       {
         "name": "TestHybridPaperBrokerOrderExecution::test_place_order_updates_position",
-        "line": 67,
+        "line": 59,
         "markers": [
           "unit"
         ],
@@ -17517,7 +17588,7 @@
       },
       {
         "name": "TestHybridPaperBrokerOrderExecution::test_place_order_updates_balance",
-        "line": 81,
+        "line": 73,
         "markers": [
           "unit"
         ],
@@ -17526,7 +17597,7 @@
       },
       {
         "name": "TestHybridPaperBrokerOrderExecution::test_place_order_with_dict_payload",
-        "line": 96,
+        "line": 88,
         "markers": [
           "unit"
         ],
@@ -17535,7 +17606,7 @@
       },
       {
         "name": "TestHybridPaperBrokerOrderExecution::test_place_order_rejected_when_no_price",
-        "line": 111,
+        "line": 103,
         "markers": [
           "unit"
         ],
@@ -17544,7 +17615,7 @@
       },
       {
         "name": "TestHybridPaperBrokerOrderExecution::test_cancel_order_success",
-        "line": 124,
+        "line": 116,
         "markers": [
           "unit"
         ],
@@ -17553,7 +17624,7 @@
       },
       {
         "name": "TestHybridPaperBrokerOrderExecution::test_cancel_order_not_found",
-        "line": 139,
+        "line": 131,
         "markers": [
           "unit"
         ],
@@ -17562,7 +17633,7 @@
       },
       {
         "name": "TestHybridPaperBrokerOrderExecution::test_get_order_returns_order",
-        "line": 145,
+        "line": 137,
         "markers": [
           "unit"
         ],
@@ -17571,7 +17642,7 @@
       },
       {
         "name": "TestHybridPaperBrokerOrderExecution::test_get_order_not_found",
-        "line": 159,
+        "line": 151,
         "markers": [
           "unit"
         ],
@@ -17580,7 +17651,7 @@
       },
       {
         "name": "TestHybridPaperBrokerLimitOrders::test_limit_buy_uses_limit_below_slippage",
-        "line": 182,
+        "line": 166,
         "markers": [
           "unit"
         ],
@@ -17589,7 +17660,7 @@
       },
       {
         "name": "TestHybridPaperBrokerLimitOrders::test_limit_sell_uses_limit_above_slippage",
-        "line": 196,
+        "line": 180,
         "markers": [
           "unit"
         ],
@@ -17598,7 +17669,7 @@
       },
       {
         "name": "TestHybridPaperBrokerLimitOrders::test_quote_size_payload_computes_quantity",
-        "line": 210,
+        "line": 194,
         "markers": [
           "unit"
         ],
@@ -17609,7 +17680,7 @@
     "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_position_updates.py": [
       {
         "name": "TestHybridPaperBrokerPositionUpdates::test_update_position_creates_new_long",
-        "line": 28,
+        "line": 20,
         "markers": [
           "unit"
         ],
@@ -17618,7 +17689,7 @@
       },
       {
         "name": "TestHybridPaperBrokerPositionUpdates::test_update_position_creates_new_short",
-        "line": 37,
+        "line": 29,
         "markers": [
           "unit"
         ],
@@ -17627,7 +17698,7 @@
       },
       {
         "name": "TestHybridPaperBrokerPositionUpdates::test_update_position_adds_to_long",
-        "line": 45,
+        "line": 37,
         "markers": [
           "unit"
         ],
@@ -17636,7 +17707,7 @@
       },
       {
         "name": "TestHybridPaperBrokerPositionUpdates::test_update_position_reduces_long",
-        "line": 65,
+        "line": 57,
         "markers": [
           "unit"
         ],
@@ -17645,7 +17716,7 @@
       },
       {
         "name": "TestHybridPaperBrokerPositionUpdates::test_update_position_closes_position",
-        "line": 84,
+        "line": 76,
         "markers": [
           "unit"
         ],
@@ -17654,7 +17725,7 @@
       },
       {
         "name": "TestHybridPaperBrokerPositionUpdates::test_short_position_add_recalculates_average",
-        "line": 101,
+        "line": 93,
         "markers": [
           "unit"
         ],
@@ -17663,86 +17734,12 @@
       },
       {
         "name": "TestHybridPaperBrokerPositionUpdates::test_short_position_reduce_keeps_entry_price",
-        "line": 120,
+        "line": 112,
         "markers": [
           "unit"
         ],
         "docstring": "Test reducing short position keeps original entry price.",
         "class": "TestHybridPaperBrokerPositionUpdates"
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_positions.py": [
-      {
-        "name": "TestHybridPaperBrokerPositionsBalances::test_list_positions_empty",
-        "line": 29,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test list_positions returns empty list initially.",
-        "class": "TestHybridPaperBrokerPositionsBalances"
-      },
-      {
-        "name": "TestHybridPaperBrokerPositionsBalances::test_list_positions_returns_positions",
-        "line": 35,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test list_positions returns stored positions.",
-        "class": "TestHybridPaperBrokerPositionsBalances"
-      },
-      {
-        "name": "TestHybridPaperBrokerPositionsBalances::test_get_positions_alias",
-        "line": 53,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test get_positions is alias for list_positions.",
-        "class": "TestHybridPaperBrokerPositionsBalances"
-      },
-      {
-        "name": "TestHybridPaperBrokerPositionsBalances::test_list_balances_returns_balances",
-        "line": 70,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test list_balances returns balances.",
-        "class": "TestHybridPaperBrokerPositionsBalances"
-      },
-      {
-        "name": "TestHybridPaperBrokerPositionsBalances::test_get_balances_alias",
-        "line": 78,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test get_balances is alias for list_balances.",
-        "class": "TestHybridPaperBrokerPositionsBalances"
-      },
-      {
-        "name": "TestHybridPaperBrokerPositionsBalances::test_get_equity_cash_only",
-        "line": 84,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test get_equity with cash only.",
-        "class": "TestHybridPaperBrokerPositionsBalances"
-      },
-      {
-        "name": "TestHybridPaperBrokerPositionsBalances::test_get_equity_with_long_position",
-        "line": 90,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test get_equity includes unrealized PnL from long position.",
-        "class": "TestHybridPaperBrokerPositionsBalances"
-      },
-      {
-        "name": "TestHybridPaperBrokerPositionsBalances::test_get_equity_with_short_position",
-        "line": 112,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test get_equity includes unrealized PnL from short position.",
-        "class": "TestHybridPaperBrokerPositionsBalances"
       }
     ],
     "tests/unit/gpt_trader/features/data/test_cache.py": [
@@ -46634,135 +46631,142 @@
     ],
     "tests/unit/gpt_trader/tui/test_log_manager.py": [
       {
-        "name": "test_get_tui_log_handler_returns_singleton",
-        "line": 41,
+        "name": "TestTuiLogHandler::test_register_unregister_and_update_widget_level",
+        "line": 42,
         "markers": [
           "unit"
         ],
-        "docstring": ""
+        "docstring": "",
+        "class": "TestTuiLogHandler"
       },
       {
-        "name": "test_register_unregister_and_update_widget_level",
-        "line": 45,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_format_mode_accepts_known_values",
-        "line": 59,
+        "name": "TestTuiLogHandler::test_format_mode_accepts_known_values",
+        "line": 55,
         "markers": [
           "parametrize",
           "unit"
         ],
-        "docstring": ""
+        "docstring": "",
+        "class": "TestTuiLogHandler"
       },
       {
-        "name": "test_format_mode_rejects_unknown_values",
+        "name": "TestTuiLogHandler::test_format_mode_rejects_unknown_values",
+        "line": 59,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestTuiLogHandler"
+      },
+      {
+        "name": "TestTuiLogHandler::test_pause_and_resume_widget_buffers_and_flushes",
         "line": 64,
         "markers": [
           "unit"
         ],
-        "docstring": ""
+        "docstring": "",
+        "class": "TestTuiLogHandler"
       },
       {
-        "name": "test_pause_and_resume_widget_buffers_and_flushes",
-        "line": 70,
+        "name": "TestTuiLogHandler::test_unregister_cleans_up_pause_state",
+        "line": 80,
         "markers": [
           "unit"
         ],
-        "docstring": ""
+        "docstring": "",
+        "class": "TestTuiLogHandler"
       },
       {
-        "name": "test_unregister_cleans_up_pause_state",
-        "line": 87,
+        "name": "TestTuiLogHandler::test_error_tracking_counts_errors",
+        "line": 88,
         "markers": [
           "unit"
         ],
-        "docstring": ""
+        "docstring": "",
+        "class": "TestTuiLogHandler"
       },
       {
-        "name": "test_error_tracking_counts_errors",
+        "name": "TestTuiLogHandler::test_log_entry_metadata_json_and_multiline",
         "line": 96,
         "markers": [
           "unit"
         ],
-        "docstring": ""
+        "docstring": "",
+        "class": "TestTuiLogHandler"
       },
       {
-        "name": "test_log_entry_metadata_json_and_multiline",
-        "line": 105,
+        "name": "TestTuiLogHandler::test_log_entry_has_structured_fields",
+        "line": 113,
         "markers": [
           "unit"
         ],
-        "docstring": ""
+        "docstring": "",
+        "class": "TestTuiLogHandler"
       },
       {
-        "name": "test_log_entry_has_structured_fields",
-        "line": 121,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_emit_writes_styled_text",
-        "line": 148,
+        "name": "TestTuiLogHandler::test_emit_writes_styled_text",
+        "line": 139,
         "markers": [
           "parametrize",
           "unit"
         ],
-        "docstring": ""
+        "docstring": "",
+        "class": "TestTuiLogHandler"
       },
       {
-        "name": "test_log_message_is_treated_as_literal_text",
-        "line": 172,
+        "name": "TestTuiLogHandler::test_log_message_is_treated_as_literal_text",
+        "line": 168,
         "markers": [
           "parametrize",
           "unit"
         ],
-        "docstring": ""
+        "docstring": "",
+        "class": "TestTuiLogHandler"
       },
       {
-        "name": "test_emit_respects_widget_min_level",
-        "line": 188,
+        "name": "TestTuiLogHandler::test_emit_respects_widget_min_level",
+        "line": 185,
         "markers": [
           "unit"
         ],
-        "docstring": ""
+        "docstring": "",
+        "class": "TestTuiLogHandler"
       },
       {
-        "name": "test_emit_skips_unmounted_widgets",
-        "line": 197,
+        "name": "TestTuiLogHandler::test_emit_skips_unmounted_widgets",
+        "line": 193,
         "markers": [
           "unit"
         ],
-        "docstring": ""
+        "docstring": "",
+        "class": "TestTuiLogHandler"
       },
       {
-        "name": "test_emit_uses_call_from_thread_off_main_thread",
-        "line": 208,
+        "name": "TestTuiLogHandler::test_emit_uses_call_from_thread_off_main_thread",
+        "line": 203,
         "markers": [
           "unit"
         ],
-        "docstring": ""
+        "docstring": "",
+        "class": "TestTuiLogHandler"
       },
       {
-        "name": "test_handler_format_has_no_extra_newline",
-        "line": 227,
+        "name": "TestTuiLogHandler::test_handler_format_has_no_extra_newline",
+        "line": 224,
         "markers": [
           "unit"
         ],
-        "docstring": ""
+        "docstring": "",
+        "class": "TestTuiLogHandler"
       },
       {
-        "name": "test_write_to_widget_passes_rich_text",
-        "line": 232,
+        "name": "TestTuiLogHandler::test_write_to_widget_passes_rich_text",
+        "line": 228,
         "markers": [
           "unit"
         ],
-        "docstring": ""
+        "docstring": "",
+        "class": "TestTuiLogHandler"
       }
     ],
     "tests/unit/gpt_trader/tui/test_log_manager_formatters.py": [

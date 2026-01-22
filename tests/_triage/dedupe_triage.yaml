@@ -6,7 +6,7 @@
 #   deferred: maybe later (hide from suggestions)
 #
 version: 1
-generated_at: '2026-01-22T00:45:15.098240+00:00'
+generated_at: '2026-01-22T06:18:59.248748+00:00'
 clusters:
   0bdbfcad487d:
     state: rejected
@@ -96,7 +96,8 @@ clusters:
     state: rejected
     owner: codex
     updated: '2026-01-22'
-    reason: cross-dir shared-import fanout (monitoring + tui); not a cohesive dedupe target
+    reason: cross-dir shared-import fanout (monitoring + tui); not a cohesive dedupe
+      target
   89424704f490:
     state: rejected
     owner: codex
@@ -106,7 +107,8 @@ clusters:
     state: rejected
     owner: codex
     updated: '2026-01-22'
-    reason: already consolidated into multiple cohesive modules to satisfy hygiene cap; single-file merge not desired
+    reason: already consolidated into multiple cohesive modules to satisfy hygiene
+      cap; single-file merge not desired
   582004a85380:
     state: deferred
     owner: codex
@@ -117,3 +119,10 @@ clusters:
     owner: codex
     updated: '2026-01-22'
     reason: already right-sized for 240-line cap; further merge not worth it
+  0a76c33c609a:
+    state: rejected
+    owner: codex
+    updated: '2026-01-22'
+    reason: 'source_fanout false positive: mixes decision_logger unit tests with guarded
+      execution/backtest flow tests; wrong inferred target_location; already right-sized
+      under 240-line cap'

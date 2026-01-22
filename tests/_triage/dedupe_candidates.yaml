@@ -983,11 +983,12 @@ clusters:
     - gpt_trader.tui.log_manager
     decision: merge
     target_location: tests/unit/gpt_trader/tui/test_log_manager.py
-    expected_file_delta: -5
+    expected_file_delta: -3
     priority: medium
-    rationale: Consolidate 6 test files into single parametrized file
-    status: in_progress
+    rationale: Consolidated log manager handler coverage and re-homed non-log widgets into existing suites
+    status: done
     owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/348
     added: '2026-01-21'
   0a76c33c609a:
     type: source_fanout

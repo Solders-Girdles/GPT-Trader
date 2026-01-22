@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6178,
-    "total_files": 799,
+    "total_tests": 6170,
+    "total_files": 796,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 6013,
+    "unit": 6005,
     "asyncio": 345,
-    "parametrize": 98,
+    "parametrize": 101,
     "property": 82,
     "integration": 79,
     "endpoints": 78,
@@ -772,7 +772,6 @@
       "tests/unit/gpt_trader/tui/state_management/test_validators_orders_and_trades.py",
       "tests/unit/gpt_trader/tui/state_management/test_validators_result.py",
       "tests/unit/gpt_trader/tui/test_app_core.py",
-      "tests/unit/gpt_trader/tui/test_app_widgets.py",
       "tests/unit/gpt_trader/tui/test_credential_cache.py",
       "tests/unit/gpt_trader/tui/test_degraded_mode.py",
       "tests/unit/gpt_trader/tui/test_error_indicator.py",
@@ -786,8 +785,6 @@
       "tests/unit/gpt_trader/tui/test_indicator_contributions.py",
       "tests/unit/gpt_trader/tui/test_log_manager.py",
       "tests/unit/gpt_trader/tui/test_log_manager_formatters.py",
-      "tests/unit/gpt_trader/tui/test_log_manager_handler.py",
-      "tests/unit/gpt_trader/tui/test_log_manager_widgets.py",
       "tests/unit/gpt_trader/tui/test_market_widget.py",
       "tests/unit/gpt_trader/tui/test_new_widgets.py",
       "tests/unit/gpt_trader/tui/test_risk_guard_explanations.py",
@@ -45815,35 +45812,6 @@
         "class": "TestResourceCleanup"
       }
     ],
-    "tests/unit/gpt_trader/tui/test_app_widgets.py": [
-      {
-        "name": "TestBotStatusWidget::test_equity_update",
-        "line": 11,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestBotStatusWidget"
-      },
-      {
-        "name": "TestMarketWatchWidget::test_price_coloring",
-        "line": 22,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestMarketWatchWidget"
-      },
-      {
-        "name": "TestTuiLogHandler::test_log_coloring",
-        "line": 42,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestTuiLogHandler"
-      }
-    ],
     "tests/unit/gpt_trader/tui/test_credential_cache.py": [
       {
         "name": "TestCredentialCache::test_set_and_get_credential_cache",
@@ -46666,76 +46634,135 @@
     ],
     "tests/unit/gpt_trader/tui/test_log_manager.py": [
       {
-        "name": "TestTuiLogManagerEntries::test_error_tracking_counts_errors",
-        "line": 17,
+        "name": "test_get_tui_log_handler_returns_singleton",
+        "line": 41,
         "markers": [
           "unit"
         ],
-        "docstring": "",
-        "class": "TestTuiLogManagerEntries"
+        "docstring": ""
       },
       {
-        "name": "TestTuiLogManagerEntries::test_log_entry_stores_enhanced_metadata",
-        "line": 39,
+        "name": "test_register_unregister_and_update_widget_level",
+        "line": 45,
         "markers": [
           "unit"
         ],
-        "docstring": "",
-        "class": "TestTuiLogManagerEntries"
+        "docstring": ""
       },
       {
-        "name": "TestTuiLogManagerEntries::test_log_entry_detects_multiline_content",
+        "name": "test_format_mode_accepts_known_values",
+        "line": 59,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_format_mode_rejects_unknown_values",
         "line": 64,
         "markers": [
           "unit"
         ],
-        "docstring": "",
-        "class": "TestTuiLogManagerEntries"
+        "docstring": ""
       },
       {
-        "name": "TestTuiLogManagerEntries::test_log_entry_has_structured_fields",
-        "line": 86,
+        "name": "test_pause_and_resume_widget_buffers_and_flushes",
+        "line": 70,
         "markers": [
           "unit"
         ],
-        "docstring": "",
-        "class": "TestTuiLogManagerEntries"
+        "docstring": ""
       },
       {
-        "name": "TestTuiLogHandlerMessageSafety::test_log_message_with_markup_characters_is_escaped",
-        "line": 115,
+        "name": "test_unregister_cleans_up_pause_state",
+        "line": 87,
         "markers": [
           "unit"
         ],
-        "docstring": "",
-        "class": "TestTuiLogHandlerMessageSafety"
+        "docstring": ""
       },
       {
-        "name": "TestTuiLogHandlerMessageSafety::test_log_message_with_closing_bracket_is_safe",
-        "line": 143,
+        "name": "test_error_tracking_counts_errors",
+        "line": 96,
         "markers": [
           "unit"
         ],
-        "docstring": "",
-        "class": "TestTuiLogHandlerMessageSafety"
+        "docstring": ""
       },
       {
-        "name": "TestTuiLogHandlerMessageSafety::test_log_message_with_multiple_brackets_is_safe",
-        "line": 170,
+        "name": "test_log_entry_metadata_json_and_multiline",
+        "line": 105,
         "markers": [
           "unit"
         ],
-        "docstring": "",
-        "class": "TestTuiLogHandlerMessageSafety"
+        "docstring": ""
       },
       {
-        "name": "TestTuiLogHandlerMessageSafety::test_formatter_output_has_no_extra_newline",
-        "line": 199,
+        "name": "test_log_entry_has_structured_fields",
+        "line": 121,
         "markers": [
           "unit"
         ],
-        "docstring": "",
-        "class": "TestTuiLogHandlerMessageSafety"
+        "docstring": ""
+      },
+      {
+        "name": "test_emit_writes_styled_text",
+        "line": 148,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_message_is_treated_as_literal_text",
+        "line": 172,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_emit_respects_widget_min_level",
+        "line": 188,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_emit_skips_unmounted_widgets",
+        "line": 197,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_emit_uses_call_from_thread_off_main_thread",
+        "line": 208,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_handler_format_has_no_extra_newline",
+        "line": 227,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_write_to_widget_passes_rich_text",
+        "line": 232,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/tui/test_log_manager_formatters.py": [
@@ -46821,149 +46848,10 @@
         "class": "TestStructuredTuiFormatter"
       }
     ],
-    "tests/unit/gpt_trader/tui/test_log_manager_handler.py": [
-      {
-        "name": "TestTuiLogHandlerEmit::test_write_to_widget_passes_text",
-        "line": 15,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestTuiLogHandlerEmit"
-      },
-      {
-        "name": "TestTuiLogHandlerEmit::test_emit_handles_error_level",
-        "line": 27,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestTuiLogHandlerEmit"
-      },
-      {
-        "name": "TestTuiLogHandlerEmit::test_emit_handles_warning_level",
-        "line": 53,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestTuiLogHandlerEmit"
-      },
-      {
-        "name": "TestTuiLogHandlerEmit::test_emit_handles_info_level",
-        "line": 79,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestTuiLogHandlerEmit"
-      },
-      {
-        "name": "TestTuiLogHandlerEmit::test_emit_handles_debug_level",
-        "line": 105,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestTuiLogHandlerEmit"
-      },
-      {
-        "name": "TestTuiLogHandlerEmit::test_emit_respects_widget_level_filter",
-        "line": 131,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestTuiLogHandlerEmit"
-      },
-      {
-        "name": "TestTuiLogHandlerEmit::test_emit_skips_unmounted_widgets",
-        "line": 165,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestTuiLogHandlerEmit"
-      },
-      {
-        "name": "TestTuiLogHandlerEmit::test_emit_uses_call_from_thread_on_background_thread",
-        "line": 187,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestTuiLogHandlerEmit"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/test_log_manager_widgets.py": [
-      {
-        "name": "TestTuiLogHandlerWidgetControls::test_get_tui_log_handler_returns_singleton",
-        "line": 10,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestTuiLogHandlerWidgetControls"
-      },
-      {
-        "name": "TestTuiLogHandlerWidgetControls::test_register_and_unregister_widget",
-        "line": 15,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestTuiLogHandlerWidgetControls"
-      },
-      {
-        "name": "TestTuiLogHandlerWidgetControls::test_update_widget_level",
-        "line": 26,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestTuiLogHandlerWidgetControls"
-      },
-      {
-        "name": "TestTuiLogHandlerWidgetControls::test_format_mode_property",
-        "line": 36,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestTuiLogHandlerWidgetControls"
-      },
-      {
-        "name": "TestTuiLogHandlerWidgetControls::test_pause_widget_buffers_logs",
-        "line": 53,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestTuiLogHandlerWidgetControls"
-      },
-      {
-        "name": "TestTuiLogHandlerWidgetControls::test_resume_widget_flushes_buffered_logs",
-        "line": 81,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestTuiLogHandlerWidgetControls"
-      },
-      {
-        "name": "TestTuiLogHandlerWidgetControls::test_unregister_cleans_up_pause_state",
-        "line": 110,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestTuiLogHandlerWidgetControls"
-      }
-    ],
     "tests/unit/gpt_trader/tui/test_market_widget.py": [
       {
         "name": "TestMarketWatchWidget::test_watch_state_handles_none",
-        "line": 14,
+        "line": 17,
         "markers": [
           "unit"
         ],
@@ -46972,7 +46860,7 @@
       },
       {
         "name": "TestMarketWatchWidget::test_watch_state_handles_valid_state",
-        "line": 21,
+        "line": 24,
         "markers": [
           "unit"
         ],
@@ -46981,7 +46869,7 @@
       },
       {
         "name": "TestMarketWatchWidget::test_watch_state_handles_falsy_last_update",
-        "line": 49,
+        "line": 52,
         "markers": [
           "unit"
         ],
@@ -46990,7 +46878,7 @@
       },
       {
         "name": "TestMarketWatchWidget::test_watch_state_handles_zero_last_update",
-        "line": 69,
+        "line": 72,
         "markers": [
           "unit"
         ],
@@ -46999,11 +46887,20 @@
       },
       {
         "name": "TestMarketWatchWidget::test_watch_state_logs_correct_metrics",
-        "line": 89,
+        "line": 92,
         "markers": [
           "unit"
         ],
         "docstring": "Test that watch_state logs expected debug information.",
+        "class": "TestMarketWatchWidget"
+      },
+      {
+        "name": "TestMarketWatchWidget::test_update_prices_colors_price_changes",
+        "line": 117,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
         "class": "TestMarketWatchWidget"
       }
     ],
@@ -51254,7 +51151,7 @@
     "tests/unit/gpt_trader/tui/widgets/test_responsive_widgets.py": [
       {
         "name": "TestResponsiveWidgets::test_contextual_footer_updates_on_responsive_event",
-        "line": 9,
+        "line": 11,
         "markers": [
           "unit"
         ],
@@ -51263,7 +51160,7 @@
       },
       {
         "name": "TestResponsiveWidgets::test_bot_status_updates_on_responsive_event",
-        "line": 15,
+        "line": 17,
         "markers": [
           "unit"
         ],
@@ -51272,7 +51169,16 @@
       },
       {
         "name": "TestResponsiveWidgets::test_slim_status_updates_on_responsive_event",
-        "line": 21,
+        "line": 23,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestResponsiveWidgets"
+      },
+      {
+        "name": "TestResponsiveWidgets::test_bot_status_equity_updates_label",
+        "line": 29,
         "markers": [
           "unit"
         ],

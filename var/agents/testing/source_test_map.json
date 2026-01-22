@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 741,
+    "tests_scanned": 738,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -1641,11 +1641,8 @@
       "tests/unit/gpt_trader/tui/test_formatting.py"
     ],
     "gpt_trader.tui.log_manager": [
-      "tests/unit/gpt_trader/tui/test_app_widgets.py",
       "tests/unit/gpt_trader/tui/test_log_manager.py",
       "tests/unit/gpt_trader/tui/test_log_manager_formatters.py",
-      "tests/unit/gpt_trader/tui/test_log_manager_handler.py",
-      "tests/unit/gpt_trader/tui/test_log_manager_widgets.py",
       "tests/unit/gpt_trader/tui/widgets/test_logs.py"
     ],
     "gpt_trader.tui.managers.ui_coordinator": [
@@ -1806,9 +1803,8 @@
     ],
     "gpt_trader.tui.theme": [
       "tests/unit/gpt_trader/tui/services/test_theme_service.py",
-      "tests/unit/gpt_trader/tui/test_app_widgets.py",
       "tests/unit/gpt_trader/tui/test_log_manager.py",
-      "tests/unit/gpt_trader/tui/test_log_manager_handler.py",
+      "tests/unit/gpt_trader/tui/test_market_widget.py",
       "tests/unit/gpt_trader/tui/test_snapshots_main_screen.py"
     ],
     "gpt_trader.tui.thresholds": [
@@ -1871,7 +1867,6 @@
       "tests/unit/gpt_trader/tui/utilities/test_table_formatting_data.py"
     ],
     "gpt_trader.tui.widgets": [
-      "tests/unit/gpt_trader/tui/test_app_widgets.py",
       "tests/unit/gpt_trader/tui/test_new_widgets.py",
       "tests/unit/gpt_trader/tui/test_screen_flows_quick_navigation_and_state.py"
     ],
@@ -4486,11 +4481,6 @@
       "gpt_trader.tui.app_lifecycle",
       "gpt_trader.tui.services.performance_service"
     ],
-    "tests/unit/gpt_trader/tui/test_app_widgets.py": [
-      "gpt_trader.tui.log_manager",
-      "gpt_trader.tui.theme",
-      "gpt_trader.tui.widgets"
-    ],
     "tests/unit/gpt_trader/tui/test_credential_cache.py": [
       "gpt_trader.tui.services.credential_validator",
       "gpt_trader.tui.services.preferences_service"
@@ -4535,15 +4525,9 @@
     "tests/unit/gpt_trader/tui/test_log_manager_formatters.py": [
       "gpt_trader.tui.log_manager"
     ],
-    "tests/unit/gpt_trader/tui/test_log_manager_handler.py": [
-      "gpt_trader.tui.log_manager",
-      "gpt_trader.tui.theme"
-    ],
-    "tests/unit/gpt_trader/tui/test_log_manager_widgets.py": [
-      "gpt_trader.tui.log_manager"
-    ],
     "tests/unit/gpt_trader/tui/test_market_widget.py": [
       "gpt_trader.tui.state",
+      "gpt_trader.tui.theme",
       "gpt_trader.tui.types",
       "gpt_trader.tui.widgets.market"
     ],
@@ -5245,11 +5229,11 @@
     "gpt_trader.tui.state_management.validators": "src/gpt_trader/tui/state_management/validators.py",
     "gpt_trader.tui.app": "src/gpt_trader/tui/app.py",
     "gpt_trader.tui.app_lifecycle": "src/gpt_trader/tui/app_lifecycle.py",
-    "gpt_trader.tui.log_manager": "src/gpt_trader/tui/log_manager.py",
-    "gpt_trader.tui.widgets": "src/gpt_trader/tui/widgets/__init__.py",
     "gpt_trader.tui.widgets.error_indicator": "src/gpt_trader/tui/widgets/error_indicator.py",
     "gpt_trader.tui.formatting": "src/gpt_trader/tui/formatting.py",
+    "gpt_trader.tui.log_manager": "src/gpt_trader/tui/log_manager.py",
     "gpt_trader.tui.widgets.market": "src/gpt_trader/tui/widgets/market.py",
+    "gpt_trader.tui.widgets": "src/gpt_trader/tui/widgets/__init__.py",
     "gpt_trader.tui.risk_guard_explanations": "src/gpt_trader/tui/risk_guard_explanations.py",
     "gpt_trader.tui.risk_preview": "src/gpt_trader/tui/risk_preview.py",
     "gpt_trader.tui.screens": "src/gpt_trader/tui/screens/__init__.py",

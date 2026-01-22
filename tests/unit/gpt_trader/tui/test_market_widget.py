@@ -3,7 +3,10 @@
 from decimal import Decimal
 from unittest.mock import MagicMock
 
+from textual.widgets import DataTable
+
 from gpt_trader.tui.state import TuiState
+from gpt_trader.tui.theme import THEME
 from gpt_trader.tui.types import MarketState
 from gpt_trader.tui.widgets.market import MarketWatchWidget
 
@@ -110,3 +113,33 @@ class TestMarketWatchWidget:
         assert any("[MarketWatchWidget]" in log for log in debug_logs)
         assert any("symbols=2" in log for log in debug_logs)
         assert any("last_update=1234567890.50" in log for log in debug_logs)
+
+    def test_update_prices_colors_price_changes(self):
+        widget = MarketWatchWidget()
+        widget.previous_prices = {}
+
+        mock_table = MagicMock()
+        mock_table.row_count = 0
+        mock_table.rows = MagicMock()
+        mock_table.rows.keys.return_value = set()
+        mock_table.columns = MagicMock()
+        mock_table.columns.keys.return_value = []
+
+        mock_empty = MagicMock()
+
+        def query_one_side_effect(selector, *args, **kwargs):
+            if selector == DataTable:
+                return mock_table
+            return mock_empty
+
+        widget.query_one = MagicMock(side_effect=query_one_side_effect)
+
+        widget.update_prices({"BTC-USD": Decimal("100")}, 1000.0)
+        widget.update_prices({"BTC-USD": Decimal("110")}, 1001.0)
+
+        formatted_price = mock_table.add_row.call_args_list[-1].args[1]
+        assert f"[{THEME.colors.success}]" in formatted_price
+
+        widget.update_prices({"BTC-USD": Decimal("105")}, 1002.0)
+        formatted_price = mock_table.add_row.call_args_list[-1].args[1]
+        assert f"[{THEME.colors.error}]" in formatted_price

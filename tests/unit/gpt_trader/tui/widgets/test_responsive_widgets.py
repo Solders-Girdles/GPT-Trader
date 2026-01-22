@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock
+
 from gpt_trader.tui.events import ResponsiveStateChanged
 from gpt_trader.tui.responsive_state import ResponsiveState
 from gpt_trader.tui.widgets.footer import ContextualFooter
@@ -23,3 +25,12 @@ class TestResponsiveWidgets:
         event = ResponsiveStateChanged(state=ResponsiveState.WIDE, width=180)
         slim.on_responsive_state_changed(event)
         assert slim.responsive_state == ResponsiveState.WIDE
+
+    def test_bot_status_equity_updates_label(self):
+        status = BotStatusWidget()
+        mock_label = MagicMock()
+        status.query_one = MagicMock(return_value=mock_label)
+
+        status.equity = "1000.50"
+        assert status.equity == "1000.50"
+        mock_label.update.assert_called_with("$1000.50")

@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 738,
+    "tests_scanned": 737,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -1711,7 +1711,6 @@
       "tests/unit/gpt_trader/tui/services/test_alert_manager_categories.py",
       "tests/unit/gpt_trader/tui/services/test_alert_manager_execution.py",
       "tests/unit/gpt_trader/tui/services/test_alert_manager_orders.py",
-      "tests/unit/gpt_trader/tui/services/test_alert_manager_stale.py",
       "tests/unit/gpt_trader/tui/widgets/test_alert_inbox.py",
       "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_actions.py",
       "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_rendering.py"
@@ -1808,7 +1807,7 @@
       "tests/unit/gpt_trader/tui/test_snapshots_main_screen.py"
     ],
     "gpt_trader.tui.thresholds": [
-      "tests/unit/gpt_trader/tui/services/test_alert_manager_stale.py",
+      "tests/unit/gpt_trader/tui/services/test_alert_manager_orders.py",
       "tests/unit/gpt_trader/tui/test_risk_preview.py",
       "tests/unit/gpt_trader/tui/test_thresholds.py",
       "tests/unit/gpt_trader/tui/test_thresholds_risk.py"
@@ -1823,7 +1822,6 @@
       "tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen_signal_detail_content.py",
       "tests/unit/gpt_trader/tui/services/test_alert_manager.py",
       "tests/unit/gpt_trader/tui/services/test_alert_manager_orders.py",
-      "tests/unit/gpt_trader/tui/services/test_alert_manager_stale.py",
       "tests/unit/gpt_trader/tui/services/test_execution_telemetry_metrics.py",
       "tests/unit/gpt_trader/tui/services/test_trading_stats.py",
       "tests/unit/gpt_trader/tui/services/test_trading_stats_compute.py",
@@ -4344,10 +4342,6 @@
       "gpt_trader.tui.services.alert_manager"
     ],
     "tests/unit/gpt_trader/tui/services/test_alert_manager_orders.py": [
-      "gpt_trader.tui.services.alert_manager",
-      "gpt_trader.tui.types"
-    ],
-    "tests/unit/gpt_trader/tui/services/test_alert_manager_stale.py": [
       "gpt_trader.tui.services.alert_manager",
       "gpt_trader.tui.thresholds",
       "gpt_trader.tui.types"

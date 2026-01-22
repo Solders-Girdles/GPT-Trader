@@ -1,16 +1,13 @@
 """Tests for SimulatedBroker core: connection, account, and initialization."""
 
+from datetime import datetime
 from decimal import Decimal
 
 import pytest
 
 from gpt_trader.backtesting.simulation.broker import SimulatedBroker
 from gpt_trader.backtesting.types import FeeTier
-from gpt_trader.core import MarketType, Product
-
-# ============================================================================
-# Connection Lifecycle Tests
-# ============================================================================
+from gpt_trader.core import MarketType, Position, Product
 
 
 class TestSimulatedBrokerConnection:
@@ -47,15 +44,7 @@ class TestSimulatedBrokerConnection:
     def test_get_account_id(self) -> None:
         broker = SimulatedBroker()
         assert broker.get_account_id() == "SIMULATED_ACCOUNT"
-
-    def test_get_account_id_consistent(self) -> None:
-        broker = SimulatedBroker()
         assert broker.get_account_id() == broker.get_account_id()
-
-
-# ============================================================================
-# Initialization Tests
-# ============================================================================
 
 
 class TestSimulatedBrokerInitialization:
@@ -85,11 +74,6 @@ class TestSimulatedBrokerInitialization:
         assert balances[0].asset == "USDC"
         assert balances[0].total == Decimal("75000")
         assert balances[0].available == Decimal("75000")
-
-
-# ============================================================================
-# Account Info Tests
-# ============================================================================
 
 
 class TestSimulatedBrokerAccountInfo:
@@ -123,10 +107,21 @@ class TestSimulatedBrokerAccountInfo:
         assert "realized_pnl" in info
         assert "margin_used" in info
 
-
-# ============================================================================
-# Initial Positions Tests
-# ============================================================================
+    def test_get_account_info_with_unrealized_pnl(self) -> None:
+        broker = SimulatedBroker(initial_equity_usd=Decimal("100000"))
+        broker.positions["BTC-USD"] = Position(
+            symbol="BTC-USD",
+            quantity=Decimal("1.0"),
+            side="long",
+            entry_price=Decimal("50000"),
+            mark_price=Decimal("55000"),
+            unrealized_pnl=Decimal("5000"),
+            realized_pnl=Decimal("0"),
+            leverage=5,
+        )
+        info = broker.get_account_info()
+        assert info["unrealized_pnl"] == Decimal("5000")
+        assert info["equity"] == Decimal("105000")
 
 
 class TestSimulatedBrokerPositions:
@@ -141,11 +136,6 @@ class TestSimulatedBrokerPositions:
     def test_positions_dict_initially_empty(self) -> None:
         broker = SimulatedBroker()
         assert broker.positions == {}
-
-
-# ============================================================================
-# Edge Cases Tests
-# ============================================================================
 
 
 class TestSimulatedBrokerEdgeCases:
@@ -167,11 +157,6 @@ class TestSimulatedBrokerEdgeCases:
     def test_fractional_equity(self) -> None:
         broker = SimulatedBroker(initial_equity_usd=Decimal("12345.6789"))
         assert broker.equity == Decimal("12345.6789")
-
-
-# ============================================================================
-# Product Management Tests
-# ============================================================================
 
 
 class TestSimulatedBrokerProductManagement:
@@ -209,3 +194,47 @@ class TestSimulatedBrokerProductManagement:
         broker = SimulatedBroker()
         retrieved = broker.get_product("NONEXISTENT-USD")
         assert retrieved is None
+
+
+class TestSimulatedBrokerEquityTracking:
+    """Test equity tracking and drawdown calculation."""
+
+    def test_equity_curve_storage(self) -> None:
+        broker = SimulatedBroker()
+        assert broker._equity_curve == []
+        broker._equity_curve = [
+            (datetime(2024, 1, 1), Decimal("100000")),
+            (datetime(2024, 1, 2), Decimal("101000")),
+        ]
+        curve = broker.get_equity_curve()
+        assert len(curve) == 2
+        assert curve[0][1] == Decimal("100000")
+
+    @pytest.mark.parametrize(
+        "attr, expected",
+        [
+            ("_peak_equity", Decimal("75000")),
+            ("_max_drawdown", Decimal("0")),
+            ("_max_drawdown_usd", Decimal("0")),
+        ],
+    )
+    def test_equity_tracking_defaults(self, attr: str, expected: Decimal) -> None:
+        broker = SimulatedBroker(initial_equity_usd=Decimal("75000"))
+        assert getattr(broker, attr) == expected
+
+
+class TestSimulatedBrokerStatistics:
+    """Test statistics tracking."""
+
+    @pytest.mark.parametrize(
+        "attr, expected",
+        [
+            ("_total_fees_paid", Decimal("0")),
+            ("_total_trades", 0),
+            ("_winning_trades", 0),
+            ("_losing_trades", 0),
+            ("_total_slippage_bps", Decimal("0")),
+        ],
+    )
+    def test_statistics_defaults(self, attr: str, expected: int | Decimal) -> None:
+        assert getattr(SimulatedBroker(), attr) == expected

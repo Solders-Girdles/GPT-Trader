@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6165,
-    "total_files": 782,
+    "total_tests": 6152,
+    "total_files": 781,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 6000,
+    "unit": 5987,
     "asyncio": 344,
-    "parametrize": 105,
+    "parametrize": 109,
     "property": 82,
     "integration": 79,
     "endpoints": 78,
@@ -183,8 +183,7 @@
       "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_settlement_timing.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker_market.py",
-      "tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker_orders.py",
-      "tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker_positions.py",
+      "tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker_trading.py",
       "tests/unit/gpt_trader/backtesting/test_coinbase_historical_fetcher_edges.py",
       "tests/unit/gpt_trader/backtesting/test_guarded_backtest_flow.py",
       "tests/unit/gpt_trader/backtesting/test_historical_data_manager_coverage_edges.py",
@@ -4952,7 +4951,7 @@
     "tests/unit/gpt_trader/backtesting/metrics/test_report_generate.py": [
       {
         "name": "TestGenerateBacktestReportFunction::test_returns_backtest_result",
-        "line": 54,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -4961,7 +4960,7 @@
       },
       {
         "name": "TestBacktestReporterGenerateResult::test_generate_result_returns_backtest_result",
-        "line": 89,
+        "line": 88,
         "markers": [
           "unit"
         ],
@@ -4970,7 +4969,7 @@
       },
       {
         "name": "TestBacktestReporterGenerateResult::test_generate_result_populates_performance",
-        "line": 102,
+        "line": 101,
         "markers": [
           "unit"
         ],
@@ -4979,7 +4978,7 @@
       },
       {
         "name": "TestBacktestReporterGenerateResult::test_generate_result_populates_trade_stats",
-        "line": 121,
+        "line": 120,
         "markers": [
           "unit"
         ],
@@ -4988,7 +4987,7 @@
       },
       {
         "name": "TestBacktestReporterGenerateResult::test_generate_result_populates_risk_metrics",
-        "line": 135,
+        "line": 134,
         "markers": [
           "unit"
         ],
@@ -4997,7 +4996,7 @@
       },
       {
         "name": "TestBacktestReporterGenerateResult::test_generate_result_calculates_unrealized_pnl",
-        "line": 149,
+        "line": 148,
         "markers": [
           "unit"
         ],
@@ -5089,7 +5088,7 @@
       },
       {
         "name": "TestBacktestReporterGenerateSummary::test_generate_summary_handles_none_sharpe",
-        "line": 164,
+        "line": 162,
         "markers": [
           "unit"
         ],
@@ -6848,7 +6847,7 @@
     "tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker.py": [
       {
         "name": "TestSimulatedBrokerConnection::test_initial_connection_state",
-        "line": 19,
+        "line": 16,
         "markers": [
           "unit"
         ],
@@ -6857,7 +6856,7 @@
       },
       {
         "name": "TestSimulatedBrokerConnection::test_connect",
-        "line": 24,
+        "line": 21,
         "markers": [
           "unit"
         ],
@@ -6866,7 +6865,7 @@
       },
       {
         "name": "TestSimulatedBrokerConnection::test_disconnect",
-        "line": 31,
+        "line": 28,
         "markers": [
           "unit"
         ],
@@ -6875,7 +6874,7 @@
       },
       {
         "name": "TestSimulatedBrokerConnection::test_connect_disconnect_cycle",
-        "line": 38,
+        "line": 35,
         "markers": [
           "unit"
         ],
@@ -6884,16 +6883,7 @@
       },
       {
         "name": "TestSimulatedBrokerConnection::test_get_account_id",
-        "line": 47,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSimulatedBrokerConnection"
-      },
-      {
-        "name": "TestSimulatedBrokerConnection::test_get_account_id_consistent",
-        "line": 51,
+        "line": 44,
         "markers": [
           "unit"
         ],
@@ -6902,7 +6892,7 @@
       },
       {
         "name": "TestSimulatedBrokerInitialization::test_default_initialization",
-        "line": 64,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -6911,7 +6901,7 @@
       },
       {
         "name": "TestSimulatedBrokerInitialization::test_custom_equity_initialization",
-        "line": 72,
+        "line": 61,
         "markers": [
           "unit"
         ],
@@ -6920,7 +6910,7 @@
       },
       {
         "name": "TestSimulatedBrokerInitialization::test_custom_fee_tier_initialization",
-        "line": 77,
+        "line": 66,
         "markers": [
           "unit"
         ],
@@ -6929,7 +6919,7 @@
       },
       {
         "name": "TestSimulatedBrokerInitialization::test_initial_balance_matches_equity",
-        "line": 81,
+        "line": 70,
         "markers": [
           "unit"
         ],
@@ -6938,7 +6928,7 @@
       },
       {
         "name": "TestSimulatedBrokerAccountInfo::test_get_equity",
-        "line": 98,
+        "line": 82,
         "markers": [
           "unit"
         ],
@@ -6947,7 +6937,7 @@
       },
       {
         "name": "TestSimulatedBrokerAccountInfo::test_get_account_info",
-        "line": 102,
+        "line": 86,
         "markers": [
           "unit"
         ],
@@ -6956,7 +6946,7 @@
       },
       {
         "name": "TestSimulatedBrokerAccountInfo::test_list_balances_structure",
-        "line": 108,
+        "line": 92,
         "markers": [
           "unit"
         ],
@@ -6965,7 +6955,16 @@
       },
       {
         "name": "TestSimulatedBrokerAccountInfo::test_get_account_info_all_fields",
-        "line": 117,
+        "line": 101,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestSimulatedBrokerAccountInfo"
+      },
+      {
+        "name": "TestSimulatedBrokerAccountInfo::test_get_account_info_with_unrealized_pnl",
+        "line": 110,
         "markers": [
           "unit"
         ],
@@ -6974,7 +6973,7 @@
       },
       {
         "name": "TestSimulatedBrokerPositions::test_list_positions_initially_empty",
-        "line": 135,
+        "line": 130,
         "markers": [
           "unit"
         ],
@@ -6983,7 +6982,7 @@
       },
       {
         "name": "TestSimulatedBrokerPositions::test_positions_dict_initially_empty",
-        "line": 141,
+        "line": 136,
         "markers": [
           "unit"
         ],
@@ -6992,7 +6991,7 @@
       },
       {
         "name": "TestSimulatedBrokerEdgeCases::test_zero_initial_equity",
-        "line": 154,
+        "line": 144,
         "markers": [
           "unit"
         ],
@@ -7001,7 +7000,7 @@
       },
       {
         "name": "TestSimulatedBrokerEdgeCases::test_very_large_equity",
-        "line": 161,
+        "line": 151,
         "markers": [
           "unit"
         ],
@@ -7010,7 +7009,7 @@
       },
       {
         "name": "TestSimulatedBrokerEdgeCases::test_fractional_equity",
-        "line": 167,
+        "line": 157,
         "markers": [
           "unit"
         ],
@@ -7019,7 +7018,7 @@
       },
       {
         "name": "TestSimulatedBrokerProductManagement::test_register_product",
-        "line": 194,
+        "line": 179,
         "markers": [
           "unit"
         ],
@@ -7028,7 +7027,7 @@
       },
       {
         "name": "TestSimulatedBrokerProductManagement::test_get_product_exists",
-        "line": 200,
+        "line": 185,
         "markers": [
           "unit"
         ],
@@ -7037,12 +7036,41 @@
       },
       {
         "name": "TestSimulatedBrokerProductManagement::test_get_product_not_exists",
-        "line": 208,
+        "line": 193,
         "markers": [
           "unit"
         ],
         "docstring": "",
         "class": "TestSimulatedBrokerProductManagement"
+      },
+      {
+        "name": "TestSimulatedBrokerEquityTracking::test_equity_curve_storage",
+        "line": 202,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestSimulatedBrokerEquityTracking"
+      },
+      {
+        "name": "TestSimulatedBrokerEquityTracking::test_equity_tracking_defaults",
+        "line": 221,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestSimulatedBrokerEquityTracking"
+      },
+      {
+        "name": "TestSimulatedBrokerStatistics::test_statistics_defaults",
+        "line": 239,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestSimulatedBrokerStatistics"
       }
     ],
     "tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker_market.py": [
@@ -7173,233 +7201,85 @@
         "class": "TestSimulatedBrokerMarketSnapshot"
       }
     ],
-    "tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker_orders.py": [
+    "tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker_trading.py": [
       {
-        "name": "TestSimulatedBrokerPlaceOrder::test_place_order_requires_quantity",
-        "line": 28,
+        "name": "TestSimulatedBrokerOrders::test_place_order_requires_quantity",
+        "line": 70,
         "markers": [
           "unit"
         ],
         "docstring": "",
-        "class": "TestSimulatedBrokerPlaceOrder"
+        "class": "TestSimulatedBrokerOrders"
       },
       {
-        "name": "TestSimulatedBrokerPlaceOrder::test_place_limit_order_submitted",
-        "line": 39,
+        "name": "TestSimulatedBrokerOrders::test_place_limit_order_submitted",
+        "line": 80,
         "markers": [
           "unit"
         ],
         "docstring": "",
-        "class": "TestSimulatedBrokerPlaceOrder"
+        "class": "TestSimulatedBrokerOrders"
       },
       {
-        "name": "TestSimulatedBrokerCancelOrder::test_cancel_nonexistent_order",
-        "line": 73,
+        "name": "TestSimulatedBrokerOrders::test_cancel_nonexistent_order",
+        "line": 96,
         "markers": [
           "unit"
         ],
         "docstring": "",
-        "class": "TestSimulatedBrokerCancelOrder"
+        "class": "TestSimulatedBrokerOrders"
       },
       {
-        "name": "TestSimulatedBrokerCancelOrder::test_cancel_open_order",
-        "line": 78,
+        "name": "TestSimulatedBrokerOrders::test_cancel_open_order",
+        "line": 100,
         "markers": [
           "unit"
         ],
         "docstring": "",
-        "class": "TestSimulatedBrokerCancelOrder"
+        "class": "TestSimulatedBrokerOrders"
       },
       {
-        "name": "TestSimulatedBrokerCancelOrder::test_cancel_open_order_direct",
-        "line": 103,
+        "name": "TestSimulatedBrokerOrders::test_cancel_open_order_direct",
+        "line": 115,
         "markers": [
           "unit"
         ],
-        "docstring": "Test cancelling an order added directly.",
-        "class": "TestSimulatedBrokerCancelOrder"
+        "docstring": "",
+        "class": "TestSimulatedBrokerOrders"
       },
       {
-        "name": "TestSimulatedBrokerChaos::test_market_order_rejected_by_chaos",
-        "line": 133,
+        "name": "test_market_order_chaos_scenarios",
+        "line": 152,
         "markers": [
+          "parametrize",
           "unit"
         ],
-        "docstring": "",
-        "class": "TestSimulatedBrokerChaos"
+        "docstring": ""
       },
       {
-        "name": "TestSimulatedBrokerChaos::test_market_order_partial_fill_by_chaos",
-        "line": 165,
+        "name": "test_calculate_margin_used",
+        "line": 199,
         "markers": [
+          "parametrize",
           "unit"
         ],
-        "docstring": "",
-        "class": "TestSimulatedBrokerChaos"
-      }
-    ],
-    "tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker_positions.py": [
-      {
-        "name": "TestSimulatedBrokerMarginCalculation::test_calculate_margin_used_no_positions",
-        "line": 13,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSimulatedBrokerMarginCalculation"
+        "docstring": ""
       },
       {
-        "name": "TestSimulatedBrokerMarginCalculation::test_calculate_margin_used_with_position",
-        "line": 17,
+        "name": "test_position_helpers_with_position",
+        "line": 205,
         "markers": [
           "unit"
         ],
-        "docstring": "",
-        "class": "TestSimulatedBrokerMarginCalculation"
+        "docstring": ""
       },
       {
-        "name": "TestSimulatedBrokerMarginCalculation::test_calculate_margin_used_multiple_positions",
-        "line": 31,
+        "name": "test_position_helpers_without_position",
+        "line": 231,
         "markers": [
           "unit"
         ],
-        "docstring": "",
-        "class": "TestSimulatedBrokerMarginCalculation"
-      },
-      {
-        "name": "TestSimulatedBrokerMarginCalculation::test_calculate_margin_used_default_leverage",
-        "line": 55,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSimulatedBrokerMarginCalculation"
-      },
-      {
-        "name": "TestSimulatedBrokerPositionPnl::test_pnl_with_position",
-        "line": 73,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSimulatedBrokerPositionPnl"
-      },
-      {
-        "name": "TestSimulatedBrokerPositionPnl::test_pnl_no_position",
-        "line": 90,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSimulatedBrokerPositionPnl"
-      },
-      {
-        "name": "TestSimulatedBrokerPositionRisk::test_risk_with_long_position",
-        "line": 101,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSimulatedBrokerPositionRisk"
-      },
-      {
-        "name": "TestSimulatedBrokerPositionRisk::test_risk_no_position",
-        "line": 127,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSimulatedBrokerPositionRisk"
-      },
-      {
-        "name": "TestSimulatedBrokerAccountInfoWithPositions::test_get_account_info_with_unrealized_pnl",
-        "line": 135,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSimulatedBrokerAccountInfoWithPositions"
-      },
-      {
-        "name": "TestSimulatedBrokerEquityTracking::test_equity_curve_initially_empty",
-        "line": 155,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSimulatedBrokerEquityTracking"
-      },
-      {
-        "name": "TestSimulatedBrokerEquityTracking::test_get_equity_curve",
-        "line": 158,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSimulatedBrokerEquityTracking"
-      },
-      {
-        "name": "TestSimulatedBrokerEquityTracking::test_peak_equity_initialized",
-        "line": 168,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSimulatedBrokerEquityTracking"
-      },
-      {
-        "name": "TestSimulatedBrokerEquityTracking::test_max_drawdown_initially_zero",
-        "line": 172,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSimulatedBrokerEquityTracking"
-      },
-      {
-        "name": "TestSimulatedBrokerStatistics::test_total_fees_initially_zero",
-        "line": 181,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSimulatedBrokerStatistics"
-      },
-      {
-        "name": "TestSimulatedBrokerStatistics::test_trade_counters_initially_zero",
-        "line": 184,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSimulatedBrokerStatistics"
-      },
-      {
-        "name": "TestSimulatedBrokerStatistics::test_slippage_initially_zero",
-        "line": 190,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSimulatedBrokerStatistics"
-      },
-      {
-        "name": "TestSimulatedBrokerGetPosition::test_get_position_no_position",
-        "line": 197,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSimulatedBrokerGetPosition"
-      },
-      {
-        "name": "TestSimulatedBrokerGetPosition::test_get_position_with_position",
-        "line": 200,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSimulatedBrokerGetPosition"
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/backtesting/test_coinbase_historical_fetcher_edges.py": [

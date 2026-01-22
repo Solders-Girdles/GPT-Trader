@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6031,
-    "total_files": 719,
+    "total_files": 718,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -108,7 +108,7 @@
     "property": 82,
     "integration": 79,
     "endpoints": 78,
-    "usefixtures": 15,
+    "usefixtures": 16,
     "skipif": 8,
     "slow": 4,
     "anyio": 3,
@@ -523,9 +523,8 @@
       "tests/unit/gpt_trader/logging/test_json_redaction.py",
       "tests/unit/gpt_trader/logging/test_runtime_helpers.py",
       "tests/unit/gpt_trader/logging/test_runtime_helpers_context.py",
-      "tests/unit/gpt_trader/logging/test_setup_configure_logging_env_overrides.py",
+      "tests/unit/gpt_trader/logging/test_setup_configure.py",
       "tests/unit/gpt_trader/logging/test_setup_configure_logging_handlers.py",
-      "tests/unit/gpt_trader/logging/test_setup_configure_logging_modes_and_idempotency.py",
       "tests/unit/gpt_trader/logging/test_setup_env_flag.py",
       "tests/unit/gpt_trader/logging/test_setup_smoke.py"
     ],
@@ -30479,42 +30478,79 @@
         "docstring": "Test the order context decorator."
       }
     ],
-    "tests/unit/gpt_trader/logging/test_setup_configure_logging_env_overrides.py": [
+    "tests/unit/gpt_trader/logging/test_setup_configure.py": [
       {
         "name": "TestConfigureLoggingEnvOverrides::test_configure_logging_respects_env_log_dir",
-        "line": 65,
+        "line": 87,
         "markers": [
+          "usefixtures",
           "unit"
         ],
-        "docstring": "Test that PERPS_LOG_DIR environment variable is respected.",
+        "docstring": "",
         "class": "TestConfigureLoggingEnvOverrides"
       },
       {
         "name": "TestConfigureLoggingEnvOverrides::test_configure_logging_respects_max_bytes_env",
-        "line": 81,
+        "line": 100,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that log size environment variables are respected.",
+        "docstring": "",
         "class": "TestConfigureLoggingEnvOverrides"
       },
       {
         "name": "TestConfigureLoggingEnvOverrides::test_configure_logging_respects_backup_count_env",
-        "line": 98,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that backup count environment variables are respected.",
-        "class": "TestConfigureLoggingEnvOverrides"
-      },
-      {
-        "name": "TestConfigureLoggingEnvOverrides::test_configure_logging_enables_debug_with_env",
         "line": 115,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that PERPS_DEBUG environment variable enables debug logging.",
+        "docstring": "",
         "class": "TestConfigureLoggingEnvOverrides"
+      },
+      {
+        "name": "TestConfigureLoggingEnvOverrides::test_configure_logging_enables_debug_with_env",
+        "line": 130,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestConfigureLoggingEnvOverrides"
+      },
+      {
+        "name": "TestConfigureLoggingModesAndIdempotency::test_configure_logging_idempotent",
+        "line": 151,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestConfigureLoggingModesAndIdempotency"
+      },
+      {
+        "name": "TestConfigureLoggingModesAndIdempotency::test_configure_logging_tui_mode_suppresses_stream_handler",
+        "line": 161,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestConfigureLoggingModesAndIdempotency"
+      },
+      {
+        "name": "TestConfigureLoggingModesAndIdempotency::test_configure_logging_cli_mode_creates_stream_handler",
+        "line": 168,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestConfigureLoggingModesAndIdempotency"
+      },
+      {
+        "name": "TestConfigureLoggingModesAndIdempotency::test_configure_logging_file_handlers_present_in_both_modes",
+        "line": 175,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestConfigureLoggingModesAndIdempotency"
       }
     ],
     "tests/unit/gpt_trader/logging/test_setup_configure_logging_handlers.py": [
@@ -30580,44 +30616,6 @@
         ],
         "docstring": "Test that handlers have formatters configured.",
         "class": "TestConfigureLoggingHandlers"
-      }
-    ],
-    "tests/unit/gpt_trader/logging/test_setup_configure_logging_modes_and_idempotency.py": [
-      {
-        "name": "TestConfigureLoggingModesAndIdempotency::test_configure_logging_idempotent",
-        "line": 69,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that calling configure_logging multiple times doesn't duplicate handlers.",
-        "class": "TestConfigureLoggingModesAndIdempotency"
-      },
-      {
-        "name": "TestConfigureLoggingModesAndIdempotency::test_configure_logging_tui_mode_suppresses_stream_handler",
-        "line": 80,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that TUI mode suppresses StreamHandler to prevent display corruption.",
-        "class": "TestConfigureLoggingModesAndIdempotency"
-      },
-      {
-        "name": "TestConfigureLoggingModesAndIdempotency::test_configure_logging_cli_mode_creates_stream_handler",
-        "line": 89,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that CLI mode creates StreamHandler for console output.",
-        "class": "TestConfigureLoggingModesAndIdempotency"
-      },
-      {
-        "name": "TestConfigureLoggingModesAndIdempotency::test_configure_logging_file_handlers_present_in_both_modes",
-        "line": 98,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that file handlers are present in both TUI and CLI modes.",
-        "class": "TestConfigureLoggingModesAndIdempotency"
       }
     ],
     "tests/unit/gpt_trader/logging/test_setup_env_flag.py": [

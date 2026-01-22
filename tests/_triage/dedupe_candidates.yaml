@@ -2216,10 +2216,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/logging/test_setup_configure.py
-    expected_file_delta: -2
+    expected_file_delta: -1
     priority: low
-    rationale: Consolidate 3 test files into single parametrized file
-    status: pending
+    rationale: Consolidated env overrides and mode/idempotency into core suite for hygiene cap
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/402
     added: '2026-01-20'
   80b88b7e58c0:
     type: similar_names

@@ -146,7 +146,8 @@ clusters:
     expected_file_delta: -20
     priority: high
     rationale: Consolidate 21 test files into single parametrized file
-    status: pending
+    status: in_progress
+    owner: codex
     added: '2026-01-21'
   fec6f0cad78c:
     type: source_fanout
@@ -1505,10 +1506,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming.py
-    expected_file_delta: -3
+    expected_file_delta: -1
     priority: low
-    rationale: Consolidate 4 test files into single parametrized file
-    status: pending
+    rationale: Consolidated telemetry streaming suites into helper, lifecycle, and loop modules to stay under hygiene cap
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/367
     added: '2026-01-21'
   60bf455b111f:
     type: similar_names

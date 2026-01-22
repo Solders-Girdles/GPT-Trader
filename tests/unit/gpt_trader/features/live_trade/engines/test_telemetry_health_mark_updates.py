@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import threading
+from datetime import datetime, timezone
 from decimal import Decimal
 from unittest.mock import Mock
 
@@ -111,6 +112,59 @@ class TestUpdateMarkAndMetrics:
         update_mark_and_metrics(coordinator, ctx, "BTC-PERP", Decimal("50000"))
 
         risk_manager.record_mark_update.assert_called()
+
+    def test_throttles_mark_metric_with_invalid_interval(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        coordinator = Mock()
+        coordinator._market_monitor = None
+        coordinator._mark_metric_last_emit = None
+        ctx = self._create_mock_context()
+        ctx.config.status_interval = "bad"
+
+        times = iter([100.0, 101.0])
+        monkeypatch.setattr(telemetry_health_module.time, "time", lambda: next(times))
+        emit = Mock()
+        monkeypatch.setattr(telemetry_health_module, "emit_metric", emit)
+
+        update_mark_and_metrics(coordinator, ctx, "BTC-PERP", Decimal("50000"))
+        update_mark_and_metrics(coordinator, ctx, "BTC-PERP", Decimal("50001"))
+
+        assert emit.call_count == 1
+
+    def test_record_mark_update_result_is_stored(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        coordinator = Mock()
+        coordinator._market_monitor = None
+        ctx = self._create_mock_context()
+        sentinel = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        risk_manager = Mock()
+        risk_manager.record_mark_update.return_value = sentinel
+        risk_manager.last_mark_update = {}
+        ctx.risk_manager = risk_manager
+        ctx.config.status_interval = 999
+        monkeypatch.setattr(telemetry_health_module, "utc_now", lambda: sentinel)
+
+        update_mark_and_metrics(coordinator, ctx, "BTC-USD", Decimal("50000"))
+
+        assert risk_manager.last_mark_update["BTC-USD"] is sentinel
+
+    def test_record_mark_update_exception_uses_fallback(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        coordinator = Mock()
+        coordinator._market_monitor = None
+        ctx = self._create_mock_context()
+        sentinel = datetime(2024, 1, 2, tzinfo=timezone.utc)
+        risk_manager = Mock()
+        risk_manager.record_mark_update.side_effect = RuntimeError("boom")
+        risk_manager.last_mark_update = {}
+        ctx.risk_manager = risk_manager
+        ctx.config.status_interval = 999
+        monkeypatch.setattr(telemetry_health_module, "utc_now", lambda: sentinel)
+
+        update_mark_and_metrics(coordinator, ctx, "BTC-USD", Decimal("50000"))
+
+        assert risk_manager.last_mark_update["BTC-USD"] is sentinel
 
     def test_creates_last_mark_update_dict_if_missing(self) -> None:
         """Test creates last_mark_update dict if not present."""

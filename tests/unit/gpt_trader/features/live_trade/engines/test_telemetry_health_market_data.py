@@ -1,3 +1,5 @@
+"""Tests for telemetry health market-data helpers."""
+
 from __future__ import annotations
 
 import time
@@ -39,53 +41,9 @@ def _make_ctx(
     )
 
 
-def _make_coordinator() -> SimpleNamespace:
-    return SimpleNamespace(_market_monitor=None, _mark_metric_last_emit=None)
-
-
 @pytest.fixture(autouse=True)
 def reset_snapshot_throttles(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(telemetry_health, "_last_snapshot_times", {})
-
-
-def test_update_mark_and_metrics_invalid_interval_throttles(monkeypatch) -> None:
-    coordinator = _make_coordinator()
-    ctx = _make_ctx(status_interval="bad")
-    times = iter([100.0, 101.0])
-    monkeypatch.setattr(time, "time", lambda: next(times))
-    emit = MagicMock()
-    monkeypatch.setattr(telemetry_health, "emit_metric", emit)
-
-    telemetry_health.update_mark_and_metrics(coordinator, ctx, "BTC-USD", Decimal("50000"))
-    telemetry_health.update_mark_and_metrics(coordinator, ctx, "BTC-USD", Decimal("50001"))
-
-    assert emit.call_count == 1
-
-
-def test_record_mark_update_result_is_stored(monkeypatch) -> None:
-    coordinator = _make_coordinator()
-    risk_manager = MagicMock()
-    sentinel = datetime(2024, 1, 1, tzinfo=timezone.utc)
-    risk_manager.record_mark_update.return_value = sentinel
-    monkeypatch.setattr(telemetry_health, "utc_now", lambda: sentinel)
-    ctx = _make_ctx(risk_manager=risk_manager, status_interval=999)
-
-    telemetry_health.update_mark_and_metrics(coordinator, ctx, "BTC-USD", Decimal("50000"))
-
-    assert risk_manager.last_mark_update["BTC-USD"] is sentinel
-
-
-def test_record_mark_update_exception_uses_fallback(monkeypatch) -> None:
-    coordinator = _make_coordinator()
-    risk_manager = MagicMock()
-    sentinel = datetime(2024, 1, 2, tzinfo=timezone.utc)
-    risk_manager.record_mark_update.side_effect = RuntimeError("boom")
-    monkeypatch.setattr(telemetry_health, "utc_now", lambda: sentinel)
-    ctx = _make_ctx(risk_manager=risk_manager, status_interval=999)
-
-    telemetry_health.update_mark_and_metrics(coordinator, ctx, "BTC-USD", Decimal("50000"))
-
-    assert risk_manager.last_mark_update["BTC-USD"] is sentinel
 
 
 def test_update_orderbook_snapshot_invalid_product_id(monkeypatch) -> None:

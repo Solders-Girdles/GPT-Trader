@@ -1281,7 +1281,7 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine.py
-    expected_file_delta: -3
+    expected_file_delta: -1
     priority: low
     rationale: Consolidated chaos misc coverage into existing modules to stay under hygiene cap
     status: done
@@ -1532,7 +1532,7 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/config/test_bot_config.py
-    expected_file_delta: -1
+    expected_file_delta: -3
     priority: low
     rationale: Consolidated bot config suites into single module under hygiene cap
     status: done
@@ -1622,7 +1622,7 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/cli/commands/optimize/test_config_loader.py
-    expected_file_delta: -1
+    expected_file_delta: -3
     priority: low
     rationale: Consolidated into single module under hygiene cap
     status: done
@@ -1640,7 +1640,7 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/backtesting/validation/test_decision_logger.py
-    expected_file_delta: -3
+    expected_file_delta: -1
     priority: low
     rationale: Consolidated into three modules to stay under hygiene cap
     status: done

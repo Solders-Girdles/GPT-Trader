@@ -2114,11 +2114,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/features/live_trade/test_state_recovery.py
-    expected_file_delta: -2
+    expected_file_delta: -1
     priority: low
-    rationale: Consolidate 3 test files into single parametrized file
-    status: in_progress
+    rationale: Consolidated recording/strategy coverage into core while keeping rehydration separate
+    status: done
     owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/397
     added: '2026-01-20'
   542f5c64c1b6:
     type: similar_names
@@ -2363,11 +2364,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline.py
-    expected_file_delta: -2
+    expected_file_delta: -1
     priority: low
-    rationale: Consolidate 3 test files into single parametrized file
-    status: in_progress
+    rationale: Consolidated pause basics/monotonicity while keeping expiry/recovery separate
+    status: done
     owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/397
     added: '2026-01-21'
   bef8933bbed5:
     type: similar_names

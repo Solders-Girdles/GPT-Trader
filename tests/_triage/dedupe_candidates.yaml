@@ -1530,7 +1530,7 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/config/test_bot_config.py
-    expected_file_delta: -3
+    expected_file_delta: -1
     priority: low
     rationale: Consolidated bot config suites into single module under hygiene cap
     status: done

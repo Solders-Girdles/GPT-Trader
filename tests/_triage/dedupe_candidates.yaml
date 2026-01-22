@@ -1449,10 +1449,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker.py
-    expected_file_delta: -3
+    expected_file_delta: -1
     priority: low
-    rationale: Consolidate 4 test files into single parametrized file
-    status: pending
+    rationale: Consolidated simulated broker suites into core, market, and trading modules to stay under hygiene cap
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/364
     added: '2026-01-21'
   58908d14a224:
     type: similar_names

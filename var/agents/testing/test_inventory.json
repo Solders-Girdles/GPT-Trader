@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6150,
-    "total_files": 774,
+    "total_files": 773,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -378,10 +378,9 @@
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_health.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_orders.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_state.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_edges.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_extract_mark.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_health_check.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_update_mark_and_metrics.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_mark_updates.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_market_data.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_lifecycle.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_loop.py",
@@ -19643,105 +19642,23 @@
         "docstring": "Test that reduce-only mode blocks orders for symbols with no position."
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_edges.py": [
-      {
-        "name": "test_update_mark_and_metrics_invalid_interval_throttles",
-        "line": 51,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_record_mark_update_result_is_stored",
-        "line": 65,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_record_mark_update_exception_uses_fallback",
-        "line": 78,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_update_orderbook_snapshot_invalid_product_id",
-        "line": 91,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_update_orderbook_snapshot_success_calls_emit",
-        "line": 108,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_update_orderbook_snapshot_logs_on_error",
-        "line": 128,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_update_trade_aggregator_creates_and_emits",
-        "line": 148,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_update_trade_aggregator_skips_missing_fields",
-        "line": 172,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_emit_orderbook_snapshot_throttles",
-        "line": 196,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_emit_trade_flow_summary_missing_and_present",
-        "line": 215,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_extract_mark.py": [
+    "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health.py": [
       {
         "name": "TestExtractMarkFromMessage::test_extracts_from_bid_ask",
-        "line": 14,
+        "line": 16,
         "markers": [
           "unit"
         ],
-        "docstring": "Test extracts mark from bid/ask midpoint.",
+        "docstring": "",
         "class": "TestExtractMarkFromMessage"
       },
       {
         "name": "TestExtractMarkFromMessage::test_extracts_from_bid_ask_strings",
-        "line": 21,
+        "line": 22,
         "markers": [
           "unit"
         ],
-        "docstring": "Test extracts from bid/ask as string keys.",
+        "docstring": "",
         "class": "TestExtractMarkFromMessage"
       },
       {
@@ -19750,196 +19667,194 @@
         "markers": [
           "unit"
         ],
-        "docstring": "Test prefers best_bid over bid key.",
+        "docstring": "",
         "class": "TestExtractMarkFromMessage"
       },
       {
         "name": "TestExtractMarkFromMessage::test_extracts_from_last_price",
-        "line": 36,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test extracts from last price when no bid/ask.",
-        "class": "TestExtractMarkFromMessage"
-      },
-      {
-        "name": "TestExtractMarkFromMessage::test_extracts_from_price_key",
-        "line": 43,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test extracts from price key when no bid/ask/last.",
-        "class": "TestExtractMarkFromMessage"
-      },
-      {
-        "name": "TestExtractMarkFromMessage::test_returns_none_for_empty_message",
-        "line": 50,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test returns None for empty message.",
-        "class": "TestExtractMarkFromMessage"
-      },
-      {
-        "name": "TestExtractMarkFromMessage::test_returns_none_for_zero_mark",
-        "line": 57,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test returns None when mark is zero.",
-        "class": "TestExtractMarkFromMessage"
-      },
-      {
-        "name": "TestExtractMarkFromMessage::test_returns_none_for_negative_mark",
-        "line": 64,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test returns None when mark is negative.",
-        "class": "TestExtractMarkFromMessage"
-      },
-      {
-        "name": "TestExtractMarkFromMessage::test_returns_none_for_zero_bid_ask_average",
-        "line": 71,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test returns None when bid/ask average is zero.",
-        "class": "TestExtractMarkFromMessage"
-      },
-      {
-        "name": "TestExtractMarkFromMessage::test_returns_none_for_invalid_decimal",
-        "line": 78,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test returns None for invalid decimal string.",
-        "class": "TestExtractMarkFromMessage"
-      },
-      {
-        "name": "TestExtractMarkFromMessage::test_handles_bid_only",
-        "line": 85,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test returns None when only bid is present.",
-        "class": "TestExtractMarkFromMessage"
-      },
-      {
-        "name": "TestExtractMarkFromMessage::test_handles_ask_only",
-        "line": 93,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test returns None when only ask is present.",
-        "class": "TestExtractMarkFromMessage"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_health_check.py": [
-      {
-        "name": "TestHealthCheck::test_healthy_when_market_monitor_present",
-        "line": 23,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test returns healthy when market_monitor is present.",
-        "class": "TestHealthCheck"
-      },
-      {
-        "name": "TestHealthCheck::test_unhealthy_when_no_monitor_or_streaming",
         "line": 34,
         "markers": [
           "unit"
         ],
-        "docstring": "Test returns unhealthy when no market_monitor and no streaming.",
+        "docstring": "",
+        "class": "TestExtractMarkFromMessage"
+      },
+      {
+        "name": "TestExtractMarkFromMessage::test_extracts_from_price_key",
+        "line": 40,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestExtractMarkFromMessage"
+      },
+      {
+        "name": "TestExtractMarkFromMessage::test_returns_none_for_empty_message",
+        "line": 46,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestExtractMarkFromMessage"
+      },
+      {
+        "name": "TestExtractMarkFromMessage::test_returns_none_for_zero_mark",
+        "line": 52,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestExtractMarkFromMessage"
+      },
+      {
+        "name": "TestExtractMarkFromMessage::test_returns_none_for_negative_mark",
+        "line": 58,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestExtractMarkFromMessage"
+      },
+      {
+        "name": "TestExtractMarkFromMessage::test_returns_none_for_zero_bid_ask_average",
+        "line": 64,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestExtractMarkFromMessage"
+      },
+      {
+        "name": "TestExtractMarkFromMessage::test_returns_none_for_invalid_decimal",
+        "line": 70,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestExtractMarkFromMessage"
+      },
+      {
+        "name": "TestExtractMarkFromMessage::test_handles_bid_only",
+        "line": 76,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestExtractMarkFromMessage"
+      },
+      {
+        "name": "TestExtractMarkFromMessage::test_handles_ask_only",
+        "line": 82,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestExtractMarkFromMessage"
+      },
+      {
+        "name": "TestHealthCheck::test_healthy_when_market_monitor_present",
+        "line": 99,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestHealthCheck"
+      },
+      {
+        "name": "TestHealthCheck::test_unhealthy_when_no_monitor_or_streaming",
+        "line": 109,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
         "class": "TestHealthCheck"
       },
       {
         "name": "TestHealthCheck::test_healthy_when_streaming_active",
-        "line": 44,
+        "line": 118,
         "markers": [
           "unit"
         ],
-        "docstring": "Test returns healthy when streaming is active (even without monitor).",
+        "docstring": "",
         "class": "TestHealthCheck"
       },
       {
         "name": "TestHealthCheck::test_detects_market_monitor_from_coordinator",
-        "line": 56,
+        "line": 129,
         "markers": [
           "unit"
         ],
-        "docstring": "Test detects market_monitor from coordinator attribute.",
+        "docstring": "",
         "class": "TestHealthCheck"
       },
       {
         "name": "TestHealthCheck::test_no_market_monitor",
-        "line": 65,
+        "line": 137,
         "markers": [
           "unit"
         ],
-        "docstring": "Test reports no market_monitor when missing.",
+        "docstring": "",
         "class": "TestHealthCheck"
       },
       {
         "name": "TestHealthCheck::test_streaming_active_when_task_running",
-        "line": 73,
+        "line": 144,
         "markers": [
           "unit"
         ],
-        "docstring": "Test reports streaming_active when task is running.",
+        "docstring": "",
         "class": "TestHealthCheck"
       },
       {
         "name": "TestHealthCheck::test_streaming_inactive_when_task_done",
-        "line": 84,
+        "line": 154,
         "markers": [
           "unit"
         ],
-        "docstring": "Test reports streaming_inactive when task is done.",
+        "docstring": "",
         "class": "TestHealthCheck"
       },
       {
         "name": "TestHealthCheck::test_streaming_inactive_when_no_task",
-        "line": 95,
+        "line": 164,
         "markers": [
           "unit"
         ],
-        "docstring": "Test reports streaming_inactive when no task.",
+        "docstring": "",
         "class": "TestHealthCheck"
       },
       {
         "name": "TestHealthCheck::test_counts_background_tasks",
-        "line": 103,
+        "line": 171,
         "markers": [
           "unit"
         ],
-        "docstring": "Test counts background tasks.",
+        "docstring": "",
         "class": "TestHealthCheck"
       },
       {
         "name": "TestHealthCheck::test_health_with_both_monitor_and_streaming",
-        "line": 112,
+        "line": 179,
         "markers": [
           "unit"
         ],
-        "docstring": "Test health when both market_monitor and streaming are present.",
+        "docstring": "",
         "class": "TestHealthCheck"
       },
       {
         "name": "TestHealthCheck::test_health_details_always_present",
-        "line": 126,
+        "line": 192,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that all expected keys are present in details.",
+        "docstring": "",
         "class": "TestHealthCheck"
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_update_mark_and_metrics.py": [
+    "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_mark_updates.py": [
       {
         "name": "TestUpdateMarkAndMetrics::test_updates_strategy_coordinator_mark_window",
-        "line": 29,
+        "line": 30,
         "markers": [
           "unit"
         ],
@@ -19948,7 +19863,7 @@
       },
       {
         "name": "TestUpdateMarkAndMetrics::test_updates_runtime_state_mark_window",
-        "line": 42,
+        "line": 43,
         "markers": [
           "unit"
         ],
@@ -19957,7 +19872,7 @@
       },
       {
         "name": "TestUpdateMarkAndMetrics::test_prunes_mark_window_when_exceeds_max_size",
-        "line": 59,
+        "line": 60,
         "markers": [
           "unit"
         ],
@@ -19966,7 +19881,7 @@
       },
       {
         "name": "TestUpdateMarkAndMetrics::test_records_market_update_via_extras_monitor",
-        "line": 76,
+        "line": 77,
         "markers": [
           "unit"
         ],
@@ -19975,7 +19890,7 @@
       },
       {
         "name": "TestUpdateMarkAndMetrics::test_records_market_update_via_coordinator_monitor",
-        "line": 89,
+        "line": 90,
         "markers": [
           "unit"
         ],
@@ -19984,7 +19899,7 @@
       },
       {
         "name": "TestUpdateMarkAndMetrics::test_records_risk_manager_mark_update",
-        "line": 101,
+        "line": 102,
         "markers": [
           "unit"
         ],
@@ -19992,8 +19907,35 @@
         "class": "TestUpdateMarkAndMetrics"
       },
       {
+        "name": "TestUpdateMarkAndMetrics::test_throttles_mark_metric_with_invalid_interval",
+        "line": 116,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestUpdateMarkAndMetrics"
+      },
+      {
+        "name": "TestUpdateMarkAndMetrics::test_record_mark_update_result_is_stored",
+        "line": 135,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestUpdateMarkAndMetrics"
+      },
+      {
+        "name": "TestUpdateMarkAndMetrics::test_record_mark_update_exception_uses_fallback",
+        "line": 151,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestUpdateMarkAndMetrics"
+      },
+      {
         "name": "TestUpdateMarkAndMetrics::test_creates_last_mark_update_dict_if_missing",
-        "line": 115,
+        "line": 169,
         "markers": [
           "unit"
         ],
@@ -20002,7 +19944,7 @@
       },
       {
         "name": "TestUpdateMarkAndMetrics::test_handles_strategy_coordinator_error",
-        "line": 127,
+        "line": 181,
         "markers": [
           "unit"
         ],
@@ -20011,7 +19953,7 @@
       },
       {
         "name": "TestUpdateMarkAndMetrics::test_handles_market_monitor_error",
-        "line": 144,
+        "line": 198,
         "markers": [
           "unit"
         ],
@@ -20020,12 +19962,70 @@
       },
       {
         "name": "TestUpdateMarkAndMetrics::test_handles_non_dict_extras",
-        "line": 161,
+        "line": 215,
         "markers": [
           "unit"
         ],
         "docstring": "Test handles non-dict extras gracefully.",
         "class": "TestUpdateMarkAndMetrics"
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_market_data.py": [
+      {
+        "name": "test_update_orderbook_snapshot_invalid_product_id",
+        "line": 49,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_update_orderbook_snapshot_success_calls_emit",
+        "line": 66,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_update_orderbook_snapshot_logs_on_error",
+        "line": 86,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_update_trade_aggregator_creates_and_emits",
+        "line": 106,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_update_trade_aggregator_skips_missing_fields",
+        "line": 130,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_emit_orderbook_snapshot_throttles",
+        "line": 154,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_emit_trade_flow_summary_missing_and_present",
+        "line": 173,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming.py": [

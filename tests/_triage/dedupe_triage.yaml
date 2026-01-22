@@ -119,6 +119,18 @@ clusters:
     owner: codex
     updated: '2026-01-22'
     reason: already right-sized for 240-line cap; further merge not worth it
+  8d5415a3e817:
+    state: deferred
+    owner: codex
+    updated: '2026-01-22'
+    reason: already split into cohesive modules under the 240-line cap; single-file
+      merge target is not feasible without major refactor
+  cb7fa34eeade:
+    state: deferred
+    owner: codex
+    updated: '2026-01-22'
+    reason: already split into cohesive modules under the 240-line cap; single-file
+      merge target is not feasible without major refactor
   0a76c33c609a:
     state: rejected
     owner: codex

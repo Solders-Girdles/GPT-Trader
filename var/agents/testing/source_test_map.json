@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 788,
+    "tests_scanned": 780,
     "source_modules": 355,
     "unresolved_modules": 3
   },
@@ -319,7 +319,7 @@
     ],
     "gpt_trader.config.constants": [
       "tests/unit/gpt_trader/monitoring/test_heartbeat_edges.py",
-      "tests/unit/gpt_trader/tui/test_app_resource_cleanup.py"
+      "tests/unit/gpt_trader/tui/test_app_core.py"
     ],
     "gpt_trader.config.env_utils": [
       "tests/unit/gpt_trader/config/test_env_utils.py"
@@ -539,7 +539,7 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_portfolio_mixin_aliases.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_portfolio_mixin_requests.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_retry_behaviour.py",
-      "tests/unit/gpt_trader/tui/test_app_resource_cleanup.py"
+      "tests/unit/gpt_trader/tui/test_app_core.py"
     ],
     "gpt_trader.features.brokerages.coinbase.client.circuit_breaker": [
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_api_resilience.py",
@@ -717,7 +717,7 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_degradation_callback.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_health.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_reset.py",
-      "tests/unit/gpt_trader/tui/test_app_resource_cleanup.py"
+      "tests/unit/gpt_trader/tui/test_app_core.py"
     ],
     "gpt_trader.features.brokerages.coinbase.ws_events": [
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_user_event_handler.py",
@@ -1681,24 +1681,16 @@
     ],
     "gpt_trader.tui.app": [
       "tests/unit/gpt_trader/tui/test_app_core.py",
-      "tests/unit/gpt_trader/tui/test_app_resource_cleanup.py",
       "tests/unit/gpt_trader/tui/test_screen_flows_help.py",
-      "tests/unit/gpt_trader/tui/test_screen_flows_log_focus.py",
       "tests/unit/gpt_trader/tui/test_screen_flows_quick_navigation_and_state.py",
-      "tests/unit/gpt_trader/tui/test_screen_flows_shortcuts.py",
-      "tests/unit/gpt_trader/tui/test_snapshots_execution_issues_modal.py",
-      "tests/unit/gpt_trader/tui/test_snapshots_layout_guardrails.py",
       "tests/unit/gpt_trader/tui/test_snapshots_main_screen.py",
-      "tests/unit/gpt_trader/tui/test_snapshots_navigation.py",
+      "tests/unit/gpt_trader/tui/test_snapshots_modals.py",
       "tests/unit/gpt_trader/tui/test_snapshots_portfolio_overlays.py",
-      "tests/unit/gpt_trader/tui/test_snapshots_risk_detail_modal.py",
       "tests/unit/gpt_trader/tui/test_snapshots_strategy_detail_screen.py",
-      "tests/unit/gpt_trader/tui/test_snapshots_system_indicators.py",
-      "tests/unit/gpt_trader/tui/test_widget_interactions_keyboard.py",
-      "tests/unit/gpt_trader/tui/test_widget_interactions_widgets.py"
+      "tests/unit/gpt_trader/tui/test_widget_interactions_keyboard.py"
     ],
     "gpt_trader.tui.app_lifecycle": [
-      "tests/unit/gpt_trader/tui/test_app_resource_cleanup.py"
+      "tests/unit/gpt_trader/tui/test_app_core.py"
     ],
     "gpt_trader.tui.demo.demo_bot": [
       "tests/unit/gpt_trader/tui/demo/test_mock_data.py"
@@ -1760,7 +1752,7 @@
       "tests/unit/gpt_trader/tui/test_risk_preview_scenarios.py"
     ],
     "gpt_trader.tui.screens": [
-      "tests/unit/gpt_trader/tui/test_screen_flows_log_focus.py",
+      "tests/unit/gpt_trader/tui/test_screen_flows_help.py",
       "tests/unit/gpt_trader/tui/test_screens.py"
     ],
     "gpt_trader.tui.screens.alert_history": [
@@ -1790,7 +1782,7 @@
     "gpt_trader.tui.services.action_dispatcher": [
       "tests/unit/gpt_trader/tui/services/test_action_dispatcher_core.py",
       "tests/unit/gpt_trader/tui/services/test_action_dispatcher_refresh.py",
-      "tests/unit/gpt_trader/tui/test_screen_flows_log_focus.py"
+      "tests/unit/gpt_trader/tui/test_screen_flows_help.py"
     ],
     "gpt_trader.tui.services.alert_manager": [
       "tests/unit/gpt_trader/tui/screens/test_alert_history.py",
@@ -1835,7 +1827,7 @@
     "gpt_trader.tui.services.performance_service": [
       "tests/unit/gpt_trader/tui/services/test_performance_service_core.py",
       "tests/unit/gpt_trader/tui/services/test_performance_service_models.py",
-      "tests/unit/gpt_trader/tui/test_app_resource_cleanup.py",
+      "tests/unit/gpt_trader/tui/test_app_core.py",
       "tests/unit/gpt_trader/tui/widgets/test_performance_dashboard_watch_snapshot.py"
     ],
     "gpt_trader.tui.services.preferences_service": [
@@ -1935,8 +1927,7 @@
       "tests/unit/gpt_trader/tui/test_risk_guard_explanations.py",
       "tests/unit/gpt_trader/tui/test_risk_preview_position.py",
       "tests/unit/gpt_trader/tui/test_risk_preview_scenarios.py",
-      "tests/unit/gpt_trader/tui/test_snapshots_execution_issues_modal.py",
-      "tests/unit/gpt_trader/tui/test_snapshots_risk_detail_modal.py",
+      "tests/unit/gpt_trader/tui/test_snapshots_modals.py",
       "tests/unit/gpt_trader/tui/test_snapshots_strategy_detail_screen.py",
       "tests/unit/gpt_trader/tui/widgets/test_account_widget_basic.py",
       "tests/unit/gpt_trader/tui/widgets/test_account_widget_partial_state.py",
@@ -1974,7 +1965,7 @@
     "gpt_trader.tui.widgets": [
       "tests/unit/gpt_trader/tui/test_app_widgets.py",
       "tests/unit/gpt_trader/tui/test_new_widgets.py",
-      "tests/unit/gpt_trader/tui/test_screen_flows_shortcuts.py"
+      "tests/unit/gpt_trader/tui/test_screen_flows_quick_navigation_and_state.py"
     ],
     "gpt_trader.tui.widgets.account": [
       "tests/unit/gpt_trader/tui/widgets/test_account_widget_basic.py",
@@ -2011,7 +2002,7 @@
       "tests/unit/gpt_trader/tui/test_error_indicator.py"
     ],
     "gpt_trader.tui.widgets.execution_issues_modal": [
-      "tests/unit/gpt_trader/tui/test_snapshots_execution_issues_modal.py",
+      "tests/unit/gpt_trader/tui/test_snapshots_modals.py",
       "tests/unit/gpt_trader/tui/widgets/test_execution_issues_modal.py"
     ],
     "gpt_trader.tui.widgets.footer": [
@@ -2052,7 +2043,7 @@
       "tests/unit/gpt_trader/tui/widgets/test_risk.py"
     ],
     "gpt_trader.tui.widgets.risk_detail_modal": [
-      "tests/unit/gpt_trader/tui/test_snapshots_risk_detail_modal.py",
+      "tests/unit/gpt_trader/tui/test_snapshots_modals.py",
       "tests/unit/gpt_trader/tui/widgets/test_risk_detail_modal_focus_preview.py",
       "tests/unit/gpt_trader/tui/widgets/test_risk_detail_modal_guard_visibility.py",
       "tests/unit/gpt_trader/tui/widgets/test_risk_detail_modal_score.py"
@@ -4716,14 +4707,11 @@
       "gpt_trader.tui.state_management.validators"
     ],
     "tests/unit/gpt_trader/tui/test_app_core.py": [
-      "gpt_trader.core",
-      "gpt_trader.monitoring.status_reporter",
-      "gpt_trader.tui.app"
-    ],
-    "tests/unit/gpt_trader/tui/test_app_resource_cleanup.py": [
       "gpt_trader.config.constants",
+      "gpt_trader.core",
       "gpt_trader.features.brokerages.coinbase.client.base",
       "gpt_trader.features.brokerages.coinbase.ws",
+      "gpt_trader.monitoring.status_reporter",
       "gpt_trader.tui.app",
       "gpt_trader.tui.app_lifecycle",
       "gpt_trader.tui.services.performance_service"
@@ -4815,55 +4803,36 @@
     ],
     "tests/unit/gpt_trader/tui/test_screen_flows_help.py": [
       "gpt_trader.tui.app",
-      "gpt_trader.tui.screens.help"
-    ],
-    "tests/unit/gpt_trader/tui/test_screen_flows_log_focus.py": [
-      "gpt_trader.tui.app",
       "gpt_trader.tui.screens",
+      "gpt_trader.tui.screens.help",
       "gpt_trader.tui.services.action_dispatcher"
     ],
     "tests/unit/gpt_trader/tui/test_screen_flows_quick_navigation_and_state.py": [
       "gpt_trader.tui.app",
-      "gpt_trader.tui.screens.help"
-    ],
-    "tests/unit/gpt_trader/tui/test_screen_flows_shortcuts.py": [
-      "gpt_trader.tui.app",
+      "gpt_trader.tui.screens.help",
       "gpt_trader.tui.widgets"
     ],
     "tests/unit/gpt_trader/tui/test_screens.py": [
       "gpt_trader.tui.screens",
       "gpt_trader.tui.state"
     ],
-    "tests/unit/gpt_trader/tui/test_snapshots_execution_issues_modal.py": [
-      "gpt_trader.tui.app",
-      "gpt_trader.tui.types",
-      "gpt_trader.tui.widgets.execution_issues_modal"
-    ],
-    "tests/unit/gpt_trader/tui/test_snapshots_layout_guardrails.py": [
-      "gpt_trader.tui.app"
-    ],
     "tests/unit/gpt_trader/tui/test_snapshots_main_screen.py": [
       "gpt_trader.tui.app",
       "gpt_trader.tui.theme"
     ],
-    "tests/unit/gpt_trader/tui/test_snapshots_navigation.py": [
-      "gpt_trader.tui.app"
+    "tests/unit/gpt_trader/tui/test_snapshots_modals.py": [
+      "gpt_trader.tui.app",
+      "gpt_trader.tui.types",
+      "gpt_trader.tui.widgets.execution_issues_modal",
+      "gpt_trader.tui.widgets.risk_detail_modal"
     ],
     "tests/unit/gpt_trader/tui/test_snapshots_portfolio_overlays.py": [
       "gpt_trader.tui.app"
-    ],
-    "tests/unit/gpt_trader/tui/test_snapshots_risk_detail_modal.py": [
-      "gpt_trader.tui.app",
-      "gpt_trader.tui.types",
-      "gpt_trader.tui.widgets.risk_detail_modal"
     ],
     "tests/unit/gpt_trader/tui/test_snapshots_strategy_detail_screen.py": [
       "gpt_trader.tui.app",
       "gpt_trader.tui.screens.strategy_detail_screen",
       "gpt_trader.tui.types"
-    ],
-    "tests/unit/gpt_trader/tui/test_snapshots_system_indicators.py": [
-      "gpt_trader.tui.app"
     ],
     "tests/unit/gpt_trader/tui/test_staleness_helpers.py": [
       "gpt_trader.tui.staleness_helpers"
@@ -4902,9 +4871,6 @@
       "gpt_trader.tui.trade_matcher"
     ],
     "tests/unit/gpt_trader/tui/test_widget_interactions_keyboard.py": [
-      "gpt_trader.tui.app"
-    ],
-    "tests/unit/gpt_trader/tui/test_widget_interactions_widgets.py": [
       "gpt_trader.tui.app"
     ],
     "tests/unit/gpt_trader/tui/utilities/test_pnl_formatting.py": [
@@ -5562,8 +5528,8 @@
     "gpt_trader.tui.widgets.market": "src/gpt_trader/tui/widgets/market.py",
     "gpt_trader.tui.risk_guard_explanations": "src/gpt_trader/tui/risk_guard_explanations.py",
     "gpt_trader.tui.risk_preview": "src/gpt_trader/tui/risk_preview.py",
-    "gpt_trader.tui.screens.help": "src/gpt_trader/tui/screens/help.py",
     "gpt_trader.tui.screens": "src/gpt_trader/tui/screens/__init__.py",
+    "gpt_trader.tui.screens.help": "src/gpt_trader/tui/screens/help.py",
     "gpt_trader.tui.widgets.execution_issues_modal": "src/gpt_trader/tui/widgets/execution_issues_modal.py",
     "gpt_trader.tui.widgets.risk_detail_modal": "src/gpt_trader/tui/widgets/risk_detail_modal.py",
     "gpt_trader.tui.staleness_helpers": "src/gpt_trader/tui/staleness_helpers.py",

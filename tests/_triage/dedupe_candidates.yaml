@@ -403,10 +403,11 @@ clusters:
     - gpt_trader.tui.app
     decision: merge
     target_location: tests/unit/gpt_trader/tui/test_app.py
-    expected_file_delta: -15
+    expected_file_delta: -8
     priority: high
-    rationale: Consolidate 16 test files into single parametrized file
-    status: pending
+    rationale: Consolidated 16 -> 8 files (core, flows, snapshots, widgets)
+    status: in_progress
+    owner: codex
     added: '2026-01-20'
   5d813542e360:
     type: source_fanout

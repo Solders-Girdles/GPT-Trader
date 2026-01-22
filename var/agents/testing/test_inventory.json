@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6310,
-    "total_files": 843,
+    "total_files": 835,
     "markers_used": 15
   },
   "marker_definitions": {
@@ -797,7 +797,6 @@
       "tests/unit/gpt_trader/tui/state_management/test_validators_orders_and_trades.py",
       "tests/unit/gpt_trader/tui/state_management/test_validators_result.py",
       "tests/unit/gpt_trader/tui/test_app_core.py",
-      "tests/unit/gpt_trader/tui/test_app_resource_cleanup.py",
       "tests/unit/gpt_trader/tui/test_app_widgets.py",
       "tests/unit/gpt_trader/tui/test_credential_cache.py",
       "tests/unit/gpt_trader/tui/test_degraded_mode.py",
@@ -821,18 +820,12 @@
       "tests/unit/gpt_trader/tui/test_risk_preview_position.py",
       "tests/unit/gpt_trader/tui/test_risk_preview_scenarios.py",
       "tests/unit/gpt_trader/tui/test_screen_flows_help.py",
-      "tests/unit/gpt_trader/tui/test_screen_flows_log_focus.py",
       "tests/unit/gpt_trader/tui/test_screen_flows_quick_navigation_and_state.py",
-      "tests/unit/gpt_trader/tui/test_screen_flows_shortcuts.py",
       "tests/unit/gpt_trader/tui/test_screens.py",
-      "tests/unit/gpt_trader/tui/test_snapshots_execution_issues_modal.py",
-      "tests/unit/gpt_trader/tui/test_snapshots_layout_guardrails.py",
       "tests/unit/gpt_trader/tui/test_snapshots_main_screen.py",
-      "tests/unit/gpt_trader/tui/test_snapshots_navigation.py",
+      "tests/unit/gpt_trader/tui/test_snapshots_modals.py",
       "tests/unit/gpt_trader/tui/test_snapshots_portfolio_overlays.py",
-      "tests/unit/gpt_trader/tui/test_snapshots_risk_detail_modal.py",
       "tests/unit/gpt_trader/tui/test_snapshots_strategy_detail_screen.py",
-      "tests/unit/gpt_trader/tui/test_snapshots_system_indicators.py",
       "tests/unit/gpt_trader/tui/test_staleness_helpers.py",
       "tests/unit/gpt_trader/tui/test_staleness_helpers_banners.py",
       "tests/unit/gpt_trader/tui/test_staleness_helpers_edge.py",
@@ -846,7 +839,6 @@
       "tests/unit/gpt_trader/tui/test_trade_matcher_matching.py",
       "tests/unit/gpt_trader/tui/test_tui_factories.py",
       "tests/unit/gpt_trader/tui/test_widget_interactions_keyboard.py",
-      "tests/unit/gpt_trader/tui/test_widget_interactions_widgets.py",
       "tests/unit/gpt_trader/tui/utilities/test_pnl_formatting.py",
       "tests/unit/gpt_trader/tui/utilities/test_table_formatting.py",
       "tests/unit/gpt_trader/tui/utilities/test_table_formatting_data.py",
@@ -46632,7 +46624,7 @@
     "tests/unit/gpt_trader/tui/test_app_core.py": [
       {
         "name": "test_app_instantiation",
-        "line": 24,
+        "line": 25,
         "markers": [
           "asyncio",
           "unit"
@@ -46641,7 +46633,7 @@
       },
       {
         "name": "test_app_sync_state",
-        "line": 33,
+        "line": 34,
         "markers": [
           "asyncio",
           "unit"
@@ -46650,18 +46642,16 @@
       },
       {
         "name": "test_bootstrap_snapshot_populates_balances_and_equity",
-        "line": 100,
+        "line": 101,
         "markers": [
           "asyncio",
           "unit"
         ],
         "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/tui/test_app_resource_cleanup.py": [
+      },
       {
         "name": "TestResourceCleanup::test_coinbase_client_has_close_method",
-        "line": 12,
+        "line": 121,
         "markers": [
           "unit"
         ],
@@ -46670,7 +46660,7 @@
       },
       {
         "name": "TestResourceCleanup::test_coinbase_client_context_manager",
-        "line": 22,
+        "line": 131,
         "markers": [
           "unit"
         ],
@@ -46679,7 +46669,7 @@
       },
       {
         "name": "TestResourceCleanup::test_websocket_has_close_method",
-        "line": 28,
+        "line": 137,
         "markers": [
           "unit"
         ],
@@ -46688,7 +46678,7 @@
       },
       {
         "name": "TestResourceCleanup::test_websocket_close_is_idempotent",
-        "line": 39,
+        "line": 148,
         "markers": [
           "unit"
         ],
@@ -46697,7 +46687,7 @@
       },
       {
         "name": "TestResourceCleanup::test_performance_service_cleanup",
-        "line": 50,
+        "line": 159,
         "markers": [
           "unit"
         ],
@@ -46706,7 +46696,7 @@
       },
       {
         "name": "TestResourceCleanup::test_app_cleanup_bot_resources_closes_client",
-        "line": 69,
+        "line": 178,
         "markers": [
           "unit"
         ],
@@ -46715,7 +46705,7 @@
       },
       {
         "name": "TestResourceCleanup::test_app_cleanup_bot_resources_closes_websocket",
-        "line": 78,
+        "line": 187,
         "markers": [
           "unit"
         ],
@@ -46724,7 +46714,7 @@
       },
       {
         "name": "TestResourceCleanup::test_app_cleanup_bot_resources_closes_engine_client",
-        "line": 87,
+        "line": 196,
         "markers": [
           "unit"
         ],
@@ -46733,7 +46723,7 @@
       },
       {
         "name": "TestResourceCleanup::test_app_cleanup_handles_missing_resources",
-        "line": 96,
+        "line": 205,
         "markers": [
           "unit"
         ],
@@ -46742,7 +46732,7 @@
       },
       {
         "name": "TestResourceCleanup::test_app_cleanup_handles_close_errors",
-        "line": 107,
+        "line": 216,
         "markers": [
           "unit"
         ],
@@ -46751,7 +46741,7 @@
       },
       {
         "name": "TestResourceCleanup::test_websocket_reconnect_limit_configurable",
-        "line": 119,
+        "line": 228,
         "markers": [
           "unit"
         ],
@@ -48342,7 +48332,7 @@
     "tests/unit/gpt_trader/tui/test_screen_flows_help.py": [
       {
         "name": "TestHelpScreenFlow::test_help_screen_opens_on_question_mark",
-        "line": 19,
+        "line": 22,
         "markers": [
           "asyncio",
           "unit"
@@ -48352,7 +48342,7 @@
       },
       {
         "name": "TestHelpScreenFlow::test_help_screen_closes_on_escape",
-        "line": 33,
+        "line": 36,
         "markers": [
           "asyncio",
           "unit"
@@ -48362,19 +48352,17 @@
       },
       {
         "name": "TestHelpScreenFlow::test_help_screen_closes_on_question_mark",
-        "line": 50,
+        "line": 53,
         "markers": [
           "asyncio",
           "unit"
         ],
         "docstring": "Test that pressing '?' again closes the help screen.",
         "class": "TestHelpScreenFlow"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/test_screen_flows_log_focus.py": [
+      },
       {
         "name": "TestLogFocusFlow::test_logs_focus_on_l",
-        "line": 21,
+        "line": 74,
         "markers": [
           "asyncio",
           "unit"
@@ -48433,12 +48421,10 @@
         ],
         "docstring": "Test that data source mode is preserved during navigation.",
         "class": "TestScreenStatePreservation"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/test_screen_flows_shortcuts.py": [
+      },
       {
         "name": "TestFullLogsScreenFlow::test_full_logs_opens_on_1",
-        "line": 18,
+        "line": 118,
         "markers": [
           "asyncio",
           "unit"
@@ -48448,7 +48434,7 @@
       },
       {
         "name": "TestFullLogsScreenFlow::test_full_logs_closes_on_escape",
-        "line": 31,
+        "line": 131,
         "markers": [
           "asyncio",
           "unit"
@@ -48458,7 +48444,7 @@
       },
       {
         "name": "TestSystemDetailsScreenFlow::test_system_details_opens_on_2",
-        "line": 51,
+        "line": 151,
         "markers": [
           "asyncio",
           "unit"
@@ -48468,7 +48454,7 @@
       },
       {
         "name": "TestSystemDetailsScreenFlow::test_system_details_closes_on_escape",
-        "line": 64,
+        "line": 164,
         "markers": [
           "asyncio",
           "unit"
@@ -48478,7 +48464,7 @@
       },
       {
         "name": "TestConfigModalFlow::test_config_opens_on_c",
-        "line": 84,
+        "line": 184,
         "markers": [
           "asyncio",
           "unit"
@@ -48488,7 +48474,7 @@
       },
       {
         "name": "TestModeInfoFlow::test_mode_info_opens_on_i",
-        "line": 101,
+        "line": 201,
         "markers": [
           "asyncio",
           "unit"
@@ -48508,30 +48494,118 @@
         "class": "TestMainScreen"
       }
     ],
-    "tests/unit/gpt_trader/tui/test_snapshots_execution_issues_modal.py": [
+    "tests/unit/gpt_trader/tui/test_snapshots_main_screen.py": [
       {
-        "name": "TestExecutionIssuesSnapshots::test_exec_issues_modal_with_data",
-        "line": 11,
+        "name": "TestMainScreenSnapshots::test_main_screen_initial_state",
+        "line": 23,
         "markers": [
           "unit"
         ],
-        "docstring": "Snapshot test for ExecutionIssuesModal with rejections and retries.",
-        "class": "TestExecutionIssuesSnapshots"
+        "docstring": "Snapshot test for MainScreen in its initial stopped state.",
+        "class": "TestMainScreenSnapshots"
       },
       {
-        "name": "TestExecutionIssuesSnapshots::test_exec_issues_modal_empty",
-        "line": 63,
+        "name": "TestMainScreenSnapshots::test_main_screen_compact_80x24",
+        "line": 30,
         "markers": [
           "unit"
         ],
-        "docstring": "Snapshot test for ExecutionIssuesModal with no issues.",
-        "class": "TestExecutionIssuesSnapshots"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/test_snapshots_layout_guardrails.py": [
+        "docstring": "Snapshot test for MainScreen in minimum compact terminal (80x24).",
+        "class": "TestMainScreenSnapshots"
+      },
+      {
+        "name": "TestMainScreenSnapshots::test_main_screen_standard_120x40",
+        "line": 37,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Snapshot test for MainScreen in standard terminal (120x40).",
+        "class": "TestMainScreenSnapshots"
+      },
+      {
+        "name": "TestMainScreenSnapshots::test_main_screen_wide_200x50",
+        "line": 44,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Snapshot test for MainScreen in wide terminal (200x50).",
+        "class": "TestMainScreenSnapshots"
+      },
+      {
+        "name": "TestThemeSnapshots::test_main_screen_dark_theme",
+        "line": 55,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Snapshot test for MainScreen with dark theme (default).",
+        "class": "TestThemeSnapshots"
+      },
+      {
+        "name": "TestThemeSnapshots::test_main_screen_light_theme",
+        "line": 62,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Snapshot test for MainScreen with light theme.",
+        "class": "TestThemeSnapshots"
+      },
+      {
+        "name": "TestThemeSnapshots::test_main_screen_high_contrast_theme",
+        "line": 77,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Snapshot test for MainScreen with high-contrast accessibility theme.",
+        "class": "TestThemeSnapshots"
+      },
+      {
+        "name": "TestScreenTransitionSnapshots::test_full_logs_screen",
+        "line": 96,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Snapshot test for full logs screen.",
+        "class": "TestScreenTransitionSnapshots"
+      },
+      {
+        "name": "TestScreenTransitionSnapshots::test_system_details_screen",
+        "line": 109,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Snapshot test for system details screen.",
+        "class": "TestScreenTransitionSnapshots"
+      },
+      {
+        "name": "TestScreenTransitionSnapshots::test_alert_history_screen",
+        "line": 122,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Snapshot test for alert history screen.",
+        "class": "TestScreenTransitionSnapshots"
+      },
+      {
+        "name": "TestFocusStateSnapshots::test_tile_focus_ring",
+        "line": 139,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Snapshot test for tile focus ring visibility.",
+        "class": "TestFocusStateSnapshots"
+      },
+      {
+        "name": "TestFocusStateSnapshots::test_focus_navigation_arrow_keys",
+        "line": 152,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Snapshot test for focus after arrow key navigation.",
+        "class": "TestFocusStateSnapshots"
+      },
       {
         "name": "TestLayoutGuardrails::test_minimum_terminal_size_renders",
-        "line": 12,
+        "line": 170,
         "markers": [
           "asyncio",
           "unit"
@@ -48541,7 +48615,7 @@
       },
       {
         "name": "TestLayoutGuardrails::test_bento_grid_tile_visibility",
-        "line": 21,
+        "line": 179,
         "markers": [
           "asyncio",
           "unit"
@@ -48551,7 +48625,7 @@
       },
       {
         "name": "TestLayoutGuardrails::test_no_overlapping_widgets",
-        "line": 37,
+        "line": 195,
         "markers": [
           "asyncio",
           "unit"
@@ -48560,116 +48634,60 @@
         "class": "TestLayoutGuardrails"
       }
     ],
-    "tests/unit/gpt_trader/tui/test_snapshots_main_screen.py": [
+    "tests/unit/gpt_trader/tui/test_snapshots_modals.py": [
       {
-        "name": "TestMainScreenSnapshots::test_main_screen_initial_state",
-        "line": 17,
+        "name": "TestExecutionIssuesSnapshots::test_exec_issues_modal_with_data",
+        "line": 23,
         "markers": [
           "unit"
         ],
-        "docstring": "Snapshot test for MainScreen in its initial stopped state.",
-        "class": "TestMainScreenSnapshots"
+        "docstring": "Snapshot test for ExecutionIssuesModal with rejections and retries.",
+        "class": "TestExecutionIssuesSnapshots"
       },
       {
-        "name": "TestMainScreenSnapshots::test_main_screen_compact_80x24",
-        "line": 28,
+        "name": "TestExecutionIssuesSnapshots::test_exec_issues_modal_empty",
+        "line": 72,
         "markers": [
           "unit"
         ],
-        "docstring": "Snapshot test for MainScreen in minimum compact terminal (80x24).",
-        "class": "TestMainScreenSnapshots"
+        "docstring": "Snapshot test for ExecutionIssuesModal with no issues.",
+        "class": "TestExecutionIssuesSnapshots"
       },
       {
-        "name": "TestMainScreenSnapshots::test_main_screen_standard_120x40",
-        "line": 39,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Snapshot test for MainScreen in standard terminal (120x40).",
-        "class": "TestMainScreenSnapshots"
-      },
-      {
-        "name": "TestMainScreenSnapshots::test_main_screen_wide_200x50",
-        "line": 50,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Snapshot test for MainScreen in wide terminal (200x50).",
-        "class": "TestMainScreenSnapshots"
-      },
-      {
-        "name": "TestThemeSnapshots::test_main_screen_dark_theme",
-        "line": 65,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Snapshot test for MainScreen with dark theme (default).",
-        "class": "TestThemeSnapshots"
-      },
-      {
-        "name": "TestThemeSnapshots::test_main_screen_light_theme",
-        "line": 76,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Snapshot test for MainScreen with light theme.",
-        "class": "TestThemeSnapshots"
-      },
-      {
-        "name": "TestThemeSnapshots::test_main_screen_high_contrast_theme",
+        "name": "TestRiskPreviewSnapshots::test_risk_preview_safe",
         "line": 94,
         "markers": [
           "unit"
         ],
-        "docstring": "Snapshot test for MainScreen with high-contrast accessibility theme.",
-        "class": "TestThemeSnapshots"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/test_snapshots_navigation.py": [
-      {
-        "name": "TestScreenTransitionSnapshots::test_full_logs_screen",
-        "line": 16,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Snapshot test for full logs screen.",
-        "class": "TestScreenTransitionSnapshots"
+        "docstring": "Snapshot test for Risk Preview in safe state (10% of limit).",
+        "class": "TestRiskPreviewSnapshots"
       },
       {
-        "name": "TestScreenTransitionSnapshots::test_system_details_screen",
-        "line": 32,
+        "name": "TestRiskPreviewSnapshots::test_risk_preview_critical",
+        "line": 116,
         "markers": [
           "unit"
         ],
-        "docstring": "Snapshot test for system details screen.",
-        "class": "TestScreenTransitionSnapshots"
+        "docstring": "Snapshot test for Risk Preview in critical state (70% of limit).",
+        "class": "TestRiskPreviewSnapshots"
       },
       {
-        "name": "TestScreenTransitionSnapshots::test_alert_history_screen",
-        "line": 48,
+        "name": "TestGuardThresholdSnapshots::test_risk_modal_with_active_guards",
+        "line": 143,
         "markers": [
           "unit"
         ],
-        "docstring": "Snapshot test for alert history screen.",
-        "class": "TestScreenTransitionSnapshots"
+        "docstring": "Snapshot test for RiskDetailModal with active guards and explanations.",
+        "class": "TestGuardThresholdSnapshots"
       },
       {
-        "name": "TestFocusStateSnapshots::test_tile_focus_ring",
-        "line": 68,
+        "name": "TestGuardThresholdSnapshots::test_risk_modal_multiple_guard_types",
+        "line": 169,
         "markers": [
           "unit"
         ],
-        "docstring": "Snapshot test for tile focus ring visibility.",
-        "class": "TestFocusStateSnapshots"
-      },
-      {
-        "name": "TestFocusStateSnapshots::test_focus_navigation_arrow_keys",
-        "line": 84,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Snapshot test for focus after arrow key navigation.",
-        "class": "TestFocusStateSnapshots"
+        "docstring": "Snapshot test for RiskDetailModal with multiple guard types.",
+        "class": "TestGuardThresholdSnapshots"
       }
     ],
     "tests/unit/gpt_trader/tui/test_snapshots_portfolio_overlays.py": [
@@ -48728,48 +48746,10 @@
         "class": "TestErrorStateSnapshots"
       }
     ],
-    "tests/unit/gpt_trader/tui/test_snapshots_risk_detail_modal.py": [
-      {
-        "name": "TestRiskPreviewSnapshots::test_risk_preview_safe",
-        "line": 11,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Snapshot test for Risk Preview in safe state (10% of limit).",
-        "class": "TestRiskPreviewSnapshots"
-      },
-      {
-        "name": "TestRiskPreviewSnapshots::test_risk_preview_critical",
-        "line": 36,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Snapshot test for Risk Preview in critical state (70% of limit).",
-        "class": "TestRiskPreviewSnapshots"
-      },
-      {
-        "name": "TestGuardThresholdSnapshots::test_risk_modal_with_active_guards",
-        "line": 66,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Snapshot test for RiskDetailModal with active guards and explanations.",
-        "class": "TestGuardThresholdSnapshots"
-      },
-      {
-        "name": "TestGuardThresholdSnapshots::test_risk_modal_multiple_guard_types",
-        "line": 95,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Snapshot test for RiskDetailModal with multiple guard types.",
-        "class": "TestGuardThresholdSnapshots"
-      }
-    ],
     "tests/unit/gpt_trader/tui/test_snapshots_strategy_detail_screen.py": [
       {
         "name": "TestStrategyDetailSnapshots::test_strategy_detail_signal_details_with_hints",
-        "line": 17,
+        "line": 23,
         "markers": [
           "unit"
         ],
@@ -48778,18 +48758,16 @@
       },
       {
         "name": "TestStrategyDetailSnapshots::test_strategy_detail_backtest_values",
-        "line": 85,
+        "line": 88,
         "markers": [
           "unit"
         ],
         "docstring": "Snapshot test for Strategy Detail with real backtest values.",
         "class": "TestStrategyDetailSnapshots"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/test_snapshots_system_indicators.py": [
+      },
       {
         "name": "TestValidationDisplaySnapshots::test_validation_failures_warning",
-        "line": 16,
+        "line": 139,
         "markers": [
           "unit"
         ],
@@ -48798,7 +48776,7 @@
       },
       {
         "name": "TestValidationDisplaySnapshots::test_validation_escalated_error",
-        "line": 38,
+        "line": 158,
         "markers": [
           "unit"
         ],
@@ -48807,7 +48785,7 @@
       },
       {
         "name": "TestDegradedStateSnapshots::test_degraded_mode_banner",
-        "line": 63,
+        "line": 180,
         "markers": [
           "unit"
         ],
@@ -48816,7 +48794,7 @@
       },
       {
         "name": "TestDegradedStateSnapshots::test_connection_unhealthy_stale_data",
-        "line": 86,
+        "line": 199,
         "markers": [
           "unit"
         ],
@@ -50129,7 +50107,7 @@
     "tests/unit/gpt_trader/tui/test_widget_interactions_keyboard.py": [
       {
         "name": "TestKeyboardNavigation::test_quit_shortcut",
-        "line": 18,
+        "line": 19,
         "markers": [
           "asyncio",
           "unit"
@@ -50139,7 +50117,7 @@
       },
       {
         "name": "TestKeyboardNavigation::test_help_screen_toggle",
-        "line": 28,
+        "line": 29,
         "markers": [
           "asyncio",
           "unit"
@@ -50149,7 +50127,7 @@
       },
       {
         "name": "TestKeyboardNavigation::test_theme_toggle",
-        "line": 38,
+        "line": 39,
         "markers": [
           "asyncio",
           "unit"
@@ -50159,19 +50137,17 @@
       },
       {
         "name": "TestBotControlInteractions::test_start_bot_updates_ui",
-        "line": 51,
+        "line": 52,
         "markers": [
           "asyncio",
           "unit"
         ],
         "docstring": "",
         "class": "TestBotControlInteractions"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/test_widget_interactions_widgets.py": [
+      },
       {
         "name": "TestPortfolioWidgetInteractions::test_log_widget_on_main_screen",
-        "line": 17,
+        "line": 80,
         "markers": [
           "asyncio",
           "unit"
@@ -50181,7 +50157,7 @@
       },
       {
         "name": "TestPortfolioWidgetInteractions::test_portfolio_accessible_via_details",
-        "line": 27,
+        "line": 90,
         "markers": [
           "asyncio",
           "unit"
@@ -50191,7 +50167,7 @@
       },
       {
         "name": "TestDataTableInteractions::test_positions_table_accessible",
-        "line": 42,
+        "line": 105,
         "markers": [
           "asyncio",
           "unit"
@@ -50201,7 +50177,7 @@
       },
       {
         "name": "TestModeIndicator::test_mode_indicator_shows_demo",
-        "line": 53,
+        "line": 116,
         "markers": [
           "asyncio",
           "unit"
@@ -50211,7 +50187,7 @@
       },
       {
         "name": "TestLogWidgetInteractions::test_log_widget_exists",
-        "line": 67,
+        "line": 130,
         "markers": [
           "asyncio",
           "unit"
@@ -50221,7 +50197,7 @@
       },
       {
         "name": "TestLogWidgetInteractions::test_log_level_filter_chips_present",
-        "line": 76,
+        "line": 139,
         "markers": [
           "asyncio",
           "unit"
@@ -50231,7 +50207,7 @@
       },
       {
         "name": "TestStatusBarInteractions::test_status_bar_shows_on_main_screen",
-        "line": 90,
+        "line": 153,
         "markers": [
           "asyncio",
           "unit"
@@ -50241,7 +50217,7 @@
       },
       {
         "name": "TestErrorIndicatorInteractions::test_error_indicator_exists",
-        "line": 101,
+        "line": 164,
         "markers": [
           "asyncio",
           "unit"
@@ -50251,7 +50227,7 @@
       },
       {
         "name": "TestResponsiveLayout::test_app_handles_small_terminal",
-        "line": 112,
+        "line": 175,
         "markers": [
           "asyncio",
           "unit"
@@ -50261,7 +50237,7 @@
       },
       {
         "name": "TestResponsiveLayout::test_app_handles_large_terminal",
-        "line": 120,
+        "line": 183,
         "markers": [
           "asyncio",
           "unit"

@@ -1673,8 +1673,10 @@ clusters:
     target_location: tests/unit/gpt_trader/tui/widgets/test_position_card.py
     expected_file_delta: -3
     priority: low
-    rationale: Consolidate 4 test files into single parametrized file
-    status: pending
+    rationale: Consolidated 4 -> 1 file
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/336
     added: '2026-01-20'
   17fece0a22bc:
     type: similar_names
@@ -1689,8 +1691,10 @@ clusters:
     target_location: tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection.py
     expected_file_delta: -3
     priority: low
-    rationale: Consolidate 4 test files into single parametrized file
-    status: pending
+    rationale: Consolidated 4 -> 1 file
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/336
     added: '2026-01-20'
   1cf535f58810:
     type: similar_names
@@ -2121,8 +2125,10 @@ clusters:
     target_location: tests/unit/gpt_trader/tui/widgets/test_account_widget.py
     expected_file_delta: -3
     priority: low
-    rationale: Consolidate 4 test files into single parametrized file
-    status: pending
+    rationale: Consolidated 4 -> 1 file
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/336
     added: '2026-01-20'
   cd320529fca2:
     type: similar_names
@@ -2216,8 +2222,10 @@ clusters:
     target_location: tests/unit/gpt_trader/tui/widgets/test_system_monitor.py
     expected_file_delta: -2
     priority: low
-    rationale: Consolidate 3 test files into single parametrized file
-    status: pending
+    rationale: Consolidated 3 -> 1 file
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/336
     added: '2026-01-21'
   15c2ae7a8003:
     type: similar_names
@@ -2246,8 +2254,10 @@ clusters:
     target_location: tests/unit/gpt_trader/preflight/test_checks_connectivity.py
     expected_file_delta: -2
     priority: low
-    rationale: Consolidate 3 test files into single parametrized file
-    status: pending
+    rationale: Consolidated 3 -> 1 file
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/336
     added: '2026-01-21'
   19f1bd3c33d4:
     type: similar_names
@@ -2696,8 +2706,10 @@ clusters:
     target_location: tests/unit/gpt_trader/tui/test_risk_preview.py
     expected_file_delta: -2
     priority: low
-    rationale: Consolidate 3 test files into single parametrized file
-    status: pending
+    rationale: Consolidated 3 -> 1 file
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/336
     added: '2026-01-21'
   cdb4985dff87:
     type: similar_names

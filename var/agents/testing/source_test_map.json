@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 720,
+    "tests_scanned": 719,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -808,8 +808,7 @@
     "gpt_trader.features.live_trade.engines.telemetry_streaming": [
       "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_lifecycle.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_loop.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_restart.py"
+      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_loop.py"
     ],
     "gpt_trader.features.live_trade.execution": [
       "tests/integration/test_validation_escalation_metrics.py"
@@ -3161,9 +3160,6 @@
       "gpt_trader.features.live_trade.engines.telemetry_streaming"
     ],
     "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_loop.py": [
-      "gpt_trader.features.live_trade.engines.telemetry_streaming"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_restart.py": [
       "gpt_trader.features.live_trade.engines.telemetry_streaming"
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_api_health_guard.py": [

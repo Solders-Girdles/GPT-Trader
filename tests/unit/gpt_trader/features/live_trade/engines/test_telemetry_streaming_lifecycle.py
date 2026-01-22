@@ -9,62 +9,12 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 
 from gpt_trader.features.live_trade.engines.telemetry_streaming import (
-    _schedule_coroutine,
     _start_streaming,
     _stop_streaming,
+    restart_streaming_if_needed,
+    start_streaming_background,
+    stop_streaming_background,
 )
-
-
-class TestScheduleCoroutine:
-    """Tests for _schedule_coroutine function."""
-
-    @pytest.mark.asyncio
-    async def test_schedule_coroutine_with_running_loop(self) -> None:
-        coordinator = Mock()
-        executed = []
-
-        async def test_coro() -> None:
-            executed.append(True)
-
-        coro = test_coro()
-        _schedule_coroutine(coordinator, coro)
-
-        await asyncio.sleep(0.01)
-
-        assert len(executed) == 1
-
-    def test_schedule_coroutine_no_running_loop(self) -> None:
-        coordinator = Mock()
-        coordinator._loop_task_handle = None
-        executed = []
-
-        async def test_coro() -> None:
-            executed.append(True)
-
-        coro = test_coro()
-        _schedule_coroutine(coordinator, coro)
-
-        assert len(executed) == 1
-
-    def test_schedule_coroutine_via_task_handle(self) -> None:
-        coordinator = Mock()
-
-        mock_loop = Mock()
-        mock_loop.is_running.return_value = True
-        mock_loop.call_soon_threadsafe = Mock()
-
-        mock_task_handle = Mock()
-        mock_task_handle.get_loop.return_value = mock_loop
-
-        coordinator._loop_task_handle = mock_task_handle
-
-        async def test_coro() -> None:
-            pass
-
-        coro = test_coro()
-        _schedule_coroutine(coordinator, coro)
-        mock_loop.call_soon_threadsafe.assert_called_once_with(asyncio.create_task, coro)
-        coro.close()
 
 
 class TestStartStreaming:
@@ -179,3 +129,82 @@ class TestStopStreaming:
         await _stop_streaming(coordinator)
         assert coordinator._stream_task is None
         assert coordinator._loop_task_handle is None
+
+
+class TestStreamingBackground:
+    def test_start_streaming_background_when_disabled(self) -> None:
+        coordinator = Mock()
+        coordinator._should_enable_streaming.return_value = False
+
+        start_streaming_background(coordinator)
+
+        coordinator._schedule_coroutine.assert_not_called()
+
+    def test_start_streaming_background_when_enabled(self) -> None:
+        coordinator = Mock()
+        coordinator._should_enable_streaming.return_value = True
+        coordinator._start_streaming.return_value = AsyncMock()
+
+        start_streaming_background(coordinator)
+
+        coordinator._schedule_coroutine.assert_called_once()
+
+    def test_stop_streaming_background_schedules_stop(self) -> None:
+        coordinator = Mock()
+        coordinator._stop_streaming.return_value = AsyncMock()
+
+        stop_streaming_background(coordinator)
+
+        coordinator._schedule_coroutine.assert_called_once()
+
+
+class TestRestartStreamingIfNeeded:
+    def test_no_restart_for_irrelevant_diff(self) -> None:
+        coordinator = Mock()
+
+        restart_streaming_if_needed(coordinator, {"some_other_key": "value"})
+
+        coordinator._schedule_coroutine.assert_not_called()
+
+    @pytest.mark.parametrize(
+        ("diff", "should_enable"),
+        [
+            ({"perps_enable_streaming": "true"}, False),
+            ({"symbols": ["BTC-PERP"]}, True),
+            ({"perps_stream_level": 2}, True),
+        ],
+    )
+    def test_restart_for_config_change(self, diff: dict, should_enable: bool) -> None:
+        coordinator = Mock()
+        coordinator._should_enable_streaming.return_value = should_enable
+        coordinator._stop_streaming.return_value = None
+        coordinator._start_streaming.return_value = None
+        coordinator._schedule_coroutine.side_effect = lambda coro: asyncio.run(coro)
+        coordinator.context.symbols = ["BTC-PERP"]
+
+        restart_streaming_if_needed(coordinator, diff)
+
+        coordinator._schedule_coroutine.assert_called()
+
+    def test_handles_runtime_error_with_asyncio_run(self) -> None:
+        coordinator = Mock()
+        coordinator._should_enable_streaming.return_value = False
+        coordinator._stop_streaming.return_value = None
+        coordinator._start_streaming = Mock()
+        coordinator._schedule_coroutine.side_effect = RuntimeError(
+            "asyncio.run() cannot be called from a running event loop"
+        )
+
+        restart_streaming_if_needed(coordinator, {"perps_enable_streaming": "false"})
+        coordinator._schedule_coroutine.assert_called_once()
+        coordinator._stop_streaming.assert_called_once()
+        coordinator._start_streaming.assert_not_called()
+
+    def test_reraises_other_runtime_errors(self) -> None:
+        coordinator = Mock()
+        coordinator._should_enable_streaming.return_value = False
+        coordinator._stop_streaming.return_value = None
+        coordinator._schedule_coroutine.side_effect = RuntimeError("Some other error")
+
+        with pytest.raises(RuntimeError, match="Some other error"):
+            restart_streaming_if_needed(coordinator, {"perps_enable_streaming": "false"})

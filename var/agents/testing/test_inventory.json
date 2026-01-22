@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6152,
-    "total_files": 778,
+    "total_tests": 6150,
+    "total_files": 777,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 5987,
+    "unit": 5985,
     "asyncio": 344,
-    "parametrize": 109,
+    "parametrize": 110,
     "property": 82,
     "integration": 79,
     "endpoints": 78,
@@ -388,7 +388,6 @@
       "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_lifecycle.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_loop.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_restart.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_api_health_guard.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_order.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_init_and_metrics.py",
@@ -20041,7 +20040,7 @@
     "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming.py": [
       {
         "name": "TestEmitMetric::test_emit_metric_calls_utility",
-        "line": 24,
+        "line": 25,
         "markers": [
           "unit"
         ],
@@ -20050,7 +20049,7 @@
       },
       {
         "name": "TestShouldEnableStreaming::test_returns_false_for_test_profile",
-        "line": 41,
+        "line": 42,
         "markers": [
           "unit"
         ],
@@ -20059,7 +20058,7 @@
       },
       {
         "name": "TestShouldEnableStreaming::test_returns_false_when_streaming_disabled",
-        "line": 50,
+        "line": 51,
         "markers": [
           "unit"
         ],
@@ -20068,7 +20067,7 @@
       },
       {
         "name": "TestShouldEnableStreaming::test_returns_true_for_prod_with_streaming_enabled",
-        "line": 59,
+        "line": 60,
         "markers": [
           "unit"
         ],
@@ -20077,7 +20076,7 @@
       },
       {
         "name": "TestShouldEnableStreaming::test_returns_true_for_canary_with_streaming_enabled",
-        "line": 68,
+        "line": 69,
         "markers": [
           "unit"
         ],
@@ -20086,7 +20085,7 @@
       },
       {
         "name": "TestShouldEnableStreaming::test_returns_false_for_dev_profile",
-        "line": 77,
+        "line": 78,
         "markers": [
           "unit"
         ],
@@ -20095,7 +20094,7 @@
       },
       {
         "name": "TestShouldEnableStreaming::test_handles_profile_with_value_attribute",
-        "line": 86,
+        "line": 87,
         "markers": [
           "unit"
         ],
@@ -20104,7 +20103,7 @@
       },
       {
         "name": "TestShouldEnableStreaming::test_handles_none_profile",
-        "line": 97,
+        "line": 98,
         "markers": [
           "unit"
         ],
@@ -20113,7 +20112,7 @@
       },
       {
         "name": "TestHandleStreamTaskCompletion::test_clears_coordinator_state",
-        "line": 110,
+        "line": 111,
         "markers": [
           "unit"
         ],
@@ -20122,7 +20121,7 @@
       },
       {
         "name": "TestHandleStreamTaskCompletion::test_handles_cancelled_error",
-        "line": 123,
+        "line": 124,
         "markers": [
           "unit"
         ],
@@ -20130,8 +20129,36 @@
         "class": "TestHandleStreamTaskCompletion"
       },
       {
+        "name": "TestScheduleCoroutine::test_schedule_coroutine_with_running_loop",
+        "line": 139,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestScheduleCoroutine"
+      },
+      {
+        "name": "TestScheduleCoroutine::test_schedule_coroutine_no_running_loop",
+        "line": 153,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestScheduleCoroutine"
+      },
+      {
+        "name": "TestScheduleCoroutine::test_schedule_coroutine_via_task_handle",
+        "line": 166,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestScheduleCoroutine"
+      },
+      {
         "name": "TestRunStreamLoopAsync::test_run_stream_loop_async_calls_sync_version",
-        "line": 138,
+        "line": 191,
         "markers": [
           "asyncio",
           "unit"
@@ -20141,7 +20168,7 @@
       },
       {
         "name": "TestRunStreamLoopAsync::test_run_stream_loop_async_handles_cancellation",
-        "line": 152,
+        "line": 205,
         "markers": [
           "asyncio",
           "unit"
@@ -20152,36 +20179,8 @@
     ],
     "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_lifecycle.py": [
       {
-        "name": "TestScheduleCoroutine::test_schedule_coroutine_with_running_loop",
-        "line": 22,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestScheduleCoroutine"
-      },
-      {
-        "name": "TestScheduleCoroutine::test_schedule_coroutine_no_running_loop",
-        "line": 36,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestScheduleCoroutine"
-      },
-      {
-        "name": "TestScheduleCoroutine::test_schedule_coroutine_via_task_handle",
-        "line": 49,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestScheduleCoroutine"
-      },
-      {
         "name": "TestStartStreaming::test_start_streaming_no_symbols",
-        "line": 74,
+        "line": 24,
         "markers": [
           "asyncio",
           "unit"
@@ -20191,7 +20190,7 @@
       },
       {
         "name": "TestStartStreaming::test_start_streaming_creates_task",
-        "line": 83,
+        "line": 33,
         "markers": [
           "asyncio",
           "unit"
@@ -20201,7 +20200,7 @@
       },
       {
         "name": "TestStartStreaming::test_start_streaming_default_level",
-        "line": 98,
+        "line": 48,
         "markers": [
           "asyncio",
           "unit"
@@ -20211,7 +20210,7 @@
       },
       {
         "name": "TestStartStreaming::test_start_streaming_invalid_level",
-        "line": 110,
+        "line": 60,
         "markers": [
           "asyncio",
           "unit"
@@ -20221,7 +20220,7 @@
       },
       {
         "name": "TestStopStreaming::test_stop_streaming_clears_config",
-        "line": 126,
+        "line": 76,
         "markers": [
           "asyncio",
           "unit"
@@ -20231,7 +20230,7 @@
       },
       {
         "name": "TestStopStreaming::test_stop_streaming_sets_stop_signal",
-        "line": 137,
+        "line": 87,
         "markers": [
           "asyncio",
           "unit"
@@ -20241,7 +20240,7 @@
       },
       {
         "name": "TestStopStreaming::test_stop_streaming_cancels_task",
-        "line": 150,
+        "line": 100,
         "markers": [
           "asyncio",
           "unit"
@@ -20251,13 +20250,77 @@
       },
       {
         "name": "TestStopStreaming::test_stop_streaming_handles_cancelled_error",
-        "line": 166,
+        "line": 116,
         "markers": [
           "asyncio",
           "unit"
         ],
         "docstring": "",
         "class": "TestStopStreaming"
+      },
+      {
+        "name": "TestStreamingBackground::test_start_streaming_background_when_disabled",
+        "line": 135,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestStreamingBackground"
+      },
+      {
+        "name": "TestStreamingBackground::test_start_streaming_background_when_enabled",
+        "line": 143,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestStreamingBackground"
+      },
+      {
+        "name": "TestStreamingBackground::test_stop_streaming_background_schedules_stop",
+        "line": 152,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestStreamingBackground"
+      },
+      {
+        "name": "TestRestartStreamingIfNeeded::test_no_restart_for_irrelevant_diff",
+        "line": 162,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestRestartStreamingIfNeeded"
+      },
+      {
+        "name": "TestRestartStreamingIfNeeded::test_restart_for_config_change",
+        "line": 177,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestRestartStreamingIfNeeded"
+      },
+      {
+        "name": "TestRestartStreamingIfNeeded::test_handles_runtime_error_with_asyncio_run",
+        "line": 189,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestRestartStreamingIfNeeded"
+      },
+      {
+        "name": "TestRestartStreamingIfNeeded::test_reraises_other_runtime_errors",
+        "line": 203,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestRestartStreamingIfNeeded"
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_loop.py": [
@@ -20359,89 +20422,6 @@
         ],
         "docstring": "",
         "class": "TestRunStreamLoop"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming_restart.py": [
-      {
-        "name": "TestStreamingBackground::test_start_streaming_background_when_disabled",
-        "line": 20,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestStreamingBackground"
-      },
-      {
-        "name": "TestStreamingBackground::test_start_streaming_background_when_enabled",
-        "line": 28,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestStreamingBackground"
-      },
-      {
-        "name": "TestStreamingBackground::test_stop_streaming_background_schedules_stop",
-        "line": 37,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestStreamingBackground"
-      },
-      {
-        "name": "TestRestartStreamingIfNeeded::test_no_restart_for_irrelevant_diff",
-        "line": 49,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestRestartStreamingIfNeeded"
-      },
-      {
-        "name": "TestRestartStreamingIfNeeded::test_restart_for_streaming_enable_change",
-        "line": 56,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestRestartStreamingIfNeeded"
-      },
-      {
-        "name": "TestRestartStreamingIfNeeded::test_restart_for_symbols_change",
-        "line": 67,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestRestartStreamingIfNeeded"
-      },
-      {
-        "name": "TestRestartStreamingIfNeeded::test_restart_for_stream_level_change",
-        "line": 79,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestRestartStreamingIfNeeded"
-      },
-      {
-        "name": "TestRestartStreamingIfNeeded::test_handles_runtime_error_with_asyncio_run",
-        "line": 90,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestRestartStreamingIfNeeded"
-      },
-      {
-        "name": "TestRestartStreamingIfNeeded::test_reraises_other_runtime_errors",
-        "line": 104,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestRestartStreamingIfNeeded"
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_api_health_guard.py": [

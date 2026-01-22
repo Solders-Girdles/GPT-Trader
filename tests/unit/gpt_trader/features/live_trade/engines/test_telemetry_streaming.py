@@ -14,6 +14,7 @@ from gpt_trader.features.live_trade.engines.telemetry_streaming import (
     _emit_metric,
     _handle_stream_task_completion,
     _run_stream_loop_async,
+    _schedule_coroutine,
     _should_enable_streaming,
 )
 
@@ -129,6 +130,58 @@ class TestHandleStreamTaskCompletion:
         _handle_stream_task_completion(coordinator, mock_task)
 
         assert coordinator._stream_task is None
+
+
+class TestScheduleCoroutine:
+    """Tests for _schedule_coroutine function."""
+
+    @pytest.mark.asyncio
+    async def test_schedule_coroutine_with_running_loop(self) -> None:
+        coordinator = Mock()
+        executed = []
+
+        async def test_coro() -> None:
+            executed.append(True)
+
+        coro = test_coro()
+        _schedule_coroutine(coordinator, coro)
+
+        await asyncio.sleep(0.01)
+
+        assert len(executed) == 1
+
+    def test_schedule_coroutine_no_running_loop(self) -> None:
+        coordinator = Mock()
+        coordinator._loop_task_handle = None
+        executed = []
+
+        async def test_coro() -> None:
+            executed.append(True)
+
+        coro = test_coro()
+        _schedule_coroutine(coordinator, coro)
+
+        assert len(executed) == 1
+
+    def test_schedule_coroutine_via_task_handle(self) -> None:
+        coordinator = Mock()
+
+        mock_loop = Mock()
+        mock_loop.is_running.return_value = True
+        mock_loop.call_soon_threadsafe = Mock()
+
+        mock_task_handle = Mock()
+        mock_task_handle.get_loop.return_value = mock_loop
+
+        coordinator._loop_task_handle = mock_task_handle
+
+        async def test_coro() -> None:
+            pass
+
+        coro = test_coro()
+        _schedule_coroutine(coordinator, coro)
+        mock_loop.call_soon_threadsafe.assert_called_once_with(asyncio.create_task, coro)
+        coro.close()
 
 
 class TestRunStreamLoopAsync:

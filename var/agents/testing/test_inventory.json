@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6129,
-    "total_files": 761,
+    "total_tests": 6112,
+    "total_files": 760,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 5964,
+    "unit": 5947,
     "asyncio": 344,
-    "parametrize": 115,
+    "parametrize": 124,
     "property": 82,
     "integration": 79,
     "endpoints": 78,
@@ -765,7 +765,6 @@
       "tests/unit/gpt_trader/tui/test_snapshots_strategy_detail_screen.py",
       "tests/unit/gpt_trader/tui/test_staleness_helpers.py",
       "tests/unit/gpt_trader/tui/test_staleness_helpers_banners.py",
-      "tests/unit/gpt_trader/tui/test_staleness_helpers_edge.py",
       "tests/unit/gpt_trader/tui/test_staleness_helpers_execution.py",
       "tests/unit/gpt_trader/tui/test_state_cfm_and_data_staleness.py",
       "tests/unit/gpt_trader/tui/test_state_resilience_and_performance.py",
@@ -47173,359 +47172,191 @@
     ],
     "tests/unit/gpt_trader/tui/test_staleness_helpers.py": [
       {
-        "name": "TestGetDataAgeSeconds::test_returns_none_when_no_data_available",
-        "line": 19,
+        "name": "test_get_data_age_seconds_returns_none",
+        "line": 33,
         "markers": [
+          "parametrize",
           "unit"
         ],
-        "docstring": "Should return None when data_available is False.",
-        "class": "TestGetDataAgeSeconds"
+        "docstring": ""
       },
       {
-        "name": "TestGetDataAgeSeconds::test_returns_none_when_last_fetch_zero",
-        "line": 27,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return None when last_data_fetch is 0.",
-        "class": "TestGetDataAgeSeconds"
-      },
-      {
-        "name": "TestGetDataAgeSeconds::test_returns_age_when_data_available",
-        "line": 35,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return age in seconds when data is available.",
-        "class": "TestGetDataAgeSeconds"
-      },
-      {
-        "name": "TestGetStalenessSeverity::test_returns_critical_when_connection_unhealthy",
-        "line": 49,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return critical when connection_healthy is False.",
-        "class": "TestGetStalenessSeverity"
-      },
-      {
-        "name": "TestGetStalenessSeverity::test_returns_fresh_when_no_data_yet",
-        "line": 58,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return fresh when no data has been fetched.",
-        "class": "TestGetStalenessSeverity"
-      },
-      {
-        "name": "TestGetStalenessSeverity::test_returns_fresh_for_recent_data",
-        "line": 67,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return fresh when data is less than 10s old.",
-        "class": "TestGetStalenessSeverity"
-      },
-      {
-        "name": "TestGetStalenessSeverity::test_returns_stale_for_aging_data",
-        "line": 76,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return stale when data is 10-30s old.",
-        "class": "TestGetStalenessSeverity"
-      },
-      {
-        "name": "TestGetStalenessSeverity::test_returns_critical_for_old_data",
-        "line": 85,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return critical when data is >30s old.",
-        "class": "TestGetStalenessSeverity"
-      },
-      {
-        "name": "TestFormatFreshnessLabel::test_formats_seconds",
-        "line": 98,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should format as seconds for age < 60.",
-        "class": "TestFormatFreshnessLabel"
-      },
-      {
-        "name": "TestFormatFreshnessLabel::test_formats_minutes",
-        "line": 103,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should format as minutes for age 60-3600.",
-        "class": "TestFormatFreshnessLabel"
-      },
-      {
-        "name": "TestFormatFreshnessLabel::test_formats_hours",
-        "line": 108,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should format as hours for age >= 3600.",
-        "class": "TestFormatFreshnessLabel"
-      },
-      {
-        "name": "TestGetFreshnessDisplay::test_returns_syncing_when_fetching",
-        "line": 117,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return syncing when data_fetching is True.",
-        "class": "TestGetFreshnessDisplay"
-      },
-      {
-        "name": "TestGetFreshnessDisplay::test_returns_none_when_no_data",
-        "line": 128,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return None when no data has been fetched.",
-        "class": "TestGetFreshnessDisplay"
-      },
-      {
-        "name": "TestGetFreshnessDisplay::test_returns_dim_for_fresh_data",
-        "line": 137,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return dim styling for fresh data.",
-        "class": "TestGetFreshnessDisplay"
-      },
-      {
-        "name": "TestGetFreshnessDisplay::test_returns_yellow_for_stale_data",
-        "line": 151,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return yellow styling for stale data.",
-        "class": "TestGetFreshnessDisplay"
-      },
-      {
-        "name": "TestGetFreshnessDisplay::test_returns_red_for_critical_data",
-        "line": 165,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return red styling for critical data.",
-        "class": "TestGetFreshnessDisplay"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/test_staleness_helpers_banners.py": [
-      {
-        "name": "TestGetStalenessBanner::test_returns_reconnecting_when_fetching",
-        "line": 18,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return reconnecting banner when data_fetching is True.",
-        "class": "TestGetStalenessBanner"
-      },
-      {
-        "name": "TestGetStalenessBanner::test_returns_degraded_banner",
-        "line": 29,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return degraded banner when in degraded mode.",
-        "class": "TestGetStalenessBanner"
-      },
-      {
-        "name": "TestGetStalenessBanner::test_returns_none_when_fresh",
-        "line": 43,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return None when data is fresh.",
-        "class": "TestGetStalenessBanner"
-      },
-      {
-        "name": "TestGetStalenessBanner::test_returns_warning_when_stale",
-        "line": 57,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return warning when data is stale.",
-        "class": "TestGetStalenessBanner"
-      },
-      {
-        "name": "TestGetStalenessBanner::test_returns_error_when_critical",
-        "line": 75,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return error with reconnect hint when critical.",
-        "class": "TestGetStalenessBanner"
-      },
-      {
-        "name": "TestGetConnectionBanner::test_returns_none_when_stopped",
-        "line": 98,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return None when bot is stopped.",
-        "class": "TestGetConnectionBanner"
-      },
-      {
-        "name": "TestGetConnectionBanner::test_returns_none_for_transitional_states",
-        "line": 107,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return None for connecting/unknown states.",
-        "class": "TestGetConnectionBanner"
-      },
-      {
-        "name": "TestGetConnectionBanner::test_returns_none_for_healthy_states",
-        "line": 117,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return None for healthy connection states.",
-        "class": "TestGetConnectionBanner"
-      },
-      {
-        "name": "TestGetConnectionBanner::test_returns_error_for_disconnected",
-        "line": 127,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return error banner for disconnected state.",
-        "class": "TestGetConnectionBanner"
-      },
-      {
-        "name": "TestGetEmptyStateConfig::test_returns_stopped_config_when_not_running",
-        "line": 143,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return stopped config when bot is not running.",
-        "class": "TestGetEmptyStateConfig"
-      },
-      {
-        "name": "TestGetEmptyStateConfig::test_returns_read_only_config",
-        "line": 154,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return read-only config for read_only mode.",
-        "class": "TestGetEmptyStateConfig"
-      },
-      {
-        "name": "TestGetEmptyStateConfig::test_returns_connection_failed_config",
-        "line": 165,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return connection failed config for error states.",
-        "class": "TestGetEmptyStateConfig"
-      },
-      {
-        "name": "TestGetEmptyStateConfig::test_returns_connecting_config",
-        "line": 176,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return connecting config for transitional states.",
-        "class": "TestGetEmptyStateConfig"
-      },
-      {
-        "name": "TestGetEmptyStateConfig::test_returns_no_data_config",
-        "line": 187,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return no data config when running but no data.",
-        "class": "TestGetEmptyStateConfig"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/test_staleness_helpers_edge.py": [
-      {
-        "name": "TestStalenessEdgeCases::test_get_data_age_with_negative_last_fetch",
-        "line": 21,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that negative last_data_fetch is treated as no data.",
-        "class": "TestStalenessEdgeCases"
-      },
-      {
-        "name": "TestStalenessEdgeCases::test_connection_unhealthy_overrides_to_critical",
-        "line": 29,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that connection_healthy=False always returns critical severity.",
-        "class": "TestStalenessEdgeCases"
-      },
-      {
-        "name": "TestStalenessEdgeCases::test_staleness_banner_with_connection_unhealthy_and_fresh_data",
+        "name": "test_get_data_age_seconds_returns_age_when_available",
         "line": 39,
         "markers": [
           "unit"
         ],
-        "docstring": "Test banner includes reconnect hint when connection unhealthy.",
-        "class": "TestStalenessEdgeCases"
+        "docstring": ""
       },
       {
-        "name": "TestStalenessEdgeCases::test_freshness_display_with_connection_unhealthy",
-        "line": 58,
+        "name": "test_get_staleness_severity_cases",
+        "line": 60,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_format_freshness_label",
+        "line": 87,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_get_freshness_display_returns_syncing_when_fetching",
+        "line": 91,
         "markers": [
           "unit"
         ],
-        "docstring": "Test freshness display returns critical when connection unhealthy.",
-        "class": "TestStalenessEdgeCases"
+        "docstring": ""
       },
       {
-        "name": "TestStalenessEdgeCases::test_staleness_banner_with_none_degraded_reason",
-        "line": 72,
+        "name": "test_get_freshness_display_returns_none_when_no_data",
+        "line": 102,
         "markers": [
           "unit"
         ],
-        "docstring": "Test banner handles None degraded_reason gracefully.",
-        "class": "TestStalenessEdgeCases"
+        "docstring": ""
       },
       {
-        "name": "TestStalenessEdgeCases::test_get_empty_state_config_handles_none_connection_status",
-        "line": 86,
+        "name": "test_get_freshness_display_styles",
+        "line": 121,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/tui/test_staleness_helpers_banners.py": [
+      {
+        "name": "test_get_staleness_banner_returns_reconnecting_when_fetching",
+        "line": 32,
         "markers": [
           "unit"
         ],
-        "docstring": "Test empty state config handles None connection status.",
-        "class": "TestStalenessEdgeCases"
+        "docstring": ""
       },
       {
-        "name": "TestStalenessEdgeCases::test_get_connection_banner_case_insensitive",
-        "line": 97,
+        "name": "test_get_staleness_banner_returns_degraded_banner",
+        "line": 43,
         "markers": [
           "unit"
         ],
-        "docstring": "Test connection banner handles lowercase status.",
-        "class": "TestStalenessEdgeCases"
+        "docstring": ""
       },
       {
-        "name": "TestStalenessEdgeCases::test_staleness_banner_returns_none_no_data_yet",
-        "line": 109,
+        "name": "test_get_staleness_banner_handles_none_degraded_reason",
+        "line": 55,
         "markers": [
           "unit"
         ],
-        "docstring": "Test banner returns None when no data has been fetched yet.",
-        "class": "TestStalenessEdgeCases"
+        "docstring": ""
       },
       {
-        "name": "TestStalenessEdgeCases::test_get_data_age_at_boundary_threshold",
-        "line": 124,
+        "name": "test_get_staleness_banner_staleness_levels",
+        "line": 75,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_get_staleness_banner_connection_unhealthy_with_fresh_data",
+        "line": 96,
         "markers": [
           "unit"
         ],
-        "docstring": "Test staleness exactly at threshold boundaries.",
-        "class": "TestStalenessEdgeCases"
+        "docstring": ""
+      },
+      {
+        "name": "test_get_staleness_banner_returns_none_when_no_data_yet",
+        "line": 108,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_get_connection_banner_returns_none_when_stopped",
+        "line": 114,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_get_connection_banner_returns_none_for_transitional_states",
+        "line": 126,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_get_connection_banner_returns_none_for_healthy_states",
+        "line": 137,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_get_connection_banner_returns_error_for_disconnected",
+        "line": 148,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_get_empty_state_config_stopped_when_not_running",
+        "line": 161,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_get_empty_state_config_read_only",
+        "line": 172,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_get_empty_state_config_connection_failed",
+        "line": 183,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_get_empty_state_config_connecting",
+        "line": 195,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_get_empty_state_config_no_data",
+        "line": 206,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/tui/test_staleness_helpers_execution.py": [

@@ -5,7 +5,7 @@ import os
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock
 
 import pytest
 
@@ -14,6 +14,7 @@ try:
 except ModuleNotFoundError:  # pragma: no cover - optional dependency
     load_dotenv = None  # type: ignore
 
+import gpt_trader.features.brokerages.coinbase.client.websocket_mixin as websocket_mixin_module
 from gpt_trader.app.config import BotConfig
 from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
 from gpt_trader.features.brokerages.coinbase.models import APIConfig
@@ -65,6 +66,13 @@ def coinbase_cdp_credentials() -> CDPCredentials:
         pytest.skip(skip_reason)
 
     return CDPCredentials(api_key=api_key, private_key=private_key)
+
+
+@pytest.fixture
+def mock_websocket_class(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    mock_ws_class = MagicMock()
+    monkeypatch.setattr(websocket_mixin_module, "CoinbaseWebSocket", mock_ws_class)
+    return mock_ws_class
 
 
 @pytest.fixture

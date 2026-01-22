@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 687,
+    "tests_scanned": 683,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -341,8 +341,8 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_accounts_balances_and_products.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_accounts_positions_and_treasury.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_errors.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_data_endpoints.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_data_models.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_models.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_models.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_models_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_perp_rules_and_quantize.py",
@@ -522,17 +522,14 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_response_cache.py"
     ],
     "gpt_trader.features.brokerages.coinbase.client.websocket_mixin": [
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_streaming.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_trades.py"
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_streaming.py"
     ],
     "gpt_trader.features.brokerages.coinbase.credentials": [
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_credentials_resolution.py"
     ],
     "gpt_trader.features.brokerages.coinbase.derivatives_discovery": [
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery_intx.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery_us.py"
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery_markets.py"
     ],
     "gpt_trader.features.brokerages.coinbase.endpoints": [
       "tests/contract/test_coinbase_api_contract.py",
@@ -555,7 +552,7 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_intx_portfolio_service.py"
     ],
     "gpt_trader.features.brokerages.coinbase.market_data_features": [
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_data_models.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_models.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_features.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_market_data.py",
       "tests/unit/gpt_trader/features/research/backtesting/test_data_loader_edges.py"
@@ -573,8 +570,7 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_rest_service_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_accounts_positions_and_treasury.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_auth.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_data_models.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_data_staleness.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_models.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_models.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_models_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_system.py"
@@ -2743,15 +2739,12 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_errors.py": [
       "gpt_trader.core"
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_data_endpoints.py": [
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market.py": [
       "gpt_trader.core"
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_data_models.py": [
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_models.py": [
       "gpt_trader.core",
       "gpt_trader.features.brokerages.coinbase.market_data_features",
-      "gpt_trader.features.brokerages.coinbase.models"
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_data_staleness.py": [
       "gpt_trader.features.brokerages.coinbase.models"
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_models.py": [
@@ -2788,10 +2781,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery.py": [
       "gpt_trader.features.brokerages.coinbase.derivatives_discovery"
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery_intx.py": [
-      "gpt_trader.features.brokerages.coinbase.derivatives_discovery"
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery_us.py": [
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery_markets.py": [
       "gpt_trader.features.brokerages.coinbase.derivatives_discovery"
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_http_request_layer.py": [
@@ -2859,13 +2849,7 @@
       "gpt_trader.features.brokerages.coinbase.ws_events",
       "gpt_trader.persistence.orders_store"
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin.py": [
-      "gpt_trader.features.brokerages.coinbase.client.websocket_mixin"
-    ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_streaming.py": [
-      "gpt_trader.features.brokerages.coinbase.client.websocket_mixin"
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_trades.py": [
       "gpt_trader.features.brokerages.coinbase.client.websocket_mixin"
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events.py": [

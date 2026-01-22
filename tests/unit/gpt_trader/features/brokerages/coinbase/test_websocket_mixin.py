@@ -5,20 +5,10 @@ from __future__ import annotations
 import threading
 from unittest.mock import MagicMock
 
-import pytest
-
-import gpt_trader.features.brokerages.coinbase.client.websocket_mixin as websocket_mixin_module
 from tests.unit.gpt_trader.features.brokerages.coinbase.websocket_mixin_test_helpers import (
     MockWebSocketClient,
     _NonCooperativeClient,
 )
-
-
-@pytest.fixture
-def mock_websocket_class(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
-    mock_ws_class = MagicMock()
-    monkeypatch.setattr(websocket_mixin_module, "CoinbaseWebSocket", mock_ws_class)
-    return mock_ws_class
 
 
 class TestWebSocketClientMixinInitialization:
@@ -169,3 +159,61 @@ class TestGetWSHealth:
             t.join(timeout=5)
         assert len(results) == 50
         assert all(r == {"connected": True} for r in results)
+
+
+class TestStreamControl:
+    """Tests for stream control methods."""
+
+    def test_stop_streaming_disconnects_websocket(self, mock_websocket_class: MagicMock):
+        """stop_streaming should disconnect WebSocket and reset state."""
+        mock_ws = MagicMock()
+        mock_websocket_class.return_value = mock_ws
+
+        client = MockWebSocketClient()
+
+        stop_event = threading.Event()
+        subscribed = threading.Event()
+        mock_ws.subscribe.side_effect = lambda *args, **kwargs: subscribed.set()
+
+        def consume_stream():
+            for _ in client.stream_orderbook(["BTC-USD"], stop_event=stop_event):
+                pass
+
+        thread = threading.Thread(target=consume_stream)
+        thread.start()
+
+        assert subscribed.wait(timeout=1.0)
+
+        client.stop_streaming()
+        thread.join(timeout=2)
+        assert not thread.is_alive()
+
+        mock_ws.disconnect.assert_called_once()
+        assert client._ws is None
+        assert client._stream_active is False
+
+    def test_stop_streaming_handles_disconnect_error(self, mock_websocket_class: MagicMock):
+        """stop_streaming should handle disconnect errors and clear state."""
+        mock_ws = MagicMock()
+        mock_ws.disconnect.side_effect = RuntimeError("disconnect failed")
+        mock_websocket_class.return_value = mock_ws
+
+        client = MockWebSocketClient()
+        client._get_websocket()
+
+        client.stop_streaming()
+
+        assert client._ws is None
+        assert client._stream_active is False
+
+    def test_is_streaming_returns_correct_state(self):
+        """is_streaming should reflect _stream_active flag."""
+        client = MockWebSocketClient()
+
+        assert client.is_streaming() is False
+
+        client._stream_active = True
+        assert client.is_streaming() is True
+
+        client._stream_active = False
+        assert client.is_streaming() is False

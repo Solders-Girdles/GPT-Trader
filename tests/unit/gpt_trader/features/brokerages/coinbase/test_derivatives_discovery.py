@@ -184,3 +184,41 @@ class TestDiscoverDerivativesBoth:
         assert result.error_message is not None
         assert "CFM balance summary unavailable" in result.error_message
         assert "No portfolios accessible" in result.error_message
+
+
+class TestFailOnInaccessible:
+    """Tests for fail_on_inaccessible behavior."""
+
+    def test_fail_on_inaccessible_true_triggers_reduce_only(self) -> None:
+        """Test that fail_on_inaccessible=True triggers reduce-only."""
+        broker = Mock()
+        broker.get_cfm_balance_summary.return_value = None
+
+        result = discover_derivatives_eligibility(
+            broker, requested_market="US", fail_on_inaccessible=True
+        )
+
+        assert result.reduce_only_required is True
+
+    def test_fail_on_inaccessible_false_no_reduce_only(self) -> None:
+        """Test that fail_on_inaccessible=False doesn't trigger reduce-only."""
+        broker = Mock()
+        broker.get_cfm_balance_summary.return_value = None
+
+        result = discover_derivatives_eligibility(
+            broker, requested_market="US", fail_on_inaccessible=False
+        )
+
+        assert result.reduce_only_required is False
+
+    def test_fail_on_inaccessible_when_accessible(self) -> None:
+        """Test that fail_on_inaccessible doesn't affect accessible markets."""
+        broker = Mock()
+        broker.get_cfm_balance_summary.return_value = {"balance": "1000"}
+
+        result = discover_derivatives_eligibility(
+            broker, requested_market="US", fail_on_inaccessible=True
+        )
+
+        assert result.cfm_portfolio_accessible is True
+        assert result.reduce_only_required is False

@@ -53,9 +53,6 @@ class TestCoinbaseMarketDataEndpoints:
 
         expected_result = case.get("expected_result")
         if expected_result is not None:
-            # If expected result has exact match keys, verify them
-            # Since CoinbaseClient.get_ticker normalizes output, we should check subsets or updated expected results
-            # For now, if it's a dict comparison, we check if expected is a subset of result
             if isinstance(expected_result, dict) and isinstance(result, dict):
                 for k, v in expected_result.items():
                     assert result[k] == v
@@ -153,7 +150,6 @@ class TestCoinbaseMarketDataEndpoints:
 
         client.set_transport_for_testing(transport)
         _ = client.list_orders(filter=["a", "b"])
-        # URL should be properly encoded; decode to verify content (use unquote_plus for + as space)
         decoded_url = unquote_plus(urls[0])
         assert "filter=['a', 'b']" in decoded_url
 
@@ -166,7 +162,6 @@ class TestCoinbaseMarketDataEndpoints:
             )
         )
         _ = client.list_orders(note="🚀")
-        # URL should be properly encoded; decode to verify emoji is preserved
         decoded_url = unquote(urls[0])
         assert "🚀" in decoded_url
 
@@ -192,7 +187,6 @@ class TestCoinbaseMarketDataEndpoints:
 
         client.set_transport_for_testing(transport)
         _ = client.list_orders(path="/foo/bar", email="test+user@example.com")
-        # URL should be properly encoded; decode to verify content
         decoded_url = unquote(urls[0])
         assert "path=/foo/bar" in decoded_url
         assert "test+user@example.com" in decoded_url

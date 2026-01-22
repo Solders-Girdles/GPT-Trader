@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6184,
-    "total_files": 800,
+    "total_tests": 6178,
+    "total_files": 799,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 6019,
+    "unit": 6013,
     "asyncio": 345,
-    "parametrize": 96,
+    "parametrize": 98,
     "property": 82,
     "integration": 79,
     "endpoints": 78,
@@ -176,7 +176,6 @@
       "tests/unit/gpt_trader/backtesting/simulation/test_fee_calculator_volume_tracking.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit.py",
-      "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_market.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_queue.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_stop.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_accrual_init.py",
@@ -6076,7 +6075,7 @@
     "tests/unit/gpt_trader/backtesting/simulation/test_fill_model.py": [
       {
         "name": "TestFillResult::test_unfilled_result",
-        "line": 17,
+        "line": 18,
         "markers": [
           "unit"
         ],
@@ -6085,7 +6084,7 @@
       },
       {
         "name": "TestFillResult::test_filled_result",
-        "line": 24,
+        "line": 25,
         "markers": [
           "unit"
         ],
@@ -6093,80 +6092,28 @@
         "class": "TestFillResult"
       },
       {
-        "name": "TestVolumeThreshold::test_sufficient_volume",
-        "line": 42,
+        "name": "TestVolumeThreshold::test_volume_threshold",
+        "line": 51,
         "markers": [
+          "parametrize",
           "unit"
         ],
         "docstring": "Test volume is sufficient when bar_volume >= order_size * threshold.",
         "class": "TestVolumeThreshold"
       },
       {
-        "name": "TestVolumeThreshold::test_exact_threshold_volume",
-        "line": 51,
+        "name": "TestSlippageCalculation::test_slippage_defaults_and_overrides",
+        "line": 74,
         "markers": [
+          "parametrize",
           "unit"
         ],
-        "docstring": "Test exact threshold volume is sufficient.",
-        "class": "TestVolumeThreshold"
-      },
-      {
-        "name": "TestVolumeThreshold::test_insufficient_volume",
-        "line": 60,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test volume is insufficient when below threshold.",
-        "class": "TestVolumeThreshold"
-      },
-      {
-        "name": "TestSlippageCalculation::test_btc_slippage_default",
-        "line": 73,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test BTC pairs use default 2 bps slippage.",
-        "class": "TestSlippageCalculation"
-      },
-      {
-        "name": "TestSlippageCalculation::test_eth_slippage_default",
-        "line": 79,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test ETH pairs use default 2 bps slippage.",
-        "class": "TestSlippageCalculation"
-      },
-      {
-        "name": "TestSlippageCalculation::test_unknown_symbol_default",
-        "line": 85,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test unknown symbols use 5 bps default slippage.",
-        "class": "TestSlippageCalculation"
-      },
-      {
-        "name": "TestSlippageCalculation::test_custom_slippage_override",
-        "line": 91,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test custom slippage overrides defaults.",
-        "class": "TestSlippageCalculation"
-      },
-      {
-        "name": "TestSlippageCalculation::test_btc_perp_uses_btc_default",
-        "line": 97,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test BTC-PERP uses BTC default slippage.",
+        "docstring": "Test slippage defaults and custom overrides.",
         "class": "TestSlippageCalculation"
       },
       {
         "name": "TestSpreadImpact::test_zero_spread_impact",
-        "line": 107,
+        "line": 89,
         "markers": [
           "unit"
         ],
@@ -6175,12 +6122,48 @@
       },
       {
         "name": "TestSpreadImpact::test_full_spread_impact",
-        "line": 131,
+        "line": 113,
         "markers": [
           "unit"
         ],
         "docstring": "Test full spread impact when spread_impact_pct is 1.",
         "class": "TestSpreadImpact"
+      },
+      {
+        "name": "TestMarketOrderFill::test_buy_market_order_fill",
+        "line": 143,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test buy market order fills at next bar open with slippage.",
+        "class": "TestMarketOrderFill"
+      },
+      {
+        "name": "TestMarketOrderFill::test_sell_market_order_fill",
+        "line": 165,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test sell market order fills with slippage working against seller.",
+        "class": "TestMarketOrderFill"
+      },
+      {
+        "name": "TestMarketOrderFill::test_market_order_without_next_bar",
+        "line": 185,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test market order uses current bar close when no next bar.",
+        "class": "TestMarketOrderFill"
+      },
+      {
+        "name": "TestMarketOrderFill::test_market_order_slippage_recorded",
+        "line": 205,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that slippage is recorded in basis points.",
+        "class": "TestMarketOrderFill"
       }
     ],
     "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit.py": [
@@ -6237,48 +6220,10 @@
         ],
         "docstring": "Test that limit order without price raises ValueError.",
         "class": "TestLimitOrderFill"
-      }
-    ],
-    "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_market.py": [
-      {
-        "name": "TestMarketOrderFill::test_buy_market_order_fill",
-        "line": 16,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test buy market order fills at next bar open with slippage.",
-        "class": "TestMarketOrderFill"
-      },
-      {
-        "name": "TestMarketOrderFill::test_sell_market_order_fill",
-        "line": 39,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test sell market order fills with slippage working against seller.",
-        "class": "TestMarketOrderFill"
-      },
-      {
-        "name": "TestMarketOrderFill::test_market_order_without_next_bar",
-        "line": 60,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test market order uses current bar close when no next bar.",
-        "class": "TestMarketOrderFill"
-      },
-      {
-        "name": "TestMarketOrderFill::test_market_order_slippage_recorded",
-        "line": 81,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that slippage is recorded in basis points.",
-        "class": "TestMarketOrderFill"
       },
       {
         "name": "TestPriceTouchLogic::test_buy_limit_touched_at_exact_low",
-        "line": 104,
+        "line": 146,
         "markers": [
           "unit"
         ],
@@ -6287,7 +6232,7 @@
       },
       {
         "name": "TestPriceTouchLogic::test_buy_limit_touched_above_low",
-        "line": 115,
+        "line": 157,
         "markers": [
           "unit"
         ],
@@ -6296,7 +6241,7 @@
       },
       {
         "name": "TestPriceTouchLogic::test_buy_limit_not_touched_below_low",
-        "line": 126,
+        "line": 168,
         "markers": [
           "unit"
         ],
@@ -6305,7 +6250,7 @@
       },
       {
         "name": "TestPriceTouchLogic::test_sell_limit_touched_at_exact_high",
-        "line": 137,
+        "line": 179,
         "markers": [
           "unit"
         ],
@@ -6314,7 +6259,7 @@
       },
       {
         "name": "TestPriceTouchLogic::test_sell_limit_touched_below_high",
-        "line": 148,
+        "line": 190,
         "markers": [
           "unit"
         ],
@@ -6323,7 +6268,7 @@
       },
       {
         "name": "TestPriceTouchLogic::test_sell_limit_not_touched_above_high",
-        "line": 159,
+        "line": 201,
         "markers": [
           "unit"
         ],
@@ -20861,7 +20806,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_retry_flows.py": [
       {
         "name": "test_retry_success_sleeps",
-        "line": 74,
+        "line": 70,
         "markers": [
           "parametrize",
           "unit"
@@ -20870,7 +20815,7 @@
       },
       {
         "name": "test_timeout_path_triggers_retry_with_classification",
-        "line": 103,
+        "line": 99,
         "markers": [
           "unit"
         ],
@@ -20878,7 +20823,7 @@
       },
       {
         "name": "test_non_retryable_errors_stop",
-        "line": 152,
+        "line": 148,
         "markers": [
           "parametrize",
           "unit"
@@ -20887,7 +20832,7 @@
       },
       {
         "name": "test_all_retries_exhausted_raises_last_exception",
-        "line": 178,
+        "line": 174,
         "markers": [
           "unit"
         ],

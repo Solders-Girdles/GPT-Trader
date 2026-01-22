@@ -70,8 +70,7 @@ clusters:
     expected_file_delta: -38
     priority: high
     rationale: Consolidate 39 test files into single parametrized file
-    status: in_progress
-    owner: codex
+    status: pending
     added: '2026-01-22'
   8e91c83ef6d3:
     type: source_fanout
@@ -111,8 +110,7 @@ clusters:
     expected_file_delta: -26
     priority: high
     rationale: Consolidate 27 test files into single parametrized file
-    status: in_progress
-    owner: codex
+    status: pending
     added: '2026-01-21'
   ec9c7f7f07fc:
     type: source_fanout
@@ -146,8 +144,7 @@ clusters:
     expected_file_delta: -20
     priority: high
     rationale: Consolidate 21 test files into single parametrized file
-    status: in_progress
-    owner: codex
+    status: pending
     added: '2026-01-21'
   fec6f0cad78c:
     type: source_fanout
@@ -178,8 +175,7 @@ clusters:
     expected_file_delta: -17
     priority: high
     rationale: Consolidate 18 test files into single parametrized file
-    status: in_progress
-    owner: codex
+    status: pending
     added: '2026-01-22'
   de9414d77913:
     type: source_fanout
@@ -208,8 +204,7 @@ clusters:
     expected_file_delta: -15
     priority: high
     rationale: Consolidate 16 test files into single parametrized file
-    status: in_progress
-    owner: codex
+    status: pending
     added: '2026-01-21'
   9cb5a6f180ea:
     type: source_fanout
@@ -237,8 +232,7 @@ clusters:
     expected_file_delta: -14
     priority: high
     rationale: Consolidate 15 test files into single parametrized file
-    status: in_progress
-    owner: codex
+    status: pending
     added: '2026-01-22'
   71fc6257482d:
     type: source_fanout
@@ -265,8 +259,7 @@ clusters:
     expected_file_delta: -13
     priority: high
     rationale: Consolidate 14 test files into single parametrized file
-    status: in_progress
-    owner: codex
+    status: pending
     added: '2026-01-21'
   8bf4e5e54905:
     type: source_fanout
@@ -293,8 +286,7 @@ clusters:
     expected_file_delta: -13
     priority: high
     rationale: Consolidate 14 test files into single parametrized file
-    status: in_progress
-    owner: codex
+    status: pending
     added: '2026-01-20'
   80ba0a3672df:
     type: source_fanout
@@ -320,8 +312,7 @@ clusters:
     expected_file_delta: -12
     priority: high
     rationale: Consolidate 13 test files into single parametrized file
-    status: in_progress
-    owner: codex
+    status: pending
     added: '2026-01-20'
   8ac1470c0e4c:
     type: source_fanout
@@ -347,8 +338,7 @@ clusters:
     expected_file_delta: -12
     priority: high
     rationale: Consolidate 13 test files into single parametrized file
-    status: in_progress
-    owner: codex
+    status: pending
     added: '2026-01-21'
   28da5bb3a503:
     type: source_fanout
@@ -373,8 +363,7 @@ clusters:
     expected_file_delta: -11
     priority: high
     rationale: Consolidate 12 test files into single parametrized file
-    status: in_progress
-    owner: codex
+    status: pending
     added: '2026-01-21'
   2de7a39a2a29:
     type: source_fanout
@@ -399,8 +388,7 @@ clusters:
     expected_file_delta: -11
     priority: high
     rationale: Consolidate 12 test files into single parametrized file
-    status: in_progress
-    owner: codex
+    status: pending
     added: '2026-01-20'
   b92f170412ac:
     type: source_fanout
@@ -425,8 +413,7 @@ clusters:
     expected_file_delta: -11
     priority: high
     rationale: Consolidate 12 test files into single parametrized file
-    status: in_progress
-    owner: codex
+    status: pending
     added: '2026-01-22'
   20c6dd9ab9e0:
     type: source_fanout
@@ -450,8 +437,7 @@ clusters:
     expected_file_delta: -10
     priority: high
     rationale: Consolidate 11 test files into single parametrized file
-    status: in_progress
-    owner: codex
+    status: pending
     added: '2026-01-20'
   46d16bee6c73:
     type: source_fanout
@@ -475,8 +461,7 @@ clusters:
     expected_file_delta: -10
     priority: high
     rationale: Consolidate 11 test files into single parametrized file
-    status: in_progress
-    owner: codex
+    status: pending
     added: '2026-01-20'
   afceca92d23a:
     type: source_fanout
@@ -500,8 +485,7 @@ clusters:
     expected_file_delta: -10
     priority: high
     rationale: Consolidate 11 test files into single parametrized file
-    status: in_progress
-    owner: codex
+    status: pending
     added: '2026-01-22'
   c1ad21138bd6:
     type: source_fanout

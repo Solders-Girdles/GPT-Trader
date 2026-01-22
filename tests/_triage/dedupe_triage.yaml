@@ -87,6 +87,11 @@ clusters:
     owner: codex
     updated: '2026-01-22'
     reason: Handled via narrower similar_names clusters
+  6435f77a0603:
+    state: rejected
+    owner: codex
+    updated: '2026-01-22'
+    reason: already consolidated into multiple cohesive modules to satisfy hygiene cap; single-file merge not desired
   582004a85380:
     state: deferred
     owner: codex

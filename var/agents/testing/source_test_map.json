@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 662,
+    "tests_scanned": 660,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -1429,9 +1429,7 @@
       "tests/unit/gpt_trader/preflight/test_checks_startup.py"
     ],
     "gpt_trader.preflight.checks.diagnostics": [
-      "tests/unit/gpt_trader/preflight/test_checks_diagnostics_api_health.py",
-      "tests/unit/gpt_trader/preflight/test_checks_diagnostics_broker.py",
-      "tests/unit/gpt_trader/preflight/test_checks_diagnostics_market.py",
+      "tests/unit/gpt_trader/preflight/test_checks_diagnostics.py",
       "tests/unit/gpt_trader/preflight/test_checks_startup.py"
     ],
     "gpt_trader.preflight.checks.environment": [
@@ -3883,13 +3881,7 @@
       "gpt_trader.preflight.checks.connectivity",
       "gpt_trader.preflight.core"
     ],
-    "tests/unit/gpt_trader/preflight/test_checks_diagnostics_api_health.py": [
-      "gpt_trader.preflight.checks.diagnostics"
-    ],
-    "tests/unit/gpt_trader/preflight/test_checks_diagnostics_broker.py": [
-      "gpt_trader.preflight.checks.diagnostics"
-    ],
-    "tests/unit/gpt_trader/preflight/test_checks_diagnostics_market.py": [
+    "tests/unit/gpt_trader/preflight/test_checks_diagnostics.py": [
       "gpt_trader.preflight.checks.diagnostics"
     ],
     "tests/unit/gpt_trader/preflight/test_checks_environment.py": [

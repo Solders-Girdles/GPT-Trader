@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6262,
-    "total_files": 818,
+    "total_tests": 6259,
+    "total_files": 816,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 6097,
+    "unit": 6094,
     "asyncio": 345,
-    "parametrize": 87,
+    "parametrize": 90,
     "property": 82,
     "integration": 79,
     "endpoints": 78,
@@ -261,9 +261,7 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_pagination.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_perform_http_request_and_lifecycle.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_rate_limiting.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_request_client_errors.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_request_happy_path.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_request_retries.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_request.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_circuit_breaker.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_circuit_breaker_client.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_circuit_breaker_registry.py",
@@ -11307,145 +11305,105 @@
         "class": "TestCoinbaseClientBaseRateLimiting"
       }
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_request_client_errors.py": [
+    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_request.py": [
       {
-        "name": "TestCoinbaseClientBaseRequestClientErrors::test_request_4xx_error",
-        "line": 24,
+        "name": "test_request_success",
+        "line": 60,
         "markers": [
           "unit"
         ],
-        "docstring": "Test request with 4xx error.",
-        "class": "TestCoinbaseClientBaseRequestClientErrors"
+        "docstring": ""
       },
       {
-        "name": "TestCoinbaseClientBaseRequestClientErrors::test_request_4xx_invalid_json_uses_text",
-        "line": 38,
+        "name": "test_request_with_body",
+        "line": 75,
         "markers": [
           "unit"
         ],
-        "docstring": "Test 4xx errors fall back to raw response text.",
-        "class": "TestCoinbaseClientBaseRequestClientErrors"
+        "docstring": ""
       },
       {
-        "name": "TestCoinbaseClientBaseRequestClientErrors::test_raise_client_error_forbidden",
-        "line": 48,
+        "name": "test_request_no_auth",
+        "line": 87,
         "markers": [
           "unit"
         ],
-        "docstring": "Test non-400 errors map to appropriate client errors.",
-        "class": "TestCoinbaseClientBaseRequestClientErrors"
+        "docstring": ""
       },
       {
-        "name": "TestCoinbaseClientBaseRequestClientErrors::test_request_invalid_json_response",
-        "line": 58,
+        "name": "test_request_with_correlation_id",
+        "line": 96,
         "markers": [
           "unit"
         ],
-        "docstring": "Test request with invalid JSON response.",
-        "class": "TestCoinbaseClientBaseRequestClientErrors"
+        "docstring": ""
       },
       {
-        "name": "TestCoinbaseClientBaseRequestClientErrors::test_request_empty_response",
-        "line": 69,
+        "name": "test_request_4xx_error_variants",
+        "line": 115,
         "markers": [
+          "parametrize",
           "unit"
         ],
-        "docstring": "Test request with empty response.",
-        "class": "TestCoinbaseClientBaseRequestClientErrors"
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_request_happy_path.py": [
-      {
-        "name": "TestCoinbaseClientBaseRequestHappyPath::test_request_success",
-        "line": 21,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test successful request.",
-        "class": "TestCoinbaseClientBaseRequestHappyPath"
+        "docstring": ""
       },
       {
-        "name": "TestCoinbaseClientBaseRequestHappyPath::test_request_with_body",
-        "line": 43,
+        "name": "test_raise_client_error_forbidden",
+        "line": 124,
         "markers": [
           "unit"
         ],
-        "docstring": "Test request with body.",
-        "class": "TestCoinbaseClientBaseRequestHappyPath"
+        "docstring": ""
       },
       {
-        "name": "TestCoinbaseClientBaseRequestHappyPath::test_request_no_auth",
-        "line": 64,
+        "name": "test_request_non_json_payloads",
+        "line": 138,
         "markers": [
+          "parametrize",
           "unit"
         ],
-        "docstring": "Test request without authentication.",
-        "class": "TestCoinbaseClientBaseRequestHappyPath"
+        "docstring": ""
       },
       {
-        "name": "TestCoinbaseClientBaseRequestHappyPath::test_request_with_correlation_id",
-        "line": 78,
+        "name": "test_request_rate_limit_retries",
+        "line": 152,
         "markers": [
+          "parametrize",
           "unit"
         ],
-        "docstring": "Test request with correlation ID.",
-        "class": "TestCoinbaseClientBaseRequestHappyPath"
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_request_retries.py": [
-      {
-        "name": "TestCoinbaseClientBaseRequestRetries::test_request_rate_limit_invalid_retry_after",
-        "line": 30,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test rate limit retry-after defaults on invalid header.",
-        "class": "TestCoinbaseClientBaseRequestRetries"
+        "docstring": ""
       },
       {
-        "name": "TestCoinbaseClientBaseRequestRetries::test_request_rate_limit_exhausts_retries",
-        "line": 45,
+        "name": "test_request_rate_limit_exhausts_retries",
+        "line": 172,
         "markers": [
           "unit"
         ],
-        "docstring": "Test rate limit errors exhaust retries and raise.",
-        "class": "TestCoinbaseClientBaseRequestRetries"
+        "docstring": ""
       },
       {
-        "name": "TestCoinbaseClientBaseRequestRetries::test_request_5xx_error_with_retry",
-        "line": 55,
+        "name": "test_request_5xx_error_with_retry",
+        "line": 181,
         "markers": [
           "unit"
         ],
-        "docstring": "Test request with 5xx error and retry.",
-        "class": "TestCoinbaseClientBaseRequestRetries"
+        "docstring": ""
       },
       {
-        "name": "TestCoinbaseClientBaseRequestRetries::test_request_rate_limit_error_with_retry_after",
-        "line": 74,
+        "name": "test_request_network_error_with_retry",
+        "line": 201,
         "markers": [
           "unit"
         ],
-        "docstring": "Test request with rate limit error and retry-after header.",
-        "class": "TestCoinbaseClientBaseRequestRetries"
+        "docstring": ""
       },
       {
-        "name": "TestCoinbaseClientBaseRequestRetries::test_request_network_error_with_retry",
-        "line": 89,
+        "name": "test_request_max_retries_exceeded",
+        "line": 221,
         "markers": [
           "unit"
         ],
-        "docstring": "Test request with network error and retry.",
-        "class": "TestCoinbaseClientBaseRequestRetries"
-      },
-      {
-        "name": "TestCoinbaseClientBaseRequestRetries::test_request_max_retries_exceeded",
-        "line": 112,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test request with max retries exceeded.",
-        "class": "TestCoinbaseClientBaseRequestRetries"
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_circuit_breaker.py": [
@@ -22663,7 +22621,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability.py": [
       {
         "name": "test_classify_rejection_reason",
-        "line": 64,
+        "line": 71,
         "markers": [
           "usefixtures",
           "parametrize",
@@ -22673,7 +22631,7 @@
       },
       {
         "name": "test_record_preview_emits_metric",
-        "line": 68,
+        "line": 75,
         "markers": [
           "usefixtures",
           "unit"
@@ -22682,7 +22640,7 @@
       },
       {
         "name": "test_record_preview_skips_none",
-        "line": 77,
+        "line": 84,
         "markers": [
           "usefixtures",
           "unit"
@@ -22691,7 +22649,7 @@
       },
       {
         "name": "test_record_preview_market_price",
-        "line": 82,
+        "line": 89,
         "markers": [
           "usefixtures",
           "unit"
@@ -22700,7 +22658,7 @@
       },
       {
         "name": "test_record_preview_suppresses_logger_errors",
-        "line": 87,
+        "line": 94,
         "markers": [
           "usefixtures",
           "unit"
@@ -22709,7 +22667,7 @@
       },
       {
         "name": "test_record_rejection_logs_and_emits",
-        "line": 98,
+        "line": 105,
         "markers": [
           "usefixtures",
           "unit"
@@ -22718,7 +22676,7 @@
       },
       {
         "name": "test_record_rejection_client_order_id",
-        "line": 111,
+        "line": 118,
         "markers": [
           "usefixtures",
           "parametrize",
@@ -22728,7 +22686,7 @@
       },
       {
         "name": "test_record_rejection_with_none_price",
-        "line": 128,
+        "line": 135,
         "markers": [
           "usefixtures",
           "unit"
@@ -22737,7 +22695,7 @@
       },
       {
         "name": "test_rejection_from_broker_status_includes_classified_reason",
-        "line": 133,
+        "line": 140,
         "markers": [
           "usefixtures",
           "unit"
@@ -22746,7 +22704,7 @@
       },
       {
         "name": "test_exception_rejection_uses_classified_reason",
-        "line": 173,
+        "line": 180,
         "markers": [
           "usefixtures",
           "unit"
@@ -22755,7 +22713,7 @@
       },
       {
         "name": "test_order_context_set_during_submission",
-        "line": 185,
+        "line": 192,
         "markers": [
           "usefixtures",
           "unit"
@@ -22764,7 +22722,7 @@
       },
       {
         "name": "test_correlation_context_preserved_during_submission",
-        "line": 198,
+        "line": 205,
         "markers": [
           "usefixtures",
           "unit"
@@ -22773,7 +22731,7 @@
       },
       {
         "name": "test_order_context_cleared_after_submission",
-        "line": 220,
+        "line": 227,
         "markers": [
           "usefixtures",
           "unit"
@@ -22802,7 +22760,7 @@
       },
       {
         "name": "test_classification_label_used_in_metrics",
-        "line": 90,
+        "line": 92,
         "markers": [
           "unit"
         ],
@@ -22810,7 +22768,7 @@
       },
       {
         "name": "test_successful_submission_records_latency_histogram",
-        "line": 111,
+        "line": 113,
         "markers": [
           "unit"
         ],
@@ -22818,7 +22776,7 @@
       },
       {
         "name": "test_failed_submission_records_latency_with_failure_result",
-        "line": 135,
+        "line": 137,
         "markers": [
           "unit"
         ],
@@ -22836,7 +22794,7 @@
       },
       {
         "name": "test_handle_order_failure_suppresses_event_store_exception",
-        "line": 72,
+        "line": 74,
         "markers": [
           "unit"
         ],
@@ -22844,7 +22802,7 @@
       },
       {
         "name": "test_handle_order_result_tracks_success",
-        "line": 88,
+        "line": 90,
         "markers": [
           "unit"
         ],
@@ -22852,7 +22810,7 @@
       },
       {
         "name": "test_handle_order_result_none_order_returns_none",
-        "line": 100,
+        "line": 102,
         "markers": [
           "unit"
         ],
@@ -22860,7 +22818,7 @@
       },
       {
         "name": "test_handle_order_result_missing_id_returns_none",
-        "line": 106,
+        "line": 108,
         "markers": [
           "unit"
         ],
@@ -22868,7 +22826,7 @@
       },
       {
         "name": "test_handle_order_result_rejected_status_raises",
-        "line": 115,
+        "line": 117,
         "markers": [
           "unit"
         ],
@@ -22876,7 +22834,7 @@
       },
       {
         "name": "test_handle_order_result_integration_mode_returns_order",
-        "line": 128,
+        "line": 130,
         "markers": [
           "unit"
         ],
@@ -22884,7 +22842,7 @@
       },
       {
         "name": "test_process_rejection_integration_mode_stores_event",
-        "line": 148,
+        "line": 150,
         "markers": [
           "unit"
         ],
@@ -22892,7 +22850,7 @@
       },
       {
         "name": "test_process_rejection_normal_mode_raises",
-        "line": 183,
+        "line": 185,
         "markers": [
           "unit"
         ],

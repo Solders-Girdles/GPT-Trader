@@ -1978,11 +1978,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/validation/test_data_validators.py
-    expected_file_delta: -2
+    expected_file_delta: -1
     priority: low
-    rationale: Consolidate 3 test files into single parametrized file
-    status: in_progress
+    rationale: Consolidated dataframe/series coverage into one module to stay under hygiene cap
+    status: done
     owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/390
     added: '2026-01-20'
   24df30e9af97:
     type: similar_names
@@ -2403,11 +2404,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/validation/test_config_validators.py
-    expected_file_delta: -2
+    expected_file_delta: -1
     priority: low
-    rationale: Consolidate 3 test files into single parametrized file
-    status: in_progress
+    rationale: Consolidated validator types into core module to stay under hygiene cap
+    status: done
     owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/390
     added: '2026-01-20'
   f9cf9481c6bd:
     type: similar_names

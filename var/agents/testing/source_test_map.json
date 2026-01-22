@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 663,
+    "tests_scanned": 662,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -880,6 +880,7 @@
       "tests/unit/gpt_trader/features/live_trade/execution/test_volatility_guard.py"
     ],
     "gpt_trader.features.live_trade.indicators": [
+      "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_algorithm.py",
       "tests/unit/gpt_trader/features/live_trade/test_indicators.py",
       "tests/unit/gpt_trader/features/live_trade/test_indicators_atr.py"
@@ -996,8 +997,7 @@
     ],
     "gpt_trader.features.live_trade.stateful_indicators": [
       "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators.py",
-      "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_algorithm.py",
-      "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_primitives.py"
+      "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_algorithm.py"
     ],
     "gpt_trader.features.live_trade.strategies.base": [
       "tests/unit/gpt_trader/features/live_trade/signals/test_order_flow.py",
@@ -3342,13 +3342,11 @@
       "gpt_trader.features.live_trade.strategies.stateful"
     ],
     "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators.py": [
+      "gpt_trader.features.live_trade.indicators",
       "gpt_trader.features.live_trade.stateful_indicators"
     ],
     "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_algorithm.py": [
       "gpt_trader.features.live_trade.indicators",
-      "gpt_trader.features.live_trade.stateful_indicators"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_primitives.py": [
       "gpt_trader.features.live_trade.stateful_indicators"
     ],
     "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_perps_baseline_edges.py": [
@@ -4746,8 +4744,8 @@
     "gpt_trader.features.live_trade.strategies.ensemble": "src/gpt_trader/features/live_trade/strategies/ensemble.py",
     "gpt_trader.features.live_trade.strategies.regime_switcher": "src/gpt_trader/features/live_trade/strategies/regime_switcher/__init__.py",
     "gpt_trader.features.live_trade.strategies.stateful": "src/gpt_trader/features/live_trade/strategies/stateful.py",
-    "gpt_trader.features.live_trade.stateful_indicators": "src/gpt_trader/features/live_trade/stateful_indicators.py",
     "gpt_trader.features.live_trade.indicators": "src/gpt_trader/features/live_trade/indicators.py",
+    "gpt_trader.features.live_trade.stateful_indicators": "src/gpt_trader/features/live_trade/stateful_indicators.py",
     "gpt_trader.features.live_trade.strategies.perps_baseline.stateful": "src/gpt_trader/features/live_trade/strategies/perps_baseline/stateful.py",
     "gpt_trader.features.live_trade.telemetry.account": "src/gpt_trader/features/live_trade/telemetry/account.py",
     "gpt_trader.monitoring": "src/gpt_trader/monitoring/__init__.py",

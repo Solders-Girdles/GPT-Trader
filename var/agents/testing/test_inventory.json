@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6031,
-    "total_files": 723,
+    "total_files": 722,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -335,9 +335,8 @@
       "tests/unit/gpt_trader/features/data/test_data_module_store_and_fetch.py",
       "tests/unit/gpt_trader/features/data/test_quality.py",
       "tests/unit/gpt_trader/features/data/test_quality_candles.py",
-      "tests/unit/gpt_trader/features/intelligence/backtesting/test_batch_regime_detector.py",
+      "tests/unit/gpt_trader/features/intelligence/backtesting/test_batch_regime.py",
       "tests/unit/gpt_trader/features/intelligence/backtesting/test_batch_regime_history.py",
-      "tests/unit/gpt_trader/features/intelligence/backtesting/test_batch_regime_snapshot.py",
       "tests/unit/gpt_trader/features/intelligence/ensemble/test_adaptive_strategy_performance.py",
       "tests/unit/gpt_trader/features/intelligence/ensemble/test_adaptive_weight_updater.py",
       "tests/unit/gpt_trader/features/intelligence/ensemble/test_orchestrator_crisis_mode.py",
@@ -17368,10 +17367,10 @@
         "class": "TestCheckCandles"
       }
     ],
-    "tests/unit/gpt_trader/features/intelligence/backtesting/test_batch_regime_detector.py": [
+    "tests/unit/gpt_trader/features/intelligence/backtesting/test_batch_regime.py": [
       {
         "name": "TestBatchRegimeDetector::test_process_prices",
-        "line": 16,
+        "line": 20,
         "markers": [
           "unit"
         ],
@@ -17380,7 +17379,7 @@
       },
       {
         "name": "TestBatchRegimeDetector::test_process_with_timestamps",
-        "line": 32,
+        "line": 36,
         "markers": [
           "unit"
         ],
@@ -17389,7 +17388,7 @@
       },
       {
         "name": "TestBatchRegimeDetector::test_process_volatile_prices",
-        "line": 49,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -17398,7 +17397,7 @@
       },
       {
         "name": "TestBatchRegimeDetector::test_process_trending_prices",
-        "line": 73,
+        "line": 77,
         "markers": [
           "unit"
         ],
@@ -17407,7 +17406,7 @@
       },
       {
         "name": "TestBatchRegimeDetector::test_reset",
-        "line": 92,
+        "line": 96,
         "markers": [
           "unit"
         ],
@@ -17416,12 +17415,39 @@
       },
       {
         "name": "TestBatchRegimeDetector::test_process_candles_interface",
-        "line": 106,
+        "line": 110,
         "markers": [
           "unit"
         ],
         "docstring": "Test process_candles convenience method.",
         "class": "TestBatchRegimeDetector"
+      },
+      {
+        "name": "TestRegimeSnapshot::test_create_snapshot",
+        "line": 140,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test creating a regime snapshot.",
+        "class": "TestRegimeSnapshot"
+      },
+      {
+        "name": "TestRegimeSnapshot::test_snapshot_with_advanced_indicators",
+        "line": 154,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test snapshot with advanced indicator values.",
+        "class": "TestRegimeSnapshot"
+      },
+      {
+        "name": "TestRegimeSnapshot::test_to_dict",
+        "line": 172,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test snapshot serialization.",
+        "class": "TestRegimeSnapshot"
       }
     ],
     "tests/unit/gpt_trader/features/intelligence/backtesting/test_batch_regime_history.py": [
@@ -17523,35 +17549,6 @@
         ],
         "docstring": "Test DataFrame row generation.",
         "class": "TestRegimeHistory"
-      }
-    ],
-    "tests/unit/gpt_trader/features/intelligence/backtesting/test_batch_regime_snapshot.py": [
-      {
-        "name": "TestRegimeSnapshot::test_create_snapshot",
-        "line": 15,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test creating a regime snapshot.",
-        "class": "TestRegimeSnapshot"
-      },
-      {
-        "name": "TestRegimeSnapshot::test_snapshot_with_advanced_indicators",
-        "line": 29,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test snapshot with advanced indicator values.",
-        "class": "TestRegimeSnapshot"
-      },
-      {
-        "name": "TestRegimeSnapshot::test_to_dict",
-        "line": 47,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test snapshot serialization.",
-        "class": "TestRegimeSnapshot"
       }
     ],
     "tests/unit/gpt_trader/features/intelligence/ensemble/test_adaptive_strategy_performance.py": [

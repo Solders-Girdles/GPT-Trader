@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 664,
+    "tests_scanned": 663,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -657,9 +657,8 @@
       "tests/unit/gpt_trader/features/data/test_data_module_store_and_fetch.py"
     ],
     "gpt_trader.features.intelligence.backtesting.batch_regime": [
-      "tests/unit/gpt_trader/features/intelligence/backtesting/test_batch_regime_detector.py",
-      "tests/unit/gpt_trader/features/intelligence/backtesting/test_batch_regime_history.py",
-      "tests/unit/gpt_trader/features/intelligence/backtesting/test_batch_regime_snapshot.py"
+      "tests/unit/gpt_trader/features/intelligence/backtesting/test_batch_regime.py",
+      "tests/unit/gpt_trader/features/intelligence/backtesting/test_batch_regime_history.py"
     ],
     "gpt_trader.features.intelligence.ensemble.adaptive": [
       "tests/unit/gpt_trader/features/intelligence/ensemble/test_adaptive_strategy_performance.py",
@@ -700,8 +699,8 @@
       "tests/unit/gpt_trader/features/intelligence/sizing/test_position_sizer.py"
     ],
     "gpt_trader.features.intelligence.regime.models": [
+      "tests/unit/gpt_trader/features/intelligence/backtesting/test_batch_regime.py",
       "tests/unit/gpt_trader/features/intelligence/backtesting/test_batch_regime_history.py",
-      "tests/unit/gpt_trader/features/intelligence/backtesting/test_batch_regime_snapshot.py",
       "tests/unit/gpt_trader/features/intelligence/ensemble/test_adaptive_strategy_performance.py",
       "tests/unit/gpt_trader/features/intelligence/ensemble/test_adaptive_weight_updater.py",
       "tests/unit/gpt_trader/features/intelligence/ensemble/test_orchestrator_crisis_mode.py",
@@ -2877,14 +2876,11 @@
       "gpt_trader.core",
       "gpt_trader.features.data.quality"
     ],
-    "tests/unit/gpt_trader/features/intelligence/backtesting/test_batch_regime_detector.py": [
-      "gpt_trader.features.intelligence.backtesting.batch_regime"
-    ],
-    "tests/unit/gpt_trader/features/intelligence/backtesting/test_batch_regime_history.py": [
+    "tests/unit/gpt_trader/features/intelligence/backtesting/test_batch_regime.py": [
       "gpt_trader.features.intelligence.backtesting.batch_regime",
       "gpt_trader.features.intelligence.regime.models"
     ],
-    "tests/unit/gpt_trader/features/intelligence/backtesting/test_batch_regime_snapshot.py": [
+    "tests/unit/gpt_trader/features/intelligence/backtesting/test_batch_regime_history.py": [
       "gpt_trader.features.intelligence.backtesting.batch_regime",
       "gpt_trader.features.intelligence.regime.models"
     ],

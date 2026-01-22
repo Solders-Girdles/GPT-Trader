@@ -2131,10 +2131,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/monitoring/test_metrics_collector.py
-    expected_file_delta: -2
+    expected_file_delta: -1
     priority: low
-    rationale: Consolidate 3 test files into single parametrized file
-    status: pending
+    rationale: Consolidated edges and summary coverage into histogram suite for hygiene cap
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/398
     added: '2026-01-20'
   57a66f3200c9:
     type: similar_names
@@ -2396,10 +2398,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/monitoring/test_health_signals.py
-    expected_file_delta: -2
+    expected_file_delta: -1
     priority: low
-    rationale: Consolidate 3 test files into single parametrized file
-    status: pending
+    rationale: Consolidated thresholds into core health signals while keeping summary separate
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/398
     added: '2026-01-20'
   cdb4985dff87:
     type: similar_names

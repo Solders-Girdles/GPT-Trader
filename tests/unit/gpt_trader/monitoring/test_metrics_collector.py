@@ -117,44 +117,6 @@ class TestGauges:
         assert collector.gauges["gpt_trader_ws_gap_count"] == 5.0
 
 
-class TestMetricsSummary:
-    """Tests for get_metrics_summary."""
-
-    def test_summary_shape(self):
-        """Test that summary has correct shape."""
-        record_counter("counter1", labels={"type": "a"})
-        record_gauge("gauge1", 100.0)
-        record_histogram("hist1", 0.5, labels={"result": "ok"})
-
-        collector = get_metrics_collector()
-        summary = collector.get_metrics_summary()
-
-        assert "timestamp" in summary
-        assert "counters" in summary
-        assert "gauges" in summary
-        assert "histograms" in summary
-
-        # Check types
-        assert isinstance(summary["counters"], dict)
-        assert isinstance(summary["gauges"], dict)
-        assert isinstance(summary["histograms"], dict)
-
-    def test_summary_includes_all_metrics(self):
-        """Test that summary includes all recorded metrics."""
-        record_counter("c1")
-        record_counter("c2", labels={"x": "y"})
-        record_gauge("g1", 1.0)
-        record_histogram("h1", 0.1)
-
-        collector = get_metrics_collector()
-        summary = collector.get_metrics_summary()
-
-        assert "c1" in summary["counters"]
-        assert "c2{x=y}" in summary["counters"]
-        assert "g1" in summary["gauges"]
-        assert "h1" in summary["histograms"]
-
-
 class TestResetAll:
     """Tests for reset_all functionality."""
 

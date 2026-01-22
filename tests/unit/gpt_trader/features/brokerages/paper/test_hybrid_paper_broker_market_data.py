@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import MagicMock, Mock
 
 import pytest
 
-import gpt_trader.features.brokerages.paper.hybrid as hybrid_module
 from gpt_trader.core import MarketType
 from gpt_trader.features.brokerages.paper.hybrid import HybridPaperBroker
 
@@ -16,16 +14,30 @@ class TestHybridPaperBrokerMarketData:
     """Test HybridPaperBroker market data methods."""
 
     @pytest.fixture
-    def broker(self, monkeypatch: pytest.MonkeyPatch) -> HybridPaperBroker:
+    def broker(self, broker_factory) -> HybridPaperBroker:
         """Create broker fixture with mocked client."""
-        monkeypatch.setattr(hybrid_module, "CoinbaseClient", MagicMock())
-        monkeypatch.setattr(hybrid_module, "SimpleAuth", MagicMock())
-        broker = HybridPaperBroker(
-            api_key="test_key",
-            private_key="test_private_key",
-        )
-        broker._client = Mock()
-        return broker
+        return broker_factory()
+
+    def test_start_market_data_prefetches_quotes(self, broker: HybridPaperBroker) -> None:
+        """Test start_market_data prefetches quotes."""
+        broker._client.get_market_product_ticker.return_value = {
+            "best_bid": "50000",
+            "best_ask": "50100",
+            "trades": [{"price": "50050"}],
+        }
+
+        broker.start_market_data(["BTC-USD", "ETH-USD"])
+
+        assert broker._client.get_market_product_ticker.call_count == 2
+
+    def test_stop_market_data_noop(self, broker: HybridPaperBroker) -> None:
+        """Test stop_market_data is no-op."""
+        broker._last_prices["BTC-USD"] = Decimal("50000")
+
+        result = broker.stop_market_data()
+
+        assert result is None
+        assert broker._last_prices["BTC-USD"] == Decimal("50000")
 
     def test_get_product_from_cache(self, broker: HybridPaperBroker) -> None:
         """Test get_product returns cached product."""

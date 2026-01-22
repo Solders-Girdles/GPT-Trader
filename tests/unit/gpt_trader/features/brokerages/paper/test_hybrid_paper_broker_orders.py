@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import MagicMock, Mock
 
 import pytest
 
-import gpt_trader.features.brokerages.paper.hybrid as hybrid_module
 from gpt_trader.core import OrderSide, OrderStatus, OrderType
 from gpt_trader.features.brokerages.paper.hybrid import HybridPaperBroker
 
@@ -16,19 +14,13 @@ class TestHybridPaperBrokerOrderExecution:
     """Test HybridPaperBroker order execution."""
 
     @pytest.fixture
-    def broker(self, monkeypatch: pytest.MonkeyPatch) -> HybridPaperBroker:
+    def broker(self, broker_factory) -> HybridPaperBroker:
         """Create broker fixture with mocked client."""
-        monkeypatch.setattr(hybrid_module, "CoinbaseClient", MagicMock())
-        monkeypatch.setattr(hybrid_module, "SimpleAuth", MagicMock())
-        broker = HybridPaperBroker(
-            api_key="test_key",
-            private_key="test_private_key",
+        return broker_factory(
             initial_equity=Decimal("10000"),
             slippage_bps=10,
             commission_bps=Decimal("10"),
         )
-        broker._client = Mock()
-        return broker
 
     def test_place_order_buy_market(self, broker: HybridPaperBroker) -> None:
         """Test placing a buy market order."""
@@ -167,17 +159,9 @@ class TestHybridPaperBrokerLimitOrders:
     """Test HybridPaperBroker limit order and quote size edge cases."""
 
     @pytest.fixture
-    def broker(self, monkeypatch: pytest.MonkeyPatch) -> HybridPaperBroker:
+    def broker(self, broker_factory) -> HybridPaperBroker:
         """Create broker fixture with mocked client."""
-        monkeypatch.setattr(hybrid_module, "CoinbaseClient", MagicMock())
-        monkeypatch.setattr(hybrid_module, "SimpleAuth", MagicMock())
-        broker = HybridPaperBroker(
-            api_key="test_key",
-            private_key="test_private_key",
-            slippage_bps=10,
-        )
-        broker._client = Mock()
-        return broker
+        return broker_factory(slippage_bps=10)
 
     def test_limit_buy_uses_limit_below_slippage(self, broker: HybridPaperBroker) -> None:
         """Test limit buy uses limit price when below slippage-adjusted price."""

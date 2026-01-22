@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 738,
+    "tests_scanned": 737,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -377,10 +377,10 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_retry_behaviour.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_enforce_perps_rules.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_service.py",
+      "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker.py",
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_market_data.py",
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_orders.py",
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_position_updates.py",
-      "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_positions.py",
       "tests/unit/gpt_trader/features/data/test_data_coinbase_edges.py",
       "tests/unit/gpt_trader/features/data/test_data_coinbase_runtime_edges.py",
       "tests/unit/gpt_trader/features/data/test_quality_candles.py",
@@ -673,8 +673,7 @@
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker.py",
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_market_data.py",
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_orders.py",
-      "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_position_updates.py",
-      "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_positions.py"
+      "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_position_updates.py"
     ],
     "gpt_trader.features.data.cache": [
       "tests/unit/gpt_trader/features/data/test_cache.py"
@@ -3024,6 +3023,7 @@
       "gpt_trader.features.brokerages.coinbase.ws"
     ],
     "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker.py": [
+      "gpt_trader.core",
       "gpt_trader.features.brokerages.paper.hybrid"
     ],
     "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_market_data.py": [
@@ -3035,10 +3035,6 @@
       "gpt_trader.features.brokerages.paper.hybrid"
     ],
     "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_position_updates.py": [
-      "gpt_trader.core",
-      "gpt_trader.features.brokerages.paper.hybrid"
-    ],
-    "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_positions.py": [
       "gpt_trader.core",
       "gpt_trader.features.brokerages.paper.hybrid"
     ],

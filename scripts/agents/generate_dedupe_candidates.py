@@ -526,6 +526,7 @@ def suggest_next_pr() -> int:
 
     # Filter pending clusters and sort by priority
     priority_order = {"high": 0, "medium": 1, "low": 2}
+    type_order = {"similar_names": 0, "source_fanout": 1}
     pending: list[tuple[str, dict[str, Any], list[str], list[str]]] = []
     for cid, cluster in clusters.items():
         if cluster.get("status") != "pending":
@@ -550,6 +551,7 @@ def suggest_next_pr() -> int:
     pending.sort(
         key=lambda item: (
             priority_order.get(item[1].get("priority", "low"), 2),
+            type_order.get(item[1].get("type", ""), 2),
             -len(item[2]),
             item[0],
         )
@@ -616,6 +618,7 @@ def suggest_next_pr() -> int:
             candidates,
             key=lambda item: (
                 priority_order.get(item[1].get("priority", "low"), 2),
+                type_order.get(item[1].get("type", ""), 2),
                 dir_count(item[2]),
                 -len(item[2]),
                 item[0],

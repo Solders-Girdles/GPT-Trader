@@ -1,4 +1,4 @@
-"""Tests for TradingEngine price tick recording behavior."""
+"""Tests for TradingEngine state recovery behaviors."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ from gpt_trader.features.live_trade.engines.strategy import (
     EVENT_PRICE_TICK,
     TradingEngine,
 )
+from gpt_trader.features.live_trade.strategies.perps_baseline import BaselinePerpsStrategy
 
 pytest_plugins = ["tests.unit.gpt_trader.features.live_trade.state_recovery_test_helpers"]
 
@@ -45,3 +46,18 @@ class TestTradingEngineRecordPriceTick:
         # Should not raise
         engine._record_price_tick("BTC-PERP", Decimal("50000.00"))
         assert context_without_store.event_store is None
+
+
+class TestStrategyRehydrate:
+    """Tests for strategy rehydrate method."""
+
+    def test_baseline_strategy_rehydrate_returns_zero(self) -> None:
+        """Test that BaselinePerpsStrategy.rehydrate returns 0 (stateless)."""
+        strategy = BaselinePerpsStrategy()
+
+        events = [
+            {"type": EVENT_PRICE_TICK, "data": {"symbol": "BTC-PERP", "price": "50000.00"}},
+        ]
+        result = strategy.rehydrate(events)
+
+        assert result == 0

@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 668,
+    "tests_scanned": 666,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -740,9 +740,8 @@
       "tests/property/test_degradation_invariants_status_and_clear_all.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_equity_calculator.py",
       "tests/unit/gpt_trader/features/live_trade/test_degradation_failure_tracking.py",
+      "tests/unit/gpt_trader/features/live_trade/test_degradation_pause.py",
       "tests/unit/gpt_trader/features/live_trade/test_degradation_pause_expiry_and_recovery.py",
-      "tests/unit/gpt_trader/features/live_trade/test_degradation_pause_monotonicity.py",
-      "tests/unit/gpt_trader/features/live_trade/test_degradation_pause_records_and_basic_pause.py",
       "tests/unit/gpt_trader/features/live_trade/test_degradation_status_and_clear_all.py"
     ],
     "gpt_trader.features.live_trade.engines": [
@@ -755,7 +754,7 @@
       "tests/integration/test_validation_escalation_flow.py",
       "tests/integration/test_validation_escalation_metrics.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_runtime_start_event.py",
-      "tests/unit/gpt_trader/features/live_trade/test_state_recovery_price_tick_recording.py",
+      "tests/unit/gpt_trader/features/live_trade/test_state_recovery.py",
       "tests/unit/gpt_trader/features/live_trade/test_state_recovery_rehydration.py"
     ],
     "gpt_trader.features.live_trade.engines.equity_calculator": [
@@ -769,9 +768,8 @@
       "tests/integration/test_validation_escalation_flow.py",
       "tests/integration/test_validation_escalation_metrics.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_runtime_start_event.py",
-      "tests/unit/gpt_trader/features/live_trade/test_state_recovery_price_tick_recording.py",
+      "tests/unit/gpt_trader/features/live_trade/test_state_recovery.py",
       "tests/unit/gpt_trader/features/live_trade/test_state_recovery_rehydration.py",
-      "tests/unit/gpt_trader/features/live_trade/test_state_recovery_strategy_rehydrate.py",
       "tests/unit/gpt_trader/features/live_trade/test_trading_engine.py"
     ],
     "gpt_trader.features.live_trade.engines.system_maintenance": [
@@ -1070,7 +1068,7 @@
       "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_strategies.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_regime_switcher.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful.py",
-      "tests/unit/gpt_trader/features/live_trade/test_state_recovery_strategy_rehydrate.py",
+      "tests/unit/gpt_trader/features/live_trade/test_state_recovery.py",
       "tests/unit/gpt_trader/features/live_trade/test_trading_engine.py"
     ],
     "gpt_trader.features.live_trade.strategies.perps_baseline.stateful": [
@@ -3400,13 +3398,10 @@
     "tests/unit/gpt_trader/features/live_trade/test_degradation_failure_tracking.py": [
       "gpt_trader.features.live_trade.degradation"
     ],
+    "tests/unit/gpt_trader/features/live_trade/test_degradation_pause.py": [
+      "gpt_trader.features.live_trade.degradation"
+    ],
     "tests/unit/gpt_trader/features/live_trade/test_degradation_pause_expiry_and_recovery.py": [
-      "gpt_trader.features.live_trade.degradation"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/test_degradation_pause_monotonicity.py": [
-      "gpt_trader.features.live_trade.degradation"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/test_degradation_pause_records_and_basic_pause.py": [
       "gpt_trader.features.live_trade.degradation"
     ],
     "tests/unit/gpt_trader/features/live_trade/test_degradation_status_and_clear_all.py": [
@@ -3448,18 +3443,15 @@
       "gpt_trader.features.live_trade.risk",
       "gpt_trader.features.live_trade.risk.config"
     ],
-    "tests/unit/gpt_trader/features/live_trade/test_state_recovery_price_tick_recording.py": [
+    "tests/unit/gpt_trader/features/live_trade/test_state_recovery.py": [
       "gpt_trader.features.live_trade.engines.base",
-      "gpt_trader.features.live_trade.engines.strategy"
+      "gpt_trader.features.live_trade.engines.strategy",
+      "gpt_trader.features.live_trade.strategies.perps_baseline"
     ],
     "tests/unit/gpt_trader/features/live_trade/test_state_recovery_rehydration.py": [
       "gpt_trader.features.live_trade.engines.base",
       "gpt_trader.features.live_trade.engines.strategy",
       "gpt_trader.persistence.orders_store"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/test_state_recovery_strategy_rehydrate.py": [
-      "gpt_trader.features.live_trade.engines.strategy",
-      "gpt_trader.features.live_trade.strategies.perps_baseline"
     ],
     "tests/unit/gpt_trader/features/live_trade/test_strategy_factory.py": [
       "gpt_trader.app.config",

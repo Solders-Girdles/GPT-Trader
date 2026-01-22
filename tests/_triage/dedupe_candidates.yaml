@@ -1415,10 +1415,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/tui/services/test_alert_manager.py
-    expected_file_delta: -4
+    expected_file_delta: -1
     priority: low
-    rationale: Consolidate 5 test files into single parametrized file
-    status: pending
+    rationale: Consolidated fill model coverage into fewer cohesive modules
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/346
     added: '2026-01-21'
   1ddeaae0a707:
     type: similar_names

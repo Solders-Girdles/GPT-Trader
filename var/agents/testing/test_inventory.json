@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6223,
-    "total_files": 806,
+    "total_tests": 6191,
+    "total_files": 803,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6058,
+    "unit": 6026,
     "asyncio": 345,
     "parametrize": 90,
     "property": 82,
@@ -287,9 +287,6 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_pnl_service_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_cfm.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_edges.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_intx.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_position_state_store_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_product_service_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_product_service_get_tickers.py",
@@ -13227,7 +13224,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service.py": [
       {
         "name": "TestPortfolioServiceInit::test_service_init",
-        "line": 15,
+        "line": 9,
         "markers": [
           "unit"
         ],
@@ -13235,109 +13232,26 @@
         "class": "TestPortfolioServiceInit"
       },
       {
-        "name": "TestPortfolioServiceBalances::test_list_balances_returns_balances",
+        "name": "TestPortfolioServiceBalances::test_balances",
+        "line": 18,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestPortfolioServiceBalances"
+      },
+      {
+        "name": "TestPortfolioServicePositions::test_positions",
         "line": 30,
         "markers": [
           "unit"
         ],
         "docstring": "",
-        "class": "TestPortfolioServiceBalances"
-      },
-      {
-        "name": "TestPortfolioServiceBalances::test_list_balances_handles_list_response",
-        "line": 60,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestPortfolioServiceBalances"
-      },
-      {
-        "name": "TestPortfolioServiceBalances::test_list_balances_calculates_total_when_missing",
-        "line": 78,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestPortfolioServiceBalances"
-      },
-      {
-        "name": "TestPortfolioServiceBalances::test_list_balances_handles_exception",
-        "line": 96,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestPortfolioServiceBalances"
-      },
-      {
-        "name": "TestPortfolioServiceBalances::test_list_balances_skips_invalid_entries",
-        "line": 105,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestPortfolioServiceBalances"
-      },
-      {
-        "name": "TestPortfolioServiceBalances::test_get_portfolio_balances_delegates_to_list_balances",
-        "line": 125,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestPortfolioServiceBalances"
-      },
-      {
-        "name": "TestPortfolioServicePositions::test_list_positions_returns_positions",
-        "line": 139,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
         "class": "TestPortfolioServicePositions"
       },
       {
-        "name": "TestPortfolioServicePositions::test_list_positions_returns_empty_when_derivatives_not_supported",
-        "line": 161,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestPortfolioServicePositions"
-      },
-      {
-        "name": "TestPortfolioServicePositions::test_list_positions_handles_exception",
-        "line": 172,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestPortfolioServicePositions"
-      },
-      {
-        "name": "TestPortfolioServicePositions::test_get_position_returns_position",
-        "line": 183,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestPortfolioServicePositions"
-      },
-      {
-        "name": "TestPortfolioServicePositions::test_get_position_returns_none_when_not_supported",
-        "line": 202,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestPortfolioServicePositions"
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_cfm.py": [
-      {
-        "name": "TestCfmBalanceSummary::test_get_cfm_balance_summary_returns_summary",
-        "line": 17,
+        "name": "TestCfmBalanceSummary::test_cfm_balance_summary",
+        "line": 47,
         "markers": [
           "unit"
         ],
@@ -13345,26 +13259,8 @@
         "class": "TestCfmBalanceSummary"
       },
       {
-        "name": "TestCfmBalanceSummary::test_get_cfm_balance_summary_returns_empty_when_not_supported",
-        "line": 32,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestCfmBalanceSummary"
-      },
-      {
-        "name": "TestCfmBalanceSummary::test_get_cfm_balance_summary_normalises_decimals_and_emits_metric",
-        "line": 41,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestCfmBalanceSummary"
-      },
-      {
-        "name": "TestCfmSweeps::test_list_cfm_sweeps_returns_sweeps",
-        "line": 67,
+        "name": "TestCfmSweeps::test_cfm_sweeps",
+        "line": 63,
         "markers": [
           "unit"
         ],
@@ -13372,35 +13268,8 @@
         "class": "TestCfmSweeps"
       },
       {
-        "name": "TestCfmSweeps::test_list_cfm_sweeps_returns_empty_when_derivatives_disabled",
-        "line": 84,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestCfmSweeps"
-      },
-      {
-        "name": "TestCfmSweeps::test_list_cfm_sweeps_normalises_entries",
-        "line": 95,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestCfmSweeps"
-      },
-      {
-        "name": "TestCfmSweeps::test_get_cfm_sweeps_schedule_returns_schedule",
-        "line": 111,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestCfmSweeps"
-      },
-      {
-        "name": "TestCfmMarginWindow::test_get_cfm_margin_window_returns_window",
-        "line": 128,
+        "name": "TestCfmMarginWindow::test_cfm_margin_window",
+        "line": 81,
         "markers": [
           "unit"
         ],
@@ -13408,55 +13277,53 @@
         "class": "TestCfmMarginWindow"
       },
       {
-        "name": "TestCfmMarginWindow::test_get_cfm_margin_window_handles_errors",
-        "line": 142,
+        "name": "TestIntxAllocate::test_intx_allocate",
+        "line": 107,
         "markers": [
           "unit"
         ],
         "docstring": "",
-        "class": "TestCfmMarginWindow"
+        "class": "TestIntxAllocate"
       },
       {
-        "name": "TestCfmMarginWindow::test_update_cfm_margin_window_success",
-        "line": 153,
+        "name": "TestIntxBalances::test_intx_balances",
+        "line": 121,
         "markers": [
           "unit"
         ],
         "docstring": "",
-        "class": "TestCfmMarginWindow"
+        "class": "TestIntxBalances"
       },
       {
-        "name": "TestCfmMarginWindow::test_update_cfm_margin_window_raises_when_not_supported",
-        "line": 169,
+        "name": "TestIntxPortfolio::test_intx_portfolio",
+        "line": 140,
         "markers": [
           "unit"
         ],
         "docstring": "",
-        "class": "TestCfmMarginWindow"
+        "class": "TestIntxPortfolio"
       },
       {
-        "name": "TestCfmMarginWindow::test_update_cfm_margin_window_enforces_derivatives",
-        "line": 178,
+        "name": "TestIntxPositions::test_intx_positions",
+        "line": 151,
         "markers": [
           "unit"
         ],
         "docstring": "",
-        "class": "TestCfmMarginWindow"
+        "class": "TestIntxPositions"
       },
       {
-        "name": "TestCfmMarginWindow::test_update_cfm_margin_window_calls_client_and_emits",
-        "line": 187,
+        "name": "TestIntxCollateral::test_intx_multi_asset_collateral",
+        "line": 164,
         "markers": [
           "unit"
         ],
         "docstring": "",
-        "class": "TestCfmMarginWindow"
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_edges.py": [
+        "class": "TestIntxCollateral"
+      },
       {
         "name": "TestCfmPositionEdges::test_list_cfm_positions_invalid_expiry_sets_none",
-        "line": 24,
+        "line": 173,
         "markers": [
           "unit"
         ],
@@ -13465,7 +13332,7 @@
       },
       {
         "name": "TestSpotPositionEdges::test_list_spot_positions_skips_usd_and_zero",
-        "line": 49,
+        "line": 178,
         "markers": [
           "unit"
         ],
@@ -13473,8 +13340,8 @@
         "class": "TestSpotPositionEdges"
       },
       {
-        "name": "TestCfmBalanceEdges::test_get_cfm_balance_missing_or_empty_summary",
-        "line": 67,
+        "name": "TestCfmBalanceEdges::test_cfm_balance_edges",
+        "line": 183,
         "markers": [
           "unit"
         ],
@@ -13482,26 +13349,8 @@
         "class": "TestCfmBalanceEdges"
       },
       {
-        "name": "TestCfmBalanceEdges::test_get_cfm_balance_parses_nested_values",
-        "line": 75,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestCfmBalanceEdges"
-      },
-      {
-        "name": "TestCfmBalanceEdges::test_has_cfm_access_false_without_summary",
-        "line": 98,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestCfmBalanceEdges"
-      },
-      {
-        "name": "TestUnifiedBalanceEdges::test_get_unified_balance_combines_spot_and_cfm",
-        "line": 108,
+        "name": "TestUnifiedBalanceEdges::test_unified_balance_edges",
+        "line": 190,
         "markers": [
           "unit"
         ],
@@ -13509,159 +13358,13 @@
         "class": "TestUnifiedBalanceEdges"
       },
       {
-        "name": "TestUnifiedBalanceEdges::test_get_unified_balance_without_usd_spot",
-        "line": 136,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestUnifiedBalanceEdges"
-      },
-      {
-        "name": "TestAllPositionsEdges::test_list_all_positions_merges_spot_and_cfm",
-        "line": 165,
+        "name": "TestAllPositionsEdges::test_all_positions_edges",
+        "line": 196,
         "markers": [
           "unit"
         ],
         "docstring": "",
         "class": "TestAllPositionsEdges"
-      },
-      {
-        "name": "TestAllPositionsEdges::test_list_all_positions_spot_only_when_no_derivatives",
-        "line": 202,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestAllPositionsEdges"
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_intx.py": [
-      {
-        "name": "TestIntxAllocate::test_intx_allocate_requires_advanced_mode",
-        "line": 17,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestIntxAllocate"
-      },
-      {
-        "name": "TestIntxAllocate::test_intx_allocate_success",
-        "line": 26,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestIntxAllocate"
-      },
-      {
-        "name": "TestIntxAllocate::test_intx_allocate_normalises_and_emits_metric",
-        "line": 42,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestIntxAllocate"
-      },
-      {
-        "name": "TestIntxBalances::test_get_intx_balances_returns_empty_when_not_advanced",
-        "line": 61,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestIntxBalances"
-      },
-      {
-        "name": "TestIntxBalances::test_get_intx_balances_returns_balances",
-        "line": 70,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestIntxBalances"
-      },
-      {
-        "name": "TestIntxBalances::test_get_intx_balances_normalises_entries",
-        "line": 87,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestIntxBalances"
-      },
-      {
-        "name": "TestIntxBalances::test_get_intx_balances_handles_errors",
-        "line": 106,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestIntxBalances"
-      },
-      {
-        "name": "TestIntxPortfolio::test_get_intx_portfolio_returns_empty_when_not_advanced",
-        "line": 123,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestIntxPortfolio"
-      },
-      {
-        "name": "TestIntxPortfolio::test_get_intx_portfolio_success",
-        "line": 132,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestIntxPortfolio"
-      },
-      {
-        "name": "TestIntxPortfolio::test_get_intx_portfolio_returns_normalised_dict",
-        "line": 146,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestIntxPortfolio"
-      },
-      {
-        "name": "TestIntxPositions::test_list_intx_positions_returns_positions",
-        "line": 161,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestIntxPositions"
-      },
-      {
-        "name": "TestIntxPositions::test_list_intx_positions_returns_normalised_list",
-        "line": 181,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestIntxPositions"
-      },
-      {
-        "name": "TestIntxPositions::test_get_intx_position_handles_missing",
-        "line": 204,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestIntxPositions"
-      },
-      {
-        "name": "TestIntxCollateral::test_get_intx_multi_asset_collateral_emits_metric",
-        "line": 219,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestIntxCollateral"
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_position_state_store_edges.py": [

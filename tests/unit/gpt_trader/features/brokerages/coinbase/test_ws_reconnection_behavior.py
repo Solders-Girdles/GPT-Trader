@@ -1,6 +1,6 @@
-"""Tests for WebSocket reconnection degradation callbacks."""
-
 from __future__ import annotations
+
+import time
 
 import pytest
 
@@ -15,7 +15,6 @@ class TestWebSocketDegradationCallback:
         self,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        """Test that degradation callback is triggered when max attempts exceeded."""
         callback_called = []
 
         def on_max_exceeded(pause_seconds: int) -> None:
@@ -23,16 +22,13 @@ class TestWebSocketDegradationCallback:
 
         ws = CoinbaseWebSocket(on_max_attempts_exceeded=on_max_exceeded)
 
-        # Set up to exceed max attempts
         monkeypatch.setattr(ws_module, "WS_RECONNECT_MAX_ATTEMPTS", 3)
         monkeypatch.setattr(ws_module, "WS_RECONNECT_PAUSE_SECONDS", 300)
-        ws._reconnect_count = 3  # At max
+        ws._reconnect_count = 3
         ws._running.set()
 
-        # Trigger close (will exceed max on increment)
         ws._on_close(None, 1000, "Connection lost")
 
-        # Callback should have been called
         assert len(callback_called) == 1
         assert callback_called[0] == 300
 
@@ -40,7 +36,6 @@ class TestWebSocketDegradationCallback:
         self,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        """Test that degradation callback is only triggered once per max-exceeded event."""
         callback_count = []
 
         def on_max_exceeded(pause_seconds: int) -> None:
@@ -52,42 +47,32 @@ class TestWebSocketDegradationCallback:
         ws._reconnect_count = 3
         ws._running.set()
 
-        # First close - should trigger callback
         ws._on_close(None, 1000, "Connection lost")
 
-        # Second close - should NOT trigger callback again
-        # Note: After max attempts triggered, _running is cleared
-        # so we need to set it again to simulate another close
         ws._running.set()
-        ws._shutdown.set()  # Prevent actual reconnection attempt
+        ws._shutdown.set()
         ws._on_close(None, 1000, "Connection lost again")
 
-        # Callback should only be called once
         assert len(callback_count) == 1
 
     def test_no_callback_when_none_provided(
         self,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        """Test that missing callback doesn't cause errors."""
         ws = CoinbaseWebSocket(on_max_attempts_exceeded=None)
 
         monkeypatch.setattr(ws_module, "WS_RECONNECT_MAX_ATTEMPTS", 3)
         ws._reconnect_count = 3
         ws._running.set()
 
-        # Should not raise even without callback
         ws._on_close(None, 1000, "Connection lost")
 
-        # Verify max_attempts_triggered flag is set
         assert ws._max_attempts_triggered is True
 
     def test_callback_exception_does_not_crash(
         self,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        """Test that exception in callback is handled gracefully."""
-
         def bad_callback(pause_seconds: int) -> None:
             raise ValueError("Intentional test error")
 
@@ -97,8 +82,56 @@ class TestWebSocketDegradationCallback:
         ws._reconnect_count = 3
         ws._running.set()
 
-        # Should not raise even with bad callback
         ws._on_close(None, 1000, "Connection lost")
 
-        # Should still set the triggered flag
         assert ws._max_attempts_triggered is True
+
+
+class TestWebSocketHealthIncludesNewFields:
+    """Tests that get_health includes reconnection fields."""
+
+    def test_health_includes_connected_since(self) -> None:
+        ws = CoinbaseWebSocket()
+        ws._connected_since = 12345.0
+
+        health = ws.get_health()
+
+        assert "connected_since" in health
+        assert health["connected_since"] == 12345.0
+
+    def test_health_includes_max_attempts_triggered(self) -> None:
+        ws = CoinbaseWebSocket()
+        ws._max_attempts_triggered = True
+
+        health = ws.get_health()
+
+        assert "max_attempts_triggered" in health
+        assert health["max_attempts_triggered"] is True
+
+
+class TestWebSocketReconnectionReset:
+    """Tests for reconnection attempt counter reset after stable connection."""
+
+    def test_attempts_reset_after_stable_period(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        ws = CoinbaseWebSocket()
+        ws._reconnect_count = 5
+        ws._running.set()
+        ws._connected_since = time.time() - 120.0
+
+        monkeypatch.setattr(ws_module, "WS_RECONNECT_RESET_SECONDS", 60.0)
+        ws._shutdown.set()
+        ws._on_close(None, 1000, "Normal closure")
+
+        assert ws._reconnect_count == 0
+
+    def test_attempts_not_reset_if_unstable(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        ws = CoinbaseWebSocket()
+        ws._reconnect_count = 5
+        ws._running.set()
+        ws._connected_since = time.time() - 10.0
+
+        monkeypatch.setattr(ws_module, "WS_RECONNECT_RESET_SECONDS", 60.0)
+        ws._shutdown.set()
+        ws._on_close(None, 1000, "Normal closure")
+
+        assert ws._reconnect_count == 5

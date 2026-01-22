@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6146,
-    "total_files": 769,
+    "total_tests": 6142,
+    "total_files": 766,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 5981,
+    "unit": 5977,
     "asyncio": 344,
-    "parametrize": 111,
+    "parametrize": 114,
     "property": 82,
     "integration": 79,
     "endpoints": 78,
@@ -204,10 +204,7 @@
       "tests/unit/gpt_trader/cli/commands/optimize/test_commands_arg_parsing.py",
       "tests/unit/gpt_trader/cli/commands/optimize/test_commands_execution.py",
       "tests/unit/gpt_trader/cli/commands/optimize/test_commands_registration.py",
-      "tests/unit/gpt_trader/cli/commands/optimize/test_config_loader_builders.py",
-      "tests/unit/gpt_trader/cli/commands/optimize/test_config_loader_file_loading.py",
-      "tests/unit/gpt_trader/cli/commands/optimize/test_config_loader_objectives.py",
-      "tests/unit/gpt_trader/cli/commands/optimize/test_config_loader_parsing.py",
+      "tests/unit/gpt_trader/cli/commands/optimize/test_config_loader.py",
       "tests/unit/gpt_trader/cli/commands/optimize/test_formatters.py",
       "tests/unit/gpt_trader/cli/test_cli_unit.py",
       "tests/unit/gpt_trader/cli/test_commands_account_treasury.py",
@@ -8358,228 +8355,169 @@
         "class": "TestOptimizeSubcommandRegistration"
       }
     ],
-    "tests/unit/gpt_trader/cli/commands/optimize/test_config_loader_builders.py": [
+    "tests/unit/gpt_trader/cli/commands/optimize/test_config_loader.py": [
       {
-        "name": "TestBuildParameterSpaceFromConfig::test_includes_strategy_parameters",
-        "line": 15,
+        "name": "test_load_config_file_loads_valid_yaml",
+        "line": 23,
         "markers": [
           "unit"
         ],
-        "docstring": "Test includes strategy parameters.",
-        "class": "TestBuildParameterSpaceFromConfig"
+        "docstring": ""
       },
       {
-        "name": "TestBuildParameterSpaceFromConfig::test_includes_risk_parameters",
-        "line": 25,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test includes risk parameters.",
-        "class": "TestBuildParameterSpaceFromConfig"
-      },
-      {
-        "name": "TestBuildParameterSpaceFromConfig::test_includes_all_groups",
-        "line": 34,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test includes all parameter groups.",
-        "class": "TestBuildParameterSpaceFromConfig"
-      },
-      {
-        "name": "TestBuildOptimizationConfig::test_builds_valid_config",
-        "line": 47,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test building valid optimization config.",
-        "class": "TestBuildOptimizationConfig"
-      },
-      {
-        "name": "TestCreateDefaultConfig::test_creates_with_minimal_args",
-        "line": 60,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test creating default config with minimal arguments.",
-        "class": "TestCreateDefaultConfig"
-      },
-      {
-        "name": "TestCreateDefaultConfig::test_creates_with_all_args",
-        "line": 68,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test creating default config with all arguments.",
-        "class": "TestCreateDefaultConfig"
-      }
-    ],
-    "tests/unit/gpt_trader/cli/commands/optimize/test_config_loader_file_loading.py": [
-      {
-        "name": "TestLoadConfigFile::test_loads_valid_yaml",
-        "line": 14,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test loading a valid YAML file.",
-        "class": "TestLoadConfigFile"
-      },
-      {
-        "name": "TestLoadConfigFile::test_raises_for_missing_file",
-        "line": 22,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test raises error for missing file.",
-        "class": "TestLoadConfigFile"
-      },
-      {
-        "name": "TestLoadConfigFile::test_raises_for_invalid_yaml",
-        "line": 29,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test raises error for invalid YAML.",
-        "class": "TestLoadConfigFile"
-      }
-    ],
-    "tests/unit/gpt_trader/cli/commands/optimize/test_config_loader_objectives.py": [
-      {
-        "name": "TestCreateObjectiveFromPreset::test_creates_simple_objective",
-        "line": 16,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test creating simple objective.",
-        "class": "TestCreateObjectiveFromPreset"
-      },
-      {
-        "name": "TestCreateObjectiveFromPreset::test_creates_composite_objective",
-        "line": 21,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test creating composite objective with factory.",
-        "class": "TestCreateObjectiveFromPreset"
-      },
-      {
-        "name": "TestCreateObjectiveFromPreset::test_passes_kwargs_to_factory",
-        "line": 26,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test kwargs are passed to factory.",
-        "class": "TestCreateObjectiveFromPreset"
-      },
-      {
-        "name": "TestCreateObjectiveFromPreset::test_raises_for_unknown_preset",
+        "name": "test_load_config_file_missing_file",
         "line": 32,
         "markers": [
           "unit"
         ],
-        "docstring": "Test raises error for unknown preset.",
-        "class": "TestCreateObjectiveFromPreset"
+        "docstring": ""
       },
       {
-        "name": "TestGetObjectiveDirection::test_maximize_presets",
+        "name": "test_load_config_file_invalid_yaml",
         "line": 39,
         "markers": [
           "unit"
         ],
-        "docstring": "Test maximize direction presets.",
-        "class": "TestGetObjectiveDirection"
+        "docstring": ""
       },
       {
-        "name": "TestGetObjectiveDirection::test_minimize_presets",
-        "line": 45,
+        "name": "test_parse_config_minimal",
+        "line": 47,
         "markers": [
           "unit"
         ],
-        "docstring": "Test minimize direction presets.",
-        "class": "TestGetObjectiveDirection"
+        "docstring": ""
       },
       {
-        "name": "TestGetObjectiveDirection::test_raises_for_unknown_preset",
-        "line": 49,
+        "name": "test_parse_config_full",
+        "line": 57,
         "markers": [
           "unit"
         ],
-        "docstring": "Test raises error for unknown preset.",
-        "class": "TestGetObjectiveDirection"
+        "docstring": ""
       },
       {
-        "name": "TestObjectivePresets::test_all_presets_have_direction",
-        "line": 56,
+        "name": "test_parse_config_missing_study_name",
+        "line": 83,
         "markers": [
           "unit"
         ],
-        "docstring": "Test all presets have a direction defined.",
-        "class": "TestObjectivePresets"
+        "docstring": ""
       },
       {
-        "name": "TestObjectivePresets::test_all_presets_can_be_created",
-        "line": 62,
+        "name": "test_merge_cli_overrides",
+        "line": 96,
         "markers": [
+          "parametrize",
           "unit"
         ],
-        "docstring": "Test all presets can be instantiated.",
-        "class": "TestObjectivePresets"
-      }
-    ],
-    "tests/unit/gpt_trader/cli/commands/optimize/test_config_loader_parsing.py": [
-      {
-        "name": "TestParseConfig::test_parses_minimal_config",
-        "line": 16,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test parsing minimal configuration.",
-        "class": "TestParseConfig"
+        "docstring": ""
       },
       {
-        "name": "TestParseConfig::test_parses_full_config",
-        "line": 25,
+        "name": "test_create_default_config_minimal",
+        "line": 106,
         "markers": [
           "unit"
         ],
-        "docstring": "Test parsing full configuration.",
-        "class": "TestParseConfig"
+        "docstring": ""
       },
       {
-        "name": "TestParseConfig::test_raises_for_missing_study_name",
-        "line": 50,
+        "name": "test_create_default_config_full",
+        "line": 114,
         "markers": [
           "unit"
         ],
-        "docstring": "Test raises error for missing study name.",
-        "class": "TestParseConfig"
+        "docstring": ""
       },
       {
-        "name": "TestMergeCliOverrides::test_overrides_trials",
-        "line": 59,
+        "name": "test_build_parameter_space_from_config",
+        "line": 143,
         "markers": [
+          "parametrize",
           "unit"
         ],
-        "docstring": "Test CLI overrides trials.",
-        "class": "TestMergeCliOverrides"
+        "docstring": ""
       },
       {
-        "name": "TestMergeCliOverrides::test_overrides_objective",
-        "line": 69,
+        "name": "test_build_optimization_config",
+        "line": 159,
         "markers": [
           "unit"
         ],
-        "docstring": "Test CLI overrides objective.",
-        "class": "TestMergeCliOverrides"
+        "docstring": ""
       },
       {
-        "name": "TestMergeCliOverrides::test_overrides_symbols",
-        "line": 77,
+        "name": "test_create_objective_from_preset_simple",
+        "line": 170,
         "markers": [
           "unit"
         ],
-        "docstring": "Test CLI overrides symbols.",
-        "class": "TestMergeCliOverrides"
+        "docstring": ""
+      },
+      {
+        "name": "test_create_objective_from_preset_composite",
+        "line": 176,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_create_objective_from_preset_kwargs",
+        "line": 182,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_create_objective_from_preset_unknown",
+        "line": 189,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_get_objective_direction_maximize",
+        "line": 195,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_get_objective_direction_minimize",
+        "line": 199,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_get_objective_direction_unknown",
+        "line": 203,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_objective_presets_have_direction",
+        "line": 208,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_objective_presets_create",
+        "line": 214,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/cli/commands/optimize/test_formatters.py": [

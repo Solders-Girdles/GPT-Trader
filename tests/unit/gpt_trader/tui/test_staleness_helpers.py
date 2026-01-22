@@ -25,7 +25,8 @@ def make_state(**attrs: object) -> MagicMock:
 @pytest.mark.parametrize(
     ("data_available", "last_data_fetch"),
     [
-        (False, time.time()),
+        # Use a deterministic value; pytest-xdist requires stable collection across workers.
+        (False, 1_700_000_000.0),
         (True, 0),
         (True, -1),
     ],

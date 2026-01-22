@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6062,
-    "total_files": 747,
+    "total_tests": 6059,
+    "total_files": 745,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 5897,
+    "unit": 5894,
     "asyncio": 344,
-    "parametrize": 139,
+    "parametrize": 141,
     "property": 82,
     "integration": 79,
     "endpoints": 78,
@@ -718,10 +718,8 @@
       "tests/unit/gpt_trader/tui/services/test_trading_stats.py",
       "tests/unit/gpt_trader/tui/services/test_trading_stats_compute.py",
       "tests/unit/gpt_trader/tui/services/test_trading_stats_matching.py",
-      "tests/unit/gpt_trader/tui/state_management/test_delta_updater_compare_account_risk_system.py",
-      "tests/unit/gpt_trader/tui/state_management/test_delta_updater_compare_market_and_positions.py",
-      "tests/unit/gpt_trader/tui/state_management/test_delta_updater_compare_orders_and_trades.py",
-      "tests/unit/gpt_trader/tui/state_management/test_delta_updater_result_and_helpers.py",
+      "tests/unit/gpt_trader/tui/state_management/test_delta_updater.py",
+      "tests/unit/gpt_trader/tui/state_management/test_delta_updater_market_orders.py",
       "tests/unit/gpt_trader/tui/state_management/test_validators_account_risk_system.py",
       "tests/unit/gpt_trader/tui/state_management/test_validators_full_state.py",
       "tests/unit/gpt_trader/tui/state_management/test_validators_market.py",
@@ -6085,7 +6083,7 @@
       },
       {
         "name": "test_limit_order_without_price_raises",
-        "line": 78,
+        "line": 76,
         "markers": [
           "unit"
         ],
@@ -6093,7 +6091,7 @@
       },
       {
         "name": "test_limit_price_touch_logic",
-        "line": 107,
+        "line": 103,
         "markers": [
           "parametrize",
           "unit"
@@ -6102,7 +6100,7 @@
       },
       {
         "name": "test_stop_order_triggering",
-        "line": 131,
+        "line": 125,
         "markers": [
           "parametrize",
           "unit"
@@ -6111,7 +6109,7 @@
       },
       {
         "name": "test_stop_order_without_stop_price_raises",
-        "line": 162,
+        "line": 156,
         "markers": [
           "unit"
         ],
@@ -6119,7 +6117,7 @@
       },
       {
         "name": "test_stop_trigger_logic",
-        "line": 191,
+        "line": 185,
         "markers": [
           "parametrize",
           "unit"
@@ -44474,169 +44472,10 @@
         "class": "TestTradeMatching"
       }
     ],
-    "tests/unit/gpt_trader/tui/state_management/test_delta_updater_compare_account_risk_system.py": [
-      {
-        "name": "TestStateDeltaUpdaterAccountRiskSystem::test_compare_account_no_changes",
-        "line": 20,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test account comparison with identical data.",
-        "class": "TestStateDeltaUpdaterAccountRiskSystem"
-      },
-      {
-        "name": "TestStateDeltaUpdaterAccountRiskSystem::test_compare_account_balance_change",
-        "line": 40,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test account comparison detects balance change.",
-        "class": "TestStateDeltaUpdaterAccountRiskSystem"
-      },
-      {
-        "name": "TestStateDeltaUpdaterAccountRiskSystem::test_compare_risk_no_changes",
-        "line": 73,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test risk comparison with identical data.",
-        "class": "TestStateDeltaUpdaterAccountRiskSystem"
-      },
-      {
-        "name": "TestStateDeltaUpdaterAccountRiskSystem::test_compare_risk_reduce_only_change",
-        "line": 89,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test risk comparison detects reduce_only mode change.",
-        "class": "TestStateDeltaUpdaterAccountRiskSystem"
-      },
-      {
-        "name": "TestStateDeltaUpdaterAccountRiskSystem::test_compare_system_no_changes",
-        "line": 112,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test system comparison with identical data.",
-        "class": "TestStateDeltaUpdaterAccountRiskSystem"
-      },
-      {
-        "name": "TestStateDeltaUpdaterAccountRiskSystem::test_compare_system_connection_change",
-        "line": 127,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test system comparison detects connection status change.",
-        "class": "TestStateDeltaUpdaterAccountRiskSystem"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/state_management/test_delta_updater_compare_market_and_positions.py": [
-      {
-        "name": "TestStateDeltaUpdaterMarketAndPositions::test_compare_market_no_changes",
-        "line": 14,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test market comparison with identical data.",
-        "class": "TestStateDeltaUpdaterMarketAndPositions"
-      },
-      {
-        "name": "TestStateDeltaUpdaterMarketAndPositions::test_compare_market_price_change",
-        "line": 26,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test market comparison detects price change.",
-        "class": "TestStateDeltaUpdaterMarketAndPositions"
-      },
-      {
-        "name": "TestStateDeltaUpdaterMarketAndPositions::test_compare_market_new_symbol",
-        "line": 43,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test market comparison detects new symbol.",
-        "class": "TestStateDeltaUpdaterMarketAndPositions"
-      },
-      {
-        "name": "TestStateDeltaUpdaterMarketAndPositions::test_compare_market_removed_symbol",
-        "line": 60,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test market comparison detects removed symbol.",
-        "class": "TestStateDeltaUpdaterMarketAndPositions"
-      },
-      {
-        "name": "TestStateDeltaUpdaterMarketAndPositions::test_compare_positions_no_changes",
-        "line": 77,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test position comparison with identical data.",
-        "class": "TestStateDeltaUpdaterMarketAndPositions"
-      },
-      {
-        "name": "TestStateDeltaUpdaterMarketAndPositions::test_compare_positions_pnl_change",
-        "line": 98,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test position comparison detects P&L change.",
-        "class": "TestStateDeltaUpdaterMarketAndPositions"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/state_management/test_delta_updater_compare_orders_and_trades.py": [
-      {
-        "name": "TestStateDeltaUpdaterOrdersAndTrades::test_compare_orders_no_changes",
-        "line": 14,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test order comparison with identical data.",
-        "class": "TestStateDeltaUpdaterOrdersAndTrades"
-      },
-      {
-        "name": "TestStateDeltaUpdaterOrdersAndTrades::test_compare_orders_status_change",
-        "line": 34,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test order comparison detects status change.",
-        "class": "TestStateDeltaUpdaterOrdersAndTrades"
-      },
-      {
-        "name": "TestStateDeltaUpdaterOrdersAndTrades::test_compare_orders_new_order",
-        "line": 67,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test order comparison detects new order.",
-        "class": "TestStateDeltaUpdaterOrdersAndTrades"
-      },
-      {
-        "name": "TestStateDeltaUpdaterOrdersAndTrades::test_compare_trades_no_changes",
-        "line": 89,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test trade comparison with identical data.",
-        "class": "TestStateDeltaUpdaterOrdersAndTrades"
-      },
-      {
-        "name": "TestStateDeltaUpdaterOrdersAndTrades::test_compare_trades_new_trade",
-        "line": 110,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test trade comparison detects new trade.",
-        "class": "TestStateDeltaUpdaterOrdersAndTrades"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/state_management/test_delta_updater_result_and_helpers.py": [
+    "tests/unit/gpt_trader/tui/state_management/test_delta_updater.py": [
       {
         "name": "TestDeltaResult::test_initial_state_no_changes",
-        "line": 13,
+        "line": 20,
         "markers": [
           "unit"
         ],
@@ -44645,7 +44484,7 @@
       },
       {
         "name": "TestDeltaResult::test_add_change_sets_has_changes",
-        "line": 21,
+        "line": 28,
         "markers": [
           "unit"
         ],
@@ -44654,7 +44493,7 @@
       },
       {
         "name": "TestDeltaResult::test_add_multiple_changes",
-        "line": 30,
+        "line": 37,
         "markers": [
           "unit"
         ],
@@ -44663,7 +44502,7 @@
       },
       {
         "name": "TestStateDeltaUpdaterHelpers::test_should_update_component_no_changes",
-        "line": 43,
+        "line": 50,
         "markers": [
           "unit"
         ],
@@ -44672,7 +44511,7 @@
       },
       {
         "name": "TestStateDeltaUpdaterHelpers::test_should_update_component_with_changes",
-        "line": 50,
+        "line": 57,
         "markers": [
           "unit"
         ],
@@ -44681,7 +44520,7 @@
       },
       {
         "name": "TestStateDeltaUpdaterHelpers::test_float_equal_within_epsilon",
-        "line": 58,
+        "line": 65,
         "markers": [
           "unit"
         ],
@@ -44690,7 +44529,7 @@
       },
       {
         "name": "TestStateDeltaUpdaterHelpers::test_decimal_equal_within_epsilon",
-        "line": 66,
+        "line": 73,
         "markers": [
           "unit"
         ],
@@ -44699,12 +44538,142 @@
       },
       {
         "name": "TestStateDeltaUpdaterHelpers::test_decimal_equal_handles_none",
-        "line": 74,
+        "line": 81,
         "markers": [
           "unit"
         ],
         "docstring": "Test decimal comparison handles None values.",
         "class": "TestStateDeltaUpdaterHelpers"
+      },
+      {
+        "name": "TestStateDeltaUpdaterAccountRiskSystem::test_compare_account_no_changes",
+        "line": 93,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test account comparison with identical data.",
+        "class": "TestStateDeltaUpdaterAccountRiskSystem"
+      },
+      {
+        "name": "TestStateDeltaUpdaterAccountRiskSystem::test_compare_account_balance_change",
+        "line": 113,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test account comparison detects balance change.",
+        "class": "TestStateDeltaUpdaterAccountRiskSystem"
+      },
+      {
+        "name": "TestStateDeltaUpdaterAccountRiskSystem::test_compare_risk_no_changes",
+        "line": 146,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test risk comparison with identical data.",
+        "class": "TestStateDeltaUpdaterAccountRiskSystem"
+      },
+      {
+        "name": "TestStateDeltaUpdaterAccountRiskSystem::test_compare_risk_reduce_only_change",
+        "line": 162,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test risk comparison detects reduce_only mode change.",
+        "class": "TestStateDeltaUpdaterAccountRiskSystem"
+      },
+      {
+        "name": "TestStateDeltaUpdaterAccountRiskSystem::test_compare_system_no_changes",
+        "line": 185,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test system comparison with identical data.",
+        "class": "TestStateDeltaUpdaterAccountRiskSystem"
+      },
+      {
+        "name": "TestStateDeltaUpdaterAccountRiskSystem::test_compare_system_connection_change",
+        "line": 200,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test system comparison detects connection status change.",
+        "class": "TestStateDeltaUpdaterAccountRiskSystem"
+      }
+    ],
+    "tests/unit/gpt_trader/tui/state_management/test_delta_updater_market_orders.py": [
+      {
+        "name": "TestStateDeltaUpdaterMarketAndPositions::test_compare_market_no_changes",
+        "line": 35,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test market comparison with identical data.",
+        "class": "TestStateDeltaUpdaterMarketAndPositions"
+      },
+      {
+        "name": "TestStateDeltaUpdaterMarketAndPositions::test_compare_market_changes",
+        "line": 70,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": "Test market comparison detects price or symbol changes.",
+        "class": "TestStateDeltaUpdaterMarketAndPositions"
+      },
+      {
+        "name": "TestStateDeltaUpdaterMarketAndPositions::test_compare_positions_no_changes",
+        "line": 87,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test position comparison with identical data.",
+        "class": "TestStateDeltaUpdaterMarketAndPositions"
+      },
+      {
+        "name": "TestStateDeltaUpdaterMarketAndPositions::test_compare_positions_pnl_change",
+        "line": 108,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test position comparison detects P&L change.",
+        "class": "TestStateDeltaUpdaterMarketAndPositions"
+      },
+      {
+        "name": "TestStateDeltaUpdaterOrdersAndTrades::test_compare_orders_no_changes",
+        "line": 147,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test order comparison with identical data.",
+        "class": "TestStateDeltaUpdaterOrdersAndTrades"
+      },
+      {
+        "name": "TestStateDeltaUpdaterOrdersAndTrades::test_compare_orders_changes",
+        "line": 182,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": "Test order comparison detects order changes.",
+        "class": "TestStateDeltaUpdaterOrdersAndTrades"
+      },
+      {
+        "name": "TestStateDeltaUpdaterOrdersAndTrades::test_compare_trades_no_changes",
+        "line": 191,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test trade comparison with identical data.",
+        "class": "TestStateDeltaUpdaterOrdersAndTrades"
+      },
+      {
+        "name": "TestStateDeltaUpdaterOrdersAndTrades::test_compare_trades_new_trade",
+        "line": 212,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test trade comparison detects new trade.",
+        "class": "TestStateDeltaUpdaterOrdersAndTrades"
       }
     ],
     "tests/unit/gpt_trader/tui/state_management/test_validators_account_risk_system.py": [

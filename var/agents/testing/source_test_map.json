@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 702,
+    "tests_scanned": 701,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -387,7 +387,6 @@
       "tests/unit/gpt_trader/features/live_trade/execution/test_router_order_result.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_account.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_flow.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_price.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_validation.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_validation_async.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_validation_exchange.py",
@@ -862,8 +861,7 @@
     "gpt_trader.features.live_trade.execution.state_collection": [
       "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_account.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_flow.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_price.py"
+      "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_flow.py"
     ],
     "gpt_trader.features.live_trade.execution.submission_result": [
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py",
@@ -3233,10 +3231,6 @@
       "gpt_trader.core",
       "gpt_trader.features.live_trade.execution.state_collection",
       "gpt_trader.features.live_trade.risk"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_price.py": [
-      "gpt_trader.core",
-      "gpt_trader.features.live_trade.execution.state_collection"
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_validation.py": [
       "gpt_trader.core",

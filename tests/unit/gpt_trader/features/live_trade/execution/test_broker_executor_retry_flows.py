@@ -9,7 +9,11 @@ import pytest
 
 import gpt_trader.features.live_trade.execution.broker_executor as broker_executor_module
 from gpt_trader.core import Order, OrderSide, OrderType
-from gpt_trader.features.live_trade.execution.broker_executor import BrokerExecutor, RetryPolicy
+from gpt_trader.features.live_trade.execution.broker_executor import (
+    BrokerExecutor,
+    RetryPolicy,
+    execute_with_retry,
+)
 from tests.fixtures.failure_injection import (
     FailureScript,
     InjectingBroker,
@@ -189,3 +193,43 @@ def test_all_retries_exhausted_raises_last_exception() -> None:
 
     assert injecting.get_call_count("place_order") == 3
     assert len(get_sleeps()) == 2
+
+
+def test_timeout_error_is_retryable() -> None:
+    func = MagicMock(side_effect=[TimeoutError("timed out"), "success"])
+    policy = RetryPolicy(max_attempts=3, jitter=0)
+    sleep_calls: list[float] = []
+
+    result = execute_with_retry(
+        func,
+        policy,
+        client_order_id="test-123",
+        sleep_fn=sleep_calls.append,
+    )
+
+    assert result == "success"
+    assert func.call_count == 2
+
+
+def test_client_order_id_logged_consistently(monkeypatch: pytest.MonkeyPatch) -> None:
+    mock_logger = MagicMock()
+    monkeypatch.setattr(broker_executor_module, "logger", mock_logger)
+
+    func = MagicMock(side_effect=[ConnectionError("fail"), "success"])
+    policy = RetryPolicy(max_attempts=3, jitter=0)
+
+    result = execute_with_retry(
+        func,
+        policy,
+        client_order_id="stable-id-123",
+        operation="test_op",
+        sleep_fn=lambda _: None,
+    )
+
+    assert result == "success"
+    assert func.call_count == 2
+
+    assert mock_logger.warning.call_args.kwargs["client_order_id"] == "stable-id-123"
+    for call in mock_logger.info.call_args_list:
+        if "client_order_id" in call.kwargs:
+            assert call.kwargs["client_order_id"] == "stable-id-123"

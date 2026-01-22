@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6078,
-    "total_files": 748,
+    "total_tests": 6062,
+    "total_files": 747,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 5913,
+    "unit": 5897,
     "asyncio": 344,
-    "parametrize": 135,
+    "parametrize": 139,
     "property": 82,
     "integration": 79,
     "endpoints": 78,
@@ -170,7 +170,6 @@
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_queue.py",
-      "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_stop.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_accrual_init.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_accrual_scenarios.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_edge_cases.py",
@@ -6068,112 +6067,64 @@
     ],
     "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit.py": [
       {
-        "name": "TestLimitOrderFill::test_buy_limit_price_touched_sufficient_volume",
-        "line": 17,
+        "name": "test_limit_order_price_touch",
+        "line": 26,
         "markers": [
+          "parametrize",
           "unit"
         ],
-        "docstring": "Test buy limit order fills when price drops to limit and volume is sufficient.",
-        "class": "TestLimitOrderFill"
+        "docstring": ""
       },
       {
-        "name": "TestLimitOrderFill::test_buy_limit_price_not_touched",
-        "line": 41,
+        "name": "test_limit_order_insufficient_volume",
+        "line": 57,
         "markers": [
           "unit"
         ],
-        "docstring": "Test buy limit order not filled when price doesn't drop to limit.",
-        "class": "TestLimitOrderFill"
+        "docstring": ""
       },
       {
-        "name": "TestLimitOrderFill::test_sell_limit_price_touched",
-        "line": 61,
+        "name": "test_limit_order_without_price_raises",
+        "line": 78,
         "markers": [
           "unit"
         ],
-        "docstring": "Test sell limit order fills when price rises to limit.",
-        "class": "TestLimitOrderFill"
+        "docstring": ""
       },
       {
-        "name": "TestLimitOrderFill::test_sell_limit_price_not_touched",
-        "line": 82,
+        "name": "test_limit_price_touch_logic",
+        "line": 107,
         "markers": [
+          "parametrize",
           "unit"
         ],
-        "docstring": "Test sell limit order not filled when price doesn't reach limit.",
-        "class": "TestLimitOrderFill"
+        "docstring": ""
       },
       {
-        "name": "TestLimitOrderFill::test_limit_order_insufficient_volume",
-        "line": 102,
+        "name": "test_stop_order_triggering",
+        "line": 131,
         "markers": [
+          "parametrize",
           "unit"
         ],
-        "docstring": "Test limit order not filled when bar volume is insufficient.",
-        "class": "TestLimitOrderFill"
+        "docstring": ""
       },
       {
-        "name": "TestLimitOrderFill::test_limit_order_without_price_raises",
-        "line": 124,
+        "name": "test_stop_order_without_stop_price_raises",
+        "line": 162,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that limit order without price raises ValueError.",
-        "class": "TestLimitOrderFill"
+        "docstring": ""
       },
       {
-        "name": "TestPriceTouchLogic::test_buy_limit_touched_at_exact_low",
-        "line": 146,
+        "name": "test_stop_trigger_logic",
+        "line": 191,
         "markers": [
+          "parametrize",
           "unit"
         ],
-        "docstring": "Test buy limit touched when limit equals bar low.",
-        "class": "TestPriceTouchLogic"
-      },
-      {
-        "name": "TestPriceTouchLogic::test_buy_limit_touched_above_low",
-        "line": 157,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test buy limit touched when limit is above bar low.",
-        "class": "TestPriceTouchLogic"
-      },
-      {
-        "name": "TestPriceTouchLogic::test_buy_limit_not_touched_below_low",
-        "line": 168,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test buy limit not touched when limit is below bar low.",
-        "class": "TestPriceTouchLogic"
-      },
-      {
-        "name": "TestPriceTouchLogic::test_sell_limit_touched_at_exact_high",
-        "line": 179,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test sell limit touched when limit equals bar high.",
-        "class": "TestPriceTouchLogic"
-      },
-      {
-        "name": "TestPriceTouchLogic::test_sell_limit_touched_below_high",
-        "line": 190,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test sell limit touched when limit is below bar high.",
-        "class": "TestPriceTouchLogic"
-      },
-      {
-        "name": "TestPriceTouchLogic::test_sell_limit_not_touched_above_high",
-        "line": 201,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test sell limit not touched when limit is above bar high.",
-        "class": "TestPriceTouchLogic"
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_queue.py": [
@@ -6248,107 +6199,6 @@
         ],
         "docstring": "Test 20% fill when volume ratio < 2x.",
         "class": "TestQueueFillEstimation"
-      }
-    ],
-    "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_stop.py": [
-      {
-        "name": "TestStopOrderFill::test_buy_stop_triggered",
-        "line": 17,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test buy stop triggers when price rises to stop price.",
-        "class": "TestStopOrderFill"
-      },
-      {
-        "name": "TestStopOrderFill::test_buy_stop_not_triggered",
-        "line": 39,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test buy stop not triggered when price doesn't reach stop.",
-        "class": "TestStopOrderFill"
-      },
-      {
-        "name": "TestStopOrderFill::test_sell_stop_triggered",
-        "line": 60,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test sell stop triggers when price drops to stop price.",
-        "class": "TestStopOrderFill"
-      },
-      {
-        "name": "TestStopOrderFill::test_sell_stop_not_triggered",
-        "line": 81,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test sell stop not triggered when price doesn't drop to stop.",
-        "class": "TestStopOrderFill"
-      },
-      {
-        "name": "TestStopOrderFill::test_stop_order_without_stop_price_raises",
-        "line": 101,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that stop order without stop_price raises ValueError.",
-        "class": "TestStopOrderFill"
-      },
-      {
-        "name": "TestStopTriggerLogic::test_buy_stop_triggered_at_exact_high",
-        "line": 123,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test buy stop triggers when stop equals bar high.",
-        "class": "TestStopTriggerLogic"
-      },
-      {
-        "name": "TestStopTriggerLogic::test_buy_stop_triggered_below_high",
-        "line": 134,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test buy stop triggers when stop is below bar high.",
-        "class": "TestStopTriggerLogic"
-      },
-      {
-        "name": "TestStopTriggerLogic::test_buy_stop_not_triggered_above_high",
-        "line": 145,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test buy stop not triggered when stop is above bar high.",
-        "class": "TestStopTriggerLogic"
-      },
-      {
-        "name": "TestStopTriggerLogic::test_sell_stop_triggered_at_exact_low",
-        "line": 156,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test sell stop triggers when stop equals bar low.",
-        "class": "TestStopTriggerLogic"
-      },
-      {
-        "name": "TestStopTriggerLogic::test_sell_stop_triggered_above_low",
-        "line": 167,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test sell stop triggers when stop is above bar low.",
-        "class": "TestStopTriggerLogic"
-      },
-      {
-        "name": "TestStopTriggerLogic::test_sell_stop_not_triggered_below_low",
-        "line": 178,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test sell stop not triggered when stop is below bar low.",
-        "class": "TestStopTriggerLogic"
       }
     ],
     "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_accrual_init.py": [

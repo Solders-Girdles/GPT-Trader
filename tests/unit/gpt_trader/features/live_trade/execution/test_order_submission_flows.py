@@ -1,208 +1,238 @@
-"""Order submission flow tests including transient failures and retry behavior."""
-
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
 
-import gpt_trader.features.live_trade.execution.order_event_recorder as recorder_module
-from gpt_trader.core import (
-    Order,
-    OrderSide,
-    OrderStatus,
-    OrderType,
-    TimeInForce,
-)
+from gpt_trader.core import Order, OrderSide, OrderStatus, OrderType, TimeInForce
 from gpt_trader.features.live_trade.execution.order_submission import OrderSubmitter
+from gpt_trader.persistence.orders_store import OrdersStore
+from gpt_trader.persistence.orders_store import OrderStatus as StoreOrderStatus
 from gpt_trader.utilities.datetime_helpers import utc_now
 
 
 @pytest.fixture
-def monitoring_logger(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
-    mock_logger = MagicMock()
-    monkeypatch.setattr(recorder_module, "get_monitoring_logger", lambda: mock_logger)
-    return mock_logger
+def flow_submitter(
+    mock_broker: MagicMock,
+    mock_event_store: MagicMock,
+    open_orders: list[str],
+) -> OrderSubmitter:
+    return OrderSubmitter(
+        broker=mock_broker,
+        event_store=mock_event_store,
+        bot_id="test-bot",
+        open_orders=open_orders,
+    )
 
 
-@pytest.fixture
-def emit_metric_mock(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
-    mock_emit = MagicMock()
-    monkeypatch.setattr(recorder_module, "emit_metric", mock_emit)
-    return mock_emit
+def _status_value(name: str):
+    if name == "CANCELLED":
+        return OrderStatus.CANCELLED
+    status = MagicMock()
+    status.value = name
+    return status
 
 
-class TestOrderSubmissionFlows:
-    """Order submission workflow tests."""
+def _rejected_order(status) -> MagicMock:
+    order = MagicMock()
+    order.id = "rejected-order"
+    order.status = status
+    order.quantity = Decimal("1.0")
+    order.filled_quantity = Decimal("0")
+    return order
 
-    def test_full_order_submission_flow(
-        self,
-        mock_broker: MagicMock,
-        mock_event_store: MagicMock,
-        open_orders: list[str],
-        mock_order: Order,
-        monitoring_logger: MagicMock,
-    ) -> None:
-        """Test complete order submission flow."""
-        mock_broker.place_order.return_value = mock_order
 
-        submitter = OrderSubmitter(
-            broker=mock_broker,
-            event_store=mock_event_store,
-            bot_id="test-bot",
-            open_orders=open_orders,
-        )
+MARKET_KWARGS = {"order_type": OrderType.MARKET, "price": None, "tif": None, "leverage": None}
 
-        result = submitter.submit_order(
-            symbol="BTC-PERP",
-            side=OrderSide.BUY,
-            order_type=OrderType.LIMIT,
-            order_quantity=Decimal("1.0"),
-            price=Decimal("50000"),
-            effective_price=Decimal("50000"),
+
+def test_submit_order_success_tracks_trade(
+    flow_submitter: OrderSubmitter,
+    submit_order_call,
+    mock_broker: MagicMock,
+    mock_order: Order,
+    mock_event_store: MagicMock,
+    open_orders: list[str],
+) -> None:
+    mock_broker.place_order.return_value = mock_order
+
+    result = submit_order_call(flow_submitter, client_order_id="custom-id")
+
+    assert result == "order-123"
+    assert "order-123" in open_orders
+    mock_event_store.append_trade.assert_called_once()
+
+
+@pytest.mark.parametrize("status_name", ["CANCELLED", "FAILED"])
+def test_submit_order_rejection_returns_none(
+    status_name: str,
+    flow_submitter: OrderSubmitter,
+    submit_order_call,
+    mock_broker: MagicMock,
+    emit_metric_mock: MagicMock,
+    monitoring_logger: MagicMock,
+    open_orders: list[str],
+) -> None:
+    mock_broker.place_order.return_value = _rejected_order(_status_value(status_name))
+
+    result = submit_order_call(flow_submitter, **MARKET_KWARGS, reduce_only=True)
+
+    assert result is None
+    assert "rejected-order" not in open_orders
+    emit_metric_mock.assert_called()
+
+
+def test_submit_order_exception_returns_none(
+    flow_submitter: OrderSubmitter,
+    submit_order_call,
+    mock_broker: MagicMock,
+    monitoring_logger: MagicMock,
+) -> None:
+    mock_broker.place_order.side_effect = RuntimeError("API error")
+
+    result = submit_order_call(flow_submitter)
+
+    assert result is None
+
+
+def test_submit_order_none_order_returns_none(
+    flow_submitter: OrderSubmitter,
+    submit_order_call,
+    mock_broker: MagicMock,
+) -> None:
+    mock_broker.place_order.return_value = None
+
+    result = submit_order_call(
+        flow_submitter,
+        **MARKET_KWARGS,
+        reduce_only=True,
+        client_order_id="test-id",
+    )
+
+    assert result is None
+
+
+def test_submit_order_none_order_persists_terminal_status(
+    mock_broker: MagicMock,
+    mock_event_store: MagicMock,
+    open_orders: list[str],
+    submit_order_call,
+    tmp_path,
+) -> None:
+    mock_broker.place_order.return_value = None
+
+    orders_store = OrdersStore(tmp_path)
+    orders_store.initialize()
+    submitter = OrderSubmitter(
+        broker=mock_broker,
+        event_store=mock_event_store,
+        bot_id="test-bot",
+        open_orders=open_orders,
+        orders_store=orders_store,
+    )
+
+    result = submit_order_call(
+        submitter,
+        **MARKET_KWARGS,
+        reduce_only=True,
+        client_order_id="test-id",
+    )
+
+    assert result is None
+    assert orders_store.get_pending_orders() == []
+    record = orders_store.get_order("test-id")
+    assert record is not None
+    assert record.status in {StoreOrderStatus.REJECTED, StoreOrderStatus.FAILED}
+
+
+def test_transient_failure_then_success_reuses_client_order_id(
+    flow_submitter: OrderSubmitter,
+    submit_order_call,
+    mock_broker: MagicMock,
+    open_orders: list[str],
+) -> None:
+    captured_client_ids: list[str] = []
+    call_count = [0]
+
+    def capture_and_respond(**kwargs) -> Order:
+        captured_client_ids.append(kwargs.get("client_id", ""))
+        call_count[0] += 1
+        if call_count[0] == 1:
+            raise ConnectionError("transient network error")
+        return Order(
+            id="order-success-123",
+            client_id=kwargs.get("client_id", ""),
+            symbol=kwargs.get("symbol", "BTC-USD"),
+            side=kwargs.get("side", OrderSide.BUY),
+            type=kwargs.get("order_type", OrderType.MARKET),
+            quantity=kwargs.get("quantity", Decimal("1.0")),
+            price=None,
             stop_price=None,
             tif=TimeInForce.GTC,
-            reduce_only=False,
-            leverage=10,
-            client_order_id="custom-id",
+            status=OrderStatus.PENDING,
+            submitted_at=utc_now(),
+            updated_at=utc_now(),
         )
 
-        assert result == "order-123"
-        assert "order-123" in open_orders
-        mock_broker.place_order.assert_called_once()
-        mock_event_store.append_trade.assert_called_once()
+    mock_broker.place_order = capture_and_respond
+    fixed_client_id = "idempotent-order-abc123"
 
-    def test_rejection_flow(
-        self,
-        mock_broker: MagicMock,
-        mock_event_store: MagicMock,
-        open_orders: list[str],
-        monitoring_logger: MagicMock,
-        emit_metric_mock: MagicMock,
-    ) -> None:
-        """Test order rejection flow."""
-        rejected_order = MagicMock()
-        rejected_order.id = "rejected-order"
-        rejected_order.status = MagicMock()
-        rejected_order.status.value = "FAILED"
-        rejected_order.quantity = Decimal("1.0")
-        rejected_order.filled_quantity = Decimal("0")
-        mock_broker.place_order.return_value = rejected_order
+    result1 = submit_order_call(
+        flow_submitter,
+        symbol="BTC-USD",
+        **MARKET_KWARGS,
+        client_order_id=fixed_client_id,
+    )
+    assert result1 is None
 
-        submitter = OrderSubmitter(
-            broker=mock_broker,
-            event_store=mock_event_store,
-            bot_id="test-bot",
-            open_orders=open_orders,
-        )
+    result2 = submit_order_call(
+        flow_submitter,
+        symbol="BTC-USD",
+        **MARKET_KWARGS,
+        client_order_id=fixed_client_id,
+    )
 
-        result = submitter.submit_order(
-            symbol="BTC-PERP",
-            side=OrderSide.BUY,
-            order_type=OrderType.MARKET,
-            order_quantity=Decimal("1.0"),
-            price=None,
-            effective_price=Decimal("50000"),
-            stop_price=None,
-            tif=None,
-            reduce_only=True,
-            leverage=None,
-            client_order_id=None,
-        )
-
-        assert result is None
-        assert "rejected-order" not in open_orders
-        emit_metric_mock.assert_called()
+    assert result2 == "order-success-123"
+    assert captured_client_ids == [fixed_client_id, fixed_client_id]
+    assert open_orders == ["order-success-123"]
 
 
-class TestTransientFailureWithClientOrderIdReuse:
-    """Integration test for transient failure followed by success."""
+@pytest.mark.parametrize(
+    ("client_order_id", "expect_same"),
+    [("retry-test-123", True), (None, False)],
+)
+def test_retry_client_order_id_behavior(
+    client_order_id: str | None,
+    expect_same: bool,
+    flow_submitter: OrderSubmitter,
+    submit_order_call,
+    mock_broker: MagicMock,
+    monitoring_logger: MagicMock,
+) -> None:
+    captured_client_ids: list[str] = []
 
-    def test_transient_failure_then_success_reuses_client_order_id(
-        self,
-        monitoring_logger: MagicMock,
-        emit_metric_mock: MagicMock,
-    ) -> None:
-        """Test that transient failure followed by success reuses client_order_id."""
-        captured_client_ids: list[str] = []
-        call_count = [0]
+    def capture_client_id(**kwargs):
+        captured_client_ids.append(kwargs.get("client_id", ""))
+        raise RuntimeError("Simulated transient error")
 
-        def capture_and_respond(**kwargs: Any) -> Order:
-            """Capture client_id, fail first, succeed second."""
-            captured_client_ids.append(kwargs.get("client_id", ""))
-            call_count[0] += 1
+    mock_broker.place_order.side_effect = capture_client_id
 
-            if call_count[0] == 1:
-                raise ConnectionError("transient network error")
+    submit_order_call(
+        flow_submitter,
+        symbol="BTC-USD",
+        **MARKET_KWARGS,
+        client_order_id=client_order_id,
+    )
+    submit_order_call(
+        flow_submitter,
+        symbol="BTC-USD",
+        **MARKET_KWARGS,
+        client_order_id=client_order_id,
+    )
 
-            return Order(
-                id="order-success-123",
-                client_id=kwargs.get("client_id", ""),
-                symbol=kwargs.get("symbol", "BTC-USD"),
-                side=kwargs.get("side", OrderSide.BUY),
-                type=kwargs.get("order_type", OrderType.MARKET),
-                quantity=kwargs.get("quantity", Decimal("1.0")),
-                price=None,
-                stop_price=None,
-                tif=TimeInForce.GTC,
-                status=OrderStatus.PENDING,
-                submitted_at=utc_now(),
-                updated_at=utc_now(),
-            )
-
-        mock_broker = MagicMock()
-        mock_broker.place_order = capture_and_respond
-        mock_event_store = MagicMock()
-
-        open_orders: list[str] = []
-        fixed_client_id = "idempotent-order-abc123"
-
-        submitter = OrderSubmitter(
-            broker=mock_broker,
-            event_store=mock_event_store,
-            bot_id="test-bot",
-            open_orders=open_orders,
-        )
-
-        result1 = submitter.submit_order(
-            symbol="BTC-USD",
-            side=OrderSide.BUY,
-            order_type=OrderType.MARKET,
-            order_quantity=Decimal("1.0"),
-            price=None,
-            effective_price=Decimal("50000"),
-            stop_price=None,
-            tif=None,
-            reduce_only=False,
-            leverage=None,
-            client_order_id=fixed_client_id,
-        )
-
-        assert result1 is None
-        assert fixed_client_id not in open_orders
-
-        result2 = submitter.submit_order(
-            symbol="BTC-USD",
-            side=OrderSide.BUY,
-            order_type=OrderType.MARKET,
-            order_quantity=Decimal("1.0"),
-            price=None,
-            effective_price=Decimal("50000"),
-            stop_price=None,
-            tif=None,
-            reduce_only=False,
-            leverage=None,
-            client_order_id=fixed_client_id,
-        )
-
-        assert result2 is not None
-        assert result2 == "order-success-123"
-
-        assert len(captured_client_ids) == 2
-        assert captured_client_ids[0] == fixed_client_id
-        assert captured_client_ids[1] == fixed_client_id
-
-        assert len(open_orders) == 1
-        assert open_orders[0] == "order-success-123"
+    if expect_same:
+        assert captured_client_ids == ["retry-test-123", "retry-test-123"]
+    else:
+        assert captured_client_ids[0] != captured_client_ids[1]
+        assert captured_client_ids[0].startswith("test-bot_")
+        assert captured_client_ids[1].startswith("test-bot_")

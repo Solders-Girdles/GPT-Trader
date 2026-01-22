@@ -1,4 +1,4 @@
-"""Tests for `BacktestReporter.generate_result`."""
+"""Tests for report generation helpers and outputs."""
 
 from __future__ import annotations
 
@@ -14,8 +14,10 @@ from tests.unit.gpt_trader.backtesting.metrics.report_test_utils import (  # nam
 )
 
 import gpt_trader.backtesting.metrics.report as report_module
-from gpt_trader.backtesting.metrics.report import BacktestReporter
-from gpt_trader.backtesting.metrics.risk import RiskMetrics
+from gpt_trader.backtesting.metrics.report import (
+    BacktestReporter,
+    generate_backtest_report,
+)
 from gpt_trader.backtesting.metrics.statistics import TradeStatistics
 
 START_DATE = datetime(2024, 1, 1)
@@ -28,7 +30,7 @@ def mock_stats() -> TradeStatistics:
 
 
 @pytest.fixture
-def mock_risk() -> RiskMetrics:
+def mock_risk():
     return create_mock_risk_metrics()
 
 
@@ -36,13 +38,48 @@ def mock_risk() -> RiskMetrics:
 def metrics_mocks(
     monkeypatch: pytest.MonkeyPatch,
     mock_stats: TradeStatistics,
-    mock_risk: RiskMetrics,
+    mock_risk,
 ) -> dict[str, MagicMock]:
     trade_stats = MagicMock(return_value=mock_stats)
     risk_metrics = MagicMock(return_value=mock_risk)
     monkeypatch.setattr(report_module, "calculate_trade_statistics", trade_stats)
     monkeypatch.setattr(report_module, "calculate_risk_metrics", risk_metrics)
     return {"trade_stats": trade_stats, "risk_metrics": risk_metrics}
+
+
+class TestGenerateBacktestReportFunction:
+    """Tests for generate_backtest_report convenience function."""
+
+    def test_returns_backtest_result(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        broker = create_mock_broker()
+        mock_stats = create_mock_trade_stats()
+        mock_risk = create_mock_risk_metrics()
+
+        mock_calculate_trade_statistics = MagicMock(return_value=mock_stats)
+        mock_calculate_risk_metrics = MagicMock(return_value=mock_risk)
+        monkeypatch.setattr(
+            report_module,
+            "calculate_trade_statistics",
+            mock_calculate_trade_statistics,
+        )
+        monkeypatch.setattr(
+            report_module,
+            "calculate_risk_metrics",
+            mock_calculate_risk_metrics,
+        )
+
+        result = generate_backtest_report(
+            broker=broker,
+            start_date=datetime(2024, 1, 1),
+            end_date=datetime(2024, 2, 1),
+        )
+
+        assert result is not None
+        assert result.start_date == datetime(2024, 1, 1)
+        assert result.end_date == datetime(2024, 2, 1)
+        assert result.duration_days == 31
+        mock_calculate_trade_statistics.assert_called_once_with(broker)
+        mock_calculate_risk_metrics.assert_called_once_with(broker)
 
 
 class TestBacktestReporterGenerateResult:
@@ -110,7 +147,6 @@ class TestBacktestReporterGenerateResult:
 
     def test_generate_result_calculates_unrealized_pnl(self, metrics_mocks) -> None:
         broker = create_mock_broker()
-        # Add mock positions with unrealized PnL
         mock_position1 = MagicMock()
         mock_position1.unrealized_pnl = Decimal("500")
         mock_position2 = MagicMock()

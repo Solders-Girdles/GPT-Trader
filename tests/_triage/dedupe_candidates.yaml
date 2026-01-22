@@ -1413,11 +1413,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/tui/mixins/test_event_handlers.py
-    expected_file_delta: -3
+    expected_file_delta: -2
     priority: low
-    rationale: Consolidate 4 test files into single parametrized file
-    status: in_progress
+    rationale: Consolidated event handler tests into core + utils to stay under hygiene cap
+    status: done
     owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/362
     added: '2026-01-20'
   4e52c9b8ac2b:
     type: similar_names

@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
 
+import pytest
+
+from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.market_data_features import (
     DepthSnapshot,
     RollingWindow,
@@ -106,3 +110,110 @@ def test_trade_tape_default_timestamp() -> None:
 
 def test_get_expected_perps() -> None:
     assert get_expected_perps() == {"BTC-PERP", "ETH-PERP", "SOL-PERP", "XRP-PERP"}
+
+
+class _DummyAuth:
+    def __init__(self) -> None:
+        self.called = False
+
+    def get_headers(self, *args, **kwargs):  # noqa: ANN002, ANN003
+        self.called = True
+        return {"Authorization": "Bearer test"}
+
+
+def _call_ticker(client: CoinbaseClient) -> dict:
+    return client.get_ticker("BTC-USD")
+
+
+def _call_candles(client: CoinbaseClient) -> dict:
+    return client.get_candles("BTC-USD", "1H", limit=2)
+
+
+def _assert_payload(result: dict, payload: dict) -> None:
+    if "price" in payload:
+        assert result.get("price") == payload["price"]
+    else:
+        assert result.get("candles") == payload["candles"]
+
+
+_REQUESTS = [
+    (
+        _call_ticker,
+        "/api/v3/brokerage/market/products/BTC-USD/ticker",
+        "/api/v3/brokerage/products/BTC-USD/ticker",
+        {"price": "100", "bid": "99", "ask": "101"},
+    ),
+    (
+        _call_candles,
+        "/api/v3/brokerage/market/products/BTC-USD/candles?granularity=1H&limit=2",
+        "/api/v3/brokerage/products/BTC-USD/candles?granularity=1H&limit=2",
+        {"candles": []},
+    ),
+]
+
+
+@pytest.mark.parametrize("call_fn, public_suffix, _auth_suffix, payload", _REQUESTS)
+def test_public_endpoint_used_when_unauthenticated(
+    call_fn, public_suffix: str, _auth_suffix: str, payload: dict
+) -> None:
+    client = CoinbaseClient(base_url="https://api.coinbase.com", auth=None, api_mode="advanced")
+    calls: list[str] = []
+
+    def transport(method, url, headers, body, timeout):  # noqa: ANN001, ANN002, ANN003
+        calls.append(url)
+        return 200, {}, json.dumps(payload)
+
+    client.set_transport_for_testing(transport)
+
+    result = call_fn(client)
+
+    _assert_payload(result, payload)
+    assert len(calls) == 1
+    assert calls[0].endswith(public_suffix)
+
+
+@pytest.mark.parametrize("call_fn, public_suffix, _auth_suffix, payload", _REQUESTS)
+def test_public_endpoint_used_when_authenticated(
+    call_fn, public_suffix: str, _auth_suffix: str, payload: dict
+) -> None:
+    auth = _DummyAuth()
+    client = CoinbaseClient(base_url="https://api.coinbase.com", auth=auth, api_mode="advanced")
+    calls: list[str] = []
+
+    def transport(method, url, headers, body, timeout):  # noqa: ANN001, ANN002, ANN003
+        calls.append(url)
+        return 200, {}, json.dumps(payload)
+
+    client.set_transport_for_testing(transport)
+
+    result = call_fn(client)
+
+    _assert_payload(result, payload)
+    assert len(calls) == 1
+    assert calls[0].endswith(public_suffix)
+    assert auth.called is False
+
+
+@pytest.mark.parametrize("call_fn, public_suffix, auth_suffix, payload", _REQUESTS)
+def test_public_not_found_falls_back_to_authenticated(
+    call_fn, public_suffix: str, auth_suffix: str, payload: dict
+) -> None:
+    auth = _DummyAuth()
+    client = CoinbaseClient(base_url="https://api.coinbase.com", auth=auth, api_mode="advanced")
+    calls: list[str] = []
+
+    def transport(method, url, headers, body, timeout):  # noqa: ANN001, ANN002, ANN003
+        calls.append(url)
+        if url.endswith(public_suffix):
+            return 404, {}, json.dumps({"message": "not found"})
+        return 200, {}, json.dumps(payload)
+
+    client.set_transport_for_testing(transport)
+
+    result = call_fn(client)
+
+    _assert_payload(result, payload)
+    assert len(calls) == 2
+    assert calls[0].endswith(public_suffix)
+    assert calls[1].endswith(auth_suffix)
+    assert auth.called is True

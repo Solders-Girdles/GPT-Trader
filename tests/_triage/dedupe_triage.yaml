@@ -6,7 +6,7 @@
 #   deferred: maybe later (hide from suggestions)
 #
 version: 1
-generated_at: '2026-01-21T23:23:38.513718+00:00'
+generated_at: '2026-01-22T00:45:15.098240+00:00'
 clusters:
   0bdbfcad487d:
     state: rejected
@@ -82,3 +82,8 @@ clusters:
     owner: codex
     updated: '2026-01-21'
     reason: Shared import fanout across subsystems; not a true dedupe target
+  89424704f490:
+    state: rejected
+    owner: codex
+    updated: '2026-01-22'
+    reason: Handled via narrower similar_names clusters

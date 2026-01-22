@@ -1,13 +1,16 @@
-"""Edge-case unit tests for StatusReporter update methods."""
+"""Edge-case unit tests for StatusReporter updates and health."""
 
 from __future__ import annotations
 
+import tempfile
 import time
 from decimal import Decimal
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
 
+from gpt_trader.monitoring.metrics_collector import reset_all
 from gpt_trader.monitoring.status_reporter import StatusReporter
 
 
@@ -190,3 +193,47 @@ def test_update_account_accepts_object_balances_and_coerces_invalid() -> None:
     assert balances[0].total == Decimal("1.25")
     assert balances[0].available == Decimal("0")
     assert balances[0].hold == Decimal("0")
+
+
+class TestStatusReporterHealth:
+    """Tests for StatusReporter health assessment."""
+
+    @pytest.mark.asyncio
+    async def test_healthy_status(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            status_file = Path(tmpdir) / "status.json"
+            reporter = StatusReporter(status_file=str(status_file))
+
+            reset_all()
+            await reporter.start()
+            reporter.update_price("BTC-USD", Decimal("50000"))
+            try:
+                status = reporter.get_status()
+                assert status.healthy is True
+                assert status.health_issues == []
+            finally:
+                await reporter.stop()
+
+    def test_unhealthy_recent_error(self) -> None:
+        reporter = StatusReporter()
+        reporter._running = True
+        reporter._start_time = time.time()
+
+        reporter.record_error("Something went wrong")
+        reporter.update_price("BTC-USD", Decimal("50000"))
+
+        status = reporter.get_status()
+        assert status.healthy is False
+        assert any("Recent error" in issue for issue in status.health_issues)
+
+    def test_unhealthy_stale_prices(self) -> None:
+        reporter = StatusReporter()
+        reporter._running = True
+        reporter._start_time = time.time()
+
+        reporter._last_prices["BTC-USD"] = Decimal("50000")
+        reporter._last_price_update = time.time() - 300
+
+        status = reporter.get_status()
+        assert status.healthy is False
+        assert any("Stale prices" in issue for issue in status.health_issues)

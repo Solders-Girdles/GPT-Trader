@@ -293,7 +293,8 @@ clusters:
     expected_file_delta: -13
     priority: high
     rationale: Consolidate 14 test files into single parametrized file
-    status: pending
+    status: in_progress
+    owner: codex
     added: '2026-01-20'
   80ba0a3672df:
     type: source_fanout
@@ -319,7 +320,8 @@ clusters:
     expected_file_delta: -12
     priority: high
     rationale: Consolidate 13 test files into single parametrized file
-    status: pending
+    status: in_progress
+    owner: codex
     added: '2026-01-20'
   8ac1470c0e4c:
     type: source_fanout

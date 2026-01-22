@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 701,
+    "tests_scanned": 699,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -27,9 +27,7 @@
       "tests/unit/gpt_trader/app/config/test_profile_loader_container_api.py",
       "tests/unit/gpt_trader/app/containers/test_risk_validation.py",
       "tests/unit/gpt_trader/app/containers/test_risk_validation_kill_switch.py",
-      "tests/unit/gpt_trader/app/test_application_container_bot_creation.py",
-      "tests/unit/gpt_trader/app/test_application_container_registry.py",
-      "tests/unit/gpt_trader/app/test_application_container_reset_and_services.py",
+      "tests/unit/gpt_trader/app/test_application_container.py",
       "tests/unit/gpt_trader/app/test_application_container_resources.py",
       "tests/unit/gpt_trader/app/test_bootstrap.py",
       "tests/unit/gpt_trader/app/test_bootstrap_profile_loading.py",
@@ -62,8 +60,7 @@
       "tests/integration/test_container_lifecycle_runtime.py",
       "tests/unit/gpt_trader/app/config/test_profile_loader.py",
       "tests/unit/gpt_trader/app/config/test_profile_loader_container_api.py",
-      "tests/unit/gpt_trader/app/test_application_container_registry.py",
-      "tests/unit/gpt_trader/app/test_application_container_reset_and_services.py",
+      "tests/unit/gpt_trader/app/test_application_container.py",
       "tests/unit/gpt_trader/config/test_bot_config.py"
     ],
     "gpt_trader.app.config.validation": [
@@ -83,9 +80,7 @@
       "tests/integration/test_validation_escalation_flow.py",
       "tests/integration/test_validation_escalation_metrics.py",
       "tests/unit/gpt_trader/app/config/test_profile_loader_container_api.py",
-      "tests/unit/gpt_trader/app/test_application_container_bot_creation.py",
-      "tests/unit/gpt_trader/app/test_application_container_registry.py",
-      "tests/unit/gpt_trader/app/test_application_container_reset_and_services.py",
+      "tests/unit/gpt_trader/app/test_application_container.py",
       "tests/unit/gpt_trader/app/test_application_container_resources.py",
       "tests/unit/gpt_trader/app/test_bootstrap.py",
       "tests/unit/gpt_trader/app/test_bootstrap_profile_loading.py",
@@ -96,8 +91,7 @@
       "tests/unit/gpt_trader/preflight/test_checks_simulation.py"
     ],
     "gpt_trader.app.containers.brokerage": [
-      "tests/unit/gpt_trader/app/test_application_container_bot_creation.py",
-      "tests/unit/gpt_trader/app/test_application_container_reset_and_services.py",
+      "tests/unit/gpt_trader/app/test_application_container.py",
       "tests/unit/gpt_trader/app/test_application_container_resources.py"
     ],
     "gpt_trader.app.containers.risk_validation": [
@@ -106,7 +100,7 @@
     ],
     "gpt_trader.app.health_server": [
       "tests/integration/test_health_server.py",
-      "tests/unit/gpt_trader/app/test_application_container_reset_and_services.py",
+      "tests/unit/gpt_trader/app/test_application_container.py",
       "tests/unit/gpt_trader/app/test_health_server_helpers.py",
       "tests/unit/gpt_trader/app/test_health_server_state.py",
       "tests/unit/gpt_trader/monitoring/test_health_checks_runner.py"
@@ -738,7 +732,7 @@
     "gpt_trader.features.live_trade.bot": [
       "tests/integration/test_core_validation.py",
       "tests/integration/test_paper_mode.py",
-      "tests/unit/gpt_trader/app/test_application_container_bot_creation.py",
+      "tests/unit/gpt_trader/app/test_application_container.py",
       "tests/unit/gpt_trader/app/test_bootstrap.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_engine_delegation.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop.py",
@@ -874,8 +868,7 @@
       "tests/property/test_validation_invariants_escalation.py",
       "tests/property/test_validation_invariants_interleaved.py",
       "tests/unit/gpt_trader/app/containers/test_risk_validation.py",
-      "tests/unit/gpt_trader/app/test_application_container_registry.py",
-      "tests/unit/gpt_trader/app/test_application_container_reset_and_services.py",
+      "tests/unit/gpt_trader/app/test_application_container.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_orders.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_get_validation_metrics.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_validation.py",
@@ -1542,7 +1535,7 @@
       "tests/unit/gpt_trader/security/test_request_validator_limits.py"
     ],
     "gpt_trader.security.secrets_manager": [
-      "tests/unit/gpt_trader/app/test_application_container_reset_and_services.py",
+      "tests/unit/gpt_trader/app/test_application_container.py",
       "tests/unit/gpt_trader/security/secrets_manager/test_cache_concurrency.py",
       "tests/unit/gpt_trader/security/secrets_manager/test_encryption_bootstrap.py",
       "tests/unit/gpt_trader/security/secrets_manager/test_error_bootstrap.py",
@@ -2271,24 +2264,13 @@
       "gpt_trader.app.containers.risk_validation",
       "gpt_trader.features.live_trade.strategies.perps_baseline"
     ],
-    "tests/unit/gpt_trader/app/test_application_container_bot_creation.py": [
-      "gpt_trader.app.config",
-      "gpt_trader.app.container",
-      "gpt_trader.app.containers.brokerage",
-      "gpt_trader.features.live_trade.bot"
-    ],
-    "tests/unit/gpt_trader/app/test_application_container_registry.py": [
-      "gpt_trader.app.config",
-      "gpt_trader.app.config.profile_loader",
-      "gpt_trader.app.container",
-      "gpt_trader.features.live_trade.execution.validation"
-    ],
-    "tests/unit/gpt_trader/app/test_application_container_reset_and_services.py": [
+    "tests/unit/gpt_trader/app/test_application_container.py": [
       "gpt_trader.app.config",
       "gpt_trader.app.config.profile_loader",
       "gpt_trader.app.container",
       "gpt_trader.app.containers.brokerage",
       "gpt_trader.app.health_server",
+      "gpt_trader.features.live_trade.bot",
       "gpt_trader.features.live_trade.execution.validation",
       "gpt_trader.security.secrets_manager"
     ],

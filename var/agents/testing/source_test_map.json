@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 715,
+    "tests_scanned": 713,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -1967,9 +1967,7 @@
       "tests/unit/gpt_trader/monitoring/test_alert_types_alert_lifecycle.py",
       "tests/unit/gpt_trader/security/test_request_validator.py",
       "tests/unit/gpt_trader/utilities/test_datetime_helpers.py",
-      "tests/unit/gpt_trader/utilities/test_datetime_helpers_normalize_to_utc.py",
-      "tests/unit/gpt_trader/utilities/test_datetime_helpers_now.py",
-      "tests/unit/gpt_trader/utilities/test_datetime_helpers_to_iso_utc.py"
+      "tests/unit/gpt_trader/utilities/test_datetime_helpers_now.py"
     ],
     "gpt_trader.utilities.iterators": [
       "tests/unit/gpt_trader/utilities/test_iterators.py"
@@ -4711,13 +4709,7 @@
     "tests/unit/gpt_trader/utilities/test_datetime_helpers.py": [
       "gpt_trader.utilities.datetime_helpers"
     ],
-    "tests/unit/gpt_trader/utilities/test_datetime_helpers_normalize_to_utc.py": [
-      "gpt_trader.utilities.datetime_helpers"
-    ],
     "tests/unit/gpt_trader/utilities/test_datetime_helpers_now.py": [
-      "gpt_trader.utilities.datetime_helpers"
-    ],
-    "tests/unit/gpt_trader/utilities/test_datetime_helpers_to_iso_utc.py": [
       "gpt_trader.utilities.datetime_helpers"
     ],
     "tests/unit/gpt_trader/utilities/test_iterators.py": [

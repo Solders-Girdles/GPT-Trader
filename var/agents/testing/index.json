@@ -7,7 +7,7 @@
     "source_test_map": "source_test_map.json"
   },
   "summary": {
-    "total_tests": 6184,
+    "total_tests": 6182,
     "total_files": 800,
     "markers_used": 16
   },

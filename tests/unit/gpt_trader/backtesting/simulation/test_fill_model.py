@@ -1,14 +1,15 @@
-"""Tests for FillResult, volume threshold, slippage, and spread impact."""
+"""Tests for FillResult, volume threshold, slippage, spread impact, and market fills."""
 
 from datetime import datetime, timezone
 from decimal import Decimal
 
+import pytest
 from tests.unit.gpt_trader.backtesting.simulation.fill_model_test_utils import (  # naming: allow
     make_order,  # naming: allow
 )
 
 from gpt_trader.backtesting.simulation.fill_model import FillResult, OrderFillModel
-from gpt_trader.core import Candle, OrderSide
+from gpt_trader.core import Candle, OrderSide, OrderType
 
 
 class TestFillResult:
@@ -39,66 +40,47 @@ class TestFillResult:
 class TestVolumeThreshold:
     """Test volume threshold logic."""
 
-    def test_sufficient_volume(self) -> None:
+    @pytest.mark.parametrize(
+        ("bar_volume", "expected"),
+        [
+            (Decimal("25"), True),  # 25 >= 10 * 2
+            (Decimal("20"), True),  # 20 == 10 * 2
+            (Decimal("15"), False),  # 15 < 10 * 2
+        ],
+    )
+    def test_volume_threshold(self, bar_volume: Decimal, expected: bool) -> None:
         """Test volume is sufficient when bar_volume >= order_size * threshold."""
         model = OrderFillModel(limit_volume_threshold=Decimal("2.0"))
         sufficient = model._has_sufficient_volume(
             order_size=Decimal("10"),
-            bar_volume=Decimal("25"),  # 25 >= 10 * 2
+            bar_volume=bar_volume,
         )
-        assert sufficient is True
-
-    def test_exact_threshold_volume(self) -> None:
-        """Test exact threshold volume is sufficient."""
-        model = OrderFillModel(limit_volume_threshold=Decimal("2.0"))
-        sufficient = model._has_sufficient_volume(
-            order_size=Decimal("10"),
-            bar_volume=Decimal("20"),  # 20 == 10 * 2
-        )
-        assert sufficient is True
-
-    def test_insufficient_volume(self) -> None:
-        """Test volume is insufficient when below threshold."""
-        model = OrderFillModel(limit_volume_threshold=Decimal("2.0"))
-        sufficient = model._has_sufficient_volume(
-            order_size=Decimal("10"),
-            bar_volume=Decimal("15"),  # 15 < 10 * 2
-        )
-        assert sufficient is False
+        assert sufficient is expected
 
 
 class TestSlippageCalculation:
     """Test slippage calculation for different symbols."""
 
-    def test_btc_slippage_default(self) -> None:
-        """Test BTC pairs use default 2 bps slippage."""
-        model = OrderFillModel()  # No custom slippage
-        slippage = model._get_slippage("BTC-USD")
-        assert slippage == Decimal("2")
-
-    def test_eth_slippage_default(self) -> None:
-        """Test ETH pairs use default 2 bps slippage."""
-        model = OrderFillModel()
-        slippage = model._get_slippage("ETH-USD")
-        assert slippage == Decimal("2")
-
-    def test_unknown_symbol_default(self) -> None:
-        """Test unknown symbols use 5 bps default slippage."""
-        model = OrderFillModel()
-        slippage = model._get_slippage("DOGE-USD")
-        assert slippage == Decimal("5")
-
-    def test_custom_slippage_override(self) -> None:
-        """Test custom slippage overrides defaults."""
-        model = OrderFillModel(slippage_bps={"CUSTOM-USD": Decimal("10")})
-        slippage = model._get_slippage("CUSTOM-USD")
-        assert slippage == Decimal("10")
-
-    def test_btc_perp_uses_btc_default(self) -> None:
-        """Test BTC-PERP uses BTC default slippage."""
-        model = OrderFillModel()
-        slippage = model._get_slippage("BTC-PERP-USDC")
-        assert slippage == Decimal("2")
+    @pytest.mark.parametrize(
+        ("symbol", "expected", "slippage_bps"),
+        [
+            ("BTC-USD", Decimal("2"), None),
+            ("ETH-USD", Decimal("2"), None),
+            ("DOGE-USD", Decimal("5"), None),
+            ("BTC-PERP-USDC", Decimal("2"), None),
+            ("CUSTOM-USD", Decimal("10"), {"CUSTOM-USD": Decimal("10")}),
+        ],
+    )
+    def test_slippage_defaults_and_overrides(
+        self,
+        symbol: str,
+        expected: Decimal,
+        slippage_bps: dict[str, Decimal] | None,
+    ) -> None:
+        """Test slippage defaults and custom overrides."""
+        model = OrderFillModel(slippage_bps=slippage_bps or {})
+        slippage = model._get_slippage(symbol)
+        assert slippage == expected
 
 
 class TestSpreadImpact:
@@ -153,3 +135,88 @@ class TestSpreadImpact:
         assert result.filled is True
         # Fill price should include spread impact + slippage
         assert result.fill_price > Decimal("100")
+
+
+class TestMarketOrderFill:
+    """Test market order fill simulation."""
+
+    def test_buy_market_order_fill(
+        self, fill_model: OrderFillModel, current_bar: Candle, next_bar: Candle
+    ) -> None:
+        """Test buy market order fills at next bar open with slippage."""
+        order = make_order(side=OrderSide.BUY, order_type=OrderType.MARKET)
+        best_bid = Decimal("50100")
+        best_ask = Decimal("50150")
+
+        result = fill_model.fill_market_order(
+            order=order,
+            current_bar=current_bar,
+            best_bid=best_bid,
+            best_ask=best_ask,
+            next_bar=next_bar,
+        )
+
+        assert result.filled is True
+        assert result.fill_quantity == Decimal("1")
+        assert result.is_maker is False  # Market orders are always taker
+        assert result.fill_time == next_bar.ts
+        assert result.fill_price > next_bar.open
+
+    def test_sell_market_order_fill(
+        self, fill_model: OrderFillModel, current_bar: Candle, next_bar: Candle
+    ) -> None:
+        """Test sell market order fills with slippage working against seller."""
+        order = make_order(side=OrderSide.SELL, order_type=OrderType.MARKET)
+        best_bid = Decimal("50100")
+        best_ask = Decimal("50150")
+
+        result = fill_model.fill_market_order(
+            order=order,
+            current_bar=current_bar,
+            best_bid=best_bid,
+            best_ask=best_ask,
+            next_bar=next_bar,
+        )
+
+        assert result.filled is True
+        assert result.is_maker is False
+        assert result.fill_price < next_bar.open
+
+    def test_market_order_without_next_bar(
+        self, fill_model: OrderFillModel, current_bar: Candle
+    ) -> None:
+        """Test market order uses current bar close when no next bar."""
+        order = make_order(side=OrderSide.BUY, order_type=OrderType.MARKET)
+        best_bid = Decimal("50100")
+        best_ask = Decimal("50150")
+
+        result = fill_model.fill_market_order(
+            order=order,
+            current_bar=current_bar,
+            best_bid=best_bid,
+            best_ask=best_ask,
+            next_bar=None,
+        )
+
+        assert result.filled is True
+        assert result.fill_time == current_bar.ts
+        assert result.fill_price > current_bar.close
+
+    def test_market_order_slippage_recorded(
+        self, fill_model: OrderFillModel, current_bar: Candle, next_bar: Candle
+    ) -> None:
+        """Test that slippage is recorded in basis points."""
+        order = make_order(side=OrderSide.BUY, order_type=OrderType.MARKET)
+        best_bid = Decimal("50100")
+        best_ask = Decimal("50150")
+
+        result = fill_model.fill_market_order(
+            order=order,
+            current_bar=current_bar,
+            best_bid=best_bid,
+            best_ask=best_ask,
+            next_bar=next_bar,
+        )
+
+        assert result.slippage_bps is not None
+        assert result.slippage_bps >= Decimal("0")

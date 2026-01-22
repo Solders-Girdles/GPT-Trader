@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6184,
+    "total_tests": 6182,
     "total_files": 800,
     "markers_used": 16
   },
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 6019,
+    "unit": 6017,
     "asyncio": 345,
-    "parametrize": 96,
+    "parametrize": 95,
     "property": 82,
     "integration": 79,
     "endpoints": 78,
@@ -176,7 +176,6 @@
       "tests/unit/gpt_trader/backtesting/simulation/test_fee_calculator_volume_tracking.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit.py",
-      "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_market.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_queue.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_stop.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker_accrual_init.py",
@@ -405,8 +404,9 @@
       "tests/unit/gpt_trader/features/live_trade/execution/test_api_health_guard.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_order.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_init_and_metrics.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_retry_flows.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_resilience.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_retry_helpers.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_with_retry.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_daily_loss_guard.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_get_validation_metrics.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager.py",
@@ -6076,7 +6076,7 @@
     "tests/unit/gpt_trader/backtesting/simulation/test_fill_model.py": [
       {
         "name": "TestFillResult::test_unfilled_result",
-        "line": 17,
+        "line": 19,
         "markers": [
           "unit"
         ],
@@ -6085,7 +6085,7 @@
       },
       {
         "name": "TestFillResult::test_filled_result",
-        "line": 24,
+        "line": 26,
         "markers": [
           "unit"
         ],
@@ -6093,80 +6093,28 @@
         "class": "TestFillResult"
       },
       {
-        "name": "TestVolumeThreshold::test_sufficient_volume",
-        "line": 42,
+        "name": "TestVolumeThreshold::test_volume_threshold",
+        "line": 52,
         "markers": [
+          "parametrize",
           "unit"
         ],
         "docstring": "Test volume is sufficient when bar_volume >= order_size * threshold.",
         "class": "TestVolumeThreshold"
       },
       {
-        "name": "TestVolumeThreshold::test_exact_threshold_volume",
-        "line": 51,
+        "name": "TestSlippageCalculation::test_slippage_defaults_and_overrides",
+        "line": 75,
         "markers": [
+          "parametrize",
           "unit"
         ],
-        "docstring": "Test exact threshold volume is sufficient.",
-        "class": "TestVolumeThreshold"
-      },
-      {
-        "name": "TestVolumeThreshold::test_insufficient_volume",
-        "line": 60,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test volume is insufficient when below threshold.",
-        "class": "TestVolumeThreshold"
-      },
-      {
-        "name": "TestSlippageCalculation::test_btc_slippage_default",
-        "line": 73,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test BTC pairs use default 2 bps slippage.",
-        "class": "TestSlippageCalculation"
-      },
-      {
-        "name": "TestSlippageCalculation::test_eth_slippage_default",
-        "line": 79,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test ETH pairs use default 2 bps slippage.",
-        "class": "TestSlippageCalculation"
-      },
-      {
-        "name": "TestSlippageCalculation::test_unknown_symbol_default",
-        "line": 85,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test unknown symbols use 5 bps default slippage.",
-        "class": "TestSlippageCalculation"
-      },
-      {
-        "name": "TestSlippageCalculation::test_custom_slippage_override",
-        "line": 91,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test custom slippage overrides defaults.",
-        "class": "TestSlippageCalculation"
-      },
-      {
-        "name": "TestSlippageCalculation::test_btc_perp_uses_btc_default",
-        "line": 97,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test BTC-PERP uses BTC default slippage.",
+        "docstring": "Test slippage defaults and custom overrides.",
         "class": "TestSlippageCalculation"
       },
       {
         "name": "TestSpreadImpact::test_zero_spread_impact",
-        "line": 107,
+        "line": 90,
         "markers": [
           "unit"
         ],
@@ -6175,12 +6123,48 @@
       },
       {
         "name": "TestSpreadImpact::test_full_spread_impact",
-        "line": 131,
+        "line": 114,
         "markers": [
           "unit"
         ],
         "docstring": "Test full spread impact when spread_impact_pct is 1.",
         "class": "TestSpreadImpact"
+      },
+      {
+        "name": "TestMarketOrderFill::test_buy_market_order_fill",
+        "line": 144,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test buy market order fills at next bar open with slippage.",
+        "class": "TestMarketOrderFill"
+      },
+      {
+        "name": "TestMarketOrderFill::test_sell_market_order_fill",
+        "line": 166,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test sell market order fills with slippage working against seller.",
+        "class": "TestMarketOrderFill"
+      },
+      {
+        "name": "TestMarketOrderFill::test_market_order_without_next_bar",
+        "line": 186,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test market order uses current bar close when no next bar.",
+        "class": "TestMarketOrderFill"
+      },
+      {
+        "name": "TestMarketOrderFill::test_market_order_slippage_recorded",
+        "line": 206,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that slippage is recorded in basis points.",
+        "class": "TestMarketOrderFill"
       }
     ],
     "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit.py": [
@@ -6237,48 +6221,10 @@
         ],
         "docstring": "Test that limit order without price raises ValueError.",
         "class": "TestLimitOrderFill"
-      }
-    ],
-    "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_market.py": [
-      {
-        "name": "TestMarketOrderFill::test_buy_market_order_fill",
-        "line": 16,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test buy market order fills at next bar open with slippage.",
-        "class": "TestMarketOrderFill"
-      },
-      {
-        "name": "TestMarketOrderFill::test_sell_market_order_fill",
-        "line": 39,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test sell market order fills with slippage working against seller.",
-        "class": "TestMarketOrderFill"
-      },
-      {
-        "name": "TestMarketOrderFill::test_market_order_without_next_bar",
-        "line": 60,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test market order uses current bar close when no next bar.",
-        "class": "TestMarketOrderFill"
-      },
-      {
-        "name": "TestMarketOrderFill::test_market_order_slippage_recorded",
-        "line": 81,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that slippage is recorded in basis points.",
-        "class": "TestMarketOrderFill"
       },
       {
         "name": "TestPriceTouchLogic::test_buy_limit_touched_at_exact_low",
-        "line": 104,
+        "line": 146,
         "markers": [
           "unit"
         ],
@@ -6287,7 +6233,7 @@
       },
       {
         "name": "TestPriceTouchLogic::test_buy_limit_touched_above_low",
-        "line": 115,
+        "line": 157,
         "markers": [
           "unit"
         ],
@@ -6296,7 +6242,7 @@
       },
       {
         "name": "TestPriceTouchLogic::test_buy_limit_not_touched_below_low",
-        "line": 126,
+        "line": 168,
         "markers": [
           "unit"
         ],
@@ -6305,7 +6251,7 @@
       },
       {
         "name": "TestPriceTouchLogic::test_sell_limit_touched_at_exact_high",
-        "line": 137,
+        "line": 179,
         "markers": [
           "unit"
         ],
@@ -6314,7 +6260,7 @@
       },
       {
         "name": "TestPriceTouchLogic::test_sell_limit_touched_below_high",
-        "line": 148,
+        "line": 190,
         "markers": [
           "unit"
         ],
@@ -6323,7 +6269,7 @@
       },
       {
         "name": "TestPriceTouchLogic::test_sell_limit_not_touched_above_high",
-        "line": 159,
+        "line": 201,
         "markers": [
           "unit"
         ],
@@ -20749,7 +20695,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_execute_order.py": [
       {
         "name": "TestBrokerExecutorExecuteOrder::test_calls_broker_with_correct_args",
-        "line": 53,
+        "line": 50,
         "markers": [
           "unit"
         ],
@@ -20758,7 +20704,7 @@
       },
       {
         "name": "TestBrokerExecutorExecuteOrder::test_passes_through_fields",
-        "line": 104,
+        "line": 101,
         "markers": [
           "parametrize",
           "unit"
@@ -20768,7 +20714,7 @@
       },
       {
         "name": "TestBrokerExecutorExecuteOrder::test_preserves_decimal_precision",
-        "line": 120,
+        "line": 117,
         "markers": [
           "unit"
         ],
@@ -20777,26 +20723,7 @@
       },
       {
         "name": "TestBrokerExecutorExecuteOrder::test_propagates_broker_exception",
-        "line": 142,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestBrokerExecutorExecuteOrder"
-      },
-      {
-        "name": "TestBrokerExecutorExecuteOrder::test_execute_order_retry_modes",
-        "line": 165,
-        "markers": [
-          "parametrize",
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestBrokerExecutorExecuteOrder"
-      },
-      {
-        "name": "TestBrokerExecutorExecuteOrder::test_retry_uses_same_client_order_id",
-        "line": 194,
+        "line": 139,
         "markers": [
           "unit"
         ],
@@ -20858,36 +20785,50 @@
         "class": "TestBrokerCallMetrics"
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_retry_flows.py": [
+    "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_resilience.py": [
       {
-        "name": "test_retry_success_sleeps",
-        "line": 74,
+        "name": "test_retry_success_after_n_failures",
+        "line": 54,
         "markers": [
-          "parametrize",
           "unit"
         ],
         "docstring": ""
       },
       {
         "name": "test_timeout_path_triggers_retry_with_classification",
-        "line": 103,
+        "line": 71,
         "markers": [
           "unit"
         ],
         "docstring": ""
       },
       {
-        "name": "test_non_retryable_errors_stop",
-        "line": 152,
+        "name": "test_non_retryable_error_short_circuits",
+        "line": 92,
         "markers": [
-          "parametrize",
           "unit"
         ],
         "docstring": ""
       },
       {
         "name": "test_all_retries_exhausted_raises_last_exception",
-        "line": 178,
+        "line": 106,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_exponential_backoff_delays",
+        "line": 122,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_non_retryable_mid_sequence_stops_immediately",
+        "line": 137,
         "markers": [
           "unit"
         ],
@@ -21002,6 +20943,44 @@
         ],
         "docstring": "",
         "class": "TestExecuteWithRetry"
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_with_retry.py": [
+      {
+        "name": "TestBrokerExecutorWithRetry::test_execute_order_without_retry_default",
+        "line": 24,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that retry is disabled by default.",
+        "class": "TestBrokerExecutorWithRetry"
+      },
+      {
+        "name": "TestBrokerExecutorWithRetry::test_execute_order_with_retry_enabled",
+        "line": 49,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that retry works when enabled.",
+        "class": "TestBrokerExecutorWithRetry"
+      },
+      {
+        "name": "TestBrokerExecutorWithRetry::test_retry_uses_same_client_order_id",
+        "line": 80,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that the same client_order_id is used across all retry attempts.",
+        "class": "TestBrokerExecutorWithRetry"
+      },
+      {
+        "name": "TestBrokerExecutorWithRetry::test_custom_retry_policy",
+        "line": 121,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that custom retry policy is used.",
+        "class": "TestBrokerExecutorWithRetry"
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_daily_loss_guard.py": [

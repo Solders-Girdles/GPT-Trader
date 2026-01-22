@@ -215,7 +215,6 @@
     "gpt_trader.backtesting.simulation.fill_model": [
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit.py",
-      "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_market.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_queue.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_stop.py"
     ],
@@ -345,7 +344,6 @@
       "tests/integration/test_validation_escalation_flow.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit.py",
-      "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_market.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_queue.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_stop.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker.py",
@@ -2483,10 +2481,6 @@
       "gpt_trader.core"
     ],
     "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit.py": [
-      "gpt_trader.backtesting.simulation.fill_model",
-      "gpt_trader.core"
-    ],
-    "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_market.py": [
       "gpt_trader.backtesting.simulation.fill_model",
       "gpt_trader.core"
     ],

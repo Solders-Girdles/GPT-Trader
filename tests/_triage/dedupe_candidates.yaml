@@ -1755,10 +1755,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/security/test_ip_allowlist.py
-    expected_file_delta: -3
+    expected_file_delta: -1
     priority: low
-    rationale: Consolidate 4 test files into single parametrized file
-    status: pending
+    rationale: Consolidated into two modules with shared conftest to stay under hygiene cap
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/382
     added: '2026-01-20'
   a1a9bea8c6ac:
     type: similar_names

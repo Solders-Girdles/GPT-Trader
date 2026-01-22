@@ -2241,8 +2241,10 @@ clusters:
     target_location: tests/unit/gpt_trader/monitoring/test_alert_types.py
     expected_file_delta: -2
     priority: low
-    rationale: Consolidate 3 test files into single parametrized file
-    status: pending
+    rationale: Consolidated 3 -> 1 file
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/338
     added: '2026-01-20'
   180648193b98:
     type: similar_names

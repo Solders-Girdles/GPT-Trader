@@ -138,3 +138,78 @@ clusters:
     reason: 'source_fanout false positive: mixes decision_logger unit tests with guarded
       execution/backtest flow tests; wrong inferred target_location; already right-sized
       under 240-line cap'
+  20c6dd9ab9e0:
+    state: rejected
+    owner: codex
+    updated: '2026-01-22'
+    reason: 'source_fanout false positive: cross-dir shared-import cluster; not a cohesive dedupe target'
+  28da5bb3a503:
+    state: rejected
+    owner: codex
+    updated: '2026-01-22'
+    reason: 'source_fanout false positive: cross-dir shared-import cluster; not a cohesive dedupe target'
+  46d16bee6c73:
+    state: rejected
+    owner: codex
+    updated: '2026-01-22'
+    reason: 'source_fanout false positive: cross-dir shared-import cluster; not a cohesive dedupe target'
+  4dddd33a4143:
+    state: rejected
+    owner: codex
+    updated: '2026-01-22'
+    reason: 'source_fanout false positive: cross-dir shared-import cluster; not a cohesive dedupe target'
+  71fc6257482d:
+    state: rejected
+    owner: codex
+    updated: '2026-01-22'
+    reason: 'source_fanout false positive: cross-dir shared-import cluster; not a cohesive dedupe target'
+  80ba0a3672df:
+    state: rejected
+    owner: codex
+    updated: '2026-01-22'
+    reason: 'source_fanout false positive: cross-dir shared-import cluster; not a cohesive dedupe target'
+  8ac1470c0e4c:
+    state: rejected
+    owner: codex
+    updated: '2026-01-22'
+    reason: 'source_fanout false positive: cross-dir shared-import cluster; not a cohesive dedupe target'
+  8bf4e5e54905:
+    state: rejected
+    owner: codex
+    updated: '2026-01-22'
+    reason: 'source_fanout false positive: cross-dir shared-import cluster; not a cohesive dedupe target'
+  8e91c83ef6d3:
+    state: rejected
+    owner: codex
+    updated: '2026-01-22'
+    reason: 'source_fanout false positive: cross-dir shared-import cluster; not a cohesive dedupe target'
+  9cb5a6f180ea:
+    state: rejected
+    owner: codex
+    updated: '2026-01-22'
+    reason: 'source_fanout false positive: cross-dir shared-import cluster; not a cohesive dedupe target'
+  afceca92d23a:
+    state: rejected
+    owner: codex
+    updated: '2026-01-22'
+    reason: 'source_fanout false positive: cross-dir shared-import cluster; not a cohesive dedupe target'
+  b92f170412ac:
+    state: rejected
+    owner: codex
+    updated: '2026-01-22'
+    reason: 'source_fanout false positive: cross-dir shared-import cluster; not a cohesive dedupe target'
+  de9414d77913:
+    state: rejected
+    owner: codex
+    updated: '2026-01-22'
+    reason: 'source_fanout false positive: cross-dir shared-import cluster; not a cohesive dedupe target'
+  ec9c7f7f07fc:
+    state: rejected
+    owner: codex
+    updated: '2026-01-22'
+    reason: 'source_fanout false positive: cross-dir shared-import cluster; not a cohesive dedupe target'
+  fec6f0cad78c:
+    state: rejected
+    owner: codex
+    updated: '2026-01-22'
+    reason: 'source_fanout false positive: cross-dir shared-import cluster; not a cohesive dedupe target'

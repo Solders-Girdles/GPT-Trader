@@ -406,8 +406,9 @@ clusters:
     expected_file_delta: -8
     priority: high
     rationale: Consolidated 16 -> 8 files (core, flows, snapshots, widgets)
-    status: in_progress
+    status: done
     owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/335
     added: '2026-01-20'
   5d813542e360:
     type: source_fanout

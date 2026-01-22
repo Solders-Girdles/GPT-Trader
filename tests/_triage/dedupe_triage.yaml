@@ -87,3 +87,13 @@ clusters:
     owner: codex
     updated: '2026-01-22'
     reason: Handled via narrower similar_names clusters
+  582004a85380:
+    state: deferred
+    owner: codex
+    updated: '2026-01-22'
+    reason: already right-sized for 240-line cap; further merge not worth it
+  dd5204625320:
+    state: deferred
+    owner: codex
+    updated: '2026-01-22'
+    reason: already right-sized for 240-line cap; further merge not worth it

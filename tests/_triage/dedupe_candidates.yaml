@@ -1995,10 +1995,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/tui/widgets/test_position_detail.py
-    expected_file_delta: -2
+    expected_file_delta: -1
     priority: low
-    rationale: Consolidate 3 test files into single parametrized file
-    status: pending
+    rationale: Consolidated classification coverage into core modules to stay under hygiene cap
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/391
     added: '2026-01-21'
   2702cc2b5190:
     type: similar_names
@@ -2329,10 +2331,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/tui/widgets/test_alert_inbox.py
-    expected_file_delta: -2
+    expected_file_delta: -1
     priority: low
-    rationale: Consolidate 3 test files into single parametrized file
-    status: pending
+    rationale: Consolidated rendering coverage into core modules to stay under hygiene cap
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/391
     added: '2026-01-21'
   b89b9f506607:
     type: similar_names
@@ -2359,7 +2363,7 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/tui/widgets/test_risk_detail.py
-    expected_file_delta: -2
+    expected_file_delta: -1
     priority: low
     rationale: Consolidate 3 test files into single parametrized file
     status: pending
@@ -2391,8 +2395,10 @@ clusters:
     target_location: tests/unit/gpt_trader/tui/services/test_trading_stats.py
     expected_file_delta: -2
     priority: low
-    rationale: Consolidate 3 test files into single parametrized file
-    status: pending
+    rationale: Consolidated focus preview into guard visibility module to stay under hygiene cap
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/391
     added: '2026-01-21'
   f2c6cc4f883e:
     type: similar_names
@@ -2438,8 +2444,10 @@ clusters:
     target_location: tests/unit/gpt_trader/tui/widgets/test_cfm_balance.py
     expected_file_delta: -2
     priority: low
-    rationale: Consolidate 3 test files into single parametrized file
-    status: pending
+    rationale: Consolidated basic/unavailable coverage into core module
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/391
     added: '2026-01-20'
   02a49ca5317d:
     type: source_fanout

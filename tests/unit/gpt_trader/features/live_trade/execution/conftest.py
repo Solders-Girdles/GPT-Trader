@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import time
 from decimal import Decimal
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
 
+import gpt_trader.features.live_trade.execution.order_event_recorder as recorder_module
 from gpt_trader.core import (
     MarketType,
     Order,
@@ -103,6 +105,20 @@ def mock_event_store() -> MagicMock:
     store.append_trade = MagicMock()
     store.append_error = MagicMock()
     return store
+
+
+@pytest.fixture
+def monitoring_logger(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    mock_logger = MagicMock()
+    monkeypatch.setattr(recorder_module, "get_monitoring_logger", lambda: mock_logger)
+    return mock_logger
+
+
+@pytest.fixture
+def emit_metric_mock(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
+    mock_emit = MagicMock()
+    monkeypatch.setattr(recorder_module, "emit_metric", mock_emit)
+    return mock_emit
 
 
 @pytest.fixture
@@ -234,6 +250,32 @@ def submitter(
         open_orders=open_orders,
         integration_mode=False,
     )
+
+
+@pytest.fixture
+def submit_order_kwargs() -> dict[str, Any]:
+    return {
+        "symbol": "BTC-PERP",
+        "side": OrderSide.BUY,
+        "order_type": OrderType.LIMIT,
+        "order_quantity": Decimal("1.0"),
+        "price": Decimal("50000"),
+        "effective_price": Decimal("50000"),
+        "stop_price": None,
+        "tif": TimeInForce.GTC,
+        "reduce_only": False,
+        "leverage": 10,
+        "client_order_id": None,
+    }
+
+
+@pytest.fixture
+def submit_order_call(submit_order_kwargs):
+    def _call(submitter: OrderSubmitter, **overrides):
+        payload = {**submit_order_kwargs, **overrides}
+        return submitter.submit_order(**payload)
+
+    return _call
 
 
 @pytest.fixture

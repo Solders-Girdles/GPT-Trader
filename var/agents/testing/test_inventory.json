@@ -2,9 +2,9 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6272,
-    "total_files": 824,
-    "markers_used": 15
+    "total_tests": 6262,
+    "total_files": 818,
+    "markers_used": 16
   },
   "marker_definitions": {
     "unit": "Unit tests (isolated component tests)",
@@ -102,12 +102,13 @@
     ]
   },
   "marker_counts": {
-    "unit": 6107,
+    "unit": 6097,
     "asyncio": 345,
-    "parametrize": 85,
+    "parametrize": 87,
     "property": 82,
     "integration": 79,
     "endpoints": 78,
+    "usefixtures": 15,
     "skipif": 8,
     "slow": 4,
     "anyio": 3,
@@ -436,16 +437,10 @@
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_rejection.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_submission.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_failure.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_preview.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_rejection.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows_retry.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows_submit.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_correlation.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_latency.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_metrics.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_results.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_router_execute_async.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_router_order_result.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_router_resolve_order_id.py",
@@ -22605,411 +22600,303 @@
         "class": "TestExecuteBrokerOrder"
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_failure.py": [
-      {
-        "name": "TestHandleOrderFailure::test_logs_error_and_returns_none",
-        "line": 32,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that failure is logged and None returned.",
-        "class": "TestHandleOrderFailure"
-      },
-      {
-        "name": "TestHandleOrderFailure::test_handles_event_store_exception",
-        "line": 48,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that event store exceptions are suppressed.",
-        "class": "TestHandleOrderFailure"
-      },
-      {
-        "name": "TestHandleOrderResult::test_successful_order_tracked",
-        "line": 69,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that successful orders are tracked.",
-        "class": "TestHandleOrderResult"
-      },
-      {
-        "name": "TestHandleOrderResult::test_none_order_returns_none",
-        "line": 94,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that None order returns None.",
-        "class": "TestHandleOrderResult"
-      },
-      {
-        "name": "TestHandleOrderResult::test_order_without_id_returns_none",
-        "line": 115,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that order without ID returns None.",
-        "class": "TestHandleOrderResult"
-      },
-      {
-        "name": "TestHandleOrderResult::test_rejected_status_raises_error",
-        "line": 139,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that rejected status raises RuntimeError.",
-        "class": "TestHandleOrderResult"
-      },
-      {
-        "name": "TestHandleOrderResult::test_integration_mode_returns_order_object",
-        "line": 165,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that integration mode returns the order object.",
-        "class": "TestHandleOrderResult"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_preview.py": [
-      {
-        "name": "TestRecordPreview::test_record_preview_with_preview_data",
-        "line": 32,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test recording a preview with data.",
-        "class": "TestRecordPreview"
-      },
-      {
-        "name": "TestRecordPreview::test_record_preview_with_none_preview_skips",
-        "line": 53,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that None preview is skipped.",
-        "class": "TestRecordPreview"
-      },
-      {
-        "name": "TestRecordPreview::test_record_preview_market_price",
-        "line": 70,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test recording a preview with market price.",
-        "class": "TestRecordPreview"
-      },
-      {
-        "name": "TestRecordPreview::test_record_preview_handles_logger_exception",
-        "line": 89,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that logger exceptions are suppressed.",
-        "class": "TestRecordPreview"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core_rejection.py": [
-      {
-        "name": "TestProcessRejection::test_integration_mode_stores_event",
-        "line": 33,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that integration mode stores rejection event.",
-        "class": "TestProcessRejection"
-      },
-      {
-        "name": "TestProcessRejection::test_normal_mode_raises_error",
-        "line": 78,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that normal mode raises RuntimeError.",
-        "class": "TestProcessRejection"
-      },
-      {
-        "name": "TestRecordRejection::test_record_rejection_logs_and_emits",
-        "line": 115,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that rejection is logged and metric emitted.",
-        "class": "TestRecordRejection"
-      },
-      {
-        "name": "TestRecordRejection::test_record_rejection_includes_client_order_id",
-        "line": 135,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that client_order_id is included in rejection telemetry.",
-        "class": "TestRecordRejection"
-      },
-      {
-        "name": "TestRecordRejection::test_record_rejection_without_client_order_id_uses_empty_string",
-        "line": 160,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that missing client_order_id defaults to empty string.",
-        "class": "TestRecordRejection"
-      },
-      {
-        "name": "TestRecordRejection::test_record_rejection_with_none_price",
-        "line": 178,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test recording rejection with None price.",
-        "class": "TestRecordRejection"
-      }
-    ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows.py": [
       {
-        "name": "TestOrderSubmissionFlows::test_full_order_submission_flow",
-        "line": 40,
+        "name": "test_submit_order_success_tracks_trade",
+        "line": 49,
         "markers": [
           "unit"
         ],
-        "docstring": "Test complete order submission flow.",
-        "class": "TestOrderSubmissionFlows"
+        "docstring": ""
       },
       {
-        "name": "TestOrderSubmissionFlows::test_rejection_flow",
-        "line": 77,
+        "name": "test_submit_order_rejection_returns_none",
+        "line": 67,
         "markers": [
+          "parametrize",
           "unit"
         ],
-        "docstring": "Test order rejection flow.",
-        "class": "TestOrderSubmissionFlows"
+        "docstring": ""
       },
       {
-        "name": "TestTransientFailureWithClientOrderIdReuse::test_transient_failure_then_success_reuses_client_order_id",
-        "line": 123,
+        "name": "test_submit_order_exception_returns_none",
+        "line": 85,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that transient failure followed by success reuses client_order_id.",
-        "class": "TestTransientFailureWithClientOrderIdReuse"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows_retry.py": [
-      {
-        "name": "TestRetryPathIdempotency::test_provided_client_order_id_is_reused_on_retry",
-        "line": 28,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that a provided client_order_id is reused across retries.",
-        "class": "TestRetryPathIdempotency"
+        "docstring": ""
       },
       {
-        "name": "TestRetryPathIdempotency::test_generated_client_order_id_differs_per_submission",
-        "line": 84,
+        "name": "test_submit_order_none_order_returns_none",
+        "line": 98,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that auto-generated client_order_ids are unique per submission.",
-        "class": "TestRetryPathIdempotency"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows_submit.py": [
-      {
-        "name": "TestSubmitOrder::test_successful_order_submission",
-        "line": 40,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test successful order submission.",
-        "class": "TestSubmitOrder"
+        "docstring": ""
       },
       {
-        "name": "TestSubmitOrder::test_rejected_order_returns_none",
-        "line": 68,
+        "name": "test_submit_order_none_order_persists_terminal_status",
+        "line": 115,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that rejected orders return None (error is caught internally).",
-        "class": "TestSubmitOrder"
+        "docstring": ""
       },
       {
-        "name": "TestSubmitOrder::test_broker_exception_returns_none",
-        "line": 100,
+        "name": "test_transient_failure_then_success_reuses_client_order_id",
+        "line": 148,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that broker exceptions result in None return.",
-        "class": "TestSubmitOrder"
+        "docstring": ""
       },
       {
-        "name": "TestSubmitOrder::test_order_with_none_result_returns_none",
-        "line": 125,
+        "name": "test_retry_client_order_id_behavior",
+        "line": 204,
         "markers": [
+          "parametrize",
           "unit"
         ],
-        "docstring": "Test that None order result returns None.",
-        "class": "TestSubmitOrder"
-      },
-      {
-        "name": "TestSubmitOrder::test_order_with_none_result_persists_terminal_status",
-        "line": 150,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that None order result persists a terminal status.",
-        "class": "TestSubmitOrder"
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability.py": [
       {
         "name": "test_classify_rejection_reason",
-        "line": 58,
+        "line": 64,
         "markers": [
+          "usefixtures",
           "parametrize",
           "unit"
         ],
-        "docstring": "Test _classify_rejection_reason helper."
+        "docstring": ""
       },
       {
-        "name": "TestBrokerStatusClassification::test_broker_rejected_status",
-        "line": 70,
+        "name": "test_record_preview_emits_metric",
+        "line": 68,
         "markers": [
+          "usefixtures",
           "unit"
         ],
-        "docstring": "Test classification of broker REJECTED status.",
-        "class": "TestBrokerStatusClassification"
+        "docstring": ""
       },
       {
-        "name": "TestBrokerStatusClassification::test_broker_cancelled_status",
-        "line": 79,
+        "name": "test_record_preview_skips_none",
+        "line": 77,
         "markers": [
+          "usefixtures",
           "unit"
         ],
-        "docstring": "Test classification of broker CANCELLED status.",
-        "class": "TestBrokerStatusClassification"
+        "docstring": ""
       },
       {
-        "name": "TestBrokerStatusClassification::test_broker_failed_status",
-        "line": 88,
+        "name": "test_record_preview_market_price",
+        "line": 82,
         "markers": [
+          "usefixtures",
           "unit"
         ],
-        "docstring": "Test classification of broker FAILED status.",
-        "class": "TestBrokerStatusClassification"
+        "docstring": ""
       },
       {
-        "name": "TestBrokerStatusClassification::test_timeout_variations",
+        "name": "test_record_preview_suppresses_logger_errors",
+        "line": 87,
+        "markers": [
+          "usefixtures",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_record_rejection_logs_and_emits",
         "line": 98,
         "markers": [
+          "usefixtures",
           "unit"
         ],
-        "docstring": "Test various timeout error messages.",
-        "class": "TestBrokerStatusClassification"
+        "docstring": ""
       },
       {
-        "name": "TestBrokerStatusClassification::test_network_variations",
-        "line": 109,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test various network error messages.",
-        "class": "TestBrokerStatusClassification"
-      },
-      {
-        "name": "TestRecordRejectionConsistency::test_rejection_from_broker_status_includes_classified_reason",
-        "line": 125,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that broker rejections use classified reasons in telemetry.",
-        "class": "TestRecordRejectionConsistency"
-      },
-      {
-        "name": "TestRecordRejectionConsistency::test_exception_rejection_uses_classified_reason",
-        "line": 175,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that exception-based rejections use classified reasons.",
-        "class": "TestRecordRejectionConsistency"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_correlation.py": [
-      {
-        "name": "TestCorrelationContextPropagation::test_order_context_set_during_submission",
-        "line": 19,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that order context is set during order submission.",
-        "class": "TestCorrelationContextPropagation"
-      },
-      {
-        "name": "TestCorrelationContextPropagation::test_correlation_context_preserved_during_submission",
-        "line": 64,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that outer correlation context is preserved during submission.",
-        "class": "TestCorrelationContextPropagation"
-      },
-      {
-        "name": "TestCorrelationContextPropagation::test_order_context_cleared_after_submission",
+        "name": "test_record_rejection_client_order_id",
         "line": 111,
         "markers": [
+          "usefixtures",
+          "parametrize",
           "unit"
         ],
-        "docstring": "Test that order context is cleared after submission completes.",
-        "class": "TestCorrelationContextPropagation"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_latency.py": [
-      {
-        "name": "TestOrderSubmissionLatencyMetrics::test_successful_submission_records_latency_histogram",
-        "line": 32,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that successful submission records latency histogram.",
-        "class": "TestOrderSubmissionLatencyMetrics"
+        "docstring": ""
       },
       {
-        "name": "TestOrderSubmissionLatencyMetrics::test_failed_submission_records_latency_with_failure_result",
-        "line": 70,
+        "name": "test_record_rejection_with_none_price",
+        "line": 128,
         "markers": [
+          "usefixtures",
           "unit"
         ],
-        "docstring": "Test that failed submission records latency with failure result.",
-        "class": "TestOrderSubmissionLatencyMetrics"
+        "docstring": ""
+      },
+      {
+        "name": "test_rejection_from_broker_status_includes_classified_reason",
+        "line": 133,
+        "markers": [
+          "usefixtures",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_exception_rejection_uses_classified_reason",
+        "line": 173,
+        "markers": [
+          "usefixtures",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_order_context_set_during_submission",
+        "line": 185,
+        "markers": [
+          "usefixtures",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_correlation_context_preserved_during_submission",
+        "line": 198,
+        "markers": [
+          "usefixtures",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_order_context_cleared_after_submission",
+        "line": 220,
+        "markers": [
+          "usefixtures",
+          "unit"
+        ],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_metrics.py": [
       {
-        "name": "TestOrderSubmissionMetrics::test_successful_order_records_metric",
-        "line": 49,
+        "name": "test_successful_order_records_metric",
+        "line": 45,
+        "markers": [
+          "usefixtures",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_failed_order_records_metric_with_reason",
+        "line": 64,
+        "markers": [
+          "usefixtures",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_classification_label_used_in_metrics",
+        "line": 90,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that successful order records metric with success labels.",
-        "class": "TestOrderSubmissionMetrics"
+        "docstring": ""
       },
       {
-        "name": "TestOrderSubmissionMetrics::test_failed_order_records_metric_with_reason",
+        "name": "test_successful_submission_records_latency_histogram",
+        "line": 111,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_failed_submission_records_latency_with_failure_result",
+        "line": 135,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_results.py": [
+      {
+        "name": "test_handle_order_failure_logs_error",
+        "line": 60,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_handle_order_failure_suppresses_event_store_exception",
+        "line": 72,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_handle_order_result_tracks_success",
         "line": 88,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that failed order records metric with failure reason.",
-        "class": "TestOrderSubmissionMetrics"
+        "docstring": ""
       },
       {
-        "name": "TestOrderSubmissionMetricLabels::test_classification_label_used_in_metrics",
-        "line": 132,
+        "name": "test_handle_order_result_none_order_returns_none",
+        "line": 100,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that failure reason classification is used in metrics.",
-        "class": "TestOrderSubmissionMetricLabels"
+        "docstring": ""
+      },
+      {
+        "name": "test_handle_order_result_missing_id_returns_none",
+        "line": 106,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_handle_order_result_rejected_status_raises",
+        "line": 115,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_handle_order_result_integration_mode_returns_order",
+        "line": 128,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_process_rejection_integration_mode_stores_event",
+        "line": 148,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_process_rejection_normal_mode_raises",
+        "line": 183,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_router_execute_async.py": [
@@ -48115,7 +48002,7 @@
     "tests/unit/gpt_trader/tui/test_risk_preview.py": [
       {
         "name": "test_dataclasses_and_helpers",
-        "line": 62,
+        "line": 63,
         "markers": [
           "unit"
         ],
@@ -48123,16 +48010,7 @@
       },
       {
         "name": "test_ratio_status_boundaries",
-        "line": 100,
-        "markers": [
-          "parametrize",
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_guard_impacts_by_threshold",
-        "line": 112,
+        "line": 105,
         "markers": [
           "parametrize",
           "unit"
@@ -48141,7 +48019,7 @@
       },
       {
         "name": "test_compute_preview_shocks",
-        "line": 130,
+        "line": 118,
         "markers": [
           "parametrize",
           "unit"
@@ -48150,7 +48028,7 @@
       },
       {
         "name": "test_compute_preview_leverage_fallback_and_no_limit",
-        "line": 145,
+        "line": 135,
         "markers": [
           "unit"
         ],
@@ -48158,7 +48036,7 @@
       },
       {
         "name": "test_default_scenarios_and_previews",
-        "line": 156,
+        "line": 148,
         "markers": [
           "unit"
         ],
@@ -48166,7 +48044,7 @@
       },
       {
         "name": "test_compute_position_impacts_empty",
-        "line": 177,
+        "line": 171,
         "markers": [
           "parametrize",
           "unit"
@@ -48175,7 +48053,7 @@
       },
       {
         "name": "test_negative_shock_creates_impacts_for_longs",
-        "line": 184,
+        "line": 178,
         "markers": [
           "unit"
         ],
@@ -48183,7 +48061,7 @@
       },
       {
         "name": "test_leverage_guard_triggers_on_excessive_leverage",
-        "line": 202,
+        "line": 198,
         "markers": [
           "unit"
         ],
@@ -48191,7 +48069,7 @@
       },
       {
         "name": "test_compute_preview_position_impacts_and_no_limit",
-        "line": 223,
+        "line": 219,
         "markers": [
           "unit"
         ],
@@ -50818,7 +50696,7 @@
       },
       {
         "name": "test_partial_state_handling",
-        "line": 173,
+        "line": 177,
         "markers": [
           "asyncio",
           "parametrize",
@@ -50828,7 +50706,7 @@
       },
       {
         "name": "test_signature_caching_skips_on_same_state",
-        "line": 186,
+        "line": 190,
         "markers": [
           "asyncio",
           "unit"
@@ -50837,7 +50715,7 @@
       },
       {
         "name": "test_signature_changes_on_update",
-        "line": 197,
+        "line": 201,
         "markers": [
           "asyncio",
           "parametrize",
@@ -50847,7 +50725,7 @@
       },
       {
         "name": "test_mount_registers_with_state_registry",
-        "line": 208,
+        "line": 212,
         "markers": [
           "asyncio",
           "unit"

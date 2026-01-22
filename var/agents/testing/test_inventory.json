@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6310,
-    "total_files": 835,
+    "total_tests": 6272,
+    "total_files": 824,
     "markers_used": 15
   },
   "marker_definitions": {
@@ -102,12 +102,12 @@
     ]
   },
   "marker_counts": {
-    "unit": 6145,
-    "asyncio": 371,
+    "unit": 6107,
+    "asyncio": 345,
+    "parametrize": 85,
     "property": 82,
     "integration": 79,
     "endpoints": 78,
-    "parametrize": 70,
     "skipif": 8,
     "slow": 4,
     "anyio": 3,
@@ -782,7 +782,6 @@
       "tests/unit/gpt_trader/tui/services/test_preferences_watchlist.py",
       "tests/unit/gpt_trader/tui/services/test_responsive_manager.py",
       "tests/unit/gpt_trader/tui/services/test_state_registry.py",
-      "tests/unit/gpt_trader/tui/services/test_state_registry_broadcast.py",
       "tests/unit/gpt_trader/tui/services/test_theme_service.py",
       "tests/unit/gpt_trader/tui/services/test_trading_stats.py",
       "tests/unit/gpt_trader/tui/services/test_trading_stats_compute.py",
@@ -817,8 +816,6 @@
       "tests/unit/gpt_trader/tui/test_new_widgets.py",
       "tests/unit/gpt_trader/tui/test_risk_guard_explanations.py",
       "tests/unit/gpt_trader/tui/test_risk_preview.py",
-      "tests/unit/gpt_trader/tui/test_risk_preview_position.py",
-      "tests/unit/gpt_trader/tui/test_risk_preview_scenarios.py",
       "tests/unit/gpt_trader/tui/test_screen_flows_help.py",
       "tests/unit/gpt_trader/tui/test_screen_flows_quick_navigation_and_state.py",
       "tests/unit/gpt_trader/tui/test_screens.py",
@@ -842,10 +839,7 @@
       "tests/unit/gpt_trader/tui/utilities/test_pnl_formatting.py",
       "tests/unit/gpt_trader/tui/utilities/test_table_formatting.py",
       "tests/unit/gpt_trader/tui/utilities/test_table_formatting_data.py",
-      "tests/unit/gpt_trader/tui/widgets/test_account_widget_basic.py",
-      "tests/unit/gpt_trader/tui/widgets/test_account_widget_partial_state.py",
-      "tests/unit/gpt_trader/tui/widgets/test_account_widget_signature_caching.py",
-      "tests/unit/gpt_trader/tui/widgets/test_account_widget_state_registry.py",
+      "tests/unit/gpt_trader/tui/widgets/test_account_widget.py",
       "tests/unit/gpt_trader/tui/widgets/test_alert_inbox.py",
       "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_actions.py",
       "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_rendering.py",
@@ -862,10 +856,7 @@
       "tests/unit/gpt_trader/tui/widgets/test_panic.py",
       "tests/unit/gpt_trader/tui/widgets/test_performance_dashboard_classes.py",
       "tests/unit/gpt_trader/tui/widgets/test_performance_dashboard_watch_snapshot.py",
-      "tests/unit/gpt_trader/tui/widgets/test_position_card_basic.py",
-      "tests/unit/gpt_trader/tui/widgets/test_position_card_partial_state.py",
-      "tests/unit/gpt_trader/tui/widgets/test_position_card_signature_caching.py",
-      "tests/unit/gpt_trader/tui/widgets/test_position_card_state_registry.py",
+      "tests/unit/gpt_trader/tui/widgets/test_position_card.py",
       "tests/unit/gpt_trader/tui/widgets/test_position_detail.py",
       "tests/unit/gpt_trader/tui/widgets/test_position_detail_calculations.py",
       "tests/unit/gpt_trader/tui/widgets/test_position_detail_classification.py",
@@ -879,8 +870,6 @@
       "tests/unit/gpt_trader/tui/widgets/test_strategy_widget_decision_display.py",
       "tests/unit/gpt_trader/tui/widgets/test_system.py",
       "tests/unit/gpt_trader/tui/widgets/test_system_monitor.py",
-      "tests/unit/gpt_trader/tui/widgets/test_system_monitor_caching.py",
-      "tests/unit/gpt_trader/tui/widgets/test_system_monitor_watch.py",
       "tests/unit/gpt_trader/tui/widgets/test_trades_widget_filters.py",
       "tests/unit/gpt_trader/tui/widgets/test_trades_widget_update.py",
       "tests/unit/gpt_trader/tui/widgets/test_trading_stats.py",
@@ -45855,8 +45844,17 @@
         "class": "TestStateRegistryPriority"
       },
       {
+        "name": "TestStateRegistryBroadcast::test_broadcast_continues_after_observer_exception",
+        "line": 101,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestStateRegistryBroadcast"
+      },
+      {
         "name": "TestUICoordinatorDecoupling::test_update_main_screen_works_without_screens_mounted",
-        "line": 103,
+        "line": 123,
         "markers": [
           "unit"
         ],
@@ -45865,7 +45863,7 @@
       },
       {
         "name": "TestUICoordinatorDecoupling::test_update_main_screen_broadcasts_to_registry",
-        "line": 121,
+        "line": 141,
         "markers": [
           "unit"
         ],
@@ -45874,7 +45872,7 @@
       },
       {
         "name": "TestUICoordinatorDecoupling::test_update_main_screen_handles_missing_registry",
-        "line": 139,
+        "line": 159,
         "markers": [
           "unit"
         ],
@@ -45883,7 +45881,7 @@
       },
       {
         "name": "TestScreenObserverRegistration::test_main_screen_has_observer_priority",
-        "line": 156,
+        "line": 176,
         "markers": [
           "unit"
         ],
@@ -45892,7 +45890,7 @@
       },
       {
         "name": "TestScreenObserverRegistration::test_system_details_screen_has_observer_priority",
-        "line": 164,
+        "line": 184,
         "markers": [
           "unit"
         ],
@@ -45901,7 +45899,7 @@
       },
       {
         "name": "TestScreenObserverRegistration::test_main_screen_has_on_state_updated",
-        "line": 172,
+        "line": 192,
         "markers": [
           "unit"
         ],
@@ -45910,23 +45908,12 @@
       },
       {
         "name": "TestScreenObserverRegistration::test_system_details_screen_has_on_state_updated",
-        "line": 180,
+        "line": 200,
         "markers": [
           "unit"
         ],
         "docstring": "SystemDetailsScreen should implement on_state_updated.",
         "class": "TestScreenObserverRegistration"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/services/test_state_registry_broadcast.py": [
-      {
-        "name": "TestStateRegistryBroadcast::test_broadcast_continues_after_observer_exception",
-        "line": 14,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestStateRegistryBroadcast"
       }
     ],
     "tests/unit/gpt_trader/tui/services/test_theme_service.py": [
@@ -48127,206 +48114,88 @@
     ],
     "tests/unit/gpt_trader/tui/test_risk_preview.py": [
       {
-        "name": "TestRiskPreviewScenario::test_scenario_creation_and_immutability",
-        "line": 19,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Scenario stores label and shock percentage, is immutable.",
-        "class": "TestRiskPreviewScenario"
-      },
-      {
-        "name": "TestRiskPreviewResult::test_result_creation",
-        "line": 31,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Result stores all preview fields with defaults.",
-        "class": "TestRiskPreviewResult"
-      },
-      {
-        "name": "TestGuardPositionImpact::test_guard_position_impact_dataclass",
-        "line": 53,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "GuardPositionImpact stores all fields correctly.",
-        "class": "TestGuardPositionImpact"
-      },
-      {
-        "name": "TestGetRatioStatus::test_status_boundaries",
-        "line": 74,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Status transitions at correct threshold boundaries.",
-        "class": "TestGetRatioStatus"
-      },
-      {
-        "name": "TestGetGuardImpacts::test_guards_by_threshold",
-        "line": 90,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Guards trigger at correct thresholds with reasons.",
-        "class": "TestGetGuardImpacts"
-      },
-      {
-        "name": "TestGetGuardImpacts::test_reasons_include_threshold_text",
-        "line": 107,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Guard reasons include threshold percentage text.",
-        "class": "TestGetGuardImpacts"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/test_risk_preview_position.py": [
-      {
-        "name": "TestComputePositionImpacts::test_no_positions_returns_empty",
-        "line": 50,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Empty positions returns empty impacts.",
-        "class": "TestComputePositionImpacts"
-      },
-      {
-        "name": "TestComputePositionImpacts::test_zero_equity_returns_empty",
+        "name": "test_dataclasses_and_helpers",
         "line": 62,
         "markers": [
           "unit"
         ],
-        "docstring": "Zero equity returns empty impacts.",
-        "class": "TestComputePositionImpacts"
+        "docstring": ""
       },
       {
-        "name": "TestComputePositionImpacts::test_negative_shock_creates_impacts_for_long_positions",
-        "line": 74,
+        "name": "test_ratio_status_boundaries",
+        "line": 100,
         "markers": [
+          "parametrize",
           "unit"
         ],
-        "docstring": "Negative shock creates impacts for long positions losing value.",
-        "class": "TestComputePositionImpacts"
+        "docstring": ""
       },
       {
-        "name": "TestComputePositionImpacts::test_positive_shock_gains_for_long_positions",
-        "line": 92,
+        "name": "test_guard_impacts_by_threshold",
+        "line": 112,
         "markers": [
+          "parametrize",
           "unit"
         ],
-        "docstring": "Positive shock creates gains for long positions (no breach).",
-        "class": "TestComputePositionImpacts"
+        "docstring": ""
       },
       {
-        "name": "TestComputePositionImpacts::test_leverage_guard_triggers_on_excessive_leverage",
-        "line": 102,
+        "name": "test_compute_preview_shocks",
+        "line": 130,
         "markers": [
+          "parametrize",
           "unit"
         ],
-        "docstring": "LeverageGuard triggers when position leverage exceeds max.",
-        "class": "TestComputePositionImpacts"
+        "docstring": ""
       },
       {
-        "name": "TestComputePositionImpacts::test_impacts_sorted_by_projected_loss",
-        "line": 131,
+        "name": "test_compute_preview_leverage_fallback_and_no_limit",
+        "line": 145,
         "markers": [
           "unit"
         ],
-        "docstring": "Impacts are sorted by projected loss (worst first).",
-        "class": "TestComputePositionImpacts"
+        "docstring": ""
       },
       {
-        "name": "TestComputePreviewWithPositionImpacts::test_compute_preview_includes_position_impacts",
-        "line": 169,
+        "name": "test_default_scenarios_and_previews",
+        "line": 156,
         "markers": [
           "unit"
         ],
-        "docstring": "compute_preview returns position_impacts field.",
-        "class": "TestComputePreviewWithPositionImpacts"
+        "docstring": ""
       },
       {
-        "name": "TestComputePreviewWithPositionImpacts::test_no_limit_returns_empty_position_impacts",
-        "line": 176,
+        "name": "test_compute_position_impacts_empty",
+        "line": 177,
         "markers": [
+          "parametrize",
           "unit"
         ],
-        "docstring": "No daily limit configured returns empty position impacts.",
-        "class": "TestComputePreviewWithPositionImpacts"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/test_risk_preview_scenarios.py": [
-      {
-        "name": "TestComputePreview::test_positive_shock_no_increase",
-        "line": 30,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Positive shock doesn't increase loss.",
-        "class": "TestComputePreview"
+        "docstring": ""
       },
       {
-        "name": "TestComputePreview::test_negative_shock_increases_loss",
-        "line": 37,
+        "name": "test_negative_shock_creates_impacts_for_longs",
+        "line": 184,
         "markers": [
           "unit"
         ],
-        "docstring": "Negative shock increases loss with leverage.",
-        "class": "TestComputePreview"
+        "docstring": ""
       },
       {
-        "name": "TestComputePreview::test_shock_triggers_warning_and_critical",
-        "line": 44,
+        "name": "test_leverage_guard_triggers_on_excessive_leverage",
+        "line": 202,
         "markers": [
           "unit"
         ],
-        "docstring": "Large shocks can trigger warning and critical status.",
-        "class": "TestComputePreview"
+        "docstring": ""
       },
       {
-        "name": "TestComputePreview::test_leverage_fallback_and_no_limit",
-        "line": 61,
+        "name": "test_compute_preview_position_impacts_and_no_limit",
+        "line": 223,
         "markers": [
           "unit"
         ],
-        "docstring": "Falls back to 1.0 leverage; returns OK when no limit configured.",
-        "class": "TestComputePreview"
-      },
-      {
-        "name": "TestGetDefaultScenarios::test_returns_all_scenarios",
-        "line": 79,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Returns all standard shock scenarios with correct structure.",
-        "class": "TestGetDefaultScenarios"
-      },
-      {
-        "name": "TestComputeAllPreviews::test_returns_all_scenario_results",
-        "line": 105,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Returns results for all default scenarios.",
-        "class": "TestComputeAllPreviews"
-      },
-      {
-        "name": "TestComputeAllPreviews::test_negative_scenarios_have_higher_loss",
-        "line": 113,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Negative shocks should have higher loss than positive.",
-        "class": "TestComputeAllPreviews"
-      },
-      {
-        "name": "TestShockScenariosConstant::test_standard_scenarios",
-        "line": 127,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Contains standard symmetric \u00b12%, \u00b15%, \u00b110% scenarios in order.",
-        "class": "TestShockScenariosConstant"
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/tui/test_screen_flows_help.py": [
@@ -50927,152 +50796,63 @@
         "class": "TestGetAgeSeconds"
       }
     ],
-    "tests/unit/gpt_trader/tui/widgets/test_account_widget_basic.py": [
+    "tests/unit/gpt_trader/tui/widgets/test_account_widget.py": [
       {
-        "name": "TestAccountWidget::test_initial_state_compact",
-        "line": 32,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that compact widget renders with defaults.",
-        "class": "TestAccountWidget"
-      },
-      {
-        "name": "TestAccountWidget::test_initial_state_expanded",
-        "line": 43,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that expanded widget renders with defaults.",
-        "class": "TestAccountWidget"
-      },
-      {
-        "name": "TestAccountWidget::test_on_state_updated_with_account_data",
-        "line": 54,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that widget correctly updates with account data.",
-        "class": "TestAccountWidget"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/widgets/test_account_widget_partial_state.py": [
-      {
-        "name": "TestAccountWidgetPartialState::test_handles_no_account_data",
-        "line": 24,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that widget handles state with no account_data.",
-        "class": "TestAccountWidgetPartialState"
-      },
-      {
-        "name": "TestAccountWidgetPartialState::test_handles_empty_balances",
-        "line": 40,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that widget handles account with empty balances.",
-        "class": "TestAccountWidgetPartialState"
-      },
-      {
-        "name": "TestAccountWidgetPartialState::test_handles_no_position_data",
-        "line": 57,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that widget handles state with no position_data.",
-        "class": "TestAccountWidgetPartialState"
-      },
-      {
-        "name": "TestAccountWidgetPartialState::test_handles_degraded_mode",
-        "line": 80,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that widget handles degraded mode.",
-        "class": "TestAccountWidgetPartialState"
-      },
-      {
-        "name": "TestAccountWidgetPartialState::test_handles_connection_unhealthy",
-        "line": 99,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that widget handles unhealthy connection state.",
-        "class": "TestAccountWidgetPartialState"
-      },
-      {
-        "name": "TestAccountWidgetPartialState::test_handles_bot_not_running",
-        "line": 117,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that widget handles stopped bot state.",
-        "class": "TestAccountWidgetPartialState"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/widgets/test_account_widget_signature_caching.py": [
-      {
-        "name": "TestAccountWidgetSignatureCaching::test_skips_update_when_signature_unchanged",
-        "line": 24,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that on_state_updated skips work when state unchanged.",
-        "class": "TestAccountWidgetSignatureCaching"
-      },
-      {
-        "name": "TestAccountWidgetSignatureCaching::test_updates_when_balance_changes",
-        "line": 50,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that signature detects balance changes.",
-        "class": "TestAccountWidgetSignatureCaching"
-      },
-      {
-        "name": "TestAccountWidgetSignatureCaching::test_updates_when_equity_changes",
+        "name": "test_initial_state",
         "line": 83,
         "markers": [
           "asyncio",
+          "parametrize",
           "unit"
         ],
-        "docstring": "Test that signature detects equity changes.",
-        "class": "TestAccountWidgetSignatureCaching"
+        "docstring": ""
       },
       {
-        "name": "TestAccountWidgetSignatureCaching::test_signature_includes_degraded_mode",
-        "line": 104,
+        "name": "test_on_state_updated_with_account_data",
+        "line": 90,
         "markers": [
           "asyncio",
           "unit"
         ],
-        "docstring": "Test that signature changes when degraded_mode changes.",
-        "class": "TestAccountWidgetSignatureCaching"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/widgets/test_account_widget_state_registry.py": [
+        "docstring": ""
+      },
       {
-        "name": "TestAccountWidgetStateRegistry::test_mount_registers_with_state_registry",
-        "line": 13,
+        "name": "test_partial_state_handling",
+        "line": 173,
+        "markers": [
+          "asyncio",
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_signature_caching_skips_on_same_state",
+        "line": 186,
         "markers": [
           "asyncio",
           "unit"
         ],
-        "docstring": "Test that widget registers with StateRegistry on mount.",
-        "class": "TestAccountWidgetStateRegistry"
+        "docstring": ""
+      },
+      {
+        "name": "test_signature_changes_on_update",
+        "line": 197,
+        "markers": [
+          "asyncio",
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_mount_registers_with_state_registry",
+        "line": 208,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/tui/widgets/test_alert_inbox.py": [
@@ -52182,122 +51962,62 @@
         "class": "TestPerformanceDashboardWidgetWatchSnapshot"
       }
     ],
-    "tests/unit/gpt_trader/tui/widgets/test_position_card_basic.py": [
+    "tests/unit/gpt_trader/tui/widgets/test_position_card.py": [
       {
-        "name": "TestPositionCardWidget::test_initial_state",
-        "line": 24,
+        "name": "test_initial_state",
+        "line": 128,
         "markers": [
           "asyncio",
           "unit"
         ],
-        "docstring": "Test that widget renders in loading state initially.",
-        "class": "TestPositionCardWidget"
+        "docstring": ""
       },
       {
-        "name": "TestPositionCardWidget::test_on_state_updated_with_position",
-        "line": 34,
+        "name": "test_on_state_updated_with_position",
+        "line": 134,
         "markers": [
           "asyncio",
           "unit"
         ],
-        "docstring": "Test that widget correctly displays position data.",
-        "class": "TestPositionCardWidget"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/widgets/test_position_card_partial_state.py": [
-      {
-        "name": "TestPositionCardPartialState::test_handles_no_position_data",
-        "line": 24,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that widget handles state with no positions.",
-        "class": "TestPositionCardPartialState"
+        "docstring": ""
       },
       {
-        "name": "TestPositionCardPartialState::test_handles_missing_system_data",
-        "line": 42,
+        "name": "test_partial_state_handling",
+        "line": 169,
         "markers": [
           "asyncio",
+          "parametrize",
           "unit"
         ],
-        "docstring": "Test that widget handles state with no system_data.",
-        "class": "TestPositionCardPartialState"
+        "docstring": ""
       },
       {
-        "name": "TestPositionCardPartialState::test_handles_degraded_mode",
-        "line": 71,
+        "name": "test_signature_caching_skips_on_same_state",
+        "line": 190,
         "markers": [
           "asyncio",
           "unit"
         ],
-        "docstring": "Test that widget handles degraded mode with staleness banner.",
-        "class": "TestPositionCardPartialState"
+        "docstring": ""
       },
       {
-        "name": "TestPositionCardPartialState::test_handles_connection_unhealthy",
-        "line": 90,
+        "name": "test_signature_changes_on_update",
+        "line": 201,
         "markers": [
           "asyncio",
+          "parametrize",
           "unit"
         ],
-        "docstring": "Test that widget handles unhealthy connection states.",
-        "class": "TestPositionCardPartialState"
+        "docstring": ""
       },
       {
-        "name": "TestPositionCardPartialState::test_handles_bot_not_running",
-        "line": 108,
+        "name": "test_mount_registers_with_state_registry",
+        "line": 212,
         "markers": [
           "asyncio",
           "unit"
         ],
-        "docstring": "Test that widget handles stopped bot state.",
-        "class": "TestPositionCardPartialState"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/widgets/test_position_card_signature_caching.py": [
-      {
-        "name": "TestPositionCardSignatureCaching::test_skips_update_when_signature_unchanged",
-        "line": 24,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that on_state_updated skips work when state unchanged.",
-        "class": "TestPositionCardSignatureCaching"
-      },
-      {
-        "name": "TestPositionCardSignatureCaching::test_updates_when_pnl_changes",
-        "line": 56,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that signature detects PnL changes.",
-        "class": "TestPositionCardSignatureCaching"
-      },
-      {
-        "name": "TestPositionCardSignatureCaching::test_signature_includes_connection_status",
-        "line": 101,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that signature changes when connection status changes.",
-        "class": "TestPositionCardSignatureCaching"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/widgets/test_position_card_state_registry.py": [
-      {
-        "name": "TestPositionCardStateRegistry::test_mount_registers_with_state_registry",
-        "line": 13,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that widget registers with StateRegistry on mount.",
-        "class": "TestPositionCardStateRegistry"
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/tui/widgets/test_position_detail.py": [
@@ -53110,218 +52830,82 @@
     ],
     "tests/unit/gpt_trader/tui/widgets/test_system_monitor.py": [
       {
-        "name": "TestSystemMonitorWidgetInitialStateAndUpdates::test_initial_state",
-        "line": 23,
+        "name": "test_initial_state",
+        "line": 101,
         "markers": [
           "asyncio",
           "unit"
         ],
-        "docstring": "Test that widget renders with default values.",
-        "class": "TestSystemMonitorWidgetInitialStateAndUpdates"
+        "docstring": ""
       },
       {
-        "name": "TestSystemMonitorWidgetInitialStateAndUpdates::test_on_state_updated_extracts_system_data",
-        "line": 42,
+        "name": "test_on_state_updated_system_data",
+        "line": 135,
         "markers": [
           "asyncio",
+          "parametrize",
           "unit"
         ],
-        "docstring": "Test that on_state_updated correctly extracts system data.",
-        "class": "TestSystemMonitorWidgetInitialStateAndUpdates"
+        "docstring": ""
       },
       {
-        "name": "TestSystemMonitorWidgetInitialStateAndUpdates::test_on_state_updated_handles_numeric_cpu",
-        "line": 70,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that on_state_updated handles numeric CPU values.",
-        "class": "TestSystemMonitorWidgetInitialStateAndUpdates"
-      },
-      {
-        "name": "TestSystemMonitorWidgetInitialStateAndUpdates::test_on_state_updated_handles_missing_system_data",
-        "line": 86,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that on_state_updated gracefully handles missing system data.",
-        "class": "TestSystemMonitorWidgetInitialStateAndUpdates"
-      },
-      {
-        "name": "TestSystemMonitorPartialState::test_handles_partial_state_system_only",
-        "line": 108,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that widget handles state with only system_data set.",
-        "class": "TestSystemMonitorPartialState"
-      },
-      {
-        "name": "TestSystemMonitorPartialState::test_handles_degraded_mode_with_no_data",
-        "line": 133,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that widget handles degraded mode with missing data sections.",
-        "class": "TestSystemMonitorPartialState"
-      },
-      {
-        "name": "TestSystemMonitorPartialState::test_handles_connection_unhealthy_state",
+        "name": "test_partial_state_handling",
         "line": 152,
         "markers": [
           "asyncio",
+          "parametrize",
           "unit"
         ],
-        "docstring": "Test that widget handles unhealthy connection states.",
-        "class": "TestSystemMonitorPartialState"
+        "docstring": ""
       },
       {
-        "name": "TestSystemMonitorPartialState::test_handles_resilience_data_with_no_last_update",
-        "line": 174,
+        "name": "test_signature_caching_skips_on_same_state",
+        "line": 160,
         "markers": [
           "asyncio",
           "unit"
         ],
-        "docstring": "Test that widget handles resilience data with last_update=0.",
-        "class": "TestSystemMonitorPartialState"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/widgets/test_system_monitor_caching.py": [
-      {
-        "name": "TestSystemMonitorSignatureCaching::test_skips_update_when_signature_unchanged",
-        "line": 22,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that on_state_updated skips work when state unchanged.",
-        "class": "TestSystemMonitorSignatureCaching"
+        "docstring": ""
       },
       {
-        "name": "TestSystemMonitorSignatureCaching::test_updates_when_single_field_changes",
-        "line": 51,
+        "name": "test_signature_changes_on_update",
+        "line": 171,
         "markers": [
           "asyncio",
+          "parametrize",
           "unit"
         ],
-        "docstring": "Test that on_state_updated runs when any field changes.",
-        "class": "TestSystemMonitorSignatureCaching"
+        "docstring": ""
       },
       {
-        "name": "TestSystemMonitorSignatureCaching::test_signature_includes_running_state",
-        "line": 79,
+        "name": "test_watch_progress_bars",
+        "line": 191,
         "markers": [
           "asyncio",
+          "parametrize",
           "unit"
         ],
-        "docstring": "Test that signature changes when running state changes.",
-        "class": "TestSystemMonitorSignatureCaching"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/widgets/test_system_monitor_watch.py": [
-      {
-        "name": "TestSystemMonitorWatchMethods::test_watch_cpu_usage_updates_progress_bar",
-        "line": 24,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that CPU usage updates the progress bar widget.",
-        "class": "TestSystemMonitorWatchMethods"
+        "docstring": ""
       },
       {
-        "name": "TestSystemMonitorWatchMethods::test_watch_latency_green_threshold",
-        "line": 39,
+        "name": "test_watch_latency_thresholds",
+        "line": 207,
         "markers": [
           "asyncio",
+          "parametrize",
           "unit"
         ],
-        "docstring": "Test latency displays green for values under 50ms.",
-        "class": "TestSystemMonitorWatchMethods"
+        "docstring": ""
       },
       {
-        "name": "TestSystemMonitorWatchMethods::test_watch_latency_yellow_threshold",
-        "line": 53,
+        "name": "test_watch_connection_status",
+        "line": 223,
         "markers": [
           "asyncio",
+          "parametrize",
           "unit"
         ],
-        "docstring": "Test latency displays yellow for values between 50-200ms.",
-        "class": "TestSystemMonitorWatchMethods"
-      },
-      {
-        "name": "TestSystemMonitorWatchMethods::test_watch_latency_red_threshold",
-        "line": 67,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test latency displays red for values over 200ms.",
-        "class": "TestSystemMonitorWatchMethods"
-      },
-      {
-        "name": "TestSystemMonitorWatchMethods::test_watch_connection_status_connected",
-        "line": 81,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test connection status displays connected state correctly.",
-        "class": "TestSystemMonitorWatchMethods"
-      },
-      {
-        "name": "TestSystemMonitorWatchMethods::test_watch_connection_status_disconnected",
-        "line": 96,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test connection status displays disconnected state correctly.",
-        "class": "TestSystemMonitorWatchMethods"
-      },
-      {
-        "name": "TestSystemMonitorWatchMethods::test_watch_connection_status_connecting",
-        "line": 111,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test connection status displays connecting state correctly.",
-        "class": "TestSystemMonitorWatchMethods"
-      },
-      {
-        "name": "TestSystemMonitorWatchMethods::test_watch_rate_limit_updates_progress_bar",
-        "line": 124,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test rate limit updates the progress bar.",
-        "class": "TestSystemMonitorWatchMethods"
-      },
-      {
-        "name": "TestSystemMonitorWatchMethods::test_watch_rate_limit_high_value",
-        "line": 137,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test rate limit with high percentage value.",
-        "class": "TestSystemMonitorWatchMethods"
-      },
-      {
-        "name": "TestSystemMonitorWatchMethods::test_watch_memory_usage_updates_progress_bar",
-        "line": 150,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test memory usage updates the progress bar.",
-        "class": "TestSystemMonitorWatchMethods"
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/tui/widgets/test_trades_widget_filters.py": [

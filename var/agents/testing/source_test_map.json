@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 780,
+    "tests_scanned": 769,
     "source_modules": 355,
     "unresolved_modules": 3
   },
@@ -1747,9 +1747,7 @@
       "tests/unit/gpt_trader/tui/test_risk_guard_explanations.py"
     ],
     "gpt_trader.tui.risk_preview": [
-      "tests/unit/gpt_trader/tui/test_risk_preview.py",
-      "tests/unit/gpt_trader/tui/test_risk_preview_position.py",
-      "tests/unit/gpt_trader/tui/test_risk_preview_scenarios.py"
+      "tests/unit/gpt_trader/tui/test_risk_preview.py"
     ],
     "gpt_trader.tui.screens": [
       "tests/unit/gpt_trader/tui/test_screen_flows_help.py",
@@ -1838,8 +1836,7 @@
       "tests/unit/gpt_trader/tui/services/test_responsive_manager.py"
     ],
     "gpt_trader.tui.services.state_registry": [
-      "tests/unit/gpt_trader/tui/services/test_state_registry.py",
-      "tests/unit/gpt_trader/tui/services/test_state_registry_broadcast.py"
+      "tests/unit/gpt_trader/tui/services/test_state_registry.py"
     ],
     "gpt_trader.tui.services.theme_service": [
       "tests/unit/gpt_trader/tui/services/test_theme_service.py"
@@ -1857,23 +1854,16 @@
     ],
     "gpt_trader.tui.state": [
       "tests/unit/gpt_trader/tui/services/test_state_registry.py",
-      "tests/unit/gpt_trader/tui/services/test_state_registry_broadcast.py",
       "tests/unit/gpt_trader/tui/test_degraded_mode.py",
       "tests/unit/gpt_trader/tui/test_market_widget.py",
-      "tests/unit/gpt_trader/tui/test_risk_preview_position.py",
-      "tests/unit/gpt_trader/tui/test_risk_preview_scenarios.py",
+      "tests/unit/gpt_trader/tui/test_risk_preview.py",
       "tests/unit/gpt_trader/tui/test_screens.py",
       "tests/unit/gpt_trader/tui/test_state_cfm_and_data_staleness.py",
       "tests/unit/gpt_trader/tui/test_state_resilience_and_performance.py",
       "tests/unit/gpt_trader/tui/test_state_update_from_bot_status.py",
-      "tests/unit/gpt_trader/tui/widgets/test_account_widget_basic.py",
-      "tests/unit/gpt_trader/tui/widgets/test_account_widget_partial_state.py",
-      "tests/unit/gpt_trader/tui/widgets/test_account_widget_signature_caching.py",
-      "tests/unit/gpt_trader/tui/widgets/test_position_card_basic.py",
-      "tests/unit/gpt_trader/tui/widgets/test_position_card_partial_state.py",
-      "tests/unit/gpt_trader/tui/widgets/test_position_card_signature_caching.py",
-      "tests/unit/gpt_trader/tui/widgets/test_system_monitor.py",
-      "tests/unit/gpt_trader/tui/widgets/test_system_monitor_caching.py"
+      "tests/unit/gpt_trader/tui/widgets/test_account_widget.py",
+      "tests/unit/gpt_trader/tui/widgets/test_position_card.py",
+      "tests/unit/gpt_trader/tui/widgets/test_system_monitor.py"
     ],
     "gpt_trader.tui.state_management.delta_updater": [
       "tests/unit/gpt_trader/tui/state_management/test_delta_updater_compare_account_risk_system.py",
@@ -1898,8 +1888,6 @@
     "gpt_trader.tui.thresholds": [
       "tests/unit/gpt_trader/tui/services/test_alert_manager_stale.py",
       "tests/unit/gpt_trader/tui/test_risk_preview.py",
-      "tests/unit/gpt_trader/tui/test_risk_preview_position.py",
-      "tests/unit/gpt_trader/tui/test_risk_preview_scenarios.py",
       "tests/unit/gpt_trader/tui/test_thresholds.py",
       "tests/unit/gpt_trader/tui/test_thresholds_risk.py"
     ],
@@ -1925,20 +1913,15 @@
       "tests/unit/gpt_trader/tui/test_market_widget.py",
       "tests/unit/gpt_trader/tui/test_new_widgets.py",
       "tests/unit/gpt_trader/tui/test_risk_guard_explanations.py",
-      "tests/unit/gpt_trader/tui/test_risk_preview_position.py",
-      "tests/unit/gpt_trader/tui/test_risk_preview_scenarios.py",
+      "tests/unit/gpt_trader/tui/test_risk_preview.py",
       "tests/unit/gpt_trader/tui/test_snapshots_modals.py",
       "tests/unit/gpt_trader/tui/test_snapshots_strategy_detail_screen.py",
-      "tests/unit/gpt_trader/tui/widgets/test_account_widget_basic.py",
-      "tests/unit/gpt_trader/tui/widgets/test_account_widget_partial_state.py",
-      "tests/unit/gpt_trader/tui/widgets/test_account_widget_signature_caching.py",
+      "tests/unit/gpt_trader/tui/widgets/test_account_widget.py",
       "tests/unit/gpt_trader/tui/widgets/test_execution_issues_modal.py",
       "tests/unit/gpt_trader/tui/widgets/test_order_detail_modal.py",
       "tests/unit/gpt_trader/tui/widgets/test_orders_widget_sorting.py",
       "tests/unit/gpt_trader/tui/widgets/test_orders_widget_update.py",
-      "tests/unit/gpt_trader/tui/widgets/test_position_card_basic.py",
-      "tests/unit/gpt_trader/tui/widgets/test_position_card_partial_state.py",
-      "tests/unit/gpt_trader/tui/widgets/test_position_card_signature_caching.py",
+      "tests/unit/gpt_trader/tui/widgets/test_position_card.py",
       "tests/unit/gpt_trader/tui/widgets/test_position_detail.py",
       "tests/unit/gpt_trader/tui/widgets/test_position_detail_calculations.py",
       "tests/unit/gpt_trader/tui/widgets/test_position_detail_classification.py",
@@ -1951,7 +1934,6 @@
       "tests/unit/gpt_trader/tui/widgets/test_strategy_widget_decision_display.py",
       "tests/unit/gpt_trader/tui/widgets/test_system.py",
       "tests/unit/gpt_trader/tui/widgets/test_system_monitor.py",
-      "tests/unit/gpt_trader/tui/widgets/test_system_monitor_caching.py",
       "tests/unit/gpt_trader/tui/widgets/test_trades_widget_filters.py",
       "tests/unit/gpt_trader/tui/widgets/test_trades_widget_update.py"
     ],
@@ -1968,10 +1950,7 @@
       "tests/unit/gpt_trader/tui/test_screen_flows_quick_navigation_and_state.py"
     ],
     "gpt_trader.tui.widgets.account": [
-      "tests/unit/gpt_trader/tui/widgets/test_account_widget_basic.py",
-      "tests/unit/gpt_trader/tui/widgets/test_account_widget_partial_state.py",
-      "tests/unit/gpt_trader/tui/widgets/test_account_widget_signature_caching.py",
-      "tests/unit/gpt_trader/tui/widgets/test_account_widget_state_registry.py"
+      "tests/unit/gpt_trader/tui/widgets/test_account_widget.py"
     ],
     "gpt_trader.tui.widgets.alert_inbox": [
       "tests/unit/gpt_trader/tui/widgets/test_alert_inbox.py",
@@ -1988,15 +1967,10 @@
     ],
     "gpt_trader.tui.widgets.dashboard": [
       "tests/unit/gpt_trader/tui/widgets/test_dashboard.py",
-      "tests/unit/gpt_trader/tui/widgets/test_system_monitor.py",
-      "tests/unit/gpt_trader/tui/widgets/test_system_monitor_caching.py",
-      "tests/unit/gpt_trader/tui/widgets/test_system_monitor_watch.py"
+      "tests/unit/gpt_trader/tui/widgets/test_system_monitor.py"
     ],
     "gpt_trader.tui.widgets.dashboard_position": [
-      "tests/unit/gpt_trader/tui/widgets/test_position_card_basic.py",
-      "tests/unit/gpt_trader/tui/widgets/test_position_card_partial_state.py",
-      "tests/unit/gpt_trader/tui/widgets/test_position_card_signature_caching.py",
-      "tests/unit/gpt_trader/tui/widgets/test_position_card_state_registry.py"
+      "tests/unit/gpt_trader/tui/widgets/test_position_card.py"
     ],
     "gpt_trader.tui.widgets.error_indicator": [
       "tests/unit/gpt_trader/tui/test_error_indicator.py"
@@ -2037,7 +2011,7 @@
       "tests/unit/gpt_trader/tui/widgets/test_position_detail_classification.py"
     ],
     "gpt_trader.tui.widgets.primitives": [
-      "tests/unit/gpt_trader/tui/widgets/test_system_monitor_watch.py"
+      "tests/unit/gpt_trader/tui/widgets/test_system_monitor.py"
     ],
     "gpt_trader.tui.widgets.risk": [
       "tests/unit/gpt_trader/tui/widgets/test_risk.py"
@@ -4656,10 +4630,6 @@
       "gpt_trader.tui.services.state_registry",
       "gpt_trader.tui.state"
     ],
-    "tests/unit/gpt_trader/tui/services/test_state_registry_broadcast.py": [
-      "gpt_trader.tui.services.state_registry",
-      "gpt_trader.tui.state"
-    ],
     "tests/unit/gpt_trader/tui/services/test_theme_service.py": [
       "gpt_trader.tui.services.theme_service",
       "gpt_trader.tui.theme"
@@ -4787,16 +4757,6 @@
     ],
     "tests/unit/gpt_trader/tui/test_risk_preview.py": [
       "gpt_trader.tui.risk_preview",
-      "gpt_trader.tui.thresholds"
-    ],
-    "tests/unit/gpt_trader/tui/test_risk_preview_position.py": [
-      "gpt_trader.tui.risk_preview",
-      "gpt_trader.tui.state",
-      "gpt_trader.tui.thresholds",
-      "gpt_trader.tui.types"
-    ],
-    "tests/unit/gpt_trader/tui/test_risk_preview_scenarios.py": [
-      "gpt_trader.tui.risk_preview",
       "gpt_trader.tui.state",
       "gpt_trader.tui.thresholds",
       "gpt_trader.tui.types"
@@ -4882,22 +4842,9 @@
     "tests/unit/gpt_trader/tui/utilities/test_table_formatting_data.py": [
       "gpt_trader.tui.utilities.table_formatting"
     ],
-    "tests/unit/gpt_trader/tui/widgets/test_account_widget_basic.py": [
+    "tests/unit/gpt_trader/tui/widgets/test_account_widget.py": [
       "gpt_trader.tui.state",
       "gpt_trader.tui.types",
-      "gpt_trader.tui.widgets.account"
-    ],
-    "tests/unit/gpt_trader/tui/widgets/test_account_widget_partial_state.py": [
-      "gpt_trader.tui.state",
-      "gpt_trader.tui.types",
-      "gpt_trader.tui.widgets.account"
-    ],
-    "tests/unit/gpt_trader/tui/widgets/test_account_widget_signature_caching.py": [
-      "gpt_trader.tui.state",
-      "gpt_trader.tui.types",
-      "gpt_trader.tui.widgets.account"
-    ],
-    "tests/unit/gpt_trader/tui/widgets/test_account_widget_state_registry.py": [
       "gpt_trader.tui.widgets.account"
     ],
     "tests/unit/gpt_trader/tui/widgets/test_alert_inbox.py": [
@@ -4961,22 +4908,9 @@
       "gpt_trader.tui.services.performance_service",
       "gpt_trader.tui.widgets.performance_dashboard"
     ],
-    "tests/unit/gpt_trader/tui/widgets/test_position_card_basic.py": [
+    "tests/unit/gpt_trader/tui/widgets/test_position_card.py": [
       "gpt_trader.tui.state",
       "gpt_trader.tui.types",
-      "gpt_trader.tui.widgets.dashboard_position"
-    ],
-    "tests/unit/gpt_trader/tui/widgets/test_position_card_partial_state.py": [
-      "gpt_trader.tui.state",
-      "gpt_trader.tui.types",
-      "gpt_trader.tui.widgets.dashboard_position"
-    ],
-    "tests/unit/gpt_trader/tui/widgets/test_position_card_signature_caching.py": [
-      "gpt_trader.tui.state",
-      "gpt_trader.tui.types",
-      "gpt_trader.tui.widgets.dashboard_position"
-    ],
-    "tests/unit/gpt_trader/tui/widgets/test_position_card_state_registry.py": [
       "gpt_trader.tui.widgets.dashboard_position"
     ],
     "tests/unit/gpt_trader/tui/widgets/test_position_detail.py": [
@@ -5033,14 +4967,6 @@
     "tests/unit/gpt_trader/tui/widgets/test_system_monitor.py": [
       "gpt_trader.tui.state",
       "gpt_trader.tui.types",
-      "gpt_trader.tui.widgets.dashboard"
-    ],
-    "tests/unit/gpt_trader/tui/widgets/test_system_monitor_caching.py": [
-      "gpt_trader.tui.state",
-      "gpt_trader.tui.types",
-      "gpt_trader.tui.widgets.dashboard"
-    ],
-    "tests/unit/gpt_trader/tui/widgets/test_system_monitor_watch.py": [
       "gpt_trader.tui.widgets.dashboard",
       "gpt_trader.tui.widgets.primitives"
     ],

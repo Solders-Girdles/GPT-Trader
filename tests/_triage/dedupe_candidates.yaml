@@ -70,7 +70,8 @@ clusters:
     expected_file_delta: -38
     priority: high
     rationale: Consolidate 39 test files into single parametrized file
-    status: pending
+    status: in_progress
+    owner: codex
     added: '2026-01-22'
   8e91c83ef6d3:
     type: source_fanout
@@ -1752,10 +1753,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/app/test_application_container.py
-    expected_file_delta: -3
+    expected_file_delta: -2
     priority: low
-    rationale: Consolidate 4 test files into single parametrized file
-    status: pending
+    rationale: Consolidated into two modules to stay under hygiene cap
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/380
     added: '2026-01-20'
   a0feb5e13a69:
     type: similar_names

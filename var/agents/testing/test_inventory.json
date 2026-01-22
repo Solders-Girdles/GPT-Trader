@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6105,
-    "total_files": 759,
+    "total_files": 757,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -135,9 +135,7 @@
       "tests/unit/gpt_trader/app/config/test_validation_rules.py",
       "tests/unit/gpt_trader/app/containers/test_risk_validation.py",
       "tests/unit/gpt_trader/app/containers/test_risk_validation_kill_switch.py",
-      "tests/unit/gpt_trader/app/test_application_container_bot_creation.py",
-      "tests/unit/gpt_trader/app/test_application_container_registry.py",
-      "tests/unit/gpt_trader/app/test_application_container_reset_and_services.py",
+      "tests/unit/gpt_trader/app/test_application_container.py",
       "tests/unit/gpt_trader/app/test_application_container_resources.py",
       "tests/unit/gpt_trader/app/test_bootstrap.py",
       "tests/unit/gpt_trader/app/test_bootstrap_profile_loading.py",
@@ -3439,30 +3437,10 @@
         "class": "TestKillSwitchDerivation"
       }
     ],
-    "tests/unit/gpt_trader/app/test_application_container_bot_creation.py": [
-      {
-        "name": "TestApplicationContainerBotCreation::test_create_bot",
-        "line": 17,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that TradingBot is created correctly from container.",
-        "class": "TestApplicationContainerBotCreation"
-      },
-      {
-        "name": "TestApplicationContainerBotCreation::test_create_bot_includes_notification_service",
-        "line": 52,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that TradingBot is created with notification service.",
-        "class": "TestApplicationContainerBotCreation"
-      }
-    ],
-    "tests/unit/gpt_trader/app/test_application_container_registry.py": [
+    "tests/unit/gpt_trader/app/test_application_container.py": [
       {
         "name": "TestCreateApplicationContainer::test_create_application_container",
-        "line": 20,
+        "line": 23,
         "markers": [
           "unit"
         ],
@@ -3471,7 +3449,7 @@
       },
       {
         "name": "TestContainerRegistry::test_get_returns_none_when_not_set",
-        "line": 31,
+        "line": 34,
         "markers": [
           "unit"
         ],
@@ -3480,7 +3458,7 @@
       },
       {
         "name": "TestContainerRegistry::test_set_and_get_container",
-        "line": 36,
+        "line": 39,
         "markers": [
           "unit"
         ],
@@ -3489,7 +3467,7 @@
       },
       {
         "name": "TestContainerRegistry::test_clear_container",
-        "line": 48,
+        "line": 51,
         "markers": [
           "unit"
         ],
@@ -3498,36 +3476,34 @@
       },
       {
         "name": "TestContainerRegistry::test_service_resolution_via_registry",
-        "line": 57,
+        "line": 60,
         "markers": [
           "unit"
         ],
         "docstring": "Test that services can be resolved via registered container.",
         "class": "TestContainerRegistry"
-      }
-    ],
-    "tests/unit/gpt_trader/app/test_application_container_reset_and_services.py": [
-      {
-        "name": "TestApplicationContainerResets::test_reset_broker",
-        "line": 14,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that broker can be reset.",
-        "class": "TestApplicationContainerResets"
       },
       {
-        "name": "TestApplicationContainerResets::test_reset_config",
-        "line": 46,
+        "name": "TestApplicationContainerBotCreation::test_create_bot",
+        "line": 87,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that config controller can be reset.",
-        "class": "TestApplicationContainerResets"
+        "docstring": "Test that TradingBot is created correctly from container.",
+        "class": "TestApplicationContainerBotCreation"
+      },
+      {
+        "name": "TestApplicationContainerBotCreation::test_create_bot_includes_notification_service",
+        "line": 122,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that TradingBot is created with notification service.",
+        "class": "TestApplicationContainerBotCreation"
       },
       {
         "name": "TestApplicationContainerSecondaryServices::test_validation_failure_tracker_creation",
-        "line": 65,
+        "line": 159,
         "markers": [
           "unit"
         ],
@@ -3536,7 +3512,7 @@
       },
       {
         "name": "TestApplicationContainerSecondaryServices::test_profile_loader_creation",
-        "line": 81,
+        "line": 175,
         "markers": [
           "unit"
         ],
@@ -3545,7 +3521,7 @@
       },
       {
         "name": "TestApplicationContainerSecondaryServices::test_health_state_creation",
-        "line": 95,
+        "line": 189,
         "markers": [
           "unit"
         ],
@@ -3554,7 +3530,7 @@
       },
       {
         "name": "TestApplicationContainerSecondaryServices::test_secrets_manager_creation",
-        "line": 111,
+        "line": 205,
         "markers": [
           "unit"
         ],
@@ -3625,6 +3601,24 @@
         ],
         "docstring": "Test that broker is created correctly with dependencies.",
         "class": "TestApplicationContainerResources"
+      },
+      {
+        "name": "TestApplicationContainerResets::test_reset_broker",
+        "line": 141,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that broker can be reset.",
+        "class": "TestApplicationContainerResets"
+      },
+      {
+        "name": "TestApplicationContainerResets::test_reset_config",
+        "line": 173,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that config controller can be reset.",
+        "class": "TestApplicationContainerResets"
       }
     ],
     "tests/unit/gpt_trader/app/test_bootstrap.py": [
@@ -22053,7 +22047,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_state_collection_flow.py": [
       {
         "name": "TestRequireProduct::test_returns_provided_product",
-        "line": 47,
+        "line": 49,
         "markers": [
           "unit"
         ],
@@ -22062,7 +22056,7 @@
       },
       {
         "name": "TestRequireProduct::test_fetches_from_broker_when_none",
-        "line": 51,
+        "line": 55,
         "markers": [
           "unit"
         ],
@@ -22071,7 +22065,7 @@
       },
       {
         "name": "TestRequireProduct::test_raises_validation_error_when_not_found",
-        "line": 59,
+        "line": 63,
         "markers": [
           "unit"
         ],
@@ -22080,7 +22074,7 @@
       },
       {
         "name": "TestRequireProduct::test_provides_synthetic_product_in_integration_mode",
-        "line": 66,
+        "line": 70,
         "markers": [
           "unit"
         ],
@@ -22089,7 +22083,7 @@
       },
       {
         "name": "TestRequireProduct::test_synthetic_product_parses_symbol_without_dash",
-        "line": 77,
+        "line": 81,
         "markers": [
           "unit"
         ],
@@ -22098,7 +22092,7 @@
       },
       {
         "name": "test_resolve_effective_price",
-        "line": 101,
+        "line": 145,
         "markers": [
           "parametrize",
           "unit"
@@ -22107,7 +22101,7 @@
       },
       {
         "name": "TestStateCollectionFlow::test_full_state_collection_flow",
-        "line": 126,
+        "line": 174,
         "markers": [
           "unit"
         ],

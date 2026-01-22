@@ -133,3 +133,54 @@ class TestApplicationContainerResources:
         assert broker == mock_broker
         assert container._brokerage._broker == broker
         mock_create_brokerage.assert_called_once()
+
+
+class TestApplicationContainerResets:
+    """Test cases for ApplicationContainer reset helpers."""
+
+    def test_reset_broker(self, mock_config: BotConfig) -> None:
+        """Test that broker can be reset."""
+        from gpt_trader.app.containers.brokerage import BrokerageContainer
+
+        mock_broker = MagicMock()
+        mock_create_brokerage = MagicMock()
+        mock_create_brokerage.return_value = (
+            mock_broker,
+            MagicMock(),
+            MagicMock(),
+            MagicMock(),
+        )
+
+        container = ApplicationContainer(mock_config)
+        container._brokerage = BrokerageContainer(
+            config=mock_config,
+            event_store_provider=lambda: container.event_store,
+            broker_factory=mock_create_brokerage,
+        )
+
+        broker = container.broker
+        assert broker == mock_broker
+        assert container._brokerage._broker == mock_broker
+
+        container.reset_broker()
+        assert container._brokerage._broker is None
+
+        broker2 = container.broker
+        assert broker2 == mock_broker
+        assert container._brokerage._broker == mock_broker
+        assert mock_create_brokerage.call_count == 2
+
+    def test_reset_config(self, mock_config: BotConfig) -> None:
+        """Test that config controller can be reset."""
+        container = ApplicationContainer(mock_config)
+
+        config_controller = container.config_controller
+        assert config_controller is not None
+        assert container._config_container._config_controller == config_controller
+
+        container.reset_config()
+        assert container._config_container._config_controller is None
+
+        config_controller2 = container.config_controller
+        assert config_controller2 is not None
+        assert config_controller2 is not config_controller

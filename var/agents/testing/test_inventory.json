@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6031,
-    "total_files": 728,
+    "total_files": 727,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -449,7 +449,6 @@
       "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_primitives.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_perps_baseline_edges.py",
       "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry.py",
-      "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_collect.py",
       "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_lifecycle.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_engine_delegation.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop.py",
@@ -24942,7 +24941,7 @@
     "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry.py": [
       {
         "name": "TestAccountTelemetryServiceInit::test_init_stores_dependencies",
-        "line": 16,
+        "line": 14,
         "markers": [
           "unit"
         ],
@@ -24951,7 +24950,7 @@
       },
       {
         "name": "TestUpdateProfile::test_update_profile_changes_profile",
-        "line": 39,
+        "line": 37,
         "markers": [
           "unit"
         ],
@@ -24960,7 +24959,7 @@
       },
       {
         "name": "TestAccountTelemetryProfileEdgeCases::test_multiple_profile_updates",
-        "line": 55,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -24968,73 +24967,8 @@
         "class": "TestAccountTelemetryProfileEdgeCases"
       },
       {
-        "name": "TestSupportsSnapshots::test_supports_snapshots_all_methods_present",
-        "line": 73,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test returns True when broker has all required methods.",
-        "class": "TestSupportsSnapshots"
-      },
-      {
-        "name": "TestSupportsSnapshots::test_supports_snapshots_missing_method",
-        "line": 91,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test returns False when broker lacks a required method.",
-        "class": "TestSupportsSnapshots"
-      },
-      {
-        "name": "TestSupportsSnapshots::test_supports_snapshots_empty_broker",
-        "line": 103,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test returns False when broker has no methods.",
-        "class": "TestSupportsSnapshots"
-      },
-      {
-        "name": "TestLatestSnapshot::test_latest_snapshot_returns_copy",
-        "line": 119,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test latest_snapshot returns a copy, not the original.",
-        "class": "TestLatestSnapshot"
-      },
-      {
-        "name": "TestLatestSnapshot::test_latest_snapshot_empty_initially",
-        "line": 133,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test latest_snapshot is empty initially.",
-        "class": "TestLatestSnapshot"
-      },
-      {
-        "name": "TestPublishSnapshot::test_publish_snapshot_emits_metric",
-        "line": 148,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test _publish_snapshot emits metric to event store.",
-        "class": "TestPublishSnapshot"
-      },
-      {
-        "name": "TestPublishSnapshot::test_publish_snapshot_file_write_error",
-        "line": 177,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test _publish_snapshot handles file write errors gracefully.",
-        "class": "TestPublishSnapshot"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_collect.py": [
-      {
         "name": "TestCollectSnapshot::test_collect_snapshot_success",
-        "line": 14,
+        "line": 71,
         "markers": [
           "unit"
         ],
@@ -25043,7 +24977,7 @@
       },
       {
         "name": "TestCollectSnapshot::test_collect_snapshot_account_manager_error",
-        "line": 37,
+        "line": 94,
         "markers": [
           "unit"
         ],
@@ -25052,7 +24986,7 @@
       },
       {
         "name": "TestCollectSnapshot::test_collect_snapshot_server_time_error",
-        "line": 58,
+        "line": 115,
         "markers": [
           "unit"
         ],
@@ -25061,7 +24995,7 @@
       },
       {
         "name": "TestCollectSnapshot::test_collect_snapshot_updates_latest",
-        "line": 80,
+        "line": 137,
         "markers": [
           "unit"
         ],
@@ -25070,7 +25004,7 @@
       },
       {
         "name": "TestCollectSnapshot::test_collect_snapshot_server_time_none",
-        "line": 101,
+        "line": 158,
         "markers": [
           "unit"
         ],
@@ -25079,7 +25013,7 @@
       },
       {
         "name": "TestAccountTelemetrySnapshotEdgeCases::test_snapshot_preserves_account_manager_data",
-        "line": 125,
+        "line": 182,
         "markers": [
           "unit"
         ],
@@ -25088,7 +25022,7 @@
       },
       {
         "name": "TestAccountTelemetrySnapshotEdgeCases::test_collect_snapshot_both_errors",
-        "line": 153,
+        "line": 210,
         "markers": [
           "unit"
         ],
@@ -25098,8 +25032,71 @@
     ],
     "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_lifecycle.py": [
       {
+        "name": "TestSupportsSnapshots::test_supports_snapshots_all_methods_present",
+        "line": 16,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test returns True when broker has all required methods.",
+        "class": "TestSupportsSnapshots"
+      },
+      {
+        "name": "TestSupportsSnapshots::test_supports_snapshots_missing_method",
+        "line": 34,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test returns False when broker lacks a required method.",
+        "class": "TestSupportsSnapshots"
+      },
+      {
+        "name": "TestSupportsSnapshots::test_supports_snapshots_empty_broker",
+        "line": 46,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test returns False when broker has no methods.",
+        "class": "TestSupportsSnapshots"
+      },
+      {
+        "name": "TestLatestSnapshot::test_latest_snapshot_returns_copy",
+        "line": 62,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test latest_snapshot returns a copy, not the original.",
+        "class": "TestLatestSnapshot"
+      },
+      {
+        "name": "TestLatestSnapshot::test_latest_snapshot_empty_initially",
+        "line": 76,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test latest_snapshot is empty initially.",
+        "class": "TestLatestSnapshot"
+      },
+      {
+        "name": "TestPublishSnapshot::test_publish_snapshot_emits_metric",
+        "line": 91,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test _publish_snapshot emits metric to event store.",
+        "class": "TestPublishSnapshot"
+      },
+      {
+        "name": "TestPublishSnapshot::test_publish_snapshot_file_write_error",
+        "line": 120,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test _publish_snapshot handles file write errors gracefully.",
+        "class": "TestPublishSnapshot"
+      },
+      {
         "name": "TestRunAsync::test_run_exits_when_snapshots_not_supported",
-        "line": 17,
+        "line": 145,
         "markers": [
           "asyncio",
           "unit"
@@ -25109,7 +25106,7 @@
       },
       {
         "name": "TestRunAsync::test_run_collects_and_publishes",
-        "line": 33,
+        "line": 161,
         "markers": [
           "asyncio",
           "unit"
@@ -25119,7 +25116,7 @@
       },
       {
         "name": "TestRunAsync::test_run_handles_collection_error",
-        "line": 74,
+        "line": 202,
         "markers": [
           "asyncio",
           "unit"

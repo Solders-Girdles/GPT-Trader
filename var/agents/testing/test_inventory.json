@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6191,
-    "total_files": 803,
+    "total_tests": 6188,
+    "total_files": 801,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 6026,
+    "unit": 6023,
     "asyncio": 345,
-    "parametrize": 90,
+    "parametrize": 93,
     "property": 82,
     "integration": 79,
     "endpoints": 78,
@@ -276,9 +276,7 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_portfolio_mixin_requests.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_priority.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_response_cache.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_configurations.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_flags_and_coercion.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_validation.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_execute_order_payload.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_find_existing_order_by_client_id.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_initialization.py",
@@ -12480,172 +12478,144 @@
         "class": "TestCachedResponse"
       }
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_configurations.py": [
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build.py": [
       {
-        "name": "TestCoinbaseRestServiceCoreBuildOrderPayloadConfigurations::test_build_order_payload_limit_order",
-        "line": 14,
+        "name": "TestCoinbaseRestServiceCoreBuildOrderPayload::test_build_order_payload_quantize_values",
+        "line": 36,
         "markers": [
           "unit"
         ],
         "docstring": "",
-        "class": "TestCoinbaseRestServiceCoreBuildOrderPayloadConfigurations"
+        "class": "TestCoinbaseRestServiceCoreBuildOrderPayload"
       },
       {
-        "name": "TestCoinbaseRestServiceCoreBuildOrderPayloadConfigurations::test_build_order_payload_market_order",
-        "line": 38,
+        "name": "TestCoinbaseRestServiceCoreBuildOrderPayload::test_build_order_payload_quantity_below_min_size",
+        "line": 46,
         "markers": [
           "unit"
         ],
         "docstring": "",
-        "class": "TestCoinbaseRestServiceCoreBuildOrderPayloadConfigurations"
+        "class": "TestCoinbaseRestServiceCoreBuildOrderPayload"
       },
       {
-        "name": "TestCoinbaseRestServiceCoreBuildOrderPayloadConfigurations::test_build_order_payload_stop_limit",
-        "line": 62,
+        "name": "TestCoinbaseRestServiceCoreBuildOrderPayload::test_build_order_payload_notional_below_min_notional",
+        "line": 51,
         "markers": [
           "unit"
         ],
         "docstring": "",
-        "class": "TestCoinbaseRestServiceCoreBuildOrderPayloadConfigurations"
+        "class": "TestCoinbaseRestServiceCoreBuildOrderPayload"
       },
       {
-        "name": "TestCoinbaseRestServiceCoreBuildOrderPayloadConfigurations::test_build_order_payload_ioc_fok_limit_orders",
-        "line": 86,
+        "name": "TestCoinbaseRestServiceCoreBuildOrderPayload::test_build_order_payload_limit_order_requires_price",
+        "line": 60,
         "markers": [
           "unit"
         ],
         "docstring": "",
-        "class": "TestCoinbaseRestServiceCoreBuildOrderPayloadConfigurations"
+        "class": "TestCoinbaseRestServiceCoreBuildOrderPayload"
       },
       {
-        "name": "TestCoinbaseRestServiceCoreBuildOrderPayloadConfigurations::test_build_order_payload_fallback_configuration",
-        "line": 119,
+        "name": "TestCoinbaseRestServiceCoreBuildOrderPayload::test_build_order_payload_product_not_found",
+        "line": 64,
         "markers": [
           "unit"
         ],
         "docstring": "",
-        "class": "TestCoinbaseRestServiceCoreBuildOrderPayloadConfigurations"
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_flags_and_coercion.py": [
-      {
-        "name": "TestCoinbaseRestServiceCoreBuildOrderPayloadFlagsAndCoercion::test_build_order_payload_with_reduce_only",
-        "line": 14,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestCoinbaseRestServiceCoreBuildOrderPayloadFlagsAndCoercion"
+        "class": "TestCoinbaseRestServiceCoreBuildOrderPayload"
       },
       {
-        "name": "TestCoinbaseRestServiceCoreBuildOrderPayloadFlagsAndCoercion::test_build_order_payload_with_leverage",
-        "line": 32,
+        "name": "TestCoinbaseRestServiceCoreBuildOrderPayload::test_build_order_payload_limit_order",
+        "line": 71,
         "markers": [
           "unit"
         ],
         "docstring": "",
-        "class": "TestCoinbaseRestServiceCoreBuildOrderPayloadFlagsAndCoercion"
+        "class": "TestCoinbaseRestServiceCoreBuildOrderPayload"
       },
       {
-        "name": "TestCoinbaseRestServiceCoreBuildOrderPayloadFlagsAndCoercion::test_build_order_payload_post_only",
-        "line": 50,
+        "name": "TestCoinbaseRestServiceCoreBuildOrderPayload::test_build_order_payload_market_order",
+        "line": 82,
         "markers": [
           "unit"
         ],
         "docstring": "",
-        "class": "TestCoinbaseRestServiceCoreBuildOrderPayloadFlagsAndCoercion"
+        "class": "TestCoinbaseRestServiceCoreBuildOrderPayload"
       },
       {
-        "name": "TestCoinbaseRestServiceCoreBuildOrderPayloadFlagsAndCoercion::test_build_order_payload_exclude_client_id",
-        "line": 69,
+        "name": "TestCoinbaseRestServiceCoreBuildOrderPayload::test_build_order_payload_stop_limit",
+        "line": 97,
         "markers": [
           "unit"
         ],
         "docstring": "",
-        "class": "TestCoinbaseRestServiceCoreBuildOrderPayloadFlagsAndCoercion"
+        "class": "TestCoinbaseRestServiceCoreBuildOrderPayload"
       },
       {
-        "name": "TestCoinbaseRestServiceCoreBuildOrderPayloadFlagsAndCoercion::test_build_order_payload_enum_coercion",
-        "line": 88,
+        "name": "TestCoinbaseRestServiceCoreBuildOrderPayload::test_build_order_payload_ioc_fok_limit_orders",
+        "line": 118,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCoinbaseRestServiceCoreBuildOrderPayload"
+      },
+      {
+        "name": "TestCoinbaseRestServiceCoreBuildOrderPayload::test_build_order_payload_fallback_configuration",
+        "line": 124,
         "markers": [
           "unit"
         ],
         "docstring": "",
-        "class": "TestCoinbaseRestServiceCoreBuildOrderPayloadFlagsAndCoercion"
+        "class": "TestCoinbaseRestServiceCoreBuildOrderPayload"
       },
       {
-        "name": "TestCoinbaseRestServiceCoreBuildOrderPayloadFlagsAndCoercion::test_build_order_payload_invalid_side_passthrough",
-        "line": 108,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestCoinbaseRestServiceCoreBuildOrderPayloadFlagsAndCoercion"
-      },
-      {
-        "name": "TestCoinbaseRestServiceCoreBuildOrderPayloadFlagsAndCoercion::test_build_order_payload_gtd_conversion",
-        "line": 126,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestCoinbaseRestServiceCoreBuildOrderPayloadFlagsAndCoercion"
-      },
-      {
-        "name": "TestCoinbaseRestServiceCoreBuildOrderPayloadFlagsAndCoercion::test_build_order_payload_invalid_tif_passthrough",
+        "name": "TestCoinbaseRestServiceCoreBuildOrderPayload::test_build_order_payload_flags",
         "line": 144,
         "markers": [
+          "parametrize",
           "unit"
         ],
         "docstring": "",
-        "class": "TestCoinbaseRestServiceCoreBuildOrderPayloadFlagsAndCoercion"
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_validation.py": [
-      {
-        "name": "TestCoinbaseRestServiceCoreBuildOrderPayloadValidation::test_build_order_payload_quantize_values",
-        "line": 24,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestCoinbaseRestServiceCoreBuildOrderPayloadValidation"
+        "class": "TestCoinbaseRestServiceCoreBuildOrderPayload"
       },
       {
-        "name": "TestCoinbaseRestServiceCoreBuildOrderPayloadValidation::test_build_order_payload_quantity_below_min_size",
-        "line": 44,
+        "name": "TestCoinbaseRestServiceCoreBuildOrderPayload::test_build_order_payload_exclude_client_id",
+        "line": 150,
         "markers": [
           "unit"
         ],
         "docstring": "",
-        "class": "TestCoinbaseRestServiceCoreBuildOrderPayloadValidation"
+        "class": "TestCoinbaseRestServiceCoreBuildOrderPayload"
       },
       {
-        "name": "TestCoinbaseRestServiceCoreBuildOrderPayloadValidation::test_build_order_payload_notional_below_min_notional",
-        "line": 62,
+        "name": "TestCoinbaseRestServiceCoreBuildOrderPayload::test_build_order_payload_enum_coercion",
+        "line": 154,
         "markers": [
           "unit"
         ],
         "docstring": "",
-        "class": "TestCoinbaseRestServiceCoreBuildOrderPayloadValidation"
+        "class": "TestCoinbaseRestServiceCoreBuildOrderPayload"
       },
       {
-        "name": "TestCoinbaseRestServiceCoreBuildOrderPayloadValidation::test_build_order_payload_limit_order_requires_price",
-        "line": 83,
+        "name": "TestCoinbaseRestServiceCoreBuildOrderPayload::test_build_order_payload_invalid_side_passthrough",
+        "line": 161,
         "markers": [
           "unit"
         ],
         "docstring": "",
-        "class": "TestCoinbaseRestServiceCoreBuildOrderPayloadValidation"
+        "class": "TestCoinbaseRestServiceCoreBuildOrderPayload"
       },
       {
-        "name": "TestCoinbaseRestServiceCoreBuildOrderPayloadValidation::test_build_order_payload_product_not_found",
-        "line": 100,
+        "name": "TestCoinbaseRestServiceCoreBuildOrderPayload::test_build_order_payload_tif_handling",
+        "line": 172,
         "markers": [
+          "parametrize",
           "unit"
         ],
         "docstring": "",
-        "class": "TestCoinbaseRestServiceCoreBuildOrderPayloadValidation"
+        "class": "TestCoinbaseRestServiceCoreBuildOrderPayload"
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_execute_order_payload.py": [

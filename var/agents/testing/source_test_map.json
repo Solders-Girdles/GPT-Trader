@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 745,
+    "tests_scanned": 743,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -359,9 +359,7 @@
       "tests/unit/gpt_trader/backtesting/test_simulation_basics.py",
       "tests/unit/gpt_trader/backtesting/validation/test_guarded_execution.py",
       "tests/unit/gpt_trader/core/test_core_types.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_configurations.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_flags_and_coercion.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_validation.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_execute_order_payload.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_find_existing_order_by_client_id.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_product_service_listing_and_get_product.py",
@@ -442,7 +440,7 @@
       "tests/unit/gpt_trader/errors/test_base_trading_and_hierarchy.py",
       "tests/unit/gpt_trader/errors/test_error_patterns_sync.py",
       "tests/unit/gpt_trader/errors/test_handler.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_validation.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_execute_order_payload.py",
       "tests/unit/gpt_trader/validation/test_base_validator.py",
       "tests/unit/gpt_trader/validation/test_composite_validators.py",
@@ -2824,13 +2822,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_response_cache.py": [
       "gpt_trader.features.brokerages.coinbase.client.response_cache"
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_configurations.py": [
-      "gpt_trader.core"
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_flags_and_coercion.py": [
-      "gpt_trader.core"
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_validation.py": [
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build.py": [
       "gpt_trader.core",
       "gpt_trader.errors"
     ],

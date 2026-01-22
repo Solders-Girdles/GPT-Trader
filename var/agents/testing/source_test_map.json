@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 728,
+    "tests_scanned": 726,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -1613,9 +1613,8 @@
       "tests/unit/gpt_trader/tui/demo/test_mock_data.py"
     ],
     "gpt_trader.tui.events": [
-      "tests/unit/gpt_trader/tui/mixins/test_event_handlers_custom_overrides.py",
-      "tests/unit/gpt_trader/tui/mixins/test_event_handlers_default_handlers.py",
-      "tests/unit/gpt_trader/tui/mixins/test_event_handlers_utilities_and_docs.py",
+      "tests/unit/gpt_trader/tui/mixins/test_event_handlers.py",
+      "tests/unit/gpt_trader/tui/mixins/test_event_handlers_utils.py",
       "tests/unit/gpt_trader/tui/test_events_bot_and_ui.py",
       "tests/unit/gpt_trader/tui/test_events_documentation.py",
       "tests/unit/gpt_trader/tui/test_events_state_updates.py",
@@ -1638,18 +1637,15 @@
       "tests/unit/gpt_trader/tui/test_degraded_mode.py"
     ],
     "gpt_trader.tui.mixins": [
-      "tests/unit/gpt_trader/tui/mixins/test_event_handlers_basics.py",
-      "tests/unit/gpt_trader/tui/mixins/test_event_handlers_custom_overrides.py",
-      "tests/unit/gpt_trader/tui/mixins/test_event_handlers_default_handlers.py",
-      "tests/unit/gpt_trader/tui/mixins/test_event_handlers_utilities_and_docs.py"
+      "tests/unit/gpt_trader/tui/mixins/test_event_handlers.py",
+      "tests/unit/gpt_trader/tui/mixins/test_event_handlers_utils.py"
     ],
     "gpt_trader.tui.mixins.event_handlers": [
-      "tests/unit/gpt_trader/tui/mixins/test_event_handlers_custom_overrides.py",
-      "tests/unit/gpt_trader/tui/mixins/test_event_handlers_default_handlers.py",
-      "tests/unit/gpt_trader/tui/mixins/test_event_handlers_utilities_and_docs.py"
+      "tests/unit/gpt_trader/tui/mixins/test_event_handlers.py",
+      "tests/unit/gpt_trader/tui/mixins/test_event_handlers_utils.py"
     ],
     "gpt_trader.tui.responsive_state": [
-      "tests/unit/gpt_trader/tui/mixins/test_event_handlers_default_handlers.py",
+      "tests/unit/gpt_trader/tui/mixins/test_event_handlers.py",
       "tests/unit/gpt_trader/tui/services/test_responsive_manager.py",
       "tests/unit/gpt_trader/tui/test_events_bot_and_ui.py",
       "tests/unit/gpt_trader/tui/widgets/test_responsive_widgets.py"
@@ -4244,21 +4240,13 @@
       "gpt_trader.tui.demo.demo_bot",
       "gpt_trader.tui.demo.mock_data"
     ],
-    "tests/unit/gpt_trader/tui/mixins/test_event_handlers_basics.py": [
-      "gpt_trader.tui.mixins"
-    ],
-    "tests/unit/gpt_trader/tui/mixins/test_event_handlers_custom_overrides.py": [
-      "gpt_trader.tui.events",
-      "gpt_trader.tui.mixins",
-      "gpt_trader.tui.mixins.event_handlers"
-    ],
-    "tests/unit/gpt_trader/tui/mixins/test_event_handlers_default_handlers.py": [
+    "tests/unit/gpt_trader/tui/mixins/test_event_handlers.py": [
       "gpt_trader.tui.events",
       "gpt_trader.tui.mixins",
       "gpt_trader.tui.mixins.event_handlers",
       "gpt_trader.tui.responsive_state"
     ],
-    "tests/unit/gpt_trader/tui/mixins/test_event_handlers_utilities_and_docs.py": [
+    "tests/unit/gpt_trader/tui/mixins/test_event_handlers_utils.py": [
       "gpt_trader.tui.events",
       "gpt_trader.tui.mixins",
       "gpt_trader.tui.mixins.event_handlers"
@@ -5147,8 +5135,8 @@
     "gpt_trader.tui.adapters.null_status_reporter": "src/gpt_trader/tui/adapters/null_status_reporter.py",
     "gpt_trader.tui.demo.demo_bot": "src/gpt_trader/tui/demo/demo_bot.py",
     "gpt_trader.tui.demo.mock_data": "src/gpt_trader/tui/demo/mock_data.py",
-    "gpt_trader.tui.mixins": "src/gpt_trader/tui/mixins/__init__.py",
     "gpt_trader.tui.events": "src/gpt_trader/tui/events.py",
+    "gpt_trader.tui.mixins": "src/gpt_trader/tui/mixins/__init__.py",
     "gpt_trader.tui.mixins.event_handlers": "src/gpt_trader/tui/mixins/event_handlers.py",
     "gpt_trader.tui.responsive_state": "src/gpt_trader/tui/responsive_state.py",
     "gpt_trader.tui.screens.alert_history": "src/gpt_trader/tui/screens/alert_history.py",

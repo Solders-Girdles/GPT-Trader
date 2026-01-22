@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6165,
-    "total_files": 786,
+    "total_files": 784,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -713,10 +713,8 @@
     "tui": [
       "tests/unit/gpt_trader/tui/adapters/test_null_status_reporter.py",
       "tests/unit/gpt_trader/tui/demo/test_mock_data.py",
-      "tests/unit/gpt_trader/tui/mixins/test_event_handlers_basics.py",
-      "tests/unit/gpt_trader/tui/mixins/test_event_handlers_custom_overrides.py",
-      "tests/unit/gpt_trader/tui/mixins/test_event_handlers_default_handlers.py",
-      "tests/unit/gpt_trader/tui/mixins/test_event_handlers_utilities_and_docs.py",
+      "tests/unit/gpt_trader/tui/mixins/test_event_handlers.py",
+      "tests/unit/gpt_trader/tui/mixins/test_event_handlers_utils.py",
       "tests/unit/gpt_trader/tui/screens/test_alert_history.py",
       "tests/unit/gpt_trader/tui/screens/test_api_setup_wizard.py",
       "tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen_backtest_and_badges.py",
@@ -41606,10 +41604,10 @@
         "class": "TestGenerateStrategyDataPerformance"
       }
     ],
-    "tests/unit/gpt_trader/tui/mixins/test_event_handlers_basics.py": [
+    "tests/unit/gpt_trader/tui/mixins/test_event_handlers.py": [
       {
         "name": "TestEventHandlerMixinBasics::test_mixin_can_be_used_with_static_widget",
-        "line": 13,
+        "line": 29,
         "markers": [
           "unit"
         ],
@@ -41618,15 +41616,105 @@
       },
       {
         "name": "TestEventHandlerMixinBasics::test_mixin_provides_all_event_handlers",
-        "line": 23,
+        "line": 39,
         "markers": [
           "unit"
         ],
         "docstring": "Test that mixin provides expected event handler methods.",
         "class": "TestEventHandlerMixinBasics"
+      },
+      {
+        "name": "TestDefaultEventHandlers::test_on_bot_state_changed_logs_default",
+        "line": 77,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test default on_bot_state_changed logs event.",
+        "class": "TestDefaultEventHandlers"
+      },
+      {
+        "name": "TestDefaultEventHandlers::test_on_bot_mode_changed_logs_default",
+        "line": 90,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test default on_bot_mode_changed logs event.",
+        "class": "TestDefaultEventHandlers"
+      },
+      {
+        "name": "TestDefaultEventHandlers::test_on_state_update_received_logs_default",
+        "line": 103,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test default on_state_update_received logs event.",
+        "class": "TestDefaultEventHandlers"
+      },
+      {
+        "name": "TestDefaultEventHandlers::test_on_state_validation_failed_logs_warnings",
+        "line": 115,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test default on_state_validation_failed logs warnings.",
+        "class": "TestDefaultEventHandlers"
+      },
+      {
+        "name": "TestDefaultEventHandlers::test_on_state_validation_passed_logs_default",
+        "line": 129,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test default on_state_validation_passed logs event.",
+        "class": "TestDefaultEventHandlers"
+      },
+      {
+        "name": "TestDefaultEventHandlers::test_on_state_delta_update_applied_logs_default",
+        "line": 137,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test default on_state_delta_update_applied logs event.",
+        "class": "TestDefaultEventHandlers"
+      },
+      {
+        "name": "TestDefaultEventHandlers::test_on_responsive_state_changed_logs_default",
+        "line": 150,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test default on_responsive_state_changed logs event.",
+        "class": "TestDefaultEventHandlers"
+      },
+      {
+        "name": "TestDefaultEventHandlers::test_on_theme_changed_logs_default",
+        "line": 161,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test default on_theme_changed logs event.",
+        "class": "TestDefaultEventHandlers"
+      },
+      {
+        "name": "TestDefaultEventHandlers::test_on_error_occurred_logs_error_severity",
+        "line": 171,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test on_error_occurred logs with correct severity.",
+        "class": "TestDefaultEventHandlers"
+      },
+      {
+        "name": "TestDefaultEventHandlers::test_on_error_occurred_logs_warning_severity",
+        "line": 179,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test on_error_occurred logs warning for warning severity.",
+        "class": "TestDefaultEventHandlers"
       }
     ],
-    "tests/unit/gpt_trader/tui/mixins/test_event_handlers_custom_overrides.py": [
+    "tests/unit/gpt_trader/tui/mixins/test_event_handlers_utils.py": [
       {
         "name": "TestCustomEventHandlers::test_custom_handler_overrides_default",
         "line": 18,
@@ -41644,104 +41732,10 @@
         ],
         "docstring": "Test custom handler that doesn't call super.",
         "class": "TestCustomEventHandlers"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/mixins/test_event_handlers_default_handlers.py": [
-      {
-        "name": "TestDefaultEventHandlers::test_on_bot_state_changed_logs_default",
-        "line": 45,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test default on_bot_state_changed logs event.",
-        "class": "TestDefaultEventHandlers"
       },
-      {
-        "name": "TestDefaultEventHandlers::test_on_bot_mode_changed_logs_default",
-        "line": 58,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test default on_bot_mode_changed logs event.",
-        "class": "TestDefaultEventHandlers"
-      },
-      {
-        "name": "TestDefaultEventHandlers::test_on_state_update_received_logs_default",
-        "line": 71,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test default on_state_update_received logs event.",
-        "class": "TestDefaultEventHandlers"
-      },
-      {
-        "name": "TestDefaultEventHandlers::test_on_state_validation_failed_logs_warnings",
-        "line": 83,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test default on_state_validation_failed logs warnings.",
-        "class": "TestDefaultEventHandlers"
-      },
-      {
-        "name": "TestDefaultEventHandlers::test_on_state_validation_passed_logs_default",
-        "line": 97,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test default on_state_validation_passed logs event.",
-        "class": "TestDefaultEventHandlers"
-      },
-      {
-        "name": "TestDefaultEventHandlers::test_on_state_delta_update_applied_logs_default",
-        "line": 105,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test default on_state_delta_update_applied logs event.",
-        "class": "TestDefaultEventHandlers"
-      },
-      {
-        "name": "TestDefaultEventHandlers::test_on_responsive_state_changed_logs_default",
-        "line": 118,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test default on_responsive_state_changed logs event.",
-        "class": "TestDefaultEventHandlers"
-      },
-      {
-        "name": "TestDefaultEventHandlers::test_on_theme_changed_logs_default",
-        "line": 129,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test default on_theme_changed logs event.",
-        "class": "TestDefaultEventHandlers"
-      },
-      {
-        "name": "TestDefaultEventHandlers::test_on_error_occurred_logs_error_severity",
-        "line": 139,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test on_error_occurred logs with correct severity.",
-        "class": "TestDefaultEventHandlers"
-      },
-      {
-        "name": "TestDefaultEventHandlers::test_on_error_occurred_logs_warning_severity",
-        "line": 147,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test on_error_occurred logs warning for warning severity.",
-        "class": "TestDefaultEventHandlers"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/mixins/test_event_handlers_utilities_and_docs.py": [
       {
         "name": "TestUtilityMethods::test_post_event_when_mounted",
-        "line": 18,
+        "line": 62,
         "markers": [
           "unit"
         ],
@@ -41750,7 +41744,7 @@
       },
       {
         "name": "TestUtilityMethods::test_post_event_when_not_mounted",
-        "line": 31,
+        "line": 75,
         "markers": [
           "unit"
         ],
@@ -41759,7 +41753,7 @@
       },
       {
         "name": "TestUtilityMethods::test_log_event_received_utility",
-        "line": 46,
+        "line": 90,
         "markers": [
           "unit"
         ],
@@ -41768,7 +41762,7 @@
       },
       {
         "name": "TestUtilityMethods::test_log_event_received_without_details",
-        "line": 64,
+        "line": 108,
         "markers": [
           "unit"
         ],
@@ -41777,7 +41771,7 @@
       },
       {
         "name": "TestMixinDocumentation::test_mixin_has_docstring",
-        "line": 85,
+        "line": 129,
         "markers": [
           "unit"
         ],
@@ -41786,7 +41780,7 @@
       },
       {
         "name": "TestMixinDocumentation::test_all_handler_methods_have_docstrings",
-        "line": 90,
+        "line": 134,
         "markers": [
           "unit"
         ],
@@ -41795,7 +41789,7 @@
       },
       {
         "name": "TestMixinDocumentation::test_utility_methods_have_docstrings",
-        "line": 109,
+        "line": 153,
         "markers": [
           "unit"
         ],

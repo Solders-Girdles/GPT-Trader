@@ -265,7 +265,8 @@ clusters:
     expected_file_delta: -13
     priority: high
     rationale: Consolidate 14 test files into single parametrized file
-    status: pending
+    status: in_progress
+    owner: codex
     added: '2026-01-21'
   8bf4e5e54905:
     type: source_fanout
@@ -1581,10 +1582,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/backtesting/engine/test_bar_runner.py
-    expected_file_delta: -3
+    expected_file_delta: -1
     priority: low
-    rationale: Consolidate 4 test files into single parametrized file
-    status: pending
+    rationale: Consolidated bar runner suites into core, execution, and funding modules under hygiene cap
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/371
     added: '2026-01-21'
   8731f83b6ab5:
     type: similar_names

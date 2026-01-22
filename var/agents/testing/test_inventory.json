@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6031,
-    "total_files": 722,
+    "total_files": 721,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -445,7 +445,6 @@
       "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_algorithm.py",
-      "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_primitives.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_perps_baseline_edges.py",
       "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry.py",
       "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_lifecycle.py",
@@ -24588,7 +24587,7 @@
     "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators.py": [
       {
         "name": "TestIndicatorBundle::test_create_with_defaults",
-        "line": 18,
+        "line": 19,
         "markers": [
           "unit"
         ],
@@ -24597,7 +24596,7 @@
       },
       {
         "name": "TestIndicatorBundle::test_create_with_custom_params",
-        "line": 27,
+        "line": 28,
         "markers": [
           "unit"
         ],
@@ -24606,7 +24605,7 @@
       },
       {
         "name": "TestIndicatorBundle::test_update_returns_all_values",
-        "line": 40,
+        "line": 41,
         "markers": [
           "unit"
         ],
@@ -24615,7 +24614,7 @@
       },
       {
         "name": "TestIndicatorBundle::test_serialize_deserialize_roundtrip",
-        "line": 51,
+        "line": 52,
         "markers": [
           "unit"
         ],
@@ -24623,18 +24622,8 @@
         "class": "TestIndicatorBundle"
       },
       {
-        "name": "TestPerformanceComparison::test_large_dataset_efficiency",
-        "line": 79,
-        "markers": [
-          "slow",
-          "unit"
-        ],
-        "docstring": "Test that stateful indicators don't recompute history.",
-        "class": "TestPerformanceComparison"
-      },
-      {
         "name": "TestOnlineZScore::test_insufficient_data_returns_none",
-        "line": 101,
+        "line": 79,
         "markers": [
           "unit"
         ],
@@ -24643,7 +24632,7 @@
       },
       {
         "name": "TestOnlineZScore::test_z_score_calculation",
-        "line": 106,
+        "line": 84,
         "markers": [
           "unit"
         ],
@@ -24652,7 +24641,7 @@
       },
       {
         "name": "TestOnlineZScore::test_windowed_z_score",
-        "line": 119,
+        "line": 97,
         "markers": [
           "unit"
         ],
@@ -24661,72 +24650,16 @@
       },
       {
         "name": "TestOnlineZScore::test_serialize_deserialize_roundtrip",
-        "line": 134,
+        "line": 112,
         "markers": [
           "unit"
         ],
         "docstring": "Test serialization preserves Z-Score state.",
         "class": "TestOnlineZScore"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_algorithm.py": [
-      {
-        "name": "TestOnlineRSI::test_first_price_returns_none",
-        "line": 12,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that first price (no change) returns None.",
-        "class": "TestOnlineRSI"
-      },
-      {
-        "name": "TestOnlineRSI::test_warmup_period",
-        "line": 17,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test RSI during warmup before initialization.",
-        "class": "TestOnlineRSI"
-      },
-      {
-        "name": "TestOnlineRSI::test_initialization",
-        "line": 25,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test RSI initializes after period changes.",
-        "class": "TestOnlineRSI"
-      },
-      {
-        "name": "TestOnlineRSI::test_all_gains_rsi_100",
-        "line": 37,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test RSI approaches 100 with only gains.",
-        "class": "TestOnlineRSI"
-      },
-      {
-        "name": "TestOnlineRSI::test_matches_stateless_rsi",
-        "line": 46,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that online RSI matches stateless implementation.",
-        "class": "TestOnlineRSI"
-      },
-      {
-        "name": "TestOnlineRSI::test_serialize_deserialize_roundtrip",
-        "line": 86,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test serialization preserves RSI state.",
-        "class": "TestOnlineRSI"
       },
       {
         "name": "TestOnlineSMA::test_warmup_period",
-        "line": 105,
+        "line": 128,
         "markers": [
           "unit"
         ],
@@ -24735,7 +24668,7 @@
       },
       {
         "name": "TestOnlineSMA::test_full_window",
-        "line": 112,
+        "line": 135,
         "markers": [
           "unit"
         ],
@@ -24744,7 +24677,7 @@
       },
       {
         "name": "TestOnlineSMA::test_matches_stateless_sma",
-        "line": 122,
+        "line": 145,
         "markers": [
           "unit"
         ],
@@ -24753,7 +24686,7 @@
       },
       {
         "name": "TestOnlineSMA::test_serialize_deserialize_roundtrip",
-        "line": 141,
+        "line": 164,
         "markers": [
           "unit"
         ],
@@ -24762,7 +24695,7 @@
       },
       {
         "name": "TestOnlineEMA::test_warmup_period",
-        "line": 159,
+        "line": 182,
         "markers": [
           "unit"
         ],
@@ -24771,7 +24704,7 @@
       },
       {
         "name": "TestOnlineEMA::test_initialization",
-        "line": 166,
+        "line": 189,
         "markers": [
           "unit"
         ],
@@ -24780,7 +24713,7 @@
       },
       {
         "name": "TestOnlineEMA::test_subsequent_updates",
-        "line": 177,
+        "line": 200,
         "markers": [
           "unit"
         ],
@@ -24789,7 +24722,7 @@
       },
       {
         "name": "TestOnlineEMA::test_serialize_deserialize_roundtrip",
-        "line": 190,
+        "line": 213,
         "markers": [
           "unit"
         ],
@@ -24797,10 +24730,74 @@
         "class": "TestOnlineEMA"
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_primitives.py": [
+    "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_algorithm.py": [
+      {
+        "name": "TestOnlineRSI::test_first_price_returns_none",
+        "line": 19,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that first price (no change) returns None.",
+        "class": "TestOnlineRSI"
+      },
+      {
+        "name": "TestOnlineRSI::test_warmup_period",
+        "line": 24,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test RSI during warmup before initialization.",
+        "class": "TestOnlineRSI"
+      },
+      {
+        "name": "TestOnlineRSI::test_initialization",
+        "line": 32,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test RSI initializes after period changes.",
+        "class": "TestOnlineRSI"
+      },
+      {
+        "name": "TestOnlineRSI::test_all_gains_rsi_100",
+        "line": 44,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test RSI approaches 100 with only gains.",
+        "class": "TestOnlineRSI"
+      },
+      {
+        "name": "TestOnlineRSI::test_matches_stateless_rsi",
+        "line": 53,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that online RSI matches stateless implementation.",
+        "class": "TestOnlineRSI"
+      },
+      {
+        "name": "TestOnlineRSI::test_serialize_deserialize_roundtrip",
+        "line": 93,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test serialization preserves RSI state.",
+        "class": "TestOnlineRSI"
+      },
+      {
+        "name": "TestPerformanceComparison::test_large_dataset_efficiency",
+        "line": 113,
+        "markers": [
+          "slow",
+          "unit"
+        ],
+        "docstring": "Test that stateful indicators don't recompute history.",
+        "class": "TestPerformanceComparison"
+      },
       {
         "name": "TestWelfordState::test_empty_state",
-        "line": 13,
+        "line": 135,
         "markers": [
           "unit"
         ],
@@ -24809,7 +24806,7 @@
       },
       {
         "name": "TestWelfordState::test_single_value",
-        "line": 20,
+        "line": 142,
         "markers": [
           "unit"
         ],
@@ -24818,7 +24815,7 @@
       },
       {
         "name": "TestWelfordState::test_multiple_values_mean",
-        "line": 28,
+        "line": 150,
         "markers": [
           "unit"
         ],
@@ -24827,7 +24824,7 @@
       },
       {
         "name": "TestWelfordState::test_variance_calculation",
-        "line": 38,
+        "line": 160,
         "markers": [
           "unit"
         ],
@@ -24836,7 +24833,7 @@
       },
       {
         "name": "TestWelfordState::test_serialize_deserialize_roundtrip",
-        "line": 51,
+        "line": 173,
         "markers": [
           "unit"
         ],
@@ -24845,7 +24842,7 @@
       },
       {
         "name": "TestRollingWindow::test_add_below_capacity",
-        "line": 68,
+        "line": 190,
         "markers": [
           "unit"
         ],
@@ -24854,7 +24851,7 @@
       },
       {
         "name": "TestRollingWindow::test_add_at_capacity_evicts",
-        "line": 76,
+        "line": 198,
         "markers": [
           "unit"
         ],
@@ -24863,7 +24860,7 @@
       },
       {
         "name": "TestRollingWindow::test_mean_calculation",
-        "line": 88,
+        "line": 210,
         "markers": [
           "unit"
         ],
@@ -24872,7 +24869,7 @@
       },
       {
         "name": "TestRollingWindow::test_running_sum_accuracy",
-        "line": 97,
+        "line": 219,
         "markers": [
           "unit"
         ],
@@ -24881,7 +24878,7 @@
       },
       {
         "name": "TestRollingWindow::test_serialize_deserialize_roundtrip",
-        "line": 107,
+        "line": 229,
         "markers": [
           "unit"
         ],

@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6150,
-    "total_files": 773,
+    "total_files": 771,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -842,9 +842,7 @@
       "tests/unit/gpt_trader/utilities/test_console_logging_functions.py",
       "tests/unit/gpt_trader/utilities/test_console_logging_functions_wrappers.py",
       "tests/unit/gpt_trader/utilities/test_datetime_helpers.py",
-      "tests/unit/gpt_trader/utilities/test_datetime_helpers_normalize_to_utc.py",
       "tests/unit/gpt_trader/utilities/test_datetime_helpers_now.py",
-      "tests/unit/gpt_trader/utilities/test_datetime_helpers_to_iso_utc.py",
       "tests/unit/gpt_trader/utilities/test_iterators.py",
       "tests/unit/gpt_trader/utilities/test_logging_patterns.py",
       "tests/unit/gpt_trader/utilities/test_logging_patterns_domain.py",
@@ -53347,12 +53345,10 @@
         ],
         "docstring": "Test timezone conversion is consistent across functions.",
         "class": "TestDateTimeHelpers"
-      }
-    ],
-    "tests/unit/gpt_trader/utilities/test_datetime_helpers_normalize_to_utc.py": [
+      },
       {
         "name": "TestNormalizeToUtc::test_normalize_to_utc_with_utc_datetime",
-        "line": 11,
+        "line": 80,
         "markers": [
           "unit"
         ],
@@ -53361,7 +53357,7 @@
       },
       {
         "name": "TestNormalizeToUtc::test_normalize_to_utc_with_naive_datetime",
-        "line": 19,
+        "line": 88,
         "markers": [
           "unit"
         ],
@@ -53370,7 +53366,7 @@
       },
       {
         "name": "TestNormalizeToUtc::test_normalize_to_utc_with_different_timezone",
-        "line": 27,
+        "line": 96,
         "markers": [
           "unit"
         ],
@@ -53379,7 +53375,7 @@
       },
       {
         "name": "TestNormalizeToUtc::test_normalize_to_utc_with_positive_timezone",
-        "line": 39,
+        "line": 106,
         "markers": [
           "unit"
         ],
@@ -53388,7 +53384,7 @@
       },
       {
         "name": "TestNormalizeToUtc::test_normalize_to_utc_preserves_microseconds",
-        "line": 51,
+        "line": 116,
         "markers": [
           "unit"
         ],
@@ -53397,12 +53393,66 @@
       },
       {
         "name": "TestNormalizeToUtc::test_normalize_to_utc_does_not_modify_original",
-        "line": 60,
+        "line": 125,
         "markers": [
           "unit"
         ],
         "docstring": "Test normalize_to_utc doesn't modify original datetime.",
         "class": "TestNormalizeToUtc"
+      },
+      {
+        "name": "TestToIsoUtc::test_to_iso_utc_with_utc_datetime",
+        "line": 137,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test to_iso_utc with UTC datetime.",
+        "class": "TestToIsoUtc"
+      },
+      {
+        "name": "TestToIsoUtc::test_to_iso_utc_with_naive_datetime",
+        "line": 144,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test to_iso_utc with naive datetime.",
+        "class": "TestToIsoUtc"
+      },
+      {
+        "name": "TestToIsoUtc::test_to_iso_utc_with_different_timezone",
+        "line": 151,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test to_iso_utc with different timezone.",
+        "class": "TestToIsoUtc"
+      },
+      {
+        "name": "TestToIsoUtc::test_to_iso_utc_with_positive_timezone",
+        "line": 159,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test to_iso_utc with positive timezone offset.",
+        "class": "TestToIsoUtc"
+      },
+      {
+        "name": "TestToIsoUtc::test_to_iso_utc_with_microseconds",
+        "line": 167,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test to_iso_utc preserves microseconds.",
+        "class": "TestToIsoUtc"
+      },
+      {
+        "name": "TestToIsoUtc::test_to_iso_utc_edge_cases",
+        "line": 174,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test to_iso_utc with edge case datetimes.",
+        "class": "TestToIsoUtc"
       }
     ],
     "tests/unit/gpt_trader/utilities/test_datetime_helpers_now.py": [
@@ -53486,62 +53536,6 @@
         ],
         "docstring": "Test utc_timestamp is consistent with utc_now.",
         "class": "TestUtcTimestamp"
-      }
-    ],
-    "tests/unit/gpt_trader/utilities/test_datetime_helpers_to_iso_utc.py": [
-      {
-        "name": "TestToIsoUtc::test_to_iso_utc_with_utc_datetime",
-        "line": 11,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test to_iso_utc with UTC datetime.",
-        "class": "TestToIsoUtc"
-      },
-      {
-        "name": "TestToIsoUtc::test_to_iso_utc_with_naive_datetime",
-        "line": 18,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test to_iso_utc with naive datetime.",
-        "class": "TestToIsoUtc"
-      },
-      {
-        "name": "TestToIsoUtc::test_to_iso_utc_with_different_timezone",
-        "line": 25,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test to_iso_utc with different timezone.",
-        "class": "TestToIsoUtc"
-      },
-      {
-        "name": "TestToIsoUtc::test_to_iso_utc_with_positive_timezone",
-        "line": 35,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test to_iso_utc with positive timezone offset.",
-        "class": "TestToIsoUtc"
-      },
-      {
-        "name": "TestToIsoUtc::test_to_iso_utc_with_microseconds",
-        "line": 45,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test to_iso_utc preserves microseconds.",
-        "class": "TestToIsoUtc"
-      },
-      {
-        "name": "TestToIsoUtc::test_to_iso_utc_edge_cases",
-        "line": 52,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test to_iso_utc with edge case datetimes.",
-        "class": "TestToIsoUtc"
       }
     ],
     "tests/unit/gpt_trader/utilities/test_iterators.py": [

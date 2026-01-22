@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6142,
-    "total_files": 766,
+    "total_tests": 6133,
+    "total_files": 765,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 5977,
+    "unit": 5968,
     "asyncio": 344,
-    "parametrize": 114,
+    "parametrize": 115,
     "property": 82,
     "integration": 79,
     "endpoints": 78,
@@ -191,7 +191,6 @@
       "tests/unit/gpt_trader/backtesting/test_simulation_basics.py",
       "tests/unit/gpt_trader/backtesting/test_types.py",
       "tests/unit/gpt_trader/backtesting/validation/test_decision_logger.py",
-      "tests/unit/gpt_trader/backtesting/validation/test_decision_logger_builder.py",
       "tests/unit/gpt_trader/backtesting/validation/test_decision_logger_logging.py",
       "tests/unit/gpt_trader/backtesting/validation/test_decision_logger_strategy.py",
       "tests/unit/gpt_trader/backtesting/validation/test_guarded_execution.py",
@@ -7605,89 +7604,6 @@
         "class": "TestDecisionLoggerProperties"
       }
     ],
-    "tests/unit/gpt_trader/backtesting/validation/test_decision_logger_builder.py": [
-      {
-        "name": "TestStrategyDecisionBuilderMethods::test_with_market_data",
-        "line": 13,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestStrategyDecisionBuilderMethods"
-      },
-      {
-        "name": "TestStrategyDecisionBuilderMethods::test_with_market_data_partial",
-        "line": 35,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestStrategyDecisionBuilderMethods"
-      },
-      {
-        "name": "TestStrategyDecisionBuilderMethods::test_with_strategy",
-        "line": 51,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestStrategyDecisionBuilderMethods"
-      },
-      {
-        "name": "TestStrategyDecisionBuilderMethods::test_with_strategy_no_params",
-        "line": 71,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestStrategyDecisionBuilderMethods"
-      },
-      {
-        "name": "TestStrategyDecisionBuilderMethods::test_with_action",
-        "line": 87,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestStrategyDecisionBuilderMethods"
-      },
-      {
-        "name": "TestStrategyDecisionBuilderMethods::test_with_action_defaults",
-        "line": 113,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestStrategyDecisionBuilderMethods"
-      },
-      {
-        "name": "TestStrategyDecisionBuilderMethods::test_with_risk_result_passed",
-        "line": 131,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestStrategyDecisionBuilderMethods"
-      },
-      {
-        "name": "TestStrategyDecisionBuilderMethods::test_with_risk_result_failed",
-        "line": 148,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestStrategyDecisionBuilderMethods"
-      },
-      {
-        "name": "TestStrategyDecisionBuilderMethods::test_with_execution",
-        "line": 168,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestStrategyDecisionBuilderMethods"
-      }
-    ],
     "tests/unit/gpt_trader/backtesting/validation/test_decision_logger_logging.py": [
       {
         "name": "TestDecisionLoggerLogDecision::test_log_decision_increments_count",
@@ -7791,76 +7707,69 @@
     ],
     "tests/unit/gpt_trader/backtesting/validation/test_decision_logger_strategy.py": [
       {
-        "name": "TestStrategyDecisionCreate::test_create_generates_decision_id",
-        "line": 15,
+        "name": "test_create_sets_id_and_timestamp",
+        "line": 52,
         "markers": [
           "unit"
         ],
-        "docstring": "",
-        "class": "TestStrategyDecisionCreate"
+        "docstring": ""
       },
       {
-        "name": "TestStrategyDecisionCreate::test_create_sets_timestamp",
-        "line": 28,
+        "name": "test_create_preserves_parameters",
+        "line": 60,
         "markers": [
           "unit"
         ],
-        "docstring": "",
-        "class": "TestStrategyDecisionCreate"
+        "docstring": ""
       },
       {
-        "name": "TestStrategyDecisionCreate::test_create_preserves_parameters",
-        "line": 42,
+        "name": "test_builder_methods",
+        "line": 158,
         "markers": [
+          "parametrize",
           "unit"
         ],
-        "docstring": "",
-        "class": "TestStrategyDecisionCreate"
+        "docstring": ""
       },
       {
-        "name": "TestStrategyDecisionSerialization::test_to_dict_converts_decimals",
-        "line": 64,
+        "name": "test_to_dict_converts_decimals",
+        "line": 166,
         "markers": [
           "unit"
         ],
-        "docstring": "",
-        "class": "TestStrategyDecisionSerialization"
+        "docstring": ""
       },
       {
-        "name": "TestStrategyDecisionSerialization::test_to_dict_converts_datetime",
-        "line": 83,
+        "name": "test_to_dict_converts_datetime",
+        "line": 184,
         "markers": [
           "unit"
         ],
-        "docstring": "",
-        "class": "TestStrategyDecisionSerialization"
+        "docstring": ""
       },
       {
-        "name": "TestStrategyDecisionSerialization::test_from_dict_restores_decimals",
-        "line": 101,
+        "name": "test_from_dict_restores_decimals",
+        "line": 201,
         "markers": [
           "unit"
         ],
-        "docstring": "",
-        "class": "TestStrategyDecisionSerialization"
+        "docstring": ""
       },
       {
-        "name": "TestStrategyDecisionSerialization::test_from_dict_restores_timestamp",
-        "line": 130,
+        "name": "test_from_dict_restores_timestamp",
+        "line": 209,
         "markers": [
           "unit"
         ],
-        "docstring": "",
-        "class": "TestStrategyDecisionSerialization"
+        "docstring": ""
       },
       {
-        "name": "TestStrategyDecisionSerialization::test_roundtrip_serialization",
-        "line": 156,
+        "name": "test_roundtrip_serialization",
+        "line": 224,
         "markers": [
           "unit"
         ],
-        "docstring": "",
-        "class": "TestStrategyDecisionSerialization"
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/backtesting/validation/test_guarded_execution.py": [

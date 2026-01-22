@@ -2046,11 +2046,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/features/brokerages/coinbase/client/test_portfolio_mixin.py
-    expected_file_delta: -2
+    expected_file_delta: -1
     priority: low
-    rationale: Consolidate 3 test files into single parametrized file
-    status: in_progress
+    rationale: Consolidated alias coverage into core suite while keeping requests separate for hygiene cap
+    status: done
     owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/394
     added: '2026-01-20'
   43ad7dc90d18:
     type: similar_names
@@ -2436,11 +2437,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/features/brokerages/coinbase/client/test_circuit_breaker.py
-    expected_file_delta: -2
+    expected_file_delta: -1
     priority: low
-    rationale: Consolidate 3 test files into single parametrized file
-    status: in_progress
+    rationale: Consolidated client + registry coverage into two cohesive modules for hygiene cap
+    status: done
     owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/394
     added: '2026-01-21'
   feca38fe83aa:
     type: similar_names

@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6133,
-    "total_files": 762,
+    "total_tests": 6129,
+    "total_files": 761,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 5968,
+    "unit": 5964,
     "asyncio": 344,
     "parametrize": 115,
     "property": 82,
@@ -581,7 +581,6 @@
       "tests/unit/gpt_trader/monitoring/test_guard_manager.py",
       "tests/unit/gpt_trader/monitoring/test_guard_manager_e2e.py",
       "tests/unit/gpt_trader/monitoring/test_guard_manager_handlers.py",
-      "tests/unit/gpt_trader/monitoring/test_guard_manager_runtime.py",
       "tests/unit/gpt_trader/monitoring/test_health_checks.py",
       "tests/unit/gpt_trader/monitoring/test_health_checks_runner.py",
       "tests/unit/gpt_trader/monitoring/test_health_checks_signals.py",
@@ -33572,71 +33571,116 @@
         ],
         "docstring": "",
         "class": "TestGuardManagerEdgeCases"
+      },
+      {
+        "name": "TestGuardManagerEdgeCases::test_manager_reset_clears_all_state",
+        "line": 201,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestGuardManagerEdgeCases"
       }
     ],
     "tests/unit/gpt_trader/monitoring/test_guard_manager_e2e.py": [
       {
         "name": "TestDefaultGuardManagerCreation::test_create_default_runtime_guard_manager",
-        "line": 21,
+        "line": 25,
         "markers": [
           "unit"
         ],
-        "docstring": "Test creation of default guard manager with config.",
+        "docstring": "",
         "class": "TestDefaultGuardManagerCreation"
       },
       {
         "name": "TestDefaultGuardManagerCreation::test_create_default_with_missing_config",
-        "line": 66,
+        "line": 67,
         "markers": [
           "unit"
         ],
-        "docstring": "Test default creation with missing config values.",
+        "docstring": "",
         "class": "TestDefaultGuardManagerCreation"
       },
       {
         "name": "TestGuardStateTransitions::test_guard_status_transitions_healthy_to_warning",
-        "line": 83,
+        "line": 78,
         "markers": [
           "unit"
         ],
-        "docstring": "Test guard transitions from healthy to warning.",
+        "docstring": "",
         "class": "TestGuardStateTransitions"
       },
       {
         "name": "TestGuardStateTransitions::test_guard_status_transitions_warning_to_breached",
-        "line": 100,
+        "line": 91,
         "markers": [
           "unit"
         ],
-        "docstring": "Test guard transitions from warning to breached.",
+        "docstring": "",
         "class": "TestGuardStateTransitions"
       },
       {
         "name": "TestGuardStateTransitions::test_guard_status_transitions_breached_to_warning",
-        "line": 114,
+        "line": 102,
         "markers": [
           "unit"
         ],
-        "docstring": "Test guard transitions from breached back to warning.",
+        "docstring": "",
         "class": "TestGuardStateTransitions"
       },
       {
         "name": "TestGuardStateTransitions::test_position_stuck_guard_state_tracking",
-        "line": 134,
+        "line": 118,
         "markers": [
           "unit"
         ],
-        "docstring": "Test position stuck guard tracks position state.",
+        "docstring": "",
         "class": "TestGuardStateTransitions"
       },
       {
         "name": "TestGuardStateTransitions::test_drawdown_guard_peak_tracking",
-        "line": 160,
+        "line": 139,
         "markers": [
           "unit"
         ],
-        "docstring": "Test drawdown guard tracks equity peaks.",
+        "docstring": "",
         "class": "TestGuardStateTransitions"
+      },
+      {
+        "name": "TestRuntimeGuardManager::test_guard_registration_and_status_tracking",
+        "line": 157,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestRuntimeGuardManager"
+      },
+      {
+        "name": "TestRuntimeGuardManager::test_alert_fan_out_to_multiple_handlers",
+        "line": 175,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestRuntimeGuardManager"
+      },
+      {
+        "name": "TestRuntimeGuardManager::test_guard_cooldown_prevents_alert_spam",
+        "line": 195,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestRuntimeGuardManager"
+      },
+      {
+        "name": "TestRuntimeGuardManager::test_multiple_guards_trigger_multiple_alerts",
+        "line": 211,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestRuntimeGuardManager"
       }
     ],
     "tests/unit/gpt_trader/monitoring/test_guard_manager_handlers.py": [
@@ -33693,89 +33737,6 @@
         ],
         "docstring": "Test email alert handler failure.",
         "class": "TestAlertHandlers"
-      }
-    ],
-    "tests/unit/gpt_trader/monitoring/test_guard_manager_runtime.py": [
-      {
-        "name": "TestRuntimeGuardManagerE2E::test_guard_registration_and_status_tracking",
-        "line": 16,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test guard registration and status tracking.",
-        "class": "TestRuntimeGuardManagerE2E"
-      },
-      {
-        "name": "TestRuntimeGuardManagerE2E::test_alert_fan_out_to_multiple_handlers",
-        "line": 38,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test alert fan-out to multiple registered handlers.",
-        "class": "TestRuntimeGuardManagerE2E"
-      },
-      {
-        "name": "TestRuntimeGuardManagerE2E::test_alert_handler_error_isolation",
-        "line": 70,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that one handler error doesn't affect others.",
-        "class": "TestRuntimeGuardManagerE2E"
-      },
-      {
-        "name": "TestRuntimeGuardManagerE2E::test_auto_shutdown_on_critical_alert",
-        "line": 93,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test auto-shutdown functionality on critical alerts.",
-        "class": "TestRuntimeGuardManagerE2E"
-      },
-      {
-        "name": "TestRuntimeGuardManagerE2E::test_no_auto_shutdown_on_non_critical_alert",
-        "line": 121,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that non-critical alerts don't trigger shutdown.",
-        "class": "TestRuntimeGuardManagerE2E"
-      },
-      {
-        "name": "TestRuntimeGuardManagerE2E::test_guard_cooldown_prevents_alert_spam",
-        "line": 144,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test cooldown prevents alert spam.",
-        "class": "TestRuntimeGuardManagerE2E"
-      },
-      {
-        "name": "TestRuntimeGuardManagerE2E::test_disabled_guard_does_not_check",
-        "line": 166,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that disabled guards don't perform checks.",
-        "class": "TestRuntimeGuardManagerE2E"
-      },
-      {
-        "name": "TestRuntimeGuardManagerE2E::test_multiple_guards_trigger_multiple_alerts",
-        "line": 180,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test multiple guards can trigger simultaneously.",
-        "class": "TestRuntimeGuardManagerE2E"
-      },
-      {
-        "name": "TestRuntimeGuardManagerE2E::test_manager_reset_clears_all_state",
-        "line": 201,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test manager reset clears all state.",
-        "class": "TestRuntimeGuardManagerE2E"
       }
     ],
     "tests/unit/gpt_trader/monitoring/test_health_checks.py": [

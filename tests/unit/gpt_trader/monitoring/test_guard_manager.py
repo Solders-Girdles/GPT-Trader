@@ -197,3 +197,16 @@ class TestGuardManagerEdgeCases:
         assert alerts == []
         record_counter_mock.assert_not_called()
         handler.assert_not_called()
+
+    def test_manager_reset_clears_all_state(self) -> None:
+        manager = RuntimeGuardManager()
+        manager.add_alert_handler(lambda alert: None)
+        manager.set_shutdown_callback(lambda: None)
+        manager.add_guard(_CheckGuardStub("daily_loss"))
+
+        manager.reset()
+
+        assert manager.guards == {}
+        assert manager.alert_handlers == []
+        assert manager.shutdown_callback is None
+        assert not manager.is_running

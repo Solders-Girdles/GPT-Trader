@@ -1,4 +1,4 @@
-"""Tests for default runtime guard manager creation and guard state transitions."""
+"""Tests for guard manager defaults, guard states, and runtime behavior."""
 
 from __future__ import annotations
 
@@ -6,20 +6,23 @@ from decimal import Decimal
 
 import pytest
 
+from gpt_trader.monitoring.alert_types import AlertSeverity
 from gpt_trader.monitoring.guards.base import GuardConfig, GuardStatus
 from gpt_trader.monitoring.guards.builtins import (
     DailyLossGuard,
     DrawdownGuard,
+    ErrorRateGuard,
     PositionStuckGuard,
+    StaleMarkGuard,
 )
-from gpt_trader.monitoring.guards.manager import create_default_runtime_guard_manager
+from gpt_trader.monitoring.guards.manager import (
+    RuntimeGuardManager,
+    create_default_runtime_guard_manager,
+)
 
 
 class TestDefaultGuardManagerCreation:
-    """Test creation of default guard manager."""
-
     def test_create_default_runtime_guard_manager(self):
-        """Test creation of default guard manager with config."""
         config = {
             "circuit_breakers": {
                 "daily_loss_limit": 500.0,
@@ -34,7 +37,6 @@ class TestDefaultGuardManagerCreation:
 
         manager = create_default_runtime_guard_manager(config)
 
-        # Check all expected guards are present
         expected_guards = {
             "daily_loss",
             "stale_mark",
@@ -44,7 +46,6 @@ class TestDefaultGuardManagerCreation:
         }
         assert set(manager.guards.keys()) == expected_guards
 
-        # Check configurations
         daily_loss_guard = manager.guards["daily_loss"]
         assert daily_loss_guard.config.threshold == 500.0
         assert daily_loss_guard.config.auto_shutdown is True
@@ -64,116 +65,163 @@ class TestDefaultGuardManagerCreation:
         assert drawdown_guard.config.auto_shutdown is True
 
     def test_create_default_with_missing_config(self):
-        """Test default creation with missing config values."""
-        config = {}  # Empty config
+        manager = create_default_runtime_guard_manager({})
 
-        manager = create_default_runtime_guard_manager(config)
-
-        # Should use defaults
         daily_loss_guard = manager.guards["daily_loss"]
-        assert daily_loss_guard.config.threshold == 500.0  # Default value
+        assert daily_loss_guard.config.threshold == 500.0
 
         stale_mark_guard = manager.guards["stale_mark"]
-        assert stale_mark_guard.config.threshold == 15.0  # Default value
+        assert stale_mark_guard.config.threshold == 15.0
 
 
 class TestGuardStateTransitions:
-    """Test guard state transitions and status tracking."""
-
     def test_guard_status_transitions_healthy_to_warning(self):
-        """Test guard transitions from healthy to warning."""
         guard = DailyLossGuard(GuardConfig(name="test", threshold=100.0))
 
-        # Start healthy
         assert guard.status == GuardStatus.HEALTHY
 
-        # Trigger warning (50% of threshold)
-        result = guard.check({"pnl": -40.0})  # -40 is less than -50 (50% of 100)
-        assert result is None  # No alert yet
-        assert guard.status == GuardStatus.HEALTHY  # Still healthy
+        result = guard.check({"pnl": -40.0})
+        assert result is None
+        assert guard.status == GuardStatus.HEALTHY
 
-        # Trigger warning threshold
-        result = guard.check({"pnl": -60.0})  # -60 is more than -50
-        assert result is None  # No alert, but status changes
+        result = guard.check({"pnl": -60.0})
+        assert result is None
         assert guard.status == GuardStatus.WARNING
 
     def test_guard_status_transitions_warning_to_breached(self):
-        """Test guard transitions from warning to breached."""
         guard = DailyLossGuard(GuardConfig(name="test", threshold=100.0))
 
-        # Set up warning state
         guard.check({"pnl": -60.0})
         assert guard.status == GuardStatus.WARNING
 
-        # Breach threshold
-        result = guard.check({"pnl": -50.0})  # Total: -110
+        result = guard.check({"pnl": -50.0})
         assert result is not None
         assert guard.status == GuardStatus.BREACHED
         assert guard.breach_count == 1
 
     def test_guard_status_transitions_breached_to_warning(self, frozen_time):
-        """Test guard transitions from breached back to warning."""
         from datetime import timedelta
 
         guard = DailyLossGuard(GuardConfig(name="test", threshold=100.0))
 
-        # Breach
         guard.check({"pnl": -110.0})
         assert guard.status == GuardStatus.BREACHED
 
-        # Next day
         frozen_time.tick(delta=timedelta(days=1))
-        result = guard.check({"pnl": -10.0})  # New day, small loss
+        result = guard.check({"pnl": -10.0})
         assert result is None
-        assert guard.status == GuardStatus.HEALTHY  # Reset to HEALTHY
+        assert guard.status == GuardStatus.HEALTHY
 
-        # Breach again to verify reset worked
         guard.check({"pnl": -110.0})
         assert guard.status == GuardStatus.BREACHED
 
     def test_position_stuck_guard_state_tracking(self, frozen_time):
-        """Test position stuck guard tracks position state."""
         from datetime import timedelta
 
-        guard = PositionStuckGuard(GuardConfig(name="position_stuck", threshold=60.0))  # 1 minute
+        guard = PositionStuckGuard(GuardConfig(name="position_stuck", threshold=60.0))
 
-        # No positions
         result = guard.check({"positions": {}})
         assert result is None
 
-        # Add position
         positions = {"BTC-USD": {"quantity": 1.0}}
         result = guard.check({"positions": positions})
         assert result is None
 
-        # Position still open after timeout
         frozen_time.tick(delta=timedelta(minutes=2))
         result = guard.check({"positions": positions})
 
         assert result is not None
         assert "Stuck positions detected" in result.message
 
-        # Position closed
         result = guard.check({"positions": {"BTC-USD": {"quantity": 0.0}}})
         assert result is None
 
     def test_drawdown_guard_peak_tracking(self):
-        """Test drawdown guard tracks equity peaks."""
         guard = DrawdownGuard(GuardConfig(name="drawdown", threshold=10.0))
 
-        # Initial equity
         guard.check({"equity": Decimal("1000")})
         assert guard.peak_equity == Decimal("1000")
 
-        # Higher equity
         guard.check({"equity": Decimal("1100")})
         assert guard.peak_equity == Decimal("1100")
 
-        # Drawdown but not breached
-        guard.check({"equity": Decimal("1050")})  # 4.55% drawdown
+        guard.check({"equity": Decimal("1050")})
         assert guard.current_drawdown == pytest.approx(Decimal("4.545454545454545"))
 
-        # Breach threshold
-        result = guard.check({"equity": Decimal("980")})  # 10.91% drawdown
+        result = guard.check({"equity": Decimal("980")})
         assert result is not None
         assert "Maximum drawdown breached" in result.message
+
+
+class TestRuntimeGuardManager:
+    def test_guard_registration_and_status_tracking(self):
+        manager = RuntimeGuardManager()
+        manager.add_guard(
+            DailyLossGuard(
+                GuardConfig(name="daily_loss", threshold=1000.0, severity=AlertSeverity.CRITICAL)
+            )
+        )
+        manager.add_guard(
+            StaleMarkGuard(
+                GuardConfig(name="stale_mark", threshold=30.0, severity=AlertSeverity.ERROR)
+            )
+        )
+
+        status = manager.get_status()
+        assert set(status) == {"daily_loss", "stale_mark"}
+        assert status["daily_loss"]["status"] == GuardStatus.HEALTHY.value
+        assert status["stale_mark"]["status"] == GuardStatus.HEALTHY.value
+
+    def test_alert_fan_out_to_multiple_handlers(self):
+        manager = RuntimeGuardManager()
+        calls: list[str] = []
+
+        def handler(alert) -> None:
+            calls.append(alert.guard_name)
+
+        manager.add_alert_handler(handler)
+        manager.add_alert_handler(handler)
+        manager.add_guard(
+            ErrorRateGuard(
+                GuardConfig(name="error_rate", threshold=0.5, severity=AlertSeverity.ERROR)
+            )
+        )
+
+        alerts = manager.check_all({"error": True})
+
+        assert len(alerts) == 1
+        assert calls == ["error_rate", "error_rate"]
+
+    def test_guard_cooldown_prevents_alert_spam(self):
+        manager = RuntimeGuardManager()
+        manager.add_guard(
+            ErrorRateGuard(
+                GuardConfig(
+                    name="error_rate",
+                    threshold=0.5,
+                    severity=AlertSeverity.ERROR,
+                    cooldown_seconds=300,
+                )
+            )
+        )
+
+        assert len(manager.check_all({"error": True})) == 1
+        assert manager.check_all({"error": True}) == []
+
+    def test_multiple_guards_trigger_multiple_alerts(self):
+        manager = RuntimeGuardManager()
+        manager.add_guard(
+            DailyLossGuard(
+                GuardConfig(name="daily_loss", threshold=100.0, severity=AlertSeverity.CRITICAL)
+            )
+        )
+        manager.add_guard(
+            ErrorRateGuard(
+                GuardConfig(name="error_rate", threshold=0.5, severity=AlertSeverity.ERROR)
+            )
+        )
+
+        alerts = manager.check_all({"pnl": -200.0, "error": True})
+
+        guard_names = {alert.guard_name for alert in alerts}
+        assert guard_names == {"daily_loss", "error_rate"}

@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6133,
-    "total_files": 765,
+    "total_files": 763,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -445,9 +445,7 @@
       "tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy_safety_and_recovery.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy_sizing_and_trend_filter.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy_zscore_and_signals.py",
-      "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_profile_configs.py",
-      "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_profile_core.py",
-      "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_profile_edges.py",
+      "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_profile.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_profile_strategy.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_strategy.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_strategy_edges.py",
@@ -7708,7 +7706,7 @@
     "tests/unit/gpt_trader/backtesting/validation/test_decision_logger_strategy.py": [
       {
         "name": "test_create_sets_id_and_timestamp",
-        "line": 52,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -7716,7 +7714,7 @@
       },
       {
         "name": "test_create_preserves_parameters",
-        "line": 60,
+        "line": 61,
         "markers": [
           "unit"
         ],
@@ -7724,7 +7722,7 @@
       },
       {
         "name": "test_builder_methods",
-        "line": 158,
+        "line": 159,
         "markers": [
           "parametrize",
           "unit"
@@ -7733,7 +7731,7 @@
       },
       {
         "name": "test_to_dict_converts_decimals",
-        "line": 166,
+        "line": 167,
         "markers": [
           "unit"
         ],
@@ -7741,7 +7739,7 @@
       },
       {
         "name": "test_to_dict_converts_datetime",
-        "line": 184,
+        "line": 185,
         "markers": [
           "unit"
         ],
@@ -7749,7 +7747,7 @@
       },
       {
         "name": "test_from_dict_restores_decimals",
-        "line": 201,
+        "line": 202,
         "markers": [
           "unit"
         ],
@@ -7757,7 +7755,7 @@
       },
       {
         "name": "test_from_dict_restores_timestamp",
-        "line": 209,
+        "line": 210,
         "markers": [
           "unit"
         ],
@@ -7765,7 +7763,7 @@
       },
       {
         "name": "test_roundtrip_serialization",
-        "line": 224,
+        "line": 225,
         "markers": [
           "unit"
         ],
@@ -24397,10 +24395,10 @@
         "class": "TestSignalGeneration"
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_profile_configs.py": [
+    "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_profile.py": [
       {
         "name": "TestSignalProfileConfig::test_from_dict_minimal",
-        "line": 15,
+        "line": 22,
         "markers": [
           "unit"
         ],
@@ -24409,7 +24407,7 @@
       },
       {
         "name": "TestSignalProfileConfig::test_from_dict_full",
-        "line": 22,
+        "line": 29,
         "markers": [
           "unit"
         ],
@@ -24418,7 +24416,7 @@
       },
       {
         "name": "TestSignalProfileConfig::test_to_dict_roundtrip",
-        "line": 34,
+        "line": 41,
         "markers": [
           "unit"
         ],
@@ -24427,7 +24425,7 @@
       },
       {
         "name": "TestDecisionProfileConfig::test_defaults",
-        "line": 51,
+        "line": 58,
         "markers": [
           "unit"
         ],
@@ -24436,7 +24434,7 @@
       },
       {
         "name": "TestDecisionProfileConfig::test_from_dict_custom",
-        "line": 60,
+        "line": 67,
         "markers": [
           "unit"
         ],
@@ -24445,7 +24443,7 @@
       },
       {
         "name": "TestCombinerProfileConfig::test_defaults",
-        "line": 78,
+        "line": 84,
         "markers": [
           "unit"
         ],
@@ -24454,159 +24452,61 @@
       },
       {
         "name": "TestCombinerProfileConfig::test_to_regime_config_with_weights",
-        "line": 85,
+        "line": 91,
         "markers": [
           "unit"
         ],
         "docstring": "Custom weights should be applied.",
         "class": "TestCombinerProfileConfig"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_profile_core.py": [
-      {
-        "name": "TestEnsembleProfile::test_default_profile_is_valid",
-        "line": 21,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Default profile should pass validation.",
-        "class": "TestEnsembleProfile"
       },
       {
-        "name": "TestEnsembleProfile::test_microstructure_profile_is_valid",
-        "line": 27,
+        "name": "TestEnsembleProfileUtilities::test_list_profiles_missing_dir_returns_empty",
+        "line": 107,
         "markers": [
           "unit"
         ],
-        "docstring": "Microstructure profile should pass validation.",
-        "class": "TestEnsembleProfile"
+        "docstring": "",
+        "class": "TestEnsembleProfileUtilities"
       },
       {
-        "name": "TestEnsembleProfile::test_conservative_profile_is_valid",
-        "line": 33,
+        "name": "TestEnsembleProfileUtilities::test_load_profile_missing_raises",
+        "line": 115,
         "markers": [
           "unit"
         ],
-        "docstring": "Conservative profile should pass validation.",
-        "class": "TestEnsembleProfile"
+        "docstring": "",
+        "class": "TestEnsembleProfileUtilities"
       },
       {
-        "name": "TestEnsembleProfile::test_aggressive_profile_is_valid",
-        "line": 39,
+        "name": "TestEnsembleProfileUtilities::test_parse_signal_type_unknown_returns_none",
+        "line": 124,
         "markers": [
           "unit"
         ],
-        "docstring": "Aggressive profile should pass validation.",
-        "class": "TestEnsembleProfile"
+        "docstring": "",
+        "class": "TestEnsembleProfileUtilities"
       },
       {
-        "name": "TestEnsembleProfile::test_build_signals_creates_instances",
-        "line": 45,
+        "name": "TestEnsembleProfileUtilities::test_build_signals_skips_unknown",
+        "line": 127,
         "markers": [
           "unit"
         ],
-        "docstring": "build_signals should create SignalGenerator instances.",
-        "class": "TestEnsembleProfile"
+        "docstring": "",
+        "class": "TestEnsembleProfileUtilities"
       },
       {
-        "name": "TestEnsembleProfile::test_build_signals_respects_enabled_flag",
-        "line": 54,
+        "name": "TestEnsembleProfileUtilities::test_combiner_config_ignores_invalid_weight_keys",
+        "line": 140,
         "markers": [
           "unit"
         ],
-        "docstring": "Disabled signals should not be built.",
-        "class": "TestEnsembleProfile"
-      },
-      {
-        "name": "TestEnsembleProfile::test_build_combiner",
-        "line": 66,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "build_combiner should create a RegimeAwareCombiner.",
-        "class": "TestEnsembleProfile"
-      },
-      {
-        "name": "TestEnsembleProfile::test_yaml_roundtrip",
-        "line": 73,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Profile should survive YAML serialization.",
-        "class": "TestEnsembleProfile"
-      },
-      {
-        "name": "TestEnsembleProfile::test_validation_requires_name",
-        "line": 91,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Profile without name should fail validation.",
-        "class": "TestEnsembleProfile"
-      },
-      {
-        "name": "TestEnsembleProfile::test_validation_requires_signals",
-        "line": 97,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Profile without signals should fail validation.",
-        "class": "TestEnsembleProfile"
-      },
-      {
-        "name": "TestEnsembleProfile::test_validation_requires_enabled_signals",
-        "line": 103,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Profile with all disabled signals should fail validation.",
-        "class": "TestEnsembleProfile"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_profile_edges.py": [
-      {
-        "name": "test_list_profiles_missing_dir_returns_empty",
-        "line": 17,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_load_profile_missing_raises",
-        "line": 26,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_parse_signal_type_unknown_returns_none",
-        "line": 36,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_build_signals_skips_unknown",
-        "line": 40,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_combiner_config_ignores_invalid_weight_keys",
-        "line": 54,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
+        "docstring": "",
+        "class": "TestEnsembleProfileUtilities"
       },
       {
         "name": "test_validate_flags_invalid_thresholds",
-        "line": 66,
+        "line": 152,
         "markers": [
           "unit"
         ],
@@ -24615,8 +24515,107 @@
     ],
     "tests/unit/gpt_trader/features/live_trade/strategies/test_ensemble_profile_strategy.py": [
       {
+        "name": "TestEnsembleProfile::test_default_profile_is_valid",
+        "line": 25,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Default profile should pass validation.",
+        "class": "TestEnsembleProfile"
+      },
+      {
+        "name": "TestEnsembleProfile::test_microstructure_profile_is_valid",
+        "line": 31,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Microstructure profile should pass validation.",
+        "class": "TestEnsembleProfile"
+      },
+      {
+        "name": "TestEnsembleProfile::test_conservative_profile_is_valid",
+        "line": 37,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Conservative profile should pass validation.",
+        "class": "TestEnsembleProfile"
+      },
+      {
+        "name": "TestEnsembleProfile::test_aggressive_profile_is_valid",
+        "line": 43,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Aggressive profile should pass validation.",
+        "class": "TestEnsembleProfile"
+      },
+      {
+        "name": "TestEnsembleProfile::test_build_signals_creates_instances",
+        "line": 49,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "build_signals should create SignalGenerator instances.",
+        "class": "TestEnsembleProfile"
+      },
+      {
+        "name": "TestEnsembleProfile::test_build_signals_respects_enabled_flag",
+        "line": 57,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Disabled signals should not be built.",
+        "class": "TestEnsembleProfile"
+      },
+      {
+        "name": "TestEnsembleProfile::test_build_combiner",
+        "line": 69,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "build_combiner should create a RegimeAwareCombiner.",
+        "class": "TestEnsembleProfile"
+      },
+      {
+        "name": "TestEnsembleProfile::test_yaml_roundtrip",
+        "line": 76,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Profile should survive YAML serialization.",
+        "class": "TestEnsembleProfile"
+      },
+      {
+        "name": "TestEnsembleProfile::test_validation_requires_name",
+        "line": 94,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Profile without name should fail validation.",
+        "class": "TestEnsembleProfile"
+      },
+      {
+        "name": "TestEnsembleProfile::test_validation_requires_signals",
+        "line": 100,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Profile without signals should fail validation.",
+        "class": "TestEnsembleProfile"
+      },
+      {
+        "name": "TestEnsembleProfile::test_validation_requires_enabled_signals",
+        "line": 106,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Profile with all disabled signals should fail validation.",
+        "class": "TestEnsembleProfile"
+      },
+      {
         "name": "TestEnsembleStrategyFromProfile::test_from_profile_creates_strategy",
-        "line": 20,
+        "line": 119,
         "markers": [
           "unit"
         ],
@@ -24625,7 +24624,7 @@
       },
       {
         "name": "TestEnsembleStrategyFromProfile::test_from_profile_name_default",
-        "line": 30,
+        "line": 129,
         "markers": [
           "unit"
         ],
@@ -24634,7 +24633,7 @@
       },
       {
         "name": "TestEnsembleStrategyFromProfile::test_from_profile_name_microstructure",
-        "line": 35,
+        "line": 134,
         "markers": [
           "unit"
         ],
@@ -24643,7 +24642,7 @@
       },
       {
         "name": "TestEnsembleStrategyFromProfile::test_from_profile_name_conservative",
-        "line": 43,
+        "line": 142,
         "markers": [
           "unit"
         ],
@@ -24652,7 +24651,7 @@
       },
       {
         "name": "TestEnsembleStrategyFromProfile::test_from_profile_name_aggressive",
-        "line": 50,
+        "line": 149,
         "markers": [
           "unit"
         ],
@@ -24661,7 +24660,7 @@
       },
       {
         "name": "TestEnsembleStrategyFromProfile::test_from_profile_name_unknown_raises",
-        "line": 57,
+        "line": 156,
         "markers": [
           "unit"
         ],
@@ -24670,7 +24669,7 @@
       },
       {
         "name": "TestEnsembleStrategyFromProfile::test_from_yaml_file",
-        "line": 62,
+        "line": 161,
         "markers": [
           "unit"
         ],
@@ -24679,7 +24678,7 @@
       },
       {
         "name": "TestProfileDecisionIntegration::test_strategy_from_profile_can_decide",
-        "line": 82,
+        "line": 181,
         "markers": [
           "unit"
         ],
@@ -24688,7 +24687,7 @@
       },
       {
         "name": "TestProfileDecisionIntegration::test_different_profiles_different_thresholds",
-        "line": 100,
+        "line": 199,
         "markers": [
           "unit"
         ],

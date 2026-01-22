@@ -1843,11 +1843,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/persistence/test_orders_store.py
-    expected_file_delta: -3
+    expected_file_delta: -2
     priority: low
-    rationale: Consolidate 4 test files into single parametrized file
-    status: in_progress
+    rationale: Consolidated into two modules to stay under hygiene cap
+    status: done
     owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/386
     added: '2026-01-20'
   d622238858da:
     type: similar_names

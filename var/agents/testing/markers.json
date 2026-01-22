@@ -101,7 +101,7 @@
     "property": 82,
     "integration": 79,
     "endpoints": 78,
-    "usefixtures": 15,
+    "usefixtures": 16,
     "skipif": 8,
     "slow": 4,
     "anyio": 3,

@@ -6,7 +6,7 @@
 #   deferred: maybe later (hide from suggestions)
 #
 version: 1
-generated_at: '2026-01-21T02:08:42.807494+00:00'
+generated_at: '2026-01-21T23:23:38.513718+00:00'
 clusters:
   0bdbfcad487d:
     state: rejected
@@ -77,3 +77,8 @@ clusters:
     updated: '2026-01-21'
     reason: 'source_fanout false positive: files share regime import but test distinct
       functionality'
+  2de7a39a2a29:
+    state: rejected
+    owner: codex
+    updated: '2026-01-21'
+    reason: Shared import fanout across subsystems; not a true dedupe target

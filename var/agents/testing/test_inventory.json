@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6040,
-    "total_files": 742,
+    "total_files": 740,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -829,10 +829,8 @@
       "tests/unit/gpt_trader/validation/test_composite_validators.py",
       "tests/unit/gpt_trader/validation/test_config_validators.py",
       "tests/unit/gpt_trader/validation/test_config_validators_edge_cases.py",
-      "tests/unit/gpt_trader/validation/test_config_validators_validator_types.py",
-      "tests/unit/gpt_trader/validation/test_data_validators_dataframe.py",
+      "tests/unit/gpt_trader/validation/test_data_validators.py",
       "tests/unit/gpt_trader/validation/test_data_validators_ohlc.py",
-      "tests/unit/gpt_trader/validation/test_data_validators_series.py",
       "tests/unit/gpt_trader/validation/test_decorators.py",
       "tests/unit/gpt_trader/validation/test_numeric_validators.py",
       "tests/unit/gpt_trader/validation/test_pattern_validators.py",
@@ -14516,7 +14514,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery_markets.py": [
       {
         "name": "test_us_market_variants",
-        "line": 67,
+        "line": 75,
         "markers": [
           "parametrize",
           "unit"
@@ -14525,7 +14523,7 @@
       },
       {
         "name": "test_intx_market_accessible_variants",
-        "line": 101,
+        "line": 109,
         "markers": [
           "parametrize",
           "unit"
@@ -14534,7 +14532,7 @@
       },
       {
         "name": "test_intx_market_portfolio_errors",
-        "line": 120,
+        "line": 132,
         "markers": [
           "parametrize",
           "unit"
@@ -14543,7 +14541,7 @@
       },
       {
         "name": "test_intx_market_missing_list_portfolios_method",
-        "line": 137,
+        "line": 149,
         "markers": [
           "unit"
         ],
@@ -14551,7 +14549,7 @@
       },
       {
         "name": "test_intx_market_missing_get_intx_portfolio",
-        "line": 148,
+        "line": 160,
         "markers": [
           "unit"
         ],
@@ -14559,7 +14557,7 @@
       },
       {
         "name": "test_intx_market_list_portfolios_errors",
-        "line": 167,
+        "line": 179,
         "markers": [
           "parametrize",
           "unit"
@@ -15942,7 +15940,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin.py": [
       {
         "name": "TestWebSocketClientMixinInitialization::test_initialization_creates_attributes",
-        "line": 19,
+        "line": 17,
         "markers": [
           "unit"
         ],
@@ -15951,7 +15949,7 @@
       },
       {
         "name": "TestWebSocketClientMixinInitialization::test_initialization_with_auth",
-        "line": 27,
+        "line": 25,
         "markers": [
           "unit"
         ],
@@ -15960,7 +15958,7 @@
       },
       {
         "name": "TestWebSocketClientMixinGetWebSocket::test_creates_websocket_on_first_call",
-        "line": 39,
+        "line": 37,
         "markers": [
           "unit"
         ],
@@ -15969,7 +15967,7 @@
       },
       {
         "name": "TestWebSocketClientMixinGetWebSocket::test_returns_same_websocket_on_subsequent_calls",
-        "line": 49,
+        "line": 47,
         "markers": [
           "unit"
         ],
@@ -15978,7 +15976,7 @@
       },
       {
         "name": "TestWebSocketClientMixinGetWebSocket::test_passes_auth_credentials_to_websocket",
-        "line": 59,
+        "line": 57,
         "markers": [
           "unit"
         ],
@@ -15987,7 +15985,7 @@
       },
       {
         "name": "TestWebSocketClientMixinGetWebSocket::test_handles_no_auth",
-        "line": 71,
+        "line": 69,
         "markers": [
           "unit"
         ],
@@ -15996,7 +15994,7 @@
       },
       {
         "name": "TestWebSocketClientMixinNonCooperativeInit::test_lazy_initializes_state_when_mixin_init_not_called",
-        "line": 82,
+        "line": 80,
         "markers": [
           "unit"
         ],
@@ -16005,7 +16003,7 @@
       },
       {
         "name": "TestWebSocketClientMixinNonCooperativeInit::test_stop_streaming_safe_when_mixin_init_not_called",
-        "line": 96,
+        "line": 94,
         "markers": [
           "unit"
         ],
@@ -16014,7 +16012,7 @@
       },
       {
         "name": "TestGetWSHealth::test_returns_empty_dict_when_no_ws",
-        "line": 104,
+        "line": 102,
         "markers": [
           "unit"
         ],
@@ -16023,7 +16021,7 @@
       },
       {
         "name": "TestGetWSHealth::test_returns_health_dict_from_ws",
-        "line": 111,
+        "line": 109,
         "markers": [
           "unit"
         ],
@@ -16032,7 +16030,7 @@
       },
       {
         "name": "TestGetWSHealth::test_returns_empty_dict_after_stop_streaming",
-        "line": 131,
+        "line": 129,
         "markers": [
           "unit"
         ],
@@ -16041,7 +16039,7 @@
       },
       {
         "name": "TestGetWSHealth::test_is_thread_safe",
-        "line": 143,
+        "line": 141,
         "markers": [
           "unit"
         ],
@@ -16050,7 +16048,7 @@
       },
       {
         "name": "TestStreamControl::test_stop_streaming_disconnects_websocket",
-        "line": 169,
+        "line": 167,
         "markers": [
           "unit"
         ],
@@ -16059,7 +16057,7 @@
       },
       {
         "name": "TestStreamControl::test_stop_streaming_handles_disconnect_error",
-        "line": 197,
+        "line": 195,
         "markers": [
           "unit"
         ],
@@ -16068,7 +16066,7 @@
       },
       {
         "name": "TestStreamControl::test_is_streaming_returns_correct_state",
-        "line": 211,
+        "line": 209,
         "markers": [
           "unit"
         ],
@@ -53662,6 +53660,42 @@
         ],
         "docstring": "Test validation with empty schema but extra config keys.",
         "class": "TestValidateConfig"
+      },
+      {
+        "name": "TestValidateConfigWithValidators::test_with_string_validator",
+        "line": 157,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test config validation with string validators.",
+        "class": "TestValidateConfigWithValidators"
+      },
+      {
+        "name": "TestValidateConfigWithValidators::test_with_numeric_validator",
+        "line": 170,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test config validation with numeric validators.",
+        "class": "TestValidateConfigWithValidators"
+      },
+      {
+        "name": "TestValidateConfigWithValidators::test_with_list_validator",
+        "line": 183,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test config validation with list validators.",
+        "class": "TestValidateConfigWithValidators"
+      },
+      {
+        "name": "TestValidateConfigWithValidators::test_with_dict_validator",
+        "line": 196,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test config validation with dict validators.",
+        "class": "TestValidateConfigWithValidators"
       }
     ],
     "tests/unit/gpt_trader/validation/test_config_validators_edge_cases.py": [
@@ -53711,45 +53745,7 @@
         "class": "TestValidateConfigEdgeCases"
       }
     ],
-    "tests/unit/gpt_trader/validation/test_config_validators_validator_types.py": [
-      {
-        "name": "TestValidateConfigWithValidators::test_with_string_validator",
-        "line": 12,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test config validation with string validators.",
-        "class": "TestValidateConfigWithValidators"
-      },
-      {
-        "name": "TestValidateConfigWithValidators::test_with_numeric_validator",
-        "line": 25,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test config validation with numeric validators.",
-        "class": "TestValidateConfigWithValidators"
-      },
-      {
-        "name": "TestValidateConfigWithValidators::test_with_list_validator",
-        "line": 38,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test config validation with list validators.",
-        "class": "TestValidateConfigWithValidators"
-      },
-      {
-        "name": "TestValidateConfigWithValidators::test_with_dict_validator",
-        "line": 51,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test config validation with dict validators.",
-        "class": "TestValidateConfigWithValidators"
-      }
-    ],
-    "tests/unit/gpt_trader/validation/test_data_validators_dataframe.py": [
+    "tests/unit/gpt_trader/validation/test_data_validators.py": [
       {
         "name": "TestDataFrameValidator::test_validates_empty_dataframe",
         "line": 15,
@@ -53830,6 +53826,69 @@
         ],
         "docstring": "",
         "class": "TestDataFrameValidator"
+      },
+      {
+        "name": "TestSeriesValidator::test_validates_series",
+        "line": 70,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestSeriesValidator"
+      },
+      {
+        "name": "TestSeriesValidator::test_validates_empty_series",
+        "line": 76,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestSeriesValidator"
+      },
+      {
+        "name": "TestSeriesValidator::test_validates_named_series",
+        "line": 82,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestSeriesValidator"
+      },
+      {
+        "name": "TestSeriesValidator::test_rejects_list",
+        "line": 88,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestSeriesValidator"
+      },
+      {
+        "name": "TestSeriesValidator::test_rejects_dataframe",
+        "line": 93,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestSeriesValidator"
+      },
+      {
+        "name": "TestSeriesValidator::test_rejects_scalar",
+        "line": 99,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestSeriesValidator"
+      },
+      {
+        "name": "TestSeriesValidator::test_field_name_in_error",
+        "line": 104,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestSeriesValidator"
       }
     ],
     "tests/unit/gpt_trader/validation/test_data_validators_ohlc.py": [
@@ -53949,71 +54008,6 @@
         ],
         "docstring": "",
         "class": "TestOHLCDataValidator"
-      }
-    ],
-    "tests/unit/gpt_trader/validation/test_data_validators_series.py": [
-      {
-        "name": "TestSeriesValidator::test_validates_series",
-        "line": 15,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSeriesValidator"
-      },
-      {
-        "name": "TestSeriesValidator::test_validates_empty_series",
-        "line": 21,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSeriesValidator"
-      },
-      {
-        "name": "TestSeriesValidator::test_validates_named_series",
-        "line": 27,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSeriesValidator"
-      },
-      {
-        "name": "TestSeriesValidator::test_rejects_list",
-        "line": 33,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSeriesValidator"
-      },
-      {
-        "name": "TestSeriesValidator::test_rejects_dataframe",
-        "line": 38,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSeriesValidator"
-      },
-      {
-        "name": "TestSeriesValidator::test_rejects_scalar",
-        "line": 44,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSeriesValidator"
-      },
-      {
-        "name": "TestSeriesValidator::test_field_name_in_error",
-        "line": 49,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestSeriesValidator"
       }
     ],
     "tests/unit/gpt_trader/validation/test_decorators.py": [

@@ -1,4 +1,4 @@
-"""Tests for CFM liquidation buffer checks and reduce-only mode."""
+"""Tests for CFM liquidation buffer and reduce-only mode."""
 
 from gpt_trader.features.live_trade.risk.config import RiskConfig
 from gpt_trader.features.live_trade.risk.manager import (
@@ -19,7 +19,6 @@ class TestLiveRiskManagerCFMLiquidationBuffer:
         cfm_balance = {
             "total_usd_balance": "10000",
             "maintenance_margin": "5000",
-            # Buffer = (10000 - 5000) / 10000 = 50%
         }
 
         warnings = manager.check_cfm_liquidation_buffer(cfm_balance)
@@ -35,7 +34,6 @@ class TestLiveRiskManagerCFMLiquidationBuffer:
         cfm_balance = {
             "total_usd_balance": "10000",
             "maintenance_margin": "9000",
-            # Buffer = (10000 - 9000) / 10000 = 10% < 15%
         }
 
         warnings = manager.check_cfm_liquidation_buffer(cfm_balance)
@@ -44,7 +42,6 @@ class TestLiveRiskManagerCFMLiquidationBuffer:
         assert warnings[0].level == RiskWarningLevel.WARNING
         assert "10.0%" in warnings[0].message
         assert warnings[0].action == "REDUCE_POSITION"
-        # Not critical, so no reduce-only mode
         assert not manager.is_cfm_reduce_only_mode()
 
     def test_check_cfm_liquidation_buffer_critical(self):
@@ -55,7 +52,6 @@ class TestLiveRiskManagerCFMLiquidationBuffer:
         cfm_balance = {
             "total_usd_balance": "10000",
             "maintenance_margin": "9500",
-            # Buffer = (10000 - 9500) / 10000 = 5% < 10% (half of 20%)
         }
 
         warnings = manager.check_cfm_liquidation_buffer(cfm_balance)
@@ -121,7 +117,6 @@ class TestLiveRiskManagerResetWithCFM:
         """Reset clears CFM-specific state."""
         manager = LiveRiskManager(state_file=None)
 
-        # Set up CFM state
         manager.set_cfm_reduce_only_mode(True, reason="test")
         manager._risk_warnings.append(RiskWarning(level=RiskWarningLevel.WARNING, message="test"))
 
@@ -130,3 +125,50 @@ class TestLiveRiskManagerResetWithCFM:
         assert not manager.is_cfm_reduce_only_mode()
         assert manager._cfm_reduce_only_reason == ""
         assert len(manager._risk_warnings) == 0
+
+
+class TestLiveRiskManagerCFMRiskSummary:
+    """Tests for CFM risk summary."""
+
+    def test_get_cfm_risk_summary(self):
+        """Can get CFM risk summary."""
+        config = RiskConfig()
+        manager = LiveRiskManager(config=config, state_file=None)
+
+        positions = [
+            {"quantity": "1", "mark_price": "50000", "product_type": "FUTURE", "leverage": 2},
+        ]
+        manager.update_exposure(positions)
+        manager.set_cfm_reduce_only_mode(True, reason="test")
+
+        summary = manager.get_cfm_risk_summary()
+
+        assert "exposure" in summary
+        assert summary["exposure"]["cfm_exposure"] == "100000"
+        assert summary["reduce_only_mode"] is True
+        assert summary["reduce_only_reason"] == "test"
+        assert "warnings_count" in summary
+        assert "warnings" in summary
+
+    def test_get_risk_warnings(self):
+        """Can get all risk warnings."""
+        config = RiskConfig(cfm_min_liquidation_buffer_pct=0.50)
+        manager = LiveRiskManager(config=config, state_file=None)
+
+        cfm_balance = {"liquidation_buffer_percentage": 0.20}
+        manager.check_cfm_liquidation_buffer(cfm_balance)
+
+        warnings = manager.get_risk_warnings()
+        assert len(warnings) >= 1
+
+    def test_clear_risk_warnings(self):
+        """Can clear all warnings."""
+        config = RiskConfig(cfm_min_liquidation_buffer_pct=0.50)
+        manager = LiveRiskManager(config=config, state_file=None)
+
+        cfm_balance = {"liquidation_buffer_percentage": 0.20}
+        manager.check_cfm_liquidation_buffer(cfm_balance)
+
+        manager.clear_risk_warnings()
+
+        assert len(manager.get_risk_warnings()) == 0

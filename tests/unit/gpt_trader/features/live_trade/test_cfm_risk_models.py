@@ -40,7 +40,6 @@ class TestExposureState:
             cfm_margin_used=Decimal("1000"),
             cfm_available_margin=Decimal("4000"),
         )
-        # Used 1000 out of total 5000 = 20%
         assert state.cfm_margin_utilization == Decimal("0.2")
 
     def test_to_payload(self):

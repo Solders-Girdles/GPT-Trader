@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6133,
-    "total_files": 763,
+    "total_files": 762,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -465,10 +465,9 @@
       "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_initialization.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_lifecycle.py",
-      "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_exposure.py",
-      "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_leverage_and_summary.py",
-      "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_liquidation_buffer_and_reduce_only.py",
-      "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_models.py",
+      "tests/unit/gpt_trader/features/live_trade/test_cfm_risk.py",
+      "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_liquidation.py",
+      "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_models.py",
       "tests/unit/gpt_trader/features/live_trade/test_config_dict_json.py",
       "tests/unit/gpt_trader/features/live_trade/test_degradation_failure_tracking.py",
       "tests/unit/gpt_trader/features/live_trade/test_degradation_pause_expiry_and_recovery.py",
@@ -25829,10 +25828,10 @@
         "class": "TestTradingBotStateManagement"
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_exposure.py": [
+    "tests/unit/gpt_trader/features/live_trade/test_cfm_risk.py": [
       {
         "name": "TestLiveRiskManagerCFMExposure::test_update_exposure_spot_only",
-        "line": 12,
+        "line": 18,
         "markers": [
           "unit"
         ],
@@ -25841,7 +25840,7 @@
       },
       {
         "name": "TestLiveRiskManagerCFMExposure::test_update_exposure_cfm_only",
-        "line": 34,
+        "line": 40,
         "markers": [
           "unit"
         ],
@@ -25850,7 +25849,7 @@
       },
       {
         "name": "TestLiveRiskManagerCFMExposure::test_update_exposure_hybrid",
-        "line": 52,
+        "line": 58,
         "markers": [
           "unit"
         ],
@@ -25859,7 +25858,7 @@
       },
       {
         "name": "TestLiveRiskManagerCFMExposure::test_update_exposure_with_cfm_balance",
-        "line": 76,
+        "line": 82,
         "markers": [
           "unit"
         ],
@@ -25868,7 +25867,7 @@
       },
       {
         "name": "TestLiveRiskManagerCFMExposure::test_get_exposure_state",
-        "line": 92,
+        "line": 98,
         "markers": [
           "unit"
         ],
@@ -25877,7 +25876,7 @@
       },
       {
         "name": "TestLiveRiskManagerCFMExposure::test_get_total_exposure",
-        "line": 104,
+        "line": 110,
         "markers": [
           "unit"
         ],
@@ -25886,7 +25885,7 @@
       },
       {
         "name": "TestLiveRiskManagerCFMExposureLimits::test_check_cfm_exposure_limits_ok",
-        "line": 120,
+        "line": 126,
         "markers": [
           "unit"
         ],
@@ -25895,7 +25894,7 @@
       },
       {
         "name": "TestLiveRiskManagerCFMExposureLimits::test_check_cfm_exposure_limits_exceeded",
-        "line": 135,
+        "line": 140,
         "markers": [
           "unit"
         ],
@@ -25904,18 +25903,16 @@
       },
       {
         "name": "TestLiveRiskManagerCFMExposureLimits::test_check_cfm_exposure_limits_zero_equity",
-        "line": 153,
+        "line": 157,
         "markers": [
           "unit"
         ],
         "docstring": "Returns empty list for zero equity.",
         "class": "TestLiveRiskManagerCFMExposureLimits"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_leverage_and_summary.py": [
+      },
       {
         "name": "TestLiveRiskManagerCFMLeverageValidation::test_validate_cfm_leverage_ok",
-        "line": 15,
+        "line": 169,
         "markers": [
           "unit"
         ],
@@ -25924,7 +25921,7 @@
       },
       {
         "name": "TestLiveRiskManagerCFMLeverageValidation::test_validate_cfm_leverage_at_limit",
-        "line": 24,
+        "line": 177,
         "markers": [
           "unit"
         ],
@@ -25933,7 +25930,7 @@
       },
       {
         "name": "TestLiveRiskManagerCFMLeverageValidation::test_validate_cfm_leverage_exceeded",
-        "line": 33,
+        "line": 185,
         "markers": [
           "unit"
         ],
@@ -25942,42 +25939,15 @@
       },
       {
         "name": "TestLiveRiskManagerCFMLeverageValidation::test_validate_cfm_leverage_default",
-        "line": 43,
+        "line": 195,
         "markers": [
           "unit"
         ],
         "docstring": "Uses default 5x when no config.",
         "class": "TestLiveRiskManagerCFMLeverageValidation"
-      },
-      {
-        "name": "TestLiveRiskManagerCFMRiskSummary::test_get_cfm_risk_summary",
-        "line": 57,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Can get CFM risk summary.",
-        "class": "TestLiveRiskManagerCFMRiskSummary"
-      },
-      {
-        "name": "TestLiveRiskManagerCFMRiskSummary::test_get_risk_warnings",
-        "line": 78,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Can get all risk warnings.",
-        "class": "TestLiveRiskManagerCFMRiskSummary"
-      },
-      {
-        "name": "TestLiveRiskManagerCFMRiskSummary::test_clear_risk_warnings",
-        "line": 90,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Can clear all warnings.",
-        "class": "TestLiveRiskManagerCFMRiskSummary"
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_liquidation_buffer_and_reduce_only.py": [
+    "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_liquidation.py": [
       {
         "name": "TestLiveRiskManagerCFMLiquidationBuffer::test_check_cfm_liquidation_buffer_ok",
         "line": 14,
@@ -25989,7 +25959,7 @@
       },
       {
         "name": "TestLiveRiskManagerCFMLiquidationBuffer::test_check_cfm_liquidation_buffer_warning",
-        "line": 30,
+        "line": 29,
         "markers": [
           "unit"
         ],
@@ -25998,7 +25968,7 @@
       },
       {
         "name": "TestLiveRiskManagerCFMLiquidationBuffer::test_check_cfm_liquidation_buffer_critical",
-        "line": 50,
+        "line": 47,
         "markers": [
           "unit"
         ],
@@ -26007,7 +25977,7 @@
       },
       {
         "name": "TestLiveRiskManagerCFMLiquidationBuffer::test_check_cfm_liquidation_buffer_with_percentage_field",
-        "line": 67,
+        "line": 63,
         "markers": [
           "unit"
         ],
@@ -26016,7 +25986,7 @@
       },
       {
         "name": "TestLiveRiskManagerCFMLiquidationBuffer::test_check_cfm_liquidation_buffer_none_balance",
-        "line": 81,
+        "line": 77,
         "markers": [
           "unit"
         ],
@@ -26025,7 +25995,7 @@
       },
       {
         "name": "TestLiveRiskManagerCFMReduceOnlyMode::test_cfm_reduce_only_mode_default",
-        "line": 93,
+        "line": 89,
         "markers": [
           "unit"
         ],
@@ -26034,7 +26004,7 @@
       },
       {
         "name": "TestLiveRiskManagerCFMReduceOnlyMode::test_set_cfm_reduce_only_mode",
-        "line": 98,
+        "line": 94,
         "markers": [
           "unit"
         ],
@@ -26043,7 +26013,7 @@
       },
       {
         "name": "TestLiveRiskManagerCFMReduceOnlyMode::test_clear_cfm_reduce_only_mode",
-        "line": 107,
+        "line": 103,
         "markers": [
           "unit"
         ],
@@ -26052,15 +26022,42 @@
       },
       {
         "name": "TestLiveRiskManagerResetWithCFM::test_reset_daily_tracking_clears_cfm_state",
-        "line": 120,
+        "line": 116,
         "markers": [
           "unit"
         ],
         "docstring": "Reset clears CFM-specific state.",
         "class": "TestLiveRiskManagerResetWithCFM"
+      },
+      {
+        "name": "TestLiveRiskManagerCFMRiskSummary::test_get_cfm_risk_summary",
+        "line": 133,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Can get CFM risk summary.",
+        "class": "TestLiveRiskManagerCFMRiskSummary"
+      },
+      {
+        "name": "TestLiveRiskManagerCFMRiskSummary::test_get_risk_warnings",
+        "line": 153,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Can get all risk warnings.",
+        "class": "TestLiveRiskManagerCFMRiskSummary"
+      },
+      {
+        "name": "TestLiveRiskManagerCFMRiskSummary::test_clear_risk_warnings",
+        "line": 164,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Can clear all warnings.",
+        "class": "TestLiveRiskManagerCFMRiskSummary"
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_models.py": [
+    "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_models.py": [
       {
         "name": "TestExposureState::test_default_values",
         "line": 15,
@@ -26099,7 +26096,7 @@
       },
       {
         "name": "TestExposureState::test_to_payload",
-        "line": 46,
+        "line": 45,
         "markers": [
           "unit"
         ],
@@ -26108,7 +26105,7 @@
       },
       {
         "name": "TestRiskWarning::test_warning_creation",
-        "line": 61,
+        "line": 60,
         "markers": [
           "unit"
         ],
@@ -26117,7 +26114,7 @@
       },
       {
         "name": "TestRiskWarning::test_critical_warning",
-        "line": 74,
+        "line": 73,
         "markers": [
           "unit"
         ],
@@ -26126,7 +26123,7 @@
       },
       {
         "name": "TestRiskWarning::test_to_payload",
-        "line": 82,
+        "line": 81,
         "markers": [
           "unit"
         ],

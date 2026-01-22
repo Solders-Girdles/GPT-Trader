@@ -2201,9 +2201,10 @@ clusters:
     target_location: tests/unit/gpt_trader/preflight/test_checks_diagnostics.py
     expected_file_delta: -2
     priority: low
-    rationale: Consolidate 3 test files into single parametrized file
-    status: in_progress
+    rationale: Consolidated diagnostics checks into single suite under hygiene cap
+    status: done
     owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/401
     added: '2026-01-21'
   8073d799fbaa:
     type: similar_names

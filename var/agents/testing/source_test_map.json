@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 733,
+    "tests_scanned": 732,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -989,7 +989,6 @@
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager_daily.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager_protection.py",
-      "tests/unit/gpt_trader/features/live_trade/test_risk_manager_validation.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager_volatility.py"
     ],
     "gpt_trader.features.live_trade.signals.mean_reversion": [
@@ -3642,9 +3641,6 @@
       "gpt_trader.features.live_trade.risk.manager"
     ],
     "tests/unit/gpt_trader/features/live_trade/test_risk_manager_protection.py": [
-      "gpt_trader.features.live_trade.risk.manager"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/test_risk_manager_validation.py": [
       "gpt_trader.features.live_trade.risk.manager"
     ],
     "tests/unit/gpt_trader/features/live_trade/test_risk_manager_volatility.py": [

@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6165,
-    "total_files": 791,
+    "total_files": 790,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -503,7 +503,6 @@
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager_daily.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager_protection.py",
-      "tests/unit/gpt_trader/features/live_trade/test_risk_manager_validation.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_manager_volatility.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_time_windows.py",
       "tests/unit/gpt_trader/features/live_trade/test_state_recovery_price_tick_recording.py",
@@ -19390,7 +19389,7 @@
       },
       {
         "name": "test_kill_switch_blocks_submission",
-        "line": 113,
+        "line": 114,
         "markers": [
           "asyncio",
           "unit"
@@ -19532,7 +19531,7 @@
       },
       {
         "name": "test_health_check_runner_started_and_stopped",
-        "line": 29,
+        "line": 28,
         "markers": [
           "asyncio",
           "unit"
@@ -19541,7 +19540,7 @@
       },
       {
         "name": "test_positions_to_risk_format",
-        "line": 69,
+        "line": 68,
         "markers": [
           "unit"
         ],
@@ -19549,7 +19548,7 @@
       },
       {
         "name": "test_risk_manager_receives_dict_format",
-        "line": 91,
+        "line": 89,
         "markers": [
           "asyncio",
           "unit"
@@ -19558,7 +19557,7 @@
       },
       {
         "name": "test_runtime_guard_sweep_calls_guard_manager",
-        "line": 138,
+        "line": 136,
         "markers": [
           "asyncio",
           "unit"
@@ -19567,7 +19566,7 @@
       },
       {
         "name": "test_runtime_guard_sweep_skips_without_guard_manager",
-        "line": 156,
+        "line": 154,
         "markers": [
           "asyncio",
           "unit"
@@ -19576,7 +19575,7 @@
       },
       {
         "name": "test_runtime_guard_sweep_uses_config_interval",
-        "line": 172,
+        "line": 170,
         "markers": [
           "asyncio",
           "unit"
@@ -19585,7 +19584,7 @@
       },
       {
         "name": "test_runtime_guard_sweep_handles_exceptions",
-        "line": 194,
+        "line": 192,
         "markers": [
           "asyncio",
           "unit"
@@ -19594,7 +19593,7 @@
       },
       {
         "name": "test_unfilled_order_alert_emitted_once",
-        "line": 218,
+        "line": 216,
         "markers": [
           "asyncio",
           "unit"
@@ -19650,7 +19649,7 @@
       },
       {
         "name": "test_stale_mark_allows_reduce_only_when_configured",
-        "line": 175,
+        "line": 173,
         "markers": [
           "asyncio",
           "unit"
@@ -19659,7 +19658,7 @@
       },
       {
         "name": "test_slippage_failures_pause_symbol_after_threshold",
-        "line": 184,
+        "line": 182,
         "markers": [
           "asyncio",
           "unit"
@@ -27301,7 +27300,7 @@
     "tests/unit/gpt_trader/features/live_trade/test_risk_manager.py": [
       {
         "name": "TestLiveRiskManagerInit::test_init_no_config",
-        "line": 23,
+        "line": 26,
         "markers": [
           "unit"
         ],
@@ -27310,7 +27309,7 @@
       },
       {
         "name": "TestLiveRiskManagerInit::test_init_with_config",
-        "line": 35,
+        "line": 38,
         "markers": [
           "unit"
         ],
@@ -27319,7 +27318,7 @@
       },
       {
         "name": "TestLiveRiskManagerInit::test_init_with_event_store",
-        "line": 42,
+        "line": 45,
         "markers": [
           "unit"
         ],
@@ -27328,7 +27327,7 @@
       },
       {
         "name": "TestLiveRiskManagerInit::test_positions_default_dict",
-        "line": 49,
+        "line": 52,
         "markers": [
           "unit"
         ],
@@ -27337,7 +27336,7 @@
       },
       {
         "name": "TestLiveRiskManagerInit::test_last_mark_update_empty",
-        "line": 55,
+        "line": 58,
         "markers": [
           "unit"
         ],
@@ -27346,7 +27345,7 @@
       },
       {
         "name": "TestValidationError::test_validation_error_is_exception",
-        "line": 65,
+        "line": 68,
         "markers": [
           "unit"
         ],
@@ -27355,7 +27354,7 @@
       },
       {
         "name": "TestValidationError::test_validation_error_with_message",
-        "line": 69,
+        "line": 72,
         "markers": [
           "unit"
         ],
@@ -27364,7 +27363,7 @@
       },
       {
         "name": "TestValidationError::test_validation_error_without_message",
-        "line": 74,
+        "line": 77,
         "markers": [
           "unit"
         ],
@@ -27373,7 +27372,7 @@
       },
       {
         "name": "TestLiveRiskManagerStubs::test_check_order_returns_true",
-        "line": 83,
+        "line": 86,
         "markers": [
           "unit"
         ],
@@ -27382,7 +27381,7 @@
       },
       {
         "name": "TestLiveRiskManagerStubs::test_update_position_is_noop",
-        "line": 91,
+        "line": 94,
         "markers": [
           "unit"
         ],
@@ -27390,40 +27389,103 @@
         "class": "TestLiveRiskManagerStubs"
       },
       {
-        "name": "TestAppendRiskMetrics::test_appends_metrics",
-        "line": 103,
+        "name": "TestPreTradeValidate::test_no_config_passes",
+        "line": 106,
         "markers": [
           "unit"
         ],
-        "docstring": "Should append metrics with timestamp.",
-        "class": "TestAppendRiskMetrics"
+        "docstring": "Should pass validation when no config.",
+        "class": "TestPreTradeValidate"
       },
       {
-        "name": "TestAppendRiskMetrics::test_captures_reduce_only_mode",
-        "line": 116,
+        "name": "TestPreTradeValidate::test_leverage_within_limit",
+        "line": 121,
         "markers": [
           "unit"
         ],
-        "docstring": "Should capture reduce_only_mode state.",
-        "class": "TestAppendRiskMetrics"
+        "docstring": "Should pass when leverage within limit.",
+        "class": "TestPreTradeValidate"
       },
       {
-        "name": "TestAppendRiskMetrics::test_limits_to_100_metrics",
-        "line": 125,
+        "name": "TestPreTradeValidate::test_leverage_exceeds_limit_raises",
+        "line": 138,
         "markers": [
           "unit"
         ],
-        "docstring": "Should keep only last 100 metrics.",
-        "class": "TestAppendRiskMetrics"
+        "docstring": "Should raise when leverage exceeds limit.",
+        "class": "TestPreTradeValidate"
       },
       {
-        "name": "TestAppendRiskMetrics::test_converts_nested_decimals_to_strings",
-        "line": 136,
+        "name": "TestPreTradeValidate::test_zero_equity_skips_validation",
+        "line": 155,
         "markers": [
           "unit"
         ],
-        "docstring": "Should convert nested Decimal values to strings.",
-        "class": "TestAppendRiskMetrics"
+        "docstring": "Should skip validation when equity is zero.",
+        "class": "TestPreTradeValidate"
+      },
+      {
+        "name": "TestPreTradeValidate::test_negative_equity_skips_validation",
+        "line": 171,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should skip validation when equity is negative.",
+        "class": "TestPreTradeValidate"
+      },
+      {
+        "name": "TestCheckMarkStaleness::test_no_update_is_stale",
+        "line": 191,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should return True when no update recorded.",
+        "class": "TestCheckMarkStaleness"
+      },
+      {
+        "name": "TestCheckMarkStaleness::test_recent_update_not_stale",
+        "line": 197,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should return False when update is recent.",
+        "class": "TestCheckMarkStaleness"
+      },
+      {
+        "name": "TestCheckMarkStaleness::test_old_update_is_stale",
+        "line": 204,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should return True when update is old.",
+        "class": "TestCheckMarkStaleness"
+      },
+      {
+        "name": "TestCheckMarkStaleness::test_custom_staleness_threshold",
+        "line": 211,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should use config staleness threshold.",
+        "class": "TestCheckMarkStaleness"
+      },
+      {
+        "name": "TestCheckMarkStaleness::test_default_threshold_without_config",
+        "line": 219,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should use default 120 second threshold.",
+        "class": "TestCheckMarkStaleness"
+      },
+      {
+        "name": "TestCheckMarkStaleness::test_exact_boundary",
+        "line": 226,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should handle exact threshold boundary.",
+        "class": "TestCheckMarkStaleness"
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/test_risk_manager_daily.py": [
@@ -27509,58 +27571,49 @@
         "class": "TestResetDailyTracking"
       },
       {
-        "name": "TestCheckMarkStaleness::test_no_update_is_stale",
+        "name": "TestAppendRiskMetrics::test_appends_metrics",
         "line": 130,
         "markers": [
           "unit"
         ],
-        "docstring": "Should return True when no update recorded.",
-        "class": "TestCheckMarkStaleness"
+        "docstring": "Should append metrics with timestamp.",
+        "class": "TestAppendRiskMetrics"
       },
       {
-        "name": "TestCheckMarkStaleness::test_recent_update_not_stale",
-        "line": 136,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should return False when update is recent.",
-        "class": "TestCheckMarkStaleness"
-      },
-      {
-        "name": "TestCheckMarkStaleness::test_old_update_is_stale",
+        "name": "TestAppendRiskMetrics::test_captures_reduce_only_mode",
         "line": 143,
         "markers": [
           "unit"
         ],
-        "docstring": "Should return True when update is old.",
-        "class": "TestCheckMarkStaleness"
+        "docstring": "Should capture reduce_only_mode state.",
+        "class": "TestAppendRiskMetrics"
       },
       {
-        "name": "TestCheckMarkStaleness::test_custom_staleness_threshold",
-        "line": 150,
+        "name": "TestAppendRiskMetrics::test_limits_to_100_metrics",
+        "line": 152,
         "markers": [
           "unit"
         ],
-        "docstring": "Should use config staleness threshold.",
-        "class": "TestCheckMarkStaleness"
+        "docstring": "Should keep only last 100 metrics.",
+        "class": "TestAppendRiskMetrics"
       },
       {
-        "name": "TestCheckMarkStaleness::test_default_threshold_without_config",
-        "line": 158,
+        "name": "TestAppendRiskMetrics::test_converts_nested_decimals_to_strings",
+        "line": 163,
         "markers": [
           "unit"
         ],
-        "docstring": "Should use default 120 second threshold.",
-        "class": "TestCheckMarkStaleness"
+        "docstring": "Should convert nested Decimal values to strings.",
+        "class": "TestAppendRiskMetrics"
       },
       {
-        "name": "TestCheckMarkStaleness::test_exact_boundary",
-        "line": 165,
+        "name": "TestDailyWorkflow::test_daily_workflow",
+        "line": 187,
         "markers": [
           "unit"
         ],
-        "docstring": "Should handle exact threshold boundary.",
-        "class": "TestCheckMarkStaleness"
+        "docstring": "Should handle typical daily workflow.",
+        "class": "TestDailyWorkflow"
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/test_risk_manager_protection.py": [
@@ -27682,8 +27735,17 @@
         "class": "TestCheckLiquidationBuffer"
       },
       {
-        "name": "TestCheckLiquidationBuffer::test_zero_mark_price_returns_false",
+        "name": "TestCheckLiquidationBuffer::test_liquidation_buffer_triggers_reduce_only",
         "line": 158,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should trigger reduce-only for symbol when buffer low.",
+        "class": "TestCheckLiquidationBuffer"
+      },
+      {
+        "name": "TestCheckLiquidationBuffer::test_zero_mark_price_returns_false",
+        "line": 173,
         "markers": [
           "unit"
         ],
@@ -27692,7 +27754,7 @@
       },
       {
         "name": "TestCheckLiquidationBuffer::test_handles_attribute_error",
-        "line": 169,
+        "line": 184,
         "markers": [
           "unit"
         ],
@@ -27701,7 +27763,7 @@
       },
       {
         "name": "TestCheckLiquidationBuffer::test_handles_none_values",
-        "line": 178,
+        "line": 193,
         "markers": [
           "unit"
         ],
@@ -27710,86 +27772,12 @@
       },
       {
         "name": "TestCheckLiquidationBuffer::test_handles_value_error",
-        "line": 189,
+        "line": 204,
         "markers": [
           "unit"
         ],
         "docstring": "Should handle ValueError gracefully.",
         "class": "TestCheckLiquidationBuffer"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/test_risk_manager_validation.py": [
-      {
-        "name": "TestPreTradeValidate::test_no_config_passes",
-        "line": 24,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should pass validation when no config.",
-        "class": "TestPreTradeValidate"
-      },
-      {
-        "name": "TestPreTradeValidate::test_leverage_within_limit",
-        "line": 39,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should pass when leverage within limit.",
-        "class": "TestPreTradeValidate"
-      },
-      {
-        "name": "TestPreTradeValidate::test_leverage_exceeds_limit_raises",
-        "line": 56,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should raise when leverage exceeds limit.",
-        "class": "TestPreTradeValidate"
-      },
-      {
-        "name": "TestPreTradeValidate::test_zero_equity_skips_validation",
-        "line": 73,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should skip validation when equity is zero.",
-        "class": "TestPreTradeValidate"
-      },
-      {
-        "name": "TestPreTradeValidate::test_negative_equity_skips_validation",
-        "line": 89,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should skip validation when equity is negative.",
-        "class": "TestPreTradeValidate"
-      },
-      {
-        "name": "TestLiveRiskManagerWorkflows::test_daily_workflow",
-        "line": 109,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should handle typical daily workflow.",
-        "class": "TestLiveRiskManagerWorkflows"
-      },
-      {
-        "name": "TestLiveRiskManagerWorkflows::test_volatility_triggers_reduce_only",
-        "line": 152,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should trigger reduce-only mode on high volatility.",
-        "class": "TestLiveRiskManagerWorkflows"
-      },
-      {
-        "name": "TestLiveRiskManagerWorkflows::test_liquidation_buffer_triggers_reduce_only",
-        "line": 172,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should trigger reduce-only for symbol when buffer low.",
-        "class": "TestLiveRiskManagerWorkflows"
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/test_risk_manager_volatility.py": [
@@ -27884,8 +27872,17 @@
         "class": "TestCheckVolatilityCircuitBreaker"
       },
       {
-        "name": "TestCheckVolatilityCircuitBreaker::test_zero_average_not_triggered",
+        "name": "TestCheckVolatilityCircuitBreaker::test_volatility_triggers_reduce_only",
         "line": 138,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should trigger reduce-only mode on high volatility.",
+        "class": "TestCheckVolatilityCircuitBreaker"
+      },
+      {
+        "name": "TestCheckVolatilityCircuitBreaker::test_zero_average_not_triggered",
+        "line": 158,
         "markers": [
           "unit"
         ],

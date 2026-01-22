@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 737,
+    "tests_scanned": 734,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -486,7 +486,7 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_rest_service_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_accounts_positions_and_treasury.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_http_request_layer.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_fallback.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_features.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_retry_behaviour.py",
       "tests/unit/gpt_trader/tui/services/test_credential_validator_connectivity.py"
     ],
@@ -592,7 +592,6 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_product_service_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_rest_service_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_ticker_cache.py"
     ],
     "gpt_trader.features.brokerages.coinbase.models": [
@@ -2933,18 +2932,13 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_intx_portfolio_service.py": [
       "gpt_trader.features.brokerages.coinbase.intx_portfolio_service"
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_fallback.py": [
-      "gpt_trader.features.brokerages.coinbase.client"
-    ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_features.py": [
+      "gpt_trader.features.brokerages.coinbase.client",
       "gpt_trader.features.brokerages.coinbase.market_data_features"
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service.py": [
       "gpt_trader.features.brokerages.coinbase.market_data_service",
       "gpt_trader.utilities.datetime_helpers"
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service_edges.py": [
-      "gpt_trader.features.brokerages.coinbase.market_data_service"
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_ticker_cache.py": [
       "gpt_trader.features.brokerages.coinbase.market_data_service",

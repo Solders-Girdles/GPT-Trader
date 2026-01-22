@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6169,
-    "total_files": 795,
+    "total_tests": 6166,
+    "total_files": 792,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 6004,
+    "unit": 6001,
     "asyncio": 345,
-    "parametrize": 101,
+    "parametrize": 104,
     "property": 82,
     "integration": 79,
     "endpoints": 78,
@@ -321,10 +321,8 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_http_request_layer.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_intx_endpoints.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_intx_portfolio_service.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_fallback.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_features.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_ticker_cache.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_retry_behaviour.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs.py",
@@ -15395,60 +15393,10 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_fallback.py": [
-      {
-        "name": "test_get_ticker_uses_public_endpoint_when_unauthenticated",
-        "line": 17,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_get_candles_uses_public_endpoint_when_unauthenticated",
-        "line": 33,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_get_ticker_prefers_public_endpoint_even_when_authenticated",
-        "line": 51,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_get_ticker_falls_back_to_authenticated_when_public_not_found",
-        "line": 70,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_get_candles_prefers_public_endpoint_even_when_authenticated",
-        "line": 92,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_get_candles_falls_back_to_authenticated_when_public_not_found",
-        "line": 113,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_features.py": [
       {
         "name": "test_rolling_window_empty_stats",
-        "line": 21,
+        "line": 25,
         "markers": [
           "unit"
         ],
@@ -15456,7 +15404,7 @@
       },
       {
         "name": "test_rolling_window_default_timestamp",
-        "line": 29,
+        "line": 33,
         "markers": [
           "unit"
         ],
@@ -15464,7 +15412,7 @@
       },
       {
         "name": "test_depth_snapshot_from_orderbook_update_sorts_levels",
-        "line": 39,
+        "line": 43,
         "markers": [
           "unit"
         ],
@@ -15472,7 +15420,7 @@
       },
       {
         "name": "test_depth_snapshot_mid_none_when_missing_side",
-        "line": 51,
+        "line": 55,
         "markers": [
           "unit"
         ],
@@ -15480,7 +15428,7 @@
       },
       {
         "name": "test_depth_snapshot_spread_bps_zero_bid",
-        "line": 57,
+        "line": 61,
         "markers": [
           "unit"
         ],
@@ -15488,7 +15436,7 @@
       },
       {
         "name": "test_trade_tape_defaults_no_trades",
-        "line": 65,
+        "line": 69,
         "markers": [
           "unit"
         ],
@@ -15496,7 +15444,7 @@
       },
       {
         "name": "test_trade_tape_cleanup_removes_old_trades",
-        "line": 80,
+        "line": 84,
         "markers": [
           "unit"
         ],
@@ -15504,7 +15452,7 @@
       },
       {
         "name": "test_trade_tape_zero_volume_vwap",
-        "line": 91,
+        "line": 95,
         "markers": [
           "unit"
         ],
@@ -15512,7 +15460,7 @@
       },
       {
         "name": "test_trade_tape_default_timestamp",
-        "line": 99,
+        "line": 103,
         "markers": [
           "unit"
         ],
@@ -15520,8 +15468,35 @@
       },
       {
         "name": "test_get_expected_perps",
-        "line": 107,
+        "line": 111,
         "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_public_endpoint_used_when_unauthenticated",
+        "line": 156,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_public_endpoint_used_when_authenticated",
+        "line": 176,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_public_not_found_falls_back_to_authenticated",
+        "line": 198,
+        "markers": [
+          "parametrize",
           "unit"
         ],
         "docstring": ""
@@ -15700,48 +15675,10 @@
         "class": "TestCoinbaseTickerService"
       }
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service_edges.py": [
-      {
-        "name": "TestTickerServiceEdges::test_ticker_cache_stale_boundary",
-        "line": 21,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestTickerServiceEdges"
-      },
-      {
-        "name": "TestTickerServiceEdges::test_ticker_cache_stale_after_ttl",
-        "line": 34,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestTickerServiceEdges"
-      },
-      {
-        "name": "TestTickerServiceEdges::test_ticker_service_start_creates_thread",
-        "line": 47,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestTickerServiceEdges"
-      },
-      {
-        "name": "TestTickerServiceEdges::test_ticker_service_stop_joins_thread",
-        "line": 64,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestTickerServiceEdges"
-      }
-    ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_ticker_cache.py": [
       {
         "name": "TestTickerCache::test_cache_init_default_ttl",
-        "line": 14,
+        "line": 22,
         "markers": [
           "unit"
         ],
@@ -15750,7 +15687,7 @@
       },
       {
         "name": "TestTickerCache::test_cache_init_custom_ttl",
-        "line": 19,
+        "line": 27,
         "markers": [
           "unit"
         ],
@@ -15759,7 +15696,7 @@
       },
       {
         "name": "TestTickerCache::test_cache_update_and_get",
-        "line": 24,
+        "line": 32,
         "markers": [
           "unit"
         ],
@@ -15768,7 +15705,7 @@
       },
       {
         "name": "TestTickerCache::test_cache_get_nonexistent",
-        "line": 40,
+        "line": 48,
         "markers": [
           "unit"
         ],
@@ -15777,7 +15714,7 @@
       },
       {
         "name": "TestTickerCache::test_cache_update_overwrites",
-        "line": 48,
+        "line": 56,
         "markers": [
           "unit"
         ],
@@ -15786,7 +15723,7 @@
       },
       {
         "name": "TestTickerCache::test_cache_multiple_symbols",
-        "line": 64,
+        "line": 72,
         "markers": [
           "unit"
         ],
@@ -15795,7 +15732,7 @@
       },
       {
         "name": "TestTickerCache::test_is_stale_nonexistent_symbol",
-        "line": 78,
+        "line": 86,
         "markers": [
           "unit"
         ],
@@ -15804,7 +15741,7 @@
       },
       {
         "name": "TestTickerCache::test_is_stale_fresh_ticker",
-        "line": 84,
+        "line": 92,
         "markers": [
           "unit"
         ],
@@ -15813,7 +15750,7 @@
       },
       {
         "name": "TestTickerCache::test_is_stale_old_ticker",
-        "line": 98,
+        "line": 106,
         "markers": [
           "unit"
         ],
@@ -15822,7 +15759,7 @@
       },
       {
         "name": "TestTickerCache::test_cache_with_zero_ttl",
-        "line": 113,
+        "line": 121,
         "markers": [
           "unit"
         ],
@@ -15831,12 +15768,48 @@
       },
       {
         "name": "TestTickerCache::test_empty_symbol_string",
-        "line": 127,
+        "line": 135,
         "markers": [
           "unit"
         ],
         "docstring": "Test handling of empty symbol string.",
         "class": "TestTickerCache"
+      },
+      {
+        "name": "TestTickerServiceEdges::test_ticker_cache_stale_boundary",
+        "line": 149,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestTickerServiceEdges"
+      },
+      {
+        "name": "TestTickerServiceEdges::test_ticker_cache_stale_after_ttl",
+        "line": 162,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestTickerServiceEdges"
+      },
+      {
+        "name": "TestTickerServiceEdges::test_ticker_service_start_creates_thread",
+        "line": 175,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestTickerServiceEdges"
+      },
+      {
+        "name": "TestTickerServiceEdges::test_ticker_service_stop_joins_thread",
+        "line": 192,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestTickerServiceEdges"
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_retry_behaviour.py": [
@@ -17679,7 +17652,7 @@
     "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_position_updates.py": [
       {
         "name": "TestHybridPaperBrokerPositionUpdates::test_update_position_creates_new_long",
-        "line": 20,
+        "line": 21,
         "markers": [
           "unit"
         ],
@@ -17688,7 +17661,7 @@
       },
       {
         "name": "TestHybridPaperBrokerPositionUpdates::test_update_position_creates_new_short",
-        "line": 29,
+        "line": 30,
         "markers": [
           "unit"
         ],
@@ -17697,7 +17670,7 @@
       },
       {
         "name": "TestHybridPaperBrokerPositionUpdates::test_update_position_adds_to_long",
-        "line": 37,
+        "line": 38,
         "markers": [
           "unit"
         ],
@@ -17706,7 +17679,7 @@
       },
       {
         "name": "TestHybridPaperBrokerPositionUpdates::test_update_position_reduces_long",
-        "line": 57,
+        "line": 58,
         "markers": [
           "unit"
         ],
@@ -17715,7 +17688,7 @@
       },
       {
         "name": "TestHybridPaperBrokerPositionUpdates::test_update_position_closes_position",
-        "line": 76,
+        "line": 77,
         "markers": [
           "unit"
         ],
@@ -17724,7 +17697,7 @@
       },
       {
         "name": "TestHybridPaperBrokerPositionUpdates::test_short_position_add_recalculates_average",
-        "line": 93,
+        "line": 94,
         "markers": [
           "unit"
         ],
@@ -17733,7 +17706,7 @@
       },
       {
         "name": "TestHybridPaperBrokerPositionUpdates::test_short_position_reduce_keeps_entry_price",
-        "line": 112,
+        "line": 113,
         "markers": [
           "unit"
         ],
@@ -42849,7 +42822,7 @@
     "tests/unit/gpt_trader/tui/services/test_alert_manager_categories.py": [
       {
         "name": "TestAlertCategories::test_alert_category_values",
-        "line": 16,
+        "line": 17,
         "markers": [
           "unit"
         ],
@@ -42858,7 +42831,7 @@
       },
       {
         "name": "TestAlertCategories::test_alert_has_category",
-        "line": 25,
+        "line": 26,
         "markers": [
           "unit"
         ],
@@ -42867,7 +42840,7 @@
       },
       {
         "name": "TestAlertCategories::test_default_rules_have_categories",
-        "line": 32,
+        "line": 33,
         "markers": [
           "unit"
         ],
@@ -42876,7 +42849,7 @@
       },
       {
         "name": "TestAlertCategories::test_filter_history_by_category",
-        "line": 42,
+        "line": 43,
         "markers": [
           "unit"
         ],
@@ -42885,7 +42858,7 @@
       },
       {
         "name": "TestAlertCategories::test_filter_history_by_severity",
-        "line": 53,
+        "line": 54,
         "markers": [
           "unit"
         ],
@@ -42894,7 +42867,7 @@
       },
       {
         "name": "TestAlertCategories::test_get_history_by_category",
-        "line": 65,
+        "line": 66,
         "markers": [
           "unit"
         ],
@@ -42903,7 +42876,7 @@
       },
       {
         "name": "TestAlertCategories::test_get_category_counts",
-        "line": 74,
+        "line": 75,
         "markers": [
           "unit"
         ],
@@ -42912,7 +42885,7 @@
       },
       {
         "name": "TestAlertCategories::test_custom_rule_with_category",
-        "line": 84,
+        "line": 85,
         "markers": [
           "unit"
         ],
@@ -42921,7 +42894,7 @@
       },
       {
         "name": "TestAlertCategories::test_risk_alert_category",
-        "line": 97,
+        "line": 98,
         "markers": [
           "unit"
         ],
@@ -42930,7 +42903,7 @@
       },
       {
         "name": "TestAlertCategories::test_position_alert_category",
-        "line": 105,
+        "line": 106,
         "markers": [
           "unit"
         ],
@@ -42939,7 +42912,7 @@
       },
       {
         "name": "TestValidationAlerts::test_validation_rules_registered",
-        "line": 116,
+        "line": 117,
         "markers": [
           "unit"
         ],
@@ -42948,7 +42921,7 @@
       },
       {
         "name": "TestValidationAlerts::test_validation_escalation_alert_triggers",
-        "line": 122,
+        "line": 123,
         "markers": [
           "unit"
         ],
@@ -42957,7 +42930,7 @@
       },
       {
         "name": "TestValidationAlerts::test_validation_escalation_no_alert_when_not_escalated",
-        "line": 134,
+        "line": 135,
         "markers": [
           "unit"
         ],
@@ -42966,7 +42939,7 @@
       },
       {
         "name": "TestValidationAlerts::test_validation_failures_alert_triggers_at_threshold",
-        "line": 144,
+        "line": 145,
         "markers": [
           "unit"
         ],
@@ -42975,7 +42948,7 @@
       },
       {
         "name": "TestValidationAlerts::test_validation_failures_no_alert_below_threshold",
-        "line": 158,
+        "line": 159,
         "markers": [
           "unit"
         ],
@@ -42984,7 +42957,7 @@
       },
       {
         "name": "TestValidationAlerts::test_validation_failures_no_alert_when_escalated",
-        "line": 168,
+        "line": 169,
         "markers": [
           "unit"
         ],
@@ -42993,7 +42966,7 @@
       },
       {
         "name": "TestValidationAlerts::test_validation_alerts_handle_missing_data",
-        "line": 180,
+        "line": 181,
         "markers": [
           "unit"
         ],

@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 761,
+    "tests_scanned": 758,
     "source_modules": 355,
     "unresolved_modules": 3
   },
@@ -700,12 +700,9 @@
     "gpt_trader.features.brokerages.coinbase.ws": [
       "tests/integration/test_core_validation.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_websocket.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_websocket_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_backoff.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_degradation_callback.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_health.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_reset.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_behavior.py",
       "tests/unit/gpt_trader/tui/test_app_core.py"
     ],
     "gpt_trader.features.brokerages.coinbase.ws_events": [
@@ -3037,9 +3034,6 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_websocket.py": [
       "gpt_trader.features.brokerages.coinbase.ws"
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_websocket_edges.py": [
-      "gpt_trader.features.brokerages.coinbase.ws"
-    ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_credentials_resolution.py": [
       "gpt_trader.features.brokerages.coinbase.credentials"
     ],
@@ -3147,13 +3141,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_backoff.py": [
       "gpt_trader.features.brokerages.coinbase.ws"
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_degradation_callback.py": [
-      "gpt_trader.features.brokerages.coinbase.ws"
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_health.py": [
-      "gpt_trader.features.brokerages.coinbase.ws"
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_reset.py": [
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_behavior.py": [
       "gpt_trader.features.brokerages.coinbase.ws"
     ],
     "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker.py": [

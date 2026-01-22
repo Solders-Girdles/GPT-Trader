@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6259,
-    "total_files": 816,
+    "total_files": 813,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -325,7 +325,6 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_product_catalog.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_system.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_websocket.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_websocket_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_conversion_endpoints.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_credentials_resolution.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery.py",
@@ -360,9 +359,7 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_edge.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_parsing.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_backoff.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_degradation_callback.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_health.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_reset.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_behavior.py",
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker.py",
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_market_data.py",
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_broker_orders.py",
@@ -11349,7 +11346,7 @@
       },
       {
         "name": "test_raise_client_error_forbidden",
-        "line": 124,
+        "line": 122,
         "markers": [
           "unit"
         ],
@@ -11357,7 +11354,7 @@
       },
       {
         "name": "test_request_non_json_payloads",
-        "line": 138,
+        "line": 136,
         "markers": [
           "parametrize",
           "unit"
@@ -11366,7 +11363,7 @@
       },
       {
         "name": "test_request_rate_limit_retries",
-        "line": 152,
+        "line": 150,
         "markers": [
           "parametrize",
           "unit"
@@ -11375,7 +11372,7 @@
       },
       {
         "name": "test_request_rate_limit_exhausts_retries",
-        "line": 172,
+        "line": 170,
         "markers": [
           "unit"
         ],
@@ -11383,7 +11380,7 @@
       },
       {
         "name": "test_request_5xx_error_with_retry",
-        "line": 181,
+        "line": 177,
         "markers": [
           "unit"
         ],
@@ -11391,7 +11388,7 @@
       },
       {
         "name": "test_request_network_error_with_retry",
-        "line": 201,
+        "line": 195,
         "markers": [
           "unit"
         ],
@@ -11399,7 +11396,7 @@
       },
       {
         "name": "test_request_max_retries_exceeded",
-        "line": 221,
+        "line": 213,
         "markers": [
           "unit"
         ],
@@ -15425,7 +15422,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_websocket.py": [
       {
         "name": "TestSequenceGuard::test_first_message_no_gap",
-        "line": 15,
+        "line": 21,
         "markers": [
           "unit"
         ],
@@ -15434,7 +15431,7 @@
       },
       {
         "name": "TestSequenceGuard::test_consecutive_no_gap",
-        "line": 23,
+        "line": 29,
         "markers": [
           "unit"
         ],
@@ -15443,7 +15440,7 @@
       },
       {
         "name": "TestSequenceGuard::test_detects_gap",
-        "line": 32,
+        "line": 38,
         "markers": [
           "unit"
         ],
@@ -15452,7 +15449,7 @@
       },
       {
         "name": "TestSequenceGuard::test_large_gap",
-        "line": 41,
+        "line": 47,
         "markers": [
           "unit"
         ],
@@ -15461,7 +15458,7 @@
       },
       {
         "name": "TestSequenceGuard::test_missing_sequence_field_passes_through",
-        "line": 50,
+        "line": 56,
         "markers": [
           "unit"
         ],
@@ -15470,7 +15467,7 @@
       },
       {
         "name": "TestSequenceGuard::test_sequence_num_gap_detection",
-        "line": 60,
+        "line": 66,
         "markers": [
           "unit"
         ],
@@ -15479,7 +15476,7 @@
       },
       {
         "name": "TestSequenceGuard::test_reset_clears_tracking",
-        "line": 69,
+        "line": 75,
         "markers": [
           "unit"
         ],
@@ -15488,7 +15485,7 @@
       },
       {
         "name": "TestSequenceGuard::test_preserves_message_fields",
-        "line": 79,
+        "line": 85,
         "markers": [
           "unit"
         ],
@@ -15497,7 +15494,7 @@
       },
       {
         "name": "TestCoinbaseWebSocketWithMockTransport::test_initialization_defaults",
-        "line": 94,
+        "line": 100,
         "markers": [
           "unit"
         ],
@@ -15506,7 +15503,7 @@
       },
       {
         "name": "TestCoinbaseWebSocketWithMockTransport::test_initialization_custom_url",
-        "line": 103,
+        "line": 109,
         "markers": [
           "unit"
         ],
@@ -15515,7 +15512,7 @@
       },
       {
         "name": "TestCoinbaseWebSocketWithMockTransport::test_has_sequence_guard",
-        "line": 109,
+        "line": 115,
         "markers": [
           "unit"
         ],
@@ -15524,46 +15521,48 @@
       },
       {
         "name": "TestCoinbaseWebSocketWithMockTransport::test_transport_none_before_connect",
-        "line": 116,
+        "line": 122,
         "markers": [
           "unit"
         ],
         "docstring": "Transport should be None before connect is called.",
         "class": "TestCoinbaseWebSocketWithMockTransport"
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_websocket_edges.py": [
-      {
-        "name": "test_subscribe_user_events_without_credentials_logs_warning",
-        "line": 14,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
       },
       {
-        "name": "test_on_message_heartbeat_updates_timestamps",
-        "line": 29,
+        "name": "TestCoinbaseWebSocketMessageHandling::test_subscribe_user_events_without_credentials_logs_warning",
+        "line": 134,
         "markers": [
           "unit"
         ],
-        "docstring": ""
+        "docstring": "",
+        "class": "TestCoinbaseWebSocketMessageHandling"
       },
       {
-        "name": "test_on_message_sequence_gap_increments_and_passes_flag",
-        "line": 42,
+        "name": "TestCoinbaseWebSocketMessageHandling::test_on_message_heartbeat_updates_timestamps",
+        "line": 149,
         "markers": [
           "unit"
         ],
-        "docstring": ""
+        "docstring": "",
+        "class": "TestCoinbaseWebSocketMessageHandling"
       },
       {
-        "name": "test_invalid_json_logs_error_and_preserves_last_message_ts",
-        "line": 60,
+        "name": "TestCoinbaseWebSocketMessageHandling::test_on_message_sequence_gap_increments_and_passes_flag",
+        "line": 162,
         "markers": [
           "unit"
         ],
-        "docstring": ""
+        "docstring": "",
+        "class": "TestCoinbaseWebSocketMessageHandling"
+      },
+      {
+        "name": "TestCoinbaseWebSocketMessageHandling::test_invalid_json_logs_error_and_preserves_last_message_ts",
+        "line": 180,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCoinbaseWebSocketMessageHandling"
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_conversion_endpoints.py": [
@@ -17952,81 +17951,77 @@
         "class": "TestCalculateBackoffWithJitter"
       }
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_degradation_callback.py": [
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_behavior.py": [
       {
         "name": "TestWebSocketDegradationCallback::test_callback_triggered_on_max_attempts",
         "line": 14,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that degradation callback is triggered when max attempts exceeded.",
+        "docstring": "",
         "class": "TestWebSocketDegradationCallback"
       },
       {
         "name": "TestWebSocketDegradationCallback::test_callback_only_triggered_once",
-        "line": 39,
+        "line": 35,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that degradation callback is only triggered once per max-exceeded event.",
+        "docstring": "",
         "class": "TestWebSocketDegradationCallback"
       },
       {
         "name": "TestWebSocketDegradationCallback::test_no_callback_when_none_provided",
-        "line": 68,
+        "line": 58,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that missing callback doesn't cause errors.",
+        "docstring": "",
         "class": "TestWebSocketDegradationCallback"
       },
       {
         "name": "TestWebSocketDegradationCallback::test_callback_exception_does_not_crash",
-        "line": 85,
+        "line": 72,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that exception in callback is handled gracefully.",
+        "docstring": "",
         "class": "TestWebSocketDegradationCallback"
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_health.py": [
+      },
       {
         "name": "TestWebSocketHealthIncludesNewFields::test_health_includes_connected_since",
-        "line": 11,
+        "line": 93,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that health dict includes connected_since field.",
+        "docstring": "",
         "class": "TestWebSocketHealthIncludesNewFields"
       },
       {
         "name": "TestWebSocketHealthIncludesNewFields::test_health_includes_max_attempts_triggered",
-        "line": 21,
+        "line": 102,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that health dict includes max_attempts_triggered field.",
+        "docstring": "",
         "class": "TestWebSocketHealthIncludesNewFields"
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_reset.py": [
+      },
       {
         "name": "TestWebSocketReconnectionReset::test_attempts_reset_after_stable_period",
-        "line": 16,
+        "line": 115,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that reconnect counter resets after stable connection.",
+        "docstring": "",
         "class": "TestWebSocketReconnectionReset"
       },
       {
         "name": "TestWebSocketReconnectionReset::test_attempts_not_reset_if_unstable",
-        "line": 38,
+        "line": 127,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that reconnect counter is NOT reset if connection was short-lived.",
+        "docstring": "",
         "class": "TestWebSocketReconnectionReset"
       }
     ],

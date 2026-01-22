@@ -546,6 +546,9 @@ def suggest_next_pr() -> int:
                 existing.append(file_path)
             else:
                 missing.append(file_path)
+        if cluster.get("type") == "source_fanout" and triage_state != "accepted":
+            if len({str(Path(path).parent) for path in existing}) > 1:
+                continue
         pending.append((cid, cluster, existing, missing))
 
     pending.sort(

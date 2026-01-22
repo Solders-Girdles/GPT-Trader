@@ -4,6 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from gpt_trader.features.brokerages.coinbase.client.circuit_breaker import (
     CircuitBreaker,
+    CircuitBreakerRegistry,
     CircuitOpenError,
     CircuitState,
 )
@@ -203,3 +204,33 @@ class TestCircuitOpenError:
         assert error.time_until_retry == 30.0
         assert "orders" in str(error)
         assert "30.0" in str(error)
+
+
+class TestCircuitBreakerRegistry:
+    """Tests for CircuitBreakerRegistry class."""
+
+    def test_get_breaker_creates_new(self) -> None:
+        """Test that get_breaker creates new breakers as needed."""
+        registry = CircuitBreakerRegistry()
+
+        breaker = registry.get_breaker("/api/v3/orders")
+        assert breaker is not None
+        assert breaker.state == CircuitState.CLOSED
+
+    def test_same_category_shares_breaker(self) -> None:
+        """Test that endpoints in same category share a breaker."""
+        registry = CircuitBreakerRegistry()
+
+        breaker1 = registry.get_breaker("/api/v3/orders")
+        breaker2 = registry.get_breaker("/api/v3/orders/123")
+
+        assert breaker1 is breaker2
+
+    def test_different_categories_different_breakers(self) -> None:
+        """Test that different categories have different breakers."""
+        registry = CircuitBreakerRegistry()
+
+        orders_breaker = registry.get_breaker("/api/v3/orders")
+        accounts_breaker = registry.get_breaker("/api/v3/accounts")
+
+        assert orders_breaker is not accounts_breaker

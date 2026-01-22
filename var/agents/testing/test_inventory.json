@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6031,
-    "total_files": 731,
+    "total_files": 729,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -246,7 +246,6 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_rate_limiting.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_base_request.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_circuit_breaker.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_circuit_breaker_client.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_circuit_breaker_registry.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_coinbase_client.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_market_mixin.py",
@@ -255,7 +254,6 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_metrics_collector.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_orders_mixin.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_portfolio_mixin.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_portfolio_mixin_aliases.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_portfolio_mixin_requests.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_priority.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_response_cache.py",
@@ -10798,7 +10796,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_circuit_breaker.py": [
       {
         "name": "TestCircuitBreaker::test_initial_state_is_closed",
-        "line": 15,
+        "line": 16,
         "markers": [
           "unit"
         ],
@@ -10807,7 +10805,7 @@
       },
       {
         "name": "TestCircuitBreaker::test_failures_trip_breaker",
-        "line": 21,
+        "line": 22,
         "markers": [
           "unit"
         ],
@@ -10816,7 +10814,7 @@
       },
       {
         "name": "TestCircuitBreaker::test_success_resets_failure_count",
-        "line": 36,
+        "line": 37,
         "markers": [
           "unit"
         ],
@@ -10825,7 +10823,7 @@
       },
       {
         "name": "TestCircuitBreaker::test_recovery_to_half_open",
-        "line": 48,
+        "line": 49,
         "markers": [
           "unit"
         ],
@@ -10834,7 +10832,7 @@
       },
       {
         "name": "TestCircuitBreaker::test_half_open_to_closed_on_success",
-        "line": 76,
+        "line": 77,
         "markers": [
           "unit"
         ],
@@ -10843,7 +10841,7 @@
       },
       {
         "name": "TestCircuitBreaker::test_half_open_to_open_on_failure",
-        "line": 112,
+        "line": 113,
         "markers": [
           "unit"
         ],
@@ -10852,7 +10850,7 @@
       },
       {
         "name": "TestCircuitBreaker::test_reset_returns_to_closed",
-        "line": 140,
+        "line": 141,
         "markers": [
           "unit"
         ],
@@ -10861,7 +10859,7 @@
       },
       {
         "name": "TestCircuitBreaker::test_get_status",
-        "line": 152,
+        "line": 153,
         "markers": [
           "unit"
         ],
@@ -10870,7 +10868,7 @@
       },
       {
         "name": "TestCircuitBreaker::test_thread_safety",
-        "line": 164,
+        "line": 165,
         "markers": [
           "unit"
         ],
@@ -10879,65 +10877,16 @@
       },
       {
         "name": "TestCircuitOpenError::test_error_message",
-        "line": 198,
+        "line": 199,
         "markers": [
           "unit"
         ],
         "docstring": "Test error message format.",
         "class": "TestCircuitOpenError"
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_circuit_breaker_client.py": [
-      {
-        "name": "TestCoinbaseClientBaseRequestResilience::test_request_uses_cache",
-        "line": 25,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test request short-circuits when cache hits.",
-        "class": "TestCoinbaseClientBaseRequestResilience"
       },
-      {
-        "name": "TestCoinbaseClientBaseRequestResilience::test_request_priority_deferred",
-        "line": 37,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test request defers when priority manager blocks.",
-        "class": "TestCoinbaseClientBaseRequestResilience"
-      },
-      {
-        "name": "TestCoinbaseClientBaseRequestResilience::test_request_circuit_open",
-        "line": 48,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test circuit breaker blocks requests when open.",
-        "class": "TestCoinbaseClientBaseRequestResilience"
-      },
-      {
-        "name": "TestCoinbaseClientBaseRequestResilience::test_request_caches_get_response",
-        "line": 73,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test GET responses are cached when cache is enabled.",
-        "class": "TestCoinbaseClientBaseRequestResilience"
-      },
-      {
-        "name": "TestCoinbaseClientBaseRequestResilience::test_invalidate_cache_orders_and_positions",
-        "line": 85,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test cache invalidation targets orders and positions.",
-        "class": "TestCoinbaseClientBaseRequestResilience"
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_circuit_breaker_registry.py": [
       {
         "name": "TestCircuitBreakerRegistry::test_get_breaker_creates_new",
-        "line": 12,
+        "line": 212,
         "markers": [
           "unit"
         ],
@@ -10946,7 +10895,7 @@
       },
       {
         "name": "TestCircuitBreakerRegistry::test_same_category_shares_breaker",
-        "line": 20,
+        "line": 220,
         "markers": [
           "unit"
         ],
@@ -10955,16 +10904,18 @@
       },
       {
         "name": "TestCircuitBreakerRegistry::test_different_categories_different_breakers",
-        "line": 29,
+        "line": 229,
         "markers": [
           "unit"
         ],
         "docstring": "Test that different categories have different breakers.",
         "class": "TestCircuitBreakerRegistry"
-      },
+      }
+    ],
+    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_circuit_breaker_registry.py": [
       {
         "name": "TestCircuitBreakerRegistry::test_can_proceed_delegates_to_breaker",
-        "line": 38,
+        "line": 24,
         "markers": [
           "unit"
         ],
@@ -10973,7 +10924,7 @@
       },
       {
         "name": "TestCircuitBreakerRegistry::test_disabled_registry_always_allows",
-        "line": 51,
+        "line": 37,
         "markers": [
           "unit"
         ],
@@ -10982,7 +10933,7 @@
       },
       {
         "name": "TestCircuitBreakerRegistry::test_get_all_status",
-        "line": 61,
+        "line": 47,
         "markers": [
           "unit"
         ],
@@ -10991,7 +10942,7 @@
       },
       {
         "name": "TestCircuitBreakerRegistry::test_reset_all",
-        "line": 72,
+        "line": 58,
         "markers": [
           "unit"
         ],
@@ -11000,7 +10951,7 @@
       },
       {
         "name": "TestAPIResilienceCircuitBreaker::test_circuit_breaker_trips_after_failures",
-        "line": 90,
+        "line": 76,
         "markers": [
           "unit"
         ],
@@ -11009,12 +10960,57 @@
       },
       {
         "name": "TestAPIResilienceCircuitBreaker::test_circuit_breaker_recovers_in_half_open",
-        "line": 119,
+        "line": 105,
         "markers": [
           "unit"
         ],
         "docstring": "Test that circuit breaker transitions through half-open to closed.",
         "class": "TestAPIResilienceCircuitBreaker"
+      },
+      {
+        "name": "TestCoinbaseClientBaseRequestResilience::test_request_uses_cache",
+        "line": 150,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test request short-circuits when cache hits.",
+        "class": "TestCoinbaseClientBaseRequestResilience"
+      },
+      {
+        "name": "TestCoinbaseClientBaseRequestResilience::test_request_priority_deferred",
+        "line": 162,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test request defers when priority manager blocks.",
+        "class": "TestCoinbaseClientBaseRequestResilience"
+      },
+      {
+        "name": "TestCoinbaseClientBaseRequestResilience::test_request_circuit_open",
+        "line": 173,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test circuit breaker blocks requests when open.",
+        "class": "TestCoinbaseClientBaseRequestResilience"
+      },
+      {
+        "name": "TestCoinbaseClientBaseRequestResilience::test_request_caches_get_response",
+        "line": 198,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test GET responses are cached when cache is enabled.",
+        "class": "TestCoinbaseClientBaseRequestResilience"
+      },
+      {
+        "name": "TestCoinbaseClientBaseRequestResilience::test_invalidate_cache_orders_and_positions",
+        "line": 210,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test cache invalidation targets orders and positions.",
+        "class": "TestCoinbaseClientBaseRequestResilience"
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_coinbase_client.py": [
@@ -11557,7 +11553,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_portfolio_mixin.py": [
       {
         "name": "test_exchange_mode_blocks_portfolio_methods",
-        "line": 30,
+        "line": 41,
         "markers": [
           "parametrize",
           "unit"
@@ -11566,17 +11562,15 @@
       },
       {
         "name": "test_commit_convert_trade_defaults_to_empty_payload",
-        "line": 37,
+        "line": 48,
         "markers": [
           "unit"
         ],
         "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_portfolio_mixin_aliases.py": [
+      },
       {
         "name": "test_list_positions_raw_aliases_cfm_positions",
-        "line": 17,
+        "line": 66,
         "markers": [
           "unit"
         ],
@@ -11584,7 +11578,7 @@
       },
       {
         "name": "test_get_intx_portfolio_aliases_intx_portfolio",
-        "line": 27,
+        "line": 76,
         "markers": [
           "unit"
         ],
@@ -11592,7 +11586,7 @@
       },
       {
         "name": "test_list_intx_positions_aliases_intx_positions",
-        "line": 37,
+        "line": 86,
         "markers": [
           "unit"
         ],
@@ -11600,7 +11594,7 @@
       },
       {
         "name": "test_get_intx_position_aliases_intx_position",
-        "line": 47,
+        "line": 96,
         "markers": [
           "unit"
         ],
@@ -11608,7 +11602,7 @@
       },
       {
         "name": "test_get_intx_multi_asset_collateral_aliases_method",
-        "line": 57,
+        "line": 106,
         "markers": [
           "unit"
         ],

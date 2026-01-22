@@ -6,10 +6,21 @@ from decimal import Decimal
 from unittest.mock import MagicMock
 
 import pytest
+from strategy_engine_chaos_fixtures import make_position
 
 import gpt_trader.security.security_validator as security_validator_module
 from gpt_trader.core import Balance, OrderSide, OrderType, Product
+from gpt_trader.features.live_trade.execution.submission_result import OrderSubmissionStatus
 from gpt_trader.features.live_trade.strategies.perps_baseline import Action, Decision
+
+
+async def _place_order(engine, action: Action = Action.BUY):
+    return await engine._validate_and_place_order(
+        symbol="BTC-USD",
+        decision=Decision(action, "test"),
+        price=Decimal("50000"),
+        equity=Decimal("10000"),
+    )
 
 
 @pytest.mark.asyncio
@@ -147,6 +158,49 @@ async def test_slippage_guard_blocks_order(engine, monkeypatch: pytest.MonkeyPat
 
     engine.context.broker.place_order.assert_not_called()
     engine._order_submitter.record_rejection.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_stale_mark_pauses_symbol(engine) -> None:
+    engine.context.risk_manager.check_mark_staleness.return_value = True
+    await _place_order(engine)
+    assert engine._degradation.is_paused(symbol="BTC-USD")
+    assert "mark_staleness" in (engine._degradation.get_pause_reason("BTC-USD") or "")
+    assert any(e.get("type") == "stale_mark_detected" for e in engine._event_store.list_events())
+
+
+@pytest.mark.asyncio
+async def test_stale_mark_allows_reduce_only_when_configured(engine) -> None:
+    engine.context.risk_manager.check_mark_staleness.return_value = True
+    engine.context.risk_manager.config.mark_staleness_allow_reduce_only = True
+    engine._current_positions = {"BTC-USD": make_position()}
+    await _place_order(engine, Action.SELL)
+    engine._order_submitter.submit_order.assert_called()
+
+
+@pytest.mark.asyncio
+async def test_slippage_failures_pause_symbol_after_threshold(engine) -> None:
+    from gpt_trader.features.live_trade.risk.manager import ValidationError
+
+    engine._order_validator.enforce_slippage_guard.side_effect = ValidationError(
+        "Slippage too high"
+    )
+    for _ in range(3):
+        await _place_order(engine)
+    assert engine._degradation.is_paused(symbol="BTC-USD")
+
+
+@pytest.mark.asyncio
+async def test_preview_disabled_after_threshold_failures(engine) -> None:
+    from gpt_trader.features.live_trade.execution.validation import get_failure_tracker
+
+    tracker = get_failure_tracker()
+    for _ in range(3):
+        tracker.record_failure("order_preview")
+    engine._order_validator.enable_order_preview = True
+    result = await _place_order(engine)
+    assert result.status in (OrderSubmissionStatus.SUCCESS, OrderSubmissionStatus.BLOCKED)
+    assert engine._order_validator.enable_order_preview is False
 
 
 def test_calculate_order_quantity_with_strategy_config(engine):

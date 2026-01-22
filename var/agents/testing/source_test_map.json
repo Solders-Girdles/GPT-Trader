@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 734,
+    "tests_scanned": 733,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -889,7 +889,7 @@
     ],
     "gpt_trader.features.live_trade.execution.submission_result": [
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_misc.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_orders.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_router_execute_async.py"
     ],
     "gpt_trader.features.live_trade.execution.validation": [
@@ -900,7 +900,7 @@
       "tests/unit/gpt_trader/app/containers/test_risk_validation.py",
       "tests/unit/gpt_trader/app/test_application_container_registry.py",
       "tests/unit/gpt_trader/app/test_application_container_reset_and_services.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_misc.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_orders.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_get_validation_metrics.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_validation.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_validation_async.py",
@@ -980,7 +980,6 @@
       "tests/unit/gpt_trader/config/test_bot_config_mark_staleness_guard.py",
       "tests/unit/gpt_trader/config/test_bot_config_reduce_only_enforcement.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_misc.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_orders.py",
       "tests/unit/gpt_trader/features/live_trade/risk/test_reduce_only.py",
       "tests/unit/gpt_trader/features/live_trade/test_cfm_risk_manager_exposure.py",
@@ -1106,7 +1105,6 @@
       "tests/unit/gpt_trader/features/intelligence/ensemble/test_voting_strategy_vote.py",
       "tests/unit/gpt_trader/features/intelligence/ensemble/test_voting_weighted_majority.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_misc.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_health.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_orders.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_state.py",
@@ -3174,12 +3172,6 @@
       "gpt_trader.features.live_trade.risk.manager",
       "gpt_trader.features.live_trade.strategies.perps_baseline"
     ],
-    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_misc.py": [
-      "gpt_trader.features.live_trade.execution.submission_result",
-      "gpt_trader.features.live_trade.execution.validation",
-      "gpt_trader.features.live_trade.risk.manager",
-      "gpt_trader.features.live_trade.strategies.perps_baseline"
-    ],
     "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_health.py": [
       "gpt_trader.core",
       "gpt_trader.features.live_trade.strategies.perps_baseline",
@@ -3188,6 +3180,8 @@
     ],
     "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_orders.py": [
       "gpt_trader.core",
+      "gpt_trader.features.live_trade.execution.submission_result",
+      "gpt_trader.features.live_trade.execution.validation",
       "gpt_trader.features.live_trade.risk.manager",
       "gpt_trader.features.live_trade.strategies.perps_baseline",
       "gpt_trader.security.security_validator"

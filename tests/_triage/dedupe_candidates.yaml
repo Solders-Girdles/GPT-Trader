@@ -1270,10 +1270,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine.py
-    expected_file_delta: -4
+    expected_file_delta: -1
     priority: low
-    rationale: Consolidate 5 test files into single parametrized file
-    status: pending
+    rationale: Consolidated chaos misc coverage into existing modules to stay under hygiene cap
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/356
     added: '2026-01-21'
   7dd7f1b90ccb:
     type: similar_names

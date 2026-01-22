@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from strategy_engine_chaos_fixtures import make_position
-from tests.support.chaos import ChaosBroker, api_outage_scenario
+from tests.support.chaos import ChaosBroker, api_outage_scenario, broker_read_failures_scenario
 
 from gpt_trader.features.live_trade.execution.submission_result import OrderSubmissionStatus
 from gpt_trader.features.live_trade.guard_errors import GuardError
@@ -88,6 +88,28 @@ class TestGuardFailureDegradation:
         assert any(e.get("type") == "api_error" for e in events)
 
 
+class TestBrokerOutageDegradation:
+    @pytest.mark.asyncio
+    async def test_broker_failures_trigger_pause_after_threshold(
+        self, engine, mock_broker, mock_risk_config
+    ) -> None:
+        engine.context.broker = ChaosBroker(mock_broker, broker_read_failures_scenario(times=3))
+        await engine._fetch_total_equity({})
+        assert engine._degradation._broker_failures == 1
+        await engine._fetch_total_equity({})
+        assert engine._degradation._broker_failures == 2
+        await engine._fetch_total_equity({})
+        assert engine._degradation.is_paused() and "broker_outage" in (
+            engine._degradation.get_pause_reason() or ""
+        )
+
+    @pytest.mark.asyncio
+    async def test_successful_broker_call_resets_counter(self, engine, mock_broker) -> None:
+        engine._degradation._broker_failures = 2
+        await engine._fetch_total_equity({})
+        assert engine._degradation._broker_failures == 0
+
+
 @pytest.mark.asyncio
 async def test_kill_switch_blocks_submission(engine) -> None:
     engine.context.risk_manager.config.kill_switch_enabled = True
@@ -105,8 +127,7 @@ async def test_kill_switch_blocks_submission(engine) -> None:
 
     assert result.status == OrderSubmissionStatus.BLOCKED
     assert result.reason == "kill_switch"
-    assert result.decision_trace is not None
-    assert result.decision_trace.decision_id
+    assert result.decision_trace and result.decision_trace.decision_id
     assert result.decision_trace.outcomes["kill_switch"]["status"] == "blocked"
     engine._order_submitter.submit_order.assert_not_called()
     engine._order_submitter.record_rejection.assert_called_with(
@@ -121,8 +142,12 @@ async def test_kill_switch_blocks_submission(engine) -> None:
 
 class TestPausedOrderRejection:
     @pytest.mark.asyncio
-    async def test_order_rejected_when_globally_paused(self, engine) -> None:
-        engine._degradation.pause_all(seconds=60, reason="test_pause")
+    @pytest.mark.parametrize("pause_all", [True, False])
+    async def test_order_rejected_when_paused(self, engine, pause_all: bool) -> None:
+        if pause_all:
+            engine._degradation.pause_all(seconds=60, reason="test_pause")
+        else:
+            engine._degradation.pause_symbol("BTC-USD", seconds=60, reason="test_pause")
         await engine._validate_and_place_order(
             symbol="BTC-USD",
             decision=Decision(Action.BUY, "test"),
@@ -130,18 +155,8 @@ class TestPausedOrderRejection:
             equity=Decimal("10000"),
         )
         engine.context.broker.place_order.assert_not_called()
-        engine._order_submitter.record_rejection.assert_called()
-
-    @pytest.mark.asyncio
-    async def test_order_rejected_when_symbol_paused(self, engine) -> None:
-        engine._degradation.pause_symbol("BTC-USD", seconds=60, reason="test_pause")
-        await engine._validate_and_place_order(
-            symbol="BTC-USD",
-            decision=Decision(Action.BUY, "test"),
-            price=Decimal("50000"),
-            equity=Decimal("10000"),
-        )
-        engine.context.broker.place_order.assert_not_called()
+        if pause_all:
+            engine._order_submitter.record_rejection.assert_called()
 
     @pytest.mark.asyncio
     async def test_reduce_only_allowed_through_pause(self, engine) -> None:

@@ -1623,8 +1623,10 @@ clusters:
     target_location: tests/unit/gpt_trader/cli/commands/optimize/test_config_loader.py
     expected_file_delta: -3
     priority: low
-    rationale: Consolidate 4 test files into single parametrized file
-    status: pending
+    rationale: Consolidated into single module under hygiene cap
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/373
     added: '2026-01-20'
   8bf0f5840b82:
     type: similar_names

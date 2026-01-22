@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6165,
-    "total_files": 788,
+    "total_files": 786,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -373,10 +373,8 @@
       "tests/unit/gpt_trader/features/intelligence/regime/test_detector_models.py",
       "tests/unit/gpt_trader/features/intelligence/regime/test_detector_persistence.py",
       "tests/unit/gpt_trader/features/intelligence/regime/test_detector_regime_classification.py",
-      "tests/unit/gpt_trader/features/intelligence/sizing/test_position_sizer_calculate_size.py",
-      "tests/unit/gpt_trader/features/intelligence/sizing/test_position_sizer_config.py",
-      "tests/unit/gpt_trader/features/intelligence/sizing/test_position_sizer_portfolio_heat_and_state.py",
-      "tests/unit/gpt_trader/features/intelligence/sizing/test_position_sizer_sizing_result.py",
+      "tests/unit/gpt_trader/features/intelligence/sizing/test_position_sizer.py",
+      "tests/unit/gpt_trader/features/intelligence/sizing/test_position_sizer_state.py",
       "tests/unit/gpt_trader/features/live_trade/combiners/test_regime_combiner_adx.py",
       "tests/unit/gpt_trader/features/live_trade/combiners/test_regime_combiner_edges.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_equity_calculator.py",
@@ -19009,7 +19007,7 @@
         "class": "TestMarketRegimeDetector"
       }
     ],
-    "tests/unit/gpt_trader/features/intelligence/sizing/test_position_sizer_calculate_size.py": [
+    "tests/unit/gpt_trader/features/intelligence/sizing/test_position_sizer.py": [
       {
         "name": "TestPositionSizer::test_basic_sizing",
         "line": 34,
@@ -19081,12 +19079,10 @@
         ],
         "docstring": "Test SizingResult serialization.",
         "class": "TestPositionSizer"
-      }
-    ],
-    "tests/unit/gpt_trader/features/intelligence/sizing/test_position_sizer_config.py": [
+      },
       {
         "name": "TestPositionSizingConfig::test_default_config",
-        "line": 7,
+        "line": 167,
         "markers": [
           "unit"
         ],
@@ -19095,7 +19091,7 @@
       },
       {
         "name": "TestPositionSizingConfig::test_regime_scale_factors",
-        "line": 17,
+        "line": 177,
         "markers": [
           "unit"
         ],
@@ -19104,7 +19100,7 @@
       },
       {
         "name": "TestPositionSizingConfig::test_to_dict",
-        "line": 24,
+        "line": 184,
         "markers": [
           "unit"
         ],
@@ -19113,7 +19109,7 @@
       },
       {
         "name": "TestPositionSizingConfig::test_from_dict",
-        "line": 33,
+        "line": 193,
         "markers": [
           "unit"
         ],
@@ -19121,10 +19117,10 @@
         "class": "TestPositionSizingConfig"
       }
     ],
-    "tests/unit/gpt_trader/features/intelligence/sizing/test_position_sizer_portfolio_heat_and_state.py": [
+    "tests/unit/gpt_trader/features/intelligence/sizing/test_position_sizer_state.py": [
       {
         "name": "TestPositionSizerState::test_record_trade_result",
-        "line": 14,
+        "line": 15,
         "markers": [
           "unit"
         ],
@@ -19133,7 +19129,7 @@
       },
       {
         "name": "TestPositionSizerState::test_portfolio_heat_tracking",
-        "line": 26,
+        "line": 27,
         "markers": [
           "unit"
         ],
@@ -19142,7 +19138,7 @@
       },
       {
         "name": "TestPositionSizerState::test_portfolio_heat_limits_sizing",
-        "line": 39,
+        "line": 40,
         "markers": [
           "unit"
         ],
@@ -19151,18 +19147,16 @@
       },
       {
         "name": "TestPositionSizerState::test_serialize_deserialize_state",
-        "line": 55,
+        "line": 56,
         "markers": [
           "unit"
         ],
         "docstring": "Test state serialization.",
         "class": "TestPositionSizerState"
-      }
-    ],
-    "tests/unit/gpt_trader/features/intelligence/sizing/test_position_sizer_sizing_result.py": [
+      },
       {
         "name": "TestSizingResult::test_to_dict_format",
-        "line": 9,
+        "line": 73,
         "markers": [
           "unit"
         ],

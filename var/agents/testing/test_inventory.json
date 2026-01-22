@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6105,
-    "total_files": 757,
+    "total_files": 755,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -681,10 +681,8 @@
       "tests/unit/gpt_trader/security/security_validator/test_symbol_validation_exception_handling.py",
       "tests/unit/gpt_trader/security/security_validator/test_trading_hours.py",
       "tests/unit/gpt_trader/security/test_input_sanitizer.py",
-      "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer_internals_and_singleton.py",
-      "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer_logging.py",
-      "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer_rules.py",
-      "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer_validation.py",
+      "tests/unit/gpt_trader/security/test_ip_allowlist.py",
+      "tests/unit/gpt_trader/security/test_ip_allowlist_validation.py",
       "tests/unit/gpt_trader/security/test_request_validator.py",
       "tests/unit/gpt_trader/security/test_request_validator_limits.py"
     ],
@@ -40539,10 +40537,10 @@
         "class": "TestSanitizeStringSafeEdgeCases"
       }
     ],
-    "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer_internals_and_singleton.py": [
+    "tests/unit/gpt_trader/security/test_ip_allowlist.py": [
       {
         "name": "test_check_ip_cidr_edge_cases",
-        "line": 17,
+        "line": 11,
         "markers": [
           "unit"
         ],
@@ -40550,7 +40548,7 @@
       },
       {
         "name": "test_check_ip_invalid_cidr_fallback",
-        "line": 24,
+        "line": 18,
         "markers": [
           "unit"
         ],
@@ -40558,7 +40556,7 @@
       },
       {
         "name": "test_check_ip_completely_invalid_entry",
-        "line": 30,
+        "line": 24,
         "markers": [
           "unit"
         ],
@@ -40566,43 +40564,15 @@
       },
       {
         "name": "test_global_singleton_and_convenience_functions",
-        "line": 36,
+        "line": 30,
         "markers": [
           "unit"
         ],
         "docstring": "Test global singleton and convenience functions."
-      }
-    ],
-    "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer_logging.py": [
-      {
-        "name": "test_validation_logging",
-        "line": 16,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test validation logging."
       },
-      {
-        "name": "test_clear_validation_log",
-        "line": 33,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test clearing validation log."
-      },
-      {
-        "name": "test_validation_log_trimming",
-        "line": 44,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that validation log is trimmed when exceeding max size."
-      }
-    ],
-    "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer_rules.py": [
       {
         "name": "test_load_rules_from_environment",
-        "line": 16,
+        "line": 45,
         "markers": [
           "unit"
         ],
@@ -40610,7 +40580,7 @@
       },
       {
         "name": "test_add_rule",
-        "line": 27,
+        "line": 56,
         "markers": [
           "unit"
         ],
@@ -40618,7 +40588,7 @@
       },
       {
         "name": "test_add_rule_invalid_ip",
-        "line": 45,
+        "line": 74,
         "markers": [
           "unit"
         ],
@@ -40626,7 +40596,7 @@
       },
       {
         "name": "test_enable_disable_rule",
-        "line": 55,
+        "line": 84,
         "markers": [
           "unit"
         ],
@@ -40634,7 +40604,7 @@
       },
       {
         "name": "test_remove_rule",
-        "line": 74,
+        "line": 103,
         "markers": [
           "unit"
         ],
@@ -40642,7 +40612,7 @@
       },
       {
         "name": "test_list_rules",
-        "line": 85,
+        "line": 114,
         "markers": [
           "unit"
         ],
@@ -40650,7 +40620,7 @@
       },
       {
         "name": "test_update_existing_rule_with_description",
-        "line": 98,
+        "line": 127,
         "markers": [
           "unit"
         ],
@@ -40658,7 +40628,7 @@
       },
       {
         "name": "test_update_existing_rule_without_description",
-        "line": 111,
+        "line": 140,
         "markers": [
           "unit"
         ],
@@ -40666,7 +40636,7 @@
       },
       {
         "name": "test_enable_rule_nonexistent",
-        "line": 122,
+        "line": 151,
         "markers": [
           "unit"
         ],
@@ -40674,7 +40644,7 @@
       },
       {
         "name": "test_disable_rule_nonexistent",
-        "line": 128,
+        "line": 157,
         "markers": [
           "unit"
         ],
@@ -40682,7 +40652,7 @@
       },
       {
         "name": "test_remove_rule_nonexistent",
-        "line": 134,
+        "line": 163,
         "markers": [
           "unit"
         ],
@@ -40690,17 +40660,17 @@
       },
       {
         "name": "test_environment_empty_allowlist",
-        "line": 140,
+        "line": 169,
         "markers": [
           "unit"
         ],
         "docstring": "Test that empty IP list from environment is skipped."
       }
     ],
-    "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer_validation.py": [
+    "tests/unit/gpt_trader/security/test_ip_allowlist_validation.py": [
       {
         "name": "test_validate_ip_exact_match",
-        "line": 16,
+        "line": 10,
         "markers": [
           "unit"
         ],
@@ -40708,7 +40678,7 @@
       },
       {
         "name": "test_validate_ip_cidr_match",
-        "line": 26,
+        "line": 20,
         "markers": [
           "unit"
         ],
@@ -40716,7 +40686,7 @@
       },
       {
         "name": "test_validate_ip_not_in_allowlist",
-        "line": 36,
+        "line": 30,
         "markers": [
           "unit"
         ],
@@ -40724,7 +40694,7 @@
       },
       {
         "name": "test_validate_ip_no_rule",
-        "line": 47,
+        "line": 41,
         "markers": [
           "unit"
         ],
@@ -40732,7 +40702,7 @@
       },
       {
         "name": "test_validate_ip_disabled_rule",
-        "line": 55,
+        "line": 49,
         "markers": [
           "unit"
         ],
@@ -40740,7 +40710,7 @@
       },
       {
         "name": "test_enforcement_disabled",
-        "line": 66,
+        "line": 60,
         "markers": [
           "unit"
         ],
@@ -40748,7 +40718,7 @@
       },
       {
         "name": "test_validate_ip_without_logging",
-        "line": 77,
+        "line": 71,
         "markers": [
           "unit"
         ],
@@ -40756,7 +40726,7 @@
       },
       {
         "name": "test_validate_ip_no_rule_without_logging",
-        "line": 89,
+        "line": 83,
         "markers": [
           "unit"
         ],
@@ -40764,11 +40734,35 @@
       },
       {
         "name": "test_validate_ip_disabled_rule_without_logging",
-        "line": 100,
+        "line": 94,
         "markers": [
           "unit"
         ],
         "docstring": "Test validation with disabled rule and log_validation=False."
+      },
+      {
+        "name": "test_validation_logging",
+        "line": 107,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test validation logging."
+      },
+      {
+        "name": "test_clear_validation_log",
+        "line": 124,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test clearing validation log."
+      },
+      {
+        "name": "test_validation_log_trimming",
+        "line": 135,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that validation log is trimmed when exceeding max size."
       }
     ],
     "tests/unit/gpt_trader/security/test_request_validator.py": [

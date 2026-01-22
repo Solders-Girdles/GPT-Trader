@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 699,
+    "tests_scanned": 697,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -1519,10 +1519,8 @@
       "tests/unit/gpt_trader/security/test_input_sanitizer.py"
     ],
     "gpt_trader.security.ip_allowlist_enforcer": [
-      "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer_internals_and_singleton.py",
-      "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer_logging.py",
-      "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer_rules.py",
-      "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer_validation.py"
+      "tests/unit/gpt_trader/security/test_ip_allowlist.py",
+      "tests/unit/gpt_trader/security/test_ip_allowlist_validation.py"
     ],
     "gpt_trader.security.numeric_validator": [
       "tests/unit/gpt_trader/security/security_validator/test_numeric_edge_behaviour.py"
@@ -4095,16 +4093,10 @@
     "tests/unit/gpt_trader/security/test_input_sanitizer.py": [
       "gpt_trader.security.input_sanitizer"
     ],
-    "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer_internals_and_singleton.py": [
+    "tests/unit/gpt_trader/security/test_ip_allowlist.py": [
       "gpt_trader.security.ip_allowlist_enforcer"
     ],
-    "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer_logging.py": [
-      "gpt_trader.security.ip_allowlist_enforcer"
-    ],
-    "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer_rules.py": [
-      "gpt_trader.security.ip_allowlist_enforcer"
-    ],
-    "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer_validation.py": [
+    "tests/unit/gpt_trader/security/test_ip_allowlist_validation.py": [
       "gpt_trader.security.ip_allowlist_enforcer"
     ],
     "tests/unit/gpt_trader/security/test_request_validator.py": [

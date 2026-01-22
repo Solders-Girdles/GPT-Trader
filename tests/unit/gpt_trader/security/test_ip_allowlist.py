@@ -1,19 +1,48 @@
-"""Tests for IPAllowlistEnforcer rule management."""
+"""Tests for IPAllowlistEnforcer rules and internals."""
+
+from __future__ import annotations
 
 import pytest
 
+import gpt_trader.security.ip_allowlist_enforcer as ip_allowlist_mod
 from gpt_trader.security.ip_allowlist_enforcer import IPAllowlistEnforcer
 
 
-@pytest.fixture
-def enforcer(monkeypatch):
-    """IP Allowlist Enforcer instance."""
+def test_check_ip_cidr_edge_cases(enforcer: IPAllowlistEnforcer) -> None:
+    """Test CIDR edge cases."""
+    assert enforcer._check_ip_in_allowlist("192.168.1.1", ["192.168.1.1/32"]) == "192.168.1.1/32"
+    assert enforcer._check_ip_in_allowlist("192.168.1.1", ["0.0.0.0/0"]) == "0.0.0.0/0"
+    assert enforcer._check_ip_in_allowlist("invalid-ip", ["192.168.1.0/24"]) is None
+
+
+def test_check_ip_invalid_cidr_fallback(enforcer: IPAllowlistEnforcer) -> None:
+    """Test IP check with invalid CIDR that falls back to IP comparison."""
+    result = enforcer._check_ip_in_allowlist("192.168.1.1", ["not-a-cidr", "192.168.1.1"])
+    assert result == "192.168.1.1"
+
+
+def test_check_ip_completely_invalid_entry(enforcer: IPAllowlistEnforcer) -> None:
+    """Test IP check skips completely invalid entries."""
+    result = enforcer._check_ip_in_allowlist("192.168.1.1", ["completely-invalid", "also-invalid"])
+    assert result is None
+
+
+def test_global_singleton_and_convenience_functions(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test global singleton and convenience functions."""
     monkeypatch.setenv("IP_ALLOWLIST_ENABLED", "1")
-    monkeypatch.setenv("IP_ALLOWLIST_COINBASE_INTX", "192.168.1.1,10.0.0.0/24")
-    return IPAllowlistEnforcer(enable_enforcement=True)
+    monkeypatch.setattr(ip_allowlist_mod, "_ip_allowlist_enforcer", None)
+
+    enforcer = ip_allowlist_mod.get_ip_allowlist_enforcer()
+    assert enforcer is not None
+
+    success = ip_allowlist_mod.add_ip_allowlist_rule("convenience_test", ["192.168.1.1"])
+    assert success
+
+    result = ip_allowlist_mod.validate_ip("192.168.1.1", "convenience_test")
+    assert result is not None
 
 
-def test_load_rules_from_environment(enforcer):
+def test_load_rules_from_environment(enforcer: IPAllowlistEnforcer) -> None:
     """Test loading rules from environment variables."""
     rules = enforcer.list_rules()
     assert len(rules) > 0
@@ -24,7 +53,7 @@ def test_load_rules_from_environment(enforcer):
     assert "10.0.0.0/24" in coinbase_rule.allowed_ips
 
 
-def test_add_rule(enforcer):
+def test_add_rule(enforcer: IPAllowlistEnforcer) -> None:
     """Test adding IP allowlist rule."""
     success = enforcer.add_rule(
         "coinbase_production",
@@ -42,7 +71,7 @@ def test_add_rule(enforcer):
     assert rule.description == "Production API server IPs"
 
 
-def test_add_rule_invalid_ip(enforcer):
+def test_add_rule_invalid_ip(enforcer: IPAllowlistEnforcer) -> None:
     """Test adding rule with invalid IP."""
     success = enforcer.add_rule(
         "test_service",
@@ -52,7 +81,7 @@ def test_add_rule_invalid_ip(enforcer):
     assert not success
 
 
-def test_enable_disable_rule(enforcer):
+def test_enable_disable_rule(enforcer: IPAllowlistEnforcer) -> None:
     """Test enabling and disabling rules."""
     enforcer.add_rule("test_service", ["192.168.1.1"])
 
@@ -71,7 +100,7 @@ def test_enable_disable_rule(enforcer):
     assert rule.enabled
 
 
-def test_remove_rule(enforcer):
+def test_remove_rule(enforcer: IPAllowlistEnforcer) -> None:
     """Test removing rule."""
     enforcer.add_rule("test_service", ["192.168.1.1"])
 
@@ -82,7 +111,7 @@ def test_remove_rule(enforcer):
     assert rule is None
 
 
-def test_list_rules(enforcer):
+def test_list_rules(enforcer: IPAllowlistEnforcer) -> None:
     """Test listing all rules."""
     enforcer.add_rule("service1", ["192.168.1.1"])
     enforcer.add_rule("service2", ["10.0.0.0/24"])
@@ -95,7 +124,7 @@ def test_list_rules(enforcer):
     assert "service2" in service_names
 
 
-def test_update_existing_rule_with_description(enforcer):
+def test_update_existing_rule_with_description(enforcer: IPAllowlistEnforcer) -> None:
     """Test updating existing rule updates description."""
     enforcer.add_rule("test_service", ["192.168.1.1"], description="Original")
 
@@ -108,7 +137,7 @@ def test_update_existing_rule_with_description(enforcer):
     assert "192.168.1.1" not in rule.allowed_ips
 
 
-def test_update_existing_rule_without_description(enforcer):
+def test_update_existing_rule_without_description(enforcer: IPAllowlistEnforcer) -> None:
     """Test updating existing rule preserves description if not provided."""
     enforcer.add_rule("test_service", ["192.168.1.1"], description="Original")
 
@@ -119,25 +148,25 @@ def test_update_existing_rule_without_description(enforcer):
     assert rule.description == "Original"
 
 
-def test_enable_rule_nonexistent(enforcer):
+def test_enable_rule_nonexistent(enforcer: IPAllowlistEnforcer) -> None:
     """Test enabling nonexistent rule returns False."""
     success = enforcer.enable_rule("nonexistent_service")
     assert not success
 
 
-def test_disable_rule_nonexistent(enforcer):
+def test_disable_rule_nonexistent(enforcer: IPAllowlistEnforcer) -> None:
     """Test disabling nonexistent rule returns False."""
     success = enforcer.disable_rule("nonexistent_service")
     assert not success
 
 
-def test_remove_rule_nonexistent(enforcer):
+def test_remove_rule_nonexistent(enforcer: IPAllowlistEnforcer) -> None:
     """Test removing nonexistent rule returns False."""
     success = enforcer.remove_rule("nonexistent_service")
     assert not success
 
 
-def test_environment_empty_allowlist(monkeypatch):
+def test_environment_empty_allowlist(monkeypatch: pytest.MonkeyPatch) -> None:
     """Test that empty IP list from environment is skipped."""
     monkeypatch.setenv("IP_ALLOWLIST_ENABLED", "1")
     monkeypatch.setenv("IP_ALLOWLIST_EMPTY_SERVICE", "")  # Empty value

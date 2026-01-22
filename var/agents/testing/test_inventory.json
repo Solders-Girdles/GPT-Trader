@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6031,
-    "total_files": 732,
+    "total_files": 731,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -560,9 +560,8 @@
       "tests/unit/gpt_trader/monitoring/guards/test_builtins_edge_cases.py",
       "tests/unit/gpt_trader/monitoring/notifications/test_notification_backends_core.py",
       "tests/unit/gpt_trader/monitoring/notifications/test_notification_backends_edges.py",
-      "tests/unit/gpt_trader/monitoring/notifications/test_notification_service_core.py",
+      "tests/unit/gpt_trader/monitoring/notifications/test_notification_service.py",
       "tests/unit/gpt_trader/monitoring/notifications/test_notification_service_edges.py",
-      "tests/unit/gpt_trader/monitoring/notifications/test_notification_service_factory.py",
       "tests/unit/gpt_trader/monitoring/system/test_metrics.py",
       "tests/unit/gpt_trader/monitoring/system/test_positions_reconciler_edges.py",
       "tests/unit/gpt_trader/monitoring/test_alert_types_alert_creation.py",
@@ -32242,10 +32241,10 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/monitoring/notifications/test_notification_service_core.py": [
+    "tests/unit/gpt_trader/monitoring/notifications/test_notification_service.py": [
       {
         "name": "TestNotificationService::test_add_backend",
-        "line": 25,
+        "line": 28,
         "markers": [
           "unit"
         ],
@@ -32254,7 +32253,7 @@
       },
       {
         "name": "TestNotificationService::test_remove_backend",
-        "line": 31,
+        "line": 34,
         "markers": [
           "unit"
         ],
@@ -32263,7 +32262,7 @@
       },
       {
         "name": "TestNotificationService::test_remove_nonexistent_backend",
-        "line": 38,
+        "line": 41,
         "markers": [
           "unit"
         ],
@@ -32272,7 +32271,7 @@
       },
       {
         "name": "TestNotificationService::test_notify_sends_to_backend",
-        "line": 44,
+        "line": 47,
         "markers": [
           "asyncio",
           "unit"
@@ -32282,7 +32281,7 @@
       },
       {
         "name": "TestNotificationService::test_notify_filters_by_severity",
-        "line": 58,
+        "line": 61,
         "markers": [
           "asyncio",
           "unit"
@@ -32292,7 +32291,7 @@
       },
       {
         "name": "TestNotificationService::test_notify_rate_limiting",
-        "line": 72,
+        "line": 75,
         "markers": [
           "asyncio",
           "unit"
@@ -32302,7 +32301,7 @@
       },
       {
         "name": "TestNotificationService::test_notify_deduplication",
-        "line": 86,
+        "line": 89,
         "markers": [
           "asyncio",
           "unit"
@@ -32312,7 +32311,7 @@
       },
       {
         "name": "TestNotificationService::test_notify_force_bypasses_dedup",
-        "line": 98,
+        "line": 101,
         "markers": [
           "asyncio",
           "unit"
@@ -32322,7 +32321,7 @@
       },
       {
         "name": "TestNotificationService::test_notify_disabled_service",
-        "line": 108,
+        "line": 111,
         "markers": [
           "asyncio",
           "unit"
@@ -32332,7 +32331,7 @@
       },
       {
         "name": "TestNotificationService::test_notify_alert",
-        "line": 118,
+        "line": 121,
         "markers": [
           "asyncio",
           "unit"
@@ -32342,7 +32341,7 @@
       },
       {
         "name": "TestNotificationService::test_test_backends",
-        "line": 136,
+        "line": 139,
         "markers": [
           "asyncio",
           "unit"
@@ -32352,7 +32351,7 @@
       },
       {
         "name": "TestNotificationService::test_get_status",
-        "line": 145,
+        "line": 148,
         "markers": [
           "unit"
         ],
@@ -32361,7 +32360,7 @@
       },
       {
         "name": "TestNotificationService::test_multiple_backends",
-        "line": 161,
+        "line": 164,
         "markers": [
           "asyncio",
           "unit"
@@ -32371,13 +32370,49 @@
       },
       {
         "name": "TestNotificationService::test_partial_backend_failure",
-        "line": 182,
+        "line": 185,
         "markers": [
           "asyncio",
           "unit"
         ],
         "docstring": "",
         "class": "TestNotificationService"
+      },
+      {
+        "name": "TestCreateNotificationService::test_creates_with_console_only",
+        "line": 206,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCreateNotificationService"
+      },
+      {
+        "name": "TestCreateNotificationService::test_creates_with_webhook",
+        "line": 211,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCreateNotificationService"
+      },
+      {
+        "name": "TestCreateNotificationService::test_creates_with_file",
+        "line": 221,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCreateNotificationService"
+      },
+      {
+        "name": "TestCreateNotificationService::test_respects_min_severity",
+        "line": 231,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCreateNotificationService"
       }
     ],
     "tests/unit/gpt_trader/monitoring/notifications/test_notification_service_edges.py": [
@@ -32424,44 +32459,6 @@
           "unit"
         ],
         "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/monitoring/notifications/test_notification_service_factory.py": [
-      {
-        "name": "TestCreateNotificationService::test_creates_with_console_only",
-        "line": 10,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestCreateNotificationService"
-      },
-      {
-        "name": "TestCreateNotificationService::test_creates_with_webhook",
-        "line": 15,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestCreateNotificationService"
-      },
-      {
-        "name": "TestCreateNotificationService::test_creates_with_file",
-        "line": 25,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestCreateNotificationService"
-      },
-      {
-        "name": "TestCreateNotificationService::test_respects_min_severity",
-        "line": 35,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestCreateNotificationService"
       }
     ],
     "tests/unit/gpt_trader/monitoring/system/test_metrics.py": [

@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 673,
+    "tests_scanned": 672,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -1234,8 +1234,7 @@
       "tests/unit/gpt_trader/monitoring/guards/test_builtins_edge_cases.py",
       "tests/unit/gpt_trader/monitoring/notifications/test_notification_backends_core.py",
       "tests/unit/gpt_trader/monitoring/notifications/test_notification_backends_edges.py",
-      "tests/unit/gpt_trader/monitoring/notifications/test_notification_service_core.py",
-      "tests/unit/gpt_trader/monitoring/notifications/test_notification_service_factory.py",
+      "tests/unit/gpt_trader/monitoring/notifications/test_notification_service.py",
       "tests/unit/gpt_trader/monitoring/test_alert_types_alert_creation.py",
       "tests/unit/gpt_trader/monitoring/test_alert_types_alert_lifecycle.py",
       "tests/unit/gpt_trader/monitoring/test_alert_types_severity.py",
@@ -1361,9 +1360,8 @@
       "tests/unit/gpt_trader/monitoring/notifications/test_notification_backends_edges.py"
     ],
     "gpt_trader.monitoring.notifications.service": [
-      "tests/unit/gpt_trader/monitoring/notifications/test_notification_service_core.py",
-      "tests/unit/gpt_trader/monitoring/notifications/test_notification_service_edges.py",
-      "tests/unit/gpt_trader/monitoring/notifications/test_notification_service_factory.py"
+      "tests/unit/gpt_trader/monitoring/notifications/test_notification_service.py",
+      "tests/unit/gpt_trader/monitoring/notifications/test_notification_service_edges.py"
     ],
     "gpt_trader.monitoring.profiling": [
       "tests/unit/gpt_trader/monitoring/test_profiling.py"
@@ -3753,17 +3751,13 @@
       "gpt_trader.monitoring.alert_types",
       "gpt_trader.monitoring.notifications.backends"
     ],
-    "tests/unit/gpt_trader/monitoring/notifications/test_notification_service_core.py": [
+    "tests/unit/gpt_trader/monitoring/notifications/test_notification_service.py": [
       "gpt_trader.monitoring.alert_types",
       "gpt_trader.monitoring.notifications.service"
     ],
     "tests/unit/gpt_trader/monitoring/notifications/test_notification_service_edges.py": [
       "gpt_trader.monitoring.notifications.service",
       "gpt_trader.utilities.datetime_helpers"
-    ],
-    "tests/unit/gpt_trader/monitoring/notifications/test_notification_service_factory.py": [
-      "gpt_trader.monitoring.alert_types",
-      "gpt_trader.monitoring.notifications.service"
     ],
     "tests/unit/gpt_trader/monitoring/system/test_metrics.py": [
       "gpt_trader.monitoring.system",

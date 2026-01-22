@@ -2029,10 +2029,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/monitoring/notifications/test_notification_service.py
-    expected_file_delta: -2
+    expected_file_delta: -1
     priority: low
-    rationale: Consolidate 3 test files into single parametrized file
-    status: pending
+    rationale: Consolidated factory coverage into core module to stay under hygiene cap
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/393
     added: '2026-01-20'
   417047edd7b5:
     type: similar_names

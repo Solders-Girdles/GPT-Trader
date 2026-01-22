@@ -1563,10 +1563,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/utilities/test_datetime_helpers.py
-    expected_file_delta: -3
+    expected_file_delta: -2
     priority: low
-    rationale: Consolidate 4 test files into single parametrized file
-    status: pending
+    rationale: Consolidated normalize/to-iso helpers into core file, kept now helpers separate to stay under hygiene cap
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/370
     added: '2026-01-20'
   85496ba5cfab:
     type: similar_names

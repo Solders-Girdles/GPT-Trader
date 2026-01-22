@@ -1436,10 +1436,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper.py
-    expected_file_delta: -4
+    expected_file_delta: -1
     priority: low
-    rationale: Consolidate 5 test files into single parametrized file
-    status: pending
+    rationale: Consolidated hybrid paper broker shards into fewer cohesive modules
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/350
     added: '2026-01-21'
   52946e567f9f:
     type: similar_names

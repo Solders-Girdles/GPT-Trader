@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import MagicMock
 
 import pytest
 
-import gpt_trader.features.brokerages.paper.hybrid as hybrid_module
 from gpt_trader.core import OrderSide, Position
 from gpt_trader.features.brokerages.paper.hybrid import HybridPaperBroker
 
@@ -16,14 +14,9 @@ class TestHybridPaperBrokerPositionUpdates:
     """Test HybridPaperBroker position update logic."""
 
     @pytest.fixture
-    def broker(self, monkeypatch: pytest.MonkeyPatch) -> HybridPaperBroker:
+    def broker(self, broker_factory) -> HybridPaperBroker:
         """Create broker fixture."""
-        monkeypatch.setattr(hybrid_module, "CoinbaseClient", MagicMock())
-        monkeypatch.setattr(hybrid_module, "SimpleAuth", MagicMock())
-        return HybridPaperBroker(
-            api_key="test_key",
-            private_key="test_private_key",
-        )
+        return broker_factory()
 
     def test_update_position_creates_new_long(self, broker: HybridPaperBroker) -> None:
         """Test creating new long position."""

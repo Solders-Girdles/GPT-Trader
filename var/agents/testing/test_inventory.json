@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6223,
-    "total_files": 809,
+    "total_files": 806,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -284,10 +284,7 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_initialization.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_position_metrics.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_close_position.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_fills.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_place_and_cancel.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_queries.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_pnl_service_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_cfm.py",
@@ -12916,124 +12913,10 @@
         "class": "TestCoinbaseRestContractSuite"
       }
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_close_position.py": [
-      {
-        "name": "TestClosePosition::test_close_position_success",
-        "line": 26,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestClosePosition"
-      },
-      {
-        "name": "TestClosePosition::test_close_position_no_open_position_raises",
-        "line": 51,
-        "markers": [
-          "parametrize",
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestClosePosition"
-      },
-      {
-        "name": "TestClosePosition::test_close_position_with_client_order_id",
-        "line": 62,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestClosePosition"
-      },
-      {
-        "name": "TestClosePosition::test_close_position_fallback_on_exception",
-        "line": 80,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestClosePosition"
-      },
-      {
-        "name": "TestClosePosition::test_close_position_no_fallback_raises",
-        "line": 99,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestClosePosition"
-      },
-      {
-        "name": "TestClosePosition::test_close_position_finds_correct_symbol_among_multiple",
-        "line": 113,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestClosePosition"
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_fills.py": [
-      {
-        "name": "TestListFills::test_list_fills_returns_fills",
-        "line": 18,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestListFills"
-      },
-      {
-        "name": "TestListFills::test_list_fills_empty_response_returns_empty_list",
-        "line": 37,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestListFills"
-      },
-      {
-        "name": "TestListFills::test_list_fills_passes_filters",
-        "line": 55,
-        "markers": [
-          "parametrize",
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestListFills"
-      },
-      {
-        "name": "TestListFills::test_list_fills_pagination",
-        "line": 70,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestListFills"
-      },
-      {
-        "name": "TestListFills::test_list_fills_handles_exception_logs_and_raises",
-        "line": 85,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestListFills"
-      },
-      {
-        "name": "TestListFills::test_list_fills_re_raises_brokerage_error",
-        "line": 100,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestListFills"
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_place_and_cancel.py": [
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service.py": [
       {
         "name": "TestPlaceOrder::test_place_order_builds_payload",
-        "line": 19,
+        "line": 45,
         "markers": [
           "unit"
         ],
@@ -13042,7 +12925,7 @@
       },
       {
         "name": "TestPlaceOrder::test_place_order_executes_payload",
-        "line": 39,
+        "line": 48,
         "markers": [
           "unit"
         ],
@@ -13051,7 +12934,7 @@
       },
       {
         "name": "TestPlaceOrder::test_place_order_passes_all_parameters",
-        "line": 62,
+        "line": 55,
         "markers": [
           "unit"
         ],
@@ -13060,7 +12943,7 @@
       },
       {
         "name": "TestPlaceOrder::test_place_order_market_order_includes_price_none",
-        "line": 89,
+        "line": 58,
         "markers": [
           "unit"
         ],
@@ -13069,7 +12952,7 @@
       },
       {
         "name": "TestCancelOrder::test_cancel_order_success",
-        "line": 107,
+        "line": 65,
         "markers": [
           "unit"
         ],
@@ -13078,7 +12961,7 @@
       },
       {
         "name": "TestCancelOrder::test_cancel_order_raises_for_rejection_or_missing_order",
-        "line": 136,
+        "line": 83,
         "markers": [
           "parametrize",
           "unit"
@@ -13088,7 +12971,7 @@
       },
       {
         "name": "TestCancelOrder::test_cancel_order_re_raises_brokerage_error",
-        "line": 148,
+        "line": 90,
         "markers": [
           "unit"
         ],
@@ -13097,18 +12980,16 @@
       },
       {
         "name": "TestCancelOrder::test_cancel_order_wraps_unexpected_exception",
-        "line": 158,
+        "line": 93,
         "markers": [
           "unit"
         ],
         "docstring": "",
         "class": "TestCancelOrder"
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_queries.py": [
+      },
       {
         "name": "TestListOrders::test_list_orders_returns_orders",
-        "line": 22,
+        "line": 98,
         "markers": [
           "unit"
         ],
@@ -13117,7 +12998,7 @@
       },
       {
         "name": "TestListOrders::test_list_orders_empty_response_returns_empty_list",
-        "line": 38,
+        "line": 103,
         "markers": [
           "unit"
         ],
@@ -13126,7 +13007,7 @@
       },
       {
         "name": "TestListOrders::test_list_orders_passes_filters_and_limit",
-        "line": 57,
+        "line": 116,
         "markers": [
           "parametrize",
           "unit"
@@ -13136,7 +13017,7 @@
       },
       {
         "name": "TestListOrders::test_list_orders_pagination",
-        "line": 72,
+        "line": 123,
         "markers": [
           "unit"
         ],
@@ -13145,7 +13026,7 @@
       },
       {
         "name": "TestListOrders::test_list_orders_handles_exception",
-        "line": 93,
+        "line": 128,
         "markers": [
           "unit"
         ],
@@ -13154,7 +13035,7 @@
       },
       {
         "name": "TestListOrders::test_list_orders_re_raises_brokerage_error",
-        "line": 103,
+        "line": 131,
         "markers": [
           "unit"
         ],
@@ -13163,7 +13044,7 @@
       },
       {
         "name": "TestGetOrder::test_get_order_returns_order",
-        "line": 115,
+        "line": 136,
         "markers": [
           "unit"
         ],
@@ -13172,7 +13053,7 @@
       },
       {
         "name": "TestGetOrder::test_get_order_returns_none_when_order_missing",
-        "line": 128,
+        "line": 141,
         "markers": [
           "unit"
         ],
@@ -13181,7 +13062,7 @@
       },
       {
         "name": "TestGetOrder::test_get_order_not_found_error_returns_none",
-        "line": 139,
+        "line": 144,
         "markers": [
           "unit"
         ],
@@ -13190,7 +13071,7 @@
       },
       {
         "name": "TestGetOrder::test_get_order_handles_exception",
-        "line": 150,
+        "line": 147,
         "markers": [
           "unit"
         ],
@@ -13199,12 +13080,122 @@
       },
       {
         "name": "TestGetOrder::test_get_order_re_raises_brokerage_error",
-        "line": 160,
+        "line": 150,
         "markers": [
           "unit"
         ],
         "docstring": "",
         "class": "TestGetOrder"
+      },
+      {
+        "name": "TestListFills::test_list_fills_returns_fills",
+        "line": 155,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestListFills"
+      },
+      {
+        "name": "TestListFills::test_list_fills_empty_response_returns_empty_list",
+        "line": 158,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestListFills"
+      },
+      {
+        "name": "TestListFills::test_list_fills_passes_filters",
+        "line": 168,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestListFills"
+      },
+      {
+        "name": "TestListFills::test_list_fills_pagination",
+        "line": 173,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestListFills"
+      },
+      {
+        "name": "TestListFills::test_list_fills_handles_exception_logs_and_raises",
+        "line": 176,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestListFills"
+      },
+      {
+        "name": "TestListFills::test_list_fills_re_raises_brokerage_error",
+        "line": 181,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestListFills"
+      },
+      {
+        "name": "TestClosePosition::test_close_position_success",
+        "line": 186,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestClosePosition"
+      },
+      {
+        "name": "TestClosePosition::test_close_position_no_open_position_raises",
+        "line": 201,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestClosePosition"
+      },
+      {
+        "name": "TestClosePosition::test_close_position_with_client_order_id",
+        "line": 208,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestClosePosition"
+      },
+      {
+        "name": "TestClosePosition::test_close_position_fallback_on_exception",
+        "line": 215,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestClosePosition"
+      },
+      {
+        "name": "TestClosePosition::test_close_position_no_fallback_raises",
+        "line": 222,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestClosePosition"
+      },
+      {
+        "name": "TestClosePosition::test_close_position_finds_correct_symbol_among_multiple",
+        "line": 227,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestClosePosition"
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_pnl_service_edges.py": [

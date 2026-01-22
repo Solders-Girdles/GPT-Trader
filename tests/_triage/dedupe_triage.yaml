@@ -82,6 +82,11 @@ clusters:
     owner: codex
     updated: '2026-01-21'
     reason: Shared import fanout across subsystems; not a true dedupe target
+  1e1b3faa9432:
+    state: rejected
+    owner: codex
+    updated: '2026-01-22'
+    reason: cross-dir shared-import fanout; suggested target file missing
   89424704f490:
     state: rejected
     owner: codex

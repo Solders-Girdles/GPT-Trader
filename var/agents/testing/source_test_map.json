@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 753,
-    "source_modules": 355,
+    "tests_scanned": 749,
+    "source_modules": 354,
     "unresolved_modules": 3
   },
   "source_to_tests": {
@@ -364,9 +364,6 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_validation.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_execute_order_payload.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_find_existing_order_by_client_id.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_close_position.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_place_and_cancel.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_queries.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_cfm.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service_edges.py",
@@ -452,7 +449,6 @@
       "tests/unit/gpt_trader/errors/test_handler.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build_order_payload_validation.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_execute_order_payload.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_close_position.py",
       "tests/unit/gpt_trader/validation/test_base_validator.py",
       "tests/unit/gpt_trader/validation/test_composite_validators.py",
       "tests/unit/gpt_trader/validation/test_config_validators.py",
@@ -588,9 +584,6 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_market_mixin_requests.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_orders_mixin.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_portfolio_mixin.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_fills.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_place_and_cancel.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_queries.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_cfm_endpoints.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_permissions_client_endpoint.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_system.py"
@@ -627,12 +620,6 @@
     "gpt_trader.features.brokerages.coinbase.rest.base": [
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_execute_order_payload.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_find_existing_order_by_client_id.py"
-    ],
-    "gpt_trader.features.brokerages.coinbase.rest.order_service": [
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_close_position.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_fills.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_place_and_cancel.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_queries.py"
     ],
     "gpt_trader.features.brokerages.coinbase.rest.pnl_service": [
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_pnl_service_edges.py"
@@ -2872,25 +2859,6 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_position_metrics.py": [
       "gpt_trader.features.brokerages.coinbase.utilities"
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_close_position.py": [
-      "gpt_trader.core",
-      "gpt_trader.errors",
-      "gpt_trader.features.brokerages.coinbase.rest.order_service"
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_fills.py": [
-      "gpt_trader.features.brokerages.coinbase.errors",
-      "gpt_trader.features.brokerages.coinbase.rest.order_service"
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_place_and_cancel.py": [
-      "gpt_trader.core",
-      "gpt_trader.features.brokerages.coinbase.errors",
-      "gpt_trader.features.brokerages.coinbase.rest.order_service"
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_queries.py": [
-      "gpt_trader.core",
-      "gpt_trader.features.brokerages.coinbase.errors",
-      "gpt_trader.features.brokerages.coinbase.rest.order_service"
-    ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_pnl_service_edges.py": [
       "gpt_trader.features.brokerages.coinbase.market_data_service",
       "gpt_trader.features.brokerages.coinbase.rest.pnl_service",
@@ -5127,7 +5095,6 @@
     "gpt_trader.features.brokerages.coinbase.client.orders": "src/gpt_trader/features/brokerages/coinbase/client/orders.py",
     "gpt_trader.features.brokerages.coinbase.client.portfolio": "src/gpt_trader/features/brokerages/coinbase/client/portfolio.py",
     "gpt_trader.features.brokerages.coinbase.rest.base": "src/gpt_trader/features/brokerages/coinbase/rest/base.py",
-    "gpt_trader.features.brokerages.coinbase.rest.order_service": "src/gpt_trader/features/brokerages/coinbase/rest/order_service.py",
     "gpt_trader.features.brokerages.coinbase.rest.pnl_service": "src/gpt_trader/features/brokerages/coinbase/rest/pnl_service.py",
     "gpt_trader.features.brokerages.coinbase.rest.position_state_store": "src/gpt_trader/features/brokerages/coinbase/rest/position_state_store.py",
     "gpt_trader.features.brokerages.coinbase.rest.portfolio_service": "src/gpt_trader/features/brokerages/coinbase/rest/portfolio_service.py",

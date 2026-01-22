@@ -1861,11 +1861,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/backtesting/simulation/test_fill_model.py
-    expected_file_delta: -3
+    expected_file_delta: -1
     priority: low
-    rationale: Consolidate 4 test files into single parametrized file
-    status: in_progress
+    rationale: Consolidated into three modules to stay under hygiene cap
+    status: done
     owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/387
     added: '2026-01-22'
   d9defbdf8ba3:
     type: similar_names

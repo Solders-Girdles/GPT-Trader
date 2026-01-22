@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6031,
-    "total_files": 725,
+    "total_files": 723,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -571,13 +571,11 @@
       "tests/unit/gpt_trader/monitoring/test_health_checks_websocket.py",
       "tests/unit/gpt_trader/monitoring/test_health_signals.py",
       "tests/unit/gpt_trader/monitoring/test_health_signals_summary.py",
-      "tests/unit/gpt_trader/monitoring/test_health_signals_thresholds.py",
       "tests/unit/gpt_trader/monitoring/test_heartbeat.py",
       "tests/unit/gpt_trader/monitoring/test_heartbeat_edges.py",
       "tests/unit/gpt_trader/monitoring/test_heartbeat_error_handling.py",
       "tests/unit/gpt_trader/monitoring/test_memory_metrics.py",
       "tests/unit/gpt_trader/monitoring/test_metrics_collector.py",
-      "tests/unit/gpt_trader/monitoring/test_metrics_collector_edges.py",
       "tests/unit/gpt_trader/monitoring/test_metrics_collector_histograms.py",
       "tests/unit/gpt_trader/monitoring/test_metrics_exporter.py",
       "tests/unit/gpt_trader/monitoring/test_profiling.py",
@@ -33541,7 +33539,7 @@
     "tests/unit/gpt_trader/monitoring/test_health_signals.py": [
       {
         "name": "TestHealthStatus::test_enum_values",
-        "line": 14,
+        "line": 15,
         "markers": [
           "unit"
         ],
@@ -33550,7 +33548,7 @@
       },
       {
         "name": "TestHealthStatus::test_string_inheritance",
-        "line": 20,
+        "line": 21,
         "markers": [
           "unit"
         ],
@@ -33559,7 +33557,7 @@
       },
       {
         "name": "TestHealthSignal::test_creation",
-        "line": 30,
+        "line": 31,
         "markers": [
           "unit"
         ],
@@ -33568,7 +33566,7 @@
       },
       {
         "name": "TestHealthSignal::test_from_value_ok",
-        "line": 47,
+        "line": 48,
         "markers": [
           "unit"
         ],
@@ -33577,7 +33575,7 @@
       },
       {
         "name": "TestHealthSignal::test_from_value_warn",
-        "line": 57,
+        "line": 58,
         "markers": [
           "unit"
         ],
@@ -33586,7 +33584,7 @@
       },
       {
         "name": "TestHealthSignal::test_from_value_crit",
-        "line": 67,
+        "line": 68,
         "markers": [
           "unit"
         ],
@@ -33595,7 +33593,7 @@
       },
       {
         "name": "TestHealthSignal::test_from_value_at_warn_threshold",
-        "line": 77,
+        "line": 78,
         "markers": [
           "unit"
         ],
@@ -33604,7 +33602,7 @@
       },
       {
         "name": "TestHealthSignal::test_from_value_at_crit_threshold",
-        "line": 87,
+        "line": 88,
         "markers": [
           "unit"
         ],
@@ -33613,7 +33611,7 @@
       },
       {
         "name": "TestHealthSignal::test_from_value_lower_is_worse",
-        "line": 97,
+        "line": 98,
         "markers": [
           "unit"
         ],
@@ -33622,7 +33620,7 @@
       },
       {
         "name": "TestHealthSignal::test_from_value_with_details",
-        "line": 129,
+        "line": 130,
         "markers": [
           "unit"
         ],
@@ -33631,12 +33629,30 @@
       },
       {
         "name": "TestHealthSignal::test_to_dict",
-        "line": 141,
+        "line": 142,
         "markers": [
           "unit"
         ],
         "docstring": "",
         "class": "TestHealthSignal"
+      },
+      {
+        "name": "TestHealthThresholds::test_default_values",
+        "line": 166,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestHealthThresholds"
+      },
+      {
+        "name": "TestHealthThresholds::test_custom_values",
+        "line": 180,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestHealthThresholds"
       }
     ],
     "tests/unit/gpt_trader/monitoring/test_health_signals_summary.py": [
@@ -33693,26 +33709,6 @@
         ],
         "docstring": "",
         "class": "TestHealthSummary"
-      }
-    ],
-    "tests/unit/gpt_trader/monitoring/test_health_signals_thresholds.py": [
-      {
-        "name": "TestHealthThresholds::test_default_values",
-        "line": 11,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestHealthThresholds"
-      },
-      {
-        "name": "TestHealthThresholds::test_custom_values",
-        "line": 25,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestHealthThresholds"
       }
     ],
     "tests/unit/gpt_trader/monitoring/test_heartbeat.py": [
@@ -34097,8 +34093,51 @@
         "class": "TestGauges"
       },
       {
-        "name": "TestMetricsSummary::test_summary_shape",
+        "name": "TestResetAll::test_reset_clears_all",
         "line": 123,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that reset_all clears all metric types.",
+        "class": "TestResetAll"
+      }
+    ],
+    "tests/unit/gpt_trader/monitoring/test_metrics_collector_histograms.py": [
+      {
+        "name": "test_format_metric_key_stringifies_non_string_labels",
+        "line": 30,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_record_histogram_uses_configured_buckets",
+        "line": 39,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_record_histogram_with_labels_uses_configured_buckets",
+        "line": 50,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_metrics_summary_includes_labeled_histograms_and_iso_timestamp",
+        "line": 61,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "TestMetricsSummary::test_summary_shape",
+        "line": 76,
         "markers": [
           "unit"
         ],
@@ -34107,7 +34146,7 @@
       },
       {
         "name": "TestMetricsSummary::test_summary_includes_all_metrics",
-        "line": 142,
+        "line": 95,
         "markers": [
           "unit"
         ],
@@ -34115,53 +34154,8 @@
         "class": "TestMetricsSummary"
       },
       {
-        "name": "TestResetAll::test_reset_clears_all",
-        "line": 161,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that reset_all clears all metric types.",
-        "class": "TestResetAll"
-      }
-    ],
-    "tests/unit/gpt_trader/monitoring/test_metrics_collector_edges.py": [
-      {
-        "name": "test_format_metric_key_stringifies_non_string_labels",
-        "line": 26,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_record_histogram_uses_configured_buckets",
-        "line": 35,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_record_histogram_with_labels_uses_configured_buckets",
-        "line": 46,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_metrics_summary_includes_labeled_histograms_and_iso_timestamp",
-        "line": 57,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/monitoring/test_metrics_collector_histograms.py": [
-      {
         "name": "TestHistograms::test_record_histogram_basic",
-        "line": 27,
+        "line": 114,
         "markers": [
           "unit"
         ],
@@ -34170,7 +34164,7 @@
       },
       {
         "name": "TestHistograms::test_record_histogram_with_labels",
-        "line": 38,
+        "line": 125,
         "markers": [
           "unit"
         ],
@@ -34179,7 +34173,7 @@
       },
       {
         "name": "TestHistograms::test_histogram_buckets",
-        "line": 53,
+        "line": 140,
         "markers": [
           "unit"
         ],
@@ -34188,7 +34182,7 @@
       },
       {
         "name": "TestHistograms::test_histogram_custom_buckets",
-        "line": 71,
+        "line": 158,
         "markers": [
           "unit"
         ],
@@ -34197,7 +34191,7 @@
       },
       {
         "name": "TestHistogramData::test_to_dict_format",
-        "line": 91,
+        "line": 178,
         "markers": [
           "unit"
         ],
@@ -34206,7 +34200,7 @@
       },
       {
         "name": "TestHistogramData::test_mean_with_no_data",
-        "line": 110,
+        "line": 197,
         "markers": [
           "unit"
         ],

@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6078,
-    "total_files": 752,
+    "total_files": 750,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -501,10 +501,8 @@
       "tests/unit/gpt_trader/features/optimize/runner/test_batch_runner.py",
       "tests/unit/gpt_trader/features/optimize/study/test_manager.py",
       "tests/unit/gpt_trader/features/optimize/test_optimization_types.py",
-      "tests/unit/gpt_trader/features/optimize/test_walk_forward_config.py",
-      "tests/unit/gpt_trader/features/optimize/test_walk_forward_generate_windows.py",
-      "tests/unit/gpt_trader/features/optimize/test_walk_forward_time_helpers.py",
-      "tests/unit/gpt_trader/features/optimize/test_walk_forward_window_models.py",
+      "tests/unit/gpt_trader/features/optimize/test_walk_forward.py",
+      "tests/unit/gpt_trader/features/optimize/test_walk_forward_helpers.py",
       "tests/unit/gpt_trader/features/research/backtesting/test_data_loader_edges.py",
       "tests/unit/gpt_trader/features/research/backtesting/test_metrics_edges.py",
       "tests/unit/gpt_trader/features/research/backtesting/test_simulator_edges.py",
@@ -29060,10 +29058,10 @@
         "class": "TestOptimizationConfig"
       }
     ],
-    "tests/unit/gpt_trader/features/optimize/test_walk_forward_config.py": [
+    "tests/unit/gpt_trader/features/optimize/test_walk_forward.py": [
       {
         "name": "TestWalkForwardConfig::test_default_values",
-        "line": 13,
+        "line": 19,
         "markers": [
           "unit"
         ],
@@ -29072,7 +29070,7 @@
       },
       {
         "name": "TestWalkForwardConfig::test_custom_values",
-        "line": 22,
+        "line": 28,
         "markers": [
           "unit"
         ],
@@ -29081,7 +29079,7 @@
       },
       {
         "name": "TestWalkForwardConfig::test_invalid_train_months_raises",
-        "line": 35,
+        "line": 41,
         "markers": [
           "unit"
         ],
@@ -29090,7 +29088,7 @@
       },
       {
         "name": "TestWalkForwardConfig::test_invalid_test_months_raises",
-        "line": 40,
+        "line": 46,
         "markers": [
           "unit"
         ],
@@ -29099,18 +29097,16 @@
       },
       {
         "name": "TestWalkForwardConfig::test_overlap_exceeds_train_raises",
-        "line": 45,
+        "line": 51,
         "markers": [
           "unit"
         ],
         "docstring": "Test that overlap >= train_months raises ValueError.",
         "class": "TestWalkForwardConfig"
-      }
-    ],
-    "tests/unit/gpt_trader/features/optimize/test_walk_forward_generate_windows.py": [
+      },
       {
         "name": "TestGenerateWindows::test_basic_rolling_window",
-        "line": 19,
+        "line": 63,
         "markers": [
           "unit"
         ],
@@ -29119,7 +29115,7 @@
       },
       {
         "name": "TestGenerateWindows::test_anchored_window",
-        "line": 35,
+        "line": 79,
         "markers": [
           "unit"
         ],
@@ -29128,7 +29124,7 @@
       },
       {
         "name": "TestGenerateWindows::test_window_continuity",
-        "line": 47,
+        "line": 91,
         "markers": [
           "unit"
         ],
@@ -29137,7 +29133,7 @@
       },
       {
         "name": "TestGenerateWindows::test_insufficient_data_raises",
-        "line": 61,
+        "line": 105,
         "markers": [
           "unit"
         ],
@@ -29146,7 +29142,7 @@
       },
       {
         "name": "TestGenerateWindows::test_exactly_one_window",
-        "line": 72,
+        "line": 116,
         "markers": [
           "unit"
         ],
@@ -29155,7 +29151,7 @@
       },
       {
         "name": "TestGenerateWindows::test_window_ids_sequential",
-        "line": 85,
+        "line": 129,
         "markers": [
           "unit"
         ],
@@ -29164,7 +29160,7 @@
       },
       {
         "name": "TestGenerateWindows::test_test_follows_train",
-        "line": 97,
+        "line": 141,
         "markers": [
           "unit"
         ],
@@ -29173,7 +29169,7 @@
       },
       {
         "name": "TestEdgeCases::test_large_train_window",
-        "line": 113,
+        "line": 157,
         "markers": [
           "unit"
         ],
@@ -29182,7 +29178,7 @@
       },
       {
         "name": "TestEdgeCases::test_large_test_window",
-        "line": 125,
+        "line": 169,
         "markers": [
           "unit"
         ],
@@ -29191,7 +29187,7 @@
       },
       {
         "name": "TestEdgeCases::test_windows_dont_exceed_end_date",
-        "line": 138,
+        "line": 182,
         "markers": [
           "unit"
         ],
@@ -29199,10 +29195,10 @@
         "class": "TestEdgeCases"
       }
     ],
-    "tests/unit/gpt_trader/features/optimize/test_walk_forward_time_helpers.py": [
+    "tests/unit/gpt_trader/features/optimize/test_walk_forward_helpers.py": [
       {
         "name": "TestAddMonths::test_add_months_simple",
-        "line": 13,
+        "line": 18,
         "markers": [
           "unit"
         ],
@@ -29211,7 +29207,7 @@
       },
       {
         "name": "TestAddMonths::test_add_months_cross_year",
-        "line": 18,
+        "line": 23,
         "markers": [
           "unit"
         ],
@@ -29220,7 +29216,7 @@
       },
       {
         "name": "TestAddMonths::test_add_months_day_overflow",
-        "line": 23,
+        "line": 28,
         "markers": [
           "unit"
         ],
@@ -29229,7 +29225,7 @@
       },
       {
         "name": "TestAddMonths::test_add_twelve_months",
-        "line": 31,
+        "line": 36,
         "markers": [
           "unit"
         ],
@@ -29238,7 +29234,7 @@
       },
       {
         "name": "TestMonthsBetween::test_one_month",
-        "line": 40,
+        "line": 45,
         "markers": [
           "unit"
         ],
@@ -29247,7 +29243,7 @@
       },
       {
         "name": "TestMonthsBetween::test_six_months",
-        "line": 47,
+        "line": 52,
         "markers": [
           "unit"
         ],
@@ -29256,18 +29252,16 @@
       },
       {
         "name": "TestMonthsBetween::test_twelve_months",
-        "line": 54,
+        "line": 59,
         "markers": [
           "unit"
         ],
         "docstring": "Test approximately twelve months difference.",
         "class": "TestMonthsBetween"
-      }
-    ],
-    "tests/unit/gpt_trader/features/optimize/test_walk_forward_window_models.py": [
+      },
       {
         "name": "TestWalkForwardWindow::test_window_creation",
-        "line": 13,
+        "line": 70,
         "markers": [
           "unit"
         ],
@@ -29276,7 +29270,7 @@
       },
       {
         "name": "TestWalkForwardWindow::test_train_days_property",
-        "line": 28,
+        "line": 85,
         "markers": [
           "unit"
         ],
@@ -29285,7 +29279,7 @@
       },
       {
         "name": "TestWalkForwardWindow::test_test_days_property",
-        "line": 39,
+        "line": 96,
         "markers": [
           "unit"
         ],
@@ -29294,7 +29288,7 @@
       },
       {
         "name": "TestWindowResult::test_valid_result",
-        "line": 54,
+        "line": 111,
         "markers": [
           "unit"
         ],
@@ -29303,7 +29297,7 @@
       },
       {
         "name": "TestWindowResult::test_invalid_result_with_errors",
-        "line": 77,
+        "line": 134,
         "markers": [
           "unit"
         ],

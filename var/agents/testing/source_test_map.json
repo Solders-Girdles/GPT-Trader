@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 694,
+    "tests_scanned": 692,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -1154,10 +1154,8 @@
       "tests/unit/gpt_trader/features/optimize/test_optimization_types.py"
     ],
     "gpt_trader.features.optimize.walk_forward": [
-      "tests/unit/gpt_trader/features/optimize/test_walk_forward_config.py",
-      "tests/unit/gpt_trader/features/optimize/test_walk_forward_generate_windows.py",
-      "tests/unit/gpt_trader/features/optimize/test_walk_forward_time_helpers.py",
-      "tests/unit/gpt_trader/features/optimize/test_walk_forward_window_models.py"
+      "tests/unit/gpt_trader/features/optimize/test_walk_forward.py",
+      "tests/unit/gpt_trader/features/optimize/test_walk_forward_helpers.py"
     ],
     "gpt_trader.features.research": [
       "tests/unit/gpt_trader/features/research/test_research_import.py"
@@ -3608,16 +3606,10 @@
     "tests/unit/gpt_trader/features/optimize/test_optimization_types.py": [
       "gpt_trader.features.optimize.types"
     ],
-    "tests/unit/gpt_trader/features/optimize/test_walk_forward_config.py": [
+    "tests/unit/gpt_trader/features/optimize/test_walk_forward.py": [
       "gpt_trader.features.optimize.walk_forward"
     ],
-    "tests/unit/gpt_trader/features/optimize/test_walk_forward_generate_windows.py": [
-      "gpt_trader.features.optimize.walk_forward"
-    ],
-    "tests/unit/gpt_trader/features/optimize/test_walk_forward_time_helpers.py": [
-      "gpt_trader.features.optimize.walk_forward"
-    ],
-    "tests/unit/gpt_trader/features/optimize/test_walk_forward_window_models.py": [
+    "tests/unit/gpt_trader/features/optimize/test_walk_forward_helpers.py": [
       "gpt_trader.features.optimize.walk_forward"
     ],
     "tests/unit/gpt_trader/features/research/backtesting/test_data_loader_edges.py": [

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import time
 from decimal import Decimal
 from unittest.mock import MagicMock
 
@@ -17,7 +18,6 @@ def test_health_check_runner_initialized(engine):
     """Test that health check runner is initialized with engine."""
     from gpt_trader.monitoring.health_checks import HealthCheckRunner
 
-    assert hasattr(engine, "_health_check_runner")
     assert isinstance(engine._health_check_runner, HealthCheckRunner)
     assert engine._health_check_runner._broker is engine.context.broker
     assert engine._health_check_runner._degradation_state is engine._degradation
@@ -80,7 +80,6 @@ def test_positions_to_risk_format(engine):
     }
 
     risk_format = engine._positions_to_risk_format(positions)
-    assert "BTC-USD" in risk_format
     assert risk_format["BTC-USD"]["quantity"] == Decimal("0.5")
     assert risk_format["BTC-USD"]["mark"] == Decimal("50000")
     assert not isinstance(risk_format["BTC-USD"], Position)
@@ -211,3 +210,31 @@ async def test_runtime_guard_sweep_handles_exceptions(engine, monkeypatch):
         await engine._runtime_guard_sweep()
 
     assert engine._guard_manager.run_runtime_guards.call_count == 2
+
+
+@pytest.mark.asyncio
+async def test_unfilled_order_alert_emitted_once(engine) -> None:
+    engine.context.risk_manager.config.unfilled_order_alert_seconds = 1
+    engine.context.broker.list_orders.return_value = {
+        "orders": [
+            {
+                "order_id": "order-1",
+                "product_id": "BTC-USD",
+                "side": "BUY",
+                "status": "OPEN",
+                "created_time": time.time() - 10,
+            }
+        ]
+    }
+
+    await engine._audit_orders()
+    alert_events = [
+        e for e in engine._event_store.list_events() if e.get("type") == "unfilled_order_alert"
+    ]
+    assert len(alert_events) == 1
+
+    await engine._audit_orders()
+    alert_events = [
+        e for e in engine._event_store.list_events() if e.get("type") == "unfilled_order_alert"
+    ]
+    assert len(alert_events) == 1

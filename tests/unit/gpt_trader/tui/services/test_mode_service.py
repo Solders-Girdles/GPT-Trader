@@ -1,4 +1,4 @@
-"""Tests for ModeService core behavior."""
+"""Tests for ModeService core behavior and create_bot_for_mode."""
 
 from __future__ import annotations
 
@@ -6,7 +6,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from gpt_trader.tui.services.mode_service import ModeService
+import gpt_trader.cli.services as cli_services_module
+from gpt_trader.tui.services.mode_service import ModeService, create_bot_for_mode
 
 
 class TestModeService:
@@ -108,3 +109,29 @@ class TestModeService:
         event = mock_app.post_message.call_args[0][0]
         assert event.new_mode == "live"
         assert event.old_mode == "paper"
+
+
+class TestCreateBotForMode:
+    """Test create_bot_for_mode function."""
+
+    def test_demo_mode_creates_demo_bot(self):
+        bot = create_bot_for_mode("demo")
+
+        assert bot.__class__.__name__ == "DemoBot"
+
+    def test_unknown_mode_raises_error(self):
+        with pytest.raises(ValueError, match="Unknown mode"):
+            create_bot_for_mode("invalid_mode")
+
+    def test_paper_mode_loads_paper_config(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        mock_config = MagicMock()
+        mock_load_config = MagicMock(return_value=mock_config)
+        mock_bot = MagicMock()
+        mock_instantiate = MagicMock(return_value=mock_bot)
+        monkeypatch.setattr(cli_services_module, "load_config_from_yaml", mock_load_config)
+        monkeypatch.setattr(cli_services_module, "instantiate_bot", mock_instantiate)
+
+        result = create_bot_for_mode("paper")
+
+        mock_load_config.assert_called_once_with("config/profiles/paper.yaml")
+        assert result == mock_bot

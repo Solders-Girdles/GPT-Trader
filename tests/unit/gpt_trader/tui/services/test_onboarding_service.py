@@ -1,4 +1,4 @@
-"""Tests for onboarding service functionality."""
+"""Tests for onboarding service core functionality."""
 
 import pytest
 

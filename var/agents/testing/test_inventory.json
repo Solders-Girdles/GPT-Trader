@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6037,
-    "total_files": 735,
+    "total_tests": 6031,
+    "total_files": 732,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 5872,
+    "unit": 5866,
     "asyncio": 344,
-    "parametrize": 150,
+    "parametrize": 153,
     "property": 82,
     "integration": 79,
     "endpoints": 78,
@@ -698,14 +698,11 @@
       "tests/unit/gpt_trader/tui/services/test_credential_validator_modes.py",
       "tests/unit/gpt_trader/tui/services/test_execution_telemetry.py",
       "tests/unit/gpt_trader/tui/services/test_execution_telemetry_metrics.py",
-      "tests/unit/gpt_trader/tui/services/test_execution_telemetry_reason.py",
       "tests/unit/gpt_trader/tui/services/test_focus_manager.py",
-      "tests/unit/gpt_trader/tui/services/test_mode_service_core.py",
-      "tests/unit/gpt_trader/tui/services/test_mode_service_create_bot.py",
+      "tests/unit/gpt_trader/tui/services/test_mode_service.py",
       "tests/unit/gpt_trader/tui/services/test_mode_service_preferences.py",
-      "tests/unit/gpt_trader/tui/services/test_onboarding_service_checklist_item.py",
-      "tests/unit/gpt_trader/tui/services/test_onboarding_service_core.py",
-      "tests/unit/gpt_trader/tui/services/test_onboarding_service_status.py",
+      "tests/unit/gpt_trader/tui/services/test_onboarding_service.py",
+      "tests/unit/gpt_trader/tui/services/test_onboarding_service_models.py",
       "tests/unit/gpt_trader/tui/services/test_performance_service_core.py",
       "tests/unit/gpt_trader/tui/services/test_performance_service_models.py",
       "tests/unit/gpt_trader/tui/services/test_preferences_watchlist.py",
@@ -42683,56 +42680,31 @@
     "tests/unit/gpt_trader/tui/services/test_execution_telemetry_metrics.py": [
       {
         "name": "TestExecutionMetrics::test_default_values",
-        "line": 15,
+        "line": 36,
         "markers": [
           "unit"
         ],
-        "docstring": "Test default values for execution metrics.",
+        "docstring": "",
         "class": "TestExecutionMetrics"
       },
       {
         "name": "TestExecutionMetrics::test_success_rate_calculation",
-        "line": 27,
+        "line": 51,
         "markers": [
+          "parametrize",
           "unit"
         ],
-        "docstring": "Test success rate calculation.",
+        "docstring": "",
         "class": "TestExecutionMetrics"
       },
       {
-        "name": "TestExecutionMetrics::test_success_rate_zero_submissions",
-        "line": 35,
+        "name": "TestExecutionMetrics::test_is_healthy",
+        "line": 59,
         "markers": [
+          "parametrize",
           "unit"
         ],
-        "docstring": "Test success rate with zero submissions.",
-        "class": "TestExecutionMetrics"
-      },
-      {
-        "name": "TestExecutionMetrics::test_is_healthy_good_metrics",
-        "line": 40,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test is_healthy with good metrics.",
-        "class": "TestExecutionMetrics"
-      },
-      {
-        "name": "TestExecutionMetrics::test_is_healthy_low_success_rate",
-        "line": 49,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test is_healthy with low success rate.",
-        "class": "TestExecutionMetrics"
-      },
-      {
-        "name": "TestExecutionMetrics::test_is_healthy_high_retry_rate",
-        "line": 58,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test is_healthy with high retry rate.",
+        "docstring": "",
         "class": "TestExecutionMetrics"
       },
       {
@@ -42741,7 +42713,7 @@
         "markers": [
           "unit"
         ],
-        "docstring": "Test top_rejection_reasons returns sorted by count.",
+        "docstring": "",
         "class": "TestExecutionMetrics"
       },
       {
@@ -42750,126 +42722,98 @@
         "markers": [
           "unit"
         ],
-        "docstring": "Test top_rejection_reasons with no rejections.",
+        "docstring": "",
         "class": "TestExecutionMetrics"
       },
       {
         "name": "TestExecutionMetrics::test_top_retry_reasons_sorted",
-        "line": 82,
+        "line": 81,
         "markers": [
           "unit"
         ],
-        "docstring": "Test top_retry_reasons returns sorted by count.",
+        "docstring": "",
         "class": "TestExecutionMetrics"
       },
       {
-        "name": "TestIssueTracking::test_rejection_issue_records_context",
-        "line": 101,
+        "name": "TestIssueTracking::test_submission_issue_records_context",
+        "line": 113,
         "markers": [
+          "parametrize",
           "unit"
         ],
-        "docstring": "Test that rejection issues capture order context.",
-        "class": "TestIssueTracking"
-      },
-      {
-        "name": "TestIssueTracking::test_failed_submission_records_issue",
-        "line": 125,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test failed submissions also record an issue.",
+        "docstring": "",
         "class": "TestIssueTracking"
       },
       {
         "name": "TestIssueTracking::test_retry_issue_records_context",
-        "line": 142,
+        "line": 125,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that retry issues capture order context.",
+        "docstring": "",
         "class": "TestIssueTracking"
       },
       {
         "name": "TestIssueTracking::test_issue_ordering_is_most_recent_first",
-        "line": 164,
+        "line": 145,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that recent issues are ordered newest-first.",
+        "docstring": "",
         "class": "TestIssueTracking"
       },
       {
         "name": "TestIssueTracking::test_empty_retry_reason_skips_issue",
-        "line": 184,
+        "line": 153,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that empty retry reasons don't create issues.",
+        "docstring": "",
         "class": "TestIssueTracking"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/services/test_execution_telemetry_reason.py": [
+      },
       {
-        "name": "TestReasonTracking::test_record_rejection_reason",
-        "line": 21,
+        "name": "TestReasonTracking::test_rejection_reasons_aggregate_and_sorted",
+        "line": 163,
         "markers": [
           "unit"
         ],
-        "docstring": "Test recording submission with rejection reason.",
+        "docstring": "",
         "class": "TestReasonTracking"
       },
       {
-        "name": "TestReasonTracking::test_multiple_rejection_reasons",
-        "line": 35,
+        "name": "TestReasonTracking::test_retry_reasons_aggregate_and_sorted",
+        "line": 175,
         "markers": [
           "unit"
         ],
-        "docstring": "Test aggregating multiple rejection reasons.",
+        "docstring": "",
         "class": "TestReasonTracking"
       },
       {
-        "name": "TestReasonTracking::test_record_retry_with_reason",
-        "line": 57,
+        "name": "TestReasonTracking::test_empty_reasons_not_tracked",
+        "line": 185,
         "markers": [
           "unit"
         ],
-        "docstring": "Test recording retry with reason.",
+        "docstring": "",
         "class": "TestReasonTracking"
       },
       {
-        "name": "TestReasonTracking::test_retry_reasons_sorted",
-        "line": 68,
+        "name": "TestReasonTracking::test_reasons_respect_rolling_window",
+        "line": 195,
         "markers": [
           "unit"
         ],
-        "docstring": "Test retry reasons are sorted by count.",
-        "class": "TestReasonTracking"
-      },
-      {
-        "name": "TestReasonTracking::test_empty_reason_not_tracked",
-        "line": 82,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that empty reasons are not tracked.",
-        "class": "TestReasonTracking"
-      },
-      {
-        "name": "TestReasonTracking::test_reasons_in_rolling_window",
-        "line": 95,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that reasons respect rolling window.",
+        "docstring": "",
         "class": "TestReasonTracking"
       },
       {
         "name": "TestReasonTracking::test_clear_clears_reasons",
-        "line": 122,
+        "line": 210,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that clear() also clears reason tracking.",
+        "docstring": "",
         "class": "TestReasonTracking"
       }
     ],
@@ -43082,10 +43026,10 @@
         "class": "TestTileFocusChanged"
       }
     ],
-    "tests/unit/gpt_trader/tui/services/test_mode_service_core.py": [
+    "tests/unit/gpt_trader/tui/services/test_mode_service.py": [
       {
         "name": "TestModeService::test_init_sets_app_and_scenario",
-        "line": 15,
+        "line": 16,
         "markers": [
           "unit"
         ],
@@ -43094,7 +43038,7 @@
       },
       {
         "name": "TestModeService::test_detect_bot_mode_demo",
-        "line": 23,
+        "line": 24,
         "markers": [
           "unit"
         ],
@@ -43103,7 +43047,7 @@
       },
       {
         "name": "TestModeService::test_detect_bot_mode_read_only",
-        "line": 35,
+        "line": 36,
         "markers": [
           "unit"
         ],
@@ -43112,7 +43056,7 @@
       },
       {
         "name": "TestModeService::test_detect_bot_mode_live",
-        "line": 48,
+        "line": 49,
         "markers": [
           "unit"
         ],
@@ -43121,7 +43065,7 @@
       },
       {
         "name": "TestModeService::test_detect_bot_mode_paper_default",
-        "line": 62,
+        "line": 63,
         "markers": [
           "unit"
         ],
@@ -43130,7 +43074,7 @@
       },
       {
         "name": "TestModeService::test_create_bot_delegates_to_function",
-        "line": 76,
+        "line": 77,
         "markers": [
           "unit"
         ],
@@ -43139,7 +43083,7 @@
       },
       {
         "name": "TestModeService::test_show_live_warning_pushes_modal",
-        "line": 86,
+        "line": 87,
         "markers": [
           "asyncio",
           "unit"
@@ -43149,40 +43093,38 @@
       },
       {
         "name": "TestModeService::test_notify_mode_changed_posts_event",
-        "line": 100,
+        "line": 101,
         "markers": [
           "unit"
         ],
         "docstring": "Test notify_mode_changed posts BotModeChanged event.",
         "class": "TestModeService"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/services/test_mode_service_create_bot.py": [
+      },
       {
         "name": "TestCreateBotForMode::test_demo_mode_creates_demo_bot",
-        "line": 16,
+        "line": 117,
         "markers": [
           "unit"
         ],
-        "docstring": "Test demo mode creates a DemoBot instance.",
+        "docstring": "",
         "class": "TestCreateBotForMode"
       },
       {
         "name": "TestCreateBotForMode::test_unknown_mode_raises_error",
-        "line": 22,
+        "line": 122,
         "markers": [
           "unit"
         ],
-        "docstring": "Test unknown mode raises ValueError.",
+        "docstring": "",
         "class": "TestCreateBotForMode"
       },
       {
         "name": "TestCreateBotForMode::test_paper_mode_loads_paper_config",
-        "line": 27,
+        "line": 126,
         "markers": [
           "unit"
         ],
-        "docstring": "Test paper mode attempts to load paper config.",
+        "docstring": "",
         "class": "TestCreateBotForMode"
       }
     ],
@@ -43270,45 +43212,7 @@
         "class": "TestModePreferencePersistence"
       }
     ],
-    "tests/unit/gpt_trader/tui/services/test_onboarding_service_checklist_item.py": [
-      {
-        "name": "TestChecklistItem::test_default_values",
-        "line": 9,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestChecklistItem"
-      },
-      {
-        "name": "TestChecklistItem::test_completed_item",
-        "line": 19,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestChecklistItem"
-      },
-      {
-        "name": "TestChecklistItem::test_optional_item",
-        "line": 28,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestChecklistItem"
-      },
-      {
-        "name": "TestChecklistItem::test_skippable_item",
-        "line": 37,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestChecklistItem"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/services/test_onboarding_service_core.py": [
+    "tests/unit/gpt_trader/tui/services/test_onboarding_service.py": [
       {
         "name": "TestOnboardingService::test_singleton_pattern",
         "line": 21,
@@ -43400,10 +43304,46 @@
         "class": "TestOnboardingService"
       }
     ],
-    "tests/unit/gpt_trader/tui/services/test_onboarding_service_status.py": [
+    "tests/unit/gpt_trader/tui/services/test_onboarding_service_models.py": [
+      {
+        "name": "TestChecklistItem::test_default_values",
+        "line": 9,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestChecklistItem"
+      },
+      {
+        "name": "TestChecklistItem::test_completed_item",
+        "line": 19,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestChecklistItem"
+      },
+      {
+        "name": "TestChecklistItem::test_optional_item",
+        "line": 28,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestChecklistItem"
+      },
+      {
+        "name": "TestChecklistItem::test_skippable_item",
+        "line": 37,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestChecklistItem"
+      },
       {
         "name": "TestOnboardingStatus::test_empty_status_is_ready",
-        "line": 9,
+        "line": 50,
         "markers": [
           "unit"
         ],
@@ -43412,7 +43352,7 @@
       },
       {
         "name": "TestOnboardingStatus::test_completed_count",
-        "line": 15,
+        "line": 56,
         "markers": [
           "unit"
         ],
@@ -43421,7 +43361,7 @@
       },
       {
         "name": "TestOnboardingStatus::test_required_count_excludes_skippable",
-        "line": 26,
+        "line": 67,
         "markers": [
           "unit"
         ],
@@ -43430,7 +43370,7 @@
       },
       {
         "name": "TestOnboardingStatus::test_required_completed",
-        "line": 37,
+        "line": 78,
         "markers": [
           "unit"
         ],
@@ -43439,7 +43379,7 @@
       },
       {
         "name": "TestOnboardingStatus::test_is_ready_all_required_complete",
-        "line": 48,
+        "line": 89,
         "markers": [
           "unit"
         ],
@@ -43448,7 +43388,7 @@
       },
       {
         "name": "TestOnboardingStatus::test_is_ready_required_incomplete",
-        "line": 59,
+        "line": 100,
         "markers": [
           "unit"
         ],
@@ -43457,7 +43397,7 @@
       },
       {
         "name": "TestOnboardingStatus::test_progress_pct",
-        "line": 69,
+        "line": 110,
         "markers": [
           "unit"
         ],
@@ -43466,7 +43406,7 @@
       },
       {
         "name": "TestOnboardingStatus::test_ready_label_when_ready",
-        "line": 81,
+        "line": 122,
         "markers": [
           "unit"
         ],
@@ -43475,7 +43415,7 @@
       },
       {
         "name": "TestOnboardingStatus::test_ready_label_when_not_ready",
-        "line": 90,
+        "line": 131,
         "markers": [
           "unit"
         ],
@@ -43484,7 +43424,7 @@
       },
       {
         "name": "TestOnboardingStatus::test_get_next_step_returns_first_incomplete_required",
-        "line": 101,
+        "line": 142,
         "markers": [
           "unit"
         ],
@@ -43493,7 +43433,7 @@
       },
       {
         "name": "TestOnboardingStatus::test_get_next_step_returns_none_when_ready",
-        "line": 114,
+        "line": 155,
         "markers": [
           "unit"
         ],
@@ -49862,7 +49802,7 @@
       },
       {
         "name": "TestPositionDetailModalRecentFills::test_format_recent_fill_row_contains_all_fields",
-        "line": 114,
+        "line": 122,
         "markers": [
           "unit"
         ],
@@ -49871,7 +49811,7 @@
       },
       {
         "name": "TestPositionDetailModalTradeClassification::test_categorize_trades",
-        "line": 142,
+        "line": 150,
         "markers": [
           "parametrize",
           "unit"
@@ -49881,7 +49821,7 @@
       },
       {
         "name": "TestPositionDetailModalTradeClassification::test_get_trade_type",
-        "line": 168,
+        "line": 176,
         "markers": [
           "parametrize",
           "unit"
@@ -49891,7 +49831,7 @@
       },
       {
         "name": "TestPositionDetailModalTradeClassification::test_format_trade_time",
-        "line": 185,
+        "line": 191,
         "markers": [
           "parametrize",
           "unit"

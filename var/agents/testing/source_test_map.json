@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 676,
+    "tests_scanned": 673,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -286,7 +286,7 @@
       "tests/integration/test_container_lifecycle_cli.py",
       "tests/integration/test_container_lifecycle_runtime.py",
       "tests/unit/gpt_trader/cli/test_services.py",
-      "tests/unit/gpt_trader/tui/services/test_mode_service_create_bot.py"
+      "tests/unit/gpt_trader/tui/services/test_mode_service.py"
     ],
     "gpt_trader.config": [
       "tests/unit/gpt_trader/tui/services/test_mode_service_preferences.py"
@@ -1658,22 +1658,19 @@
     ],
     "gpt_trader.tui.services.execution_telemetry": [
       "tests/unit/gpt_trader/tui/services/test_execution_telemetry.py",
-      "tests/unit/gpt_trader/tui/services/test_execution_telemetry_metrics.py",
-      "tests/unit/gpt_trader/tui/services/test_execution_telemetry_reason.py"
+      "tests/unit/gpt_trader/tui/services/test_execution_telemetry_metrics.py"
     ],
     "gpt_trader.tui.services.focus_manager": [
       "tests/unit/gpt_trader/tui/services/test_focus_manager.py",
       "tests/unit/gpt_trader/tui/widgets/test_trading_stats.py"
     ],
     "gpt_trader.tui.services.mode_service": [
-      "tests/unit/gpt_trader/tui/services/test_mode_service_core.py",
-      "tests/unit/gpt_trader/tui/services/test_mode_service_create_bot.py",
+      "tests/unit/gpt_trader/tui/services/test_mode_service.py",
       "tests/unit/gpt_trader/tui/services/test_mode_service_preferences.py"
     ],
     "gpt_trader.tui.services.onboarding_service": [
-      "tests/unit/gpt_trader/tui/services/test_onboarding_service_checklist_item.py",
-      "tests/unit/gpt_trader/tui/services/test_onboarding_service_core.py",
-      "tests/unit/gpt_trader/tui/services/test_onboarding_service_status.py"
+      "tests/unit/gpt_trader/tui/services/test_onboarding_service.py",
+      "tests/unit/gpt_trader/tui/services/test_onboarding_service_models.py"
     ],
     "gpt_trader.tui.services.performance_service": [
       "tests/unit/gpt_trader/tui/services/test_performance_service_core.py",
@@ -4125,16 +4122,10 @@
       "gpt_trader.tui.services.execution_telemetry",
       "gpt_trader.tui.types"
     ],
-    "tests/unit/gpt_trader/tui/services/test_execution_telemetry_reason.py": [
-      "gpt_trader.tui.services.execution_telemetry"
-    ],
     "tests/unit/gpt_trader/tui/services/test_focus_manager.py": [
       "gpt_trader.tui.services.focus_manager"
     ],
-    "tests/unit/gpt_trader/tui/services/test_mode_service_core.py": [
-      "gpt_trader.tui.services.mode_service"
-    ],
-    "tests/unit/gpt_trader/tui/services/test_mode_service_create_bot.py": [
+    "tests/unit/gpt_trader/tui/services/test_mode_service.py": [
       "gpt_trader.cli.services",
       "gpt_trader.tui.services.mode_service"
     ],
@@ -4142,13 +4133,10 @@
       "gpt_trader.config",
       "gpt_trader.tui.services.mode_service"
     ],
-    "tests/unit/gpt_trader/tui/services/test_onboarding_service_checklist_item.py": [
+    "tests/unit/gpt_trader/tui/services/test_onboarding_service.py": [
       "gpt_trader.tui.services.onboarding_service"
     ],
-    "tests/unit/gpt_trader/tui/services/test_onboarding_service_core.py": [
-      "gpt_trader.tui.services.onboarding_service"
-    ],
-    "tests/unit/gpt_trader/tui/services/test_onboarding_service_status.py": [
+    "tests/unit/gpt_trader/tui/services/test_onboarding_service_models.py": [
       "gpt_trader.tui.services.onboarding_service"
     ],
     "tests/unit/gpt_trader/tui/services/test_performance_service_core.py": [

@@ -1,4 +1,6 @@
-"""Tests for execution telemetry metrics types and issue tracking."""
+"""Tests for execution telemetry metrics and issue tracking."""
+
+from __future__ import annotations
 
 import pytest
 
@@ -9,140 +11,121 @@ from gpt_trader.tui.services.execution_telemetry import (
 from gpt_trader.tui.types import ExecutionMetrics
 
 
-class TestExecutionMetrics:
-    """Tests for ExecutionMetrics dataclass."""
+@pytest.fixture(autouse=True)
+def _clear_telemetry():
+    clear_execution_telemetry()
+    yield
+    clear_execution_telemetry()
 
+
+def _record_rejection(collector: ExecutionTelemetryCollector, reason: str, **kwargs) -> None:
+    collector.record_submission(
+        latency_ms=30.0,
+        success=False,
+        rejected=True,
+        rejection_reason=reason,
+        **kwargs,
+    )
+
+
+def _record_retry(collector: ExecutionTelemetryCollector, reason: str, **kwargs) -> None:
+    collector.record_retry(reason=reason, **kwargs)
+
+
+class TestExecutionMetrics:
     def test_default_values(self):
-        """Test default values for execution metrics."""
         metrics = ExecutionMetrics()
         assert metrics.submissions_total == 0
         assert metrics.submissions_success == 0
-        assert metrics.success_rate == 100.0  # No submissions = 100%
+        assert metrics.success_rate == 100.0
         assert metrics.is_healthy is True
         assert metrics.rejection_reasons == {}
         assert metrics.retry_reasons == {}
         assert metrics.recent_rejections == []
         assert metrics.recent_retries == []
 
-    def test_success_rate_calculation(self):
-        """Test success rate calculation."""
-        metrics = ExecutionMetrics(
-            submissions_total=10,
-            submissions_success=8,
-        )
-        assert metrics.success_rate == 80.0
+    @pytest.mark.parametrize(
+        ("total", "success", "expected"),
+        [(10, 8, 80.0), (0, 0, 100.0)],
+    )
+    def test_success_rate_calculation(self, total: int, success: int, expected: float):
+        metrics = ExecutionMetrics(submissions_total=total, submissions_success=success)
+        assert metrics.success_rate == expected
 
-    def test_success_rate_zero_submissions(self):
-        """Test success rate with zero submissions."""
-        metrics = ExecutionMetrics(submissions_total=0)
-        assert metrics.success_rate == 100.0
-
-    def test_is_healthy_good_metrics(self):
-        """Test is_healthy with good metrics."""
+    @pytest.mark.parametrize(
+        ("total", "success", "retry_rate", "expected"),
+        [(100, 98, 0.2, True), (100, 80, 0.2, False), (100, 98, 0.6, False)],
+    )
+    def test_is_healthy(self, total: int, success: int, retry_rate: float, expected: bool):
         metrics = ExecutionMetrics(
-            submissions_total=100,
-            submissions_success=98,
-            retry_rate=0.2,
+            submissions_total=total,
+            submissions_success=success,
+            retry_rate=retry_rate,
         )
-        assert metrics.is_healthy is True
-
-    def test_is_healthy_low_success_rate(self):
-        """Test is_healthy with low success rate."""
-        metrics = ExecutionMetrics(
-            submissions_total=100,
-            submissions_success=80,  # 80% < 95%
-            retry_rate=0.2,
-        )
-        assert metrics.is_healthy is False
-
-    def test_is_healthy_high_retry_rate(self):
-        """Test is_healthy with high retry rate."""
-        metrics = ExecutionMetrics(
-            submissions_total=100,
-            submissions_success=98,
-            retry_rate=0.6,  # > 0.5
-        )
-        assert metrics.is_healthy is False
+        assert metrics.is_healthy is expected
 
     def test_top_rejection_reasons_sorted(self):
-        """Test top_rejection_reasons returns sorted by count."""
         metrics = ExecutionMetrics(
             rejection_reasons={"rate_limit": 5, "insufficient_funds": 2, "timeout": 8}
         )
-        top = metrics.top_rejection_reasons
-        assert top[0] == ("timeout", 8)
-        assert top[1] == ("rate_limit", 5)
-        assert top[2] == ("insufficient_funds", 2)
+        assert metrics.top_rejection_reasons == [
+            ("timeout", 8),
+            ("rate_limit", 5),
+            ("insufficient_funds", 2),
+        ]
 
     def test_top_rejection_reasons_empty(self):
-        """Test top_rejection_reasons with no rejections."""
         metrics = ExecutionMetrics()
         assert metrics.top_rejection_reasons == []
 
     def test_top_retry_reasons_sorted(self):
-        """Test top_retry_reasons returns sorted by count."""
         metrics = ExecutionMetrics(retry_reasons={"timeout": 3, "network": 7, "rate_limit": 1})
-        top = metrics.top_retry_reasons
-        assert top[0] == ("network", 7)
-        assert top[1] == ("timeout", 3)
-        assert top[2] == ("rate_limit", 1)
+        assert metrics.top_retry_reasons == [("network", 7), ("timeout", 3), ("rate_limit", 1)]
 
 
 class TestIssueTracking:
-    """Tests for recent rejection/retry issue tracking."""
-
-    @pytest.fixture(autouse=True)
-    def setup_teardown(self):
-        """Clear singleton before and after each test."""
-        clear_execution_telemetry()
-        yield
-        clear_execution_telemetry()
-
-    def test_rejection_issue_records_context(self):
-        """Test that rejection issues capture order context."""
+    @pytest.mark.parametrize(
+        ("kwargs", "expected_reason"),
+        [
+            (
+                {
+                    "rejected": True,
+                    "rejection_reason": "rate_limit",
+                    "symbol": "BTC-USD",
+                    "side": "BUY",
+                    "quantity": 0.5,
+                    "price": 30000.0,
+                },
+                "rate_limit",
+            ),
+            (
+                {
+                    "failure_reason": "Timeout",
+                    "symbol": "ETH-USD",
+                    "side": "SELL",
+                    "quantity": 1.0,
+                    "price": 2000.0,
+                },
+                "Timeout",
+            ),
+        ],
+    )
+    def test_submission_issue_records_context(self, kwargs, expected_reason):
         collector = ExecutionTelemetryCollector()
-        collector.record_submission(
-            latency_ms=30.0,
-            success=False,
-            rejected=True,
-            rejection_reason="rate_limit",
-            symbol="BTC-USD",
-            side="BUY",
-            quantity=0.5,
-            price=30000.0,
-        )
+        collector.record_submission(latency_ms=30.0, success=False, **kwargs)
 
-        metrics = collector.get_metrics()
-        assert len(metrics.recent_rejections) == 1
-        issue = metrics.recent_rejections[0]
-        assert issue.symbol == "BTC-USD"
-        assert issue.side == "BUY"
-        assert issue.quantity == 0.5
-        assert issue.price == 30000.0
-        assert issue.reason == "rate_limit"
+        issue = collector.get_metrics().recent_rejections[0]
+        assert issue.symbol == kwargs["symbol"]
+        assert issue.side == kwargs["side"]
+        assert issue.quantity == kwargs["quantity"]
+        assert issue.price == kwargs["price"]
+        assert issue.reason == expected_reason
         assert issue.is_retry is False
 
-    def test_failed_submission_records_issue(self):
-        """Test failed submissions also record an issue."""
-        collector = ExecutionTelemetryCollector()
-        collector.record_submission(
-            latency_ms=80.0,
-            success=False,
-            failure_reason="Timeout",
-            symbol="ETH-USD",
-            side="SELL",
-            quantity=1.0,
-            price=2000.0,
-        )
-
-        metrics = collector.get_metrics()
-        assert len(metrics.recent_rejections) == 1
-        assert metrics.recent_rejections[0].reason == "Timeout"
-
     def test_retry_issue_records_context(self):
-        """Test that retry issues capture order context."""
         collector = ExecutionTelemetryCollector()
-        collector.record_retry(
+        _record_retry(
+            collector,
             reason="timeout",
             symbol="SOL-USD",
             side="SELL",
@@ -151,9 +134,7 @@ class TestIssueTracking:
         )
         collector.record_submission(latency_ms=20.0, success=True)
 
-        metrics = collector.get_metrics()
-        assert len(metrics.recent_retries) == 1
-        issue = metrics.recent_retries[0]
+        issue = collector.get_metrics().recent_retries[0]
         assert issue.symbol == "SOL-USD"
         assert issue.side == "SELL"
         assert issue.quantity == 2.0
@@ -162,30 +143,80 @@ class TestIssueTracking:
         assert issue.is_retry is True
 
     def test_issue_ordering_is_most_recent_first(self):
-        """Test that recent issues are ordered newest-first."""
         collector = ExecutionTelemetryCollector()
-        collector.record_submission(
-            latency_ms=30.0,
-            success=False,
-            rejected=True,
-            rejection_reason="older",
-        )
-        collector.record_submission(
-            latency_ms=30.0,
-            success=False,
-            rejected=True,
-            rejection_reason="newer",
-        )
+        _record_rejection(collector, "older")
+        _record_rejection(collector, "newer")
 
         metrics = collector.get_metrics()
-        assert metrics.recent_rejections[0].reason == "newer"
-        assert metrics.recent_rejections[1].reason == "older"
+        assert [issue.reason for issue in metrics.recent_rejections] == ["newer", "older"]
 
     def test_empty_retry_reason_skips_issue(self):
-        """Test that empty retry reasons don't create issues."""
         collector = ExecutionTelemetryCollector()
-        collector.record_retry(reason="")
+        _record_retry(collector, reason="")
         collector.record_submission(latency_ms=50.0, success=True)
 
         metrics = collector.get_metrics()
+        assert metrics.recent_retries == []
+
+
+class TestReasonTracking:
+    def test_rejection_reasons_aggregate_and_sorted(self):
+        collector = ExecutionTelemetryCollector()
+        for reason in ["rate_limit", "insufficient_funds", "rate_limit"]:
+            _record_rejection(collector, reason)
+
+        metrics = collector.get_metrics()
+        assert metrics.rejection_reasons == {"rate_limit": 2, "insufficient_funds": 1}
+        assert metrics.top_rejection_reasons == [
+            ("rate_limit", 2),
+            ("insufficient_funds", 1),
+        ]
+
+    def test_retry_reasons_aggregate_and_sorted(self):
+        collector = ExecutionTelemetryCollector()
+        for reason in ["network", "network", "network", "timeout"]:
+            _record_retry(collector, reason)
+        collector.record_submission(latency_ms=50.0, success=True)
+
+        metrics = collector.get_metrics()
+        assert metrics.retry_reasons == {"network": 3, "timeout": 1}
+        assert metrics.top_retry_reasons == [("network", 3), ("timeout", 1)]
+
+    def test_empty_reasons_not_tracked(self):
+        collector = ExecutionTelemetryCollector()
+        _record_rejection(collector, reason="")
+        _record_retry(collector, reason="")
+        collector.record_submission(latency_ms=50.0, success=True)
+
+        metrics = collector.get_metrics()
+        assert metrics.rejection_reasons == {}
+        assert metrics.retry_reasons == {}
+
+    def test_reasons_respect_rolling_window(self):
+        collector = ExecutionTelemetryCollector(window_size=3)
+        for _ in range(3):
+            _record_rejection(collector, "rate_limit")
+
+        metrics = collector.get_metrics()
+        assert metrics.rejection_reasons == {"rate_limit": 3}
+
+        for _ in range(3):
+            _record_rejection(collector, "timeout")
+
+        metrics = collector.get_metrics()
+        assert metrics.rejection_reasons == {"timeout": 3}
+        assert "rate_limit" not in metrics.rejection_reasons
+
+    def test_clear_clears_reasons(self):
+        collector = ExecutionTelemetryCollector()
+        _record_rejection(collector, "rate_limit")
+        _record_retry(collector, "timeout")
+
+        collector.clear()
+        collector.record_submission(latency_ms=50.0, success=True)
+        metrics = collector.get_metrics()
+
+        assert metrics.rejection_reasons == {}
+        assert metrics.retry_reasons == {}
+        assert metrics.recent_rejections == []
         assert metrics.recent_retries == []

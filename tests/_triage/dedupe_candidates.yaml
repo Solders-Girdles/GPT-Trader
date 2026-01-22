@@ -2012,10 +2012,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/tui/services/test_execution_telemetry.py
-    expected_file_delta: -2
+    expected_file_delta: -1
     priority: low
-    rationale: Consolidate 3 test files into single parametrized file
-    status: pending
+    rationale: Consolidated reason tracking into metrics module to stay under hygiene cap
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/392
     added: '2026-01-21'
   36c3dda34a26:
     type: similar_names
@@ -2072,10 +2074,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/tui/services/test_onboarding_service.py
-    expected_file_delta: -2
+    expected_file_delta: -1
     priority: low
-    rationale: Consolidate 3 test files into single parametrized file
-    status: pending
+    rationale: Consolidated checklist/status models into a shared module to stay under hygiene cap
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/392
     added: '2026-01-20'
   45c19aff861e:
     type: similar_names
@@ -2224,10 +2228,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/tui/services/test_mode_service.py
-    expected_file_delta: -2
+    expected_file_delta: -1
     priority: low
-    rationale: Consolidate 3 test files into single parametrized file
-    status: pending
+    rationale: Consolidated create_bot coverage into core module to stay under hygiene cap
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/392
     added: '2026-01-20'
   8a5666f3b255:
     type: similar_names

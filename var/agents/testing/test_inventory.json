@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6152,
-    "total_files": 780,
+    "total_files": 778,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -723,10 +723,8 @@
       "tests/unit/gpt_trader/tui/services/test_alert_manager_execution.py",
       "tests/unit/gpt_trader/tui/services/test_alert_manager_orders.py",
       "tests/unit/gpt_trader/tui/services/test_config_service.py",
-      "tests/unit/gpt_trader/tui/services/test_credential_validator_connectivity.py",
-      "tests/unit/gpt_trader/tui/services/test_credential_validator_key_format_and_compatibility.py",
-      "tests/unit/gpt_trader/tui/services/test_credential_validator_key_type_detection.py",
-      "tests/unit/gpt_trader/tui/services/test_credential_validator_mode_requirements.py",
+      "tests/unit/gpt_trader/tui/services/test_credential_validator.py",
+      "tests/unit/gpt_trader/tui/services/test_credential_validator_modes.py",
       "tests/unit/gpt_trader/tui/services/test_execution_telemetry.py",
       "tests/unit/gpt_trader/tui/services/test_execution_telemetry_metrics.py",
       "tests/unit/gpt_trader/tui/services/test_execution_telemetry_reason.py",
@@ -43074,10 +43072,57 @@
         "class": "TestConfigService"
       }
     ],
-    "tests/unit/gpt_trader/tui/services/test_credential_validator_connectivity.py": [
+    "tests/unit/gpt_trader/tui/services/test_credential_validator.py": [
+      {
+        "name": "TestCredentialValidatorKeyFormatAndConfiguration::test_demo_mode_skips_validation",
+        "line": 19,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "Demo mode should pass without any credentials.",
+        "class": "TestCredentialValidatorKeyFormatAndConfiguration"
+      },
+      {
+        "name": "TestCredentialValidatorKeyFormatAndConfiguration::test_missing_credentials_fails",
+        "line": 31,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "Modes requiring credentials should fail if none configured.",
+        "class": "TestCredentialValidatorKeyFormatAndConfiguration"
+      },
+      {
+        "name": "TestCredentialValidatorKeyFormatAndConfiguration::test_valid_key_format",
+        "line": 46,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Valid key format should pass format validation.",
+        "class": "TestCredentialValidatorKeyFormatAndConfiguration"
+      },
+      {
+        "name": "TestCredentialValidatorKeyFormatAndConfiguration::test_invalid_key_format",
+        "line": 69,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Invalid key format should fail validation with legacy detection.",
+        "class": "TestCredentialValidatorKeyFormatAndConfiguration"
+      },
+      {
+        "name": "TestCredentialValidatorKeyFormatAndConfiguration::test_invalid_private_key_format",
+        "line": 91,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Invalid private key format should fail validation with specific error.",
+        "class": "TestCredentialValidatorKeyFormatAndConfiguration"
+      },
       {
         "name": "TestCredentialValidatorConnectivity::test_connectivity_success",
-        "line": 15,
+        "line": 113,
         "markers": [
           "asyncio",
           "unit"
@@ -43087,7 +43132,7 @@
       },
       {
         "name": "TestCredentialValidatorConnectivity::test_jwt_generation_failure",
-        "line": 50,
+        "line": 148,
         "markers": [
           "asyncio",
           "unit"
@@ -43096,178 +43141,10 @@
         "class": "TestCredentialValidatorConnectivity"
       }
     ],
-    "tests/unit/gpt_trader/tui/services/test_credential_validator_key_format_and_compatibility.py": [
-      {
-        "name": "TestCredentialValidatorKeyFormatAndCompatibility::test_demo_mode_skips_validation",
-        "line": 16,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Demo mode should pass without any credentials.",
-        "class": "TestCredentialValidatorKeyFormatAndCompatibility"
-      },
-      {
-        "name": "TestCredentialValidatorKeyFormatAndCompatibility::test_missing_credentials_fails",
-        "line": 28,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Modes requiring credentials should fail if none configured.",
-        "class": "TestCredentialValidatorKeyFormatAndCompatibility"
-      },
-      {
-        "name": "TestCredentialValidatorKeyFormatAndCompatibility::test_valid_key_format",
-        "line": 43,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Valid key format should pass format validation.",
-        "class": "TestCredentialValidatorKeyFormatAndCompatibility"
-      },
-      {
-        "name": "TestCredentialValidatorKeyFormatAndCompatibility::test_invalid_key_format",
-        "line": 68,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Invalid key format should fail validation with legacy detection.",
-        "class": "TestCredentialValidatorKeyFormatAndCompatibility"
-      },
-      {
-        "name": "TestCredentialValidatorKeyFormatAndCompatibility::test_invalid_private_key_format",
-        "line": 92,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Invalid private key format should fail validation with specific error.",
-        "class": "TestCredentialValidatorKeyFormatAndCompatibility"
-      },
-      {
-        "name": "TestCredentialValidatorKeyFormatAndCompatibility::test_evaluate_mode_compatibility_live_without_trade",
-        "line": 111,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Live mode should fail without trade permission.",
-        "class": "TestCredentialValidatorKeyFormatAndCompatibility"
-      },
-      {
-        "name": "TestCredentialValidatorKeyFormatAndCompatibility::test_evaluate_mode_compatibility_paper_with_view_only",
-        "line": 134,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Paper mode should pass with view-only key.",
-        "class": "TestCredentialValidatorKeyFormatAndCompatibility"
-      },
-      {
-        "name": "TestCredentialValidatorKeyFormatAndCompatibility::test_evaluate_mode_compatibility_read_only_with_view",
-        "line": 155,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Read-only mode should pass with view permission.",
-        "class": "TestCredentialValidatorKeyFormatAndCompatibility"
-      },
-      {
-        "name": "TestCredentialValidatorKeyFormatAndCompatibility::test_evaluate_mode_compatibility_without_connectivity",
-        "line": 175,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Mode compatibility should fail without connectivity.",
-        "class": "TestCredentialValidatorKeyFormatAndCompatibility"
-      },
-      {
-        "name": "TestCredentialValidatorKeyFormatAndCompatibility::test_get_mode_requirements",
-        "line": 195,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "get_mode_requirements should return correct requirements.",
-        "class": "TestCredentialValidatorKeyFormatAndCompatibility"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/services/test_credential_validator_key_type_detection.py": [
-      {
-        "name": "TestKeyTypeDetection::test_detect_cdp_es256_key",
-        "line": 9,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Valid CDP ES256 key should be detected correctly.",
-        "class": "TestKeyTypeDetection"
-      },
-      {
-        "name": "TestKeyTypeDetection::test_detect_legacy_uuid_key",
-        "line": 23,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Legacy UUID format key should be detected.",
-        "class": "TestKeyTypeDetection"
-      },
-      {
-        "name": "TestKeyTypeDetection::test_detect_legacy_short_key",
-        "line": 36,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Legacy short format key should be detected.",
-        "class": "TestKeyTypeDetection"
-      },
-      {
-        "name": "TestKeyTypeDetection::test_detect_ed25519_key",
-        "line": 48,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Ed25519 key should be detected and flagged.",
-        "class": "TestKeyTypeDetection"
-      },
-      {
-        "name": "TestKeyTypeDetection::test_detect_openssh_ed25519_key",
-        "line": 61,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "OpenSSH Ed25519 key should be detected.",
-        "class": "TestKeyTypeDetection"
-      },
-      {
-        "name": "TestKeyTypeDetection::test_detect_rsa_key",
-        "line": 72,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "RSA key should be flagged as wrong algorithm.",
-        "class": "TestKeyTypeDetection"
-      },
-      {
-        "name": "TestKeyTypeDetection::test_detect_non_pem_secret",
-        "line": 83,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Non-PEM secret should be flagged.",
-        "class": "TestKeyTypeDetection"
-      },
-      {
-        "name": "TestKeyTypeDetection::test_detect_empty_keys",
-        "line": 93,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Empty keys should return unknown type.",
-        "class": "TestKeyTypeDetection"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/services/test_credential_validator_mode_requirements.py": [
+    "tests/unit/gpt_trader/tui/services/test_credential_validator_modes.py": [
       {
         "name": "TestModeRequirements::test_demo_requires_nothing",
-        "line": 9,
+        "line": 16,
         "markers": [
           "unit"
         ],
@@ -43276,7 +43153,7 @@
       },
       {
         "name": "TestModeRequirements::test_read_only_requires_view",
-        "line": 16,
+        "line": 23,
         "markers": [
           "unit"
         ],
@@ -43285,7 +43162,7 @@
       },
       {
         "name": "TestModeRequirements::test_paper_requires_view",
-        "line": 23,
+        "line": 30,
         "markers": [
           "unit"
         ],
@@ -43294,12 +43171,129 @@
       },
       {
         "name": "TestModeRequirements::test_live_requires_trade",
-        "line": 30,
+        "line": 37,
         "markers": [
           "unit"
         ],
         "docstring": "Live mode requires both view and trade.",
         "class": "TestModeRequirements"
+      },
+      {
+        "name": "TestModeCompatibility::test_evaluate_mode_compatibility_live_without_trade",
+        "line": 48,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Live mode should fail without trade permission.",
+        "class": "TestModeCompatibility"
+      },
+      {
+        "name": "TestModeCompatibility::test_evaluate_mode_compatibility_paper_with_view_only",
+        "line": 66,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Paper mode should pass with view-only key.",
+        "class": "TestModeCompatibility"
+      },
+      {
+        "name": "TestModeCompatibility::test_evaluate_mode_compatibility_read_only_with_view",
+        "line": 82,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Read-only mode should pass with view permission.",
+        "class": "TestModeCompatibility"
+      },
+      {
+        "name": "TestModeCompatibility::test_evaluate_mode_compatibility_without_connectivity",
+        "line": 97,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Mode compatibility should fail without connectivity.",
+        "class": "TestModeCompatibility"
+      },
+      {
+        "name": "TestModeCompatibility::test_get_mode_requirements",
+        "line": 112,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "get_mode_requirements should return correct requirements.",
+        "class": "TestModeCompatibility"
+      },
+      {
+        "name": "TestKeyTypeDetection::test_detect_cdp_es256_key",
+        "line": 122,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Valid CDP ES256 key should be detected correctly.",
+        "class": "TestKeyTypeDetection"
+      },
+      {
+        "name": "TestKeyTypeDetection::test_detect_legacy_uuid_key",
+        "line": 136,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Legacy UUID format key should be detected.",
+        "class": "TestKeyTypeDetection"
+      },
+      {
+        "name": "TestKeyTypeDetection::test_detect_legacy_short_key",
+        "line": 149,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Legacy short format key should be detected.",
+        "class": "TestKeyTypeDetection"
+      },
+      {
+        "name": "TestKeyTypeDetection::test_detect_ed25519_key",
+        "line": 161,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Ed25519 key should be detected and flagged.",
+        "class": "TestKeyTypeDetection"
+      },
+      {
+        "name": "TestKeyTypeDetection::test_detect_openssh_ed25519_key",
+        "line": 174,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "OpenSSH Ed25519 key should be detected.",
+        "class": "TestKeyTypeDetection"
+      },
+      {
+        "name": "TestKeyTypeDetection::test_detect_rsa_key",
+        "line": 185,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "RSA key should be flagged as wrong algorithm.",
+        "class": "TestKeyTypeDetection"
+      },
+      {
+        "name": "TestKeyTypeDetection::test_detect_non_pem_secret",
+        "line": 196,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Non-PEM secret should be flagged.",
+        "class": "TestKeyTypeDetection"
+      },
+      {
+        "name": "TestKeyTypeDetection::test_detect_empty_keys",
+        "line": 206,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Empty keys should return unknown type.",
+        "class": "TestKeyTypeDetection"
       }
     ],
     "tests/unit/gpt_trader/tui/services/test_execution_telemetry.py": [

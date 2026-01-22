@@ -111,7 +111,8 @@ clusters:
     expected_file_delta: -26
     priority: high
     rationale: Consolidate 27 test files into single parametrized file
-    status: pending
+    status: in_progress
+    owner: codex
     added: '2026-01-21'
   ec9c7f7f07fc:
     type: source_fanout
@@ -1486,10 +1487,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/tui/services/test_credential_validator.py
-    expected_file_delta: -3
+    expected_file_delta: -2
     priority: low
-    rationale: Consolidate 4 test files into single parametrized file
-    status: pending
+    rationale: Consolidated validator suites into format/connectivity and modes/key-type modules to stay under hygiene cap
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/366
     added: '2026-01-20'
   5a62074b66a1:
     type: similar_names

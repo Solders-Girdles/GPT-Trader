@@ -1,16 +1,19 @@
 from __future__ import annotations
 
+from unittest.mock import MagicMock
+
 import pytest
 
-from gpt_trader.preflight.validation_result import ValidationSeverity
-from gpt_trader.tui.services.credential_validator import (
-    MODE_REQUIREMENTS,
-    CredentialValidator,
+import gpt_trader.features.brokerages.coinbase.client as client_module
+from gpt_trader.preflight.validation_result import (
+    CredentialValidationResult,
+    ValidationSeverity,
 )
+from gpt_trader.tui.services.credential_validator import CredentialValidator
 
 
-class TestCredentialValidatorKeyFormatAndCompatibility:
-    """Tests for CredentialValidator format validation and mode compatibility."""
+class TestCredentialValidatorKeyFormatAndConfiguration:
+    """Tests for credential configuration and key format validation."""
 
     @pytest.mark.asyncio
     async def test_demo_mode_skips_validation(self) -> None:
@@ -53,8 +56,6 @@ class TestCredentialValidatorKeyFormatAndCompatibility:
 
         validator = CredentialValidator()
 
-        from gpt_trader.preflight.validation_result import CredentialValidationResult
-
         direct_result = CredentialValidationResult(mode="paper")
         validator._validate_key_format(direct_result)
 
@@ -78,8 +79,6 @@ class TestCredentialValidatorKeyFormatAndCompatibility:
 
         validator = CredentialValidator()
 
-        from gpt_trader.preflight.validation_result import CredentialValidationResult
-
         result = CredentialValidationResult(mode="paper")
         validator._validate_key_format(result)
 
@@ -99,8 +98,6 @@ class TestCredentialValidatorKeyFormatAndCompatibility:
 
         validator = CredentialValidator()
 
-        from gpt_trader.preflight.validation_result import CredentialValidationResult
-
         result = CredentialValidationResult(mode="paper")
         validator._validate_key_format(result)
 
@@ -108,92 +105,68 @@ class TestCredentialValidatorKeyFormatAndCompatibility:
         assert len(error_findings) == 1
         assert "Private key not in PEM format" in error_findings[0].message
 
-    def test_evaluate_mode_compatibility_live_without_trade(self) -> None:
-        """Live mode should fail without trade permission."""
+
+class TestCredentialValidatorConnectivity:
+    """Tests for connectivity validation (mocked)."""
+
+    @pytest.mark.asyncio
+    async def test_connectivity_success(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Successful connectivity should set connectivity_ok."""
+        monkeypatch.setenv("COINBASE_CDP_API_KEY", "organizations/123/apiKeys/456")
+        monkeypatch.setenv(
+            "COINBASE_CDP_PRIVATE_KEY",
+            "-----BEGIN EC PRIVATE KEY-----\ntest\n-----END EC PRIVATE KEY-----",
+        )
+
         validator = CredentialValidator()
 
-        from gpt_trader.preflight.validation_result import (
-            CredentialValidationResult,
-            PermissionDetails,
+        mock_auth_instance = MagicMock()
+        mock_auth = MagicMock(return_value=mock_auth_instance)
+        monkeypatch.setattr(client_module, "create_cdp_jwt_auth", mock_auth)
+
+        mock_client = MagicMock()
+        mock_client.get_time.return_value = {"iso": "2024-12-06T00:00:00Z"}
+        mock_client.get_key_permissions.return_value = {
+            "can_trade": True,
+            "can_view": True,
+            "portfolio_type": "SPOT",
+            "portfolio_uuid": "uuid-123",
+        }
+        mock_client_class = MagicMock(return_value=mock_client)
+        monkeypatch.setattr(client_module, "CoinbaseClient", mock_client_class)
+
+        result = await validator.validate_for_mode("paper")
+
+        assert result.connectivity_ok is True
+        assert result.jwt_generation_ok is True
+        assert result.valid_for_mode is True
+
+    @pytest.mark.asyncio
+    async def test_jwt_generation_failure(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """JWT generation failure should set connectivity_ok to False."""
+        monkeypatch.setenv("COINBASE_CDP_API_KEY", "organizations/123/apiKeys/456")
+        monkeypatch.setenv(
+            "COINBASE_CDP_PRIVATE_KEY",
+            "-----BEGIN EC PRIVATE KEY-----\ntest\n-----END EC PRIVATE KEY-----",
         )
 
-        result = CredentialValidationResult(mode="live")
-        result.connectivity_ok = True
-        result.permissions = PermissionDetails(
-            can_trade=False,
-            can_view=True,
-        )
+        validator = CredentialValidator()
 
-        validator._evaluate_mode_compatibility(result, MODE_REQUIREMENTS["live"])
+        mock_auth = MagicMock(side_effect=Exception("Invalid private key"))
+        monkeypatch.setattr(client_module, "create_cdp_jwt_auth", mock_auth)
 
-        assert result.valid_for_mode is False
+        result = CredentialValidationResult(mode="paper")
+        result.credentials_configured = True
+        result.key_format_valid = True
+
+        await validator._validate_connectivity(result)
+
+        assert result.jwt_generation_ok is False
+        assert result.connectivity_ok is False
         assert result.has_errors is True
-        error_messages = [f.message for f in result.blocking_issues]
-        assert any("trade permission" in msg.lower() for msg in error_messages)
-
-    def test_evaluate_mode_compatibility_paper_with_view_only(self) -> None:
-        """Paper mode should pass with view-only key."""
-        validator = CredentialValidator()
-
-        from gpt_trader.preflight.validation_result import (
-            CredentialValidationResult,
-            PermissionDetails,
-        )
-
-        result = CredentialValidationResult(mode="paper")
-        result.connectivity_ok = True
-        result.permissions = PermissionDetails(
-            can_trade=False,
-            can_view=True,
-        )
-
-        validator._evaluate_mode_compatibility(result, MODE_REQUIREMENTS["paper"])
-
-        assert result.valid_for_mode is True
-        assert result.has_errors is False
-
-    def test_evaluate_mode_compatibility_read_only_with_view(self) -> None:
-        """Read-only mode should pass with view permission."""
-        validator = CredentialValidator()
-
-        from gpt_trader.preflight.validation_result import (
-            CredentialValidationResult,
-            PermissionDetails,
-        )
-
-        result = CredentialValidationResult(mode="read_only")
-        result.connectivity_ok = True
-        result.permissions = PermissionDetails(
-            can_trade=False,
-            can_view=True,
-        )
-
-        validator._evaluate_mode_compatibility(result, MODE_REQUIREMENTS["read_only"])
-
-        assert result.valid_for_mode is True
-
-    def test_evaluate_mode_compatibility_without_connectivity(self) -> None:
-        """Mode compatibility should fail without connectivity."""
-        validator = CredentialValidator()
-
-        from gpt_trader.preflight.validation_result import (
-            CredentialValidationResult,
-            PermissionDetails,
-        )
-
-        result = CredentialValidationResult(mode="paper")
-        result.connectivity_ok = False
-        result.permissions = PermissionDetails(
-            can_trade=True,
-            can_view=True,
-        )
-
-        validator._evaluate_mode_compatibility(result, MODE_REQUIREMENTS["paper"])
-
-        assert result.valid_for_mode is False
-
-    def test_get_mode_requirements(self) -> None:
-        """get_mode_requirements should return correct requirements."""
-        assert CredentialValidator.get_mode_requirements("demo") == MODE_REQUIREMENTS["demo"]
-        assert CredentialValidator.get_mode_requirements("live") == MODE_REQUIREMENTS["live"]
-        assert CredentialValidator.get_mode_requirements("unknown") == MODE_REQUIREMENTS["demo"]

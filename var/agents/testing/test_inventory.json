@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6259,
-    "total_files": 813,
+    "total_tests": 6223,
+    "total_files": 809,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6094,
+    "unit": 6058,
     "asyncio": 345,
     "parametrize": 90,
     "property": 82,
@@ -283,11 +283,7 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_find_existing_order_by_client_id.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_initialization.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_position_metrics.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_place_and_cancel.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_queries_fills_and_close_position.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_pnl_service.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_portfolio_service.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_retry_and_telemetry.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_close_position.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_fills.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_place_and_cancel.py",
@@ -12891,365 +12887,33 @@
         "class": "TestCoinbaseRestServiceCorePositionMetrics"
       }
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_place_and_cancel.py": [
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite.py": [
       {
-        "name": "TestCoinbaseRestContractSuiteOrderServicePlaceAndCancel::test_place_order_quantity_resolution_success",
-        "line": 20,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test successful order placement with quantity resolution.",
-        "class": "TestCoinbaseRestContractSuiteOrderServicePlaceAndCancel"
-      },
-      {
-        "name": "TestCoinbaseRestContractSuiteOrderServicePlaceAndCancel::test_place_order_quantity_resolution_error_branch",
-        "line": 51,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test order placement with quantity below minimum.",
-        "class": "TestCoinbaseRestContractSuiteOrderServicePlaceAndCancel"
-      },
-      {
-        "name": "TestCoinbaseRestContractSuiteOrderServicePlaceAndCancel::test_place_order_error_branch_insufficient_funds",
-        "line": 66,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test order placement with insufficient funds error.",
-        "class": "TestCoinbaseRestContractSuiteOrderServicePlaceAndCancel"
-      },
-      {
-        "name": "TestCoinbaseRestContractSuiteOrderServicePlaceAndCancel::test_place_order_error_branch_validation_error",
-        "line": 82,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test order placement with validation error.",
-        "class": "TestCoinbaseRestContractSuiteOrderServicePlaceAndCancel"
-      },
-      {
-        "name": "TestCoinbaseRestContractSuiteOrderServicePlaceAndCancel::test_cancel_order_success",
-        "line": 98,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test successful order cancellation.",
-        "class": "TestCoinbaseRestContractSuiteOrderServicePlaceAndCancel"
-      },
-      {
-        "name": "TestCoinbaseRestContractSuiteOrderServicePlaceAndCancel::test_cancel_order_failure",
-        "line": 108,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test order cancellation failure raises OrderCancellationError.",
-        "class": "TestCoinbaseRestContractSuiteOrderServicePlaceAndCancel"
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_order_service_queries_fills_and_close_position.py": [
-      {
-        "name": "TestCoinbaseRestContractSuiteOrderServiceQueriesFillsAndClosePosition::test_list_orders_with_pagination",
-        "line": 22,
+        "name": "TestCoinbaseRestContractSuite::test_order_service_contracts",
+        "line": 10,
         "markers": [
           "unit"
         ],
         "docstring": "",
-        "class": "TestCoinbaseRestContractSuiteOrderServiceQueriesFillsAndClosePosition"
+        "class": "TestCoinbaseRestContractSuite"
       },
       {
-        "name": "TestCoinbaseRestContractSuiteOrderServiceQueriesFillsAndClosePosition::test_list_orders_error_handling",
-        "line": 36,
+        "name": "TestCoinbaseRestContractSuite::test_pnl_service_contracts",
+        "line": 30,
         "markers": [
           "unit"
         ],
         "docstring": "",
-        "class": "TestCoinbaseRestContractSuiteOrderServiceQueriesFillsAndClosePosition"
+        "class": "TestCoinbaseRestContractSuite"
       },
       {
-        "name": "TestCoinbaseRestContractSuiteOrderServiceQueriesFillsAndClosePosition::test_get_order_success",
-        "line": 42,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestCoinbaseRestContractSuiteOrderServiceQueriesFillsAndClosePosition"
-      },
-      {
-        "name": "TestCoinbaseRestContractSuiteOrderServiceQueriesFillsAndClosePosition::test_get_order_not_found",
-        "line": 51,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestCoinbaseRestContractSuiteOrderServiceQueriesFillsAndClosePosition"
-      },
-      {
-        "name": "TestCoinbaseRestContractSuiteOrderServiceQueriesFillsAndClosePosition::test_list_fills_with_pagination",
-        "line": 57,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestCoinbaseRestContractSuiteOrderServiceQueriesFillsAndClosePosition"
-      },
-      {
-        "name": "TestCoinbaseRestContractSuiteOrderServiceQueriesFillsAndClosePosition::test_list_fills_error_handling",
-        "line": 67,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestCoinbaseRestContractSuiteOrderServiceQueriesFillsAndClosePosition"
-      },
-      {
-        "name": "TestCoinbaseRestContractSuiteOrderServiceQueriesFillsAndClosePosition::test_close_position_success",
-        "line": 73,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestCoinbaseRestContractSuiteOrderServiceQueriesFillsAndClosePosition"
-      },
-      {
-        "name": "TestCoinbaseRestContractSuiteOrderServiceQueriesFillsAndClosePosition::test_close_position_no_position",
-        "line": 91,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestCoinbaseRestContractSuiteOrderServiceQueriesFillsAndClosePosition"
-      },
-      {
-        "name": "TestCoinbaseRestContractSuiteOrderServiceQueriesFillsAndClosePosition::test_close_position_fallback",
-        "line": 99,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestCoinbaseRestContractSuiteOrderServiceQueriesFillsAndClosePosition"
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_pnl_service.py": [
-      {
-        "name": "TestCoinbaseRestContractSuitePnLService::test_process_fill_for_pnl_new_position",
-        "line": 15,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test PnL processing for new position creation.",
-        "class": "TestCoinbaseRestContractSuitePnLService"
-      },
-      {
-        "name": "TestCoinbaseRestContractSuitePnLService::test_process_fill_for_pnl_existing_position",
+        "name": "TestCoinbaseRestContractSuite::test_portfolio_service_contracts",
         "line": 33,
         "markers": [
           "unit"
         ],
-        "docstring": "Test PnL processing for existing position update.",
-        "class": "TestCoinbaseRestContractSuitePnLService"
-      },
-      {
-        "name": "TestCoinbaseRestContractSuitePnLService::test_process_fill_for_pnl_increases_position",
-        "line": 59,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test PnL processing when increasing an existing position.",
-        "class": "TestCoinbaseRestContractSuitePnLService"
-      },
-      {
-        "name": "TestCoinbaseRestContractSuitePnLService::test_process_fill_for_pnl_handles_missing_position_record",
-        "line": 89,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test PnL processing exits when store contains symbol but get returns None.",
-        "class": "TestCoinbaseRestContractSuitePnLService"
-      },
-      {
-        "name": "TestCoinbaseRestContractSuitePnLService::test_process_fill_for_pnl_short_position_realized_pnl_sign",
-        "line": 119,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test realized PnL sign for short positions and zeroed quantity.",
-        "class": "TestCoinbaseRestContractSuitePnLService"
-      },
-      {
-        "name": "TestCoinbaseRestContractSuitePnLService::test_process_fill_for_pnl_invalid_data",
-        "line": 145,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test PnL processing with invalid fill data.",
-        "class": "TestCoinbaseRestContractSuitePnLService"
-      },
-      {
-        "name": "TestCoinbaseRestContractSuitePnLService::test_get_position_pnl_no_position",
-        "line": 153,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test position PnL retrieval for non-existent position.",
-        "class": "TestCoinbaseRestContractSuitePnLService"
-      },
-      {
-        "name": "TestCoinbaseRestContractSuitePnLService::test_get_position_pnl_with_position",
-        "line": 162,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test position PnL retrieval for existing position.",
-        "class": "TestCoinbaseRestContractSuitePnLService"
-      },
-      {
-        "name": "TestCoinbaseRestContractSuitePnLService::test_get_portfolio_pnl_aggregation",
-        "line": 184,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test portfolio PnL aggregation across multiple positions.",
-        "class": "TestCoinbaseRestContractSuitePnLService"
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_portfolio_service.py": [
-      {
-        "name": "TestCoinbaseRestContractSuitePortfolioService::test_list_balances_success",
-        "line": 17,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test successful balance listing.",
-        "class": "TestCoinbaseRestContractSuitePortfolioService"
-      },
-      {
-        "name": "TestCoinbaseRestContractSuitePortfolioService::test_list_balances_error_handling",
-        "line": 43,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test balance listing with malformed data.",
-        "class": "TestCoinbaseRestContractSuitePortfolioService"
-      },
-      {
-        "name": "TestCoinbaseRestContractSuitePortfolioService::test_get_portfolio_balances_fallback",
-        "line": 59,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test portfolio balances fallback to account balances.",
-        "class": "TestCoinbaseRestContractSuitePortfolioService"
-      },
-      {
-        "name": "TestCoinbaseRestContractSuitePortfolioService::test_list_positions_success",
-        "line": 71,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test successful position listing.",
-        "class": "TestCoinbaseRestContractSuitePortfolioService"
-      },
-      {
-        "name": "TestCoinbaseRestContractSuitePortfolioService::test_list_positions_error_handling",
-        "line": 96,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test position listing error handling.",
-        "class": "TestCoinbaseRestContractSuitePortfolioService"
-      },
-      {
-        "name": "TestCoinbaseRestContractSuitePortfolioService::test_get_position_success",
-        "line": 105,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test successful position retrieval.",
-        "class": "TestCoinbaseRestContractSuitePortfolioService"
-      },
-      {
-        "name": "TestCoinbaseRestContractSuitePortfolioService::test_get_position_not_found",
-        "line": 121,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test position retrieval when not found.",
-        "class": "TestCoinbaseRestContractSuitePortfolioService"
-      },
-      {
-        "name": "TestCoinbaseRestContractSuitePortfolioService::test_intx_allocate_success",
-        "line": 130,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test successful INTX allocation.",
-        "class": "TestCoinbaseRestContractSuitePortfolioService"
-      },
-      {
-        "name": "TestCoinbaseRestContractSuitePortfolioService::test_intx_allocate_error_handling",
-        "line": 141,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test INTX allocation error handling.",
-        "class": "TestCoinbaseRestContractSuitePortfolioService"
-      },
-      {
-        "name": "TestCoinbaseRestContractSuitePortfolioService::test_cfm_balance_summary_telemetry",
-        "line": 149,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test CFM balance summary with telemetry.",
-        "class": "TestCoinbaseRestContractSuitePortfolioService"
-      },
-      {
-        "name": "TestCoinbaseRestContractSuitePortfolioService::test_cfm_sweeps_telemetry",
-        "line": 164,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test CFM sweeps with telemetry.",
-        "class": "TestCoinbaseRestContractSuitePortfolioService"
-      },
-      {
-        "name": "TestCoinbaseRestContractSuitePortfolioService::test_update_cfm_margin_window_success",
-        "line": 179,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test successful CFM margin window update.",
-        "class": "TestCoinbaseRestContractSuitePortfolioService"
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_contract_suite_retry_and_telemetry.py": [
-      {
-        "name": "TestCoinbaseRestContractSuiteRetryAndTelemetry::test_order_retry_on_duplicate_client_id",
-        "line": 18,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test order retry logic on duplicate client ID error.",
-        "class": "TestCoinbaseRestContractSuiteRetryAndTelemetry"
-      },
-      {
-        "name": "TestCoinbaseRestContractSuiteRetryAndTelemetry::test_telemetry_logging_on_api_calls",
-        "line": 48,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test telemetry logging on various API calls.",
-        "class": "TestCoinbaseRestContractSuiteRetryAndTelemetry"
-      },
-      {
-        "name": "TestCoinbaseRestContractSuiteRetryAndTelemetry::test_pagination_cursor_handling",
-        "line": 61,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test pagination cursor handling in list operations.",
-        "class": "TestCoinbaseRestContractSuiteRetryAndTelemetry"
+        "docstring": "",
+        "class": "TestCoinbaseRestContractSuite"
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service_close_position.py": [

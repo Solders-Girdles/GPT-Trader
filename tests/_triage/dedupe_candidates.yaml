@@ -2063,10 +2063,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/utilities/test_logging_patterns.py
-    expected_file_delta: -2
+    expected_file_delta: -1
     priority: low
-    rationale: Consolidate 3 test files into single parametrized file
-    status: pending
+    rationale: Consolidated health coverage into domain suite to stay under hygiene cap
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/395
     added: '2026-01-21'
   448f0a961f38:
     type: similar_names

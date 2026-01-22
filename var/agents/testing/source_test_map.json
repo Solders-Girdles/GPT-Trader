@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 670,
+    "tests_scanned": 669,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -1881,8 +1881,7 @@
     ],
     "gpt_trader.utilities": [
       "tests/unit/gpt_trader/utilities/test_logging_patterns.py",
-      "tests/unit/gpt_trader/utilities/test_logging_patterns_domain.py",
-      "tests/unit/gpt_trader/utilities/test_logging_patterns_health.py"
+      "tests/unit/gpt_trader/utilities/test_logging_patterns_domain.py"
     ],
     "gpt_trader.utilities.async_tools": [
       "tests/unit/gpt_trader/utilities/test_async_utils_cache_and_retry.py",
@@ -4519,9 +4518,6 @@
       "gpt_trader.utilities"
     ],
     "tests/unit/gpt_trader/utilities/test_logging_patterns_domain.py": [
-      "gpt_trader.utilities"
-    ],
-    "tests/unit/gpt_trader/utilities/test_logging_patterns_health.py": [
       "gpt_trader.utilities"
     ],
     "tests/unit/gpt_trader/utilities/test_parsing.py": [

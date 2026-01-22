@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 681,
+    "tests_scanned": 676,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -394,8 +394,7 @@
     "gpt_trader.core.account": [
       "tests/unit/gpt_trader/core/test_account_edges.py",
       "tests/unit/gpt_trader/tui/test_state_cfm_and_data_staleness.py",
-      "tests/unit/gpt_trader/tui/widgets/test_cfm_balance_basic.py",
-      "tests/unit/gpt_trader/tui/widgets/test_cfm_balance_color_coding.py"
+      "tests/unit/gpt_trader/tui/widgets/test_cfm_balance.py"
     ],
     "gpt_trader.core.math.incremental": [
       "tests/unit/gpt_trader/core/math/test_incremental.py"
@@ -1647,8 +1646,7 @@
       "tests/unit/gpt_trader/tui/services/test_alert_manager_execution.py",
       "tests/unit/gpt_trader/tui/services/test_alert_manager_orders.py",
       "tests/unit/gpt_trader/tui/widgets/test_alert_inbox.py",
-      "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_actions.py",
-      "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_rendering.py"
+      "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_actions.py"
     ],
     "gpt_trader.tui.services.config_service": [
       "tests/unit/gpt_trader/tui/services/test_config_service.py"
@@ -1773,11 +1771,9 @@
       "tests/unit/gpt_trader/tui/widgets/test_position_card.py",
       "tests/unit/gpt_trader/tui/widgets/test_position_detail.py",
       "tests/unit/gpt_trader/tui/widgets/test_position_detail_calculations.py",
-      "tests/unit/gpt_trader/tui/widgets/test_position_detail_classification.py",
       "tests/unit/gpt_trader/tui/widgets/test_positions_widget.py",
       "tests/unit/gpt_trader/tui/widgets/test_risk.py",
-      "tests/unit/gpt_trader/tui/widgets/test_risk_detail_modal_focus_preview.py",
-      "tests/unit/gpt_trader/tui/widgets/test_risk_detail_modal_guard_visibility.py",
+      "tests/unit/gpt_trader/tui/widgets/test_risk_detail.py",
       "tests/unit/gpt_trader/tui/widgets/test_risk_detail_modal_score.py",
       "tests/unit/gpt_trader/tui/widgets/test_strategy_widget_core.py",
       "tests/unit/gpt_trader/tui/widgets/test_strategy_widget_decision_display.py",
@@ -1802,12 +1798,10 @@
     ],
     "gpt_trader.tui.widgets.alert_inbox": [
       "tests/unit/gpt_trader/tui/widgets/test_alert_inbox.py",
-      "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_actions.py",
-      "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_rendering.py"
+      "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_actions.py"
     ],
     "gpt_trader.tui.widgets.cfm_balance": [
-      "tests/unit/gpt_trader/tui/widgets/test_cfm_balance_basic.py",
-      "tests/unit/gpt_trader/tui/widgets/test_cfm_balance_unavailable.py"
+      "tests/unit/gpt_trader/tui/widgets/test_cfm_balance.py"
     ],
     "gpt_trader.tui.widgets.config": [
       "tests/unit/gpt_trader/tui/services/test_config_service.py",
@@ -1855,8 +1849,7 @@
     ],
     "gpt_trader.tui.widgets.portfolio.position_detail_modal": [
       "tests/unit/gpt_trader/tui/widgets/test_position_detail.py",
-      "tests/unit/gpt_trader/tui/widgets/test_position_detail_calculations.py",
-      "tests/unit/gpt_trader/tui/widgets/test_position_detail_classification.py"
+      "tests/unit/gpt_trader/tui/widgets/test_position_detail_calculations.py"
     ],
     "gpt_trader.tui.widgets.primitives": [
       "tests/unit/gpt_trader/tui/widgets/test_system_monitor.py"
@@ -1866,8 +1859,7 @@
     ],
     "gpt_trader.tui.widgets.risk_detail_modal": [
       "tests/unit/gpt_trader/tui/test_snapshots_modals.py",
-      "tests/unit/gpt_trader/tui/widgets/test_risk_detail_modal_focus_preview.py",
-      "tests/unit/gpt_trader/tui/widgets/test_risk_detail_modal_guard_visibility.py",
+      "tests/unit/gpt_trader/tui/widgets/test_risk_detail.py",
       "tests/unit/gpt_trader/tui/widgets/test_risk_detail_modal_score.py"
     ],
     "gpt_trader.tui.widgets.slim_status": [
@@ -1885,8 +1877,7 @@
     ],
     "gpt_trader.tui.widgets.tile_states": [
       "tests/unit/gpt_trader/tui/widgets/test_alert_inbox.py",
-      "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_actions.py",
-      "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_rendering.py"
+      "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_actions.py"
     ],
     "gpt_trader.tui.widgets.trading_stats": [
       "tests/unit/gpt_trader/tui/widgets/test_trading_stats.py"
@@ -4387,19 +4378,8 @@
       "gpt_trader.tui.widgets.alert_inbox",
       "gpt_trader.tui.widgets.tile_states"
     ],
-    "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_rendering.py": [
-      "gpt_trader.tui.services.alert_manager",
-      "gpt_trader.tui.widgets.alert_inbox",
-      "gpt_trader.tui.widgets.tile_states"
-    ],
-    "tests/unit/gpt_trader/tui/widgets/test_cfm_balance_basic.py": [
+    "tests/unit/gpt_trader/tui/widgets/test_cfm_balance.py": [
       "gpt_trader.core.account",
-      "gpt_trader.tui.widgets.cfm_balance"
-    ],
-    "tests/unit/gpt_trader/tui/widgets/test_cfm_balance_color_coding.py": [
-      "gpt_trader.core.account"
-    ],
-    "tests/unit/gpt_trader/tui/widgets/test_cfm_balance_unavailable.py": [
       "gpt_trader.tui.widgets.cfm_balance"
     ],
     "tests/unit/gpt_trader/tui/widgets/test_config_modal.py": [
@@ -4451,10 +4431,6 @@
       "gpt_trader.tui.types",
       "gpt_trader.tui.widgets.portfolio.position_detail_modal"
     ],
-    "tests/unit/gpt_trader/tui/widgets/test_position_detail_classification.py": [
-      "gpt_trader.tui.types",
-      "gpt_trader.tui.widgets.portfolio.position_detail_modal"
-    ],
     "tests/unit/gpt_trader/tui/widgets/test_positions_widget.py": [
       "gpt_trader.tui.types",
       "gpt_trader.tui.widgets.portfolio"
@@ -4470,11 +4446,7 @@
       "gpt_trader.tui.types",
       "gpt_trader.tui.widgets.risk"
     ],
-    "tests/unit/gpt_trader/tui/widgets/test_risk_detail_modal_focus_preview.py": [
-      "gpt_trader.tui.types",
-      "gpt_trader.tui.widgets.risk_detail_modal"
-    ],
-    "tests/unit/gpt_trader/tui/widgets/test_risk_detail_modal_guard_visibility.py": [
+    "tests/unit/gpt_trader/tui/widgets/test_risk_detail.py": [
       "gpt_trader.tui.types",
       "gpt_trader.tui.widgets.risk_detail_modal"
     ],

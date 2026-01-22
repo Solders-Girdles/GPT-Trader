@@ -1998,7 +1998,8 @@ clusters:
     expected_file_delta: -2
     priority: low
     rationale: Consolidate 3 test files into single parametrized file
-    status: pending
+    status: in_progress
+    owner: codex
     added: '2026-01-21'
   2702cc2b5190:
     type: similar_names
@@ -2332,7 +2333,8 @@ clusters:
     expected_file_delta: -2
     priority: low
     rationale: Consolidate 3 test files into single parametrized file
-    status: pending
+    status: in_progress
+    owner: codex
     added: '2026-01-21'
   b89b9f506607:
     type: similar_names
@@ -2392,7 +2394,8 @@ clusters:
     expected_file_delta: -2
     priority: low
     rationale: Consolidate 3 test files into single parametrized file
-    status: pending
+    status: in_progress
+    owner: codex
     added: '2026-01-21'
   f2c6cc4f883e:
     type: similar_names
@@ -2439,7 +2442,8 @@ clusters:
     expected_file_delta: -2
     priority: low
     rationale: Consolidate 3 test files into single parametrized file
-    status: pending
+    status: in_progress
+    owner: codex
     added: '2026-01-20'
   02a49ca5317d:
     type: source_fanout

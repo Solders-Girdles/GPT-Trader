@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6040,
-    "total_files": 740,
+    "total_tests": 6037,
+    "total_files": 735,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 5875,
+    "unit": 5872,
     "asyncio": 344,
-    "parametrize": 146,
+    "parametrize": 150,
     "property": 82,
     "integration": 79,
     "endpoints": 78,
@@ -765,10 +765,7 @@
       "tests/unit/gpt_trader/tui/widgets/test_account_widget.py",
       "tests/unit/gpt_trader/tui/widgets/test_alert_inbox.py",
       "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_actions.py",
-      "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_rendering.py",
-      "tests/unit/gpt_trader/tui/widgets/test_cfm_balance_basic.py",
-      "tests/unit/gpt_trader/tui/widgets/test_cfm_balance_color_coding.py",
-      "tests/unit/gpt_trader/tui/widgets/test_cfm_balance_unavailable.py",
+      "tests/unit/gpt_trader/tui/widgets/test_cfm_balance.py",
       "tests/unit/gpt_trader/tui/widgets/test_config_modal.py",
       "tests/unit/gpt_trader/tui/widgets/test_dashboard.py",
       "tests/unit/gpt_trader/tui/widgets/test_execution_issues_modal.py",
@@ -782,12 +779,10 @@
       "tests/unit/gpt_trader/tui/widgets/test_position_card.py",
       "tests/unit/gpt_trader/tui/widgets/test_position_detail.py",
       "tests/unit/gpt_trader/tui/widgets/test_position_detail_calculations.py",
-      "tests/unit/gpt_trader/tui/widgets/test_position_detail_classification.py",
       "tests/unit/gpt_trader/tui/widgets/test_positions_widget.py",
       "tests/unit/gpt_trader/tui/widgets/test_responsive_widgets.py",
       "tests/unit/gpt_trader/tui/widgets/test_risk.py",
-      "tests/unit/gpt_trader/tui/widgets/test_risk_detail_modal_focus_preview.py",
-      "tests/unit/gpt_trader/tui/widgets/test_risk_detail_modal_guard_visibility.py",
+      "tests/unit/gpt_trader/tui/widgets/test_risk_detail.py",
       "tests/unit/gpt_trader/tui/widgets/test_risk_detail_modal_score.py",
       "tests/unit/gpt_trader/tui/widgets/test_strategy_widget_core.py",
       "tests/unit/gpt_trader/tui/widgets/test_strategy_widget_decision_display.py",
@@ -48672,34 +48667,34 @@
     "tests/unit/gpt_trader/tui/widgets/test_alert_inbox.py": [
       {
         "name": "TestAlertItem::test_alert_item_stores_alert",
-        "line": 16,
+        "line": 87,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that AlertItem stores the alert reference.",
+        "docstring": "",
         "class": "TestAlertItem"
       },
       {
         "name": "TestAlertItem::test_alert_item_truncate_short_text",
-        "line": 29,
+        "line": 92,
         "markers": [
           "unit"
         ],
-        "docstring": "Test _truncate with text shorter than max_length.",
+        "docstring": "",
         "class": "TestAlertItem"
       },
       {
         "name": "TestAlertItem::test_alert_item_truncate_long_text",
-        "line": 43,
+        "line": 98,
         "markers": [
           "unit"
         ],
-        "docstring": "Test _truncate with text longer than max_length.",
+        "docstring": "",
         "class": "TestAlertItem"
       },
       {
         "name": "TestGetRecoveryHint::test_returns_rule_specific_hint",
-        "line": 62,
+        "line": 107,
         "markers": [
           "unit"
         ],
@@ -48708,7 +48703,7 @@
       },
       {
         "name": "TestGetRecoveryHint::test_returns_rule_specific_hint_rate_limit",
-        "line": 65,
+        "line": 110,
         "markers": [
           "unit"
         ],
@@ -48717,7 +48712,7 @@
       },
       {
         "name": "TestGetRecoveryHint::test_returns_rule_specific_hint_reduce_only",
-        "line": 68,
+        "line": 113,
         "markers": [
           "unit"
         ],
@@ -48726,7 +48721,7 @@
       },
       {
         "name": "TestGetRecoveryHint::test_returns_rule_specific_hint_daily_loss",
-        "line": 71,
+        "line": 116,
         "markers": [
           "unit"
         ],
@@ -48735,7 +48730,7 @@
       },
       {
         "name": "TestGetRecoveryHint::test_returns_rule_specific_hint_bot_stopped",
-        "line": 74,
+        "line": 119,
         "markers": [
           "unit"
         ],
@@ -48744,7 +48739,7 @@
       },
       {
         "name": "TestGetRecoveryHint::test_falls_back_to_category_hint_system",
-        "line": 77,
+        "line": 122,
         "markers": [
           "unit"
         ],
@@ -48753,7 +48748,7 @@
       },
       {
         "name": "TestGetRecoveryHint::test_falls_back_to_category_hint_risk",
-        "line": 80,
+        "line": 125,
         "markers": [
           "unit"
         ],
@@ -48762,7 +48757,7 @@
       },
       {
         "name": "TestGetRecoveryHint::test_falls_back_to_category_hint_error",
-        "line": 83,
+        "line": 128,
         "markers": [
           "unit"
         ],
@@ -48771,7 +48766,7 @@
       },
       {
         "name": "TestGetRecoveryHint::test_returns_none_for_unknown_category",
-        "line": 86,
+        "line": 131,
         "markers": [
           "unit"
         ],
@@ -48780,21 +48775,57 @@
       },
       {
         "name": "TestAlertInboxRefreshAndEmptyStates::test_refresh_with_no_manager_calls_show_empty",
-        "line": 124,
+        "line": 136,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that _refresh_alerts with no manager shows empty state.",
+        "docstring": "",
         "class": "TestAlertInboxRefreshAndEmptyStates"
       },
       {
         "name": "TestAlertInboxRefreshAndEmptyStates::test_show_empty_hides_list_shows_empty_state",
-        "line": 132,
+        "line": 143,
         "markers": [
           "unit"
         ],
-        "docstring": "Test that _show_empty hides list and shows empty state.",
+        "docstring": "",
         "class": "TestAlertInboxRefreshAndEmptyStates"
+      },
+      {
+        "name": "TestAlertInboxAlertListRender::test_refresh_with_alerts_updates_count_label",
+        "line": 152,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestAlertInboxAlertListRender"
+      },
+      {
+        "name": "TestAlertInboxAlertListRender::test_refresh_with_alerts_shows_list_hides_empty",
+        "line": 162,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestAlertInboxAlertListRender"
+      },
+      {
+        "name": "TestAlertInboxAlertListRender::test_refresh_with_alerts_appends_alert_items",
+        "line": 173,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestAlertInboxAlertListRender"
+      },
+      {
+        "name": "TestAlertInboxAlertListRender::test_refresh_with_empty_alerts_shows_empty_state",
+        "line": 186,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestAlertInboxAlertListRender"
       }
     ],
     "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_actions.py": [
@@ -48880,45 +48911,7 @@
         "class": "TestAlertInboxFilterActions"
       }
     ],
-    "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_rendering.py": [
-      {
-        "name": "TestAlertInboxAlertListRender::test_refresh_with_alerts_updates_count_label",
-        "line": 70,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that refreshing with alerts updates the count label.",
-        "class": "TestAlertInboxAlertListRender"
-      },
-      {
-        "name": "TestAlertInboxAlertListRender::test_refresh_with_alerts_shows_list_hides_empty",
-        "line": 81,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that refreshing with alerts shows list and hides empty state.",
-        "class": "TestAlertInboxAlertListRender"
-      },
-      {
-        "name": "TestAlertInboxAlertListRender::test_refresh_with_alerts_appends_alert_items",
-        "line": 93,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that refreshing with alerts appends AlertItem entries.",
-        "class": "TestAlertInboxAlertListRender"
-      },
-      {
-        "name": "TestAlertInboxAlertListRender::test_refresh_with_empty_alerts_shows_empty_state",
-        "line": 109,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that refreshing with empty alert list shows empty state.",
-        "class": "TestAlertInboxAlertListRender"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/widgets/test_cfm_balance_basic.py": [
+    "tests/unit/gpt_trader/tui/widgets/test_cfm_balance.py": [
       {
         "name": "TestCFMBalanceWidgetBasic::test_initial_state_no_cfm",
         "line": 14,
@@ -48945,12 +48938,10 @@
         ],
         "docstring": "Test that valid CFMBalance updates the widget correctly.",
         "class": "TestCFMBalanceWidgetBasic"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/widgets/test_cfm_balance_color_coding.py": [
+      },
       {
         "name": "TestCFMBalanceWidgetColorCoding::test_margin_utilization_color_coding_low",
-        "line": 11,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -48959,7 +48950,7 @@
       },
       {
         "name": "TestCFMBalanceWidgetColorCoding::test_margin_utilization_color_coding_high",
-        "line": 32,
+        "line": 74,
         "markers": [
           "unit"
         ],
@@ -48968,7 +48959,7 @@
       },
       {
         "name": "TestCFMBalanceWidgetColorCoding::test_pnl_positive_color_coding",
-        "line": 53,
+        "line": 95,
         "markers": [
           "unit"
         ],
@@ -48977,7 +48968,7 @@
       },
       {
         "name": "TestCFMBalanceWidgetColorCoding::test_pnl_negative_color_coding",
-        "line": 75,
+        "line": 117,
         "markers": [
           "unit"
         ],
@@ -48986,18 +48977,16 @@
       },
       {
         "name": "TestCFMBalanceWidgetColorCoding::test_liquidation_buffer_critical",
-        "line": 96,
+        "line": 138,
         "markers": [
           "unit"
         ],
         "docstring": "Test liquidation buffer shows red bold for critical level.",
         "class": "TestCFMBalanceWidgetColorCoding"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/widgets/test_cfm_balance_unavailable.py": [
+      },
       {
         "name": "TestCFMBalanceWidgetUnavailable::test_show_unavailable",
-        "line": 11,
+        "line": 161,
         "markers": [
           "unit"
         ],
@@ -49837,7 +49826,7 @@
     "tests/unit/gpt_trader/tui/widgets/test_position_detail.py": [
       {
         "name": "TestPositionDetailModalInit::test_init_with_position",
-        "line": 12,
+        "line": 58,
         "markers": [
           "unit"
         ],
@@ -49846,7 +49835,7 @@
       },
       {
         "name": "TestPositionDetailModalInit::test_init_with_trades",
-        "line": 28,
+        "line": 67,
         "markers": [
           "unit"
         ],
@@ -49855,7 +49844,7 @@
       },
       {
         "name": "TestPositionDetailModalInit::test_filters_trades_by_symbol",
-        "line": 66,
+        "line": 79,
         "markers": [
           "unit"
         ],
@@ -49864,7 +49853,7 @@
       },
       {
         "name": "TestPositionDetailModalRecentFills::test_get_recent_fills_ordering_and_limit",
-        "line": 114,
+        "line": 95,
         "markers": [
           "unit"
         ],
@@ -49873,18 +49862,48 @@
       },
       {
         "name": "TestPositionDetailModalRecentFills::test_format_recent_fill_row_contains_all_fields",
-        "line": 173,
+        "line": 114,
         "markers": [
           "unit"
         ],
         "docstring": "",
         "class": "TestPositionDetailModalRecentFills"
+      },
+      {
+        "name": "TestPositionDetailModalTradeClassification::test_categorize_trades",
+        "line": 142,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestPositionDetailModalTradeClassification"
+      },
+      {
+        "name": "TestPositionDetailModalTradeClassification::test_get_trade_type",
+        "line": 168,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestPositionDetailModalTradeClassification"
+      },
+      {
+        "name": "TestPositionDetailModalTradeClassification::test_format_trade_time",
+        "line": 185,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestPositionDetailModalTradeClassification"
       }
     ],
     "tests/unit/gpt_trader/tui/widgets/test_position_detail_calculations.py": [
       {
         "name": "TestPositionDetailModalCalculations::test_calculate_total_fees",
-        "line": 12,
+        "line": 58,
         "markers": [
           "unit"
         ],
@@ -49892,18 +49911,10 @@
         "class": "TestPositionDetailModalCalculations"
       },
       {
-        "name": "TestPositionDetailModalCalculations::test_calculate_realized_pnl_long_position",
-        "line": 52,
+        "name": "TestPositionDetailModalCalculations::test_calculate_realized_pnl",
+        "line": 118,
         "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestPositionDetailModalCalculations"
-      },
-      {
-        "name": "TestPositionDetailModalCalculations::test_calculate_realized_pnl_short_position",
-        "line": 90,
-        "markers": [
+          "parametrize",
           "unit"
         ],
         "docstring": "",
@@ -49920,7 +49931,7 @@
       },
       {
         "name": "TestPositionDetailModalFillQuality::test_build_fill_quality_line_formats_values",
-        "line": 144,
+        "line": 137,
         "markers": [
           "unit"
         ],
@@ -49929,59 +49940,12 @@
       },
       {
         "name": "TestPositionDetailModalFillQuality::test_build_fill_quality_line_single_trade_zero_range",
-        "line": 187,
+        "line": 154,
         "markers": [
           "unit"
         ],
         "docstring": "",
         "class": "TestPositionDetailModalFillQuality"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/widgets/test_position_detail_classification.py": [
-      {
-        "name": "TestPositionDetailModalTradeClassification::test_categorize_trades_long",
-        "line": 10,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestPositionDetailModalTradeClassification"
-      },
-      {
-        "name": "TestPositionDetailModalTradeClassification::test_categorize_trades_short",
-        "line": 51,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestPositionDetailModalTradeClassification"
-      },
-      {
-        "name": "TestPositionDetailModalTradeClassification::test_get_trade_type_long_position",
-        "line": 92,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestPositionDetailModalTradeClassification"
-      },
-      {
-        "name": "TestPositionDetailModalTradeClassification::test_get_trade_type_short_position",
-        "line": 127,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestPositionDetailModalTradeClassification"
-      },
-      {
-        "name": "TestPositionDetailModalTradeClassification::test_format_trade_time",
-        "line": 162,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestPositionDetailModalTradeClassification"
       }
     ],
     "tests/unit/gpt_trader/tui/widgets/test_positions_widget.py": [
@@ -50134,36 +50098,7 @@
         "class": "TestRiskWidget"
       }
     ],
-    "tests/unit/gpt_trader/tui/widgets/test_risk_detail_modal_focus_preview.py": [
-      {
-        "name": "TestFocusPreviewParameter::test_default_focus_preview_is_false",
-        "line": 10,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Modal defaults to focus_preview=False.",
-        "class": "TestFocusPreviewParameter"
-      },
-      {
-        "name": "TestFocusPreviewParameter::test_focus_preview_parameter_stored",
-        "line": 16,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Modal stores focus_preview parameter when True.",
-        "class": "TestFocusPreviewParameter"
-      },
-      {
-        "name": "TestFocusPreviewParameter::test_focus_preview_explicit_false",
-        "line": 22,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Modal accepts explicit focus_preview=False.",
-        "class": "TestFocusPreviewParameter"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/widgets/test_risk_detail_modal_guard_visibility.py": [
+    "tests/unit/gpt_trader/tui/widgets/test_risk_detail.py": [
       {
         "name": "TestEnhancedGuardVisibility::test_get_sorted_guards_by_severity",
         "line": 12,
@@ -50244,6 +50179,33 @@
         ],
         "docstring": "Severity order works regardless of case.",
         "class": "TestEnhancedGuardVisibility"
+      },
+      {
+        "name": "TestFocusPreviewParameter::test_default_focus_preview_is_false",
+        "line": 113,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Modal defaults to focus_preview=False.",
+        "class": "TestFocusPreviewParameter"
+      },
+      {
+        "name": "TestFocusPreviewParameter::test_focus_preview_parameter_stored",
+        "line": 119,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Modal stores focus_preview parameter when True.",
+        "class": "TestFocusPreviewParameter"
+      },
+      {
+        "name": "TestFocusPreviewParameter::test_focus_preview_explicit_false",
+        "line": 125,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Modal accepts explicit focus_preview=False.",
+        "class": "TestFocusPreviewParameter"
       }
     ],
     "tests/unit/gpt_trader/tui/widgets/test_risk_detail_modal_score.py": [

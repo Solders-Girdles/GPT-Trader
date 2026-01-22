@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6152,
-    "total_files": 781,
+    "total_files": 780,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -335,7 +335,6 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_streaming.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin_trades.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_dispatcher.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_edge.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_parsing.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_backoff.py",
@@ -7204,7 +7203,7 @@
     "tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker_trading.py": [
       {
         "name": "TestSimulatedBrokerOrders::test_place_order_requires_quantity",
-        "line": 70,
+        "line": 69,
         "markers": [
           "unit"
         ],
@@ -7213,7 +7212,7 @@
       },
       {
         "name": "TestSimulatedBrokerOrders::test_place_limit_order_submitted",
-        "line": 80,
+        "line": 79,
         "markers": [
           "unit"
         ],
@@ -7222,7 +7221,7 @@
       },
       {
         "name": "TestSimulatedBrokerOrders::test_cancel_nonexistent_order",
-        "line": 96,
+        "line": 95,
         "markers": [
           "unit"
         ],
@@ -7231,7 +7230,7 @@
       },
       {
         "name": "TestSimulatedBrokerOrders::test_cancel_open_order",
-        "line": 100,
+        "line": 99,
         "markers": [
           "unit"
         ],
@@ -7240,7 +7239,7 @@
       },
       {
         "name": "TestSimulatedBrokerOrders::test_cancel_open_order_direct",
-        "line": 115,
+        "line": 114,
         "markers": [
           "unit"
         ],
@@ -7249,7 +7248,7 @@
       },
       {
         "name": "test_market_order_chaos_scenarios",
-        "line": 152,
+        "line": 151,
         "markers": [
           "parametrize",
           "unit"
@@ -7258,7 +7257,7 @@
       },
       {
         "name": "test_calculate_margin_used",
-        "line": 199,
+        "line": 200,
         "markers": [
           "parametrize",
           "unit"
@@ -7267,7 +7266,7 @@
       },
       {
         "name": "test_position_helpers_with_position",
-        "line": 205,
+        "line": 206,
         "markers": [
           "unit"
         ],
@@ -7275,7 +7274,7 @@
       },
       {
         "name": "test_position_helpers_without_position",
-        "line": 231,
+        "line": 232,
         "markers": [
           "unit"
         ],
@@ -16725,7 +16724,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events.py": [
       {
         "name": "TestEventType::test_event_types_values",
-        "line": 11,
+        "line": 12,
         "markers": [
           "unit"
         ],
@@ -16734,7 +16733,7 @@
       },
       {
         "name": "TestSequenceGuard::test_annotate_returns_message_unchanged_without_sequence",
-        "line": 21,
+        "line": 22,
         "markers": [
           "unit"
         ],
@@ -16743,7 +16742,7 @@
       },
       {
         "name": "TestSequenceGuard::test_annotate_first_message_no_gap",
-        "line": 32,
+        "line": 31,
         "markers": [
           "unit"
         ],
@@ -16752,7 +16751,7 @@
       },
       {
         "name": "TestSequenceGuard::test_annotate_sequential_messages_no_gap",
-        "line": 42,
+        "line": 39,
         "markers": [
           "unit"
         ],
@@ -16761,7 +16760,7 @@
       },
       {
         "name": "TestSequenceGuard::test_annotate_gap_detected",
-        "line": 55,
+        "line": 50,
         "markers": [
           "unit"
         ],
@@ -16770,7 +16769,7 @@
       },
       {
         "name": "TestSequenceGuard::test_reset_clears_state",
-        "line": 65,
+        "line": 58,
         "markers": [
           "unit"
         ],
@@ -16779,7 +16778,7 @@
       },
       {
         "name": "TestCoinbaseWebSocketHealth::test_get_health_returns_all_fields",
-        "line": 81,
+        "line": 71,
         "markers": [
           "unit"
         ],
@@ -16788,7 +16787,7 @@
       },
       {
         "name": "TestCoinbaseWebSocketHealth::test_get_health_initial_state",
-        "line": 96,
+        "line": 84,
         "markers": [
           "unit"
         ],
@@ -16797,7 +16796,7 @@
       },
       {
         "name": "TestCoinbaseWebSocketHealth::test_get_health_reflects_gap_count",
-        "line": 111,
+        "line": 97,
         "markers": [
           "unit"
         ],
@@ -16806,18 +16805,16 @@
       },
       {
         "name": "TestCoinbaseWebSocketHealth::test_get_health_reflects_reconnect_count",
-        "line": 121,
+        "line": 105,
         "markers": [
           "unit"
         ],
         "docstring": "",
         "class": "TestCoinbaseWebSocketHealth"
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_dispatcher.py": [
+      },
       {
         "name": "TestEventDispatcher::test_dispatch_ticker",
-        "line": 11,
+        "line": 117,
         "markers": [
           "unit"
         ],
@@ -16826,7 +16823,7 @@
       },
       {
         "name": "TestEventDispatcher::test_dispatch_trades",
-        "line": 26,
+        "line": 132,
         "markers": [
           "unit"
         ],
@@ -16835,7 +16832,7 @@
       },
       {
         "name": "TestEventDispatcher::test_dispatch_orderbook",
-        "line": 53,
+        "line": 159,
         "markers": [
           "unit"
         ],
@@ -16844,7 +16841,7 @@
       },
       {
         "name": "TestEventDispatcher::test_dispatch_raw_always_called",
-        "line": 67,
+        "line": 173,
         "markers": [
           "unit"
         ],
@@ -16853,7 +16850,7 @@
       },
       {
         "name": "TestEventDispatcher::test_dispatch_error_event",
-        "line": 79,
+        "line": 185,
         "markers": [
           "unit"
         ],
@@ -16862,7 +16859,7 @@
       },
       {
         "name": "TestEventDispatcher::test_handler_exception_does_not_stop_dispatch",
-        "line": 91,
+        "line": 197,
         "markers": [
           "unit"
         ],
@@ -16871,7 +16868,7 @@
       },
       {
         "name": "TestEventDispatcher::test_multiple_handlers",
-        "line": 113,
+        "line": 218,
         "markers": [
           "unit"
         ],

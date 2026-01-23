@@ -1342,7 +1342,7 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/backtesting/simulation/test_fee_calculator.py
-    expected_file_delta: -2
+    expected_file_delta: -1
     priority: low
     rationale: Consolidated fee calculator suites into core + volume modules to stay under hygiene cap
     status: done
@@ -1966,8 +1966,10 @@ clusters:
     target_location: tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data.py
     expected_file_delta: -2
     priority: low
-    rationale: Consolidate 3 test files into single parametrized file
-    status: pending
+    rationale: Consolidated strategy detail coverage into two modules under hygiene cap
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/404
     added: '2026-01-22'
   224e07597e52:
     type: similar_names

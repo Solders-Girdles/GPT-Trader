@@ -400,7 +400,8 @@ from gpt_trader.features.brokerages.mock import DeterministicBroker
 broker = ChaosBroker(DeterministicBroker(), api_outage_scenario())
 ```
 
-Tip: patch `time.sleep` in tests if you use delayed faults to keep unit tests fast.
+Tip: avoid real delays in tests by passing a no-op `sleep_func` to `ChaosBroker` (for example,
+`sleep_func=lambda _: None`). Prefer injected sleep over patching `time.sleep`.
 
 ## Rollout Checklist
 

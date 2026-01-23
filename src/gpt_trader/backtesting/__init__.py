@@ -30,7 +30,8 @@ Example:
 
     # Run backtest
     async for bar_time, bars, quotes in runner.run():
-        broker.update_market_data(bar_time, bars, quotes)
+        for symbol, bar in bars.items():
+            broker.update_bar(symbol, bar)
         await strategy_coordinator.run_cycle()
 
     # Generate report

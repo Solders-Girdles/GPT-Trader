@@ -50,7 +50,8 @@ docker compose --project-directory deploy/gpt_trader/docker \
 ```
 
 This is the canonical local monitoring stack. It provisions Grafana from
-`monitoring/grafana/provisioning/` + `monitoring/grafana/dashboards/` and uses
+`deploy/gpt_trader/docker/grafana/provisioning/` +
+`deploy/gpt_trader/docker/grafana/dashboards/` and uses
 `deploy/gpt_trader/docker/prometheus.minimal.yml` for Prometheus.
 
 For full stack (Elasticsearch, Kibana, Jaeger):
@@ -174,11 +175,13 @@ prefers `events.db` and uses `events.jsonl` only as a fallback.
 
 ## Grafana Dashboard
 
-Dashboards are auto-provisioned from `monitoring/grafana/dashboards/` when using
-the deploy compose stack. For manual import, use the JSON files in that
-directory (for example, `monitoring/grafana/dashboards/grafana_dashboard.json`).
+Dashboards are auto-provisioned from `deploy/gpt_trader/docker/grafana/dashboards/`
+when using the deploy compose stack. For manual import, use the JSON files in
+that directory (for example,
+`deploy/gpt_trader/docker/grafana/dashboards/grafana_dashboard.json`).
 
-Legacy manual import (older example) uses `scripts/monitoring/grafana-dashboard.json.example`:
+Manual import uses the JSON files in
+`deploy/gpt_trader/docker/grafana/dashboards/`:
 1. In Grafana: **+ → Import**
 2. Paste JSON content
 3. Select Prometheus data source
@@ -273,12 +276,5 @@ degradation_ok, degradation_details = check_degradation_state(degradation_state,
 
 ## Legacy/Standalone Compose Bundle
 
-If you want the standalone monitoring stack (exporters + alertmanager), use the
-`monitoring/docker-compose.monitoring.yml` bundle:
-
-```bash
-cd monitoring
-docker compose -f docker-compose.monitoring.yml up -d
-```
-
-The older `scripts/monitoring/*.example` files are legacy references.
+The standalone monitoring compose bundle has been retired. Use the deploy
+compose stack (`deploy/gpt_trader/docker`) with the `observability` profile.

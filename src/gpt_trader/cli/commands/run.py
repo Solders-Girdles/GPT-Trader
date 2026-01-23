@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import inspect
 import os
 import signal
 from argparse import Namespace
@@ -206,7 +207,16 @@ def _run_bot(bot: Any, *, single_cycle: bool) -> int:
                     pass
 
     try:
-        asyncio.run(run_bot())
+        run_coro = run_bot()
+        try:
+            asyncio.run(run_coro)
+        finally:
+            # Avoid "coroutine was never awaited" warnings when asyncio.run is mocked.
+            if (
+                inspect.iscoroutine(run_coro)
+                and inspect.getcoroutinestate(run_coro) == inspect.CORO_CREATED
+            ):
+                run_coro.close()
     except KeyboardInterrupt:  # pragma: no cover - defensive
         logger.info("Shutdown complete.", status="stopped")
     finally:

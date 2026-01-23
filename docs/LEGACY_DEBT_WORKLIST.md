@@ -13,8 +13,8 @@ This is the canonical legacy-debt tracker; other reports (e.g. `docs/LEGACY_DEBT
   - `coverage_output.txt`
   - `test_output.txt`
 - [x] Resolve monitoring stack duplication and naming drift:
-  - `monitoring/` stack uses `gpt-trader-*` container names
-  - `scripts/monitoring/docker-compose.yml.example` uses legacy `coinbase_trader_*` names
+  - Removed the legacy `monitoring/` compose stack; `deploy/gpt_trader/docker` is now the only supported entrypoint.
+  - Removed legacy monitoring example bundles from `scripts/monitoring/*.example`.
 
 ## P1 — Versioning / naming drift (high confusion risk)
 

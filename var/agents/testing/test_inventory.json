@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6031,
-    "total_files": 717,
+    "total_files": 716,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -670,8 +670,7 @@
       "tests/unit/gpt_trader/tui/mixins/test_event_handlers_utils.py",
       "tests/unit/gpt_trader/tui/screens/test_alert_history.py",
       "tests/unit/gpt_trader/tui/screens/test_api_setup_wizard.py",
-      "tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen_backtest_and_badges.py",
-      "tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen_indicator_hints.py",
+      "tests/unit/gpt_trader/tui/screens/test_strategy_detail.py",
       "tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen_signal_detail_content.py",
       "tests/unit/gpt_trader/tui/services/test_action_dispatcher_core.py",
       "tests/unit/gpt_trader/tui/services/test_action_dispatcher_refresh.py",
@@ -20232,7 +20231,7 @@
       },
       {
         "name": "test_collect_runtime_guard_state_fallback_equity",
-        "line": 106,
+        "line": 105,
         "markers": [
           "unit"
         ],
@@ -20240,7 +20239,7 @@
       },
       {
         "name": "test_collect_runtime_guard_state_handles_position_errors",
-        "line": 117,
+        "line": 116,
         "markers": [
           "unit"
         ],
@@ -20248,7 +20247,7 @@
       },
       {
         "name": "test_run_guards_for_state_calls_all_guards",
-        "line": 132,
+        "line": 131,
         "markers": [
           "unit"
         ],
@@ -20256,7 +20255,7 @@
       },
       {
         "name": "test_run_runtime_guards_first_run",
-        "line": 153,
+        "line": 152,
         "markers": [
           "unit"
         ],
@@ -20264,7 +20263,7 @@
       },
       {
         "name": "test_run_runtime_guards_incremental",
-        "line": 167,
+        "line": 166,
         "markers": [
           "unit"
         ],
@@ -20272,7 +20271,7 @@
       },
       {
         "name": "test_run_runtime_guards_force_full",
-        "line": 185,
+        "line": 184,
         "markers": [
           "unit"
         ],
@@ -20280,7 +20279,7 @@
       },
       {
         "name": "test_cancel_all_orders_none_cancelled",
-        "line": 204,
+        "line": 203,
         "markers": [
           "unit"
         ],
@@ -20288,7 +20287,7 @@
       },
       {
         "name": "test_cancel_all_orders_empty_list",
-        "line": 213,
+        "line": 212,
         "markers": [
           "unit"
         ],
@@ -20296,7 +20295,7 @@
       },
       {
         "name": "test_safe_run_runtime_guards_success",
-        "line": 228,
+        "line": 227,
         "markers": [
           "unit"
         ],
@@ -20304,7 +20303,7 @@
       },
       {
         "name": "test_safe_run_runtime_guards_force_full",
-        "line": 235,
+        "line": 234,
         "markers": [
           "unit"
         ],
@@ -41133,10 +41132,10 @@
         "class": "TestWizardNavigation"
       }
     ],
-    "tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen_backtest_and_badges.py": [
+    "tests/unit/gpt_trader/tui/screens/test_strategy_detail.py": [
       {
         "name": "TestBuildBacktestDisplay::test_build_backtest_display_placeholder",
-        "line": 10,
+        "line": 13,
         "markers": [
           "unit"
         ],
@@ -41145,7 +41144,7 @@
       },
       {
         "name": "TestBuildBacktestDisplay::test_build_backtest_display_values",
-        "line": 24,
+        "line": 27,
         "markers": [
           "unit"
         ],
@@ -41154,7 +41153,7 @@
       },
       {
         "name": "TestFormatDelta::test_positive_delta_shows_green_with_plus",
-        "line": 46,
+        "line": 49,
         "markers": [
           "unit"
         ],
@@ -41163,7 +41162,7 @@
       },
       {
         "name": "TestFormatDelta::test_negative_delta_shows_red",
-        "line": 53,
+        "line": 56,
         "markers": [
           "unit"
         ],
@@ -41172,7 +41171,7 @@
       },
       {
         "name": "TestFormatDelta::test_no_previous_returns_empty",
-        "line": 60,
+        "line": 63,
         "markers": [
           "unit"
         ],
@@ -41181,7 +41180,7 @@
       },
       {
         "name": "TestFormatDelta::test_tiny_delta_ignored",
-        "line": 66,
+        "line": 69,
         "markers": [
           "unit"
         ],
@@ -41190,7 +41189,7 @@
       },
       {
         "name": "TestFormatDelta::test_precision_parameter",
-        "line": 72,
+        "line": 75,
         "markers": [
           "unit"
         ],
@@ -41199,7 +41198,7 @@
       },
       {
         "name": "TestFormatDelta::test_suffix_parameter",
-        "line": 78,
+        "line": 81,
         "markers": [
           "unit"
         ],
@@ -41208,7 +41207,7 @@
       },
       {
         "name": "TestEntryExitBadgeDetailScreen::test_buy_action_returns_entry_badge",
-        "line": 88,
+        "line": 91,
         "markers": [
           "unit"
         ],
@@ -41217,7 +41216,7 @@
       },
       {
         "name": "TestEntryExitBadgeDetailScreen::test_close_action_returns_exit_badge",
-        "line": 95,
+        "line": 98,
         "markers": [
           "unit"
         ],
@@ -41226,18 +41225,16 @@
       },
       {
         "name": "TestEntryExitBadgeDetailScreen::test_hold_action_returns_empty",
-        "line": 102,
+        "line": 105,
         "markers": [
           "unit"
         ],
         "docstring": "HOLD action returns empty string.",
         "class": "TestEntryExitBadgeDetailScreen"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen_indicator_hints.py": [
+      },
       {
         "name": "TestStrategyParametersFormat::test_rsi_period_formatted",
-        "line": 10,
+        "line": 115,
         "markers": [
           "unit"
         ],
@@ -41246,7 +41243,7 @@
       },
       {
         "name": "TestStrategyParametersFormat::test_ma_shows_all_parts",
-        "line": 15,
+        "line": 120,
         "markers": [
           "unit"
         ],
@@ -41255,7 +41252,7 @@
       },
       {
         "name": "TestStrategyParametersFormat::test_ema_uses_ma_params",
-        "line": 23,
+        "line": 128,
         "markers": [
           "unit"
         ],
@@ -41264,7 +41261,7 @@
       },
       {
         "name": "TestStrategyParametersFormat::test_zscore_formatted",
-        "line": 30,
+        "line": 135,
         "markers": [
           "unit"
         ],
@@ -41273,7 +41270,7 @@
       },
       {
         "name": "TestStrategyParametersFormat::test_vwap_deviation_percent",
-        "line": 37,
+        "line": 142,
         "markers": [
           "unit"
         ],
@@ -41282,7 +41279,7 @@
       },
       {
         "name": "TestStrategyParametersFormat::test_spread_tight_bps",
-        "line": 42,
+        "line": 147,
         "markers": [
           "unit"
         ],
@@ -41291,7 +41288,7 @@
       },
       {
         "name": "TestStrategyParametersFormat::test_orderbook_formatted",
-        "line": 47,
+        "line": 152,
         "markers": [
           "unit"
         ],
@@ -41300,7 +41297,7 @@
       },
       {
         "name": "TestStrategyParametersFormat::test_unknown_indicator_returns_none",
-        "line": 54,
+        "line": 159,
         "markers": [
           "unit"
         ],
@@ -41309,7 +41306,7 @@
       },
       {
         "name": "TestStrategyParametersFormat::test_no_params_configured_returns_none",
-        "line": 60,
+        "line": 165,
         "markers": [
           "unit"
         ],
@@ -41318,7 +41315,7 @@
       },
       {
         "name": "TestStrategyParametersFormat::test_case_insensitive",
-        "line": 66,
+        "line": 171,
         "markers": [
           "unit"
         ],
@@ -41327,7 +41324,7 @@
       },
       {
         "name": "TestGetIndicatorHint::test_exact_match_static_fallback",
-        "line": 76,
+        "line": 181,
         "markers": [
           "unit"
         ],
@@ -41336,7 +41333,7 @@
       },
       {
         "name": "TestGetIndicatorHint::test_case_insensitive_static",
-        "line": 81,
+        "line": 186,
         "markers": [
           "unit"
         ],
@@ -41345,7 +41342,7 @@
       },
       {
         "name": "TestGetIndicatorHint::test_with_parameters_in_name",
-        "line": 86,
+        "line": 191,
         "markers": [
           "unit"
         ],
@@ -41354,7 +41351,7 @@
       },
       {
         "name": "TestGetIndicatorHint::test_unknown_returns_none",
-        "line": 92,
+        "line": 197,
         "markers": [
           "unit"
         ],
@@ -41363,7 +41360,7 @@
       },
       {
         "name": "TestGetIndicatorHint::test_live_params_take_precedence",
-        "line": 97,
+        "line": 202,
         "markers": [
           "unit"
         ],
@@ -41372,7 +41369,7 @@
       },
       {
         "name": "TestGetIndicatorHint::test_fallback_to_static_when_param_not_configured",
-        "line": 102,
+        "line": 207,
         "markers": [
           "unit"
         ],
@@ -41381,7 +41378,7 @@
       },
       {
         "name": "TestGetIndicatorHint::test_live_params_for_multiple_indicators",
-        "line": 107,
+        "line": 212,
         "markers": [
           "unit"
         ],

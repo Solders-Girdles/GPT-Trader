@@ -4,7 +4,7 @@ This is a running checklist of likely legacy remnants (naming, organization, com
 
 Use this as a backlog: each item should either be **confirmed as intentionally supported** (keep), or **removed/rewritten** (pay down debt).
 
-This is the canonical legacy-debt tracker; other reports (e.g. `docs/LEGACY_DEBT.md`) should be folded into this file to avoid drift.
+This is the canonical legacy-debt tracker; fold any other reports into this file to avoid drift.
 
 ## P0 — Broken / misleading today
 
@@ -68,7 +68,7 @@ This is the canonical legacy-debt tracker; other reports (e.g. `docs/LEGACY_DEBT
   - Add `src/gpt_trader/persistence/` to `README.md` and `docs/ARCHITECTURE.md`.
   - Clarify canonical `src/gpt_trader/backtesting/` and how `features/research` relates (wrapper/adapter).
 - [x] Remove/clarify `ServiceRegistry` mentions in runtime comments (keep migration docs intentional).
-- [x] Update stale “orchestration” wording in `docs/plans/TUI_IMPROVEMENT_PLAN.md`.
+- [x] Update stale “orchestration” wording in `docs/archive/plans/TUI_IMPROVEMENT_PLAN.md`.
 - [x] Deprecate legacy profile-mapping schema support in `BotConfig.from_dict` (warnings + removal plan).
 - [x] Confirm `gpt_trader.logging.orchestration_helpers` is fully removed (code is gone; keep only migration notes in docs).
 - [x] Reconcile / prune stale entries in the deprecation tracker so it reflects reality:

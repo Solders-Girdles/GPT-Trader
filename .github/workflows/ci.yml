@@ -79,6 +79,9 @@ jobs:
       - name: Run markdown link audit
         run: python scripts/maintenance/docs_link_audit.py
 
+      - name: Check docs reachability
+        run: python scripts/maintenance/docs_reachability_check.py
+
   typecheck:
     name: Type Check
     runs-on: ubuntu-latest

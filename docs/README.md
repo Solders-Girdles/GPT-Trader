@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2025-11-24
+last-updated: 2026-01-23
 ---
 
 ## Start Here
@@ -20,7 +20,10 @@ last-updated: 2025-11-24
 | [Production Guide](guides/production.md) | Deployment, rollout, and emergency procedures |
 | [Readiness Checklist](READINESS.md) | Gates to move from paper to live trading |
 | [Reliability Guide](RELIABILITY.md) | Guard stack, degradation responses, chaos testing |
+| [TUI Guide](TUI_GUIDE.md) | Launching and operating the terminal UI |
+| [TUI Style Guide](TUI_STYLE_GUIDE.md) | Visual standards for TUI components |
 | [Coinbase Reference](reference/coinbase_complete.md) | Complete API integration docs |
+| [Naming Standards](naming.md) | Approved terminology and banned abbreviations |
 | [AI Agent Guide](guides/agents.md) | For AI agents working with this codebase |
 | [Agent Docs Index](agents/README.md) | AI-focused maps and inventories |
 | [Agent Tools](guides/agent-tools.md) | Tooling and helper commands |
@@ -41,9 +44,11 @@ last-updated: 2025-11-24
 
 ### Trading Operations
 - [Production Deployment](guides/production.md) - Deployment, monitoring, rollback, emergencies
+- [Canary Runbook](guides/canary_runbook.md) - Step-by-step canary validation phases
 - [Readiness Checklist](READINESS.md) - Paper/live gate criteria and evidence
 - [Reliability Guide](RELIABILITY.md) - Degradation matrix, config defaults, chaos harness
 - [Monitoring Playbook](MONITORING_PLAYBOOK.md) - Metrics, alerting, and dashboards
+- [Alert Runbooks](operations/RUNBOOKS.md) - Incident response procedures by alert type
 - [Observability Reference](OBSERVABILITY.md) - Metrics, traces, and structured logging
 - [Paper Trading](guides/paper_trading.md) - Safe testing with mock broker
 - [Backtesting](guides/backtesting.md) - Historical strategy validation
@@ -58,7 +63,14 @@ last-updated: 2025-11-24
 - [Development Guidelines](DEVELOPMENT_GUIDELINES.md) - Standards for contributing
 - [Feature Slice Scaffolding](DEVELOPMENT_GUIDELINES.md#slice-scaffolding) - Bootstrap new slices
 - [DI Policy](DI_POLICY.md) - Dependency injection patterns and container usage
+- [Naming Standards](naming.md) - Terminology, casing, and banned abbreviations
+- [Legacy Debt Worklist](LEGACY_DEBT_WORKLIST.md) - Backlog of legacy cleanup items
 - [Security](SECURITY.md) - Security practices and considerations
+
+### TUI
+- [TUI Guide](TUI_GUIDE.md) - Launching, configuration, and operator workflows
+- [TUI Style Guide](TUI_STYLE_GUIDE.md) - Visual standards and component rules
+- [TUI Event Migration](guides/tui_event_migration.md) - Event-driven messaging patterns
 
 ## Configuration
 
@@ -81,6 +93,10 @@ last-updated: 2025-11-24
 - [Training Guide](TRAINING_GUIDE.md) - Contributor onboarding and system overview
 - [PnL Calculations](PNL_CALCULATION_DIFFERENCES.md) - Profit/loss methodology
 - [Changelog](CHANGELOG.md) - Version history
+
+## Troubleshooting
+
+- [Coinbase Balance Troubleshooting](troubleshooting/coinbase_api_balance_guide.md) - Zero balances, key scopes, and endpoints
 
 ## Important Notes
 
@@ -107,4 +123,4 @@ last-updated: 2025-11-24
 
 ---
 
-*Documentation consolidated November 2025. Historical docs available in git history.*
+*Documentation index updated January 2026. Historical docs live in git history and docs/archive/.*

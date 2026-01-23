@@ -1,4 +1,9 @@
-# Sprint 1 Gap Report (Baseline & Gaps)
+# ARCHIVED: Sprint 1 Gap Report (Baseline & Gaps)
+
+Archived on 2026-01-23. Historical gap snapshot; see the
+[Agent Docs Index](../../agents/README.md) for current references.
+
+## Sprint 1 Gap Report (Baseline & Gaps)
 Date: 2026-01-13
 
 ## Tool Baseline

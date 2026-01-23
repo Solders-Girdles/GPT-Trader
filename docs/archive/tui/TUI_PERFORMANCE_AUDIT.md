@@ -1,4 +1,9 @@
-# TUI Performance Audit Report
+# ARCHIVED: TUI Performance Audit Report
+
+Archived on 2026-01-23. Historical audit; see [TUI Guide](../../TUI_GUIDE.md) and
+[TUI Style Guide](../../TUI_STYLE_GUIDE.md) for current guidance.
+
+## TUI Performance Audit Report
 
 **Date:** 2026-01-05
 **Scope:** Reactive update paths, throttling, redundancy detection

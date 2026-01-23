@@ -218,3 +218,4 @@ agent-verify:
 
 agent-docs-links:
 	uv run python scripts/maintenance/docs_link_audit.py
+	uv run python scripts/maintenance/docs_reachability_check.py

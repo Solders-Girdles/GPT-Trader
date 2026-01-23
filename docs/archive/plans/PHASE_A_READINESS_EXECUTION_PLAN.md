@@ -1,4 +1,9 @@
-# Phase A Readiness Execution Plan
+# ARCHIVED: Phase A Readiness Execution Plan
+
+Archived on 2026-01-23. Plan completed; current readiness guidance lives in the
+[Readiness Checklist](../../READINESS.md) and [Production Guide](../../guides/production.md).
+
+## Phase A Readiness Execution Plan
 
 ---
 status: draft

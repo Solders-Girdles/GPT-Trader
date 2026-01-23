@@ -1,5 +1,10 @@
 # Risk Integration Guide (gpt_trader)
 
+---
+status: current
+last-updated: 2026-01-23
+---
+
 The spot-first GPT-Trader architecture layers risk controls across configuration,
 pre-trade validation, runtime guards, and the `LiveRiskManager`. This guide
 highlights the active components and how they work together.
@@ -16,9 +21,9 @@ highlights the active components and how they work together.
 - **Preflight validation**: `preflight/checks/risk.py` validates
   `RiskConfig.from_env()` (env-only). Keep env and profile risk settings aligned
   for canary/prod.
-- **Config templates**: Current examples live in `docs/reference/risk_templates/*.yaml`.
-  Legacy templates are archived in `docs/archive/risk_templates/`. `RISK_CONFIG_PATH`
-  is stored on `BotConfig` but is not wired into the runtime loader by default.
+- **Risk env vars**: `RiskConfig.from_env()` reads `RISK_*` and `CFM_*` env vars
+  (see `config/environments/.env.template`).
+- **RISK_CONFIG_PATH (reserved)**: Stored on `BotConfig` but not wired into the runtime loader.
 
 ## Execution Path
 

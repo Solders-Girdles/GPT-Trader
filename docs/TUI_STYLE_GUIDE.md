@@ -1,5 +1,10 @@
 # TUI Style Guide & Component Rules
 
+---
+status: current
+last-updated: 2026-01-23
+---
+
 This document defines the visual standards and component patterns for the GPT-Trader TUI dashboard. Following these guidelines ensures consistency across all screens and widgets.
 
 ## Table of Contents

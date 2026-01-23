@@ -1,5 +1,10 @@
 # Agent Tools Reference
 
+---
+status: current
+last-updated: 2026-01-23
+---
+
 This guide documents all agent tools available in GPT-Trader for AI-assisted development workflows.
 
 ## Quick Reference

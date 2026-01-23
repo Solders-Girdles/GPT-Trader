@@ -1,5 +1,10 @@
 # Document Verification Matrix
 
+---
+status: current
+last-updated: 2026-01-23
+---
+
 This matrix helps developers and AI agents determine which documentation sources to trust and how to verify information.
 
 ## Trust Levels
@@ -31,15 +36,14 @@ This matrix helps developers and AI agents determine which documentation sources
 | `docs/guides/production.md` | 2025-12-01 | Production deployment guide |
 | `docs/guides/testing.md` | 2025-12-01 | Testing conventions |
 | `docs/RISK_INTEGRATION_GUIDE.md` | 2025-12-01 | Risk management integration |
-| `docs/reference/trading_logic_perps.md` | 2025-12-01 | Perpetuals trading logic |
+| `docs/COINBASE.md` | Links to config + code for Coinbase integration (not an API spec) |
 | `docs/TUI_GUIDE.md` | 2025-12-01 | TUI User Guide |
 
 ### Low Trust (May Be Stale)
 
 | Document | Notes |
 |----------|-------|
-| `docs/TRAINING_GUIDE.md` | 2025-12-01 | Updated links and TUI reference |
-| `docs/reference/coinbase_complete.md` | 2025-12-01 | Consolidated reference |
+| (Removed) | Historical onboarding + Coinbase reference docs were deleted; use git history if needed. |
 
 ## Verification Workflow
 
@@ -68,5 +72,3 @@ This matrix helps developers and AI agents determine which documentation sources
 | Execution engine | `src/gpt_trader/features/live_trade/engines/strategy.py` |
 
 ---
-
-*Last updated: 2026-01-14*

@@ -1,5 +1,10 @@
 # ADR 002: Coordinator Pattern for the Orchestration Layer
 
+---
+status: superseded
+last-updated: 2026-01-23
+---
+
 ## Status
 Superseded - Orchestration package removed during the DI migration (Engine Context pattern lives in `features/live_trade/engines/`)
 

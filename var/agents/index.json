@@ -1,5 +1,5 @@
 {
-  "version": "1.1",
+  "version": "1.2",
   "description": "AI Agent Tools Index for GPT-Trader",
   "generated_by": "scripts/agents/",
   "resources": {
@@ -20,6 +20,18 @@
       "description": "Structured logging event catalog and schema",
       "files": ["event_catalog.json", "log_schema.json"],
       "generator": "scripts/agents/generate_event_catalog.py"
+    },
+    "observability": {
+      "path": "observability/",
+      "description": "Prometheus-style metric catalog (static scan)",
+      "files": ["metrics_catalog.json", "metrics_catalog.md"],
+      "generator": "scripts/agents/generate_metrics_catalog.py"
+    },
+    "configuration": {
+      "path": "configuration/",
+      "description": "Environment variable reference (static scan + .env.template enrichment)",
+      "files": ["environment_variables.json", "environment_variables.md"],
+      "generator": "scripts/agents/generate_environment_variable_reference.py"
     },
     "testing": {
       "path": "testing/",
@@ -137,8 +149,10 @@
   },
   "usage_guide": {
     "config_validation": "Load schemas/ to validate configuration before use",
+    "environment_variables": "Use configuration/ to find env vars, defaults, and code locations",
     "error_handling": "Use models/errors_schema.json for recovery guidance",
     "log_parsing": "Use logging/log_schema.json to parse JSON logs",
+    "metrics": "Use observability/metrics_catalog.json for metric names, labels, and sources",
     "test_selection": "Use testing/ to select appropriate tests for changes",
     "api_calls": "Use broker/ for constructing valid API requests",
     "health_report": "Use health/ for agent-health schema and report guidance",

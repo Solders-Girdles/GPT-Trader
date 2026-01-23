@@ -13,6 +13,9 @@ from urllib.parse import unquote
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 LINK_PATTERN = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
+REPO_PATH_PATTERN = re.compile(
+    r"(?<![A-Za-z0-9_./-])(?P<path>(?:src|scripts|config|tests)/[^\s`\"')]+)"
+)
 EXCLUDED_DIRS = {
     ".git",
     ".uv-cache",
@@ -71,25 +74,82 @@ def resolve_target(source: Path, target: str, root: Path) -> Path:
     return (source.parent / target).resolve()
 
 
+def iter_repo_path_references(content: str) -> list[str]:
+    references: list[str] = []
+    for match in REPO_PATH_PATTERN.finditer(content):
+        candidate = match.group("path")
+        candidate = candidate.split("::", maxsplit=1)[0].rstrip(".,;:")
+        if not candidate:
+            continue
+        if any(token in candidate for token in ("...", "*", "?", "<", ">", "{", "}")):
+            continue
+        references.append(candidate)
+    return references
+
+
+def should_check_repo_paths(source: Path, *, root: Path) -> bool:
+    docs_root = root / "docs"
+    try:
+        source.relative_to(docs_root)
+    except ValueError:
+        return False
+
+    excluded_files = {
+        docs_root / "CHANGELOG.md",
+        docs_root / "DEPRECATIONS.md",
+    }
+    if source in excluded_files:
+        return False
+
+    excluded_dirs = {
+        docs_root / "adr",
+    }
+    for excluded_dir in excluded_dirs:
+        try:
+            source.relative_to(excluded_dir)
+        except ValueError:
+            continue
+        return False
+
+    return True
+
+
 def main() -> int:
     args = parse_args()
     root = args.root.resolve()
     markdown_files = iter_markdown_files(root)
-    missing: list[tuple[Path, str]] = []
+    missing_links: list[tuple[Path, str]] = []
+    missing_paths: list[tuple[Path, str]] = []
 
     for path in markdown_files:
         content = path.read_text(encoding="utf-8")
         for target in iter_links(content):
             resolved = resolve_target(path, target, root)
             if not resolved.exists():
-                missing.append((path, target))
+                missing_links.append((path, target))
 
-    if missing:
-        print("Missing markdown link targets:")
-        for source, target in missing:
-            rel_source = source.relative_to(root)
-            print(f"- {rel_source}: {target}")
-        print(f"\nTotal missing: {len(missing)}")
+        if should_check_repo_paths(path, root=root):
+            for candidate in iter_repo_path_references(content):
+                resolved = (root / candidate).resolve()
+                if not resolved.exists():
+                    missing_paths.append((path, candidate))
+
+    if missing_links or missing_paths:
+        if missing_links:
+            print("Missing markdown link targets:")
+            for source, target in missing_links:
+                rel_source = source.relative_to(root)
+                print(f"- {rel_source}: {target}")
+            print(f"\nTotal missing links: {len(missing_links)}")
+
+        if missing_paths:
+            if missing_links:
+                print()
+            print("Missing repo path references (src/scripts/config/tests):")
+            for source, candidate in missing_paths:
+                rel_source = source.relative_to(root)
+                print(f"- {rel_source}: {candidate}")
+            print(f"\nTotal missing paths: {len(missing_paths)}")
         return 1
 
     print(f"✓ Markdown link audit passed ({len(markdown_files)} files scanned)")

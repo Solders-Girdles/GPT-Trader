@@ -1,5 +1,10 @@
 # Reliability Layer
 
+---
+status: current
+last-updated: 2026-01-23
+---
+
 This document describes the reliability layer that protects GPT-Trader during
 startup and live trading. It covers the decision matrix, configuration defaults,
 the chaos harness for fault injection, and a rollout checklist.
@@ -102,112 +107,12 @@ Execution Resilience:
 | `ORDER_SUBMISSION_RETRIES_ENABLED` | `0` | Enable broker submission retries (off by default) |
 | `BROKER_CALLS_USE_DEDICATED_EXECUTOR` | `0` | Run broker calls in a dedicated thread pool |
 
-## Metrics
+## Observability
 
-Lightweight in-memory metrics for runtime observability with optional Prometheus export.
+Canonical reference for metrics, traces, structured logs, and alert query patterns:
 
-### Conventions
-
-- **Prefix**: `gpt_trader_`
-- **Unit suffixes**: `_seconds`, `_dollars`, `_total`
-- **Label format**: `name{key=value,key2=value2}` with alphabetically sorted keys
-- **Labels**: snake_case, low cardinality only (no `order_id`, `correlation_id`)
-
-### Access
-
-```python
-from gpt_trader.monitoring.metrics_collector import (
-    get_metrics_collector,
-    record_counter,
-    record_gauge,
-    record_histogram,
-)
-
-# Record metrics
-record_counter("gpt_trader_order_submission_total", labels={"result": "success", "side": "buy"})
-record_gauge("gpt_trader_equity_dollars", 10500.0)
-record_histogram("gpt_trader_cycle_duration_seconds", 0.45, labels={"result": "ok"})
-
-# Get summary
-summary = get_metrics_collector().get_metrics_summary()
-```
-
-### Summary Schema
-
-```json
-{
-  "timestamp": "2024-01-07T12:00:00.000000+00:00",
-  "counters": {
-    "gpt_trader_order_submission_total{reason=none,result=success,side=buy}": 10
-  },
-  "gauges": {
-    "gpt_trader_equity_dollars": 10500.50,
-    "gpt_trader_ws_gap_count": 0
-  },
-  "histograms": {
-    "gpt_trader_cycle_duration_seconds{result=ok}": {
-      "count": 100,
-      "sum": 45.5,
-      "mean": 0.455,
-      "buckets": {"0.1": 20, "0.5": 85, "1.0": 98}
-    }
-  }
-}
-```
-
-### Current Metrics
-
-| Metric | Type | Labels | Location |
-| --- | --- | --- | --- |
-| `gpt_trader_cycle_duration_seconds` | histogram | `result=ok\|error` | `strategy.py` |
-| `gpt_trader_order_submission_total` | counter | `result`, `reason`, `side` | `order_submission.py` |
-| `gpt_trader_equity_dollars` | gauge | — | `status_reporter.py` |
-| `gpt_trader_ws_gap_count` | gauge | — | `status_reporter.py` |
-
-**Label values**:
-- `result`: `success`, `rejected`, `failed`, `error`, `ok`
-- `reason`: `none` or a normalized reason code (see `docs/OBSERVABILITY.md`)
-- `side`: `buy`, `sell`
-
-### Prometheus Export
-
-Metrics are exposed on the health server's `/metrics` endpoint in Prometheus text format.
-
-**Enable the endpoint:**
-
-```bash
-export GPT_TRADER_METRICS_ENDPOINT_ENABLED=1
-gpt-trader run --profile prod
-```
-
-**Scrape config (prometheus.yml):**
-
-```yaml
-scrape_configs:
-  - job_name: 'gpt-trader'
-    static_configs:
-      - targets: ['localhost:8080']
-    metrics_path: '/metrics'
-    scrape_interval: 15s
-```
-
-**Example output:**
-
-```
-# TYPE gpt_trader_order_submission_total counter
-gpt_trader_order_submission_total{reason="none",result="success",side="buy"} 10
-# TYPE gpt_trader_equity_dollars gauge
-gpt_trader_equity_dollars 10500.5
-# TYPE gpt_trader_cycle_duration_seconds histogram
-gpt_trader_cycle_duration_seconds_bucket{le="0.1",result="ok"} 20
-gpt_trader_cycle_duration_seconds_bucket{le="0.5",result="ok"} 85
-gpt_trader_cycle_duration_seconds_sum{result="ok"} 45.5
-gpt_trader_cycle_duration_seconds_count{result="ok"} 100
-```
-
-| Env Var | Default | Purpose |
-| --- | --- | --- |
-| `GPT_TRADER_METRICS_ENDPOINT_ENABLED` | `0` | Enable `/metrics` endpoint on health server |
+- `docs/OBSERVABILITY.md`
+- `docs/MONITORING_PLAYBOOK.md` (setup + incident workflows)
 
 ## Profiling & Memory
 
@@ -272,74 +177,6 @@ do_work()
 duration_ms = (time.perf_counter() - start) * 1000
 record_profile("custom_operation", duration_ms)
 ```
-
-## Distributed Tracing
-
-Optional OpenTelemetry integration for distributed tracing across trading operations.
-
-### Setup
-
-Install the optional observability dependencies:
-
-```bash
-pip install gpt-trader[observability]
-# or with uv
-uv pip install -e ".[observability]"
-```
-
-Enable tracing:
-
-```bash
-export GPT_TRADER_OTEL_ENABLED=1
-export OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
-export OTEL_SERVICE_NAME=gpt-trader
-gpt-trader run --profile prod
-```
-
-### Instrumented Operations
-
-| Span Name | Attributes | Location |
-| --- | --- | --- |
-| `cycle` | `cycle`, `result`, `duration_seconds` | `strategy.py` |
-| `order_submit` | `symbol`, `side`, `order_type`, `quantity`, `reduce_only` | `order_submission.py` |
-| `http_request` | `http.method`, `http.path`, `http.status_code`, `http.latency_ms` | `client/base.py` |
-
-### Correlation Context
-
-Spans automatically include correlation context from the logging system:
-- `correlation_id`: Unique ID for request tracing
-- `cycle`: Current trading cycle number
-- `symbol`: Trading symbol (when in symbol context)
-- `order_id`: Order ID (when in order context)
-
-### Configuration
-
-| Env Var | Default | Purpose |
-| --- | --- | --- |
-| `GPT_TRADER_OTEL_ENABLED` | `0` | Enable OpenTelemetry tracing |
-| `OTEL_SERVICE_NAME` | `gpt-trader` | Service name for trace attribution |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | unset | OTLP gRPC endpoint (e.g., `http://localhost:4317`) |
-
-### Usage in Code
-
-```python
-from gpt_trader.observability.tracing import trace_span, init_tracing
-
-# Initialize at startup (done automatically by CLI)
-init_tracing(
-    service_name="gpt-trader",
-    endpoint="http://localhost:4317",
-    enabled=True,
-)
-
-# Create spans in your code
-with trace_span("custom_operation", {"key": "value"}) as span:
-    # ... do work ...
-    if span:
-        span.set_attribute("result", "success")
-```
-
-When tracing is disabled or OTel is not installed, `trace_span` is a no-op context manager that yields `None`.
 
 ## Performance Optimizations
 

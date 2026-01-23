@@ -1,5 +1,10 @@
 # Monitoring & Operations Guide
 
+---
+status: current
+last-updated: 2026-01-23
+---
+
 This playbook covers the spot-first GPT-Trader monitoring stack including metrics export, dashboards, alerting, and incident response.
 
 ## Quick Start
@@ -56,24 +61,9 @@ This is the canonical local monitoring stack. It provisions Grafana from
 
 The observability profile now focuses on Prometheus + Grafana only.
 
-## Available Metrics
+## Metrics
 
-Metrics are exposed with the `gpt_trader_` prefix. Common signals (non-exhaustive):
-
-| Metric | Description |
-|--------|-------------|
-| `gpt_trader_equity_dollars` | Account equity in USD |
-| `gpt_trader_cycle_duration_seconds` | Control loop latency histogram |
-| `gpt_trader_order_submission_total{result,side}` | Order submissions by outcome |
-| `gpt_trader_order_submission_latency_seconds` | Order submission latency histogram |
-| `gpt_trader_broker_call_latency_seconds{operation,outcome}` | Broker call latency histogram |
-| `gpt_trader_guard_trips_total{guard,category,recoverable}` | Guard trip counts |
-| `gpt_trader_guard_checks_total{guard,result}` | Guard evaluation counts |
-| `gpt_trader_api_requests_total{endpoint,method,outcome}` | Coinbase REST request counts |
-| `gpt_trader_api_latency_seconds{endpoint,method}` | Coinbase REST latency histogram |
-| `gpt_trader_rate_limit_usage_ratio` | Coinbase rate-limit usage ratio |
-| `gpt_trader_api_error_rate` | Coinbase API error rate |
-| `gpt_trader_ws_gap_count` | WebSocket gap count |
+Canonical catalogue (names, labels, queries): `docs/OBSERVABILITY.md`.
 
 ## Key Thresholds
 

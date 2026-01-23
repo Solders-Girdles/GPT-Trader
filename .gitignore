@@ -58,6 +58,7 @@ archived/claudia_20250812_151036/
 # Generated artifacts
 *.png
 *.csv
+docs/_build/
 
 # Data outputs (local caches / generated datasets)
 data/

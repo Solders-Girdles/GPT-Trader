@@ -1,5 +1,10 @@
 # Dependency Injection Policy
 
+---
+status: current
+last-updated: 2026-01-23
+---
+
 This document defines when and how to wire dependencies in GPT-Trader.
 
 ## Overview

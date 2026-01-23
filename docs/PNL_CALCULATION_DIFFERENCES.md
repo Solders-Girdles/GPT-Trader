@@ -1,5 +1,10 @@
 # P&L Calculation Differences: Our System vs Coinbase
 
+---
+status: current
+last-updated: 2026-01-23
+---
+
 This document describes the known differences between our P&L calculations and what Coinbase reports through their API.
 
 ## Overview
@@ -164,8 +169,7 @@ May provide aggregated P&L across all positions.
 
 ### Live Reconciliation
 - Periodically reconcile PnL against Coinbase statements using the EventStore
-  snapshots. (The historical `scripts/reconcile_pnl_with_coinbase.py` helper
-  was removed during the 2025 cleanup.)
+  snapshots. (A historical reconciliation helper was removed during the 2025 cleanup; use git history if needed.)
 - Monitor for unexpected discrepancies
 - Alert if differences exceed thresholds
 

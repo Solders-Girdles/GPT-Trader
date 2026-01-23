@@ -1,5 +1,10 @@
 # Deprecation Tracker
 
+---
+status: current
+last-updated: 2026-01-23
+---
+
 This document tracks deprecated modules, shims, and their planned removal dates.
 
 ## Active Deprecations
@@ -58,7 +63,7 @@ Before removing any deprecated item:
 | `daily_loss_limit` in profile schema | Unreleased | Use `daily_loss_limit_pct`. |
 | Perps strategy compat aliases (`short_ma`/`long_ma` props, `StrategyConfig`) | Unreleased | Use `PerpsStrategyConfig` and `short_ma_period`/`long_ma_period`. |
 | CLI fallback for unknown profile YAML | Unreleased | Use a `Profile` enum value or `--config`. |
-| Legacy risk templates | Unreleased | Archived under `docs/archive/risk_templates/`. |
+| Legacy risk templates | Unreleased | Removed from tree; use git history for reference. |
 | Module-level `health_state` | Unreleased | Use `ApplicationContainer.health_state` and pass `HealthState` explicitly to health helpers. |
 | Module-level `secrets_manager` helpers | Unreleased | Use `ApplicationContainer.secrets_manager` or instantiate `SecretsManager`. |
 | Data module singletons (`store_data`/`fetch_data` functions) | Unreleased | Use `DataService` and its instance methods. |
@@ -90,5 +95,3 @@ The entire `src/gpt_trader/orchestration/` package was removed during the DI mig
 - **Phase 14**: Post-removal cleanup (pytest marker, test hygiene allowlist, inventory generator)
 
 ---
-
-*Last updated: 2026-01-23*

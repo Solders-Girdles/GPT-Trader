@@ -31,6 +31,12 @@ GENERATORS: list[tuple[str, str, str]] = [
     ("generate_config_schemas.py", "schemas", "Configuration schemas"),
     ("export_model_schemas.py", "models", "Domain model schemas"),
     ("generate_event_catalog.py", "logging", "Event catalog"),
+    ("generate_metrics_catalog.py", "observability", "Metrics catalog"),
+    (
+        "generate_environment_variable_reference.py",
+        "configuration",
+        "Environment variable reference",
+    ),
     ("generate_test_inventory.py", "testing", "Test inventory"),
     ("generate_validator_registry.py", "validation", "Validator registry"),
     ("generate_broker_api_docs.py", "broker", "Broker API docs"),
@@ -316,7 +322,7 @@ Examples:
         type=str,
         help=(
             "Comma-separated list of generators to run (e.g., 'schemas,testing'). "
-            "Valid values: schemas, models, logging, testing, validation, broker, reasoning, health"
+            "Valid values: schemas, models, logging, observability, configuration, testing, validation, broker, reasoning, health"
         ),
     )
     parser.add_argument(

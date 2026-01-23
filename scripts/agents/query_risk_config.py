@@ -131,8 +131,6 @@ def load_risk_config(profile: str | None = None) -> dict[str, Any]:
     if profile:
         # Look for profile-specific risk config
         possible_paths = [
-            Path(f"docs/reference/risk_templates/{profile}.yaml"),
-            Path(f"docs/reference/risk_templates/{profile}.yml"),
             Path(f"config/risk/{profile}.yaml"),  # legacy path
             Path(f"config/risk/{profile}.yml"),  # legacy path
             Path(f"config/risk/{profile}.json"),  # legacy path

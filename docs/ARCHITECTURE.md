@@ -8,7 +8,7 @@ This project completed a major architectural migration from a legacy "Orchestrat
 
 - **Legacy Core:** removed during the DI migration (no longer present)
 - **Modern Core:** `src/gpt_trader/app/` (Composition Root) and `src/gpt_trader/features/` (Vertical Slices)
-- **Migration Guide:** See [MIGRATION_STATUS.md](MIGRATION_STATUS.md) for current migration progress and patterns.
+- **Migration status:** complete (legacy orchestration removed; DI container is canonical)
 
 While this document describes the **current architecture**, you may still encounter legacy references in documentation. Always prefer the patterns defined in `src/gpt_trader/app` and `src/gpt_trader/features`.
 
@@ -81,8 +81,7 @@ Risk Guards → Coinbase Brokerage Adapter → Metrics + Telemetry
 
 ### Capability Map
 
-For a detailed breakdown of system capabilities, runtime flow diagrams, and "where to change things" guidance, see **[CAPABILITIES.md](CAPABILITIES.md)**.
-
+For practical “where do I change X?” guidance, see `docs/DEVELOPMENT_GUIDELINES.md`.
 Key capabilities documented:
 - Configuration + Feature Flags (with [FEATURE_FLAGS.md](FEATURE_FLAGS.md) reference)
 - Trading Decisioning, Pre-trade Validation, Order Execution
@@ -521,8 +520,8 @@ monitoring: real-time
 - Impact cost validation (<50bps)
 - Reduce-only mode enforcement
 
-> Spot risk templates are archived; see `docs/archive/risk_templates/spot_top10.yaml`
-> for example per-symbol caps and leverage=1 limits across the top-ten USD markets.
+> Leverage caps are configured via `RiskConfig.max_leverage` and optional day/night per-symbol caps
+> (`RiskConfig.day_leverage_max_per_symbol`, `RiskConfig.night_leverage_max_per_symbol`).
 
 ### Runtime Guards
 - Daily loss limits
@@ -620,26 +619,6 @@ NORMAL → REDUCE_ONLY → PAUSED → HALTED
 - `aiohttp` - Webhook notifications + async utilities (optional; live-trade extra)
 - `pydantic` - Data validation
 
-## Future Roadmap
+## Roadmap
 
-### Near Term (Q1 2025)
-- [ ] Full WebSocket user event handling
-- [ ] Durable state recovery
-- [ ] Order modification flows
-- [ ] Partial fill handling
-
-### Medium Term (Q2 2025)
-- [ ] Advanced order types (OCO, bracket orders)
-- [ ] Portfolio-level risk management
-- [ ] Real-time ML adaptation
-- [ ] Enhanced Coinbase INTX integration
-
-### Long Term (2025+)
-- [ ] Distributed execution
-- [ ] Options integration (when Coinbase supports)
-- [ ] Institutional features
-- [ ] Advanced derivatives strategies
-
----
-
-*For implementation details, see [Trading Logic - Perpetuals](reference/trading_logic_perps.md)*
+Roadmap tracking lives in GitHub Issues/PRs. Historical planning notes live in git history.

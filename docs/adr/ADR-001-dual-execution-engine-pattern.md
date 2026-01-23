@@ -1,5 +1,10 @@
 # ADR-001: Dual Execution Engine Pattern
 
+---
+status: superseded
+last-updated: 2026-01-23
+---
+
 **Status:** Superseded
 **Date:** 2025-10-06
 **Superseded by:** TradingEngine guard stack (`_validate_and_place_order` live loop; `submit_order` external)
@@ -144,15 +149,10 @@ def should_use_advanced_engine(risk_manager: LiveRiskManager) -> bool:
 
 **Decision:** Use AdvancedExecutionEngine if **ANY** flag is enabled
 
-### Production Configuration
+### Historical Production Configuration
 
-`docs/reference/risk_templates/dev_dynamic.yaml`:
-```yaml
-enable_market_impact_guard: true
-enable_dynamic_position_sizing: true
-```
-
-**Result:** Production uses `AdvancedExecutionEngine`
+These flags were historically configured via risk-template files (removed from the tree).
+Use git history if you need to review the historical configuration.
 
 ### Fallback Configuration
 
@@ -219,7 +219,7 @@ This ADR follows the same principle: **modular, composable services** with **fea
 - **AdvancedExecutionEngine:** `src/gpt_trader/features/live_trade/advanced_execution.py` *(removed)*
 - **RiskConfig:** `src/gpt_trader/features/live_trade/risk/config.py` *(canonical path)*
 - **BotConfig:** `src/gpt_trader/app/config/bot_config.py` *(canonical path)*
-- **Production Config:** `docs/reference/risk_templates/dev_dynamic.yaml`
+- **Historical config:** Risk templates removed from tree (use git history)
 - **Tests:**
   - Deprecation shims: `tests/unit/gpt_trader/deprecations/test_orchestration_shims.py` *(removed)*
   - AdvancedExecutionEngine: `tests/unit/gpt_trader/features/live_trade/test_advanced_execution.py` *(removed)*

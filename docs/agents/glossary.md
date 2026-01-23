@@ -1,5 +1,10 @@
 # GPT-Trader Approved Abbreviations
 
+---
+status: current
+last-updated: 2026-01-23
+---
+
 This glossary lists abbreviations approved for use in the GPT-Trader codebase.
 Any abbreviation not listed here should be spelled out in full.
 

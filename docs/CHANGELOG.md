@@ -1,5 +1,10 @@
 # Changelog
 
+---
+status: current
+last-updated: 2026-01-23
+---
+
 ## Unreleased
 
 ### Global State Cleanup
@@ -61,4 +66,4 @@
 - Removed legacy `Alert.id` and `Alert.timestamp` aliases; use `alert_id` and `created_at`.
 
 ### Docs Cleanup
-- Archived legacy risk templates under `docs/archive/risk_templates/`.
+- Removed legacy risk templates from the tree; use git history for reference.

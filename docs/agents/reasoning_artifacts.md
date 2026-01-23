@@ -1,5 +1,10 @@
 # Reasoning Artifacts
 
+---
+status: current
+last-updated: 2026-01-23
+---
+
 Curated summaries for generated reasoning maps and health schema outputs.
 
 Flow definitions live in `config/agents/flows/*.yaml`. Run the generator with

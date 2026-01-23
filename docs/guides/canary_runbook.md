@@ -1,5 +1,10 @@
 # Canary Deployment Runbook
 
+---
+status: current
+last-updated: 2026-01-23
+---
+
 This runbook provides concrete steps, commands, Prometheus queries, and go/no-go criteria for canary production deployments.
 
 ## Overview
@@ -9,11 +14,10 @@ The canary deployment validates a new release against live production traffic wi
 | Phase | Duration | Criteria |
 |-------|----------|----------|
 | Preflight | ~5 min | All checks pass |
-| Phase A (reduce-only) | 2-6 hours or 10+ reduce-only orders | No CRIT signals, no global pause |
-| Phase B (micro-open) | 24h minimum or 50+ orders | No CRIT signals, stable metrics |
+| Canary window (reduce-only) | 2-6 hours or 10+ reduce-only orders | No CRIT signals, no global pause |
 | Promotion | Manual | Exit criteria met |
 
-Policy: Phase A is reduce-only (current canary profile). Phase B allows micro-positions for realistic execution validation. Promotion requires Phase B and health/metrics visibility.
+Policy: Canary runs are reduce-only (`config/profiles/canary.yaml`). Promotion requires health/metrics visibility.
 
 Health and metrics endpoints are opt-in, but required for canary promotion.
 
@@ -29,7 +33,7 @@ The health server is opt-in. For canary promotion, `/health` and `/metrics` must
   export GPT_TRADER_METRICS_ENDPOINT_ENABLED=1
   ```
 
-If `/health` or `/metrics` are unavailable, you may run Phase A but promotion is a No-Go.
+If `/health` or `/metrics` are unavailable, you may run the canary window but promotion is a No-Go.
 
 ## 1. Preflight Checks
 
@@ -97,25 +101,16 @@ uv run python scripts/production_preflight.py --profile canary --warn-only
 
 ### 1.2 Verify Canary Profile (BotConfig)
 
-The live bot uses `config/profiles/canary.yaml` via `ProfileLoader`. Phase A is reduce-only. Phase B requires a micro-open profile (copy canary and set `trading.mode: normal`).
+The live bot uses `config/profiles/canary.yaml` via `ProfileLoader`. Canary runs are reduce-only.
 
-**Phase A (reduce-only) targets:**
+**Canary (reduce-only) targets:**
 
 | Field | Expected | Rationale |
 |-------|----------|-----------|
-| `trading.mode` | `reduce_only` | No new positions in Phase A |
+| `trading.mode` | `reduce_only` | No new positions in canary |
 | `risk_management.max_leverage` | `1` | No leverage |
 | `risk_management.position_fraction` | `<= 0.001` | Micro sizing |
 | `risk_management.daily_loss_limit_pct` | `<= 0.01` | Minimal exposure |
-
-**Phase B (micro-open) targets:**
-
-| Field | Expected |
-|-------|----------|
-| `trading.mode` | `normal` |
-| `risk_management.max_leverage` | `1` |
-| `risk_management.position_fraction` | `<= 0.001` |
-| `risk_management.daily_loss_limit_pct` | `<= 0.01` |
 
 **Profile check:**
 ```python
@@ -131,8 +126,6 @@ print("daily_loss_limit_pct:", schema.risk.daily_loss_limit_pct)
 
 Note: `ProfileLoader` reads `risk_management.position_fraction`. Fields under `trading.position_sizing` are not mapped into `BotConfig`.
 
-If Phase B is required, create a local `config/profiles/canary_open.yaml` by copying `config/profiles/canary.yaml` and setting `trading.mode: normal`.
-
 ### 1.3 Verify Preflight RiskConfig (Env)
 
 Preflight uses `RiskConfig.from_env()` (RISK_* env vars). This does not read the profile YAML. Ensure env risk is conservative and consistent with canary limits.
@@ -141,11 +134,11 @@ Preflight uses `RiskConfig.from_env()` (RISK_* env vars). This does not read the
 uv run agent-risk --with-docs
 ```
 
-**Key bounds (Phase A / Phase B):**
+**Key bounds:**
 - `max_leverage <= 1`
 - `max_position_pct_per_symbol <= 0.001`
 - `daily_loss_limit_pct <= 0.01` or `daily_loss_limit <= 10`
-- `reduce_only_mode = 1` in Phase A, `0` in Phase B
+- `reduce_only_mode = 1`
 
 **Manual verification:**
 ```python
@@ -195,13 +188,13 @@ curl -s http://localhost:8080/health | jq
 | `checks.websocket.details.connected` | `true` | `false` |
 | `checks.websocket.details.stale` | `false` | `true` |
 | `checks.degradation.details.global_paused` | `false` | `true` |
-| `checks.degradation.details.reduce_only_mode` | Phase A: `true` / Phase B: `false` | mismatch |
+| `checks.degradation.details.reduce_only_mode` | `true` | mismatch |
 
 ### 2.2 Quick Health Verification Script
 
 ```bash
 #!/bin/bash
-# Example: save locally as scripts/canary_health_check.sh (not tracked)
+# Example: save locally as canary_health_check.sh (not tracked)
 
 set -e
 
@@ -372,19 +365,11 @@ curl -s http://localhost:8080/metrics | grep -E "gpt_trader_order_submission_tot
 
 ### 4.1 Promotion Criteria
 
-Phase A exit criteria (reduce-only, 2-6 hours or 10+ orders):
+Canary window exit criteria (reduce-only, 2-6 hours or 10+ orders):
 - CRIT signals: zero
 - Global pause events: zero
 - WebSocket check: connected and not stale
 - Reduce-only mode: true
-
-Phase B promotion criteria (micro-open, 24 hours or 50+ orders):
-- CRIT signals: zero
-- Global pause events: zero
-- Non-recoverable guard trips: zero
-- Order error rate: < 5% sustained
-- Broker latency p95: < 1000ms sustained
-- WebSocket check: connected and not stale
 
 ### 4.2 Decision Tree
 
@@ -399,36 +384,19 @@ START
   │     NO  ──► Investigate component, DO NOT PROCEED
   │     YES ──▼
   │
-  ├─► Phase A reduce-only window (2-6h / 10+ orders)
+  ├─► Canary reduce-only window (2-6h / 10+ orders)
   │     │
   │     ├─► Any CRIT signal or global pause?
   │     │     YES ──► STOP canary, investigate, rollback if needed
   │     │     NO  ──▼
   │     │
-  │     ├─► Phase A complete?
+  │     ├─► Canary window complete?
   │     │     NO  ──► Continue monitoring
-  │     │     YES ──► Switch to Phase B (micro-open)
-  │     │            (use canary_open profile)
+  │     │     YES ──▼
   │     │
-  │     └─► Phase B window (24h / 50+ orders)
-  │           │
-  │           ├─► Any CRIT signal or global pause?
-  │           │     YES ──► STOP canary, investigate, rollback
-  │           │     NO  ──▼
-  │           │
-  │           ├─► Guard trips > 10/hr?
-  │           │     YES ──► PAUSE, investigate guard config
-  │           │            If infra issue: fix and reset window
-  │           │            If code issue: ROLLBACK
-  │           │     NO  ──▼
-  │           │
-  │           ├─► Phase B window complete?
-  │           │     NO  ──► Continue monitoring
-  │           │     YES ──▼
-  │           │
-  │           └─► All criteria met?
-  │                 NO  ──► Extend window or investigate
-  │                 YES ──► PROMOTE TO PRODUCTION
+  │     └─► All criteria met?
+  │           NO  ──► Extend window or investigate
+  │           YES ──► PROMOTE TO PRODUCTION
   │
   └─► END
 ```
@@ -462,9 +430,9 @@ When all criteria met:
 # 1. Document canary results
 uv run gpt-trader report daily --profile canary --report-format json --output-dir reports
 
-# 2. Update production profile with any validated config changes
-cp config/profiles/canary.yaml config/profiles/prod.yaml.new  # local staging copy
-diff config/profiles/prod.yaml config/profiles/prod.yaml.new
+# 2. Review production profile changes (staging copy; do not commit)
+cp config/profiles/canary.yaml config/profiles/<local_prod_staging>.yaml
+diff config/profiles/prod.yaml config/profiles/<local_prod_staging>.yaml
 
 # 3. Stop canary (use your process manager)
 # systemctl stop gpt-trader-canary
@@ -489,11 +457,8 @@ uv run gpt-trader run --profile prod
 | Check env risk config | `uv run agent-risk --with-docs` |
 | Health check | `curl http://localhost:8080/health \| jq` |
 | Metrics endpoint | `curl http://localhost:8080/metrics` |
-| Start Phase A | `uv run gpt-trader run --profile canary` |
-| Start Phase B | `uv run gpt-trader run --profile canary_open` |
+| Start canary | `uv run gpt-trader run --profile canary` |
 | Stop canary | `systemctl stop gpt-trader-canary` |
-
-Note: Phase B assumes you created a local `config/profiles/canary_open.yaml` with `trading.mode: normal`.
 
 ### Thresholds Summary
 

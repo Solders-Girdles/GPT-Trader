@@ -1,5 +1,10 @@
 # Testing Guide
 
+---
+status: current
+last-updated: 2026-01-23
+---
+
 ## Overview
 
 This codebase targets a **100% pass rate** on actively maintained spot trading suites. The test infrastructure supports unit, property, contract, integration, and real-API testing with comprehensive coverage tracking.
@@ -31,10 +36,10 @@ make test-contract
 make test-real-api
 
 # Run specific test file
-uv run pytest tests/unit/gpt_trader/config/test_bot_config_env_aliasing.py
+uv run pytest tests/unit/gpt_trader/config/test_bot_config.py
 
 # Run specific test class or function
-uv run pytest tests/unit/gpt_trader/config/test_bot_config_env_aliasing.py::TestBotConfigEnvAliasing::test_risk_max_leverage_with_prefix
+uv run pytest tests/unit/gpt_trader/config/test_bot_config.py::TestBotConfigEnvAliasing::test_risk_max_leverage_with_prefix
 
 # Run tests matching a pattern
 uv run pytest -k "test_error"

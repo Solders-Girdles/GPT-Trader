@@ -1,12 +1,17 @@
 # AI Agent Guide
 
+---
+status: current
+last-updated: 2026-01-23
+---
+
 This is the consolidated reference for AI agents working with the GPT-Trader repository.
 
 ## Quick Navigation
 
 - Codebase map: `docs/agents/CODEBASE_MAP.md`
 - Agent docs index: `docs/agents/README.md`
-- Migration status (legacy → modern wiring): `docs/MIGRATION_STATUS.md`
+- Architecture + wiring: `docs/ARCHITECTURE.md`
 
 ## Current State
 
@@ -241,7 +246,7 @@ tail -f ${COINBASE_TRADER_LOG_DIR:-var/logs}/coinbase_trader.log
 | `docs/guides/testing.md` | Testing guide |
 | `docs/guides/production.md` | Production deployment |
 | `docs/guides/agent-tools.md` | **Agent tools reference** |
-| `docs/reference/coinbase_complete.md` | Coinbase API reference |
+| `docs/COINBASE.md` | Coinbase integration notes |
 
 ## Source of Truth Checklist
 

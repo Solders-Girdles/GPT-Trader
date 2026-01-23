@@ -3,10 +3,10 @@
 ---
 status: current
 created: 2025-01-01
-last-updated: 2025-10-07
+last-updated: 2026-01-23
 consolidates:
   - README.md
-  - docs/reference/coinbase_auth_guide.md
+  - docs/COINBASE.md
   - config/environments/.env.template
   - Various scattered setup instructions
 ---
@@ -303,9 +303,9 @@ export RISK_KILL_SWITCH_ENABLED=1 && pkill -f gpt-trader
 ### Getting Help
 
 1. **Check Documentation**:
-   - [Coinbase Integration Guide](../reference/coinbase_complete.md)
+   - [Coinbase Integration](../COINBASE.md)
    - [Architecture Overview](../ARCHITECTURE.md)
-   - [Trading Operations](../reference/trading_logic_perps.md)
+   - [Production Operations](production.md)
 
 2. **Review Logs**:
    - Main log: `${COINBASE_TRADER_LOG_DIR:-var/logs}/coinbase_trader.log`
@@ -321,8 +321,7 @@ After successful setup:
 
 1. **Learn the System**:
    - Read [Architecture Documentation](../ARCHITECTURE.md)
-   - Understand [Spot Trading Logic](../reference/trading_logic_perps.md) (perps sections apply once INTX is enabled)
-   - Review [Risk Management](../reference/coinbase_complete.md#order-types--compatibility)
+   - Review [Risk Management](../RISK_INTEGRATION_GUIDE.md)
 
 2. **Develop Strategies**:
    - Start with development/paper trading

@@ -1,5 +1,10 @@
 # Security Documentation
 
+---
+status: current
+last-updated: 2026-01-23
+---
+
 This document outlines the security controls and operational guidance for GPT-Trader.
 
 ## Security Overview

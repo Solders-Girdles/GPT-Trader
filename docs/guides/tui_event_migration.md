@@ -1,5 +1,10 @@
 # TUI Event System Migration Guide
 
+---
+status: current
+last-updated: 2026-01-23
+---
+
 ## Overview
 
 This guide explains how to migrate from direct widget queries to the event-based messaging system introduced in the TUI architecture refactoring (Phase 1).
@@ -448,7 +453,6 @@ if not self._event_posted:
 
 - [Textual Messages Documentation](https://textual.textualize.io/guide/events/)
 - [TUI Events Definitions](../../src/gpt_trader/tui/events.py)
-- [TUI Architecture Improvement Plan (archived)](../archive/plans/TUI_IMPROVEMENT_PLAN.md)
 
 ## Questions?
 

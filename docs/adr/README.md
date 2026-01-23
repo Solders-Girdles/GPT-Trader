@@ -1,5 +1,10 @@
 # Architecture Decision Records (ADRs)
 
+---
+status: current
+last-updated: 2026-01-23
+---
+
 This directory contains Architecture Decision Records (ADRs) for GPT-Trader.
 
 ## What is an ADR?
@@ -61,7 +66,7 @@ Links to code, docs, or external resources
 
 ## ADR Index
 
-- [ADR-001: Dual Execution Engine Pattern](./ADR-001-dual-execution-engine-pattern.md) - Feature flag-based execution engine selection (Accepted, 2025-10-06)
+- [ADR-001: Dual Execution Engine Pattern](./ADR-001-dual-execution-engine-pattern.md) - Feature flag-based execution engine selection (Superseded, 2025-10-06)
 - [ADR-002: Coordinator Pattern for the Orchestration Layer](./decisions/002-coordinator-pattern.md) - Superseded during DI migration (Superseded)
 
 ## Further Reading

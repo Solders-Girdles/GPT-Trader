@@ -1,5 +1,10 @@
 # Backtesting Simulation Harness
 
+---
+status: current
+last-updated: 2026-01-23
+---
+
 ## Overview
 
 The backtesting simulation harness provides a production-grade framework for validating trading strategies against historical data. The key principle is **simulation fidelity**: the backtest reuses the same strategy decision logic as live trading, with only the broker/data adapters swapped (and optional guard-parity execution via `BacktestGuardedExecutor`).

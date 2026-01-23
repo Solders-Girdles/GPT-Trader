@@ -1,7 +1,13 @@
 # Development Guidelines (gpt_trader)
 
+---
+status: current
+last-updated: 2026-01-23
+---
+
 These guidelines cover contributions to the spot-first `gpt_trader` stack. Older
-rules that referenced the monolithic `src/bot` package have been archived.
+guides from the pre-DI era were removed from the tree; use git history if you
+need to review historical practices.
 
 ## Architectural Principles
 
@@ -26,6 +32,32 @@ rules that referenced the monolithic `src/bot` package have been archived.
 - Use `--dry-run` for previews; the scaffold tool refuses overwrites by design.
 - Keep slice names snake_case, prefer explicit imports, and avoid cross-slice
   dependencies (see `src/gpt_trader/scripts/README.md`).
+
+## Where to Change Things
+
+| Intent | Start Here |
+|--------|------------|
+| Add a new trading strategy | `src/gpt_trader/features/live_trade/strategies/` + register in `src/gpt_trader/features/live_trade/factory.py` |
+| Add a new runtime guard | `src/gpt_trader/features/live_trade/execution/guards/` + register in `src/gpt_trader/features/live_trade/execution/guard_manager.py` |
+| Add a new pre-trade validation | `src/gpt_trader/features/live_trade/execution/validation.py` + `src/gpt_trader/features/live_trade/engines/strategy.py` |
+| Change order submission behavior | `src/gpt_trader/features/live_trade/execution/order_submission.py` + `src/gpt_trader/features/live_trade/execution/broker_executor.py` |
+| Modify risk rules | `src/gpt_trader/features/live_trade/risk/manager/__init__.py` + `src/gpt_trader/features/live_trade/risk/config.py` |
+| Add a new env config field | `src/gpt_trader/app/config/bot_config.py` (bot-level) or `src/gpt_trader/features/live_trade/risk/config.py` (risk manager) + `config/environments/.env.template` |
+| Modify degradation behavior | `src/gpt_trader/features/live_trade/degradation.py` |
+| Add/modify a health check | `src/gpt_trader/monitoring/health_checks.py` |
+| Add a Coinbase REST/WS endpoint | `src/gpt_trader/features/brokerages/coinbase/client/` + `src/gpt_trader/features/brokerages/coinbase/endpoints.py` |
+| Update TUI screens/widgets | `src/gpt_trader/tui/screens/` or `src/gpt_trader/tui/widgets/` |
+
+## Intentional Guard-Stack Bypasses
+
+The canonical order path routes through `TradingEngine._validate_and_place_order()` (live loop),
+with `TradingEngine.submit_order()` as the external wrapper. The following locations intentionally
+bypass guards:
+
+| Location | Purpose |
+|----------|---------|
+| `src/gpt_trader/features/live_trade/bot.py` (`TradingBot.flatten_and_stop()`) | Emergency position closure (must succeed even during risk trips) |
+| `src/gpt_trader/features/optimize/` | Optimization/backtesting flows using simulated brokers |
 
 ## Code Style
 

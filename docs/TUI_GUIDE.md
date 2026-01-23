@@ -1,5 +1,10 @@
 # GPT-Trader TUI Guide
 
+---
+status: current
+last-updated: 2026-01-23
+---
+
 The **Terminal User Interface (TUI)** is the primary monitoring and control interface for GPT-Trader. Built with [Textual](https://textual.textualize.io/), it provides real-time visibility into the bot's state, account metrics, and trading activities directly from your terminal.
 
 ## Getting Started
@@ -105,5 +110,4 @@ A scrolling log window showing the latest bot activities, errors, and signals.
 
 ## Roadmap
 
-Historical planning notes live in
-[archive/plans/TUI_IMPROVEMENT_PLAN.md](archive/plans/TUI_IMPROVEMENT_PLAN.md).
+Roadmap tracking lives in GitHub Issues/PRs. Historical planning notes live in git history.

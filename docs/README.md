@@ -15,14 +15,13 @@ last-updated: 2026-01-23
 | Document | Purpose |
 |----------|---------|
 | [Architecture](ARCHITECTURE.md) | System design and capabilities |
-| [Capability Map](CAPABILITIES.md) | Runtime flow, capability matrix, where to change things |
 | [Feature Flags](FEATURE_FLAGS.md) | Configuration precedence and canonical sources |
 | [Production Guide](guides/production.md) | Deployment, rollout, and emergency procedures |
 | [Readiness Checklist](READINESS.md) | Gates to move from paper to live trading |
 | [Reliability Guide](RELIABILITY.md) | Guard stack, degradation responses, chaos testing |
 | [TUI Guide](TUI_GUIDE.md) | Launching and operating the terminal UI |
 | [TUI Style Guide](TUI_STYLE_GUIDE.md) | Visual standards for TUI components |
-| [Coinbase Reference](reference/coinbase_complete.md) | Complete API integration docs |
+| [Coinbase Integration](COINBASE.md) | Coinbase configuration + pointers |
 | [Naming Standards](naming.md) | Approved terminology and banned abbreviations |
 | [AI Agent Guide](guides/agents.md) | For AI agents working with this codebase |
 | [Agent Docs Index](agents/README.md) | AI-focused maps and inventories |
@@ -36,11 +35,8 @@ last-updated: 2026-01-23
 
 ### Architecture & Design
 - [System Architecture](ARCHITECTURE.md) - Component overview and vertical slices
-- [Capability Map](CAPABILITIES.md) - Runtime flow, capability matrix, where to change things
 - [Feature Flags](FEATURE_FLAGS.md) - Configuration precedence and canonical sources
-- [Perpetuals Trading Logic](reference/trading_logic_perps.md) - INTX implementation (future-ready)
 - [ADR Index](adr/README.md) - Architecture Decision Records
-- [Tooling Reference](TOOLING.md) - Internal utilities and patterns
 
 ### Trading Operations
 - [Production Deployment](guides/production.md) - Deployment, monitoring, rollback, emergencies
@@ -54,9 +50,7 @@ last-updated: 2026-01-23
 - [Backtesting](guides/backtesting.md) - Historical strategy validation
 
 ### Coinbase Integration
-- [Complete Reference](reference/coinbase_complete.md) - Authentication, endpoints, troubleshooting
-- [Authentication Guide](reference/coinbase_auth_guide.md) - JWT-only details
-- [WebSocket Reference](reference/coinbase_websocket_reference.md) - Real-time data channels
+- [Coinbase Integration](COINBASE.md) - Configuration + internal entrypoints
 
 ### Development
 - [AI Agent Guide](guides/agents.md) - For Claude and other AI agents
@@ -64,7 +58,6 @@ last-updated: 2026-01-23
 - [Feature Slice Scaffolding](DEVELOPMENT_GUIDELINES.md#slice-scaffolding) - Bootstrap new slices
 - [DI Policy](DI_POLICY.md) - Dependency injection patterns and container usage
 - [Naming Standards](naming.md) - Terminology, casing, and banned abbreviations
-- [Legacy Debt Worklist](LEGACY_DEBT_WORKLIST.md) - Backlog of legacy cleanup items
 - [Security](SECURITY.md) - Security practices and considerations
 
 ### TUI
@@ -90,13 +83,8 @@ last-updated: 2026-01-23
 ## Additional Resources
 
 - [Risk Integration](RISK_INTEGRATION_GUIDE.md) - Risk management configuration
-- [Training Guide](TRAINING_GUIDE.md) - Contributor onboarding and system overview
 - [PnL Calculations](PNL_CALCULATION_DIFFERENCES.md) - Profit/loss methodology
 - [Changelog](CHANGELOG.md) - Version history
-
-## Troubleshooting
-
-- [Coinbase Balance Troubleshooting](troubleshooting/coinbase_api_balance_guide.md) - Zero balances, key scopes, and endpoints
 
 ## Important Notes
 
@@ -123,4 +111,4 @@ last-updated: 2026-01-23
 
 ---
 
-*Documentation index updated January 2026. Historical docs live in git history and docs/archive/.*
+*Documentation index updated January 2026. Historical docs live in git history.*

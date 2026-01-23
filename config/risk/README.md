@@ -1,9 +1,10 @@
-Legacy Risk Templates (Moved)
+Legacy Risk Templates (Removed)
 
-The reference risk templates have moved to:
-- docs/reference/risk_templates/
+The legacy risk templates were removed from the tree during docs cleanup.
+Use git history if you need to review historical examples.
 
-The runtime does not load templates from this directory. Active risk settings
-come from profile YAML (config/profiles/*.yaml) plus env overrides (RISK_*).
-Use the templates in docs/reference/risk_templates/ for manual wiring or
-documentation-only reference.
+Active risk settings come from:
+- Profile YAML (`config/profiles/*.yaml`) + env overrides (`RISK_*`, `CFM_*`)
+- `BotRiskConfig` (bot-level sizing/leverage) adapted into the risk manager config
+
+`RISK_CONFIG_PATH` exists on `BotConfig` but is currently unused by the runtime loader.

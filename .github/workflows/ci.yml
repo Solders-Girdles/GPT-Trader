@@ -193,8 +193,9 @@ jobs:
           set -e
           echo "exit_code=$status" >> $GITHUB_OUTPUT
           if [ $status -ne 0 ]; then
-            echo "::warning::Agent artifacts are stale; run uv run agent-regenerate"
+            echo "::error::Agent artifacts are stale; run uv run agent-regenerate and commit the changes"
           fi
+          exit $status
 
       - name: Add freshness summary
         if: always()

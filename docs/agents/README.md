@@ -7,8 +7,8 @@ Use this folder for AI-focused navigation aids and generated inventories.
 - [Codebase map](CODEBASE_MAP.md)
 - [Reasoning artifacts](reasoning_artifacts.md)
 - [Glossary](glossary.md)
-- [Naming inventory](naming_inventory.md)
 - [Naming patterns config](../../config/agents/naming_patterns.yaml)
+- [Naming scan tool](../../scripts/agents/naming_inventory.py)
 - [Document verification matrix](Document_Verification_Matrix.md)
 - [Source → test map](../../var/agents/testing/source_test_map.json)
 

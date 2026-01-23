@@ -27,7 +27,6 @@ last-updated: 2026-01-23
 | [AI Agent Guide](guides/agents.md) | For AI agents working with this codebase |
 | [Agent Docs Index](agents/README.md) | AI-focused maps and inventories |
 | [Agent Tools](guides/agent-tools.md) | Tooling and helper commands |
-| [Repo Surface Audit](REPO_SURFACE_AUDIT.md) | Inventory of top-level directories and archive decisions |
 
 ## Core Documentation
 

@@ -351,7 +351,7 @@ class UICoordinator:
 
                 # Collect resilience metrics periodically for System tile
                 if loop_count % resilience_check_interval == 0:
-                    self._collect_resilience_metrics()
+                    await self._collect_resilience_metrics()
                     self._collect_validation_metrics()
 
                 # Collect spread data periodically for Market tile (rate-limited)
@@ -417,7 +417,7 @@ class UICoordinator:
         self.sync_state_from_bot()
         logger.info("Reconnected to StatusReporter and synced state")
 
-    def _collect_resilience_metrics(self) -> None:
+    async def _collect_resilience_metrics(self) -> None:
         """Collect resilience metrics from CoinbaseClient if available.
 
         Navigates through the bot -> engine -> broker -> client chain
@@ -441,10 +441,19 @@ class UICoordinator:
             if not client:
                 return
 
-            if hasattr(client, "get_resilience_status"):
-                status = client.get_resilience_status()
-                self.app.tui_state.update_resilience_data(status)
-                logger.debug("Collected resilience metrics from client")
+            method = getattr(client, "get_resilience_status", None)
+            if method is None:
+                return
+
+            broker_calls = self._get_broker_calls()
+            if asyncio.iscoroutinefunction(method):
+                status = await method()
+            elif broker_calls is None:
+                status = await asyncio.to_thread(method)
+            else:
+                status = await broker_calls(method)
+            self.app.tui_state.update_resilience_data(status)
+            logger.debug("Collected resilience metrics from client")
         except Exception as e:
             logger.debug("Failed to collect resilience metrics: %s", e)
 
@@ -485,6 +494,51 @@ class UICoordinator:
         except Exception:
             return None
 
+    def _get_broker_calls(self) -> Any | None:
+        try:
+            app_dict = getattr(self.app, "__dict__", None)
+            if isinstance(app_dict, dict):
+                bot = app_dict.get("bot")
+            else:
+                bot = getattr(self.app, "bot", None)
+        except Exception:
+            bot = None
+        if bot is None:
+            return None
+        try:
+            bot_dict = getattr(bot, "__dict__", None)
+            if isinstance(bot_dict, dict):
+                engine = bot_dict.get("engine")
+            else:
+                engine = getattr(bot, "engine", None)
+        except Exception:
+            engine = None
+        if engine is None:
+            return None
+        try:
+            engine_dict = getattr(engine, "__dict__", None)
+            if isinstance(engine_dict, dict):
+                context = engine_dict.get("context")
+            else:
+                context = getattr(engine, "context", None)
+        except Exception:
+            context = None
+        if context is None:
+            return None
+        try:
+            context_dict = getattr(context, "__dict__", None)
+            if isinstance(context_dict, dict):
+                broker_calls = context_dict.get("broker_calls")
+            else:
+                broker_calls = getattr(context, "broker_calls", None)
+        except Exception:
+            broker_calls = None
+        if broker_calls is None:
+            return None
+        if asyncio.iscoroutinefunction(getattr(broker_calls, "__call__", None)):
+            return broker_calls
+        return None
+
     async def _collect_spread_data(self) -> None:
         """Collect spread data from order books for watched symbols.
 
@@ -504,17 +558,25 @@ class UICoordinator:
                 return
 
             spreads: dict[str, Decimal] = {}
+            broker_calls = self._get_broker_calls()
             for symbol in symbols:
                 try:
                     # Get best bid/ask from order book (level 1)
-                    if hasattr(client, "get_product_book"):
-                        book = await client.get_product_book(symbol, limit=1)
-                        if book and book.get("bids") and book.get("asks"):
-                            best_bid = Decimal(str(book["bids"][0]["price"]))
-                            best_ask = Decimal(str(book["asks"][0]["price"]))
-                            if best_bid > 0:
-                                spread_pct = ((best_ask - best_bid) / best_bid) * 100
-                                spreads[symbol] = spread_pct
+                    method = getattr(client, "get_product_book", None)
+                    if method is None:
+                        continue
+                    if asyncio.iscoroutinefunction(method):
+                        book = await method(symbol, limit=1)
+                    elif broker_calls is None:
+                        book = await asyncio.to_thread(method, symbol, limit=1)
+                    else:
+                        book = await broker_calls(method, symbol, limit=1)
+                    if book and book.get("bids") and book.get("asks"):
+                        best_bid = Decimal(str(book["bids"][0]["price"]))
+                        best_ask = Decimal(str(book["asks"][0]["price"]))
+                        if best_bid > 0:
+                            spread_pct = ((best_ask - best_bid) / best_bid) * 100
+                            spreads[symbol] = spread_pct
                 except Exception:
                     pass  # Skip symbol on error
 

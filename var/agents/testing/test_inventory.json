@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6042,
-    "total_files": 716,
+    "total_tests": 6044,
+    "total_files": 717,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,8 +102,8 @@
     ]
   },
   "marker_counts": {
-    "unit": 5877,
-    "asyncio": 353,
+    "unit": 5879,
+    "asyncio": 355,
     "parametrize": 153,
     "property": 82,
     "integration": 79,
@@ -361,6 +361,7 @@
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_ws_health.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_health.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_orders.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_reconciliation.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_state.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_mark_updates.py",
@@ -18975,6 +18976,26 @@
           "unit"
         ],
         "docstring": "Test quantity respects product min size."
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_reconciliation.py": [
+      {
+        "name": "test_audit_orders_normalizes_submit_id_to_broker_order_id",
+        "line": 13,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_audit_orders_escalates_on_unknown_bot_owned_orders",
+        "line": 69,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_state.py": [

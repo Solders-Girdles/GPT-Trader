@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6030,
+    "total_tests": 6031,
     "total_files": 715,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 5865,
+    "unit": 5866,
     "asyncio": 343,
     "parametrize": 152,
     "property": 82,
@@ -1118,7 +1118,7 @@
     "tests/integration/test_crash_recovery.py": [
       {
         "name": "TestCrashRecovery::test_price_history_survives_restart",
-        "line": 61,
+        "line": 58,
         "markers": [
           "integration"
         ],
@@ -1127,7 +1127,7 @@
       },
       {
         "name": "TestCrashRecovery::test_rehydration_filters_by_configured_symbols",
-        "line": 111,
+        "line": 108,
         "markers": [
           "integration"
         ],
@@ -1136,7 +1136,7 @@
       },
       {
         "name": "TestCrashRecovery::test_rehydration_respects_max_history_size",
-        "line": 140,
+        "line": 137,
         "markers": [
           "integration"
         ],
@@ -1145,7 +1145,7 @@
       },
       {
         "name": "TestCrashRecovery::test_in_memory_mode_no_persistence",
-        "line": 169,
+        "line": 166,
         "markers": [
           "integration"
         ],
@@ -1154,7 +1154,7 @@
       },
       {
         "name": "TestCrashRecovery::test_no_event_store_graceful_degradation",
-        "line": 194,
+        "line": 191,
         "markers": [
           "integration"
         ],
@@ -1163,7 +1163,7 @@
       },
       {
         "name": "TestCrashRecovery::test_multiple_restarts_accumulate_correctly",
-        "line": 207,
+        "line": 204,
         "markers": [
           "integration"
         ],
@@ -20172,7 +20172,7 @@
       },
       {
         "name": "TestGetValidationMetrics::test_returns_failure_counts",
-        "line": 27,
+        "line": 20,
         "markers": [
           "unit"
         ],
@@ -20181,12 +20181,21 @@
       },
       {
         "name": "TestGetValidationMetrics::test_reports_escalation_status",
-        "line": 52,
+        "line": 37,
         "markers": [
           "unit"
         ],
         "docstring": "",
         "class": "TestGetValidationMetrics"
+      },
+      {
+        "name": "TestGetValidationMetricsFromContainer::test_wrapper_uses_global_container",
+        "line": 57,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestGetValidationMetricsFromContainer"
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager.py": [
@@ -27039,7 +27048,7 @@
       },
       {
         "name": "TestTradingEngineRehydration::test_rehydrate_handles_missing_fields",
-        "line": 186,
+        "line": 187,
         "markers": [
           "unit"
         ],

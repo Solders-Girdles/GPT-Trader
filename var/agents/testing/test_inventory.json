@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6031,
-    "total_files": 713,
+    "total_tests": 6038,
+    "total_files": 715,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,8 +102,8 @@
     ]
   },
   "marker_counts": {
-    "unit": 5866,
-    "asyncio": 344,
+    "unit": 5873,
+    "asyncio": 351,
     "parametrize": 153,
     "property": 82,
     "integration": 79,
@@ -443,6 +443,7 @@
       "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators_algorithm.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_perps_baseline_edges.py",
       "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry.py",
+      "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_broker_calls.py",
       "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_lifecycle.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_engine_delegation.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop.py",
@@ -701,6 +702,7 @@
       "tests/unit/gpt_trader/tui/state_management/test_validators_market.py",
       "tests/unit/gpt_trader/tui/state_management/test_validators_orders_and_trades.py",
       "tests/unit/gpt_trader/tui/state_management/test_validators_result.py",
+      "tests/unit/gpt_trader/tui/test_app_bootstrap_snapshot.py",
       "tests/unit/gpt_trader/tui/test_app_core.py",
       "tests/unit/gpt_trader/tui/test_credential_cache.py",
       "tests/unit/gpt_trader/tui/test_degraded_mode.py",
@@ -18507,7 +18509,7 @@
     "tests/unit/gpt_trader/features/live_trade/engines/test_equity_calculator.py": [
       {
         "name": "test_equity_calculator_skips_missing_pairs_using_product_list",
-        "line": 15,
+        "line": 17,
         "markers": [
           "asyncio",
           "unit"
@@ -18516,7 +18518,16 @@
       },
       {
         "name": "test_equity_calculator_handles_dict_product_list",
-        "line": 38,
+        "line": 40,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_equity_calculator_uses_broker_calls_executor",
+        "line": 63,
         "markers": [
           "asyncio",
           "unit"
@@ -21806,7 +21817,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_validation_async.py": [
       {
         "name": "test_maybe_preview_order_async_success",
-        "line": 35,
+        "line": 44,
         "markers": [
           "asyncio",
           "unit"
@@ -21815,7 +21826,7 @@
       },
       {
         "name": "test_maybe_preview_order_async_validation_error",
-        "line": 79,
+        "line": 88,
         "markers": [
           "asyncio",
           "unit"
@@ -21824,7 +21835,7 @@
       },
       {
         "name": "test_maybe_preview_order_async_generic_error",
-        "line": 112,
+        "line": 121,
         "markers": [
           "asyncio",
           "unit"
@@ -21833,12 +21844,21 @@
       },
       {
         "name": "test_maybe_preview_order_async_disabled",
-        "line": 148,
+        "line": 157,
         "markers": [
           "asyncio",
           "unit"
         ],
         "docstring": "Test that disabled preview is skipped in async."
+      },
+      {
+        "name": "test_maybe_preview_order_async_uses_broker_calls",
+        "line": 188,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_validation_exchange.py": [
@@ -25002,6 +25022,17 @@
         ],
         "docstring": "Test collect_snapshot when both account_manager and server_time fail.",
         "class": "TestAccountTelemetrySnapshotEdgeCases"
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_broker_calls.py": [
+      {
+        "name": "test_run_uses_broker_calls",
+        "line": 23,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_lifecycle.py": [
@@ -42256,7 +42287,7 @@
     "tests/unit/gpt_trader/tui/services/test_credential_validator.py": [
       {
         "name": "TestCredentialValidatorKeyFormatAndConfiguration::test_demo_mode_skips_validation",
-        "line": 19,
+        "line": 29,
         "markers": [
           "asyncio",
           "unit"
@@ -42266,7 +42297,7 @@
       },
       {
         "name": "TestCredentialValidatorKeyFormatAndConfiguration::test_missing_credentials_fails",
-        "line": 31,
+        "line": 41,
         "markers": [
           "asyncio",
           "unit"
@@ -42276,7 +42307,7 @@
       },
       {
         "name": "TestCredentialValidatorKeyFormatAndConfiguration::test_valid_key_format",
-        "line": 46,
+        "line": 56,
         "markers": [
           "unit"
         ],
@@ -42285,7 +42316,7 @@
       },
       {
         "name": "TestCredentialValidatorKeyFormatAndConfiguration::test_invalid_key_format",
-        "line": 69,
+        "line": 79,
         "markers": [
           "unit"
         ],
@@ -42294,7 +42325,7 @@
       },
       {
         "name": "TestCredentialValidatorKeyFormatAndConfiguration::test_invalid_private_key_format",
-        "line": 91,
+        "line": 101,
         "markers": [
           "unit"
         ],
@@ -42303,7 +42334,7 @@
       },
       {
         "name": "TestCredentialValidatorConnectivity::test_connectivity_success",
-        "line": 113,
+        "line": 123,
         "markers": [
           "asyncio",
           "unit"
@@ -42312,8 +42343,18 @@
         "class": "TestCredentialValidatorConnectivity"
       },
       {
+        "name": "TestCredentialValidatorConnectivity::test_connectivity_uses_broker_calls",
+        "line": 158,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCredentialValidatorConnectivity"
+      },
+      {
         "name": "TestCredentialValidatorConnectivity::test_jwt_generation_failure",
-        "line": 148,
+        "line": 193,
         "markers": [
           "asyncio",
           "unit"
@@ -44573,10 +44614,30 @@
         "class": "TestValidationResult"
       }
     ],
+    "tests/unit/gpt_trader/tui/test_app_bootstrap_snapshot.py": [
+      {
+        "name": "test_bootstrap_snapshot_populates_balances_and_equity",
+        "line": 59,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_bootstrap_snapshot_uses_broker_calls",
+        "line": 77,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/tui/test_app_core.py": [
       {
         "name": "test_app_instantiation",
-        "line": 25,
+        "line": 22,
         "markers": [
           "asyncio",
           "unit"
@@ -44585,16 +44646,7 @@
       },
       {
         "name": "test_app_sync_state",
-        "line": 34,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_bootstrap_snapshot_populates_balances_and_equity",
-        "line": 101,
+        "line": 31,
         "markers": [
           "asyncio",
           "unit"
@@ -44603,7 +44655,7 @@
       },
       {
         "name": "TestResourceCleanup::test_coinbase_client_has_close_method",
-        "line": 121,
+        "line": 62,
         "markers": [
           "unit"
         ],
@@ -44612,7 +44664,7 @@
       },
       {
         "name": "TestResourceCleanup::test_coinbase_client_context_manager",
-        "line": 131,
+        "line": 72,
         "markers": [
           "unit"
         ],
@@ -44621,7 +44673,7 @@
       },
       {
         "name": "TestResourceCleanup::test_websocket_has_close_method",
-        "line": 137,
+        "line": 78,
         "markers": [
           "unit"
         ],
@@ -44630,7 +44682,7 @@
       },
       {
         "name": "TestResourceCleanup::test_websocket_close_is_idempotent",
-        "line": 148,
+        "line": 89,
         "markers": [
           "unit"
         ],
@@ -44639,7 +44691,7 @@
       },
       {
         "name": "TestResourceCleanup::test_performance_service_cleanup",
-        "line": 159,
+        "line": 100,
         "markers": [
           "unit"
         ],
@@ -44648,7 +44700,7 @@
       },
       {
         "name": "TestResourceCleanup::test_app_cleanup_bot_resources_closes_client",
-        "line": 178,
+        "line": 119,
         "markers": [
           "unit"
         ],
@@ -44657,7 +44709,7 @@
       },
       {
         "name": "TestResourceCleanup::test_app_cleanup_bot_resources_closes_websocket",
-        "line": 187,
+        "line": 128,
         "markers": [
           "unit"
         ],
@@ -44666,7 +44718,7 @@
       },
       {
         "name": "TestResourceCleanup::test_app_cleanup_bot_resources_closes_engine_client",
-        "line": 196,
+        "line": 137,
         "markers": [
           "unit"
         ],
@@ -44675,7 +44727,7 @@
       },
       {
         "name": "TestResourceCleanup::test_app_cleanup_handles_missing_resources",
-        "line": 205,
+        "line": 146,
         "markers": [
           "unit"
         ],
@@ -44684,7 +44736,7 @@
       },
       {
         "name": "TestResourceCleanup::test_app_cleanup_handles_close_errors",
-        "line": 216,
+        "line": 157,
         "markers": [
           "unit"
         ],
@@ -44693,7 +44745,7 @@
       },
       {
         "name": "TestResourceCleanup::test_websocket_reconnect_limit_configurable",
-        "line": 228,
+        "line": 169,
         "markers": [
           "unit"
         ],
@@ -51537,7 +51589,7 @@
     "tests/unit/gpt_trader/utilities/test_async_utils_concurrency.py": [
       {
         "name": "TestBoundedToThread::test_invalid_concurrency",
-        "line": 21,
+        "line": 22,
         "markers": [
           "unit"
         ],
@@ -51546,7 +51598,27 @@
       },
       {
         "name": "TestBoundedToThread::test_concurrency_is_bounded",
-        "line": 26,
+        "line": 27,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestBoundedToThread"
+      },
+      {
+        "name": "TestBoundedToThread::test_custom_executor_path",
+        "line": 61,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestBoundedToThread"
+      },
+      {
+        "name": "TestBoundedToThread::test_dedicated_executor_shutdown",
+        "line": 84,
         "markers": [
           "asyncio",
           "unit"
@@ -51556,7 +51628,7 @@
       },
       {
         "name": "TestAsyncContextManager::test_async_context_manager_basic",
-        "line": 64,
+        "line": 98,
         "markers": [
           "asyncio",
           "unit"
@@ -51566,7 +51638,7 @@
       },
       {
         "name": "TestAsyncContextManager::test_async_context_manager_with_timeout",
-        "line": 76,
+        "line": 110,
         "markers": [
           "asyncio",
           "unit"
@@ -51576,7 +51648,7 @@
       },
       {
         "name": "TestAsyncTimeout::test_async_timeout_success",
-        "line": 88,
+        "line": 122,
         "markers": [
           "asyncio",
           "unit"
@@ -51586,7 +51658,7 @@
       },
       {
         "name": "TestAsyncTimeout::test_async_timeout_failure",
-        "line": 100,
+        "line": 134,
         "markers": [
           "asyncio",
           "unit"
@@ -51596,7 +51668,7 @@
       },
       {
         "name": "TestAsyncBatchProcessor::test_batch_processor_basic",
-        "line": 116,
+        "line": 150,
         "markers": [
           "asyncio",
           "unit"
@@ -51606,7 +51678,7 @@
       },
       {
         "name": "TestAsyncBatchProcessor::test_batch_processor_with_exceptions",
-        "line": 132,
+        "line": 166,
         "markers": [
           "asyncio",
           "unit"

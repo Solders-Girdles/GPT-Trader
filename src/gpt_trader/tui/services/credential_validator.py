@@ -92,6 +92,44 @@ class CredentialValidator:
         self._client: Any = None
         self._auth: Any = None
 
+    def _get_broker_calls(self) -> Any | None:
+        app = self.app
+        if app is None:
+            return None
+        try:
+            app_dict = getattr(app, "__dict__", None)
+            if isinstance(app_dict, dict):
+                bot = app_dict.get("bot")
+            else:
+                bot = getattr(app, "bot", None)
+        except Exception:
+            bot = None
+        if bot is None:
+            return None
+        try:
+            bot_dict = getattr(bot, "__dict__", None)
+            if isinstance(bot_dict, dict):
+                context = bot_dict.get("context")
+            else:
+                context = getattr(bot, "context", None)
+        except Exception:
+            context = None
+        if context is None:
+            return None
+        try:
+            context_dict = getattr(context, "__dict__", None)
+            if isinstance(context_dict, dict):
+                broker_calls = context_dict.get("broker_calls")
+            else:
+                broker_calls = getattr(context, "broker_calls", None)
+        except Exception:
+            broker_calls = None
+        if broker_calls is None:
+            return None
+        if asyncio.iscoroutinefunction(getattr(broker_calls, "__call__", None)):
+            return broker_calls
+        return None
+
     def compute_credential_fingerprint(self) -> str | None:
         """Generate fingerprint from API key for cache comparison.
 
@@ -426,11 +464,15 @@ class CredentialValidator:
             api_mode="advanced",
         )
 
+        broker_calls = self._get_broker_calls()
         max_attempts = 3
         for attempt in range(1, max_attempts + 1):
             try:
                 start = time.perf_counter()
-                await asyncio.to_thread(self._client.get_time)
+                if broker_calls is None:
+                    await asyncio.to_thread(self._client.get_time)
+                else:
+                    await broker_calls(self._client.get_time)
                 result.api_latency_ms = (time.perf_counter() - start) * 1000
                 result.connectivity_ok = True
                 result.add_success(
@@ -473,9 +515,13 @@ class CredentialValidator:
         max_attempts = 3
         permissions: dict[str, Any] | None = None
 
+        broker_calls = self._get_broker_calls()
         for attempt in range(1, max_attempts + 1):
             try:
-                permissions = await asyncio.to_thread(self._client.get_key_permissions) or {}
+                if broker_calls is None:
+                    permissions = await asyncio.to_thread(self._client.get_key_permissions) or {}
+                else:
+                    permissions = await broker_calls(self._client.get_key_permissions) or {}
                 break
             except (HTTPError, URLError, TimeoutError, ConnectionError) as exc:
                 if attempt == max_attempts:

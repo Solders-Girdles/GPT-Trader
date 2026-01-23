@@ -73,6 +73,19 @@ For testing without real API access, set `MOCK_BROKER=1` in `.env`.
 | `uv run pytest tests/unit/path/to/test.py -v` | Run single test file |
 | `uv run pytest tests/unit --cov=src/gpt_trader` | Run with coverage |
 
+## GitHub Workflow
+
+`main` is protected: changes must land via pull request, with required checks passing (0 approvals required). Use auto-merge to keep the loop fast.
+
+```bash
+git switch -c <branch>
+git push -u origin HEAD
+gh pr create --fill
+gh pr merge --auto --squash --delete-branch
+```
+
+If you touch `var/agents/**`, run `uv run agent-regenerate` and commit the updated artifacts (CI fails when they’re stale).
+
 ### Quality Checks
 
 | Command | Purpose |

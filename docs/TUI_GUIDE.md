@@ -105,4 +105,5 @@ A scrolling log window showing the latest bot activities, errors, and signals.
 
 ## Roadmap
 
-See [plans/TUI_IMPROVEMENT_PLAN.md](plans/TUI_IMPROVEMENT_PLAN.md) for upcoming features and development phases.
+Historical planning notes live in
+[archive/plans/TUI_IMPROVEMENT_PLAN.md](archive/plans/TUI_IMPROVEMENT_PLAN.md).

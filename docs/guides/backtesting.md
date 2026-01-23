@@ -2,12 +2,13 @@
 
 ## Overview
 
-The backtesting simulation harness provides a production-grade framework for validating trading strategies against historical data. The key principle is **simulation fidelity**: the backtest uses the exact same `StrategyCoordinator.run_cycle()` logic as live trading, with only the broker/data adapters swapped.
+The backtesting simulation harness provides a production-grade framework for validating trading strategies against historical data. The key principle is **simulation fidelity**: the backtest reuses the same strategy decision logic as live trading, with only the broker/data adapters swapped (and optional guard-parity execution via `BacktestGuardedExecutor`).
 
 ## Architecture Principles
 
 ### 1. Zero Logic Drift
-- Same strategy coordinator, execution coordinator, and risk manager
+- Same strategy `decide()` implementation as live trading (via `create_strategy`)
+- Optional guard-parity execution via `BacktestGuardedExecutor`
 - Same circuit breakers, position sizing, and PnL tracking
 - Only difference: swappable broker implementation (live `CoinbaseRestService` vs `SimulatedBroker`)
 
@@ -15,10 +16,10 @@ The backtesting simulation harness provides a production-grade framework for val
 - Realistic order fills with slippage and spread modeling
 - Accurate fee calculation matching Coinbase Advanced Trade tiers
 - Funding PnL accrual for perpetual positions
-- Risk controls fire identically (daily loss limits, circuit breakers, reduce-only)
+- Risk controls fire identically when using `BacktestGuardedExecutor`
 
 ### 3. Fast Iteration
-- Historical data cached in Parquet format with DuckDB queries
+- Candle cache stored as JSON with coverage index (`HistoricalDataManager`)
 - Bar-by-bar replay with configurable clock speed
 - Validation framework for comparing sim vs. live decisions
 
@@ -41,7 +42,7 @@ The backtesting simulation harness provides a production-grade framework for val
           │                   │                   │
           ▼                   ▼                   ▼
    ┌────────────┐      ┌────────────┐     ┌────────────┐
-   │  Parquet   │      │   Order    │     │  Golden    │
+   │   JSON     │      │   Order    │     │  Golden    │
    │   Cache    │      │    Fill    │     │   Path     │
    │            │      │   Model    │     │  Replays   │
    └────────────┘      └────────────┘     └────────────┘
@@ -49,8 +50,8 @@ The backtesting simulation harness provides a production-grade framework for val
           │                   │                   │
           ▼                   ▼                   ▼
    ┌────────────┐      ┌────────────┐     ┌────────────┐
-   │  DuckDB    │      │    Fee     │     │   Chaos    │
-   │  Queries   │      │Calculator  │     │   Tests    │
+   │ Coverage   │      │    Fee     │     │   Chaos    │
+   │   Index    │      │Calculator  │     │   Tests    │
    │            │      │            │     │            │
    └────────────┘      └────────────┘     └────────────┘
                               │
@@ -80,12 +81,13 @@ Both implementations provide the same core methods used by the live trading engi
 - `get_quote(symbol)` - Get current bid/ask quote
 - `get_candles(...)` - Fetch historical candles
 
-This API surface ensures **zero logic drift** between live and backtest environments - the strategy coordinator and risk manager interact identically with either implementation.
+This API surface keeps strategy logic consistent between live and backtest runs; when you
+need guard parity, route orders through `BacktestGuardedExecutor` against `SimulatedBroker`.
 
 ## Simulation Engine
 
 ### ClockedBarRunner
-Time-based replay engine that feeds historical bars to the strategy coordinator.
+Time-based replay engine that feeds historical bars to your backtest loop.
 
 **Features:**
 - Configurable granularity (`ONE_MINUTE`, `FIVE_MINUTE`, `ONE_HOUR`, `ONE_DAY`, etc.)
@@ -108,8 +110,14 @@ async for bar_time, bars, quotes in runner.run():
     # bars: dict[str, Candle] - one per symbol
     for symbol, bar in bars.items():
         broker.update_bar(symbol, bar)
-    await strategy_coordinator.run_cycle()
+    # Drive your strategy or guarded executor for this timestep.
 ```
+
+### Guarded Execution (Optional)
+Use `BacktestGuardedExecutor` to run order submissions through the live validation
+stack (OrderValidator + OrderSubmitter) against `SimulatedBroker`. This provides
+the closest parity with live guard behavior when you need risk checks and
+rejection tracking in backtests.
 
 ### Order Fill Model
 
@@ -231,112 +239,39 @@ class FundingPnLTracker:
 
 ## Historical Data Management
 
-### Data Fetching
-Pull candles from Coinbase REST API and cache locally.
+Historical candles are fetched via `CoinbaseHistoricalFetcher` and cached by
+`HistoricalDataManager`. The cache is JSON-based and tracks coverage ranges so
+backtests only fetch missing windows. Default cache location is
+`~/.gpt_trader/cache/candles` (override with `cache_dir`).
 
-**Endpoint:**
-```
-GET /api/v3/brokerage/products/{product_id}/candles
-```
+**Cache layout:**
+- `<cache_dir>/<symbol>_<granularity>.json`
+- `<cache_dir>/_coverage_index.json`
 
-**Parameters:**
-- `start`: Unix timestamp (seconds)
-- `end`: Unix timestamp (seconds)
-- `granularity`: ONE_MINUTE, FIVE_MINUTE, ONE_HOUR, ONE_DAY
-
-**Rate Limits:**
-- 10 requests/second (public endpoints)
-- Pagination: max 300 candles per request
-
-**Implementation Strategy:**
-1. Chunk date ranges into 300-candle batches
-2. Parallel fetching with rate limit throttling (10 RPS)
-3. Cache raw responses in Parquet partitioned by symbol/granularity
-4. Build manifest of available data coverage
-
-### Parquet Cache Schema
-
+**Example:**
 ```python
-# Candles table
-┌──────────────┬──────────┬─────────┐
-│ Column       │ Type     │ Notes   │
-├──────────────┼──────────┼─────────┤
-│ symbol       │ string   │ Partition│
-│ granularity  │ string   │ Partition│
-│ timestamp    │ int64    │ Unix (s) │
-│ open         │ decimal  │ Price    │
-│ high         │ decimal  │ Price    │
-│ low          │ decimal  │ Price    │
-│ close        │ decimal  │ Price    │
-│ volume       │ decimal  │ Base     │
-│ fetched_at   │ int64    │ Metadata │
-└──────────────┴──────────┴─────────┘
+from datetime import datetime
+from pathlib import Path
 
-# Product metadata table
-┌──────────────────┬──────────┬──────────┐
-│ Column           │ Type     │ Notes    │
-├──────────────────┼──────────┼──────────┤
-│ symbol           │ string   │ PK       │
-│ min_order_size   │ decimal  │          │
-│ price_increment  │ decimal  │          │
-│ quote_increment  │ decimal  │          │
-│ leverage_max     │ decimal  │ Perps    │
-│ funding_rate     │ decimal  │ Perps    │
-│ market_type      │ string   │ SPOT/PERP│
-│ is_active        │ bool     │          │
-└──────────────────┴──────────┴──────────┘
-```
+from gpt_trader.backtesting.data import create_coinbase_data_provider
+from gpt_trader.features.brokerages.coinbase.client.client import CoinbaseClient
 
-### DuckDB Queries
+client = CoinbaseClient(api_mode="advanced")  # public endpoints (no auth required)
+data_provider = create_coinbase_data_provider(
+    client=client,
+    cache_dir=Path("runtime_data/dev/cache/candles"),
+    validate_quality=True,
+    spike_threshold_pct=15.0,
+    volume_anomaly_std=6.0,
+)
 
-```python
-class HistoricalDataManager:
-    def __init__(self, cache_dir: Path):
-        self.conn = duckdb.connect(str(cache_dir / "candles.duckdb"))
-        self._register_parquet_tables()
-
-    def fetch_candles(
-        self,
-        symbol: str,
-        granularity: str,
-        start: datetime,
-        end: datetime,
-    ) -> list[Candle]:
-        """Fetch candles from cache or API."""
-        # Check cache coverage
-        cached = self._query_cache(symbol, granularity, start, end)
-
-        if self._has_gaps(cached, start, end):
-            # Fetch missing data from API
-            missing = self._fetch_from_api(symbol, granularity, start, end)
-            self._write_to_cache(missing)
-            cached.extend(missing)
-
-        return sorted(cached, key=lambda c: c.timestamp)
-
-    def _query_cache(
-        self,
-        symbol: str,
-        granularity: str,
-        start: datetime,
-        end: datetime,
-    ) -> list[Candle]:
-        """Query Parquet cache via DuckDB."""
-        query = """
-        SELECT timestamp, open, high, low, close, volume
-        FROM candles
-        WHERE symbol = ?
-          AND granularity = ?
-          AND timestamp >= ?
-          AND timestamp < ?
-        ORDER BY timestamp
-        """
-        return self.conn.execute(query, [
-            symbol,
-            granularity,
-            int(start.timestamp()),
-            int(end.timestamp()),
-        ]).fetchall()
+candles = await data_provider.get_candles(
+    symbol="BTC-USD",
+    granularity="FIVE_MINUTE",
+    start=datetime(2024, 1, 1),
+    end=datetime(2024, 2, 1),
+)
+quality_report = data_provider.get_quality_report("BTC-USD", "FIVE_MINUTE")
 ```
 
 ## CLI quickstart
@@ -345,7 +280,8 @@ Use the backtest runner to execute single runs or walk-forward sweeps from the C
 
 ```bash
 uv run python scripts/backtest_runner.py --profile canary --symbol BTC-USD --granularity TWO_HOUR \
-  --strategy mr --trend-filter --shorts --start 2025-10-01 --end 2026-01-17
+  --strategy-type mean_reversion --mean-reversion-trend-filter --enable-shorts \
+  --start 2025-10-01 --end 2026-01-17
 ```
 
 Walk-forward flags:
@@ -357,7 +293,12 @@ Walk-forward flags:
 - `--wf-require-all-pass`: require every window to pass the strategy gates.
 - `--end`: anchor_end for the walk-forward schedule; defaults to UTC midnight today.
 
-Outputs:
+Outputs (single run):
+
+- `runtime_data/<profile>/reports/backtest_<run_id>.json`
+- `runtime_data/<profile>/reports/backtest_<run_id>.txt`
+
+Outputs (walk-forward):
 
 - `runtime_data/<profile>/reports/walk_forward_<timestamp>/summary.md`
 - `runtime_data/<profile>/reports/walk_forward_<timestamp>/summary.json`
@@ -365,83 +306,57 @@ Outputs:
 
 ## Validation Framework
 
-### Golden-Path Replays
+### Golden-Path Comparison
 
-Compare simulation decisions against recent live trading cycles.
+Compare logged decisions from live and simulated runs using `DecisionLogger` and
+`GoldenPathValidator`.
 
 **Workflow:**
-1. Export last N live cycles from event store (decisions, orders, fills)
-2. Replay same time period in simulation
-3. Compare decision outputs (action, side, quantity, price)
-4. Flag divergences with detailed diff
+1. Record decisions during live/backtest runs with `DecisionLogger`.
+2. Pair live vs simulated `StrategyDecision` entries.
+3. Validate pairs and generate a report.
 
-**Implementation:**
+**Example:**
 ```python
-class GoldenPathValidator:
-    def __init__(
-        self,
-        event_store: EventStore,
-        sim_broker: SimulatedBroker,
-    ):
-        ...
+from decimal import Decimal
+from pathlib import Path
 
-    async def validate_cycle(
-        self,
-        cycle_id: str,
-    ) -> ValidationReport:
-        """Replay a live cycle and compare decisions."""
-        # 1. Load live cycle from event store
-        live_events = await self.event_store.get_cycle_events(cycle_id)
-        live_decisions = self._extract_decisions(live_events)
+from gpt_trader.backtesting.validation import (
+    DecisionLogger,
+    GoldenPathValidator,
+    StrategyDecision,
+)
 
-        # 2. Replay in simulation
-        sim_decisions = await self._replay_cycle(cycle_id, self.sim_broker)
+logger = DecisionLogger(storage_path=Path("runtime_data/dev/decision_logs"))
+cycle_id = logger.start_cycle()
 
-        # 3. Compare
-        diffs = self._compare_decisions(live_decisions, sim_decisions)
+live = StrategyDecision.create(
+    cycle_id=cycle_id,
+    symbol="BTC-USD",
+    equity=Decimal("10000"),
+    position_quantity=Decimal("0"),
+    position_side=None,
+    mark_price=Decimal("42000"),
+    recent_marks=[Decimal("41900"), Decimal("42000")],
+).with_action("BUY", quantity=Decimal("0.01"))
 
-        return ValidationReport(
-            cycle_id=cycle_id,
-            total_decisions=len(live_decisions),
-            divergences=len(diffs),
-            diffs=diffs,
-        )
-```
+sim = StrategyDecision.create(
+    cycle_id=cycle_id,
+    symbol="BTC-USD",
+    equity=Decimal("10000"),
+    position_quantity=Decimal("0"),
+    position_side=None,
+    mark_price=Decimal("42000"),
+    recent_marks=[Decimal("41900"), Decimal("42000")],
+).with_action("BUY", quantity=Decimal("0.01"))
 
-**Example Diff Output:**
-```
-Cycle: 2024-03-15T14:30:00
-Symbol: BTC-PERP-USDC
+logger.log_decision(live)
+logger.log_decision(sim)
 
-Live Decision:
-  Action: BUY
-  Quantity: 0.05
-  Price: 67500.00 (limit)
-
-Sim Decision:
-  Action: BUY
-  Quantity: 0.05
-  Price: 67500.00 (limit)
-
-✓ MATCH
-
----
-
-Symbol: ETH-PERP-USDC
-
-Live Decision:
-  Action: SELL
-  Quantity: 0.5
-  Price: MARKET
-
-Sim Decision:
-  Action: HOLD
-  Quantity: 0.0
-  Price: N/A
-
-✗ DIVERGENCE
-  Reason: Sim mark price (3850.25) vs Live mark price (3851.00)
-  Impact: Missed threshold by 0.02%
+validator = GoldenPathValidator()
+validator.validate_decision(live, sim)
+report = validator.generate_report(cycle_id=cycle_id)
+print(report.match_rate)
 ```
 
 ### Chaos Testing
@@ -464,34 +379,32 @@ Inject edge cases to validate system resilience.
 
 **Implementation:**
 ```python
-class ChaosEngine:
-    def __init__(self, broker: SimulatedBroker):
-        self.broker = broker
-        self.chaos_modes: dict[str, bool] = {
-            "missing_candles": False,
-            "stale_marks": False,
-            "wide_spreads": False,
-            "order_errors": False,
-        }
+from decimal import Decimal
 
-    def enable(self, mode: str):
-        """Enable a chaos mode."""
-        self.chaos_modes[mode] = True
+from gpt_trader.backtesting.chaos import ChaosEngine
+from gpt_trader.backtesting.types import ChaosScenario
 
-    def inject_missing_candles(
-        self,
-        symbol: str,
-        gap_probability: float = 0.05,
-    ):
-        """Randomly remove candles."""
-        ...
+chaos_engine = ChaosEngine(broker)
+chaos_engine.add_scenario(
+    ChaosScenario(
+        name="volatile_market",
+        missing_candles_probability=Decimal("0.05"),
+        stale_marks_delay_seconds=30,
+        spread_multiplier=Decimal("3.0"),
+        partial_fill_probability=Decimal("0.2"),
+    )
+)
+chaos_engine.enable()
 
-    def inject_stale_marks(
-        self,
-        delay_seconds: int = 30,
-    ):
-        """Delay mark price updates."""
-        ...
+runner = ClockedBarRunner(
+    data_provider=data_provider,
+    symbols=symbols,
+    granularity=granularity,
+    start_date=start_date,
+    end_date=end_date,
+    clock_speed=ClockSpeed.INSTANT,
+    chaos_engine=chaos_engine,
+)
 ```
 
 ## Integration Example
@@ -509,7 +422,7 @@ from gpt_trader.features.brokerages.coinbase.client.client import CoinbaseClient
 
 
 async def run_backtest() -> None:
-    client = CoinbaseClient(api_key="...", api_secret="...")
+    client = CoinbaseClient(api_mode="advanced")  # public endpoints (no auth required)
     data_provider = create_coinbase_data_provider(client)
 
     symbols = ["BTC-PERP-USDC", "ETH-PERP-USDC"]
@@ -548,168 +461,22 @@ async def run_backtest() -> None:
     print(report)
 ```
 
-## Performance Metrics
+## Reports and Metrics
 
-### Backtest Speed
-- **Instant replay**: ~1000 bars/second (3 months in ~10 seconds)
-- **Real-time**: 1:1 with clock time
-- **10x speed**: 10 minutes = 100 minutes of data
+Backtest reporting utilities live in `gpt_trader.backtesting.metrics`:
 
-### Data Storage
-- 1 year of 1-minute candles (BTC-PERP): ~500MB (Parquet compressed)
-- 10 symbols × 3 granularities × 1 year: ~15GB
+- `BacktestReporter`: aggregated statistics and summaries
+- `calculate_trade_statistics` / `calculate_risk_metrics`
+- `generate_backtest_report` for a quick `BacktestResult`
 
-### Memory Usage
-- DuckDB in-memory cache: ~2GB for 1-year dataset
-- Simulation state: ~100MB per symbol
-
-## Next Steps
-
-1. **Phase 1**: Implement core interfaces and SimulatedBroker (Week 1)
-2. **Phase 2**: Build historical data fetcher and Parquet cache (Week 1-2)
-3. **Phase 3**: Add order fill model and fee calculator (Week 2)
-4. **Phase 4**: Implement funding PnL tracking (Week 2-3)
-5. **Phase 5**: Build validation framework (Week 3)
-6. **Phase 6**: Add chaos testing capabilities (Week 4)
-7. **Phase 7**: Full integration test and documentation (Week 4)
-
-## Production-Parity Backtesting
-
-> **WARNING: PARTIALLY IMPLEMENTED**
->
-> This section documents features that are currently being built in `gpt_trader.features.optimize`.
-> While the `optimize` package exists, the specific `backtest_engine.py` interface described below may differ from the actual implementation in `batch_runner.py`.
-> For existing backtesting functionality, see `gpt_trader.backtesting` module.
-
-### Key Features
-
-- **Zero Code Duplication**: Reuses `BaselinePerpsStrategy.decide()` directly
-- **Decision Logging**: Records every decision with full context
-- **Parity Validation**: Compare backtest vs live decision logs
-- **Human-Readable Logs**: JSON format for easy inspection
-
-### Quick Start
-
+Example:
 ```python
-from decimal import Decimal
-import pandas as pd
-# NOTE: These imports reference unimplemented modules
-from gpt_trader.features.live_trade.strategies.perps_baseline import (
-    BaselinePerpsStrategy,
-    PerpsStrategyConfig,
-)
-from gpt_trader.features.optimize.backtest_engine import run_backtest_production  # NOT IMPLEMENTED
-from gpt_trader.features.optimize.types_v2 import BacktestConfig  # NOT IMPLEMENTED
+from gpt_trader.backtesting.metrics import BacktestReporter
 
-# Load historical data
-data = pd.read_csv("historical_btc.csv")  # Must have 'close' column
-
-# Configure strategy (same config you use in production)
-strategy_config = PerpsStrategyConfig(
-    short_ma_period=5,
-    long_ma_period=20,
-    position_fraction=0.1,
-    enable_shorts=False,
-)
-
-# Create strategy instance
-strategy = BaselinePerpsStrategy(config=strategy_config)
-
-# Configure backtest
-backtest_config = BacktestConfig(
-    initial_capital=Decimal("10000"),
-    commission_rate=Decimal("0.001"),  # 0.1% = 10 bps
-    slippage_rate=Decimal("0.0005"),   # 0.05% = 5 bps
-    enable_decision_logging=True,
-)
-
-# Run backtest
-result = run_backtest_production(
-    strategy=strategy,
-    data=data,
-    symbol="BTC-USD",
-    config=backtest_config,
-)
-
-print(result.summary())
+reporter = BacktestReporter(broker)
+result = reporter.generate_result(start_date, end_date)
+print(result.total_return)
 ```
-
-### Decision Logging
-
-Every decision is logged with complete context in JSON format:
-
-```json
-{
-  "run_id": "bt_20250122_143052_BTC-USD",
-  "decisions": [
-    {
-      "context": {
-        "timestamp": "2025-01-15T10:30:00",
-        "current_mark": "42350.50",
-        "position_state": null,
-        "equity": "10500.00"
-      },
-      "decision": {
-        "action": "buy",
-        "quantity": "0.1",
-        "reason": "Bullish MA crossover"
-      },
-      "execution": {
-        "filled": true,
-        "fill_price": "42352.00"
-      }
-    }
-  ]
-}
-```
-
-Logs stored in: `backtesting/decision_logs/YYYY-MM-DD/bt_{timestamp}_{symbol}.json`
-
-### Parity Validation
-
-Compare backtest decisions against live trading:
-
-```python
-from gpt_trader.features.optimize.decision_logger import compare_decision_logs
-
-comparison = compare_decision_logs(
-    backtest_log=backtest_path,
-    live_log=live_path,
-)
-
-print(f"Parity Rate: {comparison['parity_rate']:.2%}")
-assert comparison['parity_rate'] > 0.99, "Parity validation failed!"
-```
-
-**Go/No-Go Criteria**: Parity rate > 99% on 24-hour shadow run
-
-### API Reference
-
-```python
-def run_backtest_production(
-    *,
-    strategy: BaselinePerpsStrategy,
-    data: pd.DataFrame,
-    symbol: str,
-    product: Product | None = None,
-    config: BacktestConfig | None = None,
-) -> BacktestResult:
-    """Run production-parity backtest."""
-
-@dataclass
-class BacktestConfig:
-    initial_capital: Decimal = Decimal("10000")
-    commission_rate: Decimal = Decimal("0.001")   # 10 bps
-    slippage_rate: Decimal = Decimal("0.0005")    # 5 bps
-    enable_decision_logging: bool = True
-    log_directory: str = "backtesting/decision_logs"
-```
-
-### Troubleshooting
-
-**No trades in backtest**: Ensure `len(data) > long_ma_period` and data contains volatility.
-
-**Parity mismatch**: Check MA periods match, position state format, equity calculations.
 
 ## References
 

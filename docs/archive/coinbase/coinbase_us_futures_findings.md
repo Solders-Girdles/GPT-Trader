@@ -1,4 +1,9 @@
-# Coinbase US Futures Availability & API Access Findings
+# ARCHIVED: Coinbase US Futures Availability & API Access Findings
+
+Archived on 2026-01-23. Historical investigation; see the
+[Coinbase Reference](../../reference/coinbase_complete.md) for current guidance.
+
+## Coinbase US Futures Availability & API Access Findings
 
 ## Summary of Findings (November 23, 2025)
 

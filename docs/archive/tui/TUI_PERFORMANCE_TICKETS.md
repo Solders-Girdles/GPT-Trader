@@ -1,4 +1,9 @@
-# TUI Performance Follow-up Tickets
+# ARCHIVED: TUI Performance Follow-up Tickets
+
+Archived on 2026-01-23. Historical follow-up tickets from the
+[performance audit](./TUI_PERFORMANCE_AUDIT.md).
+
+## TUI Performance Follow-up Tickets
 
 **Created:** 2026-01-06
 **Source:** TUI_PERFORMANCE_AUDIT.md

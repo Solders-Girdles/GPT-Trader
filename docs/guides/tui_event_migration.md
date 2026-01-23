@@ -448,7 +448,7 @@ if not self._event_posted:
 
 - [Textual Messages Documentation](https://textual.textualize.io/guide/events/)
 - [TUI Events Definitions](../../src/gpt_trader/tui/events.py)
-- [TUI Architecture Improvement Plan](../plans/TUI_IMPROVEMENT_PLAN.md)
+- [TUI Architecture Improvement Plan (archived)](../archive/plans/TUI_IMPROVEMENT_PLAN.md)
 
 ## Questions?
 

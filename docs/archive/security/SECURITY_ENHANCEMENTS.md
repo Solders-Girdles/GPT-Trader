@@ -1,4 +1,9 @@
-# Security and Configuration Hygiene Enhancements
+# ARCHIVED: Security and Configuration Hygiene Enhancements
+
+Archived on 2026-01-23. Superseded by the current [Security](../../SECURITY.md)
+documentation.
+
+## Security and Configuration Hygiene Enhancements
 
 This document describes the security enhancements implemented for the GPT-Trader system, focusing on secrets management, IP allowlisting, and configuration governance.
 

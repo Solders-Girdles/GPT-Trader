@@ -179,6 +179,8 @@ class BotConfig:
     enable_order_preview: bool = False
     use_limit_orders: bool = False
     market_order_fallback: bool = True
+    # Off by default; enable after monitoring confirms no duplicate/ghost orders.
+    order_submission_retries_enabled: bool = False
     account_telemetry_interval: int | None = None
     broker_calls_use_dedicated_executor: bool = False
 
@@ -445,6 +447,9 @@ class BotConfig:
             environment=os.getenv("ENVIRONMENT"),
             spot_force_live=parse_bool_env("SPOT_FORCE_LIVE", default=False),
             enable_order_preview=parse_bool_env("ORDER_PREVIEW_ENABLED", default=False),
+            order_submission_retries_enabled=parse_bool_env(
+                "ORDER_SUBMISSION_RETRIES_ENABLED", default=False
+            ),
             # Risk modes from env (CLI/profile override these)
             reduce_only_mode=parse_bool_env("RISK_REDUCE_ONLY_MODE", default=False),
             mock_broker=parse_bool_env("MOCK_BROKER", default=False),

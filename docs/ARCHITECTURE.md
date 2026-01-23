@@ -620,10 +620,11 @@ NORMAL → REDUCE_ONLY → PAUSED → HALTED
 - CDP API keys (for production)
 
 ### Key Libraries
-- `coinbase-advanced-py` - Official Coinbase SDK
+- `requests` + `pyjwt` - Coinbase REST client + ES256 JWT auth
 - `pandas` - Data manipulation
-- `scikit-learn` - Statistical utilities (ML integration future-ready)
-- `websocket-client` - Real-time data
+- `textual` - Terminal UI
+- `websocket-client` - Real-time data (optional; live-trade extra)
+- `aiohttp` - Webhook notifications + async utilities (optional; live-trade extra)
 - `pydantic` - Data validation
 
 ## Future Roadmap

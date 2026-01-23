@@ -79,36 +79,78 @@ class TestWaitForFirst:
 
     @pytest.mark.asyncio
     async def test_wait_for_first(self) -> None:
-        async def fast_operation():
-            await asyncio.sleep(0.01)
+        slow_release = asyncio.Event()
+        slow_done = asyncio.Event()
+
+        async def slow_operation() -> str:
+            # Block until explicitly released so we can assert wait_for_first returns
+            # without waiting on the slow task.
+            await slow_release.wait()
+            slow_done.set()
+            return "slow"
+
+        fast_release = asyncio.Event()
+
+        async def fast_operation() -> str:
+            await fast_release.wait()
             return "fast"
 
-        async def slow_operation():
-            await asyncio.sleep(0.1)
-            return "slow"
+        # Make the fast task immediately completable.
+        fast_release.set()
 
         result = await wait_for_first([fast_operation(), slow_operation()])
         assert result == "fast"
+        assert slow_done.is_set() is False
+
+        slow_release.set()
+        await slow_done.wait()
 
     @pytest.mark.asyncio
     async def test_wait_for_first_performance(self) -> None:
         results: list[str] = []
 
-        async def operation_with_delay(delay: float, result: str):
-            await asyncio.sleep(delay)
+        async def operation_with_gate(
+            gate: asyncio.Event,
+            started: asyncio.Event,
+            done: asyncio.Event,
+            result: str,
+        ) -> str:
+            started.set()
+            await gate.wait()
             results.append(result)
+            done.set()
             return result
 
+        slow_gate = asyncio.Event()
+        fast_gate = asyncio.Event()
+        medium_gate = asyncio.Event()
+
+        slow_started = asyncio.Event()
+        fast_started = asyncio.Event()
+        medium_started = asyncio.Event()
+
+        slow_done = asyncio.Event()
+        fast_done = asyncio.Event()
+        medium_done = asyncio.Event()
+
         coroutines = [
-            operation_with_delay(0.05, "slow"),
-            operation_with_delay(0.01, "fast"),
-            operation_with_delay(0.03, "medium"),
+            operation_with_gate(slow_gate, slow_started, slow_done, "slow"),
+            operation_with_gate(fast_gate, fast_started, fast_done, "fast"),
+            operation_with_gate(medium_gate, medium_started, medium_done, "medium"),
         ]
 
-        first_result = await wait_for_first(coroutines)
+        wait_task = asyncio.create_task(wait_for_first(coroutines))
+        await asyncio.gather(slow_started.wait(), fast_started.wait(), medium_started.wait())
+
+        fast_gate.set()
+        first_result = await wait_task
         assert first_result == "fast"
 
-        await asyncio.sleep(0.1)
+        medium_gate.set()
+        slow_gate.set()
+
+        # wait_for_first doesn't cancel the remaining work; ensure it completes.
+        await asyncio.gather(slow_done.wait(), fast_done.wait(), medium_done.wait())
 
         assert len(results) == 3
         assert "fast" in results
@@ -130,20 +172,30 @@ class TestWaitForFirst:
 
     @pytest.mark.asyncio
     async def test_wait_for_first_cancellation(self) -> None:
-        async def slow_op():
-            await asyncio.sleep(1.0)
+        slow_release = asyncio.Event()
+        slow_done = asyncio.Event()
+
+        async def slow_op() -> str:
+            await slow_release.wait()
+            slow_done.set()
             return "slow"
 
-        async def fast_op():
-            await asyncio.sleep(0.01)
+        fast_release = asyncio.Event()
+
+        async def fast_op() -> str:
+            await fast_release.wait()
             return "fast"
 
         task = asyncio.create_task(wait_for_first([slow_op(), fast_op()]))
 
-        await asyncio.sleep(0.02)
+        fast_release.set()
+        result = await task
 
         assert task.done()
-        assert task.result() == "fast"
+        assert result == "fast"
+
+        slow_release.set()
+        await slow_done.wait()
 
 
 class TestAsyncPerformance:

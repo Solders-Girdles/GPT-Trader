@@ -70,9 +70,7 @@ clusters:
     expected_file_delta: -38
     priority: high
     rationale: Consolidate 39 test files into single parametrized file
-    status: in_progress
-    owner: codex
-    added: '2026-01-22'
+    status: pending
   8e91c83ef6d3:
     type: source_fanout
     description: 27 test files import gpt_trader.features.live_trade.strategies.perps_baseline
@@ -1414,7 +1412,7 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/tui/mixins/test_event_handlers.py
-    expected_file_delta: -2
+    expected_file_delta: -1
     priority: low
     rationale: Consolidated event handler tests into core + utils to stay under hygiene cap
     status: done
@@ -2315,10 +2313,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/backtesting/test_historical_data.py
-    expected_file_delta: -2
+    expected_file_delta: -1
     priority: low
-    rationale: Consolidate 3 test files into single parametrized file
-    status: pending
+    rationale: Consolidated coverage and cache edges into shared historical data module
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/406
     added: '2026-01-20'
   9ac4e3c819d5:
     type: similar_names

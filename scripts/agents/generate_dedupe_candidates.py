@@ -484,30 +484,61 @@ def show_stats() -> int:
         print(f"  {status}: {count}")
     print()
 
-    if triage:
+    triage_counts: dict[str, int] = defaultdict(int)
+    pending_clusters: dict[str, dict[str, Any]] = {}
+    for cid, cluster in clusters.items():
+        if not isinstance(cluster, dict):
+            continue
+        if cluster.get("status") != "pending":
+            continue
+        pending_clusters[cid] = cluster
+        state = (triage.get(cid) or {}).get("state") or "untriaged"
+        triage_counts[state] += 1
+
+    if triage_counts:
         print("Pending Triage:")
-        triage_counts: dict[str, int] = defaultdict(int)
-        for cid, cluster in clusters.items():
-            if not isinstance(cluster, dict):
-                continue
-            if cluster.get("status") != "pending":
-                continue
-            state = (triage.get(cid) or {}).get("state") or "untriaged"
-            triage_counts[state] += 1
         for state, count in sorted(triage_counts.items()):
             print(f"  {state}: {count}")
+        print()
+
+        actionable_pending = sum(
+            count for state, count in triage_counts.items() if state not in {"rejected", "deferred"}
+        )
+        triaged_away_pending = sum(
+            count for state, count in triage_counts.items() if state in {"rejected", "deferred"}
+        )
+        print("Pending Actionability:")
+        print(f"  actionable: {actionable_pending}")
+        print(f"  triaged-away: {triaged_away_pending}")
         print()
 
     # Calculate potential file reduction
     total_files = 0
     potential_reduction = 0
-    for cluster in clusters.values():
-        if cluster.get("status") != "done":
-            total_files += len(cluster.get("files", []))
-            potential_reduction += abs(cluster.get("expected_file_delta", 0))
+    actionable_files = 0
+    actionable_reduction = 0
+    triaged_files = 0
+    triaged_reduction = 0
+    for cid, cluster in pending_clusters.items():
+        files_count = len(cluster.get("files", []))
+        reduction = abs(cluster.get("expected_file_delta", 0))
+        total_files += files_count
+        potential_reduction += reduction
+
+        state = (triage.get(cid) or {}).get("state") or "untriaged"
+        if state in {"rejected", "deferred"}:
+            triaged_files += files_count
+            triaged_reduction += reduction
+        else:
+            actionable_files += files_count
+            actionable_reduction += reduction
 
     print(f"Files in pending clusters: {total_files}")
     print(f"Potential file reduction: -{potential_reduction}")
+    print(f"Files in actionable pending clusters: {actionable_files}")
+    print(f"Potential file reduction (actionable): -{actionable_reduction}")
+    print(f"Files in triaged-away pending clusters: {triaged_files}")
+    print(f"Potential file reduction (triaged-away): -{triaged_reduction}")
 
     return 0
 

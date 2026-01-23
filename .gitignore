@@ -47,6 +47,8 @@ _tmp_status.txt
 # IDE settings
 .vscode/
 .idea/
+.cursor/
+.gemini-clipboard/
 
 # Archives (moved to external storage)
 archived/claudia_*/
@@ -92,6 +94,7 @@ coordination/orchestration/*
 
 # Local tooling outputs
 **/.ruff_cache/
+.uv-cache/
 .benchmarks/
 .swarm/
 .coverage

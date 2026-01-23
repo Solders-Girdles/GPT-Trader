@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import ast
+import subprocess
 import sys
 from pathlib import Path
 
@@ -63,18 +64,47 @@ REQUESTS_CALL_ATTRS = {
 }
 
 
-def _iter_text_files(root: Path) -> list[Path]:
-    files: list[Path] = []
-    for path in root.rglob("*"):
-        if path.is_dir():
-            if path.name in SKIP_DIRS:
+def _list_tracked_files(repo_root: Path) -> list[Path]:
+    """Return tracked files, falling back to filesystem scan when git is unavailable."""
+
+    try:
+        completed = subprocess.run(
+            ["git", "ls-files"],
+            cwd=repo_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except (OSError, subprocess.CalledProcessError):
+        files: list[Path] = []
+        for path in repo_root.rglob("*"):
+            if path.is_dir():
                 continue
+            if any(part in SKIP_DIRS for part in path.parts):
+                continue
+            files.append(path)
+        return files
+
+    files: list[Path] = []
+    for rel in completed.stdout.splitlines():
+        if not rel:
             continue
+        path = repo_root / rel
         if any(part in SKIP_DIRS for part in path.parts):
             continue
-        if path.name == "Makefile" or path.suffix in TEXT_EXTENSIONS:
-            files.append(path)
+        files.append(path)
     return files
+
+
+def _is_scannable_text_file(path: Path) -> bool:
+    if path.name == "Makefile":
+        return True
+    if path.suffix in TEXT_EXTENSIONS:
+        return True
+    # Include tracked env templates (e.g., `.env.template`) without scanning local `.env.*` files.
+    if ".env" in path.suffixes and path.suffix == ".template":
+        return True
+    return False
 
 
 def _check_deprecated_env_usage(files: list[Path]) -> list[str]:
@@ -118,11 +148,9 @@ def _collect_import_aliases(tree: ast.AST) -> tuple[set[str], set[str], set[str]
     return time_aliases, sleep_aliases, requests_aliases | requests_direct_calls
 
 
-def _check_blocking_calls_in_async(src_root: Path) -> list[str]:
+def _check_blocking_calls_in_async(py_files: list[Path]) -> list[str]:
     errors: list[str] = []
-    for path in src_root.rglob("*.py"):
-        if any(part in SKIP_DIRS for part in path.parts):
-            continue
+    for path in py_files:
         try:
             tree = ast.parse(path.read_text(encoding="utf-8"))
         except SyntaxError:
@@ -160,20 +188,18 @@ def _check_blocking_calls_in_async(src_root: Path) -> list[str]:
     return errors
 
 
-def _check_duplicate_deploy_entrypoints() -> list[str]:
+def _check_duplicate_deploy_entrypoints(tracked_files: list[Path]) -> list[str]:
     errors: list[str] = []
     allowed_compose = {
         "deploy/gpt_trader/docker/docker-compose.yaml",
         "deploy/gpt_trader/docker/docker-compose.infrastructure.yaml",
     }
-    for path in REPO_ROOT.rglob("docker-compose*.y*ml"):
+    for path in tracked_files:
         rel_path = path.relative_to(REPO_ROOT).as_posix()
-        if rel_path not in allowed_compose:
-            errors.append(f"{rel_path}: unexpected docker-compose file")
-
-    for path in (REPO_ROOT / "deploy").rglob("kubernetes"):
-        if path.is_dir():
-            rel_path = path.relative_to(REPO_ROOT).as_posix()
+        if path.name.startswith("docker-compose") and path.suffix in {".yml", ".yaml"}:
+            if rel_path not in allowed_compose:
+                errors.append(f"{rel_path}: unexpected docker-compose file")
+        if rel_path.startswith("deploy/") and "kubernetes" in path.parts:
             errors.append(f"{rel_path}: legacy kubernetes deployment directory detected")
 
     return errors
@@ -181,10 +207,16 @@ def _check_duplicate_deploy_entrypoints() -> list[str]:
 
 def main() -> int:
     errors: list[str] = []
-    files = _iter_text_files(REPO_ROOT)
-    errors.extend(_check_deprecated_env_usage(files))
-    errors.extend(_check_blocking_calls_in_async(REPO_ROOT / "src"))
-    errors.extend(_check_duplicate_deploy_entrypoints())
+    tracked_files = _list_tracked_files(REPO_ROOT)
+    text_files = [path for path in tracked_files if _is_scannable_text_file(path)]
+    errors.extend(_check_deprecated_env_usage(text_files))
+    src_py_files = [
+        path
+        for path in tracked_files
+        if path.suffix == ".py" and path.parts and path.parts[0] == "src"
+    ]
+    errors.extend(_check_blocking_calls_in_async(src_py_files))
+    errors.extend(_check_duplicate_deploy_entrypoints(tracked_files))
 
     if errors:
         print("Legacy pattern check failed:", file=sys.stderr)

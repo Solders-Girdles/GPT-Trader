@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 656,
+    "tests_scanned": 657,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -1568,7 +1568,8 @@
     ],
     "gpt_trader.tui.managers.ui_coordinator": [
       "tests/unit/gpt_trader/tui/services/test_state_registry.py",
-      "tests/unit/gpt_trader/tui/test_degraded_mode.py"
+      "tests/unit/gpt_trader/tui/test_degraded_mode.py",
+      "tests/unit/gpt_trader/tui/test_ui_coordinator_broker_calls.py"
     ],
     "gpt_trader.tui.mixins": [
       "tests/unit/gpt_trader/tui/mixins/test_event_handlers.py",
@@ -4271,6 +4272,9 @@
     ],
     "tests/unit/gpt_trader/tui/test_trade_matcher_matching.py": [
       "gpt_trader.tui.trade_matcher"
+    ],
+    "tests/unit/gpt_trader/tui/test_ui_coordinator_broker_calls.py": [
+      "gpt_trader.tui.managers.ui_coordinator"
     ],
     "tests/unit/gpt_trader/tui/test_widget_interactions_keyboard.py": [
       "gpt_trader.tui.app"

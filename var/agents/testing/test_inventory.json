@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6038,
-    "total_files": 715,
+    "total_tests": 6040,
+    "total_files": 716,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,8 +102,8 @@
     ]
   },
   "marker_counts": {
-    "unit": 5873,
-    "asyncio": 351,
+    "unit": 5875,
+    "asyncio": 353,
     "parametrize": 153,
     "property": 82,
     "integration": 79,
@@ -739,6 +739,7 @@
       "tests/unit/gpt_trader/tui/test_trade_matcher_edge_cases.py",
       "tests/unit/gpt_trader/tui/test_trade_matcher_matching.py",
       "tests/unit/gpt_trader/tui/test_tui_factories.py",
+      "tests/unit/gpt_trader/tui/test_ui_coordinator_broker_calls.py",
       "tests/unit/gpt_trader/tui/test_widget_interactions_keyboard.py",
       "tests/unit/gpt_trader/tui/utilities/test_pnl_formatting.py",
       "tests/unit/gpt_trader/tui/utilities/test_table_formatting.py",
@@ -42354,7 +42355,7 @@
       },
       {
         "name": "TestCredentialValidatorConnectivity::test_jwt_generation_failure",
-        "line": 193,
+        "line": 195,
         "markers": [
           "asyncio",
           "unit"
@@ -47718,6 +47719,26 @@
         ],
         "docstring": "",
         "class": "TestTuiStateFactory"
+      }
+    ],
+    "tests/unit/gpt_trader/tui/test_ui_coordinator_broker_calls.py": [
+      {
+        "name": "test_collect_spread_data_uses_broker_calls",
+        "line": 41,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_collect_resilience_metrics_uses_broker_calls",
+        "line": 53,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/tui/test_widget_interactions_keyboard.py": [

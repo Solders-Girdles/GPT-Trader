@@ -149,10 +149,16 @@ async def test_async_function(self):
 
 #### Mocking External Dependencies
 ```python
-def test_api_call(mocker):
+def test_api_call(monkeypatch):
     """Test API call without hitting real API."""
+    import gpt_trader.api as api
+
     mock_response = {"price": "50000.00"}
-    mocker.patch("gpt_trader.api.get_price", return_value=mock_response)
+
+    def fake_get_price(symbol: str) -> dict[str, str]:
+        return mock_response
+
+    monkeypatch.setattr(api, "get_price", fake_get_price)
     result = fetch_price("BTC-USD")
     assert result == "50000.00"
 ```
@@ -194,8 +200,14 @@ make test
 
 This repo enforces lightweight hygiene checks in CI to keep the suite fast and maintainable:
 
-- `scripts/ci/check_test_hygiene.py`: caps `test_*.py` module size, enforces directory marker conventions, and discourages `time.sleep` in favor of deterministic fake clocks.
+- `scripts/ci/check_test_hygiene.py`: caps `test_*.py` module size, enforces directory marker conventions, blocks `patch` usage in `tests/`, and flags `time.sleep` without `fake_clock`.
 - `scripts/ci/check_legacy_test_triage.py`: keeps `tests/_triage/legacy_tests.yaml` aligned with `pytest.mark.legacy_delete` / `pytest.mark.legacy_modernize` usage.
+
+## Hygiene checks
+
+- `uv run python scripts/ci/check_test_hygiene.py`
+- `uv run python scripts/ci/check_legacy_test_triage.py`
+- `uv run python scripts/ci/check_dedupe_manifest.py`
 
 ## Legacy Test Triage
 
@@ -215,6 +227,19 @@ make test-triage-check
 
 # Collect just the modernize backlog (ignore pytest.ini addopts)
 uv run pytest -o addopts= -m legacy_modernize --collect-only -q
+```
+
+## Deduplication
+
+Deduplication manifests live in:
+
+- `tests/_triage/dedupe_candidates.yaml`
+- `tests/_triage/dedupe_triage.yaml`
+
+Stats and overlap summary:
+
+```bash
+uv run agent-dedupe --stats
 ```
 
 ## Coverage Guidelines

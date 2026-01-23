@@ -41,6 +41,7 @@ That's it! Now, every time you run `git commit`, the pre-commit hooks will run a
 3. Snapshot test discovery: `uv run pytest --collect-only`.
 4. Run the full unit suite: `uv run pytest tests/unit -q`.
 5. Execute slice-specific suites relevant to your change set (examples below).
+6. Validate docs links: `make agent-docs-links` (runs `scripts/maintenance/docs_link_audit.py`).
 
 ### Recommended Commands
 
@@ -111,7 +112,10 @@ Before branching, make sure to:
 - Descriptive test names that explain what's being tested
 - One assertion per test when possible
 - Use fixtures for shared setup
-- Mock external dependencies
+- Use pytest `monkeypatch` for mocks; patch-style helpers are blocked in `tests/`
+- Keep test modules <= 240 lines unless allowlisted by `scripts/ci/check_test_hygiene.py`
+- Avoid `time.sleep`; prefer deterministic `fake_clock`
+- Match marker conventions to folder (integration/contract/real_api)
 
 ### Resilience Testing
 

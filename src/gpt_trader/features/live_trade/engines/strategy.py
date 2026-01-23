@@ -65,10 +65,7 @@ from gpt_trader.features.live_trade.execution.submission_result import (
     OrderSubmissionResult,
     OrderSubmissionStatus,
 )
-from gpt_trader.features.live_trade.execution.validation import (
-    OrderValidator,
-    get_failure_tracker,
-)
+from gpt_trader.features.live_trade.execution.validation import OrderValidator
 from gpt_trader.features.live_trade.factory import create_strategy
 from gpt_trader.features.live_trade.guard_errors import GuardError
 from gpt_trader.features.live_trade.lifecycle import (
@@ -287,8 +284,14 @@ class TradingEngine(BaseEngine):
             integration_mode=False,
         )
 
-        # Failure tracker (global) with escalation callback for graceful degradation
-        failure_tracker = get_failure_tracker()
+        # Failure tracker from container (not global) with escalation callback
+        container = self.context.container
+        if container is None:
+            raise RuntimeError(
+                "TradingEngine requires a container in context. "
+                "Pass container=ApplicationContainer(config) to CoordinatorContext."
+            )
+        failure_tracker = container.validation_failure_tracker
 
         # Wire escalation callback: on repeated validation failures, pause + reduce-only
         def _on_validation_escalation() -> None:
@@ -2275,7 +2278,9 @@ class TradingEngine(BaseEngine):
                         self._degradation.record_slippage_failure(symbol, config)
                     raise slippage_exc
 
-                failure_tracker = get_failure_tracker()
+                # Use container's tracker (validated at init, asserted non-None here)
+                assert self.context.container is not None
+                failure_tracker = self.context.container.validation_failure_tracker
                 config = self.context.risk_manager.config if self.context.risk_manager else None
                 preview_disable_threshold = config.preview_failure_disable_after if config else 5
 

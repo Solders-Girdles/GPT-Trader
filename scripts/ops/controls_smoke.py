@@ -241,9 +241,6 @@ def main() -> int:
 
     with (
         patch(
-            "gpt_trader.features.live_trade.engines.strategy.get_failure_tracker",
-        ) as get_failure_tracker,
-        patch(
             "gpt_trader.features.live_trade.engines.strategy.TradingEngine._run_security_validation",
             return_value=None,
         ),
@@ -252,9 +249,6 @@ def main() -> int:
             new=_bypass_order_guards,
         ),
     ):
-        failure_tracker = MagicMock()
-        failure_tracker.get_failure_count.return_value = 0
-        get_failure_tracker.return_value = failure_tracker
         results = [
             _run_kill_switch(engine),
             _run_reduce_only_blocks_entry(engine),

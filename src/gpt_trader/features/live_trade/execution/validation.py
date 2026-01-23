@@ -150,8 +150,14 @@ def configure_failure_tracker(
     tracker.escalation_callback = escalation_callback
 
 
-def get_validation_metrics() -> dict[str, Any]:
+def get_validation_metrics(tracker: ValidationFailureTracker) -> dict[str, Any]:
     """Get validation failure metrics for TUI display.
+
+    This function accepts the tracker explicitly for pure DI.
+    Business logic should pass the tracker from the container.
+
+    Args:
+        tracker: The ValidationFailureTracker instance to read metrics from.
 
     Returns:
         Dict with keys:
@@ -159,7 +165,6 @@ def get_validation_metrics() -> dict[str, Any]:
             - escalation_threshold: Number of failures before escalation
             - any_escalated: True if any check type has reached threshold
     """
-    tracker = get_failure_tracker()
     failures = dict(tracker.consecutive_failures)
     any_escalated = any(count >= tracker.escalation_threshold for count in failures.values())
     return {
@@ -167,6 +172,18 @@ def get_validation_metrics() -> dict[str, Any]:
         "escalation_threshold": tracker.escalation_threshold,
         "any_escalated": any_escalated,
     }
+
+
+def get_validation_metrics_from_container() -> dict[str, Any]:
+    """Entry-point wrapper that gets tracker from global container.
+
+    Use this only in CLI/entry-point code where DI is not available.
+    Business logic should use get_validation_metrics(tracker) directly.
+
+    Returns:
+        Dict with validation metrics from the global container's tracker.
+    """
+    return get_validation_metrics(get_failure_tracker())
 
 
 class OrderValidator:

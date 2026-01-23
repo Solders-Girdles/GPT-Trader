@@ -50,7 +50,7 @@ def mock_strategy():
 
 
 @pytest.fixture
-def context(mock_broker):
+def context(mock_broker, application_container):
     risk = BotRiskConfig(position_fraction=Decimal("0.1"))
     config = BotConfig(symbols=["BTC-USD"], interval=1, risk=risk)
     risk_manager = MagicMock()
@@ -66,12 +66,21 @@ def context(mock_broker):
     risk_manager.config.validation_failure_cooldown_seconds = 180
     risk_manager.config.preview_failure_disable_after = 3
     risk_manager.config.api_health_cooldown_seconds = 300
-    return CoordinatorContext(config=config, broker=mock_broker, risk_manager=risk_manager)
+    return CoordinatorContext(
+        config=config,
+        container=application_container,
+        broker=mock_broker,
+        risk_manager=risk_manager,
+    )
 
 
 @pytest.fixture
-def application_container(context):
-    container = ApplicationContainer(context.config)
+def application_container():
+    """Create container before context - no global needed."""
+    risk = BotRiskConfig(position_fraction=Decimal("0.1"))
+    config = BotConfig(symbols=["BTC-USD"], interval=1, risk=risk)
+    container = ApplicationContainer(config)
+    # Also set global for any code paths that still use service locator
     set_application_container(container)
     yield container
     clear_application_container()

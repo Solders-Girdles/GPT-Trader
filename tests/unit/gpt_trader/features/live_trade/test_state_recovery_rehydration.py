@@ -174,6 +174,7 @@ class TestTradingEngineRehydration:
 
         context = CoordinatorContext(
             config=bot_config,
+            container=application_container,
             broker=MagicMock(),
             event_store=MagicMock(),
             orders_store=orders_store,

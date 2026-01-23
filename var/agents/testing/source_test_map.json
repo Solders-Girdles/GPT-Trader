@@ -2,13 +2,16 @@
   "version": "1.0",
   "summary": {
     "tests_scanned": 656,
-    "source_modules": 348,
+    "source_modules": 349,
     "unresolved_modules": 3
   },
   "source_to_tests": {
     "gpt_trader.agents": [
       "tests/unit/gpt_trader/agents/test_agents_import.py",
       "tests/unit/gpt_trader/agents/test_cli_edges.py"
+    ],
+    "gpt_trader.app": [
+      "tests/integration/test_crash_recovery.py"
     ],
     "gpt_trader.app.bootstrap": [
       "tests/unit/gpt_trader/app/test_bootstrap.py",
@@ -75,7 +78,6 @@
       "tests/integration/test_boot_container_perps_bot.py",
       "tests/integration/test_container_lifecycle_cli.py",
       "tests/integration/test_container_lifecycle_runtime.py",
-      "tests/integration/test_crash_recovery.py",
       "tests/integration/test_end_to_end_buy.py",
       "tests/integration/test_validation_escalation_flow.py",
       "tests/integration/test_validation_escalation_metrics.py",
@@ -1994,8 +1996,8 @@
       "gpt_trader.features.live_trade.bot"
     ],
     "tests/integration/test_crash_recovery.py": [
+      "gpt_trader.app",
       "gpt_trader.app.config",
-      "gpt_trader.app.container",
       "gpt_trader.features.live_trade.engines.base",
       "gpt_trader.features.live_trade.engines.strategy",
       "gpt_trader.persistence.event_store"
@@ -4547,6 +4549,7 @@
     "gpt_trader.features.live_trade.execution.validation": "src/gpt_trader/features/live_trade/execution/validation.py",
     "gpt_trader.features.brokerages.coinbase.ws": "src/gpt_trader/features/brokerages/coinbase/ws.py",
     "gpt_trader.features.live_trade.bot": "src/gpt_trader/features/live_trade/bot.py",
+    "gpt_trader.app": "src/gpt_trader/app/__init__.py",
     "gpt_trader.features.live_trade.engines.base": "src/gpt_trader/features/live_trade/engines/base.py",
     "gpt_trader.features.live_trade.engines.strategy": "src/gpt_trader/features/live_trade/engines/strategy.py",
     "gpt_trader.features.live_trade.strategies.perps_baseline": "src/gpt_trader/features/live_trade/strategies/perps_baseline/__init__.py",

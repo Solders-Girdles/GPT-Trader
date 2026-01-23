@@ -2268,10 +2268,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/features/live_trade/test_degradation_pause.py
-    expected_file_delta: -2
+    expected_file_delta: -1
     priority: low
-    rationale: Consolidate 3 test files into single parametrized file
-    status: pending
+    rationale: Consolidated basics/monotonicity into core suite; kept expiry/recovery separate to stay under hygiene cap
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/397
     added: '2026-01-20'
   8d74e0251ecf:
     type: similar_names
@@ -2283,10 +2285,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/tui/screens/test_strategy_detail.py
-    expected_file_delta: -2
+    expected_file_delta: -1
     priority: low
-    rationale: Consolidate 3 test files into single parametrized file
-    status: pending
+    rationale: Consolidated badges/backtest + indicator hints into core suite; kept signal-detail content separate to stay under hygiene cap
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/404
     added: '2026-01-20'
   93fa26f42678:
     type: similar_names
@@ -2298,10 +2302,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/cli/test_commands_orders.py
-    expected_file_delta: -2
+    expected_file_delta: -1
     priority: low
-    rationale: Consolidate 3 test files into single parametrized file
-    status: pending
+    rationale: Consolidated payload/preview coverage into shared orders module; kept editing coverage separate to stay under hygiene cap
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/405
     added: '2026-01-20'
   982957ce2656:
     type: similar_names
@@ -2400,8 +2406,10 @@ clusters:
     target_location: tests/unit/gpt_trader/tui/widgets/test_risk_detail.py
     expected_file_delta: -1
     priority: low
-    rationale: Consolidate 3 test files into single parametrized file
-    status: pending
+    rationale: Consolidated focus preview + guard visibility into core suite; kept score suite separate to stay under hygiene cap
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/391
     added: '2026-01-20'
   bf1037e6cb7f:
     type: similar_names

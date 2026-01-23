@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 659,
+    "tests_scanned": 658,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -799,8 +799,7 @@
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_api_health_guard.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_execution.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_runtime.py"
+      "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_execution.py"
     ],
     "gpt_trader.features.live_trade.execution.guards": [
       "tests/unit/gpt_trader/features/live_trade/execution/test_daily_loss_guard.py",
@@ -874,7 +873,6 @@
       "tests/unit/gpt_trader/features/live_trade/execution/test_api_health_guard.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_daily_loss_guard.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_execution.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_runtime.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_liquidation_buffer_guard.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_mark_staleness_and_risk_metrics_guard.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_volatility_guard.py"
@@ -3056,10 +3054,6 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_execution.py": [
       "gpt_trader.features.live_trade.execution.guard_manager",
       "gpt_trader.features.live_trade.execution.guards.pnl_telemetry",
-      "gpt_trader.features.live_trade.guard_errors"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_runtime.py": [
-      "gpt_trader.features.live_trade.execution.guard_manager",
       "gpt_trader.features.live_trade.guard_errors"
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_liquidation_buffer_guard.py": [

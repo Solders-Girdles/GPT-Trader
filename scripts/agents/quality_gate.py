@@ -78,22 +78,32 @@ def parse_ruff_output(stdout: str) -> list[dict[str, Any]]:
     """Parse ruff JSON output into findings."""
     findings = []
     try:
-        # Ruff outputs one JSON object per line in some modes
-        for line in stdout.strip().split("\n"):
-            if line.startswith("{"):
-                finding = json.loads(line)
-                findings.append(
-                    {
-                        "file": finding.get("filename", ""),
-                        "line": finding.get("location", {}).get("row", 0),
-                        "column": finding.get("location", {}).get("column", 0),
-                        "code": finding.get("code", ""),
-                        "message": finding.get("message", ""),
-                        "severity": (
-                            "error" if finding.get("code", "").startswith("E") else "warning"
-                        ),
-                    }
-                )
+        text = stdout.strip()
+        if not text:
+            return findings
+
+        # Ruff's `--output-format=json` is a JSON array, but some older modes emit
+        # one JSON object per line. Support both.
+        if text.startswith("["):
+            parsed = json.loads(text)
+            if isinstance(parsed, list):
+                items = parsed
+            else:
+                items = [parsed]
+        else:
+            items = [json.loads(line) for line in text.splitlines() if line.startswith("{")]
+
+        for finding in items:
+            findings.append(
+                {
+                    "file": finding.get("filename", ""),
+                    "line": finding.get("location", {}).get("row", 0),
+                    "column": finding.get("location", {}).get("column", 0),
+                    "code": finding.get("code", ""),
+                    "message": finding.get("message", ""),
+                    "severity": ("error" if finding.get("code", "").startswith("E") else "warning"),
+                }
+            )
     except json.JSONDecodeError:
         # Fall back to line-based parsing
         for line in stdout.strip().split("\n"):
@@ -204,8 +214,8 @@ def run_lint_check(paths: list[str] | None = None) -> CheckResult:
 
 
 def run_format_check(paths: list[str] | None = None) -> CheckResult:
-    """Run ruff format check."""
-    cmd = ["uv", "run", "ruff", "format", "--check"]
+    """Run black format check."""
+    cmd = ["uv", "run", "black", "--check"]
     if paths:
         cmd.extend(paths)
     else:
@@ -213,8 +223,8 @@ def run_format_check(paths: list[str] | None = None) -> CheckResult:
 
     exit_code, stdout, stderr, duration = run_command(cmd)
 
-    # Check if ruff is not installed
-    if "Failed to spawn" in stderr or "No such file" in stderr:
+    # Check if black is not installed
+    if "Failed to spawn" in stderr or "No such file" in stderr or "No module named black" in stderr:
         return CheckResult(
             name="format",
             passed=True,
@@ -228,10 +238,11 @@ def run_format_check(paths: list[str] | None = None) -> CheckResult:
     # Count files that would be reformatted
     findings = []
     for line in (stdout + stderr).split("\n"):
-        if "Would reformat" in line or "would be reformatted" in line.lower():
+        if line.strip().lower().startswith("would reformat"):
+            file_path = line.strip().split("would reformat", 1)[-1].strip()
             findings.append(
                 {
-                    "file": line.split()[-1] if line.split() else "",
+                    "file": file_path,
                     "message": "File needs formatting",
                     "severity": "warning",
                 }

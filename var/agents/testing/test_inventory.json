@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6031,
-    "total_files": 716,
+    "total_files": 715,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -204,9 +204,8 @@
       "tests/unit/gpt_trader/cli/commands/optimize/test_formatters.py",
       "tests/unit/gpt_trader/cli/test_cli_unit.py",
       "tests/unit/gpt_trader/cli/test_commands_account_treasury.py",
+      "tests/unit/gpt_trader/cli/test_commands_orders.py",
       "tests/unit/gpt_trader/cli/test_commands_orders_editing.py",
-      "tests/unit/gpt_trader/cli/test_commands_orders_payload.py",
-      "tests/unit/gpt_trader/cli/test_commands_orders_preview.py",
       "tests/unit/gpt_trader/cli/test_commands_run.py",
       "tests/unit/gpt_trader/cli/test_response_cli_response.py",
       "tests/unit/gpt_trader/cli/test_response_envelope_contract.py",
@@ -8478,6 +8477,40 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/cli/test_commands_orders.py": [
+      {
+        "name": "test_build_order_payload_includes_optional_fields",
+        "line": 11,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_build_order_payload_omits_optional_fields_when_missing",
+        "line": 27,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_handle_preview_prints_json",
+        "line": 41,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_handle_preview_errors_without_preview_support",
+        "line": 79,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/cli/test_commands_orders_editing.py": [
       {
         "name": "test_handle_edit_preview_errors_without_support",
@@ -8514,42 +8547,6 @@
       {
         "name": "test_handle_apply_edit_propagates_broker_errors",
         "line": 119,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/cli/test_commands_orders_payload.py": [
-      {
-        "name": "test_build_order_payload_includes_optional_fields",
-        "line": 7,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_build_order_payload_omits_optional_fields_when_missing",
-        "line": 23,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/cli/test_commands_orders_preview.py": [
-      {
-        "name": "test_handle_preview_prints_json",
-        "line": 11,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_handle_preview_errors_without_preview_support",
-        "line": 49,
         "markers": [
           "unit"
         ],

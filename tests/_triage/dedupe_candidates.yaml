@@ -70,7 +70,8 @@ clusters:
     expected_file_delta: -38
     priority: high
     rationale: Consolidate 39 test files into single parametrized file
-    status: pending
+    status: in_progress
+    owner: codex
     added: '2026-01-22'
   8e91c83ef6d3:
     type: source_fanout
@@ -286,8 +287,7 @@ clusters:
     expected_file_delta: -13
     priority: high
     rationale: Consolidate 14 test files into single parametrized file
-    status: in_progress
-    owner: codex
+    status: pending
     added: '2026-01-20'
   80ba0a3672df:
     type: source_fanout
@@ -1966,10 +1966,8 @@ clusters:
     target_location: tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data.py
     expected_file_delta: -2
     priority: low
-    rationale: Consolidated strategy detail coverage into two modules under hygiene cap
-    status: done
-    owner: codex
-    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/404
+    rationale: Consolidate 3 test files into single parametrized file
+    status: pending
     added: '2026-01-22'
   224e07597e52:
     type: similar_names

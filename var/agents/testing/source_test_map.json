@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 657,
+    "tests_scanned": 656,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -264,9 +264,8 @@
       "tests/unit/gpt_trader/cli/commands/optimize/test_formatters.py"
     ],
     "gpt_trader.cli.commands.orders": [
-      "tests/unit/gpt_trader/cli/test_commands_orders_editing.py",
-      "tests/unit/gpt_trader/cli/test_commands_orders_payload.py",
-      "tests/unit/gpt_trader/cli/test_commands_orders_preview.py"
+      "tests/unit/gpt_trader/cli/test_commands_orders.py",
+      "tests/unit/gpt_trader/cli/test_commands_orders_editing.py"
     ],
     "gpt_trader.cli.commands.run": [
       "tests/integration/test_container_lifecycle_cli.py",
@@ -2462,13 +2461,10 @@
       "gpt_trader.cli.commands.account",
       "gpt_trader.cli.commands.treasury"
     ],
+    "tests/unit/gpt_trader/cli/test_commands_orders.py": [
+      "gpt_trader.cli.commands.orders"
+    ],
     "tests/unit/gpt_trader/cli/test_commands_orders_editing.py": [
-      "gpt_trader.cli.commands.orders"
-    ],
-    "tests/unit/gpt_trader/cli/test_commands_orders_payload.py": [
-      "gpt_trader.cli.commands.orders"
-    ],
-    "tests/unit/gpt_trader/cli/test_commands_orders_preview.py": [
       "gpt_trader.cli.commands.orders"
     ],
     "tests/unit/gpt_trader/cli/test_commands_run.py": [

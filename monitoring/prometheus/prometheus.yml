@@ -41,7 +41,8 @@ scrape_configs:
   # GPT-Trader application metrics
   - job_name: 'gpt-trader'
     static_configs:
-      - targets: ['host.docker.internal:8000']
+      # Default: metrics exporter script (scripts/monitoring/export_metrics.py --port 9000)
+      - targets: ['host.docker.internal:9000']
     metrics_path: /metrics
     scrape_interval: 10s
 

@@ -14,8 +14,10 @@ uv sync --extra monitoring
 
 **Option A (recommended): Built-in health server**
 
-- Ensure your runtime starts `gpt_trader.app.health_server.start_health_server`
-  (port 8080 by default).
+- If you run via `gpt-trader run`, set `GPT_TRADER_HEALTH_SERVER_ENABLED=1`
+  (optional: `GPT_TRADER_HEALTH_PORT=8080`).
+- If you embed the bot, start `gpt_trader.app.health_server.start_health_server`
+  (port 8080 by default) with the shared `HealthState`.
 - Enable metrics: `GPT_TRADER_METRICS_ENDPOINT_ENABLED=1`
 
 ```bash
@@ -257,7 +259,7 @@ degradation_ok, degradation_details = check_degradation_state(degradation_state,
 **No metrics in Prometheus:**
 - Check endpoint: `curl http://localhost:8080/metrics` (health server) or `http://localhost:9000/metrics` (exporter)
 - Verify `runtime_data/<profile>/events.db` exists and is updating (JSONL is legacy fallback)
-- Verify Prometheus targets: `http://localhost:9091/targets` (deploy stack) or `http://localhost:9090/targets` (standalone)
+- Verify Prometheus targets: `http://localhost:9090/targets`
 
 **Daily report has no data:**
 - Verify `runtime_data/<profile>/events.db` exists (canonical) or `events.jsonl` for legacy runs

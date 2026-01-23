@@ -4,18 +4,11 @@ from .lazy import LazyImport, lazy_import, with_lazy_imports
 from .optional import OptionalImport, conditional_import, optional_import
 from .profiling import ImportProfiler, get_import_stats
 from .registry import (
-    cvxpy,
-    dev_utils,  # naming: allow
-    is_test_environment,
-    matplotlib,
-    numpy,
+    aiohttp,
+    opentelemetry,
     pandas,
-    plotly,
-    scipy,
-    sklearn,
-    tensorflow,
-    test_utils,  # naming: allow
-    torch,
+    psutil,
+    websocket,
 )
 
 __all__ = [
@@ -31,15 +24,8 @@ __all__ = [
     "get_import_stats",
     # Registry exports
     "pandas",
-    "numpy",
-    "matplotlib",
-    "plotly",
-    "scipy",
-    "sklearn",
-    "tensorflow",
-    "torch",
-    "cvxpy",
-    "is_test_environment",
-    "test_utils",  # naming: allow
-    "dev_utils",  # naming: allow
+    "aiohttp",
+    "websocket",
+    "psutil",
+    "opentelemetry",
 ]

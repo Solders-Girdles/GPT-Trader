@@ -196,15 +196,6 @@ wheels = [
 ]
 
 [[package]]
-name = "chardet"
-version = "5.2.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/f3/0d/f7b6ab21ec75897ed80c17d79b15951a719226b9fababf1e40ea74d69079/chardet-5.2.0.tar.gz", hash = "sha256:1b3b6ff479a8c414bc3fa2c0852995695c4a026dcd6d0633b2dd092ca39c1cf7", size = 2069618, upload-time = "2023-08-01T19:23:02.662Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/38/6f/f5fbc992a329ee4e0f288c1fe0e2ad9485ed064cac731ed2fe47dcc38cbf/chardet-5.2.0-py3-none-any.whl", hash = "sha256:e1cf59446890a00105fe7b7912492ea04b6e6f06d4b742b2c788469e34c82970", size = 199385, upload-time = "2023-08-01T19:23:00.661Z" },
-]
-
-[[package]]
 name = "charset-normalizer"
 version = "3.4.4"
 source = { registry = "https://pypi.org/simple" }
@@ -350,21 +341,6 @@ wheels = [
 ]
 
 [[package]]
-name = "diff-cover"
-version = "10.2.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "chardet" },
-    { name = "jinja2" },
-    { name = "pluggy" },
-    { name = "pygments" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/99/b4/eee71d1e338bc1f9bd3539b46b70e303dac061324b759c9a80fa3c96d90d/diff_cover-10.2.0.tar.gz", hash = "sha256:61bf83025f10510c76ef6a5820680cf61b9b974e8f81de70c57ac926fa63872a", size = 102473, upload-time = "2026-01-09T01:59:07.605Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/b3/2c/61eeb887055a37150db824b6bf830e821a736580769ac2fea4eadb0d613f/diff_cover-10.2.0-py3-none-any.whl", hash = "sha256:59c328595e0b8948617cc5269af9e484c86462e2844bfcafa3fb37f8fca0af87", size = 56748, upload-time = "2026-01-09T01:59:06.028Z" },
-]
-
-[[package]]
 name = "distlib"
 version = "0.4.0"
 source = { registry = "https://pypi.org/simple" }
@@ -380,18 +356,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/bf/89/780e11f9588d9e7128a3f87788354c7946a9cbb1401ad38a48c4db9a4f07/execnet-2.1.2.tar.gz", hash = "sha256:63d83bfdd9a23e35b9c6a3261412324f964c2ec8dcd8d3c6916ee9373e0befcd", size = 166622, upload-time = "2025-11-12T09:56:37.75Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ab/84/02fc1827e8cdded4aa65baef11296a9bbe595c474f0d6d758af082d849fd/execnet-2.1.2-py3-none-any.whl", hash = "sha256:67fba928dd5a544b783f6056f449e5e3931a5c378b128bc18501f7ea79e296ec", size = 40708, upload-time = "2025-11-12T09:56:36.333Z" },
-]
-
-[[package]]
-name = "faker"
-version = "37.12.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "tzdata" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/3d/84/e95acaa848b855e15c83331d0401ee5f84b2f60889255c2e055cb4fb6bdf/faker-37.12.0.tar.gz", hash = "sha256:7505e59a7e02fa9010f06c3e1e92f8250d4cfbb30632296140c2d6dbef09b0fa", size = 1935741, upload-time = "2025-10-24T15:19:58.764Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/8e/98/2c050dec90e295a524c9b65c4cb9e7c302386a296b2938710448cbd267d5/faker-37.12.0-py3-none-any.whl", hash = "sha256:afe7ccc038da92f2fbae30d8e16d19d91e92e242f8401ce9caf44de892bab4c4", size = 1975461, upload-time = "2025-10-24T15:19:55.739Z" },
 ]
 
 [[package]]
@@ -471,11 +435,6 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
-ci = [
-    { name = "bandit" },
-    { name = "pip-audit" },
-    { name = "pre-commit" },
-]
 live-trade = [
     { name = "aiohttp" },
     { name = "websocket-client" },
@@ -488,19 +447,12 @@ observability = [
     { name = "opentelemetry-exporter-otlp" },
     { name = "opentelemetry-sdk" },
 ]
-testing-extended = [
-    { name = "faker" },
-    { name = "freezegun" },
-    { name = "responses" },
-]
 
 [package.dev-dependencies]
 dev = [
     { name = "bandit" },
     { name = "black" },
     { name = "coverage" },
-    { name = "diff-cover" },
-    { name = "faker" },
     { name = "freezegun" },
     { name = "hypothesis" },
     { name = "mypy" },
@@ -510,10 +462,8 @@ dev = [
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
-    { name = "pytest-mock" },
     { name = "pytest-textual-snapshot" },
     { name = "pytest-xdist" },
-    { name = "responses" },
     { name = "ruff" },
     { name = "types-pyyaml" },
     { name = "types-requests" },
@@ -522,38 +472,30 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "aiohttp", marker = "extra == 'live-trade'", specifier = ">=3.12.15,<4.0.0" },
-    { name = "bandit", marker = "extra == 'ci'", specifier = ">=1.7.9,<2.0.0" },
     { name = "cryptography", specifier = ">=43.0.0,<47.0.0" },
-    { name = "faker", marker = "extra == 'testing-extended'", specifier = ">=37.12.0,<38.0.0" },
     { name = "filelock", specifier = ">=3.20.3" },
-    { name = "freezegun", marker = "extra == 'testing-extended'", specifier = ">=1.2.0,<2.0.0" },
     { name = "opentelemetry-api", marker = "extra == 'observability'", specifier = ">=1.25.0,<2.0.0" },
     { name = "opentelemetry-exporter-otlp", marker = "extra == 'observability'", specifier = ">=1.25.0,<2.0.0" },
     { name = "opentelemetry-sdk", marker = "extra == 'observability'", specifier = ">=1.25.0,<2.0.0" },
     { name = "optuna", specifier = ">=4.0.0,<5.0.0" },
     { name = "pandas", specifier = ">=2.3.3" },
-    { name = "pip-audit", marker = "extra == 'ci'", specifier = ">=2.9.0,<3.0.0" },
-    { name = "pre-commit", marker = "extra == 'ci'", specifier = ">=4.3.0,<5.0.0" },
     { name = "psutil", marker = "extra == 'monitoring'", specifier = ">=6.0.0,<7.0.0" },
     { name = "pydantic", specifier = ">=2.7.4,<3.0.0" },
     { name = "pyjwt", specifier = ">=2.9.0,<3.0.0" },
     { name = "python-dotenv", specifier = ">=1.0.1,<2.0.0" },
     { name = "pyyaml", specifier = ">=6.0.1,<7.0.0" },
     { name = "requests", specifier = ">=2.32.3,<3.0.0" },
-    { name = "responses", marker = "extra == 'testing-extended'", specifier = ">=0.23.0,<1.0.0" },
     { name = "textual", specifier = ">=7.0.0,<8.0.0" },
     { name = "urllib3", specifier = ">=2.6.0" },
     { name = "websocket-client", marker = "extra == 'live-trade'", specifier = ">=1.8.0,<2.0.0" },
 ]
-provides-extras = ["monitoring", "live-trade", "testing-extended", "ci", "observability"]
+provides-extras = ["monitoring", "live-trade", "observability"]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "bandit", specifier = ">=1.7.9" },
     { name = "black", specifier = ">=25.12.0" },
     { name = "coverage", specifier = ">=7.0.0" },
-    { name = "diff-cover", specifier = ">=10.2.0" },
-    { name = "faker", specifier = ">=37.12.0" },
     { name = "freezegun", specifier = ">=1.2.0" },
     { name = "hypothesis", specifier = ">=6.144.0" },
     { name = "mypy", specifier = ">=1.10.0,<1.11.0" },
@@ -563,10 +505,8 @@ dev = [
     { name = "pytest", specifier = ">=8.2.0" },
     { name = "pytest-asyncio", specifier = ">=0.23.0" },
     { name = "pytest-cov", specifier = ">=4.0.0" },
-    { name = "pytest-mock", specifier = ">=3.10.0" },
     { name = "pytest-textual-snapshot", specifier = ">=1.0.0" },
     { name = "pytest-xdist", specifier = ">=3.0.0" },
-    { name = "responses", specifier = ">=0.23.0" },
     { name = "ruff", specifier = ">=0.14.3" },
     { name = "types-pyyaml", specifier = ">=6.0.12" },
     { name = "types-requests", specifier = ">=2.32.0" },
@@ -1334,18 +1274,6 @@ wheels = [
 ]
 
 [[package]]
-name = "pytest-mock"
-version = "3.15.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "pytest" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/68/14/eb014d26be205d38ad5ad20d9a80f7d201472e08167f0bb4361e251084a9/pytest_mock-3.15.1.tar.gz", hash = "sha256:1849a238f6f396da19762269de72cb1814ab44416fa73a8686deac10b0d87a0f", size = 34036, upload-time = "2025-09-16T16:37:27.081Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/5a/cc/06253936f4a7fa2e0f48dfe6d851d9c56df896a9ab09ac019d70b760619c/pytest_mock-3.15.1-py3-none-any.whl", hash = "sha256:0a25e2eb88fe5168d535041d09a4529a188176ae608a6d249ee65abc0949630d", size = 10095, upload-time = "2025-09-16T16:37:25.734Z" },
-]
-
-[[package]]
 name = "pytest-textual-snapshot"
 version = "1.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1444,20 +1372,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/c9/74/b3ff8e6c8446842c3f5c837e9c3dfcfe2018ea6ecef224c710c85ef728f4/requests-2.32.5.tar.gz", hash = "sha256:dbba0bac56e100853db0ea71b82b4dfd5fe2bf6d3754a8893c3af500cec7d7cf", size = 134517, upload-time = "2025-08-18T20:46:02.573Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/1e/db/4254e3eabe8020b458f1a747140d32277ec7a271daf1d235b70dc0b4e6e3/requests-2.32.5-py3-none-any.whl", hash = "sha256:2462f94637a34fd532264295e186976db0f5d453d1cdd31473c85a6a161affb6", size = 64738, upload-time = "2025-08-18T20:46:00.542Z" },
-]
-
-[[package]]
-name = "responses"
-version = "0.25.8"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "pyyaml" },
-    { name = "requests" },
-    { name = "urllib3" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/0e/95/89c054ad70bfef6da605338b009b2e283485835351a9935c7bfbfaca7ffc/responses-0.25.8.tar.gz", hash = "sha256:9374d047a575c8f781b94454db5cab590b6029505f488d12899ddb10a4af1cf4", size = 79320, upload-time = "2025-08-08T19:01:46.709Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/1c/4c/cc276ce57e572c102d9542d383b2cfd551276581dc60004cb94fe8774c11/responses-0.25.8-py3-none-any.whl", hash = "sha256:0c710af92def29c8352ceadff0c3fe340ace27cf5af1bbe46fb71275bcd2831c", size = 34769, upload-time = "2025-08-08T19:01:45.018Z" },
 ]
 
 [[package]]

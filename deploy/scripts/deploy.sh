@@ -11,6 +11,7 @@ DEPLOY_ENV="${1:-production}"
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 COMPOSE_DIR="$PROJECT_ROOT/deploy/gpt_trader/docker"
 COMPOSE_FILE="$COMPOSE_DIR/docker-compose.yaml"
+COMPOSE_INFRA_FILE="$COMPOSE_DIR/docker-compose.infrastructure.yaml"
 COMPOSE_ENV_FILE="$COMPOSE_DIR/.env"
 ENV_TEMPLATE="$PROJECT_ROOT/config/environments/.env.template"
 BACKUP_DIR="$PROJECT_ROOT/backups/$(date +%Y%m%d_%H%M%S)"
@@ -26,9 +27,15 @@ fi
 
 LOG_LEVEL="${LOG_LEVEL:-INFO}"
 RUNTIME_ENV="${BOT_ENV:-$DEPLOY_ENV}"
+ENABLE_OBSERVABILITY="${ENABLE_OBSERVABILITY:-0}"
+WITH_INFRA="${WITH_INFRA:-0}"
 
 compose() {
-    (cd "$COMPOSE_DIR" && docker compose "$@")
+    local files=(-f "$COMPOSE_FILE")
+    if [[ "$DEPLOY_ENV" == "production" || "$WITH_INFRA" == "1" ]]; then
+        files+=(-f "$COMPOSE_INFRA_FILE")
+    fi
+    docker compose "${files[@]}" "$@"
 }
 
 print_header() {
@@ -116,11 +123,17 @@ build_images() {
 
 run_stack() {
     echo -e "${YELLOW}Starting services...${NC}"
-    local args=(up -d)
-    if [[ "$DEPLOY_ENV" == "production" ]]; then
-        args=(--profile production up -d)
+    local profiles=()
+    if [[ "$ENABLE_OBSERVABILITY" == "1" ]]; then
+        profiles+=(--profile observability)
     fi
-    ENV="$RUNTIME_ENV" LOG_LEVEL="$LOG_LEVEL" compose "${args[@]}"
+    if [[ "$WITH_INFRA" == "1" ]]; then
+        profiles+=(--profile infra)
+    fi
+    if [[ "$DEPLOY_ENV" == "production" ]]; then
+        profiles+=(--profile production)
+    fi
+    ENV="$RUNTIME_ENV" LOG_LEVEL="$LOG_LEVEL" compose "${profiles[@]}" up -d
     echo -e "${GREEN}✓ Services launched${NC}"
 }
 
@@ -150,12 +163,20 @@ display_info() {
     echo ""
     echo "Services:"
     echo "  - Trading bot: http://localhost:8080"
-    echo "  - Secure API: https://localhost:8443 (if Nginx profile enabled)"
-    echo "  - Metrics: http://localhost:9090"
-    echo "  - Grafana: http://localhost:3000"
-    echo "  - RabbitMQ UI: http://localhost:15672"
-    echo "  - Vault UI: http://localhost:8200"
-    echo "  - Jaeger UI: http://localhost:16686"
+    if [[ "$DEPLOY_ENV" == "production" ]]; then
+        echo "  - Secure API: https://localhost:8443 (if Nginx profile enabled)"
+    fi
+    if [[ "$ENABLE_OBSERVABILITY" == "1" ]]; then
+        echo "  - Metrics (Prometheus): http://localhost:9090"
+        echo "  - Grafana: http://localhost:3000"
+    fi
+    if [[ "$WITH_INFRA" == "1" ]]; then
+        echo "  - RabbitMQ UI: http://localhost:15672"
+        echo "  - Vault UI: http://localhost:8200"
+    fi
+    if [[ "$ENABLE_OBSERVABILITY" == "1" && ( "$DEPLOY_ENV" == "production" || "$WITH_INFRA" == "1" ) ]]; then
+        echo "  - Jaeger UI: http://localhost:16686"
+    fi
     echo ""
     echo "Helpful commands (run inside $COMPOSE_DIR):"
     echo "  - docker compose ps"

@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import signal
 from argparse import Namespace
 from types import FrameType
 from typing import Any
 
 from gpt_trader.app.config.validation import ConfigValidationError
-from gpt_trader.app.container import clear_application_container
+from gpt_trader.app.container import clear_application_container, get_application_container
 from gpt_trader.cli import options, services
 from gpt_trader.config.constants import OTEL_ENABLED, OTEL_EXPORTER_ENDPOINT, OTEL_SERVICE_NAME
 from gpt_trader.observability.tracing import init_tracing, shutdown_tracing
@@ -162,8 +163,50 @@ def _run_bot(bot: Any, *, single_cycle: bool) -> int:
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
 
+    async def run_bot() -> None:
+        health_server = None
+        health_state = None
+
+        if _env_flag("GPT_TRADER_HEALTH_SERVER_ENABLED"):
+            try:
+                from gpt_trader.app.health_server import (
+                    DEFAULT_HEALTH_PORT,
+                    mark_live,
+                    start_health_server,
+                )
+
+                container = get_application_container()
+                health_state = container.health_state if container is not None else None
+                port = _env_int("GPT_TRADER_HEALTH_PORT", DEFAULT_HEALTH_PORT)
+                health_server = await start_health_server(port=port, health_state=health_state)
+                if health_state is not None:
+                    mark_live(health_state, True, reason="cli_run")
+            except Exception as exc:
+                logger.warning(
+                    "Failed to start health server",
+                    operation="health_server_start",
+                    error_type=type(exc).__name__,
+                    error_message=str(exc),
+                )
+
+        try:
+            await bot.run(single_cycle=single_cycle)
+        finally:
+            if health_state is not None:
+                from gpt_trader.app.health_server import mark_live, mark_ready
+
+                # If the bot stops, report unhealthy readiness/liveness.
+                mark_ready(health_state, False, reason="shutdown")
+                mark_live(health_state, False, reason="shutdown")
+
+            if health_server is not None:
+                try:
+                    await health_server.stop()
+                except Exception:
+                    pass
+
     try:
-        asyncio.run(bot.run(single_cycle=single_cycle))
+        asyncio.run(run_bot())
     except KeyboardInterrupt:  # pragma: no cover - defensive
         logger.info("Shutdown complete.", status="stopped")
     finally:
@@ -173,3 +216,17 @@ def _run_bot(bot: Any, *, single_cycle: bool) -> int:
         clear_application_container()
 
     return 0
+
+
+def _env_flag(name: str) -> bool:
+    return os.environ.get(name, "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _env_int(name: str, default: int) -> int:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        return default

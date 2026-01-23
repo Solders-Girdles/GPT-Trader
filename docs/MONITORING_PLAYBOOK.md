@@ -14,8 +14,10 @@ uv sync --extra monitoring
 
 **Option A (recommended): Built-in health server**
 
-- Ensure your runtime starts `gpt_trader.app.health_server.start_health_server`
-  (port 8080 by default).
+- If you run via `gpt-trader run`, set `GPT_TRADER_HEALTH_SERVER_ENABLED=1`
+  (optional: `GPT_TRADER_HEALTH_PORT=8080`).
+- If you embed the bot, start `gpt_trader.app.health_server.start_health_server`
+  (port 8080 by default) with the shared `HealthState`.
 - Enable metrics: `GPT_TRADER_METRICS_ENDPOINT_ENABLED=1`
 
 ```bash
@@ -46,6 +48,10 @@ docker compose --project-directory deploy/gpt_trader/docker \
   -f deploy/gpt_trader/docker/docker-compose.yaml \
   --profile observability up -d
 ```
+
+This is the canonical local monitoring stack. It provisions Grafana from
+`monitoring/grafana/provisioning/` + `monitoring/grafana/dashboards/` and uses
+`deploy/gpt_trader/docker/prometheus.minimal.yml` for Prometheus.
 
 For full stack (Elasticsearch, Kibana, Jaeger):
 ```bash
@@ -86,7 +92,10 @@ Metrics are exposed with the `gpt_trader_` prefix. Common signals (non-exhaustiv
 
 ## Prometheus Configuration
 
-Add to `prometheus.yml`:
+If you use the deploy compose stack, Prometheus is preconfigured via
+`deploy/gpt_trader/docker/prometheus.minimal.yml` to scrape `trading-bot:8080`.
+
+For a standalone Prometheus, add to `prometheus.yml`:
 
 ```yaml
 scrape_configs:
@@ -96,7 +105,8 @@ scrape_configs:
       - targets: ['localhost:8080']  # health server /metrics
 ```
 
-If you use the exporter script, target port `9000` instead.
+If you use the exporter script, target port `9000` instead. For Docker compose,
+swap the target to `trading-bot:8080`.
 
 ## Alert Rules
 
@@ -164,7 +174,11 @@ prefers `events.db` and uses `events.jsonl` only as a fallback.
 
 ## Grafana Dashboard
 
-Import dashboard from `scripts/monitoring/grafana-dashboard.json.example`:
+Dashboards are auto-provisioned from `monitoring/grafana/dashboards/` when using
+the deploy compose stack. For manual import, use the JSON files in that
+directory (for example, `monitoring/grafana/dashboards/grafana_dashboard.json`).
+
+Legacy manual import (older example) uses `scripts/monitoring/grafana-dashboard.json.example`:
 1. In Grafana: **+ → Import**
 2. Paste JSON content
 3. Select Prometheus data source
@@ -257,14 +271,14 @@ degradation_ok, degradation_details = check_degradation_state(degradation_state,
 - Ensure bot has written `runtime_data/<profile>/metrics.json` (run at least one cycle)
 - Check file permissions
 
-## Docker Compose Bundle
+## Legacy/Standalone Compose Bundle
 
-Sample stack in `scripts/monitoring/docker-compose.yml.example`:
+If you want the standalone monitoring stack (exporters + alertmanager), use the
+`monitoring/docker-compose.monitoring.yml` bundle:
 
 ```bash
-cd scripts/monitoring
-cp docker-compose.yml.example docker-compose.yml
-cp prometheus.yml.example prometheus.yml
-cp prometheus-alerts.yml.example prometheus-alerts.yml
-docker-compose up -d
+cd monitoring
+docker compose -f docker-compose.monitoring.yml up -d
 ```
+
+The older `scripts/monitoring/*.example` files are legacy references.

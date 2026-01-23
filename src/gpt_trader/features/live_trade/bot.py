@@ -170,6 +170,13 @@ class TradingBot:
             reason="background_tasks_started",
             details={"task_count": len(tasks)},
         )
+        # Mark readiness once the engine has scheduled its background tasks (including health checks).
+        try:
+            from gpt_trader.app.health_server import mark_ready
+
+            mark_ready(self.container.health_state, True, reason="trading_bot_running")
+        except Exception:
+            pass
         logger.info(f"Started {len(tasks)} background tasks")
 
         try:
@@ -191,6 +198,12 @@ class TradingBot:
             )
             raise
         finally:
+            try:
+                from gpt_trader.app.health_server import mark_ready
+
+                mark_ready(self.container.health_state, False, reason="trading_bot_shutdown")
+            except Exception:
+                pass
             logger.info("Bot shutting down...")
             self._transition_state(TradingBotState.STOPPING, reason="shutdown_start")
             await self.engine.shutdown()

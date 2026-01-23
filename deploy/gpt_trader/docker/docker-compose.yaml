@@ -13,15 +13,17 @@ services:
     environment:
       ENV: ${ENV:-development}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      # Enable the built-in health server so compose healthchecks + Prometheus can probe it.
+      GPT_TRADER_HEALTH_SERVER_ENABLED: ${GPT_TRADER_HEALTH_SERVER_ENABLED:-1}
+      GPT_TRADER_HEALTH_PORT: ${GPT_TRADER_HEALTH_PORT:-8080}
+      GPT_TRADER_METRICS_ENDPOINT_ENABLED: ${GPT_TRADER_METRICS_ENDPOINT_ENABLED:-1}
     volumes:
       - ../../..:/app:cached  # Mount source code for development
       - bot_logs:/app/logs
       - bot_data:/app/data
       - bot_cache:/app/cache
     ports:
-      - "8080:8080"   # Web interface
-      - "8443:8443"   # Secure API
-      - "9090:9090"   # Metrics endpoint
+      - "8080:8080"   # Health + metrics endpoints (when enabled)
     networks:
       - trading-network
     restart: unless-stopped
@@ -39,7 +41,7 @@ services:
     profiles:
       - observability
     volumes:
-      - ../../../monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus.minimal.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
@@ -48,7 +50,7 @@ services:
       - "--web.console.templates=/usr/share/prometheus/consoles"
       - "--web.enable-lifecycle"
     ports:
-      - "9091:9090"
+      - "9090:9090"
     networks:
       - trading-network
     restart: unless-stopped
@@ -69,7 +71,8 @@ services:
       GF_INSTALL_PLUGINS: redis-datasource
     volumes:
       - grafana_data:/var/lib/grafana
-      - ../../../monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ../../../monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../../../monitoring/grafana/dashboards:/etc/grafana/dashboards:ro
     ports:
       - "3000:3000"
     networks:

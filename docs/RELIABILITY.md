@@ -353,6 +353,7 @@ The strategy engine parallelizes independent broker operations:
 - `_fetch_positions()` and `_audit_orders()` run concurrently via `asyncio.create_task()`
 - Per-symbol ticker and candles fetches are bounded by `asyncio.Semaphore` (default 5 concurrent calls)
 - Configurable via `config.max_concurrent_rest_calls` (defaults to 5)
+- Optional dedicated executor via `config.broker_calls_use_dedicated_executor` (defaults to `False`)
 
 This reduces cycle latency by overlapping I/O-bound operations while preventing API rate limit exhaustion.
 

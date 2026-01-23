@@ -181,7 +181,13 @@ class TradingEngine(BaseEngine):
             except (TypeError, ValueError):
                 broker_call_limit = 5
             broker_call_limit = max(1, broker_call_limit)
-            broker_calls = BoundedToThread(max_concurrency=broker_call_limit)
+            use_dedicated_executor = (
+                getattr(context.config, "broker_calls_use_dedicated_executor", False) is True
+            )
+            broker_calls = BoundedToThread(
+                max_concurrency=broker_call_limit,
+                use_dedicated_executor=use_dedicated_executor,
+            )
 
         self._broker_calls = broker_calls
 
@@ -2442,6 +2448,9 @@ class TradingEngine(BaseEngine):
         await self._system_maintenance.stop()
         await self._status_reporter.stop()
         await self._heartbeat.stop()
+        shutdown = getattr(self._broker_calls, "shutdown", None)
+        if callable(shutdown):
+            shutdown()
         await super().shutdown()
         self._transition_state(EngineState.STOPPED, reason="shutdown_complete")
 

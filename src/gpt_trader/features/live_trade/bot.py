@@ -82,7 +82,13 @@ class TradingBot:
         except (TypeError, ValueError):
             broker_call_limit = 5
         broker_call_limit = max(1, broker_call_limit)
-        self._broker_calls = BoundedToThread(max_concurrency=broker_call_limit)
+        use_dedicated_executor = (
+            getattr(config, "broker_calls_use_dedicated_executor", False) is True
+        )
+        self._broker_calls = BoundedToThread(
+            max_concurrency=broker_call_limit,
+            use_dedicated_executor=use_dedicated_executor,
+        )
 
         # Setup context
         self.context = CoordinatorContext(
@@ -188,12 +194,14 @@ class TradingBot:
             logger.info("Bot shutting down...")
             self._transition_state(TradingBotState.STOPPING, reason="shutdown_start")
             await self.engine.shutdown()
+            self._shutdown_broker_calls()
             self._transition_state(TradingBotState.STOPPED, reason="shutdown_complete")
             logger.info("Bot shutdown complete.")
 
     async def stop(self) -> None:
         self._transition_state(TradingBotState.STOPPING, reason="stop_called")
         await self.engine.shutdown()
+        self._shutdown_broker_calls()
         self._transition_state(TradingBotState.STOPPED, reason="stop_complete")
 
     async def flatten_and_stop(self) -> list[str]:
@@ -280,12 +288,20 @@ class TradingBot:
             messages.append(f"Critical Error during flatten: {e}")
 
         await self.engine.shutdown()
+        self._shutdown_broker_calls()
         self._transition_state(TradingBotState.STOPPED, reason="flatten_and_stop_complete")
         return messages
 
     async def shutdown(self) -> None:
         """Alias for stop() to match CLI interface."""
         await self.stop()
+
+    def _shutdown_broker_calls(self) -> None:
+        broker_calls = getattr(self, "_broker_calls", None)
+        if broker_calls is not None:
+            shutdown = getattr(broker_calls, "shutdown", None)
+            if callable(shutdown):
+                shutdown()
 
     def execute_decision(
         self,

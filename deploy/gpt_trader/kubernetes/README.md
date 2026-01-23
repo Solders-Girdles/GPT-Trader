@@ -1,5 +1,9 @@
 # Kubernetes Deployment Notes
 
+Note: These manifests are legacy/experimental and are not kept in sync with
+the canonical deploy path (`deploy/gpt_trader/docker/`). Treat them as a
+starting point, not a supported deployment target.
+
 1. Copy the secret template and populate real credentials:
    ```bash
    cp deploy/gpt_trader/kubernetes/secrets/trading-bot-secrets.env.example \

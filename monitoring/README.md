@@ -1,17 +1,10 @@
 # Monitoring Stack
 
-This directory contains the Prometheus/Grafana configuration used by GPT-Trader.
+This directory contains the Grafana provisioning + dashboards used by the
+canonical deploy stack:
 
-It is referenced by:
-- `deploy/gpt_trader/docker/docker-compose.yaml` (the `observability` profile mounts these files).
-- `monitoring/docker-compose.monitoring.yml` (standalone monitoring stack for local/dev use).
+- `deploy/gpt_trader/docker/docker-compose.yaml` (use `--profile observability`)
 
-## Quick Start (Standalone)
+For runbook details (metrics endpoint, exporter script, alerting), see:
 
-From the repo root:
-
-```bash
-docker compose -f monitoring/docker-compose.monitoring.yml up -d
-```
-
-Grafana runs on `http://localhost:3000` and Prometheus on `http://localhost:9090`.
+- `docs/MONITORING_PLAYBOOK.md`

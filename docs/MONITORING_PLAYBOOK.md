@@ -271,14 +271,4 @@ degradation_ok, degradation_details = check_degradation_state(degradation_state,
 - Ensure bot has written `runtime_data/<profile>/metrics.json` (run at least one cycle)
 - Check file permissions
 
-## Legacy/Standalone Compose Bundle
-
-If you want the standalone monitoring stack (exporters + alertmanager), use the
-`monitoring/docker-compose.monitoring.yml` bundle:
-
-```bash
-cd monitoring
-docker compose -f docker-compose.monitoring.yml up -d
-```
-
 The older `scripts/monitoring/*.example` files are legacy references.

@@ -15,22 +15,9 @@ def check_environment_variables(checker: PreflightCheck) -> bool:
 
     ctx = checker.context
     intx_perps_enabled = ctx.intx_perps_enabled()
-    intx_raw = os.getenv("COINBASE_ENABLE_INTX_PERPS")
-    legacy_raw = os.getenv("COINBASE_ENABLE_DERIVATIVES")
-    use_legacy_flag = intx_raw is None or intx_raw == ""
     all_good = True
 
-    if legacy_raw:
-        checker.log_warning(
-            "COINBASE_ENABLE_DERIVATIVES is deprecated; use COINBASE_ENABLE_INTX_PERPS. "
-            "Target removal after 2026-06-30."
-        )
     for var, (expected, strict) in ctx.expected_env_defaults().items():
-        if var == "COINBASE_ENABLE_DERIVATIVES":
-            if not intx_perps_enabled:
-                continue
-            if not use_legacy_flag:
-                continue
         actual = os.getenv(var)
         if actual == expected:
             checker.log_info(f"{var}={expected}")
@@ -46,14 +33,6 @@ def check_environment_variables(checker: PreflightCheck) -> bool:
             all_good = False
         else:
             checker.log_warning(message)
-
-    if intx_raw and legacy_raw:
-        if ctx._env_bool("COINBASE_ENABLE_INTX_PERPS") != ctx._env_bool(
-            "COINBASE_ENABLE_DERIVATIVES"
-        ):
-            checker.log_warning(
-                "COINBASE_ENABLE_INTX_PERPS overrides legacy COINBASE_ENABLE_DERIVATIVES"
-            )
 
     modes = ctx.trading_modes()
     raw_modes = os.getenv("TRADING_MODES", "")

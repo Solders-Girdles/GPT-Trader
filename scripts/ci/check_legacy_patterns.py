@@ -40,14 +40,9 @@ LEGACY_ENV_VARS = {
     "COINBASE_ENABLE_DERIVATIVES": {
         "allowed_files": {
             "docs/DEPRECATIONS.md",
-            "docs/LEGACY_DEBT_WORKLIST.md",
             "scripts/ci/check_legacy_patterns.py",
-            "src/gpt_trader/app/config/bot_config.py",
-            "src/gpt_trader/preflight/checks/environment.py",
-            "src/gpt_trader/preflight/context.py",
-            "src/gpt_trader/monitoring/configuration_guardian/environment.py",
         },
-        "allowed_prefixes": ("tests/",),
+        "allowed_prefixes": (),
     },
 }
 
@@ -111,7 +106,15 @@ def _check_deprecated_env_usage(files: list[Path]) -> list[str]:
     errors: list[str] = []
     for path in files:
         rel_path = path.relative_to(REPO_ROOT).as_posix()
-        text = path.read_text(encoding="utf-8", errors="ignore")
+        try:
+            text = path.read_text(encoding="utf-8", errors="ignore")
+        except FileNotFoundError:
+            # During local development we may have deleted tracked files that are still present in
+            # `git ls-files` until the deletion is committed. Skip them so the check can still run.
+            continue
+        except OSError as exc:
+            errors.append(f"{rel_path}: failed to read file ({exc})")
+            continue
         for env_var, allow in LEGACY_ENV_VARS.items():
             if env_var not in text:
                 continue
@@ -152,7 +155,12 @@ def _check_blocking_calls_in_async(py_files: list[Path]) -> list[str]:
     errors: list[str] = []
     for path in py_files:
         try:
-            tree = ast.parse(path.read_text(encoding="utf-8"))
+            source = path.read_text(encoding="utf-8")
+        except OSError:
+            # Avoid hard-failing on missing/unreadable files during local refactors.
+            continue
+        try:
+            tree = ast.parse(source)
         except SyntaxError:
             continue
 

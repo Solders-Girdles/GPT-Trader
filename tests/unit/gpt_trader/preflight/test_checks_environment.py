@@ -29,7 +29,7 @@ class TestCheckEnvironmentVariables:
             "BROKER": "coinbase",
             "COINBASE_SANDBOX": "0",
             "COINBASE_API_MODE": "advanced",
-            "COINBASE_ENABLE_DERIVATIVES": "1",
+            "COINBASE_ENABLE_INTX_PERPS": "0",
             "COINBASE_CDP_API_KEY": "organizations/abc/apiKeys/xyz",
             "COINBASE_CDP_PRIVATE_KEY": "-----BEGIN EC PRIVATE KEY-----\ntest\n-----END EC PRIVATE KEY-----",
         }
@@ -51,7 +51,7 @@ class TestCheckEnvironmentVariables:
             "BROKER": "kraken",  # Wrong broker
             "COINBASE_SANDBOX": "0",
             "COINBASE_API_MODE": "advanced",
-            "COINBASE_ENABLE_DERIVATIVES": "1",
+            "COINBASE_ENABLE_INTX_PERPS": "0",
         }
 
         with monkeypatch.context() as mp:
@@ -69,7 +69,7 @@ class TestCheckEnvironmentVariables:
             "BROKER": "coinbase",
             "COINBASE_SANDBOX": "1",  # Should be 0 in prod
             "COINBASE_API_MODE": "advanced",
-            "COINBASE_ENABLE_DERIVATIVES": "1",
+            "COINBASE_ENABLE_INTX_PERPS": "0",
         }
 
         with monkeypatch.context() as mp:
@@ -105,7 +105,7 @@ class TestCheckEnvironmentVariables:
             "BROKER": "coinbase",
             "COINBASE_SANDBOX": "0",
             "COINBASE_API_MODE": "advanced",
-            "COINBASE_ENABLE_DERIVATIVES": "1",
+            "COINBASE_ENABLE_INTX_PERPS": "0",
             "COINBASE_CDP_API_KEY": "invalid_format",  # Invalid format
             "COINBASE_CDP_PRIVATE_KEY": "-----BEGIN EC PRIVATE KEY-----\ntest\n-----END EC PRIVATE KEY-----",
         }
@@ -125,7 +125,7 @@ class TestCheckEnvironmentVariables:
             "BROKER": "coinbase",
             "COINBASE_SANDBOX": "0",
             "COINBASE_API_MODE": "advanced",
-            "COINBASE_ENABLE_DERIVATIVES": "1",
+            "COINBASE_ENABLE_INTX_PERPS": "0",
             "COINBASE_CDP_API_KEY": "organizations/abc/apiKeys/xyz",
             "COINBASE_CDP_PRIVATE_KEY": "not-a-valid-key",  # Invalid format
         }

@@ -355,19 +355,7 @@ class BotConfig:
             daily_loss_limit_pct=_risk_float("DAILY_LOSS_LIMIT_PCT", 0.05),
         )
 
-        intx_perps_raw = os.getenv("COINBASE_ENABLE_INTX_PERPS")
-        legacy_perps_raw = os.getenv("COINBASE_ENABLE_DERIVATIVES")
-        if intx_perps_raw is not None and intx_perps_raw != "":
-            derivatives_enabled = parse_bool_env("COINBASE_ENABLE_INTX_PERPS", default=False)
-        else:
-            derivatives_enabled = parse_bool_env("COINBASE_ENABLE_DERIVATIVES", default=False)
-            if legacy_perps_raw is not None and legacy_perps_raw != "":
-                warnings.warn(
-                    "COINBASE_ENABLE_DERIVATIVES is deprecated; use COINBASE_ENABLE_INTX_PERPS. "
-                    "Target removal after 2026-06-30.",
-                    DeprecationWarning,
-                    stacklevel=2,
-                )
+        derivatives_enabled = parse_bool_env("COINBASE_ENABLE_INTX_PERPS", default=False)
 
         # Build health thresholds config from env (HEALTH_* prefix)
         def _health_float(key: str, default: float) -> float:

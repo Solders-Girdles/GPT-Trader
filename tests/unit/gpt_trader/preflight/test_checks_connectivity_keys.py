@@ -40,7 +40,7 @@ class TestCheckKeyPermissionsIntx:
 
         env = {
             "COINBASE_PREFLIGHT_FORCE_REMOTE": "1",
-            "COINBASE_ENABLE_DERIVATIVES": "1",
+            "COINBASE_ENABLE_INTX_PERPS": "1",
         }
         with monkeypatch.context() as mp:
             _set_env(mp, env, clear=True)
@@ -70,7 +70,7 @@ class TestCheckKeyPermissionsIntx:
 
         env = {
             "COINBASE_PREFLIGHT_FORCE_REMOTE": "1",
-            "COINBASE_ENABLE_DERIVATIVES": "1",
+            "COINBASE_ENABLE_INTX_PERPS": "1",
         }
         with monkeypatch.context() as mp:
             _set_env(mp, env, clear=True)
@@ -100,7 +100,7 @@ class TestCheckKeyPermissionsIntx:
 
         env = {
             "COINBASE_PREFLIGHT_FORCE_REMOTE": "1",
-            "COINBASE_ENABLE_DERIVATIVES": "0",
+            "COINBASE_ENABLE_INTX_PERPS": "0",
         }
         with monkeypatch.context() as mp:
             _set_env(mp, env, clear=True)
@@ -123,7 +123,7 @@ class TestCheckKeyPermissionsRetries:
     def isolate_preflight_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Isolate env-driven behavior for deterministic key-permissions tests."""
         for key in (
-            "COINBASE_ENABLE_DERIVATIVES",
+            "COINBASE_ENABLE_INTX_PERPS",
             "COINBASE_ENABLE_INTX_PERPS",
             "DRY_RUN",
             "PAPER_MODE",
@@ -132,7 +132,7 @@ class TestCheckKeyPermissionsRetries:
         ):
             monkeypatch.delenv(key, raising=False)
         monkeypatch.setenv("COINBASE_PREFLIGHT_FORCE_REMOTE", "1")
-        monkeypatch.setenv("COINBASE_ENABLE_DERIVATIVES", "0")
+        monkeypatch.setenv("COINBASE_ENABLE_INTX_PERPS", "0")
         monkeypatch.setenv("COINBASE_ENABLE_INTX_PERPS", "0")
 
     def test_retries_on_transient_errors(self, monkeypatch: pytest.MonkeyPatch) -> None:

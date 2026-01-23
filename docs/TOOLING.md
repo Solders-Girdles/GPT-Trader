@@ -86,9 +86,8 @@ src/gpt_trader/features/live_trade/engines/
 ├── base.py (BaseEngine, CoordinatorContext)
 ├── runtime/ (RuntimeEngine)
 └── strategy.py (TradingEngine)
-
-src/gpt_trader/features/live_trade/orchestrator/
-└── decision.py (strategy orchestration helpers)
+src/gpt_trader/features/live_trade/strategies/
+└── base.py (StrategyProtocol, MarketDataContext)
 ```
 
 ### Monitoring

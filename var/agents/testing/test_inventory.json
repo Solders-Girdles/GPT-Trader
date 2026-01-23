@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6044,
-    "total_files": 717,
+    "total_tests": 6030,
+    "total_files": 714,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 5879,
-    "asyncio": 355,
-    "parametrize": 153,
+    "unit": 5865,
+    "asyncio": 343,
+    "parametrize": 152,
     "property": 82,
     "integration": 79,
     "endpoints": 78,
@@ -402,9 +402,6 @@
       "tests/unit/gpt_trader/features/live_trade/execution/test_validation_metrics_and_escalation.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_validation_preview.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_volatility_guard.py",
-      "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_class_structure.py",
-      "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_process.py",
-      "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_process_execution.py",
       "tests/unit/gpt_trader/features/live_trade/risk/test_cfm_risk_config.py",
       "tests/unit/gpt_trader/features/live_trade/risk/test_reduce_only.py",
       "tests/unit/gpt_trader/features/live_trade/signals/test_mean_reversion_signal_edges.py",
@@ -2534,35 +2531,35 @@
         "class": "TestReduceOnlyModeEnvParsing"
       },
       {
-        "name": "TestDerivativesEnvParsing::test_derivatives_enabled_prefers_intx_perps_flag",
+        "name": "TestDerivativesEnvParsing::test_derivatives_enabled_when_intx_perps_flag_set",
         "line": 137,
         "markers": [
           "unit"
         ],
-        "docstring": "COINBASE_ENABLE_INTX_PERPS overrides legacy COINBASE_ENABLE_DERIVATIVES.",
+        "docstring": "COINBASE_ENABLE_INTX_PERPS=1 enables derivatives.",
         "class": "TestDerivativesEnvParsing"
       },
       {
-        "name": "TestDerivativesEnvParsing::test_derivatives_enabled_intx_perps_can_disable_legacy",
-        "line": 146,
+        "name": "TestDerivativesEnvParsing::test_derivatives_disabled_when_intx_perps_flag_unset",
+        "line": 145,
         "markers": [
           "unit"
         ],
-        "docstring": "COINBASE_ENABLE_INTX_PERPS=0 disables derivatives even if legacy is 1.",
+        "docstring": "COINBASE_ENABLE_INTX_PERPS defaults to disabled when unset.",
         "class": "TestDerivativesEnvParsing"
       },
       {
-        "name": "TestDerivativesEnvParsing::test_derivatives_enabled_falls_back_to_legacy",
-        "line": 155,
+        "name": "TestDerivativesEnvParsing::test_derivatives_disabled_when_intx_perps_flag_zero",
+        "line": 152,
         "markers": [
           "unit"
         ],
-        "docstring": "When COINBASE_ENABLE_INTX_PERPS is unset, legacy flag still works.",
+        "docstring": "COINBASE_ENABLE_INTX_PERPS=0 disables derivatives.",
         "class": "TestDerivativesEnvParsing"
       },
       {
         "name": "TestFromDictLegacyProfileMapping::test_profile_style_emits_deprecation_warning",
-        "line": 166,
+        "line": 164,
         "markers": [
           "unit"
         ],
@@ -18981,7 +18978,7 @@
     "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_reconciliation.py": [
       {
         "name": "test_audit_orders_normalizes_submit_id_to_broker_order_id",
-        "line": 13,
+        "line": 14,
         "markers": [
           "asyncio",
           "unit"
@@ -18990,7 +18987,7 @@
       },
       {
         "name": "test_audit_orders_escalates_on_unknown_bot_owned_orders",
-        "line": 69,
+        "line": 70,
         "markers": [
           "asyncio",
           "unit"
@@ -22221,151 +22218,6 @@
         ],
         "docstring": "",
         "class": "TestVolatilityGuardEdgeCases"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_class_structure.py": [
-      {
-        "name": "TestStrategyOrchestratorClassStructure::test_requires_context_attribute",
-        "line": 11,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that requires_context is True.",
-        "class": "TestStrategyOrchestratorClassStructure"
-      },
-      {
-        "name": "TestStrategyOrchestratorClassStructure::test_inherits_from_mixins",
-        "line": 15,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that StrategyOrchestrator inherits from expected mixins.",
-        "class": "TestStrategyOrchestratorClassStructure"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_process.py": [
-      {
-        "name": "TestProcessSymbol::test_process_symbol_skips_when_context_is_none",
-        "line": 24,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that process_symbol returns early if _prepare_context returns None.",
-        "class": "TestProcessSymbol"
-      },
-      {
-        "name": "TestProcessSymbol::test_process_symbol_calls_resolve_decision",
-        "line": 39,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that process_symbol calls _resolve_decision with context.",
-        "class": "TestProcessSymbol"
-      },
-      {
-        "name": "TestProcessSymbol::test_process_symbol_records_decision",
-        "line": 60,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that process_symbol records decision.",
-        "class": "TestProcessSymbol"
-      },
-      {
-        "name": "TestProcessSymbol::test_process_symbol_with_balances",
-        "line": 81,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that process_symbol passes balances to _prepare_context.",
-        "class": "TestProcessSymbol"
-      },
-      {
-        "name": "TestProcessSymbol::test_process_symbol_with_position_map",
-        "line": 108,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that process_symbol passes position_map to _prepare_context.",
-        "class": "TestProcessSymbol"
-      },
-      {
-        "name": "TestProcessSymbolErrorHandling::test_process_symbol_handles_prepare_context_error",
-        "line": 146,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that errors in _prepare_context are caught and logged.",
-        "class": "TestProcessSymbolErrorHandling"
-      },
-      {
-        "name": "TestProcessSymbolErrorHandling::test_process_symbol_handles_resolve_decision_error",
-        "line": 159,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that errors in _resolve_decision are caught and logged.",
-        "class": "TestProcessSymbolErrorHandling"
-      },
-      {
-        "name": "TestProcessSymbolErrorHandling::test_process_symbol_handles_execution_error",
-        "line": 178,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that errors in execute_decision are caught and logged.",
-        "class": "TestProcessSymbolErrorHandling"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_process_execution.py": [
-      {
-        "name": "TestProcessSymbolExecution::test_process_symbol_executes_buy_decision",
-        "line": 24,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that BUY decision triggers execution.",
-        "class": "TestProcessSymbolExecution"
-      },
-      {
-        "name": "TestProcessSymbolExecution::test_process_symbol_skips_execution_when_product_missing",
-        "line": 55,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that execution is skipped when product is None.",
-        "class": "TestProcessSymbolExecution"
-      },
-      {
-        "name": "TestProcessSymbolActions::test_action_execution_mapping",
-        "line": 97,
-        "markers": [
-          "asyncio",
-          "parametrize",
-          "unit"
-        ],
-        "docstring": "Test that only BUY, SELL, CLOSE trigger execution.",
-        "class": "TestProcessSymbolActions"
-      },
-      {
-        "name": "TestProcessSymbolMultipleMarks::test_uses_latest_mark_for_execution",
-        "line": 135,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test that the latest mark (marks[-1]) is used for execution.",
-        "class": "TestProcessSymbolMultipleMarks"
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/risk/test_cfm_risk_config.py": [
@@ -51810,7 +51662,7 @@
       },
       {
         "name": "TestWaitForFirst::test_wait_for_first_performance",
-        "line": 94,
+        "line": 109,
         "markers": [
           "asyncio",
           "unit"
@@ -51820,7 +51672,7 @@
       },
       {
         "name": "TestWaitForFirst::test_wait_for_first_empty",
-        "line": 117,
+        "line": 159,
         "markers": [
           "asyncio",
           "unit"
@@ -51830,7 +51682,7 @@
       },
       {
         "name": "TestWaitForFirst::test_wait_for_first_all_fail",
-        "line": 122,
+        "line": 164,
         "markers": [
           "asyncio",
           "unit"
@@ -51840,7 +51692,7 @@
       },
       {
         "name": "TestWaitForFirst::test_wait_for_first_cancellation",
-        "line": 132,
+        "line": 174,
         "markers": [
           "asyncio",
           "unit"
@@ -51850,7 +51702,7 @@
       },
       {
         "name": "TestAsyncPerformance::test_concurrent_execution_performance",
-        "line": 153,
+        "line": 205,
         "markers": [
           "asyncio",
           "unit"

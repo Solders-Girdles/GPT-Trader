@@ -39,9 +39,8 @@ This is the canonical legacy-debt tracker; fold any other reports into this file
 - [x] Legacy / deprecated fields still represented in models or UI:
   - `src/gpt_trader/monitoring/status_reporter.py` (removed legacy accessors)
   - TUI now uses `guards` list only; `active_guards` is normalized during ingestion.
-- [x] Legacy env var aliases still supported:
-  - `COINBASE_ENABLE_DERIVATIVES` (alias for INTX/perps gating)
-  - Status: removal horizon documented in `docs/DEPRECATIONS.md` and warnings issued when set.
+- [x] Legacy env var alias for INTX/perps gating removed.
+  - Status: use `COINBASE_ENABLE_INTX_PERPS` only.
 
 ## P2 — Legacy modules and facade drift
 
@@ -51,9 +50,7 @@ This is the canonical legacy-debt tracker; fold any other reports into this file
   - `tests/unit/gpt_trader/types/`
   - Status: only referenced by its unit tests; prefer `src/gpt_trader/core/` for domain types.
 - [x] Standardize on the `gpt_trader.utilities.logging` facade (keep `gpt_trader.logging` for infrastructure only):
-  - `src/gpt_trader/features/live_trade/orchestrator/orchestrator.py` (stop importing `log_execution_error`, `symbol_context`)
-  - `src/gpt_trader/features/live_trade/orchestrator/decision.py` (stop importing `log_strategy_decision`)
-  - `src/gpt_trader/features/live_trade/orchestrator/logging_utils.py` (stop importing `get_runtime_logger`)
+  - Status: live-trade stack no longer uses `gpt_trader.logging` helpers; the orchestrator module is removed.
 
 ## P2 — Partially removed integrations (choose: finish or delete)
 

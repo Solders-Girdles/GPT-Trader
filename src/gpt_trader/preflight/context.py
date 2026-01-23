@@ -90,13 +90,13 @@ class PreflightContext:
                 "BROKER": ("coinbase", True),
                 "COINBASE_SANDBOX": ("1", False),
                 "COINBASE_API_MODE": ("advanced", False),
-                "COINBASE_ENABLE_DERIVATIVES": ("0", False),
+                "COINBASE_ENABLE_INTX_PERPS": ("0", False),
             }
         return {
             "BROKER": ("coinbase", True),
             "COINBASE_SANDBOX": ("0", True),
             "COINBASE_API_MODE": ("advanced", True),
-            "COINBASE_ENABLE_DERIVATIVES": ("1", True),
+            "COINBASE_ENABLE_INTX_PERPS": ("0", True),
         }
 
     def _env_bool(self, key: str, default: bool = False) -> bool:
@@ -116,10 +116,7 @@ class PreflightContext:
         return self._env_bool("CFM_ENABLED", False)
 
     def intx_perps_enabled(self) -> bool:
-        raw = os.getenv("COINBASE_ENABLE_INTX_PERPS")
-        if raw is not None and raw != "":
-            return self._env_bool("COINBASE_ENABLE_INTX_PERPS", False)
-        return self._env_bool("COINBASE_ENABLE_DERIVATIVES", False)
+        return self._env_bool("COINBASE_ENABLE_INTX_PERPS", False)
 
     def intends_real_orders(self) -> bool:
         if self._env_bool("DRY_RUN", False):

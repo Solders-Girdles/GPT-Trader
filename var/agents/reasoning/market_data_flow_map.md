@@ -50,10 +50,6 @@ Generated: 1970-01-01T00:00:00+00:00
 ## Strategy Inputs
 | ID | Label | Path |
 |----|-------|------|
-| strategy_orchestrator | StrategyOrchestrator.process_symbol | `src/gpt_trader/features/live_trade/orchestrator/orchestrator.py` |
-| context_builder | ContextBuilderMixin._prepare_context | `src/gpt_trader/features/live_trade/orchestrator/context.py` |
-| market_data_context | MarketDataContext | `src/gpt_trader/features/live_trade/strategies/base.py` |
-| decision_engine | DecisionEngineMixin._resolve_decision | `src/gpt_trader/features/live_trade/orchestrator/decision.py` |
 | strategy_decide | Strategy.decide | `src/gpt_trader/features/live_trade/strategies/base.py` |
 
 ## Edges
@@ -90,18 +86,10 @@ Generated: 1970-01-01T00:00:00+00:00
 | emit_orderbook_snapshot | event_store_append | append orderbook |
 | emit_trade_flow_summary | event_store_append | append trade flow |
 | risk_last_mark_update | risk_check_mark_staleness | staleness input |
-| runtime_mark_windows | context_builder | marks |
-| runtime_orderbook_snapshots | context_builder | orderbook |
-| runtime_trade_aggregators | context_builder | trade stats |
-| risk_check_mark_staleness | context_builder | risk gate |
-| strategy_orchestrator | context_builder | build context |
-| context_builder | market_data_context | wrap state |
-| market_data_context | decision_engine | market data input |
-| decision_engine | strategy_decide | evaluate strategy |
 
 ## Notes
 - TradingEngine uses REST tickers/candles and records marks via PriceTickStore.
 - WebSocket streaming updates runtime_state for orderbook + trade flow context.
 - Risk mark-staleness checks read LiveRiskManager.last_mark_update timestamps.
 - EventStore persistence captures mark updates and orderbook/trade summaries.
-- StrategyOrchestrator consumes runtime_state to build MarketDataContext.
+- TradingEngine._process_symbol calls Strategy.decide with recent marks and candle context.

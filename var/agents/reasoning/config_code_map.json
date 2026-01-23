@@ -16,6 +16,12 @@
           "notes": "No direct usage found"
         },
         {
+          "field": "broker_calls_use_dedicated_executor",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
           "field": "broker_hint",
           "usage_count": 0,
           "files": [],
@@ -149,6 +155,12 @@
         },
         {
           "field": "mock_broker",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "order_submission_retries_enabled",
           "usage_count": 0,
           "files": [],
           "notes": "No direct usage found"

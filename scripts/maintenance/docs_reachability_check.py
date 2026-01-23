@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import re
+import subprocess
 import sys
 from pathlib import Path
 from urllib.parse import unquote
@@ -64,9 +65,29 @@ def resolve_target(source: Path, target: str, root: Path) -> Path:
 
 
 def collect_docs(docs_root: Path, archive_dir: Path) -> list[Path]:
-    return [
-        path.resolve() for path in docs_root.rglob("*.md") if not is_archived(path, archive_dir)
-    ]
+    # Prefer tracked docs so local, gitignored/generated files don't break the check.
+    try:
+        completed = subprocess.run(
+            ["git", "ls-files", "docs"],
+            cwd=REPO_ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return [
+            path.resolve() for path in docs_root.rglob("*.md") if not is_archived(path, archive_dir)
+        ]
+
+    docs: list[Path] = []
+    for rel in completed.stdout.splitlines():
+        if not rel or not rel.endswith(".md"):
+            continue
+        path = (REPO_ROOT / rel).resolve()
+        if is_archived(path, archive_dir):
+            continue
+        docs.append(path)
+    return docs
 
 
 def walk_reachable(

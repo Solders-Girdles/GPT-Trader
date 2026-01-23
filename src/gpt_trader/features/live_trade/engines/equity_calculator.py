@@ -46,6 +46,7 @@ class EquityCalculator:
         degradation: DegradationState,
         risk_manager: Any,
         price_history: dict[str, deque[Decimal]],
+        broker_calls: Any | None = None,
     ) -> None:
         """
         Initialize equity calculator.
@@ -65,6 +66,18 @@ class EquityCalculator:
         self._known_products_ttl_seconds = int(
             getattr(self._config, "product_catalog_ttl_seconds", 3600)
         )
+        self._broker_calls = (
+            broker_calls
+            if broker_calls is not None
+            and asyncio.iscoroutinefunction(getattr(broker_calls, "__call__", None))
+            else None
+        )
+
+    async def _call_broker(self, func: Any, *args: Any, **kwargs: Any) -> Any:
+        broker_calls = self._broker_calls
+        if broker_calls is not None:
+            return await broker_calls(func, *args, **kwargs)
+        return await asyncio.to_thread(func, *args, **kwargs)
 
     async def calculate_total_equity(
         self,
@@ -84,7 +97,7 @@ class EquityCalculator:
         start_time = time.perf_counter()
         result = "ok"
         try:
-            balances = await asyncio.to_thread(broker.list_balances)
+            balances = await self._call_broker(broker.list_balances)
 
             self._log_balance_summary(balances)
 
@@ -268,7 +281,7 @@ class EquityCalculator:
         list_products = getattr(broker, "list_products", None)
         if callable(list_products):
             try:
-                products = await asyncio.to_thread(list_products)
+                products = await self._call_broker(list_products)
             except Exception as exc:
                 logger.debug("Failed to list products for valuation: %s", exc)
                 return None
@@ -318,7 +331,7 @@ class EquityCalculator:
                 if last_price is None:
                     if known_products is not None and product_id.upper() not in known_products:
                         continue
-                    ticker = await asyncio.to_thread(broker.get_ticker, product_id)
+                    ticker = await self._call_broker(broker.get_ticker, product_id)
                     last_price = Decimal(str(ticker.get("price", 0)))
                 if last_price and last_price > 0:
                     used_pair = product_id

@@ -18,7 +18,11 @@ UNIT_ALLOWED_PREFIXES = (
 INTEGRATION_TEST_PREFIX = "tests/integration/"
 CONTRACT_TEST_PREFIX = "tests/contract/"
 REAL_API_TEST_PREFIX = "tests/real_api/"
-ALLOWLIST: set[str] = set()
+# Files allowed to exceed 240 lines with justification
+ALLOWLIST: set[str] = {
+    # Integration test covering 6 crash recovery scenarios - cohesive single-class test suite
+    "tests/integration/test_crash_recovery.py",
+}
 PATCH_ALLOWLIST: set[str] = set()
 
 SLEEP_ALLOWLIST: set[str] = set()

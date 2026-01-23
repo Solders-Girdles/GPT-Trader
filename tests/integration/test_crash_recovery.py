@@ -14,6 +14,7 @@ from gpt_trader.app.config import BotConfig
 from gpt_trader.app.container import (
     ApplicationContainer,
     clear_application_container,
+    get_application_container,
     set_application_container,
 )
 from gpt_trader.features.live_trade.engines.base import CoordinatorContext
@@ -43,12 +44,13 @@ def create_test_config(symbols: list[str] | None = None) -> BotConfig:
 
 
 def create_test_context(
-    config: BotConfig,
-    event_store: EventStore | None = None,
+    config: BotConfig, event_store: EventStore | None = None
 ) -> CoordinatorContext:
     """Create a CoordinatorContext for testing."""
+    container = get_application_container()
     return CoordinatorContext(
         config=config,
+        container=container,
         broker=MagicMock(),
         symbols=tuple(config.symbols),
         event_store=event_store,

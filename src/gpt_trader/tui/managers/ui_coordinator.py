@@ -458,15 +458,27 @@ class UICoordinator:
             logger.debug("Failed to collect resilience metrics: %s", e)
 
     def _collect_validation_metrics(self) -> None:
-        """Collect validation failure metrics from the global failure tracker.
+        """Collect validation failure metrics via the bot's container.
 
-        Updates the TUI state with current validation failure counts,
-        showing operators when validation checks are failing repeatedly.
+        Navigates through the bot -> engine -> context -> container chain
+        to access the container's validation_failure_tracker. This follows
+        the same defensive navigation pattern as _get_client().
         """
         try:
             from gpt_trader.features.live_trade.execution.validation import get_validation_metrics
 
-            metrics = get_validation_metrics()
+            # Navigate to container via bot->engine->context chain
+            if not self.app.bot:
+                return
+            engine = getattr(self.app.bot, "engine", None)
+            if not engine:
+                return
+            context = getattr(engine, "context", None)
+            if not context or not context.container:
+                return
+
+            tracker = context.container.validation_failure_tracker
+            metrics = get_validation_metrics(tracker)
             self.app.tui_state.update_validation_metrics(metrics)
             logger.debug("Collected validation metrics")
         except Exception as e:

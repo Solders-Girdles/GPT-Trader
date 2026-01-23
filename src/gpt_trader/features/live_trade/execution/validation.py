@@ -180,6 +180,7 @@ class OrderValidator:
         record_preview_callback: Any,
         record_rejection_callback: Any,
         failure_tracker: ValidationFailureTracker | None = None,
+        broker_calls: Any | None = None,
     ) -> None:
         """
         Initialize order validator.
@@ -201,6 +202,18 @@ class OrderValidator:
         self._failure_tracker = (
             failure_tracker if failure_tracker is not None else get_failure_tracker()
         )
+        self._broker_calls = (
+            broker_calls
+            if broker_calls is not None
+            and asyncio.iscoroutinefunction(getattr(broker_calls, "__call__", None))
+            else None
+        )
+
+    async def _call_broker(self, func: Any, *args: Any, **kwargs: Any) -> Any:
+        broker_calls = self._broker_calls
+        if broker_calls is not None:
+            return await broker_calls(func, *args, **kwargs)
+        return await asyncio.to_thread(func, *args, **kwargs)
 
     def validate_exchange_rules(
         self,
@@ -446,8 +459,7 @@ class OrderValidator:
         try:
             tif_value = tif if isinstance(tif, TimeInForce) else (tif or TimeInForce.GTC)
 
-            # Offload the blocking call to a thread
-            preview_data = await asyncio.to_thread(
+            preview_data = await self._call_broker(
                 preview_broker.preview_order,
                 symbol=symbol,
                 side=side,

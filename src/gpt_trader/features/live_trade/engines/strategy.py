@@ -158,14 +158,6 @@ class TradingEngine(BaseEngine):
         self._degradation = DegradationState()
         self._unfilled_order_alerts: dict[str, float] = {}
 
-        # Initialize equity calculator (extracted for reusability)
-        self._equity_calculator = EquityCalculator(
-            config=context.config,
-            degradation=self._degradation,
-            risk_manager=context.risk_manager,
-            price_history=self._price_tick_store.price_history,
-        )
-
         broker_calls = getattr(context, "broker_calls", None)
         if broker_calls is not None and not asyncio.iscoroutinefunction(
             getattr(broker_calls, "__call__", None)
@@ -190,6 +182,15 @@ class TradingEngine(BaseEngine):
             )
 
         self._broker_calls = broker_calls
+
+        # Initialize equity calculator (extracted for reusability)
+        self._equity_calculator = EquityCalculator(
+            config=context.config,
+            degradation=self._degradation,
+            risk_manager=context.risk_manager,
+            price_history=self._price_tick_store.price_history,
+            broker_calls=self._broker_calls,
+        )
 
         # Initialize health check runner for active /health probes
         health_state = context.container.health_state if context.container else HealthState()
@@ -308,6 +309,7 @@ class TradingEngine(BaseEngine):
                 record_preview_callback=self._order_submitter.record_preview,
                 record_rejection_callback=self._order_submitter.record_rejection,
                 failure_tracker=failure_tracker,
+                broker_calls=self._broker_calls,
             )
 
         # GuardManager: runtime guards (daily loss, liquidation buffer, volatility)

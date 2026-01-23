@@ -12,6 +12,15 @@ from gpt_trader.features.live_trade.execution.validation import OrderValidator
 from gpt_trader.features.live_trade.risk import ValidationError
 
 
+class BrokerCallsSpy:
+    def __init__(self) -> None:
+        self.calls: list[object] = []
+
+    async def __call__(self, func, *args, **kwargs):
+        self.calls.append(func)
+        return func(*args, **kwargs)
+
+
 @pytest.fixture
 def validator(
     mock_broker: MagicMock,
@@ -173,3 +182,38 @@ async def test_maybe_preview_order_async_disabled(
     )
 
     mock_broker.preview_order.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_maybe_preview_order_async_uses_broker_calls(
+    mock_risk_manager: MagicMock,
+    mock_failure_tracker: MagicMock,
+) -> None:
+    broker = MagicMock()
+    broker.preview_order = MagicMock(return_value={"estimated_fee": "0.1"})
+    broker.edit_order_preview = MagicMock()
+    broker_calls = BrokerCallsSpy()
+
+    validator = OrderValidator(
+        broker=broker,
+        risk_manager=mock_risk_manager,
+        enable_order_preview=True,
+        record_preview_callback=MagicMock(),
+        record_rejection_callback=MagicMock(),
+        failure_tracker=mock_failure_tracker,
+        broker_calls=broker_calls,
+    )
+
+    await validator.maybe_preview_order_async(
+        symbol="BTC-PERP",
+        side=OrderSide.BUY,
+        order_type=OrderType.LIMIT,
+        order_quantity=Decimal("1.0"),
+        effective_price=Decimal("50000"),
+        stop_price=None,
+        tif=TimeInForce.GTC,
+        reduce_only=False,
+        leverage=10,
+    )
+
+    assert broker_calls.calls == [broker.preview_order]

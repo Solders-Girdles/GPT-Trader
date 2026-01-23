@@ -213,7 +213,11 @@ def main() -> int:
     src_py_files = [
         path
         for path in tracked_files
-        if path.suffix == ".py" and path.parts and path.parts[0] == "src"
+        if (
+            path.suffix == ".py"
+            and path.relative_to(REPO_ROOT).parts
+            and path.relative_to(REPO_ROOT).parts[0] == "src"
+        )
     ]
     errors.extend(_check_blocking_calls_in_async(src_py_files))
     errors.extend(_check_duplicate_deploy_entrypoints(tracked_files))

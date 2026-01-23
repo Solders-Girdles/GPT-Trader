@@ -443,10 +443,10 @@ class TradingEngine(BaseEngine):
                 )
                 pending = []
 
-        for record in pending:
-            pending_by_client_id[str(record.client_order_id)] = record
-            tracked_ids.add(str(record.client_order_id))
-            tracked_ids.add(str(record.order_id))
+        for store_record in pending:
+            pending_by_client_id[str(store_record.client_order_id)] = store_record
+            tracked_ids.add(str(store_record.client_order_id))
+            tracked_ids.add(str(store_record.order_id))
 
         if not orders:
             # If the broker reports no open orders and we also have no pending persisted
@@ -480,22 +480,22 @@ class TradingEngine(BaseEngine):
                 if order_id is None or client_order_id is None:
                     continue
                 client_id_str = str(client_order_id)
-                record = pending_by_client_id.get(client_id_str)
-                if record is None:
+                pending_record = pending_by_client_id.get(client_id_str)
+                if pending_record is None:
                     continue
-                if record.order_id != record.client_order_id:
+                if pending_record.order_id != pending_record.client_order_id:
                     continue
                 order_id_str = str(order_id)
-                if order_id_str == record.order_id:
+                if order_id_str == pending_record.order_id:
                     continue
                 try:
                     updated = replace(
-                        record,
+                        pending_record,
                         order_id=order_id_str,
                         status=PersistedOrderStatus.OPEN,
                         updated_at=now,
                         metadata={
-                            **(record.metadata or {}),
+                            **(pending_record.metadata or {}),
                             "source": "order_audit",
                             "note": "normalized_submit_id_to_order_id",
                         },

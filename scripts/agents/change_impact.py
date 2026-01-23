@@ -22,7 +22,6 @@ import json
 import re
 import subprocess
 import sys
-from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
@@ -158,8 +157,6 @@ def load_source_test_map() -> dict[str, Any] | None:
 
 def find_test_file(source_file: str) -> str | None:
     """Find the corresponding test file for a source file."""
-    source_path = Path(source_file)
-
     # Direct mapping based on path prefixes
     for src_prefix, test_prefix in PATH_TO_TEST_MAPPING.items():
         if source_file.startswith(src_prefix):

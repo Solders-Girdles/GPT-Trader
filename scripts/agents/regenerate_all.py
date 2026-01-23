@@ -21,8 +21,7 @@ import sys
 import time
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Final
-from typing import NamedTuple
+from typing import Final, NamedTuple
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 

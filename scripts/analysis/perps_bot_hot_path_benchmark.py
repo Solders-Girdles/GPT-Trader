@@ -19,10 +19,10 @@ import argparse
 import asyncio
 import statistics
 import time
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
-from collections.abc import Iterable
 
 
 @dataclass

@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import json
+import logging
 import signal
 import sys
 import time
@@ -25,22 +25,17 @@ from pathlib import Path
 from typing import Any
 
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
-from rich.live import Live
-from rich.text import Text
+from rich.table import Table
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from gpt_trader.app.container import create_application_container
 from gpt_trader.app.config import BotConfig
+from gpt_trader.app.container import create_application_container
 from gpt_trader.features.brokerages.paper import HybridPaperBroker
-from gpt_trader.utilities.logging_patterns import get_logger
 
 # Disable standard logging to avoid cluttering rich output
-import logging
-
 logging.getLogger("gpt_trader").setLevel(logging.WARNING)
 
 console = Console()

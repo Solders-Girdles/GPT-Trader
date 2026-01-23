@@ -23,7 +23,6 @@ import argparse
 import json
 import sys
 from dataclasses import fields
-from decimal import Decimal
 from pathlib import Path
 from typing import Any
 

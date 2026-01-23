@@ -1,78 +1,18 @@
-"""Tests for async rate limiting, caching, and retry utilities."""
+"""Tests for async caching and retry utilities."""
 
 from __future__ import annotations
 
 import asyncio
-import time
 
 import pytest
 
 from gpt_trader.utilities.async_tools import (  # naming: allow
     AsyncBatchProcessor,
     AsyncCache,
-    AsyncRateLimiter,
     AsyncRetry,
     async_cache,
-    async_rate_limit,
     async_retry,
 )
-
-
-class TestAsyncRateLimiter:
-    """Test AsyncRateLimiter functionality."""
-
-    @pytest.mark.asyncio
-    async def test_rate_limiter_basic(self) -> None:
-        """Test basic rate limiting."""
-        limiter = AsyncRateLimiter(rate_limit=10.0, burst_limit=2)
-
-        start_time = time.time()
-
-        # Should allow first two requests immediately
-        await limiter.acquire()
-        await limiter.acquire()
-
-        # Third request should be delayed
-        await limiter.acquire()
-
-        elapsed = time.time() - start_time
-        assert elapsed >= 0.1  # Should be delayed
-
-    @pytest.mark.asyncio
-    async def test_rate_limiter_context_manager(self) -> None:
-        """Test rate limiter as context manager."""
-        limiter = AsyncRateLimiter(rate_limit=5.0, burst_limit=1)
-
-        async with limiter:
-            # Should acquire token
-            pass
-        assert limiter.tokens == 0.0
-
-    @pytest.mark.asyncio
-    async def test_rate_limit_decorator(self) -> None:
-        """Test rate limit decorator."""
-
-        @async_rate_limit(rate_limit=10.0, burst_limit=2)
-        async def rate_limited_func(x: int) -> int:
-            return x * 2
-
-        # Should not raise exception
-        result = await rate_limited_func(5)
-        assert result == 10
-
-    @pytest.mark.asyncio
-    async def test_rate_limiter_edge_cases(self) -> None:
-        """Test rate limiter edge cases."""
-        # Very high rate limit should not delay
-        limiter = AsyncRateLimiter(rate_limit=1000.0, burst_limit=10)
-
-        start_time = time.time()
-        for _ in range(5):
-            await limiter.acquire()
-        elapsed = time.time() - start_time
-
-        # Should be very fast
-        assert elapsed < 0.1
 
 
 class TestAsyncCache:

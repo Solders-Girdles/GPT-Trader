@@ -42,11 +42,11 @@ from gpt_trader.backtesting.engine.bar_runner import (
     FundingProcessor,
     IHistoricalDataProvider,
 )
-from gpt_trader.backtesting.metrics.risk import RiskMetrics, calculate_risk_metrics
-from gpt_trader.backtesting.metrics.statistics import TradeStatistics, calculate_trade_statistics
+from gpt_trader.backtesting.metrics.risk import calculate_risk_metrics
+from gpt_trader.backtesting.metrics.statistics import calculate_trade_statistics
 from gpt_trader.backtesting.simulation.broker import SimulatedBroker
 from gpt_trader.backtesting.types import FeeTier, SimulationConfig
-from gpt_trader.core import Candle, OrderSide, OrderType, Product, Quote
+from gpt_trader.core import Candle, OrderSide, OrderType, Product
 from gpt_trader.persistence.event_store import EventStore
 
 CHAOS_SCENARIO_FACTORIES = {
@@ -614,38 +614,38 @@ def print_results(result: StressTestResult) -> None:
     print("PAPER TRADE STRESS TEST RESULTS")
     print("=" * 60)
 
-    print(f"\n📊 Simulation Summary")
+    print("\n📊 Simulation Summary")
     print(f"   Duration: {result.simulation_days} days ({result.bars_processed:,} bars)")
     print(f"   Wall time: {result.wall_time_seconds:.1f} seconds")
     print(f"   Speed: {result.bars_processed / result.wall_time_seconds:,.0f} bars/sec")
 
-    print(f"\n💰 Performance")
+    print("\n💰 Performance")
     print(f"   Initial Equity: ${result.initial_equity:,.2f}")
     print(f"   Final Equity:   ${result.final_equity:,.2f}")
     print(f"   Total Return:   {result.total_return_pct:+.2f}%")
     print(f"   Max Drawdown:   {result.max_drawdown_pct:.2f}%")
 
-    print(f"\n📈 Trade Statistics")
+    print("\n📈 Trade Statistics")
     print(f"   Total Trades: {result.total_trades}")
     print(f"   Winners: {result.winning_trades}")
     print(f"   Losers:  {result.losing_trades}")
     print(f"   Win Rate: {result.win_rate:.1f}%")
 
-    print(f"\n💸 Costs")
+    print("\n💸 Costs")
     print(f"   Total Fees Paid: ${result.total_fees:,.2f}")
     print(f"   Total Fees Pct:  {result.total_fees_pct:.2f}%")
     print(f"   Funding PnL:     ${result.funding_pnl:+,.2f}")
     print(f"   Funding Drag:    {result.funding_drag_pct:.2f}%")
 
-    print(f"\n📉 Risk Metrics")
+    print("\n📉 Risk Metrics")
     if result.sharpe_ratio is not None:
         print(f"   Sharpe Ratio:  {result.sharpe_ratio:.2f}")
     else:
-        print(f"   Sharpe Ratio:  N/A (insufficient data)")
+        print("   Sharpe Ratio:  N/A (insufficient data)")
     if result.sortino_ratio is not None:
         print(f"   Sortino Ratio: {result.sortino_ratio:.2f}")
     else:
-        print(f"   Sortino Ratio: N/A (insufficient data)")
+        print("   Sortino Ratio: N/A (insufficient data)")
 
     if result.chaos_enabled:
         print("\nChaos Injection")
@@ -659,11 +659,11 @@ def print_results(result: StressTestResult) -> None:
             print(f"   Events By Type: {events_by_type}")
 
     if result.events_persisted > 0:
-        print(f"\n💾 Persistence")
+        print("\n💾 Persistence")
         print(f"   Events Persisted: {result.events_persisted:,}")
         print(f"   Validation: {'✅ PASSED' if result.persistence_validated else '❌ FAILED'}")
 
-    print(f"\n✅ Validation")
+    print("\n✅ Validation")
     if result.all_validations_passed:
         print("   All validations PASSED")
     else:

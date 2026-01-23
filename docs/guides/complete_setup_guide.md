@@ -113,7 +113,6 @@ CFM_ENABLED=0           # enable CFM futures (US) when approved
 
 # INTX perps (international) - only if Coinbase approves INTX access
 COINBASE_ENABLE_INTX_PERPS=0
-# Legacy alias (still supported): COINBASE_ENABLE_DERIVATIVES=0
 
 # Optional: enable paper/mock mode without real orders
 # PERPS_PAPER=1

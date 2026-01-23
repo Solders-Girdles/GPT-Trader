@@ -33,7 +33,7 @@ The integration supports both Coinbase API modes:
 
 3. Spot-First (Recommended If Not INTX-Eligible)
    - Default symbols now use spot pairs (e.g., `BTC-USD`).
-   - Perpetuals are blocked unless `COINBASE_ENABLE_DERIVATIVES=1` is set and your account is eligible.
+   - Perpetuals are blocked unless `COINBASE_ENABLE_INTX_PERPS=1` is set and your account is eligible.
    - Error messages guide you to switch to spot symbols if a `-PERP` product is used inadvertently.
 
 ### Critical Fixes Applied
@@ -132,7 +132,7 @@ pytest tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_auth.py 
 
 1. **INTX Eligibility for Perps**
    - Placing orders for Coinbase Perpetuals requires a Coinbase International Exchange (INTX) account and API keys created at international.coinbase.com.
-   - If you are not eligible for INTX, keep `COINBASE_ENABLE_DERIVATIVES=0` and use spot symbols like `BTC-USD`.
+   - If you are not eligible for INTX, keep `COINBASE_ENABLE_INTX_PERPS=0` and use spot symbols like `BTC-USD`.
 
 2. **Sandbox Limitations**
    - Advanced Trade API does not have an authenticated sandbox

@@ -6,7 +6,7 @@ from decimal import Decimal
 from unittest.mock import MagicMock
 
 import pytest
-from strategy_engine_chaos_fixtures import make_position
+from strategy_engine_chaos_helpers import make_position
 
 import gpt_trader.security.security_validator as security_validator_module
 from gpt_trader.core import Balance, OrderSide, OrderType, Product

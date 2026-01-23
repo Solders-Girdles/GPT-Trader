@@ -7,7 +7,7 @@ from decimal import Decimal
 from unittest.mock import MagicMock
 
 import pytest
-from strategy_engine_chaos_fixtures import make_position
+from strategy_engine_chaos_helpers import make_position
 from tests.support.chaos import ChaosBroker, api_outage_scenario, broker_read_failures_scenario
 
 from gpt_trader.features.live_trade.execution.submission_result import OrderSubmissionStatus

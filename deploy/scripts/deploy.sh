@@ -28,11 +28,11 @@ fi
 LOG_LEVEL="${LOG_LEVEL:-INFO}"
 RUNTIME_ENV="${BOT_ENV:-$DEPLOY_ENV}"
 ENABLE_OBSERVABILITY="${ENABLE_OBSERVABILITY:-0}"
-WITH_INFRA="${WITH_INFRA:-0}"
+WITH_PROXY="${WITH_PROXY:-${WITH_INFRA:-0}}"
 
 compose() {
     local files=(-f "$COMPOSE_FILE")
-    if [[ "$DEPLOY_ENV" == "production" || "$WITH_INFRA" == "1" ]]; then
+    if [[ "$DEPLOY_ENV" == "production" || "$WITH_PROXY" == "1" ]]; then
         files+=(-f "$COMPOSE_INFRA_FILE")
     fi
     docker compose "${files[@]}" "$@"
@@ -127,10 +127,7 @@ run_stack() {
     if [[ "$ENABLE_OBSERVABILITY" == "1" ]]; then
         profiles+=(--profile observability)
     fi
-    if [[ "$WITH_INFRA" == "1" ]]; then
-        profiles+=(--profile infra)
-    fi
-    if [[ "$DEPLOY_ENV" == "production" ]]; then
+    if [[ "$DEPLOY_ENV" == "production" || "$WITH_PROXY" == "1" ]]; then
         profiles+=(--profile production)
     fi
     ENV="$RUNTIME_ENV" LOG_LEVEL="$LOG_LEVEL" compose "${profiles[@]}" up -d
@@ -163,19 +160,12 @@ display_info() {
     echo ""
     echo "Services:"
     echo "  - Trading bot: http://localhost:8080"
-    if [[ "$DEPLOY_ENV" == "production" ]]; then
+    if [[ "$DEPLOY_ENV" == "production" || "$WITH_PROXY" == "1" ]]; then
         echo "  - Secure API: https://localhost:8443 (if Nginx profile enabled)"
     fi
     if [[ "$ENABLE_OBSERVABILITY" == "1" ]]; then
         echo "  - Metrics (Prometheus): http://localhost:9090"
         echo "  - Grafana: http://localhost:3000"
-    fi
-    if [[ "$WITH_INFRA" == "1" ]]; then
-        echo "  - RabbitMQ UI: http://localhost:15672"
-        echo "  - Vault UI: http://localhost:8200"
-    fi
-    if [[ "$ENABLE_OBSERVABILITY" == "1" && ( "$DEPLOY_ENV" == "production" || "$WITH_INFRA" == "1" ) ]]; then
-        echo "  - Jaeger UI: http://localhost:16686"
     fi
     echo ""
     echo "Helpful commands (run inside $COMPOSE_DIR):"

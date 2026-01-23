@@ -19,7 +19,7 @@ consolidates:
 
 ## Overview
 
-This is the complete, consolidated reference for Coinbase integration in GPT-Trader. The bot runs **spot trading by default** using Coinbase Advanced Trade, supports **CFM futures (US)** when enabled via `TRADING_MODES=cfm` + `CFM_ENABLED=1`, and keeps **INTX perpetuals** in a **future-ready** state that activates only when Coinbase grants INTX access and `COINBASE_ENABLE_INTX_PERPS=1` (legacy: `COINBASE_ENABLE_DERIVATIVES=1`) is set.
+This is the complete, consolidated reference for Coinbase integration in GPT-Trader. The bot runs **spot trading by default** using Coinbase Advanced Trade, supports **CFM futures (US)** when enabled via `TRADING_MODES=cfm` + `CFM_ENABLED=1`, and keeps **INTX perpetuals** in a **future-ready** state that activates only when Coinbase grants INTX access and `COINBASE_ENABLE_INTX_PERPS=1` is set.
 
 ## Table of Contents
 
@@ -43,15 +43,14 @@ COINBASE_CREDENTIALS_FILE=/path/to/cdp_key.json
 # COINBASE_CDP_PRIVATE_KEY="-----BEGIN EC PRIVATE KEY-----\n...\n-----END EC PRIVATE KEY-----"
 TRADING_MODES=spot
 CFM_ENABLED=0
-COINBASE_ENABLE_INTX_PERPS=0  # legacy: COINBASE_ENABLE_DERIVATIVES
+COINBASE_ENABLE_INTX_PERPS=0
 
 # INTX perps (INTX accounts only)
 # COINBASE_ENABLE_INTX_PERPS=1
 # COINBASE_PROD_CDP_API_KEY=organizations/{org_id}/apiKeys/{key_id}
 # COINBASE_PROD_CDP_PRIVATE_KEY="-----BEGIN EC PRIVATE KEY-----\n...\n-----END EC PRIVATE KEY-----"
 
-# Legacy env var names (JWT)
-# COINBASE_ENABLE_DERIVATIVES=1
+# Legacy env var names (JWT, deprecated; avoid in new configs)
 # COINBASE_API_KEY_NAME=organizations/{org_id}/apiKeys/{key_id}
 # COINBASE_PRIVATE_KEY="-----BEGIN EC PRIVATE KEY-----\n...\n-----END EC PRIVATE KEY-----"
 ```
@@ -124,7 +123,7 @@ If you need OAuth2 for a separate integration, follow the official Coinbase CDP 
 This guide covers how GPT-Trader consumes Coinbase API surfaces:
 
 - **Spot runtime**: Uses Accounts, Orders, and unauthenticated `/market/*` product endpoints. Sandbox responses are static and limited to Accounts + Orders.
-- **INTX perps runtime**: All INTX-only endpoints remain dormant until `COINBASE_ENABLE_INTX_PERPS=1` (legacy: `COINBASE_ENABLE_DERIVATIVES=1`) and JWT auth is configured.
+- **INTX perps runtime**: All INTX-only endpoints remain dormant until `COINBASE_ENABLE_INTX_PERPS=1` and JWT auth is configured.
 - **Coverage tracking**: Run `uv run pytest tests/unit/gpt_trader/features/brokerages/coinbase/ -v` to verify endpoint coverage.
 
 ## Order Types & Compatibility

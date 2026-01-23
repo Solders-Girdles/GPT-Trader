@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6030,
-    "total_files": 714,
+    "total_files": 715,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -783,6 +783,7 @@
       "tests/unit/gpt_trader/utilities/test_async_utils_cache_and_retry.py",
       "tests/unit/gpt_trader/utilities/test_async_utils_concurrency.py",
       "tests/unit/gpt_trader/utilities/test_async_utils_gather.py",
+      "tests/unit/gpt_trader/utilities/test_async_utils_rate_limit.py",
       "tests/unit/gpt_trader/utilities/test_async_utils_scenarios.py",
       "tests/unit/gpt_trader/utilities/test_async_utils_wrappers.py",
       "tests/unit/gpt_trader/utilities/test_console_logging.py",
@@ -51358,48 +51359,8 @@
     ],
     "tests/unit/gpt_trader/utilities/test_async_utils_cache_and_retry.py": [
       {
-        "name": "TestAsyncRateLimiter::test_rate_limiter_basic",
-        "line": 25,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test basic rate limiting.",
-        "class": "TestAsyncRateLimiter"
-      },
-      {
-        "name": "TestAsyncRateLimiter::test_rate_limiter_context_manager",
-        "line": 42,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test rate limiter as context manager.",
-        "class": "TestAsyncRateLimiter"
-      },
-      {
-        "name": "TestAsyncRateLimiter::test_rate_limit_decorator",
-        "line": 52,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test rate limit decorator.",
-        "class": "TestAsyncRateLimiter"
-      },
-      {
-        "name": "TestAsyncRateLimiter::test_rate_limiter_edge_cases",
-        "line": 64,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "Test rate limiter edge cases.",
-        "class": "TestAsyncRateLimiter"
-      },
-      {
         "name": "TestAsyncCache::test_async_cache_basic",
-        "line": 82,
+        "line": 22,
         "markers": [
           "asyncio",
           "unit"
@@ -51409,7 +51370,7 @@
       },
       {
         "name": "TestAsyncCache::test_async_cache_ttl",
-        "line": 92,
+        "line": 32,
         "markers": [
           "asyncio",
           "unit"
@@ -51419,7 +51380,7 @@
       },
       {
         "name": "TestAsyncCache::test_async_cache_clear",
-        "line": 110,
+        "line": 50,
         "markers": [
           "asyncio",
           "unit"
@@ -51429,7 +51390,7 @@
       },
       {
         "name": "TestAsyncCache::test_async_cache_decorator",
-        "line": 123,
+        "line": 63,
         "markers": [
           "asyncio",
           "unit"
@@ -51439,7 +51400,7 @@
       },
       {
         "name": "TestAsyncCache::test_cache_edge_cases",
-        "line": 150,
+        "line": 90,
         "markers": [
           "asyncio",
           "unit"
@@ -51449,7 +51410,7 @@
       },
       {
         "name": "TestAsyncRetry::test_async_retry_success",
-        "line": 169,
+        "line": 109,
         "markers": [
           "asyncio",
           "unit"
@@ -51459,7 +51420,7 @@
       },
       {
         "name": "TestAsyncRetry::test_async_retry_failure",
-        "line": 187,
+        "line": 127,
         "markers": [
           "asyncio",
           "unit"
@@ -51469,7 +51430,7 @@
       },
       {
         "name": "TestAsyncRetry::test_async_retry_decorator",
-        "line": 199,
+        "line": 139,
         "markers": [
           "asyncio",
           "unit"
@@ -51479,7 +51440,7 @@
       },
       {
         "name": "TestAsyncEdgeCases::test_batch_processor_empty",
-        "line": 220,
+        "line": 160,
         "markers": [
           "asyncio",
           "unit"
@@ -51489,7 +51450,7 @@
       },
       {
         "name": "TestAsyncEdgeCases::test_retry_zero_attempts",
-        "line": 227,
+        "line": 167,
         "markers": [
           "asyncio",
           "unit"
@@ -51709,6 +51670,48 @@
         ],
         "docstring": "",
         "class": "TestAsyncPerformance"
+      }
+    ],
+    "tests/unit/gpt_trader/utilities/test_async_utils_rate_limit.py": [
+      {
+        "name": "TestAsyncRateLimiter::test_rate_limiter_basic",
+        "line": 27,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "Test basic rate limiting.",
+        "class": "TestAsyncRateLimiter"
+      },
+      {
+        "name": "TestAsyncRateLimiter::test_rate_limiter_context_manager",
+        "line": 46,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "Test rate limiter as context manager.",
+        "class": "TestAsyncRateLimiter"
+      },
+      {
+        "name": "TestAsyncRateLimiter::test_rate_limit_decorator",
+        "line": 56,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "Test rate limit decorator.",
+        "class": "TestAsyncRateLimiter"
+      },
+      {
+        "name": "TestAsyncRateLimiter::test_rate_limiter_edge_cases",
+        "line": 68,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "Test rate limiter edge cases.",
+        "class": "TestAsyncRateLimiter"
       }
     ],
     "tests/unit/gpt_trader/utilities/test_async_utils_scenarios.py": [

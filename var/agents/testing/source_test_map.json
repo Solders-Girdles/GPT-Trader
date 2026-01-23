@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 655,
+    "tests_scanned": 656,
     "source_modules": 348,
     "unresolved_modules": 3
   },
@@ -1856,6 +1856,7 @@
       "tests/unit/gpt_trader/utilities/test_async_utils_cache_and_retry.py",
       "tests/unit/gpt_trader/utilities/test_async_utils_concurrency.py",
       "tests/unit/gpt_trader/utilities/test_async_utils_gather.py",
+      "tests/unit/gpt_trader/utilities/test_async_utils_rate_limit.py",
       "tests/unit/gpt_trader/utilities/test_async_utils_scenarios.py",
       "tests/unit/gpt_trader/utilities/test_async_utils_wrappers.py"
     ],
@@ -4411,6 +4412,9 @@
       "gpt_trader.utilities.async_tools"
     ],
     "tests/unit/gpt_trader/utilities/test_async_utils_gather.py": [
+      "gpt_trader.utilities.async_tools"
+    ],
+    "tests/unit/gpt_trader/utilities/test_async_utils_rate_limit.py": [
       "gpt_trader.utilities.async_tools"
     ],
     "tests/unit/gpt_trader/utilities/test_async_utils_scenarios.py": [

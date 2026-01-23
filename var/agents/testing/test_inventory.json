@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6031,
-    "total_files": 715,
+    "total_files": 714,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -182,8 +182,7 @@
       "tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker_trading.py",
       "tests/unit/gpt_trader/backtesting/test_coinbase_historical_fetcher_edges.py",
       "tests/unit/gpt_trader/backtesting/test_guarded_backtest_flow.py",
-      "tests/unit/gpt_trader/backtesting/test_historical_data_manager_coverage_edges.py",
-      "tests/unit/gpt_trader/backtesting/test_historical_data_manager_edges.py",
+      "tests/unit/gpt_trader/backtesting/test_historical_data.py",
       "tests/unit/gpt_trader/backtesting/test_historical_data_manager_quality_edges.py",
       "tests/unit/gpt_trader/backtesting/test_simulation_basics.py",
       "tests/unit/gpt_trader/backtesting/test_types.py",
@@ -7072,49 +7071,7 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/backtesting/test_historical_data_manager_coverage_edges.py": [
-      {
-        "name": "test_identify_gaps_returns_full_range_when_no_coverage",
-        "line": 23,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_identify_gaps_returns_empty_when_range_covered",
-        "line": 31,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_identify_gaps_returns_missing_segments_for_partial_overlap",
-        "line": 42,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_load_coverage_index_invalid_json",
-        "line": 57,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_update_coverage_writes_index_file",
-        "line": 66,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/backtesting/test_historical_data_manager_edges.py": [
+    "tests/unit/gpt_trader/backtesting/test_historical_data.py": [
       {
         "name": "test_read_from_cache_invalid_json_returns_empty",
         "line": 27,
@@ -7136,6 +7093,46 @@
         "line": 92,
         "markers": [
           "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_identify_gaps_returns_full_range_when_no_coverage",
+        "line": 130,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_identify_gaps_returns_empty_when_range_covered",
+        "line": 138,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_identify_gaps_returns_missing_segments_for_partial_overlap",
+        "line": 149,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_load_coverage_index_invalid_json",
+        "line": 164,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_update_coverage_writes_index_file",
+        "line": 173,
+        "markers": [
           "unit"
         ],
         "docstring": ""

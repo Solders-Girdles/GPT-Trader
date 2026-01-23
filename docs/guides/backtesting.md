@@ -88,7 +88,7 @@ This API surface ensures **zero logic drift** between live and backtest environm
 Time-based replay engine that feeds historical bars to the strategy coordinator.
 
 **Features:**
-- Configurable granularity (1m, 5m, 1h, 1d)
+- Configurable granularity (`ONE_MINUTE`, `FIVE_MINUTE`, `ONE_HOUR`, `ONE_DAY`, etc.)
 - Clock control (real-time, 10x, 100x, instant)
 - Symbol alignment (synchronize bars across multiple products)
 - Event hooks (on_bar_start, on_bar_end)
@@ -96,15 +96,18 @@ Time-based replay engine that feeds historical bars to the strategy coordinator.
 **Usage:**
 ```python
 runner = ClockedBarRunner(
-    data_manager=historical_data,
-    granularity="5m",
+    data_provider=data_provider,
+    symbols=["BTC-PERP-USDC", "ETH-PERP-USDC"],
+    granularity="FIVE_MINUTE",
     start_date=datetime(2024, 1, 1),
     end_date=datetime(2024, 3, 31),
     clock_speed=ClockSpeed.INSTANT,
 )
 
-async for bar_time, bars in runner.run():
+async for bar_time, bars, quotes in runner.run():
     # bars: dict[str, Candle] - one per symbol
+    for symbol, bar in bars.items():
+        broker.update_bar(symbol, bar)
     await strategy_coordinator.run_cycle()
 ```
 

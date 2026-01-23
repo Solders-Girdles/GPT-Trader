@@ -2233,10 +2233,12 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager.py
-    expected_file_delta: -2
+    expected_file_delta: -1
     priority: low
-    rationale: Consolidate 3 test files into single parametrized file
-    status: pending
+    rationale: Consolidated runtime orchestration into core suite while keeping execution tests separate
+    status: done
+    owner: codex
+    pr_url: https://github.com/Solders-Girdles/GPT-Trader/pull/403
     added: '2026-01-21'
   8a1e11aeca85:
     type: similar_names

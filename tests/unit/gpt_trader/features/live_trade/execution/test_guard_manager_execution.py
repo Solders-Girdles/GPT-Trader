@@ -6,10 +6,10 @@ import pytest
 
 import gpt_trader.features.live_trade.execution.guard_manager as guard_manager_module
 import gpt_trader.features.live_trade.execution.guards.pnl_telemetry as pnl_telemetry_module
-from gpt_trader.features.live_trade.execution.guard_manager import GuardManager
 from gpt_trader.features.live_trade.guard_errors import (
     RiskGuardActionError,
     RiskGuardComputationError,
+    RiskGuardDataUnavailable,
     RiskGuardTelemetryError,
 )
 
@@ -35,30 +35,6 @@ def test_cancel_all_orders_partial_failure(guard_manager, mock_broker):
     assert "order2" not in guard_manager.open_orders
 
 
-def test_cancel_all_orders_none_cancelled(guard_manager, mock_broker):
-    mock_broker.cancel_order.return_value = False
-
-    cancelled_count = guard_manager.cancel_all_orders()
-
-    assert cancelled_count == 0
-    guard_manager._invalidate_cache_callback.assert_not_called()
-
-
-def test_cancel_all_orders_empty_list(mock_broker, mock_risk_manager, mock_equity_calculator):
-    gm = GuardManager(
-        broker=mock_broker,
-        risk_manager=mock_risk_manager,
-        equity_calculator=mock_equity_calculator,
-        open_orders=[],
-        invalidate_cache_callback=MagicMock(),
-    )
-
-    cancelled_count = gm.cancel_all_orders()
-
-    assert cancelled_count == 0
-    mock_broker.cancel_order.assert_not_called()
-
-
 def test_cancel_all_orders_uses_broker_list_orders(guard_manager, mock_broker):
     mock_broker.list_orders = MagicMock(
         return_value={"orders": [{"id": "order3"}, {"id": "order4"}]}
@@ -71,20 +47,6 @@ def test_cancel_all_orders_uses_broker_list_orders(guard_manager, mock_broker):
     cancelled_ids = [call_args[0][0] for call_args in mock_broker.cancel_order.call_args_list]
     assert cancelled_ids == ["order3", "order4"]
     assert guard_manager.open_orders == []
-
-
-def test_safe_run_runtime_guards_success(guard_manager, monkeypatch: pytest.MonkeyPatch):
-    mock_run = MagicMock()
-    monkeypatch.setattr(guard_manager, "run_runtime_guards", mock_run)
-    guard_manager.safe_run_runtime_guards()
-    mock_run.assert_called_once_with(force_full=False)
-
-
-def test_safe_run_runtime_guards_force_full(guard_manager, monkeypatch: pytest.MonkeyPatch):
-    mock_run = MagicMock()
-    monkeypatch.setattr(guard_manager, "run_runtime_guards", mock_run)
-    guard_manager.safe_run_runtime_guards(force_full=True)
-    mock_run.assert_called_once_with(force_full=True)
 
 
 def test_safe_run_runtime_guards_recoverable_error(
@@ -209,3 +171,68 @@ def test_log_guard_telemetry_failure_raises(guard_manager, sample_guard_state, p
         guard_manager.log_guard_telemetry(sample_guard_state)
 
     assert "BTC-PERP" in str(exc_info.value.details)
+
+
+class TestGuardManagerEdgeCases:
+    def test_data_unavailable_is_recorded_and_surfaces(
+        self, guard_manager, sample_guard_state, monkeypatch: pytest.MonkeyPatch
+    ):
+        error = RiskGuardDataUnavailable(
+            guard_name="test_guard",
+            message="Data temporarily unavailable",
+            details={"reason": "network"},
+        )
+        func = MagicMock(side_effect=error)
+
+        mock_record = MagicMock()
+        monkeypatch.setattr(guard_manager_module, "record_guard_failure", mock_record)
+
+        guard_manager.run_guard_step("test_guard", func)
+
+        mock_record.assert_called_once()
+        recorded_error = mock_record.call_args[0][0]
+        assert recorded_error.guard_name == "test_guard"
+        assert recorded_error.recoverable is True
+
+    def test_guard_order_is_stable(self, guard_manager):
+        expected_order = [
+            "pnl_telemetry",
+            "daily_loss",
+            "liquidation_buffer",
+            "mark_staleness",
+            "risk_metrics",
+            "volatility_circuit_breaker",
+            "api_health",
+        ]
+
+        actual_order = [guard.name for guard in guard_manager._guards]
+        assert actual_order == expected_order
+
+    def test_run_guards_for_state_stops_on_unrecoverable_error(
+        self, guard_manager, sample_guard_state
+    ):
+        call_order: list[str] = []
+
+        def make_check(name: str, should_fail: bool = False):
+            def check(state, incremental: bool = False):
+                call_order.append(name)
+                if should_fail:
+                    raise RiskGuardActionError(
+                        guard_name=name,
+                        message="Fatal",
+                        details={},
+                    )
+
+            return check
+
+        guard_manager._guards = []
+        for i, name in enumerate(["guard_a", "guard_b", "guard_c"]):
+            mock_guard = MagicMock()
+            mock_guard.name = name
+            mock_guard.check = make_check(name, should_fail=(i == 1))
+            guard_manager._guards.append(mock_guard)
+
+        with pytest.raises(RiskGuardActionError):
+            guard_manager.run_guards_for_state(sample_guard_state, incremental=False)
+
+        assert call_order == ["guard_a", "guard_b"]

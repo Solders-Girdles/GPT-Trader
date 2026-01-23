@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6031,
-    "total_files": 718,
+    "total_files": 717,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -378,7 +378,6 @@
       "tests/unit/gpt_trader/features/live_trade/execution/test_get_validation_metrics.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_execution.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_runtime.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_liquidation_buffer_guard.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_mark_staleness_and_risk_metrics_guard.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder.py",
@@ -20217,7 +20216,7 @@
       },
       {
         "name": "test_collect_runtime_guard_state_with_positions",
-        "line": 83,
+        "line": 80,
         "markers": [
           "unit"
         ],
@@ -20225,7 +20224,7 @@
       },
       {
         "name": "test_collect_runtime_guard_state_uses_broker_pnl",
-        "line": 94,
+        "line": 90,
         "markers": [
           "unit"
         ],
@@ -20233,7 +20232,7 @@
       },
       {
         "name": "test_collect_runtime_guard_state_fallback_equity",
-        "line": 108,
+        "line": 106,
         "markers": [
           "unit"
         ],
@@ -20241,7 +20240,71 @@
       },
       {
         "name": "test_collect_runtime_guard_state_handles_position_errors",
-        "line": 119,
+        "line": 117,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_run_guards_for_state_calls_all_guards",
+        "line": 132,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_run_runtime_guards_first_run",
+        "line": 153,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_run_runtime_guards_incremental",
+        "line": 167,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_run_runtime_guards_force_full",
+        "line": 185,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_cancel_all_orders_none_cancelled",
+        "line": 204,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_cancel_all_orders_empty_list",
+        "line": 213,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_safe_run_runtime_guards_success",
+        "line": 228,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_safe_run_runtime_guards_force_full",
+        "line": 235,
         "markers": [
           "unit"
         ],
@@ -20266,7 +20329,7 @@
         "docstring": ""
       },
       {
-        "name": "test_cancel_all_orders_none_cancelled",
+        "name": "test_cancel_all_orders_uses_broker_list_orders",
         "line": 38,
         "markers": [
           "unit"
@@ -20274,40 +20337,8 @@
         "docstring": ""
       },
       {
-        "name": "test_cancel_all_orders_empty_list",
-        "line": 47,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_cancel_all_orders_uses_broker_list_orders",
-        "line": 62,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_safe_run_runtime_guards_success",
-        "line": 76,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_safe_run_runtime_guards_force_full",
-        "line": 83,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
         "name": "test_safe_run_runtime_guards_recoverable_error",
-        "line": 90,
+        "line": 52,
         "markers": [
           "unit"
         ],
@@ -20315,7 +20346,7 @@
       },
       {
         "name": "test_safe_run_runtime_guards_unrecoverable_error",
-        "line": 102,
+        "line": 64,
         "markers": [
           "unit"
         ],
@@ -20323,7 +20354,7 @@
       },
       {
         "name": "test_safe_run_runtime_guards_unexpected_error",
-        "line": 115,
+        "line": 77,
         "markers": [
           "unit"
         ],
@@ -20331,7 +20362,7 @@
       },
       {
         "name": "test_safe_run_runtime_guards_reduce_only_failure",
-        "line": 122,
+        "line": 84,
         "markers": [
           "unit"
         ],
@@ -20339,7 +20370,7 @@
       },
       {
         "name": "test_run_guard_step_success",
-        "line": 156,
+        "line": 118,
         "markers": [
           "unit"
         ],
@@ -20347,7 +20378,7 @@
       },
       {
         "name": "test_run_guard_step_recoverable_error",
-        "line": 165,
+        "line": 127,
         "markers": [
           "unit"
         ],
@@ -20355,7 +20386,7 @@
       },
       {
         "name": "test_run_guard_step_unrecoverable_error",
-        "line": 178,
+        "line": 140,
         "markers": [
           "unit"
         ],
@@ -20363,7 +20394,7 @@
       },
       {
         "name": "test_run_guard_step_unexpected_error",
-        "line": 190,
+        "line": 152,
         "markers": [
           "unit"
         ],
@@ -20371,7 +20402,7 @@
       },
       {
         "name": "test_log_guard_telemetry_success",
-        "line": 199,
+        "line": 161,
         "markers": [
           "unit"
         ],
@@ -20379,41 +20410,7 @@
       },
       {
         "name": "test_log_guard_telemetry_failure_raises",
-        "line": 205,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/execution/test_guard_manager_runtime.py": [
-      {
-        "name": "test_run_guards_for_state_calls_all_guards",
-        "line": 15,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_run_runtime_guards_first_run",
-        "line": 34,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_run_runtime_guards_incremental",
-        "line": 48,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_run_runtime_guards_force_full",
-        "line": 66,
+        "line": 167,
         "markers": [
           "unit"
         ],
@@ -20421,7 +20418,7 @@
       },
       {
         "name": "TestGuardManagerEdgeCases::test_data_unavailable_is_recorded_and_surfaces",
-        "line": 86,
+        "line": 177,
         "markers": [
           "unit"
         ],
@@ -20430,7 +20427,7 @@
       },
       {
         "name": "TestGuardManagerEdgeCases::test_guard_order_is_stable",
-        "line": 106,
+        "line": 197,
         "markers": [
           "unit"
         ],
@@ -20439,7 +20436,7 @@
       },
       {
         "name": "TestGuardManagerEdgeCases::test_run_guards_for_state_stops_on_unrecoverable_error",
-        "line": 120,
+        "line": 211,
         "markers": [
           "unit"
         ],

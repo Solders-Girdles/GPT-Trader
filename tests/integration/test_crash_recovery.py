@@ -10,13 +10,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from gpt_trader.app import container as app_container
 from gpt_trader.app.config import BotConfig
-from gpt_trader.app.container import (
-    ApplicationContainer,
-    clear_application_container,
-    get_application_container,
-    set_application_container,
-)
 from gpt_trader.features.live_trade.engines.base import CoordinatorContext
 from gpt_trader.features.live_trade.engines.strategy import TradingEngine
 from gpt_trader.persistence.event_store import EventStore
@@ -28,10 +23,10 @@ pytestmark = pytest.mark.integration
 def setup_container():
     """Set up application container for TradingEngine tests."""
     config = BotConfig(symbols=["BTC-USD"], interval=1, mock_broker=True)
-    container = ApplicationContainer(config)
-    set_application_container(container)
+    container = app_container.ApplicationContainer(config)
+    app_container.set_application_container(container)
     yield
-    clear_application_container()
+    app_container.clear_application_container()
 
 
 def create_test_config(symbols: list[str] | None = None) -> BotConfig:
@@ -47,7 +42,7 @@ def create_test_context(
     config: BotConfig, event_store: EventStore | None = None
 ) -> CoordinatorContext:
     """Create a CoordinatorContext for testing."""
-    container = get_application_container()
+    container = app_container.get_application_container()
     return CoordinatorContext(
         config=config,
         container=container,

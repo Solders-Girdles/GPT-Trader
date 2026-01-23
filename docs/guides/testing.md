@@ -196,6 +196,14 @@ make test-integration-fast
 make test
 ```
 
+## Snapshot Tests
+
+Snapshot tests should run separately from xdist to avoid flaky UI snapshots.
+
+```bash
+make test-snapshots
+```
+
 ## Guardrails
 
 This repo enforces lightweight hygiene checks in CI to keep the suite fast and maintainable:

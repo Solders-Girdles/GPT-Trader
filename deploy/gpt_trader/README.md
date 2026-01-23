@@ -4,8 +4,8 @@ This directory hosts the active Docker assets for the gpt_trader trading system.
 multi-stage Dockerfile builds uv-managed dependencies and exposes
 separate targets for development, testing, production, and optional security scanning. The base
 compose file (`docker/docker-compose.yaml`) now focuses on the essentials: the trading bot and
-opt-in Prometheus/Grafana metrics via the `observability` profile. Heavier infrastructure blocks
-are available through the optional `docker-compose.infrastructure.yaml` override.
+opt-in Prometheus/Grafana metrics via the `observability` profile. The production reverse proxy
+(Nginx) lives in the optional `docker-compose.infrastructure.yaml` override.
 
 ## Image Targets
 The Dockerfile defines several stages selectable via the `BUILD_TARGET` build argument:
@@ -30,8 +30,7 @@ file in the same directory. Base stack variables:
 - `ENV` and `LOG_LEVEL`: forwarded to the bot runtime.
 - `GF_SECURITY_ADMIN_*`: default Grafana credentials when you enable the observability profile.
 
-Override-specific environment variables (database, Redis, RabbitMQ, Vault secrets) only apply
-when you include `docker-compose.infrastructure.yaml`.
+Override-specific settings only apply when you include `docker-compose.infrastructure.yaml`.
 
 ### Development Quick Start
 ```bash
@@ -45,25 +44,13 @@ The trading bot container binds the repository root into `/app` for rapid iterat
 just that container after making code changes: `docker compose restart trading-bot`.
 No profile flag is required in the trimmed stack—the bot starts by default.
 
-Need the historical databases, queues, or Vault mock? Layer the override on top:
+Need the production reverse proxy (Nginx)? Layer the override on top:
 
 ```bash
 docker compose \
   -f docker-compose.yaml \
   -f docker-compose.infrastructure.yaml \
-  --profile infra \
-  up -d
-```
-
-Enable the `observability` profile alongside the override if you also want Elasticsearch/Kibana
-and Jaeger:
-
-```bash
-docker compose \
-  -f docker-compose.yaml \
-  -f docker-compose.infrastructure.yaml \
-  --profile observability \
-  --profile infra \
+  --profile production \
   up -d
 ```
 
@@ -72,8 +59,6 @@ docker compose \
   Nginx reverse proxy.
 - Switch `BUILD_TARGET=production` and remove the source bind mount (edit the compose file or
   supply an additional override file) before shipping images to a registry.
-- Vault, RabbitMQ, Redis, and PostgreSQL credentials should be replaced with hardened values
-  when the override stack is in play.
 
 ### Deployment Script
 - `deploy/scripts/deploy.sh` wraps the build, backup, and stack startup steps.
@@ -81,9 +66,7 @@ docker compose \
 - Override the Dockerfile stage with `BUILD_TARGET=development|testing|production`.
 
 ## Monitoring & Observability
-Prometheus and Grafana are part of the base stack (use `--profile observability`). Elasticsearch,
-Kibana, and Jaeger remain available through the infrastructure override for teams that still need
-their historical traces and log searches.
+Prometheus and Grafana are part of the base stack (use `--profile observability`).
 
 ## Migrating from the Legacy Stack
 If you previously relied on `deploy/docker/`, migrate to `deploy/gpt_trader/docker`.

@@ -6,6 +6,7 @@ from decimal import Decimal
 from unittest.mock import MagicMock
 
 import pytest
+from strategy_engine_chaos_helpers import make_position
 
 from gpt_trader.app.config import BotConfig, BotRiskConfig
 from gpt_trader.app.container import (
@@ -13,22 +14,10 @@ from gpt_trader.app.container import (
     clear_application_container,
     set_application_container,
 )
-from gpt_trader.core import Balance, Position
+from gpt_trader.core import Balance
 from gpt_trader.features.live_trade.engines.base import CoordinatorContext
 from gpt_trader.features.live_trade.engines.strategy import TradingEngine
 from gpt_trader.features.live_trade.strategies.perps_baseline import Action, Decision
-
-
-def make_position(symbol: str = "BTC-USD", qty: str = "1.0", side: str = "long") -> Position:
-    return Position(
-        symbol=symbol,
-        quantity=Decimal(qty),
-        entry_price=Decimal("40000"),
-        mark_price=Decimal("50000"),
-        unrealized_pnl=Decimal("10000"),
-        realized_pnl=Decimal("0"),
-        side=side,
-    )
 
 
 @pytest.fixture

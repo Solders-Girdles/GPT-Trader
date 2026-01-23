@@ -73,7 +73,7 @@ last-updated: 2025-11-24
 - [Environment Template](../config/environments/.env.template) - All configuration options
 - Default: Spot trading with JWT authentication
 - CFM futures (US) require `TRADING_MODES=cfm` + `CFM_ENABLED=1`
-- INTX perps require `COINBASE_ENABLE_INTX_PERPS=1` (legacy alias `COINBASE_ENABLE_DERIVATIVES`)
+- INTX perps require `COINBASE_ENABLE_INTX_PERPS=1`
 
 ## Additional Resources
 

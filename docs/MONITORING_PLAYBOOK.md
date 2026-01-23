@@ -54,13 +54,7 @@ This is the canonical local monitoring stack. It provisions Grafana from
 `deploy/gpt_trader/docker/grafana/dashboards/` and uses
 `deploy/gpt_trader/docker/prometheus.minimal.yml` for Prometheus.
 
-For full stack (Elasticsearch, Kibana, Jaeger):
-```bash
-docker compose --project-directory deploy/gpt_trader/docker \
-  -f deploy/gpt_trader/docker/docker-compose.yaml \
-  -f deploy/gpt_trader/docker/docker-compose.infrastructure.yaml \
-  --profile observability up -d
-```
+The observability profile now focuses on Prometheus + Grafana only.
 
 ## Available Metrics
 

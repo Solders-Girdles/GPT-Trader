@@ -61,7 +61,7 @@ uv run pytest --cov=gpt_trader --cov-report=term-missing
 
 ## Running the Bot Locally
 
-To run the spot trading bot for development, use the `gpt-trader` command (derivatives stay gated behind INTX + `COINBASE_ENABLE_DERIVATIVES=1`):
+To run the spot trading bot for development, use the `gpt-trader` command (derivatives stay gated behind INTX + `COINBASE_ENABLE_INTX_PERPS=1`):
 
 ```bash
 uv run gpt-trader run --profile dev --dev-fast

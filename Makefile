@@ -4,7 +4,9 @@
 	agent-regenerate agent-verify agent-docs-links canary-liveness canary-liveness-check canary-daily canary-decision-traces \
 	canary-decision-trace-probe canary-runtime-info canary-stop canary-start \
 	canary-restart canary-status canary-watchdog canary-watchdog-once ops-controls-smoke \
-	test-triage test-triage-check test-unit test-property test-contract test-real-api test-integration test-integration-fast
+	test-triage test-triage-check test-unit test-property test-contract test-real-api test-integration test-integration-fast \
+	legacy-patterns \
+	test-snapshots
 
 COMPOSE_DIR=deploy/gpt_trader/docker
 COMPOSE_FILE=$(COMPOSE_DIR)/docker-compose.yaml
@@ -32,6 +34,9 @@ lint:
 typecheck:
 	uv run mypy src
 
+legacy-patterns:
+	uv run python scripts/ci/check_legacy_patterns.py
+
 test:
 	uv run pytest -q
 
@@ -58,6 +63,9 @@ test-integration:
 
 test-integration-fast:
 	uv run pytest -q -o addopts= -m "integration and not slow and not real_api" tests/integration
+
+test-snapshots:
+	uv run pytest -q -n 0 tests/unit/gpt_trader/tui/test_snapshots_*.py
 
 smoke:
 	uv run python scripts/production_preflight.py --profile dev --verbose
@@ -178,13 +186,13 @@ agent-health:
 	$(MAKE) agent-health-full
 
 agent-health-fast:
-	BROKER=coinbase COINBASE_SANDBOX=1 COINBASE_API_MODE=advanced COINBASE_ENABLE_DERIVATIVES=0 \
+	BROKER=coinbase COINBASE_SANDBOX=1 COINBASE_API_MODE=advanced COINBASE_ENABLE_INTX_PERPS=0 \
 	RISK_MAX_LEVERAGE=3 RISK_DAILY_LOSS_LIMIT=100 RISK_MAX_POSITION_PCT_PER_SYMBOL=0.10 \
 	uv run agent-health --quality-checks $(AGENT_HEALTH_FAST_QUALITY_CHECKS) \
 	--format json --output var/agents/health/health_report.json
 
 agent-health-full:
-	BROKER=coinbase COINBASE_SANDBOX=1 COINBASE_API_MODE=advanced COINBASE_ENABLE_DERIVATIVES=0 \
+	BROKER=coinbase COINBASE_SANDBOX=1 COINBASE_API_MODE=advanced COINBASE_ENABLE_INTX_PERPS=0 \
 	RISK_MAX_LEVERAGE=3 RISK_DAILY_LOSS_LIMIT=100 RISK_MAX_POSITION_PCT_PER_SYMBOL=0.10 \
 	uv run agent-health --format json --output var/agents/health/health_report.json \
 	--text-output var/agents/health/health_report.txt --pytest-args -q tests/unit

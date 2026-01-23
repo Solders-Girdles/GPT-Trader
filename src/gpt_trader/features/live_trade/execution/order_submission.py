@@ -152,6 +152,7 @@ class OrderSubmitter:
         bot_id: str,
         open_orders: list[str],
         *,
+        enable_retries: bool = False,
         orders_store: OrdersStore | None = None,
         integration_mode: bool = False,
     ) -> None:
@@ -163,6 +164,7 @@ class OrderSubmitter:
             event_store: Event store for recording
             bot_id: Bot identifier
             open_orders: List to track open order IDs
+            enable_retries: Enable broker executor retry policy for submission calls.
             integration_mode: Enable integration test mode
         """
         self.broker = broker
@@ -171,6 +173,7 @@ class OrderSubmitter:
         self.open_orders = open_orders
         self.integration_mode = integration_mode
         self.orders_store = orders_store
+        self._enable_retries = enable_retries
         self._event_recorder = OrderEventRecorder(event_store, bot_id)
         self._broker_executor = BrokerExecutor(
             cast(BrokerProtocol, broker), integration_mode=integration_mode
@@ -709,6 +712,7 @@ class OrderSubmitter:
             tif=tif,
             reduce_only=reduce_only,
             leverage=leverage,
+            use_retry=self._enable_retries,
         )
 
     def _handle_order_result(

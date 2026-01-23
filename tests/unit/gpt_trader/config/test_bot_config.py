@@ -40,6 +40,13 @@ class TestBotConfigEnvAliasing:
         config = BotConfig.from_env()
         assert config.symbols == ["BTC-USD", "SOL-USD"]
 
+    def test_order_submission_retries_enabled_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("ORDER_SUBMISSION_RETRIES_ENABLED", "1")
+        from gpt_trader.app.config.bot_config import BotConfig
+
+        config = BotConfig.from_env()
+        assert config.order_submission_retries_enabled is True
+
 
 class TestMarkStalenessGuard:
     """Tests for mark staleness guard integration."""

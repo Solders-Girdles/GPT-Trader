@@ -268,6 +268,7 @@ class TradingEngine(BaseEngine):
             event_store=event_store,
             bot_id=bot_id,
             open_orders=self._open_orders,
+            enable_retries=getattr(self.context.config, "order_submission_retries_enabled", False),
             orders_store=self._orders_store,
             integration_mode=False,
         )

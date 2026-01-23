@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6040,
+    "total_tests": 6042,
     "total_files": 716,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 5875,
+    "unit": 5877,
     "asyncio": 353,
     "parametrize": 153,
     "property": 82,
@@ -8886,8 +8886,17 @@
         "class": "TestBotConfigEnvAliasing"
       },
       {
+        "name": "TestBotConfigEnvAliasing::test_order_submission_retries_enabled_env",
+        "line": 43,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestBotConfigEnvAliasing"
+      },
+      {
         "name": "TestMarkStalenessGuard::test_check_mark_staleness_returns_true_when_no_update",
-        "line": 47,
+        "line": 54,
         "markers": [
           "unit"
         ],
@@ -8896,7 +8905,7 @@
       },
       {
         "name": "TestMarkStalenessGuard::test_check_mark_staleness_returns_false_when_fresh",
-        "line": 57,
+        "line": 64,
         "markers": [
           "unit"
         ],
@@ -8905,7 +8914,7 @@
       },
       {
         "name": "TestMarkStalenessGuard::test_check_mark_staleness_returns_true_when_expired",
-        "line": 71,
+        "line": 78,
         "markers": [
           "unit"
         ],
@@ -8914,7 +8923,7 @@
       },
       {
         "name": "TestProfileStrategyHydration::test_profile_loader_builds_strategy_config",
-        "line": 89,
+        "line": 96,
         "markers": [
           "unit"
         ],
@@ -8923,7 +8932,7 @@
       },
       {
         "name": "TestProfileStrategyHydration::test_profile_loader_builds_risk_config",
-        "line": 106,
+        "line": 113,
         "markers": [
           "unit"
         ],
@@ -8932,7 +8941,7 @@
       },
       {
         "name": "TestProfileStrategyHydration::test_paper_profile_exists",
-        "line": 119,
+        "line": 126,
         "markers": [
           "unit"
         ],
@@ -8941,7 +8950,7 @@
       },
       {
         "name": "TestProfileStrategyHydration::test_paper_profile_loads",
-        "line": 125,
+        "line": 132,
         "markers": [
           "unit"
         ],
@@ -8950,7 +8959,7 @@
       },
       {
         "name": "TestProfileStrategyHydration::test_profile_daily_loss_limit_pct_from_yaml",
-        "line": 133,
+        "line": 140,
         "markers": [
           "unit"
         ],
@@ -8959,7 +8968,7 @@
       },
       {
         "name": "TestReduceOnlyEnforcement::test_check_order_blocks_new_position_in_reduce_only",
-        "line": 145,
+        "line": 152,
         "markers": [
           "unit"
         ],
@@ -8968,7 +8977,7 @@
       },
       {
         "name": "TestReduceOnlyEnforcement::test_check_order_allows_reduce_only_order",
-        "line": 157,
+        "line": 164,
         "markers": [
           "unit"
         ],
@@ -8977,7 +8986,7 @@
       },
       {
         "name": "TestReduceOnlyEnforcement::test_daily_loss_triggers_reduce_only",
-        "line": 169,
+        "line": 176,
         "markers": [
           "unit"
         ],
@@ -20911,8 +20920,17 @@
         "class": "TestGenerateSubmitId"
       },
       {
-        "name": "TestExecuteBrokerOrder::test_normal_order_execution",
+        "name": "TestExecuteBrokerOrder::test_passes_retry_toggle_to_broker_executor",
         "line": 99,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestExecuteBrokerOrder"
+      },
+      {
+        "name": "TestExecuteBrokerOrder::test_normal_order_execution",
+        "line": 156,
         "markers": [
           "unit"
         ],
@@ -20921,7 +20939,7 @@
       },
       {
         "name": "TestExecuteBrokerOrder::test_type_error_propagates",
-        "line": 128,
+        "line": 185,
         "markers": [
           "unit"
         ],

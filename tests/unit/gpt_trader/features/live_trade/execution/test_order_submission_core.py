@@ -96,6 +96,63 @@ class TestGenerateSubmitId:
 class TestExecuteBrokerOrder:
     """Tests for _execute_broker_order method."""
 
+    def test_passes_retry_toggle_to_broker_executor(
+        self,
+        mock_broker: MagicMock,
+        mock_event_store: MagicMock,
+        open_orders: list[str],
+        mock_order: Order,
+    ) -> None:
+        submitter = OrderSubmitter(
+            broker=mock_broker,
+            event_store=mock_event_store,
+            bot_id="test-bot",
+            open_orders=open_orders,
+        )
+        submitter._broker_executor.execute_order = MagicMock(return_value=mock_order)
+
+        submitter._execute_broker_order(
+            submit_id="test-id",
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_type=OrderType.LIMIT,
+            order_quantity=Decimal("1.0"),
+            price=Decimal("50000"),
+            stop_price=None,
+            tif=TimeInForce.GTC,
+            reduce_only=False,
+            leverage=10,
+        )
+
+        assert submitter._broker_executor.execute_order.call_args.kwargs["use_retry"] is False
+
+        submitter_with_retries = OrderSubmitter(
+            broker=mock_broker,
+            event_store=mock_event_store,
+            bot_id="test-bot",
+            open_orders=open_orders,
+            enable_retries=True,
+        )
+        submitter_with_retries._broker_executor.execute_order = MagicMock(return_value=mock_order)
+
+        submitter_with_retries._execute_broker_order(
+            submit_id="test-id",
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_type=OrderType.LIMIT,
+            order_quantity=Decimal("1.0"),
+            price=Decimal("50000"),
+            stop_price=None,
+            tif=TimeInForce.GTC,
+            reduce_only=False,
+            leverage=10,
+        )
+
+        assert (
+            submitter_with_retries._broker_executor.execute_order.call_args.kwargs["use_retry"]
+            is True
+        )
+
     def test_normal_order_execution(
         self,
         submitter: OrderSubmitter,

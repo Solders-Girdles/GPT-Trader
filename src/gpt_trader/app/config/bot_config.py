@@ -180,6 +180,7 @@ class BotConfig:
     use_limit_orders: bool = False
     market_order_fallback: bool = True
     account_telemetry_interval: int | None = None
+    broker_calls_use_dedicated_executor: bool = False
 
     # System
     log_level: str = "INFO"
@@ -408,6 +409,9 @@ class BotConfig:
             status_file=os.getenv("STATUS_FILE", "var/data/status.json"),
             status_interval=parse_int_env("STATUS_INTERVAL", 60) or 60,
             status_enabled=parse_bool_env("STATUS_ENABLED", default=True),
+            broker_calls_use_dedicated_executor=parse_bool_env(
+                "BROKER_CALLS_USE_DEDICATED_EXECUTOR", default=False
+            ),
             derivatives_enabled=derivatives_enabled,
             # Inherited from RuntimeSettings
             coinbase_default_quote=os.getenv("COINBASE_DEFAULT_QUOTE", "USD"),

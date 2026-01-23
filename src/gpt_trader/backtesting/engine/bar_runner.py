@@ -50,7 +50,8 @@ class FundingProcessor:
         )
 
         async for bar_time, bars, quotes in runner.run():
-            broker.update_bar(bars, quotes, bar_time)
+            for symbol, bar in bars.items():
+                broker.update_bar(symbol, bar)
             processor.process_funding(broker, bar_time, list(bars.keys()))
             # ... strategy logic ...
     """
@@ -213,7 +214,8 @@ class ClockedBarRunner:
 
         Example:
             async for bar_time, bars, quotes in runner.run():
-                broker.update_market_data(bar_time, bars, quotes)
+                for symbol, bar in bars.items():
+                    broker.update_bar(symbol, bar)
                 await strategy_coordinator.run_cycle()
         """
         current_time = self.start_date

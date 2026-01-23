@@ -15,13 +15,18 @@ from pathlib import Path
 
 from gpt_trader.backtesting import ClockedBarRunner, SimulatedBroker
 from gpt_trader.backtesting.data import CoinbaseHistoricalFetcher, HistoricalDataManager
-from gpt_trader.backtesting.types import ClockSpeed, FeeTier
+from gpt_trader.backtesting.types import ClockSpeed, FeeTier, SimulationConfig
 from gpt_trader.core import MarketType, Product
 from gpt_trader.features.brokerages.coinbase.client.client import CoinbaseClient
 
 
 async def run_backtest_example() -> None:
     """Run a simple backtest example."""
+
+    symbols = ["BTC-PERP-USDC", "ETH-PERP-USDC"]
+    start_date = datetime(2024, 1, 1)
+    end_date = datetime(2024, 1, 31)  # One month backtest
+    granularity = "FIVE_MINUTE"
 
     # 1. Initialize Coinbase client for data fetching
     # Note: For backtesting, you can use read-only API keys
@@ -36,15 +41,21 @@ async def run_backtest_example() -> None:
     data_manager = HistoricalDataManager(fetcher=fetcher, cache_dir=data_dir)
 
     # 3. Create simulated broker
-    broker = SimulatedBroker(
+    config = SimulationConfig(
+        start_date=start_date,
+        end_date=end_date,
+        granularity=granularity,
         initial_equity_usd=Decimal("100000"),  # Start with $100k
         fee_tier=FeeTier.TIER_2,  # $50K-$100K volume tier
         slippage_bps={
             "BTC-PERP-USDC": Decimal("2"),  # 2 bps slippage for BTC
             "ETH-PERP-USDC": Decimal("2"),  # 2 bps slippage for ETH
         },
-        spread_impact_pct=Decimal("0.5"),  # Apply 50% of spread
-        enable_funding_pnl=True,  # Track funding for perps
+    )
+    broker = SimulatedBroker(
+        initial_equity_usd=config.initial_equity_usd,
+        fee_tier=config.fee_tier,
+        config=config,
     )
 
     # 4. Register products with broker
@@ -78,13 +89,12 @@ async def run_backtest_example() -> None:
     broker.register_product(eth_perp)
 
     # 5. Set up bar runner
-    symbols = ["BTC-PERP-USDC", "ETH-PERP-USDC"]
     runner = ClockedBarRunner(
         data_provider=data_manager,
         symbols=symbols,
-        granularity="FIVE_MINUTE",  # 5-minute bars
-        start_date=datetime(2024, 1, 1),
-        end_date=datetime(2024, 1, 31),  # One month backtest
+        granularity=granularity,  # 5-minute bars
+        start_date=start_date,
+        end_date=end_date,
         clock_speed=ClockSpeed.INSTANT,  # Run as fast as possible
     )
 
@@ -97,9 +107,12 @@ async def run_backtest_example() -> None:
 
     bars_processed = 0
 
-    async for bar_time, bars, quotes in runner.run():
-        # Update broker with current market data
-        broker.update_market_data(bar_time, bars, quotes)
+    async for bar_time, bars, _quotes in runner.run():
+        # Update broker with current market data.
+        #
+        # SimulatedBroker updates one symbol at a time (and synthesizes quotes).
+        for symbol, bar in bars.items():
+            broker.update_bar(symbol, bar)
 
         # Here you would normally call:
         # await strategy_coordinator.run_cycle()

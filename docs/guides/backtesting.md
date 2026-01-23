@@ -493,67 +493,56 @@ class ChaosEngine:
 
 ## Integration Example
 
+For a runnable script, see `examples/backtesting_example.py`.
+
 ```python
-from gpt_trader.backtesting import (
-    SimulatedBroker,
-    HistoricalDataManager,
-    ClockedBarRunner,
-    GoldenPathValidator,
-)
-from gpt_trader.features.live_trade.engines.runtime.coordinator import RuntimeCoordinator
+from datetime import datetime
+from decimal import Decimal
 
-async def run_backtest():
-    # 1. Initialize historical data
-    data_manager = HistoricalDataManager(
-        cache_dir=Path("data/cache"),
-        api_client=coinbase_client,
-    )
+from gpt_trader.backtesting import ClockedBarRunner, SimulatedBroker
+from gpt_trader.backtesting.data import create_coinbase_data_provider
+from gpt_trader.backtesting.types import ClockSpeed, FeeTier, SimulationConfig
+from gpt_trader.features.brokerages.coinbase.client.client import CoinbaseClient
 
-    # 2. Create simulated broker
-    sim_broker = SimulatedBroker(
-        market_data=data_manager,
-        initial_equity=Decimal("100000"),
+
+async def run_backtest() -> None:
+    client = CoinbaseClient(api_key="...", api_secret="...")
+    data_provider = create_coinbase_data_provider(client)
+
+    symbols = ["BTC-PERP-USDC", "ETH-PERP-USDC"]
+    start_date = datetime(2024, 1, 1)
+    end_date = datetime(2024, 3, 31)
+    granularity = "FIVE_MINUTE"
+
+    config = SimulationConfig(
+        start_date=start_date,
+        end_date=end_date,
+        granularity=granularity,
+        initial_equity_usd=Decimal("100000"),
         fee_tier=FeeTier.TIER_2,
     )
+    broker = SimulatedBroker(
+        initial_equity_usd=config.initial_equity_usd,
+        fee_tier=config.fee_tier,
+        config=config,
+    )
 
-    # 3. Setup bar runner
     runner = ClockedBarRunner(
-        data_manager=data_manager,
-        symbols=["BTC-PERP-USDC", "ETH-PERP-USDC"],
-        granularity="5m",
-        start_date=datetime(2024, 1, 1),
-        end_date=datetime(2024, 3, 31),
+        data_provider=data_provider,
+        symbols=symbols,
+        granularity=granularity,
+        start_date=start_date,
+        end_date=end_date,
+        clock_speed=ClockSpeed.INSTANT,
     )
 
-    # 4. Create coordinator context (same as live!)
-    context = CoordinatorContext(
-        config=bot_config,
-        broker=sim_broker,  # Only difference!
-        risk_manager=risk_manager,
-        event_store=event_store,
-        orders_store=orders_store,
-        runtime_state=runtime_state,
-        symbols=("BTC-PERP-USDC", "ETH-PERP-USDC"),
-    )
+    async for bar_time, bars, _quotes in runner.run():
+        for symbol, bar in bars.items():
+            broker.update_bar(symbol, bar)
+        # TODO: run your strategy/executor for this timestep.
 
-    # 5. Run backtest
-    coordinator = RuntimeCoordinator()
-    coordinator.initialize(context)
-
-    async for bar_time, bars in runner.run():
-        # Update sim broker with current bars
-        sim_broker.update_market_data(bar_time, bars)
-
-        # Run strategy cycle (identical to live!)
-        await coordinator.run_cycle()
-
-    # 6. Generate report
-    report = sim_broker.generate_report()
+    report = broker.generate_report()
     print(report)
-
-# Run validation
-validator = GoldenPathValidator(event_store, sim_broker)
-await validator.validate_last_n_cycles(n=10)
 ```
 
 ## Performance Metrics

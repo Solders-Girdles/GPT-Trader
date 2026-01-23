@@ -30,6 +30,7 @@ logs/
 
 # Runtime data directories
 runtime_data/
+experiments/
 
 # Local dev artifacts
 *.tmp
@@ -56,16 +57,9 @@ archived/claudia_20250812_151036/
 *.png
 *.csv
 
-# Data outputs (keep sample universe only)
-data/**
-!data/universe/
-!data/universe/sample_universe.csv
-!data/experiments/**/run.json
-!data/optimization/config.json
+# Data outputs (local caches / generated datasets)
+data/
 data_storage/
-
-# Local data cache
-data/cache/
 
 # Security - NEVER remove these entries
 .env

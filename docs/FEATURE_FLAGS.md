@@ -44,6 +44,8 @@ Configuration values follow this precedence (highest to lowest):
 |------|------------------|---------|-----|---------|-------|
 | `enable_order_preview` | `BotConfig` | `ORDER_PREVIEW_ENABLED` | `--enable-preview` | `False` | Pre-trade validation |
 | `reduce_only_mode` | `BotConfig` | `RISK_REDUCE_ONLY_MODE` | `--reduce-only` | `False` | Only allow reducing positions |
+| `order_submission_retries_enabled` | `BotConfig` | `ORDER_SUBMISSION_RETRIES_ENABLED` | - | `False` | Retry order submissions on transient failures (off by default) |
+| `broker_calls_use_dedicated_executor` | `BotConfig` | `BROKER_CALLS_USE_DEDICATED_EXECUTOR` | - | `False` | Use a dedicated thread pool for broker calls |
 
 ### Strategy Flags
 
@@ -85,6 +87,21 @@ These flags are **canonicalized on strategy config** based on `strategy_type`:
 | Rate Limit Usage | `RISK_API_RATE_LIMIT_USAGE_THRESHOLD` | `0.9` | 90% triggers guard |
 | Vol Reduce-Only | `RISK_VOL_REDUCE_ONLY_THRESH` | `0.22` | 22% triggers reduce-only |
 | Vol Kill Switch | `RISK_VOL_KILL_SWITCH_THRESH` | `0.26` | 26% triggers kill switch |
+
+### Health Thresholds
+
+| Setting | Env Var | Default | Notes |
+|---------|---------|---------|-------|
+| Order Error Rate Warn | `HEALTH_ORDER_ERROR_RATE_WARN` | `0.05` | Warning threshold for order errors |
+| Order Error Rate Crit | `HEALTH_ORDER_ERROR_RATE_CRIT` | `0.15` | Critical threshold for order errors |
+| Order Retry Rate Warn | `HEALTH_ORDER_RETRY_RATE_WARN` | `0.10` | Warning threshold for retry rate |
+| Order Retry Rate Crit | `HEALTH_ORDER_RETRY_RATE_CRIT` | `0.25` | Critical threshold for retry rate |
+| Broker Latency Warn (ms) | `HEALTH_BROKER_LATENCY_MS_WARN` | `1000.0` | Warning threshold for broker latency |
+| Broker Latency Crit (ms) | `HEALTH_BROKER_LATENCY_MS_CRIT` | `3000.0` | Critical threshold for broker latency |
+| WS Staleness Warn (s) | `HEALTH_WS_STALENESS_SECONDS_WARN` | `30.0` | Warning threshold for WebSocket staleness |
+| WS Staleness Crit (s) | `HEALTH_WS_STALENESS_SECONDS_CRIT` | `60.0` | Critical threshold for WebSocket staleness |
+| Guard Trip Count Warn | `HEALTH_GUARD_TRIP_COUNT_WARN` | `3` | Warning threshold for guard trip count |
+| Guard Trip Count Crit | `HEALTH_GUARD_TRIP_COUNT_CRIT` | `10` | Critical threshold for guard trip count |
 
 ## Deprecated Flags
 

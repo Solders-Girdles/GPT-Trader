@@ -31,6 +31,7 @@ Implementation references:
 | Validation infra failure | ValidationFailureTracker escalation | Reduce-only + global pause | `RISK_VALIDATION_FAILURE_COOLDOWN_SECONDS` |
 | Preview failures | Preview exceptions reach threshold | Disable preview for the session | `RISK_PREVIEW_FAILURE_DISABLE_AFTER` |
 | Broker read failures | Consecutive balance/position read failures | Global pause (reduce-only allowed) | `RISK_BROKER_OUTAGE_MAX_FAILURES`, `RISK_BROKER_OUTAGE_COOLDOWN_SECONDS` |
+| Order reconciliation drift | Broker open orders include bot-owned IDs missing from open_orders/orders_store | Reduce-only + global pause after 3 consecutive detections; attempt cancels; alert operator | `ORDER_RECONCILIATION_DRIFT_MAX_FAILURES` (constant), `RISK_API_HEALTH_COOLDOWN_SECONDS` |
 | WS max reconnect | WebSocket exceeds max reconnection attempts | Global pause + callback for degradation | `GPT_TRADER_WS_RECONNECT_MAX_ATTEMPTS`, `GPT_TRADER_WS_RECONNECT_PAUSE_SECONDS` |
 
 Notes:
@@ -93,6 +94,13 @@ Health Monitoring:
 | Env Var | Default | Purpose |
 | --- | --- | --- |
 | `GPT_TRADER_HEALTH_CHECK_INTERVAL` | `30.0` | Seconds between health check runner cycles |
+
+Execution Resilience:
+
+| Env Var | Default | Purpose |
+| --- | --- | --- |
+| `ORDER_SUBMISSION_RETRIES_ENABLED` | `0` | Enable broker submission retries (off by default) |
+| `BROKER_CALLS_USE_DEDICATED_EXECUTOR` | `0` | Run broker calls in a dedicated thread pool |
 
 ## Metrics
 

@@ -142,6 +142,19 @@ uv run pytest tests/property -q
 uv run pytest tests/unit/gpt_trader/tui/test_snapshots_*.py -q
 ```
 
+### Test Guardrails
+
+- Keep `test_*.py` modules <= 240 lines unless allowlisted.
+- Patch-style mocking is blocked in `tests/`; use `monkeypatch.setattr`.
+- Avoid `time.sleep` in tests; use the `fake_clock` fixture for deterministic time.
+- Marker conventions are enforced by folder (unit/integration/contract/real_api).
+
+When you rename or move tests, regenerate the testing inventory:
+
+```bash
+uv run agent-regenerate --only testing
+```
+
 ### Agent Tools
 
 Commands for AI-assisted development:

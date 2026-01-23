@@ -17,7 +17,8 @@ import sys
 import threading
 import time
 from collections import deque
-from datetime import datetime
+from dataclasses import replace
+from datetime import datetime, timezone
 from decimal import Decimal
 from importlib import metadata
 from typing import Any
@@ -89,10 +90,21 @@ from gpt_trader.monitoring.profiling import profile_span
 from gpt_trader.monitoring.status_reporter import StatusReporter
 from gpt_trader.observability.tracing import trace_span
 from gpt_trader.persistence.event_store import EventStore
+from gpt_trader.persistence.orders_store import (
+    OrderRecord,
+)
+from gpt_trader.persistence.orders_store import (
+    OrderStatus as PersistedOrderStatus,
+)
 from gpt_trader.utilities.async_tools import BoundedToThread
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="trading_engine")
+
+# Consecutive order reconciliation drift detections required before triggering
+# an escalation (pause + reduce-only). Keep this conservative to avoid
+# flapping on transient list_orders inconsistencies.
+ORDER_RECONCILIATION_DRIFT_MAX_FAILURES = 3
 
 # Re-export for backward compatibility
 __all__ = ["TradingEngine", "EVENT_PRICE_TICK"]
@@ -157,6 +169,8 @@ class TradingEngine(BaseEngine):
         # Initialize graceful degradation state
         self._degradation = DegradationState()
         self._unfilled_order_alerts: dict[str, float] = {}
+        self._order_reconciliation_drift_failures = 0
+        self._order_reconciliation_drift_escalated = False
 
         broker_calls = getattr(context, "broker_calls", None)
         if broker_calls is not None and not asyncio.iscoroutinefunction(
@@ -395,6 +409,248 @@ class TradingEngine(BaseEngine):
             "Rehydrated open orders from persistence",
             count=len(order_ids),
             operation="order_recovery",
+        )
+
+    async def _reconcile_open_orders(self, orders: list[Any]) -> None:
+        """Reconcile internal open-order tracking with broker + persistence state.
+
+        This addresses a crash-recovery edge case: orders are persisted as pending with
+        ``order_id == client_order_id == submit_id`` before the broker responds with
+        the canonical broker order ID. After restart, rehydration can restore the
+        submit_id into ``self._open_orders``. On the next audit, we normalize tracked
+        IDs back to broker order IDs when the broker returns both IDs.
+        """
+        bot_id = str(self.context.bot_id or self.context.config.profile or "live")
+        prefix = f"{bot_id}_"
+
+        pending: list[OrderRecord] = []
+        pending_by_client_id: dict[str, OrderRecord] = {}
+        tracked_ids: set[str] = {str(order_id) for order_id in self._open_orders}
+
+        if self._orders_store is not None:
+            try:
+                pending = await self._broker_calls(
+                    self._orders_store.get_pending_orders,
+                    bot_id=bot_id or None,
+                )
+            except Exception as exc:
+                logger.warning(
+                    "Failed to load pending orders during audit",
+                    error_type=type(exc).__name__,
+                    error_message=str(exc),
+                    operation="order_reconciliation",
+                    stage="load_pending",
+                )
+                pending = []
+
+        for record in pending:
+            pending_by_client_id[str(record.client_order_id)] = record
+            tracked_ids.add(str(record.client_order_id))
+            tracked_ids.add(str(record.order_id))
+
+        if not orders:
+            # If the broker reports no open orders and we also have no pending persisted
+            # records, any tracked IDs are stale and should be cleared. If the store has
+            # pending records, keep the in-memory IDs (we may be observing eventual
+            # consistency or a transient list_orders issue).
+            if not pending and self._open_orders:
+                self._open_orders.clear()
+            self._order_reconciliation_drift_failures = 0
+            self._order_reconciliation_drift_escalated = False
+            return
+
+        order_index: dict[str, Any] = {}
+        for order in orders:
+            if order is None:
+                continue
+            order_id = self._get_order_field(order, "order_id", "id")
+            client_order_id = self._get_order_field(order, "client_order_id", "client_id")
+            if order_id is not None:
+                order_index[str(order_id)] = order
+            if client_order_id is not None:
+                order_index[str(client_order_id)] = order
+
+        # Update persisted records that are still using submit_id as order_id, now that
+        # the broker has returned the canonical order_id.
+        if self._orders_store is not None and pending_by_client_id:
+            now = datetime.now(timezone.utc)
+            for order in orders:
+                order_id = self._get_order_field(order, "order_id", "id")
+                client_order_id = self._get_order_field(order, "client_order_id", "client_id")
+                if order_id is None or client_order_id is None:
+                    continue
+                client_id_str = str(client_order_id)
+                record = pending_by_client_id.get(client_id_str)
+                if record is None:
+                    continue
+                if record.order_id != record.client_order_id:
+                    continue
+                order_id_str = str(order_id)
+                if order_id_str == record.order_id:
+                    continue
+                try:
+                    updated = replace(
+                        record,
+                        order_id=order_id_str,
+                        status=PersistedOrderStatus.OPEN,
+                        updated_at=now,
+                        metadata={
+                            **(record.metadata or {}),
+                            "source": "order_audit",
+                            "note": "normalized_submit_id_to_order_id",
+                        },
+                    )
+                    await self._broker_calls(self._orders_store.upsert_by_client_id, updated)
+                except Exception as exc:
+                    logger.warning(
+                        "Failed to persist order_id normalization",
+                        error_type=type(exc).__name__,
+                        error_message=str(exc),
+                        operation="order_reconciliation",
+                        stage="persist_normalization",
+                        client_order_id=client_id_str,
+                        order_id=order_id_str,
+                    )
+
+        # Reconcile the tracked IDs: replace submit_ids with canonical order_ids and drop
+        # IDs that are no longer open at the broker.
+        snapshot = list(self._open_orders)
+        snapshot_set = set(snapshot)
+        reconciled: list[str] = []
+        seen: set[str] = set()
+
+        def _canonical_order_id(tracked_id: str) -> str | None:
+            order = order_index.get(tracked_id)
+            if order is None:
+                return None
+            oid = self._get_order_field(order, "order_id", "id") or tracked_id
+            return str(oid)
+
+        for tracked_id in snapshot:
+            canonical = _canonical_order_id(tracked_id)
+            if canonical is None or canonical in seen:
+                continue
+            seen.add(canonical)
+            reconciled.append(canonical)
+
+        # Preserve any IDs appended while we were reconciling (e.g., order submission)
+        # without losing them via slice assignment.
+        for tracked_id in list(self._open_orders):
+            if tracked_id in snapshot_set:
+                continue
+            canonical = _canonical_order_id(tracked_id) or str(tracked_id)
+            if canonical in seen:
+                continue
+            seen.add(canonical)
+            reconciled.append(canonical)
+
+        if reconciled != snapshot:
+            self._open_orders[:] = reconciled
+
+        # Drift detection: bot-owned open orders present at the broker but not tracked in
+        # the store/open-orders list can indicate "ghost" orders after a crash.
+        unknown_bot_orders: list[str] = []
+        for order in orders:
+            client_order_id = self._get_order_field(order, "client_order_id", "client_id")
+            if client_order_id is None:
+                continue
+            client_id_str = str(client_order_id)
+            if not client_id_str.startswith(prefix):
+                continue
+            order_id = self._get_order_field(order, "order_id", "id")
+            order_id_str = str(order_id) if order_id is not None else client_id_str
+            if order_id_str in tracked_ids or client_id_str in tracked_ids:
+                continue
+            unknown_bot_orders.append(order_id_str)
+
+        if not unknown_bot_orders:
+            self._order_reconciliation_drift_failures = 0
+            self._order_reconciliation_drift_escalated = False
+            return
+
+        # Record drift event for observability.
+        payload = {
+            "timestamp": time.time(),
+            "bot_id": bot_id,
+            "unknown_bot_order_ids": unknown_bot_orders[:10],
+            "unknown_bot_order_count": len(unknown_bot_orders),
+            "open_order_count": len(orders),
+        }
+        self._append_event("order_reconciliation_drift", payload)
+        logger.warning(
+            "Order reconciliation drift detected",
+            unknown_bot_order_count=len(unknown_bot_orders),
+            open_order_count=len(orders),
+            operation="order_reconciliation",
+            stage="drift",
+        )
+
+        if self._order_reconciliation_drift_escalated:
+            return
+
+        self._order_reconciliation_drift_failures += 1
+        if self._order_reconciliation_drift_failures < ORDER_RECONCILIATION_DRIFT_MAX_FAILURES:
+            return
+
+        self._order_reconciliation_drift_escalated = True
+        await self._handle_order_reconciliation_drift(unknown_bot_orders)
+
+    async def _handle_order_reconciliation_drift(self, order_ids: list[str]) -> None:
+        """Escalate persistent order-reconciliation drift to graceful degradation."""
+        risk_manager = self.context.risk_manager
+        config = risk_manager.config if risk_manager else None
+
+        cooldown_seconds = getattr(config, "api_health_cooldown_seconds", 300) if config else 300
+        if risk_manager is not None:
+            risk_manager.set_reduce_only_mode(True, reason="order_reconciliation_drift")
+
+        broker = self.context.broker
+        cancel_order = getattr(broker, "cancel_order", None) if broker is not None else None
+        if callable(cancel_order):
+            for order_id in order_ids:
+                try:
+                    await self._broker_calls(cancel_order, order_id)
+                except Exception as exc:
+                    logger.warning(
+                        "Failed to cancel drifted order",
+                        error_type=type(exc).__name__,
+                        error_message=str(exc),
+                        operation="order_reconciliation",
+                        stage="cancel",
+                        order_id=order_id,
+                    )
+
+        self._degradation.pause_all(
+            seconds=cooldown_seconds,
+            reason="order_reconciliation_drift",
+            allow_reduce_only=True,
+        )
+
+        # Record a synthetic rejection for telemetry.
+        try:
+            self._order_submitter.record_rejection(
+                symbol="*",
+                side="*",
+                quantity=Decimal("0"),
+                price=None,
+                reason="order_reconciliation_drift",
+            )
+        except Exception:
+            pass
+
+        await self._notify(
+            title="Order Reconciliation Drift - Trading Paused",
+            message=(
+                "Detected open broker orders that appear to belong to this bot but are not tracked. "
+                f"Paused trading for {cooldown_seconds}s and enabled reduce-only mode. "
+                f"Attempted cancellation for {len(order_ids)} order(s)."
+            ),
+            severity=AlertSeverity.ERROR,
+            context={
+                "unknown_order_ids": order_ids[:10],
+                "unknown_order_count": len(order_ids),
+                "cooldown_seconds": cooldown_seconds,
+            },
         )
 
     # =========================================================================
@@ -2462,43 +2718,84 @@ class TradingEngine(BaseEngine):
 
     async def _audit_orders(self) -> None:
         """Audit open orders for reconciliation."""
-        assert self.context.broker is not None
+        broker = self.context.broker
+        if broker is None:
+            return
         try:
             # Fetch open orders
-            # Note: Coinbase API uses 'order_status' for filtering
-            # Use getattr to safely call list_orders (not part of base BrokerProtocol)
-            list_orders = getattr(self.context.broker, "list_orders", None)
-            if list_orders:
-                response = await self._broker_calls(list_orders, order_status="OPEN")
-                orders = response.get("orders", [])
+            response: Any = None
+            module_name = getattr(broker, "__module__", "")
+            if "coinbase" in module_name:
+                # Prefer Coinbase client list_orders to get the raw dict shape expected by StatusReporter.
+                client = getattr(broker, "client", None)
+                client_list_orders = getattr(client, "list_orders", None)
+                if callable(client_list_orders):
+                    response = await self._broker_calls(client_list_orders, order_status="OPEN")
+            if response is None:
+                list_orders = getattr(broker, "list_orders", None)
+                if callable(list_orders):
+                    try:
+                        response = await self._broker_calls(list_orders, order_status="OPEN")
+                    except TypeError:
+                        response = await self._broker_calls(list_orders, status=["OPEN"])
+
+            orders: list[Any]
+            if isinstance(response, dict):
+                orders = list(response.get("orders", []))
+            elif isinstance(response, list):
+                orders = list(response)
             else:
                 orders = []
 
+            await self._reconcile_open_orders(orders)
+
             if orders:
-                logger.info(f"AUDIT: Found {len(orders)} OPEN orders")
-                for order in orders:
-                    logger.info(
-                        f"  Order {order.get('order_id')}: {order.get('side')} "
-                        f"{order.get('product_id')} {order.get('order_configuration')}"
-                    )
+                logger.info(
+                    "AUDIT: Found OPEN orders",
+                    open_order_count=len(orders),
+                    operation="order_audit",
+                    stage="list",
+                )
 
             self._record_unfilled_order_alerts(orders)
 
-            # Update status reporter
-            self._status_reporter.update_orders(orders)
+            # Update status reporter (expects dict-like orders).
+            status_orders: list[dict[str, Any]] = []
+            for order in orders:
+                if isinstance(order, dict):
+                    status_orders.append(order)
+                    continue
+                status_orders.append(
+                    {
+                        "order_id": self._get_order_field(order, "order_id", "id") or "",
+                        "product_id": self._get_order_field(order, "product_id", "symbol") or "",
+                        "side": self._get_order_field(order, "side") or "",
+                        "status": self._get_order_field(order, "status") or "",
+                        "price": self._get_order_field(order, "price"),
+                        "size": self._get_order_field(order, "size", "quantity"),
+                        "created_time": self._get_order_field(order, "created_time", "created_at"),
+                        "filled_size": self._get_order_field(
+                            order, "filled_size", "filled_quantity"
+                        ),
+                        "average_filled_price": self._get_order_field(
+                            order, "average_filled_price", "avg_fill_price"
+                        ),
+                    }
+                )
+            self._status_reporter.update_orders(status_orders)
 
             # Update Account Metrics (every 60 cycles ~ 1 minute)
             if self._cycle_count % 60 == 0:
                 try:
-                    balances = await self._broker_calls(self.context.broker.list_balances)
+                    balances = await self._broker_calls(broker.list_balances)
                     # Check if broker supports transaction summary (Coinbase specific)
                     summary = {}
-                    if hasattr(self.context.broker, "client") and hasattr(
-                        self.context.broker.client, "get_transaction_summary"
+                    if hasattr(broker, "client") and hasattr(
+                        broker.client, "get_transaction_summary"
                     ):
                         try:
                             summary = await self._broker_calls(
-                                self.context.broker.client.get_transaction_summary
+                                broker.client.get_transaction_summary
                             )
                         except Exception:
                             pass  # Feature might not be available or API mode issue

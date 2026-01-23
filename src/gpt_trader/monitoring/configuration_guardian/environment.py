@@ -17,7 +17,7 @@ class EnvironmentMonitor(ConfigurationMonitor):
     """Monitors critical environment variables for runtime changes."""
 
     CRITICAL_ENV_VARS = {
-        "COINBASE_ENABLE_DERIVATIVES",
+        "COINBASE_ENABLE_INTX_PERPS",
         "SPOT_FORCE_LIVE",
         "PERPS_ENABLE_STREAMING",
     }

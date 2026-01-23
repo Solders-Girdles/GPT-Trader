@@ -784,34 +784,6 @@ MARKET_DATA_FLOW_NODES = [
         "cluster": "event_store",
     },
     {
-        "id": "strategy_orchestrator",
-        "label": "StrategyOrchestrator.process_symbol",
-        "type": "entrypoint",
-        "path": "src/gpt_trader/features/live_trade/orchestrator/orchestrator.py",
-        "cluster": "strategy",
-    },
-    {
-        "id": "context_builder",
-        "label": "ContextBuilderMixin._prepare_context",
-        "type": "context",
-        "path": "src/gpt_trader/features/live_trade/orchestrator/context.py",
-        "cluster": "strategy",
-    },
-    {
-        "id": "market_data_context",
-        "label": "MarketDataContext",
-        "type": "context",
-        "path": "src/gpt_trader/features/live_trade/strategies/base.py",
-        "cluster": "strategy",
-    },
-    {
-        "id": "decision_engine",
-        "label": "DecisionEngineMixin._resolve_decision",
-        "type": "decision",
-        "path": "src/gpt_trader/features/live_trade/orchestrator/decision.py",
-        "cluster": "strategy",
-    },
-    {
         "id": "strategy_decide",
         "label": "Strategy.decide",
         "type": "decision",
@@ -975,46 +947,6 @@ MARKET_DATA_FLOW_EDGES = [
         "from": "risk_last_mark_update",
         "to": "risk_check_mark_staleness",
         "label": "staleness input",
-    },
-    {
-        "from": "runtime_mark_windows",
-        "to": "context_builder",
-        "label": "marks",
-    },
-    {
-        "from": "runtime_orderbook_snapshots",
-        "to": "context_builder",
-        "label": "orderbook",
-    },
-    {
-        "from": "runtime_trade_aggregators",
-        "to": "context_builder",
-        "label": "trade stats",
-    },
-    {
-        "from": "risk_check_mark_staleness",
-        "to": "context_builder",
-        "label": "risk gate",
-    },
-    {
-        "from": "strategy_orchestrator",
-        "to": "context_builder",
-        "label": "build context",
-    },
-    {
-        "from": "context_builder",
-        "to": "market_data_context",
-        "label": "wrap state",
-    },
-    {
-        "from": "market_data_context",
-        "to": "decision_engine",
-        "label": "market data input",
-    },
-    {
-        "from": "decision_engine",
-        "to": "strategy_decide",
-        "label": "evaluate strategy",
     },
 ]
 
@@ -2429,7 +2361,7 @@ def build_market_data_flow_map() -> dict[str, Any]:
             "WebSocket streaming updates runtime_state for orderbook + trade flow context.",
             "Risk mark-staleness checks read LiveRiskManager.last_mark_update timestamps.",
             "EventStore persistence captures mark updates and orderbook/trade summaries.",
-            "StrategyOrchestrator consumes runtime_state to build MarketDataContext.",
+            "TradingEngine._process_symbol calls Strategy.decide with recent marks and candle context.",
         ],
     }
 

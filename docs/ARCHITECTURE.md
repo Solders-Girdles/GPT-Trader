@@ -159,9 +159,9 @@ Live trading uses a simplified engine pattern centered on `CoordinatorContext`.
 
 - `CoordinatorContext` (`src/gpt_trader/features/live_trade/engines/base.py`) - snapshot of broker, risk, stores, and notifications
 - `TradingEngine` (`src/gpt_trader/features/live_trade/engines/strategy.py`) - main trading loop and guard stack
+- `TradingEngine._process_symbol` + `Strategy.decide` (`src/gpt_trader/features/live_trade/engines/strategy.py`, `src/gpt_trader/features/live_trade/strategies/base.py`) - per-symbol decision path
 - Telemetry helpers (`src/gpt_trader/features/live_trade/engines/telemetry_health.py`, `telemetry_streaming.py`) - WS health and streaming
 - Runtime stub (`src/gpt_trader/features/live_trade/engines/runtime/coordinator.py`) - placeholder for future lifecycle splits
-- Strategy orchestration helpers (`src/gpt_trader/features/live_trade/orchestrator/`)
 
 **Lifecycle flow**
 
@@ -213,14 +213,10 @@ validation lives in `features/live_trade/execution/validation.py` and
 - **Risk metrics aggregation** (`gpt_trader/features/live_trade/execution/guards/risk_metrics.py`):
   runtime guard snapshots feed into the monitoring stack for dashboards and analytics.
 
-#### Filter Pipeline Pattern
+#### Strategy Decision Path
 
-The strategy orchestration uses a **Filter Pipeline** pattern to evaluate trade signals.
-
-- **Interface**: `Filter` (abstract base class)
-- **Implementation**: `src/gpt_trader/features/live_trade/orchestrator/spot_filters.py`
-- **Current Status**: The pipeline is currently a pass-through. Specific filter implementations (Volume, Momentum, Trend) have been removed and will be reintroduced as needed.
-- **Usage**: `SpotFiltersMixin` provides the hook for these checks.
+Strategy decisions are evaluated inside `TradingEngine._process_symbol()` using the
+strategy’s `decide()` implementation with recent marks and optional candle context.
 
 #### Signal Ensemble Architecture
 
@@ -452,13 +448,10 @@ The live trade layer provides coordinated control across trading operations thro
   - `broker_executor.py` - Broker execution abstraction
 
 **Strategy & Runtime Coordination:**
-- `features/live_trade/orchestrator/` - Strategy lifecycle management and symbol processing
-  - `orchestrator.py` - Main strategy orchestrator
-  - `decision.py` - Trading decision logic
-  - `spot_filters.py` - Spot-specific filtering rules
+- `features/live_trade/strategies/` - Strategy implementations and shared protocols
+- `features/live_trade/engines/strategy.py` - Symbol processing, decisioning, and order routing
 
 **Services & Telemetry:**
-- `features/live_trade/orchestrator/spot_profile_service.py` - Spot trading profile loading and rule management
 - `features/live_trade/telemetry/account.py` - Account metrics tracking and periodic snapshots
 - `src/gpt_trader/monitoring/system/metrics.py` - System metrics collection
 - `src/gpt_trader/monitoring/system/positions.py` - Position monitoring

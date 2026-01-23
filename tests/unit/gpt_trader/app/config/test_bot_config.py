@@ -134,30 +134,28 @@ class TestReduceOnlyModeEnvParsing:
 class TestDerivativesEnvParsing:
     """Test derivatives/perps environment flag parsing."""
 
-    def test_derivatives_enabled_prefers_intx_perps_flag(
+    def test_derivatives_enabled_when_intx_perps_flag_set(
         self, clean_env: pytest.MonkeyPatch
     ) -> None:
-        """COINBASE_ENABLE_INTX_PERPS overrides legacy COINBASE_ENABLE_DERIVATIVES."""
+        """COINBASE_ENABLE_INTX_PERPS=1 enables derivatives."""
         clean_env.setenv("COINBASE_ENABLE_INTX_PERPS", "1")
-        clean_env.setenv("COINBASE_ENABLE_DERIVATIVES", "0")
         config = BotConfig.from_env()
         assert config.derivatives_enabled is True
 
-    def test_derivatives_enabled_intx_perps_can_disable_legacy(
+    def test_derivatives_disabled_when_intx_perps_flag_unset(
         self, clean_env: pytest.MonkeyPatch
     ) -> None:
-        """COINBASE_ENABLE_INTX_PERPS=0 disables derivatives even if legacy is 1."""
-        clean_env.setenv("COINBASE_ENABLE_INTX_PERPS", "0")
-        clean_env.setenv("COINBASE_ENABLE_DERIVATIVES", "1")
+        """COINBASE_ENABLE_INTX_PERPS defaults to disabled when unset."""
         config = BotConfig.from_env()
         assert config.derivatives_enabled is False
 
-    def test_derivatives_enabled_falls_back_to_legacy(self, clean_env: pytest.MonkeyPatch) -> None:
-        """When COINBASE_ENABLE_INTX_PERPS is unset, legacy flag still works."""
-        clean_env.setenv("COINBASE_ENABLE_DERIVATIVES", "1")
-        with pytest.warns(DeprecationWarning, match="COINBASE_ENABLE_DERIVATIVES"):
-            config = BotConfig.from_env()
-        assert config.derivatives_enabled is True
+    def test_derivatives_disabled_when_intx_perps_flag_zero(
+        self, clean_env: pytest.MonkeyPatch
+    ) -> None:
+        """COINBASE_ENABLE_INTX_PERPS=0 disables derivatives."""
+        clean_env.setenv("COINBASE_ENABLE_INTX_PERPS", "0")
+        config = BotConfig.from_env()
+        assert config.derivatives_enabled is False
 
 
 class TestFromDictLegacyProfileMapping:

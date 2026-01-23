@@ -127,7 +127,7 @@ TEST_ENV_VARS = {
     "GPT_TRADER_RUNTIME_ROOT": "/tmp/test_runtime",
     "EVENT_STORE_ROOT": "/tmp/test_events",
     "COINBASE_DEFAULT_QUOTE": "usd",
-    "COINBASE_ENABLE_DERIVATIVES": "true",
+    "COINBASE_ENABLE_INTX_PERPS": "true",
     "PERPS_ENABLE_STREAMING": "true",
     "PERPS_STREAM_LEVEL": "2",
     "PERPS_PAPER": "false",

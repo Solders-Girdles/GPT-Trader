@@ -48,10 +48,6 @@ digraph MarketDataFlow {
   subgraph cluster_strategy {
     label="Strategy Inputs";
     style=rounded;
-    "strategy_orchestrator" [shape=box, label="StrategyOrchestrator.process_symbol\nsrc/gpt_trader/features/live_trade/orchestrator/orchestrator.py"];
-    "context_builder" [shape=box, label="ContextBuilderMixin._prepare_context\nsrc/gpt_trader/features/live_trade/orchestrator/context.py"];
-    "market_data_context" [shape=box, label="MarketDataContext\nsrc/gpt_trader/features/live_trade/strategies/base.py"];
-    "decision_engine" [shape=box, label="DecisionEngineMixin._resolve_decision\nsrc/gpt_trader/features/live_trade/orchestrator/decision.py"];
     "strategy_decide" [shape=box, label="Strategy.decide\nsrc/gpt_trader/features/live_trade/strategies/base.py"];
   }
   "engine_cycle" -> "fetch_batch_tickers" [label="poll tickers"];
@@ -85,12 +81,4 @@ digraph MarketDataFlow {
   "emit_orderbook_snapshot" -> "event_store_append" [label="append orderbook"];
   "emit_trade_flow_summary" -> "event_store_append" [label="append trade flow"];
   "risk_last_mark_update" -> "risk_check_mark_staleness" [label="staleness input"];
-  "runtime_mark_windows" -> "context_builder" [label="marks"];
-  "runtime_orderbook_snapshots" -> "context_builder" [label="orderbook"];
-  "runtime_trade_aggregators" -> "context_builder" [label="trade stats"];
-  "risk_check_mark_staleness" -> "context_builder" [label="risk gate"];
-  "strategy_orchestrator" -> "context_builder" [label="build context"];
-  "context_builder" -> "market_data_context" [label="wrap state"];
-  "market_data_context" -> "decision_engine" [label="market data input"];
-  "decision_engine" -> "strategy_decide" [label="evaluate strategy"];
 }

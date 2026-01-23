@@ -4,27 +4,35 @@ Strategy implementations for live and backtested trading.
 
 ## Architecture
 
-Strategies follow a common interface and receive market data from coordinator engines:
+Strategies follow a common interface and receive market data from the trading engine:
 
 ```
 strategies/
-├── perps_baseline/   # Perpetuals momentum strategy
-├── spot_baseline/    # Spot trading strategies
-└── protocols.py      # Strategy interface definitions
+├── perps_baseline/     # Perpetuals baseline strategy
+├── mean_reversion/     # Mean reversion strategy
+├── regime_switcher/    # Regime switching strategy
+├── hybrid/             # Hybrid spot/CFM strategies
+├── ensemble.py         # Signal ensemble strategy
+└── base.py             # StrategyProtocol + MarketDataContext
 ```
 
 ## Strategy Protocol
 
-All strategies implement:
+All strategies implement `StrategyProtocol` (see `base.py`):
 
 ```python
 class StrategyProtocol(Protocol):
-    def evaluate(self, market_state: MarketState) -> Signal | None:
-        """Generate trading signal from market state."""
-        ...
-
-    def configure(self, config: StrategyConfig) -> None:
-        """Apply configuration parameters."""
+    def decide(
+        self,
+        symbol: str,
+        current_mark: Decimal,
+        position_state: dict[str, Any] | None,
+        recent_marks: Sequence[Decimal],
+        equity: Decimal,
+        product: Product | None,
+        market_data: MarketDataContext | None = None,
+    ) -> Decision:
+        """Generate a trading decision."""
         ...
 ```
 
@@ -32,8 +40,9 @@ class StrategyProtocol(Protocol):
 
 | Strategy | Market | Description |
 |----------|--------|-------------|
-| `perps_baseline` | Perpetuals | Moving average crossover with momentum |
-| `spot_baseline` | Spot | Buy-and-hold with rebalancing |
+| `perps_baseline` | Perpetuals | Moving average crossover baseline |
+| `mean_reversion` | Spot/CFM | Z-score mean reversion |
+| `regime_switcher` | Spot/CFM | Regime-based strategy selection |
 
 ## Creating Custom Strategies
 
@@ -45,4 +54,4 @@ class StrategyProtocol(Protocol):
 ## Related Packages
 
 - `features/live_trade/risk/` - Pre-trade validation
-- `features/live_trade/orchestrator/` - Strategy lifecycle
+- `features/live_trade/engines/strategy.py` - Strategy evaluation and order routing

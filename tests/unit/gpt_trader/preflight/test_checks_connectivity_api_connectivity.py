@@ -42,7 +42,7 @@ class TestCheckApiConnectivity:
         # Force remote checks but no credentials
         env = {
             "COINBASE_PREFLIGHT_FORCE_REMOTE": "1",
-            "COINBASE_ENABLE_DERIVATIVES": "1",
+            "COINBASE_ENABLE_INTX_PERPS": "1",
         }
         with monkeypatch.context() as mp:
             _set_env(mp, env, clear=True)
@@ -60,7 +60,7 @@ class TestCheckApiConnectivity:
 
         env = {
             "COINBASE_PREFLIGHT_FORCE_REMOTE": "1",
-            "COINBASE_ENABLE_DERIVATIVES": "1",
+            "COINBASE_ENABLE_INTX_PERPS": "1",
         }
         with monkeypatch.context() as mp:
             _set_env(mp, env, clear=True)
@@ -83,7 +83,7 @@ class TestCheckApiConnectivity:
 
         env = {
             "COINBASE_PREFLIGHT_FORCE_REMOTE": "1",
-            "COINBASE_ENABLE_DERIVATIVES": "1",
+            "COINBASE_ENABLE_INTX_PERPS": "1",
         }
         with monkeypatch.context() as mp:
             _set_env(mp, env, clear=True)
@@ -108,7 +108,7 @@ class TestCheckApiConnectivity:
 
         env = {
             "COINBASE_PREFLIGHT_FORCE_REMOTE": "1",
-            "COINBASE_ENABLE_DERIVATIVES": "1",
+            "COINBASE_ENABLE_INTX_PERPS": "1",
         }
         with monkeypatch.context() as mp:
             _set_env(mp, env, clear=True)
@@ -152,7 +152,7 @@ class TestCheckApiConnectivity:
 
         env = {
             "COINBASE_PREFLIGHT_FORCE_REMOTE": "1",
-            "COINBASE_ENABLE_DERIVATIVES": "1",
+            "COINBASE_ENABLE_INTX_PERPS": "1",
         }
         with monkeypatch.context() as mp:
             _set_env(mp, env, clear=True)

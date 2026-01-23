@@ -31,7 +31,7 @@ def test_configuration_issue_serialization_and_repr() -> None:
         severity="high",
         recommendation="restart",
         message="Missing required env var",
-        details={"field": "COINBASE_ENABLE_DERIVATIVES"},
+        details={"field": "COINBASE_ENABLE_INTX_PERPS"},
     )
 
     payload = issue.to_dict()

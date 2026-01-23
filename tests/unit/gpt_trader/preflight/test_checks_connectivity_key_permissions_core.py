@@ -87,7 +87,7 @@ class TestCheckKeyPermissionsCore:
 
         env = {
             "COINBASE_PREFLIGHT_FORCE_REMOTE": "1",
-            "COINBASE_ENABLE_DERIVATIVES": "1",
+            "COINBASE_ENABLE_INTX_PERPS": "1",
         }
         with monkeypatch.context() as mp:
             _set_env(mp, env, clear=True)
@@ -141,7 +141,7 @@ class TestCheckKeyPermissionsCore:
 
         env = {
             "COINBASE_PREFLIGHT_FORCE_REMOTE": "1",
-            "COINBASE_ENABLE_DERIVATIVES": "0",
+            "COINBASE_ENABLE_INTX_PERPS": "0",
             "DRY_RUN": "1",
         }
         with monkeypatch.context() as mp:
@@ -174,7 +174,7 @@ class TestCheckKeyPermissionsCore:
 
         env = {
             "COINBASE_PREFLIGHT_FORCE_REMOTE": "1",
-            "COINBASE_ENABLE_DERIVATIVES": "0",
+            "COINBASE_ENABLE_INTX_PERPS": "0",
             "TRADING_MODES": "spot",
         }
         with monkeypatch.context() as mp:

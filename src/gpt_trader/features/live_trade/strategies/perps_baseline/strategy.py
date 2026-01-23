@@ -44,7 +44,7 @@ class Decision:
 class BaseStrategyConfig:
     """Common configuration for all trading strategies."""
 
-    # Moving average settings (using *_period naming for consistency with orchestrator)
+    # Moving average settings
     short_ma_period: int = 5
     long_ma_period: int = 20
 

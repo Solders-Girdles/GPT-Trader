@@ -20,7 +20,6 @@ Classification of legacy shims/fallbacks and compatibility keepers.
 | `BotConfig.from_dict` legacy profile-style YAML mapping | `src/gpt_trader/app/config/bot_config.py` | Core Config | deprecate | Emits `DeprecationWarning`; target removal in v4.0. |
 | `EventStore.events` list + `EventStore.path` JSONL alias | `src/gpt_trader/persistence/event_store.py` | Persistence | deprecate | Internal call sites now use `list_events()`/`root`; legacy properties emit deprecation warnings. |
 | `RiskConfig.daily_loss_limit` (absolute dollars) | `src/gpt_trader/features/live_trade/risk/config.py` | Risk | evaluate | Legacy absolute-dollar limit; prefer `daily_loss_limit_pct`. |
-| Legacy env var alias `COINBASE_ENABLE_DERIVATIVES` | `src/gpt_trader/app/config/bot_config.py`, `src/gpt_trader/preflight/checks/environment.py` | Core Config | deprecate | Alias for INTX/perps gating; warn when set; target removal after 2026-06-30. |
 | TUI legacy guard shapes (`active_guards`) | `src/gpt_trader/tui/state.py`, `src/gpt_trader/monitoring/status_reporter.py` | TUI | deprecate | `active_guards` removed from TUI state/output; legacy inputs are normalized into `guards`. |
 
 ### Configuration (Remove after v4.0)
@@ -67,6 +66,7 @@ Before removing any deprecated item:
 | TUI legacy preferences fallback (`config/tui_preferences.json`) | Unreleased | Use runtime preferences path or `GPT_TRADER_TUI_PREFERENCES_PATH` |
 | TUI legacy status CSS aliases (`good`/`bad`/`risk-status-*`) | Unreleased | Use `status-ok`, `status-warning`, `status-critical` |
 | TUI validation `ValidationError` alias | Unreleased | Use `FieldValidationError` |
+| `COINBASE_ENABLE_DERIVATIVES` env var alias | Unreleased | Use `COINBASE_ENABLE_INTX_PERPS` |
 | Coinbase REST legacy position dict fallback | v4.0 | Require `PositionStateStore` injection |
 | `PERPS_FORCE_MOCK` env var | v4.0 | Use `MOCK_BROKER` |
 | `SYMBOLS` env var | v4.0 | Use `TRADING_SYMBOLS` |
@@ -91,4 +91,4 @@ The entire `src/gpt_trader/orchestration/` package was removed during the DI mig
 
 ---
 
-*Last updated: 2026-01-18*
+*Last updated: 2026-01-23*

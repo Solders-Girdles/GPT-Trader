@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "description": "Catalog of structured log events in GPT-Trader",
-  "total_event_types": 132,
+  "total_event_types": 128,
   "categories": {
     "trading": [
       "cancel_order",
@@ -26,6 +26,7 @@
       "order_decision_trace",
       "order_placement",
       "order_preview",
+      "order_reconciliation",
       "order_recovery",
       "order_rejected",
       "order_route",
@@ -88,19 +89,13 @@
       "collect_runtime_guard_state",
       "config_guardian",
       "runtime_guards",
-      "runtime_start",
-      "spot_profile_service"
+      "runtime_start"
     ],
     "system": [
       "get_cfm_sweeps_schedule",
       "schedule_coroutine",
       "shutdown",
       "shutdown_tracing"
-    ],
-    "strategy": [
-      "strategy_execute",
-      "strategy_init",
-      "strategy_prepare"
     ],
     "risk": [
       "get_cfm_margin_window",
@@ -134,7 +129,6 @@
       "log_collateral_update",
       "log_submission_attempt",
       "process_rejection",
-      "process_symbol",
       "readiness_update",
       "record_decision_trace",
       "record_preview",
@@ -186,18 +180,23 @@
       ]
     },
     "health_server_start": {
-      "occurrence_count": 1,
+      "occurrence_count": 2,
       "components": null,
       "statuses": null,
       "levels": [
-        "INFO"
+        "INFO",
+        "WARNING"
       ],
       "common_fields": [
+        "error_message",
+        "error_type",
         "host",
-        "port"
+        "port",
+        "reason"
       ],
       "source_files": [
-        "app/health_server.py"
+        "app/health_server.py",
+        "cli/commands/run.py"
       ]
     },
     "health_server_stop": {
@@ -1431,6 +1430,28 @@
         "features/live_trade/engines/strategy.py"
       ]
     },
+    "order_reconciliation": {
+      "occurrence_count": 4,
+      "components": null,
+      "statuses": null,
+      "levels": [
+        "INFO",
+        "WARNING"
+      ],
+      "common_fields": [
+        "client_order_id",
+        "error_message",
+        "error_type",
+        "open_order_count",
+        "order_id",
+        "pending",
+        "stage",
+        "unknown_bot_order_count"
+      ],
+      "source_files": [
+        "features/live_trade/engines/strategy.py"
+      ]
+    },
     "streaming": {
       "occurrence_count": 2,
       "components": null,
@@ -1517,7 +1538,7 @@
       ]
     },
     "order_audit": {
-      "occurrence_count": 1,
+      "occurrence_count": 2,
       "components": null,
       "statuses": null,
       "levels": [
@@ -1525,6 +1546,7 @@
       ],
       "common_fields": [
         "audit_task",
+        "open_order_count",
         "stage"
       ],
       "source_files": [
@@ -2206,96 +2228,6 @@
         "features/live_trade/telemetry/account.py"
       ]
     },
-    "strategy_init": {
-      "occurrence_count": 2,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "INFO",
-        "WARNING"
-      ],
-      "common_fields": [
-        "PERPS_POSITION_FRACTION",
-        "position_fraction",
-        "stage",
-        "symbol"
-      ],
-      "source_files": [
-        "features/live_trade/orchestrator/initialization.py"
-      ]
-    },
-    "strategy_prepare": {
-      "occurrence_count": 3,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "DEBUG",
-        "ERROR",
-        "WARNING"
-      ],
-      "common_fields": [
-        "adjusted_equity",
-        "marks",
-        "stage",
-        "symbol"
-      ],
-      "source_files": [
-        "features/live_trade/orchestrator/context.py"
-      ]
-    },
-    "spot_profile_service": {
-      "occurrence_count": 3,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "INFO",
-        "WARNING"
-      ],
-      "common_fields": [
-        "profile_doc",
-        "profile_path",
-        "stage",
-        "symbol"
-      ],
-      "source_files": [
-        "features/live_trade/orchestrator/spot_profile_service.py"
-      ]
-    },
-    "process_symbol": {
-      "occurrence_count": 2,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "INFO"
-      ],
-      "common_fields": [
-        "None",
-        "__all__",
-        "context",
-        "error",
-        "stage",
-        "symbol"
-      ],
-      "source_files": [
-        "features/live_trade/orchestrator/orchestrator.py"
-      ]
-    },
-    "strategy_execute": {
-      "occurrence_count": 2,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR",
-        "WARNING"
-      ],
-      "common_fields": [
-        "stage",
-        "symbol"
-      ],
-      "source_files": [
-        "features/live_trade/orchestrator/orchestrator.py"
-      ]
-    },
     "api_health_guard": {
       "occurrence_count": 1,
       "components": null,
@@ -2469,28 +2401,27 @@
     }
   },
   "field_frequency": {
-    "stage": 148,
-    "error_message": 74,
-    "symbol": 70,
-    "error_type": 68,
-    "error": 41,
-    "order_id": 16,
+    "stage": 142,
+    "error_message": 78,
+    "error_type": 72,
+    "symbol": 62,
+    "error": 40,
+    "order_id": 17,
     "side": 15,
-    "reason": 13,
+    "reason": 14,
     "guard_name": 10,
     "service": 9,
     "path": 8,
     "broker": 8,
     "event_type": 5,
     "error_msg": 5,
-    "__all__": 5,
+    "client_order_id": 5,
     "granularity": 5,
     "quantity": 5,
     "consecutive_failures": 5,
     "client_ip": 4,
     "_tracer": 4,
-    "client_order_id": 4,
-    "None": 4,
+    "__all__": 4,
     "portfolio_id": 4,
     "action": 4,
     "_stream_task": 4,
@@ -2498,13 +2429,14 @@
     "severity": 4,
     "bool": 3,
     "_vault_enabled": 3,
-    "enabled": 3
+    "enabled": 3,
+    "_tracing_enabled": 3
   },
   "level_distribution": {
-    "INFO": 106,
-    "WARNING": 66,
-    "DEBUG": 49,
-    "ERROR": 81,
+    "INFO": 104,
+    "WARNING": 65,
+    "DEBUG": 48,
+    "ERROR": 79,
     "CRITICAL": 1
   }
 }

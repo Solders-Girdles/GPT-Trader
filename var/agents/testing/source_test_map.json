@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 658,
-    "source_modules": 353,
+    "tests_scanned": 655,
+    "source_modules": 348,
     "unresolved_modules": 3
   },
   "source_to_tests": {
@@ -883,23 +883,6 @@
     "gpt_trader.features.live_trade.lifecycle": [
       "tests/unit/gpt_trader/features/live_trade/test_lifecycle.py"
     ],
-    "gpt_trader.features.live_trade.orchestrator.context": [
-      "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_class_structure.py"
-    ],
-    "gpt_trader.features.live_trade.orchestrator.decision": [
-      "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_class_structure.py"
-    ],
-    "gpt_trader.features.live_trade.orchestrator.initialization": [
-      "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_class_structure.py"
-    ],
-    "gpt_trader.features.live_trade.orchestrator.orchestrator": [
-      "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_class_structure.py",
-      "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_process.py",
-      "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_process_execution.py"
-    ],
-    "gpt_trader.features.live_trade.orchestrator.spot_filters": [
-      "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_class_structure.py"
-    ],
     "gpt_trader.features.live_trade.risk": [
       "tests/integration/test_validation_escalation_flow.py",
       "tests/integration/test_validation_escalation_metrics.py",
@@ -1050,8 +1033,6 @@
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_health.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_orders.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_state.py",
-      "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_process.py",
-      "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_process_execution.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy_exit_logic_and_cooldown.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy_safety_and_recovery.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy_sizing_and_trend_filter.py",
@@ -3166,21 +3147,6 @@
       "gpt_trader.features.live_trade.execution.guards.volatility",
       "gpt_trader.features.live_trade.guard_errors"
     ],
-    "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_class_structure.py": [
-      "gpt_trader.features.live_trade.orchestrator.context",
-      "gpt_trader.features.live_trade.orchestrator.decision",
-      "gpt_trader.features.live_trade.orchestrator.initialization",
-      "gpt_trader.features.live_trade.orchestrator.orchestrator",
-      "gpt_trader.features.live_trade.orchestrator.spot_filters"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_process.py": [
-      "gpt_trader.features.live_trade.orchestrator.orchestrator",
-      "gpt_trader.features.live_trade.strategies.perps_baseline"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_process_execution.py": [
-      "gpt_trader.features.live_trade.orchestrator.orchestrator",
-      "gpt_trader.features.live_trade.strategies.perps_baseline"
-    ],
     "tests/unit/gpt_trader/features/live_trade/risk/test_cfm_risk_config.py": [
       "gpt_trader.features.live_trade.risk.config"
     ],
@@ -4705,11 +4671,6 @@
     "gpt_trader.features.live_trade.strategies.hybrid.types": "src/gpt_trader/features/live_trade/strategies/hybrid/types.py",
     "gpt_trader.features.live_trade.execution.state_collection": "src/gpt_trader/features/live_trade/execution/state_collection.py",
     "gpt_trader.features.live_trade.execution.guards.volatility": "src/gpt_trader/features/live_trade/execution/guards/volatility.py",
-    "gpt_trader.features.live_trade.orchestrator.context": "src/gpt_trader/features/live_trade/orchestrator/context.py",
-    "gpt_trader.features.live_trade.orchestrator.decision": "src/gpt_trader/features/live_trade/orchestrator/decision.py",
-    "gpt_trader.features.live_trade.orchestrator.initialization": "src/gpt_trader/features/live_trade/orchestrator/initialization.py",
-    "gpt_trader.features.live_trade.orchestrator.orchestrator": "src/gpt_trader/features/live_trade/orchestrator/orchestrator.py",
-    "gpt_trader.features.live_trade.orchestrator.spot_filters": "src/gpt_trader/features/live_trade/orchestrator/spot_filters.py",
     "gpt_trader.features.live_trade.signals.mean_reversion": "src/gpt_trader/features/live_trade/signals/mean_reversion.py",
     "gpt_trader.features.live_trade.signals.momentum": "src/gpt_trader/features/live_trade/signals/momentum.py",
     "gpt_trader.features.live_trade.signals.order_flow": "src/gpt_trader/features/live_trade/signals/order_flow.py",

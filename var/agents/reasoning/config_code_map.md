@@ -8,6 +8,7 @@ Scan root: `src/gpt_trader`
 | Field | Usage count | Example files |
 |-------|-------------|---------------|
 | account_telemetry_interval | 0 | — |
+| broker_calls_use_dedicated_executor | 0 | — |
 | broker_hint | 0 | — |
 | cfm_enabled | 0 | — |
 | cfm_margin_window | 0 | — |
@@ -31,6 +32,7 @@ Scan root: `src/gpt_trader`
 | market_order_fallback | 0 | — |
 | metadata | 0 | — |
 | mock_broker | 0 | — |
+| order_submission_retries_enabled | 0 | — |
 | perps_enable_streaming | 0 | — |
 | perps_paper_trading | 0 | — |
 | perps_position_fraction | 0 | — |

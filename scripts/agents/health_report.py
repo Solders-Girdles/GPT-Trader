@@ -10,13 +10,13 @@ import re
 import sys
 import time
 import xml.etree.ElementTree as ElementTree
+from collections.abc import Callable
 from contextlib import redirect_stderr, redirect_stdout
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from io import StringIO
 from pathlib import Path
 from typing import Any
-from collections.abc import Callable
 
 load_dotenv: Callable[..., bool] | None
 try:
@@ -32,13 +32,13 @@ SRC_ROOT = PROJECT_ROOT / "src"
 sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(SRC_ROOT))
 
-from scripts.agents import quality_gate  # noqa: E402
 from gpt_trader import __version__ as APP_VERSION  # noqa: E402
 from gpt_trader.app.config.bot_config import BotConfig  # noqa: E402
 from gpt_trader.app.config.profile_loader import ProfileLoader  # noqa: E402
 from gpt_trader.app.config.validation import validate_config  # noqa: E402
 from gpt_trader.config.types import Profile  # noqa: E402
 from gpt_trader.preflight.core import PreflightCheck  # noqa: E402
+from scripts.agents import quality_gate  # noqa: E402
 
 SCHEMA_VERSION = "1.1"
 TOOL_NAME = "agent-health"

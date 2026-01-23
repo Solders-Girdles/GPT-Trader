@@ -14,7 +14,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 GENERATED_FILES = (
     Path("src/gpt_trader/tui/styles/main.tcss"),
     Path("src/gpt_trader/tui/styles/main_light.tcss"),

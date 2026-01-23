@@ -45,3 +45,13 @@ Planned action (packet 1)
 
 Post-move dangling reference scan
 - `rg -n "container_entrypoint.sh|verify_tui.py|validate_contrast.py|inventory_xfail_skip.py" -S .` (expect no matches)
+
+## Packet 2: scripts lint clean
+
+Goal
+- Clear `ruff check scripts` so the local scripts smoke stays green.
+
+Commands used
+- `uv run ruff check scripts`
+- `uv run ruff check scripts/ci/check_tui_css_up_to_date.py --fix`
+- `uv run ruff check scripts`

@@ -3,8 +3,8 @@
 
 from __future__ import annotations
 
-import ast
 import argparse
+import ast
 import pathlib
 import sys
 from collections.abc import Sequence

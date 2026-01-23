@@ -25,7 +25,7 @@ import inspect
 import json
 import sys
 from pathlib import Path
-from typing import Any, get_type_hints
+from typing import Any
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))

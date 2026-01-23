@@ -79,7 +79,6 @@ def python_type_to_json_schema(python_type: type, field_name: str = "") -> dict[
 
     # Handle dict
     if origin is dict:
-        key_type = args[0] if args else str
         value_type = args[1] if len(args) > 1 else Any
         return {
             "type": "object",

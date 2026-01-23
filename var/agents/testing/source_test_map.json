@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 658,
+    "tests_scanned": 657,
     "source_modules": 353,
     "unresolved_modules": 3
   },
@@ -1612,8 +1612,7 @@
       "tests/unit/gpt_trader/tui/widgets/test_trading_stats.py"
     ],
     "gpt_trader.tui.screens.strategy_detail_screen": [
-      "tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen_backtest_and_badges.py",
-      "tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen_indicator_hints.py",
+      "tests/unit/gpt_trader/tui/screens/test_strategy_detail.py",
       "tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen_signal_detail_content.py",
       "tests/unit/gpt_trader/tui/test_snapshots_strategy_detail_screen.py"
     ],
@@ -1728,8 +1727,7 @@
       "tests/unit/gpt_trader/tui/test_trade_matcher_matching.py"
     ],
     "gpt_trader.tui.types": [
-      "tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen_backtest_and_badges.py",
-      "tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen_indicator_hints.py",
+      "tests/unit/gpt_trader/tui/screens/test_strategy_detail.py",
       "tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen_signal_detail_content.py",
       "tests/unit/gpt_trader/tui/services/test_alert_manager.py",
       "tests/unit/gpt_trader/tui/services/test_alert_manager_orders.py",
@@ -4011,11 +4009,7 @@
     "tests/unit/gpt_trader/tui/screens/test_api_setup_wizard.py": [
       "gpt_trader.tui.screens.api_setup_wizard"
     ],
-    "tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen_backtest_and_badges.py": [
-      "gpt_trader.tui.screens.strategy_detail_screen",
-      "gpt_trader.tui.types"
-    ],
-    "tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen_indicator_hints.py": [
+    "tests/unit/gpt_trader/tui/screens/test_strategy_detail.py": [
       "gpt_trader.tui.screens.strategy_detail_screen",
       "gpt_trader.tui.types"
     ],

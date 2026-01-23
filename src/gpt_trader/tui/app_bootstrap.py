@@ -234,8 +234,32 @@ class TraderAppBootstrapMixin:
 
             return non_zero, prices, equity
 
+        broker_calls = None
         try:
-            balances, prices, equity = await asyncio.to_thread(fetch_sync)
+            bot_dict = getattr(self.bot, "__dict__", None)
+            if isinstance(bot_dict, dict):
+                context = bot_dict.get("context")
+            else:
+                context = getattr(self.bot, "context", None)
+            if context is not None:
+                context_dict = getattr(context, "__dict__", None)
+                if isinstance(context_dict, dict):
+                    broker_calls = context_dict.get("broker_calls")
+                else:
+                    broker_calls = getattr(context, "broker_calls", None)
+        except Exception:
+            broker_calls = None
+
+        if broker_calls is not None and not asyncio.iscoroutinefunction(
+            getattr(broker_calls, "__call__", None)
+        ):
+            broker_calls = None
+
+        try:
+            if broker_calls is None:
+                balances, prices, equity = await asyncio.to_thread(fetch_sync)
+            else:
+                balances, prices, equity = await broker_calls(fetch_sync)
         except Exception as e:
             logger.warning("Bootstrap snapshot failed: %s", e)
             try:

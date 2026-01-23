@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
@@ -10,6 +11,15 @@ from gpt_trader.preflight.validation_result import (
     ValidationSeverity,
 )
 from gpt_trader.tui.services.credential_validator import CredentialValidator
+
+
+class _BrokerCallsSpy:
+    def __init__(self) -> None:
+        self.calls: list[object] = []
+
+    async def __call__(self, func, *args, **kwargs):
+        self.calls.append(func)
+        return func(*args, **kwargs)
 
 
 class TestCredentialValidatorKeyFormatAndConfiguration:
@@ -143,6 +153,43 @@ class TestCredentialValidatorConnectivity:
         assert result.connectivity_ok is True
         assert result.jwt_generation_ok is True
         assert result.valid_for_mode is True
+
+    @pytest.mark.asyncio
+    async def test_connectivity_uses_broker_calls(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        monkeypatch.setenv("COINBASE_CDP_API_KEY", "organizations/123/apiKeys/456")
+        monkeypatch.setenv(
+            "COINBASE_CDP_PRIVATE_KEY",
+            "-----BEGIN EC PRIVATE KEY-----\ntest\n-----END EC PRIVATE KEY-----",
+        )
+
+        broker_calls = _BrokerCallsSpy()
+        app = SimpleNamespace(
+            bot=SimpleNamespace(context=SimpleNamespace(broker_calls=broker_calls))
+        )
+        validator = CredentialValidator(app=app)
+
+        mock_auth_instance = MagicMock()
+        mock_auth = MagicMock(return_value=mock_auth_instance)
+        monkeypatch.setattr(client_module, "create_cdp_jwt_auth", mock_auth)
+
+        mock_client = MagicMock()
+        mock_client.get_time.return_value = {"iso": "2024-12-06T00:00:00Z"}
+        mock_client.get_key_permissions.return_value = {
+            "can_trade": True,
+            "can_view": True,
+            "portfolio_type": "SPOT",
+            "portfolio_uuid": "uuid-123",
+        }
+        mock_client_class = MagicMock(return_value=mock_client)
+        monkeypatch.setattr(client_module, "CoinbaseClient", mock_client_class)
+
+        result = await validator.validate_for_mode("paper")
+
+        assert result.connectivity_ok is True
+        assert broker_calls.calls
 
     @pytest.mark.asyncio
     async def test_jwt_generation_failure(

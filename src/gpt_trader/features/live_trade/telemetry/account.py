@@ -37,6 +37,7 @@ class AccountTelemetryService:
         event_store: EventStoreProtocol,
         bot_id: str,
         profile: str,
+        broker_calls: Any | None = None,
     ) -> None:
         self._broker = broker
         self._account_manager = account_manager
@@ -44,6 +45,12 @@ class AccountTelemetryService:
         self._bot_id = bot_id
         self._profile = profile
         self._latest_snapshot: dict[str, Any] = {}
+        if broker_calls is not None and asyncio.iscoroutinefunction(
+            getattr(broker_calls, "__call__", None)
+        ):
+            self._broker_calls = broker_calls
+        else:
+            self._broker_calls = None
 
     # ------------------------------------------------------------------
     def supports_snapshots(self) -> bool:
@@ -69,7 +76,7 @@ class AccountTelemetryService:
             return
         while True:
             try:
-                snapshot = await asyncio.to_thread(self.collect_snapshot)
+                snapshot = await self._call_broker(self.collect_snapshot)
                 if snapshot:
                     self._publish_snapshot(snapshot)
             except Exception as exc:
@@ -81,6 +88,13 @@ class AccountTelemetryService:
                     stage="run",
                 )
             await asyncio.sleep(interval_seconds)
+
+    # ------------------------------------------------------------------
+    async def _call_broker(self, func: Any, *args: Any, **kwargs: Any) -> Any:
+        broker_calls = self._broker_calls
+        if broker_calls is None:
+            return await asyncio.to_thread(func, *args, **kwargs)
+        return await broker_calls(func, *args, **kwargs)
 
     # ------------------------------------------------------------------
     def collect_snapshot(self) -> dict[str, Any]:

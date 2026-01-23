@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import threading
+from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 
@@ -55,6 +56,39 @@ class TestBoundedToThread:
 
         assert results == list(range(10))
         assert state["max"] == limit
+
+    @pytest.mark.asyncio
+    async def test_custom_executor_path(self) -> None:
+        class RecordingExecutor(ThreadPoolExecutor):
+            def __init__(self) -> None:
+                super().__init__(max_workers=1)
+                self.submit_calls = 0
+
+            def submit(self, *args, **kwargs):
+                self.submit_calls += 1
+                return super().submit(*args, **kwargs)
+
+        executor = RecordingExecutor()
+        limiter = BoundedToThread(max_concurrency=1, executor=executor)
+
+        result = await limiter.run(lambda: "ok")
+
+        assert result == "ok"
+        assert executor.submit_calls >= 1
+
+        limiter.shutdown()
+        assert executor.submit(lambda: "still-alive").result() == "still-alive"
+        executor.shutdown(wait=True)
+
+    @pytest.mark.asyncio
+    async def test_dedicated_executor_shutdown(self) -> None:
+        limiter = BoundedToThread(max_concurrency=1, use_dedicated_executor=True)
+
+        result = await limiter.run(lambda: 42)
+
+        assert result == 42
+        assert limiter._executor is not None
+        limiter.shutdown()
 
 
 class TestAsyncContextManager:

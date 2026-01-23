@@ -3,7 +3,7 @@
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
     "total_tests": 6031,
-    "total_files": 714,
+    "total_files": 713,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -402,9 +402,8 @@
       "tests/unit/gpt_trader/features/live_trade/execution/test_validation_preview.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_volatility_guard.py",
       "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_class_structure.py",
-      "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_process_symbol_control_flow.py",
-      "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_process_symbol_error_handling.py",
-      "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_process_symbol_execution.py",
+      "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_process.py",
+      "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_process_execution.py",
       "tests/unit/gpt_trader/features/live_trade/risk/test_cfm_risk_config.py",
       "tests/unit/gpt_trader/features/live_trade/risk/test_reduce_only.py",
       "tests/unit/gpt_trader/features/live_trade/signals/test_mean_reversion_signal_edges.py",
@@ -22184,7 +22183,7 @@
         "class": "TestStrategyOrchestratorClassStructure"
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_process_symbol_control_flow.py": [
+    "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_process.py": [
       {
         "name": "TestProcessSymbol::test_process_symbol_skips_when_context_is_none",
         "line": 24,
@@ -22234,12 +22233,10 @@
         ],
         "docstring": "Test that process_symbol passes position_map to _prepare_context.",
         "class": "TestProcessSymbol"
-      }
-    ],
-    "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_process_symbol_error_handling.py": [
+      },
       {
         "name": "TestProcessSymbolErrorHandling::test_process_symbol_handles_prepare_context_error",
-        "line": 24,
+        "line": 146,
         "markers": [
           "asyncio",
           "unit"
@@ -22249,7 +22246,7 @@
       },
       {
         "name": "TestProcessSymbolErrorHandling::test_process_symbol_handles_resolve_decision_error",
-        "line": 37,
+        "line": 159,
         "markers": [
           "asyncio",
           "unit"
@@ -22259,7 +22256,7 @@
       },
       {
         "name": "TestProcessSymbolErrorHandling::test_process_symbol_handles_execution_error",
-        "line": 56,
+        "line": 178,
         "markers": [
           "asyncio",
           "unit"
@@ -22268,7 +22265,7 @@
         "class": "TestProcessSymbolErrorHandling"
       }
     ],
-    "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_process_symbol_execution.py": [
+    "tests/unit/gpt_trader/features/live_trade/orchestrator/test_orchestrator_process_execution.py": [
       {
         "name": "TestProcessSymbolExecution::test_process_symbol_executes_buy_decision",
         "line": 24,

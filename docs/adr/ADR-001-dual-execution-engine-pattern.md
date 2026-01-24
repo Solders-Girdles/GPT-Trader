@@ -44,9 +44,9 @@ The system will continue to use `ExecutionEngineFactory` to create either:
 - `LiveExecutionEngine` (default) - when both feature flags are disabled
 - `AdvancedExecutionEngine` (enhanced) - when any feature flag is enabled
 
-Feature flags (in `RiskConfig`):
-- `enable_dynamic_position_sizing` (env: `RISK_ENABLE_DYNAMIC_POSITION_SIZING`)
-- `enable_market_impact_guard` (env: `RISK_ENABLE_MARKET_IMPACT_GUARD`)
+Historical feature flags (removed):
+- `enable_dynamic_position_sizing`
+- `enable_market_impact_guard`
 
 ---
 

@@ -175,7 +175,7 @@ uv run agent-risk       # Query risk configuration
 | [Architecture](docs/ARCHITECTURE.md) | System design and vertical slices |
 | [Reliability](docs/RELIABILITY.md) | Guard stack, degradation, chaos testing |
 | [Monitoring](docs/MONITORING_PLAYBOOK.md) | Metrics, alerting, dashboards |
-| [Production](docs/guides/production.md) | Deployment and operations |
+| [Production](docs/production.md) | Deployment and operations |
 | [Contributing](CONTRIBUTING.md) | Development workflow |
 | [TUI Style Guide](docs/TUI_STYLE_GUIDE.md) | Terminal UI conventions |
 

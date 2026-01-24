@@ -28,4 +28,4 @@ uv run agent-regenerate --only observability,logging
 
 ## Dashboards & Runbooks
 
-See [Monitoring Playbook](MONITORING_PLAYBOOK.md) and [Alert Runbooks](operations/RUNBOOKS.md).
+See [Monitoring Playbook](MONITORING_PLAYBOOK.md) and [Alert Runbooks](RUNBOOKS.md).

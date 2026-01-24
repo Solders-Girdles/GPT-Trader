@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2025-10-07
+last-updated: 2026-01-24
 consolidates:
   - PAPER_TRADING_IMPLEMENTATION.md
   - PAPER_ENGINE_DECOUPLING.md

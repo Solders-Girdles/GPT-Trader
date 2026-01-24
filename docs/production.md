@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2025-10-07
+last-updated: 2026-01-24
 consolidates:
   - PRODUCTION_LAUNCH_CHECKLIST.md
   - PRODUCTION_DEPLOYMENT_RUNBOOK.md

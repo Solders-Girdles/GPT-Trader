@@ -1,9 +1,9 @@
 {
   "env_template_path": "config/environments/.env.template",
   "summary": {
-    "code_only": 88,
+    "code_only": 127,
     "template_only": 0,
-    "total": 167
+    "total": 168
   },
   "variables": [
     {
@@ -25,7 +25,7 @@
           "comment": "",
           "commented_out": false,
           "default": "coinbase",
-          "line": 11
+          "line": 15
         }
       ]
     },
@@ -40,17 +40,10 @@
           "reader": "parse_bool_env"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "BROKER_CALLS_USE_DEDICATED_EXECUTOR",
-      "template_default": "0",
-      "template_references": [
-        {
-          "comment": "Use a dedicated thread pool for broker calls (1=on, 0=off)",
-          "commented_out": false,
-          "default": "0",
-          "line": 22
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -68,10 +61,10 @@
       "template_default": "0",
       "template_references": [
         {
-          "comment": "Enable CFM (Coinbase Financial Markets) futures",
+          "comment": "1=enable Coinbase Financial Markets futures",
           "commented_out": false,
           "default": "0",
-          "line": 26
+          "line": 30
         }
       ]
     },
@@ -224,7 +217,7 @@
           "comment": "",
           "commented_out": true,
           "default": "",
-          "line": 47
+          "line": 51
         }
       ]
     },
@@ -247,7 +240,7 @@
           "comment": "",
           "commented_out": false,
           "default": "advanced",
-          "line": 35
+          "line": 39
         }
       ]
     },
@@ -286,7 +279,7 @@
           "comment": "",
           "commented_out": true,
           "default": "",
-          "line": 41
+          "line": 45
         }
       ]
     },
@@ -325,7 +318,7 @@
           "comment": "",
           "commented_out": true,
           "default": "",
-          "line": 42
+          "line": 46
         }
       ]
     },
@@ -372,7 +365,7 @@
           "comment": "",
           "commented_out": false,
           "default": "",
-          "line": 39
+          "line": 43
         }
       ]
     },
@@ -393,9 +386,9 @@
       "template_references": [
         {
           "comment": "",
-          "commented_out": true,
+          "commented_out": false,
           "default": "USD",
-          "line": 162
+          "line": 34
         }
       ]
     },
@@ -431,10 +424,10 @@
       "template_default": "0",
       "template_references": [
         {
-          "comment": "",
+          "comment": "1=enable INTX perpetuals (non-US account)",
           "commented_out": false,
           "default": "0",
-          "line": 29
+          "line": 31
         }
       ]
     },
@@ -549,7 +542,7 @@
           "comment": "",
           "commented_out": true,
           "default": "",
-          "line": 48
+          "line": 52
         }
       ]
     },
@@ -578,7 +571,7 @@
           "comment": "",
           "commented_out": true,
           "default": "",
-          "line": 44
+          "line": 48
         }
       ]
     },
@@ -607,7 +600,7 @@
           "comment": "",
           "commented_out": true,
           "default": "",
-          "line": 45
+          "line": 49
         }
       ]
     },
@@ -636,7 +629,7 @@
           "comment": "",
           "commented_out": false,
           "default": "1",
-          "line": 36
+          "line": 40
         }
       ]
     },
@@ -651,17 +644,10 @@
           "reader": "_env_lookup"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "COINBASE_TRADER_CRIT_LOG_BACKUP_COUNT",
-      "template_default": "5",
-      "template_references": [
-        {
-          "comment": "Retain 5 historical critical logs",
-          "commented_out": false,
-          "default": "5",
-          "line": 142
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -674,17 +660,10 @@
           "reader": "_env_lookup"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "COINBASE_TRADER_CRIT_LOG_MAX_BYTES",
-      "template_default": "1048576",
-      "template_references": [
-        {
-          "comment": "1 MB per critical log file",
-          "commented_out": false,
-          "default": "1048576",
-          "line": 141
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -708,10 +687,10 @@
       "template_default": "0",
       "template_references": [
         {
-          "comment": "Enable verbose debug output when set to 1",
+          "comment": "",
           "commented_out": false,
           "default": "0",
-          "line": 14
+          "line": 17
         }
       ]
     },
@@ -726,17 +705,10 @@
           "reader": "_env_lookup"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "COINBASE_TRADER_LOG_BACKUP_COUNT",
-      "template_default": "3",
-      "template_references": [
-        {
-          "comment": "Retain 3 historical log files",
-          "commented_out": false,
-          "default": "3",
-          "line": 140
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -755,17 +727,10 @@
           "reader": "_env_lookup"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "COINBASE_TRADER_LOG_DIR",
-      "template_default": "var/log/coinbase_trader",
-      "template_references": [
-        {
-          "comment": "",
-          "commented_out": false,
-          "default": "var/log/coinbase_trader",
-          "line": 138
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -778,17 +743,10 @@
           "reader": "_env_lookup"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "COINBASE_TRADER_LOG_MAX_BYTES",
-      "template_default": "5242880",
-      "template_references": [
-        {
-          "comment": "5 MB per log file",
-          "commented_out": false,
-          "default": "5242880",
-          "line": 139
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -801,17 +759,10 @@
           "reader": "os.getenv"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "COINBASE_TRADER_METRIC_PREFIX",
-      "template_default": "coinbase_trader",
-      "template_references": [
-        {
-          "comment": "Optional Prometheus prefix override",
-          "commented_out": false,
-          "default": "coinbase_trader",
-          "line": 112
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -890,13 +841,13 @@
       ],
       "in_env_template": true,
       "name": "DRY_RUN",
-      "template_default": "0",
+      "template_default": "1",
       "template_references": [
         {
-          "comment": "Run without placing real orders",
+          "comment": "1=don't place real orders",
           "commented_out": false,
-          "default": "0",
-          "line": 20
+          "default": "1",
+          "line": 23
         }
       ]
     },
@@ -922,10 +873,10 @@
       "template_default": "development",
       "template_references": [
         {
-          "comment": "Environment label used by tooling/logging",
+          "comment": "",
           "commented_out": false,
           "default": "development",
-          "line": 15
+          "line": 14
         }
       ]
     },
@@ -968,10 +919,17 @@
           "reader": "os.getenv"
         }
       ],
-      "in_env_template": false,
+      "in_env_template": true,
       "name": "EVENT_STORE_ROOT",
       "template_default": "",
-      "template_references": []
+      "template_references": [
+        {
+          "comment": "Optional override; if unset, uses GPT_TRADER_RUNTIME_ROOT",
+          "commented_out": true,
+          "default": "",
+          "line": 78
+        }
+      ]
     },
     {
       "code_paths": [
@@ -984,17 +942,10 @@
           "reader": "os.getenv"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "GPT_TRADER_ADAPTIVE_THROTTLE",
-      "template_default": "1",
-      "template_references": [
-        {
-          "comment": "Proactive pacing instead of reactive blocking",
-          "commented_out": false,
-          "default": "1",
-          "line": 132
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -1039,17 +990,10 @@
           "reader": "os.getenv"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "GPT_TRADER_CACHE_ENABLED",
-      "template_default": "1",
-      "template_references": [
-        {
-          "comment": "Response caching for stable data",
-          "commented_out": false,
-          "default": "1",
-          "line": 129
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -1094,17 +1038,10 @@
           "reader": "os.getenv"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "GPT_TRADER_CIRCUIT_BREAKER_ENABLED",
-      "template_default": "1",
-      "template_references": [
-        {
-          "comment": "Prevent hammering failing endpoints",
-          "commented_out": false,
-          "default": "1",
-          "line": 130
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -1189,7 +1126,7 @@
           "comment": "",
           "commented_out": false,
           "default": "",
-          "line": 149
+          "line": 90
         }
       ]
     },
@@ -1252,15 +1189,31 @@
           "reader": "os.getenv"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "GPT_TRADER_HEALTH_CHECK_INTERVAL",
-      "template_default": "30.0",
+      "template_default": "",
+      "template_references": []
+    },
+    {
+      "code_paths": [
+        "src/gpt_trader/cli/commands/run.py"
+      ],
+      "code_references": [
+        {
+          "line": 181,
+          "path": "src/gpt_trader/cli/commands/run.py",
+          "reader": "_env_int"
+        }
+      ],
+      "in_env_template": true,
+      "name": "GPT_TRADER_HEALTH_PORT",
+      "template_default": "8080",
       "template_references": [
         {
-          "comment": "Seconds between health checks",
+          "comment": "",
           "commented_out": false,
-          "default": "30.0",
-          "line": 126
+          "default": "8080",
+          "line": 84
         }
       ]
     },
@@ -1291,10 +1244,17 @@
           "reader": "_env_flag"
         }
       ],
-      "in_env_template": false,
+      "in_env_template": true,
       "name": "GPT_TRADER_HEALTH_SERVER_ENABLED",
-      "template_default": "",
-      "template_references": []
+      "template_default": "0",
+      "template_references": [
+        {
+          "comment": "",
+          "commented_out": false,
+          "default": "0",
+          "line": 83
+        }
+      ]
     },
     {
       "code_paths": [
@@ -1387,17 +1347,10 @@
           "reader": "os.getenv"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "GPT_TRADER_METRICS_ENABLED",
-      "template_default": "1",
-      "template_references": [
-        {
-          "comment": "In-memory metrics collection",
-          "commented_out": false,
-          "default": "1",
-          "line": 133
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -1418,7 +1371,7 @@
           "comment": "",
           "commented_out": false,
           "default": "0",
-          "line": 118
+          "line": 85
         }
       ]
     },
@@ -1481,17 +1434,10 @@
           "reader": "os.getenv"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "GPT_TRADER_OTEL_ENABLED",
-      "template_default": "0",
-      "template_references": [
-        {
-          "comment": "",
-          "commented_out": false,
-          "default": "0",
-          "line": 121
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -1532,17 +1478,10 @@
           "reader": "os.getenv"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "GPT_TRADER_PRIORITY_ENABLED",
-      "template_default": "1",
-      "template_references": [
-        {
-          "comment": "Prioritize critical requests under pressure",
-          "commented_out": false,
-          "default": "1",
-          "line": 131
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -1695,10 +1634,17 @@
           "reader": "os.getenv"
         }
       ],
-      "in_env_template": false,
+      "in_env_template": true,
       "name": "GPT_TRADER_RUNTIME_ROOT",
-      "template_default": "",
-      "template_references": []
+      "template_default": ".",
+      "template_references": [
+        {
+          "comment": "",
+          "commented_out": false,
+          "default": ".",
+          "line": 77
+        }
+      ]
     },
     {
       "code_paths": [
@@ -1807,17 +1753,10 @@
           "reader": "os.getenv"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "GPT_TRADER_WS_RECONNECT_BACKOFF_BASE",
-      "template_default": "2.0",
-      "template_references": [
-        {
-          "comment": "Base delay in seconds",
-          "commented_out": false,
-          "default": "2.0",
-          "line": 99
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -1830,17 +1769,10 @@
           "reader": "os.getenv"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "GPT_TRADER_WS_RECONNECT_BACKOFF_MAX",
-      "template_default": "60.0",
-      "template_references": [
-        {
-          "comment": "Max delay cap in seconds",
-          "commented_out": false,
-          "default": "60.0",
-          "line": 100
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -1853,17 +1785,10 @@
           "reader": "os.getenv"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "GPT_TRADER_WS_RECONNECT_BACKOFF_MULTIPLIER",
-      "template_default": "2.0",
-      "template_references": [
-        {
-          "comment": "Backoff multiplier",
-          "commented_out": false,
-          "default": "2.0",
-          "line": 101
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -1876,17 +1801,10 @@
           "reader": "os.getenv"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "GPT_TRADER_WS_RECONNECT_JITTER_PCT",
-      "template_default": "0.25",
-      "template_references": [
-        {
-          "comment": "Jitter \u00b125% to prevent thundering herd",
-          "commented_out": false,
-          "default": "0.25",
-          "line": 102
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -1899,17 +1817,10 @@
           "reader": "os.getenv"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "GPT_TRADER_WS_RECONNECT_MAX_ATTEMPTS",
-      "template_default": "10",
-      "template_references": [
-        {
-          "comment": "Max attempts before degradation (0=unlimited)",
-          "commented_out": false,
-          "default": "10",
-          "line": 103
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -1922,17 +1833,10 @@
           "reader": "os.getenv"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "GPT_TRADER_WS_RECONNECT_PAUSE_SECONDS",
-      "template_default": "300",
-      "template_references": [
-        {
-          "comment": "Pause duration after max attempts exceeded",
-          "commented_out": false,
-          "default": "300",
-          "line": 105
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -1945,17 +1849,10 @@
           "reader": "os.getenv"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "GPT_TRADER_WS_RECONNECT_RESET_SECONDS",
-      "template_default": "60.0",
-      "template_references": [
-        {
-          "comment": "Stable time to reset attempt counter",
-          "commented_out": false,
-          "default": "60.0",
-          "line": 104
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -2144,10 +2041,17 @@
           "reader": "parse_int_env"
         }
       ],
-      "in_env_template": false,
+      "in_env_template": true,
       "name": "INTERVAL",
-      "template_default": "",
-      "template_references": []
+      "template_default": "60",
+      "template_references": [
+        {
+          "comment": "",
+          "commented_out": false,
+          "default": "60",
+          "line": 57
+        }
+      ]
     },
     {
       "code_paths": [
@@ -2184,7 +2088,7 @@
           "comment": "",
           "commented_out": false,
           "default": "INFO",
-          "line": 13
+          "line": 16
         }
       ]
     },
@@ -2217,13 +2121,13 @@
       ],
       "in_env_template": true,
       "name": "MOCK_BROKER",
-      "template_default": "0",
+      "template_default": "1",
       "template_references": [
         {
-          "comment": "Use mock/deterministic broker (1=mock, 0=real)",
+          "comment": "1=mock/deterministic broker (no real API calls)",
           "commented_out": false,
-          "default": "0",
-          "line": 19
+          "default": "1",
+          "line": 22
         }
       ]
     },
@@ -2246,7 +2150,7 @@
           "comment": "",
           "commented_out": false,
           "default": "1",
-          "line": 53
+          "line": 66
         }
       ]
     },
@@ -2261,17 +2165,10 @@
           "reader": "parse_bool_env"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "ORDER_SUBMISSION_RETRIES_ENABLED",
-      "template_default": "0",
-      "template_references": [
-        {
-          "comment": "",
-          "commented_out": false,
-          "default": "0",
-          "line": 55
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -2284,17 +2181,10 @@
           "reader": "os.getenv"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "OTEL_EXPORTER_OTLP_ENDPOINT",
-      "template_default": "http://localhost:4317",
-      "template_references": [
-        {
-          "comment": "Uncomment to export traces",
-          "commented_out": true,
-          "default": "http://localhost:4317",
-          "line": 123
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -2307,17 +2197,10 @@
           "reader": "os.getenv"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "OTEL_SERVICE_NAME",
-      "template_default": "gpt-trader",
-      "template_references": [
-        {
-          "comment": "",
-          "commented_out": false,
-          "default": "gpt-trader",
-          "line": 122
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -2400,17 +2283,10 @@
           "reader": "parse_bool_env"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "PERPS_ENABLE_STREAMING",
-      "template_default": "0",
-      "template_references": [
-        {
-          "comment": "",
-          "commented_out": false,
-          "default": "0",
-          "line": 110
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -2476,10 +2352,10 @@
       "template_default": "1",
       "template_references": [
         {
-          "comment": "Leave enabled for local testing (no real orders)",
+          "comment": "1=paper trade perps (when perps are enabled)",
           "commented_out": false,
           "default": "1",
-          "line": 12
+          "line": 24
         }
       ]
     },
@@ -2542,17 +2418,10 @@
           "reader": "parse_int_env"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "PERPS_STREAM_LEVEL",
-      "template_default": "1",
-      "template_references": [
-        {
-          "comment": "",
-          "commented_out": false,
-          "default": "1",
-          "line": 111
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -2565,17 +2434,10 @@
           "reader": "_get_env"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "RISK_API_ERROR_RATE_THRESHOLD",
-      "template_default": "0.2",
-      "template_references": [
-        {
-          "comment": "20% error rate triggers guard",
-          "commented_out": false,
-          "default": "0.2",
-          "line": 75
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -2588,17 +2450,10 @@
           "reader": "_get_env"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "RISK_API_HEALTH_COOLDOWN_SECONDS",
-      "template_default": "300",
-      "template_references": [
-        {
-          "comment": "Pause after API health trip (5 min)",
-          "commented_out": false,
-          "default": "300",
-          "line": 80
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -2611,17 +2466,10 @@
           "reader": "_get_env"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "RISK_API_RATE_LIMIT_USAGE_THRESHOLD",
-      "template_default": "0.9",
-      "template_references": [
-        {
-          "comment": "90% rate limit usage triggers guard",
-          "commented_out": false,
-          "default": "0.9",
-          "line": 76
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -2634,17 +2482,10 @@
           "reader": "_get_env"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "RISK_BROKER_OUTAGE_COOLDOWN_SECONDS",
-      "template_default": "120",
-      "template_references": [
-        {
-          "comment": "Broker outage pause duration",
-          "commented_out": false,
-          "default": "120",
-          "line": 88
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -2657,17 +2498,10 @@
           "reader": "_get_env"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "RISK_BROKER_OUTAGE_MAX_FAILURES",
-      "template_default": "3",
-      "template_references": [
-        {
-          "comment": "Pause after N broker read failures",
-          "commented_out": false,
-          "default": "3",
-          "line": 87
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -2680,17 +2514,10 @@
           "reader": "os.getenv"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "RISK_CONFIG_PATH",
       "template_default": "",
-      "template_references": [
-        {
-          "comment": "Reserved for future risk overrides (currently unused)",
-          "commented_out": false,
-          "default": "",
-          "line": 16
-        }
-      ]
+      "template_references": []
     },
     {
       "code_paths": [
@@ -2703,17 +2530,10 @@
           "reader": "_get_env"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "RISK_DAILY_LOSS_LIMIT",
-      "template_default": "100",
-      "template_references": [
-        {
-          "comment": "",
-          "commented_out": false,
-          "default": "100",
-          "line": 67
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -2740,7 +2560,7 @@
           "comment": "",
           "commented_out": false,
           "default": "0.05",
-          "line": 65
+          "line": 70
         }
       ]
     },
@@ -2763,7 +2583,7 @@
           "comment": "",
           "commented_out": false,
           "default": "0",
-          "line": 70
+          "line": 71
         }
       ]
     },
@@ -2778,17 +2598,10 @@
           "reader": "_get_env"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "RISK_MARK_STALENESS_ALLOW_REDUCE_ONLY",
-      "template_default": "1",
-      "template_references": [
-        {
-          "comment": "Allow reduce-only during stale mark",
-          "commented_out": false,
-          "default": "1",
-          "line": 82
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -2801,17 +2614,10 @@
           "reader": "_get_env"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "RISK_MARK_STALENESS_COOLDOWN_SECONDS",
-      "template_default": "120",
-      "template_references": [
-        {
-          "comment": "Pause symbol on stale mark (2 min)",
-          "commented_out": false,
-          "default": "120",
-          "line": 81
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -2832,7 +2638,7 @@
           "comment": "",
           "commented_out": false,
           "default": "0.30",
-          "line": 61
+          "line": 68
         }
       ]
     },
@@ -2861,7 +2667,7 @@
           "comment": "",
           "commented_out": false,
           "default": "3",
-          "line": 60
+          "line": 67
         }
       ]
     },
@@ -2890,7 +2696,7 @@
           "comment": "",
           "commented_out": false,
           "default": "0.10",
-          "line": 62
+          "line": 69
         }
       ]
     },
@@ -2921,17 +2727,10 @@
           "reader": "_get_env"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "RISK_MIN_LIQUIDATION_BUFFER_PCT",
-      "template_default": "0.20",
-      "template_references": [
-        {
-          "comment": "",
-          "commented_out": false,
-          "default": "0.20",
-          "line": 68
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -2944,17 +2743,10 @@
           "reader": "_get_env"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "RISK_PREVIEW_FAILURE_DISABLE_AFTER",
-      "template_default": "5",
-      "template_references": [
-        {
-          "comment": "Disable preview after N failures",
-          "commented_out": false,
-          "default": "5",
-          "line": 86
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -2981,7 +2773,7 @@
           "comment": "",
           "commented_out": false,
           "default": "0",
-          "line": 71
+          "line": 72
         }
       ]
     },
@@ -2996,17 +2788,10 @@
           "reader": "_get_env"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "RISK_SLIPPAGE_FAILURE_PAUSE_AFTER",
-      "template_default": "3",
-      "template_references": [
-        {
-          "comment": "Pause symbol after N slippage failures",
-          "commented_out": false,
-          "default": "3",
-          "line": 83
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -3019,17 +2804,10 @@
           "reader": "_get_env"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "RISK_SLIPPAGE_GUARD_BPS",
-      "template_default": "40",
-      "template_references": [
-        {
-          "comment": "",
-          "commented_out": false,
-          "default": "40",
-          "line": 69
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -3042,17 +2820,10 @@
           "reader": "_get_env"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "RISK_SLIPPAGE_PAUSE_SECONDS",
-      "template_default": "60",
-      "template_references": [
-        {
-          "comment": "Slippage pause duration per symbol",
-          "commented_out": false,
-          "default": "60",
-          "line": 84
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -3135,17 +2906,10 @@
           "reader": "_get_env"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "RISK_VALIDATION_FAILURE_COOLDOWN_SECONDS",
-      "template_default": "180",
-      "template_references": [
-        {
-          "comment": "Pause on validation infra failure",
-          "commented_out": false,
-          "default": "180",
-          "line": 85
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -3158,17 +2922,10 @@
           "reader": "_get_env"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "RISK_WS_HEALTH_INTERVAL_SECONDS",
-      "template_default": "5",
-      "template_references": [
-        {
-          "comment": "How often to poll WS health",
-          "commented_out": false,
-          "default": "5",
-          "line": 92
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -3181,17 +2938,10 @@
           "reader": "_get_env"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "RISK_WS_HEARTBEAT_STALE_SECONDS",
-      "template_default": "30",
-      "template_references": [
-        {
-          "comment": "Max age of last heartbeat before stale",
-          "commented_out": false,
-          "default": "30",
-          "line": 94
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -3204,17 +2954,10 @@
           "reader": "_get_env"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "RISK_WS_MESSAGE_STALE_SECONDS",
-      "template_default": "15",
-      "template_references": [
-        {
-          "comment": "Max age of last WS message before stale",
-          "commented_out": false,
-          "default": "15",
-          "line": 93
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -3227,17 +2970,10 @@
           "reader": "_get_env"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "RISK_WS_RECONNECT_PAUSE_SECONDS",
-      "template_default": "30",
-      "template_references": [
-        {
-          "comment": "Pause after WS reconnect",
-          "commented_out": false,
-          "default": "30",
-          "line": 95
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -3266,17 +3002,10 @@
           "reader": "parse_bool_env"
         }
       ],
-      "in_env_template": true,
+      "in_env_template": false,
       "name": "SPOT_FORCE_LIVE",
-      "template_default": "0",
-      "template_references": [
-        {
-          "comment": "",
-          "commented_out": true,
-          "default": "0",
-          "line": 161
-        }
-      ]
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -3294,10 +3023,10 @@
       "template_default": "1",
       "template_references": [
         {
-          "comment": "Enable status file updates",
+          "comment": "",
           "commented_out": false,
           "default": "1",
-          "line": 21
+          "line": 58
         }
       ]
     },
@@ -3312,10 +3041,17 @@
           "reader": "os.getenv"
         }
       ],
-      "in_env_template": false,
+      "in_env_template": true,
       "name": "STATUS_FILE",
-      "template_default": "",
-      "template_references": []
+      "template_default": "var/data/status.json",
+      "template_references": [
+        {
+          "comment": "",
+          "commented_out": false,
+          "default": "var/data/status.json",
+          "line": 59
+        }
+      ]
     },
     {
       "code_paths": [
@@ -3328,10 +3064,17 @@
           "reader": "parse_int_env"
         }
       ],
-      "in_env_template": false,
+      "in_env_template": true,
       "name": "STATUS_INTERVAL",
-      "template_default": "",
-      "template_references": []
+      "template_default": "60",
+      "template_references": [
+        {
+          "comment": "",
+          "commented_out": false,
+          "default": "60",
+          "line": 60
+        }
+      ]
     },
     {
       "code_paths": [
@@ -3361,10 +3104,10 @@
       "template_default": "spot",
       "template_references": [
         {
-          "comment": "Which markets to trade: \"spot\", \"cfm\", or \"spot,cfm\"",
+          "comment": "\"spot\", \"cfm\", or \"spot,cfm\"",
           "commented_out": false,
           "default": "spot",
-          "line": 25
+          "line": 29
         }
       ]
     },
@@ -3387,13 +3130,13 @@
       ],
       "in_env_template": true,
       "name": "TRADING_SYMBOLS",
-      "template_default": "BTC-PERP,ETH-PERP",
+      "template_default": "BTC-USD,ETH-USD",
       "template_references": [
         {
           "comment": "",
           "commented_out": false,
-          "default": "BTC-PERP,ETH-PERP",
-          "line": 156
+          "default": "BTC-USD,ETH-USD",
+          "line": 33
         }
       ]
     },
@@ -3426,13 +3169,13 @@
       ],
       "in_env_template": true,
       "name": "VAULT_ADDR",
-      "template_default": "",
+      "template_default": "http://localhost:8200",
       "template_references": [
         {
           "comment": "",
           "commented_out": false,
-          "default": "",
-          "line": 150
+          "default": "http://localhost:8200",
+          "line": 91
         }
       ]
     },
@@ -3455,7 +3198,7 @@
           "comment": "",
           "commented_out": false,
           "default": "",
-          "line": 151
+          "line": 92
         }
       ]
     },
@@ -3470,10 +3213,17 @@
           "reader": "os.getenv"
         }
       ],
-      "in_env_template": false,
+      "in_env_template": true,
       "name": "WEBHOOK_URL",
       "template_default": "",
-      "template_references": []
+      "template_references": [
+        {
+          "comment": "",
+          "commented_out": false,
+          "default": "",
+          "line": 61
+        }
+      ]
     }
   ],
   "version": "1.0"

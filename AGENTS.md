@@ -84,7 +84,7 @@ gh pr create --fill
 gh pr merge --auto --squash --delete-branch
 ```
 
-If you touch `var/agents/**`, run `uv run agent-regenerate` and commit the updated artifacts (CI fails when they’re stale).
+If you touch `var/agents/**` or any agent-artifact inputs (notably `scripts/agents/**` or `config/environments/.env.template`), run `uv run agent-regenerate` and commit the updated artifacts (CI fails when they’re stale). To check quickly: `uv run agent-regenerate --verify`.
 
 ### Quality Checks
 

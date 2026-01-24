@@ -47,6 +47,7 @@ ENV_READER_FUNCTIONS = {
     "coerce_env_value",
     "require_env_value",
     "_env_flag",
+    "_env_int",
 }
 
 ENV_MULTI_KEY_READERS = {

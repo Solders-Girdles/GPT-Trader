@@ -36,7 +36,7 @@ That's it! Now, every time you run `git commit`, the pre-commit hooks will run a
 - Document any skips or deselections tied to legacy code paths.
 
 ### Pre-PR Verification Checklist
-1. Review `docs/agents/Document_Verification_Matrix.md` so you reference current documentation.
+1. Review `docs/README.md` and prefer code + `var/agents/**` generated inventories for anything that drifts.
 2. Refresh dependencies: `uv sync`.
 3. Snapshot test discovery: `uv run pytest --collect-only`.
 4. Run the full unit suite: `uv run pytest tests/unit -q`.
@@ -77,7 +77,7 @@ uv run gpt-trader tui --mode demo   # Skip selector for demos
 ## Development Workflow
 
 Before branching, make sure to:
-- Review `docs/agents/Document_Verification_Matrix.md` and confirm the sources you plan to rely on.
+- Review `docs/README.md` for the current doc index (and verify key claims in code).
 - Sync with the latest `main`.
 - Run `uv sync` to pick up dependency changes.
 
@@ -225,7 +225,7 @@ The repository follows a standardized organization optimized for both human deve
 - Keep README.md updated with current state
 - Document breaking changes
 - Include examples for complex features
-- Update `docs/guides/agents.md` for AI context
+- Update `AGENTS.md` (canonical) or `docs/agents/*` when agent-facing context changes
 
 ## Quality Gate Commands
 

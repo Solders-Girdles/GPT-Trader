@@ -2,14 +2,14 @@
 
 ---
 status: current
-last-updated: 2026-01-23
+last-updated: 2026-01-24
 ---
 
 This page is intentionally thin. Feature flags and configuration drift quickly, so canonical references live in code and generated inventories.
 
 ## Canonical References
 
-- Environment options + defaults: [Environment template](../config/environments/.env.template)
+- Operator defaults (minimal): [Environment template](../config/environments/.env.template)
 - Generated env var inventory (code + template): [var/agents/configuration/environment_variables.md](../var/agents/configuration/environment_variables.md) ([.json](../var/agents/configuration/environment_variables.json))
 - Generated config schemas: [`var/agents/schemas/bot_config_schema.json`](../var/agents/schemas/bot_config_schema.json), [`var/agents/schemas/risk_config_schema.json`](../var/agents/schemas/risk_config_schema.json)
 

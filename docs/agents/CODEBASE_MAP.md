@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2026-01-23
+last-updated: 2026-01-24
 ---
 
 Use this as a “where do I start?” index when you already know what you’re trying to change.
@@ -24,7 +24,7 @@ Use this as a “where do I start?” index when you already know what you’re 
 | Add monitoring / alerts | `src/gpt_trader/monitoring/` | Heartbeat/status wiring in `src/gpt_trader/features/live_trade/engines/strategy.py` |
 | Add a TUI widget/screen | `src/gpt_trader/tui/widgets/` | Screens in `src/gpt_trader/tui/screens/`; style guide: `docs/TUI_STYLE_GUIDE.md` |
 | Change TUI styles | `src/gpt_trader/tui/styles/` | Edit modules under `styles/{theme,layout,components,widgets,screens}/` then run `scripts/build_tui_css.py` |
-| Backtesting / simulation | `src/gpt_trader/backtesting/` | Entrypoints vary; see `docs/guides/backtesting.md` |
+| Backtesting / simulation | `src/gpt_trader/backtesting/` | Entrypoints vary; start with `var/agents/reasoning/backtest_entrypoints_map.md` |
 | Security & secrets | `src/gpt_trader/security/` | Reference: `docs/SECURITY.md` |
 
 ## Golden Path

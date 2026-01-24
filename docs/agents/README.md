@@ -2,13 +2,14 @@
 
 ---
 status: current
-last-updated: 2026-01-23
+last-updated: 2026-01-24
 ---
 
 Use this folder for AI-focused navigation aids and generated inventories.
 
 ## Core References
 
+- [Agent workflow (canonical)](../../AGENTS.md)
 - [Codebase map](CODEBASE_MAP.md)
 - [Reasoning artifacts](reasoning_artifacts.md)
 - [Glossary](glossary.md)
@@ -16,12 +17,10 @@ Use this folder for AI-focused navigation aids and generated inventories.
 - [Metrics catalog](../../var/agents/observability/metrics_catalog.md)
 - [Naming patterns config](../../config/agents/naming_patterns.yaml)
 - [Naming scan tool](../../scripts/agents/naming_inventory.py)
-- [Document verification matrix](Document_Verification_Matrix.md)
 - [Source → test map](../../var/agents/testing/source_test_map.json)
 
 ## Tooling
 
-- [Agent tools reference](../guides/agent-tools.md)
 - [Tooling helpers](../../scripts/agents/README.md)
 
 ## Regeneration

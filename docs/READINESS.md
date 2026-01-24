@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2026-01-17
+last-updated: 2026-01-24
 ---
 
 ## Purpose
@@ -60,7 +60,7 @@ What good looks like: no look-ahead bias, stable parameters, and walk-forward ev
 consistent risk-adjusted performance.
 
 Evidence:
-- Backtest report (see `docs/guides/backtesting.md`)
+- Backtest report (see `src/gpt_trader/backtesting/` + `var/agents/reasoning/backtesting_flow_map.md`)
 - Out-of-sample/holdout report
 - Validation report for guard parity
 

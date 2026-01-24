@@ -14,14 +14,14 @@ While this document describes the **current architecture**, you may still encoun
 
 ---
 status: current
-last-updated: 2026-01-08
+last-updated: 2026-01-24
 ---
 
 ## Current State
 
 GPT-Trader is a production-ready Coinbase Advanced Trade trading system supporting **spot** and **CFM futures** trading. INTX perpetuals code paths remain compiled and testable but require international account access.
 
-> 📘 **Trust reminder:** Confirm this document's details against `docs/agents/Document_Verification_Matrix.md` before acting on them.
+> 📘 **Trust reminder:** Confirm key details against current source + generated inventories (`var/agents/**`) before acting on them.
 
 ## Trading Capabilities Matrix
 

@@ -70,9 +70,10 @@ cp config/environments/.env.template .env
 
 Key variables:
 - `COINBASE_CREDENTIALS_FILE` or `COINBASE_CDP_API_KEY` + `COINBASE_CDP_PRIVATE_KEY` - JWT credentials
-- `GPT_TRADER_PROFILE` - Trading profile (dev/canary/prod)
+- `--profile` (CLI) - Trading profile (`dev`/`canary`/`prod`)
 
-See [config/environments/.env.template](config/environments/.env.template) for all options.
+See [config/environments/.env.template](config/environments/.env.template) for minimal operator defaults and
+[var/agents/configuration/environment_variables.md](var/agents/configuration/environment_variables.md) for the full, code-derived inventory.
 
 ## Project Structure
 

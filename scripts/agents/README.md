@@ -57,5 +57,5 @@ Naming defaults are loaded from `config/agents/naming_patterns.yaml`.
 
 ## Reference Docs
 
-- `docs/guides/agent-tools.md`
+- `AGENTS.md`
 - `docs/agents/README.md`

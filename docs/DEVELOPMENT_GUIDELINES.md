@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2026-01-23
+last-updated: 2026-01-24
 ---
 
 These guidelines cover contributions to the spot-first `gpt_trader` stack. Older
@@ -103,8 +103,7 @@ bypass guards:
 - Update `docs/ARCHITECTURE.md`, `docs/RISK_INTEGRATION_GUIDE.md`, or other
   relevant guides whenever behaviour changes.
 - Note INTX gating whenever derivatives-resident code paths are touched.
-- Keep agent-facing docs (`docs/guides/agents.md`, `docs/agents/CODEBASE_MAP.md`,
-  `docs/agents/Document_Verification_Matrix.md`) aligned with new workflows.
+- Keep agent-facing references (`AGENTS.md`, `docs/agents/CODEBASE_MAP.md`, and generated `var/agents/**`) aligned with new workflows.
 
 ## Operational Hygiene
 

@@ -156,7 +156,7 @@ What good looks like: pause, kill switch, reduce-only, and safe shutdown verifie
 
 Evidence:
 - TUI/CLI screenshots or run log
-- Manual test steps in `docs/guides/production.md`
+- Manual test steps in `docs/production.md`
 
 Thresholds:
 - All controls verified in last 30 days

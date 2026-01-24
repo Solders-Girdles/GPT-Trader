@@ -42,7 +42,7 @@ last-updated: 2026-01-23
 
 ### March 2025 Test Harmonization
 - Removed the legacy `scripts/run_spot_profile.py` and `scripts/sweep_strategies.py` shims; docs now reference the maintained backtest entry points directly.
-- Removed the behavioral utilities walkthrough; see `docs/guides/testing.md` for current testing guidance.
+- Removed the behavioral utilities walkthrough; see `docs/testing.md` for current testing guidance.
 - Audited `uses_mock_broker` suites and documented opt-in usage while legacy market-impact hooks remain pending rebuild.
 - Retired `tests/unit/gpt_trader/test_removed_aliases.py`; compatibility status now lives in `docs/DEPRECATIONS.md`.
 

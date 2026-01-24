@@ -16,7 +16,7 @@ last-updated: 2026-01-24
 | Document | Purpose |
 |----------|---------|
 | [Architecture](ARCHITECTURE.md) | System design and capabilities |
-| [Production Guide](guides/production.md) | Deployment, rollout, and emergency procedures |
+| [Production Guide](production.md) | Deployment, rollout, and emergency procedures |
 | [Readiness Checklist](READINESS.md) | Gates to move from paper to live trading |
 | [Reliability Guide](RELIABILITY.md) | Guard stack, degradation responses, chaos testing |
 | [TUI Guide](TUI_GUIDE.md) | Launching and operating the terminal UI |
@@ -30,19 +30,19 @@ last-updated: 2026-01-24
 ## Core Documentation
 
 ### Getting Started
-- [Testing Guide](guides/testing.md) - Running and writing tests
-- [Paper Trading](guides/paper_trading.md) - Safe testing with mock broker
+- [Testing Guide](testing.md) - Running and writing tests
+- [Paper Trading](paper_trading.md) - Safe testing with mock broker
 
 ### Architecture & Design
 - [System Architecture](ARCHITECTURE.md) - Component overview and vertical slices
 - [DI Policy](DI_POLICY.md) - Dependency injection patterns and container usage
 
 ### Trading Operations
-- [Production Deployment](guides/production.md) - Deployment, monitoring, rollback, emergencies
+- [Production Deployment](production.md) - Deployment, monitoring, rollback, emergencies
 - [Readiness Checklist](READINESS.md) - Paper/live gate criteria and evidence
 - [Reliability Guide](RELIABILITY.md) - Degradation matrix, config defaults, chaos harness
 - [Monitoring Playbook](MONITORING_PLAYBOOK.md) - Metrics, alerting, and dashboards
-- [Alert Runbooks](operations/RUNBOOKS.md) - Incident response procedures by alert type
+- [Alert Runbooks](RUNBOOKS.md) - Incident response procedures by alert type
 - [Observability Reference](OBSERVABILITY.md) - Metrics, traces, and structured logging
 
 ### Coinbase Integration

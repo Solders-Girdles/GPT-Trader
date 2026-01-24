@@ -180,9 +180,8 @@ The repository follows a standardized organization optimized for both human deve
   - Root `scripts/*.py` - Core runbooks and one-off utilities
 
 #### Documentation Standards
-- `/docs/guides/` - How-to guides and tutorials
-- `/docs/reference/` - Technical reference documentation
-- `/docs/operations/` - Operations and maintenance procedures
+- `/docs/` - Canonical, low-overhead documentation (prefer flat structure)
+- `/docs/agents/` - AI-focused maps, inventories, and agent workflows
 
 #### Archive Management
 - Use git history for retired docs or scripts
@@ -191,10 +190,9 @@ The repository follows a standardized organization optimized for both human deve
 ### File Placement Guidelines
 
 #### New Documentation
-- **Tutorials/Guides**: `/docs/guides/`
-- **API Reference**: `/docs/reference/`
-- **Operations**: `/docs/operations/`
-- **Never**: Root directory or legacy locations
+- **Default**: `/docs/` (keep docs flat unless a subdirectory is clearly justified)
+- **AI Agent Context**: `/docs/agents/`
+- **Never**: New archive directories; rely on git history
 
 #### New Scripts
 - **Core Operations**: `/scripts/` (root helpers)

@@ -35311,7 +35311,7 @@
     "tests/unit/gpt_trader/persistence/test_event_store.py": [
       {
         "name": "TestEventStore::test_event_store_init_default_path",
-        "line": 15,
+        "line": 14,
         "markers": [
           "unit"
         ],
@@ -35320,7 +35320,7 @@
       },
       {
         "name": "TestEventStore::test_event_store_init_custom_path",
-        "line": 21,
+        "line": 20,
         "markers": [
           "unit"
         ],
@@ -35329,7 +35329,7 @@
       },
       {
         "name": "TestEventStore::test_append_adds_to_memory",
-        "line": 29,
+        "line": 28,
         "markers": [
           "unit"
         ],
@@ -35338,7 +35338,7 @@
       },
       {
         "name": "TestEventStore::test_append_trade",
-        "line": 38,
+        "line": 37,
         "markers": [
           "unit"
         ],
@@ -35347,7 +35347,7 @@
       },
       {
         "name": "TestEventStore::test_append_trade_dict_only",
-        "line": 52,
+        "line": 51,
         "markers": [
           "unit"
         ],
@@ -35356,7 +35356,7 @@
       },
       {
         "name": "TestEventStore::test_append_position",
-        "line": 64,
+        "line": 63,
         "markers": [
           "unit"
         ],
@@ -35365,7 +35365,7 @@
       },
       {
         "name": "TestEventStore::test_append_metric",
-        "line": 81,
+        "line": 80,
         "markers": [
           "unit"
         ],
@@ -35374,7 +35374,7 @@
       },
       {
         "name": "TestEventStore::test_append_error_without_context",
-        "line": 94,
+        "line": 93,
         "markers": [
           "unit"
         ],
@@ -35383,7 +35383,7 @@
       },
       {
         "name": "TestEventStore::test_append_error_with_context",
-        "line": 107,
+        "line": 106,
         "markers": [
           "unit"
         ],
@@ -35392,7 +35392,7 @@
       },
       {
         "name": "TestEventStore::test_store_event_alias",
-        "line": 121,
+        "line": 120,
         "markers": [
           "unit"
         ],
@@ -35401,7 +35401,7 @@
       },
       {
         "name": "TestEventStorePruning::test_prune_memory_only_is_noop",
-        "line": 134,
+        "line": 133,
         "markers": [
           "unit"
         ],
@@ -35410,7 +35410,7 @@
       },
       {
         "name": "TestEventStorePruning::test_prune_persistent_removes_oldest",
-        "line": 146,
+        "line": 145,
         "markers": [
           "unit"
         ],
@@ -35419,7 +35419,7 @@
       },
       {
         "name": "TestEventStorePruning::test_prune_when_under_limit_is_noop",
-        "line": 171,
+        "line": 170,
         "markers": [
           "unit"
         ],
@@ -35428,7 +35428,7 @@
       },
       {
         "name": "TestEventStorePruning::test_prune_with_zero_max_rows",
-        "line": 187,
+        "line": 186,
         "markers": [
           "unit"
         ],

@@ -156,7 +156,7 @@ scaffold-slice:
 	uv run python scripts/maintenance/feature_slice_scaffold.py --name $(name) $(flags)
 
 legacy-bundle:
-	@echo "Legacy bundling helper retired; see docs/archive/legacy_recovery.md for manual recovery steps."
+	@echo "Legacy bundling helper retired; use git history if you need the old recovery steps."
 
 agent-setup:
 	uv sync --all-extras

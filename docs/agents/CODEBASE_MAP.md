@@ -31,7 +31,7 @@ Use this as a “where do I start?” index when you already know what you’re 
 
 - Use `ApplicationContainer` (`src/gpt_trader/app/container.py`) for all dependency wiring.
 - Use `build_bot()` or `bot_from_profile()` from `bootstrap.py` for simple bot creation.
-- If you need to understand architecture decisions, start at `docs/ARCHITECTURE.md` and `docs/adr/README.md`.
+- If you need to understand historical architecture decisions, use git history (PRs/commits) plus `docs/ARCHITECTURE.md`.
 
 ## Useful Commands
 

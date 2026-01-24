@@ -35,7 +35,6 @@ last-updated: 2026-01-24
 
 ### Architecture & Design
 - [System Architecture](ARCHITECTURE.md) - Component overview and vertical slices
-- [ADR Index](adr/README.md) - Architecture Decision Records
 - [DI Policy](DI_POLICY.md) - Dependency injection patterns and container usage
 
 ### Trading Operations

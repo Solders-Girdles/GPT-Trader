@@ -183,7 +183,6 @@ The repository follows a standardized organization optimized for both human deve
 - `/docs/guides/` - How-to guides and tutorials
 - `/docs/reference/` - Technical reference documentation
 - `/docs/operations/` - Operations and maintenance procedures
-- `/docs/adr/` - Architecture decision records
 
 #### Archive Management
 - Use git history for retired docs or scripts

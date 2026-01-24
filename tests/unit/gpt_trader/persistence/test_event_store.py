@@ -1,7 +1,6 @@
 """Tests for EventStore persistence functionality.
 
-NOTE: The EventStore is currently a minimal in-memory implementation.
-See docs/archive/PROJECT_ROADMAP_NOV_2025.md "Future Activation" section - "EventStore need production hardening".
+EventStore supports both in-memory mode (`root=None`) and SQLite persistence when a `root` is provided.
 """
 
 from pathlib import Path

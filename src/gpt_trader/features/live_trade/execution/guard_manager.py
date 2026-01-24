@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 from gpt_trader.core import Balance
 from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
+from gpt_trader.features.live_trade.execution.broker_executor import BrokerExecutor
 from gpt_trader.features.live_trade.execution.guards.api_health import ApiHealthGuard
 from gpt_trader.features.live_trade.execution.guards.cache import GuardStateCache
 from gpt_trader.features.live_trade.execution.guards.daily_loss import DailyLossGuard
@@ -52,6 +53,7 @@ class GuardManager:
         equity_calculator: Callable[[list[Balance]], tuple[Decimal, list[Balance], Decimal]],
         open_orders: list[str],
         invalidate_cache_callback: Callable[[], None],
+        cancel_retries_enabled: bool = False,
     ) -> None:
         """
         Initialize guard manager.
@@ -67,6 +69,8 @@ class GuardManager:
         self.risk_manager = risk_manager
         self._calculate_equity = equity_calculator
         self.open_orders = open_orders
+        self._cancel_retries_enabled = cancel_retries_enabled
+        self._broker_executor = BrokerExecutor(broker=broker)
         # Backward compat: store callback reference for tests
         self._invalidate_cache_callback = invalidate_cache_callback
 
@@ -365,12 +369,24 @@ class GuardManager:
 
         for order_id in list(order_ids):  # Copy list to avoid modification during iteration
             try:
-                if self.broker.cancel_order(order_id):
+                did_cancel = self._broker_executor.cancel_order(
+                    order_id,
+                    use_retry=self._cancel_retries_enabled,
+                    allow_idempotent=True,
+                )
+                if did_cancel:
                     cancelled += 1
                     if order_id in self.open_orders:
                         self.open_orders.remove(order_id)
                     logger.info(
                         "Cancelled order",
+                        order_id=order_id,
+                        operation="order_cancel",
+                        stage="single",
+                    )
+                else:
+                    logger.warning(
+                        "Cancel returned false",
                         order_id=order_id,
                         operation="order_cancel",
                         stage="single",

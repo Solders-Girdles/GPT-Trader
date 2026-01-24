@@ -85,18 +85,20 @@ class TestExecutionMetrics:
 
 class TestIssueTracking:
     @pytest.mark.parametrize(
-        ("kwargs", "expected_reason"),
+        ("kwargs", "expected_reason", "expected_detail"),
         [
             (
                 {
                     "rejected": True,
                     "rejection_reason": "rate_limit",
+                    "reason_detail": "limit_exceeded",
                     "symbol": "BTC-USD",
                     "side": "BUY",
                     "quantity": 0.5,
                     "price": 30000.0,
                 },
                 "rate_limit",
+                "limit_exceeded",
             ),
             (
                 {
@@ -107,10 +109,11 @@ class TestIssueTracking:
                     "price": 2000.0,
                 },
                 "Timeout",
+                "",
             ),
         ],
     )
-    def test_submission_issue_records_context(self, kwargs, expected_reason):
+    def test_submission_issue_records_context(self, kwargs, expected_reason, expected_detail):
         collector = ExecutionTelemetryCollector()
         collector.record_submission(latency_ms=30.0, success=False, **kwargs)
 
@@ -120,6 +123,7 @@ class TestIssueTracking:
         assert issue.quantity == kwargs["quantity"]
         assert issue.price == kwargs["price"]
         assert issue.reason == expected_reason
+        assert issue.reason_detail == expected_detail
         assert issue.is_retry is False
 
     def test_retry_issue_records_context(self):

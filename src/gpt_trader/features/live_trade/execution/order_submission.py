@@ -10,8 +10,10 @@ from __future__ import annotations
 import os
 import time
 import uuid
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
+from enum import Enum
 from typing import Any, cast
 
 from gpt_trader.app.protocols import EventStoreProtocol
@@ -38,6 +40,44 @@ from gpt_trader.utilities.logging_patterns import get_logger
 logger = get_logger(__name__, component="order_submission")
 
 
+class OrderSubmissionOutcomeStatus(str, Enum):
+    """Outcome status for broker submission attempts."""
+
+    SUCCESS = "success"
+    REJECTED = "rejected"
+    FAILED = "failed"
+
+
+@dataclass(frozen=True)
+class OrderSubmissionOutcome:
+    """Structured result for broker submission attempts."""
+
+    status: OrderSubmissionOutcomeStatus
+    order_id: str | None = None
+    order: Any | None = None
+    reason: str | None = None
+    reason_detail: str | None = None
+    error: str | None = None
+
+    @property
+    def success(self) -> bool:
+        return self.status is OrderSubmissionOutcomeStatus.SUCCESS
+
+    @property
+    def rejected(self) -> bool:
+        return self.status is OrderSubmissionOutcomeStatus.REJECTED
+
+    @property
+    def failed(self) -> bool:
+        return self.status is OrderSubmissionOutcomeStatus.FAILED
+
+    @property
+    def error_message(self) -> str | None:
+        if self.reason and self.reason_detail:
+            return f"{self.reason}:{self.reason_detail}"
+        return self.reason or self.error
+
+
 def _classify_rejection_reason(status_or_error: str) -> str:
     """Classify a rejection or error into a standardized reason category."""
     return normalize_rejection_reason(status_or_error)[0]
@@ -49,6 +89,7 @@ def _record_execution_telemetry(
     rejected: bool = False,
     failure_reason: str = "",
     rejection_reason: str = "",
+    reason_detail: str | None = None,
     symbol: str = "",
     side: str = "",
     quantity: float = 0.0,
@@ -65,6 +106,7 @@ def _record_execution_telemetry(
         rejected: Whether broker rejected the order.
         failure_reason: Human-readable failure reason.
         rejection_reason: Categorized reason for rejection/failure (normalized).
+        reason_detail: Additional context for rejection/failure (optional).
         symbol: Order symbol.
         side: Order side (BUY/SELL).
         quantity: Order quantity.
@@ -80,6 +122,7 @@ def _record_execution_telemetry(
             rejected=rejected,
             failure_reason=failure_reason,
             rejection_reason=rejection_reason,
+            reason_detail=reason_detail or "",
             symbol=symbol,
             side=side,
             quantity=quantity,
@@ -240,6 +283,21 @@ class OrderSubmitter:
             return value
         return Decimal(str(value))
 
+    def _get_existing_record(self, client_order_id: str) -> OrderRecord | None:
+        if self.orders_store is None:
+            return None
+        try:
+            return self.orders_store.get_order_by_client_order_id(client_order_id)
+        except Exception as exc:
+            logger.warning(
+                "Failed to fetch order record",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="orders_store_lookup",
+                client_order_id=client_order_id,
+            )
+            return None
+
     def _persist_order(self, record: OrderRecord) -> None:
         if self.orders_store is None:
             return
@@ -387,6 +445,126 @@ class OrderSubmitter:
         )
         self._persist_order(record)
 
+    def _handle_existing_submission_outcome(
+        self,
+        record: OrderRecord,
+        *,
+        submit_id: str,
+        symbol: str,
+        side: OrderSide,
+        order_type: OrderType,
+        order_quantity: Decimal,
+        price: Decimal | None,
+        effective_price: Decimal,
+    ) -> OrderSubmissionOutcome:
+        order_id = record.order_id or submit_id
+        status = record.status
+        if status in {
+            StoreOrderStatus.PENDING,
+            StoreOrderStatus.OPEN,
+            StoreOrderStatus.PARTIALLY_FILLED,
+        }:
+            if order_id not in self.open_orders:
+                self.open_orders.append(order_id)
+            logger.info(
+                "Idempotent submission hit",
+                order_id=order_id,
+                client_order_id=submit_id,
+                symbol=symbol,
+                side=side.value,
+                order_type=self._normalize_order_type(order_type),
+                status=status.value,
+                operation="order_submit",
+                stage="idempotent_open",
+            )
+            return OrderSubmissionOutcome(
+                status=OrderSubmissionOutcomeStatus.SUCCESS,
+                order_id=order_id,
+            )
+        if status is StoreOrderStatus.FILLED:
+            logger.info(
+                "Idempotent submission hit for filled order",
+                order_id=order_id,
+                client_order_id=submit_id,
+                symbol=symbol,
+                side=side.value,
+                order_type=self._normalize_order_type(order_type),
+                status=status.value,
+                operation="order_submit",
+                stage="idempotent_filled",
+            )
+            return OrderSubmissionOutcome(
+                status=OrderSubmissionOutcomeStatus.SUCCESS,
+                order_id=order_id,
+            )
+        if status in {
+            StoreOrderStatus.CANCELLED,
+            StoreOrderStatus.REJECTED,
+            StoreOrderStatus.EXPIRED,
+            StoreOrderStatus.FAILED,
+        }:
+            reason = f"broker_status_{status.value}"
+            self.record_rejection(
+                symbol,
+                side.value,
+                order_quantity,
+                price if price is not None else effective_price,
+                reason,
+                client_order_id=submit_id,
+            )
+            logger.warning(
+                "Idempotent submission blocked by terminal status",
+                order_id=order_id,
+                client_order_id=submit_id,
+                symbol=symbol,
+                side=side.value,
+                order_type=self._normalize_order_type(order_type),
+                status=status.value,
+                operation="order_submit",
+                stage="idempotent_terminal",
+            )
+            normalized_reason, reason_detail = normalize_rejection_reason(reason)
+            return OrderSubmissionOutcome(
+                status=OrderSubmissionOutcomeStatus.REJECTED,
+                order_id=order_id,
+                reason=normalized_reason,
+                reason_detail=reason_detail,
+            )
+        return OrderSubmissionOutcome(
+            status=OrderSubmissionOutcomeStatus.FAILED,
+            order_id=order_id,
+            reason="unknown",
+            reason_detail=str(status),
+        )
+
+    def _handle_existing_submission(
+        self,
+        record: OrderRecord,
+        *,
+        submit_id: str,
+        symbol: str,
+        side: OrderSide,
+        order_type: OrderType,
+        order_quantity: Decimal,
+        price: Decimal | None,
+        effective_price: Decimal,
+    ) -> str | None:
+        outcome = self._handle_existing_submission_outcome(
+            record,
+            submit_id=submit_id,
+            symbol=symbol,
+            side=side,
+            order_type=order_type,
+            order_quantity=order_quantity,
+            price=price,
+            effective_price=effective_price,
+        )
+        if self.integration_mode and outcome.order is not None:
+            return cast(str | None, outcome.order)
+        if outcome.success:
+            return outcome.order_id
+        return None
+
     def generate_client_order_id(self, client_order_id: str | None = None) -> str:
         """Generate a stable client order ID using submission rules."""
         return self._generate_submit_id(client_order_id)
@@ -465,9 +643,61 @@ class OrderSubmitter:
         Returns:
             Order ID if successful, None otherwise
         """
+        outcome = self.submit_order_with_result(
+            symbol=symbol,
+            side=side,
+            order_type=order_type,
+            order_quantity=order_quantity,
+            price=price,
+            effective_price=effective_price,
+            stop_price=stop_price,
+            tif=tif,
+            reduce_only=reduce_only,
+            leverage=leverage,
+            client_order_id=client_order_id,
+        )
+        if self.integration_mode and outcome.order is not None:
+            return cast(str | None, outcome.order)
+        if outcome.success:
+            return outcome.order_id
+        return None
+
+    def submit_order_with_result(
+        self,
+        *,
+        symbol: str,
+        side: OrderSide,
+        order_type: OrderType,
+        order_quantity: Decimal,
+        price: Decimal | None,
+        effective_price: Decimal,
+        stop_price: Decimal | None,
+        tif: Any | None,
+        reduce_only: bool,
+        leverage: int | None,
+        client_order_id: str | None,
+    ) -> OrderSubmissionOutcome:
+        """
+        Submit order to broker and record the result.
+
+        Args:
+            symbol: Trading symbol
+            side: Order side
+            order_type: Order type
+            order_quantity: Order quantity
+            price: Order price (None for market)
+            effective_price: Effective price for recording
+            stop_price: Stop price for stop orders
+            tif: Time in force
+            reduce_only: Whether order is reduce-only
+            leverage: Leverage multiplier
+            client_order_id: Client order ID (generated if None)
+
+        Returns:
+            Structured outcome describing success/rejection/failure.
+        """
         submit_id = self._generate_submit_id(client_order_id)
 
-        # Wrap entire submission in order context and trace span
         with order_context(order_id=submit_id, symbol=symbol):
             with trace_span(
                 "order_submit",
@@ -483,7 +713,7 @@ class OrderSubmitter:
                     "reduce_only": reduce_only,
                 },
             ):
-                return self._submit_order_inner(
+                return self._submit_order_inner_result(
                     submit_id=submit_id,
                     symbol=symbol,
                     side=side,
@@ -497,7 +727,7 @@ class OrderSubmitter:
                     leverage=leverage,
                 )
 
-    def _submit_order_inner(
+    def _submit_order_inner_result(
         self,
         *,
         submit_id: str,
@@ -511,9 +741,41 @@ class OrderSubmitter:
         tif: Any | None,
         reduce_only: bool,
         leverage: int | None,
-    ) -> str | None:
+    ) -> OrderSubmissionOutcome:
         """Inner order submission logic wrapped in correlation context."""
-        # 1. Log submission attempt
+        existing_record = self._get_existing_record(submit_id)
+        if existing_record is not None:
+            known_statuses = {
+                StoreOrderStatus.PENDING,
+                StoreOrderStatus.OPEN,
+                StoreOrderStatus.PARTIALLY_FILLED,
+                StoreOrderStatus.FILLED,
+                StoreOrderStatus.CANCELLED,
+                StoreOrderStatus.REJECTED,
+                StoreOrderStatus.EXPIRED,
+                StoreOrderStatus.FAILED,
+            }
+            if existing_record.status in known_statuses:
+                return self._handle_existing_submission_outcome(
+                    existing_record,
+                    submit_id=submit_id,
+                    symbol=symbol,
+                    side=side,
+                    order_type=order_type,
+                    order_quantity=order_quantity,
+                    price=price,
+                    effective_price=effective_price,
+                )
+            logger.warning(
+                "Order record has unexpected status",
+                client_order_id=submit_id,
+                order_id=existing_record.order_id,
+                status=getattr(existing_record.status, "value", str(existing_record.status)),
+                symbol=symbol,
+                side=side.value,
+                operation="order_submit",
+                stage="idempotent_unknown",
+            )
         self._log_submission_attempt(submit_id, symbol, side, order_type, order_quantity, price)
         self._record_pending_submission(
             submit_id,
@@ -529,7 +791,6 @@ class OrderSubmitter:
 
         start_time = time.perf_counter()
         try:
-            # 2. Execute Broker Request
             order = self._execute_broker_order(
                 submit_id=submit_id,
                 symbol=symbol,
@@ -544,7 +805,6 @@ class OrderSubmitter:
             )
             latency_ms = (time.perf_counter() - start_time) * 1000
 
-            # 3. Handle Result (Success/Rejection)
             result = self._handle_order_result(
                 order,
                 symbol,
@@ -559,15 +819,21 @@ class OrderSubmitter:
                 submit_id,
             )
 
-            # Record telemetry for successful submission
             side_str = side.value if hasattr(side, "value") else str(side)
             price_float = float(price) if price is not None else 0.0
             qty_float = float(order_quantity)
-
-            # Convert latency to seconds for histogram
             latency_seconds = latency_ms / 1000.0
 
             if result is not None:
+                order_id: str | None = None
+                order_payload: Any | None = None
+                if self.integration_mode:
+                    order_payload = result
+                    raw_order_id = getattr(result, "id", None)
+                    if raw_order_id is not None:
+                        order_id = str(raw_order_id)
+                else:
+                    order_id = cast(str, result)
                 _record_execution_telemetry(
                     latency_ms=latency_ms,
                     success=True,
@@ -586,56 +852,58 @@ class OrderSubmitter:
                     result="success",
                     side=side_str,
                 )
-            else:
-                # Order was rejected by broker (fallback case - no order returned)
-                _record_execution_telemetry(
-                    latency_ms=latency_ms,
-                    success=False,
-                    rejected=True,
-                    rejection_reason="broker_rejected",
-                    symbol=symbol,
-                    side=side_str,
-                    quantity=qty_float,
-                    price=price_float,
+                return OrderSubmissionOutcome(
+                    status=OrderSubmissionOutcomeStatus.SUCCESS,
+                    order_id=order_id,
+                    order=order_payload,
                 )
-                _record_order_submission_metric(
-                    result="rejected",
-                    reason="broker_rejected",
-                    side=side_str,
-                )
-                _record_order_submission_latency(
-                    latency_seconds=latency_seconds,
-                    result="rejected",
-                    side=side_str,
-                )
-
-            return result
+            _record_execution_telemetry(
+                latency_ms=latency_ms,
+                success=False,
+                rejected=True,
+                rejection_reason="broker_rejected",
+                symbol=symbol,
+                side=side_str,
+                quantity=qty_float,
+                price=price_float,
+            )
+            _record_order_submission_metric(
+                result="rejected",
+                reason="broker_rejected",
+                side=side_str,
+            )
+            _record_order_submission_latency(
+                latency_seconds=latency_seconds,
+                result="rejected",
+                side=side_str,
+            )
+            return OrderSubmissionOutcome(
+                status=OrderSubmissionOutcomeStatus.REJECTED,
+                reason="broker_rejected",
+            )
 
         except Exception as exc:
             latency_ms = (time.perf_counter() - start_time) * 1000
-            # Classify the error for telemetry
             error_str = str(exc)
-            reason = _classify_rejection_reason(error_str)
+            reason, reason_detail = normalize_rejection_reason(error_str)
             is_rejection = reason in {"broker_rejected", "broker_status"}
 
-            # Compute order context for telemetry
             side_str = side.value if hasattr(side, "value") else str(side)
             price_float = float(price) if price is not None else 0.0
             qty_float = float(order_quantity)
 
-            # Record telemetry for failed submission
             _record_execution_telemetry(
                 latency_ms=latency_ms,
                 success=False,
                 rejected=is_rejection,
                 failure_reason=error_str[:100],
                 rejection_reason=reason,
+                reason_detail=reason_detail,
                 symbol=symbol,
                 side=side_str,
                 quantity=qty_float,
                 price=price_float,
             )
-            # Record metric with rejection/failure classification
             metric_result = "rejected" if is_rejection else "failed"
             _record_order_submission_metric(
                 result=metric_result,
@@ -647,7 +915,6 @@ class OrderSubmitter:
                 result=metric_result,
                 side=side_str,
             )
-            # 4. Handle Failure
             self._record_failed_submission(
                 submit_id,
                 symbol,
@@ -660,7 +927,50 @@ class OrderSubmitter:
                 leverage,
             )
             self._handle_order_failure(exc, symbol, side, order_quantity)
-            return None
+            return OrderSubmissionOutcome(
+                status=(
+                    OrderSubmissionOutcomeStatus.REJECTED
+                    if is_rejection
+                    else OrderSubmissionOutcomeStatus.FAILED
+                ),
+                reason=reason,
+                reason_detail=reason_detail,
+                error=error_str,
+            )
+
+    def _submit_order_inner(
+        self,
+        *,
+        submit_id: str,
+        symbol: str,
+        side: OrderSide,
+        order_type: OrderType,
+        order_quantity: Decimal,
+        price: Decimal | None,
+        effective_price: Decimal,
+        stop_price: Decimal | None,
+        tif: Any | None,
+        reduce_only: bool,
+        leverage: int | None,
+    ) -> str | None:
+        outcome = self._submit_order_inner_result(
+            submit_id=submit_id,
+            symbol=symbol,
+            side=side,
+            order_type=order_type,
+            order_quantity=order_quantity,
+            price=price,
+            effective_price=effective_price,
+            stop_price=stop_price,
+            tif=tif,
+            reduce_only=reduce_only,
+            leverage=leverage,
+        )
+        if self.integration_mode and outcome.order is not None:
+            return cast(str | None, outcome.order)
+        if outcome.success:
+            return outcome.order_id
+        return None
 
     def _generate_submit_id(self, client_order_id: str | None) -> str:
         """Generate or retrieve client order ID."""

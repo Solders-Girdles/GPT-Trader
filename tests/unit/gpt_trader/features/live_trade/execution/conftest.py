@@ -279,6 +279,15 @@ def submit_order_call(submit_order_kwargs):
 
 
 @pytest.fixture
+def submit_order_with_result_call(submit_order_kwargs):
+    def _call(submitter: OrderSubmitter, **overrides):
+        payload = {**submit_order_kwargs, **overrides}
+        return submitter.submit_order_with_result(**payload)
+
+    return _call
+
+
+@pytest.fixture
 def mock_order() -> Order:
     """Create a mock successful order."""
     return Order(

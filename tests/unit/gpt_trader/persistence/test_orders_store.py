@@ -36,6 +36,19 @@ class TestOrdersStore:
                 assert retrieved.symbol == order.symbol
                 assert retrieved.quantity == order.quantity
 
+    def test_get_order_by_client_order_id(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            with OrdersStore(tmpdir) as store:
+                order = create_test_order(order_id="order-123", client_order_id="client-abc")
+                store.save_order(order)
+
+                retrieved = store.get_order_by_client_order_id("client-abc")
+                assert retrieved is not None
+                assert retrieved.order_id == "order-123"
+
+                missing = store.get_order_by_client_order_id("missing-client")
+                assert missing is None
+
     def test_get_order_not_found(self) -> None:
         with TemporaryDirectory() as tmpdir:
             with OrdersStore(tmpdir) as store:

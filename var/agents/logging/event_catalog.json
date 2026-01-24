@@ -1,49 +1,10 @@
 {
-  "version": "1.0",
-  "description": "Catalog of structured log events in GPT-Trader",
-  "total_event_types": 128,
   "categories": {
-    "trading": [
-      "cancel_order",
-      "cleanup_orders",
-      "execute_order",
-      "fill_persist",
-      "get_cfm_balance",
-      "get_intx_balances",
-      "get_intx_position",
-      "get_order",
-      "get_position",
-      "handle_order_failure",
-      "list_balances",
-      "list_cfm_positions",
-      "list_fills",
-      "list_intx_positions",
-      "list_orders",
-      "list_positions",
-      "list_spot_positions_as_core",
-      "order_audit",
-      "order_cancel",
-      "order_decision_trace",
-      "order_placement",
-      "order_preview",
-      "order_reconciliation",
-      "order_recovery",
-      "order_rejected",
-      "order_route",
-      "order_submit",
-      "order_update_persist",
-      "orders_init",
-      "orders_store_init",
-      "orders_store_persist",
-      "pnl_process_fill",
-      "record_trade_event",
-      "save_order",
-      "submit",
-      "system_monitor_positions",
-      "telemetry_orderbook",
-      "telemetry_trade",
-      "upsert_order",
-      "user_backfill"
+    "configuration": [
+      "collect_runtime_guard_state",
+      "config_guardian",
+      "runtime_guards",
+      "runtime_start"
     ],
     "data": [
       "fetch_total_equity",
@@ -75,33 +36,6 @@
       "system_monitor_metrics",
       "telemetry_stream",
       "ws_health"
-    ],
-    "security": [
-      "check_ip",
-      "encryption_init",
-      "enforce_slippage_guard",
-      "secret_retrieve",
-      "secret_store",
-      "suspicious_activity",
-      "vault_init"
-    ],
-    "configuration": [
-      "collect_runtime_guard_state",
-      "config_guardian",
-      "runtime_guards",
-      "runtime_start"
-    ],
-    "system": [
-      "get_cfm_sweeps_schedule",
-      "schedule_coroutine",
-      "shutdown",
-      "shutdown_tracing"
-    ],
-    "risk": [
-      "get_cfm_margin_window",
-      "guard_alert",
-      "guard_manager",
-      "rate_limit"
     ],
     "other": [
       "add_rule",
@@ -146,518 +80,173 @@
       "validation_escalation",
       "verify_integrity",
       "write_event"
+    ],
+    "risk": [
+      "get_cfm_margin_window",
+      "guard_alert",
+      "guard_manager",
+      "rate_limit"
+    ],
+    "security": [
+      "check_ip",
+      "encryption_init",
+      "enforce_slippage_guard",
+      "secret_retrieve",
+      "secret_store",
+      "suspicious_activity",
+      "vault_init"
+    ],
+    "system": [
+      "get_cfm_sweeps_schedule",
+      "schedule_coroutine",
+      "shutdown",
+      "shutdown_tracing"
+    ],
+    "trading": [
+      "cancel_order",
+      "cleanup_orders",
+      "execute_order",
+      "fill_persist",
+      "get_cfm_balance",
+      "get_intx_balances",
+      "get_intx_position",
+      "get_order",
+      "get_position",
+      "handle_order_failure",
+      "list_balances",
+      "list_cfm_positions",
+      "list_fills",
+      "list_intx_positions",
+      "list_orders",
+      "list_positions",
+      "list_spot_positions_as_core",
+      "order_audit",
+      "order_cancel",
+      "order_decision_trace",
+      "order_placement",
+      "order_preview",
+      "order_reconciliation",
+      "order_recovery",
+      "order_rejected",
+      "order_route",
+      "order_submit",
+      "order_update_persist",
+      "orders_init",
+      "orders_store_init",
+      "orders_store_persist",
+      "pnl_process_fill",
+      "record_trade_event",
+      "save_order",
+      "submit",
+      "system_monitor_positions",
+      "telemetry_orderbook",
+      "telemetry_trade",
+      "upsert_order",
+      "user_backfill"
     ]
   },
+  "description": "Catalog of structured log events in GPT-Trader",
   "events": {
-    "bot_bootstrap": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "INFO"
-      ],
+    "account_telemetry": {
       "common_fields": [
-        "container",
+        "indent",
+        "int",
+        "server_time",
         "stage"
       ],
-      "source_files": [
-        "app/bootstrap.py"
-      ]
-    },
-    "health_signals": {
-      "occurrence_count": 1,
       "components": null,
-      "statuses": null,
-      "levels": [
-        "WARNING"
-      ],
-      "common_fields": [
-        "error",
-        "summary"
-      ],
-      "source_files": [
-        "app/health_server.py"
-      ]
-    },
-    "health_server_start": {
-      "occurrence_count": 2,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "INFO",
-        "WARNING"
-      ],
-      "common_fields": [
-        "error_message",
-        "error_type",
-        "host",
-        "port",
-        "reason"
-      ],
-      "source_files": [
-        "app/health_server.py",
-        "cli/commands/run.py"
-      ]
-    },
-    "health_server_stop": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "INFO"
-      ],
-      "common_fields": [
-        "_server",
-        "running"
-      ],
-      "source_files": [
-        "app/health_server.py"
-      ]
-    },
-    "health_request": {
-      "occurrence_count": 2,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "DEBUG"
-      ],
-      "common_fields": [
-        "error"
-      ],
-      "source_files": [
-        "app/health_server.py"
-      ]
-    },
-    "readiness_update": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "INFO"
-      ],
-      "common_fields": [
-        "bool",
-        "ready",
-        "reason",
-        "str"
-      ],
-      "source_files": [
-        "app/health_server.py"
-      ]
-    },
-    "encryption_init": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": [
-        "generated"
-      ],
-      "levels": [
-        "WARNING"
-      ],
-      "common_fields": [
-        "encryption_key"
-      ],
-      "source_files": [
-        "security/secrets_manager.py"
-      ]
-    },
-    "vault_init": {
-      "occurrence_count": 5,
-      "components": null,
-      "statuses": [
-        "connected",
-        "dependency_missing",
-        "error",
-        "token_missing",
-        "unauthenticated"
-      ],
       "levels": [
         "DEBUG",
-        "INFO",
-        "WARNING"
-      ],
-      "common_fields": [
-        "_vault_enabled"
-      ],
-      "source_files": [
-        "security/secrets_manager.py"
-      ]
-    },
-    "secret_store": {
-      "occurrence_count": 3,
-      "components": null,
-      "statuses": [
-        "error",
-        "success"
-      ],
-      "levels": [
-        "ERROR",
         "INFO"
       ],
-      "common_fields": [
-        "path",
-        "secret"
-      ],
+      "occurrence_count": 4,
       "source_files": [
-        "security/secrets_manager.py"
-      ]
-    },
-    "secret_retrieve": {
-      "occurrence_count": 1,
-      "components": null,
+        "features/live_trade/telemetry/account.py"
+      ],
       "statuses": [
-        "error"
-      ],
-      "levels": [
-        "ERROR"
-      ],
-      "common_fields": [],
-      "source_files": [
-        "security/secrets_manager.py"
-      ]
-    },
-    "rotate_key": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
-      ],
-      "common_fields": [
-        "error_message",
-        "error_type",
-        "path"
-      ],
-      "source_files": [
-        "security/secrets_manager.py"
-      ]
-    },
-    "suspicious_activity": {
-      "occurrence_count": 3,
-      "components": null,
-      "statuses": [
-        "alert"
-      ],
-      "levels": [
-        "WARNING"
-      ],
-      "common_fields": [
-        "avg_size"
-      ],
-      "source_files": [
-        "security/suspicious_activity_detector.py"
-      ]
-    },
-    "load_rules": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "INFO"
-      ],
-      "common_fields": [
-        "ip_count",
-        "service"
-      ],
-      "source_files": [
-        "security/ip_allowlist_enforcer.py"
+        "disabled"
       ]
     },
     "add_rule": {
-      "occurrence_count": 2,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR",
-        "INFO"
-      ],
       "common_fields": [
         "invalid_value",
         "ip_count",
         "iption",
         "service"
       ],
+      "components": null,
+      "levels": [
+        "ERROR",
+        "INFO"
+      ],
+      "occurrence_count": 2,
       "source_files": [
         "security/ip_allowlist_enforcer.py"
-      ]
+      ],
+      "statuses": null
     },
-    "validate_ip": {
-      "occurrence_count": 3,
+    "api_health_guard": {
+      "common_fields": [
+        "details",
+        "guard_name",
+        "reasons"
+      ],
       "components": null,
-      "statuses": null,
       "levels": [
-        "DEBUG",
         "WARNING"
       ],
-      "common_fields": [
-        "client_ip",
-        "matched_rule",
-        "rule_exists",
-        "service"
-      ],
+      "occurrence_count": 1,
       "source_files": [
-        "security/ip_allowlist_enforcer.py"
-      ]
+        "features/live_trade/execution/guards/api_health.py"
+      ],
+      "statuses": null
+    },
+    "bot_bootstrap": {
+      "common_fields": [
+        "container",
+        "stage"
+      ],
+      "components": null,
+      "levels": [
+        "INFO"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "app/bootstrap.py"
+      ],
+      "statuses": null
+    },
+    "cancel_order": {
+      "common_fields": [
+        "error_message",
+        "error_type",
+        "order_id"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/brokerages/coinbase/rest/order_service.py"
+      ],
+      "statuses": null
     },
     "check_ip": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "WARNING"
-      ],
       "common_fields": [
         "client_ip"
       ],
+      "components": null,
+      "levels": [
+        "WARNING"
+      ],
+      "occurrence_count": 1,
       "source_files": [
         "security/ip_allowlist_enforcer.py"
-      ]
-    },
-    "enable_rule": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "INFO"
       ],
-      "common_fields": [
-        "enabled",
-        "service",
-        "updated_at"
-      ],
-      "source_files": [
-        "security/ip_allowlist_enforcer.py"
-      ]
-    },
-    "disable_rule": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "WARNING"
-      ],
-      "common_fields": [
-        "enabled",
-        "service",
-        "updated_at"
-      ],
-      "source_files": [
-        "security/ip_allowlist_enforcer.py"
-      ]
-    },
-    "remove_rule": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "WARNING"
-      ],
-      "common_fields": [
-        "service"
-      ],
-      "source_files": [
-        "security/ip_allowlist_enforcer.py"
-      ]
-    },
-    "rate_limit": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": [
-        "blocked"
-      ],
-      "levels": [
-        "WARNING"
-      ],
-      "common_fields": [],
-      "source_files": [
-        "security/rate_limiter.py"
-      ]
-    },
-    "init_tracing": {
-      "occurrence_count": 5,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "INFO",
-        "WARNING"
-      ],
-      "common_fields": [
-        "_tracer",
-        "_tracing_enabled",
-        "enabled",
-        "endpoint",
-        "er",
-        "error",
-        "processor",
-        "service_name"
-      ],
-      "source_files": [
-        "observability/tracing.py"
-      ]
-    },
-    "shutdown_tracing": {
-      "occurrence_count": 2,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "INFO"
-      ],
-      "common_fields": [
-        "_tracer",
-        "error",
-        "provider"
-      ],
-      "source_files": [
-        "observability/tracing.py"
-      ]
-    },
-    "database_init": {
-      "occurrence_count": 4,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "DEBUG",
-        "ERROR",
-        "INFO"
-      ],
-      "common_fields": [
-        "_initialized",
-        "connection",
-        "issues",
-        "path",
-        "schema"
-      ],
-      "source_files": [
-        "persistence/database.py"
-      ]
-    },
-    "write_event": {
-      "occurrence_count": 3,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "DEBUG",
-        "ERROR"
-      ],
-      "common_fields": [
-        "error",
-        "error_msg",
-        "event_type",
-        "row_id"
-      ],
-      "source_files": [
-        "persistence/database.py"
-      ]
-    },
-    "orders_init": {
-      "occurrence_count": 2,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR",
-        "INFO"
-      ],
-      "common_fields": [
-        "_initialized",
-        "es",
-        "issues",
-        "path"
-      ],
-      "source_files": [
-        "persistence/orders_store.py"
-      ]
-    },
-    "save_order": {
-      "occurrence_count": 2,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "DEBUG",
-        "ERROR"
-      ],
-      "common_fields": [
-        "checksum",
-        "error",
-        "error_msg",
-        "order_id"
-      ],
-      "source_files": [
-        "persistence/orders_store.py"
-      ]
-    },
-    "upsert_order": {
-      "occurrence_count": 2,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "DEBUG",
-        "ERROR"
-      ],
-      "common_fields": [
-        "checksum",
-        "client_order_id",
-        "error",
-        "error_msg",
-        "order_id"
-      ],
-      "source_files": [
-        "persistence/orders_store.py"
-      ]
-    },
-    "update_status": {
-      "occurrence_count": 2,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "DEBUG",
-        "ERROR"
-      ],
-      "common_fields": [
-        "error",
-        "error_msg",
-        "order_id"
-      ],
-      "source_files": [
-        "persistence/orders_store.py"
-      ]
-    },
-    "verify_integrity": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "WARNING"
-      ],
-      "common_fields": [
-        "order_id",
-        "stored"
-      ],
-      "source_files": [
-        "persistence/orders_store.py"
-      ]
-    },
-    "cleanup_orders": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "INFO"
-      ],
-      "common_fields": [
-        "days_threshold",
-        "deleted"
-      ],
-      "source_files": [
-        "persistence/orders_store.py"
-      ]
+      "statuses": null
     },
     "checksum_verify": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "WARNING"
-      ],
       "common_fields": [
         "expected",
         "path",
@@ -665,19 +254,161 @@
         "stored_checksum",
         "valid"
       ],
+      "components": null,
+      "levels": [
+        "WARNING"
+      ],
+      "occurrence_count": 1,
       "source_files": [
         "persistence/durability.py"
+      ],
+      "statuses": null
+    },
+    "cleanup_orders": {
+      "common_fields": [
+        "days_threshold",
+        "deleted"
+      ],
+      "components": null,
+      "levels": [
+        "INFO"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "persistence/orders_store.py"
+      ],
+      "statuses": null
+    },
+    "collateral_update": {
+      "common_fields": [
+        "_last_collateral_available",
+        "current",
+        "delta",
+        "previous"
+      ],
+      "components": null,
+      "levels": [
+        "INFO"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/live_trade/execution/state_collection.py"
+      ],
+      "statuses": null
+    },
+    "collect_runtime_guard_state": {
+      "common_fields": [
+        "error_message",
+        "error_type",
+        "symbol",
+        "unrealized"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR",
+        "INFO"
+      ],
+      "occurrence_count": 3,
+      "source_files": [
+        "features/live_trade/execution/guard_manager.py"
+      ],
+      "statuses": null
+    },
+    "collect_snapshot": {
+      "common_fields": [
+        "error_message",
+        "error_type",
+        "stage"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/live_trade/telemetry/account.py"
+      ],
+      "statuses": null
+    },
+    "config_guardian": {
+      "common_fields": [
+        "event_count",
+        "monitor",
+        "result",
+        "stage",
+        "user_id",
+        "validator"
+      ],
+      "components": null,
+      "levels": [
+        "INFO",
+        "WARNING"
+      ],
+      "occurrence_count": 4,
+      "source_files": [
+        "monitoring/configuration_guardian/detector.py",
+        "monitoring/configuration_guardian/guardian.py"
+      ],
+      "statuses": null
+    },
+    "cycle": {
+      "common_fields": [
+        "_connection_status",
+        "broker"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/live_trade/engines/strategy.py"
+      ],
+      "statuses": [
+        "DISCONNECTED"
       ]
     },
-    "database_repair": {
-      "occurrence_count": 5,
+    "daily_tracking": {
+      "common_fields": [
+        "broker",
+        "equity",
+        "error_message",
+        "quity",
+        "stage"
+      ],
       "components": null,
-      "statuses": null,
       "levels": [
         "ERROR",
         "INFO",
         "WARNING"
       ],
+      "occurrence_count": 3,
+      "source_files": [
+        "features/live_trade/engines/strategy.py"
+      ],
+      "statuses": null
+    },
+    "database_init": {
+      "common_fields": [
+        "_initialized",
+        "connection",
+        "issues",
+        "path",
+        "schema"
+      ],
+      "components": null,
+      "levels": [
+        "DEBUG",
+        "ERROR",
+        "INFO"
+      ],
+      "occurrence_count": 4,
+      "source_files": [
+        "persistence/database.py"
+      ],
+      "statuses": null
+    },
+    "database_repair": {
       "common_fields": [
         "__all__",
         "backup",
@@ -687,183 +418,19 @@
         "table",
         "tables_recovered"
       ],
+      "components": null,
+      "levels": [
+        "ERROR",
+        "INFO",
+        "WARNING"
+      ],
+      "occurrence_count": 5,
       "source_files": [
         "persistence/durability.py"
-      ]
-    },
-    "status_write": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
       ],
-      "common_fields": [
-        "cls",
-        "ent",
-        "error"
-      ],
-      "source_files": [
-        "monitoring/status_reporter.py"
-      ]
-    },
-    "health_assessment": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "WARNING"
-      ],
-      "common_fields": [
-        "error",
-        "health_state"
-      ],
-      "source_files": [
-        "monitoring/status_reporter.py"
-      ]
-    },
-    "health_check": {
-      "occurrence_count": 3,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "WARNING"
-      ],
-      "common_fields": [
-        "error",
-        "latency_ms"
-      ],
-      "source_files": [
-        "monitoring/health_checks.py"
-      ]
-    },
-    "health_check_runner": {
-      "occurrence_count": 3,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "INFO",
-        "WARNING"
-      ],
-      "common_fields": [
-        "_running",
-        "_task",
-        "error",
-        "interval_seconds"
-      ],
-      "source_files": [
-        "monitoring/health_checks.py"
-      ]
-    },
-    "get_candles": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "INFO"
-      ],
-      "common_fields": [
-        "gaps",
-        "spikes",
-        "volume_anomalies"
-      ],
-      "source_files": [
-        "backtesting/data/manager.py"
-      ]
-    },
-    "validate_candles": {
-      "occurrence_count": 3,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "INFO"
-      ],
-      "common_fields": [
-        "granularity",
-        "issue_type",
-        "symbol",
-        "timestamp"
-      ],
-      "source_files": [
-        "backtesting/data/manager.py"
-      ]
-    },
-    "read_from_cache": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
-      ],
-      "common_fields": [
-        "error_message",
-        "error_type",
-        "granularity",
-        "symbol"
-      ],
-      "source_files": [
-        "backtesting/data/manager.py"
-      ]
-    },
-    "write_to_cache": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
-      ],
-      "common_fields": [
-        "error_message",
-        "error_type",
-        "granularity",
-        "symbol"
-      ],
-      "source_files": [
-        "backtesting/data/manager.py"
-      ]
-    },
-    "load_coverage_index": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
-      ],
-      "common_fields": [
-        "error_message",
-        "error_type",
-        "index_path"
-      ],
-      "source_files": [
-        "backtesting/data/manager.py"
-      ]
-    },
-    "profile_load": {
-      "occurrence_count": 2,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "INFO",
-        "WARNING"
-      ],
-      "common_fields": [
-        "error",
-        "path",
-        "profile",
-        "schema"
-      ],
-      "source_files": [
-        "app/config/profile_loader.py"
-      ]
+      "statuses": null
     },
     "degradation": {
-      "occurrence_count": 12,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "INFO",
-        "WARNING"
-      ],
       "common_fields": [
         "None",
         "_broker_failures",
@@ -881,94 +448,19 @@
         "side",
         "stage"
       ],
+      "components": null,
+      "levels": [
+        "INFO",
+        "WARNING"
+      ],
+      "occurrence_count": 12,
       "source_files": [
         "features/live_trade/degradation.py",
         "features/live_trade/engines/strategy.py"
-      ]
-    },
-    "flatten_and_stop": {
-      "occurrence_count": 2,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "INFO",
-        "WARNING"
       ],
-      "common_fields": [
-        "bypass_reason",
-        "details",
-        "messages",
-        "quantity",
-        "symbol"
-      ],
-      "source_files": [
-        "features/live_trade/bot.py"
-      ]
-    },
-    "lifecycle_transition": {
-      "occurrence_count": 2,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "INFO",
-        "WARNING"
-      ],
-      "common_fields": [
-        "_last_transition",
-        "_state",
-        "entity",
-        "forced",
-        "from_state",
-        "wed"
-      ],
-      "source_files": [
-        "features/live_trade/lifecycle.py"
-      ]
-    },
-    "to_product": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
-      ],
-      "common_fields": [
-        "error_message",
-        "error_type",
-        "symbol"
-      ],
-      "source_files": [
-        "features/brokerages/coinbase/models.py"
-      ]
-    },
-    "to_quote": {
-      "occurrence_count": 2,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
-      ],
-      "common_fields": [
-        "error_message",
-        "error_type",
-        "last",
-        "symbol",
-        "ts",
-        "ts_raw"
-      ],
-      "source_files": [
-        "features/brokerages/coinbase/models.py"
-      ]
+      "statuses": null
     },
     "derivatives_discovery": {
-      "occurrence_count": 18,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "DEBUG",
-        "INFO",
-        "WARNING"
-      ],
       "common_fields": [
         "None",
         "balance_summary_keys",
@@ -985,19 +477,19 @@
         "tfolios",
         "us_enabled"
       ],
-      "source_files": [
-        "features/brokerages/coinbase/derivatives_discovery.py"
-      ]
-    },
-    "derivatives_product_discovery": {
-      "occurrence_count": 5,
       "components": null,
-      "statuses": null,
       "levels": [
-        "ERROR",
+        "DEBUG",
         "INFO",
         "WARNING"
       ],
+      "occurrence_count": 18,
+      "source_files": [
+        "features/brokerages/coinbase/derivatives_discovery.py"
+      ],
+      "statuses": null
+    },
+    "derivatives_product_discovery": {
       "common_fields": [
         "base_max_size",
         "error",
@@ -1008,436 +500,882 @@
         "stage",
         "symbol"
       ],
+      "components": null,
+      "levels": [
+        "ERROR",
+        "INFO",
+        "WARNING"
+      ],
+      "occurrence_count": 5,
       "source_files": [
         "features/brokerages/coinbase/derivatives_products.py"
-      ]
+      ],
+      "statuses": null
     },
-    "order_update_persist": {
-      "occurrence_count": 1,
+    "disable_rule": {
+      "common_fields": [
+        "enabled",
+        "service",
+        "updated_at"
+      ],
       "components": null,
-      "statuses": null,
       "levels": [
         "WARNING"
       ],
-      "common_fields": [
-        "error_message",
-        "error_type",
-        "order_id"
-      ],
+      "occurrence_count": 1,
       "source_files": [
-        "features/brokerages/coinbase/user_event_handler.py"
-      ]
+        "security/ip_allowlist_enforcer.py"
+      ],
+      "statuses": null
     },
-    "pnl_process_fill": {
-      "occurrence_count": 2,
+    "enable_rule": {
+      "common_fields": [
+        "enabled",
+        "service",
+        "updated_at"
+      ],
       "components": null,
-      "statuses": null,
+      "levels": [
+        "INFO"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "security/ip_allowlist_enforcer.py"
+      ],
+      "statuses": null
+    },
+    "encryption_init": {
+      "common_fields": [
+        "encryption_key"
+      ],
+      "components": null,
       "levels": [
         "WARNING"
       ],
-      "common_fields": [
-        "bool",
-        "error_message",
-        "error_type"
-      ],
+      "occurrence_count": 1,
       "source_files": [
-        "features/brokerages/coinbase/user_event_handler.py"
+        "security/secrets_manager.py"
+      ],
+      "statuses": [
+        "generated"
       ]
     },
-    "fill_persist": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "WARNING"
-      ],
+    "enforce_slippage_guard": {
       "common_fields": [
         "error_message",
         "error_type",
-        "order_id"
+        "side",
+        "symbol"
       ],
-      "source_files": [
-        "features/brokerages/coinbase/user_event_handler.py"
-      ]
-    },
-    "user_backfill": {
-      "occurrence_count": 4,
       "components": null,
-      "statuses": null,
-      "levels": [
-        "DEBUG",
-        "WARNING"
-      ],
-      "common_fields": [
-        "error_message",
-        "error_type",
-        "order_id",
-        "reason",
-        "rest_service",
-        "stage",
-        "symbol",
-        "symbols"
-      ],
-      "source_files": [
-        "features/brokerages/coinbase/user_event_handler.py"
-      ]
-    },
-    "user_event_emit": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "DEBUG"
-      ],
-      "common_fields": [
-        "error_message",
-        "error_type",
-        "event_type"
-      ],
-      "source_files": [
-        "features/brokerages/coinbase/user_event_handler.py"
-      ]
-    },
-    "cancel_order": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
       "levels": [
         "ERROR"
       ],
-      "common_fields": [
-        "error_message",
-        "error_type",
-        "order_id"
-      ],
-      "source_files": [
-        "features/brokerages/coinbase/rest/order_service.py"
-      ]
-    },
-    "list_orders": {
       "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
-      ],
-      "common_fields": [
-        "error_message",
-        "error_type",
-        "product_id"
-      ],
       "source_files": [
-        "features/brokerages/coinbase/rest/order_service.py"
-      ]
+        "features/live_trade/execution/validation.py"
+      ],
+      "statuses": null
     },
-    "get_order": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
-      ],
+    "ensure_mark_is_fresh": {
       "common_fields": [
-        "error_message",
-        "error_type",
-        "order_id"
-      ],
-      "source_files": [
-        "features/brokerages/coinbase/rest/order_service.py"
-      ]
-    },
-    "list_fills": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
-      ],
-      "common_fields": [
-        "error_message",
-        "error_type",
-        "order_id",
-        "product_id"
-      ],
-      "source_files": [
-        "features/brokerages/coinbase/rest/order_service.py"
-      ]
-    },
-    "list_balances": {
-      "occurrence_count": 2,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
-      ],
-      "common_fields": [
-        "account_id",
-        "error_message",
-        "error_type"
-      ],
-      "source_files": [
-        "features/brokerages/coinbase/rest/portfolio_service.py"
-      ]
-    },
-    "list_positions": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
-      ],
-      "common_fields": [
-        "error_message",
-        "error_type"
-      ],
-      "source_files": [
-        "features/brokerages/coinbase/rest/portfolio_service.py"
-      ]
-    },
-    "get_position": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
-      ],
-      "common_fields": [
+        "consecutive_failures",
         "error_message",
         "error_type",
         "symbol"
       ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/live_trade/execution/validation.py"
+      ],
+      "statuses": null
+    },
+    "event_store": {
+      "common_fields": [
+        "__all__",
+        "error_message",
+        "error_type",
+        "event_type",
+        "spread_bps",
+        "symbol",
+        "trade_count"
+      ],
+      "components": null,
+      "levels": [
+        "DEBUG",
+        "ERROR"
+      ],
+      "occurrence_count": 5,
+      "source_files": [
+        "features/live_trade/engines/strategy.py",
+        "features/live_trade/engines/telemetry_health.py"
+      ],
+      "statuses": null
+    },
+    "execute_order": {
+      "common_fields": [
+        "__all__",
+        "client_order_id",
+        "leverage",
+        "sleep_fn"
+      ],
+      "components": null,
+      "levels": [
+        "INFO"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/live_trade/execution/broker_executor.py"
+      ],
+      "statuses": null
+    },
+    "extract_mark": {
+      "common_fields": [
+        "ask",
+        "bid",
+        "error_message",
+        "error_type"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/live_trade/engines/telemetry_health.py"
+      ],
+      "statuses": null
+    },
+    "fetch_total_equity": {
+      "common_fields": [
+        "error_type",
+        "result"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/live_trade/engines/equity_calculator.py"
+      ],
+      "statuses": null
+    },
+    "fill_persist": {
+      "common_fields": [
+        "error_message",
+        "error_type",
+        "order_id"
+      ],
+      "components": null,
+      "levels": [
+        "WARNING"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/brokerages/coinbase/user_event_handler.py"
+      ],
+      "statuses": null
+    },
+    "flatten_and_stop": {
+      "common_fields": [
+        "bypass_reason",
+        "details",
+        "messages",
+        "quantity",
+        "symbol"
+      ],
+      "components": null,
+      "levels": [
+        "INFO",
+        "WARNING"
+      ],
+      "occurrence_count": 2,
+      "source_files": [
+        "features/live_trade/bot.py"
+      ],
+      "statuses": null
+    },
+    "get_candles": {
+      "common_fields": [
+        "gaps",
+        "spikes",
+        "volume_anomalies"
+      ],
+      "components": null,
+      "levels": [
+        "INFO"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "backtesting/data/manager.py"
+      ],
+      "statuses": null
+    },
+    "get_cfm_balance": {
+      "common_fields": [
+        "error_message",
+        "error_type"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
       "source_files": [
         "features/brokerages/coinbase/rest/portfolio_service.py"
-      ]
+      ],
+      "statuses": null
+    },
+    "get_cfm_margin_window": {
+      "common_fields": [
+        "error_message",
+        "error_type"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/brokerages/coinbase/rest/portfolio_service.py"
+      ],
+      "statuses": null
+    },
+    "get_cfm_sweeps_schedule": {
+      "common_fields": [
+        "error_message",
+        "error_type"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/brokerages/coinbase/rest/portfolio_service.py"
+      ],
+      "statuses": null
     },
     "get_intx_balances": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
-      ],
       "common_fields": [
         "error_message",
         "error_type",
         "portfolio_id"
       ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
       "source_files": [
         "features/brokerages/coinbase/rest/portfolio_service.py"
-      ]
+      ],
+      "statuses": null
+    },
+    "get_intx_multi_asset_collateral": {
+      "common_fields": [
+        "error_message",
+        "error_type"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/brokerages/coinbase/rest/portfolio_service.py"
+      ],
+      "statuses": null
     },
     "get_intx_portfolio": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
-      ],
       "common_fields": [
         "error_message",
         "error_type",
         "portfolio_id"
       ],
-      "source_files": [
-        "features/brokerages/coinbase/rest/portfolio_service.py"
-      ]
-    },
-    "list_intx_positions": {
-      "occurrence_count": 1,
       "components": null,
-      "statuses": null,
       "levels": [
         "ERROR"
       ],
-      "common_fields": [
-        "error_message",
-        "error_type",
-        "portfolio_id"
-      ],
+      "occurrence_count": 1,
       "source_files": [
         "features/brokerages/coinbase/rest/portfolio_service.py"
-      ]
+      ],
+      "statuses": null
     },
     "get_intx_position": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
-      ],
       "common_fields": [
         "error_message",
         "error_type",
         "portfolio_id",
         "symbol"
       ],
-      "source_files": [
-        "features/brokerages/coinbase/rest/portfolio_service.py"
-      ]
-    },
-    "get_intx_multi_asset_collateral": {
-      "occurrence_count": 1,
       "components": null,
-      "statuses": null,
       "levels": [
         "ERROR"
       ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/brokerages/coinbase/rest/portfolio_service.py"
+      ],
+      "statuses": null
+    },
+    "get_order": {
       "common_fields": [
         "error_message",
-        "error_type"
-      ],
-      "source_files": [
-        "features/brokerages/coinbase/rest/portfolio_service.py"
-      ]
-    },
-    "get_cfm_sweeps_schedule": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
-      ],
-      "common_fields": [
-        "error_message",
-        "error_type"
-      ],
-      "source_files": [
-        "features/brokerages/coinbase/rest/portfolio_service.py"
-      ]
-    },
-    "get_cfm_margin_window": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
-      ],
-      "common_fields": [
-        "error_message",
-        "error_type"
-      ],
-      "source_files": [
-        "features/brokerages/coinbase/rest/portfolio_service.py"
-      ]
-    },
-    "list_cfm_positions": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
-      ],
-      "common_fields": [
-        "error_message",
-        "error_type"
-      ],
-      "source_files": [
-        "features/brokerages/coinbase/rest/portfolio_service.py"
-      ]
-    },
-    "list_spot_positions_as_core": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
-      ],
-      "common_fields": [
-        "error_message",
-        "error_type"
-      ],
-      "source_files": [
-        "features/brokerages/coinbase/rest/portfolio_service.py"
-      ]
-    },
-    "get_cfm_balance": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
-      ],
-      "common_fields": [
-        "error_message",
-        "error_type"
-      ],
-      "source_files": [
-        "features/brokerages/coinbase/rest/portfolio_service.py"
-      ]
-    },
-    "fetch_total_equity": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
-      ],
-      "common_fields": [
         "error_type",
-        "result"
+        "order_id"
       ],
-      "source_files": [
-        "features/live_trade/engines/equity_calculator.py"
-      ]
-    },
-    "orders_store_init": {
-      "occurrence_count": 2,
       "components": null,
-      "statuses": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/brokerages/coinbase/rest/order_service.py"
+      ],
+      "statuses": null
+    },
+    "get_position": {
+      "common_fields": [
+        "error_message",
+        "error_type",
+        "symbol"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/brokerages/coinbase/rest/portfolio_service.py"
+      ],
+      "statuses": null
+    },
+    "guard_alert": {
+      "common_fields": [
+        "auto_shutdown",
+        "guard_name",
+        "json",
+        "severity",
+        "stage",
+        "timeout"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR",
+        "INFO"
+      ],
+      "occurrence_count": 3,
+      "source_files": [
+        "monitoring/guards/manager.py"
+      ],
+      "statuses": null
+    },
+    "guard_manager": {
+      "common_fields": [
+        "alert",
+        "bool",
+        "guard_name",
+        "log_method",
+        "severity",
+        "stage"
+      ],
+      "components": null,
+      "levels": [
+        "CRITICAL",
+        "ERROR",
+        "INFO"
+      ],
+      "occurrence_count": 5,
+      "source_files": [
+        "monitoring/guards/manager.py"
+      ],
+      "statuses": null
+    },
+    "handle_order_failure": {
+      "common_fields": [
+        "error_message",
+        "error_type",
+        "side",
+        "symbol"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/live_trade/execution/order_event_recorder.py"
+      ],
+      "statuses": null
+    },
+    "health_assessment": {
+      "common_fields": [
+        "error",
+        "health_state"
+      ],
+      "components": null,
       "levels": [
         "WARNING"
       ],
+      "occurrence_count": 1,
+      "source_files": [
+        "monitoring/status_reporter.py"
+      ],
+      "statuses": null
+    },
+    "health_check": {
       "common_fields": [
-        "_orders_store",
+        "error",
+        "latency_ms"
+      ],
+      "components": null,
+      "levels": [
+        "WARNING"
+      ],
+      "occurrence_count": 3,
+      "source_files": [
+        "monitoring/health_checks.py"
+      ],
+      "statuses": null
+    },
+    "health_check_runner": {
+      "common_fields": [
+        "_running",
+        "_task",
+        "error",
+        "interval_seconds"
+      ],
+      "components": null,
+      "levels": [
+        "INFO",
+        "WARNING"
+      ],
+      "occurrence_count": 3,
+      "source_files": [
+        "monitoring/health_checks.py"
+      ],
+      "statuses": null
+    },
+    "health_request": {
+      "common_fields": [
+        "error"
+      ],
+      "components": null,
+      "levels": [
+        "DEBUG"
+      ],
+      "occurrence_count": 2,
+      "source_files": [
+        "app/health_server.py"
+      ],
+      "statuses": null
+    },
+    "health_server_start": {
+      "common_fields": [
         "error_message",
         "error_type",
-        "orders_store"
+        "host",
+        "port",
+        "reason"
       ],
-      "source_files": [
-        "features/live_trade/engines/strategy.py",
-        "features/live_trade/execution/order_submission.py"
-      ]
-    },
-    "user_events": {
-      "occurrence_count": 1,
       "components": null,
-      "statuses": null,
+      "levels": [
+        "INFO",
+        "WARNING"
+      ],
+      "occurrence_count": 2,
+      "source_files": [
+        "app/health_server.py",
+        "cli/commands/run.py"
+      ],
+      "statuses": null
+    },
+    "health_server_stop": {
+      "common_fields": [
+        "_server",
+        "running"
+      ],
+      "components": null,
       "levels": [
         "INFO"
       ],
-      "common_fields": [
-        "broker",
-        "stage"
-      ],
+      "occurrence_count": 1,
       "source_files": [
-        "features/live_trade/engines/strategy.py"
-      ]
+        "app/health_server.py"
+      ],
+      "statuses": null
     },
-    "order_recovery": {
-      "occurrence_count": 2,
+    "health_signals": {
+      "common_fields": [
+        "error",
+        "summary"
+      ],
       "components": null,
-      "statuses": null,
+      "levels": [
+        "WARNING"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "app/health_server.py"
+      ],
+      "statuses": null
+    },
+    "init_tracing": {
+      "common_fields": [
+        "_tracer",
+        "_tracing_enabled",
+        "enabled",
+        "endpoint",
+        "er",
+        "error",
+        "processor",
+        "service_name"
+      ],
+      "components": null,
       "levels": [
         "INFO",
         "WARNING"
       ],
+      "occurrence_count": 5,
+      "source_files": [
+        "observability/tracing.py"
+      ],
+      "statuses": null
+    },
+    "lifecycle_transition": {
       "common_fields": [
-        "count",
+        "_last_transition",
+        "_state",
+        "entity",
+        "forced",
+        "from_state",
+        "wed"
+      ],
+      "components": null,
+      "levels": [
+        "INFO",
+        "WARNING"
+      ],
+      "occurrence_count": 2,
+      "source_files": [
+        "features/live_trade/lifecycle.py"
+      ],
+      "statuses": null
+    },
+    "liquidation_monitor": {
+      "common_fields": [
+        "position_count",
+        "reason",
+        "risk",
+        "risk_level",
+        "stage",
+        "symbol"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR",
+        "INFO",
+        "WARNING"
+      ],
+      "occurrence_count": 6,
+      "source_files": [
+        "monitoring/domain/perps/liquidation.py"
+      ],
+      "statuses": null
+    },
+    "list_balances": {
+      "common_fields": [
+        "account_id",
         "error_message",
         "error_type"
       ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 2,
+      "source_files": [
+        "features/brokerages/coinbase/rest/portfolio_service.py"
+      ],
+      "statuses": null
+    },
+    "list_cfm_positions": {
+      "common_fields": [
+        "error_message",
+        "error_type"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/brokerages/coinbase/rest/portfolio_service.py"
+      ],
+      "statuses": null
+    },
+    "list_fills": {
+      "common_fields": [
+        "error_message",
+        "error_type",
+        "order_id",
+        "product_id"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/brokerages/coinbase/rest/order_service.py"
+      ],
+      "statuses": null
+    },
+    "list_intx_positions": {
+      "common_fields": [
+        "error_message",
+        "error_type",
+        "portfolio_id"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/brokerages/coinbase/rest/portfolio_service.py"
+      ],
+      "statuses": null
+    },
+    "list_orders": {
+      "common_fields": [
+        "error_message",
+        "error_type",
+        "product_id"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/brokerages/coinbase/rest/order_service.py"
+      ],
+      "statuses": null
+    },
+    "list_positions": {
+      "common_fields": [
+        "error_message",
+        "error_type"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/brokerages/coinbase/rest/portfolio_service.py"
+      ],
+      "statuses": null
+    },
+    "list_spot_positions_as_core": {
+      "common_fields": [
+        "error_message",
+        "error_type"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/brokerages/coinbase/rest/portfolio_service.py"
+      ],
+      "statuses": null
+    },
+    "load_coverage_index": {
+      "common_fields": [
+        "error_message",
+        "error_type",
+        "index_path"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "backtesting/data/manager.py"
+      ],
+      "statuses": null
+    },
+    "load_rules": {
+      "common_fields": [
+        "ip_count",
+        "service"
+      ],
+      "components": null,
+      "levels": [
+        "INFO"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "security/ip_allowlist_enforcer.py"
+      ],
+      "statuses": null
+    },
+    "log_collateral_update": {
+      "common_fields": [
+        "equity",
+        "error_message",
+        "error_type"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/live_trade/execution/state_collection.py"
+      ],
+      "statuses": null
+    },
+    "log_submission_attempt": {
+      "common_fields": [
+        "error_message",
+        "error_type",
+        "side",
+        "submit_id",
+        "symbol"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/live_trade/execution/order_event_recorder.py"
+      ],
+      "statuses": null
+    },
+    "margin_monitor": {
+      "common_fields": [
+        "alert_threshold",
+        "alert_type",
+        "client",
+        "client_provided",
+        "monitor",
+        "stage"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR",
+        "INFO"
+      ],
+      "occurrence_count": 3,
+      "source_files": [
+        "monitoring/domain/perps/margin.py"
+      ],
+      "statuses": null
+    },
+    "order_audit": {
+      "common_fields": [
+        "audit_task",
+        "open_order_count",
+        "stage"
+      ],
+      "components": null,
+      "levels": [
+        "INFO"
+      ],
+      "occurrence_count": 2,
       "source_files": [
         "features/live_trade/engines/strategy.py"
-      ]
+      ],
+      "statuses": null
     },
-    "order_reconciliation": {
-      "occurrence_count": 4,
+    "order_cancel": {
+      "common_fields": [
+        "cancelled",
+        "error_message",
+        "error_type",
+        "order_id",
+        "response_type",
+        "stage"
+      ],
       "components": null,
-      "statuses": null,
       "levels": [
+        "ERROR",
         "INFO",
         "WARNING"
       ],
+      "occurrence_count": 6,
+      "source_files": [
+        "features/live_trade/execution/guard_manager.py"
+      ],
+      "statuses": null
+    },
+    "order_decision_trace": {
+      "common_fields": [
+        "error_message",
+        "error_type",
+        "side",
+        "symbol"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/live_trade/engines/strategy.py"
+      ],
+      "statuses": null
+    },
+    "order_placement": {
+      "common_fields": [
+        "action",
+        "error_message",
+        "reason",
+        "stage",
+        "symbol"
+      ],
+      "components": null,
+      "levels": [
+        "INFO"
+      ],
+      "occurrence_count": 4,
+      "source_files": [
+        "features/live_trade/engines/strategy.py"
+      ],
+      "statuses": null
+    },
+    "order_preview": {
+      "common_fields": [
+        "broker",
+        "consecutive_failures",
+        "error",
+        "preview_broker",
+        "stage"
+      ],
+      "components": null,
+      "levels": [
+        "DEBUG"
+      ],
+      "occurrence_count": 6,
+      "source_files": [
+        "features/live_trade/execution/validation.py"
+      ],
+      "statuses": null
+    },
+    "order_reconciliation": {
       "common_fields": [
         "client_order_id",
         "error_message",
@@ -1448,196 +1386,74 @@
         "stage",
         "unknown_bot_order_count"
       ],
-      "source_files": [
-        "features/live_trade/engines/strategy.py"
-      ]
-    },
-    "streaming": {
-      "occurrence_count": 2,
       "components": null,
-      "statuses": null,
       "levels": [
-        "INFO"
+        "INFO",
+        "WARNING"
       ],
-      "common_fields": [
-        "stage"
-      ],
-      "source_files": [
-        "features/live_trade/engines/strategy.py"
-      ]
-    },
-    "ws_health": {
-      "occurrence_count": 7,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "DEBUG",
-        "INFO"
-      ],
-      "common_fields": [
-        "60",
-        "_ws_health_task",
-        "connected",
-        "e_stale",
-        "error",
-        "gap_count",
-        "heartbeat_stale",
-        "pause_seconds",
-        "reconnect_count",
-        "stage"
-      ],
-      "source_files": [
-        "features/live_trade/engines/strategy.py"
-      ]
-    },
-    "runtime_start": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "INFO"
-      ],
-      "common_fields": [],
-      "source_files": [
-        "features/live_trade/engines/strategy.py"
-      ]
-    },
-    "runtime_guards": {
       "occurrence_count": 4,
+      "source_files": [
+        "features/live_trade/engines/strategy.py"
+      ],
+      "statuses": null
+    },
+    "order_recovery": {
+      "common_fields": [
+        "count",
+        "error_message",
+        "error_type"
+      ],
       "components": null,
-      "statuses": null,
+      "levels": [
+        "INFO",
+        "WARNING"
+      ],
+      "occurrence_count": 2,
+      "source_files": [
+        "features/live_trade/engines/strategy.py"
+      ],
+      "statuses": null
+    },
+    "order_rejected": {
+      "common_fields": [
+        "client_order_id",
+        "price",
+        "reason",
+        "reason_detail",
+        "stage"
+      ],
+      "components": null,
+      "levels": [
+        "INFO"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/live_trade/execution/order_event_recorder.py"
+      ],
+      "statuses": null
+    },
+    "order_route": {
+      "common_fields": [
+        "error_message",
+        "mode",
+        "quantity",
+        "reason",
+        "side",
+        "stage",
+        "symbol"
+      ],
+      "components": null,
       "levels": [
         "ERROR",
-        "INFO",
-        "WARNING"
-      ],
-      "common_fields": [
-        "recoverable",
-        "stage"
-      ],
-      "source_files": [
-        "features/live_trade/engines/strategy.py",
-        "features/live_trade/execution/guard_manager.py"
-      ]
-    },
-    "cycle": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": [
-        "DISCONNECTED"
-      ],
-      "levels": [
-        "ERROR"
-      ],
-      "common_fields": [
-        "_connection_status",
-        "broker"
-      ],
-      "source_files": [
-        "features/live_trade/engines/strategy.py"
-      ]
-    },
-    "order_audit": {
-      "occurrence_count": 2,
-      "components": null,
-      "statuses": null,
-      "levels": [
         "INFO"
       ],
-      "common_fields": [
-        "audit_task",
-        "open_order_count",
-        "stage"
-      ],
-      "source_files": [
-        "features/live_trade/engines/strategy.py"
-      ]
-    },
-    "order_placement": {
       "occurrence_count": 4,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "INFO"
-      ],
-      "common_fields": [
-        "action",
-        "error_message",
-        "reason",
-        "stage",
-        "symbol"
-      ],
       "source_files": [
-        "features/live_trade/engines/strategy.py"
-      ]
-    },
-    "order_decision_trace": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
+        "features/live_trade/execution/router.py"
       ],
-      "common_fields": [
-        "error_message",
-        "error_type",
-        "side",
-        "symbol"
-      ],
-      "source_files": [
-        "features/live_trade/engines/strategy.py"
-      ]
-    },
-    "event_store": {
-      "occurrence_count": 5,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "DEBUG",
-        "ERROR"
-      ],
-      "common_fields": [
-        "__all__",
-        "error_message",
-        "error_type",
-        "event_type",
-        "spread_bps",
-        "symbol",
-        "trade_count"
-      ],
-      "source_files": [
-        "features/live_trade/engines/strategy.py",
-        "features/live_trade/engines/telemetry_health.py"
-      ]
-    },
-    "reduce_only": {
-      "occurrence_count": 2,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "INFO",
-        "WARNING"
-      ],
-      "common_fields": [
-        "reduce_only",
-        "side",
-        "stage",
-        "symbol"
-      ],
-      "source_files": [
-        "features/live_trade/engines/strategy.py",
-        "features/live_trade/execution/validation.py"
-      ]
+      "statuses": null
     },
     "order_submit": {
-      "occurrence_count": 3,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR",
-        "INFO",
-        "WARNING"
-      ],
       "common_fields": [
         "ide",
         "price",
@@ -1647,41 +1463,618 @@
         "stage",
         "symbol"
       ],
+      "components": null,
+      "levels": [
+        "ERROR",
+        "INFO",
+        "WARNING"
+      ],
+      "occurrence_count": 3,
       "source_files": [
         "features/live_trade/engines/strategy.py",
         "features/live_trade/execution/order_event_recorder.py"
-      ]
+      ],
+      "statuses": null
     },
-    "daily_tracking": {
-      "occurrence_count": 3,
+    "order_update_persist": {
+      "common_fields": [
+        "error_message",
+        "error_type",
+        "order_id"
+      ],
       "components": null,
-      "statuses": null,
+      "levels": [
+        "WARNING"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/brokerages/coinbase/user_event_handler.py"
+      ],
+      "statuses": null
+    },
+    "orders_init": {
+      "common_fields": [
+        "_initialized",
+        "es",
+        "issues",
+        "path"
+      ],
+      "components": null,
       "levels": [
         "ERROR",
+        "INFO"
+      ],
+      "occurrence_count": 2,
+      "source_files": [
+        "persistence/orders_store.py"
+      ],
+      "statuses": null
+    },
+    "orders_store_init": {
+      "common_fields": [
+        "_orders_store",
+        "error_message",
+        "error_type",
+        "orders_store"
+      ],
+      "components": null,
+      "levels": [
+        "WARNING"
+      ],
+      "occurrence_count": 2,
+      "source_files": [
+        "features/live_trade/engines/strategy.py",
+        "features/live_trade/execution/order_submission.py"
+      ],
+      "statuses": null
+    },
+    "orders_store_persist": {
+      "common_fields": [
+        "client_order_id",
+        "error_message",
+        "error_type",
+        "order_id"
+      ],
+      "components": null,
+      "levels": [
+        "WARNING"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/live_trade/execution/order_submission.py"
+      ],
+      "statuses": null
+    },
+    "pnl_process_fill": {
+      "common_fields": [
+        "bool",
+        "error_message",
+        "error_type"
+      ],
+      "components": null,
+      "levels": [
+        "WARNING"
+      ],
+      "occurrence_count": 2,
+      "source_files": [
+        "features/brokerages/coinbase/user_event_handler.py"
+      ],
+      "statuses": null
+    },
+    "process_rejection": {
+      "common_fields": [
+        "error_message",
+        "error_type",
+        "symbol"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/live_trade/execution/order_event_recorder.py"
+      ],
+      "statuses": null
+    },
+    "profile_load": {
+      "common_fields": [
+        "error",
+        "path",
+        "profile",
+        "schema"
+      ],
+      "components": null,
+      "levels": [
         "INFO",
         "WARNING"
       ],
+      "occurrence_count": 2,
+      "source_files": [
+        "app/config/profile_loader.py"
+      ],
+      "statuses": null
+    },
+    "rate_limit": {
+      "common_fields": [],
+      "components": null,
+      "levels": [
+        "WARNING"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "security/rate_limiter.py"
+      ],
+      "statuses": [
+        "blocked"
+      ]
+    },
+    "read_from_cache": {
       "common_fields": [
-        "broker",
-        "equity",
         "error_message",
-        "quity",
+        "error_type",
+        "granularity",
+        "symbol"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "backtesting/data/manager.py"
+      ],
+      "statuses": null
+    },
+    "readiness_update": {
+      "common_fields": [
+        "bool",
+        "ready",
+        "reason",
+        "str"
+      ],
+      "components": null,
+      "levels": [
+        "INFO"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "app/health_server.py"
+      ],
+      "statuses": null
+    },
+    "record_decision_trace": {
+      "common_fields": [
+        "error_message",
+        "error_type",
+        "side",
+        "symbol"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/live_trade/execution/order_event_recorder.py"
+      ],
+      "statuses": null
+    },
+    "record_preview": {
+      "common_fields": [
+        "error_message",
+        "error_type",
+        "side",
+        "symbol"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/live_trade/execution/order_event_recorder.py"
+      ],
+      "statuses": null
+    },
+    "record_rejection": {
+      "common_fields": [
+        "error_message",
+        "error_type",
+        "reason",
+        "symbol"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/live_trade/execution/order_event_recorder.py"
+      ],
+      "statuses": null
+    },
+    "record_trade_event": {
+      "common_fields": [
+        "error_message",
+        "error_type",
+        "order_id",
+        "side",
+        "symbol"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 2,
+      "source_files": [
+        "features/live_trade/execution/order_event_recorder.py"
+      ],
+      "statuses": null
+    },
+    "reduce_only": {
+      "common_fields": [
+        "reduce_only",
+        "side",
+        "stage",
+        "symbol"
+      ],
+      "components": null,
+      "levels": [
+        "INFO",
+        "WARNING"
+      ],
+      "occurrence_count": 2,
+      "source_files": [
+        "features/live_trade/engines/strategy.py",
+        "features/live_trade/execution/validation.py"
+      ],
+      "statuses": null
+    },
+    "remove_rule": {
+      "common_fields": [
+        "service"
+      ],
+      "components": null,
+      "levels": [
+        "WARNING"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "security/ip_allowlist_enforcer.py"
+      ],
+      "statuses": null
+    },
+    "resolve_effective_price": {
+      "common_fields": [
+        "error_message",
+        "error_type",
+        "symbol"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 2,
+      "source_files": [
+        "features/live_trade/execution/state_collection.py"
+      ],
+      "statuses": null
+    },
+    "rotate_key": {
+      "common_fields": [
+        "error_message",
+        "error_type",
+        "path"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "security/secrets_manager.py"
+      ],
+      "statuses": null
+    },
+    "run_stream_loop": {
+      "common_fields": [
+        "error_message",
+        "error_type",
         "stage"
       ],
-      "source_files": [
-        "features/live_trade/engines/strategy.py"
-      ]
-    },
-    "telemetry_stream": {
-      "occurrence_count": 20,
       "components": null,
-      "statuses": null,
       "levels": [
-        "DEBUG",
+        "INFO"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/live_trade/engines/telemetry_streaming.py"
+      ],
+      "statuses": null
+    },
+    "runtime_guards": {
+      "common_fields": [
+        "recoverable",
+        "stage"
+      ],
+      "components": null,
+      "levels": [
         "ERROR",
         "INFO",
         "WARNING"
       ],
+      "occurrence_count": 4,
+      "source_files": [
+        "features/live_trade/engines/strategy.py",
+        "features/live_trade/execution/guard_manager.py"
+      ],
+      "statuses": null
+    },
+    "runtime_start": {
+      "common_fields": [],
+      "components": null,
+      "levels": [
+        "INFO"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/live_trade/engines/strategy.py"
+      ],
+      "statuses": null
+    },
+    "save_order": {
+      "common_fields": [
+        "checksum",
+        "error",
+        "error_msg",
+        "order_id"
+      ],
+      "components": null,
+      "levels": [
+        "DEBUG",
+        "ERROR"
+      ],
+      "occurrence_count": 2,
+      "source_files": [
+        "persistence/orders_store.py"
+      ],
+      "statuses": null
+    },
+    "schedule_coroutine": {
+      "common_fields": [
+        "error_message",
+        "error_type",
+        "loop",
+        "stage"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 2,
+      "source_files": [
+        "features/live_trade/engines/telemetry_streaming.py"
+      ],
+      "statuses": null
+    },
+    "secret_retrieve": {
+      "common_fields": [],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "security/secrets_manager.py"
+      ],
+      "statuses": [
+        "error"
+      ]
+    },
+    "secret_store": {
+      "common_fields": [
+        "path",
+        "secret"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR",
+        "INFO"
+      ],
+      "occurrence_count": 3,
+      "source_files": [
+        "security/secrets_manager.py"
+      ],
+      "statuses": [
+        "error",
+        "success"
+      ]
+    },
+    "shutdown": {
+      "common_fields": [
+        "running"
+      ],
+      "components": null,
+      "levels": [
+        "INFO"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "cli/commands/run.py"
+      ],
+      "statuses": null
+    },
+    "shutdown_tracing": {
+      "common_fields": [
+        "_tracer",
+        "error",
+        "provider"
+      ],
+      "components": null,
+      "levels": [
+        "INFO"
+      ],
+      "occurrence_count": 2,
+      "source_files": [
+        "observability/tracing.py"
+      ],
+      "statuses": null
+    },
+    "state_collection": {
+      "common_fields": [
+        "error",
+        "stage",
+        "symbol"
+      ],
+      "components": null,
+      "levels": [
+        "WARNING"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/live_trade/execution/state_collection.py"
+      ],
+      "statuses": null
+    },
+    "status_write": {
+      "common_fields": [
+        "cls",
+        "ent",
+        "error"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "monitoring/status_reporter.py"
+      ],
+      "statuses": null
+    },
+    "stop_streaming": {
+      "common_fields": [
+        "error_message",
+        "error_type",
+        "stage"
+      ],
+      "components": null,
+      "levels": [
+        "INFO"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/live_trade/engines/telemetry_streaming.py"
+      ],
+      "statuses": null
+    },
+    "streaming": {
+      "common_fields": [
+        "stage"
+      ],
+      "components": null,
+      "levels": [
+        "INFO"
+      ],
+      "occurrence_count": 2,
+      "source_files": [
+        "features/live_trade/engines/strategy.py"
+      ],
+      "statuses": null
+    },
+    "submit": {
+      "common_fields": [
+        "latency_seconds",
+        "nt_id",
+        "outcome",
+        "reason"
+      ],
+      "components": null,
+      "levels": [
+        "INFO"
+      ],
+      "occurrence_count": 2,
+      "source_files": [
+        "features/live_trade/execution/broker_executor.py"
+      ],
+      "statuses": null
+    },
+    "suspicious_activity": {
+      "common_fields": [
+        "avg_size"
+      ],
+      "components": null,
+      "levels": [
+        "WARNING"
+      ],
+      "occurrence_count": 3,
+      "source_files": [
+        "security/suspicious_activity_detector.py"
+      ],
+      "statuses": [
+        "alert"
+      ]
+    },
+    "system_monitor_metrics": {
+      "common_fields": [
+        "error",
+        "indent",
+        "nent",
+        "stage"
+      ],
+      "components": null,
+      "levels": [
+        "DEBUG"
+      ],
+      "occurrence_count": 2,
+      "source_files": [
+        "monitoring/system/metrics.py"
+      ],
+      "statuses": null
+    },
+    "system_monitor_positions": {
+      "common_fields": [
+        "change_count",
+        "error",
+        "last_positions",
+        "side",
+        "size",
+        "stage",
+        "symbol"
+      ],
+      "components": null,
+      "levels": [
+        "DEBUG",
+        "INFO"
+      ],
+      "occurrence_count": 4,
+      "source_files": [
+        "monitoring/system/positions.py"
+      ],
+      "statuses": null
+    },
+    "telemetry_orderbook": {
+      "common_fields": [
+        "ask_levels",
+        "bid_levels",
+        "error_message",
+        "error_type",
+        "spread_bps",
+        "symbol"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR",
+        "INFO"
+      ],
+      "occurrence_count": 2,
+      "source_files": [
+        "features/live_trade/engines/telemetry_health.py"
+      ],
+      "statuses": null
+    },
+    "telemetry_stream": {
       "common_fields": [
         "None",
         "__all__",
@@ -1699,105 +2092,21 @@
         "nfig",
         "risk_manager"
       ],
+      "components": null,
+      "levels": [
+        "DEBUG",
+        "ERROR",
+        "INFO",
+        "WARNING"
+      ],
+      "occurrence_count": 20,
       "source_files": [
         "features/live_trade/engines/telemetry_health.py",
         "features/live_trade/engines/telemetry_streaming.py"
-      ]
-    },
-    "schedule_coroutine": {
-      "occurrence_count": 2,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
       ],
-      "common_fields": [
-        "error_message",
-        "error_type",
-        "loop",
-        "stage"
-      ],
-      "source_files": [
-        "features/live_trade/engines/telemetry_streaming.py"
-      ]
-    },
-    "stop_streaming": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "INFO"
-      ],
-      "common_fields": [
-        "error_message",
-        "error_type",
-        "stage"
-      ],
-      "source_files": [
-        "features/live_trade/engines/telemetry_streaming.py"
-      ]
-    },
-    "run_stream_loop": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "INFO"
-      ],
-      "common_fields": [
-        "error_message",
-        "error_type",
-        "stage"
-      ],
-      "source_files": [
-        "features/live_trade/engines/telemetry_streaming.py"
-      ]
-    },
-    "extract_mark": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
-      ],
-      "common_fields": [
-        "ask",
-        "bid",
-        "error_message",
-        "error_type"
-      ],
-      "source_files": [
-        "features/live_trade/engines/telemetry_health.py"
-      ]
-    },
-    "telemetry_orderbook": {
-      "occurrence_count": 2,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR",
-        "INFO"
-      ],
-      "common_fields": [
-        "ask_levels",
-        "bid_levels",
-        "error_message",
-        "error_type",
-        "spread_bps",
-        "symbol"
-      ],
-      "source_files": [
-        "features/live_trade/engines/telemetry_health.py"
-      ]
+      "statuses": null
     },
     "telemetry_trade": {
-      "occurrence_count": 2,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "DEBUG",
-        "ERROR"
-      ],
       "common_fields": [
         "error_message",
         "error_type",
@@ -1806,637 +2115,328 @@
         "size",
         "symbol"
       ],
+      "components": null,
+      "levels": [
+        "DEBUG",
+        "ERROR"
+      ],
+      "occurrence_count": 2,
       "source_files": [
         "features/live_trade/engines/telemetry_health.py"
-      ]
+      ],
+      "statuses": null
     },
-    "record_preview": {
-      "occurrence_count": 1,
+    "to_product": {
+      "common_fields": [
+        "error_message",
+        "error_type",
+        "symbol"
+      ],
       "components": null,
-      "statuses": null,
       "levels": [
         "ERROR"
       ],
-      "common_fields": [
-        "error_message",
-        "error_type",
-        "side",
-        "symbol"
-      ],
-      "source_files": [
-        "features/live_trade/execution/order_event_recorder.py"
-      ]
-    },
-    "order_rejected": {
       "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "INFO"
-      ],
-      "common_fields": [
-        "client_order_id",
-        "price",
-        "reason",
-        "reason_detail",
-        "stage"
-      ],
       "source_files": [
-        "features/live_trade/execution/order_event_recorder.py"
-      ]
-    },
-    "record_rejection": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
+        "features/brokerages/coinbase/models.py"
       ],
+      "statuses": null
+    },
+    "to_quote": {
       "common_fields": [
         "error_message",
         "error_type",
-        "reason",
-        "symbol"
-      ],
-      "source_files": [
-        "features/live_trade/execution/order_event_recorder.py"
-      ]
-    },
-    "record_decision_trace": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
-      ],
-      "common_fields": [
-        "error_message",
-        "error_type",
-        "side",
-        "symbol"
-      ],
-      "source_files": [
-        "features/live_trade/execution/order_event_recorder.py"
-      ]
-    },
-    "log_submission_attempt": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
-      ],
-      "common_fields": [
-        "error_message",
-        "error_type",
-        "side",
-        "submit_id",
-        "symbol"
-      ],
-      "source_files": [
-        "features/live_trade/execution/order_event_recorder.py"
-      ]
-    },
-    "record_trade_event": {
-      "occurrence_count": 2,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
-      ],
-      "common_fields": [
-        "error_message",
-        "error_type",
-        "order_id",
-        "side",
-        "symbol"
-      ],
-      "source_files": [
-        "features/live_trade/execution/order_event_recorder.py"
-      ]
-    },
-    "handle_order_failure": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
-      ],
-      "common_fields": [
-        "error_message",
-        "error_type",
-        "side",
-        "symbol"
-      ],
-      "source_files": [
-        "features/live_trade/execution/order_event_recorder.py"
-      ]
-    },
-    "process_rejection": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
-      ],
-      "common_fields": [
-        "error_message",
-        "error_type",
-        "symbol"
-      ],
-      "source_files": [
-        "features/live_trade/execution/order_event_recorder.py"
-      ]
-    },
-    "orders_store_persist": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "WARNING"
-      ],
-      "common_fields": [
-        "client_order_id",
-        "error_message",
-        "error_type",
-        "order_id"
-      ],
-      "source_files": [
-        "features/live_trade/execution/order_submission.py"
-      ]
-    },
-    "order_route": {
-      "occurrence_count": 4,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR",
-        "INFO"
-      ],
-      "common_fields": [
-        "error_message",
-        "mode",
-        "quantity",
-        "reason",
-        "side",
-        "stage",
-        "symbol"
-      ],
-      "source_files": [
-        "features/live_trade/execution/router.py"
-      ]
-    },
-    "submit": {
-      "occurrence_count": 2,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "INFO"
-      ],
-      "common_fields": [
-        "latency_seconds",
-        "nt_id",
-        "outcome",
-        "reason"
-      ],
-      "source_files": [
-        "features/live_trade/execution/broker_executor.py"
-      ]
-    },
-    "execute_order": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "INFO"
-      ],
-      "common_fields": [
-        "__all__",
-        "client_order_id",
-        "leverage",
-        "sleep_fn"
-      ],
-      "source_files": [
-        "features/live_trade/execution/broker_executor.py"
-      ]
-    },
-    "order_cancel": {
-      "occurrence_count": 6,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR",
-        "INFO",
-        "WARNING"
-      ],
-      "common_fields": [
-        "cancelled",
-        "error_message",
-        "error_type",
-        "order_id",
-        "response_type",
-        "stage"
-      ],
-      "source_files": [
-        "features/live_trade/execution/guard_manager.py"
-      ]
-    },
-    "collect_runtime_guard_state": {
-      "occurrence_count": 3,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR",
-        "INFO"
-      ],
-      "common_fields": [
-        "error_message",
-        "error_type",
+        "last",
         "symbol",
-        "unrealized"
+        "ts",
+        "ts_raw"
       ],
-      "source_files": [
-        "features/live_trade/execution/guard_manager.py"
-      ]
-    },
-    "collateral_update": {
-      "occurrence_count": 1,
       "components": null,
-      "statuses": null,
-      "levels": [
-        "INFO"
-      ],
-      "common_fields": [
-        "_last_collateral_available",
-        "current",
-        "delta",
-        "previous"
-      ],
-      "source_files": [
-        "features/live_trade/execution/state_collection.py"
-      ]
-    },
-    "log_collateral_update": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
       "levels": [
         "ERROR"
       ],
-      "common_fields": [
-        "equity",
-        "error_message",
-        "error_type"
-      ],
+      "occurrence_count": 2,
       "source_files": [
-        "features/live_trade/execution/state_collection.py"
-      ]
-    },
-    "state_collection": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "WARNING"
+        "features/brokerages/coinbase/models.py"
       ],
+      "statuses": null
+    },
+    "update_status": {
       "common_fields": [
         "error",
-        "stage",
-        "symbol"
+        "error_msg",
+        "order_id"
       ],
-      "source_files": [
-        "features/live_trade/execution/state_collection.py"
-      ]
-    },
-    "resolve_effective_price": {
-      "occurrence_count": 2,
       "components": null,
-      "statuses": null,
       "levels": [
+        "DEBUG",
         "ERROR"
       ],
+      "occurrence_count": 2,
+      "source_files": [
+        "persistence/orders_store.py"
+      ],
+      "statuses": null
+    },
+    "upsert_order": {
+      "common_fields": [
+        "checksum",
+        "client_order_id",
+        "error",
+        "error_msg",
+        "order_id"
+      ],
+      "components": null,
+      "levels": [
+        "DEBUG",
+        "ERROR"
+      ],
+      "occurrence_count": 2,
+      "source_files": [
+        "persistence/orders_store.py"
+      ],
+      "statuses": null
+    },
+    "user_backfill": {
       "common_fields": [
         "error_message",
         "error_type",
-        "symbol"
+        "order_id",
+        "reason",
+        "rest_service",
+        "stage",
+        "symbol",
+        "symbols"
       ],
-      "source_files": [
-        "features/live_trade/execution/state_collection.py"
-      ]
-    },
-    "validation_escalation": {
-      "occurrence_count": 1,
       "components": null,
-      "statuses": null,
+      "levels": [
+        "DEBUG",
+        "WARNING"
+      ],
+      "occurrence_count": 4,
+      "source_files": [
+        "features/brokerages/coinbase/user_event_handler.py"
+      ],
+      "statuses": null
+    },
+    "user_event_emit": {
+      "common_fields": [
+        "error_message",
+        "error_type",
+        "event_type"
+      ],
+      "components": null,
+      "levels": [
+        "DEBUG"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/brokerages/coinbase/user_event_handler.py"
+      ],
+      "statuses": null
+    },
+    "user_events": {
+      "common_fields": [
+        "broker",
+        "stage"
+      ],
+      "components": null,
       "levels": [
         "INFO"
       ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/live_trade/engines/strategy.py"
+      ],
+      "statuses": null
+    },
+    "validate_candles": {
+      "common_fields": [
+        "granularity",
+        "issue_type",
+        "symbol",
+        "timestamp"
+      ],
+      "components": null,
+      "levels": [
+        "INFO"
+      ],
+      "occurrence_count": 3,
+      "source_files": [
+        "backtesting/data/manager.py"
+      ],
+      "statuses": null
+    },
+    "validate_ip": {
+      "common_fields": [
+        "client_ip",
+        "matched_rule",
+        "rule_exists",
+        "service"
+      ],
+      "components": null,
+      "levels": [
+        "DEBUG",
+        "WARNING"
+      ],
+      "occurrence_count": 3,
+      "source_files": [
+        "security/ip_allowlist_enforcer.py"
+      ],
+      "statuses": null
+    },
+    "validation_escalation": {
       "common_fields": [
         "check_type",
         "consecutive_failures",
         "threshold"
       ],
-      "source_files": [
-        "features/live_trade/execution/validation.py"
-      ]
-    },
-    "ensure_mark_is_fresh": {
+      "components": null,
+      "levels": [
+        "INFO"
+      ],
       "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
-      ],
-      "common_fields": [
-        "consecutive_failures",
-        "error_message",
-        "error_type",
-        "symbol"
-      ],
       "source_files": [
         "features/live_trade/execution/validation.py"
-      ]
-    },
-    "enforce_slippage_guard": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
       ],
+      "statuses": null
+    },
+    "vault_init": {
       "common_fields": [
-        "error_message",
-        "error_type",
-        "side",
-        "symbol"
+        "_vault_enabled"
       ],
-      "source_files": [
-        "features/live_trade/execution/validation.py"
-      ]
-    },
-    "order_preview": {
-      "occurrence_count": 6,
       "components": null,
-      "statuses": null,
-      "levels": [
-        "DEBUG"
-      ],
-      "common_fields": [
-        "broker",
-        "consecutive_failures",
-        "error",
-        "preview_broker",
-        "stage"
-      ],
-      "source_files": [
-        "features/live_trade/execution/validation.py"
-      ]
-    },
-    "account_telemetry": {
-      "occurrence_count": 4,
-      "components": null,
-      "statuses": [
-        "disabled"
-      ],
       "levels": [
         "DEBUG",
-        "INFO"
-      ],
-      "common_fields": [
-        "indent",
-        "int",
-        "server_time",
-        "stage"
-      ],
-      "source_files": [
-        "features/live_trade/telemetry/account.py"
-      ]
-    },
-    "collect_snapshot": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR"
-      ],
-      "common_fields": [
-        "error_message",
-        "error_type",
-        "stage"
-      ],
-      "source_files": [
-        "features/live_trade/telemetry/account.py"
-      ]
-    },
-    "api_health_guard": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "WARNING"
-      ],
-      "common_fields": [
-        "details",
-        "guard_name",
-        "reasons"
-      ],
-      "source_files": [
-        "features/live_trade/execution/guards/api_health.py"
-      ]
-    },
-    "shutdown": {
-      "occurrence_count": 1,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "INFO"
-      ],
-      "common_fields": [
-        "running"
-      ],
-      "source_files": [
-        "cli/commands/run.py"
-      ]
-    },
-    "config_guardian": {
-      "occurrence_count": 4,
-      "components": null,
-      "statuses": null,
-      "levels": [
         "INFO",
         "WARNING"
       ],
-      "common_fields": [
-        "event_count",
-        "monitor",
-        "result",
-        "stage",
-        "user_id",
-        "validator"
-      ],
-      "source_files": [
-        "monitoring/configuration_guardian/detector.py",
-        "monitoring/configuration_guardian/guardian.py"
-      ]
-    },
-    "system_monitor_metrics": {
-      "occurrence_count": 2,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "DEBUG"
-      ],
-      "common_fields": [
-        "error",
-        "indent",
-        "nent",
-        "stage"
-      ],
-      "source_files": [
-        "monitoring/system/metrics.py"
-      ]
-    },
-    "system_monitor_positions": {
-      "occurrence_count": 4,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "DEBUG",
-        "INFO"
-      ],
-      "common_fields": [
-        "change_count",
-        "error",
-        "last_positions",
-        "side",
-        "size",
-        "stage",
-        "symbol"
-      ],
-      "source_files": [
-        "monitoring/system/positions.py"
-      ]
-    },
-    "guard_manager": {
       "occurrence_count": 5,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "CRITICAL",
-        "ERROR",
-        "INFO"
-      ],
-      "common_fields": [
-        "alert",
-        "bool",
-        "guard_name",
-        "log_method",
-        "severity",
-        "stage"
-      ],
       "source_files": [
-        "monitoring/guards/manager.py"
+        "security/secrets_manager.py"
+      ],
+      "statuses": [
+        "connected",
+        "dependency_missing",
+        "error",
+        "token_missing",
+        "unauthenticated"
       ]
     },
-    "guard_alert": {
-      "occurrence_count": 3,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR",
-        "INFO"
-      ],
+    "verify_integrity": {
       "common_fields": [
-        "auto_shutdown",
-        "guard_name",
-        "json",
-        "severity",
-        "stage",
-        "timeout"
+        "order_id",
+        "stored"
       ],
-      "source_files": [
-        "monitoring/guards/manager.py"
-      ]
-    },
-    "margin_monitor": {
-      "occurrence_count": 3,
       "components": null,
-      "statuses": null,
       "levels": [
-        "ERROR",
-        "INFO"
-      ],
-      "common_fields": [
-        "alert_threshold",
-        "alert_type",
-        "client",
-        "client_provided",
-        "monitor",
-        "stage"
-      ],
-      "source_files": [
-        "monitoring/domain/perps/margin.py"
-      ]
-    },
-    "liquidation_monitor": {
-      "occurrence_count": 6,
-      "components": null,
-      "statuses": null,
-      "levels": [
-        "ERROR",
-        "INFO",
         "WARNING"
       ],
+      "occurrence_count": 1,
+      "source_files": [
+        "persistence/orders_store.py"
+      ],
+      "statuses": null
+    },
+    "write_event": {
       "common_fields": [
-        "position_count",
-        "reason",
-        "risk",
-        "risk_level",
-        "stage",
+        "error",
+        "error_msg",
+        "event_type",
+        "row_id"
+      ],
+      "components": null,
+      "levels": [
+        "DEBUG",
+        "ERROR"
+      ],
+      "occurrence_count": 3,
+      "source_files": [
+        "persistence/database.py"
+      ],
+      "statuses": null
+    },
+    "write_to_cache": {
+      "common_fields": [
+        "error_message",
+        "error_type",
+        "granularity",
         "symbol"
       ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
       "source_files": [
-        "monitoring/domain/perps/liquidation.py"
-      ]
+        "backtesting/data/manager.py"
+      ],
+      "statuses": null
+    },
+    "ws_health": {
+      "common_fields": [
+        "60",
+        "_ws_health_task",
+        "connected",
+        "e_stale",
+        "error",
+        "gap_count",
+        "heartbeat_stale",
+        "pause_seconds",
+        "reconnect_count",
+        "stage"
+      ],
+      "components": null,
+      "levels": [
+        "DEBUG",
+        "INFO"
+      ],
+      "occurrence_count": 7,
+      "source_files": [
+        "features/live_trade/engines/strategy.py"
+      ],
+      "statuses": null
     }
   },
   "field_frequency": {
-    "stage": 142,
-    "error_message": 78,
-    "error_type": 72,
-    "symbol": 62,
-    "error": 40,
-    "order_id": 17,
-    "side": 15,
-    "reason": 14,
-    "guard_name": 10,
-    "service": 9,
-    "path": 8,
-    "broker": 8,
-    "event_type": 5,
-    "error_msg": 5,
-    "client_order_id": 5,
-    "granularity": 5,
-    "quantity": 5,
-    "consecutive_failures": 5,
-    "client_ip": 4,
-    "_tracer": 4,
+    "None": 3,
     "__all__": 4,
-    "portfolio_id": 4,
-    "action": 4,
     "_stream_task": 4,
-    "mode": 4,
-    "severity": 4,
-    "bool": 3,
+    "_tracer": 4,
+    "_tracing_enabled": 3,
     "_vault_enabled": 3,
-    "enabled": 3,
-    "_tracing_enabled": 3
+    "action": 4,
+    "allow_reduce_only": 3,
+    "broker": 8,
+    "client_ip": 4,
+    "client_order_id": 5,
+    "consecutive_failures": 5,
+    "error": 40,
+    "error_message": 78,
+    "error_msg": 5,
+    "error_type": 72,
+    "event_type": 5,
+    "granularity": 5,
+    "guard_name": 10,
+    "mode": 4,
+    "order_id": 17,
+    "path": 8,
+    "portfolio_id": 4,
+    "quantity": 5,
+    "reason": 14,
+    "service": 9,
+    "severity": 4,
+    "side": 15,
+    "stage": 142,
+    "symbol": 62
   },
   "level_distribution": {
-    "INFO": 104,
-    "WARNING": 65,
+    "CRITICAL": 1,
     "DEBUG": 48,
     "ERROR": 79,
-    "CRITICAL": 1
-  }
+    "INFO": 104,
+    "WARNING": 65
+  },
+  "total_event_types": 128,
+  "version": "1.0"
 }

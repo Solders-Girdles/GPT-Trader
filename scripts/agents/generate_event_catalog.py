@@ -39,12 +39,17 @@ def scan_logging_calls(source_dir: Path) -> dict[str, Any]:
     fields_seen: dict[str, int] = defaultdict(int)
     log_levels: dict[str, int] = defaultdict(int)
 
-    for py_file in source_dir.rglob("*.py"):
+    py_files = sorted(
+        (path for path in source_dir.rglob("*.py") if "__pycache__" not in str(path)),
+        key=lambda path: path.relative_to(source_dir).as_posix(),
+    )
+
+    for py_file in py_files:
         if "__pycache__" in str(py_file):
             continue
 
         try:
-            content = py_file.read_text()
+            content = py_file.read_text(encoding="utf-8")
         except Exception:
             continue
 
@@ -79,13 +84,15 @@ def scan_logging_calls(source_dir: Path) -> dict[str, Any]:
             # Filter out common non-field kwargs
             kwargs -= {"operation", "component", "status", "extra", "exc_info"}
 
+            sorted_kwargs = sorted(kwargs)
+
             operations[operation].append(
                 {
-                    "file": str(py_file.relative_to(source_dir)),
+                    "file": py_file.relative_to(source_dir).as_posix(),
                     "component": component,
                     "status": status,
                     "level": level,
-                    "fields": list(kwargs)[:10],  # Limit fields
+                    "fields": sorted_kwargs[:10],  # Limit fields (deterministic)
                 }
             )
 
@@ -99,7 +106,7 @@ def scan_logging_calls(source_dir: Path) -> dict[str, Any]:
 
     return {
         "operations": dict(operations),
-        "components": {k: list(set(v)) for k, v in components.items()},
+        "components": {key: sorted(set(values)) for key, values in components.items()},
         "fields": dict(fields_seen),
         "levels": dict(log_levels),
     }
@@ -226,8 +233,9 @@ def generate_event_catalog(scan_results: dict[str, Any]) -> dict[str, Any]:
     operations = scan_results["operations"]
     categories = categorize_operations(operations)
 
-    events = {}
-    for op_name, occurrences in operations.items():
+    events: dict[str, Any] = {}
+    for op_name in sorted(operations):
+        occurrences = operations[op_name]
         # Aggregate info from all occurrences
         components = set()
         statuses = set()
@@ -253,14 +261,24 @@ def generate_event_catalog(scan_results: dict[str, Any]) -> dict[str, Any]:
             "source_files": sorted(files)[:5],  # Limit to 5 example files
         }
 
+    field_frequency = sorted(
+        scan_results["fields"].items(),
+        key=lambda item: (-item[1], item[0]),
+    )[:30]
+
+    level_distribution = {
+        level: scan_results["levels"].get(level, 0)
+        for level in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+    }
+
     return {
         "version": "1.0",
         "description": "Catalog of structured log events in GPT-Trader",
         "total_event_types": len(events),
         "categories": categories,
         "events": events,
-        "field_frequency": dict(sorted(scan_results["fields"].items(), key=lambda x: -x[1])[:30]),
-        "level_distribution": scan_results["levels"],
+        "field_frequency": dict(field_frequency),
+        "level_distribution": level_distribution,
     }
 
 
@@ -307,13 +325,13 @@ def main() -> int:
     # Write event catalog
     catalog_path = output_dir / "event_catalog.json"
     with open(catalog_path, "w") as f:
-        json.dump(event_catalog, f, indent=2)
+        json.dump(event_catalog, f, indent=2, sort_keys=True)
     print(f"Event catalog written to: {catalog_path}")
 
     # Write log schema
     schema_path = output_dir / "log_schema.json"
     with open(schema_path, "w") as f:
-        json.dump(log_schema, f, indent=2)
+        json.dump(log_schema, f, indent=2, sort_keys=True)
     print(f"Log schema written to: {schema_path}")
 
     # Write index
@@ -327,7 +345,7 @@ def main() -> int:
         "summary": {
             "total_events": event_catalog["total_event_types"],
             "categories": list(event_catalog["categories"].keys()),
-            "top_operations": list(event_catalog["events"].keys())[:10],
+            "top_operations": sorted(event_catalog["events"].keys())[:10],
         },
         "usage": {
             "parsing": "Use log_schema.json to validate/parse JSON log entries",
@@ -337,7 +355,7 @@ def main() -> int:
     }
     index_path = output_dir / "index.json"
     with open(index_path, "w") as f:
-        json.dump(index, f, indent=2)
+        json.dump(index, f, indent=2, sort_keys=True)
     print(f"Index written to: {index_path}")
 
     print(f"\nFound {event_catalog['total_event_types']} unique event types")

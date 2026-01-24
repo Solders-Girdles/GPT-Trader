@@ -46,6 +46,11 @@ ENV_READER_FUNCTIONS = {
     "parse_env_mapping",
     "coerce_env_value",
     "require_env_value",
+    "_env_flag",
+}
+
+ENV_MULTI_KEY_READERS = {
+    "_env_lookup",
 }
 
 SPECIAL_PREFIX_READERS: dict[str, dict[str, str]] = {
@@ -123,9 +128,27 @@ def _resolve_default_literal(node: ast.AST) -> str | None:
 def _call_name(node: ast.AST) -> str | None:
     if isinstance(node, ast.Name):
         return node.id
-    if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name):
-        return f"{node.value.id}.{node.attr}"
+    if isinstance(node, ast.Attribute):
+        parent = _call_name(node.value)
+        if parent:
+            return f"{parent}.{node.attr}"
+        return None
     return None
+
+
+def _iter_env_var_names_from_args(
+    args: list[ast.AST],
+    constants: dict[str, str],
+) -> list[str]:
+    names: list[str] = []
+    for arg in args:
+        name = _resolve_string_literal(arg, constants)
+        if not name:
+            continue
+        if not re.fullmatch(r"[A-Z0-9_]+", name):
+            continue
+        names.append(name)
+    return names
 
 
 def collect_code_references() -> dict[str, list[CodeReference]]:
@@ -158,6 +181,20 @@ def collect_code_references() -> dict[str, list[CodeReference]]:
                 if call_name == "os.getenv" and node.args:
                     name = _resolve_string_literal(node.args[0], constants)
                     reader = "os.getenv"
+                elif call_name == "os.environ.get" and node.args:
+                    name = _resolve_string_literal(node.args[0], constants)
+                    reader = "os.environ.get"
+                elif call_name in ENV_MULTI_KEY_READERS:
+                    names = _iter_env_var_names_from_args(node.args, constants)
+                    if names:
+                        for resolved in names:
+                            location = CodeReference(
+                                path=rel_path,
+                                line=getattr(node, "lineno", 0) or 0,
+                                reader=call_name,
+                            )
+                            references.setdefault(resolved, []).append(location)
+                    continue
                 elif call_name in ENV_READER_FUNCTIONS and node.args:
                     name = _resolve_string_literal(node.args[0], constants)
                     reader = call_name

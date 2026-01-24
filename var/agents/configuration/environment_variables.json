@@ -1,9 +1,9 @@
 {
   "env_template_path": "config/environments/.env.template",
   "summary": {
-    "code_only": 78,
-    "template_only": 23,
-    "total": 175
+    "code_only": 88,
+    "template_only": 0,
+    "total": 167
   },
   "variables": [
     {
@@ -179,11 +179,17 @@
     },
     {
       "code_paths": [
+        "src/gpt_trader/cli/commands/optimize/run.py",
         "src/gpt_trader/features/brokerages/coinbase/auth.py",
         "src/gpt_trader/features/brokerages/coinbase/credentials.py",
         "src/gpt_trader/tui/services/credential_validator.py"
       ],
       "code_references": [
+        {
+          "line": 351,
+          "path": "src/gpt_trader/cli/commands/optimize/run.py",
+          "reader": "os.environ.get"
+        },
         {
           "line": 111,
           "path": "src/gpt_trader/features/brokerages/coinbase/auth.py",
@@ -328,6 +334,7 @@
         "scripts/monitoring/canary_reduce_only_test.py",
         "scripts/test_api_connectivity.py",
         "scripts/test_paper_broker.py",
+        "src/gpt_trader/cli/commands/optimize/run.py",
         "src/gpt_trader/features/brokerages/coinbase/credentials.py"
       ],
       "code_references": [
@@ -345,6 +352,11 @@
           "line": 35,
           "path": "scripts/test_paper_broker.py",
           "reader": "os.getenv"
+        },
+        {
+          "line": 341,
+          "path": "src/gpt_trader/cli/commands/optimize/run.py",
+          "reader": "os.environ.get"
         },
         {
           "line": 56,
@@ -383,7 +395,7 @@
           "comment": "",
           "commented_out": true,
           "default": "USD",
-          "line": 180
+          "line": 162
         }
       ]
     },
@@ -492,11 +504,17 @@
     },
     {
       "code_paths": [
+        "src/gpt_trader/cli/commands/optimize/run.py",
         "src/gpt_trader/features/brokerages/coinbase/auth.py",
         "src/gpt_trader/features/brokerages/coinbase/credentials.py",
         "src/gpt_trader/tui/services/credential_validator.py"
       ],
       "code_references": [
+        {
+          "line": 353,
+          "path": "src/gpt_trader/cli/commands/optimize/run.py",
+          "reader": "os.environ.get"
+        },
         {
           "line": 112,
           "path": "src/gpt_trader/features/brokerages/coinbase/auth.py",
@@ -623,8 +641,16 @@
       ]
     },
     {
-      "code_paths": [],
-      "code_references": [],
+      "code_paths": [
+        "src/gpt_trader/logging/setup.py"
+      ],
+      "code_references": [
+        {
+          "line": 88,
+          "path": "src/gpt_trader/logging/setup.py",
+          "reader": "_env_lookup"
+        }
+      ],
       "in_env_template": true,
       "name": "COINBASE_TRADER_CRIT_LOG_BACKUP_COUNT",
       "template_default": "5",
@@ -633,13 +659,21 @@
           "comment": "Retain 5 historical critical logs",
           "commented_out": false,
           "default": "5",
-          "line": 153
+          "line": 142
         }
       ]
     },
     {
-      "code_paths": [],
-      "code_references": [],
+      "code_paths": [
+        "src/gpt_trader/logging/setup.py"
+      ],
+      "code_references": [
+        {
+          "line": 84,
+          "path": "src/gpt_trader/logging/setup.py",
+          "reader": "_env_lookup"
+        }
+      ],
       "in_env_template": true,
       "name": "COINBASE_TRADER_CRIT_LOG_MAX_BYTES",
       "template_default": "1048576",
@@ -648,13 +682,27 @@
           "comment": "1 MB per critical log file",
           "commented_out": false,
           "default": "1048576",
-          "line": 152
+          "line": 141
         }
       ]
     },
     {
-      "code_paths": [],
-      "code_references": [],
+      "code_paths": [
+        "src/gpt_trader/cli/__init__.py",
+        "src/gpt_trader/logging/setup.py"
+      ],
+      "code_references": [
+        {
+          "line": 192,
+          "path": "src/gpt_trader/cli/__init__.py",
+          "reader": "_env_flag"
+        },
+        {
+          "line": 154,
+          "path": "src/gpt_trader/logging/setup.py",
+          "reader": "_env_flag"
+        }
+      ],
       "in_env_template": true,
       "name": "COINBASE_TRADER_DEBUG",
       "template_default": "0",
@@ -668,8 +716,16 @@
       ]
     },
     {
-      "code_paths": [],
-      "code_references": [],
+      "code_paths": [
+        "src/gpt_trader/logging/setup.py"
+      ],
+      "code_references": [
+        {
+          "line": 81,
+          "path": "src/gpt_trader/logging/setup.py",
+          "reader": "_env_lookup"
+        }
+      ],
       "in_env_template": true,
       "name": "COINBASE_TRADER_LOG_BACKUP_COUNT",
       "template_default": "3",
@@ -678,19 +734,25 @@
           "comment": "Retain 3 historical log files",
           "commented_out": false,
           "default": "3",
-          "line": 151
+          "line": 140
         }
       ]
     },
     {
       "code_paths": [
-        "scripts/monitoring/manage_logs.py"
+        "scripts/monitoring/manage_logs.py",
+        "src/gpt_trader/logging/setup.py"
       ],
       "code_references": [
         {
           "line": 17,
           "path": "scripts/monitoring/manage_logs.py",
           "reader": "os.getenv"
+        },
+        {
+          "line": 46,
+          "path": "src/gpt_trader/logging/setup.py",
+          "reader": "_env_lookup"
         }
       ],
       "in_env_template": true,
@@ -701,13 +763,21 @@
           "comment": "",
           "commented_out": false,
           "default": "var/log/coinbase_trader",
-          "line": 149
+          "line": 138
         }
       ]
     },
     {
-      "code_paths": [],
-      "code_references": [],
+      "code_paths": [
+        "src/gpt_trader/logging/setup.py"
+      ],
+      "code_references": [
+        {
+          "line": 78,
+          "path": "src/gpt_trader/logging/setup.py",
+          "reader": "_env_lookup"
+        }
+      ],
       "in_env_template": true,
       "name": "COINBASE_TRADER_LOG_MAX_BYTES",
       "template_default": "5242880",
@@ -716,7 +786,7 @@
           "comment": "5 MB per log file",
           "commented_out": false,
           "default": "5242880",
-          "line": 150
+          "line": 139
         }
       ]
     },
@@ -739,7 +809,7 @@
           "comment": "Optional Prometheus prefix override",
           "commented_out": false,
           "default": "coinbase_trader",
-          "line": 123
+          "line": 112
         }
       ]
     },
@@ -806,51 +876,6 @@
       "name": "COINBASE_WS_SUBPROTOCOLS",
       "template_default": "",
       "template_references": []
-    },
-    {
-      "code_paths": [],
-      "code_references": [],
-      "in_env_template": true,
-      "name": "COINBASE_WS_USER_AUTH",
-      "template_default": "0",
-      "template_references": [
-        {
-          "comment": "",
-          "commented_out": false,
-          "default": "0",
-          "line": 121
-        }
-      ]
-    },
-    {
-      "code_paths": [],
-      "code_references": [],
-      "in_env_template": true,
-      "name": "DEFAULT_ORDER_TYPE",
-      "template_default": "limit",
-      "template_references": [
-        {
-          "comment": "",
-          "commented_out": false,
-          "default": "limit",
-          "line": 55
-        }
-      ]
-    },
-    {
-      "code_paths": [],
-      "code_references": [],
-      "in_env_template": true,
-      "name": "DEFAULT_TIME_IN_FORCE",
-      "template_default": "GTC",
-      "template_references": [
-        {
-          "comment": "",
-          "commented_out": false,
-          "default": "GTC",
-          "line": 56
-        }
-      ]
     },
     {
       "code_paths": [
@@ -949,21 +974,6 @@
       "template_references": []
     },
     {
-      "code_paths": [],
-      "code_references": [],
-      "in_env_template": true,
-      "name": "FEE_BPS_BY_SYMBOL",
-      "template_default": "BTC-PERP:6,ETH-PERP:8",
-      "template_references": [
-        {
-          "comment": "",
-          "commented_out": false,
-          "default": "BTC-PERP:6,ETH-PERP:8",
-          "line": 169
-        }
-      ]
-    },
-    {
       "code_paths": [
         "src/gpt_trader/config/constants.py"
       ],
@@ -982,7 +992,7 @@
           "comment": "Proactive pacing instead of reactive blocking",
           "commented_out": false,
           "default": "1",
-          "line": 143
+          "line": 132
         }
       ]
     },
@@ -1037,7 +1047,7 @@
           "comment": "Response caching for stable data",
           "commented_out": false,
           "default": "1",
-          "line": 140
+          "line": 129
         }
       ]
     },
@@ -1092,7 +1102,7 @@
           "comment": "Prevent hammering failing endpoints",
           "commented_out": false,
           "default": "1",
-          "line": 141
+          "line": 130
         }
       ]
     },
@@ -1179,7 +1189,7 @@
           "comment": "",
           "commented_out": false,
           "default": "",
-          "line": 161
+          "line": 149
         }
       ]
     },
@@ -1250,7 +1260,7 @@
           "comment": "Seconds between health checks",
           "commented_out": false,
           "default": "30.0",
-          "line": 137
+          "line": 126
         }
       ]
     },
@@ -1267,6 +1277,22 @@
       ],
       "in_env_template": false,
       "name": "GPT_TRADER_HEALTH_READ_TIMEOUT",
+      "template_default": "",
+      "template_references": []
+    },
+    {
+      "code_paths": [
+        "src/gpt_trader/cli/commands/run.py"
+      ],
+      "code_references": [
+        {
+          "line": 171,
+          "path": "src/gpt_trader/cli/commands/run.py",
+          "reader": "_env_flag"
+        }
+      ],
+      "in_env_template": false,
+      "name": "GPT_TRADER_HEALTH_SERVER_ENABLED",
       "template_default": "",
       "template_references": []
     },
@@ -1369,7 +1395,7 @@
           "comment": "In-memory metrics collection",
           "commented_out": false,
           "default": "1",
-          "line": 144
+          "line": 133
         }
       ]
     },
@@ -1392,7 +1418,7 @@
           "comment": "",
           "commented_out": false,
           "default": "0",
-          "line": 129
+          "line": 118
         }
       ]
     },
@@ -1463,7 +1489,7 @@
           "comment": "",
           "commented_out": false,
           "default": "0",
-          "line": 132
+          "line": 121
         }
       ]
     },
@@ -1514,7 +1540,7 @@
           "comment": "Prioritize critical requests under pressure",
           "commented_out": false,
           "default": "1",
-          "line": 142
+          "line": 131
         }
       ]
     },
@@ -1789,7 +1815,7 @@
           "comment": "Base delay in seconds",
           "commented_out": false,
           "default": "2.0",
-          "line": 109
+          "line": 99
         }
       ]
     },
@@ -1812,7 +1838,7 @@
           "comment": "Max delay cap in seconds",
           "commented_out": false,
           "default": "60.0",
-          "line": 110
+          "line": 100
         }
       ]
     },
@@ -1835,7 +1861,7 @@
           "comment": "Backoff multiplier",
           "commented_out": false,
           "default": "2.0",
-          "line": 111
+          "line": 101
         }
       ]
     },
@@ -1858,7 +1884,7 @@
           "comment": "Jitter \u00b125% to prevent thundering herd",
           "commented_out": false,
           "default": "0.25",
-          "line": 112
+          "line": 102
         }
       ]
     },
@@ -1881,7 +1907,7 @@
           "comment": "Max attempts before degradation (0=unlimited)",
           "commented_out": false,
           "default": "10",
-          "line": 113
+          "line": 103
         }
       ]
     },
@@ -1904,7 +1930,7 @@
           "comment": "Pause duration after max attempts exceeded",
           "commented_out": false,
           "default": "300",
-          "line": 115
+          "line": 105
         }
       ]
     },
@@ -1927,7 +1953,7 @@
           "comment": "Stable time to reset attempt counter",
           "commented_out": false,
           "default": "60.0",
-          "line": 114
+          "line": 104
         }
       ]
     },
@@ -2124,19 +2150,20 @@
       "template_references": []
     },
     {
-      "code_paths": [],
-      "code_references": [],
-      "in_env_template": true,
-      "name": "JWT_SECRET_KEY",
-      "template_default": "",
-      "template_references": [
+      "code_paths": [
+        "src/gpt_trader/security/ip_allowlist_enforcer.py"
+      ],
+      "code_references": [
         {
-          "comment": "",
-          "commented_out": false,
-          "default": "",
-          "line": 160
+          "line": 74,
+          "path": "src/gpt_trader/security/ip_allowlist_enforcer.py",
+          "reader": "os.environ.get"
         }
-      ]
+      ],
+      "in_env_template": false,
+      "name": "IP_ALLOWLIST_ENABLED",
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -2178,36 +2205,6 @@
       "template_references": []
     },
     {
-      "code_paths": [],
-      "code_references": [],
-      "in_env_template": true,
-      "name": "MAX_ORDER_SIZE_USD",
-      "template_default": "2500",
-      "template_references": [
-        {
-          "comment": "",
-          "commented_out": false,
-          "default": "2500",
-          "line": 60
-        }
-      ]
-    },
-    {
-      "code_paths": [],
-      "code_references": [],
-      "in_env_template": true,
-      "name": "MIN_ORDER_SIZE_USD",
-      "template_default": "25",
-      "template_references": [
-        {
-          "comment": "",
-          "commented_out": false,
-          "default": "25",
-          "line": 59
-        }
-      ]
-    },
-    {
       "code_paths": [
         "src/gpt_trader/app/config/bot_config.py"
       ],
@@ -2227,36 +2224,6 @@
           "commented_out": false,
           "default": "0",
           "line": 19
-        }
-      ]
-    },
-    {
-      "code_paths": [],
-      "code_references": [],
-      "in_env_template": true,
-      "name": "ORDER_MAX_RETRIES",
-      "template_default": "1",
-      "template_references": [
-        {
-          "comment": "",
-          "commented_out": false,
-          "default": "1",
-          "line": 63
-        }
-      ]
-    },
-    {
-      "code_paths": [],
-      "code_references": [],
-      "in_env_template": true,
-      "name": "ORDER_POST_ONLY",
-      "template_default": "0",
-      "template_references": [
-        {
-          "comment": "",
-          "commented_out": false,
-          "default": "0",
-          "line": 57
         }
       ]
     },
@@ -2284,51 +2251,6 @@
       ]
     },
     {
-      "code_paths": [],
-      "code_references": [],
-      "in_env_template": true,
-      "name": "ORDER_PREVIEW_FAIL_CLOSED",
-      "template_default": "1",
-      "template_references": [
-        {
-          "comment": "",
-          "commented_out": false,
-          "default": "1",
-          "line": 54
-        }
-      ]
-    },
-    {
-      "code_paths": [],
-      "code_references": [],
-      "in_env_template": true,
-      "name": "ORDER_REDUCE_ONLY_DEFAULT",
-      "template_default": "0",
-      "template_references": [
-        {
-          "comment": "",
-          "commented_out": false,
-          "default": "0",
-          "line": 58
-        }
-      ]
-    },
-    {
-      "code_paths": [],
-      "code_references": [],
-      "in_env_template": true,
-      "name": "ORDER_RETRY_DELAY_MS",
-      "template_default": "750",
-      "template_references": [
-        {
-          "comment": "",
-          "commented_out": false,
-          "default": "750",
-          "line": 64
-        }
-      ]
-    },
-    {
       "code_paths": [
         "src/gpt_trader/app/config/bot_config.py"
       ],
@@ -2347,7 +2269,7 @@
           "comment": "",
           "commented_out": false,
           "default": "0",
-          "line": 62
+          "line": 55
         }
       ]
     },
@@ -2370,7 +2292,7 @@
           "comment": "Uncomment to export traces",
           "commented_out": true,
           "default": "http://localhost:4317",
-          "line": 134
+          "line": 123
         }
       ]
     },
@@ -2393,7 +2315,7 @@
           "comment": "",
           "commented_out": false,
           "default": "gpt-trader",
-          "line": 133
+          "line": 122
         }
       ]
     },
@@ -2410,6 +2332,60 @@
       ],
       "in_env_template": false,
       "name": "PERPS_COLLATERAL_ASSETS",
+      "template_default": "",
+      "template_references": []
+    },
+    {
+      "code_paths": [
+        "src/gpt_trader/logging/setup.py"
+      ],
+      "code_references": [
+        {
+          "line": 88,
+          "path": "src/gpt_trader/logging/setup.py",
+          "reader": "_env_lookup"
+        }
+      ],
+      "in_env_template": false,
+      "name": "PERPS_CRIT_LOG_BACKUP_COUNT",
+      "template_default": "",
+      "template_references": []
+    },
+    {
+      "code_paths": [
+        "src/gpt_trader/logging/setup.py"
+      ],
+      "code_references": [
+        {
+          "line": 84,
+          "path": "src/gpt_trader/logging/setup.py",
+          "reader": "_env_lookup"
+        }
+      ],
+      "in_env_template": false,
+      "name": "PERPS_CRIT_LOG_MAX_BYTES",
+      "template_default": "",
+      "template_references": []
+    },
+    {
+      "code_paths": [
+        "src/gpt_trader/cli/__init__.py",
+        "src/gpt_trader/logging/setup.py"
+      ],
+      "code_references": [
+        {
+          "line": 192,
+          "path": "src/gpt_trader/cli/__init__.py",
+          "reader": "_env_flag"
+        },
+        {
+          "line": 154,
+          "path": "src/gpt_trader/logging/setup.py",
+          "reader": "_env_flag"
+        }
+      ],
+      "in_env_template": false,
+      "name": "PERPS_DEBUG",
       "template_default": "",
       "template_references": []
     },
@@ -2432,9 +2408,57 @@
           "comment": "",
           "commented_out": false,
           "default": "0",
-          "line": 120
+          "line": 110
         }
       ]
+    },
+    {
+      "code_paths": [
+        "src/gpt_trader/logging/setup.py"
+      ],
+      "code_references": [
+        {
+          "line": 81,
+          "path": "src/gpt_trader/logging/setup.py",
+          "reader": "_env_lookup"
+        }
+      ],
+      "in_env_template": false,
+      "name": "PERPS_LOG_BACKUP_COUNT",
+      "template_default": "",
+      "template_references": []
+    },
+    {
+      "code_paths": [
+        "src/gpt_trader/logging/setup.py"
+      ],
+      "code_references": [
+        {
+          "line": 46,
+          "path": "src/gpt_trader/logging/setup.py",
+          "reader": "_env_lookup"
+        }
+      ],
+      "in_env_template": false,
+      "name": "PERPS_LOG_DIR",
+      "template_default": "",
+      "template_references": []
+    },
+    {
+      "code_paths": [
+        "src/gpt_trader/logging/setup.py"
+      ],
+      "code_references": [
+        {
+          "line": 78,
+          "path": "src/gpt_trader/logging/setup.py",
+          "reader": "_env_lookup"
+        }
+      ],
+      "in_env_template": false,
+      "name": "PERPS_LOG_MAX_BYTES",
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -2493,6 +2517,22 @@
     },
     {
       "code_paths": [
+        "src/gpt_trader/features/brokerages/coinbase/specs.py"
+      ],
+      "code_references": [
+        {
+          "line": 54,
+          "path": "src/gpt_trader/features/brokerages/coinbase/specs.py",
+          "reader": "os.environ.get"
+        }
+      ],
+      "in_env_template": false,
+      "name": "PERPS_SPECS_PATH",
+      "template_default": "",
+      "template_references": []
+    },
+    {
+      "code_paths": [
         "src/gpt_trader/app/config/bot_config.py"
       ],
       "code_references": [
@@ -2510,7 +2550,7 @@
           "comment": "",
           "commented_out": false,
           "default": "1",
-          "line": 122
+          "line": 111
         }
       ]
     },
@@ -2533,7 +2573,7 @@
           "comment": "20% error rate triggers guard",
           "commented_out": false,
           "default": "0.2",
-          "line": 85
+          "line": 75
         }
       ]
     },
@@ -2556,7 +2596,7 @@
           "comment": "Pause after API health trip (5 min)",
           "commented_out": false,
           "default": "300",
-          "line": 90
+          "line": 80
         }
       ]
     },
@@ -2579,7 +2619,7 @@
           "comment": "90% rate limit usage triggers guard",
           "commented_out": false,
           "default": "0.9",
-          "line": 86
+          "line": 76
         }
       ]
     },
@@ -2602,7 +2642,7 @@
           "comment": "Broker outage pause duration",
           "commented_out": false,
           "default": "120",
-          "line": 98
+          "line": 88
         }
       ]
     },
@@ -2625,7 +2665,7 @@
           "comment": "Pause after N broker read failures",
           "commented_out": false,
           "default": "3",
-          "line": 97
+          "line": 87
         }
       ]
     },
@@ -2671,7 +2711,7 @@
           "comment": "",
           "commented_out": false,
           "default": "100",
-          "line": 76
+          "line": 67
         }
       ]
     },
@@ -2700,52 +2740,7 @@
           "comment": "",
           "commented_out": false,
           "default": "0.05",
-          "line": 74
-        }
-      ]
-    },
-    {
-      "code_paths": [],
-      "code_references": [],
-      "in_env_template": true,
-      "name": "RISK_ENABLE_DYNAMIC_POSITION_SIZING",
-      "template_default": "0",
-      "template_references": [
-        {
-          "comment": "",
-          "commented_out": true,
-          "default": "0",
-          "line": 176
-        }
-      ]
-    },
-    {
-      "code_paths": [],
-      "code_references": [],
-      "in_env_template": true,
-      "name": "RISK_ENABLE_MARKET_IMPACT_GUARD",
-      "template_default": "1",
-      "template_references": [
-        {
-          "comment": "",
-          "commented_out": true,
-          "default": "1",
-          "line": 174
-        }
-      ]
-    },
-    {
-      "code_paths": [],
-      "code_references": [],
-      "in_env_template": true,
-      "name": "RISK_ENABLE_PRE_TRADE_LIQ_PROJECTION",
-      "template_default": "1",
-      "template_references": [
-        {
-          "comment": "",
-          "commented_out": false,
-          "default": "1",
-          "line": 78
+          "line": 65
         }
       ]
     },
@@ -2768,7 +2763,7 @@
           "comment": "",
           "commented_out": false,
           "default": "0",
-          "line": 80
+          "line": 70
         }
       ]
     },
@@ -2791,7 +2786,7 @@
           "comment": "Allow reduce-only during stale mark",
           "commented_out": false,
           "default": "1",
-          "line": 92
+          "line": 82
         }
       ]
     },
@@ -2814,7 +2809,7 @@
           "comment": "Pause symbol on stale mark (2 min)",
           "commented_out": false,
           "default": "120",
-          "line": 91
+          "line": 81
         }
       ]
     },
@@ -2837,7 +2832,7 @@
           "comment": "",
           "commented_out": false,
           "default": "0.30",
-          "line": 70
+          "line": 61
         }
       ]
     },
@@ -2866,22 +2861,7 @@
           "comment": "",
           "commented_out": false,
           "default": "3",
-          "line": 69
-        }
-      ]
-    },
-    {
-      "code_paths": [],
-      "code_references": [],
-      "in_env_template": true,
-      "name": "RISK_MAX_MARKET_IMPACT_BPS",
-      "template_default": "50",
-      "template_references": [
-        {
-          "comment": "",
-          "commented_out": true,
-          "default": "50",
-          "line": 175
+          "line": 60
         }
       ]
     },
@@ -2910,7 +2890,7 @@
           "comment": "",
           "commented_out": false,
           "default": "0.10",
-          "line": 71
+          "line": 62
         }
       ]
     },
@@ -2949,37 +2929,7 @@
           "comment": "",
           "commented_out": false,
           "default": "0.20",
-          "line": 77
-        }
-      ]
-    },
-    {
-      "code_paths": [],
-      "code_references": [],
-      "in_env_template": true,
-      "name": "RISK_POSITION_SIZING_METHOD",
-      "template_default": "notional",
-      "template_references": [
-        {
-          "comment": "",
-          "commented_out": true,
-          "default": "notional",
-          "line": 177
-        }
-      ]
-    },
-    {
-      "code_paths": [],
-      "code_references": [],
-      "in_env_template": true,
-      "name": "RISK_POSITION_SIZING_MULTIPLIER",
-      "template_default": "1.0",
-      "template_references": [
-        {
-          "comment": "",
-          "commented_out": true,
-          "default": "1.0",
-          "line": 178
+          "line": 68
         }
       ]
     },
@@ -3002,7 +2952,7 @@
           "comment": "Disable preview after N failures",
           "commented_out": false,
           "default": "5",
-          "line": 96
+          "line": 86
         }
       ]
     },
@@ -3031,7 +2981,7 @@
           "comment": "",
           "commented_out": false,
           "default": "0",
-          "line": 81
+          "line": 71
         }
       ]
     },
@@ -3054,7 +3004,7 @@
           "comment": "Pause symbol after N slippage failures",
           "commented_out": false,
           "default": "3",
-          "line": 93
+          "line": 83
         }
       ]
     },
@@ -3077,7 +3027,7 @@
           "comment": "",
           "commented_out": false,
           "default": "40",
-          "line": 79
+          "line": 69
         }
       ]
     },
@@ -3100,7 +3050,7 @@
           "comment": "Slippage pause duration per symbol",
           "commented_out": false,
           "default": "60",
-          "line": 94
+          "line": 84
         }
       ]
     },
@@ -3193,7 +3143,7 @@
           "comment": "Pause on validation infra failure",
           "commented_out": false,
           "default": "180",
-          "line": 95
+          "line": 85
         }
       ]
     },
@@ -3216,7 +3166,7 @@
           "comment": "How often to poll WS health",
           "commented_out": false,
           "default": "5",
-          "line": 102
+          "line": 92
         }
       ]
     },
@@ -3239,7 +3189,7 @@
           "comment": "Max age of last heartbeat before stale",
           "commented_out": false,
           "default": "30",
-          "line": 104
+          "line": 94
         }
       ]
     },
@@ -3262,7 +3212,7 @@
           "comment": "Max age of last WS message before stale",
           "commented_out": false,
           "default": "15",
-          "line": 103
+          "line": 93
         }
       ]
     },
@@ -3285,7 +3235,7 @@
           "comment": "Pause after WS reconnect",
           "commented_out": false,
           "default": "30",
-          "line": 105
+          "line": 95
         }
       ]
     },
@@ -3324,7 +3274,7 @@
           "comment": "",
           "commented_out": true,
           "default": "0",
-          "line": 179
+          "line": 161
         }
       ]
     },
@@ -3443,9 +3393,25 @@
           "comment": "",
           "commented_out": false,
           "default": "BTC-PERP,ETH-PERP",
-          "line": 168
+          "line": 156
         }
       ]
+    },
+    {
+      "code_paths": [
+        "src/gpt_trader/tui/services/performance_service.py"
+      ],
+      "code_references": [
+        {
+          "line": 35,
+          "path": "src/gpt_trader/tui/services/performance_service.py",
+          "reader": "os.environ.get"
+        }
+      ],
+      "in_env_template": false,
+      "name": "TUI_PERF_TRACE",
+      "template_default": "",
+      "template_references": []
     },
     {
       "code_paths": [
@@ -3466,7 +3432,7 @@
           "comment": "",
           "commented_out": false,
           "default": "",
-          "line": 162
+          "line": 150
         }
       ]
     },
@@ -3489,7 +3455,7 @@
           "comment": "",
           "commented_out": false,
           "default": "",
-          "line": 163
+          "line": 151
         }
       ]
     },

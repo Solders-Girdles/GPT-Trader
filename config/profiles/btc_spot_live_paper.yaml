@@ -1,0 +1,39 @@
+# BTC spot live market-data paper fills configuration (no exchange orders).
+profile: "btc_spot_live_paper"
+environment: "development"
+
+symbols:
+  - "BTC-USD"
+interval: 15
+account_telemetry_interval: 60
+
+strategy_type: "baseline"
+strategy:
+  short_ma_period: 5
+  long_ma_period: 20
+  rsi_period: 14
+  rsi_overbought: 70
+  rsi_oversold: 30
+  enable_shorts: false
+
+risk:
+  target_leverage: 1
+  max_leverage: 1
+  position_fraction: "0.10"
+  max_position_size: "1000"
+  dry_run_equity_usd: "10000"
+  stop_loss_pct: "0.02"
+  take_profit_pct: "0.04"
+  daily_loss_limit_pct: 0.05
+
+trading_modes:
+  - "spot"
+
+enable_shorts: false
+dry_run: false
+mock_broker: false
+paper_fills: true
+time_in_force: "GTC"
+log_level: "INFO"
+status_interval: 60
+status_enabled: true

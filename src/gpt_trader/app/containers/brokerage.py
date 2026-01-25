@@ -16,13 +16,15 @@ from gpt_trader.features.brokerages.coinbase.client.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
 from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
 from gpt_trader.features.brokerages.mock import DeterministicBroker
+from gpt_trader.features.brokerages.paper import HybridPaperBroker
+from gpt_trader.features.brokerages.read_only import ReadOnlyBroker
 from gpt_trader.persistence.event_store import EventStore
 
 if TYPE_CHECKING:
     pass
 
 # Type alias for the broker factory function signature
-BrokerType = CoinbaseClient | DeterministicBroker
+BrokerType = CoinbaseClient | DeterministicBroker | ReadOnlyBroker | HybridPaperBroker
 BrokerFactoryResult = tuple[BrokerType, EventStore, MarketDataService, ProductCatalog]
 BrokerFactory = Callable[
     [EventStore, MarketDataService, ProductCatalog, BotConfig],

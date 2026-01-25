@@ -11,7 +11,7 @@ import os
 import warnings
 from dataclasses import dataclass, field, fields, replace
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, ClassVar, Literal
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, get_args, get_origin
 
 # Import canonical defaults (top-10 symbols).
 
@@ -87,6 +87,8 @@ class BotRiskConfig:
     trailing_stop_pct: Decimal = Decimal("0.01")
     max_drawdown_pct: Decimal | None = None
     reduce_only_threshold: Decimal | None = None
+    # Optional paper equity override for dry-run observation mode.
+    dry_run_equity_usd: Decimal | None = None
     # Daily loss limit as percentage of equity (0.05 = 5%)
     # When daily loss exceeds this, reduce-only mode is triggered
     daily_loss_limit_pct: float = 0.05
@@ -172,6 +174,7 @@ class BotConfig:
     # General config (not nested)
     symbols: list[str] = field(default_factory=lambda: ["BTC-USD", "ETH-USD"])
     interval: int = 60  # seconds
+    max_cycles: int | None = None
     derivatives_enabled: bool = False
     enable_shorts: bool = False
     reduce_only_mode: bool = False
@@ -188,6 +191,8 @@ class BotConfig:
     log_level: str = "INFO"
     dry_run: bool = False
     mock_broker: bool = False
+    # Real market data + simulated execution (no exchange orders).
+    paper_fills: bool = False
     profile: object = None
 
     # Notifications (Slack/Discord webhook URL)
@@ -441,6 +446,9 @@ class BotConfig:
             # Risk modes from env (CLI/profile override these)
             reduce_only_mode=parse_bool_env("RISK_REDUCE_ONLY_MODE", default=False),
             mock_broker=parse_bool_env("MOCK_BROKER", default=False),
+            paper_fills=parse_bool_env(
+                "PAPER_FILLS", default=parse_bool_env("PAPER_MODE", default=False)
+            ),
         )
 
     @classmethod
@@ -464,7 +472,16 @@ class BotConfig:
         def _coerce_decimal_fields(source: dict[str, Any], dataclass_type: type) -> dict[str, Any]:
             result = dict(source)
             for f in dataclass_fields(dataclass_type):
-                if f.name in result and f.type in (Decimal, "Decimal"):
+                if f.name not in result:
+                    continue
+                type_hint = f.type
+                is_decimal = type_hint in (Decimal, "Decimal")
+                if not is_decimal:
+                    origin = get_origin(type_hint)
+                    if origin is not None:
+                        args = get_args(type_hint)
+                        is_decimal = any(arg in (Decimal, "Decimal") for arg in args)
+                if is_decimal:
                     val = result[f.name]
                     if val is not None and not isinstance(val, Decimal):
                         result[f.name] = Decimal(str(val))

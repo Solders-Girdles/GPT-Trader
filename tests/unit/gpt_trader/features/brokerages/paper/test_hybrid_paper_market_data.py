@@ -128,7 +128,7 @@ class TestHybridPaperBrokerMarketData:
 
     def test_get_ticker_returns_ticker(self, broker: HybridPaperBroker) -> None:
         """Test get_ticker returns ticker data."""
-        broker._client.get_market_product_ticker.return_value = {
+        broker._client.get_ticker.return_value = {
             "price": "50000.00",
             "volume_24h": "1000.00",
         }
@@ -139,7 +139,7 @@ class TestHybridPaperBrokerMarketData:
 
     def test_get_ticker_api_error(self, broker: HybridPaperBroker) -> None:
         """Test get_ticker returns empty dict on API error."""
-        broker._client.get_market_product_ticker.side_effect = Exception("API error")
+        broker._client.get_ticker.side_effect = Exception("API error")
 
         result = broker.get_ticker("BTC-USD")
 

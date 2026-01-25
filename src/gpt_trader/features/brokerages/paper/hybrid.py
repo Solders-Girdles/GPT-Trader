@@ -2,11 +2,14 @@
 Hybrid Paper Broker for paper trading with real market data.
 
 Combines real Coinbase market data with simulated order execution.
-Used when PAPER_MODE=1 to test strategies against live prices without real orders.
+Used for paper-fills mode (real market data + simulated fills) to validate
+strategies against live prices without placing exchange orders.
 """
 
 from __future__ import annotations
 
+import os
+import time
 from datetime import datetime
 from decimal import Decimal
 from typing import Any
@@ -92,6 +95,7 @@ class HybridPaperBroker:
         }
         self._orders: dict[str, Order] = {}
         self._order_counter = 0
+        self._order_id_prefix = f"{os.getpid()}_{time.time_ns()}"
         self._products_cache: dict[str, Product] = {}
         self._last_prices: dict[str, Decimal] = {}
 
@@ -153,10 +157,37 @@ class HybridPaperBroker:
     def get_ticker(self, product_id: str) -> dict[str, Any]:
         """Get ticker data from Coinbase."""
         try:
-            return self._client.get_market_product_ticker(product_id)
+            get_ticker = getattr(self._client, "get_ticker", None)
+            if callable(get_ticker):
+                response = get_ticker(product_id)
+            else:
+                response = self._client.get_market_product_ticker(product_id)
         except Exception as e:
             logger.warning(f"Failed to fetch ticker for {product_id}: {e}")
             return {}
+
+        price = response.get("price")
+        if not price:
+            trades = response.get("trades", [])
+            if trades:
+                price = trades[0].get("price")
+        bid = response.get("bid") or response.get("best_bid")
+        ask = response.get("ask") or response.get("best_ask")
+
+        normalized = {
+            "product_id": product_id,
+            "price": price or "0",
+            "bid": bid or "0",
+            "ask": ask or "0",
+            **response,
+        }
+        try:
+            price_dec = Decimal(str(normalized.get("price", "0")))
+            if price_dec > 0:
+                self._last_prices[product_id] = price_dec
+        except Exception:
+            pass
+        return normalized
 
     def get_candles(
         self, symbol: str, granularity: str = "ONE_HOUR", limit: int = 200
@@ -192,6 +223,14 @@ class HybridPaperBroker:
 
     def list_positions(self) -> list[Position]:
         """Return simulated positions."""
+        # Keep marks fresh for downstream strategy code without forcing extra API calls.
+        for pos in self._positions.values():
+            last_price = self._last_prices.get(pos.symbol)
+            if last_price is not None:
+                pos.mark_price = last_price
+                # EquityCalculator already values spot holdings via balances, so avoid
+                # double-counting PnL by keeping spot positions' unrealized_pnl at 0.
+                pos.unrealized_pnl = Decimal("0")
         return list(self._positions.values())
 
     def get_positions(self) -> list[Position]:
@@ -207,20 +246,27 @@ class HybridPaperBroker:
         return self.list_balances()
 
     def get_equity(self) -> Decimal:
-        """Calculate total equity including unrealized PnL."""
-        cash = self._balances.get(
-            "USD", Balance(asset="USD", total=Decimal("0"), available=Decimal("0"))
-        ).total
-        unrealized_pnl = Decimal("0")
+        """Calculate total equity from simulated balances and cached prices."""
+        total = Decimal("0")
+        for balance in self._balances.values():
+            asset = str(balance.asset or "").upper()
+            amount = balance.total
+            if amount == 0:
+                continue
+            if asset in {"USD", "USDC"}:
+                total += amount
+                continue
 
-        for symbol, position in self._positions.items():
-            current_price = self._last_prices.get(symbol, position.entry_price)
-            if position.quantity > 0:
-                unrealized_pnl += (current_price - position.entry_price) * position.quantity
-            else:
-                unrealized_pnl += (position.entry_price - current_price) * abs(position.quantity)
-
-        return cash + unrealized_pnl
+            product_id = f"{asset}-USD"
+            price = self._last_prices.get(product_id)
+            if price is None:
+                ticker = self.get_ticker(product_id)
+                try:
+                    price = Decimal(str(ticker.get("price", "0")))
+                except Exception:
+                    price = Decimal("0")
+            total += amount * price
+        return total
 
     # -------------------------------------------------------------------------
     # Order Execution Methods (simulated)
@@ -228,7 +274,7 @@ class HybridPaperBroker:
 
     def place_order(
         self,
-        symbol_or_payload: str | dict[str, Any],
+        symbol_or_payload: str | dict[str, Any] | None = None,
         side: str | OrderSide | None = None,
         order_type: str | OrderType = "market",
         quantity: Decimal | None = None,
@@ -241,13 +287,21 @@ class HybridPaperBroker:
         Orders are filled immediately at current market price with slippage.
         """
         self._order_counter += 1
-        order_id = f"PAPER_{self._order_counter:06d}"
+        order_id = f"PAPER_{self._order_id_prefix}_{self._order_counter:06d}"
+
+        # Handle 'symbol' keyword arg (from BrokerExecutor)
+        if symbol_or_payload is None:
+            symbol_or_payload = kwargs.pop("symbol", "")
+
+        # Handle 'price' keyword arg (alias for limit_price, from BrokerExecutor)
+        if limit_price is None and "price" in kwargs:
+            limit_price = kwargs.pop("price")
 
         # Handle dict payload from strategy engine
         if isinstance(symbol_or_payload, dict):
             payload = symbol_or_payload
-            symbol = payload.get("product_id", "")
-            side = payload.get("side", "BUY")
+            symbol = payload.get("product_id") or payload.get("symbol") or ""
+            side = payload.get("side", side) or "BUY"
             order_config = payload.get("order_configuration", {})
             if "market_market_ioc" in order_config:
                 quote_size = order_config["market_market_ioc"].get("quote_size")
@@ -258,7 +312,7 @@ class HybridPaperBroker:
                     price = self._get_current_price(symbol)
                     quantity = Decimal(quote_size) / price if price else Decimal("0.001")
         else:
-            symbol = symbol_or_payload
+            symbol = str(symbol_or_payload or "")
 
         # Convert strings to enums
         if isinstance(side, str):
@@ -292,17 +346,53 @@ class HybridPaperBroker:
                 fill_price = limit_price
 
         fill_quantity = quantity or Decimal("0.001")
+        if fill_quantity <= 0:
+            return self._rejected_order(order_id, symbol, side_enum, Decimal("0"))
         now = utc_now()
 
         # Calculate commission
         notional = fill_price * fill_quantity
         commission = notional * self._commission_bps / Decimal("10000")
 
-        # Update simulated position
-        self._update_position(symbol, side_enum, fill_quantity, fill_price)
+        reduce_only = bool(kwargs.get("reduce_only", False))
+        base_asset, quote_asset = self._parse_symbol(symbol)
 
-        # Update simulated balance
-        self._update_balance(side_enum, notional, commission)
+        if side_enum == OrderSide.BUY:
+            required = notional + commission
+            if self._get_available(quote_asset) < required:
+                logger.info(
+                    "[PAPER] Insufficient %s for BUY (required=%s, available=%s)",
+                    quote_asset,
+                    required,
+                    self._get_available(quote_asset),
+                )
+                return self._rejected_order(order_id, symbol, side_enum, fill_quantity)
+        else:
+            available_base = self._get_available(base_asset)
+            if available_base <= 0:
+                return self._rejected_order(order_id, symbol, side_enum, fill_quantity)
+            if fill_quantity > available_base:
+                if reduce_only:
+                    fill_quantity = available_base
+                    notional = fill_price * fill_quantity
+                    commission = notional * self._commission_bps / Decimal("10000")
+                else:
+                    return self._rejected_order(order_id, symbol, side_enum, fill_quantity)
+
+        # Update simulated balances + positions after acceptance checks.
+        self._update_balances_from_fill(
+            symbol=symbol,
+            side=side_enum,
+            quantity=fill_quantity,
+            fill_price=fill_price,
+            commission=commission,
+        )
+        self._update_position_from_fill(
+            symbol=symbol,
+            side=side_enum,
+            quantity=fill_quantity,
+            fill_price=fill_price,
+        )
 
         order = Order(
             id=order_id,
@@ -377,78 +467,102 @@ class HybridPaperBroker:
         quote = self.get_quote(symbol)
         return quote.last if quote else None
 
-    def _update_position(
-        self, symbol: str, side: OrderSide, quantity: Decimal, price: Decimal
+    def _parse_symbol(self, symbol: str) -> tuple[str, str]:
+        base, _, quote = symbol.partition("-")
+        return base.upper(), (quote or "USD").upper()
+
+    def _ensure_balance(self, asset: str) -> Balance:
+        asset_upper = asset.upper()
+        existing = self._balances.get(asset_upper)
+        if existing is None:
+            existing = Balance(asset=asset_upper, total=Decimal("0"), available=Decimal("0"))
+            self._balances[asset_upper] = existing
+        return existing
+
+    def _get_available(self, asset: str) -> Decimal:
+        balance = self._balances.get(asset.upper())
+        return balance.available if balance is not None else Decimal("0")
+
+    def _adjust_balance(self, asset: str, delta: Decimal) -> None:
+        bal = self._ensure_balance(asset)
+        asset_upper = asset.upper()
+        self._balances[asset_upper] = Balance(
+            asset=asset_upper,
+            total=bal.total + delta,
+            available=bal.available + delta,
+            hold=bal.hold,
+        )
+
+    def _update_balances_from_fill(
+        self,
+        *,
+        symbol: str,
+        side: OrderSide,
+        quantity: Decimal,
+        fill_price: Decimal,
+        commission: Decimal,
     ) -> None:
-        """Update simulated position after fill."""
-        if symbol not in self._positions:
-            # New position
-            pos_side = "long" if side == OrderSide.BUY else "short"
-            position_quantity = quantity if side == OrderSide.BUY else -quantity
+        base_asset, quote_asset = self._parse_symbol(symbol)
+        notional = fill_price * quantity
+        if side == OrderSide.BUY:
+            self._adjust_balance(quote_asset, -(notional + commission))
+            self._adjust_balance(base_asset, quantity)
+        else:
+            self._adjust_balance(base_asset, -quantity)
+            self._adjust_balance(quote_asset, notional - commission)
+
+    def _update_position_from_fill(
+        self,
+        *,
+        symbol: str,
+        side: OrderSide,
+        quantity: Decimal,
+        fill_price: Decimal,
+    ) -> None:
+        if quantity <= 0:
+            return
+
+        position = self._positions.get(symbol)
+        if position is None:
+            if side != OrderSide.BUY:
+                return
             self._positions[symbol] = Position(
                 symbol=symbol,
-                quantity=position_quantity,
-                entry_price=price,
-                mark_price=price,
+                quantity=quantity,
+                entry_price=fill_price,
+                mark_price=fill_price,
                 unrealized_pnl=Decimal("0"),
                 realized_pnl=Decimal("0"),
-                side=pos_side,
+                side="long",
                 leverage=1,
             )
-        else:
-            # Update existing position
-            pos = self._positions[symbol]
-            old_quantity = pos.quantity
-            old_price = pos.entry_price
-
-            if side == OrderSide.BUY:
-                new_quantity = old_quantity + quantity
-            else:
-                new_quantity = old_quantity - quantity
-
-            # Calculate new average price (simple weighted average for adds)
-            if new_quantity != Decimal("0"):
-                if (old_quantity > 0 and side == OrderSide.BUY) or (
-                    old_quantity < 0 and side == OrderSide.SELL
-                ):
-                    # Adding to position
-                    total_cost = (abs(old_quantity) * old_price) + (quantity * price)
-                    new_avg = total_cost / abs(new_quantity)
-                else:
-                    # Reducing position, keep old average
-                    new_avg = old_price
-
-                pos_side = "long" if new_quantity > 0 else "short"
-                self._positions[symbol] = Position(
-                    symbol=symbol,
-                    quantity=new_quantity,
-                    entry_price=new_avg,
-                    mark_price=price,
-                    unrealized_pnl=Decimal("0"),
-                    realized_pnl=pos.realized_pnl,
-                    side=pos_side,
-                    leverage=1,
-                )
-            else:
-                # Position closed
-                del self._positions[symbol]
-
-    def _update_balance(self, side: OrderSide, notional: Decimal, commission: Decimal) -> None:
-        """Update simulated balance after trade."""
-        usd = self._balances.get(
-            "USD", Balance(asset="USD", total=Decimal("0"), available=Decimal("0"))
-        )
+            return
 
         if side == OrderSide.BUY:
-            new_total = usd.total - notional - commission
-        else:
-            new_total = usd.total + notional - commission
+            new_quantity = position.quantity + quantity
+            if new_quantity <= 0:
+                return
+            weighted_entry = (
+                position.entry_price * position.quantity + fill_price * quantity
+            ) / new_quantity
+            position.quantity = new_quantity
+            position.entry_price = weighted_entry
+            position.mark_price = fill_price
+            position.unrealized_pnl = Decimal("0")
+            position.side = "long"
+            return
 
-        self._balances["USD"] = Balance(
-            asset="USD",
-            total=new_total,
-            available=new_total,
-        )
+        # SELL reduces / closes a long spot position.
+        closing_quantity = min(position.quantity, quantity)
+        realized_delta = (fill_price - position.entry_price) * closing_quantity
+        remaining = position.quantity - closing_quantity
+        if remaining <= 0:
+            self._positions.pop(symbol, None)
+            return
+        position.quantity = remaining
+        position.mark_price = fill_price
+        position.realized_pnl += realized_delta
+        position.unrealized_pnl = Decimal("0")
 
     def _parse_product(self, data: dict[str, Any]) -> Product:
         """Parse product from API response."""

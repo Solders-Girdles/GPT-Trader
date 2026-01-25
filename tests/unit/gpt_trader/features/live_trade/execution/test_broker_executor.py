@@ -8,6 +8,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from gpt_trader.core import (
+    NotFoundError,
     Order,
     OrderSide,
     OrderType,
@@ -218,3 +219,54 @@ class TestBrokerExecutorExecuteOrder:
         )
 
         assert captured_client_ids == ["idempotent-id-456", "idempotent-id-456"]
+
+
+class TestBrokerExecutorCancelOrder:
+    def test_calls_broker_with_order_id(
+        self,
+        executor: BrokerExecutor,
+        mock_broker: MagicMock,
+    ) -> None:
+        mock_broker.cancel_order.return_value = True
+
+        result = executor.cancel_order("order-123")
+
+        assert result is True
+        mock_broker.cancel_order.assert_called_once_with("order-123")
+
+    def test_retries_on_retryable_error(
+        self,
+        mock_broker: MagicMock,
+    ) -> None:
+        mock_broker.cancel_order.side_effect = [ConnectionError("fail"), True]
+        executor = BrokerExecutor(
+            broker=mock_broker,
+            retry_policy=RetryPolicy(max_attempts=2, jitter=0),
+            sleep_fn=lambda _: None,
+        )
+
+        result = executor.cancel_order("order-456", use_retry=True)
+
+        assert result is True
+        assert mock_broker.cancel_order.call_count == 2
+
+    def test_not_found_treated_as_success_when_idempotent(
+        self,
+        executor: BrokerExecutor,
+        mock_broker: MagicMock,
+    ) -> None:
+        mock_broker.cancel_order.side_effect = NotFoundError("order not found")
+
+        result = executor.cancel_order("order-789", allow_idempotent=True)
+
+        assert result is True
+
+    def test_not_found_raises_when_not_idempotent(
+        self,
+        executor: BrokerExecutor,
+        mock_broker: MagicMock,
+    ) -> None:
+        mock_broker.cancel_order.side_effect = NotFoundError("order not found")
+
+        with pytest.raises(NotFoundError):
+            executor.cancel_order("order-999", allow_idempotent=False)

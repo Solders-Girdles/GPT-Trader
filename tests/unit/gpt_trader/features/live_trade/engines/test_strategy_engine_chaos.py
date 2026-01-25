@@ -10,6 +10,10 @@ import pytest
 from strategy_engine_chaos_helpers import make_position
 from tests.support.chaos import ChaosBroker, api_outage_scenario, broker_read_failures_scenario
 
+from gpt_trader.features.live_trade.execution.order_submission import (
+    OrderSubmissionOutcome,
+    OrderSubmissionOutcomeStatus,
+)
 from gpt_trader.features.live_trade.execution.submission_result import OrderSubmissionStatus
 from gpt_trader.features.live_trade.guard_errors import GuardError
 from gpt_trader.features.live_trade.strategies.perps_baseline import Action, Decision
@@ -113,7 +117,12 @@ class TestBrokerOutageDegradation:
 @pytest.mark.asyncio
 async def test_kill_switch_blocks_submission(engine) -> None:
     engine.context.risk_manager.config.kill_switch_enabled = True
-    engine._order_submitter.submit_order = MagicMock(return_value="order-123")
+    engine._order_submitter.submit_order_with_result = MagicMock(
+        return_value=OrderSubmissionOutcome(
+            status=OrderSubmissionOutcomeStatus.SUCCESS,
+            order_id="order-123",
+        )
+    )
 
     decision = Decision(Action.BUY, "kill switch test")
     result = await engine._validate_and_place_order(
@@ -129,7 +138,7 @@ async def test_kill_switch_blocks_submission(engine) -> None:
     assert result.reason == "kill_switch"
     assert result.decision_trace and result.decision_trace.decision_id
     assert result.decision_trace.outcomes["kill_switch"]["status"] == "blocked"
-    engine._order_submitter.submit_order.assert_not_called()
+    engine._order_submitter.submit_order_with_result.assert_not_called()
     engine._order_submitter.record_rejection.assert_called_with(
         "BTC-USD",
         "BUY",
@@ -168,7 +177,7 @@ class TestPausedOrderRejection:
             price=Decimal("50000"),
             equity=Decimal("10000"),
         )
-        engine._order_submitter.submit_order.assert_called()
+        engine._order_submitter.submit_order_with_result.assert_called()
 
 
 class TestGuardOutcomeInvariants:
@@ -188,7 +197,7 @@ class TestGuardOutcomeInvariants:
         assert result.status == OrderSubmissionStatus.BLOCKED
         engine._order_validator.run_pre_trade_validation.assert_not_called()
         engine._order_validator.validate_exchange_rules.assert_not_called()
-        engine._order_submitter.submit_order.assert_not_called()
+        engine._order_submitter.submit_order_with_result.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_risk_validation_blocked_vs_failed(self, engine) -> None:
@@ -205,7 +214,7 @@ class TestGuardOutcomeInvariants:
 
         assert result.status == OrderSubmissionStatus.BLOCKED
         assert result.reason is not None
-        engine._order_submitter.submit_order.assert_not_called()
+        engine._order_submitter.submit_order_with_result.assert_not_called()
 
         engine._order_validator.run_pre_trade_validation.side_effect = Exception("boom")
 
@@ -224,7 +233,10 @@ class TestGuardOutcomeInvariants:
         engine.context.risk_manager.check_mark_staleness.return_value = True
         engine.context.risk_manager.config.mark_staleness_allow_reduce_only = True
         engine._order_validator.finalize_reduce_only_flag.return_value = True
-        engine._order_submitter.submit_order.return_value = "order-1"
+        engine._order_submitter.submit_order_with_result.return_value = OrderSubmissionOutcome(
+            status=OrderSubmissionOutcomeStatus.SUCCESS,
+            order_id="order-1",
+        )
         engine._current_positions = {"BTC-USD": make_position()}
 
         result = await engine._validate_and_place_order(
@@ -236,5 +248,5 @@ class TestGuardOutcomeInvariants:
         )
 
         assert result.status == OrderSubmissionStatus.SUCCESS
-        call_kwargs = engine._order_submitter.submit_order.call_args.kwargs
+        call_kwargs = engine._order_submitter.submit_order_with_result.call_args.kwargs
         assert call_kwargs["reduce_only"] is True

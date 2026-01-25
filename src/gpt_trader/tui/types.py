@@ -444,6 +444,7 @@ class ExecutionIssue:
     quantity: float
     price: float
     reason: str
+    reason_detail: str = ""
     is_retry: bool = False
 
 

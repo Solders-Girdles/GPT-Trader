@@ -14,6 +14,10 @@ from gpt_trader.app.container import (
 from gpt_trader.core import Balance, Position
 from gpt_trader.features.live_trade.engines.base import CoordinatorContext
 from gpt_trader.features.live_trade.engines.strategy import TradingEngine
+from gpt_trader.features.live_trade.execution.order_submission import (
+    OrderSubmissionOutcome,
+    OrderSubmissionOutcomeStatus,
+)
 from gpt_trader.features.live_trade.strategies.perps_baseline import Action, Decision
 
 
@@ -117,5 +121,9 @@ def engine(context, mock_strategy, application_container, monkeypatch):
     engine._order_validator.finalize_reduce_only_flag.return_value = False
 
     engine._order_submitter = MagicMock()
+    engine._order_submitter.submit_order_with_result.return_value = OrderSubmissionOutcome(
+        status=OrderSubmissionOutcomeStatus.SUCCESS,
+        order_id="order-123",
+    )
 
     return engine

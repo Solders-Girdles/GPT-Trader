@@ -40,8 +40,8 @@ async def test_order_placed_with_dynamic_quantity(engine, monkeypatch: pytest.Mo
 
     await engine._cycle()
 
-    engine._order_submitter.submit_order.assert_called_once()
-    call_kwargs = engine._order_submitter.submit_order.call_args[1]
+    engine._order_submitter.submit_order_with_result.assert_called_once()
+    call_kwargs = engine._order_submitter.submit_order_with_result.call_args[1]
     assert call_kwargs["symbol"] == "BTC-USD"
     assert call_kwargs["side"] == OrderSide.BUY
     assert call_kwargs["order_type"] == OrderType.MARKET
@@ -175,7 +175,7 @@ async def test_stale_mark_allows_reduce_only_when_configured(engine) -> None:
     engine.context.risk_manager.config.mark_staleness_allow_reduce_only = True
     engine._current_positions = {"BTC-USD": make_position()}
     await _place_order(engine, Action.SELL)
-    engine._order_submitter.submit_order.assert_called()
+    engine._order_submitter.submit_order_with_result.assert_called()
 
 
 @pytest.mark.asyncio

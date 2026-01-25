@@ -41,9 +41,15 @@ class TestHybridPaperBrokerOrderExecution:
         assert order.avg_fill_price > Decimal("50000")
 
     def test_place_order_sell_market(self, broker: HybridPaperBroker) -> None:
-        """Test placing a sell market order."""
+        """Test placing a sell market order after acquiring spot inventory."""
         broker._last_prices["BTC-USD"] = Decimal("50000")
 
+        broker.place_order(
+            symbol_or_payload="BTC-USD",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("0.1"),
+        )
         order = broker.place_order(
             symbol_or_payload="BTC-USD",
             side=OrderSide.SELL,
@@ -180,6 +186,13 @@ class TestHybridPaperBrokerLimitOrders:
     def test_limit_sell_uses_limit_above_slippage(self, broker: HybridPaperBroker) -> None:
         """Test limit sell uses limit price when above slippage-adjusted price."""
         broker._last_prices["BTC-USD"] = Decimal("100")
+
+        broker.place_order(
+            symbol_or_payload="BTC-USD",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("1"),
+        )
 
         order = broker.place_order(
             symbol_or_payload="BTC-USD",

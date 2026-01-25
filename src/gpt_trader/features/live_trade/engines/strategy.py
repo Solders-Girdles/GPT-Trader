@@ -19,7 +19,7 @@ import time
 from collections import deque
 from dataclasses import replace
 from datetime import datetime, timezone
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from importlib import metadata
 from typing import Any
 
@@ -57,6 +57,7 @@ from gpt_trader.features.live_trade.engines.telemetry_streaming import (
     start_streaming_background,
     stop_streaming_background,
 )
+from gpt_trader.features.live_trade.execution.broker_executor import BrokerExecutor
 from gpt_trader.features.live_trade.execution.decision_trace import OrderDecisionTrace
 from gpt_trader.features.live_trade.execution.guard_manager import GuardManager
 from gpt_trader.features.live_trade.execution.order_submission import OrderSubmitter
@@ -339,6 +340,9 @@ class TradingEngine(BaseEngine):
                 equity_calculator=self._state_collector.calculate_equity_from_balances,
                 open_orders=self._open_orders,
                 invalidate_cache_callback=lambda: None,
+                cancel_retries_enabled=getattr(
+                    self.context.config, "order_submission_retries_enabled", False
+                ),
             )
 
     def _init_user_event_handler(self) -> None:
@@ -414,6 +418,151 @@ class TradingEngine(BaseEngine):
             operation="order_recovery",
         )
 
+    async def _recover_unknown_bot_orders(
+        self,
+        orders: list[Any],
+        *,
+        bot_id: str,
+    ) -> list[OrderRecord]:
+        if not orders or self._orders_store is None:
+            return []
+        now = datetime.now(timezone.utc)
+        recovered: list[OrderRecord] = []
+        for order in orders:
+            record = self._build_record_from_broker_order(order, bot_id=bot_id, now=now)
+            if record is None:
+                continue
+            metadata = dict(record.metadata or {})
+            metadata["note"] = "backfilled_from_broker"
+            record = replace(record, metadata=metadata)
+            try:
+                await self._broker_calls(self._orders_store.upsert_by_client_id, record)
+            except Exception as exc:
+                logger.warning(
+                    "Failed to persist recovered order",
+                    error_type=type(exc).__name__,
+                    error_message=str(exc),
+                    operation="order_reconciliation",
+                    stage="persist_recovery",
+                    order_id=record.order_id,
+                    client_order_id=record.client_order_id,
+                )
+                continue
+            if record.order_id not in self._open_orders:
+                self._open_orders.append(record.order_id)
+            recovered.append(record)
+
+        if recovered:
+            payload = {
+                "timestamp": time.time(),
+                "bot_id": bot_id,
+                "recovered_order_ids": [record.order_id for record in recovered][:10],
+                "recovered_order_count": len(recovered),
+                "open_order_count": len(self._open_orders),
+            }
+            self._append_event("order_reconciliation_recovered", payload)
+            logger.info(
+                "Recovered unknown bot orders",
+                recovered_order_count=len(recovered),
+                operation="order_reconciliation",
+                stage="recover",
+            )
+
+        return recovered
+
+    async def _refresh_missing_persisted_orders(
+        self,
+        records: list[OrderRecord],
+        *,
+        bot_id: str,
+    ) -> list[Any]:
+        if not records or self._orders_store is None:
+            return []
+        broker = self.context.broker
+        if broker is None:
+            return []
+        get_order = getattr(broker, "get_order", None)
+        if not callable(get_order):
+            return []
+        now = datetime.now(timezone.utc)
+        refreshed_orders: list[Any] = []
+        for record in records:
+            try:
+                order = await self._broker_calls(get_order, record.order_id)
+                if order is None and record.client_order_id != record.order_id:
+                    order = await self._broker_calls(get_order, record.client_order_id)
+            except Exception as exc:
+                logger.warning(
+                    "Failed to load order during reconciliation",
+                    error_type=type(exc).__name__,
+                    error_message=str(exc),
+                    operation="order_reconciliation",
+                    stage="load_missing",
+                    order_id=record.order_id,
+                    client_order_id=record.client_order_id,
+                )
+                continue
+            if order is None:
+                continue
+            update_record = self._build_record_from_broker_order(order, bot_id=bot_id, now=now)
+            if update_record is None:
+                continue
+            update_metadata = dict(update_record.metadata or {})
+            update_metadata["note"] = "refresh_missing"
+            metadata = self._merge_metadata(record.metadata, update_metadata)
+            updated = replace(
+                record,
+                order_id=update_record.order_id,
+                client_order_id=update_record.client_order_id,
+                symbol=update_record.symbol or record.symbol,
+                side=update_record.side or record.side,
+                order_type=update_record.order_type or record.order_type,
+                quantity=(
+                    update_record.quantity
+                    if update_record.quantity != Decimal("0")
+                    else record.quantity
+                ),
+                price=update_record.price if update_record.price is not None else record.price,
+                status=update_record.status,
+                filled_quantity=(
+                    update_record.filled_quantity
+                    if update_record.filled_quantity != Decimal("0")
+                    else record.filled_quantity
+                ),
+                average_fill_price=(update_record.average_fill_price or record.average_fill_price),
+                updated_at=now,
+                metadata=metadata,
+                bot_id=record.bot_id or bot_id,
+                time_in_force=update_record.time_in_force or record.time_in_force,
+            )
+            try:
+                await self._broker_calls(self._orders_store.upsert_by_client_id, updated)
+            except Exception as exc:
+                logger.warning(
+                    "Failed to persist order refresh",
+                    error_type=type(exc).__name__,
+                    error_message=str(exc),
+                    operation="order_reconciliation",
+                    stage="persist_refresh",
+                    order_id=updated.order_id,
+                    client_order_id=updated.client_order_id,
+                )
+                continue
+
+            if updated.status in {
+                PersistedOrderStatus.PENDING,
+                PersistedOrderStatus.OPEN,
+                PersistedOrderStatus.PARTIALLY_FILLED,
+            }:
+                if updated.order_id not in self._open_orders:
+                    self._open_orders.append(updated.order_id)
+                refreshed_orders.append(order)
+            else:
+                if updated.order_id in self._open_orders:
+                    self._open_orders.remove(updated.order_id)
+
+        return refreshed_orders
+
     async def _reconcile_open_orders(self, orders: list[Any]) -> None:
         """Reconcile internal open-order tracking with broker + persistence state.
 
@@ -452,26 +601,35 @@ class TradingEngine(BaseEngine):
             tracked_ids.add(str(store_record.order_id))
 
         if not orders:
-            # If the broker reports no open orders and we also have no pending persisted
-            # records, any tracked IDs are stale and should be cleared. If the store has
-            # pending records, keep the in-memory IDs (we may be observing eventual
-            # consistency or a transient list_orders issue).
-            if not pending and self._open_orders:
-                self._open_orders.clear()
-            self._order_reconciliation_drift_failures = 0
-            self._order_reconciliation_drift_escalated = False
-            return
+            refreshed_orders: list[Any] = []
+            if pending:
+                refreshed_orders = await self._refresh_missing_persisted_orders(
+                    pending,
+                    bot_id=bot_id,
+                )
+            if refreshed_orders:
+                orders = refreshed_orders
+            else:
+                if not pending and self._open_orders:
+                    self._open_orders.clear()
+                self._order_reconciliation_drift_failures = 0
+                self._order_reconciliation_drift_escalated = False
+                return
 
         order_index: dict[str, Any] = {}
-        for order in orders:
+
+        def _index_order(order: Any) -> None:
             if order is None:
-                continue
+                return
             order_id = self._get_order_field(order, "order_id", "id")
             client_order_id = self._get_order_field(order, "client_order_id", "client_id")
             if order_id is not None:
                 order_index[str(order_id)] = order
             if client_order_id is not None:
                 order_index[str(client_order_id)] = order
+
+        for order in orders:
+            _index_order(order)
 
         # Update persisted records that are still using submit_id as order_id, now that
         # the broker has returned the canonical order_id.
@@ -515,6 +673,21 @@ class TradingEngine(BaseEngine):
                         order_id=order_id_str,
                     )
 
+        if pending:
+            open_ids = set(order_index.keys())
+            missing_records = [
+                record
+                for record in pending
+                if str(record.order_id) not in open_ids
+                and str(record.client_order_id) not in open_ids
+            ]
+            refreshed_orders = await self._refresh_missing_persisted_orders(
+                missing_records,
+                bot_id=bot_id,
+            )
+            for refreshed_order in refreshed_orders:
+                _index_order(refreshed_order)
+
         # Reconcile the tracked IDs: replace submit_ids with canonical order_ids and drop
         # IDs that are no longer open at the broker.
         snapshot = list(self._open_orders)
@@ -553,6 +726,7 @@ class TradingEngine(BaseEngine):
         # Drift detection: bot-owned open orders present at the broker but not tracked in
         # the store/open-orders list can indicate "ghost" orders after a crash.
         unknown_bot_orders: list[str] = []
+        unknown_orders: list[Any] = []
         for order in orders:
             client_order_id = self._get_order_field(order, "client_order_id", "client_id")
             if client_order_id is None:
@@ -565,6 +739,19 @@ class TradingEngine(BaseEngine):
             if order_id_str in tracked_ids or client_id_str in tracked_ids:
                 continue
             unknown_bot_orders.append(order_id_str)
+            unknown_orders.append(order)
+
+        recovered_records = await self._recover_unknown_bot_orders(
+            unknown_orders,
+            bot_id=bot_id,
+        )
+        if recovered_records:
+            recovered_ids = {record.order_id for record in recovered_records}
+            recovered_ids.update(record.client_order_id for record in recovered_records)
+            tracked_ids.update(recovered_ids)
+            unknown_bot_orders = [
+                order_id for order_id in unknown_bot_orders if order_id not in recovered_ids
+            ]
 
         if not unknown_bot_orders:
             self._order_reconciliation_drift_failures = 0
@@ -608,11 +795,17 @@ class TradingEngine(BaseEngine):
             risk_manager.set_reduce_only_mode(True, reason="order_reconciliation_drift")
 
         broker = self.context.broker
-        cancel_order = getattr(broker, "cancel_order", None) if broker is not None else None
-        if callable(cancel_order):
+        if broker is not None:
+            cancel_executor = BrokerExecutor(broker=broker)
+            retry_enabled = getattr(self.context.config, "order_submission_retries_enabled", False)
             for order_id in order_ids:
                 try:
-                    await self._broker_calls(cancel_order, order_id)
+                    await self._broker_calls(
+                        cancel_executor.cancel_order,
+                        order_id,
+                        use_retry=retry_enabled,
+                        allow_idempotent=True,
+                    )
                 except Exception as exc:
                     logger.warning(
                         "Failed to cancel drifted order",
@@ -1513,9 +1706,25 @@ class TradingEngine(BaseEngine):
                         "Order submission failed",
                         symbol=symbol,
                         action=decision.action.value,
+                        reason=result.reason,
                         error_message=result.error,
                         operation="order_placement",
                         stage="failed",
+                    )
+                    failure_detail = result.error or result.reason or "unknown"
+                    await self._notify(
+                        title="Order Submission Failed",
+                        message=(
+                            f"Failed to submit {decision.action.value} order for {symbol}: "
+                            f"{failure_detail}"
+                        ),
+                        severity=AlertSeverity.ERROR,
+                        context={
+                            "symbol": symbol,
+                            "action": decision.action.value,
+                            "reason": result.reason,
+                            "error": result.error,
+                        },
                     )
             except Exception as e:
                 logger.error(
@@ -1766,6 +1975,110 @@ class TradingEngine(BaseEngine):
                 if value is not None:
                     return value
         return None
+
+    def _normalize_persisted_status(self, status: Any) -> PersistedOrderStatus:
+        value = status.value if hasattr(status, "value") else status
+        normalized = str(value).lower()
+        mapping = {
+            "pending": PersistedOrderStatus.PENDING,
+            "submitted": PersistedOrderStatus.OPEN,
+            "open": PersistedOrderStatus.OPEN,
+            "partially_filled": PersistedOrderStatus.PARTIALLY_FILLED,
+            "filled": PersistedOrderStatus.FILLED,
+            "cancelled": PersistedOrderStatus.CANCELLED,
+            "canceled": PersistedOrderStatus.CANCELLED,
+            "rejected": PersistedOrderStatus.REJECTED,
+            "expired": PersistedOrderStatus.EXPIRED,
+            "failed": PersistedOrderStatus.FAILED,
+        }
+        return mapping.get(normalized, PersistedOrderStatus.OPEN)
+
+    def _parse_decimal(self, value: Any, default: Decimal) -> Decimal:
+        if value is None:
+            return default
+        if isinstance(value, Decimal):
+            return value
+        try:
+            return Decimal(str(value))
+        except (InvalidOperation, ValueError, TypeError):
+            return default
+
+    def _parse_decimal_optional(self, value: Any) -> Decimal | None:
+        if value is None:
+            return None
+        if isinstance(value, Decimal):
+            return value
+        try:
+            return Decimal(str(value))
+        except (InvalidOperation, ValueError, TypeError):
+            return None
+
+    def _merge_metadata(
+        self,
+        base: dict[str, Any] | None,
+        update: dict[str, Any] | None,
+    ) -> dict[str, Any] | None:
+        if base is None and update is None:
+            return None
+        merged = dict(base or {})
+        if update:
+            merged.update(update)
+        return merged
+
+    def _build_record_from_broker_order(
+        self,
+        order: Any,
+        *,
+        bot_id: str,
+        now: datetime,
+    ) -> OrderRecord | None:
+        order_id = self._get_order_field(order, "order_id", "id")
+        client_order_id = self._get_order_field(order, "client_order_id", "client_id") or order_id
+        if order_id is None or client_order_id is None:
+            return None
+        symbol = self._get_order_field(order, "product_id", "symbol") or ""
+        side_value = self._get_order_field(order, "side")
+        side = str(side_value).lower() if side_value is not None else "unknown"
+        order_type_value = self._get_order_field(order, "order_type", "type")
+        order_type = str(order_type_value).lower() if order_type_value is not None else "unknown"
+        quantity_value = self._get_order_field(order, "size", "quantity", "base_size")
+        quantity = self._parse_decimal(quantity_value, Decimal("0"))
+        price_value = self._get_order_field(order, "price")
+        price = self._parse_decimal_optional(price_value)
+        filled_value = self._get_order_field(order, "filled_size", "filled_quantity")
+        filled_quantity = self._parse_decimal(filled_value, Decimal("0"))
+        average_value = self._get_order_field(order, "average_filled_price", "avg_fill_price")
+        average_fill_price = self._parse_decimal_optional(average_value)
+        status_value = self._get_order_field(order, "status")
+        status = self._normalize_persisted_status(status_value)
+        created_value = self._get_order_field(
+            order, "created_time", "created_at", "submitted_at", "created"
+        )
+        created_ts = self._parse_timestamp(created_value)
+        created_at = datetime.fromtimestamp(created_ts, tz=timezone.utc)
+        tif_value = self._get_order_field(order, "tif", "time_in_force")
+        time_in_force = str(tif_value) if tif_value is not None else "GTC"
+        metadata = {
+            "source": "order_reconciliation",
+            "raw_status": str(status_value or ""),
+        }
+        return OrderRecord(
+            order_id=str(order_id),
+            client_order_id=str(client_order_id),
+            symbol=str(symbol),
+            side=side,
+            order_type=order_type,
+            quantity=quantity,
+            price=price,
+            status=status,
+            filled_quantity=filled_quantity,
+            average_fill_price=average_fill_price,
+            created_at=created_at,
+            updated_at=now,
+            bot_id=bot_id,
+            time_in_force=time_in_force,
+            metadata=metadata,
+        )
 
     def _parse_timestamp(self, value: Any) -> float:
         if value is None:
@@ -2522,8 +2835,8 @@ class TradingEngine(BaseEngine):
             return result
 
         # Place order via OrderSubmitter for proper ID tracking and telemetry
-        order_id = await self._broker_calls(
-            self._order_submitter.submit_order,
+        submission_outcome = await self._broker_calls(
+            self._order_submitter.submit_order_with_result,
             symbol=symbol,
             side=side,
             order_type=OrderType.MARKET,
@@ -2538,7 +2851,8 @@ class TradingEngine(BaseEngine):
         )
 
         # Notify on successful order placement
-        if order_id is not None:
+        if submission_outcome.success:
+            order_id = submission_outcome.order_id
             trace.order_id = order_id
             await self._notify(
                 title="Order Executed",
@@ -2569,21 +2883,29 @@ class TradingEngine(BaseEngine):
                 status=OrderSubmissionStatus.SUCCESS,
                 order_id=order_id,
             )
-        else:
-            # Order was rejected by broker
-            logger.warning(
-                "Order submission returned None - order may have been rejected",
-                symbol=symbol,
-                side=side.value,
-                operation="order_submit",
-                stage="rejected",
-            )
-            trace.record_outcome("submit_order", "failed", detail="broker_rejected")
-            return self._finalize_decision_trace(
-                trace,
-                status=OrderSubmissionStatus.FAILED,
-                error="broker_rejected",
-            )
+        reason = submission_outcome.reason or "broker_rejected"
+        logger.warning(
+            "Order submission failed",
+            symbol=symbol,
+            side=side.value,
+            reason=reason,
+            reason_detail=submission_outcome.reason_detail,
+            operation="order_submit",
+            stage="failed",
+        )
+        trace.record_outcome(
+            "submit_order",
+            "failed",
+            detail=reason,
+            reason_detail=submission_outcome.reason_detail,
+            error=submission_outcome.error,
+        )
+        return self._finalize_decision_trace(
+            trace,
+            status=OrderSubmissionStatus.FAILED,
+            reason=reason,
+            error=submission_outcome.error_message,
+        )
 
     def reset_daily_tracking(self) -> None:
         """Reset daily PnL tracking and guard cache (start of trading day)."""

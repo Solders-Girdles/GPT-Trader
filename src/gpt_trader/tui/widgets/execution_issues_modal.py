@@ -110,6 +110,10 @@ class ExecutionIssuesModal(ModalScreen):
         side_color = "green" if issue.side.upper() == "BUY" else "red"
 
         # Build the row: HH:MM:SS SYMBOL SIDE QTY @ PRICE — REASON
+        reason_text = issue.reason or "unknown"
+        if issue.reason_detail:
+            reason_text = f"{reason_text}:{issue.reason_detail}"
+
         parts = [
             "  ",
             Text(time_str, style="dim"),
@@ -122,7 +126,7 @@ class ExecutionIssuesModal(ModalScreen):
             " @ ",
             Text(price_str, style="cyan"),
             " — ",
-            Text(issue.reason, style="yellow"),
+            Text(reason_text, style="yellow"),
         ]
 
         return Text.assemble(*parts)

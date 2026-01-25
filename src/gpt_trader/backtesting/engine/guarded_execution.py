@@ -252,7 +252,7 @@ class BacktestGuardedExecutor:
 
         reduce_only_final = self._order_validator.finalize_reduce_only_flag(reduce_only, symbol)
 
-        order_id = self._order_submitter.submit_order(
+        submission_outcome = self._order_submitter.submit_order_with_result(
             symbol=symbol,
             side=side,
             order_type=order_type,
@@ -266,17 +266,20 @@ class BacktestGuardedExecutor:
             client_order_id=client_order_id,
         )
 
-        if order_id is None:
+        if not submission_outcome.success:
+            reason = submission_outcome.reason or "broker_rejected"
             self._record_decision(
                 decision=decision,
                 passed=False,
-                failures=["broker_rejected"],
+                failures=[reason],
             )
             return OrderSubmissionResult(
                 status=OrderSubmissionStatus.FAILED,
-                error="broker_rejected",
+                reason=reason,
+                error=submission_outcome.error_message,
             )
 
+        order_id = submission_outcome.order_id
         self._record_decision(
             decision=decision,
             passed=True,

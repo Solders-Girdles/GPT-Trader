@@ -39,6 +39,7 @@ class SubmissionRecord:
     retry_count: int = 0
     failure_reason: str = ""
     rejection_reason: str = ""  # Specific reason for rejection (e.g., rate_limit)
+    reason_detail: str = ""
     symbol: str = ""
     side: str = ""
     quantity: float = 0.0
@@ -83,6 +84,7 @@ class ExecutionTelemetryCollector:
         retry_count: int = 0,
         failure_reason: str = "",
         rejection_reason: str = "",
+        reason_detail: str = "",
         symbol: str = "",
         side: str = "",
         quantity: float = 0.0,
@@ -96,7 +98,8 @@ class ExecutionTelemetryCollector:
             rejected: Whether broker rejected the order.
             retry_count: Number of retries before this result.
             failure_reason: Reason for failure (if failed).
-        rejection_reason: Categorized reason for rejection/failure (normalized).
+            rejection_reason: Categorized reason for rejection/failure (normalized).
+            reason_detail: Additional context for rejection/failure (optional).
             symbol: Order symbol (if available).
             side: Order side (if available).
             quantity: Order quantity (if available).
@@ -110,6 +113,7 @@ class ExecutionTelemetryCollector:
             retry_count=retry_count,
             failure_reason=failure_reason,
             rejection_reason=rejection_reason,
+            reason_detail=reason_detail,
             symbol=symbol,
             side=side,
             quantity=quantity,
@@ -130,6 +134,7 @@ class ExecutionTelemetryCollector:
                         quantity=record.quantity,
                         price=record.price,
                         reason=issue_reason,
+                        reason_detail=record.reason_detail,
                         is_retry=False,
                     )
                 )
@@ -166,6 +171,7 @@ class ExecutionTelemetryCollector:
                         quantity=quantity,
                         price=price,
                         reason=reason,
+                        reason_detail="",
                         is_retry=True,
                     )
                 )

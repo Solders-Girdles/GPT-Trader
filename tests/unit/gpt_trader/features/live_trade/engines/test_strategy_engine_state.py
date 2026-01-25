@@ -200,8 +200,8 @@ async def test_reduce_only_clamps_quantity_to_prevent_position_flip(
 
     await engine._cycle()
 
-    engine._order_submitter.submit_order.assert_called_once()
-    call_kwargs = engine._order_submitter.submit_order.call_args[1]
+    engine._order_submitter.submit_order_with_result.assert_called_once()
+    call_kwargs = engine._order_submitter.submit_order_with_result.call_args[1]
     assert call_kwargs["symbol"] == "BTC-USD"
     assert call_kwargs["side"] == OrderSide.SELL
     assert call_kwargs["order_type"] == OrderType.MARKET

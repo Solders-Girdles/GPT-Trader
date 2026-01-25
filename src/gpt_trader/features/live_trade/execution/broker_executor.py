@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, TypeVar
 
-from gpt_trader.core import OrderSide, OrderType
+from gpt_trader.core import NotFoundError, OrderSide, OrderType, RateLimitError
 from gpt_trader.monitoring.metrics_collector import record_histogram
 from gpt_trader.utilities.logging_patterns import get_logger
 
@@ -45,7 +45,7 @@ class RetryPolicy:
     timeout_seconds: float = 30.0
     jitter: float = 0.1
     retryable_exceptions: tuple[type[Exception], ...] = field(
-        default=(TimeoutError, ConnectionError, OSError)
+        default=(TimeoutError, ConnectionError, OSError, RateLimitError)
     )
 
     def __post_init__(self) -> None:
@@ -112,6 +112,35 @@ def _record_broker_call_latency(
     except Exception:
         # Don't let metrics errors affect broker operations
         pass
+
+
+def _classify_broker_error_reason(error: Exception) -> str:
+    message = str(error).lower()
+    if isinstance(error, TimeoutError) or "timeout" in message:
+        return "timeout"
+    if isinstance(error, ConnectionError) or "connection" in message or "network" in message:
+        return "network"
+    if isinstance(error, RateLimitError) or "rate" in message or "429" in message:
+        return "rate_limit"
+    if isinstance(error, NotFoundError) or "not found" in message or "unknown order" in message:
+        return "not_found"
+    return "error"
+
+
+def _is_cancel_idempotent_error(error: Exception) -> bool:
+    if isinstance(error, NotFoundError):
+        return True
+    message = str(error).lower()
+    markers = (
+        "not found",
+        "unknown order",
+        "already canceled",
+        "already cancelled",
+        "already filled",
+        "too late to cancel",
+        "order is done",
+    )
+    return any(marker in message for marker in markers)
 
 
 def execute_with_retry(
@@ -305,6 +334,23 @@ class BrokerExecutor:
             leverage=leverage,
         )
 
+    def cancel_order(
+        self,
+        order_id: str,
+        *,
+        use_retry: bool = False,
+        allow_idempotent: bool = True,
+    ) -> bool:
+        if use_retry:
+            return self._execute_cancel_with_retry(
+                order_id=order_id,
+                allow_idempotent=allow_idempotent,
+            )
+        return self._execute_broker_cancel(
+            order_id=order_id,
+            allow_idempotent=allow_idempotent,
+        )
+
     def _execute_broker_order(
         self,
         submit_id: str,
@@ -342,19 +388,52 @@ class BrokerExecutor:
             return result
         except Exception as exc:
             latency_seconds = time.perf_counter() - start_time
-            # Classify error for metrics
-            error_msg = str(exc).lower()
-            if "timeout" in error_msg:
-                reason = "timeout"
-            elif "connection" in error_msg or "network" in error_msg:
-                reason = "network"
-            elif "rate" in error_msg or "429" in error_msg:
-                reason = "rate_limit"
-            else:
-                reason = "error"
+            reason = _classify_broker_error_reason(exc)
             _record_broker_call_latency(
                 latency_seconds=latency_seconds,
                 operation="submit",
+                outcome="failure",
+                reason=reason,
+            )
+            raise
+
+    def _execute_broker_cancel(
+        self,
+        order_id: str,
+        *,
+        allow_idempotent: bool,
+    ) -> bool:
+        start_time = time.perf_counter()
+        try:
+            result = self._broker.cancel_order(order_id)
+            latency_seconds = time.perf_counter() - start_time
+            _record_broker_call_latency(
+                latency_seconds=latency_seconds,
+                operation="cancel",
+                outcome="success",
+            )
+            return bool(result)
+        except Exception as exc:
+            latency_seconds = time.perf_counter() - start_time
+            reason = _classify_broker_error_reason(exc)
+            if allow_idempotent and _is_cancel_idempotent_error(exc):
+                _record_broker_call_latency(
+                    latency_seconds=latency_seconds,
+                    operation="cancel",
+                    outcome="success",
+                    reason="idempotent",
+                )
+                logger.info(
+                    "Cancel treated as idempotent success",
+                    order_id=order_id,
+                    reason=reason,
+                    operation="cancel_order",
+                    stage="idempotent",
+                )
+                return True
+            _record_broker_call_latency(
+                latency_seconds=latency_seconds,
+                operation="cancel",
                 outcome="failure",
                 reason=reason,
             )
@@ -398,6 +477,26 @@ class BrokerExecutor:
             self._retry_policy,
             client_order_id=submit_id,
             operation="execute_order",
+            sleep_fn=self._sleep_fn,
+        )
+
+    def _execute_cancel_with_retry(
+        self,
+        order_id: str,
+        *,
+        allow_idempotent: bool,
+    ) -> bool:
+        def broker_call() -> bool:
+            return self._execute_broker_cancel(
+                order_id=order_id,
+                allow_idempotent=allow_idempotent,
+            )
+
+        return execute_with_retry(
+            broker_call,
+            self._retry_policy,
+            client_order_id=order_id,
+            operation="cancel_order",
             sleep_fn=self._sleep_fn,
         )
 

@@ -159,6 +159,7 @@ CREATE TABLE IF NOT EXISTS orders (
 
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 CREATE INDEX IF NOT EXISTS idx_orders_bot_id ON orders(bot_id);
+CREATE INDEX IF NOT EXISTS idx_orders_client_order_id ON orders(client_order_id);
 CREATE INDEX IF NOT EXISTS idx_orders_symbol ON orders(symbol);
 CREATE INDEX IF NOT EXISTS idx_orders_created ON orders(created_at);
 """
@@ -410,6 +411,28 @@ class OrdersStore:
         cursor = connection.execute(
             "SELECT * FROM orders WHERE order_id = ?",
             (order_id,),
+        )
+        row = cursor.fetchone()
+        if row is None:
+            return None
+
+        return self._row_to_record(row)
+
+    def get_order_by_client_order_id(self, client_order_id: str) -> OrderRecord | None:
+        """
+        Get order by client order ID.
+
+        Args:
+            client_order_id: Client order identifier
+
+        Returns:
+            OrderRecord if found, None otherwise
+        """
+        self._ensure_initialized()
+        connection = self._get_connection()
+        cursor = connection.execute(
+            "SELECT * FROM orders WHERE client_order_id = ?",
+            (client_order_id,),
         )
         row = cursor.fetchone()
         if row is None:

@@ -11,7 +11,8 @@ from collections.abc import Sequence
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
-from gpt_trader.core import Action as StandardAction, Decision, Product
+from gpt_trader.core import Action as StandardAction
+from gpt_trader.core import Decision, Product
 from gpt_trader.features.live_trade.strategies.base import StatefulStrategyBase
 from gpt_trader.features.live_trade.symbols import (
     get_cfm_symbol,

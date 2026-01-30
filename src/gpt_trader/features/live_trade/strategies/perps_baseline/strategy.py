@@ -8,7 +8,7 @@ This strategy combines multiple technical indicators to generate trading signals
 """
 
 from collections.abc import Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 

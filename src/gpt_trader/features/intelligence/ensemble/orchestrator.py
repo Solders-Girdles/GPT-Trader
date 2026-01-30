@@ -12,8 +12,7 @@ from collections.abc import Sequence
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
-from gpt_trader.core import Product
-from gpt_trader.core import Action, Decision
+from gpt_trader.core import Action, Decision, Product
 
 from ..regime.detector import MarketRegimeDetector
 from ..regime.models import RegimeConfig, RegimeState, RegimeType

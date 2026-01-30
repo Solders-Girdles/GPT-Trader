@@ -15,8 +15,6 @@ from gpt_trader.core import Action, Candle, Decision
 from gpt_trader.core.account import Order
 from gpt_trader.core.trading import OrderSide, OrderStatus, OrderType, TimeInForce
 from gpt_trader.features.live_trade.strategies.base import MarketDataContext
-from gpt_trader.utilities.logging_patterns import get_logger
-
 from gpt_trader.features.research.backtesting.data_loader import HistoricalDataPoint
 from gpt_trader.features.research.backtesting.simulator import (
     BacktestConfig,
@@ -25,6 +23,7 @@ from gpt_trader.features.research.backtesting.simulator import (
     SimulatedOrder,
     SimulatedTrade,
 )
+from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="backtest_adapter")
 

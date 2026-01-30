@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from argparse import Namespace
-from pathlib import Path
 from typing import Any
 
 from gpt_trader.cli.response import CliErrorCode, CliResponse

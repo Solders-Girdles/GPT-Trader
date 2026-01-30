@@ -4,8 +4,8 @@ from decimal import Decimal
 
 import pytest
 
-from gpt_trader.features.intelligence.ensemble.orchestrator import EnsembleOrchestrator
 from gpt_trader.core import Action
+from gpt_trader.features.intelligence.ensemble.orchestrator import EnsembleOrchestrator
 
 from .orchestrator_test_base import MockStrategy
 

@@ -37,4 +37,3 @@ def resolve_strategy_type(value: str, *, variant: str | None = None) -> tuple[st
 def is_known_strategy_type(value: str) -> bool:
     """Check whether a value is a known canonical strategy type or alias."""
     return normalize_strategy_type(value) in CANONICAL_STRATEGY_TYPES
-

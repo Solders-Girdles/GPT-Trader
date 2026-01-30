@@ -6,12 +6,12 @@ from typing import Any, cast
 
 import pytest
 
+from gpt_trader.core import Action, Decision
 from gpt_trader.features.intelligence.regime import (
     MarketRegimeDetector,
     RegimeState,
     RegimeType,
 )
-from gpt_trader.core import Action, Decision
 from gpt_trader.features.live_trade.strategies.regime_switcher import (
     RegimeSwitchingStrategy,
 )

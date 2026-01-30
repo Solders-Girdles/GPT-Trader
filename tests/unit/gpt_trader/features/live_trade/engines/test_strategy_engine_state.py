@@ -8,8 +8,7 @@ from unittest.mock import MagicMock
 import pytest
 
 import gpt_trader.security.security_validator as security_validator_module
-from gpt_trader.core import Balance, OrderSide, OrderType, Position
-from gpt_trader.core import Action, Decision
+from gpt_trader.core import Action, Balance, Decision, OrderSide, OrderType, Position
 
 
 def test_reset_daily_tracking_recomputes_equity(engine):

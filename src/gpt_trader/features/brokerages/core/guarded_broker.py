@@ -6,7 +6,8 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any, Iterator
+from typing import Any
+from collections.abc import Iterator
 
 from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
 from gpt_trader.utilities.logging_patterns import get_logger

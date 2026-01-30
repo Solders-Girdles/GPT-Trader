@@ -35,7 +35,7 @@ class ArtifactRegistry:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "ArtifactRegistry":
+    def from_dict(cls, data: dict[str, Any]) -> ArtifactRegistry:
         return cls(
             profiles=dict(data.get("profiles") or {}),
             updated_at=data.get("updated_at"),

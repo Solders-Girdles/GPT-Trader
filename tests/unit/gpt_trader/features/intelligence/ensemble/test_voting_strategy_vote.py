@@ -1,7 +1,7 @@
 """Tests for StrategyVote model."""
 
-from gpt_trader.features.intelligence.ensemble.models import StrategyVote
 from gpt_trader.core import Action, Decision
+from gpt_trader.features.intelligence.ensemble.models import StrategyVote
 
 
 class TestStrategyVote:

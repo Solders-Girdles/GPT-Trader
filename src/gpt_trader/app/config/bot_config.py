@@ -9,7 +9,7 @@ Supports nested configuration structure for optimization framework compatibility
 
 import os
 import warnings
-from dataclasses import MISSING, dataclass, field, fields, replace, is_dataclass
+from dataclasses import MISSING, dataclass, field, fields, is_dataclass, replace
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, ClassVar, Literal, get_args, get_origin
 
@@ -259,7 +259,10 @@ class BotConfig:
 
         if self.perps_position_fraction is not None:
             override = Decimal(str(self.perps_position_fraction))
-            if override != self.risk.position_fraction and not BotConfig._position_fraction_sync_warned:
+            if (
+                override != self.risk.position_fraction
+                and not BotConfig._position_fraction_sync_warned
+            ):
                 warnings.warn(
                     "perps_position_fraction is deprecated; "
                     "use risk.position_fraction instead. "
@@ -271,8 +274,13 @@ class BotConfig:
             self.risk.position_fraction = override
 
         strategy_fraction = getattr(self.strategy, "position_fraction", None)
-        if strategy_fraction is not None and not self._strategy_field_is_default("position_fraction"):
-            if Decimal(str(strategy_fraction)) != self.risk.position_fraction and not BotConfig._position_fraction_sync_warned:
+        if strategy_fraction is not None and not self._strategy_field_is_default(
+            "position_fraction"
+        ):
+            if (
+                Decimal(str(strategy_fraction)) != self.risk.position_fraction
+                and not BotConfig._position_fraction_sync_warned
+            ):
                 warnings.warn(
                     "strategy.position_fraction is ignored for live sizing; "
                     "use risk.position_fraction instead.",

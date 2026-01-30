@@ -10,13 +10,13 @@ import pytest
 from strategy_engine_chaos_helpers import make_position
 from tests.support.chaos import ChaosBroker, api_outage_scenario, broker_read_failures_scenario
 
+from gpt_trader.core import Action, Decision
 from gpt_trader.features.live_trade.execution.order_submission import (
     OrderSubmissionOutcome,
     OrderSubmissionOutcomeStatus,
 )
 from gpt_trader.features.live_trade.execution.submission_result import OrderSubmissionStatus
 from gpt_trader.features.live_trade.guard_errors import GuardError
-from gpt_trader.core import Action, Decision
 
 pytest_plugins = ["strategy_engine_chaos_fixtures"]
 

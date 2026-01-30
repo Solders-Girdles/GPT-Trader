@@ -16,8 +16,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
 from gpt_trader.app.config import MeanReversionConfig
-from gpt_trader.core import Product
-from gpt_trader.core import Action, Decision
+from gpt_trader.core import Action, Decision, Product
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:

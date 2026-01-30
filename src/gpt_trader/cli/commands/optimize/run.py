@@ -399,9 +399,7 @@ def _create_strategy_factory(
     strategy_variant: str | None,
 ) -> Callable[[dict[str, Any]], StrategyProtocol]:
     """Create a strategy factory for the given strategy type."""
-    resolved_type, resolved_variant = resolve_strategy_type(
-        strategy_type, variant=strategy_variant
-    )
+    resolved_type, resolved_variant = resolve_strategy_type(strategy_type, variant=strategy_variant)
 
     def factory(params: dict[str, Any]) -> StrategyProtocol:
         if resolved_type == "baseline" and resolved_variant == "spot":
@@ -775,9 +773,7 @@ def _split_best_parameters(
     strategy_parameters = {
         name: value for name, value in parameters.items() if name in strategy_names
     }
-    risk_parameters = {
-        name: value for name, value in parameters.items() if name in risk_names
-    }
+    risk_parameters = {name: value for name, value in parameters.items() if name in risk_names}
     simulation_parameters = {
         name: value for name, value in parameters.items() if name in simulation_names
     }

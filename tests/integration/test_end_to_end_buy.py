@@ -1,8 +1,7 @@
+from decimal import Decimal
 from unittest.mock import MagicMock
 
 import pytest
-
-from decimal import Decimal
 
 from gpt_trader.app.config import BotConfig, BotRiskConfig
 from gpt_trader.app.container import (

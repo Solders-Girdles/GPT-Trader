@@ -10,8 +10,7 @@ from unittest.mock import MagicMock
 import pytest
 
 import gpt_trader.security.security_validator as security_validator_module
-from gpt_trader.core import Balance, Position
-from gpt_trader.core import Action, Decision
+from gpt_trader.core import Action, Balance, Decision, Position
 
 
 def test_health_check_runner_initialized(engine):

@@ -55,9 +55,8 @@ from gpt_trader.backtesting.metrics.statistics import (
 )
 from gpt_trader.backtesting.simulation.broker import SimulatedBroker
 from gpt_trader.backtesting.types import BacktestResult, FeeTier, SimulationConfig
-from gpt_trader.core import OrderSide, OrderType
+from gpt_trader.core import Action, Decision, OrderSide, OrderType
 from gpt_trader.features.live_trade.strategies.base import StrategyProtocol
-from gpt_trader.core import Action, Decision
 from gpt_trader.features.optimize.objectives.base import ObjectiveFunction
 from gpt_trader.features.optimize.study.manager import OptimizationStudyManager
 from gpt_trader.features.optimize.types import OptimizationConfig

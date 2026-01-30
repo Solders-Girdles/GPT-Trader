@@ -9,9 +9,8 @@ import pytest
 from strategy_engine_chaos_helpers import make_position
 
 import gpt_trader.security.security_validator as security_validator_module
-from gpt_trader.core import Balance, OrderSide, OrderType, Product
+from gpt_trader.core import Action, Balance, Decision, OrderSide, OrderType, Product
 from gpt_trader.features.live_trade.execution.submission_result import OrderSubmissionStatus
-from gpt_trader.core import Action, Decision
 
 
 async def _place_order(engine, action: Action = Action.BUY):

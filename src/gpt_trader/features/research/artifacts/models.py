@@ -49,7 +49,7 @@ class StrategyArtifact:
         evidence_paths: list[str] | None = None,
         source: str | None = None,
         notes: str | None = None,
-    ) -> "StrategyArtifact":
+    ) -> StrategyArtifact:
         """Create a new strategy artifact with a generated id and timestamp."""
         created_at = datetime.now(timezone.utc).isoformat()
         return cls(
@@ -96,7 +96,7 @@ class StrategyArtifact:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "StrategyArtifact":
+    def from_dict(cls, data: dict[str, Any]) -> StrategyArtifact:
         return cls(
             artifact_id=str(data.get("artifact_id") or ""),
             strategy_type=str(data.get("strategy_type") or ""),

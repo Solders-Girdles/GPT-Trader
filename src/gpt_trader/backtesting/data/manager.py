@@ -527,9 +527,7 @@ class HistoricalDataManager(IHistoricalDataProvider):
         if granularity not in self._coverage_index[symbol]:
             self._coverage_index[symbol][granularity] = []
 
-        self._coverage_index[symbol][granularity].append(
-            (_ensure_utc(start), _ensure_utc(end))
-        )
+        self._coverage_index[symbol][granularity].append((_ensure_utc(start), _ensure_utc(end)))
         self._save_coverage_index()
 
     def _load_coverage_index(self) -> None:

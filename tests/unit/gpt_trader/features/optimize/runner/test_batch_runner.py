@@ -7,8 +7,8 @@ import pytest
 
 import gpt_trader.features.optimize.runner.batch_runner as batch_runner_module
 from gpt_trader.backtesting.engine.bar_runner import IHistoricalDataProvider
-from gpt_trader.features.live_trade.strategies.base import StrategyProtocol
 from gpt_trader.core import Action, Decision
+from gpt_trader.features.live_trade.strategies.base import StrategyProtocol
 from gpt_trader.features.optimize.objectives.base import ObjectiveFunction
 from gpt_trader.features.optimize.runner.batch_runner import BatchBacktestRunner
 

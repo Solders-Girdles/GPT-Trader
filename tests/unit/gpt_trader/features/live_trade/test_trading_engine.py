@@ -9,8 +9,8 @@ from gpt_trader.app.container import (
     clear_application_container,
     set_application_container,
 )
-from gpt_trader.features.live_trade.engines.strategy import TradingEngine
 from gpt_trader.core import Action, Decision
+from gpt_trader.features.live_trade.engines.strategy import TradingEngine
 
 
 @pytest.fixture

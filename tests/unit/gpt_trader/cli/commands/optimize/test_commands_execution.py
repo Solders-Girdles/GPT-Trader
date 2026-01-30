@@ -64,9 +64,9 @@ class TestRunCommand:
                     "  symbols:",
                     "    - ETH-USD",
                     "backtest:",
-                    "  start_date: \"2026-01-01\"",
-                    "  end_date: \"2026-01-02\"",
-                    "  granularity: \"ONE_HOUR\"",
+                    '  start_date: "2026-01-01"',
+                    '  end_date: "2026-01-02"',
+                    '  granularity: "ONE_HOUR"',
                 ]
             )
             + "\n"
@@ -119,9 +119,9 @@ class TestRunCommand:
                     "  symbols:",
                     "    - ETH-USD",
                     "backtest:",
-                    "  start_date: \"2026-01-01\"",
-                    "  end_date: \"2026-01-02\"",
-                    "  granularity: \"ONE_HOUR\"",
+                    '  start_date: "2026-01-01"',
+                    '  end_date: "2026-01-02"',
+                    '  granularity: "ONE_HOUR"',
                 ]
             )
             + "\n"

@@ -30,11 +30,9 @@ class TestHybridStrategyBaseDecide:
             product=None,
         )
 
-        from gpt_trader.features.live_trade.strategies.perps_baseline.strategy import (
-            Action as LegacyAction,
-        )
+        from gpt_trader.core import Action as StandardAction
 
-        assert decision.action == LegacyAction.HOLD
+        assert decision.action == StandardAction.HOLD
 
     def test_decide_converts_buy(self):
         """Converts BUY action correctly."""
@@ -60,11 +58,9 @@ class TestHybridStrategyBaseDecide:
             product=None,
         )
 
-        from gpt_trader.features.live_trade.strategies.perps_baseline.strategy import (
-            Action as LegacyAction,
-        )
+        from gpt_trader.core import Action as StandardAction
 
-        assert decision.action == LegacyAction.BUY
+        assert decision.action == StandardAction.BUY
         assert decision.reason == "Test buy"
         assert decision.confidence == 0.8
 
@@ -89,11 +85,9 @@ class TestHybridStrategyBaseDecide:
             product=None,
         )
 
-        from gpt_trader.features.live_trade.strategies.perps_baseline.strategy import (
-            Action as LegacyAction,
-        )
+        from gpt_trader.core import Action as StandardAction
 
-        assert decision.action == LegacyAction.SELL
+        assert decision.action == StandardAction.SELL
 
     def test_decide_skips_hold_decisions(self):
         """Skips HOLD decisions to find actionable one."""
@@ -122,9 +116,7 @@ class TestHybridStrategyBaseDecide:
             product=None,
         )
 
-        from gpt_trader.features.live_trade.strategies.perps_baseline.strategy import (
-            Action as LegacyAction,
-        )
+        from gpt_trader.core import Action as StandardAction
 
-        assert decision.action == LegacyAction.BUY
+        assert decision.action == StandardAction.BUY
         assert decision.reason == "Second decision"

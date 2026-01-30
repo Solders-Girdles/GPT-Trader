@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from gpt_trader.app.bootstrap import bot_from_profile, build_bot
-from gpt_trader.app.config import BotConfig
+from gpt_trader.app.config import BotConfig, BotRiskConfig
 from gpt_trader.app.container import (
     ApplicationContainer,
     clear_application_container,
@@ -51,7 +51,7 @@ def integration_config() -> BotConfig:
         dry_run=True,
         enable_order_preview=False,
         perps_enable_streaming=False,
-        perps_position_fraction=0.04,  # 4% position sizing
+        risk=BotRiskConfig(position_fraction=Decimal("0.04")),  # 4% position sizing
     )
 
 

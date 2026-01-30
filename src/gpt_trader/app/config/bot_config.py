@@ -9,7 +9,7 @@ Supports nested configuration structure for optimization framework compatibility
 
 import os
 import warnings
-from dataclasses import dataclass, field, fields, replace
+from dataclasses import MISSING, dataclass, field, fields, replace, is_dataclass
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, ClassVar, Literal, get_args, get_origin
 
@@ -171,6 +171,12 @@ class BotConfig:
 
     regime_switcher_trend_mode: Literal["delegate", "regime_follow"] = "delegate"
 
+    # Strategy artifact overrides (research -> live handoff)
+    strategy_artifact_id: str | None = None
+    strategy_artifact_path: str | None = None
+    strategy_artifact_use_registry: bool = False
+    strategy_artifact_allow_unapproved: bool = False
+
     # General config (not nested)
     symbols: list[str] = field(default_factory=lambda: ["BTC-USD", "ETH-USD"])
     interval: int = 60  # seconds
@@ -237,6 +243,78 @@ class BotConfig:
 
     # Metadata (Pydantic compatibility)
     metadata: dict[str, Any] = field(default_factory=dict)
+
+    # Single-shot sync warnings for sizing/leverage mismatches
+    _position_fraction_sync_warned: ClassVar[bool] = False
+    _leverage_sync_warned: ClassVar[bool] = False
+
+    def __post_init__(self) -> None:
+        self._sync_legacy_position_fraction()
+        self._warn_strategy_leverage_mismatch()
+
+    def _sync_legacy_position_fraction(self) -> None:
+        """Keep sizing configuration canonical in BotRiskConfig."""
+        if not hasattr(self, "risk") or self.risk is None:
+            return
+
+        if self.perps_position_fraction is not None:
+            override = Decimal(str(self.perps_position_fraction))
+            if override != self.risk.position_fraction and not BotConfig._position_fraction_sync_warned:
+                warnings.warn(
+                    "perps_position_fraction is deprecated; "
+                    "use risk.position_fraction instead. "
+                    "Applying perps_position_fraction override.",
+                    UserWarning,
+                    stacklevel=2,
+                )
+                BotConfig._position_fraction_sync_warned = True
+            self.risk.position_fraction = override
+
+        strategy_fraction = getattr(self.strategy, "position_fraction", None)
+        if strategy_fraction is not None and not self._strategy_field_is_default("position_fraction"):
+            if Decimal(str(strategy_fraction)) != self.risk.position_fraction and not BotConfig._position_fraction_sync_warned:
+                warnings.warn(
+                    "strategy.position_fraction is ignored for live sizing; "
+                    "use risk.position_fraction instead.",
+                    UserWarning,
+                    stacklevel=2,
+                )
+                BotConfig._position_fraction_sync_warned = True
+
+    def _warn_strategy_leverage_mismatch(self) -> None:
+        """Warn when strategy leverage settings diverge from BotRiskConfig."""
+        if not hasattr(self, "risk") or self.risk is None:
+            return
+
+        for field_name in ("target_leverage", "max_leverage"):
+            if not self._strategy_field_is_default(field_name):
+                strategy_value = getattr(self.strategy, field_name, None)
+                risk_value = getattr(self.risk, field_name, None)
+                if (
+                    strategy_value is not None
+                    and risk_value is not None
+                    and strategy_value != risk_value
+                    and not BotConfig._leverage_sync_warned
+                ):
+                    warnings.warn(
+                        f"strategy.{field_name} is ignored for live risk limits; "
+                        f"use risk.{field_name} instead.",
+                        UserWarning,
+                        stacklevel=2,
+                    )
+                    BotConfig._leverage_sync_warned = True
+
+    def _strategy_field_is_default(self, field_name: str) -> bool:
+        if not is_dataclass(self.strategy):
+            return False
+        field_def = self.strategy.__dataclass_fields__.get(field_name)
+        if field_def is None:
+            return False
+        if field_def.default_factory is not MISSING:  # type: ignore[comparison-overlap]
+            default_value = field_def.default_factory()
+        else:
+            default_value = field_def.default
+        return getattr(self.strategy, field_name, None) == default_value
 
     @property
     def model_fields(self) -> dict[str, Any]:
@@ -443,6 +521,14 @@ class BotConfig:
             order_submission_retries_enabled=parse_bool_env(
                 "ORDER_SUBMISSION_RETRIES_ENABLED", default=False
             ),
+            strategy_artifact_id=os.getenv("STRATEGY_ARTIFACT_ID"),
+            strategy_artifact_path=os.getenv("STRATEGY_ARTIFACT_PATH"),
+            strategy_artifact_use_registry=parse_bool_env(
+                "STRATEGY_ARTIFACT_USE_REGISTRY", default=False
+            ),
+            strategy_artifact_allow_unapproved=parse_bool_env(
+                "STRATEGY_ARTIFACT_ALLOW_UNAPPROVED", default=False
+            ),
             # Risk modes from env (CLI/profile override these)
             reduce_only_mode=parse_bool_env("RISK_REDUCE_ONLY_MODE", default=False),
             mock_broker=parse_bool_env("MOCK_BROKER", default=False),
@@ -489,6 +575,7 @@ class BotConfig:
 
         if any(key in data for key in ("trading", "risk_management", "profile_name")):
             from gpt_trader.app.config.profile_loader import ProfileSchema
+            from gpt_trader.config.strategy_types import normalize_strategy_type
 
             warnings.warn(
                 "Legacy profile-style YAML mapping via BotConfig.from_dict() is deprecated and will "
@@ -531,7 +618,7 @@ class BotConfig:
                 "log_level": schema.monitoring.log_level,
                 "status_interval": schema.monitoring.update_interval,
                 "status_enabled": schema.monitoring.status_enabled,
-                "strategy_type": schema.strategy.type,
+                "strategy_type": normalize_strategy_type(schema.strategy.type),
             }
 
             if schema.trading.mode == "reduce_only":
@@ -555,6 +642,12 @@ class BotConfig:
         valid_bot_fields = {f.name for f in dataclass_fields(cls)}
         config_data = {k: v for k, v in data.items() if k in valid_bot_fields}
         config_data.update({"strategy": strategy, "risk": risk})
+        if "strategy_type" in config_data and config_data["strategy_type"]:
+            from gpt_trader.config.strategy_types import normalize_strategy_type
+
+            config_data["strategy_type"] = normalize_strategy_type(
+                str(config_data["strategy_type"])
+            )
 
         return cls(**config_data)
 

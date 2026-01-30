@@ -1,9 +1,9 @@
+from gpt_trader.core import Action, Decision
+
 from .stateful import StatefulBaselineStrategy, StatefulPerpsStrategy
 from .strategy import (
-    Action,
     BaselinePerpsStrategy,
     BaseStrategyConfig,
-    Decision,
     IndicatorState,
     PerpsStrategy,
     PerpsStrategyConfig,

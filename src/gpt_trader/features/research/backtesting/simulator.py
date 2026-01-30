@@ -19,7 +19,7 @@ from gpt_trader.core.trading import OrderStatus
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
-    from gpt_trader.features.live_trade.strategies.perps_baseline import Decision
+    from gpt_trader.core import Decision
     from gpt_trader.features.research.backtesting.data_loader import HistoricalDataPoint
 
 logger = get_logger(__name__, component="backtest_simulator")
@@ -362,7 +362,7 @@ class BacktestSimulator:
             decision: Strategy decision.
             point: Current market data point.
         """
-        from gpt_trader.features.live_trade.strategies.perps_baseline import Action
+        from gpt_trader.core import Action
 
         action = decision.action
         pending = self._has_pending_orders(point.symbol)

@@ -48,6 +48,9 @@ class ApplicationContainer:
 
     def __init__(self, config: BotConfig):
         self.config = config
+        from gpt_trader.features.research.artifacts import apply_strategy_artifact_to_config
+
+        apply_strategy_artifact_to_config(self.config)
 
         # Sub-containers (lazily delegate to these for grouped dependencies)
         self._config_container = ConfigContainer(config=config)

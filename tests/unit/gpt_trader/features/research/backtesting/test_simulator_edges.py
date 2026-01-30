@@ -5,15 +5,10 @@ from decimal import Decimal
 
 from gpt_trader.backtesting.simulation.fee_calculator import FeeCalculator
 from gpt_trader.backtesting.types import FeeTier
-from gpt_trader.features.live_trade.strategies.perps_baseline.strategy import (
-    Action,
-    Decision,
-)
+from gpt_trader.core import Action, Decision
+from gpt_trader.features.research.backtesting.adapter import BacktestSimulator
 from gpt_trader.features.research.backtesting.data_loader import HistoricalDataPoint
-from gpt_trader.features.research.backtesting.simulator import (
-    BacktestConfig,
-    BacktestSimulator,
-)
+from gpt_trader.features.research.backtesting.simulator import BacktestConfig
 
 
 class HoldAfterBuyStrategy:

@@ -25,7 +25,16 @@ def register(subparsers: Any) -> None:
     )
 
     # Import and register each subcommand
-    from . import apply, compare, export, resume, run, view
+    from . import (
+        apply,
+        artifact_activate,
+        artifact_publish,
+        compare,
+        export,
+        resume,
+        run,
+        view,
+    )
     from . import list as list_cmd
 
     run.register(optimize_subparsers)
@@ -35,6 +44,8 @@ def register(subparsers: Any) -> None:
     export.register(optimize_subparsers)
     resume.register(optimize_subparsers)
     apply.register(optimize_subparsers)
+    artifact_publish.register(optimize_subparsers)
+    artifact_activate.register(optimize_subparsers)
 
     parser.set_defaults(handler=_default_handler)
 
@@ -51,6 +62,8 @@ def _default_handler(args: Any) -> int:
     print("  export   - Export results (JSON/CSV/YAML)")
     print("  resume   - Resume an interrupted study")
     print("  apply    - Apply optimized params to a config file")
+    print("  artifact-publish  - Publish a strategy artifact")
+    print("  artifact-activate - Activate a strategy artifact for a profile")
     print()
     print("Use 'gpt-trader optimize <subcommand> --help' for more information.")
     return 0

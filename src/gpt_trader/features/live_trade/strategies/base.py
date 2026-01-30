@@ -17,12 +17,10 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
-from gpt_trader.core import Product
+from gpt_trader.core import Decision, Product
 
 if TYPE_CHECKING:
     from gpt_trader.features.brokerages.coinbase.market_data_features import DepthSnapshot
-
-    from .perps_baseline.strategy import Decision
 
 
 @dataclass(slots=True)
@@ -77,6 +75,7 @@ class StrategyProtocol(Protocol):
         equity: Decimal,
         product: Product | None,
         market_data: MarketDataContext | None = None,
+        candles: Sequence[Any] | None = None,
     ) -> "Decision":
         """Generate a trading decision based on market data.
 
@@ -88,6 +87,7 @@ class StrategyProtocol(Protocol):
             equity: Account equity for position sizing
             product: Product specification from exchange
             market_data: Optional enhanced market data (orderbook depth, trade flow)
+            candles: Historical candles (optional)
 
         Returns:
             Decision with action, reason, confidence, and indicator state
@@ -132,6 +132,7 @@ class BaseStrategy(ABC):
         equity: Decimal,
         product: Product | None,
         market_data: MarketDataContext | None = None,
+        candles: Sequence[Any] | None = None,
     ) -> "Decision":
         """Generate a trading decision based on market data."""
         ...

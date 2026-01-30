@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import os
 import warnings
+from decimal import Decimal
 
 import pytest
 
-from gpt_trader.app.config import BotConfig
+from gpt_trader.app.config import BotConfig, BotRiskConfig
 from gpt_trader.app.config.bot_config import MeanReversionConfig
 from gpt_trader.features.live_trade.strategies.perps_baseline import PerpsStrategyConfig
 
@@ -166,3 +167,31 @@ class TestFromDictLegacyProfileMapping:
             config = BotConfig.from_dict({"profile_name": "minimal"})
 
         assert config.symbols
+
+
+class TestSizingAndLeveragePrecedence:
+    """Test sizing/leverage precedence for live trading."""
+
+    def test_perps_position_fraction_overrides_risk(self) -> None:
+        BotConfig._position_fraction_sync_warned = False
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            config = BotConfig(
+                risk=BotRiskConfig(position_fraction=Decimal("0.1")),
+                perps_position_fraction=0.2,
+            )
+
+        assert config.risk.position_fraction == Decimal("0.2")
+        assert any("perps_position_fraction" in str(item.message) for item in w)
+
+    def test_strategy_position_fraction_warns_when_non_default(self) -> None:
+        BotConfig._position_fraction_sync_warned = False
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            config = BotConfig(
+                strategy=PerpsStrategyConfig(position_fraction=0.3),
+                risk=BotRiskConfig(position_fraction=Decimal("0.1")),
+            )
+
+        assert config.risk.position_fraction == Decimal("0.1")
+        assert any("strategy.position_fraction" in str(item.message) for item in w)

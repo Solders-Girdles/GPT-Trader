@@ -28,6 +28,10 @@ def create_strategy(config: "BotConfig") -> TradingStrategy:
     Raises:
         ValueError: If strategy_type is not recognized
     """
+    from gpt_trader.features.research.artifacts import apply_strategy_artifact_to_config
+
+    apply_strategy_artifact_to_config(config)
+
     strategy_type = config.strategy_type
 
     if strategy_type == "baseline":

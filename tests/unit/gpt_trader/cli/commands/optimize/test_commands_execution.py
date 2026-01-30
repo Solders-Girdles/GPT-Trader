@@ -7,8 +7,18 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from gpt_trader.cli.commands.optimize import apply, compare, export, run, view
+from gpt_trader.cli.commands.optimize import (
+    apply,
+    artifact_activate,
+    artifact_publish,
+    compare,
+    export,
+    run,
+    view,
+)
 from gpt_trader.cli.commands.optimize import list as list_cmd
+from gpt_trader.cli.response import CliResponse
+from gpt_trader.features.research.artifacts import StrategyArtifact, StrategyArtifactStore
 
 
 class TestRunCommand:
@@ -36,6 +46,120 @@ class TestRunCommand:
 
         result = run.execute(args)
         assert result == 0
+
+    def test_config_file_is_not_overridden_by_defaults(self, tmp_path):
+        """Config file values should remain unless CLI overrides are explicit."""
+        config_path = tmp_path / "optimize.yml"
+        config_path.write_text(
+            "\n".join(
+                [
+                    "study:",
+                    "  name: cfg_run",
+                    "  trials: 3",
+                    "  sampler: random",
+                    "objective:",
+                    "  preset: total_return",
+                    "strategy:",
+                    "  type: spot",
+                    "  symbols:",
+                    "    - ETH-USD",
+                    "backtest:",
+                    "  start_date: \"2026-01-01\"",
+                    "  end_date: \"2026-01-02\"",
+                    "  granularity: \"ONE_HOUR\"",
+                ]
+            )
+            + "\n"
+        )
+
+        args = Namespace(
+            config=config_path,
+            objective=None,
+            strategy=None,
+            symbols=None,
+            name=None,
+            trials=None,
+            sampler=None,
+            seed=None,
+            timeout=None,
+            start_date=None,
+            end_date=None,
+            granularity=None,
+            format="text",
+            quiet=True,
+            dry_run=True,
+        )
+
+        config = run._build_config_from_args(args)
+
+        assert config.study.name == "cfg_run"
+        assert config.study.trials == 3
+        assert config.study.sampler == "random"
+        assert config.objective_name == "total_return"
+        assert config.strategy_type == "baseline"
+        assert config.strategy_variant == "spot"
+        assert config.symbols == ["ETH-USD"]
+        assert config.backtest is not None
+        assert config.backtest.granularity == "ONE_HOUR"
+
+    def test_cli_overrides_apply_over_config(self, tmp_path):
+        """Explicit CLI flags should override config file values."""
+        config_path = tmp_path / "optimize.yml"
+        config_path.write_text(
+            "\n".join(
+                [
+                    "study:",
+                    "  name: cfg_run",
+                    "  trials: 3",
+                    "  sampler: random",
+                    "objective:",
+                    "  preset: total_return",
+                    "strategy:",
+                    "  type: spot",
+                    "  symbols:",
+                    "    - ETH-USD",
+                    "backtest:",
+                    "  start_date: \"2026-01-01\"",
+                    "  end_date: \"2026-01-02\"",
+                    "  granularity: \"ONE_HOUR\"",
+                ]
+            )
+            + "\n"
+        )
+
+        args = Namespace(
+            config=config_path,
+            objective="sharpe",
+            strategy="perps_baseline",
+            symbols=["BTC-USD", "SOL-USD"],
+            name=None,
+            trials=12,
+            sampler="tpe",
+            seed=42,
+            timeout=3600,
+            start_date="2026-01-05",
+            end_date="2026-01-06",
+            granularity="FIVE_MINUTE",
+            format="text",
+            quiet=True,
+            dry_run=True,
+        )
+
+        config = run._build_config_from_args(args)
+
+        assert config.study.name == "cfg_run"
+        assert config.study.trials == 12
+        assert config.study.sampler == "tpe"
+        assert config.study.seed == 42
+        assert config.study.timeout_seconds == 3600
+        assert config.objective_name == "sharpe"
+        assert config.strategy_type == "baseline"
+        assert config.strategy_variant == "perps"
+        assert config.symbols == ["BTC-USD", "SOL-USD"]
+        assert config.backtest is not None
+        assert config.backtest.start_date.isoformat().startswith("2026-01-05")
+        assert config.backtest.end_date.isoformat().startswith("2026-01-06")
+        assert config.backtest.granularity == "FIVE_MINUTE"
 
 
 class TestListCommand:
@@ -139,3 +263,105 @@ class TestApplyCommand:
         result = apply.execute(args)
 
         assert result == 1  # Error: no runs found
+
+
+class TestArtifactCommands:
+    """Test artifact publish/activate commands."""
+
+    def test_publish_artifact_marks_approved(self, tmp_path, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.setenv("STRATEGY_ARTIFACT_ROOT", str(tmp_path))
+        store = StrategyArtifactStore()
+        artifact = StrategyArtifact.create(
+            strategy_type="baseline",
+            symbols=["BTC-USD"],
+            interval=60,
+        )
+        store.save(artifact)
+
+        args = Namespace(
+            artifact=artifact.artifact_id,
+            approved_by="tester",
+            notes="ok",
+            format="json",
+            output_format="json",
+        )
+
+        result = artifact_publish.execute(args)
+        assert isinstance(result, CliResponse)
+        assert result.success is True
+
+        reloaded = store.load(artifact.artifact_id)
+        assert reloaded.approved is True
+        assert reloaded.approved_by == "tester"
+
+    def test_activate_artifact_sets_active(self, tmp_path, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.setenv("STRATEGY_ARTIFACT_ROOT", str(tmp_path))
+        store = StrategyArtifactStore()
+        artifact = StrategyArtifact.create(
+            strategy_type="baseline",
+            symbols=["BTC-USD"],
+            interval=60,
+        )
+        store.save(artifact)
+        store.publish(artifact.artifact_id, approved_by="tester")
+
+        args = Namespace(
+            artifact=artifact.artifact_id,
+            profile="prod",
+            allow_unapproved=False,
+            format="json",
+            output_format="json",
+        )
+
+        result = artifact_activate.execute(args)
+        assert isinstance(result, CliResponse)
+        assert result.success is True
+        assert store.resolve_active("prod") == artifact.artifact_id
+
+    def test_activate_artifact_rejects_unapproved(self, tmp_path, monkeypatch: pytest.MonkeyPatch):
+        monkeypatch.setenv("STRATEGY_ARTIFACT_ROOT", str(tmp_path))
+        store = StrategyArtifactStore()
+        artifact = StrategyArtifact.create(
+            strategy_type="baseline",
+            symbols=["BTC-USD"],
+            interval=60,
+        )
+        store.save(artifact)
+
+        args = Namespace(
+            artifact=artifact.artifact_id,
+            profile="prod",
+            allow_unapproved=False,
+            format="json",
+            output_format="json",
+        )
+
+        result = artifact_activate.execute(args)
+        assert isinstance(result, CliResponse)
+        assert result.success is False
+        assert result.errors[0].code == "VALIDATION_ERROR"
+
+    def test_activate_artifact_allows_unapproved_with_warning(
+        self, tmp_path, monkeypatch: pytest.MonkeyPatch
+    ):
+        monkeypatch.setenv("STRATEGY_ARTIFACT_ROOT", str(tmp_path))
+        store = StrategyArtifactStore()
+        artifact = StrategyArtifact.create(
+            strategy_type="baseline",
+            symbols=["BTC-USD"],
+            interval=60,
+        )
+        store.save(artifact)
+
+        args = Namespace(
+            artifact=artifact.artifact_id,
+            profile="prod",
+            allow_unapproved=True,
+            format="json",
+            output_format="json",
+        )
+
+        result = artifact_activate.execute(args)
+        assert isinstance(result, CliResponse)
+        assert result.success is True
+        assert result.warnings == ["Activating unapproved artifact"]

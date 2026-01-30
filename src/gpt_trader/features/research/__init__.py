@@ -7,6 +7,10 @@ This module provides tools for:
 - Calculating performance metrics
 - Comparing strategies across different market conditions
 
+Note: The canonical backtesting engine is `gpt_trader.backtesting`. The
+research backtesting module is legacy and will migrate onto the canonical
+engine via an adapter.
+
 Example:
     from gpt_trader.features.research.backtesting import (
         HistoricalDataLoader,

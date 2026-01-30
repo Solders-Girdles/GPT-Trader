@@ -52,6 +52,8 @@ def test_parse_config_minimal():
     assert config.study.name == "test"
     assert config.study.trials == 100
     assert config.objective_name == "sharpe"
+    assert config.strategy_type == "baseline"
+    assert config.strategy_variant == "perps"
 
 
 def test_parse_config_full():
@@ -76,6 +78,8 @@ def test_parse_config_full():
     assert config.study.trials == 200
     assert config.study.sampler == "cmaes"
     assert config.objective_name == "risk_averse"
+    assert config.strategy_type == "baseline"
+    assert config.strategy_variant == "perps"
     assert config.symbols == ["BTC-USD", "ETH-USD"]
     assert config.backtest.granularity == "ONE_HOUR"
 
@@ -109,6 +113,8 @@ def test_create_default_config_minimal():
     assert config.study.name == "test"
     assert config.objective_name == "sharpe"
     assert config.symbols == ["BTC-USD"]
+    assert config.strategy_type == "baseline"
+    assert config.strategy_variant == "perps"
 
 
 def test_create_default_config_full():
@@ -130,6 +136,8 @@ def test_create_default_config_full():
     assert config.symbols == ["ETH-USD"]
     assert config.backtest.start_date == start
     assert config.backtest.end_date == end
+    assert config.strategy_type == "baseline"
+    assert config.strategy_variant == "perps"
 
 
 @pytest.mark.parametrize(

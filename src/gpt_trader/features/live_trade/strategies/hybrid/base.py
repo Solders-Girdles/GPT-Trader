@@ -11,6 +11,7 @@ from collections.abc import Sequence
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
+from gpt_trader.core import Action as StandardAction, Decision, Product
 from gpt_trader.features.live_trade.strategies.base import StatefulStrategyBase
 from gpt_trader.features.live_trade.symbols import (
     get_cfm_symbol,
@@ -27,9 +28,7 @@ from .types import (
 )
 
 if TYPE_CHECKING:
-    from gpt_trader.core import Product
     from gpt_trader.features.live_trade.strategies.base import MarketDataContext
-    from gpt_trader.features.live_trade.strategies.perps_baseline.strategy import Decision
 
 logger = get_logger(__name__, component="hybrid_strategy")
 
@@ -101,6 +100,7 @@ class HybridStrategyBase(StatefulStrategyBase):
         equity: Decimal,
         product: Product | None,
         market_data: MarketDataContext | None = None,
+        candles: Sequence[Any] | None = None,
     ) -> Decision:
         """Standard strategy interface - delegates to decide_hybrid.
 
@@ -119,14 +119,6 @@ class HybridStrategyBase(StatefulStrategyBase):
         Returns:
             Standard Decision (first actionable decision or HOLD)
         """
-        # Import here to avoid circular dependency
-        from gpt_trader.features.live_trade.strategies.perps_baseline.strategy import (
-            Action as LegacyAction,
-        )
-        from gpt_trader.features.live_trade.strategies.perps_baseline.strategy import (
-            Decision,
-        )
-
         # Create market data from standard inputs
         hybrid_market_data = HybridMarketData(
             symbol=symbol,
@@ -144,17 +136,17 @@ class HybridStrategyBase(StatefulStrategyBase):
         # Convert first actionable decision to standard Decision
         for decision in decisions:
             if decision.is_actionable():
-                # Map hybrid Action to legacy Action
+                # Map hybrid Action to standard Action
                 action_map = {
-                    Action.BUY: LegacyAction.BUY,
-                    Action.SELL: LegacyAction.SELL,
-                    Action.HOLD: LegacyAction.HOLD,
-                    Action.CLOSE: LegacyAction.CLOSE,
-                    Action.CLOSE_LONG: LegacyAction.CLOSE,
-                    Action.CLOSE_SHORT: LegacyAction.CLOSE,
+                    Action.BUY: StandardAction.BUY,
+                    Action.SELL: StandardAction.SELL,
+                    Action.HOLD: StandardAction.HOLD,
+                    Action.CLOSE: StandardAction.CLOSE,
+                    Action.CLOSE_LONG: StandardAction.CLOSE,
+                    Action.CLOSE_SHORT: StandardAction.CLOSE,
                 }
                 return Decision(
-                    action=action_map.get(decision.action, LegacyAction.HOLD),
+                    action=action_map.get(decision.action, StandardAction.HOLD),
                     reason=decision.reason,
                     confidence=decision.confidence,
                     indicators=decision.indicators,
@@ -162,7 +154,7 @@ class HybridStrategyBase(StatefulStrategyBase):
 
         # No actionable decision - return HOLD
         return Decision(
-            action=LegacyAction.HOLD,
+            action=StandardAction.HOLD,
             reason="No actionable hybrid decision",
             confidence=0.0,
         )

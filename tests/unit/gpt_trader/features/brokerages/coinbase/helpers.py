@@ -364,8 +364,8 @@ MARKET_DATA_ENDPOINT_CASES = [
             "expected_query": {
                 "granularity": ["1H"],
                 "limit": ["500"],
-                "start": ["2024-01-01T00:00:00Z"],
-                "end": ["2024-01-02T00:00:00Z"],
+                "start": ["1704067200"],
+                "end": ["1704153600"],
             },
             "response": {"candles": []},
             "expected_result": {"candles": []},

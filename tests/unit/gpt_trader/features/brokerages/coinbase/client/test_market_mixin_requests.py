@@ -50,7 +50,7 @@ def test_get_product_ticker_alias() -> None:
 
 
 def test_get_candles_formats_time_range() -> None:
-    client = _make_market_client()
+    client = _make_market_client(api_mode="advanced")
     recorded: dict[str, str] = {}
 
     def _request(method: str, path: str, payload=None):
@@ -62,10 +62,10 @@ def test_get_candles_formats_time_range() -> None:
     start = datetime(2024, 1, 1, 0, 0, 0)
     end = datetime(2024, 1, 1, 1, 0, 0, tzinfo=UTC)
 
-    def _isoz(ts: datetime) -> str:
+    def _unix(ts: datetime) -> str:
         value = ts if ts.tzinfo else ts.replace(tzinfo=UTC)
         value = value.astimezone(UTC).replace(microsecond=0)
-        return value.isoformat().replace("+00:00", "Z")
+        return str(int(value.timestamp()))
 
     MarketDataClientMixin.get_candles(
         client,
@@ -80,8 +80,8 @@ def test_get_candles_formats_time_range() -> None:
     assert path.startswith("/api/v3/brokerage/products/BTC-USD/candles?")
     assert "granularity=ONE_MINUTE" in path
     assert "limit=2" in path
-    assert f"start={_isoz(start)}" in path
-    assert f"end={_isoz(end)}" in path
+    assert f"start={_unix(start)}" in path
+    assert f"end={_unix(end)}" in path
 
 
 def test_get_product_builds_path() -> None:
@@ -151,7 +151,7 @@ def test_get_market_product_ticker_builds_path() -> None:
 
 
 def test_get_market_product_candles_formats_time_range() -> None:
-    client = _make_market_client()
+    client = _make_market_client(api_mode="advanced")
     recorded: dict[str, str] = {}
 
     def _request(method: str, path: str, payload=None):
@@ -163,10 +163,10 @@ def test_get_market_product_candles_formats_time_range() -> None:
     start = datetime(2024, 2, 1, 0, 0, 0)
     end = datetime(2024, 2, 1, 0, 5, 0, tzinfo=UTC)
 
-    def _isoz(ts: datetime) -> str:
+    def _unix(ts: datetime) -> str:
         value = ts if ts.tzinfo else ts.replace(tzinfo=UTC)
         value = value.astimezone(UTC).replace(microsecond=0)
-        return value.isoformat().replace("+00:00", "Z")
+        return str(int(value.timestamp()))
 
     MarketDataClientMixin.get_market_product_candles(
         client,
@@ -180,6 +180,41 @@ def test_get_market_product_candles_formats_time_range() -> None:
     assert path.startswith("/api/v3/brokerage/market/products/ETH-USD/candles?")
     assert "granularity=FIVE_MINUTE" in path
     assert "limit=200" in path
+    assert f"start={_unix(start)}" in path
+    assert f"end={_unix(end)}" in path
+
+
+def test_get_candles_exchange_uses_iso_format() -> None:
+    client = _make_market_client(api_mode="exchange")
+    recorded: dict[str, str] = {}
+
+    def _request(method: str, path: str, payload=None):
+        recorded["path"] = path
+        return {"candles": []}
+
+    client._request = _request  # type: ignore[method-assign]
+    client._get_endpoint_path = (  # type: ignore[method-assign]
+        lambda endpoint_name, **kwargs: f"/products/{kwargs.get('product_id', 'BTC-USD')}/candles"
+    )
+
+    start = datetime(2024, 3, 1, 0, 0, 0)
+    end = datetime(2024, 3, 1, 0, 10, 0, tzinfo=UTC)
+
+    def _isoz(ts: datetime) -> str:
+        value = ts if ts.tzinfo else ts.replace(tzinfo=UTC)
+        value = value.astimezone(UTC).replace(microsecond=0)
+        return value.isoformat().replace("+00:00", "Z")
+
+    MarketDataClientMixin.get_candles(
+        client,
+        "BTC-USD",
+        "ONE_MINUTE",
+        limit=2,
+        start=start,
+        end=end,
+    )
+
+    path = recorded["path"]
     assert f"start={_isoz(start)}" in path
     assert f"end={_isoz(end)}" in path
 

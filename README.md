@@ -1,6 +1,6 @@
 # GPT-Trader
 
-A production-ready Coinbase trading system built collaboratively with AI coding assistants.
+An in-progress Coinbase trading system built collaboratively with AI coding assistants, focused on safe, automated live trading.
 
 [![CI](https://github.com/Solders-Girdles/GPT-Trader/actions/workflows/ci.yml/badge.svg)](https://github.com/Solders-Girdles/GPT-Trader/actions/workflows/ci.yml)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
@@ -10,6 +10,8 @@ A production-ready Coinbase trading system built collaboratively with AI coding 
 ## Overview
 
 GPT-Trader is a Coinbase trading bot featuring a Terminal User Interface, vertical slice architecture, and comprehensive risk management. The name reflects how AI assistants (Claude, GPT, Gemini) collaborate in developing this codebase—the trading strategies themselves use technical analysis, not LLM inference.
+
+**Project status:** Active stabilization. The system is not yet production-ready; documentation and architecture are being aligned with live trading as the primary goal.
 
 ### Trading Capabilities
 
@@ -172,6 +174,7 @@ uv run agent-risk       # Query risk configuration
 
 | Document | Purpose |
 |----------|---------|
+| [Project Charter](docs/PROJECT_CHARTER.md) | Purpose, scope, and success criteria |
 | [Architecture](docs/ARCHITECTURE.md) | System design and vertical slices |
 | [Reliability](docs/RELIABILITY.md) | Guard stack, degradation, chaos testing |
 | [Monitoring](docs/MONITORING_PLAYBOOK.md) | Metrics, alerting, dashboards |

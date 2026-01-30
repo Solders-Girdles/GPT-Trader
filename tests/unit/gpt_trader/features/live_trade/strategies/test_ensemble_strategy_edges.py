@@ -9,7 +9,7 @@ from gpt_trader.features.live_trade.strategies.ensemble import (
     EnsembleStrategy,
     EnsembleStrategyConfig,
 )
-from gpt_trader.features.live_trade.strategies.perps_baseline import Action
+from gpt_trader.core import Action
 
 
 @dataclass

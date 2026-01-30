@@ -21,7 +21,7 @@ from gpt_trader.features.live_trade.execution.order_submission import (
     OrderSubmissionOutcome,
     OrderSubmissionOutcomeStatus,
 )
-from gpt_trader.features.live_trade.strategies.perps_baseline import Action, Decision
+from gpt_trader.core import Action, Decision
 
 
 @pytest.fixture
@@ -115,6 +115,7 @@ def engine(context, mock_security_validator, application_container, monkeypatch)
     )
 
     eng = TradingEngine(context)
+    eng.context.config.risk.position_fraction = Decimal("0.1")
     eng._state_collector = MagicMock()
     eng._state_collector.require_product.return_value = MagicMock()
     eng._state_collector.resolve_effective_price.return_value = Decimal("50000")

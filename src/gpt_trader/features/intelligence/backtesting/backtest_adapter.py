@@ -23,7 +23,7 @@ from .batch_regime import RegimeHistory, RegimeSnapshot
 if TYPE_CHECKING:
     from gpt_trader.core import Product
     from gpt_trader.features.live_trade.interfaces import TradingStrategy
-    from gpt_trader.features.live_trade.strategies.perps_baseline import Decision
+    from gpt_trader.core import Decision
 
 
 @dataclass

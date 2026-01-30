@@ -6,7 +6,16 @@ import argparse
 
 import pytest
 
-from gpt_trader.cli.commands.optimize import apply, compare, export, resume, run, view
+from gpt_trader.cli.commands.optimize import (
+    apply,
+    artifact_activate,
+    artifact_publish,
+    compare,
+    export,
+    resume,
+    run,
+    view,
+)
 from gpt_trader.cli.commands.optimize import list as list_cmd
 
 
@@ -29,6 +38,8 @@ class TestArgumentParsing:
         export.register(opt_subparsers)
         resume.register(opt_subparsers)
         apply.register(opt_subparsers)
+        artifact_publish.register(opt_subparsers)
+        artifact_activate.register(opt_subparsers)
 
         return main_parser
 
@@ -70,4 +81,16 @@ class TestArgumentParsing:
     def test_apply_parses_profile(self, parser):
         """Test apply command parses profile."""
         args = parser.parse_args(["optimize", "apply", "--profile", "prod"])
+        assert args.profile == "prod"
+
+    def test_artifact_publish_parses_id(self, parser):
+        """Test artifact-publish command parses artifact id."""
+        args = parser.parse_args(["optimize", "artifact-publish", "artifact-123"])
+        assert args.artifact == "artifact-123"
+
+    def test_artifact_activate_parses_profile(self, parser):
+        """Test artifact-activate command parses profile."""
+        args = parser.parse_args(
+            ["optimize", "artifact-activate", "artifact-123", "--profile", "prod"]
+        )
         assert args.profile == "prod"

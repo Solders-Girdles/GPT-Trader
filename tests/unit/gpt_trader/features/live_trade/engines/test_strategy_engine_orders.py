@@ -11,7 +11,7 @@ from strategy_engine_chaos_helpers import make_position
 import gpt_trader.security.security_validator as security_validator_module
 from gpt_trader.core import Balance, OrderSide, OrderType, Product
 from gpt_trader.features.live_trade.execution.submission_result import OrderSubmissionStatus
-from gpt_trader.features.live_trade.strategies.perps_baseline import Action, Decision
+from gpt_trader.core import Action, Decision
 
 
 async def _place_order(engine, action: Action = Action.BUY):
@@ -27,7 +27,7 @@ async def _place_order(engine, action: Action = Action.BUY):
 async def test_order_placed_with_dynamic_quantity(engine, monkeypatch: pytest.MonkeyPatch):
     """Test full flow from decision to order placement with calculated size."""
     engine.strategy.decide.return_value = Decision(Action.BUY, "test")
-    engine.strategy.config.position_fraction = Decimal("0.1")
+    engine.context.config.risk.position_fraction = Decimal("0.1")
     engine.context.broker.get_ticker.return_value = {"price": "50000"}
     engine.context.broker.list_balances.return_value = [
         Balance(asset="USD", total=Decimal("10000"), available=Decimal("10000"))
@@ -75,7 +75,7 @@ async def test_exchange_rules_blocks_small_order(engine, monkeypatch: pytest.Mon
     from gpt_trader.features.live_trade.risk.manager import ValidationError
 
     engine.strategy.decide.return_value = Decision(Action.BUY, "test")
-    engine.strategy.config.position_fraction = Decimal("0.001")
+    engine.context.config.risk.position_fraction = Decimal("0.001")
     engine.context.broker.get_ticker.return_value = {"price": "50000"}
     engine.context.broker.list_balances.return_value = [
         Balance(asset="USD", total=Decimal("100"), available=Decimal("100"))
@@ -119,7 +119,7 @@ async def test_slippage_guard_blocks_order(engine, monkeypatch: pytest.MonkeyPat
     from gpt_trader.features.live_trade.risk.manager import ValidationError
 
     engine.strategy.decide.return_value = Decision(Action.BUY, "test")
-    engine.strategy.config.position_fraction = Decimal("0.1")
+    engine.context.config.risk.position_fraction = Decimal("0.1")
     engine.context.broker.get_ticker.return_value = {"price": "50000"}
     engine.context.broker.list_balances.return_value = [
         Balance(asset="USD", total=Decimal("10000"), available=Decimal("10000"))
@@ -203,9 +203,9 @@ async def test_preview_disabled_after_threshold_failures(engine) -> None:
     assert engine._order_validator.enable_order_preview is False
 
 
-def test_calculate_order_quantity_with_strategy_config(engine):
-    """Test quantity calculation uses strategy config if set."""
-    engine.strategy.config.position_fraction = Decimal("0.5")
+def test_calculate_order_quantity_with_risk_config(engine):
+    """Test quantity calculation uses risk config if set."""
+    engine.context.config.risk.position_fraction = Decimal("0.5")
     equity = Decimal("10000")
     price = Decimal("50000")
 
@@ -213,10 +213,9 @@ def test_calculate_order_quantity_with_strategy_config(engine):
     assert quantity == Decimal("0.1")
 
 
-def test_calculate_order_quantity_fallback_to_bot_config(engine):
-    """Test quantity calculation falls back to bot config."""
-    engine.strategy.config.position_fraction = None
-    engine.context.config.perps_position_fraction = Decimal("0.2")
+def test_calculate_order_quantity_uses_risk_config(engine):
+    """Test quantity calculation uses bot risk config."""
+    engine.context.config.risk.position_fraction = Decimal("0.2")
 
     equity = Decimal("10000")
     price = Decimal("50000")
@@ -227,7 +226,7 @@ def test_calculate_order_quantity_fallback_to_bot_config(engine):
 
 def test_calculate_order_quantity_min_size(engine):
     """Test quantity respects product min size."""
-    engine.strategy.config.position_fraction = Decimal("0.1")
+    engine.context.config.risk.position_fraction = Decimal("0.1")
     equity = Decimal("100")
     price = Decimal("50000")
 

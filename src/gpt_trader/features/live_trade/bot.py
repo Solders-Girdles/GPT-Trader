@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any
 
 from gpt_trader.app.config import BotConfig
 from gpt_trader.app.runtime_ui_adapter import NullUIAdapter, RuntimeUIAdapter
+from gpt_trader.features.brokerages.core.guarded_broker import bypass_order_guard
 from gpt_trader.features.live_trade.engines.base import CoordinatorContext
 from gpt_trader.features.live_trade.engines.strategy import TradingEngine
 from gpt_trader.features.live_trade.lifecycle import (
@@ -265,25 +266,26 @@ class TradingBot:
                         # Use absolute quantity for order
                         quantity = abs(pos.quantity)
 
-                        # Direct broker call bypasses guard stack intentionally
-                        if broker_calls is not None and asyncio.iscoroutinefunction(
-                            getattr(broker_calls, "__call__", None)
-                        ):
-                            await broker_calls(
-                                self.broker.place_order,
-                                pos.symbol,
-                                side,
-                                OrderType.MARKET,
-                                quantity,
-                            )
-                        else:
-                            await asyncio.to_thread(
-                                self.broker.place_order,
-                                pos.symbol,
-                                side,
-                                OrderType.MARKET,
-                                quantity,
-                            )
+                        # Direct broker call bypasses guard stack intentionally.
+                        with bypass_order_guard("emergency_shutdown"):
+                            if broker_calls is not None and asyncio.iscoroutinefunction(
+                                getattr(broker_calls, "__call__", None)
+                            ):
+                                await broker_calls(
+                                    self.broker.place_order,
+                                    pos.symbol,
+                                    side,
+                                    OrderType.MARKET,
+                                    quantity,
+                                )
+                            else:
+                                await asyncio.to_thread(
+                                    self.broker.place_order,
+                                    pos.symbol,
+                                    side,
+                                    OrderType.MARKET,
+                                    quantity,
+                                )
                         logger.info(
                             "Emergency close submitted",
                             symbol=pos.symbol,

@@ -10,6 +10,7 @@ from typing import Any
 
 import yaml
 
+from gpt_trader.config.strategy_types import resolve_strategy_type
 from gpt_trader.features.optimize.objectives.factories import (
     create_execution_quality_objective,
     create_perpetuals_objective,
@@ -64,7 +65,8 @@ class OptimizeCliConfig:
     study: StudySettings
     objective_name: str
     objective_kwargs: dict[str, Any] = field(default_factory=dict)
-    strategy_type: str = "perps_baseline"
+    strategy_type: str = "baseline"
+    strategy_variant: str | None = None
     symbols: list[str] = field(default_factory=lambda: ["BTC-USD"])
     backtest: BacktestSettings | None = None
     parameter_overrides: dict[str, dict[str, Any]] = field(default_factory=dict)
@@ -175,7 +177,11 @@ def parse_config(raw_config: dict[str, Any]) -> OptimizeCliConfig:
 
     # Parse strategy
     strategy_raw = raw_config.get("strategy", {})
-    strategy_type = strategy_raw.get("type", "perps_baseline")
+    strategy_type_raw = strategy_raw.get("type", "baseline")
+    strategy_variant_raw = strategy_raw.get("variant")
+    strategy_type, strategy_variant = resolve_strategy_type(
+        strategy_type_raw, variant=strategy_variant_raw
+    )
     symbols = strategy_raw.get("symbols", ["BTC-USD"])
 
     # Parse backtest settings
@@ -209,6 +215,7 @@ def parse_config(raw_config: dict[str, Any]) -> OptimizeCliConfig:
         objective_name=objective_name,
         objective_kwargs=objective_kwargs,
         strategy_type=strategy_type,
+        strategy_variant=strategy_variant,
         symbols=symbols if isinstance(symbols, list) else [symbols],
         backtest=backtest,
         parameter_overrides=parameter_overrides,
@@ -248,7 +255,10 @@ def merge_cli_overrides(
 
     # Override strategy settings
     if cli_args.get("strategy"):
-        config.strategy_type = cli_args["strategy"]
+        strategy_type, strategy_variant = resolve_strategy_type(cli_args["strategy"])
+        config.strategy_type = strategy_type
+        if strategy_variant is not None:
+            config.strategy_variant = strategy_variant
     if cli_args.get("symbols"):
         config.symbols = cli_args["symbols"]
 
@@ -417,6 +427,8 @@ def create_default_config(
     return OptimizeCliConfig(
         study=study,
         objective_name=objective,
+        strategy_type="baseline",
+        strategy_variant="perps",
         symbols=symbols or ["BTC-USD"],
         backtest=backtest,
     )

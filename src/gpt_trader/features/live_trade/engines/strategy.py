@@ -75,10 +75,7 @@ from gpt_trader.features.live_trade.lifecycle import (
     LifecycleStateMachine,
 )
 from gpt_trader.features.live_trade.risk.manager import ValidationError
-from gpt_trader.features.live_trade.strategies.perps_baseline import (
-    Action,
-    Decision,
-)
+from gpt_trader.core import Action, Decision
 from gpt_trader.logging.correlation import correlation_context
 from gpt_trader.monitoring.alert_types import AlertSeverity
 from gpt_trader.monitoring.health_checks import HealthCheckRunner
@@ -1844,13 +1841,8 @@ class TradingEngine(BaseEngine):
 
         # 1. Determine fraction
         fraction = Decimal("0.1")  # Default
-        if hasattr(self.strategy, "config") and self.strategy.config.position_fraction:
-            fraction = Decimal(str(self.strategy.config.position_fraction))
-        elif (
-            hasattr(self.context.config, "perps_position_fraction")
-            and self.context.config.perps_position_fraction is not None
-        ):
-            fraction = Decimal(str(self.context.config.perps_position_fraction))
+        if hasattr(self.context.config, "risk") and self.context.config.risk:
+            fraction = Decimal(str(self.context.config.risk.position_fraction))
 
         # 2. Calculate raw quantity
         if price == 0:

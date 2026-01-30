@@ -1,25 +1,25 @@
 # System Architecture
 
-## ⚠️ Architecture Transition (Complete)
+## ⚠️ Architecture Transition (Stabilizing)
 
 **Important Note for Developers and Agents:**
 
-This project completed a major architectural migration from a legacy "Orchestration" pattern (monolithic builders) to a modern **Dependency Injection** pattern using `ApplicationContainer`.
+This project completed a major architectural migration from a legacy "Orchestration" pattern (monolithic builders) to a modern **Dependency Injection** pattern using `ApplicationContainer`. Consolidation and cleanup are still in progress.
 
 - **Legacy Core:** removed during the DI migration (no longer present)
 - **Modern Core:** `src/gpt_trader/app/` (Composition Root) and `src/gpt_trader/features/` (Vertical Slices)
-- **Migration status:** complete (legacy orchestration removed; DI container is canonical)
+- **Migration status:** DI container is canonical; remaining consolidation is ongoing
 
 While this document describes the **current architecture**, you may still encounter legacy references in documentation. Always prefer the patterns defined in `src/gpt_trader/app` and `src/gpt_trader/features`.
 
 ---
 status: current
-last-updated: 2026-01-24
+last-updated: 2026-01-30
 ---
 
 ## Current State
 
-GPT-Trader is a production-ready Coinbase Advanced Trade trading system supporting **spot** and **CFM futures** trading. INTX perpetuals code paths remain compiled and testable but require international account access.
+GPT-Trader is an in-progress Coinbase Advanced Trade trading system under active stabilization, supporting **spot** and **CFM futures** trading. INTX perpetuals code paths remain compiled and testable but require international account access.
 
 > 📘 **Trust reminder:** Confirm key details against current source + generated inventories (`var/agents/**`) before acting on them.
 
@@ -71,6 +71,10 @@ src/gpt_trader/
 
 > **Note:** `src/gpt_trader/backtesting/` is the canonical backtesting framework. `features/research/` hosts
 > research workflows and adapters that build on top of the backtesting package.
+>
+> **Adapter Order Metadata:** research backtests can pass order intent via `Decision.indicators` when using
+> the adapter (`features/research/backtesting/adapter.py`). Supported keys: `order_type` (`market`, `limit`,
+> `stop`, `stop_limit`), `price`/`limit_price`, `stop_price`, `tif`/`time_in_force`, and `reduce_only`.
 
 ### High-Level Flow
 

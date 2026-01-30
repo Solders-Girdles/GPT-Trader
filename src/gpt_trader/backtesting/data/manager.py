@@ -1,7 +1,7 @@
 """Historical data manager with caching."""
 
 import json
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -30,6 +30,16 @@ GRANULARITY_TO_TIMEDELTA = {
 }
 
 
+class HistoricalDataUnavailableError(RuntimeError):
+    """Raised when historical data is missing in offline mode."""
+
+
+def _ensure_utc(value: datetime) -> datetime:
+    if value.tzinfo is None:
+        return value.replace(tzinfo=UTC)
+    return value.astimezone(UTC)
+
+
 class HistoricalDataManager(IHistoricalDataProvider):
     """
     Manage historical candle data with file-based caching and quality validation.
@@ -44,12 +54,13 @@ class HistoricalDataManager(IHistoricalDataProvider):
 
     def __init__(
         self,
-        fetcher: CoinbaseHistoricalFetcher,
+        fetcher: CoinbaseHistoricalFetcher | None,
         cache_dir: Path,
         validate_quality: bool = True,
         reject_on_quality_failure: bool = False,
         spike_threshold_pct: float = 15.0,
         volume_anomaly_std: float = 3.0,
+        allow_fetch: bool = True,
     ):
         """
         Initialize data manager.
@@ -61,10 +72,15 @@ class HistoricalDataManager(IHistoricalDataProvider):
             reject_on_quality_failure: If True, reject data that fails quality checks
             spike_threshold_pct: Price change threshold for spike detection
             volume_anomaly_std: Standard deviations for volume anomaly detection
+            allow_fetch: When False, never fetch from API (offline/cache-only mode)
         """
         self.fetcher = fetcher
         self.cache_dir = Path(cache_dir)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
+        self.allow_fetch = allow_fetch
+
+        if self.allow_fetch and self.fetcher is None:
+            raise ValueError("HistoricalDataManager requires a fetcher when allow_fetch=True")
 
         # Quality validation settings
         self.validate_quality = validate_quality
@@ -77,6 +93,8 @@ class HistoricalDataManager(IHistoricalDataProvider):
         # Cache metadata {symbol: {granularity: [(start, end)]}}
         self._coverage_index: dict[str, dict[str, list[tuple[datetime, datetime]]]] = {}
         self._load_coverage_index()
+        if not self.allow_fetch and not self._coverage_index:
+            self._rebuild_coverage_from_cache()
 
         # Track recent quality reports
         self._recent_quality_reports: dict[str, CandleQualityReport] = {}
@@ -100,8 +118,13 @@ class HistoricalDataManager(IHistoricalDataProvider):
         Returns:
             List of candles sorted by timestamp
         """
+        start = _ensure_utc(start)
+        end = _ensure_utc(end)
+
         # Check cache
-        cached_candles = self._read_from_cache(symbol, granularity, start, end)
+        cached_candles = self._normalize_candles(
+            self._read_from_cache(symbol, granularity, start, end)
+        )
 
         # Identify gaps
         gaps = self._identify_gaps(symbol, granularity, start, end)
@@ -109,6 +132,26 @@ class HistoricalDataManager(IHistoricalDataProvider):
         if not gaps:
             # All data in cache
             return cached_candles
+
+        if not self.allow_fetch:
+            logger.error(
+                "Historical data missing in offline mode",
+                symbol=symbol,
+                granularity=granularity,
+                missing_ranges=[(g[0].isoformat(), g[1].isoformat()) for g in gaps[:3]],
+                missing_range_count=len(gaps),
+                cache_dir=str(self.cache_dir),
+                operation="get_candles",
+            )
+            raise HistoricalDataUnavailableError(
+                f"Missing cached data for {symbol} {granularity} "
+                f"({len(gaps)} gap(s)) in offline mode."
+            )
+
+        if self.fetcher is None:
+            raise HistoricalDataUnavailableError(
+                f"Historical fetcher unavailable for {symbol} {granularity}."
+            )
 
         # Fetch missing data
         fetched_candles = []
@@ -119,6 +162,7 @@ class HistoricalDataManager(IHistoricalDataProvider):
                 start=gap_start,
                 end=gap_end,
             )
+            gap_candles = self._normalize_candles(gap_candles)
             fetched_candles.extend(gap_candles)
 
             # Update cache
@@ -151,6 +195,11 @@ class HistoricalDataManager(IHistoricalDataProvider):
                 return []
 
         return all_candles
+
+    def _normalize_candles(self, candles: list[Candle]) -> list[Candle]:
+        for candle in candles:
+            candle.ts = _ensure_utc(candle.ts)
+        return candles
 
     def _validate_candles(
         self,
@@ -231,6 +280,69 @@ class HistoricalDataManager(IHistoricalDataProvider):
         safe_symbol = symbol.replace("/", "_").replace("-", "_")
         return self.cache_dir / f"{safe_symbol}_{granularity}.json"
 
+    def _parse_cache_filename(self, filename: str) -> tuple[str, str] | None:
+        if not filename.endswith(".json"):
+            return None
+        if filename == "_coverage_index.json":
+            return None
+
+        for granularity in sorted(GRANULARITY_TO_TIMEDELTA.keys(), key=len, reverse=True):
+            suffix = f"_{granularity}.json"
+            if filename.endswith(suffix):
+                safe_symbol = filename[: -len(suffix)]
+                symbol = safe_symbol.replace("_", "-")
+                return symbol, granularity
+
+        return None
+
+    def _read_all_cached_candles(self, cache_path: Path) -> list[Candle]:
+        try:
+            with open(cache_path) as f:
+                data = json.load(f)
+        except (json.JSONDecodeError, OSError, KeyError) as exc:
+            logger.error(
+                "Failed to read cache file for coverage rebuild",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="rebuild_coverage",
+                cache_path=str(cache_path),
+            )
+            return []
+
+        candles: list[Candle] = []
+        for item in data.get("candles", []):
+            ts = _ensure_utc(datetime.fromisoformat(item["ts"]))
+            candles.append(
+                Candle(
+                    ts=ts,
+                    open=Decimal(str(item["open"])),
+                    high=Decimal(str(item["high"])),
+                    low=Decimal(str(item["low"])),
+                    close=Decimal(str(item["close"])),
+                    volume=Decimal(str(item["volume"])),
+                )
+            )
+        candles.sort(key=lambda c: c.ts)
+        return candles
+
+    def _rebuild_coverage_from_cache(self) -> None:
+        """Rebuild coverage index from cached candle files."""
+        if not self.cache_dir.exists():
+            return
+
+        for cache_path in self.cache_dir.glob("*.json"):
+            parsed = self._parse_cache_filename(cache_path.name)
+            if parsed is None:
+                continue
+            symbol, granularity = parsed
+            candles = self._read_all_cached_candles(cache_path)
+            if not candles:
+                continue
+
+            start = candles[0].ts
+            end = candles[-1].ts + GRANULARITY_TO_TIMEDELTA.get(granularity, timedelta())
+            self._update_coverage(symbol, granularity, start, end)
+
     def _read_from_cache(
         self,
         symbol: str,
@@ -250,7 +362,7 @@ class HistoricalDataManager(IHistoricalDataProvider):
 
             candles = []
             for item in data.get("candles", []):
-                ts = datetime.fromisoformat(item["ts"])
+                ts = _ensure_utc(datetime.fromisoformat(item["ts"]))
                 if start <= ts < end:
                     candles.append(
                         Candle(
@@ -349,6 +461,9 @@ class HistoricalDataManager(IHistoricalDataProvider):
         Returns:
             List of (gap_start, gap_end) tuples
         """
+        start = _ensure_utc(start)
+        end = _ensure_utc(end)
+
         if symbol not in self._coverage_index:
             # No coverage at all
             return [(start, end)]
@@ -362,6 +477,8 @@ class HistoricalDataManager(IHistoricalDataProvider):
         # Identify uncovered segments by merging coverage and subtracting from the request window.
         clamped: list[tuple[datetime, datetime]] = []
         for cov_start, cov_end in covered_ranges:
+            cov_start = _ensure_utc(cov_start)
+            cov_end = _ensure_utc(cov_end)
             if cov_start >= cov_end:
                 continue
             if cov_end <= start or cov_start >= end:
@@ -410,7 +527,9 @@ class HistoricalDataManager(IHistoricalDataProvider):
         if granularity not in self._coverage_index[symbol]:
             self._coverage_index[symbol][granularity] = []
 
-        self._coverage_index[symbol][granularity].append((start, end))
+        self._coverage_index[symbol][granularity].append(
+            (_ensure_utc(start), _ensure_utc(end))
+        )
         self._save_coverage_index()
 
     def _load_coverage_index(self) -> None:
@@ -429,7 +548,11 @@ class HistoricalDataManager(IHistoricalDataProvider):
                 self._coverage_index[symbol] = {}
                 for granularity, ranges in granularities.items():
                     self._coverage_index[symbol][granularity] = [
-                        (datetime.fromisoformat(r[0]), datetime.fromisoformat(r[1])) for r in ranges
+                        (
+                            _ensure_utc(datetime.fromisoformat(r[0])),
+                            _ensure_utc(datetime.fromisoformat(r[1])),
+                        )
+                        for r in ranges
                     ]
         except (json.JSONDecodeError, KeyError) as exc:
             logger.error(
@@ -463,6 +586,7 @@ def create_coinbase_data_provider(
     reject_on_quality_failure: bool = False,
     spike_threshold_pct: float = 15.0,
     volume_anomaly_std: float = 3.0,
+    allow_fetch: bool = True,
 ) -> HistoricalDataManager:
     """
     Factory function to create a HistoricalDataManager with Coinbase fetcher.
@@ -477,6 +601,7 @@ def create_coinbase_data_provider(
         reject_on_quality_failure: If True, reject data that fails quality checks
         spike_threshold_pct: Price change threshold for spike detection (default 15%)
         volume_anomaly_std: Standard deviations for volume anomaly detection
+        allow_fetch: When False, never fetch from API (offline/cache-only mode)
 
     Returns:
         Configured HistoricalDataManager instance
@@ -516,4 +641,40 @@ def create_coinbase_data_provider(
         reject_on_quality_failure=reject_on_quality_failure,
         spike_threshold_pct=spike_threshold_pct,
         volume_anomaly_std=volume_anomaly_std,
+        allow_fetch=allow_fetch,
+    )
+
+
+def create_offline_data_provider(
+    cache_dir: Path | str | None = None,
+    validate_quality: bool = True,
+    reject_on_quality_failure: bool = False,
+    spike_threshold_pct: float = 15.0,
+    volume_anomaly_std: float = 3.0,
+) -> HistoricalDataManager:
+    """
+    Create an offline-only HistoricalDataManager (no API fetches).
+
+    Args:
+        cache_dir: Directory for cached candle storage.
+        validate_quality: Whether to run quality checks on cached data.
+        reject_on_quality_failure: If True, reject data that fails quality checks.
+        spike_threshold_pct: Price change threshold for spike detection.
+        volume_anomaly_std: Standard deviations for volume anomaly detection.
+    """
+    if cache_dir is None:
+        from gpt_trader.config.path_registry import BACKTEST_DATA_DIR
+
+        cache_dir = BACKTEST_DATA_DIR
+    else:
+        cache_dir = Path(cache_dir)
+
+    return HistoricalDataManager(
+        fetcher=None,
+        cache_dir=cache_dir,
+        validate_quality=validate_quality,
+        reject_on_quality_failure=reject_on_quality_failure,
+        spike_threshold_pct=spike_threshold_pct,
+        volume_anomaly_std=volume_anomaly_std,
+        allow_fetch=False,
     )

@@ -11,6 +11,8 @@ __all__ = [
     "LOG_DIR",
     "RESULTS_DIR",
     "RUNTIME_DATA_DIR",
+    "STRATEGY_ARTIFACT_DIR",
+    "BACKTEST_DATA_DIR",
     "COINBASE_TRADER_RUNTIME_DIR",
     "DEFAULT_EVENT_STORE_DIR",
     "ensure_directories",
@@ -28,6 +30,8 @@ RESULTS_DIR = VAR_DIR / "results"
 RUNTIME_DATA_DIR = PROJECT_ROOT / "runtime_data"
 COINBASE_TRADER_RUNTIME_DIR = RUNTIME_DATA_DIR
 DEFAULT_EVENT_STORE_DIR = COINBASE_TRADER_RUNTIME_DIR / "shared"
+STRATEGY_ARTIFACT_DIR = RUNTIME_DATA_DIR / "strategy_artifacts"
+BACKTEST_DATA_DIR = RUNTIME_DATA_DIR / "datasets" / "candles"
 
 
 def ensure_directories(paths: Iterable[Path] | None = None) -> None:
@@ -38,6 +42,8 @@ def ensure_directories(paths: Iterable[Path] | None = None) -> None:
             LOG_DIR,
             RESULTS_DIR,
             RUNTIME_DATA_DIR,
+            STRATEGY_ARTIFACT_DIR,
+            BACKTEST_DATA_DIR,
             COINBASE_TRADER_RUNTIME_DIR,
         )
     )

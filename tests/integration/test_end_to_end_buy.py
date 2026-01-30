@@ -2,13 +2,15 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from gpt_trader.app.config import BotConfig
+from decimal import Decimal
+
+from gpt_trader.app.config import BotConfig, BotRiskConfig
 from gpt_trader.app.container import (
     ApplicationContainer,
     clear_application_container,
     set_application_container,
 )
-from gpt_trader.features.live_trade.strategies.perps_baseline import Action, Decision
+from gpt_trader.core import Action, Decision
 
 pytestmark = pytest.mark.integration
 
@@ -26,7 +28,9 @@ async def test_end_to_end_buy_execution(monkeypatch: pytest.MonkeyPatch):
         symbols=["BTC-USD"],
         interval=0.01,  # Fast interval for testing
         mock_broker=True,  # Use deterministic broker
-        perps_position_fraction=0.04,  # 4% position sizing (must be < 5% security limit)
+        risk=BotRiskConfig(
+            position_fraction=Decimal("0.04")
+        ),  # 4% position sizing (must be < 5% security limit)
     )
 
     # 2. Create container, register globally, and create bot

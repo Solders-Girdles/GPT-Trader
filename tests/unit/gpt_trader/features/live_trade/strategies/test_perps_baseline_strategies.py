@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from gpt_trader.features.live_trade.strategies.perps_baseline.strategy import Action
+from gpt_trader.core import Action
 from tests.unit.gpt_trader.features.live_trade.strategies.perps_baseline_test_helpers import (
     make_downtrend,
     make_uptrend,

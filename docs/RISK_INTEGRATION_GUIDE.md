@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2026-01-23
+last-updated: 2026-01-30
 ---
 
 The spot-first GPT-Trader architecture layers risk controls across configuration,
@@ -59,10 +59,13 @@ Pre-trade validation lives in `features/live_trade/execution/validation.py`
 
 ## Position Sizing & Exposure
 
-- Strategy-level sizing uses `PerpsStrategyConfig.position_fraction` in
-  `features/live_trade/strategies/perps_baseline/strategy.py`.
-- Bot-level risk sizing uses `BotRiskConfig.position_fraction` and is adapted to
+- **Live sizing is canonical in BotRiskConfig**: `BotRiskConfig.position_fraction`
+  drives `TradingEngine` sizing and is adapted to
   `RiskConfig.max_position_pct_per_symbol` in `app/containers/risk_validation.py`.
+- `perps_position_fraction` is a legacy alias that syncs into `BotRiskConfig`
+  on config load; prefer setting `risk.position_fraction`.
+- Strategy-level sizing (`PerpsStrategyConfig.position_fraction`) is retained
+  for research/backtests but is ignored for live trading.
 - Equity and exposure calculations for guards are handled by
   `features/live_trade/engines/equity_calculator.py`.
 - Research/backtesting sizing helpers live in

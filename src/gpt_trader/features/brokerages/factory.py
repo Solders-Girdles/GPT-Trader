@@ -15,6 +15,7 @@ from gpt_trader.features.brokerages.coinbase.client.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.credentials import resolve_coinbase_credentials
 from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
 from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
+from gpt_trader.features.brokerages.core.guarded_broker import GuardedBroker
 from gpt_trader.features.brokerages.mock import DeterministicBroker
 from gpt_trader.features.brokerages.paper import HybridPaperBroker
 from gpt_trader.features.brokerages.read_only import ReadOnlyBroker
@@ -116,5 +117,8 @@ def create_brokerage(
             bot_id=bot_id,
         )
         logger.info("Dry-run enabled: broker write calls are suppressed")
+    elif not config.mock_broker and not config.paper_fills:
+        broker = GuardedBroker(broker, strict=True)
+        logger.info("Order guard enabled for live broker execution")
 
     return broker, event_store, market_data, product_catalog

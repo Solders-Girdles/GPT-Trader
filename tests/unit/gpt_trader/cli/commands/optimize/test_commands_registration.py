@@ -6,7 +6,16 @@ import argparse
 
 import pytest
 
-from gpt_trader.cli.commands.optimize import apply, compare, export, resume, run, view
+from gpt_trader.cli.commands.optimize import (
+    apply,
+    artifact_activate,
+    artifact_publish,
+    compare,
+    export,
+    resume,
+    run,
+    view,
+)
 from gpt_trader.cli.commands.optimize import list as list_cmd
 
 
@@ -59,4 +68,16 @@ class TestOptimizeSubcommandRegistration:
         """Test apply subcommand registers."""
         apply.register(subparsers)
         parser = subparsers.choices.get("apply")
+        assert parser is not None
+
+    def test_artifact_publish_register(self, subparsers):
+        """Test artifact-publish subcommand registers."""
+        artifact_publish.register(subparsers)
+        parser = subparsers.choices.get("artifact-publish")
+        assert parser is not None
+
+    def test_artifact_activate_register(self, subparsers):
+        """Test artifact-activate subcommand registers."""
+        artifact_activate.register(subparsers)
+        parser = subparsers.choices.get("artifact-activate")
         assert parser is not None

@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2026-01-24
+last-updated: 2026-01-30
 ---
 
 These guidelines cover contributions to the spot-first `gpt_trader` stack. Older
@@ -17,6 +17,14 @@ need to review historical practices.
   (`src/gpt_trader/app/container.py`) instead of hidden imports. See
   `docs/DI_POLICY.md` for detailed guidance on when to use container vs
   singletons.
+- **Strategy contracts**: Standard strategies return `gpt_trader.core.Action` +
+  `gpt_trader.core.Decision`. Hybrid strategies emit `HybridDecision` and are
+  adapted to the standard contract via `HybridStrategyBase`.
+- **Research handoff**: Use Strategy Artifacts for research -> live promotion
+  (`docs/STRATEGY_ARTIFACTS.md`).
+- **Research backtests**: The research backtesting adapter accepts order intent via
+  `Decision.indicators` (`order_type`, `price`/`limit_price`, `stop_price`,
+  `tif`/`time_in_force`, `reduce_only`) when using the canonical broker adapter.
 - **Configuration-first**: Extend `BotConfig` when new runtime options are
   required; expose overrides through the CLI when appropriate.
 - **Modular refactoring**: Extract large modules (>500 lines) into focused
@@ -59,6 +67,9 @@ bypass guards:
 | `src/gpt_trader/features/live_trade/bot.py` (`TradingBot.flatten_and_stop()`) | Emergency position closure (must succeed even during risk trips) |
 | `src/gpt_trader/features/optimize/` | Optimization/backtesting flows using simulated brokers |
 
+When a direct broker call is required (emergency shutdown only), use the
+`bypass_order_guard()` context manager to document the reason in logs.
+
 ## Code Style
 
 - Python 3.12 with Ruff + Black defaults (line length 100).
@@ -87,6 +98,8 @@ bypass guards:
   submodule has independent test coverage. Maintain backward compatibility by
   keeping facade modules (e.g., `risk/__init__.py`) that re-export the public
   API.
+- **Offline backtests**: Set `BACKTEST_DATA_SOURCE=offline` (and optionally
+  `BACKTEST_DATA_DIR`) to force cache-only datasets and avoid API rate limits.
 
 ## Continuous Integration
 

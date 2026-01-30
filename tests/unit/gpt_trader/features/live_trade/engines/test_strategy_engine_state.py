@@ -9,7 +9,7 @@ import pytest
 
 import gpt_trader.security.security_validator as security_validator_module
 from gpt_trader.core import Balance, OrderSide, OrderType, Position
-from gpt_trader.features.live_trade.strategies.perps_baseline import Action, Decision
+from gpt_trader.core import Action, Decision
 
 
 def test_reset_daily_tracking_recomputes_equity(engine):
@@ -168,7 +168,7 @@ async def test_reduce_only_clamps_quantity_to_prevent_position_flip(
 ):
     """Test that reduce-only mode clamps order quantity to prevent position flip."""
     engine.strategy.decide.return_value = Decision(Action.SELL, "test")
-    engine.strategy.config.position_fraction = Decimal("0.2")
+    engine.context.config.risk.position_fraction = Decimal("0.2")
     engine.context.broker.get_ticker.return_value = {"price": "50000"}
     engine.context.broker.list_balances.return_value = [
         Balance(asset="USD", total=Decimal("500000"), available=Decimal("500000"))
@@ -214,7 +214,7 @@ async def test_reduce_only_blocks_new_position_on_empty_symbol(
 ):
     """Test that reduce-only mode blocks orders for symbols with no position."""
     engine.strategy.decide.return_value = Decision(Action.BUY, "test")
-    engine.strategy.config.position_fraction = Decimal("0.1")
+    engine.context.config.risk.position_fraction = Decimal("0.1")
     engine.context.broker.get_ticker.return_value = {"price": "50000"}
     engine.context.broker.list_balances.return_value = [
         Balance(asset="USD", total=Decimal("10000"), available=Decimal("10000"))

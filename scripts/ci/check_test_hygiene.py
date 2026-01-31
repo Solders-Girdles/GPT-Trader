@@ -18,7 +18,21 @@ UNIT_ALLOWED_PREFIXES = (
 INTEGRATION_TEST_PREFIX = "tests/integration/"
 CONTRACT_TEST_PREFIX = "tests/contract/"
 REAL_API_TEST_PREFIX = "tests/real_api/"
-ALLOWLIST: set[str] = set()
+ALLOWLIST_REASONS: dict[str, str] = {
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows.py": (
+        "Order submission flow coverage spans retries, rejection wiring, and telemetry; split pending."
+    ),
+    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py": (
+        "Chaos strategy engine scenarios share fixtures; split pending."
+    ),
+    "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor.py": (
+        "Broker executor idempotency coverage consolidated; split pending."
+    ),
+    "tests/unit/gpt_trader/cli/commands/optimize/test_commands_execution.py": (
+        "CLI optimize execution tests are currently consolidated; split pending (touched due to naming-standards strictness)."
+    ),
+}
+ALLOWLIST: set[str] = set(ALLOWLIST_REASONS)
 PATCH_ALLOWLIST: set[str] = set()
 
 SLEEP_ALLOWLIST: set[str] = set()

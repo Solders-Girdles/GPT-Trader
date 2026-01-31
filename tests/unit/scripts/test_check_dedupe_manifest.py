@@ -132,9 +132,7 @@ def test_validate_manifest_in_progress_invalid_added_date() -> None:
 
     problems = check_dedupe_manifest.validate_manifest(manifest)
 
-    assert problems == [
-        "Cluster alpha: invalid 'added' date format (expected YYYY-MM-DD)"
-    ]
+    assert problems == ["Cluster alpha: invalid 'added' date format (expected YYYY-MM-DD)"]
 
 
 def test_validate_manifest_in_progress_stale_without_pr_url(monkeypatch) -> None:

@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6049,
-    "total_files": 721,
+    "total_tests": 6062,
+    "total_files": 722,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 5884,
+    "unit": 5897,
     "asyncio": 347,
     "parametrize": 154,
     "property": 82,
@@ -676,6 +676,9 @@
     ],
     "test_chaos.py": [
       "tests/unit/support/test_chaos.py"
+    ],
+    "test_check_dedupe_manifest.py": [
+      "tests/unit/scripts/test_check_dedupe_manifest.py"
     ],
     "test_check_import_boundaries.py": [
       "tests/unit/scripts/test_check_import_boundaries.py"
@@ -55787,6 +55790,112 @@
       {
         "name": "test_once_exit_codes",
         "line": 131,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/scripts/test_check_dedupe_manifest.py": [
+      {
+        "name": "test_load_manifest_missing_returns_empty",
+        "line": 25,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_load_manifest_empty_raises",
+        "line": 32,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_load_manifest_top_level_mapping_required",
+        "line": 41,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_load_manifest_version_must_be_one",
+        "line": 50,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_load_manifest_clusters_must_be_mapping",
+        "line": 59,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_validate_manifest_empty_is_ok",
+        "line": 68,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_validate_manifest_reports_missing_required_fields",
+        "line": 72,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_validate_manifest_reports_invalid_fields",
+        "line": 86,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_validate_manifest_cluster_must_be_mapping",
+        "line": 110,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_validate_manifest_in_progress_missing_owner",
+        "line": 118,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_validate_manifest_in_progress_invalid_added_date",
+        "line": 128,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_validate_manifest_in_progress_stale_without_pr_url",
+        "line": 138,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_validate_manifest_done_requires_owner_and_pr_url",
+        "line": 165,
         "markers": [
           "unit"
         ],

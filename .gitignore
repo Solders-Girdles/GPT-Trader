@@ -129,3 +129,4 @@ preflight_report_*.json
 var/agents/health/health_report.*
 var/agents/health/chaos_smoke.*
 var/agents/health/chaos_week.*
+var/agents/health/agent_regenerate_verify.txt

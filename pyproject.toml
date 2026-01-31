@@ -36,6 +36,7 @@ observability = [
 
 [project.scripts]
 gpt-trader = "gpt_trader.cli:main"
+local-ci = "gpt_trader.ci.local_ci:main"
 # Agent tools - first-class commands for AI-assisted development
 agent-check = "gpt_trader.agents.cli:check"
 agent-impact = "gpt_trader.agents.cli:impact"

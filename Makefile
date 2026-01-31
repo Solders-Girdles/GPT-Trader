@@ -1,4 +1,4 @@
-.PHONY: dev-up dev-down lint typecheck test smoke preflight preflight-readiness dash cov clean clean-dry-run scaffold-slice \
+.PHONY: dev-up dev-down lint typecheck docs-audit tui-css-check test-guardrails ci-required test smoke preflight preflight-readiness dash cov clean clean-dry-run scaffold-slice \
 	readiness-window legacy-bundle agent-setup agent-check agent-impact agent-impact-full agent-map agent-tests agent-risk \
 	agent-naming agent-health agent-health-fast agent-health-full agent-chaos-smoke agent-chaos-week \
 	agent-regenerate agent-verify agent-docs-links canary-liveness canary-liveness-check canary-daily canary-decision-traces \
@@ -47,6 +47,38 @@ lint:
 
 typecheck:
 	uv run mypy src
+
+docs-audit:
+	uv run python scripts/maintenance/docs_link_audit.py
+	uv run python scripts/maintenance/docs_reachability_check.py
+
+tui-css-check:
+	uv run python scripts/ci/check_tui_css_up_to_date.py
+
+test-guardrails:
+	uv run python scripts/ci/check_test_hygiene.py
+	uv run python scripts/ci/check_legacy_patterns.py
+	uv run python scripts/ci/check_legacy_test_triage.py
+	uv run python scripts/ci/check_dedupe_manifest.py --strict
+	$(MAKE) test-triage-check
+
+ci-required:
+	$(MAKE) lint
+	uv run ruff check scripts/ops scripts/backtest_runner.py scripts/perps_dashboard.py scripts/monitoring/export_metrics.py scripts/monitoring/canary_reduce_only_test.py scripts/monitoring/manage_logs.py scripts/production_preflight.py scripts/readiness_window.py scripts/test_api_connectivity.py scripts/test_paper_broker.py
+	@if grep -rn -E "(from|import)\\s+gpt_trader\\.orchestration" src tests scripts --include="*.py"; then \
+		echo "::error::gpt_trader.orchestration was removed in v3.0"; \
+		echo "Use canonical paths: app.*, features.live_trade.*, features.brokerages.*"; \
+		echo "See docs/DEPRECATIONS.md for migration guidance."; \
+		exit 1; \
+	fi
+	@echo "No orchestration imports found - package was removed in v3.0."
+	uv run python scripts/ci/check_deprecation_registry.py
+	$(MAKE) docs-audit
+	$(MAKE) typecheck
+	uv run agent-regenerate --verify
+	$(MAKE) tui-css-check
+	$(MAKE) test-guardrails
+	GPT_TRADER_STRICT_CONTAINER=1 PYTHONWARNINGS=default uv run pytest tests/unit -n auto -q --ignore-glob=tests/unit/gpt_trader/tui/test_snapshots_*.py
 
 legacy-patterns:
 	uv run python scripts/ci/check_legacy_patterns.py

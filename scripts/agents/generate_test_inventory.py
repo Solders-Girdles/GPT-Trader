@@ -292,7 +292,7 @@ def categorize_by_path(inventory: dict[str, list[dict[str, Any]]]) -> dict[str, 
     """Organize tests by path structure."""
     categories: dict[str, list[str]] = defaultdict(list)
 
-    for file_path in inventory.keys():
+    for file_path in sorted(inventory):
         parts = Path(file_path).parts
 
         # Extract category from path (e.g., tests/unit/gpt_trader/cli -> cli)
@@ -300,7 +300,28 @@ def categorize_by_path(inventory: dict[str, list[dict[str, Any]]]) -> dict[str, 
             category = parts[3]  # e.g., "cli", "features", "config"
             categories[category].append(file_path)
 
-    return dict(categories)
+    return {
+        category: sorted(paths)
+        for category, paths in sorted(categories.items())
+    }
+
+
+def sort_test_inventory(
+    inventory: dict[str, list[dict[str, Any]]],
+) -> dict[str, list[dict[str, Any]]]:
+    """Return inventory with deterministic file/test ordering."""
+    sorted_inventory: dict[str, list[dict[str, Any]]] = {}
+    for file_path in sorted(inventory):
+        tests = inventory[file_path]
+        sorted_tests = sorted(
+            tests,
+            key=lambda test: (
+                test.get("line", 0),
+                test.get("name", ""),
+            ),
+        )
+        sorted_inventory[file_path] = sorted_tests
+    return sorted_inventory
 
 
 def generate_test_inventory(
@@ -308,8 +329,9 @@ def generate_test_inventory(
     marker_defs: dict[str, str],
 ) -> dict[str, Any]:
     """Generate the complete test inventory."""
-    inventory = scan_results["inventory"]
+    inventory = sort_test_inventory(scan_results["inventory"])
     path_categories = categorize_by_path(inventory)
+    marker_defs_sorted = dict(sorted(marker_defs.items(), key=lambda item: item[0]))
 
     # Group markers by category (from pytest.ini comments)
     marker_categories = {
@@ -347,7 +369,7 @@ def generate_test_inventory(
             "total_files": scan_results["total_files"],
             "markers_used": len(scan_results["marker_counts"]),
         },
-        "marker_definitions": marker_defs,
+        "marker_definitions": marker_defs_sorted,
         "marker_categories": marker_categories,
         "marker_counts": dict(
             sorted(scan_results["marker_counts"].items(), key=lambda x: (-x[1], x[0]))
@@ -460,7 +482,8 @@ def build_source_test_map(imports_by_file: dict[str, list[str]]) -> dict[str, An
     source_paths: dict[str, str] = {}
     unresolved: dict[str, list[str]] = defaultdict(list)
 
-    for test_file, modules in imports_by_file.items():
+    for test_file in sorted(imports_by_file):
+        modules = imports_by_file[test_file]
         unique_modules = sorted(set(modules))
         test_to_sources[test_file] = unique_modules
         for module in unique_modules:
@@ -475,6 +498,9 @@ def build_source_test_map(imports_by_file: dict[str, list[str]]) -> dict[str, An
     source_to_tests_sorted = {
         module: sorted(list(tests)) for module, tests in sorted(source_to_tests.items())
     }
+    source_paths_sorted = {
+        module: source_paths[module] for module in sorted(source_paths)
+    }
 
     return {
         "version": "1.0",
@@ -485,7 +511,7 @@ def build_source_test_map(imports_by_file: dict[str, list[str]]) -> dict[str, An
         },
         "source_to_tests": source_to_tests_sorted,
         "test_to_sources": dict(sorted(test_to_sources.items())),
-        "source_paths": source_paths,
+        "source_paths": source_paths_sorted,
         "unresolved_modules": {
             module: sorted(tests) for module, tests in sorted(unresolved.items())
         },

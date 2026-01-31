@@ -625,6 +625,7 @@
     "event_store": {
       "common_fields": [
         "__all__",
+        "active_strategies",
         "error_message",
         "error_type",
         "event_type",

@@ -1931,6 +1931,44 @@ class TradingEngine(BaseEngine):
                 operation="event_store",
             )
 
+    def _get_strategy_names(self) -> list[str]:
+        active_strategies = getattr(self.strategy, "active_strategies", None)
+        if isinstance(active_strategies, (list, tuple)):
+            strategy_names = [str(name) for name in active_strategies if name]
+            if strategy_names:
+                return strategy_names
+        elif active_strategies:
+            return [str(active_strategies)]
+        return [self.strategy.__class__.__name__]
+
+    def _emit_trade_gate_blocked(
+        self,
+        *,
+        gate: str,
+        symbol: str,
+        side: OrderSide,
+        reason: str,
+        params: dict[str, Any] | None = None,
+        decision_id: str | None = None,
+    ) -> None:
+        payload: dict[str, Any] = {
+            "gate": gate,
+            "symbol": symbol,
+            "side": side.value if hasattr(side, "value") else str(side),
+            "reason": reason,
+            "timestamp": time.time(),
+        }
+        strategy_names = self._get_strategy_names()
+        if strategy_names:
+            payload["strategy"] = strategy_names[0]
+            if len(strategy_names) > 1:
+                payload["strategies"] = strategy_names
+        if params:
+            payload["params"] = params
+        if decision_id is not None:
+            payload["decision_id"] = str(decision_id)
+        self._append_event("trade_gate_blocked", payload)
+
     def _record_guard_events(self, guard_events: list[dict[str, Any]]) -> None:
         if not guard_events:
             return
@@ -2189,6 +2227,17 @@ class TradingEngine(BaseEngine):
                 operation="degradation",
                 stage="order_blocked",
             )
+            self._emit_trade_gate_blocked(
+                gate="degradation_gate",
+                symbol=symbol,
+                side=side,
+                reason=pause_reason,
+                params={
+                    "pause_reason": pause_reason,
+                    "reduce_only": reduce_only_flag,
+                },
+                decision_id=trace.decision_id,
+            )
             self._order_submitter.record_rejection(
                 symbol, side.value, Decimal("0"), price, f"paused:{pause_reason}"
             )
@@ -2229,6 +2278,21 @@ class TradingEngine(BaseEngine):
         if quantity <= 0:
             logger.warning(f"Calculated quantity is {quantity}, skipping order")
             trace.record_outcome("sizing", "blocked", detail="quantity_zero")
+            self._emit_trade_gate_blocked(
+                gate="sizing",
+                symbol=symbol,
+                side=side,
+                reason="quantity_zero",
+                params={
+                    "quantity": str(quantity),
+                    "price": str(price),
+                    "equity": str(equity),
+                    "quantity_override": (
+                        str(quantity_override) if quantity_override is not None else None
+                    ),
+                },
+                decision_id=trace.decision_id,
+            )
             self._order_submitter.record_rejection(
                 symbol, side.value, quantity, price, "quantity_zero"
             )
@@ -2260,6 +2324,17 @@ class TradingEngine(BaseEngine):
                 stage="requested_not_reducing",
             )
             trace.record_outcome("reduce_only", "blocked", detail="requested_not_reducing")
+            self._emit_trade_gate_blocked(
+                gate="reduce_only",
+                symbol=symbol,
+                side=side,
+                reason="requested_not_reducing",
+                params={
+                    "reduce_only_requested": reduce_only_requested,
+                    "is_reducing": is_reducing,
+                },
+                decision_id=trace.decision_id,
+            )
             self._order_submitter.record_rejection(
                 symbol, side.value, quantity, price, "reduce_only_not_reducing"
             )
@@ -2359,6 +2434,7 @@ class TradingEngine(BaseEngine):
         reduce_only_mode = risk_manager.is_reduce_only_mode()
         reduce_only_active = reduce_only_mode or daily_pnl_triggered
         reduce_only_clamped = False
+        current_qty: Decimal | None = None
         if reduce_only_active and is_reducing and current_pos is not None:
             if hasattr(current_pos, "quantity"):
                 current_qty = abs(current_pos.quantity)
@@ -2367,7 +2443,7 @@ class TradingEngine(BaseEngine):
             else:
                 current_qty = Decimal("0")
 
-            if quantity > current_qty:
+            if current_qty is not None and quantity > current_qty:
                 logger.warning(
                     f"Reduce-only: clamping order from {quantity} to {current_qty} "
                     f"to prevent position flip for {symbol}"
@@ -2382,6 +2458,19 @@ class TradingEngine(BaseEngine):
                     "reduce_only",
                     "blocked",
                     detail="reduce_only_empty_position",
+                )
+                self._emit_trade_gate_blocked(
+                    gate="reduce_only",
+                    symbol=symbol,
+                    side=side,
+                    reason="reduce_only_empty_position",
+                    params={
+                        "quantity": str(quantity),
+                        "current_qty": str(current_qty) if current_qty is not None else None,
+                        "reduce_only_mode": reduce_only_mode,
+                        "daily_pnl_triggered": daily_pnl_triggered,
+                    },
+                    decision_id=trace.decision_id,
                 )
                 self._order_submitter.record_rejection(
                     symbol, side.value, quantity, price, "reduce_only_empty_position"
@@ -2406,6 +2495,19 @@ class TradingEngine(BaseEngine):
                 f"daily_pnl_triggered={daily_pnl_triggered}"
             )
             logger.warning(error_msg)
+            self._emit_trade_gate_blocked(
+                gate="reduce_only",
+                symbol=symbol,
+                side=side,
+                reason="reduce_only_mode_blocked",
+                params={
+                    "reduce_only_mode": reduce_only_mode,
+                    "daily_pnl_triggered": daily_pnl_triggered,
+                    "reduce_only_flag": reduce_only_flag,
+                    "is_reducing": is_reducing,
+                },
+                decision_id=trace.decision_id,
+            )
             await self._notify(
                 title="Order Blocked - Reduce Only Mode",
                 message=f"Cannot open new {side.value} position for {symbol} while in reduce-only mode",
@@ -2475,6 +2577,18 @@ class TradingEngine(BaseEngine):
                     return None
 
                 logger.warning(f"Order blocked: mark price stale for {symbol}")
+                self._emit_trade_gate_blocked(
+                    gate="mark_staleness",
+                    symbol=symbol,
+                    side=side,
+                    reason="mark_staleness",
+                    params={
+                        "allow_reduce_only": allow_reduce,
+                        "reduce_only": reduce_only_flag,
+                        "cooldown_seconds": cooldown,
+                    },
+                    decision_id=trace.decision_id,
+                )
                 self._order_submitter.record_rejection(
                     symbol, side.value, quantity, price, "mark_staleness"
                 )
@@ -2492,6 +2606,18 @@ class TradingEngine(BaseEngine):
                 )
 
             logger.warning(f"Order blocked: mark price stale for {symbol}")
+            self._emit_trade_gate_blocked(
+                gate="mark_staleness",
+                symbol=symbol,
+                side=side,
+                reason="mark_staleness",
+                params={
+                    "allow_reduce_only": False,
+                    "reduce_only": reduce_only_flag,
+                    "cooldown_seconds": None,
+                },
+                decision_id=trace.decision_id,
+            )
             self._append_event(
                 "stale_mark_detected",
                 {
@@ -2647,6 +2773,17 @@ class TradingEngine(BaseEngine):
                     blocked_stage = stage
                     break
             reason_code = blocked_stage or "order_validation"
+            self._emit_trade_gate_blocked(
+                gate=reason_code,
+                symbol=symbol,
+                side=side,
+                reason=str(exc),
+                params={
+                    "blocked_stage": reason_code,
+                    "reduce_only": reduce_only_flag,
+                },
+                decision_id=trace.decision_id,
+            )
             self._order_submitter.record_rejection(
                 symbol, side.value, quantity, effective_price, reason_code
             )

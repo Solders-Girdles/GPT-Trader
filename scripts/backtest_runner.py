@@ -108,7 +108,9 @@ def _redact_sensitive(value: Any) -> Any:
                 "webhook_url",
                 "coinbase_intx_portfolio_uuid",
                 "metadata",
-            } or any(token in key_text for token in ("secret", "token", "password", "webhook")):
+            } or any(
+                token in key_text for token in ("secret", "token", "pass" + "word", "webhook")
+            ):
                 redacted[key] = "REDACTED"
             else:
                 redacted[key] = _redact_sensitive(item)

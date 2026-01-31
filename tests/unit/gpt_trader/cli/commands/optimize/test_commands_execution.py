@@ -54,7 +54,7 @@ class TestRunCommand:
             "\n".join(
                 [
                     "study:",
-                    "  name: cfg_run",
+                    "  name: config_run",
                     "  trials: 3",
                     "  sampler: random",
                     "objective:",
@@ -92,7 +92,7 @@ class TestRunCommand:
 
         config = run._build_config_from_args(args)
 
-        assert config.study.name == "cfg_run"
+        assert config.study.name == "config_run"
         assert config.study.trials == 3
         assert config.study.sampler == "random"
         assert config.objective_name == "total_return"
@@ -109,7 +109,7 @@ class TestRunCommand:
             "\n".join(
                 [
                     "study:",
-                    "  name: cfg_run",
+                    "  name: config_run",
                     "  trials: 3",
                     "  sampler: random",
                     "objective:",
@@ -147,7 +147,7 @@ class TestRunCommand:
 
         config = run._build_config_from_args(args)
 
-        assert config.study.name == "cfg_run"
+        assert config.study.name == "config_run"
         assert config.study.trials == 12
         assert config.study.sampler == "tpe"
         assert config.study.seed == 42

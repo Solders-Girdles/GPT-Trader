@@ -40,8 +40,10 @@ last-updated: 2026-01-30
 
 ### Architecture & Design
 - [System Architecture](ARCHITECTURE.md) - Component overview and vertical slices
+- [Architecture Boundaries](architecture/BOUNDARIES.md) - Layer ownership and dependency direction
 - [Architecture Audit](ARCHITECTURE_AUDIT.md) - Stabilization backlog + gaps
 - [DI Policy](DI_POLICY.md) - Dependency injection patterns and container usage
+- [Entrypoints](architecture/ENTRYPOINTS.md) - CLI, TUI, preflight, and live bot wiring
 
 ### Trading Operations
 - [Production Deployment](production.md) - Deployment, monitoring, rollback, emergencies

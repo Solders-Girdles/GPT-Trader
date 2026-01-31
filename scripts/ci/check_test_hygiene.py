@@ -28,6 +28,9 @@ ALLOWLIST_REASONS: dict[str, str] = {
     "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor.py": (
         "Broker executor idempotency coverage consolidated; split pending."
     ),
+    "tests/unit/gpt_trader/cli/commands/optimize/test_commands_execution.py": (
+        "CLI optimize execution tests are currently consolidated; split pending (touched due to naming-standards strictness)."
+    ),
 }
 ALLOWLIST: set[str] = set(ALLOWLIST_REASONS)
 PATCH_ALLOWLIST: set[str] = set()

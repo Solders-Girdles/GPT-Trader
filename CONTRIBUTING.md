@@ -340,6 +340,12 @@ The CI workflow (`.github/workflows/ci.yml`) runs checks in parallel lanes for f
 
 ### Running Lanes Locally
 
+Makefile shortcuts:
+- `make lint` (ruff check + black --check)
+- `make lint-fix` (ruff check --fix)
+- `make fmt` (black)
+- `make fmt-check` (black --check)
+
 ```bash
 # Lint lane
 uv run ruff check . && uv run black --check .

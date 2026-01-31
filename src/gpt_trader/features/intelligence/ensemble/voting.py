@@ -12,7 +12,7 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import TYPE_CHECKING
 
-from gpt_trader.features.live_trade.strategies.perps_baseline import Action, Decision
+from gpt_trader.features.intelligence.contracts import Action, Decision
 
 from .models import StrategyVote
 

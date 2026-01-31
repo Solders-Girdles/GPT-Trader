@@ -7,7 +7,7 @@ import pytest
 
 from gpt_trader.core import Order, OrderSide, OrderStatus, OrderType, TimeInForce
 from gpt_trader.features.live_trade.execution.order_submission import OrderSubmitter
-from gpt_trader.persistence.orders_store import OrdersStore
+from gpt_trader.persistence.orders_store import OrderRecord, OrdersStore
 from gpt_trader.persistence.orders_store import OrderStatus as StoreOrderStatus
 from gpt_trader.utilities.datetime_helpers import utc_now
 
@@ -63,6 +63,21 @@ def test_submit_order_success_tracks_trade(
     mock_event_store.append_trade.assert_called_once()
 
 
+def test_submit_order_with_result_success(
+    flow_submitter: OrderSubmitter,
+    submit_order_with_result_call,
+    mock_broker: MagicMock,
+    mock_order: Order,
+) -> None:
+    mock_broker.place_order.return_value = mock_order
+
+    outcome = submit_order_with_result_call(flow_submitter, client_order_id="custom-id")
+
+    assert outcome.success is True
+    assert outcome.order_id == "order-123"
+    assert outcome.reason is None
+
+
 @pytest.mark.parametrize("status_name", ["CANCELLED", "FAILED"])
 def test_submit_order_rejection_returns_none(
     status_name: str,
@@ -80,6 +95,36 @@ def test_submit_order_rejection_returns_none(
     assert result is None
     assert "rejected-order" not in open_orders
     emit_metric_mock.assert_called()
+
+
+def test_submit_order_with_result_rejection_reason(
+    flow_submitter: OrderSubmitter,
+    submit_order_with_result_call,
+    mock_broker: MagicMock,
+    emit_metric_mock: MagicMock,
+) -> None:
+    mock_broker.place_order.return_value = _rejected_order(_status_value("CANCELLED"))
+
+    outcome = submit_order_with_result_call(flow_submitter, **MARKET_KWARGS, reduce_only=True)
+
+    assert outcome.rejected is True
+    assert outcome.reason == "broker_status"
+    assert outcome.reason_detail == "CANCELLED"
+    emit_metric_mock.assert_called()
+
+
+def test_submit_order_with_result_failure_reason(
+    flow_submitter: OrderSubmitter,
+    submit_order_with_result_call,
+    mock_broker: MagicMock,
+    monitoring_logger: MagicMock,
+) -> None:
+    mock_broker.place_order.side_effect = RuntimeError("Request timeout")
+
+    outcome = submit_order_with_result_call(flow_submitter)
+
+    assert outcome.failed is True
+    assert outcome.reason == "timeout"
 
 
 def test_submit_order_exception_returns_none(
@@ -143,6 +188,103 @@ def test_submit_order_none_order_persists_terminal_status(
     record = orders_store.get_order("test-id")
     assert record is not None
     assert record.status in {StoreOrderStatus.REJECTED, StoreOrderStatus.FAILED}
+
+
+def test_submit_order_idempotent_open_record_skips_broker(
+    mock_broker: MagicMock,
+    mock_event_store: MagicMock,
+    open_orders: list[str],
+    submit_order_call,
+    tmp_path,
+) -> None:
+    orders_store = OrdersStore(tmp_path)
+    orders_store.initialize()
+    record = OrderRecord(
+        order_id="order-open-1",
+        client_order_id="idempotent-open-1",
+        symbol="BTC-USD",
+        side="buy",
+        order_type="market",
+        quantity=Decimal("1.0"),
+        price=None,
+        status=StoreOrderStatus.OPEN,
+        filled_quantity=Decimal("0"),
+        average_fill_price=None,
+        created_at=utc_now(),
+        updated_at=utc_now(),
+        bot_id="test-bot",
+        time_in_force="GTC",
+        metadata=None,
+    )
+    orders_store.upsert_by_client_id(record)
+
+    submitter = OrderSubmitter(
+        broker=mock_broker,
+        event_store=mock_event_store,
+        bot_id="test-bot",
+        open_orders=open_orders,
+        orders_store=orders_store,
+    )
+
+    result = submit_order_call(
+        submitter,
+        symbol="BTC-USD",
+        **MARKET_KWARGS,
+        client_order_id="idempotent-open-1",
+    )
+
+    assert result == "order-open-1"
+    assert open_orders == ["order-open-1"]
+    mock_broker.place_order.assert_not_called()
+
+
+def test_submit_order_idempotent_terminal_record_skips_broker(
+    mock_broker: MagicMock,
+    mock_event_store: MagicMock,
+    open_orders: list[str],
+    submit_order_call,
+    emit_metric_mock: MagicMock,
+    tmp_path,
+) -> None:
+    orders_store = OrdersStore(tmp_path)
+    orders_store.initialize()
+    record = OrderRecord(
+        order_id="order-cancelled-1",
+        client_order_id="idempotent-cancelled-1",
+        symbol="BTC-USD",
+        side="buy",
+        order_type="market",
+        quantity=Decimal("1.0"),
+        price=None,
+        status=StoreOrderStatus.CANCELLED,
+        filled_quantity=Decimal("0"),
+        average_fill_price=None,
+        created_at=utc_now(),
+        updated_at=utc_now(),
+        bot_id="test-bot",
+        time_in_force="GTC",
+        metadata=None,
+    )
+    orders_store.upsert_by_client_id(record)
+
+    submitter = OrderSubmitter(
+        broker=mock_broker,
+        event_store=mock_event_store,
+        bot_id="test-bot",
+        open_orders=open_orders,
+        orders_store=orders_store,
+    )
+
+    result = submit_order_call(
+        submitter,
+        symbol="BTC-USD",
+        **MARKET_KWARGS,
+        client_order_id="idempotent-cancelled-1",
+    )
+
+    assert result is None
+    assert open_orders == []
+    mock_broker.place_order.assert_not_called()
 
 
 def test_transient_failure_then_success_reuses_client_order_id(

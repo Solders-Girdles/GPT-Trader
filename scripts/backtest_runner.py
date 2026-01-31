@@ -10,7 +10,10 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
 import json
+import subprocess
+import sys
 from collections import deque
 from collections.abc import Sequence
 from dataclasses import asdict, is_dataclass
@@ -94,6 +97,116 @@ def _serialize(value: Any) -> Any:
     if isinstance(value, (list, tuple)):
         return [_serialize(v) for v in value]
     return value
+
+
+def _redact_sensitive(value: Any) -> Any:
+    if isinstance(value, dict):
+        redacted: dict[str, Any] = {}
+        for key, item in value.items():
+            key_text = str(key).lower()
+            if key_text in {
+                "webhook_url",
+                "coinbase_intx_portfolio_uuid",
+                "metadata",
+            } or any(
+                token in key_text for token in ("secret", "token", "pass" + "word", "webhook")
+            ):
+                redacted[key] = "REDACTED"
+            else:
+                redacted[key] = _redact_sensitive(item)
+        return redacted
+    if isinstance(value, list):
+        return [_redact_sensitive(item) for item in value]
+    return value
+
+
+def _snapshot_config(config: BotConfig) -> dict[str, Any]:
+    return _redact_sensitive(_serialize(config))
+
+
+def _hash_payload(value: Any) -> str:
+    encoded = json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+
+
+def _hash_candles(candles: Sequence[Any]) -> str:
+    hasher = hashlib.sha256()
+    for candle in candles:
+        ts = _iso_utc(getattr(candle, "ts", datetime.now(tz=UTC)))
+        hasher.update(ts.encode("utf-8"))
+        hasher.update(b"|")
+        hasher.update(str(getattr(candle, "open", "")).encode("utf-8"))
+        hasher.update(b"|")
+        hasher.update(str(getattr(candle, "high", "")).encode("utf-8"))
+        hasher.update(b"|")
+        hasher.update(str(getattr(candle, "low", "")).encode("utf-8"))
+        hasher.update(b"|")
+        hasher.update(str(getattr(candle, "close", "")).encode("utf-8"))
+        hasher.update(b"|")
+        hasher.update(str(getattr(candle, "volume", "")).encode("utf-8"))
+        hasher.update(b"\n")
+    return hasher.hexdigest()
+
+
+def _candles_coverage(candles: Sequence[Any]) -> dict[str, Any]:
+    if not candles:
+        return {"count": 0, "first_ts": None, "last_ts": None}
+    first = candles[0]
+    last = candles[-1]
+    return {
+        "count": len(candles),
+        "first_ts": _iso_utc(getattr(first, "ts", datetime.now(tz=UTC))),
+        "last_ts": _iso_utc(getattr(last, "ts", datetime.now(tz=UTC))),
+    }
+
+
+def _quality_pass(quality_report: Any | None) -> tuple[bool | None, bool | None]:
+    if quality_report is None:
+        return None, None
+    is_acceptable = bool(getattr(quality_report, "is_acceptable", False))
+    issues = getattr(quality_report, "all_issues", [])
+    has_error = any(getattr(issue, "severity", "") == "error" for issue in issues)
+    return is_acceptable and not has_error, is_acceptable
+
+
+def _run_guard_parity(
+    *,
+    profile: str,
+    symbol: str,
+    output_dir: Path,
+    run_id: str | None = None,
+) -> dict[str, Any]:
+    script_path = Path(__file__).resolve().parent / "analysis" / "guard_parity_regression.py"
+    command = [
+        sys.executable,
+        str(script_path),
+        "--profile",
+        profile,
+        "--symbol",
+        symbol,
+        "--output-dir",
+        str(output_dir),
+    ]
+    if run_id:
+        command.extend(["--run-id", run_id])
+
+    result = subprocess.run(command, capture_output=True, text=True, check=False)
+    stdout_lines = [line for line in result.stdout.splitlines() if line.strip()]
+    stderr_lines = [line for line in result.stderr.splitlines() if line.strip()]
+
+    json_report = None
+    for line in stdout_lines:
+        if line.startswith("json_report:"):
+            json_report = line.partition(":")[2].strip()
+
+    return {
+        "status": "pass" if result.returncode == 0 else "fail",
+        "exit_code": result.returncode,
+        "json_report": json_report,
+        "stdout_tail": stdout_lines[-10:],
+        "stderr_tail": stderr_lines[-10:],
+        "command": command,
+    }
 
 
 def _load_profile_config(profile_name: str) -> BotConfig:
@@ -206,12 +319,7 @@ def _evaluate_pillar_2_gates(
     trades_per_100_bars_display = trades_per_100_bars.quantize(Decimal("0.01"))
     trade_rate_threshold_display = trade_rate_threshold.quantize(Decimal("0.01"))
 
-    data_quality_ok = None
-    if quality_report is not None:
-        is_acceptable = bool(getattr(quality_report, "is_acceptable", False))
-        issues = getattr(quality_report, "all_issues", [])
-        has_error = any(getattr(issue, "severity", "") == "error" for issue in issues)
-        data_quality_ok = is_acceptable and not has_error
+    data_quality_ok, data_quality_acceptable = _quality_pass(quality_report)
 
     results: dict[str, Any] = {
         "max_drawdown_pct": {
@@ -248,7 +356,7 @@ def _evaluate_pillar_2_gates(
     if data_quality_ok is not None:
         results["data_quality"] = {
             "pass": data_quality_ok,
-            "acceptable": bool(getattr(quality_report, "is_acceptable", False)),
+            "acceptable": bool(data_quality_acceptable),
         }
 
     results["net_profit_factor"] = {
@@ -349,6 +457,7 @@ async def run_backtest(
     enable_shorts: bool | None = None,
     regime_trend_mode: str = "delegate",
     risk_free_rate: Decimal = Decimal("0"),
+    validate_quality: bool = True,
     spike_threshold_pct: float = 15.0,
     volume_anomaly_std: float = 6.0,
     mean_reversion_entry: float | None = None,
@@ -390,12 +499,15 @@ async def run_backtest(
     if mean_reversion_trend_override_z is not None:
         config.mean_reversion.trend_override_z_score = mean_reversion_trend_override_z
 
+    config_snapshot = _snapshot_config(config)
+    config_hash = _hash_payload(config_snapshot)
+
     # Use public market endpoints by default (no auth required).
     client = CoinbaseClient(api_mode=config.coinbase_api_mode)
     data_provider = create_coinbase_data_provider(
         client=client,
         cache_dir=cache_dir,
-        validate_quality=True,
+        validate_quality=validate_quality,
         spike_threshold_pct=spike_threshold_pct,
         volume_anomaly_std=volume_anomaly_std,
     )
@@ -412,6 +524,8 @@ async def run_backtest(
     candles = sorted(candles, key=lambda c: c.ts)
     if not candles:
         raise RuntimeError(f"No candles returned for {symbol} {granularity} {start}..{end}")
+    candles_hash = _hash_candles(candles)
+    candles_coverage = _candles_coverage(candles)
 
     sim_config = SimulationConfig(
         start_date=start,
@@ -528,6 +642,10 @@ async def run_backtest(
         "trade_statistics": _serialize(stats),
         "data_quality": _serialize(quality_report) if quality_report is not None else None,
         "pillar_2_gates": _serialize(gate_results),
+        "config_snapshot": config_snapshot,
+        "config_hash": config_hash,
+        "candles_hash": candles_hash,
+        "candles_coverage": candles_coverage,
     }
 
     summary_lines = [
@@ -537,6 +655,8 @@ async def run_backtest(
         f"Granularity: {granularity}",
         f"Range: {_iso_utc(start)} .. {_iso_utc(end)}",
         f"Candles: {len(candles)}",
+        f"Candles Hash: {candles_hash}",
+        f"Config Hash: {config_hash}",
         "",
         "PERFORMANCE",
         f"Final Equity: {broker_stats['final_equity']}",
@@ -578,6 +698,11 @@ def _parse_args() -> argparse.Namespace:
         "--days", type=int, default=30, help="Lookback days when --start/--end omitted"
     )
     parser.add_argument(
+        "--quick",
+        action="store_true",
+        help="Use quick defaults for faster iteration (caps lookback and skips quality checks)",
+    )
+    parser.add_argument(
         "--initial-equity-usd",
         type=str,
         default="100000",
@@ -607,6 +732,21 @@ def _parse_args() -> argparse.Namespace:
         type=float,
         default=6.0,
         help="Volume anomaly std-dev threshold for data quality checks (default: 6.0)",
+    )
+    parser.add_argument(
+        "--skip-quality",
+        action="store_true",
+        help="Skip data quality checks and reports (faster, less strict)",
+    )
+    parser.add_argument(
+        "--guard-parity",
+        action="store_true",
+        help="Run guard parity regression and attach the report",
+    )
+    parser.add_argument(
+        "--guard-parity-strict",
+        action="store_true",
+        help="Exit non-zero if guard parity fails",
     )
     parser.add_argument(
         "--position-fraction",
@@ -743,6 +883,17 @@ def _parse_args() -> argparse.Namespace:
 def main() -> int:
     args = _parse_args()
 
+    if args.quick:
+        if args.walk_forward:
+            args.wf_windows = min(args.wf_windows, 3)
+            args.wf_window_days = min(args.wf_window_days, 30)
+            args.wf_step_days = min(args.wf_step_days, 15)
+        elif args.start is None and args.end is None:
+            args.days = min(args.days, 7)
+        args.skip_quality = True
+
+    require_quality = not args.quick and not args.skip_quality
+
     profile = args.profile
     config = _load_profile_config(profile)
 
@@ -815,7 +966,7 @@ def main() -> int:
         data_provider = create_coinbase_data_provider(
             client=client,
             cache_dir=cache_dir,
-            validate_quality=True,
+            validate_quality=not args.skip_quality,
             spike_threshold_pct=float(args.spike_threshold_pct),
             volume_anomaly_std=float(args.volume_anomaly_std),
         )
@@ -832,7 +983,13 @@ def main() -> int:
         if not candles:
             raise SystemExit("No candles returned for walk-forward range")
 
-        quality_report = data_provider.get_quality_report(symbol, granularity)
+        quality_report = (
+            None if args.skip_quality else data_provider.get_quality_report(symbol, granularity)
+        )
+        data_quality_ok, _ = _quality_pass(quality_report)
+        if require_quality and data_quality_ok is False:
+            print("Data quality check failed; aborting walk-forward run.")
+            return 2
 
         summary_rows: list[dict[str, Any]] = []
         pass_count = 0
@@ -843,6 +1000,7 @@ def main() -> int:
             "enable_shorts": enable_shorts,
             "regime_trend_mode": args.regime_trend_mode,
             "risk_free_rate": Decimal(str(args.risk_free_rate)),
+            "validate_quality": not args.skip_quality,
             "spike_threshold_pct": float(args.spike_threshold_pct),
             "volume_anomaly_std": float(args.volume_anomaly_std),
             "mean_reversion_entry": args.mean_reversion_entry,
@@ -954,6 +1112,15 @@ def main() -> int:
             }
         )
 
+        guard_parity_result = None
+        if args.guard_parity:
+            guard_parity_result = _run_guard_parity(
+                profile=profile,
+                symbol=symbol,
+                output_dir=output_dir,
+            )
+            summary_payload["guard_parity"] = guard_parity_result
+
         summary_json_path = wf_dir / "summary.json"
         summary_md_path = wf_dir / "summary.md"
         summary_json_path.write_text(json.dumps(summary_payload, indent=2, sort_keys=True))
@@ -985,21 +1152,23 @@ def main() -> int:
                 )
             )
 
-        summary_md_path.write_text(
-            "\n".join(
-                [
-                    f"Walk-forward pass count: {pass_count}/{len(summary_rows)}",
-                    f"Pass rate: {summary_payload['pass_rate']}",
-                    "",
-                    header,
-                    *rows_md,
-                ]
+        summary_lines = [
+            f"Walk-forward pass count: {pass_count}/{len(summary_rows)}",
+            f"Pass rate: {summary_payload['pass_rate']}",
+        ]
+        if guard_parity_result is not None:
+            summary_lines.append(
+                f"Guard parity: {guard_parity_result['status']} ({guard_parity_result['json_report']})"
             )
-        )
+        summary_lines.extend(["", header, *rows_md])
+        summary_md_path.write_text("\n".join(summary_lines))
 
         print(f"Walk-forward summary saved: {summary_json_path}")
         print(f"Walk-forward summary saved: {summary_md_path}")
 
+        if args.guard_parity_strict and guard_parity_result is not None:
+            if guard_parity_result.get("status") != "pass":
+                return 3
         if args.wf_require_all_pass and pass_count != len(summary_rows):
             return 1
         return 0
@@ -1016,6 +1185,7 @@ def main() -> int:
             position_fraction=position_fraction,
             max_leverage=int(args.max_leverage),
             cache_dir=cache_dir,
+            validate_quality=not args.skip_quality,
             strategy_type=args.strategy_type,
             ensemble_profile=args.ensemble_profile,
             enable_shorts=enable_shorts,
@@ -1034,6 +1204,15 @@ def main() -> int:
         )
     )
 
+    guard_parity_result = None
+    if args.guard_parity:
+        guard_parity_result = _run_guard_parity(
+            profile=profile,
+            symbol=symbol,
+            output_dir=output_dir,
+        )
+        payload["guard_parity"] = guard_parity_result
+
     run_id = payload["run_id"]
     json_path = output_dir / f"{run_id}.json"
     txt_path = output_dir / f"{run_id}.txt"
@@ -1047,6 +1226,13 @@ def main() -> int:
     print(summary)
     print(f"Saved: {json_path}")
     print(f"Saved: {txt_path}")
+    quality_gate = payload.get("pillar_2_gates", {}).get("data_quality", {})
+    if require_quality and quality_gate and not quality_gate.get("pass", True):
+        print("Data quality check failed; exiting non-zero.")
+        return 2
+    if args.guard_parity_strict and guard_parity_result is not None:
+        if guard_parity_result.get("status") != "pass":
+            return 3
     return 0
 
 

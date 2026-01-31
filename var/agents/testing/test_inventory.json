@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6031,
-    "total_files": 715,
+    "total_tests": 6039,
+    "total_files": 717,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,8 +102,8 @@
     ]
   },
   "marker_counts": {
-    "unit": 5866,
-    "asyncio": 343,
+    "unit": 5874,
+    "asyncio": 345,
     "parametrize": 152,
     "property": 82,
     "integration": 79,
@@ -322,9 +322,11 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_backoff.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_reconnection_behavior.py",
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper.py",
+      "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_executor_compatibility.py",
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_market_data.py",
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_orders.py",
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_positions.py",
+      "tests/unit/gpt_trader/features/brokerages/test_brokerage_factory_paper_fills.py",
       "tests/unit/gpt_trader/features/data/test_cache.py",
       "tests/unit/gpt_trader/features/data/test_data_coinbase_edges.py",
       "tests/unit/gpt_trader/features/data/test_data_coinbase_runtime_edges.py",
@@ -16593,6 +16595,26 @@
         "class": "TestHybridPaperBrokerStatus"
       }
     ],
+    "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_executor_compatibility.py": [
+      {
+        "name": "TestHybridPaperBrokerExecutorCompatibility::test_place_order_accepts_symbol_and_price_kwargs",
+        "line": 20,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestHybridPaperBrokerExecutorCompatibility"
+      },
+      {
+        "name": "TestHybridPaperBrokerExecutorCompatibility::test_reduce_only_sell_clamps_to_available_base",
+        "line": 36,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestHybridPaperBrokerExecutorCompatibility"
+      }
+    ],
     "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_market_data.py": [
       {
         "name": "TestHybridPaperBrokerMarketData::test_start_market_data_prefetches_quotes",
@@ -16746,12 +16768,12 @@
         "markers": [
           "unit"
         ],
-        "docstring": "Test placing a sell market order.",
+        "docstring": "Test placing a sell market order after acquiring spot inventory.",
         "class": "TestHybridPaperBrokerOrderExecution"
       },
       {
         "name": "TestHybridPaperBrokerOrderExecution::test_place_order_updates_position",
-        "line": 59,
+        "line": 65,
         "markers": [
           "unit"
         ],
@@ -16760,7 +16782,7 @@
       },
       {
         "name": "TestHybridPaperBrokerOrderExecution::test_place_order_updates_balance",
-        "line": 73,
+        "line": 79,
         "markers": [
           "unit"
         ],
@@ -16769,7 +16791,7 @@
       },
       {
         "name": "TestHybridPaperBrokerOrderExecution::test_place_order_with_dict_payload",
-        "line": 88,
+        "line": 94,
         "markers": [
           "unit"
         ],
@@ -16778,7 +16800,7 @@
       },
       {
         "name": "TestHybridPaperBrokerOrderExecution::test_place_order_rejected_when_no_price",
-        "line": 103,
+        "line": 109,
         "markers": [
           "unit"
         ],
@@ -16787,7 +16809,7 @@
       },
       {
         "name": "TestHybridPaperBrokerOrderExecution::test_cancel_order_success",
-        "line": 116,
+        "line": 122,
         "markers": [
           "unit"
         ],
@@ -16796,7 +16818,7 @@
       },
       {
         "name": "TestHybridPaperBrokerOrderExecution::test_cancel_order_not_found",
-        "line": 131,
+        "line": 137,
         "markers": [
           "unit"
         ],
@@ -16805,7 +16827,7 @@
       },
       {
         "name": "TestHybridPaperBrokerOrderExecution::test_get_order_returns_order",
-        "line": 137,
+        "line": 143,
         "markers": [
           "unit"
         ],
@@ -16814,7 +16836,7 @@
       },
       {
         "name": "TestHybridPaperBrokerOrderExecution::test_get_order_not_found",
-        "line": 151,
+        "line": 157,
         "markers": [
           "unit"
         ],
@@ -16823,7 +16845,7 @@
       },
       {
         "name": "TestHybridPaperBrokerLimitOrders::test_limit_buy_uses_limit_below_slippage",
-        "line": 166,
+        "line": 172,
         "markers": [
           "unit"
         ],
@@ -16832,7 +16854,7 @@
       },
       {
         "name": "TestHybridPaperBrokerLimitOrders::test_limit_sell_uses_limit_above_slippage",
-        "line": 180,
+        "line": 186,
         "markers": [
           "unit"
         ],
@@ -16841,7 +16863,7 @@
       },
       {
         "name": "TestHybridPaperBrokerLimitOrders::test_quote_size_payload_computes_quantity",
-        "line": 194,
+        "line": 207,
         "markers": [
           "unit"
         ],
@@ -16852,138 +16874,83 @@
     "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_positions.py": [
       {
         "name": "TestHybridPaperBrokerPositionsBalances::test_list_positions_empty",
-        "line": 22,
+        "line": 24,
         "markers": [
           "unit"
         ],
-        "docstring": "Test list_positions returns empty list initially.",
+        "docstring": "",
         "class": "TestHybridPaperBrokerPositionsBalances"
       },
       {
-        "name": "TestHybridPaperBrokerPositionsBalances::test_list_positions_returns_positions",
-        "line": 28,
+        "name": "TestHybridPaperBrokerPositionsBalances::test_list_positions_refreshes_mark_and_clears_unrealized",
+        "line": 27,
         "markers": [
           "unit"
         ],
-        "docstring": "Test list_positions returns stored positions.",
+        "docstring": "",
         "class": "TestHybridPaperBrokerPositionsBalances"
       },
       {
-        "name": "TestHybridPaperBrokerPositionsBalances::test_get_positions_alias",
-        "line": 46,
+        "name": "TestHybridPaperBrokerPositionsBalances::test_list_balances_initially_usd_only",
+        "line": 47,
         "markers": [
           "unit"
         ],
-        "docstring": "Test get_positions is alias for list_positions.",
-        "class": "TestHybridPaperBrokerPositionsBalances"
-      },
-      {
-        "name": "TestHybridPaperBrokerPositionsBalances::test_list_balances_returns_balances",
-        "line": 63,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test list_balances returns balances.",
-        "class": "TestHybridPaperBrokerPositionsBalances"
-      },
-      {
-        "name": "TestHybridPaperBrokerPositionsBalances::test_get_balances_alias",
-        "line": 71,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test get_balances is alias for list_balances.",
+        "docstring": "",
         "class": "TestHybridPaperBrokerPositionsBalances"
       },
       {
         "name": "TestHybridPaperBrokerPositionsBalances::test_get_equity_cash_only",
-        "line": 77,
+        "line": 53,
         "markers": [
           "unit"
         ],
-        "docstring": "Test get_equity with cash only.",
+        "docstring": "",
         "class": "TestHybridPaperBrokerPositionsBalances"
       },
       {
-        "name": "TestHybridPaperBrokerPositionsBalances::test_get_equity_with_long_position",
+        "name": "TestHybridPaperBrokerPositionsBalances::test_get_equity_with_spot_holdings",
+        "line": 56,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestHybridPaperBrokerPositionsBalances"
+      },
+      {
+        "name": "TestHybridPaperBrokerLifecycle::test_buy_sell_round_trip_returns_flat",
+        "line": 69,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestHybridPaperBrokerLifecycle"
+      }
+    ],
+    "tests/unit/gpt_trader/features/brokerages/test_brokerage_factory_paper_fills.py": [
+      {
+        "name": "test_create_brokerage_paper_fills_selects_hybrid_paper_broker",
+        "line": 22,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_create_brokerage_paper_fills_mutually_exclusive_with_mock_broker",
+        "line": 70,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_create_brokerage_paper_fills_mutually_exclusive_with_dry_run",
         "line": 83,
         "markers": [
           "unit"
         ],
-        "docstring": "Test get_equity includes unrealized PnL from long position.",
-        "class": "TestHybridPaperBrokerPositionsBalances"
-      },
-      {
-        "name": "TestHybridPaperBrokerPositionsBalances::test_get_equity_with_short_position",
-        "line": 105,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test get_equity includes unrealized PnL from short position.",
-        "class": "TestHybridPaperBrokerPositionsBalances"
-      },
-      {
-        "name": "TestHybridPaperBrokerPositionUpdates::test_update_position_creates_new_long",
-        "line": 131,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test creating new long position.",
-        "class": "TestHybridPaperBrokerPositionUpdates"
-      },
-      {
-        "name": "TestHybridPaperBrokerPositionUpdates::test_update_position_creates_new_short",
-        "line": 140,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test creating new short position.",
-        "class": "TestHybridPaperBrokerPositionUpdates"
-      },
-      {
-        "name": "TestHybridPaperBrokerPositionUpdates::test_update_position_adds_to_long",
-        "line": 148,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test adding to existing long position.",
-        "class": "TestHybridPaperBrokerPositionUpdates"
-      },
-      {
-        "name": "TestHybridPaperBrokerPositionUpdates::test_update_position_reduces_long",
-        "line": 168,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test reducing long position.",
-        "class": "TestHybridPaperBrokerPositionUpdates"
-      },
-      {
-        "name": "TestHybridPaperBrokerPositionUpdates::test_update_position_closes_position",
-        "line": 187,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test closing position completely.",
-        "class": "TestHybridPaperBrokerPositionUpdates"
-      },
-      {
-        "name": "TestHybridPaperBrokerPositionUpdates::test_short_position_add_recalculates_average",
-        "line": 204,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test adding to short position recalculates average entry.",
-        "class": "TestHybridPaperBrokerPositionUpdates"
-      },
-      {
-        "name": "TestHybridPaperBrokerPositionUpdates::test_short_position_reduce_keeps_entry_price",
-        "line": 223,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test reducing short position keeps original entry price.",
-        "class": "TestHybridPaperBrokerPositionUpdates"
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/features/data/test_cache.py": [
@@ -18616,7 +18583,7 @@
     "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py": [
       {
         "name": "TestGuardFailureDegradation::test_guard_failure_triggers_pause_and_reduce_only",
-        "line": 22,
+        "line": 26,
         "markers": [
           "asyncio",
           "unit"
@@ -18626,7 +18593,7 @@
       },
       {
         "name": "TestGuardFailureDegradation::test_api_outage_scenario_triggers_degradation",
-        "line": 45,
+        "line": 49,
         "markers": [
           "asyncio",
           "unit"
@@ -18636,7 +18603,7 @@
       },
       {
         "name": "TestGuardFailureDegradation::test_api_health_guard_emits_api_error_event",
-        "line": 74,
+        "line": 78,
         "markers": [
           "asyncio",
           "unit"
@@ -18646,7 +18613,7 @@
       },
       {
         "name": "TestBrokerOutageDegradation::test_broker_failures_trigger_pause_after_threshold",
-        "line": 93,
+        "line": 97,
         "markers": [
           "asyncio",
           "unit"
@@ -18656,7 +18623,7 @@
       },
       {
         "name": "TestBrokerOutageDegradation::test_successful_broker_call_resets_counter",
-        "line": 107,
+        "line": 111,
         "markers": [
           "asyncio",
           "unit"
@@ -18666,7 +18633,7 @@
       },
       {
         "name": "test_kill_switch_blocks_submission",
-        "line": 114,
+        "line": 118,
         "markers": [
           "asyncio",
           "unit"
@@ -18675,7 +18642,7 @@
       },
       {
         "name": "TestPausedOrderRejection::test_order_rejected_when_paused",
-        "line": 146,
+        "line": 155,
         "markers": [
           "asyncio",
           "parametrize",
@@ -18686,7 +18653,7 @@
       },
       {
         "name": "TestPausedOrderRejection::test_reduce_only_allowed_through_pause",
-        "line": 162,
+        "line": 171,
         "markers": [
           "asyncio",
           "unit"
@@ -18696,7 +18663,7 @@
       },
       {
         "name": "TestGuardOutcomeInvariants::test_degradation_blocks_before_validation",
-        "line": 176,
+        "line": 185,
         "markers": [
           "asyncio",
           "unit"
@@ -18706,7 +18673,7 @@
       },
       {
         "name": "TestGuardOutcomeInvariants::test_risk_validation_blocked_vs_failed",
-        "line": 194,
+        "line": 203,
         "markers": [
           "asyncio",
           "unit"
@@ -18716,7 +18683,7 @@
       },
       {
         "name": "TestGuardOutcomeInvariants::test_reduce_only_requested_allows_stale_mark",
-        "line": 223,
+        "line": 232,
         "markers": [
           "asyncio",
           "unit"
@@ -18979,7 +18946,7 @@
     "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_reconciliation.py": [
       {
         "name": "test_audit_orders_normalizes_submit_id_to_broker_order_id",
-        "line": 14,
+        "line": 15,
         "markers": [
           "asyncio",
           "unit"
@@ -18987,8 +18954,26 @@
         "docstring": ""
       },
       {
-        "name": "test_audit_orders_escalates_on_unknown_bot_owned_orders",
-        "line": 70,
+        "name": "test_audit_orders_recovers_unknown_bot_owned_orders",
+        "line": 71,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_audit_orders_escalates_without_orders_store",
+        "line": 108,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_audit_orders_refreshes_missing_persisted_order",
+        "line": 146,
         "markers": [
           "asyncio",
           "unit"
@@ -19921,7 +19906,7 @@
     "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor.py": [
       {
         "name": "TestBrokerExecutorExecuteOrder::test_calls_broker_with_correct_args",
-        "line": 53,
+        "line": 54,
         "markers": [
           "unit"
         ],
@@ -19930,7 +19915,7 @@
       },
       {
         "name": "TestBrokerExecutorExecuteOrder::test_passes_through_fields",
-        "line": 104,
+        "line": 105,
         "markers": [
           "parametrize",
           "unit"
@@ -19940,7 +19925,7 @@
       },
       {
         "name": "TestBrokerExecutorExecuteOrder::test_preserves_decimal_precision",
-        "line": 120,
+        "line": 121,
         "markers": [
           "unit"
         ],
@@ -19949,7 +19934,7 @@
       },
       {
         "name": "TestBrokerExecutorExecuteOrder::test_propagates_broker_exception",
-        "line": 142,
+        "line": 143,
         "markers": [
           "unit"
         ],
@@ -19958,7 +19943,7 @@
       },
       {
         "name": "TestBrokerExecutorExecuteOrder::test_execute_order_retry_modes",
-        "line": 165,
+        "line": 166,
         "markers": [
           "parametrize",
           "unit"
@@ -19968,12 +19953,48 @@
       },
       {
         "name": "TestBrokerExecutorExecuteOrder::test_retry_uses_same_client_order_id",
-        "line": 194,
+        "line": 195,
         "markers": [
           "unit"
         ],
         "docstring": "",
         "class": "TestBrokerExecutorExecuteOrder"
+      },
+      {
+        "name": "TestBrokerExecutorCancelOrder::test_calls_broker_with_order_id",
+        "line": 225,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestBrokerExecutorCancelOrder"
+      },
+      {
+        "name": "TestBrokerExecutorCancelOrder::test_retries_on_retryable_error",
+        "line": 237,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestBrokerExecutorCancelOrder"
+      },
+      {
+        "name": "TestBrokerExecutorCancelOrder::test_not_found_treated_as_success_when_idempotent",
+        "line": 253,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestBrokerExecutorCancelOrder"
+      },
+      {
+        "name": "TestBrokerExecutorCancelOrder::test_not_found_raises_when_not_idempotent",
+        "line": 264,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestBrokerExecutorCancelOrder"
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_core.py": [
@@ -20985,8 +21006,16 @@
         "docstring": ""
       },
       {
+        "name": "test_submit_order_with_result_success",
+        "line": 66,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_submit_order_rejection_returns_none",
-        "line": 67,
+        "line": 82,
         "markers": [
           "parametrize",
           "unit"
@@ -20994,8 +21023,24 @@
         "docstring": ""
       },
       {
+        "name": "test_submit_order_with_result_rejection_reason",
+        "line": 100,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_submit_order_with_result_failure_reason",
+        "line": 116,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_submit_order_exception_returns_none",
-        "line": 85,
+        "line": 130,
         "markers": [
           "unit"
         ],
@@ -21003,7 +21048,7 @@
       },
       {
         "name": "test_submit_order_none_order_returns_none",
-        "line": 98,
+        "line": 143,
         "markers": [
           "unit"
         ],
@@ -21011,7 +21056,23 @@
       },
       {
         "name": "test_submit_order_none_order_persists_terminal_status",
-        "line": 115,
+        "line": 160,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_submit_order_idempotent_open_record_skips_broker",
+        "line": 193,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_submit_order_idempotent_terminal_record_skips_broker",
+        "line": 241,
         "markers": [
           "unit"
         ],
@@ -21019,7 +21080,7 @@
       },
       {
         "name": "test_transient_failure_then_success_reuses_client_order_id",
-        "line": 148,
+        "line": 290,
         "markers": [
           "unit"
         ],
@@ -21027,7 +21088,7 @@
       },
       {
         "name": "test_retry_client_order_id_behavior",
-        "line": 204,
+        "line": 346,
         "markers": [
           "parametrize",
           "unit"
@@ -35514,7 +35575,7 @@
         "class": "TestOrdersStore"
       },
       {
-        "name": "TestOrdersStore::test_get_order_not_found",
+        "name": "TestOrdersStore::test_get_order_by_client_order_id",
         "line": 39,
         "markers": [
           "unit"
@@ -35523,8 +35584,17 @@
         "class": "TestOrdersStore"
       },
       {
+        "name": "TestOrdersStore::test_get_order_not_found",
+        "line": 52,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestOrdersStore"
+      },
+      {
         "name": "TestOrdersStore::test_save_order_upsert",
-        "line": 45,
+        "line": 58,
         "markers": [
           "unit"
         ],
@@ -35533,7 +35603,7 @@
       },
       {
         "name": "TestOrdersStore::test_upsert_by_client_id_updates_order_id",
-        "line": 59,
+        "line": 72,
         "markers": [
           "unit"
         ],
@@ -35542,7 +35612,7 @@
       },
       {
         "name": "TestOrdersStore::test_get_pending_orders",
-        "line": 81,
+        "line": 94,
         "markers": [
           "unit"
         ],
@@ -35551,15 +35621,6 @@
       },
       {
         "name": "TestOrdersStore::test_get_pending_orders_by_bot",
-        "line": 100,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestOrdersStore"
-      },
-      {
-        "name": "TestOrdersStore::test_get_orders_by_symbol",
         "line": 113,
         "markers": [
           "unit"
@@ -35568,7 +35629,7 @@
         "class": "TestOrdersStore"
       },
       {
-        "name": "TestOrdersStore::test_update_status",
+        "name": "TestOrdersStore::test_get_orders_by_symbol",
         "line": 126,
         "markers": [
           "unit"
@@ -35577,8 +35638,17 @@
         "class": "TestOrdersStore"
       },
       {
+        "name": "TestOrdersStore::test_update_status",
+        "line": 139,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestOrdersStore"
+      },
+      {
         "name": "TestOrdersStore::test_verify_integrity_valid",
-        "line": 146,
+        "line": 159,
         "markers": [
           "unit"
         ],
@@ -35587,7 +35657,7 @@
       },
       {
         "name": "TestOrdersStore::test_cleanup_old_orders",
-        "line": 157,
+        "line": 170,
         "markers": [
           "unit"
         ],
@@ -35596,7 +35666,7 @@
       },
       {
         "name": "TestOrdersStore::test_context_manager",
-        "line": 167,
+        "line": 180,
         "markers": [
           "unit"
         ],
@@ -42625,7 +42695,7 @@
       },
       {
         "name": "TestIssueTracking::test_submission_issue_records_context",
-        "line": 113,
+        "line": 116,
         "markers": [
           "parametrize",
           "unit"
@@ -42635,7 +42705,7 @@
       },
       {
         "name": "TestIssueTracking::test_retry_issue_records_context",
-        "line": 125,
+        "line": 129,
         "markers": [
           "unit"
         ],
@@ -42644,7 +42714,7 @@
       },
       {
         "name": "TestIssueTracking::test_issue_ordering_is_most_recent_first",
-        "line": 145,
+        "line": 149,
         "markers": [
           "unit"
         ],
@@ -42653,7 +42723,7 @@
       },
       {
         "name": "TestIssueTracking::test_empty_retry_reason_skips_issue",
-        "line": 153,
+        "line": 157,
         "markers": [
           "unit"
         ],
@@ -42662,7 +42732,7 @@
       },
       {
         "name": "TestReasonTracking::test_rejection_reasons_aggregate_and_sorted",
-        "line": 163,
+        "line": 167,
         "markers": [
           "unit"
         ],
@@ -42671,7 +42741,7 @@
       },
       {
         "name": "TestReasonTracking::test_retry_reasons_aggregate_and_sorted",
-        "line": 175,
+        "line": 179,
         "markers": [
           "unit"
         ],
@@ -42680,7 +42750,7 @@
       },
       {
         "name": "TestReasonTracking::test_empty_reasons_not_tracked",
-        "line": 185,
+        "line": 189,
         "markers": [
           "unit"
         ],
@@ -42689,7 +42759,7 @@
       },
       {
         "name": "TestReasonTracking::test_reasons_respect_rolling_window",
-        "line": 195,
+        "line": 199,
         "markers": [
           "unit"
         ],
@@ -42698,7 +42768,7 @@
       },
       {
         "name": "TestReasonTracking::test_clear_clears_reasons",
-        "line": 210,
+        "line": 214,
         "markers": [
           "unit"
         ],

@@ -103,6 +103,7 @@
       "shutdown_tracing"
     ],
     "trading": [
+      "cancel",
       "cancel_order",
       "cleanup_orders",
       "execute_order",
@@ -130,9 +131,11 @@
       "order_rejected",
       "order_route",
       "order_submit",
+      "order_suppressed",
       "order_update_persist",
       "orders_init",
       "orders_store_init",
+      "orders_store_lookup",
       "orders_store_persist",
       "pnl_process_fill",
       "record_trade_event",
@@ -216,19 +219,44 @@
       ],
       "statuses": null
     },
-    "cancel_order": {
+    "cancel": {
       "common_fields": [
-        "error_message",
-        "error_type",
-        "order_id"
+        "latency_seconds",
+        "outcome",
+        "reason",
+        "stage"
       ],
       "components": null,
       "levels": [
-        "ERROR"
+        "INFO"
       ],
-      "occurrence_count": 1,
+      "occurrence_count": 3,
       "source_files": [
-        "features/brokerages/coinbase/rest/order_service.py"
+        "features/live_trade/execution/broker_executor.py"
+      ],
+      "statuses": null
+    },
+    "cancel_order": {
+      "common_fields": [
+        "__all__",
+        "allow_idempotent",
+        "client_order_id",
+        "error_message",
+        "error_type",
+        "order_id",
+        "reason",
+        "sleep_fn",
+        "stage"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR",
+        "INFO"
+      ],
+      "occurrence_count": 3,
+      "source_files": [
+        "features/brokerages/coinbase/rest/order_service.py",
+        "features/live_trade/execution/broker_executor.py"
       ],
       "statuses": null
     },
@@ -618,7 +646,6 @@
     },
     "execute_order": {
       "common_fields": [
-        "__all__",
         "client_order_id",
         "leverage",
         "sleep_fn"
@@ -1316,7 +1343,7 @@
         "INFO",
         "WARNING"
       ],
-      "occurrence_count": 6,
+      "occurrence_count": 7,
       "source_files": [
         "features/live_trade/execution/guard_manager.py"
       ],
@@ -1343,6 +1370,7 @@
       "common_fields": [
         "action",
         "error_message",
+        "failure_detail",
         "reason",
         "stage",
         "symbol"
@@ -1383,6 +1411,7 @@
         "open_order_count",
         "order_id",
         "pending",
+        "recovered_order_count",
         "stage",
         "unknown_bot_order_count"
       ],
@@ -1391,7 +1420,7 @@
         "INFO",
         "WARNING"
       ],
-      "occurrence_count": 4,
+      "occurrence_count": 8,
       "source_files": [
         "features/live_trade/engines/strategy.py"
       ],
@@ -1456,8 +1485,12 @@
     "order_submit": {
       "common_fields": [
         "ide",
+        "order_type",
         "price",
         "quantity",
+        "r_id",
+        "reason",
+        "reason_detail",
         "reduce_only",
         "side",
         "stage",
@@ -1466,13 +1499,29 @@
       "components": null,
       "levels": [
         "ERROR",
-        "INFO",
-        "WARNING"
+        "INFO"
       ],
-      "occurrence_count": 3,
+      "occurrence_count": 7,
       "source_files": [
         "features/live_trade/engines/strategy.py",
-        "features/live_trade/execution/order_event_recorder.py"
+        "features/live_trade/execution/order_event_recorder.py",
+        "features/live_trade/execution/order_submission.py"
+      ],
+      "statuses": null
+    },
+    "order_suppressed": {
+      "common_fields": [
+        "None",
+        "error_message",
+        "error_type"
+      ],
+      "components": null,
+      "levels": [
+        "WARNING"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/brokerages/read_only.py"
       ],
       "statuses": null
     },
@@ -1524,6 +1573,22 @@
       "occurrence_count": 2,
       "source_files": [
         "features/live_trade/engines/strategy.py",
+        "features/live_trade/execution/order_submission.py"
+      ],
+      "statuses": null
+    },
+    "orders_store_lookup": {
+      "common_fields": [
+        "client_order_id",
+        "error_message",
+        "error_type"
+      ],
+      "components": null,
+      "levels": [
+        "WARNING"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
         "features/live_trade/execution/order_submission.py"
       ],
       "statuses": null
@@ -1985,6 +2050,7 @@
     },
     "submit": {
       "common_fields": [
+        "ds",
         "latency_seconds",
         "nt_id",
         "outcome",
@@ -2399,44 +2465,44 @@
     }
   },
   "field_frequency": {
-    "None": 3,
+    "None": 4,
     "__all__": 4,
     "_stream_task": 4,
     "_tracer": 4,
     "_tracing_enabled": 3,
-    "_vault_enabled": 3,
     "action": 4,
-    "allow_reduce_only": 3,
     "broker": 8,
     "client_ip": 4,
-    "client_order_id": 5,
+    "client_order_id": 7,
     "consecutive_failures": 5,
     "error": 40,
-    "error_message": 78,
+    "error_message": 83,
     "error_msg": 5,
-    "error_type": 72,
+    "error_type": 77,
     "event_type": 5,
     "granularity": 5,
     "guard_name": 10,
+    "latency_seconds": 5,
     "mode": 4,
-    "order_id": 17,
+    "order_id": 22,
+    "outcome": 5,
     "path": 8,
     "portfolio_id": 4,
     "quantity": 5,
-    "reason": 14,
+    "reason": 19,
     "service": 9,
     "severity": 4,
-    "side": 15,
-    "stage": 142,
-    "symbol": 62
+    "side": 19,
+    "stage": 153,
+    "symbol": 66
   },
   "level_distribution": {
     "CRITICAL": 1,
     "DEBUG": 48,
     "ERROR": 79,
-    "INFO": 104,
-    "WARNING": 65
+    "INFO": 115,
+    "WARNING": 70
   },
-  "total_event_types": 128,
+  "total_event_types": 131,
   "version": "1.0"
 }

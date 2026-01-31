@@ -5,6 +5,7 @@
 	canary-decision-trace-probe canary-runtime-info canary-stop canary-start \
 	canary-restart canary-status canary-watchdog canary-watchdog-once ops-controls-smoke \
 	test-triage test-triage-check test-unit test-property test-contract test-real-api test-integration test-integration-fast \
+	backtest backtest-quick backtest-walk-forward backtest-walk-forward-quick guard-parity \
 	legacy-patterns \
 	test-snapshots
 
@@ -19,6 +20,19 @@ AGENT_CHAOS_MAX_FEES_PCT?=4.5
 PREFLIGHT_PROFILE?=canary
 READINESS_REPORT_DIR?=runtime_data/$(PREFLIGHT_PROFILE)/reports
 READINESS_WINDOW_HOURS?=24
+BACKTEST_PROFILE?=canary
+BACKTEST_SYMBOL?=BTC-USD
+BACKTEST_GRANULARITY?=FIVE_MINUTE
+BACKTEST_DAYS?=30
+BACKTEST_STRATEGY?=
+BACKTEST_WF_WINDOWS?=6
+BACKTEST_WF_WINDOW_DAYS?=90
+BACKTEST_WF_STEP_DAYS?=30
+BACKTEST_EXTRA_ARGS?=
+GUARD_PARITY_PROFILE?=canary
+GUARD_PARITY_SYMBOL?=BTC-USD
+GUARD_PARITY_OUTPUT_DIR?=runtime_data/$(GUARD_PARITY_PROFILE)/reports
+GUARD_PARITY_RUN_ID?=
 
 # Start local development stack (bot by default)
 dev-up:
@@ -66,6 +80,57 @@ test-integration-fast:
 
 test-snapshots:
 	uv run pytest -q -n 0 tests/unit/gpt_trader/tui/test_snapshots_*.py
+
+backtest:
+	uv run python scripts/backtest_runner.py \
+		--profile $(BACKTEST_PROFILE) \
+		--symbol $(BACKTEST_SYMBOL) \
+		--granularity $(BACKTEST_GRANULARITY) \
+		--days $(BACKTEST_DAYS) \
+		$(if $(BACKTEST_STRATEGY),--strategy-type $(BACKTEST_STRATEGY),) \
+		$(BACKTEST_EXTRA_ARGS)
+
+backtest-quick:
+	uv run python scripts/backtest_runner.py \
+		--profile $(BACKTEST_PROFILE) \
+		--symbol $(BACKTEST_SYMBOL) \
+		--granularity $(BACKTEST_GRANULARITY) \
+		--days $(BACKTEST_DAYS) \
+		--quick \
+		$(if $(BACKTEST_STRATEGY),--strategy-type $(BACKTEST_STRATEGY),) \
+		$(BACKTEST_EXTRA_ARGS)
+
+backtest-walk-forward:
+	uv run python scripts/backtest_runner.py \
+		--profile $(BACKTEST_PROFILE) \
+		--symbol $(BACKTEST_SYMBOL) \
+		--granularity $(BACKTEST_GRANULARITY) \
+		--walk-forward \
+		--wf-windows $(BACKTEST_WF_WINDOWS) \
+		--wf-window-days $(BACKTEST_WF_WINDOW_DAYS) \
+		--wf-step-days $(BACKTEST_WF_STEP_DAYS) \
+		$(if $(BACKTEST_STRATEGY),--strategy-type $(BACKTEST_STRATEGY),) \
+		$(BACKTEST_EXTRA_ARGS)
+
+backtest-walk-forward-quick:
+	uv run python scripts/backtest_runner.py \
+		--profile $(BACKTEST_PROFILE) \
+		--symbol $(BACKTEST_SYMBOL) \
+		--granularity $(BACKTEST_GRANULARITY) \
+		--walk-forward \
+		--wf-windows $(BACKTEST_WF_WINDOWS) \
+		--wf-window-days $(BACKTEST_WF_WINDOW_DAYS) \
+		--wf-step-days $(BACKTEST_WF_STEP_DAYS) \
+		--quick \
+		$(if $(BACKTEST_STRATEGY),--strategy-type $(BACKTEST_STRATEGY),) \
+		$(BACKTEST_EXTRA_ARGS)
+
+guard-parity:
+	uv run python scripts/analysis/guard_parity_regression.py \
+		--profile $(GUARD_PARITY_PROFILE) \
+		--symbol $(GUARD_PARITY_SYMBOL) \
+		--output-dir $(GUARD_PARITY_OUTPUT_DIR) \
+		$(if $(GUARD_PARITY_RUN_ID),--run-id $(GUARD_PARITY_RUN_ID),)
 
 smoke:
 	uv run python scripts/production_preflight.py --profile dev --verbose

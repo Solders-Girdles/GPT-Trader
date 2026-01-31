@@ -66,12 +66,16 @@ class TestModeSelectionSnapshots:
     def test_mode_selection_screen(self, snap_compare):
         """Snapshot test for ModeSelectionScreen (no bot provided)."""
 
+        async def wait_for_initial_render(pilot):
+            await pilot.pause()
+
         def create_app():
             return TraderApp()
 
         assert snap_compare(
             create_app(),
             terminal_size=(100, 30),
+            run_before=wait_for_initial_render,
         )
 
 

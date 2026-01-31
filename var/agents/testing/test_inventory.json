@@ -46509,7 +46509,7 @@
       },
       {
         "name": "TestWidgetSnapshots::test_portfolio_widget_with_positions",
-        "line": 81,
+        "line": 85,
         "markers": [
           "unit"
         ],
@@ -46518,7 +46518,7 @@
       },
       {
         "name": "TestErrorStateSnapshots::test_error_indicator_visible",
-        "line": 100,
+        "line": 104,
         "markers": [
           "unit"
         ],

@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2026-01-23
+last-updated: 2026-01-31
 ---
 
 This playbook covers the spot-first GPT-Trader monitoring stack including metrics export, dashboards, alerting, and incident response.
@@ -24,6 +24,7 @@ uv sync --extra monitoring
 - If you embed the bot, start `gpt_trader.app.health_server.start_health_server`
   (port 8080 by default) with the shared `HealthState`.
 - Enable metrics: `GPT_TRADER_METRICS_ENDPOINT_ENABLED=1`
+- Health server metrics use the `gpt_trader_` prefix (example: `gpt_trader_order_submission_total`).
 
 ```bash
 curl http://localhost:8080/health
@@ -42,9 +43,14 @@ uv run python scripts/monitoring/export_metrics.py \
 The exporter reads `runtime_data/<profile>/events.db` first and falls back to
 `runtime_data/<profile>/events.jsonl` if the DB is unavailable.
 
+Exporter metrics use the `COINBASE_TRADER_METRIC_PREFIX` environment variable
+(default: `coinbase_trader`). Set it if you need a different prefix.
+
 **Exporter Endpoints:**
 - `/metrics` - Prometheus text format
-- `/metrics.json` - Raw JSON with account snapshots
+- `/metrics.json` - Raw JSON payload (metrics + `latest_order_preview` and
+  `latest_account_snapshot` events). This endpoint is only served by the exporter
+  script.
 
 ### 3. Start Observability Stack (Optional)
 
@@ -64,6 +70,9 @@ The observability profile now focuses on Prometheus + Grafana only.
 ## Metrics
 
 Canonical catalogue (names, labels, queries): `docs/OBSERVABILITY.md`.
+Alert rules in this playbook assume the in-process `gpt_trader_` prefix. If you
+use the exporter script with a different prefix, adjust the queries or set
+`COINBASE_TRADER_METRIC_PREFIX=gpt_trader`.
 
 ## Key Thresholds
 

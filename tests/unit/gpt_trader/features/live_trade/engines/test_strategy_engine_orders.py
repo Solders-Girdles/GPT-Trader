@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 import pytest
 from strategy_engine_chaos_helpers import make_position
 
-import gpt_trader.security.security_validator as security_validator_module
+import gpt_trader.security.validate as security_validate_module
 from gpt_trader.core import Balance, OrderSide, OrderType, Product
 from gpt_trader.features.live_trade.execution.submission_result import OrderSubmissionStatus
 from gpt_trader.features.live_trade.strategies.perps_baseline import Action, Decision
@@ -36,7 +36,7 @@ async def test_order_placed_with_dynamic_quantity(engine, monkeypatch: pytest.Mo
 
     mock_validator = MagicMock()
     mock_validator.validate_order_request.return_value.is_valid = True
-    monkeypatch.setattr(security_validator_module, "get_validator", lambda: mock_validator)
+    monkeypatch.setattr(security_validate_module, "get_validator", lambda: mock_validator)
 
     await engine._cycle()
 
@@ -104,7 +104,7 @@ async def test_exchange_rules_blocks_small_order(engine, monkeypatch: pytest.Mon
 
     mock_validator = MagicMock()
     mock_validator.validate_order_request.return_value.is_valid = True
-    monkeypatch.setattr(security_validator_module, "get_validator", lambda: mock_validator)
+    monkeypatch.setattr(security_validate_module, "get_validator", lambda: mock_validator)
 
     await engine._cycle()
 
@@ -152,7 +152,7 @@ async def test_slippage_guard_blocks_order(engine, monkeypatch: pytest.MonkeyPat
 
     mock_validator = MagicMock()
     mock_validator.validate_order_request.return_value.is_valid = True
-    monkeypatch.setattr(security_validator_module, "get_validator", lambda: mock_validator)
+    monkeypatch.setattr(security_validate_module, "get_validator", lambda: mock_validator)
 
     await engine._cycle()
 

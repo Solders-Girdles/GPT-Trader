@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from gpt_trader.security import security_validator
+from gpt_trader.security import validate as security_validate
 
 
 class TestConvenienceWrappers:
@@ -18,7 +18,7 @@ class TestConvenienceWrappers:
         }
         account_value = 100000.0
 
-        result = security_validator.validate_order(order, account_value)
+        result = security_validate.validate_order(order, account_value)
 
         assert result is not None
         assert hasattr(result, "is_valid")
@@ -29,7 +29,7 @@ class TestConvenienceWrappers:
         identifier = "test-user"
         limit_type = "api_calls"
 
-        allowed, message = security_validator.check_rate_limit(identifier, limit_type)
+        allowed, message = security_validate.check_rate_limit(identifier, limit_type)
 
         assert isinstance(allowed, bool)
         assert isinstance(message, (str, type(None)))
@@ -38,7 +38,7 @@ class TestConvenienceWrappers:
         """Test sanitize_input convenience wrapper."""
         input_str = "normal text"
 
-        result = security_validator.sanitize_input(input_str)
+        result = security_validate.sanitize_input(input_str)
 
         assert result is not None
         assert hasattr(result, "is_valid")
@@ -53,7 +53,7 @@ class TestConvenienceWrappers:
         }
         account_value = 50000.0
 
-        result = security_validator.validate_order(order, account_value)
+        result = security_validate.validate_order(order, account_value)
 
         assert result.is_valid
 
@@ -62,7 +62,7 @@ class TestConvenienceWrappers:
         identifier = "wrapper-test"
         limit_type = "order_submissions"
 
-        allowed, message = security_validator.check_rate_limit(identifier, limit_type)
+        allowed, message = security_validate.check_rate_limit(identifier, limit_type)
 
         assert allowed is True
         assert message is None
@@ -71,14 +71,14 @@ class TestConvenienceWrappers:
         """Test sanitize_input uses global validator instance."""
         input_str = "test string"
 
-        result = security_validator.sanitize_input(input_str)
+        result = security_validate.sanitize_input(input_str)
 
         assert result.is_valid
         assert result.sanitized_value == "test string"
 
     def test_validate_order_with_invalid_input(self) -> None:
         """Test validate_order wrapper with invalid input."""
-        from gpt_trader.security.security_validator import ValidationResult
+        from gpt_trader.security.validate import ValidationResult
 
         invalid_order = {
             "symbol": "INVALID",
@@ -88,7 +88,7 @@ class TestConvenienceWrappers:
         }
         account_value = 1000.0
 
-        result = security_validator.validate_order(invalid_order, account_value)
+        result = security_validate.validate_order(invalid_order, account_value)
 
         assert isinstance(result, ValidationResult)
         assert not result.is_valid
@@ -100,9 +100,9 @@ class TestConvenienceWrappers:
         limit_type = "api_calls"
 
         # Make requests up to limit
-        limit = security_validator.get_validator().RATE_LIMITS[limit_type].requests
+        limit = security_validate.get_validator().RATE_LIMITS[limit_type].requests
         for i in range(limit + 1):
-            allowed, message = security_validator.check_rate_limit(identifier, limit_type)
+            allowed, message = security_validate.check_rate_limit(identifier, limit_type)
 
         # Should be blocked
         assert allowed is False
@@ -117,18 +117,18 @@ class TestConvenienceWrappers:
         ]
 
         for attack_input in attack_inputs:
-            result = security_validator.sanitize_input(attack_input)
+            result = security_validate.sanitize_input(attack_input)
             assert not result.is_valid
 
     def test_wrapper_functions_consistency(self) -> None:
         """Test wrapper functions are consistent with direct validator usage."""
-        validator = security_validator.get_validator()
+        validator = security_validate.get_validator()
 
         # Test order validation
         order = {"symbol": "BTC-USD", "quantity": 0.001, "order_type": "limit", "price": 50000.0}
         account_value = 100000.0
 
-        wrapper_result = security_validator.validate_order(order, account_value)
+        wrapper_result = security_validate.validate_order(order, account_value)
         direct_result = validator.validate_order_request(order, account_value)
 
         assert wrapper_result.is_valid == direct_result.is_valid
@@ -137,7 +137,7 @@ class TestConvenienceWrappers:
         identifier = "consistency-test"
         limit_type = "api_calls"
 
-        wrapper_allowed, wrapper_message = security_validator.check_rate_limit(
+        wrapper_allowed, wrapper_message = security_validate.check_rate_limit(
             identifier, limit_type
         )
         direct_allowed, direct_message = validator.check_rate_limit(identifier, limit_type)
@@ -148,7 +148,7 @@ class TestConvenienceWrappers:
         # Test sanitization
         input_str = "test string"
 
-        wrapper_result = security_validator.sanitize_input(input_str)
+        wrapper_result = security_validate.sanitize_input(input_str)
         direct_result = validator.sanitize_string(input_str)
 
         assert wrapper_result.is_valid == direct_result.is_valid
@@ -157,14 +157,14 @@ class TestConvenienceWrappers:
     def test_wrapper_functions_error_handling(self) -> None:
         """Test wrapper functions error handling."""
         # Test with None inputs
-        order_result = security_validator.validate_order(None, 1000)  # type: ignore
+        order_result = security_validate.validate_order(None, 1000)  # type: ignore
         assert not order_result.is_valid
         assert any("Order payload must be a mapping" in error for error in order_result.errors)
 
-        rate_result = security_validator.check_rate_limit(None, "invalid")  # type: ignore
+        rate_result = security_validate.check_rate_limit(None, "invalid")  # type: ignore
         assert isinstance(rate_result, tuple)
 
-        sanitize_result = security_validator.sanitize_input(None)  # type: ignore
+        sanitize_result = security_validate.sanitize_input(None)  # type: ignore
         assert not sanitize_result.is_valid
 
     def test_wrapper_functions_multiple_calls(self) -> None:
@@ -175,7 +175,7 @@ class TestConvenienceWrappers:
         # Make multiple calls to test state persistence
         results = []
         for i in range(3):
-            allowed, message = security_validator.check_rate_limit(identifier, limit_type)
+            allowed, message = security_validate.check_rate_limit(identifier, limit_type)
             results.append((allowed, message))
 
         # Should allow first few calls
@@ -187,8 +187,8 @@ class TestConvenienceWrappers:
         # Test order validation with different account values
         order = {"symbol": "BTC-USD", "quantity": 0.01, "order_type": "limit", "price": 50000.0}
 
-        small_account = security_validator.validate_order(order, 1000)
-        large_account = security_validator.validate_order(order, 100000)
+        small_account = security_validate.validate_order(order, 1000)
+        large_account = security_validate.validate_order(order, 100000)
 
         # Small account should be rejected, large account accepted
         assert not small_account.is_valid
@@ -198,27 +198,27 @@ class TestConvenienceWrappers:
         """Test wrapper functions return correct types."""
         # Test validate_order return type
         order = {"symbol": "BTC-USD", "quantity": 0.001, "order_type": "limit", "price": 50000.0}
-        order_result = security_validator.validate_order(order, 100000)
+        order_result = security_validate.validate_order(order, 100000)
 
         assert hasattr(order_result, "is_valid")
         assert hasattr(order_result, "errors")
         assert hasattr(order_result, "sanitized_value")
 
         # Test check_rate_limit return type
-        allowed, message = security_validator.check_rate_limit("test", "api_calls")
+        allowed, message = security_validate.check_rate_limit("test", "api_calls")
         assert isinstance(allowed, bool)
         assert isinstance(message, (str, type(None)))
 
         # Test sanitize_input return type
-        sanitize_result = security_validator.sanitize_input("test")
+        sanitize_result = security_validate.sanitize_input("test")
         assert hasattr(sanitize_result, "is_valid")
         assert hasattr(sanitize_result, "errors")
         assert hasattr(sanitize_result, "sanitized_value")
 
     def test_wrapper_functions_import_path(self) -> None:
         """Test wrapper functions are accessible from correct import path."""
-        # Should be importable from gpt_trader.security.security_validator
-        from gpt_trader.security.security_validator import (
+        # Should be importable from gpt_trader.security.validate
+        from gpt_trader.security.validate import (
             check_rate_limit,
             sanitize_input,
             validate_order,

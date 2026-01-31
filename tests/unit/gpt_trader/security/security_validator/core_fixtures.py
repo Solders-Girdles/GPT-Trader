@@ -16,6 +16,6 @@ def validator_bot_config(bot_config_factory) -> BotConfig:
 @pytest.fixture
 def security_validator() -> Any:
     """SecurityValidator instance for testing."""
-    from gpt_trader.security.security_validator import SecurityValidator
+    from gpt_trader.security.validate import SecurityValidator
 
     return SecurityValidator()

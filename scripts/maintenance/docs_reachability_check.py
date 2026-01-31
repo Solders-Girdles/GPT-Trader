@@ -76,33 +76,64 @@ def _find_metadata_block(lines: list[str], *, scan_limit: int = 60) -> tuple[int
     return None
 
 
-def has_required_metadata(path: Path) -> bool:
+def _parse_metadata(lines: list[str]) -> tuple[dict[str, str], tuple[int, int] | None]:
+    bounds = _find_metadata_block(lines)
+    if bounds is None:
+        return {}, None
+
+    start, end = bounds
+    metadata: dict[str, str] = {}
+    for line in lines[start + 1 : end]:
+        stripped = line.strip()
+        if not stripped or ":" not in stripped:
+            continue
+        key, value = stripped.split(":", maxsplit=1)
+        key = key.strip()
+        value = value.strip()
+        if key and value:
+            metadata[key] = value
+    return metadata, bounds
+
+
+def metadata_issues(path: Path) -> list[str]:
     try:
         lines = path.read_text(encoding="utf-8").splitlines()
     except OSError:
-        return False
+        return ["unable to read file"]
 
-    bounds = _find_metadata_block(lines)
+    metadata, bounds = _parse_metadata(lines)
     if bounds is None:
-        return False
+        return ["missing metadata block (add YAML front matter within the first 60 lines)"]
 
-    start, end = bounds
-    block_lines = [line.strip() for line in lines[start + 1 : end] if line.strip()]
-    status_value: str | None = None
-    date_value: str | None = None
+    issues: list[str] = []
 
-    for line in block_lines:
-        if line.startswith("status:"):
-            status_value = line.split(":", maxsplit=1)[1].strip()
-        for key in ("last-updated:", "last-reviewed:", "last-verified:"):
-            if line.startswith(key):
-                date_value = line.split(":", maxsplit=1)[1].strip()
+    status_value = metadata.get("status")
+    if status_value is None:
+        issues.append("missing status")
+    elif status_value not in ALLOWED_STATUSES:
+        allowed = ", ".join(sorted(ALLOWED_STATUSES))
+        issues.append(f"invalid status '{status_value}' (allowed: {allowed})")
 
-    if status_value is None or status_value not in ALLOWED_STATUSES:
-        return False
-    if date_value is None or not ISO_DATE_PATTERN.match(date_value):
-        return False
-    return True
+    date_keys = ("last-updated", "last-reviewed", "last-verified")
+    date_candidates = {key: metadata[key] for key in date_keys if key in metadata}
+
+    if not date_candidates:
+        issues.append("missing last-updated/last-reviewed/last-verified")
+    else:
+        valid_dates = [
+            (key, value)
+            for key, value in date_candidates.items()
+            if ISO_DATE_PATTERN.match(value)
+        ]
+        if not valid_dates:
+            invalid_list = ", ".join(
+                f"{key}={value!r}" for key, value in sorted(date_candidates.items())
+            )
+            issues.append(
+                f"invalid date format ({invalid_list}); expected YYYY-MM-DD"
+            )
+
+    return issues
 
 
 def load_readme_sections(readme_path: Path) -> set[str]:
@@ -322,13 +353,29 @@ def main() -> int:
         print(f"\nTotal orphaned: {len(orphaned)}")
         return 1
 
-    missing_metadata = sorted([path for path in docs if not has_required_metadata(path)])
+    missing_metadata: list[tuple[Path, list[str]]] = []
+    for path in sorted(docs):
+        issues = metadata_issues(path)
+        if issues:
+            missing_metadata.append((path, issues))
+
     if missing_metadata:
+        print("Docs missing required metadata.")
         print(
-            "Docs missing required metadata block (status + last-updated/last-reviewed/last-verified):"
+            "Add a YAML front matter block within the first 60 lines containing:"
         )
-        for path in missing_metadata:
-            print(f"- {path.relative_to(repo_root)}")
+        print("  ---")
+        print(
+            "  status: current|draft|deprecated|superseded"
+        )
+        print(
+            "  last-updated: YYYY-MM-DD  (or last-reviewed / last-verified)"
+        )
+        print("  ---")
+        print("\nProblems:")
+        for path, issues in missing_metadata:
+            issue_text = "; ".join(issues)
+            print(f"- {path.relative_to(repo_root)} ({issue_text})")
         print(f"\nTotal missing metadata: {len(missing_metadata)}")
         return 1
 

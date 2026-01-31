@@ -21,9 +21,11 @@ from ..sizing.position_sizer import PositionSizer, PositionSizingConfig, SizingR
 from .batch_regime import RegimeHistory, RegimeSnapshot
 
 if TYPE_CHECKING:
-    from gpt_trader.core import Product
-    from gpt_trader.features.live_trade.interfaces import TradingStrategy
-    from gpt_trader.features.live_trade.strategies.perps_baseline import Decision
+    from gpt_trader.features.intelligence.contracts import (
+        Decision,
+        Product,
+        TradingStrategy,
+    )
 
 
 @dataclass

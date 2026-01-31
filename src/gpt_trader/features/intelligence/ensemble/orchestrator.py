@@ -10,10 +10,15 @@ from __future__ import annotations
 import inspect
 from collections.abc import Sequence
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-from gpt_trader.core import Product
-from gpt_trader.features.live_trade.strategies.perps_baseline import Action, Decision
+from gpt_trader.features.intelligence.contracts import (
+    Action,
+    Decision,
+    MarketDataContext,
+    Product,
+    TradingStrategy,
+)
 
 from ..regime.detector import MarketRegimeDetector
 from ..regime.models import RegimeConfig, RegimeState, RegimeType
@@ -21,10 +26,6 @@ from .adaptive import BayesianWeightConfig, BayesianWeightUpdater
 from .models import EnsembleConfig, StrategyVote
 from .voting import VotingMechanism
 from .weighting import DynamicWeightCalculator
-
-if TYPE_CHECKING:
-    from gpt_trader.features.live_trade.interfaces import TradingStrategy
-    from gpt_trader.features.live_trade.strategies.base import MarketDataContext
 
 
 class EnsembleOrchestrator:

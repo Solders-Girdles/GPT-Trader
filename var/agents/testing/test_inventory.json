@@ -7,46 +7,46 @@
     "markers_used": 16
   },
   "marker_definitions": {
-    "unit": "Unit tests (isolated component tests)",
-    "integration": "Integration-level tests (skipped by default)",
-    "property": "Property-based tests using hypothesis",
-    "behavioral": "Behavioral contract tests",
-    "contract": "Contract tests for API verification",
-    "e2e": "End-to-end system tests",
+    "anyio": "Async tests using anyio",
     "api": "API-related tests",
-    "endpoints": "Coinbase API endpoint tests (paths/params/modes/errors)",
-    "cli": "Command-line interface tests",
-    "monitoring": "Monitoring and alerting tests",
-    "risk": "Risk management tests",
-    "execution": "Trade execution tests",
+    "asyncio": "Async tests (mapped to anyio via anyio plugin)",
     "backtesting": "Backtesting engine tests",
-    "persistence": "Data persistence tests",
-    "security": "Security validation tests",
-    "utilities": "Utility function tests",
-    "perps": "Perpetual futures trading tests",
-    "spot": "Spot trading tests",
-    "portfolio": "Portfolio management tests",
-    "strategy": "Trading strategy tests",
+    "behavioral": "Behavioral contract tests",
+    "cli": "Command-line interface tests",
+    "contract": "Contract tests for API verification",
+    "deprecated": "Tests for deprecated functionality",
+    "e2e": "End-to-end system tests",
+    "endpoints": "Coinbase API endpoint tests (paths/params/modes/errors)",
+    "execution": "Trade execution tests",
+    "flaky": "Known flaky tests that may need retries",
+    "integration": "Integration-level tests (skipped by default)",
+    "legacy_delete": "Tests slated for deletion (see tests/_triage/legacy_tests.yaml)",
+    "legacy_modernize": "Tests to modernize/refactor (see tests/_triage/legacy_tests.yaml)",
     "liquidity": "Liquidity and market impact tests",
+    "load": "Load testing scenarios",
+    "manual": "Tests requiring manual intervention/verification",
+    "monitoring": "Monitoring and alerting tests",
     "perf": "Performance benchmarks (opt-in)",
     "performance": "Performance benchmarks (alias to perf)",
-    "slow": "High-duration tests gated from default dev runs",
-    "load": "Load testing scenarios",
-    "stress": "Stress testing scenarios",
+    "perps": "Perpetual futures trading tests",
+    "persistence": "Data persistence tests",
+    "portfolio": "Portfolio management tests",
+    "property": "Property-based tests using hypothesis",
     "real_api": "Tests that hit real Coinbase APIs (opt-in)",
-    "uses_mock_broker": "Tests that depend on the deterministic broker (legacy MockBroker path; skipped by default)",
+    "regression": "Regression tests for known issues",
     "requires_db": "Tests requiring database connectivity",
     "requires_network": "Tests requiring network connectivity",
     "requires_secrets": "Tests requiring access to secrets/vault",
-    "asyncio": "Async tests (mapped to anyio via anyio plugin)",
-    "anyio": "Async tests using anyio",
-    "regression": "Regression tests for known issues",
-    "flaky": "Known flaky tests that may need retries",
-    "manual": "Tests requiring manual intervention/verification",
-    "deprecated": "Tests for deprecated functionality",
+    "risk": "Risk management tests",
+    "security": "Security validation tests",
+    "slow": "High-duration tests gated from default dev runs",
+    "spot": "Spot trading tests",
+    "strategy": "Trading strategy tests",
+    "stress": "Stress testing scenarios",
+    "unit": "Unit tests (isolated component tests)",
+    "uses_mock_broker": "Tests that depend on the deterministic broker (legacy MockBroker path; skipped by default)",
     "uses_real_preferences": "Tests that read or write real TUI preferences",
-    "legacy_delete": "Tests slated for deletion (see tests/_triage/legacy_tests.yaml)",
-    "legacy_modernize": "Tests to modernize/refactor (see tests/_triage/legacy_tests.yaml)"
+    "utilities": "Utility function tests"
   },
   "marker_categories": {
     "test_type": [
@@ -662,6 +662,42 @@
       "tests/unit/gpt_trader/security/test_request_validator.py",
       "tests/unit/gpt_trader/security/test_request_validator_limits.py"
     ],
+    "test_agent_health_ci_input.py": [
+      "tests/unit/scripts/test_agent_health_ci_input.py"
+    ],
+    "test_backtest_runner_pillar2_gates.py": [
+      "tests/unit/scripts/test_backtest_runner_pillar2_gates.py"
+    ],
+    "test_canary_process.py": [
+      "tests/unit/scripts/test_canary_process.py"
+    ],
+    "test_canary_watchdog.py": [
+      "tests/unit/scripts/test_canary_watchdog.py"
+    ],
+    "test_chaos.py": [
+      "tests/unit/support/test_chaos.py"
+    ],
+    "test_check_import_boundaries.py": [
+      "tests/unit/scripts/test_check_import_boundaries.py"
+    ],
+    "test_docs_maintenance.py": [
+      "tests/unit/scripts/test_docs_maintenance.py"
+    ],
+    "test_feature_slice_scaffold.py": [
+      "tests/unit/scripts/test_feature_slice_scaffold.py"
+    ],
+    "test_liveness_check.py": [
+      "tests/unit/scripts/test_liveness_check.py"
+    ],
+    "test_reasoning_artifacts_guard_stack.py": [
+      "tests/unit/scripts/test_reasoning_artifacts_guard_stack.py"
+    ],
+    "test_runtime_fingerprint.py": [
+      "tests/unit/scripts/test_runtime_fingerprint.py"
+    ],
+    "test_tail_decision_traces.py": [
+      "tests/unit/scripts/test_tail_decision_traces.py"
+    ],
     "tui": [
       "tests/unit/gpt_trader/tui/adapters/test_null_status_reporter.py",
       "tests/unit/gpt_trader/tui/demo/test_mock_data.py",
@@ -819,42 +855,6 @@
       "tests/unit/gpt_trader/validation/test_rules_string_time_and_symbol_rules.py",
       "tests/unit/gpt_trader/validation/test_temporal_validators.py",
       "tests/unit/gpt_trader/validation/test_type_validators.py"
-    ],
-    "test_agent_health_ci_input.py": [
-      "tests/unit/scripts/test_agent_health_ci_input.py"
-    ],
-    "test_backtest_runner_pillar2_gates.py": [
-      "tests/unit/scripts/test_backtest_runner_pillar2_gates.py"
-    ],
-    "test_canary_process.py": [
-      "tests/unit/scripts/test_canary_process.py"
-    ],
-    "test_canary_watchdog.py": [
-      "tests/unit/scripts/test_canary_watchdog.py"
-    ],
-    "test_check_import_boundaries.py": [
-      "tests/unit/scripts/test_check_import_boundaries.py"
-    ],
-    "test_docs_maintenance.py": [
-      "tests/unit/scripts/test_docs_maintenance.py"
-    ],
-    "test_feature_slice_scaffold.py": [
-      "tests/unit/scripts/test_feature_slice_scaffold.py"
-    ],
-    "test_liveness_check.py": [
-      "tests/unit/scripts/test_liveness_check.py"
-    ],
-    "test_reasoning_artifacts_guard_stack.py": [
-      "tests/unit/scripts/test_reasoning_artifacts_guard_stack.py"
-    ],
-    "test_runtime_fingerprint.py": [
-      "tests/unit/scripts/test_runtime_fingerprint.py"
-    ],
-    "test_tail_decision_traces.py": [
-      "tests/unit/scripts/test_tail_decision_traces.py"
-    ],
-    "test_chaos.py": [
-      "tests/unit/support/test_chaos.py"
     ]
   },
   "tests_by_file": {

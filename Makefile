@@ -49,11 +49,11 @@ typecheck:
 	uv run mypy src
 
 docs-audit:
-	python scripts/maintenance/docs_link_audit.py
-	python scripts/maintenance/docs_reachability_check.py
+	uv run python scripts/maintenance/docs_link_audit.py
+	uv run python scripts/maintenance/docs_reachability_check.py
 
 tui-css-check:
-	python scripts/ci/check_tui_css_up_to_date.py
+	uv run python scripts/ci/check_tui_css_up_to_date.py
 
 test-guardrails:
 	uv run python scripts/ci/check_test_hygiene.py
@@ -72,7 +72,7 @@ ci-required:
 		exit 1; \
 	fi
 	@echo "No orchestration imports found - package was removed in v3.0."
-	python scripts/ci/check_deprecation_registry.py
+	uv run python scripts/ci/check_deprecation_registry.py
 	$(MAKE) docs-audit
 	$(MAKE) typecheck
 	uv run agent-regenerate --verify

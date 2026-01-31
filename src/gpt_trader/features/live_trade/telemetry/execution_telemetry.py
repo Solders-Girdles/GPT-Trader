@@ -1,8 +1,8 @@
 """
-Execution Telemetry Collector.
+Execution telemetry collection for live trade order submissions.
 
-Tracks order submission metrics including latency, success rates,
-and retry activity for monitoring execution health.
+Tracks order submission latency, success rates, rejection reasons, and retry activity.
+Designed for lightweight in-memory aggregation consumed by runtime monitoring and the TUI.
 """
 
 from __future__ import annotations
@@ -11,21 +11,83 @@ import statistics
 import threading
 import time
 from collections import deque
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
-
-from gpt_trader.tui.types import ExecutionIssue, ExecutionMetrics
-from gpt_trader.utilities.logging_patterns import get_logger
-
-if TYPE_CHECKING:
-    pass
-
-logger = get_logger(__name__, component="tui")
+from dataclasses import dataclass, field
 
 # Rolling window size for metrics
 METRICS_WINDOW_SIZE = 100
 LATENCY_WINDOW_SIZE = 50
 ISSUES_WINDOW_SIZE = 10
+
+
+@dataclass
+class ExecutionIssue:
+    """A recent execution issue such as a rejection or retry."""
+
+    timestamp: float
+    symbol: str
+    side: str
+    quantity: float
+    price: float
+    reason: str
+    reason_detail: str = ""
+    is_retry: bool = False
+
+
+@dataclass
+class ExecutionMetrics:
+    """Execution telemetry for order submission tracking.
+
+    Tracks order submission performance including latency, success rates,
+    and retry activity for monitoring execution health.
+    """
+
+    # Submission counts (rolling window)
+    submissions_total: int = 0
+    submissions_success: int = 0
+    submissions_failed: int = 0
+    submissions_rejected: int = 0
+
+    # Latency metrics (milliseconds)
+    avg_latency_ms: float = 0.0
+    p50_latency_ms: float = 0.0
+    p95_latency_ms: float = 0.0
+    last_latency_ms: float = 0.0
+
+    # Retry metrics
+    retry_total: int = 0
+    retry_rate: float = 0.0  # retries per submission
+
+    # Recent activity
+    last_submission_time: float = 0.0
+    last_failure_reason: str = ""
+
+    # Reason breakdowns (rolling window)
+    rejection_reasons: dict[str, int] = field(default_factory=dict)
+    retry_reasons: dict[str, int] = field(default_factory=dict)
+    recent_rejections: list[ExecutionIssue] = field(default_factory=list)
+    recent_retries: list[ExecutionIssue] = field(default_factory=list)
+
+    @property
+    def success_rate(self) -> float:
+        """Calculate success rate as percentage."""
+        if self.submissions_total == 0:
+            return 100.0
+        return (self.submissions_success / self.submissions_total) * 100
+
+    @property
+    def is_healthy(self) -> bool:
+        """Check if execution metrics indicate healthy state."""
+        return self.success_rate >= 95.0 and self.retry_rate < 0.5
+
+    @property
+    def top_rejection_reasons(self) -> list[tuple[str, int]]:
+        """Get rejection reasons sorted by count (highest first)."""
+        return sorted(self.rejection_reasons.items(), key=lambda x: -x[1])
+
+    @property
+    def top_retry_reasons(self) -> list[tuple[str, int]]:
+        """Get retry reasons sorted by count (highest first)."""
+        return sorted(self.retry_reasons.items(), key=lambda x: -x[1])
 
 
 @dataclass
@@ -210,9 +272,9 @@ class ExecutionTelemetryCollector:
             last_latency = last.latency_ms
             last_time = last.timestamp
             last_reason = ""
-            for s in reversed(self._submissions):
-                if s.failure_reason:
-                    last_reason = s.failure_reason
+            for record in reversed(self._submissions):
+                if record.failure_reason:
+                    last_reason = record.failure_reason
                     break
 
             # Calculate retry rate
@@ -220,10 +282,10 @@ class ExecutionTelemetryCollector:
 
             # Aggregate rejection reasons from submissions in window
             rejection_reasons: dict[str, int] = {}
-            for s in self._submissions:
-                if s.rejection_reason:
-                    rejection_reasons[s.rejection_reason] = (
-                        rejection_reasons.get(s.rejection_reason, 0) + 1
+            for record in self._submissions:
+                if record.rejection_reason:
+                    rejection_reasons[record.rejection_reason] = (
+                        rejection_reasons.get(record.rejection_reason, 0) + 1
                     )
 
             # Aggregate retry reasons from retry_reasons deque
@@ -284,6 +346,7 @@ def clear_execution_telemetry() -> None:
 
 
 __all__ = [
+    "ExecutionIssue",
     "ExecutionMetrics",
     "ExecutionTelemetryCollector",
     "SubmissionRecord",

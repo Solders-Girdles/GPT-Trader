@@ -8,9 +8,9 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING, Any
 
+from gpt_trader.features.live_trade.telemetry import get_execution_telemetry
 from gpt_trader.tui.notification_helpers import notify_action
 from gpt_trader.tui.screens import DetailsScreen, MarketScreen, StrategyDetailScreen
-from gpt_trader.tui.services.execution_telemetry import get_execution_telemetry
 from gpt_trader.tui.widgets import SlimStatusWidget
 from gpt_trader.tui.widgets.execution_issues_modal import ExecutionIssuesModal
 from gpt_trader.tui.widgets.status import BotStatusWidget

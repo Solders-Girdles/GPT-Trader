@@ -175,6 +175,10 @@ def build_steps(args: argparse.Namespace) -> list[PlannedStep]:
             command=["uv", "run", "python", "scripts/ci/check_legacy_patterns.py"],
         ),
         PlannedStep(
+            label="Check import boundaries",
+            command=["uv", "run", "python", "scripts/ci/check_import_boundaries.py"],
+        ),
+        PlannedStep(
             label="Check legacy triage alignment",
             command=["uv", "run", "python", "scripts/ci/check_legacy_test_triage.py"],
         ),

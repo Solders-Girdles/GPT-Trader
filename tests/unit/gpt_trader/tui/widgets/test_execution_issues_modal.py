@@ -2,7 +2,7 @@
 
 import time
 
-from gpt_trader.tui.types import ExecutionIssue, ExecutionMetrics
+from gpt_trader.features.live_trade.telemetry import ExecutionIssue, ExecutionMetrics
 from gpt_trader.tui.widgets.execution_issues_modal import ExecutionIssuesModal
 
 

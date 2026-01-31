@@ -2,8 +2,8 @@
   "version": "1.0",
   "summary": {
     "tests_scanned": 656,
-    "source_modules": 350,
-    "unresolved_modules": 4
+    "source_modules": 349,
+    "unresolved_modules": 3
   },
   "source_to_tests": {
     "gpt_trader.agents": [
@@ -276,7 +276,6 @@
       "tests/unit/gpt_trader/cli/test_commands_account_treasury.py"
     ],
     "gpt_trader.cli.response": [
-      "tests/unit/gpt_trader/cli/commands/optimize/test_commands_execution.py",
       "tests/unit/gpt_trader/cli/test_response_cli_response.py",
       "tests/unit/gpt_trader/cli/test_response_envelope_contract.py",
       "tests/unit/gpt_trader/cli/test_response_error.py",
@@ -1124,9 +1123,6 @@
     ],
     "gpt_trader.features.research": [
       "tests/unit/gpt_trader/features/research/test_research_import.py"
-    ],
-    "gpt_trader.features.research.artifacts": [
-      "tests/unit/gpt_trader/cli/commands/optimize/test_commands_execution.py"
     ],
     "gpt_trader.features.research.backtesting.data_loader": [
       "tests/unit/gpt_trader/features/research/backtesting/test_data_loader_edges.py",
@@ -2432,9 +2428,7 @@
       "gpt_trader.cli.commands.optimize"
     ],
     "tests/unit/gpt_trader/cli/commands/optimize/test_commands_execution.py": [
-      "gpt_trader.cli.commands.optimize",
-      "gpt_trader.cli.response",
-      "gpt_trader.features.research.artifacts"
+      "gpt_trader.cli.commands.optimize"
     ],
     "tests/unit/gpt_trader/cli/commands/optimize/test_commands_registration.py": [
       "gpt_trader.cli.commands.optimize"
@@ -4605,12 +4599,12 @@
     "gpt_trader.backtesting.simulation": "src/gpt_trader/backtesting/simulation/__init__.py",
     "gpt_trader.backtesting.validation.validator": "src/gpt_trader/backtesting/validation/validator.py",
     "gpt_trader.cli.commands.optimize": "src/gpt_trader/cli/commands/optimize/__init__.py",
-    "gpt_trader.cli.response": "src/gpt_trader/cli/response.py",
     "gpt_trader.cli.commands.optimize.config_loader": "src/gpt_trader/cli/commands/optimize/config_loader.py",
     "gpt_trader.cli.commands.optimize.formatters": "src/gpt_trader/cli/commands/optimize/formatters.py",
     "gpt_trader.cli.commands.account": "src/gpt_trader/cli/commands/account.py",
     "gpt_trader.cli.commands.treasury": "src/gpt_trader/cli/commands/treasury.py",
     "gpt_trader.cli.commands.orders": "src/gpt_trader/cli/commands/orders.py",
+    "gpt_trader.cli.response": "src/gpt_trader/cli/response.py",
     "gpt_trader.config.config_utilities": "src/gpt_trader/config/config_utilities.py",
     "gpt_trader.config.env_utils": "src/gpt_trader/config/env_utils.py",
     "gpt_trader.core.math.incremental": "src/gpt_trader/core/math/incremental.py",
@@ -4894,9 +4888,6 @@
       "tests/unit/gpt_trader/features/live_trade/test_symbols.py",
       "tests/unit/gpt_trader/features/live_trade/test_symbols_derivatives.py",
       "tests/unit/gpt_trader/features/live_trade/test_symbols_normalization.py"
-    ],
-    "gpt_trader.features.research.artifacts": [
-      "tests/unit/gpt_trader/cli/commands/optimize/test_commands_execution.py"
     ],
     "gpt_trader.tui": [
       "tests/unit/gpt_trader/tui/test_helpers.py"

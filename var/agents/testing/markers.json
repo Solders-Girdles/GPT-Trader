@@ -1,54 +1,8 @@
 {
-  "definitions": {
-    "unit": "Unit tests (isolated component tests)",
-    "integration": "Integration-level tests (skipped by default)",
-    "property": "Property-based tests using hypothesis",
-    "behavioral": "Behavioral contract tests",
-    "contract": "Contract tests for API verification",
-    "e2e": "End-to-end system tests",
-    "api": "API-related tests",
-    "endpoints": "Coinbase API endpoint tests (paths/params/modes/errors)",
-    "cli": "Command-line interface tests",
-    "monitoring": "Monitoring and alerting tests",
-    "risk": "Risk management tests",
-    "execution": "Trade execution tests",
-    "backtesting": "Backtesting engine tests",
-    "persistence": "Data persistence tests",
-    "security": "Security validation tests",
-    "utilities": "Utility function tests",
-    "perps": "Perpetual futures trading tests",
-    "spot": "Spot trading tests",
-    "portfolio": "Portfolio management tests",
-    "strategy": "Trading strategy tests",
-    "liquidity": "Liquidity and market impact tests",
-    "perf": "Performance benchmarks (opt-in)",
-    "performance": "Performance benchmarks (alias to perf)",
-    "slow": "High-duration tests gated from default dev runs",
-    "load": "Load testing scenarios",
-    "stress": "Stress testing scenarios",
-    "real_api": "Tests that hit real Coinbase APIs (opt-in)",
-    "uses_mock_broker": "Tests that depend on the deterministic broker (legacy MockBroker path; skipped by default)",
-    "requires_db": "Tests requiring database connectivity",
-    "requires_network": "Tests requiring network connectivity",
-    "requires_secrets": "Tests requiring access to secrets/vault",
-    "asyncio": "Async tests (mapped to anyio via anyio plugin)",
-    "anyio": "Async tests using anyio",
-    "regression": "Regression tests for known issues",
-    "flaky": "Known flaky tests that may need retries",
-    "manual": "Tests requiring manual intervention/verification",
-    "deprecated": "Tests for deprecated functionality",
-    "uses_real_preferences": "Tests that read or write real TUI preferences",
-    "legacy_delete": "Tests slated for deletion (see tests/_triage/legacy_tests.yaml)",
-    "legacy_modernize": "Tests to modernize/refactor (see tests/_triage/legacy_tests.yaml)"
-  },
   "categories": {
-    "test_type": [
-      "unit",
-      "integration",
-      "property",
-      "behavioral",
-      "contract",
-      "e2e"
+    "async": [
+      "asyncio",
+      "anyio"
     ],
     "component": [
       "api",
@@ -62,12 +16,12 @@
       "security",
       "utilities"
     ],
-    "trading": [
-      "perps",
-      "spot",
-      "portfolio",
-      "strategy",
-      "liquidity"
+    "environment": [
+      "real_api",
+      "uses_mock_broker",
+      "requires_db",
+      "requires_network",
+      "requires_secrets"
     ],
     "performance": [
       "perf",
@@ -76,45 +30,91 @@
       "load",
       "stress"
     ],
-    "environment": [
-      "real_api",
-      "uses_mock_broker",
-      "requires_db",
-      "requires_network",
-      "requires_secrets"
-    ],
-    "async": [
-      "asyncio",
-      "anyio"
-    ],
     "special": [
       "regression",
       "flaky",
       "manual",
       "deprecated"
+    ],
+    "test_type": [
+      "unit",
+      "integration",
+      "property",
+      "behavioral",
+      "contract",
+      "e2e"
+    ],
+    "trading": [
+      "perps",
+      "spot",
+      "portfolio",
+      "strategy",
+      "liquidity"
     ]
   },
   "counts": {
-    "unit": 5876,
-    "asyncio": 347,
-    "parametrize": 152,
-    "property": 82,
-    "integration": 79,
-    "endpoints": 78,
-    "usefixtures": 16,
-    "skipif": 8,
-    "slow": 4,
     "anyio": 3,
+    "asyncio": 347,
     "contract": 3,
+    "endpoints": 78,
+    "integration": 79,
+    "parametrize": 152,
     "perps": 3,
+    "property": 82,
     "real_api": 1,
     "requires_network": 1,
     "requires_secrets": 1,
+    "skipif": 8,
+    "slow": 4,
+    "unit": 5876,
+    "usefixtures": 16,
     "uses_real_preferences": 1
   },
+  "definitions": {
+    "anyio": "Async tests using anyio",
+    "api": "API-related tests",
+    "asyncio": "Async tests (mapped to anyio via anyio plugin)",
+    "backtesting": "Backtesting engine tests",
+    "behavioral": "Behavioral contract tests",
+    "cli": "Command-line interface tests",
+    "contract": "Contract tests for API verification",
+    "deprecated": "Tests for deprecated functionality",
+    "e2e": "End-to-end system tests",
+    "endpoints": "Coinbase API endpoint tests (paths/params/modes/errors)",
+    "execution": "Trade execution tests",
+    "flaky": "Known flaky tests that may need retries",
+    "integration": "Integration-level tests (skipped by default)",
+    "legacy_delete": "Tests slated for deletion (see tests/_triage/legacy_tests.yaml)",
+    "legacy_modernize": "Tests to modernize/refactor (see tests/_triage/legacy_tests.yaml)",
+    "liquidity": "Liquidity and market impact tests",
+    "load": "Load testing scenarios",
+    "manual": "Tests requiring manual intervention/verification",
+    "monitoring": "Monitoring and alerting tests",
+    "perf": "Performance benchmarks (opt-in)",
+    "performance": "Performance benchmarks (alias to perf)",
+    "perps": "Perpetual futures trading tests",
+    "persistence": "Data persistence tests",
+    "portfolio": "Portfolio management tests",
+    "property": "Property-based tests using hypothesis",
+    "real_api": "Tests that hit real Coinbase APIs (opt-in)",
+    "regression": "Regression tests for known issues",
+    "requires_db": "Tests requiring database connectivity",
+    "requires_network": "Tests requiring network connectivity",
+    "requires_secrets": "Tests requiring access to secrets/vault",
+    "risk": "Risk management tests",
+    "security": "Security validation tests",
+    "slow": "High-duration tests gated from default dev runs",
+    "spot": "Spot trading tests",
+    "strategy": "Trading strategy tests",
+    "stress": "Stress testing scenarios",
+    "unit": "Unit tests (isolated component tests)",
+    "uses_mock_broker": "Tests that depend on the deterministic broker (legacy MockBroker path; skipped by default)",
+    "uses_real_preferences": "Tests that read or write real TUI preferences",
+    "utilities": "Utility function tests"
+  },
   "usage": {
-    "run_by_marker": "pytest -m <marker>",
+    "combine_markers": "pytest -m '<marker1> and <marker2>'",
     "exclude_marker": "pytest -m 'not <marker>'",
-    "combine_markers": "pytest -m '<marker1> and <marker2>'"
+    "run_by_marker": "pytest -m <marker>"
   }
 }

@@ -1,23 +1,23 @@
 {
-  "version": "1.0",
   "description": "Test inventory for AI agent consumption",
   "files": {
-    "test_inventory": "test_inventory.json",
     "markers": "markers.json",
-    "source_test_map": "source_test_map.json"
-  },
-  "summary": {
-    "total_tests": 6041,
-    "total_files": 718,
-    "markers_used": 16
+    "source_test_map": "source_test_map.json",
+    "test_inventory": "test_inventory.json"
   },
   "quick_commands": {
-    "run_unit_tests": "pytest -m unit",
+    "find_test_files_for_source": "uv run agent-tests --source gpt_trader.cli --source-files",
+    "find_tests_for_source": "uv run agent-tests --source gpt_trader.cli",
+    "list_all_markers": "pytest --markers",
     "run_cli_tests": "pytest tests/unit/gpt_trader/cli",
     "run_fast_tests": "pytest -m 'not slow and not performance'",
     "run_risk_tests": "pytest -m risk",
-    "list_all_markers": "pytest --markers",
-    "find_tests_for_source": "uv run agent-tests --source gpt_trader.cli",
-    "find_test_files_for_source": "uv run agent-tests --source gpt_trader.cli --source-files"
-  }
+    "run_unit_tests": "pytest -m unit"
+  },
+  "summary": {
+    "markers_used": 16,
+    "total_files": 718,
+    "total_tests": 6041
+  },
+  "version": "1.0"
 }

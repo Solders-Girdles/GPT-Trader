@@ -169,7 +169,7 @@ def extract_test_info(file_path: Path) -> list[dict[str, Any]]:
                     test_info["markers"] = dedupe_preserve_order(test_info["markers"])
                     tests.append(test_info)
 
-    return tests
+    return sorted(tests, key=lambda test: (test.get("line", 0), test.get("name", "")))
 
 
 def extract_test_imports(file_path: Path) -> list[str]:
@@ -280,11 +280,11 @@ def scan_test_files(test_dir: Path) -> dict[str, Any]:
             imports_by_file[rel_path] = imports
 
     return {
-        "inventory": inventory,
+        "inventory": dict(sorted(inventory.items())),
         "marker_counts": dict(marker_counts),
         "total_tests": total_tests,
         "total_files": len(inventory),
-        "imports_by_file": imports_by_file,
+        "imports_by_file": dict(sorted(imports_by_file.items())),
     }
 
 
@@ -300,7 +300,7 @@ def categorize_by_path(inventory: dict[str, list[dict[str, Any]]]) -> dict[str, 
             category = parts[3]  # e.g., "cli", "features", "config"
             categories[category].append(file_path)
 
-    return dict(categories)
+    return {category: sorted(paths) for category, paths in sorted(categories.items())}
 
 
 def generate_test_inventory(
@@ -310,6 +310,7 @@ def generate_test_inventory(
     """Generate the complete test inventory."""
     inventory = scan_results["inventory"]
     path_categories = categorize_by_path(inventory)
+    marker_defs = dict(sorted(marker_defs.items()))
 
     # Group markers by category (from pytest.ini comments)
     marker_categories = {
@@ -485,11 +486,18 @@ def build_source_test_map(imports_by_file: dict[str, list[str]]) -> dict[str, An
         },
         "source_to_tests": source_to_tests_sorted,
         "test_to_sources": dict(sorted(test_to_sources.items())),
-        "source_paths": source_paths,
+        "source_paths": dict(sorted(source_paths.items())),
         "unresolved_modules": {
             module: sorted(tests) for module, tests in sorted(unresolved.items())
         },
     }
+
+
+def dump_json(path: Path, payload: Any) -> None:
+    """Write deterministic JSON output."""
+    with open(path, "w") as f:
+        json.dump(payload, f, indent=2, sort_keys=True)
+        f.write("\n")
 
 
 def main() -> int:
@@ -551,7 +559,7 @@ def main() -> int:
     if args.by_marker:
         matches = filter_by_marker(inventory, args.by_marker)
         if args.stdout:
-            print(json.dumps(matches, indent=2))
+            print(json.dumps(matches, indent=2, sort_keys=True))
         else:
             for m in matches:
                 print(m)
@@ -561,7 +569,7 @@ def main() -> int:
     if args.by_path:
         matches = filter_by_path(inventory, args.by_path)
         if args.stdout:
-            print(json.dumps(matches, indent=2))
+            print(json.dumps(matches, indent=2, sort_keys=True))
         else:
             for m in matches:
                 print(m)
@@ -572,7 +580,7 @@ def main() -> int:
         if args.source_files:
             matches = find_test_files_for_source(source_test_map, args.source)
             if args.stdout:
-                print(json.dumps(matches, indent=2))
+                print(json.dumps(matches, indent=2, sort_keys=True))
             else:
                 for m in matches:
                     print(m)
@@ -583,7 +591,7 @@ def main() -> int:
         else:
             matches = filter_by_source(inventory, source_test_map, args.source)
             if args.stdout:
-                print(json.dumps(matches, indent=2))
+                print(json.dumps(matches, indent=2, sort_keys=True))
             else:
                 for m in matches:
                     print(m)
@@ -591,7 +599,7 @@ def main() -> int:
         return 0
 
     if args.stdout:
-        print(json.dumps(inventory, indent=2))
+        print(json.dumps(inventory, indent=2, sort_keys=True))
         return 0
 
     # Write output files
@@ -600,9 +608,7 @@ def main() -> int:
 
     # Write main inventory
     inventory_path = output_dir / "test_inventory.json"
-    with open(inventory_path, "w") as f:
-        json.dump(inventory, f, indent=2)
-        f.write("\n")
+    dump_json(inventory_path, inventory)
     print(f"Test inventory written to: {inventory_path}")
 
     # Write markers reference
@@ -617,9 +623,7 @@ def main() -> int:
         },
     }
     markers_path = output_dir / "markers.json"
-    with open(markers_path, "w") as f:
-        json.dump(markers_ref, f, indent=2)
-        f.write("\n")
+    dump_json(markers_path, markers_ref)
     print(f"Markers reference written to: {markers_path}")
 
     # Write index
@@ -643,16 +647,12 @@ def main() -> int:
         },
     }
     index_path = output_dir / "index.json"
-    with open(index_path, "w") as f:
-        json.dump(index, f, indent=2)
-        f.write("\n")
+    dump_json(index_path, index)
     print(f"Index written to: {index_path}")
 
     # Write source-to-test map
     source_test_map_path = output_dir / "source_test_map.json"
-    with open(source_test_map_path, "w") as f:
-        json.dump(source_test_map, f, indent=2)
-        f.write("\n")
+    dump_json(source_test_map_path, source_test_map)
     print(f"Source/test map written to: {source_test_map_path}")
 
     print(

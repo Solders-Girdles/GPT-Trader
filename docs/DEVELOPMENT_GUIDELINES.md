@@ -103,6 +103,16 @@ bypass guards:
 
 ### Local CI Command
 
+For a fail-fast entrypoint that mirrors the required PR checks, run:
+
+```bash
+make ci-required
+```
+
+It runs lint/format, docs audits, mypy, agent artifacts freshness, the TUI CSS
+check, test guardrails, and core unit tests, stopping on the first failure.
+Use it when you want the required CI gates without optional suites.
+
 Run the local CI command to mirror the required PR checks:
 
 ```bash

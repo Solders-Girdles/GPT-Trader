@@ -113,7 +113,7 @@ def _record_execution_telemetry(
         price: Order price.
     """
     try:
-        from gpt_trader.tui.services.execution_telemetry import get_execution_telemetry
+        from gpt_trader.features.live_trade.telemetry import get_execution_telemetry
 
         collector = get_execution_telemetry()
         collector.record_submission(

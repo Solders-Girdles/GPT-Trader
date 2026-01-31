@@ -7,8 +7,9 @@ Update baselines:
 
 from __future__ import annotations
 
+from gpt_trader.features.live_trade.telemetry import ExecutionIssue, ExecutionMetrics
 from gpt_trader.tui.app import TraderApp
-from gpt_trader.tui.types import ExecutionIssue, ExecutionMetrics, RiskGuard, RiskState
+from gpt_trader.tui.types import RiskGuard, RiskState
 from gpt_trader.tui.widgets.execution_issues_modal import ExecutionIssuesModal
 from gpt_trader.tui.widgets.risk_detail_modal import RiskDetailModal
 

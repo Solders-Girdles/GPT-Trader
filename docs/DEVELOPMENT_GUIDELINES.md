@@ -150,6 +150,9 @@ python scripts/ci/local_ci.py
 - Confirm metrics output updates when telemetry changes (`metrics.json`).
 - Coordinate with operations before altering risk guard thresholds or order
   routing.
+- Preview stale Codex worktrees under `/tmp/gpt-*` with `python scripts/maintenance/cleanup_worktrees.py`.
+- Add `--apply` to remove the worktrees and delete their local branches.
+- Only `codex/*` or `issue/*` branches with missing upstream remotes are eligible.
 
 ## Submitting Changes
 

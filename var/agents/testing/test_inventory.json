@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6039,
-    "total_files": 717,
+    "total_tests": 6042,
+    "total_files": 718,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 5874,
+    "unit": 5877,
     "asyncio": 345,
-    "parametrize": 152,
+    "parametrize": 154,
     "property": 82,
     "integration": 79,
     "endpoints": 78,
@@ -830,6 +830,9 @@
     ],
     "test_canary_watchdog.py": [
       "tests/unit/scripts/test_canary_watchdog.py"
+    ],
+    "test_docs_maintenance.py": [
+      "tests/unit/scripts/test_docs_maintenance.py"
     ],
     "test_feature_slice_scaffold.py": [
       "tests/unit/scripts/test_feature_slice_scaffold.py"
@@ -55758,6 +55761,34 @@
         "name": "test_once_exit_codes",
         "line": 131,
         "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/scripts/test_docs_maintenance.py": [
+      {
+        "name": "test_iter_links_skips_external_strips_anchors_and_decodes",
+        "line": 14,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_iter_repo_path_references_filters_invalid_patterns",
+        "line": 32,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_suggest_sections_for_representative_paths",
+        "line": 56,
+        "markers": [
+          "parametrize",
           "unit"
         ],
         "docstring": ""

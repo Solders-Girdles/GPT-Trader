@@ -37,6 +37,28 @@ shared inputs, but avoid importing the container or CLI/TUI layers from lower-le
   Avoid importing CLI/TUI/preflight or `app.container` from adapter code.
 - App/runtime and entrypoints may import from all lower layers to wire dependencies.
 
+## Public surfaces (stable import points)
+
+A public surface is a small, import-only module that re-exports the stable API for a slice.
+It is the only place other slices/tests should import from; everything else is internal
+and may change.
+
+Why we use them:
+- Stabilize cross-slice imports while internals evolve.
+- Reduce dependency churn in tests and tooling.
+- Make boundary ownership explicit (the surface is the contract).
+
+Rules of thumb:
+- Keep surfaces thin: re-exports only, no IO, no container wiring.
+- If another slice/test needs a symbol, add it to the surface instead of importing deep modules.
+- Treat non-surface modules as private to the slice.
+
+Examples in this repo:
+- Security validation surface: `gpt_trader.security.validate` (facade over `src/gpt_trader/security/`).
+- Intelligence contracts: `src/gpt_trader/features/intelligence/contracts.py`
+  (import via `gpt_trader.features.intelligence.contracts` for types like `RegimeType`,
+  `EnsembleConfig`, `PositionSizingConfig`).
+
 ## Decision tree: where to put new code
 
 - New trading logic, strategy, execution guard, or risk rule? Add it under

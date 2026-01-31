@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2026-01-24
+last-updated: 2026-01-31
 ---
 
 These guidelines cover contributions to the spot-first `gpt_trader` stack. Older
@@ -17,6 +17,9 @@ need to review historical practices.
   (`src/gpt_trader/app/container.py`) instead of hidden imports. See
   `docs/DI_POLICY.md` for detailed guidance on when to use container vs
   singletons.
+- **Public surfaces**: Prefer importing across slices/tests via surface modules
+  (e.g., `gpt_trader.security.validate`, `gpt_trader.features.intelligence.contracts`)
+  instead of deep/internal modules. Add new exports to the surface when needed.
 - **Configuration-first**: Extend `BotConfig` when new runtime options are
   required; expose overrides through the CLI when appropriate.
 - **Modular refactoring**: Extract large modules (>500 lines) into focused

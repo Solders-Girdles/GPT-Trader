@@ -59,6 +59,19 @@ Examples in this repo:
   (import via `gpt_trader.features.intelligence.contracts` for types like `RegimeType`,
   `EnsembleConfig`, `PositionSizingConfig`).
 
+## Import boundary guard
+
+We enforce a lightweight import scan in `scripts/ci/check_import_boundaries.py` to keep
+layering drift visible in CI. Current rules are intentionally small:
+
+- Feature slices (`src/gpt_trader/features/`) must not import the TUI layer (`gpt_trader.tui`).
+
+To extend the rule set:
+- Add a new `ImportRule` entry in `scripts/ci/check_import_boundaries.py` with a clear name.
+- Set `source_root` to the directory you want to scan.
+- Add `forbidden_prefixes` for the module prefixes you want to block.
+- Use `allowlist_files` or `allowlist_import_prefixes` sparingly for temporary exceptions.
+
 ## Decision tree: where to put new code
 
 - New trading logic, strategy, execution guard, or risk rule? Add it under

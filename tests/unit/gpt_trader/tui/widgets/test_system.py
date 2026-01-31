@@ -3,7 +3,8 @@ from textual.app import App, ComposeResult
 from textual.containers import Vertical
 from textual.widgets import Label
 
-from gpt_trader.tui.types import ExecutionMetrics, SystemStatus
+from gpt_trader.features.live_trade.telemetry import ExecutionMetrics
+from gpt_trader.tui.types import SystemStatus
 from gpt_trader.tui.widgets.system import SystemHealthWidget
 
 

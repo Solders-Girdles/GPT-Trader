@@ -2,7 +2,7 @@
 
 import pytest
 
-from gpt_trader.tui.services.execution_telemetry import (
+from gpt_trader.features.live_trade.telemetry import (
     ExecutionTelemetryCollector,
     SubmissionRecord,
     clear_execution_telemetry,

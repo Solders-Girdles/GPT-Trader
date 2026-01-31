@@ -117,9 +117,9 @@ def _clear_all_tui_singletons():
         log_module._tui_log_handler = None
 
     # Clear execution telemetry
-    import gpt_trader.tui.services.execution_telemetry as exec_module
+    from gpt_trader.features.live_trade.telemetry import clear_execution_telemetry
 
-    exec_module._execution_telemetry = None
+    clear_execution_telemetry()
 
     # Clear preferences service
     import gpt_trader.tui.services.preferences_service as prefs_module

@@ -2,20 +2,23 @@
 
 ---
 status: current
-last-updated: 2026-01-24
+last-updated: 2026-01-30
 ---
 
 ## Start Here
 
 1. **[Architecture](ARCHITECTURE.md)** - Understand vertical slices before touching code
 2. **[Development Guidelines](DEVELOPMENT_GUIDELINES.md)** - Where to change things + guardrails
-3. **[Monitoring Playbook](MONITORING_PLAYBOOK.md)** - Metrics + runbooks (when operating)
+3. **[Readiness Checklist](READINESS.md)** - Gates to move from paper to live trading
+4. **[Monitoring Playbook](MONITORING_PLAYBOOK.md)** - Metrics + runbooks (when operating)
 
 ## Quick Links
 
 | Document | Purpose |
 |----------|---------|
 | [Architecture](ARCHITECTURE.md) | System design and capabilities |
+| [Architecture Boundaries](architecture/BOUNDARIES.md) | Layer ownership and dependency direction |
+| [Entrypoints](architecture/ENTRYPOINTS.md) | CLI, TUI, preflight, and live bot wiring |
 | [Production Guide](production.md) | Deployment, rollout, and emergency procedures |
 | [Readiness Checklist](READINESS.md) | Gates to move from paper to live trading |
 | [Reliability Guide](RELIABILITY.md) | Guard stack, degradation responses, chaos testing |
@@ -35,7 +38,9 @@ last-updated: 2026-01-24
 
 ### Architecture & Design
 - [System Architecture](ARCHITECTURE.md) - Component overview and vertical slices
+- [Architecture Boundaries](architecture/BOUNDARIES.md) - Layer ownership and dependency direction
 - [DI Policy](DI_POLICY.md) - Dependency injection patterns and container usage
+- [Entrypoints](architecture/ENTRYPOINTS.md) - CLI, TUI, preflight, and live bot wiring
 
 ### Trading Operations
 - [Production Deployment](production.md) - Deployment, monitoring, rollback, emergencies
@@ -54,6 +59,7 @@ last-updated: 2026-01-24
 - [Naming Standards](naming.md) - Terminology, casing, and banned abbreviations
 - [Security](SECURITY.md) - Security practices and considerations
 - [Deprecations](DEPRECATIONS.md) - Deprecated modules and shims (CI-checked)
+- Research backtests: adapter order intent keys live in `Development Guidelines`
 
 ### TUI
 - [TUI Guide](TUI_GUIDE.md) - Launching, configuration, and operator workflows

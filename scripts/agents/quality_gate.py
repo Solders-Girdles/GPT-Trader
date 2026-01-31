@@ -509,6 +509,7 @@ def main() -> int:
         output = json.dumps(report, indent=2)
 
     if args.output:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(output)
         print(f"Report written to: {args.output}", file=sys.stderr)
     else:

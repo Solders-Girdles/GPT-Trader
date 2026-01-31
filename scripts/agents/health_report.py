@@ -79,6 +79,10 @@ def _parse_profile(value: str) -> Profile:
         raise ValueError(f"Unknown profile: {value}") from exc
 
 
+def _ensure_parent_dir(path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+
 def _run_quality_checks(
     *,
     checks: list[str],
@@ -804,6 +808,7 @@ def main() -> int:
     if args.schema:
         output = json.dumps(build_schema(), indent=2)
         if args.output:
+            _ensure_parent_dir(args.output)
             args.output.write_text(output)
         else:
             print(output)
@@ -812,6 +817,7 @@ def main() -> int:
     if args.example:
         output = json.dumps(build_example(), indent=2)
         if args.output:
+            _ensure_parent_dir(args.output)
             args.output.write_text(output)
         else:
             print(output)
@@ -874,6 +880,7 @@ def main() -> int:
     output = json.dumps(report, indent=2) if args.format == "json" else format_text_report(report)
 
     if args.output:
+        _ensure_parent_dir(args.output)
         args.output.write_text(output)
     else:
         print(output)
@@ -885,6 +892,7 @@ def main() -> int:
         text_output = args.output.with_name("health_report.txt")
 
     if text_output:
+        _ensure_parent_dir(text_output)
         text_output.write_text(format_text_report(report))
 
     exit_code = 1 if report["status"] == "failed" else 0

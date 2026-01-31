@@ -5,6 +5,9 @@ status: current
 last-updated: 2026-01-30
 ---
 
+All docs under `docs/` must be reachable from this index (directly or via other linked docs).
+When adding a new doc, link it below in the best-fit section.
+
 ## Start Here
 
 1. **[Architecture](ARCHITECTURE.md)** - Understand vertical slices before touching code

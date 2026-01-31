@@ -21,6 +21,13 @@ EXTERNAL_PREFIXES = ("http://", "https://", "mailto:", "tel:")
 ALLOWED_STATUSES = {"current", "draft", "deprecated", "superseded"}
 ISO_DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
+SECTION_FALLBACKS = (
+    "Quick Links",
+    "Additional Resources",
+    "Core Documentation",
+    "Start Here",
+)
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Check docs reachability from docs/README.md")
@@ -96,6 +103,100 @@ def has_required_metadata(path: Path) -> bool:
     if date_value is None or not ISO_DATE_PATTERN.match(date_value):
         return False
     return True
+
+
+def load_readme_sections(readme_path: Path) -> set[str]:
+    sections: set[str] = set()
+    parent: str | None = None
+    try:
+        lines = readme_path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return sections
+
+    for line in lines:
+        if line.startswith("## "):
+            parent = line[3:].strip()
+            if parent:
+                sections.add(parent)
+            continue
+        if line.startswith("### "):
+            child = line[4:].strip()
+            if child:
+                if parent:
+                    sections.add(f"{parent} > {child}")
+                else:
+                    sections.add(child)
+    return sections
+
+
+def suggest_sections(path: Path, available_sections: set[str]) -> list[str]:
+    if not available_sections:
+        return []
+
+    rel = path.as_posix().lower()
+    name = path.name.lower()
+    candidates: list[str] = []
+
+    if "/agents/" in rel or "agent" in name:
+        candidates.extend(["Quick Links", "Getting Help"])
+    if "/architecture/" in rel or "architecture" in rel:
+        candidates.append("Core Documentation > Architecture & Design")
+    if "tui" in rel:
+        candidates.append("Core Documentation > TUI")
+    if any(
+        keyword in rel
+        for keyword in (
+            "production",
+            "readiness",
+            "monitoring",
+            "runbook",
+            "observability",
+            "reliability",
+            "incident",
+            "operations",
+        )
+    ):
+        candidates.append("Core Documentation > Trading Operations")
+    if any(keyword in rel for keyword in ("coinbase", "broker", "cfm", "intx")):
+        candidates.append("Core Documentation > Coinbase Integration")
+    if any(
+        keyword in rel
+        for keyword in (
+            "test",
+            "testing",
+            "development",
+            "guidelines",
+            "naming",
+            "security",
+            "deprecation",
+            "feature",
+        )
+    ):
+        candidates.append("Core Documentation > Development")
+    if any(
+        keyword in rel for keyword in ("getting started", "getting_started", "overview", "intro")
+    ):
+        candidates.append("Core Documentation > Getting Started")
+    if any(keyword in rel for keyword in ("config", "environment", "profile", "flag")):
+        candidates.append("Configuration")
+    if any(keyword in rel for keyword in ("risk", "pnl", "changelog")):
+        candidates.append("Additional Resources")
+
+    suggestions: list[str] = []
+    for candidate in candidates:
+        if candidate in available_sections and candidate not in suggestions:
+            suggestions.append(candidate)
+
+    if suggestions:
+        return suggestions[:3]
+
+    for fallback in SECTION_FALLBACKS:
+        if fallback in available_sections:
+            suggestions.append(fallback)
+        if len(suggestions) >= 2:
+            break
+
+    return suggestions
 
 
 def collect_docs(docs_root: Path) -> tuple[list[Path], list[Path]]:
@@ -203,9 +304,21 @@ def main() -> int:
     orphaned = sorted(set(docs) - reachable)
 
     if orphaned:
-        print("Docs not reachable from docs/README.md:")
+        sections = load_readme_sections(entrypoint)
+        print("Docs not reachable from docs/README.md.")
+        print(
+            "Reachability rule: every markdown file under docs/ must be reachable by following links "
+            "starting at docs/README.md (directly or via other reachable docs)."
+        )
+        print("\nOrphaned docs:")
         for path in orphaned:
-            print(f"- {path.relative_to(repo_root)}")
+            rel_path = path.relative_to(repo_root)
+            suggestions = suggest_sections(path, sections)
+            if suggestions:
+                suggestions_text = "; ".join(suggestions)
+                print(f"- {rel_path} (suggested section(s): {suggestions_text})")
+            else:
+                print(f"- {rel_path}")
         print(f"\nTotal orphaned: {len(orphaned)}")
         return 1
 

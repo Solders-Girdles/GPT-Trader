@@ -2042,8 +2042,8 @@ def _timestamp() -> str:
     return "1970-01-01T00:00:00+00:00"
 
 
-def _ensure_output_dir() -> None:
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+def _ensure_output_dir(output_dir: Path) -> None:
+    output_dir.mkdir(parents=True, exist_ok=True)
 
 
 def _write_json(path: Path, payload: dict[str, Any]) -> None:
@@ -2921,7 +2921,7 @@ def generate(
     validate: bool = False,
     strict: bool = False,
 ) -> dict[str, Path]:
-    _ensure_output_dir()
+    _ensure_output_dir(output_dir)
     flow_payloads: list[tuple[str, dict[str, Any]]] = []
 
     def _load_flow(

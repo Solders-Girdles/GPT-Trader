@@ -20,6 +20,13 @@ LINK_PATTERN = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
 EXTERNAL_PREFIXES = ("http://", "https://", "mailto:", "tel:")
 ALLOWED_STATUSES = {"current", "draft", "deprecated", "superseded"}
 ISO_DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+DATE_KEYS = ("last-updated", "last-reviewed", "last-verified")
+METADATA_TEMPLATE = (
+    "---\n"
+    "status: current\n"
+    "last-updated: YYYY-MM-DD\n"
+    "---"
+)
 
 SECTION_FALLBACKS = (
     "Quick Links",
@@ -94,8 +101,8 @@ def has_required_metadata(path: Path) -> bool:
     for line in block_lines:
         if line.startswith("status:"):
             status_value = line.split(":", maxsplit=1)[1].strip()
-        for key in ("last-updated:", "last-reviewed:", "last-verified:"):
-            if line.startswith(key):
+        for key in DATE_KEYS:
+            if line.startswith(f"{key}:"):
                 date_value = line.split(":", maxsplit=1)[1].strip()
 
     if status_value is None or status_value not in ALLOWED_STATUSES:
@@ -324,11 +331,19 @@ def main() -> int:
 
     missing_metadata = sorted([path for path in docs if not has_required_metadata(path)])
     if missing_metadata:
+        date_keys = ", ".join(DATE_KEYS)
+        allowed_statuses = ", ".join(sorted(ALLOWED_STATUSES))
         print(
-            "Docs missing required metadata block (status + last-updated/last-reviewed/last-verified):"
+            "Docs missing or invalid metadata block (status + last-updated/last-reviewed/last-verified):"
         )
         for path in missing_metadata:
             print(f"- {path.relative_to(repo_root)}")
+        print("\nMetadata requirements:")
+        print(f"- Allowed status values: {allowed_statuses}")
+        print(f"- Accepted date keys: {date_keys}")
+        print("- Date format: YYYY-MM-DD")
+        print("\nCopy/paste template:")
+        print(METADATA_TEMPLATE)
         print(f"\nTotal missing metadata: {len(missing_metadata)}")
         return 1
 

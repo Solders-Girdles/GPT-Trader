@@ -110,6 +110,14 @@ async def test_exchange_rules_blocks_small_order(engine, monkeypatch: pytest.Mon
 
     engine.context.broker.place_order.assert_not_called()
     engine._order_submitter.record_rejection.assert_called_once()
+    events = [
+        event
+        for event in engine._event_store.list_events()
+        if event.get("type") == "trade_gate_blocked"
+    ]
+    assert events
+    payload = events[-1].get("data", {})
+    assert payload.get("gate") == "exchange_rules"
 
 
 @pytest.mark.asyncio
@@ -167,6 +175,14 @@ async def test_stale_mark_pauses_symbol(engine) -> None:
     assert engine._degradation.is_paused(symbol="BTC-USD")
     assert "mark_staleness" in (engine._degradation.get_pause_reason("BTC-USD") or "")
     assert any(e.get("type") == "stale_mark_detected" for e in engine._event_store.list_events())
+    events = [
+        event
+        for event in engine._event_store.list_events()
+        if event.get("type") == "trade_gate_blocked"
+    ]
+    assert events
+    payload = events[-1].get("data", {})
+    assert payload.get("gate") == "mark_staleness"
 
 
 @pytest.mark.asyncio
@@ -201,6 +217,28 @@ async def test_preview_disabled_after_threshold_failures(engine) -> None:
     result = await _place_order(engine)
     assert result.status in (OrderSubmissionStatus.SUCCESS, OrderSubmissionStatus.BLOCKED)
     assert engine._order_validator.enable_order_preview is False
+
+
+@pytest.mark.asyncio
+async def test_quantity_zero_emits_gate_event(engine) -> None:
+    result = await engine._validate_and_place_order(
+        symbol="BTC-USD",
+        decision=Decision(Action.BUY, "test"),
+        price=Decimal("50000"),
+        equity=Decimal("10000"),
+        quantity_override=Decimal("0"),
+    )
+
+    assert result.status == OrderSubmissionStatus.BLOCKED
+    events = [
+        event
+        for event in engine._event_store.list_events()
+        if event.get("type") == "trade_gate_blocked"
+    ]
+    assert events
+    payload = events[-1].get("data", {})
+    assert payload.get("gate") == "sizing"
+    assert payload.get("reason") == "quantity_zero"
 
 
 def test_calculate_order_quantity_with_strategy_config(engine):

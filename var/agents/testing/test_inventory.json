@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6041,
-    "total_files": 718,
+    "total_tests": 6044,
+    "total_files": 719,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 5876,
+    "unit": 5879,
     "asyncio": 347,
-    "parametrize": 152,
+    "parametrize": 154,
     "property": 82,
     "integration": 79,
     "endpoints": 78,
@@ -831,6 +831,9 @@
     ],
     "test_canary_watchdog.py": [
       "tests/unit/scripts/test_canary_watchdog.py"
+    ],
+    "test_docs_maintenance.py": [
+      "tests/unit/scripts/test_docs_maintenance.py"
     ],
     "test_feature_slice_scaffold.py": [
       "tests/unit/scripts/test_feature_slice_scaffold.py"
@@ -46506,7 +46509,7 @@
       },
       {
         "name": "TestWidgetSnapshots::test_portfolio_widget_with_positions",
-        "line": 81,
+        "line": 85,
         "markers": [
           "unit"
         ],
@@ -46515,7 +46518,7 @@
       },
       {
         "name": "TestErrorStateSnapshots::test_error_indicator_visible",
-        "line": 100,
+        "line": 104,
         "markers": [
           "unit"
         ],
@@ -55779,6 +55782,34 @@
         "name": "test_once_exit_codes",
         "line": 131,
         "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/scripts/test_docs_maintenance.py": [
+      {
+        "name": "test_iter_links_skips_external_strips_anchors_and_decodes",
+        "line": 14,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_iter_repo_path_references_filters_invalid_patterns",
+        "line": 32,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_suggest_sections_for_representative_paths",
+        "line": 56,
+        "markers": [
+          "parametrize",
           "unit"
         ],
         "docstring": ""

@@ -1076,6 +1076,13 @@
     "gpt_trader.features.live_trade.strategies.stateful": [
       "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful.py"
     ],
+    "gpt_trader.features.live_trade.telemetry": [
+      "tests/unit/gpt_trader/tui/services/test_execution_telemetry.py",
+      "tests/unit/gpt_trader/tui/services/test_execution_telemetry_metrics.py",
+      "tests/unit/gpt_trader/tui/test_snapshots_modals.py",
+      "tests/unit/gpt_trader/tui/widgets/test_execution_issues_modal.py",
+      "tests/unit/gpt_trader/tui/widgets/test_system.py"
+    ],
     "gpt_trader.features.live_trade.telemetry.account": [
       "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry.py",
       "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_broker_calls.py",
@@ -1635,10 +1642,6 @@
       "tests/unit/gpt_trader/tui/services/test_credential_validator_modes.py",
       "tests/unit/gpt_trader/tui/test_credential_cache.py"
     ],
-    "gpt_trader.tui.services.execution_telemetry": [
-      "tests/unit/gpt_trader/tui/services/test_execution_telemetry.py",
-      "tests/unit/gpt_trader/tui/services/test_execution_telemetry_metrics.py"
-    ],
     "gpt_trader.tui.services.focus_manager": [
       "tests/unit/gpt_trader/tui/services/test_focus_manager.py",
       "tests/unit/gpt_trader/tui/widgets/test_trading_stats.py"
@@ -1725,7 +1728,6 @@
       "tests/unit/gpt_trader/tui/screens/test_strategy_detail_screen_signal_detail_content.py",
       "tests/unit/gpt_trader/tui/services/test_alert_manager.py",
       "tests/unit/gpt_trader/tui/services/test_alert_manager_orders.py",
-      "tests/unit/gpt_trader/tui/services/test_execution_telemetry_metrics.py",
       "tests/unit/gpt_trader/tui/services/test_trading_stats.py",
       "tests/unit/gpt_trader/tui/services/test_trading_stats_compute.py",
       "tests/unit/gpt_trader/tui/services/test_trading_stats_matching.py",
@@ -1739,7 +1741,6 @@
       "tests/unit/gpt_trader/tui/test_snapshots_modals.py",
       "tests/unit/gpt_trader/tui/test_snapshots_strategy_detail_screen.py",
       "tests/unit/gpt_trader/tui/widgets/test_account_widget.py",
-      "tests/unit/gpt_trader/tui/widgets/test_execution_issues_modal.py",
       "tests/unit/gpt_trader/tui/widgets/test_order_detail_modal.py",
       "tests/unit/gpt_trader/tui/widgets/test_orders_widget_sorting.py",
       "tests/unit/gpt_trader/tui/widgets/test_orders_widget_update.py",
@@ -4045,11 +4046,10 @@
       "gpt_trader.tui.services.credential_validator"
     ],
     "tests/unit/gpt_trader/tui/services/test_execution_telemetry.py": [
-      "gpt_trader.tui.services.execution_telemetry"
+      "gpt_trader.features.live_trade.telemetry"
     ],
     "tests/unit/gpt_trader/tui/services/test_execution_telemetry_metrics.py": [
-      "gpt_trader.tui.services.execution_telemetry",
-      "gpt_trader.tui.types"
+      "gpt_trader.features.live_trade.telemetry"
     ],
     "tests/unit/gpt_trader/tui/services/test_focus_manager.py": [
       "gpt_trader.tui.services.focus_manager"
@@ -4226,6 +4226,7 @@
       "gpt_trader.tui.theme"
     ],
     "tests/unit/gpt_trader/tui/test_snapshots_modals.py": [
+      "gpt_trader.features.live_trade.telemetry",
       "gpt_trader.tui.app",
       "gpt_trader.tui.types",
       "gpt_trader.tui.widgets.execution_issues_modal",
@@ -4313,7 +4314,7 @@
       "gpt_trader.tui.widgets.dashboard"
     ],
     "tests/unit/gpt_trader/tui/widgets/test_execution_issues_modal.py": [
-      "gpt_trader.tui.types",
+      "gpt_trader.features.live_trade.telemetry",
       "gpt_trader.tui.widgets.execution_issues_modal"
     ],
     "tests/unit/gpt_trader/tui/widgets/test_logs.py": [
@@ -4387,6 +4388,7 @@
       "gpt_trader.tui.widgets.strategy"
     ],
     "tests/unit/gpt_trader/tui/widgets/test_system.py": [
+      "gpt_trader.features.live_trade.telemetry",
       "gpt_trader.tui.types",
       "gpt_trader.tui.widgets.system"
     ],
@@ -4714,6 +4716,7 @@
     "gpt_trader.features.live_trade.strategies.perps_baseline.strategy": "src/gpt_trader/features/live_trade/strategies/perps_baseline/strategy.py",
     "gpt_trader.features.live_trade.strategies.regime_switcher": "src/gpt_trader/features/live_trade/strategies/regime_switcher/__init__.py",
     "gpt_trader.features.live_trade.strategies.stateful": "src/gpt_trader/features/live_trade/strategies/stateful.py",
+    "gpt_trader.features.live_trade.telemetry": "src/gpt_trader/features/live_trade/telemetry/__init__.py",
     "gpt_trader.features.live_trade.telemetry.account": "src/gpt_trader/features/live_trade/telemetry/account.py",
     "gpt_trader.features.optimize.objectives.base": "src/gpt_trader/features/optimize/objectives/base.py",
     "gpt_trader.features.optimize.objectives.composite": "src/gpt_trader/features/optimize/objectives/composite.py",
@@ -4834,7 +4837,6 @@
     "gpt_trader.tui.services.alert_manager": "src/gpt_trader/tui/services/alert_manager.py",
     "gpt_trader.tui.services.config_service": "src/gpt_trader/tui/services/config_service.py",
     "gpt_trader.tui.services.credential_validator": "src/gpt_trader/tui/services/credential_validator.py",
-    "gpt_trader.tui.services.execution_telemetry": "src/gpt_trader/tui/services/execution_telemetry.py",
     "gpt_trader.tui.services.focus_manager": "src/gpt_trader/tui/services/focus_manager.py",
     "gpt_trader.tui.services.mode_service": "src/gpt_trader/tui/services/mode_service.py",
     "gpt_trader.tui.services.onboarding_service": "src/gpt_trader/tui/services/onboarding_service.py",

@@ -14,6 +14,7 @@ from textual.reactive import reactive
 from textual.widget import Widget
 
 from gpt_trader.core.account import CFMBalance
+from gpt_trader.features.live_trade.telemetry import ExecutionMetrics
 from gpt_trader.monitoring.status_reporter import BotStatus
 from gpt_trader.tui.events import (
     FieldValidationError,
@@ -29,7 +30,6 @@ from gpt_trader.tui.types import (
     AccountSummary,
     ActiveOrders,
     DecisionData,
-    ExecutionMetrics,
     IndicatorContribution,
     MarketState,
     MetricsSnapshot,
@@ -778,7 +778,7 @@ class TuiState(Widget):
         if available. Safe to call even if collector hasn't been initialized.
         """
         try:
-            from gpt_trader.tui.services.execution_telemetry import get_execution_telemetry
+            from gpt_trader.features.live_trade.telemetry import get_execution_telemetry
 
             collector = get_execution_telemetry()
             self.execution_data = collector.get_metrics()

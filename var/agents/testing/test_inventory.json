@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6041,
-    "total_files": 718,
+    "total_tests": 6044,
+    "total_files": 719,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 5876,
+    "unit": 5879,
     "asyncio": 347,
-    "parametrize": 152,
+    "parametrize": 154,
     "property": 82,
     "integration": 79,
     "endpoints": 78,
@@ -676,6 +676,9 @@
     ],
     "test_chaos.py": [
       "tests/unit/support/test_chaos.py"
+    ],
+    "test_docs_maintenance.py": [
+      "tests/unit/scripts/test_docs_maintenance.py"
     ],
     "test_feature_slice_scaffold.py": [
       "tests/unit/scripts/test_feature_slice_scaffold.py"
@@ -46414,7 +46417,7 @@
     "tests/unit/gpt_trader/tui/test_snapshots_modals.py": [
       {
         "name": "TestExecutionIssuesSnapshots::test_exec_issues_modal_with_data",
-        "line": 23,
+        "line": 24,
         "markers": [
           "unit"
         ],
@@ -46423,7 +46426,7 @@
       },
       {
         "name": "TestExecutionIssuesSnapshots::test_exec_issues_modal_empty",
-        "line": 72,
+        "line": 73,
         "markers": [
           "unit"
         ],
@@ -46432,7 +46435,7 @@
       },
       {
         "name": "TestRiskPreviewSnapshots::test_risk_preview_safe",
-        "line": 94,
+        "line": 95,
         "markers": [
           "unit"
         ],
@@ -46441,7 +46444,7 @@
       },
       {
         "name": "TestRiskPreviewSnapshots::test_risk_preview_critical",
-        "line": 116,
+        "line": 117,
         "markers": [
           "unit"
         ],
@@ -46450,7 +46453,7 @@
       },
       {
         "name": "TestGuardThresholdSnapshots::test_risk_modal_with_active_guards",
-        "line": 143,
+        "line": 144,
         "markers": [
           "unit"
         ],
@@ -46459,7 +46462,7 @@
       },
       {
         "name": "TestGuardThresholdSnapshots::test_risk_modal_multiple_guard_types",
-        "line": 169,
+        "line": 170,
         "markers": [
           "unit"
         ],
@@ -46506,7 +46509,7 @@
       },
       {
         "name": "TestWidgetSnapshots::test_portfolio_widget_with_positions",
-        "line": 81,
+        "line": 85,
         "markers": [
           "unit"
         ],
@@ -46515,7 +46518,7 @@
       },
       {
         "name": "TestErrorStateSnapshots::test_error_indicator_visible",
-        "line": 100,
+        "line": 104,
         "markers": [
           "unit"
         ],
@@ -50465,7 +50468,7 @@
     "tests/unit/gpt_trader/tui/widgets/test_system.py": [
       {
         "name": "TestSystemHealthWidget::test_update_system",
-        "line": 17,
+        "line": 18,
         "markers": [
           "asyncio",
           "unit"
@@ -50475,7 +50478,7 @@
       },
       {
         "name": "TestSystemHealthWidget::test_disconnected_status",
-        "line": 50,
+        "line": 51,
         "markers": [
           "asyncio",
           "unit"
@@ -50485,7 +50488,7 @@
       },
       {
         "name": "TestSystemHealthWidget::test_validation_failures_display_ok",
-        "line": 62,
+        "line": 63,
         "markers": [
           "asyncio",
           "unit"
@@ -50495,7 +50498,7 @@
       },
       {
         "name": "TestSystemHealthWidget::test_validation_failures_display_warning",
-        "line": 79,
+        "line": 80,
         "markers": [
           "asyncio",
           "unit"
@@ -50505,7 +50508,7 @@
       },
       {
         "name": "TestSystemHealthWidget::test_validation_failures_display_escalated",
-        "line": 100,
+        "line": 101,
         "markers": [
           "asyncio",
           "unit"
@@ -50515,7 +50518,7 @@
       },
       {
         "name": "TestExecutionIssues::test_execution_issues_hidden_when_empty",
-        "line": 122,
+        "line": 123,
         "markers": [
           "asyncio",
           "unit"
@@ -50525,7 +50528,7 @@
       },
       {
         "name": "TestExecutionIssues::test_execution_issues_shows_rejections",
-        "line": 137,
+        "line": 138,
         "markers": [
           "asyncio",
           "unit"
@@ -50535,7 +50538,7 @@
       },
       {
         "name": "TestExecutionIssues::test_execution_issues_shows_retries",
-        "line": 159,
+        "line": 160,
         "markers": [
           "asyncio",
           "unit"
@@ -50545,7 +50548,7 @@
       },
       {
         "name": "TestExecutionIssues::test_execution_issues_truncates_to_top_two",
-        "line": 181,
+        "line": 182,
         "markers": [
           "asyncio",
           "unit"
@@ -50555,7 +50558,7 @@
       },
       {
         "name": "TestExecutionIssues::test_execution_issues_hides_empty_category",
-        "line": 208,
+        "line": 209,
         "markers": [
           "asyncio",
           "unit"
@@ -55779,6 +55782,34 @@
         "name": "test_once_exit_codes",
         "line": 131,
         "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/scripts/test_docs_maintenance.py": [
+      {
+        "name": "test_iter_links_skips_external_strips_anchors_and_decodes",
+        "line": 14,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_iter_repo_path_references_filters_invalid_patterns",
+        "line": 32,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_suggest_sections_for_representative_paths",
+        "line": 56,
+        "markers": [
+          "parametrize",
           "unit"
         ],
         "docstring": ""

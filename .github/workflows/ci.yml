@@ -301,6 +301,9 @@ jobs:
       - name: Check legacy patterns
         run: uv run python scripts/ci/check_legacy_patterns.py
 
+      - name: Check import boundaries
+        run: uv run python scripts/ci/check_import_boundaries.py
+
       - name: Check legacy triage alignment
         run: uv run python scripts/ci/check_legacy_test_triage.py
 

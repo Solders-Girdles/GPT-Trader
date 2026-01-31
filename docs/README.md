@@ -18,6 +18,7 @@ last-updated: 2026-01-30
 |----------|---------|
 | [Architecture](ARCHITECTURE.md) | System design and capabilities |
 | [Architecture Boundaries](architecture/BOUNDARIES.md) | Layer ownership and dependency direction |
+| [Ownership Map](architecture/OWNERSHIP.md) | Module ownership map and boundaries |
 | [Entrypoints](architecture/ENTRYPOINTS.md) | CLI, TUI, preflight, and live bot wiring |
 | [Production Guide](production.md) | Deployment, rollout, and emergency procedures |
 | [Readiness Checklist](READINESS.md) | Gates to move from paper to live trading |
@@ -55,9 +56,11 @@ last-updated: 2026-01-30
 - [Coinbase Integration](COINBASE.md) - Configuration + internal entrypoints
 
 ### Development
+- [Test Hygiene Policy](test_hygiene.md) - Line limits, allowlist policy, and splitting guidance
 - [Development Guidelines](DEVELOPMENT_GUIDELINES.md) - Standards for contributing
 - [Feature Slice Scaffolding](DEVELOPMENT_GUIDELINES.md#slice-scaffolding) - Bootstrap new slices
 - [Naming Standards](naming.md) - Terminology, casing, and banned abbreviations
+- [Naming Suppressions](naming_suppressions.md) - Strict mode behavior and how to suppress
 - [Security](SECURITY.md) - Security practices and considerations
 - [Deprecations](DEPRECATIONS.md) - Deprecated modules and shims (CI-checked)
 - Research backtests: adapter order intent keys live in `Development Guidelines`

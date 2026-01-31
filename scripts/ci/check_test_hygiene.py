@@ -19,6 +19,9 @@ INTEGRATION_TEST_PREFIX = "tests/integration/"
 CONTRACT_TEST_PREFIX = "tests/contract/"
 REAL_API_TEST_PREFIX = "tests/real_api/"
 ALLOWLIST_REASONS: dict[str, str] = {
+    "tests/unit/gpt_trader/cli/commands/optimize/test_commands_execution.py": (
+        "Optimize CLI execution tests are consolidated; split pending per docs/test_hygiene.md."
+    ),
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows.py": (
         "Order submission flow coverage spans retries, rejection wiring, and telemetry; split pending."
     ),

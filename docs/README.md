@@ -35,6 +35,8 @@ last-updated: 2026-01-24
 
 ### Architecture & Design
 - [System Architecture](ARCHITECTURE.md) - Component overview and vertical slices
+- [Module Boundaries](architecture/BOUNDARIES.md) - Dependency direction and layer rules
+- [Canonical Entrypoints](architecture/ENTRYPOINTS.md) - Supported entrypoints and wiring
 - [DI Policy](DI_POLICY.md) - Dependency injection patterns and container usage
 
 ### Trading Operations

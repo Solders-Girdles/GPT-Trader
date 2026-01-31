@@ -60,6 +60,7 @@ last-updated: 2026-01-30
 - [Development Guidelines](DEVELOPMENT_GUIDELINES.md) - Standards for contributing
 - [Feature Slice Scaffolding](DEVELOPMENT_GUIDELINES.md#slice-scaffolding) - Bootstrap new slices
 - [Naming Standards](naming.md) - Terminology, casing, and banned abbreviations
+- [Naming Suppressions](naming_suppressions.md) - Strict mode behavior and how to suppress
 - [Security](SECURITY.md) - Security practices and considerations
 - [Deprecations](DEPRECATIONS.md) - Deprecated modules and shims (CI-checked)
 - Research backtests: adapter order intent keys live in `Development Guidelines`

@@ -300,10 +300,7 @@ def categorize_by_path(inventory: dict[str, list[dict[str, Any]]]) -> dict[str, 
             category = parts[3]  # e.g., "cli", "features", "config"
             categories[category].append(file_path)
 
-    return {
-        category: sorted(paths)
-        for category, paths in sorted(categories.items())
-    }
+    return {category: sorted(paths) for category, paths in sorted(categories.items())}
 
 
 def sort_test_inventory(
@@ -498,9 +495,7 @@ def build_source_test_map(imports_by_file: dict[str, list[str]]) -> dict[str, An
     source_to_tests_sorted = {
         module: sorted(list(tests)) for module, tests in sorted(source_to_tests.items())
     }
-    source_paths_sorted = {
-        module: source_paths[module] for module in sorted(source_paths)
-    }
+    source_paths_sorted = {module: source_paths[module] for module in sorted(source_paths)}
 
     return {
         "version": "1.0",

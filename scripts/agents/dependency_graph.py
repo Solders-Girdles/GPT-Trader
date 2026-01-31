@@ -418,6 +418,7 @@ def main() -> int:
         output = json.dumps(graph, indent=2)
 
     if args.output:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(output)
         print(f"Graph written to: {args.output}", file=sys.stderr)
     else:

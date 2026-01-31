@@ -266,6 +266,7 @@ def main() -> int:
         schema = generate_schema()
         output = json.dumps(schema, indent=2)
         if args.output:
+            args.output.parent.mkdir(parents=True, exist_ok=True)
             args.output.write_text(output)
             print(f"Schema written to: {args.output}")
         else:
@@ -296,6 +297,7 @@ def main() -> int:
         output = json.dumps(config, indent=2, default=str)
 
     if args.output:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(output)
         print(f"Config written to: {args.output}")
     else:

@@ -2287,9 +2287,9 @@ class TradingEngine(BaseEngine):
                     "quantity": str(quantity),
                     "price": str(price),
                     "equity": str(equity),
-                    "quantity_override": str(quantity_override)
-                    if quantity_override is not None
-                    else None,
+                    "quantity_override": (
+                        str(quantity_override) if quantity_override is not None else None
+                    ),
                 },
                 decision_id=trace.decision_id,
             )

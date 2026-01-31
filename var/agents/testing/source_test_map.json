@@ -1502,14 +1502,14 @@
       "tests/unit/gpt_trader/security/secrets_manager/test_error_vault.py",
       "tests/unit/gpt_trader/security/secrets_manager/test_vault_failures.py"
     ],
-    "gpt_trader.security.security_validator": [
+    "gpt_trader.security.symbol_validator": [
+      "tests/unit/gpt_trader/security/security_validator/test_symbol_validation_exception_handling.py"
+    ],
+    "gpt_trader.security.validate": [
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_health.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_orders.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_state.py",
       "tests/unit/gpt_trader/security/security_validator/test_convenience_wrappers.py"
-    ],
-    "gpt_trader.security.symbol_validator": [
-      "tests/unit/gpt_trader/security/security_validator/test_symbol_validation_exception_handling.py"
     ],
     "gpt_trader.tui": [
       "tests/unit/gpt_trader/tui/test_helpers.py"
@@ -2980,7 +2980,7 @@
       "gpt_trader.core",
       "gpt_trader.features.live_trade.strategies.perps_baseline",
       "gpt_trader.monitoring.health_checks",
-      "gpt_trader.security.security_validator"
+      "gpt_trader.security.validate"
     ],
     "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_orders.py": [
       "gpt_trader.core",
@@ -2988,7 +2988,7 @@
       "gpt_trader.features.live_trade.execution.validation",
       "gpt_trader.features.live_trade.risk.manager",
       "gpt_trader.features.live_trade.strategies.perps_baseline",
-      "gpt_trader.security.security_validator"
+      "gpt_trader.security.validate"
     ],
     "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_reconciliation.py": [
       "gpt_trader.core",
@@ -2997,7 +2997,7 @@
     "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_state.py": [
       "gpt_trader.core",
       "gpt_trader.features.live_trade.strategies.perps_baseline",
-      "gpt_trader.security.security_validator"
+      "gpt_trader.security.validate"
     ],
     "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health.py": [
       "gpt_trader.features.live_trade.engines.telemetry_health"
@@ -3938,7 +3938,7 @@
     ],
     "tests/unit/gpt_trader/security/security_validator/test_convenience_wrappers.py": [
       "gpt_trader.security",
-      "gpt_trader.security.security_validator"
+      "gpt_trader.security.validate"
     ],
     "tests/unit/gpt_trader/security/security_validator/test_numeric_edge_behaviour.py": [
       "gpt_trader.security.numeric_validator"
@@ -4680,7 +4680,7 @@
     "gpt_trader.features.live_trade.execution.submission_result": "src/gpt_trader/features/live_trade/execution/submission_result.py",
     "gpt_trader.features.live_trade.guard_errors": "src/gpt_trader/features/live_trade/guard_errors.py",
     "gpt_trader.monitoring.health_checks": "src/gpt_trader/monitoring/health_checks.py",
-    "gpt_trader.security.security_validator": "src/gpt_trader/security/security_validator.py",
+    "gpt_trader.security.validate": "src/gpt_trader/security/validate.py",
     "gpt_trader.features.live_trade.engines.telemetry_health": "src/gpt_trader/features/live_trade/engines/telemetry_health.py",
     "gpt_trader.features.live_trade.engines": "src/gpt_trader/features/live_trade/engines/__init__.py",
     "gpt_trader.features.live_trade.engines.telemetry_streaming": "src/gpt_trader/features/live_trade/engines/telemetry_streaming.py",

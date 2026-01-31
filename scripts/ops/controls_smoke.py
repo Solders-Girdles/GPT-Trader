@@ -220,7 +220,7 @@ def main() -> int:
             return_value=MagicMock(),
         ),
         patch(
-            "gpt_trader.security.security_validator.get_validator",
+            "gpt_trader.security.validate.get_validator",
         ) as validator,
     ):
         engine = _build_engine()

@@ -30,9 +30,11 @@ Scan root: `src/gpt_trader`
 | interval | 0 | — |
 | log_level | 0 | — |
 | market_order_fallback | 0 | — |
+| max_cycles | 0 | — |
 | metadata | 0 | — |
 | mock_broker | 0 | — |
 | order_submission_retries_enabled | 0 | — |
+| paper_fills | 0 | — |
 | perps_enable_streaming | 0 | — |
 | perps_paper_trading | 0 | — |
 | perps_position_fraction | 0 | — |
@@ -58,6 +60,7 @@ Scan root: `src/gpt_trader`
 | Field | Usage count | Example files |
 |-------|-------------|---------------|
 | daily_loss_limit_pct | 0 | — |
+| dry_run_equity_usd | 0 | — |
 | max_drawdown_pct | 0 | — |
 | max_leverage | 0 | — |
 | max_position_size | 0 | — |

@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 656,
-    "source_modules": 349,
+    "tests_scanned": 658,
+    "source_modules": 350,
     "unresolved_modules": 3
   },
   "source_to_tests": {
@@ -37,6 +37,7 @@
       "tests/unit/gpt_trader/backtesting/test_guarded_backtest_flow.py",
       "tests/unit/gpt_trader/backtesting/validation/test_guarded_execution.py",
       "tests/unit/gpt_trader/cli/test_services.py",
+      "tests/unit/gpt_trader/features/brokerages/test_brokerage_factory_paper_fills.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_runtime_start_event.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_get_validation_metrics.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy_exit_logic_and_cooldown.py",
@@ -352,6 +353,7 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_retry_behaviour.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_enforce_perps_rules.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_service.py",
+      "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_executor_compatibility.py",
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_market_data.py",
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_orders.py",
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_positions.py",
@@ -361,6 +363,7 @@
       "tests/unit/gpt_trader/features/live_trade/engines/test_equity_calculator.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_health.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_orders.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_reconciliation.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_state.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_core.py",
@@ -633,8 +636,12 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_edge.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events_parsing.py"
     ],
+    "gpt_trader.features.brokerages.factory": [
+      "tests/unit/gpt_trader/features/brokerages/test_brokerage_factory_paper_fills.py"
+    ],
     "gpt_trader.features.brokerages.paper.hybrid": [
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper.py",
+      "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_executor_compatibility.py",
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_market_data.py",
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_orders.py",
       "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_positions.py"
@@ -826,6 +833,7 @@
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_metrics.py"
     ],
     "gpt_trader.features.live_trade.execution.order_submission": [
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability.py",
@@ -2811,6 +2819,10 @@
     "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper.py": [
       "gpt_trader.features.brokerages.paper.hybrid"
     ],
+    "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_executor_compatibility.py": [
+      "gpt_trader.core",
+      "gpt_trader.features.brokerages.paper.hybrid"
+    ],
     "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_market_data.py": [
       "gpt_trader.core",
       "gpt_trader.features.brokerages.paper.hybrid"
@@ -2822,6 +2834,10 @@
     "tests/unit/gpt_trader/features/brokerages/paper/test_hybrid_paper_positions.py": [
       "gpt_trader.core",
       "gpt_trader.features.brokerages.paper.hybrid"
+    ],
+    "tests/unit/gpt_trader/features/brokerages/test_brokerage_factory_paper_fills.py": [
+      "gpt_trader.app.config",
+      "gpt_trader.features.brokerages.factory"
     ],
     "tests/unit/gpt_trader/features/data/test_cache.py": [
       "gpt_trader.features.data.cache"
@@ -2954,6 +2970,7 @@
     ],
     "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py": [
       "gpt_trader.features.live_trade.execution.guard_manager",
+      "gpt_trader.features.live_trade.execution.order_submission",
       "gpt_trader.features.live_trade.execution.submission_result",
       "gpt_trader.features.live_trade.guard_errors",
       "gpt_trader.features.live_trade.risk.manager",
@@ -2974,6 +2991,7 @@
       "gpt_trader.security.security_validator"
     ],
     "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_reconciliation.py": [
+      "gpt_trader.core",
       "gpt_trader.persistence.orders_store"
     ],
     "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_state.py": [
@@ -4637,6 +4655,7 @@
     "gpt_trader.features.brokerages.coinbase.ws_events": "src/gpt_trader/features/brokerages/coinbase/ws_events.py",
     "gpt_trader.features.brokerages.coinbase.client.websocket_mixin": "src/gpt_trader/features/brokerages/coinbase/client/websocket_mixin.py",
     "gpt_trader.features.brokerages.paper.hybrid": "src/gpt_trader/features/brokerages/paper/hybrid.py",
+    "gpt_trader.features.brokerages.factory": "src/gpt_trader/features/brokerages/factory.py",
     "gpt_trader.features.data.cache": "src/gpt_trader/features/data/cache.py",
     "gpt_trader.features.data.data": "src/gpt_trader/features/data/data.py",
     "gpt_trader.features.data.types": "src/gpt_trader/features/data/types.py",
@@ -4657,6 +4676,7 @@
     "gpt_trader.utilities.async_tools": "src/gpt_trader/utilities/async_tools/__init__.py",
     "gpt_trader.features.live_trade.engines.price_tick_store": "src/gpt_trader/features/live_trade/engines/price_tick_store.py",
     "gpt_trader.features.live_trade.execution.guard_manager": "src/gpt_trader/features/live_trade/execution/guard_manager.py",
+    "gpt_trader.features.live_trade.execution.order_submission": "src/gpt_trader/features/live_trade/execution/order_submission.py",
     "gpt_trader.features.live_trade.execution.submission_result": "src/gpt_trader/features/live_trade/execution/submission_result.py",
     "gpt_trader.features.live_trade.guard_errors": "src/gpt_trader/features/live_trade/guard_errors.py",
     "gpt_trader.monitoring.health_checks": "src/gpt_trader/monitoring/health_checks.py",
@@ -4672,7 +4692,6 @@
     "gpt_trader.features.live_trade.execution.guards.liquidation_buffer": "src/gpt_trader/features/live_trade/execution/guards/liquidation_buffer.py",
     "gpt_trader.features.live_trade.execution.decision_trace": "src/gpt_trader/features/live_trade/execution/decision_trace.py",
     "gpt_trader.features.live_trade.execution.order_event_recorder": "src/gpt_trader/features/live_trade/execution/order_event_recorder.py",
-    "gpt_trader.features.live_trade.execution.order_submission": "src/gpt_trader/features/live_trade/execution/order_submission.py",
     "gpt_trader.logging.correlation": "src/gpt_trader/logging/correlation.py",
     "gpt_trader.features.live_trade.execution.router": "src/gpt_trader/features/live_trade/execution/router.py",
     "gpt_trader.features.live_trade.strategies.hybrid.types": "src/gpt_trader/features/live_trade/strategies/hybrid/types.py",

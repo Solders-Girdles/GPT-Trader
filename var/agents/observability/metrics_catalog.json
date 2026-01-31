@@ -99,7 +99,7 @@
       ],
       "locations": [
         {
-          "line": 1245,
+          "line": 1438,
           "path": "src/gpt_trader/features/live_trade/engines/strategy.py"
         }
       ],
@@ -210,7 +210,7 @@
       ],
       "locations": [
         {
-          "line": 132,
+          "line": 175,
           "path": "src/gpt_trader/features/live_trade/execution/order_submission.py"
         }
       ],
@@ -227,7 +227,7 @@
       ],
       "locations": [
         {
-          "line": 106,
+          "line": 149,
           "path": "src/gpt_trader/features/live_trade/execution/order_submission.py"
         }
       ],
@@ -242,7 +242,7 @@
       ],
       "locations": [
         {
-          "line": 1566,
+          "line": 1775,
           "path": "src/gpt_trader/features/live_trade/engines/strategy.py"
         }
       ],

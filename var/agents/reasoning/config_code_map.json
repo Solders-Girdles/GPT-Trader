@@ -148,6 +148,12 @@
           "notes": "No direct usage found"
         },
         {
+          "field": "max_cycles",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
           "field": "metadata",
           "usage_count": 0,
           "files": [],
@@ -161,6 +167,12 @@
         },
         {
           "field": "order_submission_retries_enabled",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "paper_fills",
           "usage_count": 0,
           "files": [],
           "notes": "No direct usage found"
@@ -294,6 +306,12 @@
       "fields": [
         {
           "field": "daily_loss_limit_pct",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
+          "field": "dry_run_equity_usd",
           "usage_count": 0,
           "files": [],
           "notes": "No direct usage found"

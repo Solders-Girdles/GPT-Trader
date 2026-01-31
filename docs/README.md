@@ -18,6 +18,7 @@ last-updated: 2026-01-30
 |----------|---------|
 | [Architecture](ARCHITECTURE.md) | System design and capabilities |
 | [Architecture Boundaries](architecture/BOUNDARIES.md) | Layer ownership and dependency direction |
+| [Ownership Map](architecture/OWNERSHIP.md) | Module ownership map and boundaries |
 | [Entrypoints](architecture/ENTRYPOINTS.md) | CLI, TUI, preflight, and live bot wiring |
 | [Production Guide](production.md) | Deployment, rollout, and emergency procedures |
 | [Readiness Checklist](READINESS.md) | Gates to move from paper to live trading |

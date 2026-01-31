@@ -2280,7 +2280,7 @@ class TradingEngine(BaseEngine):
         equity: Decimal,
         trace: OrderDecisionTrace,
     ) -> OrderSubmissionResult | None:
-        from gpt_trader.security.security_validator import get_validator
+        from gpt_trader.security.validate import get_validator
 
         security_order = {
             "symbol": symbol,

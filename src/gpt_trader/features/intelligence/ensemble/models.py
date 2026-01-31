@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Any
 from gpt_trader.features.intelligence.regime.models import RegimeType
 
 if TYPE_CHECKING:
-    from gpt_trader.features.live_trade.strategies.perps_baseline import Decision
+    from gpt_trader.features.intelligence.contracts import Decision
 
 
 @dataclass

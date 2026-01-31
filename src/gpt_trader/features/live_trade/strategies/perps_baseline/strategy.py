@@ -20,9 +20,12 @@ from gpt_trader.features.live_trade.indicators import (
     relative_strength_index,
     simple_moving_average,
 )
+from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
     from gpt_trader.features.live_trade.strategies.base import MarketDataContext
+
+logger = get_logger(__name__, component="baseline_strategy")
 
 
 class Action(Enum):
@@ -297,7 +300,8 @@ class BaselinePerpsStrategy:
 
         indicator_dict = self._indicators_to_dict(indicators)
 
-        # Determine action based on weighted signals
+        # Entry gate: require a dominant side AND enough aggregated weight.
+        # With default weights, trend-only signals won't pass without crossover/RSI alignment.
         if buy_weight > sell_weight and buy_weight >= self.config.min_confidence:
             return Decision(
                 Action.BUY,
@@ -311,6 +315,28 @@ class BaselinePerpsStrategy:
                 reason="; ".join(reasons) if reasons else "Sell signal",
                 confidence=min(sell_weight, 1.0),
                 indicators=indicator_dict,
+            )
+
+        if reasons or buy_weight or sell_weight:
+            if buy_weight == sell_weight:
+                blocked_reason = "balanced_signals"
+            elif buy_weight > sell_weight:
+                blocked_reason = "buy_below_min_confidence"
+            else:
+                blocked_reason = "sell_below_min_confidence"
+            logger.info(
+                "Entry gate blocked",
+                symbol=symbol,
+                blocked_reason=blocked_reason,
+                buy_weight=round(buy_weight, 4),
+                sell_weight=round(sell_weight, 4),
+                min_confidence=self.config.min_confidence,
+                rsi=indicator_dict.get("rsi"),
+                rsi_signal=indicators.rsi_signal,
+                crossover_signal=indicators.crossover_signal,
+                trend=indicators.trend,
+                short_ma=indicator_dict.get("short_ma"),
+                long_ma=indicator_dict.get("long_ma"),
             )
 
         return Decision(

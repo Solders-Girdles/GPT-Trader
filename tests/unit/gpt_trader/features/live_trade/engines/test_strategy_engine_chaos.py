@@ -166,6 +166,16 @@ class TestPausedOrderRejection:
         engine.context.broker.place_order.assert_not_called()
         if pause_all:
             engine._order_submitter.record_rejection.assert_called()
+        events = [
+            event
+            for event in engine._event_store.list_events()
+            if event.get("type") == "trade_gate_blocked"
+        ]
+        assert events
+        payload = events[-1].get("data", {})
+        assert payload.get("gate") == "degradation_gate"
+        assert payload.get("symbol") == "BTC-USD"
+        assert payload.get("side") == "BUY"
 
     @pytest.mark.asyncio
     async def test_reduce_only_allowed_through_pause(self, engine) -> None:
@@ -178,6 +188,30 @@ class TestPausedOrderRejection:
             equity=Decimal("10000"),
         )
         engine._order_submitter.submit_order_with_result.assert_called()
+
+
+@pytest.mark.asyncio
+async def test_reduce_only_mode_blocked_emits_gate_event(engine) -> None:
+    engine.context.risk_manager.is_reduce_only_mode = MagicMock(return_value=True)
+    engine.context.risk_manager.check_order = MagicMock(return_value=False)
+
+    result = await engine._validate_and_place_order(
+        symbol="BTC-USD",
+        decision=Decision(Action.BUY, "test"),
+        price=Decimal("50000"),
+        equity=Decimal("10000"),
+    )
+
+    assert result.status == OrderSubmissionStatus.BLOCKED
+    events = [
+        event
+        for event in engine._event_store.list_events()
+        if event.get("type") == "trade_gate_blocked"
+    ]
+    assert events
+    payload = events[-1].get("data", {})
+    assert payload.get("gate") == "reduce_only"
+    assert payload.get("reason") == "reduce_only_mode_blocked"
 
 
 class TestGuardOutcomeInvariants:

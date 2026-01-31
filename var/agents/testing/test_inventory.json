@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6042,
-    "total_files": 718,
+    "total_tests": 6044,
+    "total_files": 719,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,8 +102,8 @@
     ]
   },
   "marker_counts": {
-    "unit": 5877,
-    "asyncio": 345,
+    "unit": 5879,
+    "asyncio": 347,
     "parametrize": 154,
     "property": 82,
     "integration": 79,
@@ -364,6 +364,7 @@
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_health.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_orders.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_reconciliation.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_sizing.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_state.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_mark_updates.py",
@@ -18656,7 +18657,7 @@
       },
       {
         "name": "TestPausedOrderRejection::test_reduce_only_allowed_through_pause",
-        "line": 171,
+        "line": 181,
         "markers": [
           "asyncio",
           "unit"
@@ -18665,8 +18666,17 @@
         "class": "TestPausedOrderRejection"
       },
       {
+        "name": "test_reduce_only_mode_blocked_emits_gate_event",
+        "line": 194,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "TestGuardOutcomeInvariants::test_degradation_blocks_before_validation",
-        "line": 185,
+        "line": 219,
         "markers": [
           "asyncio",
           "unit"
@@ -18676,7 +18686,7 @@
       },
       {
         "name": "TestGuardOutcomeInvariants::test_risk_validation_blocked_vs_failed",
-        "line": 203,
+        "line": 237,
         "markers": [
           "asyncio",
           "unit"
@@ -18686,7 +18696,7 @@
       },
       {
         "name": "TestGuardOutcomeInvariants::test_reduce_only_requested_allows_stale_mark",
-        "line": 232,
+        "line": 266,
         "markers": [
           "asyncio",
           "unit"
@@ -18878,7 +18888,7 @@
       },
       {
         "name": "test_slippage_guard_blocks_order",
-        "line": 116,
+        "line": 124,
         "markers": [
           "asyncio",
           "unit"
@@ -18887,7 +18897,7 @@
       },
       {
         "name": "test_stale_mark_pauses_symbol",
-        "line": 164,
+        "line": 172,
         "markers": [
           "asyncio",
           "unit"
@@ -18896,7 +18906,7 @@
       },
       {
         "name": "test_stale_mark_allows_reduce_only_when_configured",
-        "line": 173,
+        "line": 189,
         "markers": [
           "asyncio",
           "unit"
@@ -18905,7 +18915,7 @@
       },
       {
         "name": "test_slippage_failures_pause_symbol_after_threshold",
-        "line": 182,
+        "line": 198,
         "markers": [
           "asyncio",
           "unit"
@@ -18914,36 +18924,12 @@
       },
       {
         "name": "test_preview_disabled_after_threshold_failures",
-        "line": 194,
+        "line": 210,
         "markers": [
           "asyncio",
           "unit"
         ],
         "docstring": ""
-      },
-      {
-        "name": "test_calculate_order_quantity_with_strategy_config",
-        "line": 206,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test quantity calculation uses strategy config if set."
-      },
-      {
-        "name": "test_calculate_order_quantity_fallback_to_bot_config",
-        "line": 216,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test quantity calculation falls back to bot config."
-      },
-      {
-        "name": "test_calculate_order_quantity_min_size",
-        "line": 228,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test quantity respects product min size."
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_reconciliation.py": [
@@ -18982,6 +18968,41 @@
           "unit"
         ],
         "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_sizing.py": [
+      {
+        "name": "test_quantity_zero_emits_gate_event",
+        "line": 16,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_calculate_order_quantity_with_strategy_config",
+        "line": 37,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test quantity calculation uses strategy config if set."
+      },
+      {
+        "name": "test_calculate_order_quantity_fallback_to_bot_config",
+        "line": 47,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test quantity calculation falls back to bot config."
+      },
+      {
+        "name": "test_calculate_order_quantity_min_size",
+        "line": 59,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test quantity respects product min size."
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_state.py": [

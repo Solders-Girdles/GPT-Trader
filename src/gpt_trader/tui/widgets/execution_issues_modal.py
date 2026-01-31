@@ -14,7 +14,7 @@ from textual.widgets import Button, Label, Static
 from gpt_trader.tui.responsive import calculate_modal_width
 
 if TYPE_CHECKING:
-    from gpt_trader.tui.types import ExecutionIssue, ExecutionMetrics
+    from gpt_trader.features.live_trade.telemetry import ExecutionIssue, ExecutionMetrics
 
 
 class ExecutionIssuesModal(ModalScreen):

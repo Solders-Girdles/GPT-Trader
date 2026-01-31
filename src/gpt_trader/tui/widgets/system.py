@@ -3,8 +3,9 @@ from textual.containers import Horizontal, Vertical
 from textual.reactive import reactive
 from textual.widgets import Label, Static
 
+from gpt_trader.features.live_trade.telemetry import ExecutionMetrics
 from gpt_trader.tui.helpers import safe_update
-from gpt_trader.tui.types import ExecutionMetrics, MetricsSnapshot, SystemStatus, WebSocketState
+from gpt_trader.tui.types import MetricsSnapshot, SystemStatus, WebSocketState
 
 
 class SystemHealthWidget(Static):

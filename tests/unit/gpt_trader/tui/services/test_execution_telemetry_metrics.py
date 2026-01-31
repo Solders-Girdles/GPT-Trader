@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import pytest
 
-from gpt_trader.tui.services.execution_telemetry import (
+from gpt_trader.features.live_trade.telemetry import (
+    ExecutionMetrics,
     ExecutionTelemetryCollector,
     clear_execution_telemetry,
 )
-from gpt_trader.tui.types import ExecutionMetrics
 
 
 @pytest.fixture(autouse=True)

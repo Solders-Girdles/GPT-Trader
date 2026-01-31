@@ -46417,7 +46417,7 @@
     "tests/unit/gpt_trader/tui/test_snapshots_modals.py": [
       {
         "name": "TestExecutionIssuesSnapshots::test_exec_issues_modal_with_data",
-        "line": 23,
+        "line": 24,
         "markers": [
           "unit"
         ],
@@ -46426,7 +46426,7 @@
       },
       {
         "name": "TestExecutionIssuesSnapshots::test_exec_issues_modal_empty",
-        "line": 72,
+        "line": 73,
         "markers": [
           "unit"
         ],
@@ -46435,7 +46435,7 @@
       },
       {
         "name": "TestRiskPreviewSnapshots::test_risk_preview_safe",
-        "line": 94,
+        "line": 95,
         "markers": [
           "unit"
         ],
@@ -46444,7 +46444,7 @@
       },
       {
         "name": "TestRiskPreviewSnapshots::test_risk_preview_critical",
-        "line": 116,
+        "line": 117,
         "markers": [
           "unit"
         ],
@@ -46453,7 +46453,7 @@
       },
       {
         "name": "TestGuardThresholdSnapshots::test_risk_modal_with_active_guards",
-        "line": 143,
+        "line": 144,
         "markers": [
           "unit"
         ],
@@ -46462,7 +46462,7 @@
       },
       {
         "name": "TestGuardThresholdSnapshots::test_risk_modal_multiple_guard_types",
-        "line": 169,
+        "line": 170,
         "markers": [
           "unit"
         ],
@@ -50468,7 +50468,7 @@
     "tests/unit/gpt_trader/tui/widgets/test_system.py": [
       {
         "name": "TestSystemHealthWidget::test_update_system",
-        "line": 17,
+        "line": 18,
         "markers": [
           "asyncio",
           "unit"
@@ -50478,7 +50478,7 @@
       },
       {
         "name": "TestSystemHealthWidget::test_disconnected_status",
-        "line": 50,
+        "line": 51,
         "markers": [
           "asyncio",
           "unit"
@@ -50488,7 +50488,7 @@
       },
       {
         "name": "TestSystemHealthWidget::test_validation_failures_display_ok",
-        "line": 62,
+        "line": 63,
         "markers": [
           "asyncio",
           "unit"
@@ -50498,7 +50498,7 @@
       },
       {
         "name": "TestSystemHealthWidget::test_validation_failures_display_warning",
-        "line": 79,
+        "line": 80,
         "markers": [
           "asyncio",
           "unit"
@@ -50508,7 +50508,7 @@
       },
       {
         "name": "TestSystemHealthWidget::test_validation_failures_display_escalated",
-        "line": 100,
+        "line": 101,
         "markers": [
           "asyncio",
           "unit"
@@ -50518,7 +50518,7 @@
       },
       {
         "name": "TestExecutionIssues::test_execution_issues_hidden_when_empty",
-        "line": 122,
+        "line": 123,
         "markers": [
           "asyncio",
           "unit"
@@ -50528,7 +50528,7 @@
       },
       {
         "name": "TestExecutionIssues::test_execution_issues_shows_rejections",
-        "line": 137,
+        "line": 138,
         "markers": [
           "asyncio",
           "unit"
@@ -50538,7 +50538,7 @@
       },
       {
         "name": "TestExecutionIssues::test_execution_issues_shows_retries",
-        "line": 159,
+        "line": 160,
         "markers": [
           "asyncio",
           "unit"
@@ -50548,7 +50548,7 @@
       },
       {
         "name": "TestExecutionIssues::test_execution_issues_truncates_to_top_two",
-        "line": 181,
+        "line": 182,
         "markers": [
           "asyncio",
           "unit"
@@ -50558,7 +50558,7 @@
       },
       {
         "name": "TestExecutionIssues::test_execution_issues_hides_empty_category",
-        "line": 208,
+        "line": 209,
         "markers": [
           "asyncio",
           "unit"

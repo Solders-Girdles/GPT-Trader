@@ -1,4 +1,4 @@
-.PHONY: dev-up dev-down lint fmt fmt-check lint-fix typecheck docs-audit tui-css-check test-guardrails ci-required test smoke preflight preflight-readiness dash cov clean clean-dry-run scaffold-slice \
+.PHONY: dev-up dev-down lint fmt fmt-check lint-fix fmt-lint-fix typecheck docs-audit tui-css-check test-guardrails ci-required test smoke preflight preflight-readiness dash cov clean clean-dry-run scaffold-slice \
 	readiness-window legacy-bundle agent-setup agent-check agent-impact agent-impact-full agent-map agent-tests agent-risk \
 	agent-naming agent-health agent-health-fast agent-health-full agent-chaos-smoke agent-chaos-week \
 	agent-regenerate agent-verify agent-docs-links canary-liveness canary-liveness-check canary-daily canary-decision-traces \
@@ -47,6 +47,10 @@ lint:
 
 lint-fix:
 	uv run ruff check . --fix
+
+fmt-lint-fix:
+	uv run ruff check . --fix
+	uv run black .
 
 fmt:
 	uv run black .

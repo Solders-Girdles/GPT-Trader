@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6044,
-    "total_files": 719,
+    "total_tests": 6047,
+    "total_files": 720,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 5879,
+    "unit": 5882,
     "asyncio": 347,
     "parametrize": 154,
     "property": 82,
@@ -831,6 +831,9 @@
     ],
     "test_canary_watchdog.py": [
       "tests/unit/scripts/test_canary_watchdog.py"
+    ],
+    "test_check_import_boundaries.py": [
+      "tests/unit/scripts/test_check_import_boundaries.py"
     ],
     "test_docs_maintenance.py": [
       "tests/unit/scripts/test_docs_maintenance.py"
@@ -55781,6 +55784,32 @@
       {
         "name": "test_once_exit_codes",
         "line": 131,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/scripts/test_check_import_boundaries.py": [
+      {
+        "name": "test_absolute_import_violation",
+        "line": 29,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_relative_import_violation",
+        "line": 45,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_allowed_imports_pass",
+        "line": 61,
         "markers": [
           "unit"
         ],

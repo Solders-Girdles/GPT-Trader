@@ -77,10 +77,39 @@ jobs:
         run: uv sync --all-extras --dev
 
       - name: Run markdown link audit
-        run: python scripts/maintenance/docs_link_audit.py
+        run: |
+          set -o pipefail
+          mkdir -p var/ci/docs_audit
+          python scripts/maintenance/docs_link_audit.py 2>&1 | tee var/ci/docs_audit/docs_link_audit.log
 
       - name: Check docs reachability
-        run: python scripts/maintenance/docs_reachability_check.py
+        run: |
+          set -o pipefail
+          mkdir -p var/ci/docs_audit
+          python scripts/maintenance/docs_reachability_check.py 2>&1 | tee var/ci/docs_audit/docs_reachability.log
+
+      - name: Docs audit summary
+        if: always()
+        run: |
+          {
+            if [ "${{ job.status }}" = "success" ]; then
+              echo "Docs audit OK"
+            else
+              echo "Docs audit failed."
+              for file in var/ci/docs_audit/docs_link_audit.log var/ci/docs_audit/docs_reachability.log; do
+                if [ -f "$file" ]; then
+                  echo ""
+                  echo "### $(basename "$file") (first 40 lines)"
+                  echo '```'
+                  sed -n '1,40p' "$file"
+                  echo '```'
+                else
+                  echo ""
+                  echo "Log not found: $file"
+                fi
+              done
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
 
   typecheck:
     name: Type Check

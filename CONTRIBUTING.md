@@ -343,6 +343,7 @@ The CI workflow (`.github/workflows/ci.yml`) runs checks in parallel lanes for f
 Makefile shortcuts:
 - `make lint` (ruff check + black --check)
 - `make lint-fix` (ruff check --fix)
+- `make lint-fmt-fix` (ruff check --fix + black)
 - `make fmt` (black)
 - `make fmt-check` (black --check)
 

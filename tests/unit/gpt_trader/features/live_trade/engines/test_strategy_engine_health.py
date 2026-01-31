@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-import gpt_trader.security.security_validator as security_validator_module
+import gpt_trader.security.validate as security_validate_module
 from gpt_trader.core import Balance, Position
 from gpt_trader.features.live_trade.strategies.perps_baseline import Action, Decision
 
@@ -98,7 +98,7 @@ async def test_risk_manager_receives_dict_format(engine, monkeypatch: pytest.Mon
 
     mock_validator = MagicMock()
     mock_validator.validate_order_request.return_value.is_valid = True
-    monkeypatch.setattr(security_validator_module, "get_validator", lambda: mock_validator)
+    monkeypatch.setattr(security_validate_module, "get_validator", lambda: mock_validator)
 
     engine.strategy.decide.return_value = Decision(Action.BUY, "test")
     engine.strategy.config.position_fraction = Decimal("0.1")

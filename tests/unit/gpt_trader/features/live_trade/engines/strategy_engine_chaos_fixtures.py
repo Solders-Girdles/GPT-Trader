@@ -89,10 +89,10 @@ def mock_security_validator(monkeypatch):
     result.is_valid, result.errors = True, []
     validator.validate_order_request.return_value = result
 
-    import gpt_trader.security.security_validator as security_validator_module
+    import gpt_trader.security.validate as security_validate_module
 
     monkeypatch.setattr(
-        security_validator_module,
+        security_validate_module,
         "get_validator",
         MagicMock(return_value=validator),
     )

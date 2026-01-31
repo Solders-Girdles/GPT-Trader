@@ -33,8 +33,7 @@ def test_generate_test_inventory_orders_output() -> None:
         "tests/unit/gpt_trader/core/test_core.py",
     ]
     assert [
-        test["name"]
-        for test in inventory["tests_by_file"]["tests/unit/gpt_trader/cli/test_cli.py"]
+        test["name"] for test in inventory["tests_by_file"]["tests/unit/gpt_trader/cli/test_cli.py"]
     ] == [
         "test_alpha",
         "test_delta",

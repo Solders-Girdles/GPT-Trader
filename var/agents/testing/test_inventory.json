@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6047,
-    "total_files": 720,
+    "total_tests": 6049,
+    "total_files": 721,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 5882,
+    "unit": 5884,
     "asyncio": 347,
     "parametrize": 154,
     "property": 82,
@@ -685,6 +685,9 @@
     ],
     "test_feature_slice_scaffold.py": [
       "tests/unit/scripts/test_feature_slice_scaffold.py"
+    ],
+    "test_generate_test_inventory.py": [
+      "tests/unit/scripts/test_generate_test_inventory.py"
     ],
     "test_liveness_check.py": [
       "tests/unit/scripts/test_liveness_check.py"
@@ -55864,6 +55867,24 @@
       {
         "name": "test_refuses_overwrite",
         "line": 46,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/scripts/test_generate_test_inventory.py": [
+      {
+        "name": "test_generate_test_inventory_orders_output",
+        "line": 6,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_build_source_test_map_orders_entries",
+        "line": 55,
         "markers": [
           "unit"
         ],

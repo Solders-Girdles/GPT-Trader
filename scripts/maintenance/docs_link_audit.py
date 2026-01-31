@@ -135,20 +135,32 @@ def main() -> int:
                     missing_paths.append((path, candidate))
 
     if missing_links or missing_paths:
+        print("How to reproduce: python scripts/maintenance/docs_link_audit.py")
+        print()
         if missing_links:
-            print("Missing markdown link targets:")
+            grouped_links: dict[Path, list[str]] = {}
             for source, target in missing_links:
+                grouped_links.setdefault(source, []).append(target)
+            print("Missing markdown link targets:")
+            for source, targets in grouped_links.items():
                 rel_source = source.relative_to(root)
-                print(f"- {rel_source}: {target}")
+                print(f"- {rel_source}")
+                for target in targets:
+                    print(f"  - {target}")
             print(f"\nTotal missing links: {len(missing_links)}")
 
         if missing_paths:
             if missing_links:
                 print()
-            print("Missing repo path references (src/scripts/config/tests):")
+            grouped_paths: dict[Path, list[str]] = {}
             for source, candidate in missing_paths:
+                grouped_paths.setdefault(source, []).append(candidate)
+            print("Missing repo path references (src/scripts/config/tests):")
+            for source, candidates in grouped_paths.items():
                 rel_source = source.relative_to(root)
-                print(f"- {rel_source}: {candidate}")
+                print(f"- {rel_source}")
+                for candidate in candidates:
+                    print(f"  - {candidate}")
             print(f"\nTotal missing paths: {len(missing_paths)}")
         return 1
 

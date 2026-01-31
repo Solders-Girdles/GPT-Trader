@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Iterable, Sequence
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+SRC_ROOT = REPO_ROOT / "src"
 
 
 @dataclass(frozen=True)
@@ -65,15 +66,79 @@ def _collect_explicit_files(paths: Sequence[str]) -> list[Path]:
     return files
 
 
-def _iter_imports(tree: ast.AST) -> Iterable[tuple[int, str]]:
+def _module_for_path(path: Path) -> str | None:
+    """Return the absolute module path for a file under src/ (best-effort)."""
+    try:
+        rel = path.resolve().relative_to(SRC_ROOT)
+    except ValueError:
+        return None
+
+    if rel.suffix != ".py":
+        return None
+
+    parts = list(rel.with_suffix("").parts)
+    if not parts:
+        return None
+
+    # __init__.py represents the package itself.
+    if parts[-1] == "__init__":
+        parts = parts[:-1]
+
+    if not parts:
+        return None
+
+    return ".".join(parts)
+
+
+def _package_parts_for_path(path: Path) -> list[str] | None:
+    """Return package parts for a file (directory module path)."""
+    mod = _module_for_path(path)
+    if not mod:
+        return None
+
+    parts = mod.split(".")
+    if path.name != "__init__.py":
+        # Drop the module name to get package parts.
+        parts = parts[:-1]
+
+    return parts
+
+
+def _resolve_relative_import(path: Path, node: ast.ImportFrom) -> str | None:
+    """Resolve a relative ImportFrom to an absolute module prefix.
+
+    This is intentionally conservative and only meant for boundary checks.
+    """
+    pkg = _package_parts_for_path(path)
+    if pkg is None:
+        return None
+
+    if node.level <= 0:
+        return node.module
+
+    # level=1 => current package; level=2 => parent, etc.
+    trim = node.level - 1
+    if trim > len(pkg):
+        return None
+
+    base = pkg[: len(pkg) - trim]
+
+    if node.module:
+        base.extend(node.module.split("."))
+
+    return ".".join(base) if base else None
+
+
+def _iter_imports(path: Path, tree: ast.AST) -> Iterable[tuple[int, str]]:
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
                 yield node.lineno, alias.name
         elif isinstance(node, ast.ImportFrom):
-            if node.level != 0 or not node.module:
+            module = _resolve_relative_import(path, node)
+            if not module:
                 continue
-            module = node.module
+
             for alias in node.names:
                 if alias.name == "*":
                     yield node.lineno, module
@@ -138,7 +203,7 @@ def _scan_rule(rule: ImportRule, explicit_files: list[Path] | None) -> list[Impo
             )
             continue
 
-        for line, import_path in _iter_imports(tree):
+        for line, import_path in _iter_imports(path, tree):
             if _is_allowed(import_path, rule):
                 continue
             if any(_matches_prefix(import_path, prefix) for prefix in rule.forbidden_prefixes):

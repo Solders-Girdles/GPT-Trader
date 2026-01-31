@@ -151,6 +151,25 @@ make agent-verify            # or: uv run agent-regenerate --verify
 Regeneration should update files in `var/agents/**`; stage and commit those
 changes in your PR.
 
+### Resolving Generated Artifact Conflicts
+
+If merge conflicts appear in `var/agents/**`, avoid hand-editing the generated
+files. Resolve conflicts in the source inputs first (for example, under
+`scripts/agents/**`, `config/environments/.env.template`, or related code), then
+regenerate the artifacts.
+
+Recommended flow:
+
+```bash
+# 1) Resolve conflicts in the source inputs.
+# 2) Clear conflict markers from generated files (choose a side or delete them).
+uv run agent-regenerate          # or: make agent-regenerate
+uv run agent-regenerate --verify # optional verification
+```
+
+Stage the regenerated `var/agents/**` outputs and include them in the same PR
+as the source changes.
+
 ## Documentation
 
 - Update `docs/ARCHITECTURE.md`, `docs/RISK_INTEGRATION_GUIDE.md`, or other

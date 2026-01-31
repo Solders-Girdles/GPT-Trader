@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6031,
+    "total_tests": 6037,
     "total_files": 715,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 5866,
+    "unit": 5872,
     "asyncio": 343,
     "parametrize": 152,
     "property": 82,
@@ -7932,7 +7932,7 @@
     "tests/unit/gpt_trader/cli/commands/optimize/test_commands_execution.py": [
       {
         "name": "TestRunCommand::test_dry_run_returns_success",
-        "line": 17,
+        "line": 27,
         "markers": [
           "unit"
         ],
@@ -7940,8 +7940,26 @@
         "class": "TestRunCommand"
       },
       {
+        "name": "TestRunCommand::test_config_file_is_not_overridden_by_defaults",
+        "line": 50,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Config file values should remain unless CLI overrides are explicit.",
+        "class": "TestRunCommand"
+      },
+      {
+        "name": "TestRunCommand::test_cli_overrides_apply_over_config",
+        "line": 105,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Explicit CLI flags should override config file values.",
+        "class": "TestRunCommand"
+      },
+      {
         "name": "TestListCommand::test_execute_with_no_runs",
-        "line": 44,
+        "line": 168,
         "markers": [
           "unit"
         ],
@@ -7950,7 +7968,7 @@
       },
       {
         "name": "TestListCommand::test_execute_with_runs",
-        "line": 55,
+        "line": 179,
         "markers": [
           "unit"
         ],
@@ -7959,7 +7977,7 @@
       },
       {
         "name": "TestViewCommand::test_execute_with_missing_run",
-        "line": 77,
+        "line": 201,
         "markers": [
           "unit"
         ],
@@ -7968,7 +7986,7 @@
       },
       {
         "name": "TestCompareCommand::test_execute_requires_two_runs",
-        "line": 94,
+        "line": 218,
         "markers": [
           "unit"
         ],
@@ -7977,7 +7995,7 @@
       },
       {
         "name": "TestExportCommand::test_execute_with_missing_run",
-        "line": 104,
+        "line": 228,
         "markers": [
           "unit"
         ],
@@ -7986,12 +8004,48 @@
       },
       {
         "name": "TestApplyCommand::test_execute_with_missing_run",
-        "line": 125,
+        "line": 249,
         "markers": [
           "unit"
         ],
         "docstring": "Test apply command with missing run.",
         "class": "TestApplyCommand"
+      },
+      {
+        "name": "TestArtifactCommands::test_publish_artifact_marks_approved",
+        "line": 271,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestArtifactCommands"
+      },
+      {
+        "name": "TestArtifactCommands::test_activate_artifact_sets_active",
+        "line": 297,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestArtifactCommands"
+      },
+      {
+        "name": "TestArtifactCommands::test_activate_artifact_rejects_unapproved",
+        "line": 321,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestArtifactCommands"
+      },
+      {
+        "name": "TestArtifactCommands::test_activate_artifact_allows_unapproved_with_warning",
+        "line": 344,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestArtifactCommands"
       }
     ],
     "tests/unit/gpt_trader/cli/commands/optimize/test_commands_registration.py": [

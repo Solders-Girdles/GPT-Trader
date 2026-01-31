@@ -103,6 +103,16 @@ bypass guards:
 
 ### Local CI Command
 
+For a fail-fast entrypoint that mirrors the required PR checks, run:
+
+```bash
+make ci-required
+```
+
+It runs lint/format, docs audits, mypy, agent artifacts freshness, the TUI CSS
+check, test guardrails, and core unit tests, stopping on the first failure.
+Use it when you want the required CI gates without optional suites.
+
 Run the local CI command to mirror the required PR checks:
 
 ```bash
@@ -140,6 +150,9 @@ python scripts/ci/local_ci.py
 - Confirm metrics output updates when telemetry changes (`metrics.json`).
 - Coordinate with operations before altering risk guard thresholds or order
   routing.
+- Preview stale Codex worktrees under `/tmp/gpt-*` with `python scripts/maintenance/cleanup_worktrees.py`.
+- Add `--apply` to remove the worktrees and delete their local branches.
+- Only `codex/*` or `issue/*` branches with missing upstream remotes are eligible.
 
 ## Submitting Changes
 

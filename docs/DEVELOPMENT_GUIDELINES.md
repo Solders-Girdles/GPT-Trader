@@ -137,6 +137,20 @@ If you prefer calling the script directly, run:
 python scripts/ci/local_ci.py
 ```
 
+### Agent Artifacts Freshness
+
+The required **Agent Artifacts Freshness** check verifies generated inventories
+under `var/agents/**` are up to date with their sources. If it fails, regenerate
+the artifacts and commit the results.
+
+```bash
+make agent-regenerate        # or: uv run agent-regenerate
+make agent-verify            # or: uv run agent-regenerate --verify
+```
+
+Regeneration should update files in `var/agents/**`; stage and commit those
+changes in your PR.
+
 ## Documentation
 
 - Update `docs/ARCHITECTURE.md`, `docs/RISK_INTEGRATION_GUIDE.md`, or other

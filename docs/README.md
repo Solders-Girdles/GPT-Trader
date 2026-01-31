@@ -56,6 +56,7 @@ last-updated: 2026-01-30
 - [Coinbase Integration](COINBASE.md) - Configuration + internal entrypoints
 
 ### Development
+- [Test Hygiene Policy](test_hygiene.md) - Line limits, allowlist policy, and splitting guidance
 - [Development Guidelines](DEVELOPMENT_GUIDELINES.md) - Standards for contributing
 - [Feature Slice Scaffolding](DEVELOPMENT_GUIDELINES.md#slice-scaffolding) - Bootstrap new slices
 - [Naming Standards](naming.md) - Terminology, casing, and banned abbreviations

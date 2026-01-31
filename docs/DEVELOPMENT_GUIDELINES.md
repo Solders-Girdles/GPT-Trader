@@ -101,6 +101,32 @@ bypass guards:
 - `Security Audit`: Weekly pip-audit export to catch dependency vulnerabilities.
 - `GPT-Trader CI/CD Pipeline`: End-to-end build and deployment flow for staging/production releases; Docker publish is skipped on pull requests.
 
+### Local CI Command
+
+Run the local CI command to mirror the required PR checks:
+
+```bash
+uv run local-ci
+```
+
+This runs the same commands as CI (lint + format, docs audits, mypy, agent artifacts
+freshness, TUI CSS check, test guardrails, and core unit tests).
+
+Optional suites:
+
+```bash
+uv run local-ci --include-snapshots
+uv run local-ci --include-property-tests
+uv run local-ci --include-contract-tests
+uv run local-ci --include-agent-health
+```
+
+If you prefer calling the script directly, run:
+
+```bash
+python scripts/ci/local_ci.py
+```
+
 ## Documentation
 
 - Update `docs/ARCHITECTURE.md`, `docs/RISK_INTEGRATION_GUIDE.md`, or other

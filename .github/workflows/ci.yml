@@ -194,6 +194,16 @@ jobs:
           echo "exit_code=$status" >> $GITHUB_OUTPUT
           if [ $status -ne 0 ]; then
             echo "::error::Agent artifacts are stale; run uv run agent-regenerate and commit the changes"
+            echo "Fix command: uv run agent-regenerate"
+            echo "Verify log: var/agents/health/agent_regenerate_verify.txt"
+            changed_files=$(git status --porcelain)
+            if [ -n "$changed_files" ]; then
+              echo "Changed files (git status --porcelain):"
+              echo "$changed_files"
+            else
+              echo "No working tree changes detected; diffstat:"
+              git diff --stat
+            fi
           fi
           exit $status
 
@@ -203,6 +213,8 @@ jobs:
           echo "## Agent Artifacts Freshness" >> $GITHUB_STEP_SUMMARY
           if [ "${{ steps.verify.outputs.exit_code }}" != "0" ]; then
             echo "Status: STALE (run \`uv run agent-regenerate\`)" >> $GITHUB_STEP_SUMMARY
+            echo "Fix: \`uv run agent-regenerate\`" >> $GITHUB_STEP_SUMMARY
+            echo "Verify log: \`var/agents/health/agent_regenerate_verify.txt\`" >> $GITHUB_STEP_SUMMARY
           else
             echo "Status: OK" >> $GITHUB_STEP_SUMMARY
           fi

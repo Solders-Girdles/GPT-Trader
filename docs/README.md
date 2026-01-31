@@ -42,6 +42,7 @@ last-updated: 2026-01-30
 - [Architecture Boundaries](architecture/BOUNDARIES.md) - Layer ownership and dependency direction
 - [DI Policy](DI_POLICY.md) - Dependency injection patterns and container usage
 - [Entrypoints](architecture/ENTRYPOINTS.md) - CLI, TUI, preflight, and live bot wiring
+- [Core Seams](architecture/SEAMS.md) - Canonical boundaries for Strategy/Execution/Data/Config
 
 ### Trading Operations
 - [Production Deployment](production.md) - Deployment, monitoring, rollback, emergencies

@@ -21,12 +21,7 @@ EXTERNAL_PREFIXES = ("http://", "https://", "mailto:", "tel:")
 ALLOWED_STATUSES = {"current", "draft", "deprecated", "superseded"}
 ISO_DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 DATE_KEYS = ("last-updated", "last-reviewed", "last-verified")
-METADATA_TEMPLATE = (
-    "---\n"
-    "status: current\n"
-    "last-updated: YYYY-MM-DD\n"
-    "---"
-)
+METADATA_TEMPLATE = "---\n" "status: current\n" "last-updated: YYYY-MM-DD\n" "---"
 
 SECTION_FALLBACKS = (
     "Quick Links",

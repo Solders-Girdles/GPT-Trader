@@ -34619,7 +34619,7 @@
       },
       {
         "name": "TestStatusReporterMetrics::test_equity_gauge_updates_on_change",
-        "line": 114,
+        "line": 122,
         "markers": [
           "unit"
         ],
@@ -34628,7 +34628,7 @@
       },
       {
         "name": "TestStatusReporterStrategyPerformance::test_update_strategy_performance_sets_performance",
-        "line": 129,
+        "line": 137,
         "markers": [
           "unit"
         ],
@@ -34637,7 +34637,7 @@
       },
       {
         "name": "TestStatusReporterStrategyPerformance::test_update_strategy_performance_sets_backtest",
-        "line": 146,
+        "line": 154,
         "markers": [
           "unit"
         ],
@@ -34646,7 +34646,7 @@
       },
       {
         "name": "TestStatusReporterStrategyPerformance::test_update_strategy_performance_sets_both",
-        "line": 163,
+        "line": 171,
         "markers": [
           "unit"
         ],
@@ -34655,7 +34655,7 @@
       },
       {
         "name": "TestStatusReporterUpdates::test_record_cycle",
-        "line": 180,
+        "line": 188,
         "markers": [
           "unit"
         ],
@@ -34664,7 +34664,7 @@
       },
       {
         "name": "TestStatusReporterUpdates::test_record_error",
-        "line": 190,
+        "line": 198,
         "markers": [
           "unit"
         ],
@@ -34673,15 +34673,6 @@
       },
       {
         "name": "TestStatusReporterUpdates::test_update_price",
-        "line": 200,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestStatusReporterUpdates"
-      },
-      {
-        "name": "TestStatusReporterUpdates::test_update_positions",
         "line": 208,
         "markers": [
           "unit"
@@ -34690,8 +34681,17 @@
         "class": "TestStatusReporterUpdates"
       },
       {
+        "name": "TestStatusReporterUpdates::test_update_positions",
+        "line": 216,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestStatusReporterUpdates"
+      },
+      {
         "name": "TestStatusReporterUpdates::test_set_heartbeat_service",
-        "line": 221,
+        "line": 229,
         "markers": [
           "unit"
         ],
@@ -34700,7 +34700,7 @@
       },
       {
         "name": "TestStatusReporterStop::test_stop_when_not_running",
-        "line": 235,
+        "line": 243,
         "markers": [
           "asyncio",
           "unit"

@@ -1016,7 +1016,9 @@ class StatusReporter:
 
         # Record WS health gauges for metrics
         try:
-            record_gauge("gpt_trader_ws_connected", 1.0 if self._status.websocket.connected else 0.0)
+            record_gauge(
+                "gpt_trader_ws_connected", 1.0 if self._status.websocket.connected else 0.0
+            )
             record_gauge(
                 "gpt_trader_ws_message_stale",
                 1.0 if self._status.websocket.message_stale else 0.0,

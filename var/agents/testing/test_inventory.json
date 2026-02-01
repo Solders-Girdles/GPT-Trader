@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6074,
+    "total_tests": 6075,
     "total_files": 724,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 5909,
+    "unit": 5910,
     "asyncio": 347,
     "parametrize": 154,
     "property": 82,
@@ -34475,14 +34475,6 @@
     "tests/unit/gpt_trader/monitoring/test_runtime_guards_base.py": [
       {
         "name": "test_runtime_guard_triggers_generic_breach",
-        "line": 13,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_runtime_guard_warning_before_breach",
         "line": 26,
         "markers": [
           "unit"
@@ -34490,8 +34482,16 @@
         "docstring": ""
       },
       {
+        "name": "test_runtime_guard_warning_before_breach",
+        "line": 39,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_runtime_guard_less_than_comparison",
-        "line": 42,
+        "line": 55,
         "markers": [
           "unit"
         ],
@@ -34499,7 +34499,15 @@
       },
       {
         "name": "test_runtime_guard_absolute_comparison",
-        "line": 54,
+        "line": 67,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_runtime_guard_uses_time_provider_for_cooldown",
+        "line": 77,
         "markers": [
           "unit"
         ],

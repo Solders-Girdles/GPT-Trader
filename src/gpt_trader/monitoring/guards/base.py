@@ -9,8 +9,8 @@ from enum import Enum
 from typing import Any, cast
 
 from gpt_trader.monitoring.alert_types import AlertSeverity
-from gpt_trader.utilities.time_provider import SystemTimeProvider, TimeProvider
 from gpt_trader.utilities.logging_patterns import get_logger
+from gpt_trader.utilities.time_provider import SystemTimeProvider, TimeProvider
 from gpt_trader.validation import DecimalRule, RuleError
 
 logger = get_logger(__name__, component="monitoring_guards_base")

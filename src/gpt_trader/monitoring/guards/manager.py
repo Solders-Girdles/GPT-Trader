@@ -10,7 +10,6 @@ from gpt_trader.config.constants import WEBHOOK_TIMEOUT
 from gpt_trader.monitoring.alert_types import AlertSeverity
 from gpt_trader.monitoring.metrics_collector import record_counter
 from gpt_trader.utilities.logging_patterns import get_logger
-
 from gpt_trader.utilities.time_provider import TimeProvider
 
 from .base import Alert, GuardConfig, RuntimeGuard

@@ -887,11 +887,11 @@
     },
     "guard_alert": {
       "common_fields": [
-        "auto_shutdown",
         "guard_name",
         "json",
         "severity",
         "stage",
+        "time_provider",
         "timeout"
       ],
       "components": null,

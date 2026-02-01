@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6068,
-    "total_files": 723,
+    "total_tests": 6074,
+    "total_files": 724,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 5903,
+    "unit": 5909,
     "asyncio": 347,
     "parametrize": 154,
     "property": 82,
@@ -697,6 +697,9 @@
     ],
     "test_liveness_check.py": [
       "tests/unit/scripts/test_liveness_check.py"
+    ],
+    "test_manage_logs.py": [
+      "tests/unit/scripts/test_manage_logs.py"
     ],
     "test_reasoning_artifacts_guard_stack.py": [
       "tests/unit/scripts/test_reasoning_artifacts_guard_stack.py"
@@ -56089,6 +56092,56 @@
       {
         "name": "test_liveness_min_event_id_requires_newer_event",
         "line": 113,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/scripts/test_manage_logs.py": [
+      {
+        "name": "test_rotate_logs_by_size",
+        "line": 17,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_rotate_logs_by_age",
+        "line": 33,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_generate_summary_counts_plain_and_gz",
+        "line": 47,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_generate_summary_missing_file",
+        "line": 72,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_cleanup_old_logs_removes_archives",
+        "line": 82,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_get_active_logs_reports_sizes",
+        "line": 98,
         "markers": [
           "unit"
         ],

@@ -95,6 +95,7 @@ from gpt_trader.persistence.orders_store import (
     OrderStatus as PersistedOrderStatus,
 )
 from gpt_trader.utilities.async_tools import BoundedToThread
+from gpt_trader.utilities.datetime_helpers import parse_iso_to_epoch
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="trading_engine")
@@ -2127,9 +2128,7 @@ class TradingEngine(BaseEngine):
             return value.timestamp()
         if isinstance(value, str):
             try:
-                clean = value.rstrip("Z")
-                dt = datetime.fromisoformat(clean)
-                return dt.timestamp()
+                return parse_iso_to_epoch(value)
             except (ValueError, TypeError):
                 return time.time()
         return time.time()

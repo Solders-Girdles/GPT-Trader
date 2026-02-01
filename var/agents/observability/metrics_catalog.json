@@ -294,6 +294,32 @@
       "label_keys": [],
       "locations": [
         {
+          "line": 150,
+          "path": "src/gpt_trader/features/live_trade/execution/router.py"
+        }
+      ],
+      "name": "gpt_trader_trades_blocked_total",
+      "types": [
+        "counter"
+      ]
+    },
+    {
+      "label_keys": [],
+      "locations": [
+        {
+          "line": 889,
+          "path": "src/gpt_trader/features/live_trade/execution/order_submission.py"
+        }
+      ],
+      "name": "gpt_trader_trades_executed_total",
+      "types": [
+        "counter"
+      ]
+    },
+    {
+      "label_keys": [],
+      "locations": [
+        {
           "line": 84,
           "path": "src/gpt_trader/features/live_trade/execution/validation.py"
         }

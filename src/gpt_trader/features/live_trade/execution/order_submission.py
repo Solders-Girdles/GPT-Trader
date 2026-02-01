@@ -885,6 +885,10 @@ class OrderSubmitter:
                         reason="none",
                         side=side_str,
                     )
+                    try:
+                        record_counter("gpt_trader_trades_executed_total")
+                    except Exception:
+                        pass
                     _record_order_submission_latency(
                         latency_seconds=latency_seconds,
                         result="success",

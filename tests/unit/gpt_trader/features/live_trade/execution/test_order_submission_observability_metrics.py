@@ -61,6 +61,23 @@ def test_successful_order_records_metric(
 
 
 @pytest.mark.usefixtures("reset_metrics")
+def test_successful_order_increments_trades_executed_counter(
+    submitter,
+    submit_order_call,
+    mock_broker: MagicMock,
+    mock_order,
+) -> None:
+    from gpt_trader.monitoring.metrics_collector import get_metrics_collector
+
+    mock_broker.place_order.return_value = mock_order
+
+    submit_order_call(submitter)
+
+    collector = get_metrics_collector()
+    assert collector.counters["gpt_trader_trades_executed_total"] == 1
+
+
+@pytest.mark.usefixtures("reset_metrics")
 def test_failed_order_records_metric_with_reason(
     submitter,
     submit_order_call,

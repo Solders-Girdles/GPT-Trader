@@ -2020,7 +2020,7 @@
       ],
       "code_references": [
         {
-          "line": 1059,
+          "line": 1063,
           "path": "src/gpt_trader/features/live_trade/execution/order_submission.py",
           "reader": "os.getenv"
         }

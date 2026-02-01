@@ -11,6 +11,8 @@ from gpt_trader.monitoring.alert_types import AlertSeverity
 from gpt_trader.monitoring.metrics_collector import record_counter
 from gpt_trader.utilities.logging_patterns import get_logger
 
+from gpt_trader.utilities.time_provider import TimeProvider
+
 from .base import Alert, GuardConfig, RuntimeGuard
 from .builtins import (
     DailyLossGuard,
@@ -136,7 +138,11 @@ def _to_float(value: Any, default: float) -> float:
         return default
 
 
-def create_default_runtime_guard_manager(config: Mapping[str, Any]) -> RuntimeGuardManager:
+def create_default_runtime_guard_manager(
+    config: Mapping[str, Any],
+    *,
+    time_provider: TimeProvider | None = None,
+) -> RuntimeGuardManager:
     manager = RuntimeGuardManager()
 
     circuit_config = config.get("circuit_breakers", {})
@@ -150,7 +156,8 @@ def create_default_runtime_guard_manager(config: Mapping[str, Any]) -> RuntimeGu
                 threshold=daily_loss_limit,
                 severity=AlertSeverity.CRITICAL,
                 auto_shutdown=True,
-            )
+            ),
+            time_provider=time_provider,
         )
     )
 
@@ -161,7 +168,8 @@ def create_default_runtime_guard_manager(config: Mapping[str, Any]) -> RuntimeGu
                 name="stale_mark",
                 threshold=stale_mark_seconds,
                 severity=AlertSeverity.ERROR,
-            )
+            ),
+            time_provider=time_provider,
         )
     )
 
@@ -174,7 +182,8 @@ def create_default_runtime_guard_manager(config: Mapping[str, Any]) -> RuntimeGu
                 window_seconds=300,
                 severity=AlertSeverity.ERROR,
                 auto_shutdown=True,
-            )
+            ),
+            time_provider=time_provider,
         )
     )
 
@@ -184,7 +193,8 @@ def create_default_runtime_guard_manager(config: Mapping[str, Any]) -> RuntimeGu
                 name="position_stuck",
                 threshold=_to_float(circuit_config.get("position_timeout_seconds"), 1800),
                 severity=AlertSeverity.WARNING,
-            )
+            ),
+            time_provider=time_provider,
         )
     )
 
@@ -196,7 +206,8 @@ def create_default_runtime_guard_manager(config: Mapping[str, Any]) -> RuntimeGu
                 threshold=max_drawdown,
                 severity=AlertSeverity.ERROR,
                 auto_shutdown=True,
-            )
+            ),
+            time_provider=time_provider,
         )
     )
 

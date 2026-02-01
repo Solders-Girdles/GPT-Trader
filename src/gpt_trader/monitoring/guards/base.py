@@ -9,6 +9,7 @@ from enum import Enum
 from typing import Any, cast
 
 from gpt_trader.monitoring.alert_types import AlertSeverity
+from gpt_trader.utilities.time_provider import SystemTimeProvider, TimeProvider
 from gpt_trader.utilities.logging_patterns import get_logger
 from gpt_trader.validation import DecimalRule, RuleError
 
@@ -62,21 +63,23 @@ class RuntimeGuard:
 
     _DECIMAL_RULE = DecimalRule(allow_none=True)
 
-    def __init__(self, config: GuardConfig) -> None:
+    def __init__(self, config: GuardConfig, *, time_provider: TimeProvider | None = None) -> None:
         self.config = config
+        self._time_provider = time_provider or SystemTimeProvider()
         self.status: GuardStatus = GuardStatus.HEALTHY if config.enabled else GuardStatus.DISABLED
-        self.last_check: datetime = datetime.now()
+        self.last_check: datetime = self._now()
         self.last_alert: datetime | None = None
         self.breach_count: int = 0
         self.alerts: list[Alert] = []
 
     def check(self, context: dict[str, Any]) -> Alert | None:
         """Check guard condition and return an alert if breached."""
+        now = self._now()
         if not self.config.enabled:
             return None
 
         if self.last_alert:
-            elapsed = (datetime.now() - self.last_alert).total_seconds()
+            elapsed = (now - self.last_alert).total_seconds()
             if elapsed < self.config.cooldown_seconds:
                 return None
 
@@ -86,20 +89,21 @@ class RuntimeGuard:
             self.status = GuardStatus.BREACHED
             self.breach_count += 1
             alert = Alert(
-                timestamp=datetime.now(),
+                timestamp=now,
                 guard_name=self.config.name,
                 severity=self.config.severity,
                 message=message,
                 context=dict(context),
             )
             self.alerts.append(alert)
-            self.last_alert = datetime.now()
+            self.last_alert = now
+            self.last_check = now
             return alert
 
         if self.status == GuardStatus.BREACHED:
             self.status = GuardStatus.WARNING
 
-        self.last_check = datetime.now()
+        self.last_check = now
         return None
 
     # ------------------------------------------------------------------
@@ -110,6 +114,9 @@ class RuntimeGuard:
             return cast(Decimal, self._DECIMAL_RULE(raw, "value"))
         except RuleError:
             return None
+
+    def _now(self) -> datetime:
+        return self._time_provider.now()
 
     def _evaluate(self, context: dict[str, Any]) -> tuple[bool, str]:
         """Default evaluation logic based on threshold comparisons."""

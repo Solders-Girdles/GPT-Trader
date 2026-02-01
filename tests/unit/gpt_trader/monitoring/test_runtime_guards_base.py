@@ -2,12 +2,25 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta
+
 from gpt_trader.monitoring.alert_types import AlertSeverity
 from gpt_trader.monitoring.guards import (
     GuardConfig,
     GuardStatus,
     RuntimeGuard,
 )
+
+
+class ManualTimeProvider:
+    def __init__(self, start: datetime) -> None:
+        self._current = start
+
+    def now(self) -> datetime:
+        return self._current
+
+    def advance(self, delta: timedelta) -> None:
+        self._current = self._current + delta
 
 
 def test_runtime_guard_triggers_generic_breach():
@@ -59,3 +72,29 @@ def test_runtime_guard_absolute_comparison():
 
     assert alert is not None
     assert "absolute" in alert.message.lower()
+
+
+def test_runtime_guard_uses_time_provider_for_cooldown():
+    provider = ManualTimeProvider(datetime(2024, 1, 1, 12, 0, 0))
+    guard = RuntimeGuard(
+        GuardConfig(
+            name="latency",
+            threshold=100.0,
+            severity=AlertSeverity.ERROR,
+            cooldown_seconds=60,
+        ),
+        time_provider=provider,
+    )
+
+    first_alert = guard.check({"value": 150, "units": "ms"})
+    assert first_alert is not None
+    assert first_alert.timestamp == provider.now()
+    assert guard.last_alert == provider.now()
+
+    provider.advance(timedelta(seconds=30))
+    assert guard.check({"value": 150, "units": "ms"}) is None
+
+    provider.advance(timedelta(seconds=31))
+    second_alert = guard.check({"value": 150, "units": "ms"})
+    assert second_alert is not None
+    assert second_alert.timestamp == provider.now()

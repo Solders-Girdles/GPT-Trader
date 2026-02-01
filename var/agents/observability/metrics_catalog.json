@@ -350,11 +350,115 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 1000,
+          "line": 1015,
+          "path": "src/gpt_trader/monitoring/status_reporter.py"
+        }
+      ],
+      "name": "gpt_trader_ws_connected",
+      "types": [
+        "gauge"
+      ]
+    },
+    {
+      "label_keys": [],
+      "locations": [
+        {
+          "line": 1026,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],
       "name": "gpt_trader_ws_gap_count",
+      "types": [
+        "gauge"
+      ]
+    },
+    {
+      "label_keys": [],
+      "locations": [
+        {
+          "line": 1022,
+          "path": "src/gpt_trader/monitoring/status_reporter.py"
+        }
+      ],
+      "name": "gpt_trader_ws_heartbeat_stale",
+      "types": [
+        "gauge"
+      ]
+    },
+    {
+      "label_keys": [],
+      "locations": [
+        {
+          "line": 1039,
+          "path": "src/gpt_trader/monitoring/status_reporter.py"
+        }
+      ],
+      "name": "gpt_trader_ws_last_close_age_seconds",
+      "types": [
+        "gauge"
+      ]
+    },
+    {
+      "label_keys": [],
+      "locations": [
+        {
+          "line": 1043,
+          "path": "src/gpt_trader/monitoring/status_reporter.py"
+        }
+      ],
+      "name": "gpt_trader_ws_last_error_age_seconds",
+      "types": [
+        "gauge"
+      ]
+    },
+    {
+      "label_keys": [],
+      "locations": [
+        {
+          "line": 1035,
+          "path": "src/gpt_trader/monitoring/status_reporter.py"
+        }
+      ],
+      "name": "gpt_trader_ws_last_heartbeat_age_seconds",
+      "types": [
+        "gauge"
+      ]
+    },
+    {
+      "label_keys": [],
+      "locations": [
+        {
+          "line": 1031,
+          "path": "src/gpt_trader/monitoring/status_reporter.py"
+        }
+      ],
+      "name": "gpt_trader_ws_last_message_age_seconds",
+      "types": [
+        "gauge"
+      ]
+    },
+    {
+      "label_keys": [],
+      "locations": [
+        {
+          "line": 1018,
+          "path": "src/gpt_trader/monitoring/status_reporter.py"
+        }
+      ],
+      "name": "gpt_trader_ws_message_stale",
+      "types": [
+        "gauge"
+      ]
+    },
+    {
+      "label_keys": [],
+      "locations": [
+        {
+          "line": 1027,
+          "path": "src/gpt_trader/monitoring/status_reporter.py"
+        }
+      ],
+      "name": "gpt_trader_ws_reconnect_count",
       "types": [
         "gauge"
       ]

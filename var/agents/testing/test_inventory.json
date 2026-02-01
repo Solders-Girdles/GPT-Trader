@@ -34566,7 +34566,7 @@
     "tests/unit/gpt_trader/monitoring/test_status_reporter.py": [
       {
         "name": "TestBotStatusDataclass::test_default_values",
-        "line": 23,
+        "line": 20,
         "markers": [
           "unit"
         ],
@@ -34575,7 +34575,7 @@
       },
       {
         "name": "TestBotStatusDataclass::test_engine_status_defaults",
-        "line": 31,
+        "line": 28,
         "markers": [
           "unit"
         ],
@@ -34584,7 +34584,7 @@
       },
       {
         "name": "TestBotStatusDataclass::test_market_status_defaults",
-        "line": 37,
+        "line": 34,
         "markers": [
           "unit"
         ],
@@ -34593,7 +34593,7 @@
       },
       {
         "name": "TestBotStatusDataclass::test_position_status_defaults",
-        "line": 42,
+        "line": 39,
         "markers": [
           "unit"
         ],
@@ -34602,7 +34602,7 @@
       },
       {
         "name": "TestStatusReporterInit::test_default_values",
-        "line": 52,
+        "line": 48,
         "markers": [
           "unit"
         ],
@@ -34611,7 +34611,7 @@
       },
       {
         "name": "TestStatusReporterInit::test_custom_values",
-        "line": 60,
+        "line": 56,
         "markers": [
           "unit"
         ],
@@ -34620,7 +34620,7 @@
       },
       {
         "name": "TestStatusReporterMetrics::test_update_equity_records_gauge",
-        "line": 84,
+        "line": 79,
         "markers": [
           "unit"
         ],
@@ -34629,7 +34629,7 @@
       },
       {
         "name": "TestStatusReporterMetrics::test_update_ws_health_records_gap_gauge",
-        "line": 95,
+        "line": 90,
         "markers": [
           "unit"
         ],
@@ -34638,7 +34638,7 @@
       },
       {
         "name": "TestStatusReporterMetrics::test_equity_gauge_updates_on_change",
-        "line": 114,
+        "line": 117,
         "markers": [
           "unit"
         ],
@@ -34647,7 +34647,7 @@
       },
       {
         "name": "TestStatusReporterStrategyPerformance::test_update_strategy_performance_sets_performance",
-        "line": 129,
+        "line": 131,
         "markers": [
           "unit"
         ],
@@ -34656,7 +34656,7 @@
       },
       {
         "name": "TestStatusReporterStrategyPerformance::test_update_strategy_performance_sets_backtest",
-        "line": 146,
+        "line": 148,
         "markers": [
           "unit"
         ],
@@ -34665,7 +34665,7 @@
       },
       {
         "name": "TestStatusReporterStrategyPerformance::test_update_strategy_performance_sets_both",
-        "line": 163,
+        "line": 165,
         "markers": [
           "unit"
         ],
@@ -34674,7 +34674,7 @@
       },
       {
         "name": "TestStatusReporterUpdates::test_record_cycle",
-        "line": 180,
+        "line": 181,
         "markers": [
           "unit"
         ],
@@ -34683,7 +34683,7 @@
       },
       {
         "name": "TestStatusReporterUpdates::test_record_error",
-        "line": 190,
+        "line": 191,
         "markers": [
           "unit"
         ],
@@ -34692,7 +34692,7 @@
       },
       {
         "name": "TestStatusReporterUpdates::test_update_price",
-        "line": 200,
+        "line": 201,
         "markers": [
           "unit"
         ],
@@ -34701,7 +34701,7 @@
       },
       {
         "name": "TestStatusReporterUpdates::test_update_positions",
-        "line": 208,
+        "line": 209,
         "markers": [
           "unit"
         ],
@@ -34710,7 +34710,7 @@
       },
       {
         "name": "TestStatusReporterUpdates::test_set_heartbeat_service",
-        "line": 221,
+        "line": 222,
         "markers": [
           "unit"
         ],

@@ -18,6 +18,7 @@ from typing import Any
 
 from rich.text import Text
 
+from gpt_trader.utilities.datetime_helpers import parse_iso_to_epoch
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="tui")
@@ -103,6 +104,7 @@ def parse_timestamp_to_epoch(value: str | float | int | None) -> float | None:
 
     Handles:
     - float/int epoch timestamps
+    - numeric strings representing epoch timestamps
     - ISO 8601 strings (with or without trailing Z, with or without microseconds)
     - None values
 
@@ -132,10 +134,11 @@ def parse_timestamp_to_epoch(value: str | float | int | None) -> float | None:
         if not value:
             return None
         try:
-            # Strip trailing Z and parse
-            clean = value.rstrip("Z")
-            dt = datetime.fromisoformat(clean)
-            return dt.timestamp()
+            return float(value)
+        except (ValueError, TypeError):
+            pass
+        try:
+            return parse_iso_to_epoch(value)
         except (ValueError, TypeError):
             pass
 

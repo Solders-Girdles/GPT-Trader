@@ -110,6 +110,14 @@ class TestStatusReporterMetrics:
         collector = get_metrics_collector()
         assert "gpt_trader_ws_gap_count" in collector.gauges
         assert collector.gauges["gpt_trader_ws_gap_count"] == 5.0
+        assert collector.gauges["gpt_trader_ws_connected"] == 1.0
+        assert collector.gauges["gpt_trader_ws_message_stale"] == 0.0
+        assert collector.gauges["gpt_trader_ws_heartbeat_stale"] == 0.0
+        assert collector.gauges["gpt_trader_ws_reconnect_count"] == 2.0
+        assert collector.gauges["gpt_trader_ws_last_message_age_seconds"] >= 0.0
+        assert collector.gauges["gpt_trader_ws_last_heartbeat_age_seconds"] >= 0.0
+        assert collector.gauges["gpt_trader_ws_last_close_age_seconds"] == 0.0
+        assert collector.gauges["gpt_trader_ws_last_error_age_seconds"] == 0.0
 
     def test_equity_gauge_updates_on_change(self) -> None:
         """equity gauge updates when equity changes."""

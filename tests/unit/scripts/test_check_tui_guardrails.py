@@ -14,12 +14,7 @@ def _write(path: Path, text: str) -> Path:
 def test_check_python_files_blocks_inline_css(tmp_path: Path) -> None:
     path = _write(
         tmp_path / "src" / "widget.py",
-        "class Widget:\n"
-        "    CSS = \"\"\"\n"
-        "#widget {\n"
-        "  width: 1;\n"
-        "}\n"
-        "\"\"\"\n",
+        "class Widget:\n" '    CSS = """\n' "#widget {\n" "  width: 1;\n" "}\n" '"""\n',
     )
 
     errors, warnings = guardrails.check_python_files([path], tmp_path)
@@ -46,18 +41,8 @@ def test_check_python_files_allows_allowlisted_paths(tmp_path: Path) -> None:
         'PRIMARY = "#A1B2C3"\n',
     )
     inline_path = _write(
-        tmp_path
-        / "src"
-        / "gpt_trader"
-        / "tui"
-        / "screens"
-        / "watchlist_screen.py",
-        "class WatchlistScreen:\n"
-        "    CSS = \"\"\"\n"
-        "#watchlist {\n"
-        "  width: 1;\n"
-        "}\n"
-        "\"\"\"\n",
+        tmp_path / "src" / "gpt_trader" / "tui" / "screens" / "watchlist_screen.py",
+        "class WatchlistScreen:\n" '    CSS = """\n' "#watchlist {\n" "  width: 1;\n" "}\n" '"""\n',
     )
 
     errors, warnings = guardrails.check_python_files([theme_path, inline_path], tmp_path)

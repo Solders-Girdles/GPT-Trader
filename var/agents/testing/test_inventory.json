@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6078,
-    "total_files": 725,
+    "total_tests": 6083,
+    "total_files": 726,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 5913,
+    "unit": 5918,
     "asyncio": 347,
     "parametrize": 154,
     "property": 82,
@@ -686,6 +686,9 @@
     ],
     "test_check_tui_css_up_to_date.py": [
       "tests/unit/scripts/test_check_tui_css_up_to_date.py"
+    ],
+    "test_check_tui_guardrails.py": [
+      "tests/unit/scripts/test_check_tui_guardrails.py"
     ],
     "test_docs_maintenance.py": [
       "tests/unit/scripts/test_docs_maintenance.py"
@@ -56013,6 +56016,48 @@
       {
         "name": "test_main_reports_outdated_css",
         "line": 112,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/scripts/test_check_tui_guardrails.py": [
+      {
+        "name": "test_check_python_files_blocks_inline_css",
+        "line": 14,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_check_python_files_blocks_hex_colors",
+        "line": 26,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_check_python_files_allows_allowlisted_paths",
+        "line": 38,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_check_css_files_flags_unsupported_patterns",
+        "line": 54,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_check_required_modules_reports_missing",
+        "line": 76,
         "markers": [
           "unit"
         ],

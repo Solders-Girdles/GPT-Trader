@@ -1485,7 +1485,13 @@
     },
     "order_submit": {
       "common_fields": [
+        "attempt",
+        "client_order_id",
+        "error_message",
+        "error_type",
         "ide",
+        "max_attempts",
+        "order_id",
         "order_type",
         "price",
         "quantity",
@@ -1493,16 +1499,14 @@
         "reason",
         "reason_detail",
         "reduce_only",
-        "side",
-        "stage",
-        "symbol"
+        "side"
       ],
       "components": null,
       "levels": [
         "ERROR",
         "INFO"
       ],
-      "occurrence_count": 7,
+      "occurrence_count": 11,
       "source_files": [
         "features/live_trade/engines/strategy.py",
         "features/live_trade/execution/order_event_recorder.py",
@@ -2474,18 +2478,18 @@
     "action": 4,
     "broker": 8,
     "client_ip": 4,
-    "client_order_id": 7,
+    "client_order_id": 11,
     "consecutive_failures": 5,
     "error": 40,
-    "error_message": 83,
+    "error_message": 85,
     "error_msg": 5,
-    "error_type": 77,
+    "error_type": 79,
     "event_type": 5,
     "granularity": 5,
     "guard_name": 10,
     "latency_seconds": 5,
     "mode": 4,
-    "order_id": 22,
+    "order_id": 23,
     "outcome": 5,
     "path": 8,
     "portfolio_id": 4,
@@ -2494,14 +2498,14 @@
     "service": 9,
     "severity": 4,
     "side": 19,
-    "stage": 153,
+    "stage": 157,
     "symbol": 66
   },
   "level_distribution": {
     "CRITICAL": 1,
     "DEBUG": 48,
     "ERROR": 79,
-    "INFO": 115,
+    "INFO": 119,
     "WARNING": 70
   },
   "total_event_types": 131,

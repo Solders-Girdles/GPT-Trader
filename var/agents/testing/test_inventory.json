@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6083,
-    "total_files": 726,
+    "total_tests": 6085,
+    "total_files": 727,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 5918,
+    "unit": 5920,
     "asyncio": 347,
     "parametrize": 154,
     "property": 82,
@@ -392,6 +392,7 @@
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_metrics.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_results.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_retry.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_router_execute_async.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_router_order_result.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_router_resolve_order_id.py",
@@ -21398,6 +21399,24 @@
       {
         "name": "test_process_rejection_normal_mode_raises",
         "line": 185,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_retry.py": [
+      {
+        "name": "test_submit_order_retries_transient_error_once",
+        "line": 11,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_submit_order_no_retry_on_non_transient_error",
+        "line": 41,
         "markers": [
           "unit"
         ],

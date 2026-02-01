@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6083,
-    "total_files": 726,
+    "total_tests": 6087,
+    "total_files": 727,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 5918,
+    "unit": 5922,
     "asyncio": 347,
     "parametrize": 154,
     "property": 82,
@@ -689,6 +689,9 @@
     ],
     "test_check_tui_guardrails.py": [
       "tests/unit/scripts/test_check_tui_guardrails.py"
+    ],
+    "test_cleanup_workspace.py": [
+      "tests/unit/scripts/test_cleanup_workspace.py"
     ],
     "test_docs_maintenance.py": [
       "tests/unit/scripts/test_docs_maintenance.py"
@@ -56058,6 +56061,40 @@
       {
         "name": "test_check_required_modules_reports_missing",
         "line": 76,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/scripts/test_cleanup_workspace.py": [
+      {
+        "name": "test_clean_tool_caches_preserve_hypothesis",
+        "line": 25,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_clean_coverage_artifacts_removes_files",
+        "line": 37,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_clean_var_logs_prunes_archived_gz",
+        "line": 55,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_rotate_large_file_archives_stale",
+        "line": 80,
         "markers": [
           "unit"
         ],

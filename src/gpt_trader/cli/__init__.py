@@ -27,6 +27,7 @@ from gpt_trader.cli.commands import (  # noqa: E402
     account,
     optimize,
     orders,
+    preflight,
     report,
     run,
     treasury,
@@ -37,7 +38,7 @@ from gpt_trader.cli.commands import (  # noqa: E402
 from . import services as _cli_services  # noqa: E402, F401
 from .response import CliErrorCode, CliResponse, format_response  # noqa: E402
 
-COMMAND_NAMES = {"run", "account", "orders", "treasury", "report", "optimize", "tui"}
+COMMAND_NAMES = {"run", "account", "orders", "treasury", "report", "optimize", "tui", "preflight"}
 __all__ = ["main"]
 
 
@@ -164,6 +165,7 @@ def _build_parser() -> argparse.ArgumentParser:
     treasury.register(subparsers)
     report.register(subparsers)
     optimize.register(subparsers)
+    preflight.register(subparsers)
 
     return parser
 

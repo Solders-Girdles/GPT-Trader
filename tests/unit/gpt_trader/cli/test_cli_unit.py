@@ -149,3 +149,21 @@ def test_orders_preview_invokes_broker_preview(monkeypatch):
     assert payload["reduce_only"] is True
     assert payload["leverage"] == 3
     assert any("status" in line for line in printed)
+
+
+def test_cli_preflight_delegates_to_preflight_cli(monkeypatch):
+    cli = importlib.import_module("gpt_trader.cli")
+    preflight_cmd = importlib.import_module("gpt_trader.cli.commands.preflight")
+
+    captured = {}
+
+    def fake_run(argv=None):
+        captured["argv"] = list(argv or [])
+        return 0
+
+    monkeypatch.setattr(preflight_cmd, "run_preflight_cli", fake_run)
+
+    exit_code = cli.main(["preflight", "--profile", "prod", "--warn-only"])
+
+    assert exit_code == 0
+    assert captured["argv"] == ["--profile", "prod", "--warn-only"]

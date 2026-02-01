@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from gpt_trader.monitoring.metrics_collector import record_gauge
+from gpt_trader.utilities.datetime_helpers import normalize_to_utc, parse_iso_to_epoch
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -721,18 +722,13 @@ class StatusReporter:
         # Already a numeric type
         if isinstance(value, (int, float)):
             return float(value)
+        if isinstance(value, datetime):
+            return normalize_to_utc(value).timestamp()
 
         # ISO string (e.g., "2024-01-15T10:30:00Z" or "2024-01-15T10:30:00.123456Z")
         if isinstance(value, str):
             try:
-                # Strip trailing Z and parse
-                clean = value.rstrip("Z")
-                # Handle optional microseconds
-                if "." in clean:
-                    dt = datetime.fromisoformat(clean)
-                else:
-                    dt = datetime.fromisoformat(clean)
-                return dt.timestamp()
+                return parse_iso_to_epoch(value)
             except (ValueError, TypeError):
                 pass
 

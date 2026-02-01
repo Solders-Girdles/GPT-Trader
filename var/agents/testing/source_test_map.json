@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 660,
+    "tests_scanned": 661,
     "source_modules": 351,
     "unresolved_modules": 3
   },
@@ -842,7 +842,8 @@
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_metrics.py",
-      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_results.py"
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_results.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_retry.py"
     ],
     "gpt_trader.features.live_trade.execution.router": [
       "tests/unit/gpt_trader/features/live_trade/execution/test_router_execute_async.py",
@@ -3120,6 +3121,9 @@
       "gpt_trader.core",
       "gpt_trader.features.live_trade.execution.order_submission",
       "gpt_trader.persistence.orders_store"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_retry.py": [
+      "gpt_trader.features.live_trade.execution.order_submission"
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_router_execute_async.py": [
       "gpt_trader.core",

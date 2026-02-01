@@ -210,7 +210,7 @@
       ],
       "locations": [
         {
-          "line": 175,
+          "line": 193,
           "path": "src/gpt_trader/features/live_trade/execution/order_submission.py"
         }
       ],
@@ -227,7 +227,7 @@
       ],
       "locations": [
         {
-          "line": 149,
+          "line": 167,
           "path": "src/gpt_trader/features/live_trade/execution/order_submission.py"
         }
       ],

@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6083,
-    "total_files": 726,
+    "total_tests": 6091,
+    "total_files": 727,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 5918,
+    "unit": 5926,
     "asyncio": 347,
     "parametrize": 154,
     "property": 82,
@@ -692,6 +692,9 @@
     ],
     "test_docs_maintenance.py": [
       "tests/unit/scripts/test_docs_maintenance.py"
+    ],
+    "test_export_metrics.py": [
+      "tests/unit/scripts/test_export_metrics.py"
     ],
     "test_feature_slice_scaffold.py": [
       "tests/unit/scripts/test_feature_slice_scaffold.py"
@@ -56087,6 +56090,72 @@
         "line": 56,
         "markers": [
           "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/scripts/test_export_metrics.py": [
+      {
+        "name": "test_load_metrics_reads_file",
+        "line": 41,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_load_metrics_falls_back_to_db_when_missing",
+        "line": 51,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_load_latest_metrics_prefers_cycle_metrics",
+        "line": 68,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_load_latest_event_from_db_normalizes_payload",
+        "line": 90,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_load_latest_event_falls_back_to_file",
+        "line": 108,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_count_events_uses_database_when_available",
+        "line": 121,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_extract_limit_remaining_reads_nested_balances",
+        "line": 134,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_render_prometheus_includes_key_metrics",
+        "line": 142,
+        "markers": [
           "unit"
         ],
         "docstring": ""

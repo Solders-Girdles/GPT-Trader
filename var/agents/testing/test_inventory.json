@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6068,
-    "total_files": 723,
+    "total_tests": 6074,
+    "total_files": 724,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 5903,
+    "unit": 5909,
     "asyncio": 347,
     "parametrize": 154,
     "property": 82,

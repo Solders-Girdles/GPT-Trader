@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 659,
-    "source_modules": 350,
+    "tests_scanned": 660,
+    "source_modules": 351,
     "unresolved_modules": 3
   },
   "source_to_tests": {
@@ -249,6 +249,9 @@
       "tests/unit/gpt_trader/backtesting/validation/test_validator_reporting_and_divergences.py",
       "tests/unit/gpt_trader/backtesting/validation/test_validator_validate_decision.py",
       "tests/unit/gpt_trader/backtesting/validation/test_validator_validation_result.py"
+    ],
+    "gpt_trader.cli.commands": [
+      "tests/unit/gpt_trader/cli/test_commands_preflight.py"
     ],
     "gpt_trader.cli.commands.account": [
       "tests/unit/gpt_trader/cli/test_commands_account_treasury.py"
@@ -2461,6 +2464,9 @@
     "tests/unit/gpt_trader/cli/test_commands_orders_editing.py": [
       "gpt_trader.cli.commands.orders"
     ],
+    "tests/unit/gpt_trader/cli/test_commands_preflight.py": [
+      "gpt_trader.cli.commands"
+    ],
     "tests/unit/gpt_trader/cli/test_commands_run.py": [
       "gpt_trader.app.config.validation",
       "gpt_trader.cli.commands.run"
@@ -4591,6 +4597,7 @@
     "gpt_trader.backtesting.types": "src/gpt_trader/backtesting/types.py",
     "gpt_trader.backtesting.validation.decision_logger": "src/gpt_trader/backtesting/validation/decision_logger.py",
     "gpt_trader.backtesting.validation.validator": "src/gpt_trader/backtesting/validation/validator.py",
+    "gpt_trader.cli.commands": "src/gpt_trader/cli/commands/__init__.py",
     "gpt_trader.cli.commands.account": "src/gpt_trader/cli/commands/account.py",
     "gpt_trader.cli.commands.optimize": "src/gpt_trader/cli/commands/optimize/__init__.py",
     "gpt_trader.cli.commands.optimize.config_loader": "src/gpt_trader/cli/commands/optimize/config_loader.py",

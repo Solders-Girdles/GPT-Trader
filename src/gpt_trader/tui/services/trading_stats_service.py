@@ -13,6 +13,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from gpt_trader.tui.types import Trade, TradingStats
+from gpt_trader.utilities.datetime_helpers import parse_iso_to_epoch
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -204,19 +205,8 @@ class TradingStatsService:
         if not trade.time:
             return 0.0
 
-        # Try parsing ISO format (2024-01-15T10:30:00Z)
-        from datetime import datetime
-
         try:
-            # Handle various ISO formats
-            time_str = trade.time.rstrip("Z")
-            if "T" in time_str:
-                if "." in time_str:
-                    # With microseconds
-                    dt = datetime.fromisoformat(time_str.split(".")[0])
-                else:
-                    dt = datetime.fromisoformat(time_str)
-                return dt.timestamp()
+            return parse_iso_to_epoch(trade.time)
         except (ValueError, AttributeError):
             pass
 

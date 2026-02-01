@@ -99,7 +99,7 @@
       ],
       "locations": [
         {
-          "line": 1438,
+          "line": 1439,
           "path": "src/gpt_trader/features/live_trade/engines/strategy.py"
         }
       ],
@@ -140,7 +140,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 632,
+          "line": 633,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],
@@ -242,7 +242,7 @@
       ],
       "locations": [
         {
-          "line": 1775,
+          "line": 1776,
           "path": "src/gpt_trader/features/live_trade/engines/strategy.py"
         }
       ],
@@ -350,7 +350,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 1019,
+          "line": 1015,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],
@@ -363,7 +363,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 1030,
+          "line": 1026,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],
@@ -376,7 +376,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 1026,
+          "line": 1022,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],
@@ -389,7 +389,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 1043,
+          "line": 1039,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],
@@ -402,7 +402,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 1047,
+          "line": 1043,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],
@@ -415,7 +415,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 1039,
+          "line": 1035,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],
@@ -428,7 +428,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 1035,
+          "line": 1031,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],
@@ -441,7 +441,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 1022,
+          "line": 1018,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],
@@ -454,7 +454,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 1031,
+          "line": 1027,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],

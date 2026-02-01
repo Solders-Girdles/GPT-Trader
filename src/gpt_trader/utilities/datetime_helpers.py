@@ -85,10 +85,26 @@ def normalize_to_utc(dt: datetime) -> datetime:
     return dt.astimezone(UTC)
 
 
+def parse_iso_to_epoch(value: str) -> float:
+    """Parse an ISO 8601 timestamp string to an epoch float (UTC).
+
+    Handles trailing "Z" by converting to "+00:00" and normalizes naive
+    datetimes as UTC to avoid local-time ambiguity.
+    """
+    cleaned = value.strip()
+    if not cleaned:
+        raise ValueError("Empty timestamp")
+    if cleaned.endswith("Z"):
+        cleaned = cleaned[:-1] + "+00:00"
+    dt = datetime.fromisoformat(cleaned)
+    return normalize_to_utc(dt).timestamp()
+
+
 __all__ = [
     "utc_now",
     "utc_now_iso",
     "utc_timestamp",
     "to_iso_utc",
     "normalize_to_utc",
+    "parse_iso_to_epoch",
 ]

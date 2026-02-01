@@ -173,11 +173,11 @@
           "path": "src/gpt_trader/features/live_trade/guard_errors.py"
         },
         {
-          "line": 66,
+          "line": 67,
           "path": "src/gpt_trader/monitoring/guards/manager.py"
         },
         {
-          "line": 71,
+          "line": 72,
           "path": "src/gpt_trader/monitoring/guards/manager.py"
         }
       ],

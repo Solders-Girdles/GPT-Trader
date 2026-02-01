@@ -7,19 +7,21 @@ from datetime import datetime, timedelta
 from decimal import Decimal, DecimalException
 from typing import Any
 
+from gpt_trader.utilities.time_provider import TimeProvider
+
 from .base import GuardConfig, GuardStatus, RuntimeGuard
 
 
 class DailyLossGuard(RuntimeGuard):
     """Monitor daily loss limits."""
 
-    def __init__(self, config: GuardConfig) -> None:
-        super().__init__(config)
+    def __init__(self, config: GuardConfig, *, time_provider: TimeProvider | None = None) -> None:
+        super().__init__(config, time_provider=time_provider)
         self.daily_pnl: Decimal = Decimal("0")
-        self.last_reset = datetime.now().date()
+        self.last_reset = self._now().date()
 
     def _evaluate(self, context: dict[str, Any]) -> tuple[bool, str]:
-        current_date = datetime.now().date()
+        current_date = self._now().date()
         if current_date > self.last_reset:
             self.daily_pnl = Decimal("0")
             self.last_reset = current_date
@@ -52,8 +54,8 @@ class DailyLossGuard(RuntimeGuard):
 class StaleMarkGuard(RuntimeGuard):
     """Monitor for stale market data."""
 
-    def __init__(self, config: GuardConfig) -> None:
-        super().__init__(config)
+    def __init__(self, config: GuardConfig, *, time_provider: TimeProvider | None = None) -> None:
+        super().__init__(config, time_provider=time_provider)
         self.last_marks: dict[str, datetime] = {}
 
     def _evaluate(self, context: dict[str, Any]) -> tuple[bool, str]:
@@ -75,7 +77,7 @@ class StaleMarkGuard(RuntimeGuard):
 
         self.last_marks[symbol] = mark_time
 
-        age_seconds = (datetime.now() - mark_time).total_seconds()
+        age_seconds = (self._now() - mark_time).total_seconds()
         if age_seconds > self.config.threshold:
             message = (
                 f"Stale marks detected for {symbol}: "
@@ -88,15 +90,15 @@ class StaleMarkGuard(RuntimeGuard):
 class ErrorRateGuard(RuntimeGuard):
     """Monitor error rates."""
 
-    def __init__(self, config: GuardConfig) -> None:
-        super().__init__(config)
+    def __init__(self, config: GuardConfig, *, time_provider: TimeProvider | None = None) -> None:
+        super().__init__(config, time_provider=time_provider)
         self.error_times: list[datetime] = []
 
     def _evaluate(self, context: dict[str, Any]) -> tuple[bool, str]:
         if context.get("error"):
-            self.error_times.append(datetime.now())
+            self.error_times.append(self._now())
 
-        cutoff = datetime.now() - timedelta(seconds=self.config.window_seconds)
+        cutoff = self._now() - timedelta(seconds=self.config.window_seconds)
         self.error_times = [t for t in self.error_times if t > cutoff]
 
         error_count = len(self.error_times)
@@ -112,8 +114,8 @@ class ErrorRateGuard(RuntimeGuard):
 class PositionStuckGuard(RuntimeGuard):
     """Monitor for positions that aren't being managed."""
 
-    def __init__(self, config: GuardConfig) -> None:
-        super().__init__(config)
+    def __init__(self, config: GuardConfig, *, time_provider: TimeProvider | None = None) -> None:
+        super().__init__(config, time_provider=time_provider)
         self.position_times: dict[str, datetime] = {}
 
     def _evaluate(self, context: dict[str, Any]) -> tuple[bool, str]:
@@ -132,13 +134,13 @@ class PositionStuckGuard(RuntimeGuard):
             except (TypeError, ValueError):
                 continue
             if size != 0.0:
-                self.position_times.setdefault(symbol, datetime.now())
+                self.position_times.setdefault(symbol, self._now())
             else:
                 self.position_times.pop(symbol, None)
 
         stuck_positions: list[tuple[str, float]] = []
         for symbol, open_time in list(self.position_times.items()):
-            age_seconds = (datetime.now() - open_time).total_seconds()
+            age_seconds = (self._now() - open_time).total_seconds()
             if age_seconds > self.config.threshold:
                 stuck_positions.append((symbol, age_seconds))
 
@@ -152,8 +154,8 @@ class PositionStuckGuard(RuntimeGuard):
 class DrawdownGuard(RuntimeGuard):
     """Monitor maximum drawdown."""
 
-    def __init__(self, config: GuardConfig) -> None:
-        super().__init__(config)
+    def __init__(self, config: GuardConfig, *, time_provider: TimeProvider | None = None) -> None:
+        super().__init__(config, time_provider=time_provider)
         self.peak_equity: Decimal = Decimal("0")
         self.current_drawdown: Decimal = Decimal("0")
 

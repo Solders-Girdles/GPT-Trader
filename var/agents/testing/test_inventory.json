@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6080,
-    "total_files": 726,
+    "total_tests": 6085,
+    "total_files": 727,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 5915,
+    "unit": 5920,
     "asyncio": 347,
     "parametrize": 154,
     "property": 82,
@@ -687,6 +687,9 @@
     ],
     "test_check_tui_css_up_to_date.py": [
       "tests/unit/scripts/test_check_tui_css_up_to_date.py"
+    ],
+    "test_check_tui_guardrails.py": [
+      "tests/unit/scripts/test_check_tui_guardrails.py"
     ],
     "test_docs_maintenance.py": [
       "tests/unit/scripts/test_docs_maintenance.py"
@@ -48359,7 +48362,7 @@
     "tests/unit/gpt_trader/tui/utilities/test_table_formatting_data.py": [
       {
         "name": "TestSortTableData::test_sort_by_string_column_ascending",
-        "line": 17,
+        "line": 18,
         "markers": [
           "unit"
         ],
@@ -48368,7 +48371,7 @@
       },
       {
         "name": "TestSortTableData::test_sort_by_string_column_descending",
-        "line": 29,
+        "line": 30,
         "markers": [
           "unit"
         ],
@@ -48377,7 +48380,7 @@
       },
       {
         "name": "TestSortTableData::test_sort_by_numeric_column",
-        "line": 41,
+        "line": 42,
         "markers": [
           "unit"
         ],
@@ -48386,7 +48389,7 @@
       },
       {
         "name": "TestSortTableData::test_sort_empty_list",
-        "line": 53,
+        "line": 54,
         "markers": [
           "unit"
         ],
@@ -48395,7 +48398,7 @@
       },
       {
         "name": "TestSortTableData::test_sort_missing_column",
-        "line": 58,
+        "line": 59,
         "markers": [
           "unit"
         ],
@@ -48404,7 +48407,7 @@
       },
       {
         "name": "TestSortTableData::test_sort_decimal_values",
-        "line": 64,
+        "line": 65,
         "markers": [
           "unit"
         ],
@@ -48413,7 +48416,7 @@
       },
       {
         "name": "TestGetSortIndicator::test_no_sort",
-        "line": 79,
+        "line": 80,
         "markers": [
           "unit"
         ],
@@ -48422,7 +48425,7 @@
       },
       {
         "name": "TestGetSortIndicator::test_ascending_indicator",
-        "line": 84,
+        "line": 85,
         "markers": [
           "unit"
         ],
@@ -48431,7 +48434,7 @@
       },
       {
         "name": "TestGetSortIndicator::test_descending_indicator",
-        "line": 89,
+        "line": 90,
         "markers": [
           "unit"
         ],
@@ -48440,7 +48443,7 @@
       },
       {
         "name": "TestGetSortIndicator::test_different_column_no_indicator",
-        "line": 94,
+        "line": 95,
         "markers": [
           "unit"
         ],
@@ -48449,7 +48452,7 @@
       },
       {
         "name": "TestFormatTimestamp::test_iso_with_milliseconds_and_z",
-        "line": 103,
+        "line": 104,
         "markers": [
           "unit"
         ],
@@ -48458,7 +48461,7 @@
       },
       {
         "name": "TestFormatTimestamp::test_iso_with_milliseconds",
-        "line": 108,
+        "line": 109,
         "markers": [
           "unit"
         ],
@@ -48467,7 +48470,7 @@
       },
       {
         "name": "TestFormatTimestamp::test_iso_without_milliseconds",
-        "line": 113,
+        "line": 114,
         "markers": [
           "unit"
         ],
@@ -48476,7 +48479,7 @@
       },
       {
         "name": "TestFormatTimestamp::test_empty_string",
-        "line": 118,
+        "line": 119,
         "markers": [
           "unit"
         ],
@@ -48485,7 +48488,7 @@
       },
       {
         "name": "TestFormatTimestamp::test_no_t_separator",
-        "line": 123,
+        "line": 124,
         "markers": [
           "unit"
         ],
@@ -48494,7 +48497,7 @@
       },
       {
         "name": "TestFormatTimestamp::test_already_formatted_time",
-        "line": 128,
+        "line": 129,
         "markers": [
           "unit"
         ],
@@ -48503,7 +48506,7 @@
       },
       {
         "name": "TestParseTimestampToEpoch::test_float_passthrough",
-        "line": 137,
+        "line": 138,
         "markers": [
           "unit"
         ],
@@ -48512,7 +48515,7 @@
       },
       {
         "name": "TestParseTimestampToEpoch::test_int_passthrough",
-        "line": 142,
+        "line": 143,
         "markers": [
           "unit"
         ],
@@ -48521,7 +48524,7 @@
       },
       {
         "name": "TestParseTimestampToEpoch::test_iso_with_z_suffix",
-        "line": 147,
+        "line": 148,
         "markers": [
           "unit"
         ],
@@ -48530,7 +48533,7 @@
       },
       {
         "name": "TestParseTimestampToEpoch::test_iso_with_microseconds_and_z",
-        "line": 155,
+        "line": 156,
         "markers": [
           "unit"
         ],
@@ -48539,7 +48542,7 @@
       },
       {
         "name": "TestParseTimestampToEpoch::test_iso_without_z",
-        "line": 161,
+        "line": 162,
         "markers": [
           "unit"
         ],
@@ -48548,7 +48551,7 @@
       },
       {
         "name": "TestParseTimestampToEpoch::test_none_returns_none",
-        "line": 167,
+        "line": 168,
         "markers": [
           "unit"
         ],
@@ -48557,7 +48560,7 @@
       },
       {
         "name": "TestParseTimestampToEpoch::test_empty_string_returns_none",
-        "line": 172,
+        "line": 173,
         "markers": [
           "unit"
         ],
@@ -48566,7 +48569,7 @@
       },
       {
         "name": "TestParseTimestampToEpoch::test_invalid_string_returns_none",
-        "line": 177,
+        "line": 178,
         "markers": [
           "unit"
         ],
@@ -48575,7 +48578,7 @@
       },
       {
         "name": "TestGetAgeSeconds::test_recent_timestamp",
-        "line": 186,
+        "line": 187,
         "markers": [
           "unit"
         ],
@@ -48584,7 +48587,7 @@
       },
       {
         "name": "TestGetAgeSeconds::test_old_timestamp",
-        "line": 196,
+        "line": 197,
         "markers": [
           "unit"
         ],
@@ -48593,7 +48596,7 @@
       },
       {
         "name": "TestGetAgeSeconds::test_none_returns_none",
-        "line": 206,
+        "line": 207,
         "markers": [
           "unit"
         ],
@@ -48602,7 +48605,7 @@
       },
       {
         "name": "TestGetAgeSeconds::test_zero_returns_none",
-        "line": 211,
+        "line": 212,
         "markers": [
           "unit"
         ],
@@ -48611,7 +48614,7 @@
       },
       {
         "name": "TestGetAgeSeconds::test_negative_returns_none",
-        "line": 216,
+        "line": 217,
         "markers": [
           "unit"
         ],
@@ -48620,7 +48623,7 @@
       },
       {
         "name": "TestGetAgeSeconds::test_future_timestamp_returns_zero",
-        "line": 221,
+        "line": 222,
         "markers": [
           "unit"
         ],
@@ -56032,6 +56035,48 @@
       {
         "name": "test_main_reports_outdated_css",
         "line": 112,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/scripts/test_check_tui_guardrails.py": [
+      {
+        "name": "test_check_python_files_blocks_inline_css",
+        "line": 14,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_check_python_files_blocks_hex_colors",
+        "line": 26,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_check_python_files_allows_allowlisted_paths",
+        "line": 38,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_check_css_files_flags_unsupported_patterns",
+        "line": 54,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_check_required_modules_reports_missing",
+        "line": 76,
         "markers": [
           "unit"
         ],

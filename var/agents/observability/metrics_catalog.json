@@ -99,7 +99,7 @@
       ],
       "locations": [
         {
-          "line": 1438,
+          "line": 1439,
           "path": "src/gpt_trader/features/live_trade/engines/strategy.py"
         }
       ],
@@ -140,7 +140,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 632,
+          "line": 633,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],
@@ -242,7 +242,7 @@
       ],
       "locations": [
         {
-          "line": 1775,
+          "line": 1776,
           "path": "src/gpt_trader/features/live_trade/engines/strategy.py"
         }
       ],
@@ -350,7 +350,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 1004,
+          "line": 1000,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],

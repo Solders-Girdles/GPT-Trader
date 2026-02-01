@@ -1014,6 +1014,8 @@ class OrderSubmitter:
                     error=error_str,
                 )
 
+        raise RuntimeError("Order submission exited retry loop without producing an outcome")
+
     def _submit_order_inner(
         self,
         *,

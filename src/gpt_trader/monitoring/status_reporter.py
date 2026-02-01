@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from gpt_trader.monitoring.metrics_collector import record_gauge
+from gpt_trader.utilities.datetime_helpers import normalize_to_utc, parse_iso_to_epoch
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -721,18 +722,13 @@ class StatusReporter:
         # Already a numeric type
         if isinstance(value, (int, float)):
             return float(value)
+        if isinstance(value, datetime):
+            return normalize_to_utc(value).timestamp()
 
         # ISO string (e.g., "2024-01-15T10:30:00Z" or "2024-01-15T10:30:00.123456Z")
         if isinstance(value, str):
             try:
-                # Strip trailing Z and parse
-                clean = value.rstrip("Z")
-                # Handle optional microseconds
-                if "." in clean:
-                    dt = datetime.fromisoformat(clean)
-                else:
-                    dt = datetime.fromisoformat(clean)
-                return dt.timestamp()
+                return parse_iso_to_epoch(value)
             except (ValueError, TypeError):
                 pass
 
@@ -979,14 +975,29 @@ class StatusReporter:
         """
         now = time.time()
 
+        def _coerce_timestamp(value: Any) -> float | None:
+            if value is None or isinstance(value, bool):
+                return None
+            if isinstance(value, (int, float)):
+                return float(value)
+            return None
+
+        def _age_seconds(timestamp: float | None) -> float:
+            if timestamp is None:
+                return 0.0
+            age = now - timestamp
+            return age if age > 0 else 0.0
+
         # Extract values with defaults
         self._status.websocket.connected = bool(health.get("connected", False))
-        self._status.websocket.last_message_ts = health.get("last_message_ts")
-        self._status.websocket.last_heartbeat_ts = health.get("last_heartbeat_ts")
-        self._status.websocket.last_close_ts = health.get("last_close_ts")
-        self._status.websocket.last_error_ts = health.get("last_error_ts")
-        self._status.websocket.gap_count = int(health.get("gap_count", 0))
-        self._status.websocket.reconnect_count = int(health.get("reconnect_count", 0))
+        self._status.websocket.last_message_ts = _coerce_timestamp(health.get("last_message_ts"))
+        self._status.websocket.last_heartbeat_ts = _coerce_timestamp(
+            health.get("last_heartbeat_ts")
+        )
+        self._status.websocket.last_close_ts = _coerce_timestamp(health.get("last_close_ts"))
+        self._status.websocket.last_error_ts = _coerce_timestamp(health.get("last_error_ts"))
+        self._status.websocket.gap_count = int(health.get("gap_count", 0) or 0)
+        self._status.websocket.reconnect_count = int(health.get("reconnect_count", 0) or 0)
 
         # Calculate staleness based on thresholds (15s message, 30s heartbeat)
         last_message_ts = self._status.websocket.last_message_ts
@@ -999,9 +1010,40 @@ class StatusReporter:
             last_heartbeat_ts is not None and (now - last_heartbeat_ts) > 30
         )
 
-        # Record WS gap gauge for metrics
+        # Record WS health gauges for metrics
         try:
+            record_gauge(
+                "gpt_trader_ws_connected", 1.0 if self._status.websocket.connected else 0.0
+            )
+            record_gauge(
+                "gpt_trader_ws_message_stale",
+                1.0 if self._status.websocket.message_stale else 0.0,
+            )
+            record_gauge(
+                "gpt_trader_ws_heartbeat_stale",
+                1.0 if self._status.websocket.heartbeat_stale else 0.0,
+            )
             record_gauge("gpt_trader_ws_gap_count", float(self._status.websocket.gap_count))
+            record_gauge(
+                "gpt_trader_ws_reconnect_count",
+                float(self._status.websocket.reconnect_count),
+            )
+            record_gauge(
+                "gpt_trader_ws_last_message_age_seconds",
+                _age_seconds(self._status.websocket.last_message_ts),
+            )
+            record_gauge(
+                "gpt_trader_ws_last_heartbeat_age_seconds",
+                _age_seconds(self._status.websocket.last_heartbeat_ts),
+            )
+            record_gauge(
+                "gpt_trader_ws_last_close_age_seconds",
+                _age_seconds(self._status.websocket.last_close_ts),
+            )
+            record_gauge(
+                "gpt_trader_ws_last_error_age_seconds",
+                _age_seconds(self._status.websocket.last_error_ts),
+            )
         except Exception:
             pass  # Don't let metrics errors affect operation
 

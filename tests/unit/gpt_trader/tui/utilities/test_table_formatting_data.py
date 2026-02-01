@@ -1,5 +1,6 @@
 """Tests for DataTable sorting and timestamp utilities."""
 
+from datetime import datetime, timezone
 from decimal import Decimal
 
 from gpt_trader.tui.utilities.table_formatting import (
@@ -147,10 +148,10 @@ class TestParseTimestampToEpoch:
     def test_iso_with_z_suffix(self) -> None:
         """Parse ISO timestamp with Z suffix."""
         result = parse_timestamp_to_epoch("2024-01-15T10:30:45Z")
+        expected = datetime(2024, 1, 15, 10, 30, 45, tzinfo=timezone.utc).timestamp()
         assert result is not None
         assert isinstance(result, float)
-        # Just verify it's a reasonable timestamp (after 2024)
-        assert result > 1704067200  # 2024-01-01 00:00:00 UTC
+        assert result == expected
 
     def test_iso_with_microseconds_and_z(self) -> None:
         """Parse ISO timestamp with microseconds and Z suffix."""

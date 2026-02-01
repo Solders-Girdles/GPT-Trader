@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6091,
-    "total_files": 727,
+    "total_tests": 6094,
+    "total_files": 728,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,13 +102,13 @@
     ]
   },
   "marker_counts": {
-    "unit": 5926,
+    "unit": 5929,
     "asyncio": 347,
     "parametrize": 154,
     "property": 82,
     "integration": 79,
     "endpoints": 78,
-    "usefixtures": 16,
+    "usefixtures": 17,
     "skipif": 8,
     "slow": 4,
     "anyio": 3,
@@ -392,6 +392,7 @@
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_metrics.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_results.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_retry.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_router_execute_async.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_router_order_result.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_router_resolve_order_id.py",
@@ -21300,7 +21301,7 @@
         "docstring": ""
       },
       {
-        "name": "test_failed_order_records_metric_with_reason",
+        "name": "test_successful_order_increments_trades_executed_counter",
         "line": 64,
         "markers": [
           "usefixtures",
@@ -21309,8 +21310,17 @@
         "docstring": ""
       },
       {
+        "name": "test_failed_order_records_metric_with_reason",
+        "line": 81,
+        "markers": [
+          "usefixtures",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_classification_label_used_in_metrics",
-        "line": 92,
+        "line": 109,
         "markers": [
           "unit"
         ],
@@ -21318,7 +21328,7 @@
       },
       {
         "name": "test_successful_submission_records_latency_histogram",
-        "line": 113,
+        "line": 130,
         "markers": [
           "unit"
         ],
@@ -21326,7 +21336,7 @@
       },
       {
         "name": "test_failed_submission_records_latency_with_failure_result",
-        "line": 137,
+        "line": 154,
         "markers": [
           "unit"
         ],
@@ -21407,10 +21417,28 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_retry.py": [
+      {
+        "name": "test_submit_order_retries_transient_error_once",
+        "line": 11,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_submit_order_no_retry_on_non_transient_error",
+        "line": 41,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_router_execute_async.py": [
       {
         "name": "TestOrderRouterAsyncExecution::test_execute_async_delegates_to_submitter",
-        "line": 25,
+        "line": 34,
         "markers": [
           "asyncio",
           "unit"
@@ -21420,7 +21448,7 @@
       },
       {
         "name": "TestOrderRouterAsyncExecution::test_execute_async_passes_reduce_only_for_close",
-        "line": 62,
+        "line": 71,
         "markers": [
           "asyncio",
           "unit"
@@ -21430,7 +21458,7 @@
       },
       {
         "name": "TestOrderRouterAsyncExecution::test_execute_async_handles_submitter_failure_result",
-        "line": 92,
+        "line": 101,
         "markers": [
           "asyncio",
           "unit"
@@ -21440,7 +21468,7 @@
       },
       {
         "name": "TestOrderRouterAsyncExecution::test_execute_async_handles_submitter_blocked_result",
-        "line": 123,
+        "line": 132,
         "markers": [
           "asyncio",
           "unit"
@@ -21450,7 +21478,7 @@
       },
       {
         "name": "TestOrderRouterAsyncExecution::test_execute_async_handles_submitter_exception",
-        "line": 154,
+        "line": 168,
         "markers": [
           "asyncio",
           "unit"
@@ -21460,7 +21488,7 @@
       },
       {
         "name": "TestOrderRouterAsyncExecution::test_execute_async_hold_is_not_actionable",
-        "line": 180,
+        "line": 194,
         "markers": [
           "asyncio",
           "unit"
@@ -34550,7 +34578,7 @@
     "tests/unit/gpt_trader/monitoring/test_status_reporter.py": [
       {
         "name": "TestBotStatusDataclass::test_default_values",
-        "line": 23,
+        "line": 20,
         "markers": [
           "unit"
         ],
@@ -34559,7 +34587,7 @@
       },
       {
         "name": "TestBotStatusDataclass::test_engine_status_defaults",
-        "line": 31,
+        "line": 28,
         "markers": [
           "unit"
         ],
@@ -34568,7 +34596,7 @@
       },
       {
         "name": "TestBotStatusDataclass::test_market_status_defaults",
-        "line": 37,
+        "line": 34,
         "markers": [
           "unit"
         ],
@@ -34577,7 +34605,7 @@
       },
       {
         "name": "TestBotStatusDataclass::test_position_status_defaults",
-        "line": 42,
+        "line": 39,
         "markers": [
           "unit"
         ],
@@ -34586,7 +34614,7 @@
       },
       {
         "name": "TestStatusReporterInit::test_default_values",
-        "line": 52,
+        "line": 48,
         "markers": [
           "unit"
         ],
@@ -34595,7 +34623,7 @@
       },
       {
         "name": "TestStatusReporterInit::test_custom_values",
-        "line": 60,
+        "line": 56,
         "markers": [
           "unit"
         ],
@@ -34604,7 +34632,7 @@
       },
       {
         "name": "TestStatusReporterMetrics::test_update_equity_records_gauge",
-        "line": 84,
+        "line": 79,
         "markers": [
           "unit"
         ],
@@ -34613,7 +34641,7 @@
       },
       {
         "name": "TestStatusReporterMetrics::test_update_ws_health_records_gap_gauge",
-        "line": 95,
+        "line": 90,
         "markers": [
           "unit"
         ],
@@ -34622,7 +34650,7 @@
       },
       {
         "name": "TestStatusReporterMetrics::test_equity_gauge_updates_on_change",
-        "line": 114,
+        "line": 117,
         "markers": [
           "unit"
         ],
@@ -34631,7 +34659,7 @@
       },
       {
         "name": "TestStatusReporterStrategyPerformance::test_update_strategy_performance_sets_performance",
-        "line": 129,
+        "line": 131,
         "markers": [
           "unit"
         ],
@@ -34640,7 +34668,7 @@
       },
       {
         "name": "TestStatusReporterStrategyPerformance::test_update_strategy_performance_sets_backtest",
-        "line": 146,
+        "line": 148,
         "markers": [
           "unit"
         ],
@@ -34649,7 +34677,7 @@
       },
       {
         "name": "TestStatusReporterStrategyPerformance::test_update_strategy_performance_sets_both",
-        "line": 163,
+        "line": 165,
         "markers": [
           "unit"
         ],
@@ -34658,7 +34686,7 @@
       },
       {
         "name": "TestStatusReporterUpdates::test_record_cycle",
-        "line": 180,
+        "line": 181,
         "markers": [
           "unit"
         ],
@@ -34667,7 +34695,7 @@
       },
       {
         "name": "TestStatusReporterUpdates::test_record_error",
-        "line": 190,
+        "line": 191,
         "markers": [
           "unit"
         ],
@@ -34676,7 +34704,7 @@
       },
       {
         "name": "TestStatusReporterUpdates::test_update_price",
-        "line": 200,
+        "line": 201,
         "markers": [
           "unit"
         ],
@@ -34685,7 +34713,7 @@
       },
       {
         "name": "TestStatusReporterUpdates::test_update_positions",
-        "line": 208,
+        "line": 209,
         "markers": [
           "unit"
         ],
@@ -34694,7 +34722,7 @@
       },
       {
         "name": "TestStatusReporterUpdates::test_set_heartbeat_service",
-        "line": 221,
+        "line": 222,
         "markers": [
           "unit"
         ],
@@ -48346,7 +48374,7 @@
     "tests/unit/gpt_trader/tui/utilities/test_table_formatting_data.py": [
       {
         "name": "TestSortTableData::test_sort_by_string_column_ascending",
-        "line": 17,
+        "line": 18,
         "markers": [
           "unit"
         ],
@@ -48355,7 +48383,7 @@
       },
       {
         "name": "TestSortTableData::test_sort_by_string_column_descending",
-        "line": 29,
+        "line": 30,
         "markers": [
           "unit"
         ],
@@ -48364,7 +48392,7 @@
       },
       {
         "name": "TestSortTableData::test_sort_by_numeric_column",
-        "line": 41,
+        "line": 42,
         "markers": [
           "unit"
         ],
@@ -48373,7 +48401,7 @@
       },
       {
         "name": "TestSortTableData::test_sort_empty_list",
-        "line": 53,
+        "line": 54,
         "markers": [
           "unit"
         ],
@@ -48382,7 +48410,7 @@
       },
       {
         "name": "TestSortTableData::test_sort_missing_column",
-        "line": 58,
+        "line": 59,
         "markers": [
           "unit"
         ],
@@ -48391,7 +48419,7 @@
       },
       {
         "name": "TestSortTableData::test_sort_decimal_values",
-        "line": 64,
+        "line": 65,
         "markers": [
           "unit"
         ],
@@ -48400,7 +48428,7 @@
       },
       {
         "name": "TestGetSortIndicator::test_no_sort",
-        "line": 79,
+        "line": 80,
         "markers": [
           "unit"
         ],
@@ -48409,7 +48437,7 @@
       },
       {
         "name": "TestGetSortIndicator::test_ascending_indicator",
-        "line": 84,
+        "line": 85,
         "markers": [
           "unit"
         ],
@@ -48418,7 +48446,7 @@
       },
       {
         "name": "TestGetSortIndicator::test_descending_indicator",
-        "line": 89,
+        "line": 90,
         "markers": [
           "unit"
         ],
@@ -48427,7 +48455,7 @@
       },
       {
         "name": "TestGetSortIndicator::test_different_column_no_indicator",
-        "line": 94,
+        "line": 95,
         "markers": [
           "unit"
         ],
@@ -48436,7 +48464,7 @@
       },
       {
         "name": "TestFormatTimestamp::test_iso_with_milliseconds_and_z",
-        "line": 103,
+        "line": 104,
         "markers": [
           "unit"
         ],
@@ -48445,7 +48473,7 @@
       },
       {
         "name": "TestFormatTimestamp::test_iso_with_milliseconds",
-        "line": 108,
+        "line": 109,
         "markers": [
           "unit"
         ],
@@ -48454,7 +48482,7 @@
       },
       {
         "name": "TestFormatTimestamp::test_iso_without_milliseconds",
-        "line": 113,
+        "line": 114,
         "markers": [
           "unit"
         ],
@@ -48463,7 +48491,7 @@
       },
       {
         "name": "TestFormatTimestamp::test_empty_string",
-        "line": 118,
+        "line": 119,
         "markers": [
           "unit"
         ],
@@ -48472,7 +48500,7 @@
       },
       {
         "name": "TestFormatTimestamp::test_no_t_separator",
-        "line": 123,
+        "line": 124,
         "markers": [
           "unit"
         ],
@@ -48481,7 +48509,7 @@
       },
       {
         "name": "TestFormatTimestamp::test_already_formatted_time",
-        "line": 128,
+        "line": 129,
         "markers": [
           "unit"
         ],
@@ -48490,7 +48518,7 @@
       },
       {
         "name": "TestParseTimestampToEpoch::test_float_passthrough",
-        "line": 137,
+        "line": 138,
         "markers": [
           "unit"
         ],
@@ -48499,7 +48527,7 @@
       },
       {
         "name": "TestParseTimestampToEpoch::test_int_passthrough",
-        "line": 142,
+        "line": 143,
         "markers": [
           "unit"
         ],
@@ -48508,7 +48536,7 @@
       },
       {
         "name": "TestParseTimestampToEpoch::test_iso_with_z_suffix",
-        "line": 147,
+        "line": 148,
         "markers": [
           "unit"
         ],
@@ -48517,7 +48545,7 @@
       },
       {
         "name": "TestParseTimestampToEpoch::test_iso_with_microseconds_and_z",
-        "line": 155,
+        "line": 156,
         "markers": [
           "unit"
         ],
@@ -48526,7 +48554,7 @@
       },
       {
         "name": "TestParseTimestampToEpoch::test_iso_without_z",
-        "line": 161,
+        "line": 162,
         "markers": [
           "unit"
         ],
@@ -48535,7 +48563,7 @@
       },
       {
         "name": "TestParseTimestampToEpoch::test_none_returns_none",
-        "line": 167,
+        "line": 168,
         "markers": [
           "unit"
         ],
@@ -48544,7 +48572,7 @@
       },
       {
         "name": "TestParseTimestampToEpoch::test_empty_string_returns_none",
-        "line": 172,
+        "line": 173,
         "markers": [
           "unit"
         ],
@@ -48553,7 +48581,7 @@
       },
       {
         "name": "TestParseTimestampToEpoch::test_invalid_string_returns_none",
-        "line": 177,
+        "line": 178,
         "markers": [
           "unit"
         ],
@@ -48562,7 +48590,7 @@
       },
       {
         "name": "TestGetAgeSeconds::test_recent_timestamp",
-        "line": 186,
+        "line": 187,
         "markers": [
           "unit"
         ],
@@ -48571,7 +48599,7 @@
       },
       {
         "name": "TestGetAgeSeconds::test_old_timestamp",
-        "line": 196,
+        "line": 197,
         "markers": [
           "unit"
         ],
@@ -48580,7 +48608,7 @@
       },
       {
         "name": "TestGetAgeSeconds::test_none_returns_none",
-        "line": 206,
+        "line": 207,
         "markers": [
           "unit"
         ],
@@ -48589,7 +48617,7 @@
       },
       {
         "name": "TestGetAgeSeconds::test_zero_returns_none",
-        "line": 211,
+        "line": 212,
         "markers": [
           "unit"
         ],
@@ -48598,7 +48626,7 @@
       },
       {
         "name": "TestGetAgeSeconds::test_negative_returns_none",
-        "line": 216,
+        "line": 217,
         "markers": [
           "unit"
         ],
@@ -48607,7 +48635,7 @@
       },
       {
         "name": "TestGetAgeSeconds::test_future_timestamp_returns_zero",
-        "line": 221,
+        "line": 222,
         "markers": [
           "unit"
         ],

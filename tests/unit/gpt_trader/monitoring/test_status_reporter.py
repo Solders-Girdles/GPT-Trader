@@ -1,5 +1,3 @@
-"""Unit tests for status reporter models, init, metrics, and updates."""
-
 from __future__ import annotations
 
 import time
@@ -18,7 +16,6 @@ from gpt_trader.monitoring.status_reporter import (
 
 
 class TestBotStatusDataclass:
-    """Tests for BotStatus dataclass."""
 
     def test_default_values(self) -> None:
         status = BotStatus()
@@ -47,7 +44,6 @@ class TestBotStatusDataclass:
 
 
 class TestStatusReporterInit:
-    """Tests for StatusReporter initialization."""
 
     def test_default_values(self) -> None:
         reporter = StatusReporter()
@@ -71,7 +67,6 @@ class TestStatusReporterInit:
 
 
 class TestStatusReporterMetrics:
-    """Tests for metrics recording in StatusReporter."""
 
     @pytest.fixture(autouse=True)
     def reset_metrics(self):
@@ -110,6 +105,14 @@ class TestStatusReporterMetrics:
         collector = get_metrics_collector()
         assert "gpt_trader_ws_gap_count" in collector.gauges
         assert collector.gauges["gpt_trader_ws_gap_count"] == 5.0
+        assert collector.gauges["gpt_trader_ws_connected"] == 1.0
+        assert collector.gauges["gpt_trader_ws_message_stale"] == 0.0
+        assert collector.gauges["gpt_trader_ws_heartbeat_stale"] == 0.0
+        assert collector.gauges["gpt_trader_ws_reconnect_count"] == 2.0
+        assert collector.gauges["gpt_trader_ws_last_message_age_seconds"] >= 0.0
+        assert collector.gauges["gpt_trader_ws_last_heartbeat_age_seconds"] >= 0.0
+        assert collector.gauges["gpt_trader_ws_last_close_age_seconds"] == 0.0
+        assert collector.gauges["gpt_trader_ws_last_error_age_seconds"] == 0.0
 
     def test_equity_gauge_updates_on_change(self) -> None:
         """equity gauge updates when equity changes."""
@@ -124,7 +127,6 @@ class TestStatusReporterMetrics:
 
 
 class TestStatusReporterStrategyPerformance:
-    """Tests for StatusReporter.update_strategy_performance method."""
 
     def test_update_strategy_performance_sets_performance(self) -> None:
         """update_strategy_performance sets strategy.performance."""
@@ -175,7 +177,6 @@ class TestStatusReporterStrategyPerformance:
 
 
 class TestStatusReporterUpdates:
-    """Tests for StatusReporter update methods."""
 
     def test_record_cycle(self) -> None:
         reporter = StatusReporter()
@@ -229,7 +230,6 @@ class TestStatusReporterUpdates:
 
 
 class TestStatusReporterStop:
-    """Tests for StatusReporter stop method."""
 
     @pytest.mark.asyncio
     async def test_stop_when_not_running(self) -> None:

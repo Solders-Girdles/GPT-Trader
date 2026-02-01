@@ -331,12 +331,8 @@ def clean_var_logs(
     archive_dir.mkdir(parents=True, exist_ok=True)
     retention_cutoff = utcnow() - timedelta(days=retention_days)
 
-    rotations: dict[str, list[tuple[int, Path]]] = {}
-    for entry in log_dir.iterdir():
-        if entry.is_dir():
-            continue
-
-        if entry.suffix == ".gz":
+    def prune_archives(directory: Path) -> None:
+        for entry in directory.glob("*.gz"):
             mtime = datetime.fromtimestamp(entry.stat().st_mtime, tz=timezone.utc)
             if mtime < retention_cutoff:
                 remove_path(
@@ -345,6 +341,16 @@ def clean_var_logs(
                     category="runtime_log_archive",
                     reason=f"older_than_{retention_days}d",
                 )
+
+    prune_archives(log_dir)
+    prune_archives(archive_dir)
+
+    rotations: dict[str, list[tuple[int, Path]]] = {}
+    for entry in log_dir.iterdir():
+        if entry.is_dir():
+            continue
+
+        if entry.suffix == ".gz":
             continue
 
         rotation_info = parse_rotation(entry)

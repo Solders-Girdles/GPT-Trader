@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6083,
-    "total_files": 726,
+    "total_tests": 6087,
+    "total_files": 727,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 5918,
+    "unit": 5922,
     "asyncio": 347,
     "parametrize": 154,
     "property": 82,
@@ -680,6 +680,9 @@
     ],
     "test_check_dedupe_manifest.py": [
       "tests/unit/scripts/test_check_dedupe_manifest.py"
+    ],
+    "test_check_deprecation_registry.py": [
+      "tests/unit/scripts/test_check_deprecation_registry.py"
     ],
     "test_check_import_boundaries.py": [
       "tests/unit/scripts/test_check_import_boundaries.py"
@@ -55940,6 +55943,40 @@
       {
         "name": "test_validate_manifest_done_requires_owner_and_pr_url",
         "line": 165,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/scripts/test_check_deprecation_registry.py": [
+      {
+        "name": "test_missing_docs_file_reports_error",
+        "line": 15,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_docs_without_src_paths_reports_error",
+        "line": 27,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_valid_registry_passes",
+        "line": 41,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_missing_registry_entry_fails_with_list",
+        "line": 68,
         "markers": [
           "unit"
         ],

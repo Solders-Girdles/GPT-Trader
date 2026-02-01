@@ -1,4 +1,3 @@
-"""Unit tests for status reporter models, init, metrics, and updates."""
 
 from __future__ import annotations
 
@@ -18,7 +17,6 @@ from gpt_trader.monitoring.status_reporter import (
 
 
 class TestBotStatusDataclass:
-    """Tests for BotStatus dataclass."""
 
     def test_default_values(self) -> None:
         status = BotStatus()
@@ -47,7 +45,6 @@ class TestBotStatusDataclass:
 
 
 class TestStatusReporterInit:
-    """Tests for StatusReporter initialization."""
 
     def test_default_values(self) -> None:
         reporter = StatusReporter()
@@ -71,7 +68,6 @@ class TestStatusReporterInit:
 
 
 class TestStatusReporterMetrics:
-    """Tests for metrics recording in StatusReporter."""
 
     @pytest.fixture(autouse=True)
     def reset_metrics(self):
@@ -132,7 +128,6 @@ class TestStatusReporterMetrics:
 
 
 class TestStatusReporterStrategyPerformance:
-    """Tests for StatusReporter.update_strategy_performance method."""
 
     def test_update_strategy_performance_sets_performance(self) -> None:
         """update_strategy_performance sets strategy.performance."""
@@ -183,7 +178,6 @@ class TestStatusReporterStrategyPerformance:
 
 
 class TestStatusReporterUpdates:
-    """Tests for StatusReporter update methods."""
 
     def test_record_cycle(self) -> None:
         reporter = StatusReporter()
@@ -237,7 +231,6 @@ class TestStatusReporterUpdates:
 
 
 class TestStatusReporterStop:
-    """Tests for StatusReporter stop method."""
 
     @pytest.mark.asyncio
     async def test_stop_when_not_running(self) -> None:

@@ -12,9 +12,10 @@ import json
 import os
 import sqlite3
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from flask import Flask, Response, jsonify  # type: ignore[import-not-found]
+if TYPE_CHECKING:
+    from flask import Flask
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_PROFILE = "prod"
@@ -23,9 +24,6 @@ DEFAULT_METRICS = DEFAULT_RUNTIME_ROOT / "runtime_data" / DEFAULT_PROFILE / "met
 DEFAULT_EVENTS_DB = DEFAULT_RUNTIME_ROOT / "runtime_data" / DEFAULT_PROFILE / "events.db"
 DEFAULT_EVENTS = DEFAULT_RUNTIME_ROOT / "runtime_data" / DEFAULT_PROFILE / "events.jsonl"
 METRIC_PREFIX = os.getenv("COINBASE_TRADER_METRIC_PREFIX", "coinbase_trader")
-
-
-app = Flask(__name__)
 
 
 def load_metrics(metrics_path: Path, events_db: Path | None = None) -> dict[str, Any]:
@@ -401,6 +399,10 @@ def render_prometheus(metrics: dict[str, Any], events_path: Path, events_db: Pat
 
 
 def create_app(metrics_path: Path, events_path: Path, events_db: Path | None) -> Flask:
+    from flask import Flask, Response, jsonify  # type: ignore[import-not-found]
+
+    app = Flask(__name__)
+
     @app.route("/metrics")
     def metrics_route():
         metrics = load_metrics(metrics_path, events_db)

@@ -36,10 +36,9 @@ This document lists the canonical runtime entrypoints and where they are wired.
 
 - Script entrypoint: `python scripts/production_preflight.py`
   - Implementation: `scripts/production_preflight.py` (`main`)
+- CLI subcommand: `gpt-trader preflight`
+  - Implementation: `src/gpt_trader/cli/commands/preflight.py` (`execute`)
 - Preflight CLI function:
   - `src/gpt_trader/preflight/__init__.py` (`run_preflight_cli`)
   - `src/gpt_trader/preflight/cli.py` (`main`)
 - Checks live in: `src/gpt_trader/preflight/checks/`
-
-Note: preflight is not currently registered as a `gpt-trader` subcommand in
-`pyproject.toml`.

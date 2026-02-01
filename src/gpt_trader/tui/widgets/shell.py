@@ -42,7 +42,9 @@ class CommandBar(Static):
         self._onboarding = get_onboarding_service()
 
     def on_mount(self) -> None:
-        self.set_interval(1.0, self.update_time)
+        # Avoid time-driven updates during headless test runs to keep snapshots stable.
+        if not getattr(self.app, "is_headless", False):
+            self.set_interval(1.0, self.update_time)
         self.update_time()
         if hasattr(self.app, "state_registry"):
             self.app.state_registry.register(self)

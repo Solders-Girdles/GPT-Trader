@@ -1337,6 +1337,7 @@
     "gpt_trader.monitoring.metrics_collector": [
       "tests/integration/test_order_flow.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_metrics.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_router_execute_async.py",
       "tests/unit/gpt_trader/monitoring/test_health_checks_signals.py",
       "tests/unit/gpt_trader/monitoring/test_metrics_collector.py",
       "tests/unit/gpt_trader/monitoring/test_metrics_collector_histograms.py",
@@ -3129,7 +3130,8 @@
       "gpt_trader.core",
       "gpt_trader.features.live_trade.execution.router",
       "gpt_trader.features.live_trade.execution.submission_result",
-      "gpt_trader.features.live_trade.strategies.hybrid.types"
+      "gpt_trader.features.live_trade.strategies.hybrid.types",
+      "gpt_trader.monitoring.metrics_collector"
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_router_order_result.py": [
       "gpt_trader.core",

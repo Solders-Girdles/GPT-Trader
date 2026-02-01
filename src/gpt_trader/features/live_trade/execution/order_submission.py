@@ -14,12 +14,12 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
-from typing import Any, cast
+from typing import Any, Callable, cast
 
 from gpt_trader.app.protocols import EventStoreProtocol
 from gpt_trader.core import OrderSide, OrderType
 from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
-from gpt_trader.features.live_trade.execution.broker_executor import BrokerExecutor
+from gpt_trader.features.live_trade.execution.broker_executor import BrokerExecutor, RetryPolicy
 from gpt_trader.features.live_trade.execution.decision_trace import OrderDecisionTrace
 from gpt_trader.features.live_trade.execution.order_event_recorder import OrderEventRecorder
 from gpt_trader.features.live_trade.execution.rejection_reason import (
@@ -38,6 +38,14 @@ from gpt_trader.persistence.orders_store import (
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="order_submission")
+
+SUBMISSION_RETRY_POLICY = RetryPolicy(
+    max_attempts=2,
+    base_delay=0.25,
+    max_delay=1.0,
+    jitter=0.0,
+)
+TRANSIENT_SUBMISSION_REASONS = {"timeout", "network", "rate_limit"}
 
 
 class OrderSubmissionOutcomeStatus(str, Enum):
@@ -81,6 +89,16 @@ class OrderSubmissionOutcome:
 def _classify_rejection_reason(status_or_error: str) -> str:
     """Classify a rejection or error into a standardized reason category."""
     return normalize_rejection_reason(status_or_error)[0]
+
+
+def _is_transient_submission_error(error: Exception, reason: str | None = None) -> bool:
+    """Return True if the error is transient and worth retrying."""
+    if isinstance(error, SUBMISSION_RETRY_POLICY.retryable_exceptions):
+        return True
+    if error.__class__.__name__ == "TransientBrokerError":
+        return True
+    normalized_reason = reason or normalize_rejection_reason(str(error))[0]
+    return normalized_reason in TRANSIENT_SUBMISSION_REASONS
 
 
 def _record_execution_telemetry(
@@ -198,6 +216,7 @@ class OrderSubmitter:
         enable_retries: bool = False,
         orders_store: OrdersStore | None = None,
         integration_mode: bool = False,
+        sleep_fn: Callable[[float], None] | None = None,
     ) -> None:
         """
         Initialize order submitter.
@@ -207,8 +226,9 @@ class OrderSubmitter:
             event_store: Event store for recording
             bot_id: Bot identifier
             open_orders: List to track open order IDs
-            enable_retries: Enable broker executor retry policy for submission calls.
+            enable_retries: Enable one retry for transient submission failures.
             integration_mode: Enable integration test mode
+            sleep_fn: Optional sleep function for retry backoff (defaults to time.sleep).
         """
         self.broker = broker
         self.event_store = event_store
@@ -217,9 +237,13 @@ class OrderSubmitter:
         self.integration_mode = integration_mode
         self.orders_store = orders_store
         self._enable_retries = enable_retries
+        self._sleep_fn = sleep_fn or time.sleep
         self._event_recorder = OrderEventRecorder(event_store, bot_id)
         self._broker_executor = BrokerExecutor(
-            cast(BrokerProtocol, broker), integration_mode=integration_mode
+            cast(BrokerProtocol, broker),
+            integration_mode=integration_mode,
+            retry_policy=SUBMISSION_RETRY_POLICY,
+            sleep_fn=sleep_fn,
         )
         if self.orders_store is not None:
             try:
@@ -790,153 +814,211 @@ class OrderSubmitter:
         )
 
         start_time = time.perf_counter()
-        try:
-            order = self._execute_broker_order(
-                submit_id=submit_id,
-                symbol=symbol,
-                side=side,
-                order_type=order_type,
-                order_quantity=order_quantity,
-                price=price,
-                stop_price=stop_price,
-                tif=tif,
-                reduce_only=reduce_only,
-                leverage=leverage,
-            )
-            latency_ms = (time.perf_counter() - start_time) * 1000
+        max_attempts = SUBMISSION_RETRY_POLICY.max_attempts if self._enable_retries else 1
 
-            result = self._handle_order_result(
-                order,
-                symbol,
-                side,
-                order_type,
-                order_quantity,
-                price,
-                effective_price,
-                tif,
-                reduce_only,
-                leverage,
-                submit_id,
-            )
+        for attempt in range(1, max_attempts + 1):
+            try:
+                order = self._execute_broker_order(
+                    submit_id=submit_id,
+                    symbol=symbol,
+                    side=side,
+                    order_type=order_type,
+                    order_quantity=order_quantity,
+                    price=price,
+                    stop_price=stop_price,
+                    tif=tif,
+                    reduce_only=reduce_only,
+                    leverage=leverage,
+                    use_retry=False,
+                )
+                latency_ms = (time.perf_counter() - start_time) * 1000
 
-            side_str = side.value if hasattr(side, "value") else str(side)
-            price_float = float(price) if price is not None else 0.0
-            qty_float = float(order_quantity)
-            latency_seconds = latency_ms / 1000.0
+                result = self._handle_order_result(
+                    order,
+                    symbol,
+                    side,
+                    order_type,
+                    order_quantity,
+                    price,
+                    effective_price,
+                    tif,
+                    reduce_only,
+                    leverage,
+                    submit_id,
+                )
 
-            if result is not None:
-                order_id: str | None = None
-                order_payload: Any | None = None
-                if self.integration_mode:
-                    order_payload = result
-                    raw_order_id = getattr(result, "id", None)
-                    if raw_order_id is not None:
-                        order_id = str(raw_order_id)
-                else:
-                    order_id = cast(str, result)
+                side_str = side.value if hasattr(side, "value") else str(side)
+                price_float = float(price) if price is not None else 0.0
+                qty_float = float(order_quantity)
+                latency_seconds = latency_ms / 1000.0
+
+                if result is not None:
+                    order_id: str | None = None
+                    order_payload: Any | None = None
+                    if self.integration_mode:
+                        order_payload = result
+                        raw_order_id = getattr(result, "id", None)
+                        if raw_order_id is not None:
+                            order_id = str(raw_order_id)
+                    else:
+                        order_id = cast(str, result)
+                    if attempt > 1:
+                        logger.info(
+                            "Order submission succeeded after retry",
+                            attempt=attempt,
+                            max_attempts=max_attempts,
+                            client_order_id=submit_id,
+                            order_id=order_id,
+                            operation="order_submit",
+                            stage="retry_success",
+                        )
+                    _record_execution_telemetry(
+                        latency_ms=latency_ms,
+                        success=True,
+                        symbol=symbol,
+                        side=side_str,
+                        quantity=qty_float,
+                        price=price_float,
+                    )
+                    _record_order_submission_metric(
+                        result="success",
+                        reason="none",
+                        side=side_str,
+                    )
+                    try:
+                        record_counter("gpt_trader_trades_executed_total")
+                    except Exception:
+                        pass
+                    _record_order_submission_latency(
+                        latency_seconds=latency_seconds,
+                        result="success",
+                        side=side_str,
+                    )
+                    return OrderSubmissionOutcome(
+                        status=OrderSubmissionOutcomeStatus.SUCCESS,
+                        order_id=order_id,
+                        order=order_payload,
+                    )
+                if attempt > 1:
+                    logger.warning(
+                        "Order submission rejected after retry",
+                        attempt=attempt,
+                        max_attempts=max_attempts,
+                        client_order_id=submit_id,
+                        operation="order_submit",
+                        stage="retry_rejected",
+                    )
                 _record_execution_telemetry(
                     latency_ms=latency_ms,
-                    success=True,
+                    success=False,
+                    rejected=True,
+                    rejection_reason="broker_rejected",
                     symbol=symbol,
                     side=side_str,
                     quantity=qty_float,
                     price=price_float,
                 )
                 _record_order_submission_metric(
-                    result="success",
-                    reason="none",
+                    result="rejected",
+                    reason="broker_rejected",
                     side=side_str,
                 )
                 _record_order_submission_latency(
                     latency_seconds=latency_seconds,
-                    result="success",
+                    result="rejected",
                     side=side_str,
                 )
                 return OrderSubmissionOutcome(
-                    status=OrderSubmissionOutcomeStatus.SUCCESS,
-                    order_id=order_id,
-                    order=order_payload,
+                    status=OrderSubmissionOutcomeStatus.REJECTED,
+                    reason="broker_rejected",
                 )
-            _record_execution_telemetry(
-                latency_ms=latency_ms,
-                success=False,
-                rejected=True,
-                rejection_reason="broker_rejected",
-                symbol=symbol,
-                side=side_str,
-                quantity=qty_float,
-                price=price_float,
-            )
-            _record_order_submission_metric(
-                result="rejected",
-                reason="broker_rejected",
-                side=side_str,
-            )
-            _record_order_submission_latency(
-                latency_seconds=latency_seconds,
-                result="rejected",
-                side=side_str,
-            )
-            return OrderSubmissionOutcome(
-                status=OrderSubmissionOutcomeStatus.REJECTED,
-                reason="broker_rejected",
-            )
 
-        except Exception as exc:
-            latency_ms = (time.perf_counter() - start_time) * 1000
-            error_str = str(exc)
-            reason, reason_detail = normalize_rejection_reason(error_str)
-            is_rejection = reason in {"broker_rejected", "broker_status"}
+            except Exception as exc:
+                error_str = str(exc)
+                reason, reason_detail = normalize_rejection_reason(error_str)
 
-            side_str = side.value if hasattr(side, "value") else str(side)
-            price_float = float(price) if price is not None else 0.0
-            qty_float = float(order_quantity)
+                if attempt < max_attempts and _is_transient_submission_error(exc, reason):
+                    delay_seconds = SUBMISSION_RETRY_POLICY.calculate_delay(attempt + 1)
+                    logger.warning(
+                        "Transient order submission failure, retrying",
+                        attempt=attempt,
+                        max_attempts=max_attempts,
+                        delay_seconds=round(delay_seconds, 3),
+                        error_type=type(exc).__name__,
+                        error_message=error_str,
+                        client_order_id=submit_id,
+                        operation="order_submit",
+                        stage="retry_wait",
+                    )
+                    self._sleep_fn(delay_seconds)
+                    continue
 
-            _record_execution_telemetry(
-                latency_ms=latency_ms,
-                success=False,
-                rejected=is_rejection,
-                failure_reason=error_str[:100],
-                rejection_reason=reason,
-                reason_detail=reason_detail,
-                symbol=symbol,
-                side=side_str,
-                quantity=qty_float,
-                price=price_float,
-            )
-            metric_result = "rejected" if is_rejection else "failed"
-            _record_order_submission_metric(
-                result=metric_result,
-                reason=reason,
-                side=side_str,
-            )
-            _record_order_submission_latency(
-                latency_seconds=latency_ms / 1000.0,
-                result=metric_result,
-                side=side_str,
-            )
-            self._record_failed_submission(
-                submit_id,
-                symbol,
-                side,
-                order_type,
-                order_quantity,
-                price,
-                tif,
-                reduce_only,
-                leverage,
-            )
-            self._handle_order_failure(exc, symbol, side, order_quantity)
-            return OrderSubmissionOutcome(
-                status=(
-                    OrderSubmissionOutcomeStatus.REJECTED
-                    if is_rejection
-                    else OrderSubmissionOutcomeStatus.FAILED
-                ),
-                reason=reason,
-                reason_detail=reason_detail,
-                error=error_str,
-            )
+                latency_ms = (time.perf_counter() - start_time) * 1000
+                is_rejection = reason in {"broker_rejected", "broker_status"}
+
+                side_str = side.value if hasattr(side, "value") else str(side)
+                price_float = float(price) if price is not None else 0.0
+                qty_float = float(order_quantity)
+
+                if attempt > 1:
+                    logger.error(
+                        "Order submission failed after retry",
+                        attempt=attempt,
+                        max_attempts=max_attempts,
+                        error_type=type(exc).__name__,
+                        error_message=error_str,
+                        client_order_id=submit_id,
+                        operation="order_submit",
+                        stage="retry_failed",
+                    )
+
+                _record_execution_telemetry(
+                    latency_ms=latency_ms,
+                    success=False,
+                    rejected=is_rejection,
+                    failure_reason=error_str[:100],
+                    rejection_reason=reason,
+                    reason_detail=reason_detail,
+                    symbol=symbol,
+                    side=side_str,
+                    quantity=qty_float,
+                    price=price_float,
+                )
+                metric_result = "rejected" if is_rejection else "failed"
+                _record_order_submission_metric(
+                    result=metric_result,
+                    reason=reason,
+                    side=side_str,
+                )
+                _record_order_submission_latency(
+                    latency_seconds=latency_ms / 1000.0,
+                    result=metric_result,
+                    side=side_str,
+                )
+                self._record_failed_submission(
+                    submit_id,
+                    symbol,
+                    side,
+                    order_type,
+                    order_quantity,
+                    price,
+                    tif,
+                    reduce_only,
+                    leverage,
+                )
+                self._handle_order_failure(exc, symbol, side, order_quantity)
+                return OrderSubmissionOutcome(
+                    status=(
+                        OrderSubmissionOutcomeStatus.REJECTED
+                        if is_rejection
+                        else OrderSubmissionOutcomeStatus.FAILED
+                    ),
+                    reason=reason,
+                    reason_detail=reason_detail,
+                    error=error_str,
+                )
+
+        raise RuntimeError("Order submission exited retry loop without producing an outcome")
 
     def _submit_order_inner(
         self,
@@ -1009,8 +1091,11 @@ class OrderSubmitter:
         tif: Any | None,
         reduce_only: bool,
         leverage: int | None,
+        *,
+        use_retry: bool | None = None,
     ) -> Any:
         """Execute the order placement against the broker."""
+        retry_enabled = self._enable_retries if use_retry is None else use_retry
         return self._broker_executor.execute_order(
             submit_id=submit_id,
             symbol=symbol,
@@ -1022,7 +1107,7 @@ class OrderSubmitter:
             tif=tif,
             reduce_only=reduce_only,
             leverage=leverage,
-            use_retry=self._enable_retries,
+            use_retry=retry_enabled,
         )
 
     def _handle_order_result(

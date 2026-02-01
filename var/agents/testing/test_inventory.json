@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6087,
-    "total_files": 727,
+    "total_tests": 6090,
+    "total_files": 728,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,13 +102,13 @@
     ]
   },
   "marker_counts": {
-    "unit": 5922,
+    "unit": 5925,
     "asyncio": 347,
     "parametrize": 154,
     "property": 82,
     "integration": 79,
     "endpoints": 78,
-    "usefixtures": 16,
+    "usefixtures": 17,
     "skipif": 8,
     "slow": 4,
     "anyio": 3,
@@ -392,6 +392,7 @@
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_metrics.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_results.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_retry.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_router_execute_async.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_router_order_result.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_router_resolve_order_id.py",
@@ -21300,7 +21301,7 @@
         "docstring": ""
       },
       {
-        "name": "test_failed_order_records_metric_with_reason",
+        "name": "test_successful_order_increments_trades_executed_counter",
         "line": 64,
         "markers": [
           "usefixtures",
@@ -21309,8 +21310,17 @@
         "docstring": ""
       },
       {
+        "name": "test_failed_order_records_metric_with_reason",
+        "line": 81,
+        "markers": [
+          "usefixtures",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_classification_label_used_in_metrics",
-        "line": 92,
+        "line": 109,
         "markers": [
           "unit"
         ],
@@ -21318,7 +21328,7 @@
       },
       {
         "name": "test_successful_submission_records_latency_histogram",
-        "line": 113,
+        "line": 130,
         "markers": [
           "unit"
         ],
@@ -21326,7 +21336,7 @@
       },
       {
         "name": "test_failed_submission_records_latency_with_failure_result",
-        "line": 137,
+        "line": 154,
         "markers": [
           "unit"
         ],
@@ -21407,10 +21417,28 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_retry.py": [
+      {
+        "name": "test_submit_order_retries_transient_error_once",
+        "line": 11,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_submit_order_no_retry_on_non_transient_error",
+        "line": 41,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_router_execute_async.py": [
       {
         "name": "TestOrderRouterAsyncExecution::test_execute_async_delegates_to_submitter",
-        "line": 25,
+        "line": 34,
         "markers": [
           "asyncio",
           "unit"
@@ -21420,7 +21448,7 @@
       },
       {
         "name": "TestOrderRouterAsyncExecution::test_execute_async_passes_reduce_only_for_close",
-        "line": 62,
+        "line": 71,
         "markers": [
           "asyncio",
           "unit"
@@ -21430,7 +21458,7 @@
       },
       {
         "name": "TestOrderRouterAsyncExecution::test_execute_async_handles_submitter_failure_result",
-        "line": 92,
+        "line": 101,
         "markers": [
           "asyncio",
           "unit"
@@ -21440,7 +21468,7 @@
       },
       {
         "name": "TestOrderRouterAsyncExecution::test_execute_async_handles_submitter_blocked_result",
-        "line": 123,
+        "line": 132,
         "markers": [
           "asyncio",
           "unit"
@@ -21450,7 +21478,7 @@
       },
       {
         "name": "TestOrderRouterAsyncExecution::test_execute_async_handles_submitter_exception",
-        "line": 154,
+        "line": 168,
         "markers": [
           "asyncio",
           "unit"
@@ -21460,7 +21488,7 @@
       },
       {
         "name": "TestOrderRouterAsyncExecution::test_execute_async_hold_is_not_actionable",
-        "line": 180,
+        "line": 194,
         "markers": [
           "asyncio",
           "unit"
@@ -34550,7 +34578,7 @@
     "tests/unit/gpt_trader/monitoring/test_status_reporter.py": [
       {
         "name": "TestBotStatusDataclass::test_default_values",
-        "line": 23,
+        "line": 20,
         "markers": [
           "unit"
         ],
@@ -34559,7 +34587,7 @@
       },
       {
         "name": "TestBotStatusDataclass::test_engine_status_defaults",
-        "line": 31,
+        "line": 28,
         "markers": [
           "unit"
         ],
@@ -34568,7 +34596,7 @@
       },
       {
         "name": "TestBotStatusDataclass::test_market_status_defaults",
-        "line": 37,
+        "line": 34,
         "markers": [
           "unit"
         ],
@@ -34577,7 +34605,7 @@
       },
       {
         "name": "TestBotStatusDataclass::test_position_status_defaults",
-        "line": 42,
+        "line": 39,
         "markers": [
           "unit"
         ],
@@ -34586,7 +34614,7 @@
       },
       {
         "name": "TestStatusReporterInit::test_default_values",
-        "line": 52,
+        "line": 48,
         "markers": [
           "unit"
         ],
@@ -34595,7 +34623,7 @@
       },
       {
         "name": "TestStatusReporterInit::test_custom_values",
-        "line": 60,
+        "line": 56,
         "markers": [
           "unit"
         ],
@@ -34604,7 +34632,7 @@
       },
       {
         "name": "TestStatusReporterMetrics::test_update_equity_records_gauge",
-        "line": 84,
+        "line": 79,
         "markers": [
           "unit"
         ],
@@ -34613,7 +34641,7 @@
       },
       {
         "name": "TestStatusReporterMetrics::test_update_ws_health_records_gap_gauge",
-        "line": 95,
+        "line": 90,
         "markers": [
           "unit"
         ],
@@ -34622,7 +34650,7 @@
       },
       {
         "name": "TestStatusReporterMetrics::test_equity_gauge_updates_on_change",
-        "line": 114,
+        "line": 117,
         "markers": [
           "unit"
         ],
@@ -34631,7 +34659,7 @@
       },
       {
         "name": "TestStatusReporterStrategyPerformance::test_update_strategy_performance_sets_performance",
-        "line": 129,
+        "line": 131,
         "markers": [
           "unit"
         ],
@@ -34640,7 +34668,7 @@
       },
       {
         "name": "TestStatusReporterStrategyPerformance::test_update_strategy_performance_sets_backtest",
-        "line": 146,
+        "line": 148,
         "markers": [
           "unit"
         ],
@@ -34649,7 +34677,7 @@
       },
       {
         "name": "TestStatusReporterStrategyPerformance::test_update_strategy_performance_sets_both",
-        "line": 163,
+        "line": 165,
         "markers": [
           "unit"
         ],
@@ -34658,7 +34686,7 @@
       },
       {
         "name": "TestStatusReporterUpdates::test_record_cycle",
-        "line": 180,
+        "line": 181,
         "markers": [
           "unit"
         ],
@@ -34667,7 +34695,7 @@
       },
       {
         "name": "TestStatusReporterUpdates::test_record_error",
-        "line": 190,
+        "line": 191,
         "markers": [
           "unit"
         ],
@@ -34676,7 +34704,7 @@
       },
       {
         "name": "TestStatusReporterUpdates::test_update_price",
-        "line": 200,
+        "line": 201,
         "markers": [
           "unit"
         ],
@@ -34685,7 +34713,7 @@
       },
       {
         "name": "TestStatusReporterUpdates::test_update_positions",
-        "line": 208,
+        "line": 209,
         "markers": [
           "unit"
         ],
@@ -34694,7 +34722,7 @@
       },
       {
         "name": "TestStatusReporterUpdates::test_set_heartbeat_service",
-        "line": 221,
+        "line": 222,
         "markers": [
           "unit"
         ],

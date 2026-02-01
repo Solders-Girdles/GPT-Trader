@@ -18,6 +18,15 @@ from gpt_trader.features.live_trade.strategies.hybrid.types import (
 )
 
 
+@pytest.fixture(autouse=True)
+def reset_metrics() -> None:
+    from gpt_trader.monitoring.metrics_collector import reset_all
+
+    reset_all()
+    yield
+    reset_all()
+
+
 class TestOrderRouterAsyncExecution:
     """Tests for OrderRouter.execute_async() canonical path."""
 
@@ -149,6 +158,11 @@ class TestOrderRouterAsyncExecution:
         assert result.error is not None
         assert "paused" in result.error
         assert result.error_code == "ORDER_BLOCKED"
+
+        from gpt_trader.monitoring.metrics_collector import get_metrics_collector
+
+        collector = get_metrics_collector()
+        assert collector.counters["gpt_trader_trades_blocked_total"] == 1
 
     @pytest.mark.asyncio
     async def test_execute_async_handles_submitter_exception(self) -> None:

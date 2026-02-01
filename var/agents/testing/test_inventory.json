@@ -683,6 +683,9 @@
     "test_check_import_boundaries.py": [
       "tests/unit/scripts/test_check_import_boundaries.py"
     ],
+    "test_check_tui_css_up_to_date.py": [
+      "tests/unit/scripts/test_check_tui_css_up_to_date.py"
+    ],
     "test_docs_maintenance.py": [
       "tests/unit/scripts/test_docs_maintenance.py"
     ],
@@ -55925,6 +55928,56 @@
       {
         "name": "test_allowed_imports_pass",
         "line": 61,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/scripts/test_check_tui_css_up_to_date.py": [
+      {
+        "name": "test_project_root_includes_script",
+        "line": 10,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_run_build_invokes_script",
+        "line": 17,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_diff_names_filters_blank_lines",
+        "line": 35,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_print_diff_calls_git",
+        "line": 70,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_main_returns_zero_when_no_changes",
+        "line": 88,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_main_reports_outdated_css",
+        "line": 112,
         "markers": [
           "unit"
         ],

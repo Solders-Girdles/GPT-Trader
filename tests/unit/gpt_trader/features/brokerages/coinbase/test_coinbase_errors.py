@@ -59,9 +59,7 @@ def test_500_maps_to_brokerage_error():
 
 
 def test_503_maps_to_transient_broker_error() -> None:
-    error = map_http_error(
-        503, "service_unavailable", "Service temporarily unavailable"
-    )
+    error = map_http_error(503, "service_unavailable", "Service temporarily unavailable")
     assert isinstance(error, TransientBrokerError)
     assert "unavailable" in str(error).lower()
 

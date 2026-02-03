@@ -548,6 +548,7 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_orders_mixin.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_portfolio_mixin.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_cfm_endpoints.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_errors.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_permissions_client_endpoint.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_system.py"
     ],
@@ -2697,7 +2698,8 @@
       "gpt_trader.features.brokerages.coinbase.models"
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_errors.py": [
-      "gpt_trader.core"
+      "gpt_trader.core",
+      "gpt_trader.features.brokerages.coinbase.errors"
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market.py": [
       "gpt_trader.core"

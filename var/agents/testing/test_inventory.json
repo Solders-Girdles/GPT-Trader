@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6128,
+    "total_tests": 6132,
     "total_files": 732,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 5963,
+    "unit": 5967,
     "asyncio": 347,
     "parametrize": 154,
     "property": 82,
@@ -33463,7 +33463,7 @@
     "tests/unit/gpt_trader/monitoring/test_health_checks_signals.py": [
       {
         "name": "TestComputeExecutionHealthSignals::test_returns_health_summary",
-        "line": 11,
+        "line": 23,
         "markers": [
           "unit"
         ],
@@ -33472,7 +33472,7 @@
       },
       {
         "name": "TestComputeExecutionHealthSignals::test_with_custom_thresholds",
-        "line": 22,
+        "line": 34,
         "markers": [
           "unit"
         ],
@@ -33481,7 +33481,7 @@
       },
       {
         "name": "TestComputeExecutionHealthSignals::test_signal_names",
-        "line": 40,
+        "line": 52,
         "markers": [
           "unit"
         ],
@@ -33490,7 +33490,7 @@
       },
       {
         "name": "TestComputeExecutionHealthSignals::test_zero_metrics_returns_ok",
-        "line": 52,
+        "line": 64,
         "markers": [
           "unit"
         ],
@@ -33499,7 +33499,7 @@
       },
       {
         "name": "TestComputeExecutionHealthSignals::test_to_dict_serializable",
-        "line": 68,
+        "line": 74,
         "markers": [
           "unit"
         ],
@@ -33507,8 +33507,53 @@
         "class": "TestComputeExecutionHealthSignals"
       },
       {
+        "name": "TestComputeExecutionHealthSignals::test_guard_trip_warn_at_threshold",
+        "line": 89,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that value exactly at warn threshold returns WARN.",
+        "class": "TestComputeExecutionHealthSignals"
+      },
+      {
+        "name": "TestComputeExecutionHealthSignals::test_guard_trip_crit_at_threshold",
+        "line": 104,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that value exactly at crit threshold returns CRIT.",
+        "class": "TestComputeExecutionHealthSignals"
+      },
+      {
+        "name": "TestComputeExecutionHealthSignals::test_custom_thresholds_override_status",
+        "line": 119,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that custom thresholds impact computed status.",
+        "class": "TestComputeExecutionHealthSignals"
+      },
+      {
+        "name": "TestComputeExecutionHealthSignals::test_missing_metrics_returns_ok",
+        "line": 143,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that missing metrics data yields OK signals.",
+        "class": "TestComputeExecutionHealthSignals"
+      },
+      {
+        "name": "TestComputeExecutionHealthSignals::test_mixed_statuses_aggregate_summary",
+        "line": 162,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test aggregate status with mixed signal levels.",
+        "class": "TestComputeExecutionHealthSignals"
+      },
+      {
         "name": "TestCheckWsStalenessSignal::test_broker_without_ws_support",
-        "line": 87,
+        "line": 194,
         "markers": [
           "unit"
         ],
@@ -33517,7 +33562,7 @@
       },
       {
         "name": "TestCheckWsStalenessSignal::test_ws_not_initialized",
-        "line": 100,
+        "line": 207,
         "markers": [
           "unit"
         ],
@@ -33526,7 +33571,7 @@
       },
       {
         "name": "TestCheckWsStalenessSignal::test_ws_fresh_messages",
-        "line": 114,
+        "line": 221,
         "markers": [
           "unit"
         ],
@@ -33535,7 +33580,7 @@
       },
       {
         "name": "TestCheckWsStalenessSignal::test_ws_stale_messages_warn",
-        "line": 133,
+        "line": 240,
         "markers": [
           "unit"
         ],
@@ -33544,7 +33589,7 @@
       },
       {
         "name": "TestCheckWsStalenessSignal::test_ws_stale_messages_crit",
-        "line": 155,
+        "line": 262,
         "markers": [
           "unit"
         ],
@@ -33553,7 +33598,7 @@
       },
       {
         "name": "TestCheckWsStalenessSignal::test_ws_exception_returns_unknown",
-        "line": 177,
+        "line": 284,
         "markers": [
           "unit"
         ],
@@ -56175,17 +56220,8 @@
         "class": "TestSleepViolations"
       },
       {
-        "name": "TestSleepViolations::test_time_sleep_inside_string_literal_not_flagged",
-        "line": 213,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Sample code containing 'time.sleep(' in a string should not be flagged.",
-        "class": "TestSleepViolations"
-      },
-      {
         "name": "TestSleepViolations::test_time_sleep_with_fake_clock_passes",
-        "line": 229,
+        "line": 213,
         "markers": [
           "unit"
         ],
@@ -56194,7 +56230,7 @@
       },
       {
         "name": "TestPatchViolations::test_patch_call_flagged",
-        "line": 249,
+        "line": 233,
         "markers": [
           "unit"
         ],
@@ -56203,7 +56239,7 @@
       },
       {
         "name": "TestPatchViolations::test_patch_object_call_flagged",
-        "line": 263,
+        "line": 247,
         "markers": [
           "unit"
         ],
@@ -56212,7 +56248,7 @@
       },
       {
         "name": "TestHelperFunctions::test_is_patch_callable_detects_patch_name",
-        "line": 283,
+        "line": 267,
         "markers": [
           "unit"
         ],
@@ -56221,7 +56257,7 @@
       },
       {
         "name": "TestHelperFunctions::test_is_patch_callable_detects_patch_attribute",
-        "line": 290,
+        "line": 274,
         "markers": [
           "unit"
         ],
@@ -56230,7 +56266,7 @@
       },
       {
         "name": "TestHelperFunctions::test_is_patch_callable_detects_patch_object",
-        "line": 301,
+        "line": 285,
         "markers": [
           "unit"
         ],
@@ -56239,7 +56275,7 @@
       },
       {
         "name": "TestHelperFunctions::test_first_patch_call_line_returns_none_for_no_patch",
-        "line": 312,
+        "line": 296,
         "markers": [
           "unit"
         ],
@@ -56248,7 +56284,7 @@
       },
       {
         "name": "TestHelperFunctions::test_first_patch_call_line_returns_line_number",
-        "line": 317,
+        "line": 301,
         "markers": [
           "unit"
         ],
@@ -56257,7 +56293,7 @@
       },
       {
         "name": "TestHelperFunctions::test_first_patch_call_line_handles_syntax_error",
-        "line": 323,
+        "line": 307,
         "markers": [
           "unit"
         ],
@@ -56266,7 +56302,7 @@
       },
       {
         "name": "TestMainEntryPoint::test_main_returns_zero_for_valid_tests",
-        "line": 332,
+        "line": 316,
         "markers": [
           "unit"
         ],
@@ -56275,7 +56311,7 @@
       },
       {
         "name": "TestMainEntryPoint::test_main_returns_one_for_violations",
-        "line": 345,
+        "line": 329,
         "markers": [
           "unit"
         ],

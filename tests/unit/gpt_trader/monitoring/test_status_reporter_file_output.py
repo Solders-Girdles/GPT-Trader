@@ -14,17 +14,24 @@ import gpt_trader.monitoring.status_reporter as status_reporter
 from gpt_trader.monitoring.status_reporter import DecimalEncoder, StatusReporter
 
 
+class _TestClock:
+    def __init__(self, start: float) -> None:
+        self._now = start
+
+    def time(self) -> float:
+        return self._now
+
+    def advance(self, seconds: float) -> None:
+        self._now += seconds
+
+
 def _freeze_time(
     monkeypatch: pytest.MonkeyPatch,
     start: float = 1000.0,
 ) -> Callable[[float], None]:
-    now = {"value": start}
-    monkeypatch.setattr(status_reporter.time, "time", lambda: now["value"])
-
-    def advance(seconds: float) -> None:
-        now["value"] += seconds
-
-    return advance
+    clock = _TestClock(start)
+    monkeypatch.setattr(status_reporter, "get_clock", lambda: clock)
+    return clock.advance
 
 
 @pytest.mark.asyncio

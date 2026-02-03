@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6137,
-    "total_files": 733,
+    "total_tests": 6142,
+    "total_files": 734,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 5972,
+    "unit": 5977,
     "asyncio": 347,
     "parametrize": 155,
     "property": 82,
@@ -687,6 +687,9 @@
     ],
     "test_check_import_boundaries.py": [
       "tests/unit/scripts/test_check_import_boundaries.py"
+    ],
+    "test_check_legacy_patterns.py": [
+      "tests/unit/scripts/test_check_legacy_patterns.py"
     ],
     "test_check_legacy_test_triage.py": [
       "tests/unit/scripts/test_check_legacy_test_triage.py"
@@ -56111,6 +56114,53 @@
           "unit"
         ],
         "docstring": ""
+      }
+    ],
+    "tests/unit/scripts/test_check_legacy_patterns.py": [
+      {
+        "name": "TestDeprecatedEnvUsage::test_env_var_allowed_in_allowlist",
+        "line": 20,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestDeprecatedEnvUsage"
+      },
+      {
+        "name": "TestDeprecatedEnvUsage::test_env_var_disallowed_elsewhere",
+        "line": 31,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestDeprecatedEnvUsage"
+      },
+      {
+        "name": "TestBlockingCallsInAsync::test_blocking_calls_inside_async_flagged",
+        "line": 48,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestBlockingCallsInAsync"
+      },
+      {
+        "name": "TestBlockingCallsInAsync::test_blocking_calls_inside_sync_allowed",
+        "line": 63,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestBlockingCallsInAsync"
+      },
+      {
+        "name": "TestDuplicateDeployEntrypoints::test_duplicate_entrypoints_flagged",
+        "line": 81,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestDuplicateDeployEntrypoints"
       }
     ],
     "tests/unit/scripts/test_check_legacy_test_triage.py": [

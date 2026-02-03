@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6137,
-    "total_files": 733,
+    "total_tests": 6139,
+    "total_files": 734,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 5972,
+    "unit": 5974,
     "asyncio": 347,
     "parametrize": 155,
     "property": 82,
@@ -203,6 +203,7 @@
       "tests/unit/gpt_trader/cli/commands/optimize/test_formatters.py",
       "tests/unit/gpt_trader/cli/test_cli_unit.py",
       "tests/unit/gpt_trader/cli/test_commands_account_treasury.py",
+      "tests/unit/gpt_trader/cli/test_commands_coinbase.py",
       "tests/unit/gpt_trader/cli/test_commands_orders.py",
       "tests/unit/gpt_trader/cli/test_commands_orders_editing.py",
       "tests/unit/gpt_trader/cli/test_commands_preflight.py",
@@ -8519,6 +8520,24 @@
       {
         "name": "test_treasury_errors_when_manager_missing",
         "line": 170,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/cli/test_commands_coinbase.py": [
+      {
+        "name": "test_coinbase_connectivity_success",
+        "line": 8,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_coinbase_connectivity_failure",
+        "line": 31,
         "markers": [
           "unit"
         ],

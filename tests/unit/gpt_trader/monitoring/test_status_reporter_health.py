@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import tempfile
-import time
 from decimal import Decimal
 from pathlib import Path
 from unittest.mock import MagicMock
@@ -52,7 +51,11 @@ def test_update_positions_coerces_invalid_and_skips_non_dict() -> None:
 def test_update_orders_invalid_fields_use_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
     import gpt_trader.monitoring.status_reporter as status_reporter
 
-    monkeypatch.setattr(status_reporter.time, "time", lambda: 123.45)
+    class _TestClock:
+        def time(self) -> float:
+            return 123.45
+
+    monkeypatch.setattr(status_reporter, "get_clock", lambda: _TestClock())
     reporter = StatusReporter()
 
     reporter.update_orders(

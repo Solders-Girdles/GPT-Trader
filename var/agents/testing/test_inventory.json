@@ -56128,7 +56128,7 @@
       },
       {
         "name": "TestDeprecatedEnvUsage::test_env_var_disallowed_elsewhere",
-        "line": 31,
+        "line": 32,
         "markers": [
           "unit"
         ],
@@ -56137,7 +56137,7 @@
       },
       {
         "name": "TestBlockingCallsInAsync::test_blocking_calls_inside_async_flagged",
-        "line": 48,
+        "line": 49,
         "markers": [
           "unit"
         ],
@@ -56146,7 +56146,7 @@
       },
       {
         "name": "TestBlockingCallsInAsync::test_blocking_calls_inside_sync_allowed",
-        "line": 69,
+        "line": 70,
         "markers": [
           "unit"
         ],
@@ -56155,7 +56155,7 @@
       },
       {
         "name": "TestDuplicateDeployEntrypoints::test_duplicate_entrypoints_flagged",
-        "line": 87,
+        "line": 88,
         "markers": [
           "unit"
         ],

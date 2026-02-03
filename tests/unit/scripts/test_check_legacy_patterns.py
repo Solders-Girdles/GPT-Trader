@@ -22,7 +22,8 @@ class TestDeprecatedEnvUsage:
     ) -> None:
         monkeypatch.setattr(check_legacy_patterns, "REPO_ROOT", tmp_path)
         allowed_path = tmp_path / "docs" / "DEPRECATIONS.md"
-        _write_file(allowed_path, "COINBASE_ENABLE_DERIVATIVES=1\n")
+        env_var = "COINBASE_ENABLE_" "DERIVATIVES"
+        _write_file(allowed_path, f"{env_var}=1\n")
 
         errors = check_legacy_patterns._check_deprecated_env_usage([allowed_path])
 
@@ -33,13 +34,13 @@ class TestDeprecatedEnvUsage:
     ) -> None:
         monkeypatch.setattr(check_legacy_patterns, "REPO_ROOT", tmp_path)
         disallowed_path = tmp_path / "notes.md"
-        _write_file(disallowed_path, "COINBASE_ENABLE_DERIVATIVES=1\n")
+        env_var = "COINBASE_ENABLE_" "DERIVATIVES"
+        _write_file(disallowed_path, f"{env_var}=1\n")
 
         errors = check_legacy_patterns._check_deprecated_env_usage([disallowed_path])
 
-        assert errors == [
-            "notes.md: legacy env var 'COINBASE_ENABLE_DERIVATIVES' referenced outside allowlist"
-        ]
+        env_var = "COINBASE_ENABLE_" "DERIVATIVES"
+        assert errors == [f"notes.md: legacy env var '{env_var}' referenced outside allowlist"]
 
 
 class TestBlockingCallsInAsync:

@@ -34803,7 +34803,7 @@
     "tests/unit/gpt_trader/monitoring/test_status_reporter_file_output.py": [
       {
         "name": "test_writes_valid_json",
-        "line": 31,
+        "line": 38,
         "markers": [
           "asyncio",
           "unit"
@@ -34812,7 +34812,7 @@
       },
       {
         "name": "test_handles_decimal_serialization",
-        "line": 59,
+        "line": 66,
         "markers": [
           "asyncio",
           "unit"
@@ -34821,7 +34821,7 @@
       },
       {
         "name": "test_atomic_write_overwrites_cleanly",
-        "line": 75,
+        "line": 82,
         "markers": [
           "asyncio",
           "unit"
@@ -34830,7 +34830,7 @@
       },
       {
         "name": "test_write_status_creates_directories_and_writes_json",
-        "line": 94,
+        "line": 101,
         "markers": [
           "asyncio",
           "unit"
@@ -34839,7 +34839,7 @@
       },
       {
         "name": "test_decimal_encoder_handles_nested_decimals",
-        "line": 106,
+        "line": 113,
         "markers": [
           "unit"
         ],
@@ -34847,7 +34847,7 @@
       },
       {
         "name": "test_write_status_handles_write_errors",
-        "line": 126,
+        "line": 133,
         "markers": [
           "asyncio",
           "unit"
@@ -34856,7 +34856,7 @@
       },
       {
         "name": "test_serialize_status_includes_expected_keys",
-        "line": 141,
+        "line": 148,
         "markers": [
           "unit"
         ],
@@ -34864,16 +34864,6 @@
       },
       {
         "name": "TestStatusReporterStart::test_start_when_disabled",
-        "line": 167,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestStatusReporterStart"
-      },
-      {
-        "name": "TestStatusReporterStart::test_start_creates_task",
         "line": 174,
         "markers": [
           "asyncio",
@@ -34883,8 +34873,18 @@
         "class": "TestStatusReporterStart"
       },
       {
+        "name": "TestStatusReporterStart::test_start_creates_task",
+        "line": 181,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestStatusReporterStart"
+      },
+      {
         "name": "TestStatusReporterStart::test_start_writes_initial_status",
-        "line": 191,
+        "line": 198,
         "markers": [
           "asyncio",
           "unit"
@@ -34894,7 +34894,7 @@
       },
       {
         "name": "TestStatusReporterStart::test_start_creates_directory",
-        "line": 209,
+        "line": 216,
         "markers": [
           "asyncio",
           "unit"
@@ -34904,7 +34904,7 @@
       },
       {
         "name": "TestStatusReporterStop::test_stop_cancels_task",
-        "line": 227,
+        "line": 234,
         "markers": [
           "asyncio",
           "unit"
@@ -34916,7 +34916,7 @@
     "tests/unit/gpt_trader/monitoring/test_status_reporter_health.py": [
       {
         "name": "test_update_positions_coerces_invalid_and_skips_non_dict",
-        "line": 25,
+        "line": 24,
         "markers": [
           "unit"
         ],
@@ -34924,7 +34924,7 @@
       },
       {
         "name": "test_update_orders_invalid_fields_use_defaults",
-        "line": 52,
+        "line": 51,
         "markers": [
           "unit"
         ],
@@ -34932,7 +34932,7 @@
       },
       {
         "name": "test_update_account_skips_zero_or_invalid_balances",
-        "line": 86,
+        "line": 89,
         "markers": [
           "unit"
         ],
@@ -34940,7 +34940,7 @@
       },
       {
         "name": "test_update_strategy_generates_decision_id_and_handles_invalid_timestamp",
-        "line": 106,
+        "line": 109,
         "markers": [
           "unit"
         ],
@@ -34948,7 +34948,7 @@
       },
       {
         "name": "test_update_equity_swallows_record_gauge_exceptions",
-        "line": 129,
+        "line": 132,
         "markers": [
           "unit"
         ],
@@ -34956,7 +34956,7 @@
       },
       {
         "name": "test_add_trade_caps_recent_trades",
-        "line": 142,
+        "line": 145,
         "markers": [
           "unit"
         ],
@@ -34964,7 +34964,7 @@
       },
       {
         "name": "test_update_strategy_caps_decisions",
-        "line": 167,
+        "line": 170,
         "markers": [
           "unit"
         ],
@@ -34972,7 +34972,7 @@
       },
       {
         "name": "test_update_account_accepts_object_balances_and_coerces_invalid",
-        "line": 179,
+        "line": 182,
         "markers": [
           "unit"
         ],
@@ -34980,7 +34980,7 @@
       },
       {
         "name": "TestStatusReporterHealth::test_healthy_status",
-        "line": 202,
+        "line": 205,
         "markers": [
           "asyncio",
           "unit"
@@ -34990,7 +34990,7 @@
       },
       {
         "name": "TestStatusReporterHealth::test_unhealthy_recent_error",
-        "line": 217,
+        "line": 220,
         "markers": [
           "unit"
         ],
@@ -34999,7 +34999,7 @@
       },
       {
         "name": "TestStatusReporterHealth::test_unhealthy_stale_prices",
-        "line": 229,
+        "line": 232,
         "markers": [
           "unit"
         ],

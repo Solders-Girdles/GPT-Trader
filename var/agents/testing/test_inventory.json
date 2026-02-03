@@ -13539,7 +13539,7 @@
       },
       {
         "name": "test_429_triggers_retry_with_backoff",
-        "line": 69,
+        "line": 67,
         "markers": [
           "unit"
         ],
@@ -13547,7 +13547,7 @@
       },
       {
         "name": "test_429_exhausts_retries",
-        "line": 86,
+        "line": 84,
         "markers": [
           "unit"
         ],
@@ -13555,7 +13555,7 @@
       },
       {
         "name": "test_503_triggers_retry",
-        "line": 98,
+        "line": 96,
         "markers": [
           "unit"
         ],
@@ -13563,7 +13563,7 @@
       },
       {
         "name": "test_network_errors_retry",
-        "line": 115,
+        "line": 113,
         "markers": [
           "unit"
         ],
@@ -13571,7 +13571,7 @@
       },
       {
         "name": "test_jitter_applied_to_retry_delay",
-        "line": 132,
+        "line": 130,
         "markers": [
           "unit"
         ],
@@ -13579,7 +13579,7 @@
       },
       {
         "name": "test_408_timeout_does_not_retry",
-        "line": 154,
+        "line": 152,
         "markers": [
           "unit"
         ],

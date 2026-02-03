@@ -82,13 +82,7 @@ class TestDuplicateDeployEntrypoints:
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         monkeypatch.setattr(check_legacy_patterns, "REPO_ROOT", tmp_path)
-        allowed_compose = (
-            tmp_path
-            / "deploy"
-            / "gpt_trader"
-            / "docker"
-            / "docker-compose.yaml"
-        )
+        allowed_compose = tmp_path / "deploy" / "gpt_trader" / "docker" / "docker-compose.yaml"
         disallowed_compose = tmp_path / "deploy" / "docker-compose.yaml"
         legacy_kubernetes = tmp_path / "deploy" / "legacy" / "kubernetes" / "job.yaml"
 
@@ -100,14 +94,9 @@ class TestDuplicateDeployEntrypoints:
             [allowed_compose, disallowed_compose, legacy_kubernetes]
         )
 
-        assert (
-            "deploy/docker-compose.yaml: unexpected docker-compose file" in errors
-        )
+        assert "deploy/docker-compose.yaml: unexpected docker-compose file" in errors
         assert (
             "deploy/legacy/kubernetes/job.yaml: legacy kubernetes deployment directory detected"
             in errors
         )
-        assert all(
-            "deploy/gpt_trader/docker/docker-compose.yaml" not in error
-            for error in errors
-        )
+        assert all("deploy/gpt_trader/docker/docker-compose.yaml" not in error for error in errors)

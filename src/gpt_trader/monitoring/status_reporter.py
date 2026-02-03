@@ -12,7 +12,6 @@ import json
 import os
 import random
 import tempfile
-import time
 from collections import deque
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
@@ -24,6 +23,7 @@ from typing import TYPE_CHECKING, Any
 from gpt_trader.monitoring.metrics_collector import record_gauge
 from gpt_trader.utilities.datetime_helpers import normalize_to_utc, parse_iso_to_epoch
 from gpt_trader.utilities.logging_patterns import get_logger
+from gpt_trader.utilities.time_provider import get_clock
 
 if TYPE_CHECKING:
     from gpt_trader.monitoring.heartbeat import HeartbeatService
@@ -33,6 +33,10 @@ logger = get_logger(__name__, component="status_reporter")
 
 def _format_timestamp_iso(timestamp: float) -> str:
     return datetime.fromtimestamp(timestamp, UTC).isoformat().replace("+00:00", "Z")
+
+
+def _clock_time() -> float:
+    return get_clock().time()
 
 
 @dataclass
@@ -215,7 +219,7 @@ class BotStatus:
     """Complete status snapshot of the trading bot."""
 
     bot_id: str = ""
-    timestamp: float = field(default_factory=time.time)
+    timestamp: float = field(default_factory=_clock_time)
     timestamp_iso: str = ""
     version: str = "1.0.0"
 
@@ -325,7 +329,7 @@ class StatusReporter:
             return self._task
 
         self._running = True
-        self._start_time = time.time()
+        self._start_time = _clock_time()
         self._last_file_write = 0.0  # Force initial write
         self._status = BotStatus(bot_id=self.bot_id, observer_interval=self.observer_interval)
 
@@ -335,7 +339,7 @@ class StatusReporter:
 
         # Write initial status
         await self._write_status()
-        self._last_file_write = time.time()
+        self._last_file_write = _clock_time()
 
         self._task = asyncio.create_task(self._report_loop())
         logger.info(
@@ -388,7 +392,7 @@ class StatusReporter:
                 self._update_status()
 
                 # Check if it's time to write to disk
-                now = time.time()
+                now = _clock_time()
                 time_since_last_write = now - self._last_file_write
                 should_write_file = time_since_last_write >= self.file_write_interval
 
@@ -452,7 +456,7 @@ class StatusReporter:
 
     def _update_status(self) -> None:
         """Update the status object with current values."""
-        now = time.time()
+        now = _clock_time()
         self._status.timestamp = now
         self._status.timestamp_iso = _format_timestamp_iso(now)
         self._status.bot_id = self.bot_id
@@ -514,13 +518,13 @@ class StatusReporter:
 
         # Check for recent errors
         if self._errors_count > 0 and self._last_error_time:
-            time_since_error = time.time() - self._last_error_time
+            time_since_error = _clock_time() - self._last_error_time
             if time_since_error < 300:  # Error in last 5 minutes
                 issues.append(f"Recent error: {self._last_error}")
 
         # Check price staleness
         if self._last_price_update:
-            time_since_price = time.time() - self._last_price_update
+            time_since_price = _clock_time() - self._last_price_update
             if time_since_price > 120:  # No price update in 2 minutes
                 issues.append(f"Stale prices ({int(time_since_price)}s old)")
 
@@ -572,18 +576,18 @@ class StatusReporter:
     def record_cycle(self) -> None:
         """Record a completed trading cycle."""
         self._cycle_count += 1
-        self._status.engine.last_cycle_time = time.time()
+        self._status.engine.last_cycle_time = _clock_time()
 
     def record_error(self, error: str) -> None:
         """Record an error occurrence."""
         self._errors_count += 1
         self._last_error = error
-        self._last_error_time = time.time()
+        self._last_error_time = _clock_time()
 
     def update_price(self, symbol: str, price: Decimal) -> None:
         """Update the last known price for a symbol and maintain price history."""
         self._last_prices[symbol] = price
-        self._last_price_update = time.time()
+        self._last_price_update = _clock_time()
 
         # Maintain price history (last 100 prices per symbol)
         if symbol not in self._price_history:
@@ -717,7 +721,7 @@ class StatusReporter:
             Epoch timestamp as float, or current time if parsing fails.
         """
         if value is None:
-            return time.time()
+            return _clock_time()
 
         # Already a numeric type
         if isinstance(value, (int, float)):
@@ -732,17 +736,18 @@ class StatusReporter:
             except (ValueError, TypeError):
                 pass
 
-        return time.time()
+        return _clock_time()
 
     def add_trade(self, trade: dict[str, Any]) -> None:
         """Add a recent trade."""
         # Generate unique trade_id
         trade_id = (
-            trade.get("trade_id") or f"trade_{int(time.time() * 1000)}_{random.randint(1000, 9999)}"
+            trade.get("trade_id")
+            or f"trade_{int(_clock_time() * 1000)}_{random.randint(1000, 9999)}"
         )
 
         # Convert timestamp to ISO string
-        timestamp = trade.get("timestamp", time.time())
+        timestamp = trade.get("timestamp", _clock_time())
         time_str = _format_timestamp_iso(timestamp)
 
         # Parse numeric fields to Decimal
@@ -973,7 +978,7 @@ class StatusReporter:
                 - gap_count: int
                 - reconnect_count: int
         """
-        now = time.time()
+        now = _clock_time()
 
         def _coerce_timestamp(value: Any) -> float | None:
             if value is None or isinstance(value, bool):

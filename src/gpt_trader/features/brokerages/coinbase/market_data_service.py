@@ -2,7 +2,8 @@ import threading
 from dataclasses import dataclass
 from datetime import datetime
 
-from gpt_trader.utilities.datetime_helpers import normalize_to_utc, utc_now
+from gpt_trader.utilities.datetime_helpers import normalize_to_utc
+from gpt_trader.utilities.time_provider import Clock, SystemClock
 
 
 @dataclass
@@ -21,10 +22,11 @@ class TickerCache:
     All operations are protected by an RLock for safe concurrent access.
     """
 
-    def __init__(self, ttl_seconds: int = 5):
+    def __init__(self, ttl_seconds: int = 5, *, clock: Clock | None = None):
         self.ttl = ttl_seconds
         self._lock = threading.RLock()
         self._cache: dict[str, Ticker] = {}
+        self._clock = clock or SystemClock()
 
     def update(self, ticker: Ticker) -> None:
         """Update ticker data (called by WebSocket thread)."""
@@ -44,7 +46,7 @@ class TickerCache:
             ticker = self._cache.get(symbol)
             if not ticker:
                 return True
-            return (utc_now() - ticker.ts).total_seconds() > self.ttl
+            return (self._clock.now() - ticker.ts).total_seconds() > self.ttl
 
 
 class CoinbaseTickerService:

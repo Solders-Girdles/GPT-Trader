@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 661,
-    "source_modules": 351,
+    "tests_scanned": 662,
+    "source_modules": 352,
     "unresolved_modules": 3
   },
   "source_to_tests": {
@@ -1927,6 +1927,10 @@
     "gpt_trader.utilities.telemetry": [
       "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming.py"
     ],
+    "gpt_trader.utilities.time_provider": [
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_ticker_cache.py",
+      "tests/unit/gpt_trader/utilities/test_clock.py"
+    ],
     "gpt_trader.validation": [
       "tests/unit/gpt_trader/security/security_validator/test_symbol_validation.py",
       "tests/unit/gpt_trader/validation/test_base_validator.py",
@@ -2767,7 +2771,8 @@
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_ticker_cache.py": [
       "gpt_trader.features.brokerages.coinbase.market_data_service",
-      "gpt_trader.utilities.datetime_helpers"
+      "gpt_trader.utilities.datetime_helpers",
+      "gpt_trader.utilities.time_provider"
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_retry_behaviour.py": [
       "gpt_trader.core",
@@ -4467,6 +4472,9 @@
     "tests/unit/gpt_trader/utilities/test_async_utils_wrappers.py": [
       "gpt_trader.utilities.async_tools"
     ],
+    "tests/unit/gpt_trader/utilities/test_clock.py": [
+      "gpt_trader.utilities.time_provider"
+    ],
     "tests/unit/gpt_trader/utilities/test_console_logging.py": [
       "gpt_trader.utilities.console_logging"
     ],
@@ -4909,6 +4917,7 @@
     "gpt_trader.utilities.performance.timing": "src/gpt_trader/utilities/performance/timing.py",
     "gpt_trader.utilities.quantization": "src/gpt_trader/utilities/quantization.py",
     "gpt_trader.utilities.telemetry": "src/gpt_trader/utilities/telemetry.py",
+    "gpt_trader.utilities.time_provider": "src/gpt_trader/utilities/time_provider.py",
     "gpt_trader.validation": "src/gpt_trader/validation/__init__.py",
     "gpt_trader.validation.base_validators": "src/gpt_trader/validation/base_validators.py",
     "gpt_trader.validation.calculation_validator": "src/gpt_trader/validation/calculation_validator.py",

@@ -56146,7 +56146,7 @@
       },
       {
         "name": "TestBlockingCallsInAsync::test_blocking_calls_inside_sync_allowed",
-        "line": 63,
+        "line": 69,
         "markers": [
           "unit"
         ],
@@ -56155,7 +56155,7 @@
       },
       {
         "name": "TestDuplicateDeployEntrypoints::test_duplicate_entrypoints_flagged",
-        "line": 81,
+        "line": 87,
         "markers": [
           "unit"
         ],

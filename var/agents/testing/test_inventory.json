@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6125,
-    "total_files": 731,
+    "total_tests": 6130,
+    "total_files": 732,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 5960,
+    "unit": 5965,
     "asyncio": 347,
-    "parametrize": 154,
+    "parametrize": 155,
     "property": 82,
     "integration": 79,
     "endpoints": 78,
@@ -687,6 +687,9 @@
     ],
     "test_check_import_boundaries.py": [
       "tests/unit/scripts/test_check_import_boundaries.py"
+    ],
+    "test_check_legacy_test_triage.py": [
+      "tests/unit/scripts/test_check_legacy_test_triage.py"
     ],
     "test_check_test_hygiene.py": [
       "tests/unit/scripts/test_check_test_hygiene.py"
@@ -56044,6 +56047,54 @@
           "unit"
         ],
         "docstring": ""
+      }
+    ],
+    "tests/unit/scripts/test_check_legacy_test_triage.py": [
+      {
+        "name": "TestLoadManifest::test_invalid_manifest_payload_raises",
+        "line": 41,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestLoadManifest"
+      },
+      {
+        "name": "TestValidateManifestEntries::test_bad_paths_are_flagged",
+        "line": 59,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestValidateManifestEntries"
+      },
+      {
+        "name": "TestValidateManifestEntries::test_invalid_action_status_and_missing_reason_flagged",
+        "line": 97,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestValidateManifestEntries"
+      },
+      {
+        "name": "TestValidateMarkerAlignment::test_missing_manifest_and_mismatched_marker_flagged",
+        "line": 127,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestValidateMarkerAlignment"
+      },
+      {
+        "name": "TestValidateMarkerAlignment::test_missing_required_marker_flagged_except_done_missing_file",
+        "line": 154,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestValidateMarkerAlignment"
       }
     ],
     "tests/unit/scripts/test_check_test_hygiene.py": [

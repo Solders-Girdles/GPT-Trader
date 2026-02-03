@@ -56,9 +56,7 @@ class TestLoadManifest:
 class TestValidateManifestEntries:
     """Coverage for validate_manifest_entries()."""
 
-    def test_bad_paths_are_flagged(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_bad_paths_are_flagged(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.chdir(tmp_path)
         _write_file(tmp_path / "tests" / "unit" / "test_prefix.py")
         _write_file(tmp_path / "docs" / "test_outside.py")
@@ -86,12 +84,10 @@ class TestValidateManifestEntries:
 
         assert any("remove leading './'" in problem for problem in problems)
         assert any(
-            "docs/test_outside.py: must live under tests/" in problem
-            for problem in problems
+            "docs/test_outside.py: must live under tests/" in problem for problem in problems
         )
         assert any(
-            "tests/unit/test_note.txt: must be a .py file" in problem
-            for problem in problems
+            "tests/unit/test_note.txt: must be a .py file" in problem for problem in problems
         )
 
     def test_invalid_action_status_and_missing_reason_flagged(
@@ -136,9 +132,7 @@ class TestValidateMarkerAlignment:
             "tests/unit/test_mismatch.py": {"action": "modernize"},
         }
 
-        problems = check_legacy_test_triage.validate_marker_alignment(
-            manifest, marked_files
-        )
+        problems = check_legacy_test_triage.validate_marker_alignment(manifest, marked_files)
 
         assert any(
             "tests/unit/test_missing_manifest.py: has legacy_delete marker but is missing"

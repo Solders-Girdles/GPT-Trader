@@ -566,7 +566,8 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_product_service_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_rest_service_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_ticker_cache.py"
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_ticker_cache.py",
+      "tests/unit/gpt_trader/monitoring/test_health_checks.py"
     ],
     "gpt_trader.features.brokerages.coinbase.models": [
       "tests/contract/test_coinbase_api_contract.py",
@@ -1928,6 +1929,7 @@
     ],
     "gpt_trader.utilities.time_provider": [
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_ticker_cache.py",
+      "tests/unit/gpt_trader/monitoring/test_health_checks.py",
       "tests/unit/gpt_trader/utilities/test_clock.py"
     ],
     "gpt_trader.validation": [
@@ -3764,7 +3766,9 @@
       "gpt_trader.monitoring.guards.manager"
     ],
     "tests/unit/gpt_trader/monitoring/test_health_checks.py": [
-      "gpt_trader.monitoring.health_checks"
+      "gpt_trader.features.brokerages.coinbase.market_data_service",
+      "gpt_trader.monitoring.health_checks",
+      "gpt_trader.utilities.time_provider"
     ],
     "tests/unit/gpt_trader/monitoring/test_health_checks_runner.py": [
       "gpt_trader.app.health_server",

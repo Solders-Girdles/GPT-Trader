@@ -19,8 +19,8 @@ from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
     from gpt_trader.app.health_server import HealthState
-    from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
     from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
+    from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
     from gpt_trader.features.live_trade.degradation import DegradationState
     from gpt_trader.utilities.async_tools.bounded_to_thread import BoundedToThread
 from gpt_trader.features.live_trade.risk.protocols import RiskManagerProtocol

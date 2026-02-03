@@ -31,6 +31,7 @@ def register(subparsers: Any) -> None:
 def _handle_connectivity(args: Namespace) -> CliResponse | int:
     output_format = getattr(args, "output_format", "text")
 
+    client = None
     try:
         client = _build_coinbase_client()
     except Exception as exc:  # noqa: BLE001

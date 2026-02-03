@@ -278,12 +278,12 @@ def check_ticker_freshness(market_data_service: MarketDataService) -> tuple[bool
     if ticker_cache is None:
         details.update(
             {
-                "stale_symbols": [],
-                "stale_count": 0,
                 "ticker_cache_unavailable": True,
+                "reason": "ticker_cache_unavailable",
             }
         )
-        return True, details
+        # No cache means we cannot evaluate staleness; treat as unhealthy so this check is actionable.
+        return False, details
 
     stale_symbols: list[str] = []
     fresh_symbols: list[str] = []

@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 663,
+    "tests_scanned": 662,
     "source_modules": 352,
     "unresolved_modules": 3
   },
@@ -1362,7 +1362,6 @@
       "tests/unit/gpt_trader/monitoring/test_status_reporter.py",
       "tests/unit/gpt_trader/monitoring/test_status_reporter_file_output.py",
       "tests/unit/gpt_trader/monitoring/test_status_reporter_health.py",
-      "tests/unit/gpt_trader/monitoring/test_status_reporter_time.py",
       "tests/unit/gpt_trader/tui/test_app_bootstrap_snapshot.py",
       "tests/unit/gpt_trader/tui/test_app_core.py",
       "tests/unit/gpt_trader/tui/test_state_resilience_and_performance.py",
@@ -1928,8 +1927,8 @@
       "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming.py"
     ],
     "gpt_trader.utilities.time_provider": [
-      "tests/unit/gpt_trader/monitoring/test_status_reporter_time.py",
-      "tests/unit/gpt_trader/utilities/test_time_provider.py"
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_ticker_cache.py",
+      "tests/unit/gpt_trader/utilities/test_clock.py"
     ],
     "gpt_trader.validation": [
       "tests/unit/gpt_trader/security/security_validator/test_symbol_validation.py",
@@ -2770,7 +2769,8 @@
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_ticker_cache.py": [
       "gpt_trader.features.brokerages.coinbase.market_data_service",
-      "gpt_trader.utilities.datetime_helpers"
+      "gpt_trader.utilities.datetime_helpers",
+      "gpt_trader.utilities.time_provider"
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_retry_behaviour.py": [
       "gpt_trader.core",
@@ -3830,10 +3830,6 @@
       "gpt_trader.monitoring.metrics_collector",
       "gpt_trader.monitoring.status_reporter"
     ],
-    "tests/unit/gpt_trader/monitoring/test_status_reporter_time.py": [
-      "gpt_trader.monitoring.status_reporter",
-      "gpt_trader.utilities.time_provider"
-    ],
     "tests/unit/gpt_trader/monitoring/two_person_rule/test_manager_edges.py": [
       "gpt_trader.monitoring.two_person_rule.manager",
       "gpt_trader.monitoring.two_person_rule.models"
@@ -4474,6 +4470,9 @@
     "tests/unit/gpt_trader/utilities/test_async_utils_wrappers.py": [
       "gpt_trader.utilities.async_tools"
     ],
+    "tests/unit/gpt_trader/utilities/test_clock.py": [
+      "gpt_trader.utilities.time_provider"
+    ],
     "tests/unit/gpt_trader/utilities/test_console_logging.py": [
       "gpt_trader.utilities.console_logging"
     ],
@@ -4503,9 +4502,6 @@
     ],
     "tests/unit/gpt_trader/utilities/test_quantization.py": [
       "gpt_trader.utilities.quantization"
-    ],
-    "tests/unit/gpt_trader/utilities/test_time_provider.py": [
-      "gpt_trader.utilities.time_provider"
     ],
     "tests/unit/gpt_trader/validation/test_base_validator.py": [
       "gpt_trader.errors",

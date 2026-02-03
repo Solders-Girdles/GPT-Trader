@@ -1,10 +1,33 @@
-"""Clock abstractions for deterministic time handling."""
+"""Time/clock abstractions for deterministic time handling.
+
+This module intentionally supports two related concepts:
+- Clock: simple wall-clock time with now() + time()
+- TimeProvider: richer interface used by runtime guards/status reporting
+
+Implementation notes
+- FakeClock is used heavily in tests. It supports both:
+  - FakeClock(<datetime>)  (clock-style)
+  - FakeClock(start_time=<float>) / set_datetime(...) (time-provider style)
+"""
 
 from __future__ import annotations
 
-import time as system_time
-from datetime import UTC, datetime
+import time as time_module
+from datetime import UTC, datetime, timedelta
 from typing import Protocol, runtime_checkable
+
+from gpt_trader.utilities.datetime_helpers import normalize_to_utc, utc_now
+
+
+@runtime_checkable
+class Clock(Protocol):
+    """Protocol for retrieving current time."""
+
+    def now(self) -> datetime:
+        """Return the current time (timezone-aware UTC)."""
+
+    def time(self) -> float:
+        """Return the current time as epoch seconds."""
 
 
 @runtime_checkable
@@ -24,22 +47,18 @@ class TimeProvider(Protocol):
 class SystemClock:
     """Clock backed by the system time sources."""
 
+    def now(self) -> datetime:
+        return utc_now()
+
     def now_utc(self) -> datetime:
-        return datetime.now(UTC)
+        # Alias used by TimeProvider consumers.
+        return utc_now()
 
     def time(self) -> float:
-        return system_time.time()
+        return time_module.time()
 
     def monotonic(self) -> float:
-        return system_time.monotonic()
-
-
-def _coerce_to_utc_timestamp(value: datetime) -> float:
-    if value.tzinfo is None:
-        value = value.replace(tzinfo=UTC)
-    elif value.tzinfo != UTC:
-        value = value.astimezone(UTC)
-    return value.timestamp()
+        return time_module.monotonic()
 
 
 class FakeClock:
@@ -47,42 +66,65 @@ class FakeClock:
 
     def __init__(
         self,
+        initial: datetime | None = None,
         *,
         start_time: float | None = None,
         start_datetime: datetime | None = None,
         start_monotonic: float | None = None,
     ) -> None:
+        if initial is not None and start_datetime is None:
+            start_datetime = initial
+
         if start_datetime is not None:
-            start_time = _coerce_to_utc_timestamp(start_datetime)
-        if start_time is None:
-            start_time = 0.0
+            now = normalize_to_utc(start_datetime)
+            ts = now.timestamp()
+        elif start_time is not None:
+            ts = float(start_time)
+            now = datetime.fromtimestamp(ts, UTC)
+        else:
+            now = normalize_to_utc(utc_now())
+            ts = now.timestamp()
+
         if start_monotonic is None:
-            start_monotonic = float(start_time)
-        self._time = float(start_time)
+            start_monotonic = float(ts)
+
+        self._now = now
         self._monotonic = float(start_monotonic)
 
-    def now_utc(self) -> datetime:
-        return datetime.fromtimestamp(self._time, UTC)
+    # Clock API
+    def now(self) -> datetime:
+        return self._now
 
     def time(self) -> float:
-        return self._time
+        return self._now.timestamp()
+
+    # TimeProvider API
+    def now_utc(self) -> datetime:
+        return self._now
 
     def monotonic(self) -> float:
         return self._monotonic
+
+    # Mutators
+    def set_time(self, current: datetime | float) -> None:
+        if isinstance(current, datetime):
+            self._now = normalize_to_utc(current)
+            self._monotonic = float(self._now.timestamp())
+            return
+
+        ts = float(current)
+        self._now = datetime.fromtimestamp(ts, UTC)
+        self._monotonic = float(ts)
+
+    def set_datetime(self, value: datetime) -> None:
+        self.set_time(value)
 
     def advance(self, seconds: float) -> None:
         if seconds < 0:
             raise ValueError("advance() requires a non-negative duration")
         delta = float(seconds)
-        self._time += delta
+        self._now = self._now + timedelta(seconds=delta)
         self._monotonic += delta
-
-    def set_time(self, timestamp: float) -> None:
-        self._time = float(timestamp)
-        self._monotonic = float(timestamp)
-
-    def set_datetime(self, value: datetime) -> None:
-        self.set_time(_coerce_to_utc_timestamp(value))
 
 
 _default_clock = SystemClock()
@@ -91,22 +133,26 @@ _clock: TimeProvider = _default_clock
 
 def get_clock() -> TimeProvider:
     """Return the current active clock implementation."""
+
     return _clock
 
 
 def set_clock(clock: TimeProvider) -> None:
     """Override the active clock (useful for deterministic tests)."""
+
     global _clock
     _clock = clock
 
 
 def reset_clock() -> None:
     """Reset the active clock to the system clock."""
+
     global _clock
     _clock = _default_clock
 
 
 __all__ = [
+    "Clock",
     "TimeProvider",
     "SystemClock",
     "FakeClock",

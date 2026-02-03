@@ -14,6 +14,7 @@ from gpt_trader.features.brokerages.coinbase.market_data_service import (
     TickerCache,
 )
 from gpt_trader.utilities.datetime_helpers import utc_now
+from gpt_trader.utilities.time_provider import FakeClock
 
 
 class TestTickerCache:
@@ -146,29 +147,23 @@ class TestTickerCache:
 class TestTickerServiceEdges:
     """Edge case tests for ticker service and cache."""
 
-    def test_ticker_cache_stale_boundary(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        cache = TickerCache(ttl_seconds=5)
+    def test_ticker_cache_stale_boundary(self) -> None:
         base_time = datetime(2024, 1, 1, 0, 0, 0, tzinfo=UTC)
+        clock = FakeClock(base_time)
+        cache = TickerCache(ttl_seconds=5, clock=clock)
         cache.update(Ticker(symbol="BTC-USD", bid=1.0, ask=2.0, last=1.5, ts=base_time))
 
-        monkeypatch.setattr(
-            market_data_service,
-            "utc_now",
-            lambda: base_time + timedelta(seconds=5),
-        )
+        clock.advance(5)
 
         assert cache.is_stale("BTC-USD") is False
 
-    def test_ticker_cache_stale_after_ttl(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        cache = TickerCache(ttl_seconds=5)
+    def test_ticker_cache_stale_after_ttl(self) -> None:
         base_time = datetime(2024, 1, 1, 0, 0, 0, tzinfo=UTC)
+        clock = FakeClock(base_time)
+        cache = TickerCache(ttl_seconds=5, clock=clock)
         cache.update(Ticker(symbol="BTC-USD", bid=1.0, ask=2.0, last=1.5, ts=base_time))
 
-        monkeypatch.setattr(
-            market_data_service,
-            "utc_now",
-            lambda: base_time + timedelta(seconds=6),
-        )
+        clock.advance(6)
 
         assert cache.is_stale("BTC-USD") is True
 

@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6130,
-    "total_files": 733,
+    "total_tests": 6127,
+    "total_files": 732,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 5965,
+    "unit": 5962,
     "asyncio": 347,
     "parametrize": 154,
     "property": 82,
@@ -581,7 +581,6 @@
       "tests/unit/gpt_trader/monitoring/test_status_reporter.py",
       "tests/unit/gpt_trader/monitoring/test_status_reporter_file_output.py",
       "tests/unit/gpt_trader/monitoring/test_status_reporter_health.py",
-      "tests/unit/gpt_trader/monitoring/test_status_reporter_time.py",
       "tests/unit/gpt_trader/monitoring/two_person_rule/test_manager_edges.py",
       "tests/unit/gpt_trader/monitoring/two_person_rule/test_models_edges.py"
     ],
@@ -855,6 +854,7 @@
       "tests/unit/gpt_trader/utilities/test_async_utils_rate_limit.py",
       "tests/unit/gpt_trader/utilities/test_async_utils_scenarios.py",
       "tests/unit/gpt_trader/utilities/test_async_utils_wrappers.py",
+      "tests/unit/gpt_trader/utilities/test_clock.py",
       "tests/unit/gpt_trader/utilities/test_console_logging.py",
       "tests/unit/gpt_trader/utilities/test_console_logging_functions.py",
       "tests/unit/gpt_trader/utilities/test_datetime_helpers.py",
@@ -864,8 +864,7 @@
       "tests/unit/gpt_trader/utilities/test_logging_patterns_domain.py",
       "tests/unit/gpt_trader/utilities/test_parsing.py",
       "tests/unit/gpt_trader/utilities/test_performance_monitor.py",
-      "tests/unit/gpt_trader/utilities/test_quantization.py",
-      "tests/unit/gpt_trader/utilities/test_time_provider.py"
+      "tests/unit/gpt_trader/utilities/test_quantization.py"
     ],
     "validation": [
       "tests/unit/gpt_trader/validation/test_base_validator.py",
@@ -15046,7 +15045,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_ticker_cache.py": [
       {
         "name": "TestTickerCache::test_cache_init_default_ttl",
-        "line": 22,
+        "line": 23,
         "markers": [
           "unit"
         ],
@@ -15055,7 +15054,7 @@
       },
       {
         "name": "TestTickerCache::test_cache_init_custom_ttl",
-        "line": 27,
+        "line": 28,
         "markers": [
           "unit"
         ],
@@ -15064,7 +15063,7 @@
       },
       {
         "name": "TestTickerCache::test_cache_update_and_get",
-        "line": 32,
+        "line": 33,
         "markers": [
           "unit"
         ],
@@ -15073,7 +15072,7 @@
       },
       {
         "name": "TestTickerCache::test_cache_get_nonexistent",
-        "line": 48,
+        "line": 49,
         "markers": [
           "unit"
         ],
@@ -15082,7 +15081,7 @@
       },
       {
         "name": "TestTickerCache::test_cache_update_overwrites",
-        "line": 56,
+        "line": 57,
         "markers": [
           "unit"
         ],
@@ -15091,7 +15090,7 @@
       },
       {
         "name": "TestTickerCache::test_cache_multiple_symbols",
-        "line": 72,
+        "line": 73,
         "markers": [
           "unit"
         ],
@@ -15100,7 +15099,7 @@
       },
       {
         "name": "TestTickerCache::test_is_stale_nonexistent_symbol",
-        "line": 86,
+        "line": 87,
         "markers": [
           "unit"
         ],
@@ -15109,7 +15108,7 @@
       },
       {
         "name": "TestTickerCache::test_is_stale_fresh_ticker",
-        "line": 92,
+        "line": 93,
         "markers": [
           "unit"
         ],
@@ -15118,7 +15117,7 @@
       },
       {
         "name": "TestTickerCache::test_is_stale_old_ticker",
-        "line": 106,
+        "line": 107,
         "markers": [
           "unit"
         ],
@@ -15127,7 +15126,7 @@
       },
       {
         "name": "TestTickerCache::test_cache_with_zero_ttl",
-        "line": 121,
+        "line": 122,
         "markers": [
           "unit"
         ],
@@ -15136,7 +15135,7 @@
       },
       {
         "name": "TestTickerCache::test_empty_symbol_string",
-        "line": 135,
+        "line": 136,
         "markers": [
           "unit"
         ],
@@ -15145,7 +15144,7 @@
       },
       {
         "name": "TestTickerServiceEdges::test_ticker_cache_stale_boundary",
-        "line": 149,
+        "line": 150,
         "markers": [
           "unit"
         ],
@@ -15154,7 +15153,7 @@
       },
       {
         "name": "TestTickerServiceEdges::test_ticker_cache_stale_after_ttl",
-        "line": 162,
+        "line": 160,
         "markers": [
           "unit"
         ],
@@ -15163,7 +15162,7 @@
       },
       {
         "name": "TestTickerServiceEdges::test_ticker_service_start_creates_thread",
-        "line": 175,
+        "line": 170,
         "markers": [
           "unit"
         ],
@@ -15172,7 +15171,7 @@
       },
       {
         "name": "TestTickerServiceEdges::test_ticker_service_stop_joins_thread",
-        "line": 192,
+        "line": 187,
         "markers": [
           "unit"
         ],
@@ -34547,7 +34546,7 @@
     "tests/unit/gpt_trader/monitoring/test_runtime_guards_base.py": [
       {
         "name": "test_runtime_guard_triggers_generic_breach",
-        "line": 34,
+        "line": 26,
         "markers": [
           "unit"
         ],
@@ -34555,7 +34554,7 @@
       },
       {
         "name": "test_runtime_guard_warning_before_breach",
-        "line": 47,
+        "line": 39,
         "markers": [
           "unit"
         ],
@@ -34563,7 +34562,7 @@
       },
       {
         "name": "test_runtime_guard_less_than_comparison",
-        "line": 63,
+        "line": 55,
         "markers": [
           "unit"
         ],
@@ -34571,7 +34570,7 @@
       },
       {
         "name": "test_runtime_guard_absolute_comparison",
-        "line": 75,
+        "line": 67,
         "markers": [
           "unit"
         ],
@@ -34579,7 +34578,7 @@
       },
       {
         "name": "test_runtime_guard_uses_time_provider_for_cooldown",
-        "line": 85,
+        "line": 77,
         "markers": [
           "unit"
         ],
@@ -34956,16 +34955,6 @@
         ],
         "docstring": "",
         "class": "TestStatusReporterHealth"
-      }
-    ],
-    "tests/unit/gpt_trader/monitoring/test_status_reporter_time.py": [
-      {
-        "name": "test_status_reporter_uses_fake_clock_for_timestamps",
-        "line": 21,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/monitoring/two_person_rule/test_manager_edges.py": [
@@ -52070,6 +52059,24 @@
         "class": "TestRunAsyncIfNeeded"
       }
     ],
+    "tests/unit/gpt_trader/utilities/test_clock.py": [
+      {
+        "name": "test_fake_clock_set_time_updates_now",
+        "line": 10,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_fake_clock_advance_updates_time",
+        "line": 22,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/utilities/test_console_logging.py": [
       {
         "name": "test_init_default",
@@ -53002,40 +53009,6 @@
         ],
         "docstring": "Test quantization with realistic trading prices.",
         "class": "TestQuantizeRealWorldScenarios"
-      }
-    ],
-    "tests/unit/gpt_trader/utilities/test_time_provider.py": [
-      {
-        "name": "test_system_clock_returns_utc_and_time_values",
-        "line": 24,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_fake_clock_advances_deterministically",
-        "line": 34,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_fake_clock_set_datetime_updates_time",
-        "line": 48,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_clock_helpers_switch_and_reset",
-        "line": 58,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/validation/test_base_validator.py": [

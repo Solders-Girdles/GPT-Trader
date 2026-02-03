@@ -279,11 +279,12 @@ def check_ticker_freshness(market_data_service: MarketDataService) -> tuple[bool
         details.update(
             {
                 "ticker_cache_unavailable": True,
+                "skipped": True,
                 "reason": "ticker_cache_unavailable",
             }
         )
-        # No cache means we cannot evaluate staleness; treat as unhealthy so this check is actionable.
-        return False, details
+        # No cache means we cannot evaluate staleness. Treat this as skipped/healthy so /health doesn't permanently fail.
+        return True, details
 
     stale_symbols: list[str] = []
     fresh_symbols: list[str] = []

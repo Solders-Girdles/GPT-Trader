@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6127,
-    "total_files": 732,
+    "total_tests": 6132,
+    "total_files": 734,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 5962,
+    "unit": 5967,
     "asyncio": 347,
     "parametrize": 154,
     "property": 82,
@@ -581,6 +581,7 @@
       "tests/unit/gpt_trader/monitoring/test_status_reporter.py",
       "tests/unit/gpt_trader/monitoring/test_status_reporter_file_output.py",
       "tests/unit/gpt_trader/monitoring/test_status_reporter_health.py",
+      "tests/unit/gpt_trader/monitoring/test_status_reporter_time.py",
       "tests/unit/gpt_trader/monitoring/two_person_rule/test_manager_edges.py",
       "tests/unit/gpt_trader/monitoring/two_person_rule/test_models_edges.py"
     ],
@@ -864,7 +865,8 @@
       "tests/unit/gpt_trader/utilities/test_logging_patterns_domain.py",
       "tests/unit/gpt_trader/utilities/test_parsing.py",
       "tests/unit/gpt_trader/utilities/test_performance_monitor.py",
-      "tests/unit/gpt_trader/utilities/test_quantization.py"
+      "tests/unit/gpt_trader/utilities/test_quantization.py",
+      "tests/unit/gpt_trader/utilities/test_time_provider.py"
     ],
     "validation": [
       "tests/unit/gpt_trader/validation/test_base_validator.py",
@@ -34546,7 +34548,7 @@
     "tests/unit/gpt_trader/monitoring/test_runtime_guards_base.py": [
       {
         "name": "test_runtime_guard_triggers_generic_breach",
-        "line": 26,
+        "line": 34,
         "markers": [
           "unit"
         ],
@@ -34554,7 +34556,7 @@
       },
       {
         "name": "test_runtime_guard_warning_before_breach",
-        "line": 39,
+        "line": 47,
         "markers": [
           "unit"
         ],
@@ -34562,7 +34564,7 @@
       },
       {
         "name": "test_runtime_guard_less_than_comparison",
-        "line": 55,
+        "line": 63,
         "markers": [
           "unit"
         ],
@@ -34570,7 +34572,7 @@
       },
       {
         "name": "test_runtime_guard_absolute_comparison",
-        "line": 67,
+        "line": 75,
         "markers": [
           "unit"
         ],
@@ -34578,7 +34580,7 @@
       },
       {
         "name": "test_runtime_guard_uses_time_provider_for_cooldown",
-        "line": 77,
+        "line": 85,
         "markers": [
           "unit"
         ],
@@ -34955,6 +34957,16 @@
         ],
         "docstring": "",
         "class": "TestStatusReporterHealth"
+      }
+    ],
+    "tests/unit/gpt_trader/monitoring/test_status_reporter_time.py": [
+      {
+        "name": "test_status_reporter_uses_fake_clock_for_timestamps",
+        "line": 21,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/monitoring/two_person_rule/test_manager_edges.py": [
@@ -53009,6 +53021,40 @@
         ],
         "docstring": "Test quantization with realistic trading prices.",
         "class": "TestQuantizeRealWorldScenarios"
+      }
+    ],
+    "tests/unit/gpt_trader/utilities/test_time_provider.py": [
+      {
+        "name": "test_system_clock_returns_utc_and_time_values",
+        "line": 24,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_fake_clock_advances_deterministically",
+        "line": 34,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_fake_clock_set_datetime_updates_time",
+        "line": 48,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_clock_helpers_switch_and_reset",
+        "line": 58,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/validation/test_base_validator.py": [

@@ -10,7 +10,7 @@ from typing import Any, cast
 
 from gpt_trader.monitoring.alert_types import AlertSeverity
 from gpt_trader.utilities.logging_patterns import get_logger
-from gpt_trader.utilities.time_provider import SystemTimeProvider, TimeProvider
+from gpt_trader.utilities.time_provider import SystemClock, TimeProvider
 from gpt_trader.validation import DecimalRule, RuleError
 
 logger = get_logger(__name__, component="monitoring_guards_base")
@@ -65,7 +65,7 @@ class RuntimeGuard:
 
     def __init__(self, config: GuardConfig, *, time_provider: TimeProvider | None = None) -> None:
         self.config = config
-        self._time_provider = time_provider or SystemTimeProvider()
+        self._time_provider = time_provider or SystemClock()
         self.status: GuardStatus = GuardStatus.HEALTHY if config.enabled else GuardStatus.DISABLED
         self.last_check: datetime = self._now()
         self.last_alert: datetime | None = None
@@ -116,7 +116,7 @@ class RuntimeGuard:
             return None
 
     def _now(self) -> datetime:
-        return self._time_provider.now()
+        return self._time_provider.now_utc()
 
     def _evaluate(self, context: dict[str, Any]) -> tuple[bool, str]:
         """Default evaluation logic based on threshold comparisons."""

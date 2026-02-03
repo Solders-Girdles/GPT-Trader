@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 from gpt_trader.monitoring.alert_types import AlertSeverity
 from gpt_trader.monitoring.guards import (
@@ -15,12 +15,20 @@ from gpt_trader.monitoring.guards import (
 class ManualTimeProvider:
     def __init__(self, start: datetime) -> None:
         self._current = start
+        self._monotonic = start.timestamp()
 
-    def now(self) -> datetime:
+    def now_utc(self) -> datetime:
         return self._current
+
+    def time(self) -> float:
+        return self._current.timestamp()
+
+    def monotonic(self) -> float:
+        return self._monotonic
 
     def advance(self, delta: timedelta) -> None:
         self._current = self._current + delta
+        self._monotonic += delta.total_seconds()
 
 
 def test_runtime_guard_triggers_generic_breach():
@@ -75,7 +83,7 @@ def test_runtime_guard_absolute_comparison():
 
 
 def test_runtime_guard_uses_time_provider_for_cooldown():
-    provider = ManualTimeProvider(datetime(2024, 1, 1, 12, 0, 0))
+    provider = ManualTimeProvider(datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC))
     guard = RuntimeGuard(
         GuardConfig(
             name="latency",
@@ -88,8 +96,8 @@ def test_runtime_guard_uses_time_provider_for_cooldown():
 
     first_alert = guard.check({"value": 150, "units": "ms"})
     assert first_alert is not None
-    assert first_alert.timestamp == provider.now()
-    assert guard.last_alert == provider.now()
+    assert first_alert.timestamp == provider.now_utc()
+    assert guard.last_alert == provider.now_utc()
 
     provider.advance(timedelta(seconds=30))
     assert guard.check({"value": 150, "units": "ms"}) is None
@@ -97,4 +105,4 @@ def test_runtime_guard_uses_time_provider_for_cooldown():
     provider.advance(timedelta(seconds=31))
     second_alert = guard.check({"value": 150, "units": "ms"})
     assert second_alert is not None
-    assert second_alert.timestamp == provider.now()
+    assert second_alert.timestamp == provider.now_utc()

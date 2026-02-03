@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 
 from gpt_trader.monitoring.alert_types import AlertSeverity
@@ -51,7 +51,7 @@ class TestStaleMarkGuardEdgeCases:
 
     def test_non_string_symbol_returns_no_alert(self) -> None:
         guard = StaleMarkGuard(_config("stale_mark", threshold=30))
-        result = guard.check({"symbol": 123, "mark_timestamp": datetime.now()})
+        result = guard.check({"symbol": 123, "mark_timestamp": datetime.now(UTC)})
         assert result is None
 
     def test_missing_mark_timestamp_returns_no_alert(self) -> None:
@@ -71,7 +71,7 @@ class TestStaleMarkGuardEdgeCases:
 
     def test_float_timestamp_converted(self) -> None:
         guard = StaleMarkGuard(_config("stale_mark", threshold=30))
-        recent_time = datetime.now().timestamp()
+        recent_time = datetime.now(UTC).timestamp()
         result = guard.check({"symbol": "BTC-PERP", "mark_timestamp": recent_time})
         assert result is None
         assert "BTC-PERP" in guard.last_marks

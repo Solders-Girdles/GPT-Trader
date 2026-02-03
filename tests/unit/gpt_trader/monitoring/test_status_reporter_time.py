@@ -23,9 +23,7 @@ def test_status_reporter_uses_fake_clock_for_timestamps(fake_clock: FakeClock) -
     reporter._start_time = fake_clock.time()
 
     status = reporter.get_status()
-    expected_iso = datetime.fromtimestamp(fake_clock.time(), UTC).isoformat().replace(
-        "+00:00", "Z"
-    )
+    expected_iso = datetime.fromtimestamp(fake_clock.time(), UTC).isoformat().replace("+00:00", "Z")
 
     assert status.timestamp == fake_clock.time()
     assert status.timestamp_iso == expected_iso

@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 661,
-    "source_modules": 351,
+    "tests_scanned": 663,
+    "source_modules": 352,
     "unresolved_modules": 3
   },
   "source_to_tests": {
@@ -1362,6 +1362,7 @@
       "tests/unit/gpt_trader/monitoring/test_status_reporter.py",
       "tests/unit/gpt_trader/monitoring/test_status_reporter_file_output.py",
       "tests/unit/gpt_trader/monitoring/test_status_reporter_health.py",
+      "tests/unit/gpt_trader/monitoring/test_status_reporter_time.py",
       "tests/unit/gpt_trader/tui/test_app_bootstrap_snapshot.py",
       "tests/unit/gpt_trader/tui/test_app_core.py",
       "tests/unit/gpt_trader/tui/test_state_resilience_and_performance.py",
@@ -1925,6 +1926,10 @@
     ],
     "gpt_trader.utilities.telemetry": [
       "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming.py"
+    ],
+    "gpt_trader.utilities.time_provider": [
+      "tests/unit/gpt_trader/monitoring/test_status_reporter_time.py",
+      "tests/unit/gpt_trader/utilities/test_time_provider.py"
     ],
     "gpt_trader.validation": [
       "tests/unit/gpt_trader/security/security_validator/test_symbol_validation.py",
@@ -3825,6 +3830,10 @@
       "gpt_trader.monitoring.metrics_collector",
       "gpt_trader.monitoring.status_reporter"
     ],
+    "tests/unit/gpt_trader/monitoring/test_status_reporter_time.py": [
+      "gpt_trader.monitoring.status_reporter",
+      "gpt_trader.utilities.time_provider"
+    ],
     "tests/unit/gpt_trader/monitoring/two_person_rule/test_manager_edges.py": [
       "gpt_trader.monitoring.two_person_rule.manager",
       "gpt_trader.monitoring.two_person_rule.models"
@@ -4495,6 +4504,9 @@
     "tests/unit/gpt_trader/utilities/test_quantization.py": [
       "gpt_trader.utilities.quantization"
     ],
+    "tests/unit/gpt_trader/utilities/test_time_provider.py": [
+      "gpt_trader.utilities.time_provider"
+    ],
     "tests/unit/gpt_trader/validation/test_base_validator.py": [
       "gpt_trader.errors",
       "gpt_trader.validation"
@@ -4907,6 +4919,7 @@
     "gpt_trader.utilities.performance.timing": "src/gpt_trader/utilities/performance/timing.py",
     "gpt_trader.utilities.quantization": "src/gpt_trader/utilities/quantization.py",
     "gpt_trader.utilities.telemetry": "src/gpt_trader/utilities/telemetry.py",
+    "gpt_trader.utilities.time_provider": "src/gpt_trader/utilities/time_provider.py",
     "gpt_trader.validation": "src/gpt_trader/validation/__init__.py",
     "gpt_trader.validation.base_validators": "src/gpt_trader/validation/base_validators.py",
     "gpt_trader.validation.calculation_validator": "src/gpt_trader/validation/calculation_validator.py",

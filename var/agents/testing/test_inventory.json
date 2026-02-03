@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6127,
+    "total_tests": 6128,
     "total_files": 732,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 5962,
+    "unit": 5963,
     "asyncio": 347,
     "parametrize": 154,
     "property": 82,
@@ -56175,8 +56175,17 @@
         "class": "TestSleepViolations"
       },
       {
-        "name": "TestSleepViolations::test_time_sleep_with_fake_clock_passes",
+        "name": "TestSleepViolations::test_time_sleep_inside_string_literal_not_flagged",
         "line": 213,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Sample code containing 'time.sleep(' in a string should not be flagged.",
+        "class": "TestSleepViolations"
+      },
+      {
+        "name": "TestSleepViolations::test_time_sleep_with_fake_clock_passes",
+        "line": 229,
         "markers": [
           "unit"
         ],
@@ -56185,7 +56194,7 @@
       },
       {
         "name": "TestPatchViolations::test_patch_call_flagged",
-        "line": 233,
+        "line": 249,
         "markers": [
           "unit"
         ],
@@ -56194,7 +56203,7 @@
       },
       {
         "name": "TestPatchViolations::test_patch_object_call_flagged",
-        "line": 247,
+        "line": 263,
         "markers": [
           "unit"
         ],
@@ -56203,7 +56212,7 @@
       },
       {
         "name": "TestHelperFunctions::test_is_patch_callable_detects_patch_name",
-        "line": 267,
+        "line": 283,
         "markers": [
           "unit"
         ],
@@ -56212,7 +56221,7 @@
       },
       {
         "name": "TestHelperFunctions::test_is_patch_callable_detects_patch_attribute",
-        "line": 274,
+        "line": 290,
         "markers": [
           "unit"
         ],
@@ -56221,7 +56230,7 @@
       },
       {
         "name": "TestHelperFunctions::test_is_patch_callable_detects_patch_object",
-        "line": 285,
+        "line": 301,
         "markers": [
           "unit"
         ],
@@ -56230,7 +56239,7 @@
       },
       {
         "name": "TestHelperFunctions::test_first_patch_call_line_returns_none_for_no_patch",
-        "line": 296,
+        "line": 312,
         "markers": [
           "unit"
         ],
@@ -56239,7 +56248,7 @@
       },
       {
         "name": "TestHelperFunctions::test_first_patch_call_line_returns_line_number",
-        "line": 301,
+        "line": 317,
         "markers": [
           "unit"
         ],
@@ -56248,7 +56257,7 @@
       },
       {
         "name": "TestHelperFunctions::test_first_patch_call_line_handles_syntax_error",
-        "line": 307,
+        "line": 323,
         "markers": [
           "unit"
         ],
@@ -56257,7 +56266,7 @@
       },
       {
         "name": "TestMainEntryPoint::test_main_returns_zero_for_valid_tests",
-        "line": 316,
+        "line": 332,
         "markers": [
           "unit"
         ],
@@ -56266,7 +56275,7 @@
       },
       {
         "name": "TestMainEntryPoint::test_main_returns_one_for_violations",
-        "line": 329,
+        "line": 345,
         "markers": [
           "unit"
         ],

@@ -13,6 +13,10 @@ from gpt_trader.core import (
     InvalidRequestError,
     RateLimitError,
 )
+from gpt_trader.features.brokerages.coinbase.errors import (
+    TransientBrokerError,
+    map_http_error,
+)
 from tests.unit.gpt_trader.features.brokerages.coinbase.helpers import make_client
 
 
@@ -52,6 +56,14 @@ def test_500_maps_to_brokerage_error():
     with pytest.raises(BrokerageError) as exc:
         client.list_orders()
     assert "Something went wrong" in str(exc.value)
+
+
+def test_503_maps_to_transient_broker_error() -> None:
+    error = map_http_error(
+        503, "service_unavailable", "Service temporarily unavailable"
+    )
+    assert isinstance(error, TransientBrokerError)
+    assert "unavailable" in str(error).lower()
 
 
 def test_429_triggers_retry_with_backoff(fake_clock):

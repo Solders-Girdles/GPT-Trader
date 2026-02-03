@@ -88,6 +88,8 @@ def map_http_error(status: int, code: str | None, message: str | None) -> Broker
         return NotFoundError(message or "not found")
     if status == 429:
         return RateLimitError(message or code or "rate limited")
+    if status == 503 or (code and code.lower() in {"service_unavailable", "temporarily_unavailable"}):
+        return TransientBrokerError(message or code or "service unavailable")
     if status == 403:
         return PermissionDeniedError(message or code or "permission denied")
     if "insufficient" in text:

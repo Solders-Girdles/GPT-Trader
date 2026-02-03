@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6102,
-    "total_files": 730,
+    "total_tests": 6125,
+    "total_files": 731,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 5937,
+    "unit": 5960,
     "asyncio": 347,
     "parametrize": 154,
     "property": 82,
@@ -687,6 +687,9 @@
     ],
     "test_check_import_boundaries.py": [
       "tests/unit/scripts/test_check_import_boundaries.py"
+    ],
+    "test_check_test_hygiene.py": [
+      "tests/unit/scripts/test_check_test_hygiene.py"
     ],
     "test_check_tui_css_up_to_date.py": [
       "tests/unit/scripts/test_check_tui_css_up_to_date.py"
@@ -56041,6 +56044,215 @@
           "unit"
         ],
         "docstring": ""
+      }
+    ],
+    "tests/unit/scripts/test_check_test_hygiene.py": [
+      {
+        "name": "TestValidCases::test_valid_unit_test_in_gpt_trader_passes",
+        "line": 27,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "A properly placed unit test should produce no problems.",
+        "class": "TestValidCases"
+      },
+      {
+        "name": "TestValidCases::test_valid_unit_test_in_scripts_passes",
+        "line": 40,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Unit test in scripts directory should pass.",
+        "class": "TestValidCases"
+      },
+      {
+        "name": "TestValidCases::test_valid_integration_test_with_marker_passes",
+        "line": 53,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Integration test with proper marker should pass.",
+        "class": "TestValidCases"
+      },
+      {
+        "name": "TestLayoutViolations::test_unit_test_outside_allowed_prefix_flagged",
+        "line": 73,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Unit test outside allowed prefixes should be flagged.",
+        "class": "TestLayoutViolations"
+      },
+      {
+        "name": "TestMarkerViolations::test_integration_test_missing_marker_flagged",
+        "line": 91,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Integration test without marker should be flagged.",
+        "class": "TestMarkerViolations"
+      },
+      {
+        "name": "TestMarkerViolations::test_contract_test_missing_marker_flagged",
+        "line": 104,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Contract test without marker should be flagged.",
+        "class": "TestMarkerViolations"
+      },
+      {
+        "name": "TestMarkerViolations::test_real_api_test_missing_marker_flagged",
+        "line": 117,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Real API test without marker should be flagged.",
+        "class": "TestMarkerViolations"
+      },
+      {
+        "name": "TestMarkerViolations::test_unit_test_with_integration_marker_flagged",
+        "line": 130,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Unit test with integration marker should be flagged for reclassification.",
+        "class": "TestMarkerViolations"
+      },
+      {
+        "name": "TestMarkerViolations::test_integration_test_with_real_api_marker_flagged",
+        "line": 146,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Integration test with real_api marker should be flagged to move.",
+        "class": "TestMarkerViolations"
+      },
+      {
+        "name": "TestSizeViolations::test_test_exceeding_threshold_flagged",
+        "line": 166,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test file over threshold should be flagged.",
+        "class": "TestSizeViolations"
+      },
+      {
+        "name": "TestSizeViolations::test_test_under_threshold_passes",
+        "line": 180,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test file under threshold should pass.",
+        "class": "TestSizeViolations"
+      },
+      {
+        "name": "TestSleepViolations::test_time_sleep_without_fake_clock_flagged",
+        "line": 197,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test using time.sleep without fake_clock should be flagged.",
+        "class": "TestSleepViolations"
+      },
+      {
+        "name": "TestSleepViolations::test_time_sleep_with_fake_clock_passes",
+        "line": 213,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test using time.sleep with fake_clock fixture should pass.",
+        "class": "TestSleepViolations"
+      },
+      {
+        "name": "TestPatchViolations::test_patch_call_flagged",
+        "line": 233,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test using patch() should be flagged.",
+        "class": "TestPatchViolations"
+      },
+      {
+        "name": "TestPatchViolations::test_patch_object_call_flagged",
+        "line": 247,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test using patch.object() should also be flagged.",
+        "class": "TestPatchViolations"
+      },
+      {
+        "name": "TestHelperFunctions::test_is_patch_callable_detects_patch_name",
+        "line": 267,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "_is_patch_callable should detect bare 'patch' name.",
+        "class": "TestHelperFunctions"
+      },
+      {
+        "name": "TestHelperFunctions::test_is_patch_callable_detects_patch_attribute",
+        "line": 274,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "_is_patch_callable should detect 'mock.patch' attribute.",
+        "class": "TestHelperFunctions"
+      },
+      {
+        "name": "TestHelperFunctions::test_is_patch_callable_detects_patch_object",
+        "line": 285,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "_is_patch_callable should detect 'patch.object' chain.",
+        "class": "TestHelperFunctions"
+      },
+      {
+        "name": "TestHelperFunctions::test_first_patch_call_line_returns_none_for_no_patch",
+        "line": 296,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "_first_patch_call_line should return None when no patch present.",
+        "class": "TestHelperFunctions"
+      },
+      {
+        "name": "TestHelperFunctions::test_first_patch_call_line_returns_line_number",
+        "line": 301,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "_first_patch_call_line should return line number of first patch call.",
+        "class": "TestHelperFunctions"
+      },
+      {
+        "name": "TestHelperFunctions::test_first_patch_call_line_handles_syntax_error",
+        "line": 307,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "_first_patch_call_line should return None on syntax error.",
+        "class": "TestHelperFunctions"
+      },
+      {
+        "name": "TestMainEntryPoint::test_main_returns_zero_for_valid_tests",
+        "line": 316,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "main() should return 0 when all tests pass hygiene checks.",
+        "class": "TestMainEntryPoint"
+      },
+      {
+        "name": "TestMainEntryPoint::test_main_returns_one_for_violations",
+        "line": 329,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "main() should return 1 when hygiene violations found.",
+        "class": "TestMainEntryPoint"
       }
     ],
     "tests/unit/scripts/test_check_tui_css_up_to_date.py": [

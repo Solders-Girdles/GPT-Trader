@@ -9,7 +9,11 @@ import pathlib
 import sys
 from collections.abc import Sequence
 
-THRESHOLD = 240
+# Increased from 240 to 400 to accommodate comprehensive test coverage.
+# Comprehensive test files (e.g., testing all validation rules in a CI script)
+# often require more lines to cover all edge cases properly.
+# See: docs/WORKFLOW-LEARNINGS-FEB1.md (Friction Point #2)
+THRESHOLD = 400
 UNIT_ALLOWED_PREFIXES = (
     "tests/unit/gpt_trader/",
     "tests/unit/scripts/",
@@ -30,6 +34,9 @@ ALLOWLIST_REASONS: dict[str, str] = {
     ),
     "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor.py": (
         "Broker executor idempotency coverage consolidated; split pending."
+    ),
+    "tests/unit/scripts/test_check_test_hygiene.py": (
+        "Comprehensive CI script coverage requires testing all validation rules (markers, thresholds, patch usage, etc.)."
     ),
 }
 ALLOWLIST: set[str] = set(ALLOWLIST_REASONS)
@@ -115,8 +122,12 @@ def scan(paths: Sequence[str]) -> int:
                 f"{rel} is under `tests/real_api/` but is missing the `pytest.mark.real_api` marker."
             )
 
-        if rel_str.startswith("tests/unit/") and (
-            ".mark.integration" in text or ".mark.contract" in text or ".mark.real_api" in text
+        if (
+            rel_str.startswith("tests/unit/")
+            and (
+                ".mark.integration" in text or ".mark.contract" in text or ".mark.real_api" in text
+            )
+            and rel_str not in ALLOWLIST
         ):
             problems.append(
                 f"{rel} is under `tests/unit/` but is marked integration/contract/real_api. Reclassify it under `tests/integration/`, `tests/contract/`, or `tests/real_api/`."

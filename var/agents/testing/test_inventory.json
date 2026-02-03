@@ -34916,7 +34916,7 @@
     "tests/unit/gpt_trader/monitoring/test_status_reporter_health.py": [
       {
         "name": "test_update_positions_coerces_invalid_and_skips_non_dict",
-        "line": 24,
+        "line": 25,
         "markers": [
           "unit"
         ],
@@ -34924,7 +34924,7 @@
       },
       {
         "name": "test_update_orders_invalid_fields_use_defaults",
-        "line": 51,
+        "line": 52,
         "markers": [
           "unit"
         ],
@@ -34932,7 +34932,7 @@
       },
       {
         "name": "test_update_account_skips_zero_or_invalid_balances",
-        "line": 89,
+        "line": 90,
         "markers": [
           "unit"
         ],
@@ -34940,7 +34940,7 @@
       },
       {
         "name": "test_update_strategy_generates_decision_id_and_handles_invalid_timestamp",
-        "line": 109,
+        "line": 110,
         "markers": [
           "unit"
         ],
@@ -34948,7 +34948,7 @@
       },
       {
         "name": "test_update_equity_swallows_record_gauge_exceptions",
-        "line": 132,
+        "line": 133,
         "markers": [
           "unit"
         ],
@@ -34956,7 +34956,7 @@
       },
       {
         "name": "test_add_trade_caps_recent_trades",
-        "line": 145,
+        "line": 146,
         "markers": [
           "unit"
         ],
@@ -34964,7 +34964,7 @@
       },
       {
         "name": "test_update_strategy_caps_decisions",
-        "line": 170,
+        "line": 171,
         "markers": [
           "unit"
         ],
@@ -34972,7 +34972,7 @@
       },
       {
         "name": "test_update_account_accepts_object_balances_and_coerces_invalid",
-        "line": 182,
+        "line": 183,
         "markers": [
           "unit"
         ],
@@ -34980,7 +34980,7 @@
       },
       {
         "name": "TestStatusReporterHealth::test_healthy_status",
-        "line": 205,
+        "line": 206,
         "markers": [
           "asyncio",
           "unit"
@@ -34990,7 +34990,7 @@
       },
       {
         "name": "TestStatusReporterHealth::test_unhealthy_recent_error",
-        "line": 220,
+        "line": 221,
         "markers": [
           "unit"
         ],
@@ -34999,7 +34999,7 @@
       },
       {
         "name": "TestStatusReporterHealth::test_unhealthy_stale_prices",
-        "line": 232,
+        "line": 233,
         "markers": [
           "unit"
         ],

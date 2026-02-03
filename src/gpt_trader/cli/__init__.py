@@ -25,6 +25,7 @@ logger = get_logger(__name__, component="cli")
 # fmt: off
 from gpt_trader.cli.commands import (  # noqa: E402
     account,
+    coinbase,
     optimize,
     orders,
     preflight,
@@ -38,7 +39,17 @@ from gpt_trader.cli.commands import (  # noqa: E402
 from . import services as _cli_services  # noqa: E402, F401
 from .response import CliErrorCode, CliResponse, format_response  # noqa: E402
 
-COMMAND_NAMES = {"run", "account", "orders", "treasury", "report", "optimize", "tui", "preflight"}
+COMMAND_NAMES = {
+    "run",
+    "account",
+    "coinbase",
+    "orders",
+    "treasury",
+    "report",
+    "optimize",
+    "tui",
+    "preflight",
+}
 __all__ = ["main"]
 
 
@@ -161,6 +172,7 @@ def _build_parser() -> argparse.ArgumentParser:
     tui.register(subparsers)
     run.register(subparsers)
     account.register(subparsers)
+    coinbase.register(subparsers)
     orders.register(subparsers)
     treasury.register(subparsers)
     report.register(subparsers)

@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6125,
-    "total_files": 731,
+    "total_tests": 6127,
+    "total_files": 732,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 5960,
+    "unit": 5962,
     "asyncio": 347,
     "parametrize": 154,
     "property": 82,
@@ -854,6 +854,7 @@
       "tests/unit/gpt_trader/utilities/test_async_utils_rate_limit.py",
       "tests/unit/gpt_trader/utilities/test_async_utils_scenarios.py",
       "tests/unit/gpt_trader/utilities/test_async_utils_wrappers.py",
+      "tests/unit/gpt_trader/utilities/test_clock.py",
       "tests/unit/gpt_trader/utilities/test_console_logging.py",
       "tests/unit/gpt_trader/utilities/test_console_logging_functions.py",
       "tests/unit/gpt_trader/utilities/test_datetime_helpers.py",
@@ -15044,7 +15045,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_ticker_cache.py": [
       {
         "name": "TestTickerCache::test_cache_init_default_ttl",
-        "line": 22,
+        "line": 23,
         "markers": [
           "unit"
         ],
@@ -15053,7 +15054,7 @@
       },
       {
         "name": "TestTickerCache::test_cache_init_custom_ttl",
-        "line": 27,
+        "line": 28,
         "markers": [
           "unit"
         ],
@@ -15062,7 +15063,7 @@
       },
       {
         "name": "TestTickerCache::test_cache_update_and_get",
-        "line": 32,
+        "line": 33,
         "markers": [
           "unit"
         ],
@@ -15071,7 +15072,7 @@
       },
       {
         "name": "TestTickerCache::test_cache_get_nonexistent",
-        "line": 48,
+        "line": 49,
         "markers": [
           "unit"
         ],
@@ -15080,7 +15081,7 @@
       },
       {
         "name": "TestTickerCache::test_cache_update_overwrites",
-        "line": 56,
+        "line": 57,
         "markers": [
           "unit"
         ],
@@ -15089,7 +15090,7 @@
       },
       {
         "name": "TestTickerCache::test_cache_multiple_symbols",
-        "line": 72,
+        "line": 73,
         "markers": [
           "unit"
         ],
@@ -15098,7 +15099,7 @@
       },
       {
         "name": "TestTickerCache::test_is_stale_nonexistent_symbol",
-        "line": 86,
+        "line": 87,
         "markers": [
           "unit"
         ],
@@ -15107,7 +15108,7 @@
       },
       {
         "name": "TestTickerCache::test_is_stale_fresh_ticker",
-        "line": 92,
+        "line": 93,
         "markers": [
           "unit"
         ],
@@ -15116,7 +15117,7 @@
       },
       {
         "name": "TestTickerCache::test_is_stale_old_ticker",
-        "line": 106,
+        "line": 107,
         "markers": [
           "unit"
         ],
@@ -15125,7 +15126,7 @@
       },
       {
         "name": "TestTickerCache::test_cache_with_zero_ttl",
-        "line": 121,
+        "line": 122,
         "markers": [
           "unit"
         ],
@@ -15134,7 +15135,7 @@
       },
       {
         "name": "TestTickerCache::test_empty_symbol_string",
-        "line": 135,
+        "line": 136,
         "markers": [
           "unit"
         ],
@@ -15143,7 +15144,7 @@
       },
       {
         "name": "TestTickerServiceEdges::test_ticker_cache_stale_boundary",
-        "line": 149,
+        "line": 150,
         "markers": [
           "unit"
         ],
@@ -15152,7 +15153,7 @@
       },
       {
         "name": "TestTickerServiceEdges::test_ticker_cache_stale_after_ttl",
-        "line": 162,
+        "line": 160,
         "markers": [
           "unit"
         ],
@@ -15161,7 +15162,7 @@
       },
       {
         "name": "TestTickerServiceEdges::test_ticker_service_start_creates_thread",
-        "line": 175,
+        "line": 170,
         "markers": [
           "unit"
         ],
@@ -15170,7 +15171,7 @@
       },
       {
         "name": "TestTickerServiceEdges::test_ticker_service_stop_joins_thread",
-        "line": 192,
+        "line": 187,
         "markers": [
           "unit"
         ],
@@ -52056,6 +52057,24 @@
         ],
         "docstring": "",
         "class": "TestRunAsyncIfNeeded"
+      }
+    ],
+    "tests/unit/gpt_trader/utilities/test_clock.py": [
+      {
+        "name": "test_fake_clock_set_time_updates_now",
+        "line": 10,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_fake_clock_advance_updates_time",
+        "line": 22,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/utilities/test_console_logging.py": [

@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6145,
+    "total_tests": 6143,
     "total_files": 735,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 5980,
+    "unit": 5978,
     "asyncio": 347,
     "parametrize": 155,
     "property": 82,
@@ -13513,7 +13513,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_errors.py": [
       {
         "name": "test_401_maps_to_auth_error",
-        "line": 19,
+        "line": 23,
         "markers": [
           "unit"
         ],
@@ -13521,7 +13521,7 @@
       },
       {
         "name": "test_400_maps_to_invalid_request_error",
-        "line": 31,
+        "line": 35,
         "markers": [
           "unit"
         ],
@@ -13529,7 +13529,15 @@
       },
       {
         "name": "test_500_maps_to_brokerage_error",
-        "line": 44,
+        "line": 48,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_503_maps_to_transient_broker_error",
+        "line": 61,
         "markers": [
           "unit"
         ],
@@ -13537,7 +13545,7 @@
       },
       {
         "name": "test_429_triggers_retry_with_backoff",
-        "line": 57,
+        "line": 67,
         "markers": [
           "unit"
         ],
@@ -13545,7 +13553,7 @@
       },
       {
         "name": "test_429_exhausts_retries",
-        "line": 74,
+        "line": 84,
         "markers": [
           "unit"
         ],
@@ -13553,7 +13561,7 @@
       },
       {
         "name": "test_503_triggers_retry",
-        "line": 86,
+        "line": 96,
         "markers": [
           "unit"
         ],
@@ -13561,7 +13569,7 @@
       },
       {
         "name": "test_network_errors_retry",
-        "line": 103,
+        "line": 113,
         "markers": [
           "unit"
         ],
@@ -13569,7 +13577,7 @@
       },
       {
         "name": "test_jitter_applied_to_retry_delay",
-        "line": 120,
+        "line": 130,
         "markers": [
           "unit"
         ],
@@ -13577,7 +13585,7 @@
       },
       {
         "name": "test_408_timeout_does_not_retry",
-        "line": 142,
+        "line": 152,
         "markers": [
           "unit"
         ],
@@ -33318,7 +33326,7 @@
     "tests/unit/gpt_trader/monitoring/test_health_checks.py": [
       {
         "name": "TestCheckBrokerPing::test_success_with_get_time",
-        "line": 23,
+        "line": 16,
         "markers": [
           "unit"
         ],
@@ -33327,7 +33335,7 @@
       },
       {
         "name": "TestCheckBrokerPing::test_success_fallback_to_list_balances",
-        "line": 34,
+        "line": 27,
         "markers": [
           "unit"
         ],
@@ -33336,7 +33344,7 @@
       },
       {
         "name": "TestCheckBrokerPing::test_failure_on_exception",
-        "line": 43,
+        "line": 36,
         "markers": [
           "unit"
         ],
@@ -33345,7 +33353,7 @@
       },
       {
         "name": "TestCheckBrokerPing::test_high_latency_warning",
-        "line": 53,
+        "line": 46,
         "markers": [
           "unit"
         ],
@@ -33354,7 +33362,7 @@
       },
       {
         "name": "TestCheckDegradationState::test_normal_operation",
-        "line": 69,
+        "line": 62,
         "markers": [
           "unit"
         ],
@@ -33363,7 +33371,7 @@
       },
       {
         "name": "TestCheckDegradationState::test_global_paused",
-        "line": 83,
+        "line": 76,
         "markers": [
           "unit"
         ],
@@ -33372,7 +33380,7 @@
       },
       {
         "name": "TestCheckDegradationState::test_reduce_only_mode",
-        "line": 97,
+        "line": 90,
         "markers": [
           "unit"
         ],
@@ -33381,39 +33389,12 @@
       },
       {
         "name": "TestCheckDegradationState::test_symbol_paused",
-        "line": 118,
+        "line": 111,
         "markers": [
           "unit"
         ],
         "docstring": "Test warning when specific symbols are paused.",
         "class": "TestCheckDegradationState"
-      },
-      {
-        "name": "TestCheckTickerFreshness::test_all_fresh",
-        "line": 143,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test healthy when all symbols are fresh.",
-        "class": "TestCheckTickerFreshness"
-      },
-      {
-        "name": "TestCheckTickerFreshness::test_some_stale",
-        "line": 166,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test unhealthy when some symbols are stale.",
-        "class": "TestCheckTickerFreshness"
-      },
-      {
-        "name": "TestCheckTickerFreshness::test_no_data_available",
-        "line": 197,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test unhealthy when no tickers are available.",
-        "class": "TestCheckTickerFreshness"
       }
     ],
     "tests/unit/gpt_trader/monitoring/test_health_checks_runner.py": [
@@ -33428,7 +33409,7 @@
       },
       {
         "name": "TestHealthCheckRunner::test_set_broker",
-        "line": 29,
+        "line": 28,
         "markers": [
           "unit"
         ],
@@ -33437,7 +33418,7 @@
       },
       {
         "name": "TestHealthCheckRunner::test_set_degradation_state",
-        "line": 38,
+        "line": 37,
         "markers": [
           "unit"
         ],
@@ -33446,7 +33427,7 @@
       },
       {
         "name": "TestHealthCheckRunner::test_run_checks_sync",
-        "line": 47,
+        "line": 46,
         "markers": [
           "unit"
         ],
@@ -33455,7 +33436,7 @@
       },
       {
         "name": "TestHealthCheckRunner::test_start_and_stop",
-        "line": 76,
+        "line": 75,
         "markers": [
           "asyncio",
           "unit"
@@ -33465,7 +33446,7 @@
       },
       {
         "name": "TestHealthCheckRunner::test_execute_checks_updates_health_state",
-        "line": 97,
+        "line": 96,
         "markers": [
           "asyncio",
           "unit"
@@ -33475,7 +33456,7 @@
       },
       {
         "name": "TestHealthCheckResult::test_creation",
-        "line": 122,
+        "line": 121,
         "markers": [
           "unit"
         ],
@@ -33484,7 +33465,7 @@
       },
       {
         "name": "TestHealthCheckResult::test_unhealthy_result",
-        "line": 129,
+        "line": 128,
         "markers": [
           "unit"
         ],

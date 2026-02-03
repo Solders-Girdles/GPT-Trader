@@ -2,7 +2,18 @@
 
 from __future__ import annotations
 
+import pytest
 from unittest.mock import MagicMock
+
+from gpt_trader.monitoring.metrics_collector import reset_all
+
+
+@pytest.fixture(autouse=True)
+def reset_metrics() -> None:
+    """Reset metrics before and after each test for deterministic results."""
+    reset_all()
+    yield
+    reset_all()
 
 
 class TestComputeExecutionHealthSignals:
@@ -53,17 +64,11 @@ class TestComputeExecutionHealthSignals:
         """Test that with no metrics, signals are OK."""
         from gpt_trader.monitoring.health_checks import compute_execution_health_signals
         from gpt_trader.monitoring.health_signals import HealthStatus
-        from gpt_trader.monitoring.metrics_collector import reset_all
 
-        # Fresh collector should have zero metrics
-        reset_all()
         result = compute_execution_health_signals()
 
-        # With zero submissions, error rate should be 0 = OK
-        error_signal = next((s for s in result.signals if s.name == "order_error_rate"), None)
-        assert error_signal is not None
-        assert error_signal.value == 0.0
-        assert error_signal.status == HealthStatus.OK
+        assert result.status == HealthStatus.OK
+        assert all(signal.status == HealthStatus.OK for signal in result.signals)
 
     def test_to_dict_serializable(self) -> None:
         """Test that the summary can be serialized to dict."""
@@ -79,6 +84,107 @@ class TestComputeExecutionHealthSignals:
         assert json_str is not None
         assert "status" in result_dict
         assert "signals" in result_dict
+
+    def test_guard_trip_warn_at_threshold(self) -> None:
+        """Test that value exactly at warn threshold returns WARN."""
+        from gpt_trader.monitoring.health_checks import compute_execution_health_signals
+        from gpt_trader.monitoring.health_signals import HealthStatus
+        from gpt_trader.monitoring.metrics_collector import record_counter
+
+        record_counter("gpt_trader_guard_trip_count", increment=3)
+
+        result = compute_execution_health_signals()
+        guard_signal = next((s for s in result.signals if s.name == "guard_trip_count"), None)
+
+        assert guard_signal is not None
+        assert guard_signal.value == pytest.approx(3.0)
+        assert guard_signal.status == HealthStatus.WARN
+
+    def test_guard_trip_crit_at_threshold(self) -> None:
+        """Test that value exactly at crit threshold returns CRIT."""
+        from gpt_trader.monitoring.health_checks import compute_execution_health_signals
+        from gpt_trader.monitoring.health_signals import HealthStatus
+        from gpt_trader.monitoring.metrics_collector import record_counter
+
+        record_counter("gpt_trader_guard_trip_count", increment=10)
+
+        result = compute_execution_health_signals()
+        guard_signal = next((s for s in result.signals if s.name == "guard_trip_count"), None)
+
+        assert guard_signal is not None
+        assert guard_signal.value == pytest.approx(10.0)
+        assert guard_signal.status == HealthStatus.CRIT
+
+    def test_custom_thresholds_override_status(self) -> None:
+        """Test that custom thresholds impact computed status."""
+        from gpt_trader.monitoring.health_checks import compute_execution_health_signals
+        from gpt_trader.monitoring.health_signals import HealthStatus, HealthThresholds
+        from gpt_trader.monitoring.metrics_collector import record_histogram
+
+        record_histogram(
+            "gpt_trader_broker_call_latency_seconds",
+            1.0,
+            labels={"outcome": "success"},
+        )
+
+        thresholds = HealthThresholds(
+            broker_latency_ms_warn=1500.0,
+            broker_latency_ms_crit=2500.0,
+        )
+
+        result = compute_execution_health_signals(thresholds=thresholds)
+        latency_signal = next((s for s in result.signals if s.name == "broker_latency_p95"), None)
+
+        assert latency_signal is not None
+        assert latency_signal.value == pytest.approx(1000.0)
+        assert latency_signal.status == HealthStatus.OK
+
+    def test_missing_metrics_returns_ok(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Test that missing metrics data yields OK signals."""
+        from gpt_trader.monitoring.health_checks import compute_execution_health_signals
+        from gpt_trader.monitoring.health_signals import HealthStatus
+
+        class StubCollector:
+            def get_metrics_summary(self) -> dict[str, object]:
+                return {"counters": None, "histograms": None}
+
+        monkeypatch.setattr(
+            "gpt_trader.monitoring.metrics_collector.get_metrics_collector",
+            lambda: StubCollector(),
+        )
+
+        result = compute_execution_health_signals()
+
+        assert result.status == HealthStatus.OK
+        assert all(signal.status == HealthStatus.OK for signal in result.signals)
+
+    def test_mixed_statuses_aggregate_summary(self) -> None:
+        """Test aggregate status with mixed signal levels."""
+        from gpt_trader.monitoring.health_checks import compute_execution_health_signals
+        from gpt_trader.monitoring.health_signals import HealthStatus
+        from gpt_trader.monitoring.metrics_collector import record_counter, record_histogram
+
+        record_counter(
+            "gpt_trader_order_submission_total",
+            increment=8,
+            labels={"result": "success"},
+        )
+        record_counter(
+            "gpt_trader_order_submission_total",
+            increment=2,
+            labels={"result": "failed"},
+        )
+        for _ in range(11):
+            record_histogram(
+                "gpt_trader_broker_call_latency_seconds",
+                0.01,
+                labels={"outcome": "success"},
+            )
+
+        result = compute_execution_health_signals()
+
+        assert result.status == HealthStatus.CRIT
+        assert result.message == "1 critical signal(s), 1 warning(s)"
 
 
 class TestCheckWsStalenessSignal:

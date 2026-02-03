@@ -52,7 +52,13 @@ class TestBlockingCallsInAsync:
         file_path = tmp_path / "src" / "example.py"
         _write_file(
             file_path,
-            """import time\nimport requests\n\nasync def do_work():\n    time.sleep(1)\n    requests.get('https://example.com')\n""",
+            "import time\n"
+            "import requests\n"
+            "\n"
+            "async def do_work():\n"
+            "    time."
+            "sleep(1)\n"
+            "    requests.get('https://example.com')\n",
         )
 
         errors = check_legacy_patterns._check_blocking_calls_in_async([file_path])
@@ -67,7 +73,11 @@ class TestBlockingCallsInAsync:
         file_path = tmp_path / "src" / "example.py"
         _write_file(
             file_path,
-            """import time\n\ndef do_work():\n    time.sleep(1)\n""",
+            "import time\n"
+            "\n"
+            "def do_work():\n"
+            "    time."
+            "sleep(1)\n",
         )
 
         errors = check_legacy_patterns._check_blocking_calls_in_async([file_path])

@@ -69,6 +69,29 @@ def _first_patch_call_line(text: str) -> int | None:
     return None
 
 
+def _has_time_sleep_call(text: str) -> bool:
+    """Return True if the file contains a real time.sleep(...) call.
+
+    This intentionally ignores occurrences inside strings/comments.
+    """
+    if "sleep" not in text:
+        return False
+    try:
+        tree = ast.parse(text)
+    except SyntaxError:
+        return False
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        if isinstance(func, ast.Attribute) and func.attr == "sleep":
+            # time.sleep(...)
+            if isinstance(func.value, ast.Name) and func.value.id == "time":
+                return True
+    return False
+
+
 def scan(paths: Sequence[str]) -> int:
     root = pathlib.Path.cwd()
     test_files: list[pathlib.Path] = []
@@ -143,7 +166,11 @@ def scan(paths: Sequence[str]) -> int:
                 f"{rel} exceeds {THRESHOLD} lines ({line_count}). Split into smaller modules or add to the allowlist with justification."
             )
 
-        if "time.sleep(" in text and "fake_clock" not in text and rel_str not in SLEEP_ALLOWLIST:
+        if (
+            _has_time_sleep_call(text)
+            and "fake_clock" not in text
+            and rel_str not in SLEEP_ALLOWLIST
+        ):
             problems.append(
                 f"{rel} calls time.sleep without using fake_clock fixture. Use fake_clock or justify with an explicit helper."
             )

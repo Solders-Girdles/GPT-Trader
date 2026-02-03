@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6137,
+    "total_tests": 6138,
     "total_files": 733,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 5972,
+    "unit": 5973,
     "asyncio": 347,
     "parametrize": 155,
     "property": 82,
@@ -13511,7 +13511,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_errors.py": [
       {
         "name": "test_401_maps_to_auth_error",
-        "line": 19,
+        "line": 23,
         "markers": [
           "unit"
         ],
@@ -13519,7 +13519,7 @@
       },
       {
         "name": "test_400_maps_to_invalid_request_error",
-        "line": 31,
+        "line": 35,
         "markers": [
           "unit"
         ],
@@ -13527,7 +13527,15 @@
       },
       {
         "name": "test_500_maps_to_brokerage_error",
-        "line": 44,
+        "line": 48,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_503_maps_to_transient_broker_error",
+        "line": 61,
         "markers": [
           "unit"
         ],
@@ -13535,7 +13543,7 @@
       },
       {
         "name": "test_429_triggers_retry_with_backoff",
-        "line": 57,
+        "line": 67,
         "markers": [
           "unit"
         ],
@@ -13543,7 +13551,7 @@
       },
       {
         "name": "test_429_exhausts_retries",
-        "line": 74,
+        "line": 84,
         "markers": [
           "unit"
         ],
@@ -13551,7 +13559,7 @@
       },
       {
         "name": "test_503_triggers_retry",
-        "line": 86,
+        "line": 96,
         "markers": [
           "unit"
         ],
@@ -13559,7 +13567,7 @@
       },
       {
         "name": "test_network_errors_retry",
-        "line": 103,
+        "line": 113,
         "markers": [
           "unit"
         ],
@@ -13567,7 +13575,7 @@
       },
       {
         "name": "test_jitter_applied_to_retry_delay",
-        "line": 120,
+        "line": 130,
         "markers": [
           "unit"
         ],
@@ -13575,7 +13583,7 @@
       },
       {
         "name": "test_408_timeout_does_not_retry",
-        "line": 142,
+        "line": 152,
         "markers": [
           "unit"
         ],

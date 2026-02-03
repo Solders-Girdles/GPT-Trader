@@ -56071,7 +56071,7 @@
       },
       {
         "name": "TestValidateManifestEntries::test_invalid_action_status_and_missing_reason_flagged",
-        "line": 97,
+        "line": 93,
         "markers": [
           "unit"
         ],
@@ -56080,7 +56080,7 @@
       },
       {
         "name": "TestValidateMarkerAlignment::test_missing_manifest_and_mismatched_marker_flagged",
-        "line": 127,
+        "line": 123,
         "markers": [
           "unit"
         ],
@@ -56089,7 +56089,7 @@
       },
       {
         "name": "TestValidateMarkerAlignment::test_missing_required_marker_flagged_except_done_missing_file",
-        "line": 154,
+        "line": 148,
         "markers": [
           "unit"
         ],

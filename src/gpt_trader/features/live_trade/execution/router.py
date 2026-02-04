@@ -146,10 +146,11 @@ class OrderRouter:
                 )
 
             if submission.status is OrderSubmissionStatus.BLOCKED:
-                try:
-                    record_counter("gpt_trader_trades_blocked_total")
-                except Exception:
-                    pass
+                if submission.decision_trace is None:
+                    try:
+                        record_counter("gpt_trader_trades_blocked_total")
+                    except Exception:
+                        pass
                 logger.warning(
                     "Order blocked via canonical path",
                     symbol=decision.symbol,

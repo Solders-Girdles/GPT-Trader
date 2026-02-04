@@ -5,6 +5,8 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main, develop]
+  merge_group:
+    branches: [main, develop]
   workflow_dispatch:
 
 concurrency:
@@ -220,7 +222,10 @@ jobs:
           status=$?
           set +o pipefail
           set -e
+
+          EVENT_NAME="${{ github.event_name }}"
           echo "exit_code=$status" >> $GITHUB_OUTPUT
+
           if [ $status -ne 0 ]; then
             echo "::error::Agent artifacts are stale; run uv run agent-regenerate and commit the changes"
             echo "Fix command: uv run agent-regenerate"
@@ -233,16 +238,28 @@ jobs:
               echo "No working tree changes detected; diffstat:"
               git diff --stat
             fi
+
+            # Non-blocking on PRs: signal in summary, but don't stall merges.
+            if [ "$EVENT_NAME" = "pull_request" ]; then
+              echo "::warning::Agent artifacts are stale (non-blocking on pull_request); a scheduled refresh workflow will update these on main."
+              exit 0
+            fi
           fi
+
           exit $status
 
       - name: Add freshness summary
         if: always()
         run: |
+          EVENT_NAME="${{ github.event_name }}"
           echo "## Agent Artifacts Freshness" >> $GITHUB_STEP_SUMMARY
           if [ "${{ steps.verify.outputs.exit_code }}" != "0" ]; then
-            echo "Status: STALE (run \`uv run agent-regenerate\`)" >> $GITHUB_STEP_SUMMARY
-            echo "Fix: \`uv run agent-regenerate\`" >> $GITHUB_STEP_SUMMARY
+            if [ "$EVENT_NAME" = "pull_request" ]; then
+              echo "Status: STALE (non-blocking on PR; scheduled refresh will update on main)" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "Status: STALE (run \`uv run agent-regenerate\`)" >> $GITHUB_STEP_SUMMARY
+              echo "Fix: \`uv run agent-regenerate\`" >> $GITHUB_STEP_SUMMARY
+            fi
             echo "Verify log: \`var/agents/health/agent_regenerate_verify.txt\`" >> $GITHUB_STEP_SUMMARY
           else
             echo "Status: OK" >> $GITHUB_STEP_SUMMARY

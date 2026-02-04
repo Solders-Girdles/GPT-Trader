@@ -207,11 +207,15 @@ class TradingEngine(BaseEngine):
 
         # Initialize health check runner for active /health probes
         health_state = context.container.health_state if context.container else HealthState()
+        market_data_service = None
+        if context.container is not None:
+            market_data_service = getattr(context.container, "market_data_service", None)
         self._health_check_runner = HealthCheckRunner(
             health_state=health_state,
             broker=context.broker,
             degradation_state=self._degradation,
             risk_manager=context.risk_manager,
+            market_data_service=market_data_service,
             interval_seconds=HEALTH_CHECK_INTERVAL_SECONDS,
             message_stale_seconds=getattr(context.config, "ws_message_stale_seconds", 60.0),
             heartbeat_stale_seconds=getattr(context.config, "ws_heartbeat_stale_seconds", 120.0),

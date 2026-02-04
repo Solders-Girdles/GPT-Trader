@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 664,
-    "source_modules": 352,
+    "tests_scanned": 665,
+    "source_modules": 353,
     "unresolved_modules": 3
   },
   "source_to_tests": {
@@ -255,6 +255,9 @@
     ],
     "gpt_trader.cli.commands.account": [
       "tests/unit/gpt_trader/cli/test_commands_account_treasury.py"
+    ],
+    "gpt_trader.cli.commands.coinbase": [
+      "tests/unit/gpt_trader/cli/test_commands_coinbase.py"
     ],
     "gpt_trader.cli.commands.optimize": [
       "tests/unit/gpt_trader/cli/commands/optimize/test_commands_arg_parsing.py",
@@ -548,6 +551,7 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_orders_mixin.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_portfolio_mixin.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_cfm_endpoints.py",
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_errors.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_permissions_client_endpoint.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_system.py"
     ],
@@ -566,7 +570,8 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_product_service_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_rest_service_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_ticker_cache.py"
+      "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_ticker_cache.py",
+      "tests/unit/gpt_trader/monitoring/test_health_checks.py"
     ],
     "gpt_trader.features.brokerages.coinbase.models": [
       "tests/contract/test_coinbase_api_contract.py",
@@ -1929,6 +1934,7 @@
     ],
     "gpt_trader.utilities.time_provider": [
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_ticker_cache.py",
+      "tests/unit/gpt_trader/monitoring/test_health_checks.py",
       "tests/unit/gpt_trader/monitoring/test_status_reporter_time.py",
       "tests/unit/gpt_trader/utilities/test_clock.py",
       "tests/unit/gpt_trader/utilities/test_time_provider.py"
@@ -2467,6 +2473,9 @@
       "gpt_trader.cli.commands.account",
       "gpt_trader.cli.commands.treasury"
     ],
+    "tests/unit/gpt_trader/cli/test_commands_coinbase.py": [
+      "gpt_trader.cli.commands.coinbase"
+    ],
     "tests/unit/gpt_trader/cli/test_commands_orders.py": [
       "gpt_trader.cli.commands.orders"
     ],
@@ -2704,7 +2713,8 @@
       "gpt_trader.features.brokerages.coinbase.models"
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_errors.py": [
-      "gpt_trader.core"
+      "gpt_trader.core",
+      "gpt_trader.features.brokerages.coinbase.errors"
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market.py": [
       "gpt_trader.core"
@@ -3767,7 +3777,9 @@
       "gpt_trader.monitoring.guards.manager"
     ],
     "tests/unit/gpt_trader/monitoring/test_health_checks.py": [
-      "gpt_trader.monitoring.health_checks"
+      "gpt_trader.features.brokerages.coinbase.market_data_service",
+      "gpt_trader.monitoring.health_checks",
+      "gpt_trader.utilities.time_provider"
     ],
     "tests/unit/gpt_trader/monitoring/test_health_checks_runner.py": [
       "gpt_trader.app.health_server",
@@ -4623,6 +4635,7 @@
     "gpt_trader.backtesting.validation.validator": "src/gpt_trader/backtesting/validation/validator.py",
     "gpt_trader.cli.commands": "src/gpt_trader/cli/commands/__init__.py",
     "gpt_trader.cli.commands.account": "src/gpt_trader/cli/commands/account.py",
+    "gpt_trader.cli.commands.coinbase": "src/gpt_trader/cli/commands/coinbase.py",
     "gpt_trader.cli.commands.optimize": "src/gpt_trader/cli/commands/optimize/__init__.py",
     "gpt_trader.cli.commands.optimize.config_loader": "src/gpt_trader/cli/commands/optimize/config_loader.py",
     "gpt_trader.cli.commands.optimize.formatters": "src/gpt_trader/cli/commands/optimize/formatters.py",

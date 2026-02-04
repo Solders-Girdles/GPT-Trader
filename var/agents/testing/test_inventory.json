@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6156,
+    "total_tests": 6158,
     "total_files": 737,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 5991,
+    "unit": 5993,
     "asyncio": 347,
     "parametrize": 155,
     "property": 82,
@@ -33420,7 +33420,7 @@
       },
       {
         "name": "TestCheckTickerFreshness::test_all_fresh",
-        "line": 143,
+        "line": 146,
         "markers": [
           "unit"
         ],
@@ -33429,7 +33429,7 @@
       },
       {
         "name": "TestCheckTickerFreshness::test_some_stale",
-        "line": 166,
+        "line": 169,
         "markers": [
           "unit"
         ],
@@ -33438,11 +33438,29 @@
       },
       {
         "name": "TestCheckTickerFreshness::test_no_data_available",
-        "line": 197,
+        "line": 200,
         "markers": [
           "unit"
         ],
         "docstring": "Test unhealthy when no tickers are available.",
+        "class": "TestCheckTickerFreshness"
+      },
+      {
+        "name": "TestCheckTickerFreshness::test_partial_symbol_coverage",
+        "line": 213,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test missing symbols are marked stale.",
+        "class": "TestCheckTickerFreshness"
+      },
+      {
+        "name": "TestCheckTickerFreshness::test_missing_provider_is_skipped",
+        "line": 235,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test missing freshness provider is skipped and healthy.",
         "class": "TestCheckTickerFreshness"
       }
     ],

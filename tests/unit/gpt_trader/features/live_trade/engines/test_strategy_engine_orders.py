@@ -24,6 +24,25 @@ async def _place_order(engine, action: Action = Action.BUY):
     )
 
 
+def _mock_security_validation(monkeypatch: pytest.MonkeyPatch) -> None:
+    mock_validator = MagicMock()
+    mock_validator.validate_order_request.return_value.is_valid = True
+    monkeypatch.setattr(security_validate_module, "get_validator", lambda: mock_validator)
+
+
+def _setup_pre_trade_validation_block(engine) -> None:
+    from gpt_trader.features.live_trade.risk.manager import ValidationError
+
+    engine._order_validator.run_pre_trade_validation.side_effect = ValidationError(
+        "Leverage exceeds limit"
+    )
+
+
+def _setup_mark_staleness_block(engine) -> None:
+    engine.context.risk_manager.check_mark_staleness.return_value = True
+    engine.context.risk_manager.config.mark_staleness_allow_reduce_only = False
+
+
 @pytest.fixture
 def reset_metrics():
     from gpt_trader.monitoring.metrics_collector import reset_all
@@ -251,3 +270,73 @@ async def test_preview_disabled_after_threshold_failures(engine) -> None:
     result = await _place_order(engine)
     assert result.status in (OrderSubmissionStatus.SUCCESS, OrderSubmissionStatus.BLOCKED)
     assert engine._order_validator.enable_order_preview is False
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "setup_guard, expected_gate, expected_blocked_stage",
+    [
+        (_setup_pre_trade_validation_block, "pre_trade_validation", "pre_trade_validation"),
+        (_setup_mark_staleness_block, "mark_staleness", None),
+    ],
+)
+async def test_guard_block_records_blocked_reason(
+    engine,
+    monkeypatch: pytest.MonkeyPatch,
+    setup_guard,
+    expected_gate: str,
+    expected_blocked_stage: str | None,
+) -> None:
+    """Guard blocks should emit telemetry with the blocked reason tag."""
+    _mock_security_validation(monkeypatch)
+    setup_guard(engine)
+
+    result = await engine._validate_and_place_order(
+        symbol="BTC-USD",
+        decision=Decision(Action.BUY, "test"),
+        price=Decimal("50000"),
+        equity=Decimal("10000"),
+    )
+
+    assert result.status == OrderSubmissionStatus.BLOCKED
+    engine._order_submitter.submit_order_with_result.assert_not_called()
+
+    record_call = engine._order_submitter.record_rejection.call_args
+    assert record_call is not None
+    assert record_call.args[4] == expected_gate
+
+    events = [
+        event
+        for event in engine._event_store.list_events()
+        if event.get("type") == "trade_gate_blocked"
+    ]
+    assert events
+    payload = events[-1].get("data", {})
+    assert payload.get("gate") == expected_gate
+    if expected_blocked_stage is not None:
+        params = payload.get("params", {})
+        assert params.get("blocked_stage") == expected_blocked_stage
+
+
+@pytest.mark.asyncio
+async def test_mark_staleness_allowed_emits_allowed_telemetry(
+    engine, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Reduce-only stale mark path should record an allowed telemetry label."""
+    _mock_security_validation(monkeypatch)
+    engine.context.risk_manager.check_mark_staleness.return_value = True
+    engine.context.risk_manager.config.mark_staleness_allow_reduce_only = True
+    engine._order_validator.finalize_reduce_only_flag.return_value = True
+    engine._current_positions = {"BTC-USD": make_position()}
+
+    result = await engine._validate_and_place_order(
+        symbol="BTC-USD",
+        decision=Decision(Action.SELL, "test"),
+        price=Decimal("50000"),
+        equity=Decimal("10000"),
+    )
+
+    assert result.status == OrderSubmissionStatus.SUCCESS
+    engine._order_submitter.submit_order_with_result.assert_called_once()
+    assert result.decision_trace is not None
+    assert result.decision_trace.outcomes["mark_staleness"]["status"] == "allowed"

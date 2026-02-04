@@ -15,6 +15,7 @@ import time
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
+from gpt_trader.monitoring.metrics_collector import record_counter
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -31,6 +32,10 @@ from gpt_trader.features.live_trade.risk.protocols import RiskManagerProtocol
 logger = get_logger(__name__, component="health_checks")
 
 TickerFreshnessService = TickerFreshnessProviderSource | TickerFreshnessProvider
+
+# Metrics emitted by the ticker freshness health check.
+TICKER_CACHE_UNAVAILABLE_COUNTER = "gpt_trader_ticker_cache_unavailable_total"
+TICKER_STALE_SYMBOLS_COUNTER = "gpt_trader_ticker_stale_symbols_total"
 
 
 @dataclass
@@ -261,10 +266,17 @@ def check_ticker_freshness(
             - stale_symbols: Symbols with stale or missing tickers
             - stale_count: Count of stale symbols
             - symbol_count: Total symbol count
+
+    Metrics:
+        - gpt_trader_ticker_cache_unavailable_total: increments when the market data
+          provider or ticker cache is unavailable.
+        - gpt_trader_ticker_stale_symbols_total: increments by the number of stale
+          symbols observed per check.
     """
     details: dict[str, Any] = {"severity": "warning"}
 
     if market_data_service is None:
+        record_counter(TICKER_CACHE_UNAVAILABLE_COUNTER)
         details.update(
             {
                 "skipped": True,
@@ -289,8 +301,10 @@ def check_ticker_freshness(
 
     ticker_freshness_provider = _resolve_ticker_freshness_provider(market_data_service)
     if ticker_freshness_provider is None:
+        record_counter(TICKER_CACHE_UNAVAILABLE_COUNTER)
         details.update(
             {
+                "ticker_cache_unavailable": True,
                 "ticker_freshness_provider_unavailable": True,
                 "skipped": True,
                 "reason": "ticker_freshness_provider_unavailable",
@@ -332,6 +346,7 @@ def check_ticker_freshness(
     )
 
     if stale_symbols:
+        record_counter(TICKER_STALE_SYMBOLS_COUNTER, increment=len(stale_symbols))
         if len(stale_symbols) == len(symbols):
             details["severity"] = "critical"
         return False, details
@@ -883,6 +898,8 @@ if TYPE_CHECKING:
 __all__ = [
     "HealthCheckResult",
     "HealthCheckRunner",
+    "TICKER_CACHE_UNAVAILABLE_COUNTER",
+    "TICKER_STALE_SYMBOLS_COUNTER",
     "check_broker_ping",
     "check_ticker_freshness",
     "check_ws_freshness",

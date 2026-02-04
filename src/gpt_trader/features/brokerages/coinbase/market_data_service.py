@@ -41,6 +41,11 @@ class TickerCache:
         with self._lock:
             return self._cache.get(symbol)
 
+    def has_any(self) -> bool:
+        """Return True if any ticker data has been populated."""
+        with self._lock:
+            return bool(self._cache)
+
     def is_stale(self, symbol: str) -> bool:
         """Check if ticker data is stale (thread-safe)."""
         with self._lock:
@@ -76,7 +81,12 @@ class CoinbaseTickerService:
     def set_symbols(self, symbols: list[str]) -> None:
         self._symbols = symbols
 
-    def get_ticker_freshness_provider(self) -> TickerFreshnessProvider:
+    def get_ticker_freshness_provider(self) -> TickerFreshnessProvider | None:
+        # Only advertise a freshness provider once something is actually populating the cache.
+        # Otherwise, environments that wire this stub service without a live updater will
+        # report every symbol as stale and fail /health.
+        if not self._ticker_cache.has_any():
+            return None
         return self._ticker_cache
 
     def is_stale(self, symbol: str) -> bool:

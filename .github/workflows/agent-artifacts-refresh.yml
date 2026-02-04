@@ -1,0 +1,57 @@
+name: Agent Artifacts Refresh
+
+on:
+  schedule:
+    # Every 6 hours, offset to avoid common top-of-hour spikes.
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  refresh:
+    name: Refresh var/agents artifacts
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: ".python-version"
+
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Regenerate agent artifacts
+        run: |
+          set -euo pipefail
+          uv run agent-regenerate
+
+      - name: Create or update pull request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore: refresh agent artifacts"
+          title: "chore: refresh agent artifacts"
+          body: |
+            Automated refresh of generated agent context under `var/agents/`.
+
+            - Trigger: scheduled workflow
+            - Command: `uv run agent-regenerate`
+
+            If this PR is large or noisy, consider narrowing generators or moving high-churn outputs out of the repo.
+          branch: automation/agent-artifacts-refresh
+          base: main
+          delete-branch: true

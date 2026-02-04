@@ -42,9 +42,11 @@ def test_record_histogram_uses_configured_buckets() -> None:
     collector.configure_histogram_buckets("latency", custom_buckets)
 
     record_histogram("latency", 0.4)
+    record_histogram("latency", 0.05)
 
     hist = collector.histograms["latency"]
     assert hist.buckets == custom_buckets
+    assert hist.bucket_counts == [1, 2, 2]
 
 
 def test_record_histogram_with_labels_uses_configured_buckets() -> None:
@@ -132,6 +134,8 @@ class TestHistograms:
         ok_hist = collector.histograms["gpt_trader_cycle_duration_seconds{result=ok}"]
         error_hist = collector.histograms["gpt_trader_cycle_duration_seconds{result=error}"]
 
+        assert ok_hist is not error_hist
+        assert len(collector.histograms) == 2
         assert ok_hist.count == 2
         assert ok_hist.total == pytest.approx(1.5)
         assert error_hist.count == 1
@@ -154,6 +158,32 @@ class TestHistograms:
         assert buckets["0.01"] == 2  # 0.001 and 0.008 fit
         assert buckets["0.5"] == 3  # 0.001, 0.008, and 0.5 fit
         assert buckets["10.0"] == 3  # 100.0 doesn't fit in any bucket
+
+    def test_histogram_overflow_does_not_increment_buckets(self):
+        """Test values above all buckets only increment count/total."""
+        custom_buckets = (0.1, 0.2)
+        record_histogram("overflow", 0.05, buckets=custom_buckets)
+
+        collector = get_metrics_collector()
+        hist = collector.histograms["overflow"]
+        bucket_counts_before = hist.bucket_counts.copy()
+
+        record_histogram("overflow", 0.25)
+
+        assert hist.count == 2
+        assert hist.total == pytest.approx(0.3)
+        assert hist.bucket_counts == bucket_counts_before
+
+    def test_histogram_boundary_value_is_inclusive(self):
+        """Test boundary values are counted in the matching bucket."""
+        custom_buckets = (0.1, 0.2)
+        record_histogram("boundary", 0.1, buckets=custom_buckets)
+
+        collector = get_metrics_collector()
+        buckets = collector.histograms["boundary"].to_dict()["buckets"]
+
+        assert buckets["0.1"] == 1
+        assert buckets["0.2"] == 1
 
     def test_histogram_custom_buckets(self):
         """Test histogram with custom buckets."""

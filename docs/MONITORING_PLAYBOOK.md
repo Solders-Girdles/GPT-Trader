@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2026-01-31
+last-updated: 2026-02-04
 ---
 
 This playbook covers the spot-first GPT-Trader monitoring stack including metrics export, dashboards, alerting, and incident response.
@@ -27,7 +27,12 @@ uv sync --extra monitoring
 - Health server metrics use the `gpt_trader_` prefix (example: `gpt_trader_order_submission_total`).
 
 ```bash
+export GPT_TRADER_HEALTH_SERVER_ENABLED=1
+export GPT_TRADER_METRICS_ENDPOINT_ENABLED=1
+
 curl http://localhost:8080/health
+curl http://localhost:8080/live
+curl http://localhost:8080/ready
 curl http://localhost:8080/metrics
 ```
 
@@ -51,6 +56,61 @@ Exporter metrics use the `COINBASE_TRADER_METRIC_PREFIX` environment variable
 - `/metrics.json` - Raw JSON payload (metrics + `latest_order_preview` and
   `latest_account_snapshot` events). This endpoint is only served by the exporter
   script.
+
+## HealthServer Endpoints
+
+The health server responds with JSON for probes and Prometheus text format for metrics.
+
+| Endpoint | Purpose | Expected response |
+| --- | --- | --- |
+| `/health` | Combined liveness + readiness with health signals | JSON with `status` (`healthy`, `degraded`, `starting`, `unhealthy`), `live`, `ready`, `reason`, `checks`, and `signals`. Returns HTTP 200 for `healthy`/`degraded`, HTTP 503 otherwise. |
+| `/live` | Liveness probe | JSON with `status` (`pass`/`fail`) and `live` boolean. Returns HTTP 200 when `live=true`, HTTP 503 otherwise. |
+| `/ready` | Readiness probe | JSON with `status` (`pass`/`fail`), `ready` boolean, and `reason`. Returns HTTP 200 when `ready=true`, HTTP 503 otherwise. |
+| `/metrics` | Prometheus scrape endpoint (optional) | Prometheus text format when `GPT_TRADER_METRICS_ENDPOINT_ENABLED=1`; otherwise HTTP 404 with JSON error + hint. |
+
+Example responses (trimmed):
+
+```json
+{
+  "status": "healthy",
+  "live": true,
+  "ready": true,
+  "reason": "application_ready",
+  "checks": {
+    "performance": {
+      "status": "healthy"
+    }
+  },
+  "signals": {
+    "status": "OK"
+  }
+}
+```
+
+```json
+{
+  "status": "pass",
+  "ready": true,
+  "reason": "application_ready"
+}
+```
+
+```json
+{
+  "error": "Metrics endpoint disabled",
+  "hint": "Set GPT_TRADER_METRICS_ENDPOINT_ENABLED=1"
+}
+```
+
+## HealthServer `/metrics` vs Exporter Script
+
+- HealthServer `/metrics` is in-process: it exposes live metrics from the running
+  bot and shares the same process lifecycle as readiness/liveness probes. Use it
+  for Kubernetes probes and live Prometheus scraping.
+- `scripts/monitoring/export_metrics.py` is out-of-process: it reads
+  `runtime_data/<profile>/events.db` (with JSONL fallback) and `metrics.json`, and
+  can serve metrics even when the bot is not directly exposing HTTP endpoints.
+  It also provides `/metrics.json`, which the HealthServer does not serve.
 
 ### 3. Start Observability Stack (Optional)
 

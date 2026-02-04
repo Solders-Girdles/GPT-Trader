@@ -26,8 +26,8 @@ from gpt_trader.utilities.logging_patterns import get_logger
 from gpt_trader.utilities.time_provider import get_clock
 
 if TYPE_CHECKING:
-    from gpt_trader.monitoring.heartbeat import HeartbeatService
     from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
+    from gpt_trader.monitoring.heartbeat import HeartbeatService
 
 logger = get_logger(__name__, component="status_reporter")
 

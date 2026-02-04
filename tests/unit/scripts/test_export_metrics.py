@@ -144,6 +144,9 @@ def test_render_prometheus_includes_key_metrics(tmp_path: Path) -> None:
     events = [
         {"event_type": "preview_reject"},
         {"event_type": "preview_reject"},
+        {"event_type": "trade"},
+        {"event_type": "trade"},
+        {"event_type": "trade_gate_blocked"},
         {"event_type": "websocket_reconnect"},
         {"event_type": "stale_mark_detected"},
         {"event_type": "unfilled_order_alert"},
@@ -188,6 +191,8 @@ def test_render_prometheus_includes_key_metrics(tmp_path: Path) -> None:
     assert f'{prefix}_fee_tier{{tier="pro"}} 1' in output
     assert f"{prefix}_account_limit_remaining 50.0" in output
     assert f"{prefix}_order_preview_failures_total 2" in output
+    assert f"{prefix}_trades_executed_total 2" in output
+    assert f"{prefix}_trades_blocked_total 1" in output
     assert f"{prefix}_circuit_breaker_triggered 1" in output
     assert f'{prefix}_symbol_exposure_usd{{symbol="BTC_USD"}} 123.45' in output
     assert f'{prefix}_symbol_pnl_usd{{symbol="BTC_USD"}} 5.5' in output

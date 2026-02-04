@@ -313,6 +313,20 @@ def render_prometheus(metrics: dict[str, Any], events_path: Path, events_db: Pat
     lines.append(f"# TYPE {metric('order_preview_failures_total')} counter")
     lines.append(f"{metric('order_preview_failures_total')} {preview_failures}")
 
+    trades_executed = count_events(events_path, "trade", events_db)
+    lines.append(
+        f"# HELP {metric('trades_executed_total')} Total number of trades executed successfully"
+    )
+    lines.append(f"# TYPE {metric('trades_executed_total')} counter")
+    lines.append(f"{metric('trades_executed_total')} {trades_executed}")
+
+    trades_blocked = count_events(events_path, "trade_gate_blocked", events_db)
+    lines.append(
+        f"# HELP {metric('trades_blocked_total')} Total number of trades blocked by guards"
+    )
+    lines.append(f"# TYPE {metric('trades_blocked_total')} counter")
+    lines.append(f"{metric('trades_blocked_total')} {trades_blocked}")
+
     # Circuit breaker state
     circuit_breaker_triggered = 0
     latest_cb = load_latest_event(events_path, "circuit_breaker_triggered", events_db=events_db)

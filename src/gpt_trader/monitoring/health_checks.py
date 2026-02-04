@@ -237,9 +237,12 @@ def _resolve_ticker_freshness_provider(
     if market_data_service is None:
         return None
 
+    # If the service itself is a provider, use it.
     if isinstance(market_data_service, TickerFreshnessProvider):
         return market_data_service
 
+    # If the service explicitly exposes a provider, trust that contract.
+    # Important: if it returns None, do NOT guess/fallback to internal attrs.
     if isinstance(market_data_service, TickerFreshnessProviderSource):
         try:
             provider = market_data_service.get_ticker_freshness_provider()
@@ -247,6 +250,19 @@ def _resolve_ticker_freshness_provider(
             return None
         if isinstance(provider, TickerFreshnessProvider):
             return provider
+        return None
+
+    # Backwards-compatible attribute-based discovery (used by some tests / simple stubs).
+    for attribute_name in ("ticker_cache", "_ticker_cache"):
+        candidate = getattr(market_data_service, attribute_name, None)
+        if candidate is not None and hasattr(candidate, "is_stale"):
+            return candidate
+
+    # Finally, accept any object that has a callable is_stale.
+    if hasattr(market_data_service, "is_stale") and callable(
+        getattr(market_data_service, "is_stale", None)
+    ):
+        return market_data_service
 
     return None
 

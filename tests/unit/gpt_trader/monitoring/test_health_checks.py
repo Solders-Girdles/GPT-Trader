@@ -10,6 +10,7 @@ import pytest
 
 from gpt_trader.features.brokerages.coinbase.market_data_service import Ticker, TickerCache
 from gpt_trader.monitoring.health_checks import (
+    TICKER_FRESHNESS_CHECKS_COUNTER,
     TICKER_CACHE_UNAVAILABLE_COUNTER,
     TICKER_STALE_SYMBOLS_COUNTER,
     check_broker_ping,
@@ -182,6 +183,61 @@ class TestCheckTickerFreshness:
         assert healthy is True
         assert details["stale_symbols"] == []
         assert details["stale_count"] == 0
+
+    def test_records_profile_and_outcome_metrics(self) -> None:
+        """Test ticker freshness emits profile histogram and ok outcome counter."""
+        base_time = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        clock = FakeClock(base_time)
+        cache = TickerCache(ttl_seconds=10, clock=clock)
+        for symbol in ("BTC-USD", "ETH-USD"):
+            cache.update(
+                Ticker(
+                    symbol=symbol,
+                    bid=1.0,
+                    ask=2.0,
+                    last=1.5,
+                    ts=base_time,
+                )
+            )
+        market_data_service = FakeMarketDataService(["BTC-USD", "ETH-USD"], cache)
+
+        healthy, _ = check_ticker_freshness(market_data_service)
+
+        assert healthy is True
+        collector = get_metrics_collector()
+        summary = collector.get_metrics_summary()
+        histogram_key = "gpt_trader_profile_duration_seconds{phase=ticker_freshness}"
+        assert histogram_key in summary["histograms"]
+        ok_key = f"{TICKER_FRESHNESS_CHECKS_COUNTER}{{result=ok}}"
+        assert collector.counters[ok_key] == 1
+        output = format_prometheus(summary)
+        assert f'{TICKER_FRESHNESS_CHECKS_COUNTER}{{result="ok"}} 1' in output
+        assert 'gpt_trader_profile_duration_seconds_count{phase="ticker_freshness"} 1' in output
+
+    def test_error_records_outcome_metric(self) -> None:
+        """Test check exceptions increment error outcome counter."""
+
+        class ExplodingProvider:
+            def is_stale(self, symbol: str) -> bool:
+                raise RuntimeError("boom")
+
+        class MarketDataWithProvider:
+            def __init__(self, symbols: list[str], provider: ExplodingProvider) -> None:
+                self._symbols = symbols
+                self._provider = provider
+
+            def get_ticker_freshness_provider(self) -> ExplodingProvider:
+                return self._provider
+
+        market_data_service = MarketDataWithProvider(["BTC-USD"], ExplodingProvider())
+
+        healthy, details = check_ticker_freshness(market_data_service)
+
+        assert healthy is False
+        assert details["error_type"] == "RuntimeError"
+        collector = get_metrics_collector()
+        error_key = f"{TICKER_FRESHNESS_CHECKS_COUNTER}{{result=error}}"
+        assert collector.counters[error_key] == 1
 
     def test_some_stale(self) -> None:
         """Test unhealthy when some symbols are stale."""

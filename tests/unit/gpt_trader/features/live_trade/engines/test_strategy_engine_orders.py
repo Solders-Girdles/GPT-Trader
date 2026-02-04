@@ -10,6 +10,7 @@ from strategy_engine_chaos_helpers import make_position
 
 import gpt_trader.security.validate as security_validate_module
 from gpt_trader.core import Balance, OrderSide, OrderType, Product
+from gpt_trader.features.live_trade.execution.decision_trace import OrderDecisionTrace
 from gpt_trader.features.live_trade.execution.submission_result import OrderSubmissionStatus
 from gpt_trader.features.live_trade.strategies.perps_baseline import Action, Decision
 
@@ -40,6 +41,39 @@ def _setup_pre_trade_validation_block(engine) -> None:
 def _setup_mark_staleness_block(engine) -> None:
     engine.context.risk_manager.check_mark_staleness.return_value = True
     engine.context.risk_manager.config.mark_staleness_allow_reduce_only = False
+
+
+@pytest.fixture
+def reset_metrics():
+    from gpt_trader.monitoring.metrics_collector import reset_all
+
+    reset_all()
+    yield
+    reset_all()
+
+
+def test_finalize_decision_trace_records_blocked_metric(engine, reset_metrics) -> None:
+    from gpt_trader.monitoring.metrics_collector import get_metrics_collector
+
+    trace = OrderDecisionTrace(
+        symbol="BTC-USD",
+        side="BUY",
+        price=Decimal("50000"),
+        equity=Decimal("10000"),
+        quantity=Decimal("0.1"),
+        reduce_only=False,
+        reason="test",
+    )
+
+    result = engine._finalize_decision_trace(
+        trace,
+        status=OrderSubmissionStatus.BLOCKED,
+        reason="guard_block",
+    )
+
+    assert result.status is OrderSubmissionStatus.BLOCKED
+    collector = get_metrics_collector()
+    assert collector.counters["gpt_trader_trades_blocked_total"] == 1
 
 
 @pytest.mark.asyncio

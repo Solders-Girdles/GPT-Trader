@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6154,
+    "total_tests": 6156,
     "total_files": 737,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 5989,
+    "unit": 5991,
     "asyncio": 347,
     "parametrize": 155,
     "property": 82,
@@ -34309,7 +34309,7 @@
       },
       {
         "name": "test_record_histogram_with_labels_uses_configured_buckets",
-        "line": 50,
+        "line": 52,
         "markers": [
           "unit"
         ],
@@ -34317,7 +34317,7 @@
       },
       {
         "name": "test_metrics_summary_includes_labeled_histograms_and_iso_timestamp",
-        "line": 61,
+        "line": 63,
         "markers": [
           "unit"
         ],
@@ -34325,7 +34325,7 @@
       },
       {
         "name": "TestMetricsSummary::test_summary_shape",
-        "line": 76,
+        "line": 78,
         "markers": [
           "unit"
         ],
@@ -34334,7 +34334,7 @@
       },
       {
         "name": "TestMetricsSummary::test_summary_includes_all_metrics",
-        "line": 95,
+        "line": 97,
         "markers": [
           "unit"
         ],
@@ -34343,7 +34343,7 @@
       },
       {
         "name": "TestHistograms::test_record_histogram_basic",
-        "line": 114,
+        "line": 116,
         "markers": [
           "unit"
         ],
@@ -34352,7 +34352,7 @@
       },
       {
         "name": "TestHistograms::test_record_histogram_with_labels",
-        "line": 125,
+        "line": 127,
         "markers": [
           "unit"
         ],
@@ -34361,7 +34361,7 @@
       },
       {
         "name": "TestHistograms::test_histogram_buckets",
-        "line": 140,
+        "line": 144,
         "markers": [
           "unit"
         ],
@@ -34369,8 +34369,26 @@
         "class": "TestHistograms"
       },
       {
+        "name": "TestHistograms::test_histogram_overflow_does_not_increment_buckets",
+        "line": 162,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test values above all buckets only increment count/total.",
+        "class": "TestHistograms"
+      },
+      {
+        "name": "TestHistograms::test_histogram_boundary_value_is_inclusive",
+        "line": 177,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test boundary values are counted in the matching bucket.",
+        "class": "TestHistograms"
+      },
+      {
         "name": "TestHistograms::test_histogram_custom_buckets",
-        "line": 158,
+        "line": 188,
         "markers": [
           "unit"
         ],
@@ -34379,7 +34397,7 @@
       },
       {
         "name": "TestHistogramData::test_to_dict_format",
-        "line": 178,
+        "line": 208,
         "markers": [
           "unit"
         ],
@@ -34388,7 +34406,7 @@
       },
       {
         "name": "TestHistogramData::test_mean_with_no_data",
-        "line": 197,
+        "line": 227,
         "markers": [
           "unit"
         ],

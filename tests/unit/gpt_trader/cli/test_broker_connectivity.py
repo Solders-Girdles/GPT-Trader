@@ -45,6 +45,36 @@ def test_broker_check_coinbase_success(monkeypatch, capsys) -> None:
     assert "2025-01-01T00:00:00Z" in out
 
 
+def test_broker_check_coinbase_success_empty_response(monkeypatch, capsys) -> None:
+    class StubClient:
+        def __init__(self) -> None:
+            self.closed = False
+
+        def _get_endpoint_path(self, endpoint_name: str) -> str:
+            assert endpoint_name == "orders"
+            return "/api/v3/brokerage/orders/historical/batch"
+
+        def get(self, path: str):
+            return []
+
+        def close(self) -> None:
+            self.closed = True
+
+    client = StubClient()
+
+    monkeypatch.setattr(broker_cmd, "_build_coinbase_client", lambda *, timeout: client)
+
+    exit_code = broker_cmd._handle_coinbase_check(
+        Namespace(output_format="text", endpoint="orders", timeout=5)
+    )
+
+    assert exit_code == 0
+    assert client.closed is True
+    out = capsys.readouterr().out
+    assert "Broker check OK" in out
+    assert "empty response" in out.lower()
+
+
 def test_broker_check_coinbase_failure_malformed_payload(monkeypatch, capsys) -> None:
     class StubClient:
         def __init__(self) -> None:

@@ -184,9 +184,16 @@ def _resolve_endpoint(client: CoinbaseClient, endpoint: str) -> str:
 
 
 def _evaluate_response(response: Any, resolved_endpoint: str) -> tuple[bool, str, Any | None]:
-    if response is None or response == {} or response == []:
-        summary = f"Empty response from Coinbase endpoint '{resolved_endpoint}'"
+    # None means we didn't get a usable response at all.
+    if response is None:
+        summary = f"No response from Coinbase endpoint '{resolved_endpoint}'"
         return False, summary, response
+
+    # Empty collections can be valid for many read-only endpoints (e.g., no open orders).
+    # Treat these as reachability success to avoid false negatives.
+    if response == {} or response == []:
+        summary = f"Coinbase endpoint '{resolved_endpoint}' reachable (empty response)"
+        return True, summary, response
 
     if isinstance(response, dict) and "raw" in response and len(response) == 1:
         summary = f"Malformed JSON response from Coinbase endpoint '{resolved_endpoint}'"

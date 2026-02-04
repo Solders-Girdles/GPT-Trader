@@ -22,6 +22,7 @@ class TestHealthCheckRunner:
         assert runner._broker is None
         assert runner._degradation_state is None
         assert runner._risk_manager is None
+        assert runner._market_data_service is None
         assert runner._interval == 30.0
         assert runner._running is False
 

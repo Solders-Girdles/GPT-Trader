@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal, DecimalException
 from typing import Any
 
+from gpt_trader.utilities.datetime_helpers import normalize_to_utc
 from gpt_trader.utilities.time_provider import TimeProvider
 
 from .base import GuardConfig, GuardStatus, RuntimeGuard
@@ -67,12 +68,14 @@ class StaleMarkGuard(RuntimeGuard):
 
         if isinstance(mark_time, str):
             try:
-                mark_time = datetime.fromisoformat(mark_time)
+                mark_time = normalize_to_utc(datetime.fromisoformat(mark_time))
             except ValueError:
                 return False, ""
         elif isinstance(mark_time, (int, float)):
-            mark_time = datetime.fromtimestamp(mark_time)
-        elif not isinstance(mark_time, datetime):
+            mark_time = datetime.fromtimestamp(mark_time, UTC)
+        elif isinstance(mark_time, datetime):
+            mark_time = normalize_to_utc(mark_time)
+        else:
             return False, ""
 
         self.last_marks[symbol] = mark_time

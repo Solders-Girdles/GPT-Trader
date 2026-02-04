@@ -210,6 +210,22 @@ class TestSleepViolations:
 
         assert result == 1
 
+    def test_time_sleep_inside_string_literal_not_flagged(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Sample code containing 'time.sleep(' in a string should not be flagged."""
+        monkeypatch.chdir(tmp_path)
+        test_dir = tmp_path / "tests" / "unit" / "gpt_trader"
+        test_file = test_dir / "test_example.py"
+        _write_test_file(
+            test_file,
+            """def test_something():\n    sample = \"time.sleep(1)\"\n    assert sample\n""",
+        )
+
+        result = check_test_hygiene.scan([str(test_dir)])
+
+        assert result == 0
+
     def test_time_sleep_with_fake_clock_passes(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:

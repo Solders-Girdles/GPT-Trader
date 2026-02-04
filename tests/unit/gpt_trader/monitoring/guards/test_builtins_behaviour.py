@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 from gpt_trader.monitoring.alert_types import AlertSeverity
 from gpt_trader.monitoring.guards.base import GuardConfig
@@ -39,15 +39,15 @@ def test_daily_loss_guard_resets_each_day(frozen_time):
 def test_stale_mark_guard_handles_formats(frozen_time):
     guard = StaleMarkGuard(_config("stale_mark", threshold=30))
 
-    fresh_time = datetime.now() - timedelta(seconds=10)
+    fresh_time = datetime.now(UTC) - timedelta(seconds=10)
     assert guard.check({"symbol": "BTC-PERP", "mark_timestamp": fresh_time.isoformat()}) is None
 
-    stale_time = datetime.now() - timedelta(seconds=90)
+    stale_time = datetime.now(UTC) - timedelta(seconds=90)
     alert = guard.check({"symbol": "BTC-PERP", "mark_timestamp": stale_time.isoformat()})
     assert alert is not None
     assert "Stale marks detected" in alert.message
 
-    epoch_time = int((datetime.now() - timedelta(seconds=120)).timestamp())
+    epoch_time = int((datetime.now(UTC) - timedelta(seconds=120)).timestamp())
     second_alert = guard.check({"symbol": "ETH-PERP", "mark_timestamp": epoch_time})
     assert second_alert is not None
 

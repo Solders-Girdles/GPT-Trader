@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6134,
-    "total_files": 732,
+    "total_tests": 6154,
+    "total_files": 737,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 5969,
+    "unit": 5989,
     "asyncio": 347,
-    "parametrize": 154,
+    "parametrize": 155,
     "property": 82,
     "integration": 79,
     "endpoints": 78,
@@ -203,6 +203,7 @@
       "tests/unit/gpt_trader/cli/commands/optimize/test_formatters.py",
       "tests/unit/gpt_trader/cli/test_cli_unit.py",
       "tests/unit/gpt_trader/cli/test_commands_account_treasury.py",
+      "tests/unit/gpt_trader/cli/test_commands_coinbase.py",
       "tests/unit/gpt_trader/cli/test_commands_orders.py",
       "tests/unit/gpt_trader/cli/test_commands_orders_editing.py",
       "tests/unit/gpt_trader/cli/test_commands_preflight.py",
@@ -581,6 +582,7 @@
       "tests/unit/gpt_trader/monitoring/test_status_reporter.py",
       "tests/unit/gpt_trader/monitoring/test_status_reporter_file_output.py",
       "tests/unit/gpt_trader/monitoring/test_status_reporter_health.py",
+      "tests/unit/gpt_trader/monitoring/test_status_reporter_time.py",
       "tests/unit/gpt_trader/monitoring/two_person_rule/test_manager_edges.py",
       "tests/unit/gpt_trader/monitoring/two_person_rule/test_models_edges.py"
     ],
@@ -687,6 +689,12 @@
     ],
     "test_check_import_boundaries.py": [
       "tests/unit/scripts/test_check_import_boundaries.py"
+    ],
+    "test_check_legacy_patterns.py": [
+      "tests/unit/scripts/test_check_legacy_patterns.py"
+    ],
+    "test_check_legacy_test_triage.py": [
+      "tests/unit/scripts/test_check_legacy_test_triage.py"
     ],
     "test_check_test_hygiene.py": [
       "tests/unit/scripts/test_check_test_hygiene.py"
@@ -864,7 +872,8 @@
       "tests/unit/gpt_trader/utilities/test_logging_patterns_domain.py",
       "tests/unit/gpt_trader/utilities/test_parsing.py",
       "tests/unit/gpt_trader/utilities/test_performance_monitor.py",
-      "tests/unit/gpt_trader/utilities/test_quantization.py"
+      "tests/unit/gpt_trader/utilities/test_quantization.py",
+      "tests/unit/gpt_trader/utilities/test_time_provider.py"
     ],
     "validation": [
       "tests/unit/gpt_trader/validation/test_base_validator.py",
@@ -8522,6 +8531,24 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/cli/test_commands_coinbase.py": [
+      {
+        "name": "test_coinbase_connectivity_success",
+        "line": 8,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_coinbase_connectivity_failure",
+        "line": 31,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/cli/test_commands_orders.py": [
       {
         "name": "test_build_order_payload_includes_optional_fields",
@@ -13508,7 +13535,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_errors.py": [
       {
         "name": "test_401_maps_to_auth_error",
-        "line": 19,
+        "line": 23,
         "markers": [
           "unit"
         ],
@@ -13516,7 +13543,7 @@
       },
       {
         "name": "test_400_maps_to_invalid_request_error",
-        "line": 31,
+        "line": 35,
         "markers": [
           "unit"
         ],
@@ -13524,7 +13551,15 @@
       },
       {
         "name": "test_500_maps_to_brokerage_error",
-        "line": 44,
+        "line": 48,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_503_maps_to_transient_broker_error",
+        "line": 61,
         "markers": [
           "unit"
         ],
@@ -13532,7 +13567,7 @@
       },
       {
         "name": "test_429_triggers_retry_with_backoff",
-        "line": 57,
+        "line": 67,
         "markers": [
           "unit"
         ],
@@ -13540,7 +13575,7 @@
       },
       {
         "name": "test_429_exhausts_retries",
-        "line": 74,
+        "line": 84,
         "markers": [
           "unit"
         ],
@@ -13548,7 +13583,7 @@
       },
       {
         "name": "test_503_triggers_retry",
-        "line": 86,
+        "line": 96,
         "markers": [
           "unit"
         ],
@@ -13556,7 +13591,7 @@
       },
       {
         "name": "test_network_errors_retry",
-        "line": 103,
+        "line": 113,
         "markers": [
           "unit"
         ],
@@ -13564,7 +13599,7 @@
       },
       {
         "name": "test_jitter_applied_to_retry_delay",
-        "line": 120,
+        "line": 130,
         "markers": [
           "unit"
         ],
@@ -13572,7 +13607,7 @@
       },
       {
         "name": "test_408_timeout_does_not_retry",
-        "line": 142,
+        "line": 152,
         "markers": [
           "unit"
         ],
@@ -33313,7 +33348,7 @@
     "tests/unit/gpt_trader/monitoring/test_health_checks.py": [
       {
         "name": "TestCheckBrokerPing::test_success_with_get_time",
-        "line": 16,
+        "line": 23,
         "markers": [
           "unit"
         ],
@@ -33322,7 +33357,7 @@
       },
       {
         "name": "TestCheckBrokerPing::test_success_fallback_to_list_balances",
-        "line": 27,
+        "line": 34,
         "markers": [
           "unit"
         ],
@@ -33331,7 +33366,7 @@
       },
       {
         "name": "TestCheckBrokerPing::test_failure_on_exception",
-        "line": 36,
+        "line": 43,
         "markers": [
           "unit"
         ],
@@ -33340,7 +33375,7 @@
       },
       {
         "name": "TestCheckBrokerPing::test_high_latency_warning",
-        "line": 46,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -33349,7 +33384,7 @@
       },
       {
         "name": "TestCheckDegradationState::test_normal_operation",
-        "line": 62,
+        "line": 69,
         "markers": [
           "unit"
         ],
@@ -33358,7 +33393,7 @@
       },
       {
         "name": "TestCheckDegradationState::test_global_paused",
-        "line": 76,
+        "line": 83,
         "markers": [
           "unit"
         ],
@@ -33367,7 +33402,7 @@
       },
       {
         "name": "TestCheckDegradationState::test_reduce_only_mode",
-        "line": 90,
+        "line": 97,
         "markers": [
           "unit"
         ],
@@ -33376,12 +33411,39 @@
       },
       {
         "name": "TestCheckDegradationState::test_symbol_paused",
-        "line": 111,
+        "line": 118,
         "markers": [
           "unit"
         ],
         "docstring": "Test warning when specific symbols are paused.",
         "class": "TestCheckDegradationState"
+      },
+      {
+        "name": "TestCheckTickerFreshness::test_all_fresh",
+        "line": 143,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test healthy when all symbols are fresh.",
+        "class": "TestCheckTickerFreshness"
+      },
+      {
+        "name": "TestCheckTickerFreshness::test_some_stale",
+        "line": 166,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test unhealthy when some symbols are stale.",
+        "class": "TestCheckTickerFreshness"
+      },
+      {
+        "name": "TestCheckTickerFreshness::test_no_data_available",
+        "line": 197,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test unhealthy when no tickers are available.",
+        "class": "TestCheckTickerFreshness"
       }
     ],
     "tests/unit/gpt_trader/monitoring/test_health_checks_runner.py": [
@@ -33396,7 +33458,7 @@
       },
       {
         "name": "TestHealthCheckRunner::test_set_broker",
-        "line": 28,
+        "line": 29,
         "markers": [
           "unit"
         ],
@@ -33405,7 +33467,7 @@
       },
       {
         "name": "TestHealthCheckRunner::test_set_degradation_state",
-        "line": 37,
+        "line": 38,
         "markers": [
           "unit"
         ],
@@ -33414,7 +33476,7 @@
       },
       {
         "name": "TestHealthCheckRunner::test_run_checks_sync",
-        "line": 46,
+        "line": 47,
         "markers": [
           "unit"
         ],
@@ -33423,7 +33485,7 @@
       },
       {
         "name": "TestHealthCheckRunner::test_start_and_stop",
-        "line": 75,
+        "line": 76,
         "markers": [
           "asyncio",
           "unit"
@@ -33433,7 +33495,7 @@
       },
       {
         "name": "TestHealthCheckRunner::test_execute_checks_updates_health_state",
-        "line": 96,
+        "line": 97,
         "markers": [
           "asyncio",
           "unit"
@@ -33443,7 +33505,7 @@
       },
       {
         "name": "TestHealthCheckResult::test_creation",
-        "line": 121,
+        "line": 122,
         "markers": [
           "unit"
         ],
@@ -33452,7 +33514,7 @@
       },
       {
         "name": "TestHealthCheckResult::test_unhealthy_result",
-        "line": 128,
+        "line": 129,
         "markers": [
           "unit"
         ],
@@ -34247,7 +34309,7 @@
       },
       {
         "name": "test_record_histogram_with_labels_uses_configured_buckets",
-        "line": 52,
+        "line": 50,
         "markers": [
           "unit"
         ],
@@ -34255,7 +34317,7 @@
       },
       {
         "name": "test_metrics_summary_includes_labeled_histograms_and_iso_timestamp",
-        "line": 63,
+        "line": 61,
         "markers": [
           "unit"
         ],
@@ -34263,7 +34325,7 @@
       },
       {
         "name": "TestMetricsSummary::test_summary_shape",
-        "line": 78,
+        "line": 76,
         "markers": [
           "unit"
         ],
@@ -34272,7 +34334,7 @@
       },
       {
         "name": "TestMetricsSummary::test_summary_includes_all_metrics",
-        "line": 97,
+        "line": 95,
         "markers": [
           "unit"
         ],
@@ -34281,7 +34343,7 @@
       },
       {
         "name": "TestHistograms::test_record_histogram_basic",
-        "line": 116,
+        "line": 114,
         "markers": [
           "unit"
         ],
@@ -34290,7 +34352,7 @@
       },
       {
         "name": "TestHistograms::test_record_histogram_with_labels",
-        "line": 127,
+        "line": 125,
         "markers": [
           "unit"
         ],
@@ -34299,7 +34361,7 @@
       },
       {
         "name": "TestHistograms::test_histogram_buckets",
-        "line": 144,
+        "line": 140,
         "markers": [
           "unit"
         ],
@@ -34307,26 +34369,8 @@
         "class": "TestHistograms"
       },
       {
-        "name": "TestHistograms::test_histogram_overflow_does_not_increment_buckets",
-        "line": 162,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test values above all buckets only increment count/total.",
-        "class": "TestHistograms"
-      },
-      {
-        "name": "TestHistograms::test_histogram_boundary_value_is_inclusive",
-        "line": 177,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test boundary values are counted in the matching bucket.",
-        "class": "TestHistograms"
-      },
-      {
         "name": "TestHistograms::test_histogram_custom_buckets",
-        "line": 188,
+        "line": 158,
         "markers": [
           "unit"
         ],
@@ -34335,7 +34379,7 @@
       },
       {
         "name": "TestHistogramData::test_to_dict_format",
-        "line": 208,
+        "line": 178,
         "markers": [
           "unit"
         ],
@@ -34344,7 +34388,7 @@
       },
       {
         "name": "TestHistogramData::test_mean_with_no_data",
-        "line": 227,
+        "line": 197,
         "markers": [
           "unit"
         ],
@@ -34609,7 +34653,7 @@
     "tests/unit/gpt_trader/monitoring/test_runtime_guards_base.py": [
       {
         "name": "test_runtime_guard_triggers_generic_breach",
-        "line": 26,
+        "line": 34,
         "markers": [
           "unit"
         ],
@@ -34617,7 +34661,7 @@
       },
       {
         "name": "test_runtime_guard_warning_before_breach",
-        "line": 39,
+        "line": 47,
         "markers": [
           "unit"
         ],
@@ -34625,7 +34669,7 @@
       },
       {
         "name": "test_runtime_guard_less_than_comparison",
-        "line": 55,
+        "line": 63,
         "markers": [
           "unit"
         ],
@@ -34633,7 +34677,7 @@
       },
       {
         "name": "test_runtime_guard_absolute_comparison",
-        "line": 67,
+        "line": 75,
         "markers": [
           "unit"
         ],
@@ -34641,7 +34685,7 @@
       },
       {
         "name": "test_runtime_guard_uses_time_provider_for_cooldown",
-        "line": 77,
+        "line": 85,
         "markers": [
           "unit"
         ],
@@ -34816,7 +34860,7 @@
     "tests/unit/gpt_trader/monitoring/test_status_reporter_file_output.py": [
       {
         "name": "test_writes_valid_json",
-        "line": 31,
+        "line": 38,
         "markers": [
           "asyncio",
           "unit"
@@ -34825,7 +34869,7 @@
       },
       {
         "name": "test_handles_decimal_serialization",
-        "line": 59,
+        "line": 66,
         "markers": [
           "asyncio",
           "unit"
@@ -34834,7 +34878,7 @@
       },
       {
         "name": "test_atomic_write_overwrites_cleanly",
-        "line": 75,
+        "line": 82,
         "markers": [
           "asyncio",
           "unit"
@@ -34843,7 +34887,7 @@
       },
       {
         "name": "test_write_status_creates_directories_and_writes_json",
-        "line": 94,
+        "line": 101,
         "markers": [
           "asyncio",
           "unit"
@@ -34852,7 +34896,7 @@
       },
       {
         "name": "test_decimal_encoder_handles_nested_decimals",
-        "line": 106,
+        "line": 113,
         "markers": [
           "unit"
         ],
@@ -34860,7 +34904,7 @@
       },
       {
         "name": "test_write_status_handles_write_errors",
-        "line": 126,
+        "line": 133,
         "markers": [
           "asyncio",
           "unit"
@@ -34869,7 +34913,7 @@
       },
       {
         "name": "test_serialize_status_includes_expected_keys",
-        "line": 141,
+        "line": 148,
         "markers": [
           "unit"
         ],
@@ -34877,16 +34921,6 @@
       },
       {
         "name": "TestStatusReporterStart::test_start_when_disabled",
-        "line": 167,
-        "markers": [
-          "asyncio",
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestStatusReporterStart"
-      },
-      {
-        "name": "TestStatusReporterStart::test_start_creates_task",
         "line": 174,
         "markers": [
           "asyncio",
@@ -34896,8 +34930,18 @@
         "class": "TestStatusReporterStart"
       },
       {
+        "name": "TestStatusReporterStart::test_start_creates_task",
+        "line": 181,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestStatusReporterStart"
+      },
+      {
         "name": "TestStatusReporterStart::test_start_writes_initial_status",
-        "line": 191,
+        "line": 198,
         "markers": [
           "asyncio",
           "unit"
@@ -34907,7 +34951,7 @@
       },
       {
         "name": "TestStatusReporterStart::test_start_creates_directory",
-        "line": 209,
+        "line": 216,
         "markers": [
           "asyncio",
           "unit"
@@ -34917,7 +34961,7 @@
       },
       {
         "name": "TestStatusReporterStop::test_stop_cancels_task",
-        "line": 227,
+        "line": 234,
         "markers": [
           "asyncio",
           "unit"
@@ -34945,7 +34989,7 @@
       },
       {
         "name": "test_update_account_skips_zero_or_invalid_balances",
-        "line": 86,
+        "line": 90,
         "markers": [
           "unit"
         ],
@@ -34953,7 +34997,7 @@
       },
       {
         "name": "test_update_strategy_generates_decision_id_and_handles_invalid_timestamp",
-        "line": 106,
+        "line": 110,
         "markers": [
           "unit"
         ],
@@ -34961,7 +35005,7 @@
       },
       {
         "name": "test_update_equity_swallows_record_gauge_exceptions",
-        "line": 129,
+        "line": 133,
         "markers": [
           "unit"
         ],
@@ -34969,7 +35013,7 @@
       },
       {
         "name": "test_add_trade_caps_recent_trades",
-        "line": 142,
+        "line": 146,
         "markers": [
           "unit"
         ],
@@ -34977,7 +35021,7 @@
       },
       {
         "name": "test_update_strategy_caps_decisions",
-        "line": 167,
+        "line": 171,
         "markers": [
           "unit"
         ],
@@ -34985,7 +35029,7 @@
       },
       {
         "name": "test_update_account_accepts_object_balances_and_coerces_invalid",
-        "line": 179,
+        "line": 183,
         "markers": [
           "unit"
         ],
@@ -34993,7 +35037,7 @@
       },
       {
         "name": "TestStatusReporterHealth::test_healthy_status",
-        "line": 202,
+        "line": 206,
         "markers": [
           "asyncio",
           "unit"
@@ -35003,7 +35047,7 @@
       },
       {
         "name": "TestStatusReporterHealth::test_unhealthy_recent_error",
-        "line": 217,
+        "line": 221,
         "markers": [
           "unit"
         ],
@@ -35012,12 +35056,22 @@
       },
       {
         "name": "TestStatusReporterHealth::test_unhealthy_stale_prices",
-        "line": 229,
+        "line": 233,
         "markers": [
           "unit"
         ],
         "docstring": "",
         "class": "TestStatusReporterHealth"
+      }
+    ],
+    "tests/unit/gpt_trader/monitoring/test_status_reporter_time.py": [
+      {
+        "name": "test_status_reporter_uses_fake_clock_for_timestamps",
+        "line": 21,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/monitoring/two_person_rule/test_manager_edges.py": [
@@ -53074,6 +53128,40 @@
         "class": "TestQuantizeRealWorldScenarios"
       }
     ],
+    "tests/unit/gpt_trader/utilities/test_time_provider.py": [
+      {
+        "name": "test_system_clock_returns_utc_and_time_values",
+        "line": 24,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_fake_clock_advances_deterministically",
+        "line": 34,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_fake_clock_set_datetime_updates_time",
+        "line": 48,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_clock_helpers_switch_and_reset",
+        "line": 58,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/validation/test_base_validator.py": [
       {
         "name": "test_validator_no_predicate_is_pass_through",
@@ -56128,6 +56216,101 @@
         "docstring": ""
       }
     ],
+    "tests/unit/scripts/test_check_legacy_patterns.py": [
+      {
+        "name": "TestDeprecatedEnvUsage::test_env_var_allowed_in_allowlist",
+        "line": 20,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestDeprecatedEnvUsage"
+      },
+      {
+        "name": "TestDeprecatedEnvUsage::test_env_var_disallowed_elsewhere",
+        "line": 32,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestDeprecatedEnvUsage"
+      },
+      {
+        "name": "TestBlockingCallsInAsync::test_blocking_calls_inside_async_flagged",
+        "line": 49,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestBlockingCallsInAsync"
+      },
+      {
+        "name": "TestBlockingCallsInAsync::test_blocking_calls_inside_sync_allowed",
+        "line": 70,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestBlockingCallsInAsync"
+      },
+      {
+        "name": "TestDuplicateDeployEntrypoints::test_duplicate_entrypoints_flagged",
+        "line": 88,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestDuplicateDeployEntrypoints"
+      }
+    ],
+    "tests/unit/scripts/test_check_legacy_test_triage.py": [
+      {
+        "name": "TestLoadManifest::test_invalid_manifest_payload_raises",
+        "line": 41,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestLoadManifest"
+      },
+      {
+        "name": "TestValidateManifestEntries::test_bad_paths_are_flagged",
+        "line": 59,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestValidateManifestEntries"
+      },
+      {
+        "name": "TestValidateManifestEntries::test_invalid_action_status_and_missing_reason_flagged",
+        "line": 93,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestValidateManifestEntries"
+      },
+      {
+        "name": "TestValidateMarkerAlignment::test_missing_manifest_and_mismatched_marker_flagged",
+        "line": 123,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestValidateMarkerAlignment"
+      },
+      {
+        "name": "TestValidateMarkerAlignment::test_missing_required_marker_flagged_except_done_missing_file",
+        "line": 148,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestValidateMarkerAlignment"
+      }
+    ],
     "tests/unit/scripts/test_check_test_hygiene.py": [
       {
         "name": "TestValidCases::test_valid_unit_test_in_gpt_trader_passes",
@@ -56238,8 +56421,17 @@
         "class": "TestSleepViolations"
       },
       {
-        "name": "TestSleepViolations::test_time_sleep_with_fake_clock_passes",
+        "name": "TestSleepViolations::test_time_sleep_inside_string_literal_not_flagged",
         "line": 213,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Sample code containing 'time.sleep(' in a string should not be flagged.",
+        "class": "TestSleepViolations"
+      },
+      {
+        "name": "TestSleepViolations::test_time_sleep_with_fake_clock_passes",
+        "line": 229,
         "markers": [
           "unit"
         ],
@@ -56248,7 +56440,7 @@
       },
       {
         "name": "TestPatchViolations::test_patch_call_flagged",
-        "line": 233,
+        "line": 249,
         "markers": [
           "unit"
         ],
@@ -56257,7 +56449,7 @@
       },
       {
         "name": "TestPatchViolations::test_patch_object_call_flagged",
-        "line": 247,
+        "line": 263,
         "markers": [
           "unit"
         ],
@@ -56266,7 +56458,7 @@
       },
       {
         "name": "TestHelperFunctions::test_is_patch_callable_detects_patch_name",
-        "line": 267,
+        "line": 283,
         "markers": [
           "unit"
         ],
@@ -56275,7 +56467,7 @@
       },
       {
         "name": "TestHelperFunctions::test_is_patch_callable_detects_patch_attribute",
-        "line": 274,
+        "line": 290,
         "markers": [
           "unit"
         ],
@@ -56284,7 +56476,7 @@
       },
       {
         "name": "TestHelperFunctions::test_is_patch_callable_detects_patch_object",
-        "line": 285,
+        "line": 301,
         "markers": [
           "unit"
         ],
@@ -56293,7 +56485,7 @@
       },
       {
         "name": "TestHelperFunctions::test_first_patch_call_line_returns_none_for_no_patch",
-        "line": 296,
+        "line": 312,
         "markers": [
           "unit"
         ],
@@ -56302,7 +56494,7 @@
       },
       {
         "name": "TestHelperFunctions::test_first_patch_call_line_returns_line_number",
-        "line": 301,
+        "line": 317,
         "markers": [
           "unit"
         ],
@@ -56311,7 +56503,7 @@
       },
       {
         "name": "TestHelperFunctions::test_first_patch_call_line_handles_syntax_error",
-        "line": 307,
+        "line": 323,
         "markers": [
           "unit"
         ],
@@ -56320,7 +56512,7 @@
       },
       {
         "name": "TestMainEntryPoint::test_main_returns_zero_for_valid_tests",
-        "line": 316,
+        "line": 332,
         "markers": [
           "unit"
         ],
@@ -56329,7 +56521,7 @@
       },
       {
         "name": "TestMainEntryPoint::test_main_returns_one_for_violations",
-        "line": 329,
+        "line": 345,
         "markers": [
           "unit"
         ],

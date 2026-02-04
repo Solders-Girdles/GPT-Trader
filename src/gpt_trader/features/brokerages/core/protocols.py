@@ -121,8 +121,32 @@ class MarketDataProtocol(Protocol):
         ...
 
 
+@runtime_checkable
+class TickerFreshnessProvider(Protocol):
+    """
+    Protocol for checking ticker freshness.
+
+    Implemented by ticker caches or services that can report staleness for a symbol.
+    """
+
+    def is_stale(self, symbol: str) -> bool:
+        """Return True when ticker data for the symbol is stale or missing."""
+        ...
+
+
+@runtime_checkable
+class TickerFreshnessProviderSource(Protocol):
+    """Protocol for exposing a ticker freshness provider."""
+
+    def get_ticker_freshness_provider(self) -> TickerFreshnessProvider | None:
+        """Return a ticker freshness provider if available."""
+        ...
+
+
 __all__ = [
     "BrokerProtocol",
     "ExtendedBrokerProtocol",
     "MarketDataProtocol",
+    "TickerFreshnessProvider",
+    "TickerFreshnessProviderSource",
 ]

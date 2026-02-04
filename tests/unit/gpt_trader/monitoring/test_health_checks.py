@@ -146,7 +146,10 @@ class TestCheckDegradationState:
 class FakeMarketDataService:
     def __init__(self, symbols: list[str], ticker_cache: TickerCache) -> None:
         self._symbols = symbols
-        self.ticker_cache = ticker_cache
+        self._ticker_cache = ticker_cache
+
+    def get_ticker_freshness_provider(self) -> TickerCache:
+        return self._ticker_cache
 
 
 class FakeMarketDataServiceNoCache:
@@ -225,7 +228,7 @@ class TestCheckTickerFreshness:
         assert details["stale_count"] == 2
 
     def test_cache_unavailable_records_metric(self) -> None:
-        """Test ticker cache unavailable increments metrics counter."""
+        """Test missing provider/cache increments metrics counter and is skipped/healthy."""
         market_data_service = FakeMarketDataServiceNoCache(["BTC-USD"])
 
         healthy, details = check_ticker_freshness(market_data_service)
@@ -261,3 +264,40 @@ class TestCheckTickerFreshness:
         assert collector.counters[TICKER_STALE_SYMBOLS_COUNTER] == 1
         output = format_prometheus(collector.get_metrics_summary())
         assert f"{TICKER_STALE_SYMBOLS_COUNTER} 1" in output
+
+    def test_partial_symbol_coverage(self) -> None:
+        """Test missing symbols are marked stale."""
+        base_time = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        clock = FakeClock(base_time)
+        cache = TickerCache(ttl_seconds=5, clock=clock)
+        cache.update(
+            Ticker(
+                symbol="BTC-USD",
+                bid=1.0,
+                ask=2.0,
+                last=1.5,
+                ts=base_time,
+            )
+        )
+        market_data_service = FakeMarketDataService(["BTC-USD", "ETH-USD"], cache)
+
+        healthy, details = check_ticker_freshness(market_data_service)
+
+        assert healthy is False
+        assert details["stale_symbols"] == ["ETH-USD"]
+        assert details["stale_count"] == 1
+
+    def test_missing_provider_is_skipped(self) -> None:
+        """Test missing freshness provider is skipped and healthy."""
+
+        class MarketDataNoProvider:
+            def __init__(self, symbols: list[str]) -> None:
+                self._symbols = symbols
+
+        market_data_service = MarketDataNoProvider(["BTC-USD"])
+
+        healthy, details = check_ticker_freshness(market_data_service)
+
+        assert healthy is True
+        assert details["skipped"] is True
+        assert details["reason"] == "ticker_freshness_provider_unavailable"

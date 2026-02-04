@@ -194,3 +194,15 @@ class TestTickerServiceEdges:
 
         assert service._running is False
         thread.join.assert_called_once_with(timeout=1.0)
+
+    def test_ticker_freshness_provider_not_advertised_until_cache_populated(self) -> None:
+        service = CoinbaseTickerService(symbols=["BTC-USD"])
+
+        assert service.get_ticker_freshness_provider() is None
+
+        base_time = datetime(2024, 1, 1, 0, 0, 0, tzinfo=UTC)
+        service._ticker_cache.update(
+            Ticker(symbol="BTC-USD", bid=1.0, ask=2.0, last=1.5, ts=base_time)
+        )
+
+        assert service.get_ticker_freshness_provider() is service._ticker_cache

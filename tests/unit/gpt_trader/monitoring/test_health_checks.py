@@ -10,8 +10,8 @@ import pytest
 
 from gpt_trader.features.brokerages.coinbase.market_data_service import Ticker, TickerCache
 from gpt_trader.monitoring.health_checks import (
-    TICKER_FRESHNESS_CHECKS_COUNTER,
     TICKER_CACHE_UNAVAILABLE_COUNTER,
+    TICKER_FRESHNESS_CHECKS_COUNTER,
     TICKER_STALE_SYMBOLS_COUNTER,
     check_broker_ping,
     check_degradation_state,

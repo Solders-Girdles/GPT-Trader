@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from gpt_trader.monitoring.metrics_collector import record_counter
 from gpt_trader.utilities.logging_patterns import get_logger
@@ -256,13 +256,13 @@ def _resolve_ticker_freshness_provider(
     for attribute_name in ("ticker_cache", "_ticker_cache"):
         candidate = getattr(market_data_service, attribute_name, None)
         if candidate is not None and hasattr(candidate, "is_stale"):
-            return candidate
+            return cast(TickerFreshnessProvider, candidate)
 
     # Finally, accept any object that has a callable is_stale.
     if hasattr(market_data_service, "is_stale") and callable(
         getattr(market_data_service, "is_stale", None)
     ):
-        return market_data_service
+        return cast(TickerFreshnessProvider, market_data_service)
 
     return None
 

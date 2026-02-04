@@ -210,6 +210,8 @@ class TradingEngine(BaseEngine):
         market_data_service = None
         if context.container is not None:
             market_data_service = getattr(context.container, "market_data_service", None)
+        if market_data_service is not None:
+            self._status_reporter.set_market_data_service(market_data_service)
         self._health_check_runner = HealthCheckRunner(
             health_state=health_state,
             broker=context.broker,

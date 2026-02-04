@@ -72,6 +72,7 @@
       "resolve_effective_price",
       "rotate_key",
       "state_collection",
+      "status_reporter",
       "status_write",
       "to_product",
       "update_status",
@@ -2007,6 +2008,23 @@
       ],
       "statuses": null
     },
+    "status_reporter": {
+      "common_fields": [
+        "details",
+        "error"
+      ],
+      "components": null,
+      "levels": [
+        "WARNING"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "monitoring/status_reporter.py"
+      ],
+      "statuses": [
+        "fail"
+      ]
+    },
     "status_write": {
       "common_fields": [
         "cls",
@@ -2480,7 +2498,7 @@
     "client_ip": 4,
     "client_order_id": 11,
     "consecutive_failures": 5,
-    "error": 41,
+    "error": 42,
     "error_message": 85,
     "error_msg": 5,
     "error_type": 79,
@@ -2506,8 +2524,8 @@
     "DEBUG": 48,
     "ERROR": 79,
     "INFO": 119,
-    "WARNING": 71
+    "WARNING": 72
   },
-  "total_event_types": 131,
+  "total_event_types": 132,
   "version": "1.0"
 }

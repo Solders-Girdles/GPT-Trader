@@ -34896,7 +34896,7 @@
     "tests/unit/gpt_trader/monitoring/test_status_reporter_file_output.py": [
       {
         "name": "test_writes_valid_json",
-        "line": 38,
+        "line": 42,
         "markers": [
           "asyncio",
           "unit"
@@ -34905,7 +34905,7 @@
       },
       {
         "name": "test_handles_decimal_serialization",
-        "line": 66,
+        "line": 70,
         "markers": [
           "asyncio",
           "unit"
@@ -34914,7 +34914,7 @@
       },
       {
         "name": "test_atomic_write_overwrites_cleanly",
-        "line": 82,
+        "line": 86,
         "markers": [
           "asyncio",
           "unit"
@@ -34923,7 +34923,7 @@
       },
       {
         "name": "test_write_status_creates_directories_and_writes_json",
-        "line": 101,
+        "line": 105,
         "markers": [
           "asyncio",
           "unit"
@@ -34932,7 +34932,7 @@
       },
       {
         "name": "test_decimal_encoder_handles_nested_decimals",
-        "line": 113,
+        "line": 117,
         "markers": [
           "unit"
         ],
@@ -34940,7 +34940,7 @@
       },
       {
         "name": "test_write_status_handles_write_errors",
-        "line": 133,
+        "line": 137,
         "markers": [
           "asyncio",
           "unit"
@@ -34949,7 +34949,23 @@
       },
       {
         "name": "test_serialize_status_includes_expected_keys",
-        "line": 148,
+        "line": 152,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_ticker_freshness_summary_includes_counts_and_reason",
+        "line": 189,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_ticker_freshness_summary_caps_symbols",
+        "line": 209,
         "markers": [
           "unit"
         ],
@@ -34957,7 +34973,7 @@
       },
       {
         "name": "TestStatusReporterStart::test_start_when_disabled",
-        "line": 174,
+        "line": 231,
         "markers": [
           "asyncio",
           "unit"
@@ -34967,7 +34983,7 @@
       },
       {
         "name": "TestStatusReporterStart::test_start_creates_task",
-        "line": 181,
+        "line": 238,
         "markers": [
           "asyncio",
           "unit"
@@ -34977,7 +34993,7 @@
       },
       {
         "name": "TestStatusReporterStart::test_start_writes_initial_status",
-        "line": 198,
+        "line": 255,
         "markers": [
           "asyncio",
           "unit"
@@ -34987,7 +35003,7 @@
       },
       {
         "name": "TestStatusReporterStart::test_start_creates_directory",
-        "line": 216,
+        "line": 273,
         "markers": [
           "asyncio",
           "unit"
@@ -34997,7 +35013,7 @@
       },
       {
         "name": "TestStatusReporterStop::test_stop_cancels_task",
-        "line": 234,
+        "line": 291,
         "markers": [
           "asyncio",
           "unit"

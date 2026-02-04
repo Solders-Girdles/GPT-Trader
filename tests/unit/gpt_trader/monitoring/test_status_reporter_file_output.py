@@ -11,7 +11,11 @@ from pathlib import Path
 import pytest
 
 import gpt_trader.monitoring.status_reporter as status_reporter
-from gpt_trader.monitoring.status_reporter import DecimalEncoder, StatusReporter
+from gpt_trader.monitoring.status_reporter import (
+    MAX_TICKER_FRESHNESS_SYMBOLS,
+    DecimalEncoder,
+    StatusReporter,
+)
 
 
 class _TestClock:
@@ -163,8 +167,61 @@ def test_serialize_status_includes_expected_keys() -> None:
         "system",
         "heartbeat",
         "websocket",
+        "ticker_freshness",
     ):
         assert key in payload
+
+
+class _FakeTickerCache:
+    def __init__(self, stale_symbols: set[str]) -> None:
+        self._stale_symbols = stale_symbols
+
+    def is_stale(self, symbol: str) -> bool:
+        return symbol in self._stale_symbols
+
+
+class _FakeMarketDataService:
+    def __init__(self, symbols: list[str], stale_symbols: set[str]) -> None:
+        self.symbols = symbols
+        self.ticker_cache = _FakeTickerCache(stale_symbols)
+
+
+def test_ticker_freshness_summary_includes_counts_and_reason() -> None:
+    reporter = StatusReporter()
+    service = _FakeMarketDataService(
+        symbols=["BTC-USD", "ETH-USD", "SOL-USD"],
+        stale_symbols={"BTC-USD", "SOL-USD"},
+    )
+    reporter.set_market_data_service(service)
+
+    reporter._update_status()
+    payload = reporter._serialize_status()
+    summary = payload["ticker_freshness"]
+
+    assert summary["symbol_count"] == 3
+    assert summary["stale_count"] == 2
+    assert summary["severity"] == "warning"
+    assert summary["reason"] == "stale_symbols_detected"
+    assert summary["status"] == "fail"
+    assert summary["stale_symbols"] == ["BTC-USD", "SOL-USD"]
+
+
+def test_ticker_freshness_summary_caps_symbols() -> None:
+    reporter = StatusReporter()
+    symbols = [f"SYM-{i}" for i in range(MAX_TICKER_FRESHNESS_SYMBOLS + 2)]
+    service = _FakeMarketDataService(
+        symbols=symbols,
+        stale_symbols=set(symbols),
+    )
+    reporter.set_market_data_service(service)
+
+    reporter._update_status()
+    payload = reporter._serialize_status()
+    summary = payload["ticker_freshness"]
+
+    assert summary["stale_count"] == len(symbols)
+    assert summary["stale_symbols_capped"] is True
+    assert len(summary["stale_symbols"]) == MAX_TICKER_FRESHNESS_SYMBOLS
 
 
 class TestStatusReporterStart:

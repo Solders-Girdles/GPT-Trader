@@ -10,11 +10,23 @@ import pytest
 
 from gpt_trader.features.brokerages.coinbase.market_data_service import Ticker, TickerCache
 from gpt_trader.monitoring.health_checks import (
+    TICKER_CACHE_UNAVAILABLE_COUNTER,
+    TICKER_STALE_SYMBOLS_COUNTER,
     check_broker_ping,
     check_degradation_state,
     check_ticker_freshness,
 )
+from gpt_trader.monitoring.metrics_collector import get_metrics_collector, reset_all
+from gpt_trader.monitoring.metrics_exporter import format_prometheus
 from gpt_trader.utilities.time_provider import FakeClock
+
+
+@pytest.fixture(autouse=True)
+def reset_metrics():
+    """Reset metrics before and after each test."""
+    reset_all()
+    yield
+    reset_all()
 
 
 class TestCheckBrokerPing:
@@ -137,6 +149,11 @@ class FakeMarketDataService:
         self.ticker_cache = ticker_cache
 
 
+class FakeMarketDataServiceNoCache:
+    def __init__(self, symbols: list[str]) -> None:
+        self._symbols = symbols
+
+
 class TestCheckTickerFreshness:
     """Tests for check_ticker_freshness function."""
 
@@ -206,3 +223,41 @@ class TestCheckTickerFreshness:
         assert healthy is False
         assert set(details["stale_symbols"]) == {"BTC-USD", "ETH-USD"}
         assert details["stale_count"] == 2
+
+    def test_cache_unavailable_records_metric(self) -> None:
+        """Test ticker cache unavailable increments metrics counter."""
+        market_data_service = FakeMarketDataServiceNoCache(["BTC-USD"])
+
+        healthy, details = check_ticker_freshness(market_data_service)
+
+        assert healthy is True
+        assert details["ticker_cache_unavailable"] is True
+        collector = get_metrics_collector()
+        assert collector.counters[TICKER_CACHE_UNAVAILABLE_COUNTER] == 1
+        output = format_prometheus(collector.get_metrics_summary())
+        assert f"{TICKER_CACHE_UNAVAILABLE_COUNTER} 1" in output
+
+    def test_stale_symbol_metrics_incremented(self) -> None:
+        """Test stale ticker observations increment metrics counter by symbol count."""
+        base_time = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        clock = FakeClock(base_time)
+        cache = TickerCache(ttl_seconds=5, clock=clock)
+        cache.update(
+            Ticker(
+                symbol="BTC-USD",
+                bid=1.0,
+                ask=2.0,
+                last=1.5,
+                ts=base_time - timedelta(seconds=10),
+            )
+        )
+        market_data_service = FakeMarketDataService(["BTC-USD"], cache)
+
+        healthy, details = check_ticker_freshness(market_data_service)
+
+        assert healthy is False
+        assert details["stale_count"] == 1
+        collector = get_metrics_collector()
+        assert collector.counters[TICKER_STALE_SYMBOLS_COUNTER] == 1
+        output = format_prometheus(collector.get_metrics_summary())
+        assert f"{TICKER_STALE_SYMBOLS_COUNTER} 1" in output

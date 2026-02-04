@@ -294,6 +294,36 @@
       "label_keys": [],
       "locations": [
         {
+          "line": 266,
+          "path": "src/gpt_trader/monitoring/health_checks.py"
+        },
+        {
+          "line": 291,
+          "path": "src/gpt_trader/monitoring/health_checks.py"
+        }
+      ],
+      "name": "gpt_trader_ticker_cache_unavailable_total",
+      "types": [
+        "counter"
+      ]
+    },
+    {
+      "label_keys": [],
+      "locations": [
+        {
+          "line": 335,
+          "path": "src/gpt_trader/monitoring/health_checks.py"
+        }
+      ],
+      "name": "gpt_trader_ticker_stale_symbols_total",
+      "types": [
+        "counter"
+      ]
+    },
+    {
+      "label_keys": [],
+      "locations": [
+        {
           "line": 150,
           "path": "src/gpt_trader/features/live_trade/execution/router.py"
         }

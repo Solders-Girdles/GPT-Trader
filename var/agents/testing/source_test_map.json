@@ -1343,6 +1343,7 @@
       "tests/integration/test_order_flow.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_metrics.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_router_execute_async.py",
+      "tests/unit/gpt_trader/monitoring/test_health_checks.py",
       "tests/unit/gpt_trader/monitoring/test_health_checks_signals.py",
       "tests/unit/gpt_trader/monitoring/test_metrics_collector.py",
       "tests/unit/gpt_trader/monitoring/test_metrics_collector_histograms.py",
@@ -1350,6 +1351,7 @@
       "tests/unit/gpt_trader/monitoring/test_status_reporter_health.py"
     ],
     "gpt_trader.monitoring.metrics_exporter": [
+      "tests/unit/gpt_trader/monitoring/test_health_checks.py",
       "tests/unit/gpt_trader/monitoring/test_metrics_exporter.py"
     ],
     "gpt_trader.monitoring.notifications.backends": [
@@ -3779,6 +3781,8 @@
     "tests/unit/gpt_trader/monitoring/test_health_checks.py": [
       "gpt_trader.features.brokerages.coinbase.market_data_service",
       "gpt_trader.monitoring.health_checks",
+      "gpt_trader.monitoring.metrics_collector",
+      "gpt_trader.monitoring.metrics_exporter",
       "gpt_trader.utilities.time_provider"
     ],
     "tests/unit/gpt_trader/monitoring/test_health_checks_runner.py": [

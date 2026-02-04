@@ -2,6 +2,7 @@ import threading
 from dataclasses import dataclass
 from datetime import datetime
 
+from gpt_trader.features.brokerages.core.protocols import TickerFreshnessProvider
 from gpt_trader.utilities.datetime_helpers import normalize_to_utc
 from gpt_trader.utilities.time_provider import Clock, SystemClock
 
@@ -50,10 +51,16 @@ class TickerCache:
 
 
 class CoinbaseTickerService:
-    def __init__(self, symbols: list[str] | None = None):
+    def __init__(
+        self,
+        symbols: list[str] | None = None,
+        *,
+        ticker_cache: TickerCache | None = None,
+    ):
         self._symbols = symbols or []
         self._running = False
         self._thread: threading.Thread | None = None
+        self._ticker_cache = ticker_cache or TickerCache()
 
     def start(self) -> None:
         self._running = True
@@ -68,6 +75,12 @@ class CoinbaseTickerService:
 
     def set_symbols(self, symbols: list[str]) -> None:
         self._symbols = symbols
+
+    def get_ticker_freshness_provider(self) -> TickerFreshnessProvider:
+        return self._ticker_cache
+
+    def is_stale(self, symbol: str) -> bool:
+        return self._ticker_cache.is_stale(symbol)
 
     def _run(self) -> None:
         pass

@@ -19,13 +19,18 @@ from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
     from gpt_trader.app.health_server import HealthState
-    from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
     from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
     from gpt_trader.features.live_trade.degradation import DegradationState
     from gpt_trader.utilities.async_tools.bounded_to_thread import BoundedToThread
+from gpt_trader.features.brokerages.core.protocols import (
+    TickerFreshnessProvider,
+    TickerFreshnessProviderSource,
+)
 from gpt_trader.features.live_trade.risk.protocols import RiskManagerProtocol
 
 logger = get_logger(__name__, component="health_checks")
+
+TickerFreshnessService = TickerFreshnessProviderSource | TickerFreshnessProvider
 
 
 @dataclass
@@ -221,26 +226,34 @@ def _extract_market_data_symbols(market_data_service: Any) -> list[str]:
     return []
 
 
-def _resolve_ticker_cache(market_data_service: Any) -> Any | None:
-    for attribute_name in ("ticker_cache", "_ticker_cache"):
-        candidate = getattr(market_data_service, attribute_name, None)
-        if candidate is not None and hasattr(candidate, "is_stale"):
-            return candidate
+def _resolve_ticker_freshness_provider(
+    market_data_service: Any,
+) -> TickerFreshnessProvider | None:
+    if market_data_service is None:
+        return None
 
-    if hasattr(market_data_service, "is_stale") and callable(
-        getattr(market_data_service, "is_stale", None)
-    ):
+    if isinstance(market_data_service, TickerFreshnessProvider):
         return market_data_service
+
+    if isinstance(market_data_service, TickerFreshnessProviderSource):
+        try:
+            provider = market_data_service.get_ticker_freshness_provider()
+        except Exception:
+            return None
+        if isinstance(provider, TickerFreshnessProvider):
+            return provider
 
     return None
 
 
-def check_ticker_freshness(market_data_service: MarketDataService) -> tuple[bool, dict[str, Any]]:
+def check_ticker_freshness(
+    market_data_service: TickerFreshnessService | None,
+) -> tuple[bool, dict[str, Any]]:
     """
-    Check market data ticker freshness using the ticker cache.
+    Check market data ticker freshness using a freshness provider.
 
     Args:
-        market_data_service: MarketDataService instance with ticker cache.
+        market_data_service: Market data service or provider that exposes ticker freshness.
 
     Returns:
         Tuple of (healthy, details) where details includes:
@@ -274,23 +287,23 @@ def check_ticker_freshness(market_data_service: MarketDataService) -> tuple[bool
         )
         return True, details
 
-    ticker_cache = _resolve_ticker_cache(market_data_service)
-    if ticker_cache is None:
+    ticker_freshness_provider = _resolve_ticker_freshness_provider(market_data_service)
+    if ticker_freshness_provider is None:
         details.update(
             {
-                "ticker_cache_unavailable": True,
+                "ticker_freshness_provider_unavailable": True,
                 "skipped": True,
-                "reason": "ticker_cache_unavailable",
+                "reason": "ticker_freshness_provider_unavailable",
             }
         )
-        # No cache means we cannot evaluate staleness. Treat this as skipped/healthy so /health doesn't permanently fail.
+        # No provider means we cannot evaluate staleness. Treat this as skipped/healthy so /health doesn't permanently fail.
         return True, details
 
     stale_symbols: list[str] = []
     fresh_symbols: list[str] = []
     try:
         for symbol in symbols:
-            if ticker_cache.is_stale(symbol):
+            if ticker_freshness_provider.is_stale(symbol):
                 stale_symbols.append(symbol)
             else:
                 fresh_symbols.append(symbol)
@@ -436,7 +449,7 @@ class HealthCheckRunner:
         broker: BrokerProtocol | None = None,
         degradation_state: DegradationState | None = None,
         risk_manager: RiskManagerProtocol | None = None,
-        market_data_service: MarketDataService | None = None,
+        market_data_service: TickerFreshnessService | None = None,
         interval_seconds: float = 30.0,
         message_stale_seconds: float = 60.0,
         heartbeat_stale_seconds: float = 120.0,
@@ -450,7 +463,7 @@ class HealthCheckRunner:
             broker: Broker for connectivity checks.
             degradation_state: DegradationState for pause/reduce-only checks.
             risk_manager: RiskManager for reduce-only mode checks.
-            market_data_service: Market data service for ticker freshness checks.
+            market_data_service: Market data service or provider for ticker freshness checks.
             interval_seconds: How often to run checks (default 30s).
             message_stale_seconds: WS message staleness threshold.
             heartbeat_stale_seconds: WS heartbeat staleness threshold.
@@ -479,8 +492,8 @@ class HealthCheckRunner:
         """Set the risk manager for reduce-only checks."""
         self._risk_manager = manager
 
-    def set_market_data_service(self, market_data_service: MarketDataService) -> None:
-        """Set the market data service for ticker freshness checks."""
+    def set_market_data_service(self, market_data_service: TickerFreshnessService) -> None:
+        """Set the market data service or provider for ticker freshness checks."""
         self._market_data_service = market_data_service
 
     async def start(self) -> None:

@@ -183,9 +183,7 @@ def _resolve_endpoint(client: CoinbaseClient, endpoint: str) -> str:
     return client._get_endpoint_path(endpoint)
 
 
-def _evaluate_response(
-    response: Any, resolved_endpoint: str
-) -> tuple[bool, str, Any | None]:
+def _evaluate_response(response: Any, resolved_endpoint: str) -> tuple[bool, str, Any | None]:
     if response is None or response == {} or response == []:
         summary = f"Empty response from Coinbase endpoint '{resolved_endpoint}'"
         return False, summary, response
@@ -196,9 +194,7 @@ def _evaluate_response(
 
     server_time = _extract_server_time(response)
     if server_time:
-        summary = (
-            f"Coinbase endpoint '{resolved_endpoint}' reachable (server time: {server_time})"
-        )
+        summary = f"Coinbase endpoint '{resolved_endpoint}' reachable (server time: {server_time})"
     else:
         summary = f"Coinbase endpoint '{resolved_endpoint}' reachable"
     return True, summary, response

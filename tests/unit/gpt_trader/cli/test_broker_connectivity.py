@@ -62,9 +62,7 @@ def test_broker_check_coinbase_failure_malformed_payload(monkeypatch, capsys) ->
 
     client = StubClient()
 
-    monkeypatch.setattr(
-        broker_cmd, "_build_coinbase_client", lambda *, timeout: client
-    )
+    monkeypatch.setattr(broker_cmd, "_build_coinbase_client", lambda *, timeout: client)
 
     exit_code = broker_cmd._handle_coinbase_check(
         Namespace(output_format="text", endpoint="time", timeout=5)

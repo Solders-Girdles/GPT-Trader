@@ -196,3 +196,28 @@ def test_render_prometheus_includes_key_metrics(tmp_path: Path) -> None:
     assert f"{prefix}_circuit_breaker_triggered 1" in output
     assert f'{prefix}_symbol_exposure_usd{{symbol="BTC_USD"}} 123.45' in output
     assert f'{prefix}_symbol_pnl_usd{{symbol="BTC_USD"}} 5.5' in output
+
+
+def test_render_prometheus_prefers_trade_counters_when_available(tmp_path: Path) -> None:
+    events_path = tmp_path / "events.jsonl"
+    events = [
+        {"event_type": "trade"},
+        {"event_type": "trade"},
+        {"event_type": "trade_gate_blocked"},
+    ]
+    events_path.write_text("\n".join(json.dumps(event) for event in events) + "\n")
+
+    metrics = {
+        "timestamp": "2025-01-01T00:00:00Z",
+        "counters": {
+            "gpt_trader_trades_executed_total": 7,
+            "gpt_trader_trades_blocked_total": 5,
+        },
+    }
+
+    output = export_metrics.render_prometheus(metrics, events_path, events_db=None)
+    prefix = export_metrics.METRIC_PREFIX
+
+    # Should use counters (covers kill-switch blocks), not event counts.
+    assert f"{prefix}_trades_executed_total 7" in output
+    assert f"{prefix}_trades_blocked_total 5" in output

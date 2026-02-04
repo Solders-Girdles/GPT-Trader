@@ -313,19 +313,29 @@ def render_prometheus(metrics: dict[str, Any], events_path: Path, events_db: Pat
     lines.append(f"# TYPE {metric('order_preview_failures_total')} counter")
     lines.append(f"{metric('order_preview_failures_total')} {preview_failures}")
 
-    trades_executed = count_events(events_path, "trade", events_db)
+    counters = metrics.get("counters") if isinstance(metrics, dict) else None
+    if not isinstance(counters, dict):
+        counters = {}
+
+    # Prefer the internal counters (covers kill-switch blocks and other non-event paths),
+    # but fall back to event counts for backwards compatibility.
+    trades_executed = counters.get("gpt_trader_trades_executed_total")
+    if trades_executed is None:
+        trades_executed = count_events(events_path, "trade", events_db)
     lines.append(
         f"# HELP {metric('trades_executed_total')} Total number of trades executed successfully"
     )
     lines.append(f"# TYPE {metric('trades_executed_total')} counter")
-    lines.append(f"{metric('trades_executed_total')} {trades_executed}")
+    lines.append(f"{metric('trades_executed_total')} {int(trades_executed or 0)}")
 
-    trades_blocked = count_events(events_path, "trade_gate_blocked", events_db)
+    trades_blocked = counters.get("gpt_trader_trades_blocked_total")
+    if trades_blocked is None:
+        trades_blocked = count_events(events_path, "trade_gate_blocked", events_db)
     lines.append(
         f"# HELP {metric('trades_blocked_total')} Total number of trades blocked by guards"
     )
     lines.append(f"# TYPE {metric('trades_blocked_total')} counter")
-    lines.append(f"{metric('trades_blocked_total')} {trades_blocked}")
+    lines.append(f"{metric('trades_blocked_total')} {int(trades_blocked or 0)}")
 
     # Circuit breaker state
     circuit_breaker_triggered = 0

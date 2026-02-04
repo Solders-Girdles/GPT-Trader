@@ -26,9 +26,12 @@ from gpt_trader.utilities.logging_patterns import get_logger
 from gpt_trader.utilities.time_provider import get_clock
 
 if TYPE_CHECKING:
+    from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
     from gpt_trader.monitoring.heartbeat import HeartbeatService
 
 logger = get_logger(__name__, component="status_reporter")
+
+MAX_TICKER_FRESHNESS_SYMBOLS = 10
 
 
 def _format_timestamp_iso(timestamp: float) -> str:
@@ -60,6 +63,19 @@ class MarketStatus:
     last_prices: dict[str, Decimal] = field(default_factory=dict)
     last_price_update: float | None = None
     price_history: dict[str, list[Decimal]] = field(default_factory=dict)
+
+
+@dataclass
+class TickerFreshnessSummary:
+    """Status summary of ticker freshness health check."""
+
+    symbol_count: int = 0
+    stale_count: int = 0
+    stale_symbols: list[str] = field(default_factory=list)
+    stale_symbols_capped: bool = False
+    severity: str = "unknown"
+    reason: str = ""
+    status: str = "unknown"
 
 
 @dataclass
@@ -234,6 +250,7 @@ class BotStatus:
     system: SystemStatus = field(default_factory=SystemStatus)
     heartbeat: HeartbeatStatus = field(default_factory=HeartbeatStatus)
     websocket: WebSocketStatus = field(default_factory=WebSocketStatus)
+    ticker_freshness: TickerFreshnessSummary = field(default_factory=TickerFreshnessSummary)
 
     # Overall health
     healthy: bool = True
@@ -317,6 +334,7 @@ class StatusReporter:
     _positions: dict[str, Any] = field(default_factory=dict, repr=False)
     _equity: Decimal = field(default=Decimal("0"), repr=False)
     _heartbeat_service: HeartbeatService | None = field(default=None, repr=False)
+    _market_data_service: MarketDataService | None = field(default=None, repr=False)
 
     async def start(self) -> asyncio.Task[None] | None:
         """Start the status reporter background task."""
@@ -501,6 +519,9 @@ class StatusReporter:
             self._status.heartbeat.last_heartbeat = hb_status.get("last_heartbeat")
             self._status.heartbeat.is_healthy = self._heartbeat_service.is_healthy
 
+        # Ticker freshness summary
+        self._status.ticker_freshness = self._build_ticker_freshness_summary()
+
         # Health assessment
         self._assess_health()
 
@@ -572,6 +593,10 @@ class StatusReporter:
     def set_heartbeat_service(self, service: HeartbeatService) -> None:
         """Set the heartbeat service reference for status reporting."""
         self._heartbeat_service = service
+
+    def set_market_data_service(self, market_data_service: MarketDataService | None) -> None:
+        """Set the market data service reference for ticker freshness checks."""
+        self._market_data_service = market_data_service
 
     def record_cycle(self) -> None:
         """Record a completed trading cycle."""
@@ -1062,12 +1087,77 @@ class StatusReporter:
         self._update_status()
         return self._status
 
+    def _build_ticker_freshness_summary(self) -> TickerFreshnessSummary:
+        summary = TickerFreshnessSummary()
+        if self._market_data_service is None:
+            summary.status = "skip"
+            summary.severity = "warning"
+            summary.reason = "market_data_service_unavailable"
+            return summary
+
+        try:
+            from gpt_trader.monitoring.health_checks import check_ticker_freshness
+
+            healthy, details = check_ticker_freshness(self._market_data_service)
+        except Exception as exc:
+            logger.warning(
+                "Ticker freshness summary failed",
+                operation="status_reporter",
+                error=str(exc),
+            )
+            summary.status = "fail"
+            summary.severity = "critical"
+            summary.reason = "ticker_freshness_check_error"
+            return summary
+
+        if not isinstance(details, dict):
+            details = {}
+
+        symbol_count = int(details.get("symbol_count") or 0)
+        stale_count = int(details.get("stale_count") or 0)
+        stale_symbols_raw = details.get("stale_symbols") or []
+        if not isinstance(stale_symbols_raw, list):
+            stale_symbols_raw = []
+
+        stale_symbols = [str(symbol) for symbol in stale_symbols_raw if symbol]
+        if len(stale_symbols) > MAX_TICKER_FRESHNESS_SYMBOLS:
+            summary.stale_symbols_capped = True
+            stale_symbols = stale_symbols[:MAX_TICKER_FRESHNESS_SYMBOLS]
+
+        summary.symbol_count = symbol_count
+        summary.stale_count = stale_count
+        summary.stale_symbols = stale_symbols
+
+        status = "pass" if healthy else "fail"
+        if details.get("skipped"):
+            status = "skip"
+        summary.status = status
+
+        if status == "pass":
+            summary.severity = "ok"
+        else:
+            summary.severity = str(details.get("severity") or "warning")
+
+        reason = details.get("reason")
+        if not reason:
+            if status == "skip":
+                reason = "ticker_freshness_skipped"
+            elif symbol_count == 0:
+                reason = "no_symbols_configured"
+            elif stale_count > 0:
+                reason = "stale_symbols_detected"
+            else:
+                reason = "ok"
+        summary.reason = str(reason)
+        return summary
+
 
 __all__ = [
     "StatusReporter",
     "BotStatus",
     "EngineStatus",
     "MarketStatus",
+    "TickerFreshnessSummary",
     "PositionStatus",
     "OrderStatus",
     "TradeStatus",

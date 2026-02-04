@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
 
 from gpt_trader.monitoring.metrics_collector import record_counter
+from gpt_trader.monitoring.profiling import profile_span
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -34,6 +35,7 @@ logger = get_logger(__name__, component="health_checks")
 TickerFreshnessService = TickerFreshnessProviderSource | TickerFreshnessProvider
 
 # Metrics emitted by the ticker freshness health check.
+TICKER_FRESHNESS_CHECKS_COUNTER = "gpt_trader_ticker_freshness_checks_total"
 TICKER_CACHE_UNAVAILABLE_COUNTER = "gpt_trader_ticker_cache_unavailable_total"
 TICKER_STALE_SYMBOLS_COUNTER = "gpt_trader_ticker_stale_symbols_total"
 
@@ -284,6 +286,9 @@ def check_ticker_freshness(
             - symbol_count: Total symbol count
 
     Metrics:
+        - gpt_trader_profile_duration_seconds{phase="ticker_freshness"}: duration histogram
+          recorded via profile_span.
+        - gpt_trader_ticker_freshness_checks_total{result="ok"|"error"}: check outcome.
         - gpt_trader_ticker_cache_unavailable_total: increments when the market data
           provider or ticker cache is unavailable.
         - gpt_trader_ticker_stale_symbols_total: increments by the number of stale
@@ -291,83 +296,89 @@ def check_ticker_freshness(
     """
     details: dict[str, Any] = {"severity": "warning"}
 
-    if market_data_service is None:
-        record_counter(TICKER_CACHE_UNAVAILABLE_COUNTER)
+    def record_outcome(healthy: bool, details: dict[str, Any]) -> tuple[bool, dict[str, Any]]:
+        result = "ok" if healthy else "error"
+        record_counter(TICKER_FRESHNESS_CHECKS_COUNTER, labels={"result": result})
+        return healthy, details
+
+    with profile_span("ticker_freshness"):
+        if market_data_service is None:
+            record_counter(TICKER_CACHE_UNAVAILABLE_COUNTER)
+            details.update(
+                {
+                    "skipped": True,
+                    "reason": "market_data_service_unavailable",
+                }
+            )
+            return record_outcome(True, details)
+
+        symbols = _extract_market_data_symbols(market_data_service)
+        details["symbol_count"] = len(symbols)
+        details["symbols_checked"] = list(symbols)
+
+        if not symbols:
+            details.update(
+                {
+                    "stale_symbols": [],
+                    "stale_count": 0,
+                    "stale": False,
+                }
+            )
+            return record_outcome(True, details)
+
+        ticker_freshness_provider = _resolve_ticker_freshness_provider(market_data_service)
+        if ticker_freshness_provider is None:
+            record_counter(TICKER_CACHE_UNAVAILABLE_COUNTER)
+            details.update(
+                {
+                    "ticker_cache_unavailable": True,
+                    "ticker_freshness_provider_unavailable": True,
+                    "skipped": True,
+                    "reason": "ticker_freshness_provider_unavailable",
+                }
+            )
+            # No provider means we cannot evaluate staleness. Treat this as skipped/healthy so /health doesn't permanently fail.
+            return record_outcome(True, details)
+
+        stale_symbols: list[str] = []
+        fresh_symbols: list[str] = []
+        try:
+            for symbol in symbols:
+                if ticker_freshness_provider.is_stale(symbol):
+                    stale_symbols.append(symbol)
+                else:
+                    fresh_symbols.append(symbol)
+        except Exception as exc:
+            details.update(
+                {
+                    "error": str(exc),
+                    "error_type": type(exc).__name__,
+                    "severity": "critical",
+                }
+            )
+            logger.warning(
+                "Ticker freshness check failed",
+                operation="health_check",
+                error=str(exc),
+            )
+            return record_outcome(False, details)
+
         details.update(
             {
-                "skipped": True,
-                "reason": "market_data_service_unavailable",
+                "fresh_symbols": fresh_symbols,
+                "stale_symbols": stale_symbols,
+                "stale_count": len(stale_symbols),
+                "stale": bool(stale_symbols),
             }
         )
-        return True, details
 
-    symbols = _extract_market_data_symbols(market_data_service)
-    details["symbol_count"] = len(symbols)
-    details["symbols_checked"] = list(symbols)
+        if stale_symbols:
+            record_counter(TICKER_STALE_SYMBOLS_COUNTER, increment=len(stale_symbols))
+            if len(stale_symbols) == len(symbols):
+                details["severity"] = "critical"
+            return record_outcome(False, details)
 
-    if not symbols:
-        details.update(
-            {
-                "stale_symbols": [],
-                "stale_count": 0,
-                "stale": False,
-            }
-        )
-        return True, details
-
-    ticker_freshness_provider = _resolve_ticker_freshness_provider(market_data_service)
-    if ticker_freshness_provider is None:
-        record_counter(TICKER_CACHE_UNAVAILABLE_COUNTER)
-        details.update(
-            {
-                "ticker_cache_unavailable": True,
-                "ticker_freshness_provider_unavailable": True,
-                "skipped": True,
-                "reason": "ticker_freshness_provider_unavailable",
-            }
-        )
-        # No provider means we cannot evaluate staleness. Treat this as skipped/healthy so /health doesn't permanently fail.
-        return True, details
-
-    stale_symbols: list[str] = []
-    fresh_symbols: list[str] = []
-    try:
-        for symbol in symbols:
-            if ticker_freshness_provider.is_stale(symbol):
-                stale_symbols.append(symbol)
-            else:
-                fresh_symbols.append(symbol)
-    except Exception as exc:
-        details.update(
-            {
-                "error": str(exc),
-                "error_type": type(exc).__name__,
-                "severity": "critical",
-            }
-        )
-        logger.warning(
-            "Ticker freshness check failed",
-            operation="health_check",
-            error=str(exc),
-        )
-        return False, details
-
-    details.update(
-        {
-            "fresh_symbols": fresh_symbols,
-            "stale_symbols": stale_symbols,
-            "stale_count": len(stale_symbols),
-            "stale": bool(stale_symbols),
-        }
-    )
-
-    if stale_symbols:
-        record_counter(TICKER_STALE_SYMBOLS_COUNTER, increment=len(stale_symbols))
-        if len(stale_symbols) == len(symbols):
-            details["severity"] = "critical"
-        return False, details
-
-    return True, details
+        return record_outcome(True, details)
 
 
 def check_degradation_state(
@@ -914,6 +925,7 @@ if TYPE_CHECKING:
 __all__ = [
     "HealthCheckResult",
     "HealthCheckRunner",
+    "TICKER_FRESHNESS_CHECKS_COUNTER",
     "TICKER_CACHE_UNAVAILABLE_COUNTER",
     "TICKER_STALE_SYMBOLS_COUNTER",
     "check_broker_ping",

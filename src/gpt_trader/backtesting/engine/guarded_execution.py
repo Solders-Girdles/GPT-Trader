@@ -133,6 +133,12 @@ class BacktestGuardedExecutor:
             decision_context=decision_context,
             reason=reason,
         )
+        decision_id = client_order_id
+        if decision_id is None:
+            if decision is not None:
+                decision_id = decision.decision_id
+            else:
+                decision_id = self._order_submitter.generate_client_order_id(None)
 
         try:
             order_quantity, adjusted_price = self._order_validator.validate_exchange_rules(
@@ -263,7 +269,7 @@ class BacktestGuardedExecutor:
             tif=self._context.config.time_in_force,
             reduce_only=reduce_only_final,
             leverage=leverage,
-            client_order_id=client_order_id,
+            client_order_id=decision_id,
         )
 
         if not submission_outcome.success:

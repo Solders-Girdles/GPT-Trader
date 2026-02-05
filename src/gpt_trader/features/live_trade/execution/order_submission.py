@@ -46,6 +46,7 @@ SUBMISSION_RETRY_POLICY = RetryPolicy(
     jitter=0.0,
 )
 TRANSIENT_SUBMISSION_REASONS = {"timeout", "network", "rate_limit"}
+MISSING_DECISION_ID_METRIC = "gpt_trader_order_missing_decision_id_total"
 
 
 class OrderSubmissionOutcomeStatus(str, Enum):
@@ -260,6 +261,13 @@ class OrderSubmitter:
     def _normalize_side(side: OrderSide | str) -> str:
         value = side.value if isinstance(side, OrderSide) else str(side)
         return value.lower()
+
+    @staticmethod
+    def _normalize_decision_id(decision_id: str | None) -> str | None:
+        if decision_id is None:
+            return None
+        normalized = str(decision_id).strip()
+        return normalized if normalized else None
 
     @staticmethod
     def _normalize_order_type(order_type: OrderType | str) -> str:
@@ -633,6 +641,46 @@ class OrderSubmitter:
         """Record decision trace for later analysis."""
         self._event_recorder.record_decision_trace(trace)
 
+    def _reject_missing_decision_id(
+        self,
+        *,
+        symbol: str,
+        side: OrderSide,
+        order_quantity: Decimal,
+        price: Decimal | None,
+    ) -> OrderSubmissionOutcome:
+        side_str = side.value if hasattr(side, "value") else str(side)
+        logger.error(
+            "Order submission blocked: missing decision_id",
+            symbol=symbol,
+            side=side_str,
+            quantity=float(order_quantity),
+            price=float(price) if price is not None else None,
+            operation="order_submit",
+            stage="missing_decision_id",
+        )
+        try:
+            record_counter(MISSING_DECISION_ID_METRIC)
+        except Exception:
+            pass
+        self.record_rejection(
+            symbol,
+            side_str,
+            order_quantity,
+            price,
+            "missing_decision_id",
+        )
+        _record_order_submission_metric(
+            result="rejected",
+            reason="missing_decision_id",
+            side=side_str,
+        )
+        return OrderSubmissionOutcome(
+            status=OrderSubmissionOutcomeStatus.REJECTED,
+            reason="missing_decision_id",
+            reason_detail="client_order_id_required",
+        )
+
     def submit_order(
         self,
         *,
@@ -662,7 +710,7 @@ class OrderSubmitter:
             tif: Time in force
             reduce_only: Whether order is reduce-only
             leverage: Leverage multiplier
-            client_order_id: Client order ID (generated if None)
+            client_order_id: Decision-linked client order ID (required)
 
         Returns:
             Order ID if successful, None otherwise
@@ -715,12 +763,21 @@ class OrderSubmitter:
             tif: Time in force
             reduce_only: Whether order is reduce-only
             leverage: Leverage multiplier
-            client_order_id: Client order ID (generated if None)
+            client_order_id: Decision-linked client order ID (required)
 
         Returns:
             Structured outcome describing success/rejection/failure.
         """
-        submit_id = self._generate_submit_id(client_order_id)
+        decision_id = self._normalize_decision_id(client_order_id)
+        if decision_id is None:
+            return self._reject_missing_decision_id(
+                symbol=symbol,
+                side=side,
+                order_quantity=order_quantity,
+                price=price,
+            )
+
+        submit_id = self._generate_submit_id(decision_id)
 
         with order_context(order_id=submit_id, symbol=symbol):
             with trace_span(

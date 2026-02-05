@@ -50,6 +50,10 @@ class HealthThresholdsConfig:
     guard_trip_count_warn: int = 3  # 3 trips warning
     guard_trip_count_crit: int = 10  # 10 trips critical
 
+    # Missing decision_id events (count)
+    missing_decision_id_count_warn: int = 1  # 1 missing ID warning
+    missing_decision_id_count_crit: int = 3  # 3 missing IDs critical
+
     def to_health_thresholds(self) -> "HealthThresholds":
         """Convert to monitoring.health_signals.HealthThresholds."""
         from gpt_trader.monitoring.health_signals import HealthThresholds
@@ -65,6 +69,8 @@ class HealthThresholdsConfig:
             ws_staleness_seconds_crit=self.ws_staleness_seconds_crit,
             guard_trip_count_warn=self.guard_trip_count_warn,
             guard_trip_count_crit=self.guard_trip_count_crit,
+            missing_decision_id_count_warn=self.missing_decision_id_count_warn,
+            missing_decision_id_count_crit=self.missing_decision_id_count_crit,
         )
 
 
@@ -384,6 +390,8 @@ class BotConfig:
             ws_staleness_seconds_crit=_health_float("WS_STALENESS_SECONDS_CRIT", 60.0),
             guard_trip_count_warn=_health_int("GUARD_TRIP_COUNT_WARN", 3),
             guard_trip_count_crit=_health_int("GUARD_TRIP_COUNT_CRIT", 10),
+            missing_decision_id_count_warn=_health_int("MISSING_DECISION_ID_COUNT_WARN", 1),
+            missing_decision_id_count_crit=_health_int("MISSING_DECISION_ID_COUNT_CRIT", 3),
         )
 
         symbols_raw = os.getenv("TRADING_SYMBOLS")

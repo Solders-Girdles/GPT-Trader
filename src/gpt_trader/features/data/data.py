@@ -8,9 +8,11 @@ from typing import TYPE_CHECKING, Any, cast
 import pandas as pd
 
 from gpt_trader.features.data.cache import DataCache
-from gpt_trader.features.data.quality import DataQualityChecker
+from gpt_trader.features.data.quality import CandleQualityReport, DataQualityChecker
 from gpt_trader.features.data.types import DataQuery, DataSource
+from gpt_trader.monitoring.metrics_collector import record_counter, record_gauge
 from gpt_trader.utilities.datetime_helpers import utc_now
+from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
     from gpt_trader.backtesting.data import HistoricalDataManager
@@ -48,6 +50,28 @@ def _interval_to_granularity(interval: str) -> str:
     return mapping.get(interval, "ONE_HOUR")
 
 
+def _interval_to_timedelta(interval: str) -> timedelta:
+    """Convert interval string to a timedelta for quality checks."""
+    mapping = {
+        "1m": timedelta(minutes=1),
+        "5m": timedelta(minutes=5),
+        "15m": timedelta(minutes=15),
+        "30m": timedelta(minutes=30),
+        "1h": timedelta(hours=1),
+        "2h": timedelta(hours=2),
+        "6h": timedelta(hours=6),
+        "1d": timedelta(days=1),
+    }
+    return mapping.get(interval, timedelta(hours=1))
+
+
+DATA_QUALITY_ISSUES_GAUGE = "gpt_trader_data_quality_issues"
+DATA_QUALITY_SCORE_GAUGE = "gpt_trader_data_quality_score"
+DATA_QUALITY_ISSUES_COUNTER = "gpt_trader_data_quality_issues_total"
+
+logger = get_logger(__name__, component="data_quality")
+
+
 class DataService:
     """Stateful data service for storage, caching, and historical downloads."""
 
@@ -58,11 +82,14 @@ class DataService:
         cache: DataCache | None = None,
         quality_checker: DataQualityChecker | None = None,
         coinbase_manager: HistoricalDataManager | None = None,
+        quality_checks_enabled: bool = True,
     ) -> None:
         self._storage = storage
         self._cache = cache
         self._quality_checker = quality_checker
         self._coinbase_manager = coinbase_manager
+        self._quality_checks_enabled = quality_checks_enabled
+        self._recent_quality_reports: dict[str, CandleQualityReport] = {}
 
     @classmethod
     def from_coinbase_client(
@@ -72,9 +99,19 @@ class DataService:
         cache_dir: Path | str | None = None,
         cache_max_size_mb: float = 100.0,
         storage: Any | None = None,
+        validate_quality: bool = True,
+        spike_threshold_pct: float = 15.0,
+        volume_anomaly_std: float = 3.0,
+        min_acceptable_score: float = 0.8,
     ) -> DataService:
         cache = DataCache(max_size_mb=cache_max_size_mb)
-        quality_checker = DataQualityChecker()
+        quality_checker = None
+        if validate_quality:
+            quality_checker = DataQualityChecker(
+                spike_threshold_pct=spike_threshold_pct,
+                volume_anomaly_std=volume_anomaly_std,
+                min_acceptable_score=min_acceptable_score,
+            )
         coinbase_manager: HistoricalDataManager | None = None
 
         if coinbase_client is not None:
@@ -83,6 +120,9 @@ class DataService:
             coinbase_manager = create_coinbase_data_provider(
                 client=coinbase_client,
                 cache_dir=cache_dir,
+                validate_quality=False,
+                spike_threshold_pct=spike_threshold_pct,
+                volume_anomaly_std=volume_anomaly_std,
             )
 
         return cls(
@@ -90,6 +130,7 @@ class DataService:
             cache=cache,
             quality_checker=quality_checker,
             coinbase_manager=coinbase_manager,
+            quality_checks_enabled=validate_quality,
         )
 
     def store_data(self, symbol: str, data: pd.DataFrame, **kwargs: Any) -> bool:
@@ -186,6 +227,7 @@ class DataService:
                     start=start_date,
                     end=end_date,
                 )
+                self._evaluate_candle_quality(symbol, interval, candles)
                 result[symbol] = _candles_to_dataframe(candles)
 
         # Run async fetch in sync context
@@ -210,6 +252,61 @@ class DataService:
         if self._cache:
             return bool(self._cache.put(key, data, ttl_seconds))
         return False
+
+    def get_quality_report(self, symbol: str, interval: str) -> CandleQualityReport | None:
+        """Return the latest candle quality report for a symbol and interval."""
+        return self._recent_quality_reports.get(f"{symbol}:{interval}")
+
+    def _evaluate_candle_quality(self, symbol: str, interval: str, candles: list[Candle]) -> None:
+        # Record/report quality even when candle list is empty.
+        if not self._quality_checker or not self._quality_checks_enabled:
+            return
+
+        expected_interval = _interval_to_timedelta(interval)
+        report = self._quality_checker.check_candles(candles, expected_interval)
+
+        self._recent_quality_reports[f"{symbol}:{interval}"] = report
+        self._record_quality_metrics(symbol, interval, report)
+        if report.has_issues:
+            self._log_quality_issues(symbol, interval, report)
+
+    def _record_quality_metrics(
+        self, symbol: str, interval: str, report: CandleQualityReport
+    ) -> None:
+        record_gauge(
+            DATA_QUALITY_SCORE_GAUGE,
+            report.overall_score,
+            labels={"symbol": symbol, "interval": interval},
+        )
+        record_gauge(
+            DATA_QUALITY_ISSUES_GAUGE,
+            float(len(report.all_issues)),
+            labels={"symbol": symbol, "interval": interval},
+        )
+
+        for issue in report.all_issues:
+            record_counter(
+                DATA_QUALITY_ISSUES_COUNTER,
+                labels={
+                    "symbol": symbol,
+                    "interval": interval,
+                    "issue_type": issue.issue_type,
+                    "severity": issue.severity,
+                },
+            )
+
+    def _log_quality_issues(self, symbol: str, interval: str, report: CandleQualityReport) -> None:
+        for issue in report.all_issues:
+            log_func = logger.error if issue.severity == "error" else logger.warning
+            log_func(
+                issue.description,
+                issue_type=issue.issue_type,
+                symbol=symbol,
+                interval=interval,
+                timestamp=issue.timestamp.isoformat(),
+                operation="data_quality_check",
+                **issue.details,
+            )
 
     def clean_old_data(self, days_to_keep: int) -> int:
         if self._storage:
@@ -271,6 +368,10 @@ def initialize_data_layer(
     coinbase_client: Any | None = None,
     cache_dir: Path | str | None = None,
     cache_max_size_mb: float = 100.0,
+    validate_quality: bool = True,
+    spike_threshold_pct: float = 15.0,
+    volume_anomaly_std: float = 3.0,
+    min_acceptable_score: float = 0.8,
 ) -> DataService:
     """
     Initialize the data layer with Coinbase integration.
@@ -282,6 +383,10 @@ def initialize_data_layer(
         coinbase_client: CoinbaseClient instance for API access
         cache_dir: Directory for file-based candle caching
         cache_max_size_mb: Maximum size for in-memory DataFrame cache
+        validate_quality: Enable candle data quality checks
+        spike_threshold_pct: Price change threshold for spike detection
+        volume_anomaly_std: Standard deviations for volume anomaly detection
+        min_acceptable_score: Minimum quality score to mark data acceptable
 
     Example:
         ```python
@@ -296,4 +401,8 @@ def initialize_data_layer(
         coinbase_client=coinbase_client,
         cache_dir=cache_dir,
         cache_max_size_mb=cache_max_size_mb,
+        validate_quality=validate_quality,
+        spike_threshold_pct=spike_threshold_pct,
+        volume_anomaly_std=volume_anomaly_std,
+        min_acceptable_score=min_acceptable_score,
     )

@@ -144,6 +144,22 @@ use the exporter script with a different prefix, adjust the queries or set
 | `ws_staleness_seconds` | > 30s | > 60s |
 | `guard_trip_count` | > 3 (5m) | > 10 (5m) |
 
+## Data Quality Signals
+
+Historical candle loads emit data quality metrics. Use these as readiness signals
+for research/backtesting workflows and to flag upstream feed issues before
+enabling automated trading.
+
+- `gpt_trader_data_quality_issues` (gauge): count of detected issues in the most
+  recent load, labeled by `symbol` and `interval`.
+- `gpt_trader_data_quality_score` (gauge): 0-1 score for the most recent load.
+- `gpt_trader_data_quality_issues_total` (counter): cumulative issue count,
+  labeled by `symbol`, `interval`, `issue_type`, and `severity`.
+
+Operational guidance: treat non-zero `gpt_trader_data_quality_issues` or a score
+below the configured minimum as a degraded readiness signal and investigate
+before promoting a dataset or starting a strategy that depends on those candles.
+
 ## Prometheus Configuration
 
 If you use the deploy compose stack, Prometheus is preconfigured via

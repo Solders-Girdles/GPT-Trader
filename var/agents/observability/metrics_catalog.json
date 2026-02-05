@@ -109,6 +109,56 @@
       ]
     },
     {
+      "label_keys": [
+        "interval",
+        "symbol"
+      ],
+      "locations": [
+        {
+          "line": 280,
+          "path": "src/gpt_trader/features/data/data.py"
+        }
+      ],
+      "name": "gpt_trader_data_quality_issues",
+      "types": [
+        "gauge"
+      ]
+    },
+    {
+      "label_keys": [
+        "interval",
+        "issue_type",
+        "severity",
+        "symbol"
+      ],
+      "locations": [
+        {
+          "line": 287,
+          "path": "src/gpt_trader/features/data/data.py"
+        }
+      ],
+      "name": "gpt_trader_data_quality_issues_total",
+      "types": [
+        "counter"
+      ]
+    },
+    {
+      "label_keys": [
+        "interval",
+        "symbol"
+      ],
+      "locations": [
+        {
+          "line": 275,
+          "path": "src/gpt_trader/features/data/data.py"
+        }
+      ],
+      "name": "gpt_trader_data_quality_score",
+      "types": [
+        "gauge"
+      ]
+    },
+    {
       "label_keys": [],
       "locations": [
         {
@@ -204,13 +254,26 @@
       ]
     },
     {
+      "label_keys": [],
+      "locations": [
+        {
+          "line": 663,
+          "path": "src/gpt_trader/features/live_trade/execution/order_submission.py"
+        }
+      ],
+      "name": "gpt_trader_order_missing_decision_id_total",
+      "types": [
+        "counter"
+      ]
+    },
+    {
       "label_keys": [
         "result",
         "side"
       ],
       "locations": [
         {
-          "line": 193,
+          "line": 194,
           "path": "src/gpt_trader/features/live_trade/execution/order_submission.py"
         }
       ],
@@ -227,7 +290,7 @@
       ],
       "locations": [
         {
-          "line": 167,
+          "line": 168,
           "path": "src/gpt_trader/features/live_trade/execution/order_submission.py"
         }
       ],
@@ -294,11 +357,11 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 266,
+          "line": 321,
           "path": "src/gpt_trader/monitoring/health_checks.py"
         },
         {
-          "line": 291,
+          "line": 346,
           "path": "src/gpt_trader/monitoring/health_checks.py"
         }
       ],
@@ -308,10 +371,25 @@
       ]
     },
     {
+      "label_keys": [
+        "result"
+      ],
+      "locations": [
+        {
+          "line": 316,
+          "path": "src/gpt_trader/monitoring/health_checks.py"
+        }
+      ],
+      "name": "gpt_trader_ticker_freshness_checks_total",
+      "types": [
+        "counter"
+      ]
+    },
+    {
       "label_keys": [],
       "locations": [
         {
-          "line": 335,
+          "line": 391,
           "path": "src/gpt_trader/monitoring/health_checks.py"
         }
       ],
@@ -324,7 +402,11 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 150,
+          "line": 2209,
+          "path": "src/gpt_trader/features/live_trade/engines/strategy.py"
+        },
+        {
+          "line": 151,
           "path": "src/gpt_trader/features/live_trade/execution/router.py"
         }
       ],
@@ -337,7 +419,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 889,
+          "line": 946,
           "path": "src/gpt_trader/features/live_trade/execution/order_submission.py"
         }
       ],

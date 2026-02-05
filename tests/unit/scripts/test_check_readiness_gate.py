@@ -184,3 +184,31 @@ def test_main_require_reports_fails_without_reports(tmp_path: Path, capsys) -> N
     error_output = capsys.readouterr().err
     assert result == 1
     assert "Readiness gate skipped" in error_output
+
+
+def test_main_scopes_daily_report_parsing_to_target_profile(tmp_path: Path, capsys) -> None:
+    """A broken report for another profile should not fail the canary gate."""
+
+    profile = "canary"
+    _setup_green_streak(tmp_path, profile, date(2026, 1, 17))
+
+    other_profile_report = (
+        tmp_path / "runtime_data" / "dev" / "reports" / "daily_report_2026-01-17.json"
+    )
+    other_profile_report.parent.mkdir(parents=True, exist_ok=True)
+    other_profile_report.write_text("{not valid json", encoding="utf-8")
+
+    result = check_readiness_gate.main(
+        [
+            "--profile",
+            profile,
+            "--daily-root",
+            str(tmp_path / "runtime_data"),
+            "--preflight-dir",
+            str(tmp_path),
+        ]
+    )
+
+    output = capsys.readouterr().out
+    assert result == 0
+    assert "Readiness gate PASSED" in output

@@ -13,10 +13,11 @@ import json
 import os
 import re
 import sys
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 TABLE_START = "<!-- readiness-streak-table:start -->"
@@ -531,6 +532,27 @@ def _thresholds_from_env() -> Thresholds:
     )
 
 
+def _resolve_daily_reports_root(daily_root: Path, profile: str) -> Path:
+    """Resolve the directory to scan for daily reports.
+
+    Historically we pointed --daily-root at runtime_data and then rglobbed for
+    daily_report_*.json across *all* profiles.
+
+    This resolver scopes the search to the requested profile (preferred) while
+    remaining backwards compatible if a caller already points at
+    runtime_data/<profile> or runtime_data/<profile>/reports.
+    """
+
+    if daily_root.name == "reports":
+        return daily_root
+
+    candidate = daily_root / "reports"
+    if candidate.exists():
+        return candidate
+
+    return daily_root / profile / "reports"
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = _parse_args(argv)
     profile = str(args.profile)
@@ -538,7 +560,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     daily_root = Path(args.daily_root).expanduser()
     preflight_dir = Path(args.preflight_dir).expanduser()
 
-    daily_reports, daily_errors = _discover_daily_reports(daily_root)
+    daily_reports_root = _resolve_daily_reports_root(daily_root, profile)
+
+    daily_reports, daily_errors = _discover_daily_reports(daily_reports_root)
     preflight_reports, preflight_errors = _discover_preflight_reports(preflight_dir)
     errors = daily_errors + preflight_errors
 

@@ -1,0 +1,189 @@
+from __future__ import annotations
+
+import json
+from datetime import date, datetime, time, timedelta, timezone
+from pathlib import Path
+
+import scripts.ci.check_readiness_gate as check_readiness_gate
+
+
+def _fixture_dir() -> Path:
+    return Path(__file__).resolve().parents[2] / "fixtures" / "readiness"
+
+
+def _load_fixture(name: str) -> dict[str, object]:
+    path = _fixture_dir() / name
+    with path.open("r", encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+def _write_daily_report(
+    base_dir: Path,
+    report_date: date,
+    *,
+    profile: str,
+    fixture_name: str,
+) -> Path:
+    data = _load_fixture(fixture_name)
+    data["date"] = report_date.isoformat()
+    data["profile"] = profile
+    data["generated_at"] = f"{report_date.isoformat()}T00:10:00Z"
+    report_dir = base_dir / "runtime_data" / profile / "reports"
+    report_dir.mkdir(parents=True, exist_ok=True)
+    report_path = report_dir / f"daily_report_{report_date.isoformat()}.json"
+    report_path.write_text(json.dumps(data), encoding="utf-8")
+    return report_path
+
+
+def _write_preflight_report(
+    base_dir: Path,
+    report_date: date,
+    *,
+    profile: str,
+    fixture_name: str,
+) -> Path:
+    data = _load_fixture(fixture_name)
+    data["profile"] = profile
+    timestamp = datetime.combine(report_date, time(1, 0), tzinfo=timezone.utc)
+    data["timestamp"] = timestamp.isoformat().replace("+00:00", "Z")
+    report_path = (
+        base_dir
+        / f"preflight_report_{report_date.strftime('%Y%m%d')}_010000.json"
+    )
+    report_path.write_text(json.dumps(data), encoding="utf-8")
+    return report_path
+
+
+def _setup_green_streak(base_dir: Path, profile: str, end_date: date) -> None:
+    for offset in range(2, -1, -1):
+        report_date = end_date - timedelta(days=offset)
+        _write_daily_report(
+            base_dir,
+            report_date,
+            profile=profile,
+            fixture_name="daily_report_green.json",
+        )
+        _write_preflight_report(
+            base_dir,
+            report_date,
+            profile=profile,
+            fixture_name="preflight_ready.json",
+        )
+
+
+def test_main_passes_with_green_streak(tmp_path: Path, capsys) -> None:
+    profile = "canary"
+    _setup_green_streak(tmp_path, profile, date(2026, 1, 17))
+
+    result = check_readiness_gate.main(
+        [
+            "--profile",
+            profile,
+            "--daily-root",
+            str(tmp_path / "runtime_data"),
+            "--preflight-dir",
+            str(tmp_path),
+        ]
+    )
+
+    output = capsys.readouterr().out
+    assert result == 0
+    assert "Readiness gate PASSED" in output
+
+
+def test_main_fails_when_preflight_missing(tmp_path: Path, capsys) -> None:
+    profile = "canary"
+    end_date = date(2026, 1, 17)
+    for offset in range(2, -1, -1):
+        report_date = end_date - timedelta(days=offset)
+        _write_daily_report(
+            tmp_path,
+            report_date,
+            profile=profile,
+            fixture_name="daily_report_green.json",
+        )
+        if offset != 1:
+            _write_preflight_report(
+                tmp_path,
+                report_date,
+                profile=profile,
+                fixture_name="preflight_ready.json",
+            )
+
+    result = check_readiness_gate.main(
+        [
+            "--profile",
+            profile,
+            "--daily-root",
+            str(tmp_path / "runtime_data"),
+            "--preflight-dir",
+            str(tmp_path),
+        ]
+    )
+
+    error_output = capsys.readouterr().err
+    assert result == 1
+    assert "missing preflight report" in error_output
+
+
+def test_main_fails_when_pillar_not_green(tmp_path: Path, capsys) -> None:
+    profile = "canary"
+    end_date = date(2026, 1, 17)
+    _setup_green_streak(tmp_path, profile, end_date)
+    _write_daily_report(
+        tmp_path,
+        end_date,
+        profile=profile,
+        fixture_name="daily_report_bad.json",
+    )
+
+    result = check_readiness_gate.main(
+        [
+            "--profile",
+            profile,
+            "--daily-root",
+            str(tmp_path / "runtime_data"),
+            "--preflight-dir",
+            str(tmp_path),
+        ]
+    )
+
+    error_output = capsys.readouterr().err
+    assert result == 1
+    assert "Execution correctness" in error_output
+    assert "api_errors" in error_output
+
+
+def test_main_skips_when_no_reports(tmp_path: Path, capsys) -> None:
+    result = check_readiness_gate.main(
+        [
+            "--profile",
+            "canary",
+            "--daily-root",
+            str(tmp_path / "runtime_data"),
+            "--preflight-dir",
+            str(tmp_path),
+        ]
+    )
+
+    output = capsys.readouterr().out
+    assert result == 0
+    assert "Readiness gate skipped" in output
+
+
+def test_main_require_reports_fails_without_reports(tmp_path: Path, capsys) -> None:
+    result = check_readiness_gate.main(
+        [
+            "--profile",
+            "canary",
+            "--daily-root",
+            str(tmp_path / "runtime_data"),
+            "--preflight-dir",
+            str(tmp_path),
+            "--require-reports",
+        ]
+    )
+
+    error_output = capsys.readouterr().err
+    assert result == 1
+    assert "Readiness gate skipped" in error_output

@@ -60,6 +60,7 @@ class TestComputeExecutionHealthSignals:
         assert "order_retry_rate" in signal_names
         assert "broker_latency_p95" in signal_names
         assert "guard_trip_count" in signal_names
+        assert "missing_decision_id_count" in signal_names
 
     def test_zero_metrics_returns_ok(self) -> None:
         """Test that with no metrics, signals are OK."""
@@ -115,6 +116,23 @@ class TestComputeExecutionHealthSignals:
         assert guard_signal is not None
         assert guard_signal.value == pytest.approx(10.0)
         assert guard_signal.status == HealthStatus.CRIT
+
+    def test_missing_decision_id_warn_at_threshold(self) -> None:
+        """Test that missing decision_id count at warn threshold returns WARN."""
+        from gpt_trader.monitoring.health_checks import compute_execution_health_signals
+        from gpt_trader.monitoring.health_signals import HealthStatus
+        from gpt_trader.monitoring.metrics_collector import record_counter
+
+        record_counter("gpt_trader_order_missing_decision_id_total", increment=1)
+
+        result = compute_execution_health_signals()
+        missing_signal = next(
+            (s for s in result.signals if s.name == "missing_decision_id_count"), None
+        )
+
+        assert missing_signal is not None
+        assert missing_signal.value == pytest.approx(1.0)
+        assert missing_signal.status == HealthStatus.WARN
 
     def test_custom_thresholds_override_status(self) -> None:
         """Test that custom thresholds impact computed status."""

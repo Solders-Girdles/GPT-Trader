@@ -176,6 +176,8 @@ class TestHealthThresholds:
         assert thresholds.ws_staleness_seconds_crit == 60.0
         assert thresholds.guard_trip_count_warn == 3
         assert thresholds.guard_trip_count_crit == 10
+        assert thresholds.missing_decision_id_count_warn == 1
+        assert thresholds.missing_decision_id_count_crit == 3
 
     def test_custom_values(self) -> None:
         thresholds = HealthThresholds(

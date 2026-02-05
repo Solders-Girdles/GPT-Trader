@@ -265,7 +265,7 @@ def submit_order_kwargs() -> dict[str, Any]:
         "tif": TimeInForce.GTC,
         "reduce_only": False,
         "leverage": 10,
-        "client_order_id": None,
+        "client_order_id": "decision-123",
     }
 
 

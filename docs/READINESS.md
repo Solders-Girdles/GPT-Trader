@@ -144,6 +144,7 @@ Evidence:
 
 Thresholds:
 - 100% of live orders trace to a `decision_id`
+- `gpt_trader_order_missing_decision_id_total == 0` (health signal `missing_decision_id_count` stays OK)
 - Alerts include actionable remediation notes
 
 Checklist:

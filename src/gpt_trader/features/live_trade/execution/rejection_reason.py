@@ -17,6 +17,7 @@ STABLE_REJECTION_CODES: Final[set[str]] = {
     "invalid_size",
     "invalid_price",
     "mark_staleness",
+    "missing_decision_id",
     "order_preview",
     "order_validation",
     "paused",

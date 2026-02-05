@@ -703,6 +703,7 @@ def compute_execution_health_signals(
     - Order retry rate
     - Broker call latency (p95)
     - Guard trip frequency
+    - Missing decision_id count
 
     Args:
         thresholds: Optional custom thresholds. Uses defaults if None.
@@ -751,6 +752,7 @@ def _build_execution_health_signals(
 
     latency_p95_ms = _compute_broker_latency_p95_ms(histograms)
     guard_trip_count = _count_guard_trips(counters)
+    missing_decision_id_count = _count_missing_decision_ids(counters)
 
     return [
         HealthSignal.from_value(
@@ -789,6 +791,14 @@ def _build_execution_health_signals(
             value=float(guard_trip_count),
             threshold_warn=float(thresholds.guard_trip_count_warn),
             threshold_crit=float(thresholds.guard_trip_count_crit),
+            unit="count",
+            details={},
+        ),
+        HealthSignal.from_value(
+            name="missing_decision_id_count",
+            value=float(missing_decision_id_count),
+            threshold_warn=float(thresholds.missing_decision_id_count_warn),
+            threshold_crit=float(thresholds.missing_decision_id_count_crit),
             unit="count",
             details={},
         ),
@@ -849,6 +859,14 @@ def _count_guard_trips(counters: dict[str, Any]) -> int:
         if "guard" in lowered and ("failure" in lowered or "trip" in lowered):
             guard_trip_count += count
     return guard_trip_count
+
+
+def _count_missing_decision_ids(counters: dict[str, Any]) -> int:
+    missing_count = 0
+    for key, count in counters.items():
+        if key.startswith("gpt_trader_order_missing_decision_id_total"):
+            missing_count += count
+    return missing_count
 
 
 def _ratio_or_zero(numerator: int | float, denominator: int | float) -> float:

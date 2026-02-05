@@ -201,6 +201,10 @@ class HealthThresholds:
     guard_trip_count_warn: int = 3  # 3 trips warning
     guard_trip_count_crit: int = 10  # 10 trips critical
 
+    # Missing decision_id events (count)
+    missing_decision_id_count_warn: int = 1  # 1 missing ID warning
+    missing_decision_id_count_crit: int = 3  # 3 missing IDs critical
+
 
 __all__ = [
     "HealthSignal",

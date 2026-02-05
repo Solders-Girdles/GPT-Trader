@@ -78,6 +78,20 @@ def test_submit_order_with_result_success(
     assert outcome.reason is None
 
 
+def test_submit_order_missing_decision_id_rejected(
+    flow_submitter: OrderSubmitter,
+    submit_order_with_result_call,
+    mock_broker: MagicMock,
+    emit_metric_mock: MagicMock,
+) -> None:
+    outcome = submit_order_with_result_call(flow_submitter, client_order_id=None)
+
+    assert outcome.rejected is True
+    assert outcome.reason == "missing_decision_id"
+    mock_broker.place_order.assert_not_called()
+    emit_metric_mock.assert_called()
+
+
 @pytest.mark.parametrize("status_name", ["CANCELLED", "FAILED"])
 def test_submit_order_rejection_returns_none(
     status_name: str,
@@ -339,13 +353,7 @@ def test_transient_failure_then_success_reuses_client_order_id(
     assert open_orders == ["order-success-123"]
 
 
-@pytest.mark.parametrize(
-    ("client_order_id", "expect_same"),
-    [("retry-test-123", True), (None, False)],
-)
 def test_retry_client_order_id_behavior(
-    client_order_id: str | None,
-    expect_same: bool,
     flow_submitter: OrderSubmitter,
     submit_order_call,
     mock_broker: MagicMock,
@@ -363,18 +371,13 @@ def test_retry_client_order_id_behavior(
         flow_submitter,
         symbol="BTC-USD",
         **MARKET_KWARGS,
-        client_order_id=client_order_id,
+        client_order_id="retry-test-123",
     )
     submit_order_call(
         flow_submitter,
         symbol="BTC-USD",
         **MARKET_KWARGS,
-        client_order_id=client_order_id,
+        client_order_id="retry-test-123",
     )
 
-    if expect_same:
-        assert captured_client_ids == ["retry-test-123", "retry-test-123"]
-    else:
-        assert captured_client_ids[0] != captured_client_ids[1]
-        assert captured_client_ids[0].startswith("test-bot_")
-        assert captured_client_ids[1].startswith("test-bot_")
+    assert captured_client_ids == ["retry-test-123", "retry-test-123"]

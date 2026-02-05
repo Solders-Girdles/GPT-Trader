@@ -83,3 +83,26 @@ class TestCheckCandles:
         assert report.total_candles == 0
         assert report.overall_score == 0.0
         assert report.is_acceptable is False
+
+    def test_acceptable_data_returns_clean_report(self) -> None:
+        checker = DataQualityChecker()
+        base = datetime(2024, 1, 1, 0, 0)
+        candles = [
+            _make_candle(
+                base + timedelta(minutes=i),
+                Decimal("100"),
+                Decimal("101"),
+                Decimal("99"),
+                Decimal("100"),
+                Decimal("100"),
+            )
+            for i in range(6)
+        ]
+
+        report = checker.check_candles(candles, timedelta(minutes=1))
+
+        assert report.is_acceptable is True
+        assert report.has_issues is False
+        assert report.gaps_detected == []
+        assert report.spikes_detected == []
+        assert report.volume_anomalies == []

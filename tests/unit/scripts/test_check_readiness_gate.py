@@ -46,10 +46,7 @@ def _write_preflight_report(
     data["profile"] = profile
     timestamp = datetime.combine(report_date, time(1, 0), tzinfo=timezone.utc)
     data["timestamp"] = timestamp.isoformat().replace("+00:00", "Z")
-    report_path = (
-        base_dir
-        / f"preflight_report_{report_date.strftime('%Y%m%d')}_010000.json"
-    )
+    report_path = base_dir / f"preflight_report_{report_date.strftime('%Y%m%d')}_010000.json"
     report_path.write_text(json.dumps(data), encoding="utf-8")
     return report_path
 

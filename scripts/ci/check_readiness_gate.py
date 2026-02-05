@@ -308,13 +308,9 @@ def _evaluate_market_data(
     stale_marks = _coerce_int(health.get("stale_marks", health.get("stale_marks_count")))
     ws_reconnects = _coerce_int(health.get("ws_reconnects"))
     if stale_marks > thresholds.stale_marks_max:
-        reasons.append(
-            f"stale_marks {stale_marks} > {thresholds.stale_marks_max}"
-        )
+        reasons.append(f"stale_marks {stale_marks} > {thresholds.stale_marks_max}")
     if ws_reconnects > thresholds.ws_reconnects_max:
-        reasons.append(
-            f"ws_reconnects {ws_reconnects} > {thresholds.ws_reconnects_max}"
-        )
+        reasons.append(f"ws_reconnects {ws_reconnects} > {thresholds.ws_reconnects_max}")
 
     liveness_ok, liveness_reason = _evaluate_liveness_snapshot(
         health.get("liveness"),
@@ -345,9 +341,7 @@ def _evaluate_execution(
     unfilled_orders = _coerce_int(health.get("unfilled_orders"))
     api_errors = _coerce_int(health.get("api_errors"))
     if unfilled_orders > thresholds.unfilled_orders_max:
-        reasons.append(
-            f"unfilled_orders {unfilled_orders} > {thresholds.unfilled_orders_max}"
-        )
+        reasons.append(f"unfilled_orders {unfilled_orders} > {thresholds.unfilled_orders_max}")
     if api_errors > thresholds.api_errors_max:
         reasons.append(f"api_errors {api_errors} > {thresholds.api_errors_max}")
 
@@ -377,9 +371,7 @@ def _evaluate_risk(
     else:
         guard_total = _coerce_int(guard_triggers)
     if guard_total > thresholds.guard_triggers_max:
-        reasons.append(
-            f"guard_triggers {guard_total} > {thresholds.guard_triggers_max}"
-        )
+        reasons.append(f"guard_triggers {guard_total} > {thresholds.guard_triggers_max}")
 
     circuit_breaker = risk.get("circuit_breaker_state", {})
     if isinstance(circuit_breaker, dict) and circuit_breaker.get("triggered"):
@@ -438,7 +430,9 @@ def _evaluate_profile(
         return [], False
 
     latest_date = max(daily_by_date)
-    required_dates = [latest_date - timedelta(days=offset) for offset in range(streak_days - 1, -1, -1)]
+    required_dates = [
+        latest_date - timedelta(days=offset) for offset in range(streak_days - 1, -1, -1)
+    ]
     evaluations: list[DayEvaluation] = []
 
     for report_date in required_dates:

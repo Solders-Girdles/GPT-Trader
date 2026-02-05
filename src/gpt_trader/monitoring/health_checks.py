@@ -12,8 +12,10 @@ Each check returns (bool, dict) where:
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, cast
+from functools import partial
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 from gpt_trader.monitoring.metrics_collector import record_counter
 from gpt_trader.monitoring.profiling import profile_span
@@ -46,6 +48,19 @@ class HealthCheckResult:
 
     healthy: bool
     details: dict[str, Any]
+
+
+HealthCheckOutcome = tuple[bool, dict[str, Any]]
+HealthCheckMode = Literal["blocking", "fast"]
+
+
+@dataclass(frozen=True)
+class HealthCheckDescriptor:
+    """Descriptor for a registered health check."""
+
+    name: str
+    mode: HealthCheckMode
+    run: Callable[[], HealthCheckOutcome]
 
 
 def check_broker_ping(broker: BrokerProtocol) -> tuple[bool, dict[str, Any]]:
@@ -538,6 +553,54 @@ class HealthCheckRunner:
         """Set the market data service or provider for ticker freshness checks."""
         self._market_data_service = market_data_service
 
+    def _health_check_registry(self) -> tuple[HealthCheckDescriptor, ...]:
+        """Build the registry of health checks to execute."""
+        checks: list[HealthCheckDescriptor] = []
+
+        broker = self._broker
+        if broker is not None:
+            checks.append(
+                HealthCheckDescriptor(
+                    name="broker",
+                    mode="blocking",
+                    run=partial(check_broker_ping, broker),
+                )
+            )
+            checks.append(
+                HealthCheckDescriptor(
+                    name="websocket",
+                    mode="blocking",
+                    run=partial(
+                        check_ws_freshness,
+                        broker,
+                        message_stale_seconds=self._message_stale_seconds,
+                        heartbeat_stale_seconds=self._heartbeat_stale_seconds,
+                    ),
+                )
+            )
+
+        market_data_service = self._market_data_service
+        if market_data_service is not None:
+            checks.append(
+                HealthCheckDescriptor(
+                    name="ticker_freshness",
+                    mode="fast",
+                    run=partial(check_ticker_freshness, market_data_service),
+                )
+            )
+
+        degradation_state = self._degradation_state
+        if degradation_state is not None:
+            checks.append(
+                HealthCheckDescriptor(
+                    name="degradation",
+                    mode="fast",
+                    run=partial(check_degradation_state, degradation_state, self._risk_manager),
+                )
+            )
+
+        return tuple(checks)
+
     async def start(self) -> None:
         """Start the health check runner background task."""
         import asyncio
@@ -596,49 +659,22 @@ class HealthCheckRunner:
         ):
             broker_calls = None
 
-        async def run_blocking(func: Any, *args: Any, **kwargs: Any) -> Any:
+        async def run_blocking(
+            callable_obj: Callable[[], HealthCheckOutcome],
+        ) -> HealthCheckOutcome:
             if broker_calls is None:
-                return await asyncio.to_thread(func, *args, **kwargs)
-            return await broker_calls(func, *args, **kwargs)
+                return await asyncio.to_thread(callable_obj)
+            return await broker_calls(callable_obj)
 
-        # Run broker ping in thread pool (blocking I/O)
-        if self._broker is not None:
+        for check in self._health_check_registry():
             try:
-                healthy, details = await run_blocking(check_broker_ping, self._broker)
-                health_state.add_check("broker", healthy, details)
+                if check.mode == "blocking":
+                    healthy, details = await run_blocking(check.run)
+                else:
+                    healthy, details = check.run()
+                health_state.add_check(check.name, healthy, details)
             except Exception as exc:
-                health_state.add_check("broker", False, {"error": str(exc)})
-
-        # Run WS freshness check in thread pool
-        if self._broker is not None:
-            try:
-                healthy, details = await run_blocking(
-                    check_ws_freshness,
-                    self._broker,
-                    self._message_stale_seconds,
-                    self._heartbeat_stale_seconds,
-                )
-                health_state.add_check("websocket", healthy, details)
-            except Exception as exc:
-                health_state.add_check("websocket", False, {"error": str(exc)})
-
-        # Run ticker freshness check (fast, no I/O)
-        if self._market_data_service is not None:
-            try:
-                healthy, details = check_ticker_freshness(self._market_data_service)
-                health_state.add_check("ticker_freshness", healthy, details)
-            except Exception as exc:
-                health_state.add_check("ticker_freshness", False, {"error": str(exc)})
-
-        # Run degradation state check (fast, no I/O)
-        if self._degradation_state is not None:
-            try:
-                healthy, details = check_degradation_state(
-                    self._degradation_state, self._risk_manager
-                )
-                health_state.add_check("degradation", healthy, details)
-            except Exception as exc:
-                health_state.add_check("degradation", False, {"error": str(exc)})
+                health_state.add_check(check.name, False, {"error": str(exc)})
 
     def run_checks_sync(self) -> dict[str, tuple[bool, dict[str, Any]]]:
         """
@@ -649,23 +685,10 @@ class HealthCheckRunner:
         Returns:
             Dict mapping check name to (healthy, details) tuple.
         """
-        results: dict[str, tuple[bool, dict[str, Any]]] = {}
+        results: dict[str, HealthCheckOutcome] = {}
 
-        if self._broker is not None:
-            results["broker"] = check_broker_ping(self._broker)
-            results["websocket"] = check_ws_freshness(
-                self._broker,
-                self._message_stale_seconds,
-                self._heartbeat_stale_seconds,
-            )
-
-        if self._market_data_service is not None:
-            results["ticker_freshness"] = check_ticker_freshness(self._market_data_service)
-
-        if self._degradation_state is not None:
-            results["degradation"] = check_degradation_state(
-                self._degradation_state, self._risk_manager
-            )
+        for check in self._health_check_registry():
+            results[check.name] = check.run()
 
         return results
 

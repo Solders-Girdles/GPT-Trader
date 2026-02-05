@@ -179,6 +179,15 @@ def build_steps(args: argparse.Namespace) -> list[PlannedStep]:
             command=["uv", "run", "python", "scripts/ci/check_import_boundaries.py"],
         ),
         PlannedStep(
+            label="Readiness gate (3-day streak)",
+            command=[
+                "python",
+                "scripts/ci/check_readiness_gate.py",
+                "--profile",
+                "canary",
+            ],
+        ),
+        PlannedStep(
             label="Check legacy triage alignment",
             command=["uv", "run", "python", "scripts/ci/check_legacy_test_triage.py"],
         ),

@@ -1,0 +1,8 @@
+{
+  "timestamp": "2026-01-17T01:00:00Z",
+  "profile": "canary",
+  "status": "NOT READY",
+  "successes": 5,
+  "warnings": 2,
+  "errors": 1
+}

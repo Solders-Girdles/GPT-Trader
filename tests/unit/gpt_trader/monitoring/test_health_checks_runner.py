@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
 
 from gpt_trader.app.health_server import HealthState
+from gpt_trader.monitoring import health_checks
 from gpt_trader.monitoring.health_checks import HealthCheckResult, HealthCheckRunner
 
 
@@ -191,6 +193,41 @@ class TestHealthCheckRunner:
         assert "websocket" in call_args
         assert "ticker_freshness" in call_args
         assert "degradation" in call_args
+
+    @pytest.mark.asyncio
+    async def test_registry_drives_sync_and_async_paths(self) -> None:
+        """Ensure both sync and async paths use the registry."""
+        health_state = MagicMock()
+        runner = HealthCheckRunner(health_state=health_state)
+        calls: list[str] = []
+
+        def custom_check() -> tuple[bool, dict[str, Any]]:
+            calls.append("called")
+            return True, {"source": "registry"}
+
+        registry = (
+            health_checks.HealthCheckDescriptor(
+                name="custom_check",
+                mode="fast",
+                run=custom_check,
+            ),
+        )
+        runner._health_check_registry = MagicMock(return_value=registry)
+
+        sync_results = runner.run_checks_sync()
+
+        assert sync_results["custom_check"][0] is True
+        assert sync_results["custom_check"][1]["source"] == "registry"
+
+        await runner._execute_checks()
+
+        assert runner._health_check_registry.call_count == 2
+        assert calls == ["called", "called"]
+        health_state.add_check.assert_called_with(
+            "custom_check",
+            True,
+            {"source": "registry"},
+        )
 
 
 class TestHealthCheckResult:

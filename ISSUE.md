@@ -1,24 +1,51 @@
-# Issue 530 — Clock/TimeProvider abstraction
+# GitHub Issue #578: [architecture] Centralize HealthCheckRunner registration with typed results
+https://github.com/Solders-Girdles/GPT-Trader/issues/578
 
-## Summary
-- Introduce a minimal Clock/TimeProvider interface with `now_utc()`, `time()`, and `monotonic()`.
-- Provide a real `SystemClock` plus a `FakeClock` that can be advanced/reset for deterministic tests.
-- Wire the abstraction into a monitoring component (suggest `src/gpt_trader/monitoring/status_reporter.py`) that currently calls `time.time()` or `datetime.now()` directly.
-- Add tests that demonstrate deterministic timestamps/durations while keeping production behavior unchanged.
+## Title
+`[architecture] Centralize HealthCheckRunner registration with typed results`
 
-## Acceptance Criteria
-- Add the Clock/TimeProvider interface and a production-grade `SystemClock` implementation.
-- Provide a `FakeClock` (with `advance()`/`set_time()` helpers) and `get_clock()/set_clock()/reset_clock()` helpers for dependency injection.
-- Update at least one monitoring component to use this clock abstraction instead of direct `time`/`datetime` calls.
-- Cover the utilities and the monitoring change with new unit tests that rely on the fake clock for deterministic assertions.
+## Why / Context
+Health checks are currently wired directly inside `HealthCheckRunner._execute_checks()` and again in `run_checks_sync()`. As we add checks (ticker freshness, degradation, etc.), it’s easy for async/sync paths to drift or for naming/details conventions to diverge.
 
-## Plan
-1. Create `src/gpt_trader/utilities/time_provider.py` with:
-   - A `TimeProvider` protocol (methods: `now_utc()`, `time()`, `monotonic()`).
-   - `SystemClock` returning real UTC timestamps and monotonic time.
-   - `FakeClock` storing `_time`/`_monotonic` and implementing `advance()`, `set_time()`, `set_datetime()`.
-   - Module helpers `get_clock()`, `set_clock(clock)`, `reset_clock()` and a `_default_clock` singleton.
-2. In `src/gpt_trader/monitoring/status_reporter.py` (or another monitoring file), import `get_clock()` and replace direct `time.time()`/`datetime.now()` calls with the clock helper. Keep the existing behavior for production (use `SystemClock` by default) and slide in the fake clock through the module helper.
-3. Create `tests/unit/gpt_trader/utilities/test_time_provider.py` to cover `SystemClock`, `FakeClock`, and the module helpers (ensure reset restores the system clock).
-4. Add a monitoring test file (e.g., `tests/unit/gpt_trader/monitoring/test_status_reporter_time.py`) showing how the fake clock makes reporting deterministic.
-5. Add a short summary at the end of the work explaining what changed, why the fake clock exists, and how the monitoring component now uses `get_clock()`.
+## Scope
+**In scope**
+- Introduce a small, typed registry/descriptor for health checks (name + callable + “blocking vs fast” or similar).
+- Use that registry in both `run_checks_sync()` and `_execute_checks()` so the check set stays consistent.
+- Keep behavior the same (no semantic changes to health check outcomes).
+
+**Out of scope**
+- Reworking the health server API.
+- Changing check logic (other than wiring).
+
+Constraints:
+- Keep changes small/mergeable.
+- Deterministic tests only.
+
+## Acceptance Criteria (required)
+- [ ] There is a single source of truth for which checks run (no duplication between async and sync paths).
+- [ ] Existing unit tests still pass, and at least one test asserts that the registry drives both paths.
+- [ ] No behavior change in health check results (only wiring/structure).
+
+## Implementation Notes / Pointers
+**Likely files / modules:**
+- `src/gpt_trader/monitoring/health_checks.py` (`HealthCheckRunner`)
+
+**Related tests:**
+- `tests/unit/gpt_trader/monitoring/test_health_checks_runner.py`
+
+## Commands (local)
+- `make lint-fmt-fix`
+- `make typecheck`
+- `pytest -q tests/unit/gpt_trader/monitoring/test_health_checks_runner.py`
+
+## PR Requirements
+- PR title should match the issue.
+- PR body must include: `Fixes #<issue-number>`
+- CI must be green.
+
+## Codex-Ready Checklist (for the issue creator)
+- [x] Clear acceptance criteria
+- [x] At least one file pointer
+- [x] Commands included
+- [x] No ambiguous “do the right thing” language
+

@@ -12,6 +12,7 @@ from gpt_trader.features.data.data import (
     _candles_to_dataframe,
     _interval_to_granularity,
 )
+from gpt_trader.features.data.quality import DataQualityChecker
 
 
 def test_interval_to_granularity_maps_known_and_default() -> None:
@@ -90,9 +91,10 @@ def test_from_coinbase_client_wires_manager(monkeypatch) -> None:
     sentinel_manager = Mock()
     calls: dict[str, object] = {}
 
-    def _fake_provider(*, client: object, cache_dir: object) -> object:
+    def _fake_provider(*, client: object, cache_dir: object, **kwargs: object) -> object:
         calls["client"] = client
         calls["cache_dir"] = cache_dir
+        calls["kwargs"] = kwargs
         return sentinel_manager
 
     monkeypatch.setattr(
@@ -105,4 +107,32 @@ def test_from_coinbase_client_wires_manager(monkeypatch) -> None:
 
     assert calls["client"] is client
     assert calls["cache_dir"] == "tmp"
+    assert calls["kwargs"]["validate_quality"] is False
     assert service._coinbase_manager is sentinel_manager
+
+
+def test_download_from_coinbase_records_quality_report_for_empty_candles() -> None:
+    class EmptyManager:
+        async def get_candles(
+            self, *, symbol: str, granularity: str, start: datetime, end: datetime
+        ) -> list[Candle]:
+            return []
+
+    service = DataService(
+        coinbase_manager=EmptyManager(),
+        quality_checker=DataQualityChecker(),
+        quality_checks_enabled=True,
+    )
+    start = datetime(2024, 1, 1, tzinfo=timezone.utc)
+    end = datetime(2024, 1, 2, tzinfo=timezone.utc)
+
+    result = service.download_from_coinbase(["BTC-USD"], start, end, interval="1h")
+
+    assert result is not None
+    assert result["BTC-USD"].empty
+
+    report = service.get_quality_report("BTC-USD", "1h")
+    assert report is not None
+    assert report.total_candles == 0
+    assert report.overall_score == 0.0
+    assert report.is_acceptable is False

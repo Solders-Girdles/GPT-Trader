@@ -258,7 +258,8 @@ class DataService:
         return self._recent_quality_reports.get(f"{symbol}:{interval}")
 
     def _evaluate_candle_quality(self, symbol: str, interval: str, candles: list[Candle]) -> None:
-        if not self._quality_checker or not self._quality_checks_enabled or not candles:
+        # Record/report quality even when candle list is empty.
+        if not self._quality_checker or not self._quality_checks_enabled:
             return
 
         expected_interval = _interval_to_timedelta(interval)
@@ -294,9 +295,7 @@ class DataService:
                 },
             )
 
-    def _log_quality_issues(
-        self, symbol: str, interval: str, report: CandleQualityReport
-    ) -> None:
+    def _log_quality_issues(self, symbol: str, interval: str, report: CandleQualityReport) -> None:
         for issue in report.all_issues:
             log_func = logger.error if issue.severity == "error" else logger.warning
             log_func(

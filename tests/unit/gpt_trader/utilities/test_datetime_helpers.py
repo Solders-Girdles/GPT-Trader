@@ -194,9 +194,9 @@ class TestTimestampCoercionHelpers:
         assert to_epoch_seconds(dt) == dt.timestamp()
 
         iso = "2024-05-10T12:34:56Z"
-        assert to_epoch_seconds(iso) == datetime.fromisoformat(
-            "2024-05-10T12:34:56+00:00"
-        ).timestamp()
+        assert (
+            to_epoch_seconds(iso) == datetime.fromisoformat("2024-05-10T12:34:56+00:00").timestamp()
+        )
 
         assert to_epoch_seconds("invalid") is None
         assert to_epoch_seconds(None) is None

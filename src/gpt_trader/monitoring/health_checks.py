@@ -183,6 +183,12 @@ def check_ws_freshness(
             last_heartbeat_ts,
             now_seconds=now,
         )
+        message_timestamp_unparseable = message_ts is None and (
+            last_message_ts not in (None, "", 0, 0.0, False)
+        )
+        heartbeat_timestamp_unparseable = heartbeat_ts is None and (
+            last_heartbeat_ts not in (None, "", 0, 0.0, False)
+        )
 
         details.update(
             {
@@ -202,7 +208,13 @@ def check_ws_freshness(
         # Determine health status
         is_stale = False
         if connected:
-            if message_ts is not None and message_age > message_stale_seconds:
+            if message_timestamp_unparseable:
+                is_stale = True
+                details["stale_reason"] = "message_timestamp_unparseable"
+            elif heartbeat_timestamp_unparseable:
+                is_stale = True
+                details["stale_reason"] = "heartbeat_timestamp_unparseable"
+            elif message_ts is not None and message_age > message_stale_seconds:
                 is_stale = True
                 details["stale_reason"] = "message"
             elif heartbeat_ts is not None and heartbeat_age > heartbeat_stale_seconds:

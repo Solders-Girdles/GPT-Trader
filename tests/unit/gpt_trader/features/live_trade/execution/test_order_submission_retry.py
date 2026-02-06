@@ -4,8 +4,11 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
+import pytest
+
 import gpt_trader.features.live_trade.execution.order_submission as order_submission_module
 from gpt_trader.features.live_trade.execution.order_submission import OrderSubmitter
+from gpt_trader.utilities.time_provider import FakeClock
 
 
 def test_submit_order_retries_transient_error_once(
@@ -61,3 +64,41 @@ def test_submit_order_no_retry_on_non_transient_error(
     assert outcome.failed is True
     assert mock_broker.place_order.call_count == 1
     assert sleep_calls == []
+
+
+def test_submit_order_latency_uses_time_provider(
+    mock_broker: MagicMock,
+    mock_event_store: MagicMock,
+    open_orders: list[str],
+    submit_order_with_result_call,
+    mock_order,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    clock = FakeClock(start_time=1000.0, start_monotonic=500.0)
+    captured: dict[str, float] = {}
+
+    def record_latency(latency_seconds: float, result: str, side: str) -> None:
+        captured["latency_seconds"] = latency_seconds
+        captured["result"] = result
+        captured["side"] = side
+
+    def place_order(**kwargs):
+        clock.advance(1.25)
+        return mock_order
+
+    monkeypatch.setattr(order_submission_module, "_record_order_submission_latency", record_latency)
+    mock_broker.place_order.side_effect = place_order
+
+    submitter = OrderSubmitter(
+        broker=mock_broker,
+        event_store=mock_event_store,
+        bot_id="test-bot",
+        open_orders=open_orders,
+        enable_retries=False,
+        time_provider=clock,
+    )
+
+    outcome = submit_order_with_result_call(submitter, client_order_id="clock-123")
+
+    assert outcome.success is True
+    assert captured["latency_seconds"] == pytest.approx(1.25)

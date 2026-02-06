@@ -8,6 +8,7 @@ timestamps in logs, metrics, caches, and persistence include timezone informatio
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import Any
 
 
 def utc_now() -> datetime:
@@ -100,6 +101,58 @@ def parse_iso_to_epoch(value: str) -> float:
     return normalize_to_utc(dt).timestamp()
 
 
+def to_epoch_seconds(value: Any) -> float | None:
+    """Coerce a timestamp-ish value into epoch seconds (or None).
+
+    Args:
+        value: Timestamp expressed as numeric seconds, datetime, or ISO string.
+
+    Returns:
+        Seconds since the epoch, or None if the input is missing/unsupported.
+    """
+
+    if value is None or isinstance(value, bool):
+        return None
+
+    if isinstance(value, (int, float)):
+        return float(value)
+
+    if isinstance(value, datetime):
+        return normalize_to_utc(value).timestamp()
+
+    if isinstance(value, str):
+        try:
+            return parse_iso_to_epoch(value)
+        except ValueError:
+            return None
+
+    return None
+
+
+def age_since_timestamp_seconds(
+    value: Any,
+    *,
+    now_seconds: float | None = None,
+    missing_value: float = float("inf"),
+) -> tuple[float | None, float]:
+    """Return a (timestamp, age) pair for a timestamp-ish value.
+
+    Converts the input to epoch seconds, then returns the computed age
+    using ``now_seconds`` (defaulting to :func:`utc_timestamp`).
+    If the timestamp is missing or falsy (e.g., 0), the returned age
+    uses ``missing_value`` and the timestamp is None.
+    """
+
+    timestamp = to_epoch_seconds(value)
+    if now_seconds is None:
+        now_seconds = utc_timestamp()
+
+    if not timestamp:
+        return None, missing_value
+
+    return timestamp, now_seconds - timestamp
+
+
 __all__ = [
     "utc_now",
     "utc_now_iso",
@@ -107,4 +160,6 @@ __all__ = [
     "to_iso_utc",
     "normalize_to_utc",
     "parse_iso_to_epoch",
+    "to_epoch_seconds",
+    "age_since_timestamp_seconds",
 ]

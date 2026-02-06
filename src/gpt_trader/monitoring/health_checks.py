@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING, Any, Literal, cast
 
 from gpt_trader.monitoring.metrics_collector import record_counter
 from gpt_trader.monitoring.profiling import profile_span
+from gpt_trader.utilities.datetime_helpers import age_since_timestamp_seconds
 from gpt_trader.utilities.logging_patterns import get_logger
 from gpt_trader.utilities.time_provider import TimeProvider, get_clock
 
@@ -174,8 +175,20 @@ def check_ws_freshness(
         max_attempts_triggered = health.get("max_attempts_triggered", False)
 
         # Calculate ages
-        message_age = now - last_message_ts if last_message_ts else float("inf")
-        heartbeat_age = now - last_heartbeat_ts if last_heartbeat_ts else float("inf")
+        message_ts, message_age = age_since_timestamp_seconds(
+            last_message_ts,
+            now_seconds=now,
+        )
+        heartbeat_ts, heartbeat_age = age_since_timestamp_seconds(
+            last_heartbeat_ts,
+            now_seconds=now,
+        )
+        message_timestamp_unparseable = message_ts is None and (
+            last_message_ts not in (None, "", 0, 0.0, False)
+        )
+        heartbeat_timestamp_unparseable = heartbeat_ts is None and (
+            last_heartbeat_ts not in (None, "", 0, 0.0, False)
+        )
 
         details.update(
             {
@@ -195,10 +208,16 @@ def check_ws_freshness(
         # Determine health status
         is_stale = False
         if connected:
-            if last_message_ts and message_age > message_stale_seconds:
+            if message_timestamp_unparseable:
+                is_stale = True
+                details["stale_reason"] = "message_timestamp_unparseable"
+            elif heartbeat_timestamp_unparseable:
+                is_stale = True
+                details["stale_reason"] = "heartbeat_timestamp_unparseable"
+            elif message_ts is not None and message_age > message_stale_seconds:
                 is_stale = True
                 details["stale_reason"] = "message"
-            elif last_heartbeat_ts and heartbeat_age > heartbeat_stale_seconds:
+            elif heartbeat_ts is not None and heartbeat_age > heartbeat_stale_seconds:
                 is_stale = True
                 details["stale_reason"] = "heartbeat"
 
@@ -931,8 +950,11 @@ def check_ws_staleness_signal(
             )
 
         now = time.time()
-        last_message_ts = health.get("last_message_ts", 0)
-        staleness = now - last_message_ts if last_message_ts else float("inf")
+        raw_last_message_ts = health.get("last_message_ts", 0)
+        message_ts, staleness = age_since_timestamp_seconds(
+            raw_last_message_ts,
+            now_seconds=now,
+        )
 
         # Cap staleness at a reasonable max for display
         if staleness == float("inf"):
@@ -946,7 +968,7 @@ def check_ws_staleness_signal(
             unit="seconds",
             details={
                 "connected": health.get("connected", False),
-                "last_message_ts": last_message_ts,
+                "last_message_ts": message_ts if message_ts is not None else 0.0,
             },
         )
 

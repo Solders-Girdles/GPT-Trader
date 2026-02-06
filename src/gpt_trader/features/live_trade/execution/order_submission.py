@@ -41,6 +41,7 @@ from gpt_trader.persistence.orders_store import (
     OrderStatus as StoreOrderStatus,
 )
 from gpt_trader.utilities.logging_patterns import get_logger
+from gpt_trader.utilities.time_provider import TimeProvider, get_clock
 
 logger = get_logger(__name__, component="order_submission")
 
@@ -223,6 +224,7 @@ class OrderSubmitter:
         orders_store: OrdersStore | None = None,
         integration_mode: bool = False,
         sleep_fn: Callable[[float], None] | None = None,
+        time_provider: TimeProvider | None = None,
     ) -> None:
         """
         Initialize order submitter.
@@ -235,6 +237,7 @@ class OrderSubmitter:
             enable_retries: Enable one retry for transient submission failures.
             integration_mode: Enable integration test mode
             sleep_fn: Optional sleep function for retry backoff (defaults to time.sleep).
+            time_provider: Optional time provider for deterministic timing.
         """
         self.broker = broker
         self.event_store = event_store
@@ -244,6 +247,7 @@ class OrderSubmitter:
         self.orders_store = orders_store
         self._enable_retries = enable_retries
         self._sleep_fn = sleep_fn or time.sleep
+        self._time_provider = time_provider or get_clock()
         self._event_recorder = OrderEventRecorder(event_store, bot_id)
         self._broker_executor = BrokerExecutor(
             cast(BrokerProtocol, broker),
@@ -879,7 +883,7 @@ class OrderSubmitter:
             leverage,
         )
 
-        start_time = time.perf_counter()
+        start_time = self._time_provider.monotonic()
         max_attempts = SUBMISSION_RETRY_POLICY.max_attempts if self._enable_retries else 1
 
         for attempt in range(1, max_attempts + 1):
@@ -897,7 +901,7 @@ class OrderSubmitter:
                     leverage=leverage,
                     use_retry=False,
                 )
-                latency_ms = (time.perf_counter() - start_time) * 1000
+                latency_ms = (self._time_provider.monotonic() - start_time) * 1000
 
                 result = self._handle_order_result(
                     order,
@@ -1019,7 +1023,7 @@ class OrderSubmitter:
                     self._sleep_fn(delay_seconds)
                     continue
 
-                latency_ms = (time.perf_counter() - start_time) * 1000
+                latency_ms = (self._time_provider.monotonic() - start_time) * 1000
                 is_rejection = reason in {"broker_rejected", "broker_status"}
 
                 side_str = side.value if hasattr(side, "value") else str(side)
@@ -1123,7 +1127,8 @@ class OrderSubmitter:
     def _generate_submit_id(self, client_order_id: str | None) -> str:
         """Generate or retrieve client order ID."""
         submit_id = (
-            client_order_id or f"{self.bot_id}_{int(time.time() * 1000)}_{uuid.uuid4().hex[:6]}"
+            client_order_id
+            or f"{self.bot_id}_{int(self._time_provider.time() * 1000)}_{uuid.uuid4().hex[:6]}"
         )
         if self.integration_mode:
             forced_id = os.getenv("INTEGRATION_TEST_ORDER_ID")

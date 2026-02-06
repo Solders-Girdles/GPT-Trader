@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import MagicMock
 
 from gpt_trader.monitoring.health_checks import check_ws_freshness
+from gpt_trader.utilities.time_provider import FakeClock
 
 
 class TestCheckWsFreshness:
@@ -103,3 +104,38 @@ class TestCheckWsFreshness:
         assert healthy is False
         assert details["max_attempts_triggered"] is True
         assert details["severity"] == "critical"
+
+    def test_ws_freshness_uses_time_provider(self) -> None:
+        """Test freshness checks use the injected time provider."""
+        clock = FakeClock(start_time=1000.0)
+        broker = MagicMock()
+        broker.get_ws_health.return_value = {
+            "connected": True,
+            "last_message_ts": 995.0,
+            "last_heartbeat_ts": 990.0,
+            "gap_count": 0,
+            "reconnect_count": 0,
+            "max_attempts_triggered": False,
+        }
+
+        healthy, details = check_ws_freshness(
+            broker,
+            message_stale_seconds=10.0,
+            heartbeat_stale_seconds=15.0,
+            time_provider=clock,
+        )
+
+        assert healthy is True
+        assert details["stale"] is False
+
+        clock.advance(20.0)
+        healthy, details = check_ws_freshness(
+            broker,
+            message_stale_seconds=10.0,
+            heartbeat_stale_seconds=15.0,
+            time_provider=clock,
+        )
+
+        assert healthy is False
+        assert details["stale"] is True
+        assert details["stale_reason"] == "message"

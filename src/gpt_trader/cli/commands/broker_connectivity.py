@@ -24,6 +24,18 @@ from gpt_trader.features.brokerages.coinbase.errors import (
 
 COMMAND_NAME = "broker-check coinbase"
 DEFAULT_ENDPOINT = "time"
+AUTH_REMEDIATION = "Verify Coinbase API key name/private key and required permissions."
+MISSING_CREDENTIALS_REMEDIATION = (
+    "Set COINBASE_CREDENTIALS_FILE or COINBASE_CDP_API_KEY + COINBASE_CDP_PRIVATE_KEY."
+)
+INVALID_ENDPOINT_REMEDIATION = "Use a known endpoint name or full path/URL."
+RATE_LIMIT_REMEDIATION = "Wait and retry with backoff; reduce request rate."
+NETWORK_REMEDIATION = "Check network/DNS/proxy/firewall and retry."
+TRANSIENT_REMEDIATION = "Retry with backoff and check Coinbase status."
+
+
+class MissingCredentialsError(RuntimeError):
+    """Raised when Coinbase credentials cannot be resolved."""
 
 
 def register(subparsers: Any) -> None:
@@ -73,6 +85,18 @@ def _handle_coinbase_check(args: Namespace) -> CliResponse | int:
             resolved_endpoint,
             timeout,
         )
+    except MissingCredentialsError as exc:
+        summary = f"Credentials missing: {exc}"
+        return _emit_error(
+            output_format,
+            CliErrorCode.CONFIG_NOT_FOUND,
+            summary,
+            endpoint,
+            resolved_endpoint,
+            timeout,
+            None,
+            remediation=MISSING_CREDENTIALS_REMEDIATION,
+        )
     except InvalidRequestError as exc:
         summary = f"Invalid endpoint '{endpoint}': {exc}"
         return _emit_error(
@@ -83,8 +107,9 @@ def _handle_coinbase_check(args: Namespace) -> CliResponse | int:
             resolved_endpoint,
             timeout,
             None,
+            remediation=INVALID_ENDPOINT_REMEDIATION,
         )
-    except (AuthError, PermissionDeniedError) as exc:
+    except AuthError as exc:
         summary = f"Authentication failed: {exc}"
         return _emit_error(
             output_format,
@@ -94,6 +119,19 @@ def _handle_coinbase_check(args: Namespace) -> CliResponse | int:
             resolved_endpoint,
             timeout,
             None,
+            remediation=AUTH_REMEDIATION,
+        )
+    except PermissionDeniedError as exc:
+        summary = f"Permission denied: {exc}"
+        return _emit_error(
+            output_format,
+            CliErrorCode.AUTHENTICATION_FAILED,
+            summary,
+            endpoint,
+            resolved_endpoint,
+            timeout,
+            None,
+            remediation=AUTH_REMEDIATION,
         )
     except RateLimitError as exc:
         summary = f"Rate limited: {exc}"
@@ -105,6 +143,7 @@ def _handle_coinbase_check(args: Namespace) -> CliResponse | int:
             resolved_endpoint,
             timeout,
             None,
+            remediation=RATE_LIMIT_REMEDIATION,
         )
     except TransientBrokerError as exc:
         summary = f"Service unavailable: {exc}"
@@ -116,6 +155,7 @@ def _handle_coinbase_check(args: Namespace) -> CliResponse | int:
             resolved_endpoint,
             timeout,
             None,
+            remediation=TRANSIENT_REMEDIATION,
         )
     except requests.exceptions.SSLError as exc:
         summary = f"SSL error: {exc}"
@@ -127,6 +167,7 @@ def _handle_coinbase_check(args: Namespace) -> CliResponse | int:
             resolved_endpoint,
             timeout,
             None,
+            remediation=NETWORK_REMEDIATION,
         )
     except (requests.Timeout, requests.ConnectionError, ConnectionError) as exc:
         summary = f"Network timeout/error: {exc}"
@@ -138,6 +179,7 @@ def _handle_coinbase_check(args: Namespace) -> CliResponse | int:
             resolved_endpoint,
             timeout,
             None,
+            remediation=NETWORK_REMEDIATION,
         )
     except Exception as exc:  # noqa: BLE001
         summary = f"{type(exc).__name__}: {exc}"
@@ -149,6 +191,7 @@ def _handle_coinbase_check(args: Namespace) -> CliResponse | int:
             resolved_endpoint,
             timeout,
             None,
+            remediation="Check command configuration and retry.",
         )
     finally:
         if client is not None:
@@ -161,7 +204,7 @@ def _handle_coinbase_check(args: Namespace) -> CliResponse | int:
 def _build_coinbase_client(*, timeout: int | None) -> CoinbaseClient:
     creds = resolve_coinbase_credentials()
     if not creds:
-        raise RuntimeError(
+        raise MissingCredentialsError(
             "Coinbase credentials not found. Set COINBASE_CREDENTIALS_FILE or "
             "COINBASE_CDP_API_KEY + COINBASE_CDP_PRIVATE_KEY."
         )
@@ -258,23 +301,30 @@ def _emit_error(
     resolved_endpoint: str,
     timeout: int | None,
     raw_response: Any | None,
+    *,
+    remediation: str | None,
 ) -> CliResponse | int:
     if output_format == "json":
+        details = {
+            "broker": "coinbase",
+            "endpoint": endpoint,
+            "resolved_endpoint": resolved_endpoint,
+            "timeout": timeout,
+            "summary": summary,
+            "raw_response": raw_response,
+        }
+        if remediation:
+            details["remediation"] = remediation
         return CliResponse.error_response(
             command=COMMAND_NAME,
             code=code,
             message=summary,
-            details={
-                "broker": "coinbase",
-                "endpoint": endpoint,
-                "resolved_endpoint": resolved_endpoint,
-                "timeout": timeout,
-                "summary": summary,
-                "raw_response": raw_response,
-            },
+            details=details,
         )
 
-    print(f"Broker check FAILED: {summary}")
+    print(f"Broker check FAILED [{code.value}]: {summary}")
+    if remediation:
+        print(f"Remediation: {remediation}")
     print(f"Raw response: {_format_raw_response(raw_response)}")
     return 1
 

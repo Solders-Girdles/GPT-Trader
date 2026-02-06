@@ -13,6 +13,15 @@ from gpt_trader.utilities.datetime_helpers import utc_now
 
 
 @pytest.fixture
+def reset_metrics() -> None:
+    from gpt_trader.monitoring.metrics_collector import reset_all
+
+    reset_all()
+    yield
+    reset_all()
+
+
+@pytest.fixture
 def flow_submitter(
     mock_broker: MagicMock,
     mock_event_store: MagicMock,
@@ -83,13 +92,18 @@ def test_submit_order_missing_decision_id_rejected(
     submit_order_with_result_call,
     mock_broker: MagicMock,
     emit_metric_mock: MagicMock,
+    reset_metrics: None,
 ) -> None:
+    from gpt_trader.monitoring.metrics_collector import get_metrics_collector
+
     outcome = submit_order_with_result_call(flow_submitter, client_order_id=None)
 
     assert outcome.rejected is True
     assert outcome.reason == "missing_decision_id"
     mock_broker.place_order.assert_not_called()
     emit_metric_mock.assert_called()
+    collector = get_metrics_collector()
+    assert collector.counters["gpt_trader_trades_blocked_total"] == 1
 
 
 @pytest.mark.parametrize("status_name", ["CANCELLED", "FAILED"])

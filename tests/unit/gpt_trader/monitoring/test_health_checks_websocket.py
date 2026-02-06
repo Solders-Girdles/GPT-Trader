@@ -103,3 +103,60 @@ class TestCheckWsFreshness:
         assert healthy is False
         assert details["max_attempts_triggered"] is True
         assert details["severity"] == "critical"
+
+    def test_ws_connected_with_unparseable_message_timestamp(self) -> None:
+        """Connected WS should fail closed when message timestamp is invalid."""
+        import time
+
+        broker = MagicMock()
+        broker.get_ws_health.return_value = {
+            "connected": True,
+            "last_message_ts": {"invalid": "timestamp"},
+            "last_heartbeat_ts": time.time() - 5,
+            "gap_count": 0,
+            "reconnect_count": 0,
+            "max_attempts_triggered": False,
+        }
+
+        healthy, details = check_ws_freshness(broker)
+
+        assert healthy is False
+        assert details["stale"] is True
+        assert details["stale_reason"] == "message_timestamp_unparseable"
+
+    def test_ws_connected_with_unparseable_heartbeat_timestamp(self) -> None:
+        """Connected WS should fail closed when heartbeat timestamp is invalid."""
+        import time
+
+        broker = MagicMock()
+        broker.get_ws_health.return_value = {
+            "connected": True,
+            "last_message_ts": time.time() - 5,
+            "last_heartbeat_ts": "not-a-timestamp",
+            "gap_count": 0,
+            "reconnect_count": 0,
+            "max_attempts_triggered": False,
+        }
+
+        healthy, details = check_ws_freshness(broker)
+
+        assert healthy is False
+        assert details["stale"] is True
+        assert details["stale_reason"] == "heartbeat_timestamp_unparseable"
+
+    def test_ws_connected_with_missing_timestamps_keeps_prior_behavior(self) -> None:
+        """Connected WS without timestamp values keeps legacy missing-data behavior."""
+        broker = MagicMock()
+        broker.get_ws_health.return_value = {
+            "connected": True,
+            "last_message_ts": 0,
+            "last_heartbeat_ts": 0,
+            "gap_count": 0,
+            "reconnect_count": 0,
+            "max_attempts_triggered": False,
+        }
+
+        healthy, details = check_ws_freshness(broker)
+
+        assert healthy is True
+        assert details["stale"] is False

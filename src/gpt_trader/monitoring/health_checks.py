@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING, Any, Literal, cast
 from gpt_trader.monitoring.metrics_collector import record_counter
 from gpt_trader.monitoring.profiling import profile_span
 from gpt_trader.utilities.logging_patterns import get_logger
+from gpt_trader.utilities.time_provider import TimeProvider, get_clock
 
 if TYPE_CHECKING:
     from gpt_trader.app.health_server import HealthState
@@ -129,6 +130,7 @@ def check_ws_freshness(
     broker: BrokerProtocol,
     message_stale_seconds: float = 60.0,
     heartbeat_stale_seconds: float = 120.0,
+    time_provider: TimeProvider | None = None,
 ) -> tuple[bool, dict[str, Any]]:
     """
     Check WebSocket connection health and message freshness.
@@ -137,6 +139,7 @@ def check_ws_freshness(
         broker: Broker protocol instance (must have get_ws_health method).
         message_stale_seconds: Max age of last message before considered stale.
         heartbeat_stale_seconds: Max age of last heartbeat before considered stale.
+        time_provider: Optional time provider for deterministic freshness checks.
 
     Returns:
         Tuple of (healthy, details) where details includes:
@@ -163,7 +166,8 @@ def check_ws_freshness(
             details["ws_not_initialized"] = True
             return True, details
 
-        now = time.time()
+        clock = time_provider or get_clock()
+        now = clock.time()
         connected = health.get("connected", False)
         last_message_ts = health.get("last_message_ts", 0)
         last_heartbeat_ts = health.get("last_heartbeat_ts", 0)
@@ -511,6 +515,7 @@ class HealthCheckRunner:
         message_stale_seconds: float = 60.0,
         heartbeat_stale_seconds: float = 120.0,
         broker_calls: BoundedToThread | None = None,
+        time_provider: TimeProvider | None = None,
     ) -> None:
         """
         Initialize the health check runner.
@@ -524,6 +529,7 @@ class HealthCheckRunner:
             interval_seconds: How often to run checks (default 30s).
             message_stale_seconds: WS message staleness threshold.
             heartbeat_stale_seconds: WS heartbeat staleness threshold.
+            time_provider: Optional time provider for deterministic staleness checks.
         """
         self._health_state = health_state
         self._broker = broker
@@ -534,6 +540,7 @@ class HealthCheckRunner:
         self._message_stale_seconds = message_stale_seconds
         self._heartbeat_stale_seconds = heartbeat_stale_seconds
         self._broker_calls = broker_calls
+        self._time_provider = time_provider
         self._running = False
         self._task: Any = None
 
@@ -575,6 +582,7 @@ class HealthCheckRunner:
                         broker,
                         message_stale_seconds=self._message_stale_seconds,
                         heartbeat_stale_seconds=self._heartbeat_stale_seconds,
+                        time_provider=self._time_provider,
                     ),
                 )
             )

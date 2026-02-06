@@ -3,7 +3,9 @@
 from datetime import UTC, datetime, timedelta, timezone
 
 from gpt_trader.utilities.datetime_helpers import (
+    age_since_timestamp_seconds,
     normalize_to_utc,
+    to_epoch_seconds,
     to_iso_utc,
     utc_now,
     utc_now_iso,
@@ -180,3 +182,47 @@ class TestToIsoUtc:
         dt = datetime(2100, 12, 31, 23, 59, 59, 999999, tzinfo=UTC)
         result = to_iso_utc(dt)
         assert result == "2100-12-31T23:59:59.999999+00:00"
+
+
+class TestTimestampCoercionHelpers:
+    def test_to_epoch_seconds_handles_various_types(self) -> None:
+        """Test epoch coercion for numbers, datetimes, and ISO strings."""
+        assert to_epoch_seconds(123.5) == 123.5
+        assert to_epoch_seconds(42) == 42.0
+
+        dt = datetime(2024, 1, 1, 0, 0, tzinfo=UTC)
+        assert to_epoch_seconds(dt) == dt.timestamp()
+
+        iso = "2024-05-10T12:34:56Z"
+        assert to_epoch_seconds(iso) == datetime.fromisoformat(
+            "2024-05-10T12:34:56+00:00"
+        ).timestamp()
+
+        assert to_epoch_seconds("invalid") is None
+        assert to_epoch_seconds(None) is None
+        assert to_epoch_seconds(False) is None
+
+    def test_age_since_timestamp_seconds_returns_expected_age(self) -> None:
+        """Test age calculations use provided `now_seconds` and missing values."""
+        now = 1000.0
+        timestamp_value = 900.0
+        timestamp, age = age_since_timestamp_seconds(timestamp_value, now_seconds=now)
+        assert timestamp == timestamp_value
+        assert age == 100.0
+
+        iso = "2024-01-01T00:00:00Z"
+        timestamp_iso, age_iso = age_since_timestamp_seconds(
+            iso,
+            now_seconds=1700000000.0,
+        )
+        expected_iso = datetime.fromisoformat("2024-01-01T00:00:00+00:00").timestamp()
+        assert timestamp_iso == expected_iso
+        assert age_iso == 1700000000.0 - expected_iso
+
+        missing_timestamp, missing_age = age_since_timestamp_seconds(
+            None,
+            now_seconds=now,
+            missing_value=999.0,
+        )
+        assert missing_timestamp is None
+        assert missing_age == 999.0

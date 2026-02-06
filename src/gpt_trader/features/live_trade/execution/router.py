@@ -17,7 +17,7 @@ from gpt_trader.features.live_trade.execution.submission_result import (
     OrderSubmissionStatus,
 )
 from gpt_trader.features.live_trade.strategies.hybrid.types import Action, HybridDecision
-from gpt_trader.monitoring.metrics_collector import record_counter
+from gpt_trader.monitoring.metrics_collector import record_trade_blocked
 from gpt_trader.utilities.datetime_helpers import utc_now
 from gpt_trader.utilities.logging_patterns import get_logger
 
@@ -148,7 +148,7 @@ class OrderRouter:
             if submission.status is OrderSubmissionStatus.BLOCKED:
                 if submission.decision_trace is None:
                     try:
-                        record_counter("gpt_trader_trades_blocked_total")
+                        record_trade_blocked()
                     except Exception:
                         pass
                 logger.warning(

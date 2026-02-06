@@ -26,7 +26,12 @@ from gpt_trader.features.live_trade.execution.rejection_reason import (
     normalize_rejection_reason,
 )
 from gpt_trader.logging.correlation import order_context
-from gpt_trader.monitoring.metrics_collector import record_counter, record_histogram
+from gpt_trader.monitoring.metrics_collector import (
+    record_counter,
+    record_histogram,
+    record_trade_blocked,
+    record_trade_executed,
+)
 from gpt_trader.observability.tracing import trace_span
 from gpt_trader.persistence.orders_store import (
     OrderRecord,
@@ -663,6 +668,10 @@ class OrderSubmitter:
             record_counter(MISSING_DECISION_ID_METRIC)
         except Exception:
             pass
+        try:
+            record_trade_blocked()
+        except Exception:
+            pass
         self.record_rejection(
             symbol,
             side_str,
@@ -943,7 +952,7 @@ class OrderSubmitter:
                         side=side_str,
                     )
                     try:
-                        record_counter("gpt_trader_trades_executed_total")
+                        record_trade_executed()
                     except Exception:
                         pass
                     _record_order_submission_latency(

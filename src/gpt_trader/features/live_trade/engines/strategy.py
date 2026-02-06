@@ -83,7 +83,7 @@ from gpt_trader.logging.correlation import correlation_context
 from gpt_trader.monitoring.alert_types import AlertSeverity
 from gpt_trader.monitoring.health_checks import HealthCheckRunner
 from gpt_trader.monitoring.heartbeat import HeartbeatService
-from gpt_trader.monitoring.metrics_collector import record_counter, record_histogram
+from gpt_trader.monitoring.metrics_collector import record_histogram, record_trade_blocked
 from gpt_trader.monitoring.profiling import profile_span
 from gpt_trader.monitoring.status_reporter import StatusReporter
 from gpt_trader.observability.tracing import trace_span
@@ -2206,7 +2206,7 @@ class TradingEngine(BaseEngine):
         trace.record_outcome("result", status.value, detail=detail)
         if status is OrderSubmissionStatus.BLOCKED:
             try:
-                record_counter("gpt_trader_trades_blocked_total")
+                record_trade_blocked()
             except Exception:
                 pass
         self._record_decision_trace(trace)

@@ -21,6 +21,10 @@ from typing import Any
 # Default histogram buckets for latency measurements (seconds)
 DEFAULT_LATENCY_BUCKETS = (0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0)
 
+# Trade execution counters
+TRADE_EXECUTED_COUNTER = "gpt_trader_trades_executed_total"
+TRADE_BLOCKED_COUNTER = "gpt_trader_trades_blocked_total"
+
 
 def format_metric_key(name: str, labels: dict[str, str] | None) -> str:
     """Format a metric name with labels into a stable key.
@@ -177,6 +181,16 @@ def get_metrics_collector() -> _GuardMetricsCollector:
 def record_counter(name: str, increment: int = 1, labels: dict[str, str] | None = None) -> None:
     """Increment the named counter, optionally with labels."""
     _GLOBAL_COLLECTOR.record_counter(name, increment, labels)
+
+
+def record_trade_executed() -> None:
+    """Increment the trade executed counter."""
+    record_counter(TRADE_EXECUTED_COUNTER)
+
+
+def record_trade_blocked() -> None:
+    """Increment the trade blocked counter."""
+    record_counter(TRADE_BLOCKED_COUNTER)
 
 
 def record_gauge(name: str, value: float, labels: dict[str, str] | None = None) -> None:

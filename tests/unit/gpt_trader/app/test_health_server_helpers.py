@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 import pytest
 
 from gpt_trader.app.health_server import (
@@ -12,6 +10,7 @@ from gpt_trader.app.health_server import (
     mark_live,
     mark_ready,
 )
+from gpt_trader.monitoring.interfaces import HealthCheckResult
 
 
 class TestHealthCheckFunctions:
@@ -33,24 +32,25 @@ class TestHealthCheckFunctions:
         assert health_state.reason == "graceful_shutdown"
 
     def test_add_health_check_success(self, health_state: HealthState) -> None:
-        def check_broker() -> tuple[bool, dict[str, Any]]:
-            return True, {"latency_ms": 25}
+        def check_broker() -> HealthCheckResult:
+            return HealthCheckResult(healthy=True, details={"latency_ms": 25})
 
         add_health_check(health_state, "broker", check_broker)
-        assert health_state.checks["broker"]["status"] == "pass"
-        assert health_state.checks["broker"]["details"]["latency_ms"] == 25
+        assert health_state.checks["broker"].status == "pass"
+        assert health_state.checks["broker"].details["latency_ms"] == 25
+        assert health_state.checks_payload()["broker"]["status"] == "pass"
 
     def test_add_health_check_failure(self, health_state: HealthState) -> None:
-        def check_database() -> tuple[bool, dict[str, Any]]:
-            return False, {"error": "connection refused"}
+        def check_database() -> HealthCheckResult:
+            return HealthCheckResult(healthy=False, details={"error": "connection refused"})
 
         add_health_check(health_state, "database", check_database)
-        assert health_state.checks["database"]["status"] == "fail"
+        assert health_state.checks["database"].status == "fail"
 
     def test_add_health_check_exception(self, health_state: HealthState) -> None:
-        def check_flaky() -> tuple[bool, dict[str, Any]]:
+        def check_flaky() -> HealthCheckResult:
             raise RuntimeError("check failed")
 
         add_health_check(health_state, "flaky", check_flaky)
-        assert health_state.checks["flaky"]["status"] == "fail"
-        assert "check failed" in health_state.checks["flaky"]["details"]["error"]
+        assert health_state.checks["flaky"].status == "fail"
+        assert "check failed" in health_state.checks["flaky"].details["error"]

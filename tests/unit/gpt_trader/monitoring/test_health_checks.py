@@ -37,31 +37,31 @@ class TestCheckBrokerPing:
         """Test successful ping using get_time method."""
         broker = MagicMock()
         broker.get_time.return_value = {"epoch": 1234567890}
-        healthy, details = check_broker_ping(broker)
-        assert healthy is True
-        assert "latency_ms" in details
-        assert details["method"] == "get_time"
-        assert details["severity"] == "critical"
+        result = check_broker_ping(broker)
+        assert result.healthy is True
+        assert "latency_ms" in result.details
+        assert result.details["method"] == "get_time"
+        assert result.details["severity"] == "critical"
         broker.get_time.assert_called_once()
 
     def test_success_fallback_to_list_balances(self) -> None:
         """Test fallback to list_balances when get_time not available."""
         broker = MagicMock(spec=["list_balances"])
         broker.list_balances.return_value = [{"currency": "USD", "available": "100"}]
-        healthy, details = check_broker_ping(broker)
-        assert healthy is True
-        assert details["method"] == "list_balances"
+        result = check_broker_ping(broker)
+        assert result.healthy is True
+        assert result.details["method"] == "list_balances"
         broker.list_balances.assert_called_once()
 
     def test_failure_on_exception(self) -> None:
         """Test failure when broker call raises exception."""
         broker = MagicMock()
         broker.get_time.side_effect = ConnectionError("connection refused")
-        healthy, details = check_broker_ping(broker)
-        assert healthy is False
-        assert "error" in details
-        assert details["error_type"] == "ConnectionError"
-        assert details["severity"] == "critical"
+        result = check_broker_ping(broker)
+        assert result.healthy is False
+        assert "error" in result.details
+        assert result.details["error_type"] == "ConnectionError"
+        assert result.details["severity"] == "critical"
 
     def test_high_latency_warning(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test that high latency sets severity to warning."""
@@ -69,11 +69,11 @@ class TestCheckBrokerPing:
         mock_time = MagicMock()
         mock_time.side_effect = [0, 2.5]
         monkeypatch.setattr(time, "perf_counter", mock_time)
-        healthy, details = check_broker_ping(broker)
-        assert healthy is True
-        assert details["latency_ms"] == 2500.0
-        assert details["severity"] == "warning"
-        assert "warning" in details
+        result = check_broker_ping(broker)
+        assert result.healthy is True
+        assert result.details["latency_ms"] == 2500.0
+        assert result.details["severity"] == "warning"
+        assert "warning" in result.details
 
 
 class TestCheckDegradationState:
@@ -88,10 +88,10 @@ class TestCheckDegradationState:
             "paused_symbols": {},
             "global_remaining_seconds": 0,
         }
-        healthy, details = check_degradation_state(degradation_state)
-        assert healthy is True
-        assert details["global_paused"] is False
-        assert details["reduce_only_mode"] is False
+        result = check_degradation_state(degradation_state)
+        assert result.healthy is True
+        assert result.details["global_paused"] is False
+        assert result.details["reduce_only_mode"] is False
 
     def test_global_paused(self) -> None:
         """Test failure when globally paused."""
@@ -102,10 +102,10 @@ class TestCheckDegradationState:
             "paused_symbols": {},
             "global_remaining_seconds": 300,
         }
-        healthy, details = check_degradation_state(degradation_state)
-        assert healthy is False
-        assert details["global_paused"] is True
-        assert details["severity"] == "critical"
+        result = check_degradation_state(degradation_state)
+        assert result.healthy is False
+        assert result.details["global_paused"] is True
+        assert result.details["severity"] == "critical"
 
     def test_reduce_only_mode(self) -> None:
         """Test warning when in reduce-only mode."""
@@ -122,11 +122,11 @@ class TestCheckDegradationState:
         risk_manager._reduce_only_reason = "validation_failures"
         del risk_manager._cfm_reduce_only_mode
         risk_manager.is_cfm_reduce_only_mode = MagicMock(return_value=False)
-        healthy, details = check_degradation_state(degradation_state, risk_manager)
-        assert healthy is True
-        assert details["reduce_only_mode"] is True
-        assert details["reduce_only_reason"] == "validation_failures"
-        assert details["severity"] == "warning"
+        result = check_degradation_state(degradation_state, risk_manager)
+        assert result.healthy is True
+        assert result.details["reduce_only_mode"] is True
+        assert result.details["reduce_only_reason"] == "validation_failures"
+        assert result.details["severity"] == "warning"
 
     def test_symbol_paused(self) -> None:
         """Test warning when specific symbols are paused."""
@@ -137,11 +137,11 @@ class TestCheckDegradationState:
             "paused_symbols": {"BTC-USD": {"reason": "rate_limited"}},
             "global_remaining_seconds": 0,
         }
-        healthy, details = check_degradation_state(degradation_state)
-        assert healthy is True
-        assert details["paused_symbol_count"] == 1
-        assert "BTC-USD" in details["paused_symbols"]
-        assert details["severity"] == "warning"
+        result = check_degradation_state(degradation_state)
+        assert result.healthy is True
+        assert result.details["paused_symbol_count"] == 1
+        assert "BTC-USD" in result.details["paused_symbols"]
+        assert result.details["severity"] == "warning"
 
 
 class FakeMarketDataService:
@@ -178,11 +178,11 @@ class TestCheckTickerFreshness:
             )
         market_data_service = FakeMarketDataService(["BTC-USD", "ETH-USD"], cache)
 
-        healthy, details = check_ticker_freshness(market_data_service)
+        result = check_ticker_freshness(market_data_service)
 
-        assert healthy is True
-        assert details["stale_symbols"] == []
-        assert details["stale_count"] == 0
+        assert result.healthy is True
+        assert result.details["stale_symbols"] == []
+        assert result.details["stale_count"] == 0
 
     def test_records_profile_and_outcome_metrics(self) -> None:
         """Test ticker freshness emits profile histogram and ok outcome counter."""
@@ -201,9 +201,9 @@ class TestCheckTickerFreshness:
             )
         market_data_service = FakeMarketDataService(["BTC-USD", "ETH-USD"], cache)
 
-        healthy, _ = check_ticker_freshness(market_data_service)
+        result = check_ticker_freshness(market_data_service)
 
-        assert healthy is True
+        assert result.healthy is True
         collector = get_metrics_collector()
         summary = collector.get_metrics_summary()
         histogram_key = "gpt_trader_profile_duration_seconds{phase=ticker_freshness}"
@@ -231,10 +231,10 @@ class TestCheckTickerFreshness:
 
         market_data_service = MarketDataWithProvider(["BTC-USD"], ExplodingProvider())
 
-        healthy, details = check_ticker_freshness(market_data_service)
+        result = check_ticker_freshness(market_data_service)
 
-        assert healthy is False
-        assert details["error_type"] == "RuntimeError"
+        assert result.healthy is False
+        assert result.details["error_type"] == "RuntimeError"
         collector = get_metrics_collector()
         error_key = f"{TICKER_FRESHNESS_CHECKS_COUNTER}{{result=error}}"
         assert collector.counters[error_key] == 1
@@ -264,11 +264,11 @@ class TestCheckTickerFreshness:
         )
         market_data_service = FakeMarketDataService(["BTC-USD", "ETH-USD"], cache)
 
-        healthy, details = check_ticker_freshness(market_data_service)
+        result = check_ticker_freshness(market_data_service)
 
-        assert healthy is False
-        assert "ETH-USD" in details["stale_symbols"]
-        assert details["stale_count"] == 1
+        assert result.healthy is False
+        assert "ETH-USD" in result.details["stale_symbols"]
+        assert result.details["stale_count"] == 1
 
     def test_no_data_available(self) -> None:
         """Test unhealthy when no tickers are available."""
@@ -277,20 +277,20 @@ class TestCheckTickerFreshness:
         cache = TickerCache(ttl_seconds=5, clock=clock)
         market_data_service = FakeMarketDataService(["BTC-USD", "ETH-USD"], cache)
 
-        healthy, details = check_ticker_freshness(market_data_service)
+        result = check_ticker_freshness(market_data_service)
 
-        assert healthy is False
-        assert set(details["stale_symbols"]) == {"BTC-USD", "ETH-USD"}
-        assert details["stale_count"] == 2
+        assert result.healthy is False
+        assert set(result.details["stale_symbols"]) == {"BTC-USD", "ETH-USD"}
+        assert result.details["stale_count"] == 2
 
     def test_cache_unavailable_records_metric(self) -> None:
         """Test missing provider/cache increments metrics counter and is skipped/healthy."""
         market_data_service = FakeMarketDataServiceNoCache(["BTC-USD"])
 
-        healthy, details = check_ticker_freshness(market_data_service)
+        result = check_ticker_freshness(market_data_service)
 
-        assert healthy is True
-        assert details["ticker_cache_unavailable"] is True
+        assert result.healthy is True
+        assert result.details["ticker_cache_unavailable"] is True
         collector = get_metrics_collector()
         assert collector.counters[TICKER_CACHE_UNAVAILABLE_COUNTER] == 1
         output = format_prometheus(collector.get_metrics_summary())
@@ -312,10 +312,10 @@ class TestCheckTickerFreshness:
         )
         market_data_service = FakeMarketDataService(["BTC-USD"], cache)
 
-        healthy, details = check_ticker_freshness(market_data_service)
+        result = check_ticker_freshness(market_data_service)
 
-        assert healthy is False
-        assert details["stale_count"] == 1
+        assert result.healthy is False
+        assert result.details["stale_count"] == 1
         collector = get_metrics_collector()
         assert collector.counters[TICKER_STALE_SYMBOLS_COUNTER] == 1
         output = format_prometheus(collector.get_metrics_summary())
@@ -337,11 +337,11 @@ class TestCheckTickerFreshness:
         )
         market_data_service = FakeMarketDataService(["BTC-USD", "ETH-USD"], cache)
 
-        healthy, details = check_ticker_freshness(market_data_service)
+        result = check_ticker_freshness(market_data_service)
 
-        assert healthy is False
-        assert details["stale_symbols"] == ["ETH-USD"]
-        assert details["stale_count"] == 1
+        assert result.healthy is False
+        assert result.details["stale_symbols"] == ["ETH-USD"]
+        assert result.details["stale_count"] == 1
 
     def test_missing_provider_is_skipped(self) -> None:
         """Test missing freshness provider is skipped and healthy."""
@@ -352,8 +352,8 @@ class TestCheckTickerFreshness:
 
         market_data_service = MarketDataNoProvider(["BTC-USD"])
 
-        healthy, details = check_ticker_freshness(market_data_service)
+        result = check_ticker_freshness(market_data_service)
 
-        assert healthy is True
-        assert details["skipped"] is True
-        assert details["reason"] == "ticker_freshness_provider_unavailable"
+        assert result.healthy is True
+        assert result.details["skipped"] is True
+        assert result.details["reason"] == "ticker_freshness_provider_unavailable"

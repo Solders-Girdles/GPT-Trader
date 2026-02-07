@@ -63,9 +63,12 @@ def serialize_preflight_report(report_payload: Mapping[str, Any]) -> str:
     return json.dumps(report_payload, indent=2)
 
 
-def report_path_for_timestamp(timestamp: datetime) -> Path:
+def report_path_for_timestamp(timestamp: datetime, *, output_dir: Path | None = None) -> Path:
     """Resolve report path for the provided timestamp."""
-    return Path(f"preflight_report_{timestamp.strftime('%Y%m%d_%H%M%S')}.json")
+    filename = f"preflight_report_{timestamp.strftime('%Y%m%d_%H%M%S')}.json"
+    if output_dir is None:
+        return Path(filename)
+    return output_dir / filename
 
 
 def write_preflight_report(report_path: Path, report_content: str) -> None:
@@ -74,7 +77,12 @@ def write_preflight_report(report_path: Path, report_content: str) -> None:
     report_path.write_text(report_content, encoding="utf-8")
 
 
-def generate_report(checker: PreflightCheck) -> tuple[bool, str]:
+def generate_report(
+    checker: PreflightCheck,
+    *,
+    report_dir: Path | None = None,
+    report_path: Path | None = None,
+) -> tuple[bool, str]:
     """Render terminal summary and persist JSON report."""
     ctx = checker.context
     checker.section_header("PREFLIGHT REPORT")
@@ -121,7 +129,10 @@ def generate_report(checker: PreflightCheck) -> tuple[bool, str]:
     timestamp = datetime.now(timezone.utc)
     report_payload = format_preflight_report(checker, timestamp=timestamp)
     report_content = serialize_preflight_report(report_payload)
-    report_path = report_path_for_timestamp(timestamp)
+    if report_dir is not None and report_path is not None:
+        raise ValueError("report_dir and report_path are mutually exclusive")
+    if report_path is None:
+        report_path = report_path_for_timestamp(timestamp, output_dir=report_dir)
 
     try:
         write_preflight_report(report_path, report_content)

@@ -16,14 +16,17 @@ Entry point:
 from __future__ import annotations
 
 import argparse
+import shutil
 import subprocess
 import sys
+import tempfile
 import time
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Final, NamedTuple
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
+VAR_AGENTS_DIR = PROJECT_ROOT / "var" / "agents"
 
 # Map of generator scripts to their output directories
 # Format: (script_name, output_subdir, description)
@@ -96,6 +99,7 @@ def normalize_output_dir(output_dir: Path) -> None:
 def run_generator(
     script_name: str,
     output_dir: str,
+    output_root: Path,
     extra_args: Sequence[str] = (),
 ) -> GeneratorResult:
     """Run a single generator script.
@@ -121,7 +125,18 @@ def run_generator(
 
     start = time.time()
     try:
-        command = [sys.executable, str(script_path), *extra_args]
+        target_dir = output_root / output_dir
+        if target_dir.exists():
+            shutil.rmtree(target_dir)
+        target_dir.mkdir(parents=True, exist_ok=True)
+
+        command = [
+            sys.executable,
+            str(script_path),
+            "--output-dir",
+            str(target_dir),
+            *extra_args,
+        ]
         result = subprocess.run(
             command,
             cwd=PROJECT_ROOT,
@@ -141,7 +156,7 @@ def run_generator(
                 error=error_msg[:500],  # Truncate long errors
             )
 
-        normalize_output_dir(PROJECT_ROOT / "var" / "agents" / output_dir)
+        normalize_output_dir(target_dir)
 
         return GeneratorResult(
             script=script_name,
@@ -172,6 +187,7 @@ def regenerate_all(
     verbose: bool = True,
     generators: Sequence[tuple[str, str, str]] | None = None,
     *,
+    output_root: Path | None = None,
     reasoning_validate: bool = False,
     reasoning_strict: bool = False,
 ) -> tuple[list[GeneratorResult], bool]:
@@ -185,11 +201,11 @@ def regenerate_all(
         Tuple of (results list, overall success)
     """
     results: list[GeneratorResult] = []
-    var_agents = PROJECT_ROOT / "var" / "agents"
+    output_root = output_root or VAR_AGENTS_DIR
     generators_to_run = list(generators) if generators is not None else GENERATORS
 
     # Ensure output directory exists
-    var_agents.mkdir(parents=True, exist_ok=True)
+    output_root.mkdir(parents=True, exist_ok=True)
 
     for script_name, output_dir, description in generators_to_run:
         if verbose:
@@ -202,7 +218,7 @@ def regenerate_all(
             if reasoning_strict:
                 extra_args.append("--strict")
 
-        result = run_generator(script_name, output_dir, extra_args)
+        result = run_generator(script_name, output_dir, output_root, extra_args)
         results.append(result)
 
         if verbose:
@@ -219,65 +235,92 @@ def regenerate_all(
     return results, success
 
 
-def verify_freshness(generators: Sequence[tuple[str, str, str]] | None = None) -> int:
-    """Verify that generated files are up-to-date.
+def _diff_directories(committed_dir: Path, generated_dir: Path) -> str | None:
+    if not committed_dir.exists() and not generated_dir.exists():
+        return None
+    if not generated_dir.exists():
+        return (
+            f"Generated output missing at {generated_dir.as_posix()} (expected files at "
+            f"{committed_dir.as_posix()})."
+        )
+    if not committed_dir.exists():
+        return (
+            f"Committed output missing at {committed_dir.as_posix()} (generator wrote to "
+            f"{generated_dir.as_posix()})."
+        )
 
-    Runs all generators and checks if there are uncommitted changes
-    in var/agents/. Returns 0 if fresh, 1 if stale.
-    """
-    import shutil
-
-    var_agents = PROJECT_ROOT / "var" / "agents"
-    generators_to_run = list(generators) if generators is not None else GENERATORS
-
-    # Check if git is available
-    if shutil.which("git") is None:
-        print("Error: git not found", file=sys.stderr)
-        return 1
-
-    print("Regenerating context files...", file=sys.stderr)
-    results, success = regenerate_all(
-        verbose=True,
-        generators=generators_to_run,
-        reasoning_validate=True,
-        reasoning_strict=True,
+    diff_result = subprocess.run(
+        [
+            "git",
+            "diff",
+            "--stat",
+            "--no-index",
+            "--",
+            str(committed_dir),
+            str(generated_dir),
+        ],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
     )
 
-    if not success:
-        print("\nSome generators failed. Cannot verify freshness.", file=sys.stderr)
-        return 1
+    if diff_result.returncode == 0:
+        return None
+
+    if diff_result.returncode == 1:
+        return diff_result.stdout.strip()
+
+    message = (diff_result.stderr or diff_result.stdout).strip() or "Unknown git diff error"
+    return f"git diff failed ({diff_result.returncode}): {message}"
+
+
+def verify_freshness(generators: Sequence[tuple[str, str, str]] | None = None) -> int:
+    """Verify that generated files are up-to-date."""
+    generators_to_run = list(generators) if generators is not None else GENERATORS
 
     if not generators_to_run:
         print("\nNo generators selected; nothing to verify.", file=sys.stderr)
         return 1
 
-    diff_paths = [str(var_agents / output_dir) for _, output_dir, _ in generators_to_run]
-
-    # Check for git changes
-    result = subprocess.run(
-        ["git", "diff", "--quiet", "--", *diff_paths],
-        cwd=PROJECT_ROOT,
-        capture_output=True,
-    )
-
-    if result.returncode != 0:
-        print("\n" + "=" * 50, file=sys.stderr)
-        print("STALE: Agent context files have changed!", file=sys.stderr)
-        print("=" * 50, file=sys.stderr)
-        print("\nRun 'uv run agent-regenerate' and commit the changes.", file=sys.stderr)
-
-        # Show what changed
-        diff_result = subprocess.run(
-            ["git", "diff", "--stat", "--", *diff_paths],
-            cwd=PROJECT_ROOT,
-            capture_output=True,
-            text=True,
-        )
-        if diff_result.stdout:
-            print("\nChanged files:", file=sys.stderr)
-            print(diff_result.stdout, file=sys.stderr)
-
+    if shutil.which("git") is None:
+        print("Error: git not found", file=sys.stderr)
         return 1
+
+    print("Regenerating context files...", file=sys.stderr)
+    with tempfile.TemporaryDirectory(prefix="agent-regenerate-") as temp_dir:
+        temp_root = Path(temp_dir)
+        _, success = regenerate_all(
+            verbose=True,
+            generators=generators_to_run,
+            output_root=temp_root,
+            reasoning_validate=True,
+            reasoning_strict=True,
+        )
+
+        if not success:
+            print("\nSome generators failed. Cannot verify freshness.", file=sys.stderr)
+            return 1
+
+        stale_diffs: list[tuple[str, str]] = []
+        for _, output_dir, _ in generators_to_run:
+            committed_dir = VAR_AGENTS_DIR / output_dir
+            generated_dir = temp_root / output_dir
+            diff_text = _diff_directories(committed_dir, generated_dir)
+            if diff_text:
+                stale_diffs.append((output_dir, diff_text))
+
+        if stale_diffs:
+            print("\n" + "=" * 50, file=sys.stderr)
+            print("STALE: Agent context files have changed!", file=sys.stderr)
+            print("=" * 50, file=sys.stderr)
+            print("\nRun 'uv run agent-regenerate' and commit the changes.", file=sys.stderr)
+
+            print("\nChanged files:", file=sys.stderr)
+            for output_dir, diff_text in stale_diffs:
+                print(f"\n{output_dir}:", file=sys.stderr)
+                print(diff_text, file=sys.stderr)
+
+            return 1
 
     print("\nAll context files are up-to-date.", file=sys.stderr)
     return 0

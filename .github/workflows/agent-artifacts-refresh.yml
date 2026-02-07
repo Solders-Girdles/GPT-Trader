@@ -40,7 +40,7 @@ jobs:
           uv run agent-regenerate
 
       - name: Create or update pull request
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "chore: refresh agent artifacts"

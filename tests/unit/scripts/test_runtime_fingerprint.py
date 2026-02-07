@@ -92,3 +92,18 @@ def test_validate_runtime_start_passes_when_matching() -> None:
 
     assert is_valid is True
     assert reason == "ok"
+
+
+def test_print_payload_normalizes_timestamp(capsys) -> None:
+    payload = {
+        "event_id": 1,
+        "timestamp": "2026-02-01 12:00:00",
+        "profile": "dev",
+    }
+
+    runtime_fingerprint._print_payload(payload)
+    output = capsys.readouterr().out.strip().splitlines()
+    values = dict(line.split("=", 1) for line in output)
+
+    assert values["timestamp"] == "2026-02-01T12:00:00+00:00"
+    assert values["event_id"] == "1"

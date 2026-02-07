@@ -47,6 +47,17 @@ class TestBotConfigEnvAliasing:
         config = BotConfig.from_env()
         assert config.order_submission_retries_enabled is True
 
+    def test_health_market_data_staleness_thresholds_from_env(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("HEALTH_MARKET_DATA_STALENESS_SECONDS_WARN", "12.5")
+        monkeypatch.setenv("HEALTH_MARKET_DATA_STALENESS_SECONDS_CRIT", "42.0")
+        from gpt_trader.app.config.bot_config import BotConfig
+
+        config = BotConfig.from_env()
+        assert config.health_thresholds.market_data_staleness_seconds_warn == 12.5
+        assert config.health_thresholds.market_data_staleness_seconds_crit == 42.0
+
 
 class TestMarkStalenessGuard:
     """Tests for mark staleness guard integration."""

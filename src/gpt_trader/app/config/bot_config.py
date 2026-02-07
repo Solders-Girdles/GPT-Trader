@@ -394,6 +394,12 @@ class BotConfig:
             broker_latency_ms_crit=_health_float("BROKER_LATENCY_MS_CRIT", 3000.0),
             ws_staleness_seconds_warn=_health_float("WS_STALENESS_SECONDS_WARN", 30.0),
             ws_staleness_seconds_crit=_health_float("WS_STALENESS_SECONDS_CRIT", 60.0),
+            market_data_staleness_seconds_warn=_health_float(
+                "MARKET_DATA_STALENESS_SECONDS_WARN", 10.0
+            ),
+            market_data_staleness_seconds_crit=_health_float(
+                "MARKET_DATA_STALENESS_SECONDS_CRIT", 30.0
+            ),
             guard_trip_count_warn=_health_int("GUARD_TRIP_COUNT_WARN", 3),
             guard_trip_count_crit=_health_int("GUARD_TRIP_COUNT_CRIT", 10),
             missing_decision_id_count_warn=_health_int("MISSING_DECISION_ID_COUNT_WARN", 1),

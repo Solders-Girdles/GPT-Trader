@@ -207,41 +207,35 @@ class EquityCalculator:
         known_products_checked = False
 
         for balance in balances:
+            asset, amount = self._normalize_balance(balance, use_total_balance)
             logger.debug(
                 f"Balance: {balance.asset} = {balance.available} available, {balance.total} total"
             )
-            asset = str(balance.asset or "").upper()
-            amount = balance.total if use_total_balance else balance.available
 
-            # Handle USD/USDC directly
-            if asset in ("USD", "USDC"):
-                cash_collateral += amount
-                if amount > 0:
-                    diagnostics["usd_usdc_found"].append(f"{asset}=${amount}")
+            cash_amount = self._try_collect_usd_usdc(asset, amount, diagnostics)
+            if cash_amount is not None:
+                cash_collateral += cash_amount
                 continue
 
-            if balance.total > 0:
-                diagnostics["other_assets_found"].append(f"{asset}={balance.total}")
+            self._record_non_usd_asset(diagnostics, asset, balance.total)
 
             if amount <= 0:
                 continue
 
-            # Handle quote currency directly
-            if asset == quote:
-                cash_collateral += amount
-                diagnostics["priced_assets"].append(f"{asset}=${amount}")
+            quote_amount = self._try_collect_quote(asset, quote, amount, diagnostics)
+            if quote_amount is not None:
+                cash_collateral += quote_amount
                 continue
 
-            # Handle stable-to-stable conversion
-            if asset in self.STABLE_QUOTES and quote in self.STABLE_QUOTES:
-                cash_collateral += amount
-                diagnostics["priced_assets"].append(f"{asset}≈${amount}")
+            stable_amount = self._try_collect_stable(asset, quote, amount, diagnostics)
+            if stable_amount is not None:
+                cash_collateral += stable_amount
                 continue
 
-            # Convert non-USD assets using ticker prices
             if not known_products_checked:
                 known_products = await self._get_known_products(broker)
                 known_products_checked = True
+
             usd_value = await self._value_asset(
                 broker,
                 asset,
@@ -254,6 +248,61 @@ class EquityCalculator:
                 converted_collateral += usd_value
 
         return cash_collateral, converted_collateral, diagnostics
+
+    def _normalize_balance(self, balance: Any, use_total_balance: bool) -> tuple[str, Decimal]:
+        """Normalize a balance record to its uppercase asset name and relevant amount."""
+        asset = str(balance.asset or "").upper()
+        amount = balance.total if use_total_balance else balance.available
+        return asset, amount
+
+    def _try_collect_usd_usdc(
+        self,
+        asset: str,
+        amount: Decimal,
+        diagnostics: dict[str, list[str]],
+    ) -> Decimal | None:
+        """Handle USD/USDC balances directly."""
+        if asset in ("USD", "USDC"):
+            if amount > 0:
+                diagnostics["usd_usdc_found"].append(f"{asset}=${amount}")
+            return amount
+        return None
+
+    def _record_non_usd_asset(
+        self,
+        diagnostics: dict[str, list[str]],
+        asset: str,
+        total: Decimal,
+    ) -> None:
+        """Track non-USD holdings for diagnostic logging."""
+        if total > 0:
+            diagnostics["other_assets_found"].append(f"{asset}={total}")
+
+    def _try_collect_quote(
+        self,
+        asset: str,
+        quote: str,
+        amount: Decimal,
+        diagnostics: dict[str, list[str]],
+    ) -> Decimal | None:
+        """Treat balances denominated in the quote currency as cash."""
+        if asset == quote:
+            diagnostics["priced_assets"].append(f"{asset}=${amount}")
+            return amount
+        return None
+
+    def _try_collect_stable(
+        self,
+        asset: str,
+        quote: str,
+        amount: Decimal,
+        diagnostics: dict[str, list[str]],
+    ) -> Decimal | None:
+        """Treat stable-to-stable balances as cash when both asset and quote are stable."""
+        if asset in self.STABLE_QUOTES and quote in self.STABLE_QUOTES:
+            diagnostics["priced_assets"].append(f"{asset}≈${amount}")
+            return amount
+        return None
 
     def _build_valuation_quotes(self, quote: str) -> list[str]:
         """Build ordered list of quote currencies for valuation."""

@@ -6,6 +6,7 @@ from gpt_trader.preflight.validation_result import (
     ValidationCategory,
     ValidationFinding,
     ValidationSeverity,
+    normalize_preflight_result,
 )
 
 
@@ -212,3 +213,34 @@ class TestCredentialValidationResult:
         finding = result.findings[0]
         assert finding.severity == ValidationSeverity.ERROR
         assert finding.details == "can_trade=False"
+
+
+class TestPreflightResultNormalization:
+    """Tests for preflight result normalization helper."""
+
+    def test_normalizes_pass_from_bool(self) -> None:
+        result = normalize_preflight_result(True, message="All good")
+
+        assert result["status"] == "pass"
+        assert result["message"] == "All good"
+        assert result["details"] == {}
+
+    def test_normalizes_warning_from_status_alias(self) -> None:
+        result = normalize_preflight_result(
+            {"status": "warning", "message": "Heads up", "details": {"checks": 2}}
+        )
+
+        assert result["status"] == "warn"
+        assert result["message"] == "Heads up"
+        assert result["details"] == {"checks": 2}
+
+    def test_normalizes_failure_with_string_details(self) -> None:
+        result = normalize_preflight_result(
+            False,
+            message="Broken",
+            details="Missing credentials",
+        )
+
+        assert result["status"] == "fail"
+        assert result["message"] == "Broken"
+        assert result["details"] == {"detail": "Missing credentials"}

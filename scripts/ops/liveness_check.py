@@ -8,6 +8,12 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
+try:
+    from scripts.ops import formatting
+except ModuleNotFoundError:  # pragma: no cover
+    # Allow direct script execution (e.g. `python3 scripts/ops/liveness_check.py ...`).
+    import formatting  # type: ignore
+
 DEFAULT_EVENT_TYPES = ("heartbeat", "price_tick")
 DEFAULT_MAX_AGE_SECONDS = 300
 STALE_AGE_SECONDS = 999999
@@ -53,27 +59,6 @@ def _parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def _parse_timestamp(value: str | None) -> datetime | None:
-    if value is None:
-        return None
-    raw = value.strip()
-    if not raw:
-        return None
-    try:
-        parsed = datetime.fromisoformat(raw.replace(" ", "T"))
-    except ValueError:
-        return None
-    if parsed.tzinfo is None:
-        return parsed.replace(tzinfo=timezone.utc)
-    return parsed
-
-
-def _format_timestamp(value: datetime | None) -> str:
-    if value is None:
-        return "-"
-    return value.isoformat()
-
-
 def _fetch_latest_event(
     connection: sqlite3.Connection, event_type: str
 ) -> tuple[int | None, str | None]:
@@ -110,12 +95,12 @@ def check_liveness(
         now_ts = now or datetime.now(timezone.utc)
         for event_type in event_types:
             event_id, raw_ts = _fetch_latest_event(connection, event_type)
-            parsed = _parse_timestamp(raw_ts)
+            parsed = formatting.parse_timestamp(raw_ts)
             if parsed is None:
                 rows.append(
                     EventAge(
                         event_type=event_type,
-                        last_ts="-",
+                        last_ts=formatting.format_timestamp(None),
                         age_seconds=STALE_AGE_SECONDS,
                         event_id=None,
                     )
@@ -125,7 +110,7 @@ def check_liveness(
             rows.append(
                 EventAge(
                     event_type=event_type,
-                    last_ts=_format_timestamp(parsed),
+                    last_ts=formatting.format_timestamp(parsed),
                     age_seconds=age_seconds,
                     event_id=event_id,
                 )
@@ -145,7 +130,7 @@ def main() -> int:
     event_types = args.event_type or list(DEFAULT_EVENT_TYPES)
 
     events_db = args.runtime_root / "runtime_data" / args.profile / "events.db"
-    print(f"events_db={events_db}")
+    print(formatting.format_status_line("events_db", events_db))
 
     try:
         rows, is_green = check_liveness(
@@ -155,19 +140,20 @@ def main() -> int:
             min_event_id=args.min_event_id,
         )
     except (sqlite3.Error, FileNotFoundError) as exc:
-        print("liveness_status=ERROR")
-        print(f"error={exc}")
+        print(formatting.format_status_line("liveness_status", "ERROR"))
+        print(formatting.format_status_line("error", exc))
         return 2
 
     for row in rows:
-        event_id = row.event_id if row.event_id is not None else "-"
         print(
-            f"{row.event_type} last_ts={row.last_ts} age_seconds={row.age_seconds} "
-            f"event_id={event_id}"
+            f"{row.event_type} "
+            f"{formatting.format_status_line('last_ts', row.last_ts)} "
+            f"{formatting.format_status_line('age_seconds', row.age_seconds)} "
+            f"{formatting.format_status_line('event_id', row.event_id)}"
         )
 
     status = "GREEN" if is_green else "RED"
-    print(f"liveness_status={status}")
+    print(formatting.format_status_line("liveness_status", status))
     return 0 if is_green else 1
 
 

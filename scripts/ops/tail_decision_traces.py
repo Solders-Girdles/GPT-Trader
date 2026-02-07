@@ -5,9 +5,14 @@ import argparse
 import json
 import sqlite3
 from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+try:
+    from scripts.ops import formatting
+except ModuleNotFoundError:  # pragma: no cover
+    # Allow direct script execution (e.g. `python3 scripts/ops/tail_decision_traces.py ...`).
+    import formatting  # type: ignore
 
 
 @dataclass(frozen=True)
@@ -49,18 +54,6 @@ def _resolve_decision_id(payload: dict[str, Any]) -> str | None:
     return _coerce_str(payload.get("client_order_id"))
 
 
-def _parse_timestamp(value: str) -> str:
-    raw = value.strip()
-    if not raw:
-        return value
-    try:
-        # events.db stores "YYYY-MM-DD HH:MM:SS"
-        dt = datetime.fromisoformat(raw.replace(" ", "T"))
-        return dt.isoformat()
-    except ValueError:
-        return value
-
-
 def _read_traces(events_db: Path, limit: int) -> list[DecisionTraceRow]:
     if limit <= 0:
         return []
@@ -80,7 +73,7 @@ def _read_traces(events_db: Path, limit: int) -> list[DecisionTraceRow]:
         )
         rows: list[DecisionTraceRow] = []
         for record in cursor:
-            timestamp = _parse_timestamp(str(record["timestamp"] or ""))
+            timestamp = formatting.format_timestamp(record["timestamp"])
             payload_raw = record["payload"]
             try:
                 payload = json.loads(payload_raw) if payload_raw else {}
@@ -113,13 +106,15 @@ def main() -> int:
         print("No order_decision_trace rows found.")
         return 1
 
-    print(f"events_db={events_db}")
-    print(f"rows={len(rows)}")
+    print(formatting.format_status_line("events_db", events_db))
+    print(formatting.format_status_line("rows", len(rows)))
     for row in rows:
         symbol = row.symbol or "-"
         side = row.side or "-"
         decision_id = row.decision_id or "-"
         reason = (row.reason or "-").replace("\n", " ").strip()
+        if not reason:
+            reason = "-"
         print(f"{row.timestamp} | {symbol} | {side} | {decision_id} | {reason}")
     return 0
 

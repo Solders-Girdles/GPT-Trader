@@ -126,6 +126,10 @@ def run_generator(
     start = time.time()
     try:
         target_dir = output_root / output_dir
+        if target_dir.exists():
+            shutil.rmtree(target_dir)
+        target_dir.mkdir(parents=True, exist_ok=True)
+
         command = [
             sys.executable,
             str(script_path),

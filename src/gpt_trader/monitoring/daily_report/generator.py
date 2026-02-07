@@ -15,6 +15,7 @@ from .analytics import (
     calculate_trade_metrics,
 )
 from .loaders import (
+    build_liveness_fallback,
     load_events_since,
     load_liveness_snapshot,
     load_metrics,
@@ -23,6 +24,10 @@ from .loaders import (
 )
 from .logging_utils import logger  # naming: allow
 from .models import DailyReport
+
+
+LIVENESS_FALLBACK_REASON_DB_MISSING = "events.db unavailable"
+LIVENESS_FALLBACK_REASON_SNAPSHOT_UNAVAILABLE = "liveness snapshot unavailable"
 
 
 class DailyReportGenerator:
@@ -69,6 +74,16 @@ class DailyReportGenerator:
         if events_db.exists():
             liveness_snapshot = load_liveness_snapshot(events_db, now=generated_at_dt)
             runtime_fingerprint = load_runtime_fingerprint(events_db)
+            if liveness_snapshot is None:
+                liveness_snapshot = build_liveness_fallback(
+                    LIVENESS_FALLBACK_REASON_SNAPSHOT_UNAVAILABLE,
+                    source=str(events_db),
+                )
+        else:
+            liveness_snapshot = build_liveness_fallback(
+                LIVENESS_FALLBACK_REASON_DB_MISSING,
+                source=str(events_db),
+            )
 
         return DailyReport(
             date=date.strftime("%Y-%m-%d"),

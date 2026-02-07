@@ -317,6 +317,17 @@ def _evaluate_liveness_snapshot(
 ) -> tuple[bool, str | None]:
     if not isinstance(liveness, dict):
         return False, "missing liveness snapshot"
+    fallback = liveness.get("fallback")
+    if isinstance(fallback, dict):
+        message_parts: list[str] = []
+        reason = fallback.get("reason")
+        if isinstance(reason, str) and reason:
+            message_parts.append(reason)
+        source = fallback.get("source")
+        if isinstance(source, str) and source:
+            message_parts.append(f"source={source}")
+        message = "; ".join(message_parts) if message_parts else "unavailable"
+        return False, f"liveness fallback: {message}"
     events = liveness.get("events")
     if not isinstance(events, dict):
         return False, "missing liveness events"

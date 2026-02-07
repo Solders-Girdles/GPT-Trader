@@ -49,8 +49,9 @@ with the runner instantiated in
   }
   ```
 - Include `details["severity"]` as `warning` or `critical` when a failure should
-  degrade or fail `/health`. The health server also appends `performance` and
-  `signals` summaries to the `checks` payload.
+  degrade or fail `/health`.
+  - The health server appends a `performance` summary under `checks.performance`.
+  - `signals` is returned as a top-level object alongside `checks` (not nested under it).
 
 **Extension checklist**
 - Pick a unique check `name` and add the check function in

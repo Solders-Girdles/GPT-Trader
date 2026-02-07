@@ -28,6 +28,7 @@ class TickerCache:
         self._lock = threading.RLock()
         self._cache: dict[str, Ticker] = {}
         self._clock = clock or SystemClock()
+        self._last_ticker_timestamp: datetime | None = None
 
     def update(self, ticker: Ticker) -> None:
         """Update ticker data (called by WebSocket thread)."""
@@ -35,6 +36,8 @@ class TickerCache:
             if ticker.ts.tzinfo is None:
                 ticker.ts = normalize_to_utc(ticker.ts)
             self._cache[ticker.symbol] = ticker
+            if self._last_ticker_timestamp is None or ticker.ts > self._last_ticker_timestamp:
+                self._last_ticker_timestamp = ticker.ts
 
     def get(self, symbol: str) -> Ticker | None:
         """Get ticker data (called by trading thread)."""
@@ -45,6 +48,11 @@ class TickerCache:
         """Return True if any ticker data has been populated."""
         with self._lock:
             return bool(self._cache)
+
+    def get_last_ticker_timestamp(self) -> datetime | None:
+        """Return the most recent ticker timestamp observed."""
+        with self._lock:
+            return self._last_ticker_timestamp
 
     def is_stale(self, symbol: str) -> bool:
         """Check if ticker data is stale (thread-safe)."""
@@ -88,6 +96,10 @@ class CoinbaseTickerService:
         if not self._ticker_cache.has_any():
             return None
         return self._ticker_cache
+
+    def get_last_ticker_timestamp(self) -> datetime | None:
+        """Return the most recent ticker timestamp observed."""
+        return self._ticker_cache.get_last_ticker_timestamp()
 
     def is_stale(self, symbol: str) -> bool:
         return self._ticker_cache.is_stale(symbol)

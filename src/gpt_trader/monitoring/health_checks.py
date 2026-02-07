@@ -339,6 +339,56 @@ def _resolve_ticker_freshness_provider(
     return None
 
 
+def _resolve_last_ticker_timestamp(market_data_service: Any) -> tuple[Any | None, dict[str, Any]]:
+    details: dict[str, Any] = {}
+    if market_data_service is None:
+        details["market_data_service_unavailable"] = True
+        return None, details
+
+    for method_name in (
+        "get_last_ticker_timestamp",
+        "get_latest_ticker_timestamp",
+        "get_last_update_timestamp",
+    ):
+        method = getattr(market_data_service, method_name, None)
+        if callable(method):
+            try:
+                return method(), details
+            except Exception as exc:
+                details.update(
+                    {
+                        "timestamp_error": str(exc),
+                        "timestamp_error_type": type(exc).__name__,
+                    }
+                )
+                return None, details
+
+    for attribute_name in ("ticker_cache", "_ticker_cache"):
+        candidate = getattr(market_data_service, attribute_name, None)
+        if candidate is None:
+            continue
+        for method_name in (
+            "get_last_ticker_timestamp",
+            "get_latest_ticker_timestamp",
+            "get_last_update_timestamp",
+        ):
+            method = getattr(candidate, method_name, None)
+            if callable(method):
+                try:
+                    return method(), details
+                except Exception as exc:
+                    details.update(
+                        {
+                            "timestamp_error": str(exc),
+                            "timestamp_error_type": type(exc).__name__,
+                        }
+                    )
+                    return None, details
+
+    details["timestamp_unavailable"] = True
+    return None, details
+
+
 def check_ticker_freshness(
     market_data_service: TickerFreshnessService | None,
 ) -> HealthCheckResult:
@@ -449,6 +499,44 @@ def check_ticker_freshness(
             return record_outcome(False, details)
 
         return record_outcome(True, details)
+
+
+def check_market_data_feed_staleness(
+    market_data_service: TickerFreshnessService | None,
+    thresholds: HealthThresholds | None = None,
+    time_provider: TimeProvider | None = None,
+) -> tuple[bool, dict[str, Any]]:
+    """Check market data feed staleness using last ticker update timestamp."""
+    from gpt_trader.monitoring.health_signals import HealthStatus, HealthThresholds
+
+    if thresholds is None:
+        thresholds = HealthThresholds()
+
+    signal = check_market_data_staleness_signal(
+        market_data_service,
+        thresholds=thresholds,
+        time_provider=time_provider,
+    )
+
+    details: dict[str, Any] = {
+        "age_seconds": signal.value,
+        "threshold_warn_seconds": signal.threshold_warn,
+        "threshold_crit_seconds": signal.threshold_crit,
+        "status": signal.status.value,
+        **signal.details,
+    }
+
+    if signal.status == HealthStatus.UNKNOWN:
+        details["skipped"] = True
+        details.setdefault("reason", "market_data_timestamp_unavailable")
+        return True, details
+
+    if signal.status == HealthStatus.OK:
+        details["severity"] = "ok"
+        return True, details
+
+    details["severity"] = "critical" if signal.status == HealthStatus.CRIT else "warning"
+    return False, details
 
 
 def check_degradation_state(
@@ -567,6 +655,7 @@ class HealthCheckRunner:
         heartbeat_stale_seconds: float = 120.0,
         broker_calls: BoundedToThread | None = None,
         time_provider: TimeProvider | None = None,
+        signal_thresholds: HealthThresholds | None = None,
     ) -> None:
         """
         Initialize the health check runner.
@@ -581,6 +670,7 @@ class HealthCheckRunner:
             message_stale_seconds: WS message staleness threshold.
             heartbeat_stale_seconds: WS heartbeat staleness threshold.
             time_provider: Optional time provider for deterministic staleness checks.
+            signal_thresholds: Optional thresholds for health signals.
         """
         self._health_state = health_state
         self._broker = broker
@@ -592,6 +682,7 @@ class HealthCheckRunner:
         self._heartbeat_stale_seconds = heartbeat_stale_seconds
         self._broker_calls = broker_calls
         self._time_provider = time_provider
+        self._signal_thresholds = signal_thresholds
         self._running = False
         self._task: Any = None
 
@@ -645,6 +736,21 @@ class HealthCheckRunner:
                     name="ticker_freshness",
                     mode="fast",
                     run=partial(check_ticker_freshness, market_data_service),
+                )
+            )
+            checks.append(
+                HealthCheckDescriptor(
+                    name="market_data_feed",
+                    mode="fast",
+                    run=cast(
+                        Callable[[], HealthCheckOutcome],
+                        partial(
+                            check_market_data_feed_staleness,
+                            market_data_service,
+                            thresholds=self._signal_thresholds,
+                            time_provider=self._time_provider,
+                        ),
+                    ),
                 )
             )
 
@@ -934,6 +1040,57 @@ def _ratio_or_zero(numerator: int | float, denominator: int | float) -> float:
     return 0.0
 
 
+def check_market_data_staleness_signal(
+    market_data_service: TickerFreshnessService | None,
+    thresholds: HealthThresholds | None = None,
+    time_provider: TimeProvider | None = None,
+) -> HealthSignal:
+    """Check market data feed staleness as a health signal."""
+    from gpt_trader.monitoring.health_signals import (
+        HealthSignal,
+        HealthStatus,
+        HealthThresholds,
+    )
+
+    if thresholds is None:
+        thresholds = HealthThresholds()
+
+    timestamp, details = _resolve_last_ticker_timestamp(market_data_service)
+    if timestamp is None:
+        details.setdefault("timestamp_unavailable", True)
+        return HealthSignal(
+            name="market_data_staleness",
+            status=HealthStatus.UNKNOWN,
+            value=0.0,
+            threshold_warn=thresholds.market_data_staleness_seconds_warn,
+            threshold_crit=thresholds.market_data_staleness_seconds_crit,
+            unit="seconds",
+            details=details,
+        )
+
+    clock = time_provider or get_clock()
+    now = clock.time()
+    last_ts, staleness = age_since_timestamp_seconds(
+        timestamp,
+        now_seconds=now,
+    )
+
+    if staleness == float("inf"):
+        staleness = 9999.0
+
+    return HealthSignal.from_value(
+        name="market_data_staleness",
+        value=staleness,
+        threshold_warn=thresholds.market_data_staleness_seconds_warn,
+        threshold_crit=thresholds.market_data_staleness_seconds_crit,
+        unit="seconds",
+        details={
+            **details,
+            "last_update_ts": last_ts if last_ts is not None else 0.0,
+        },
+    )
+
+
 def check_ws_staleness_signal(
     broker: BrokerProtocol,
     thresholds: HealthThresholds | None = None,
@@ -1037,8 +1194,10 @@ __all__ = [
     "register_health_check",
     "check_broker_ping",
     "check_ticker_freshness",
+    "check_market_data_feed_staleness",
     "check_ws_freshness",
     "check_degradation_state",
     "compute_execution_health_signals",
+    "check_market_data_staleness_signal",
     "check_ws_staleness_signal",
 ]

@@ -174,6 +174,8 @@ class TestHealthThresholds:
         assert thresholds.broker_latency_ms_crit == 3000.0
         assert thresholds.ws_staleness_seconds_warn == 30.0
         assert thresholds.ws_staleness_seconds_crit == 60.0
+        assert thresholds.market_data_staleness_seconds_warn == 10.0
+        assert thresholds.market_data_staleness_seconds_crit == 30.0
         assert thresholds.guard_trip_count_warn == 3
         assert thresholds.guard_trip_count_crit == 10
         assert thresholds.missing_decision_id_count_warn == 1

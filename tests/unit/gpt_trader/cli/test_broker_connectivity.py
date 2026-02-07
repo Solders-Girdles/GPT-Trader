@@ -5,7 +5,7 @@ from argparse import Namespace
 import requests
 
 import gpt_trader.cli.commands.broker_connectivity as broker_cmd
-from gpt_trader.features.brokerages.coinbase.errors import AuthError
+from gpt_trader.features.brokerages.coinbase.errors import AuthError, TransientBrokerError
 
 
 def test_broker_check_coinbase_success(monkeypatch, capsys) -> None:
@@ -171,3 +171,129 @@ def test_broker_check_coinbase_transport_failure(monkeypatch, capsys) -> None:
     assert "NETWORK_ERROR" in out
     assert "Remediation" in out
     assert "network" in out.lower()
+
+
+def test_broker_check_coinbase_transient_failure(monkeypatch, capsys) -> None:
+    class StubClient:
+        def __init__(self) -> None:
+            self.closed = False
+
+        def _get_endpoint_path(self, endpoint_name: str) -> str:
+            assert endpoint_name == "time"
+            return "/api/v3/brokerage/time"
+
+        def get(self, path: str):
+            raise TransientBrokerError("service_unavailable")
+
+        def close(self) -> None:
+            self.closed = True
+
+    client = StubClient()
+
+    monkeypatch.setattr(broker_cmd, "_build_coinbase_client", lambda *, timeout: client)
+
+    exit_code = broker_cmd._handle_coinbase_check(
+        Namespace(output_format="text", endpoint="time", timeout=5)
+    )
+
+    assert exit_code == 1
+    assert client.closed is True
+    out = capsys.readouterr().out
+    assert "Broker check FAILED" in out
+    assert "API_ERROR" in out
+    assert "Remediation" in out
+    assert "retry" in out.lower()
+
+
+def test_broker_check_coinbase_connection_error(monkeypatch, capsys) -> None:
+    class StubClient:
+        def __init__(self) -> None:
+            self.closed = False
+
+        def _get_endpoint_path(self, endpoint_name: str) -> str:
+            assert endpoint_name == "time"
+            return "/api/v3/brokerage/time"
+
+        def get(self, path: str):
+            raise requests.ConnectionError("connection reset")
+
+        def close(self) -> None:
+            self.closed = True
+
+    client = StubClient()
+
+    monkeypatch.setattr(broker_cmd, "_build_coinbase_client", lambda *, timeout: client)
+
+    exit_code = broker_cmd._handle_coinbase_check(
+        Namespace(output_format="text", endpoint="time", timeout=5)
+    )
+
+    assert exit_code == 1
+    assert client.closed is True
+    out = capsys.readouterr().out
+    assert "Broker check FAILED" in out
+    assert "NETWORK_ERROR" in out
+    assert "network" in out.lower()
+
+
+def test_broker_check_coinbase_unknown_exception(monkeypatch, capsys) -> None:
+    class StubClient:
+        def __init__(self) -> None:
+            self.closed = False
+
+        def _get_endpoint_path(self, endpoint_name: str) -> str:
+            assert endpoint_name == "time"
+            return "/api/v3/brokerage/time"
+
+        def get(self, path: str):
+            raise ValueError("boom")
+
+        def close(self) -> None:
+            self.closed = True
+
+    client = StubClient()
+
+    monkeypatch.setattr(broker_cmd, "_build_coinbase_client", lambda *, timeout: client)
+
+    exit_code = broker_cmd._handle_coinbase_check(
+        Namespace(output_format="text", endpoint="time", timeout=5)
+    )
+
+    assert exit_code == 1
+    assert client.closed is True
+    out = capsys.readouterr().out
+    assert "Broker check FAILED" in out
+    assert "OPERATION_FAILED" in out
+    assert "ValueError" in out
+
+
+def test_broker_check_coinbase_redacts_secret_in_error_output(monkeypatch, capsys) -> None:
+    class StubClient:
+        def __init__(self) -> None:
+            self.closed = False
+
+        def _get_endpoint_path(self, endpoint_name: str) -> str:
+            assert endpoint_name == "time"
+            return "/api/v3/brokerage/time"
+
+        def get(self, path: str):
+            raise AuthError("token=supersecret-123")
+
+        def close(self) -> None:
+            self.closed = True
+
+    client = StubClient()
+
+    monkeypatch.setattr(broker_cmd, "_build_coinbase_client", lambda *, timeout: client)
+
+    exit_code = broker_cmd._handle_coinbase_check(
+        Namespace(output_format="text", endpoint="time", timeout=5)
+    )
+
+    assert exit_code == 1
+    assert client.closed is True
+    out = capsys.readouterr().out
+    assert "Broker check FAILED" in out
+    assert "AUTHENTICATION_FAILED" in out
+    assert "supersecret-123" not in out
+    assert "token=[REDACTED]" in out

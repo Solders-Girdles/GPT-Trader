@@ -212,3 +212,103 @@ def test_main_scopes_daily_report_parsing_to_target_profile(tmp_path: Path, caps
     output = capsys.readouterr().out
     assert result == 0
     assert "Readiness gate PASSED" in output
+
+
+def test_main_json_output_passes_with_machine_payload(tmp_path: Path, capsys) -> None:
+    profile = "canary"
+    _setup_green_streak(tmp_path, profile, date(2026, 1, 17))
+
+    result = check_readiness_gate.main(
+        [
+            "--profile",
+            profile,
+            "--daily-root",
+            str(tmp_path / "runtime_data"),
+            "--preflight-dir",
+            str(tmp_path),
+            "--json",
+        ]
+    )
+
+    output = capsys.readouterr()
+    payload = json.loads(output.out)
+    assert result == 0
+    assert payload["status"] == "PASSED"
+    assert payload["streak_green"] is True
+    assert payload["streak_days"] == 3
+    assert payload["thresholds"]["stale_marks_max"] == 0
+    assert len(payload["days"]) == 3
+    assert all(day["green"] for day in payload["days"])
+    assert payload["failure_reasons"] == []
+    assert payload["streak_window"]["dates"] == [
+        "2026-01-15",
+        "2026-01-16",
+        "2026-01-17",
+    ]
+    assert all(day["preflight_status"] == "READY" for day in payload["days"])
+
+
+def test_main_json_output_reports_failures(tmp_path: Path, capsys) -> None:
+    profile = "canary"
+    end_date = date(2026, 1, 17)
+    for offset in range(2, -1, -1):
+        report_date = end_date - timedelta(days=offset)
+        _write_daily_report(
+            tmp_path,
+            report_date,
+            profile=profile,
+            fixture_name="daily_report_green.json",
+        )
+        if offset != 1:
+            _write_preflight_report(
+                tmp_path,
+                report_date,
+                profile=profile,
+                fixture_name="preflight_ready.json",
+            )
+
+    result = check_readiness_gate.main(
+        [
+            "--profile",
+            profile,
+            "--daily-root",
+            str(tmp_path / "runtime_data"),
+            "--preflight-dir",
+            str(tmp_path),
+            "--json",
+        ]
+    )
+
+    output = capsys.readouterr()
+    payload = json.loads(output.out)
+    assert result == 1
+    assert payload["status"] == "FAILED"
+    assert any("missing preflight report" in reason for reason in payload["failure_reasons"])
+    assert any(not day["green"] for day in payload["days"])
+
+
+def test_main_json_output_skips_when_no_reports(tmp_path: Path, capsys) -> None:
+    daily_root = tmp_path / "runtime_data"
+    result = check_readiness_gate.main(
+        [
+            "--profile",
+            "canary",
+            "--daily-root",
+            str(daily_root),
+            "--preflight-dir",
+            str(tmp_path),
+            "--json",
+        ]
+    )
+
+    output = capsys.readouterr()
+    payload = json.loads(output.out)
+    expected_message = (
+        f"Readiness gate skipped: no daily reports found for profile 'canary' "
+        f"under {daily_root}."
+    )
+    assert result == 0
+    assert payload["status"] == "SKIPPED"
+    assert payload["failure_reasons"] == [expected_message]
+    assert payload["days"] == []
+    assert payload["streak_window"]["dates"] == []

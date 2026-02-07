@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import json
+import os
 from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
-
-import os
 
 import scripts.ci.check_readiness_gate as check_readiness_gate
 
@@ -275,3 +274,36 @@ def test_main_strict_mode_fails_when_reports_are_stale(tmp_path: Path, capsys) -
     assert result == 1
     assert "Readiness gate degraded" in error_output
     assert "Readiness gate FAILED" in error_output
+
+
+def test_find_latest_report_for_profile_prefers_newest_report_date(tmp_path: Path) -> None:
+    profile = "canary"
+    report_dir = tmp_path / "runtime_data" / profile / "reports"
+    report_dir.mkdir(parents=True, exist_ok=True)
+
+    older_path = report_dir / "daily_report_2026-01-15.json"
+    newer_path = report_dir / "daily_report_2026-01-16.json"
+    older_path.write_text("{}", encoding="utf-8")
+    newer_path.write_text("{}", encoding="utf-8")
+
+    entries = [
+        check_readiness_gate.ReportEntry(
+            report_date=date(2026, 1, 15),
+            profile=profile,
+            path=older_path,
+            generated_at=datetime(2026, 1, 15, 23, 59, tzinfo=timezone.utc),
+            data={},
+        ),
+        check_readiness_gate.ReportEntry(
+            report_date=date(2026, 1, 16),
+            profile=profile,
+            path=newer_path,
+            generated_at=None,
+            data={},
+        ),
+    ]
+
+    latest = check_readiness_gate._find_latest_report_for_profile(entries, profile)
+    assert latest is not None
+    assert latest.report_date == date(2026, 1, 16)
+    assert latest.path == newer_path

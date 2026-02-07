@@ -300,7 +300,9 @@ def _find_latest_report_for_profile(
     filtered = [report for report in reports if report.profile == profile]
     if not filtered:
         return None
-    return _select_latest(filtered)
+    latest_date = max(report.report_date for report in filtered)
+    latest_date_entries = [report for report in filtered if report.report_date == latest_date]
+    return _select_latest(latest_date_entries)
 
 
 def _evaluate_liveness_snapshot(

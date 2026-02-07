@@ -175,9 +175,7 @@ def suggest_sections(path: Path, available_sections: set[str]) -> list[str]:
         )
     ):
         candidates.append("Core Documentation > Development")
-    if any(
-        keyword in rel for keyword in ("getting started", "getting_started", "overview", "intro")
-    ):
+    if any(keyword in rel for keyword in ("getting started", "getting_started", "intro")):
         candidates.append("Core Documentation > Getting Started")
     if any(keyword in rel for keyword in ("config", "environment", "profile", "flag")):
         candidates.append("Configuration")

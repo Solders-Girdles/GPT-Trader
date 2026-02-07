@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
+import pytest
+
 from gpt_trader.monitoring.health_checks import check_ws_freshness
 from gpt_trader.utilities.time_provider import FakeClock
 
@@ -139,6 +141,45 @@ class TestCheckWsFreshness:
         assert healthy is False
         assert details["stale"] is True
         assert details["stale_reason"] == "message"
+
+    @pytest.mark.parametrize(
+        ("message_age", "expected_stale"),
+        [
+            (9.9, False),  # below threshold
+            (10.0, False),  # exactly at threshold
+            (10.1, True),  # above threshold
+        ],
+    )
+    def test_ws_message_staleness_threshold_boundaries(
+        self,
+        message_age: float,
+        expected_stale: bool,
+    ) -> None:
+        """Test message staleness boundary behavior around the threshold."""
+        clock = FakeClock(start_time=1000.0)
+        broker = MagicMock()
+        broker.get_ws_health.return_value = {
+            "connected": True,
+            "last_message_ts": clock.time() - message_age,
+            "last_heartbeat_ts": clock.time() - 1.0,
+            "gap_count": 0,
+            "reconnect_count": 0,
+            "max_attempts_triggered": False,
+        }
+
+        healthy, details = check_ws_freshness(
+            broker,
+            message_stale_seconds=10.0,
+            heartbeat_stale_seconds=15.0,
+            time_provider=clock,
+        )
+
+        assert details["stale"] is expected_stale
+        if expected_stale:
+            assert healthy is False
+            assert details["stale_reason"] == "message"
+        else:
+            assert healthy is True
 
     def test_ws_connected_with_unparseable_message_timestamp(self) -> None:
         """Connected WS should fail closed when message timestamp is invalid."""

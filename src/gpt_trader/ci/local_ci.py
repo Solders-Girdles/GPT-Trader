@@ -185,6 +185,7 @@ def build_steps(args: argparse.Namespace) -> list[PlannedStep]:
                 "scripts/ci/check_readiness_gate.py",
                 "--profile",
                 "canary",
+                "--strict",
             ],
         ),
         PlannedStep(

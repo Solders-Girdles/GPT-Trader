@@ -112,7 +112,10 @@ class TestPreflightCheckDelegations:
         monkeypatch.setattr(preflight_core_module, function_name, mock)
         result = getattr(check, method_name)()
 
-        mock.assert_called_once_with(check)
+        if function_name == "generate_report":
+            mock.assert_called_once_with(check, report_dir=None, report_path=None)
+        else:
+            mock.assert_called_once_with(check)
         assert result == return_value
 
 

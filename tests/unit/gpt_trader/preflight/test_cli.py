@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 from dataclasses import dataclass
 from unittest.mock import MagicMock
 
 import pytest
 
 from gpt_trader.preflight.cli import _header, main
+from gpt_trader.preflight.cli_args import PreflightCliArgs, parse_preflight_args
 
 
 @dataclass(frozen=True)
@@ -55,6 +57,53 @@ class TestHeader:
 
         captured = capsys.readouterr()
         assert "=" * 70 in captured.out
+
+
+class TestParsePreflightArgs:
+    """Test CLI argument parsing."""
+
+    def test_defaults(self) -> None:
+        parsed = parse_preflight_args([])
+
+        assert parsed == PreflightCliArgs(
+            verbose=False,
+            profile="canary",
+            warn_only=False,
+            report_dir=None,
+            report_path=None,
+        )
+
+    def test_warn_only_flag(self) -> None:
+        parsed = parse_preflight_args(["--warn-only"])
+
+        assert parsed.warn_only is True
+
+    def test_report_dir_resolves_absolute(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.chdir(tmp_path)
+
+        parsed = parse_preflight_args(["--report-dir", "reports"])
+
+        assert parsed.report_dir == (tmp_path / "reports").resolve()
+
+    def test_invalid_profile_exits_non_zero(self) -> None:
+        with pytest.raises(SystemExit) as exc:
+            parse_preflight_args(["--profile", "invalid"])
+
+        assert exc.value.code != 0
+
+    def test_report_path_rejects_directory(self, tmp_path: Path) -> None:
+        with pytest.raises(SystemExit) as exc:
+            parse_preflight_args(["--report-path", str(tmp_path)])
+
+        assert exc.value.code != 0
+
+    def test_warn_only_does_not_suppress_parse_errors(self, tmp_path: Path) -> None:
+        with pytest.raises(SystemExit) as exc:
+            parse_preflight_args(["--warn-only", "--report-path", str(tmp_path)])
+
+        assert exc.value.code != 0
 
 
 class TestMain:

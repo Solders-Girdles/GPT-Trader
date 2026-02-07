@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from argparse import Namespace
 
-import gpt_trader.cli.commands.broker_connectivity as broker_cmd
 import requests
+
+import gpt_trader.cli.commands.broker_connectivity as broker_cmd
 from gpt_trader.features.brokerages.coinbase.errors import AuthError
 
 

@@ -57,6 +57,17 @@ class TestPreflightCheckCompatibilityMirrors:
 
         assert check.successes == ["test success"]
 
+    def test_results_mirrors_context(self) -> None:
+        """results property should mirror context.results."""
+        check = PreflightCheck()
+        check.context.results.append(
+            {"status": "pass", "message": "test", "details": {"source": "unit"}}
+        )
+
+        assert check.results == [
+            {"status": "pass", "message": "test", "details": {"source": "unit"}}
+        ]
+
     def test_config_mirrors_context(self) -> None:
         """config property should mirror context.config."""
         check = PreflightCheck()
@@ -116,6 +127,17 @@ class TestPreflightCheckLoggingHelpers:
         assert "Success message" in check.successes
         captured = capsys.readouterr()
         assert "Success message" in captured.out
+
+    def test_log_warning_records_normalized_result(self) -> None:
+        """log_warning should record a normalized payload."""
+        check = PreflightCheck()
+        check.log_warning("Warn message", details={"hint": "review"})
+
+        assert check.results[-1] == {
+            "status": "warn",
+            "message": "Warn message",
+            "details": {"hint": "review"},
+        }
 
     def test_log_warning_delegates_to_context(self, capsys: pytest.CaptureFixture) -> None:
         """log_warning should delegate to context."""

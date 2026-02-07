@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
+from typing import Any, Mapping, TypedDict
 
 
 class ValidationSeverity(Enum):
@@ -29,6 +29,111 @@ class ValidationCategory(Enum):
     PERMISSIONS = "permissions"
     ACCOUNT_STATUS = "account_status"
     MODE_COMPATIBILITY = "mode_compatibility"
+
+
+class PreflightResultPayload(TypedDict):
+    """Normalized preflight check payload."""
+
+    status: str
+    message: str
+    details: dict[str, Any]
+
+
+_STATUS_ALIASES: dict[str, str] = {
+    "pass": "pass",
+    "passed": "pass",
+    "ok": "pass",
+    "okay": "pass",
+    "success": "pass",
+    "true": "pass",
+    "warn": "warn",
+    "warning": "warn",
+    "warnings": "warn",
+    "review": "warn",
+    "fail": "fail",
+    "failed": "fail",
+    "error": "fail",
+    "errors": "fail",
+    "critical": "fail",
+    "false": "fail",
+}
+
+
+def _coerce_preflight_status(value: object) -> str | None:
+    if isinstance(value, bool):
+        return "pass" if value else "fail"
+    if value is None:
+        return None
+    if isinstance(value, str):
+        token = value.strip().lower()
+        return _STATUS_ALIASES.get(token)
+    return None
+
+
+def _coerce_preflight_details(details: object) -> dict[str, Any]:
+    if details is None:
+        return {}
+    if isinstance(details, Mapping):
+        return dict(details)
+    if isinstance(details, str):
+        return {"detail": details}
+    return {"detail": details}
+
+
+def normalize_preflight_result(
+    payload: object | None = None,
+    *,
+    status: str | bool | None = None,
+    message: str | None = None,
+    details: Mapping[str, Any] | str | None = None,
+) -> PreflightResultPayload:
+    """Normalize preflight check output into a stable payload.
+
+    Args:
+        payload: Optional payload containing status/message/details.
+        status: Explicit status override (pass/warn/fail, bool, or alias).
+        message: Explicit message override.
+        details: Optional structured details or a plain string.
+
+    Returns:
+        Normalized payload with status, message, and details.
+    """
+
+    payload_status: object | None = None
+    payload_message: str | None = None
+    payload_details: object | None = None
+
+    if isinstance(payload, dict):
+        payload_status = payload.get("status")
+        if payload_status is None and "ok" in payload:
+            payload_status = payload.get("ok")
+        payload_message = payload.get("message") or payload.get("msg")
+        payload_details = payload.get("details")
+        if payload_details is None:
+            payload_details = payload.get("detail") or payload.get("context")
+    elif isinstance(payload, bool):
+        payload_status = payload
+    elif isinstance(payload, str):
+        if message is None and _coerce_preflight_status(payload) is None:
+            payload_message = payload
+        else:
+            payload_status = payload
+
+    normalized_status = (
+        _coerce_preflight_status(status)
+        or _coerce_preflight_status(payload_status)
+        or "pass"
+    )
+    normalized_message = message or payload_message or ""
+    normalized_details = _coerce_preflight_details(
+        details if details is not None else payload_details
+    )
+
+    return {
+        "status": normalized_status,
+        "message": normalized_message,
+        "details": normalized_details,
+    }
 
 
 @dataclass

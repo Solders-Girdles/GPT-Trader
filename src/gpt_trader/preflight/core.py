@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Mapping
 
 from .checks import (
     check_api_connectivity,
@@ -21,6 +21,7 @@ from .checks import (
 )
 from .context import PreflightContext
 from .report import generate_report
+from .validation_result import PreflightResultPayload
 
 
 @dataclass
@@ -48,18 +49,28 @@ class PreflightCheck:
         return self.context.successes
 
     @property
+    def results(self) -> list[PreflightResultPayload]:
+        return self.context.results
+
+    @property
     def config(self) -> dict:
         return self.context.config
 
     # Logging helpers (preserve original surface area)
-    def log_success(self, message: str) -> None:
-        self.context.log_success(message)
+    def log_success(
+        self, message: str, details: Mapping[str, Any] | str | None = None
+    ) -> None:
+        self.context.log_success(message, details=details)
 
-    def log_warning(self, message: str) -> None:
-        self.context.log_warning(message)
+    def log_warning(
+        self, message: str, details: Mapping[str, Any] | str | None = None
+    ) -> None:
+        self.context.log_warning(message, details=details)
 
-    def log_error(self, message: str) -> None:
-        self.context.log_error(message)
+    def log_error(
+        self, message: str, details: Mapping[str, Any] | str | None = None
+    ) -> None:
+        self.context.log_error(message, details=details)
 
     def log_info(self, message: str) -> None:
         self.context.log_info(message)

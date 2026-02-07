@@ -34,6 +34,7 @@ class TestPreflightContextInit:
         assert ctx.errors == []
         assert ctx.warnings == []
         assert ctx.successes == []
+        assert ctx.results == []
         assert ctx.config == {}
 
     def test_custom_initialization(self) -> None:

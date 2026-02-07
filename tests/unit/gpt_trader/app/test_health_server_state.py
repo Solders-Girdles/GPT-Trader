@@ -1,6 +1,7 @@
 """Tests for health server state."""
 
 from gpt_trader.app.health_server import DEFAULT_HEALTH_PORT, HealthState
+from gpt_trader.monitoring.interfaces import HealthCheckResult
 
 
 class TestHealthState:
@@ -27,15 +28,23 @@ class TestHealthState:
 
     def test_add_check_pass(self) -> None:
         state = HealthState()
-        state.add_check("broker", True, {"latency_ms": 50})
-        assert state.checks["broker"]["status"] == "pass"
-        assert state.checks["broker"]["details"]["latency_ms"] == 50
+        state.add_check(
+            "broker",
+            HealthCheckResult(healthy=True, details={"latency_ms": 50}),
+        )
+        assert state.checks["broker"].healthy is True
+        assert state.checks["broker"].details["latency_ms"] == 50
+        assert state.checks_payload()["broker"]["status"] == "pass"
 
     def test_add_check_fail(self) -> None:
         state = HealthState()
-        state.add_check("database", False, {"error": "connection timeout"})
-        assert state.checks["database"]["status"] == "fail"
-        assert state.checks["database"]["details"]["error"] == "connection timeout"
+        state.add_check(
+            "database",
+            HealthCheckResult(healthy=False, details={"error": "connection timeout"}),
+        )
+        assert state.checks["database"].healthy is False
+        assert state.checks["database"].details["error"] == "connection timeout"
+        assert state.checks_payload()["database"]["status"] == "fail"
 
 
 def test_default_port_is_8080() -> None:

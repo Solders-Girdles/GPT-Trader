@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
@@ -67,6 +66,19 @@ class TestHealthCheckRunner:
 
         assert runner._degradation_state is state
 
+    def test_register_health_check_records_result(self) -> None:
+        """Test canonical registration stores typed results."""
+        health_state = HealthState()
+
+        def check_custom() -> HealthCheckResult:
+            return HealthCheckResult(healthy=True, details={"source": "registry"})
+
+        result = health_checks.register_health_check(health_state, "custom", check_custom)
+
+        assert result.healthy is True
+        assert health_state.checks["custom"] is result
+        assert health_state.checks_payload()["custom"]["status"] == "pass"
+
     def test_run_checks_sync(self) -> None:
         """Test synchronous check execution."""
         broker = MagicMock()
@@ -97,9 +109,9 @@ class TestHealthCheckRunner:
         assert "websocket" in results
         assert "ticker_freshness" in results
         assert "degradation" in results
-        assert results["broker"][0] is True  # healthy
-        assert results["ticker_freshness"][0] is True  # healthy
-        assert results["degradation"][0] is True  # healthy
+        assert results["broker"].healthy is True
+        assert results["ticker_freshness"].healthy is True
+        assert results["degradation"].healthy is True
 
     def test_run_checks_sync_ticker_freshness_exception(self) -> None:
         """Test that ticker freshness errors are captured in results."""
@@ -115,9 +127,9 @@ class TestHealthCheckRunner:
         results = runner.run_checks_sync()
 
         assert "ticker_freshness" in results
-        healthy, details = results["ticker_freshness"]
-        assert healthy is False
-        assert details["error"] == "ticker failure"
+        result = results["ticker_freshness"]
+        assert result.healthy is False
+        assert result.details["error"] == "ticker failure"
 
     def test_run_checks_sync_degradation_exception(self) -> None:
         """Test that degradation errors are captured in results."""
@@ -132,9 +144,9 @@ class TestHealthCheckRunner:
         results = runner.run_checks_sync()
 
         assert "degradation" in results
-        healthy, details = results["degradation"]
-        assert healthy is False
-        assert details["error"] == "degradation failure"
+        result = results["degradation"]
+        assert result.healthy is False
+        assert result.details["error"] == "degradation failure"
 
     @pytest.mark.asyncio
     async def test_start_and_stop(self) -> None:
@@ -201,9 +213,9 @@ class TestHealthCheckRunner:
         runner = HealthCheckRunner(health_state=health_state)
         calls: list[str] = []
 
-        def custom_check() -> tuple[bool, dict[str, Any]]:
+        def custom_check() -> HealthCheckResult:
             calls.append("called")
-            return True, {"source": "registry"}
+            return HealthCheckResult(healthy=True, details={"source": "registry"})
 
         registry = (
             health_checks.HealthCheckDescriptor(
@@ -216,17 +228,17 @@ class TestHealthCheckRunner:
 
         sync_results = runner.run_checks_sync()
 
-        assert sync_results["custom_check"][0] is True
-        assert sync_results["custom_check"][1]["source"] == "registry"
+        assert sync_results["custom_check"].healthy is True
+        assert sync_results["custom_check"].details["source"] == "registry"
 
         await runner._execute_checks()
 
         assert runner._health_check_registry.call_count == 2
         assert calls == ["called", "called"]
+        expected_result = HealthCheckResult(healthy=True, details={"source": "registry"})
         health_state.add_check.assert_called_with(
             "custom_check",
-            True,
-            {"source": "registry"},
+            expected_result,
         )
 
 
@@ -238,7 +250,9 @@ class TestHealthCheckResult:
         result = HealthCheckResult(healthy=True, details={"latency_ms": 50})
 
         assert result.healthy is True
+        assert result.status == "pass"
         assert result.details["latency_ms"] == 50
+        assert result.to_payload() == {"status": "pass", "details": {"latency_ms": 50}}
 
     def test_unhealthy_result(self) -> None:
         """Test creating an unhealthy result."""
@@ -248,4 +262,5 @@ class TestHealthCheckResult:
         )
 
         assert result.healthy is False
+        assert result.status == "fail"
         assert result.details["error"] == "connection refused"

@@ -20,6 +20,7 @@ from gpt_trader.config.constants import (
     HEALTH_CHECK_READ_TIMEOUT_SECONDS,
     METRICS_ENDPOINT_ENABLED,
 )
+from gpt_trader.monitoring.interfaces import HealthCheckResult
 from gpt_trader.utilities.logging_patterns import get_logger
 from gpt_trader.utilities.performance.health import get_performance_health_check
 
@@ -39,7 +40,7 @@ class HealthState:
     ready: bool = False
     live: bool = True
     reason: str = "initializing"
-    checks: dict[str, Any] = field(default_factory=dict)
+    checks: dict[str, HealthCheckResult] = field(default_factory=dict)
 
     def set_ready(self, ready: bool, reason: str = "") -> None:
         """Update readiness state."""
@@ -53,9 +54,13 @@ class HealthState:
         if reason:
             self.reason = reason
 
-    def add_check(self, name: str, status: bool, details: dict[str, Any] | None = None) -> None:
+    def add_check(self, name: str, result: HealthCheckResult) -> None:
         """Add a named health check result."""
-        self.checks[name] = {"status": "pass" if status else "fail", "details": details or {}}
+        self.checks[name] = result
+
+    def checks_payload(self) -> dict[str, dict[str, Any]]:
+        """Serialize checks for the health endpoint payload."""
+        return {name: result.to_payload() for name, result in self.checks.items()}
 
 
 def _build_health_response(state: HealthState) -> dict[str, Any]:
@@ -76,12 +81,10 @@ def _build_health_response(state: HealthState) -> dict[str, Any]:
     # Check individual health checks for severity escalation
     # Only escalate if we're currently healthy/degraded
     if overall_status in ("healthy", "degraded"):
-        for check_name, check_result in state.checks.items():
-            check_status = check_result.get("status", "pass")
-            check_details = check_result.get("details", {})
-            severity = check_details.get("severity", "warning")
+        for check_result in state.checks.values():
+            severity = check_result.details.get("severity", "warning")
 
-            if check_status == "fail":
+            if check_result.status == "fail":
                 if severity == "critical":
                     overall_status = "unhealthy"
                     break
@@ -104,10 +107,7 @@ def _build_health_response(state: HealthState) -> dict[str, Any]:
         "live": state.live,
         "ready": state.ready,
         "reason": state.reason,
-        "checks": {
-            **state.checks,
-            "performance": perf_health,
-        },
+        "checks": {**state.checks_payload(), "performance": perf_health},
         "signals": signals_summary,
     }
 
@@ -376,20 +376,18 @@ def mark_live(state: HealthState, live: bool = True, reason: str = "") -> None:
 def add_health_check(
     state: HealthState,
     name: str,
-    check_fn: Callable[[], tuple[bool, dict[str, Any]]],
+    check_fn: Callable[[], HealthCheckResult],
 ) -> None:
     """Add a custom health check.
 
     Args:
         state: HealthState instance to update.
         name: Name of the health check
-        check_fn: Function that returns (status, details)
+        check_fn: Function that returns HealthCheckResult
     """
-    try:
-        status, details = check_fn()
-        state.add_check(name, status, details)
-    except Exception as exc:
-        state.add_check(name, False, {"error": str(exc)})
+    from gpt_trader.monitoring.health_checks import register_health_check
+
+    register_health_check(state, name, check_fn)
 
 
 __all__ = [

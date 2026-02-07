@@ -30,7 +30,7 @@ with the runner instantiated in
 
 **Registration flow**
 1. Add a check function in `src/gpt_trader/monitoring/health_checks.py` that returns
-   `(healthy: bool, details: dict)`.
+   `HealthCheckResult(healthy=..., details=...)`.
 2. Register it in `HealthCheckRunner._health_check_registry` with a
    `HealthCheckDescriptor(name=..., mode="blocking"|"fast", run=...)`.
 3. Ensure required dependencies are plumbed into `HealthCheckRunner` (broker,

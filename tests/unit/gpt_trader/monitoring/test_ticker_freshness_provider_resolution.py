@@ -47,6 +47,12 @@ class NotAProvider:
     pass
 
 
+def test_returns_none_for_missing_service():
+    resolved = _resolve_ticker_freshness_provider(None)
+
+    assert resolved is None
+
+
 def test_resolves_provider_instance():
     provider = StubProvider()
 

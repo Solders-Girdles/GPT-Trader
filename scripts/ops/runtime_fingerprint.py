@@ -7,6 +7,12 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
+try:
+    from scripts.ops import formatting
+except ModuleNotFoundError:  # pragma: no cover
+    # Allow direct script execution (e.g. `python3 scripts/ops/runtime_fingerprint.py ...`).
+    import formatting  # type: ignore
+
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -100,26 +106,26 @@ def _print_payload(payload: dict[str, Any]) -> None:
     ]
     for field in fields:
         value = payload.get(field)
-        if value is None or value == "":
-            value = "-"
-        print(f"{field}={value}")
+        if field == "timestamp":
+            value = formatting.format_timestamp(value)
+        print(formatting.format_status_line(field, value))
 
 
 def main() -> int:
     args = _parse_args()
     events_db = args.runtime_root / "runtime_data" / args.profile / "events.db"
     if not events_db.exists():
-        print(f"error=events.db not found: {events_db}")
+        print(formatting.format_status_line("error", f"events.db not found: {events_db}"))
         return 1
 
     try:
         payload = _read_latest_runtime_start(events_db)
     except sqlite3.Error as exc:
-        print(f"error=failed to read events.db: {exc}")
+        print(formatting.format_status_line("error", f"failed to read events.db: {exc}"))
         return 2
 
     if payload is None:
-        print("error=no runtime_start events")
+        print(formatting.format_status_line("error", "no runtime_start events"))
         return 3
 
     is_valid, reason = _validate_runtime_start(
@@ -128,7 +134,7 @@ def main() -> int:
         expected_build_sha=args.expected_build_sha,
     )
     if not is_valid:
-        print(f"error={reason}")
+        print(formatting.format_status_line("error", reason))
         return 4
 
     _print_payload(payload)

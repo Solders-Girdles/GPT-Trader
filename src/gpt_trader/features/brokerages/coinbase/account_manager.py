@@ -25,85 +25,21 @@ class CoinbaseAccountManager:
     def snapshot(self) -> dict[str, Any]:
         snapshot_data: dict[str, Any] = {}
 
-        # Key Permissions
-        try:
-            permissions = self.broker.get_key_permissions()
-            snapshot_data["key_permissions"] = permissions
-        except Exception as e:
-            logger.warning(f"Failed to get key permissions: {e}")
-            snapshot_data["key_permissions"] = {"error": str(e)}
+        snapshot_probes: list[tuple[str, str]] = [
+            ("key_permissions", "get_key_permissions"),
+            ("fee_schedule", "get_fee_schedule"),
+            ("limits", "get_account_limits"),
+            ("transaction_summary", "get_transaction_summary"),
+            ("payment_methods", "list_payment_methods"),
+            ("portfolios", "list_portfolios"),
+            ("cfm_balance_summary", "get_cfm_balance_summary"),
+            ("cfm_sweeps", "list_cfm_sweeps"),
+            ("cfm_sweeps_schedule", "get_cfm_sweeps_schedule"),
+            ("cfm_margin_window", "get_cfm_margin_window"),
+        ]
 
-        # Fee Schedule
-        try:
-            fee_schedule = self.broker.get_fee_schedule()
-            snapshot_data["fee_schedule"] = fee_schedule
-        except Exception as e:
-            logger.warning(f"Failed to get fee schedule: {e}")
-            snapshot_data["fee_schedule"] = {"error": str(e)}
-
-        # Account Limits
-        try:
-            limits = self.broker.get_account_limits()
-            snapshot_data["limits"] = limits
-        except Exception as e:
-            logger.warning(f"Failed to get account limits: {e}")
-            snapshot_data["limits"] = {"error": str(e)}
-
-        # Transaction Summary
-        try:
-            transaction_summary = self.broker.get_transaction_summary()
-            snapshot_data["transaction_summary"] = transaction_summary
-        except Exception as e:
-            logger.warning(f"Failed to get transaction summary: {e}")
-            snapshot_data["transaction_summary"] = {"error": str(e)}
-
-        # Payment Methods
-        try:
-            payment_methods = self.broker.list_payment_methods()
-            snapshot_data["payment_methods"] = payment_methods
-        except Exception as e:
-            logger.warning(f"Failed to list payment methods: {e}")
-            snapshot_data["payment_methods"] = {"error": str(e)}
-
-        # Portfolios
-        try:
-            portfolios = self.broker.list_portfolios()
-            snapshot_data["portfolios"] = portfolios
-        except Exception as e:
-            logger.warning(f"Failed to list portfolios: {e}")
-            snapshot_data["portfolios"] = {"error": str(e)}
-
-        # CFM Summary
-        try:
-            cfm_summary = self.broker.get_cfm_balance_summary()
-            snapshot_data["cfm_balance_summary"] = cfm_summary
-        except Exception as e:
-            logger.warning(f"Failed to get CFM balance summary: {e}")
-            snapshot_data["cfm_balance_summary"] = {"error": str(e)}
-
-        # CFM Sweeps
-        try:
-            cfm_sweeps = self.broker.list_cfm_sweeps()
-            snapshot_data["cfm_sweeps"] = cfm_sweeps
-        except Exception as e:
-            logger.warning(f"Failed to list CFM sweeps: {e}")
-            snapshot_data["cfm_sweeps"] = {"error": str(e)}
-
-        # CFM Sweeps Schedule
-        try:
-            cfm_sweeps_schedule = self.broker.get_cfm_sweeps_schedule()
-            snapshot_data["cfm_sweeps_schedule"] = cfm_sweeps_schedule
-        except Exception as e:
-            logger.warning(f"Failed to get CFM sweeps schedule: {e}")
-            snapshot_data["cfm_sweeps_schedule"] = {"error": str(e)}
-
-        # CFM Margin Window
-        try:
-            cfm_margin_window = self.broker.get_cfm_margin_window()
-            snapshot_data["cfm_margin_window"] = cfm_margin_window
-        except Exception as e:
-            logger.warning(f"Failed to get CFM margin window: {e}")
-            snapshot_data["cfm_margin_window"] = {"error": str(e)}
+        for key, probe_name in snapshot_probes:
+            snapshot_data[key] = self._execute_snapshot_probe(key, probe_name)
 
         # INTX Status
         snapshot_data["intx_available"] = self.broker.supports_intx()
@@ -166,6 +102,25 @@ class CoinbaseAccountManager:
         )
 
         return snapshot_data
+
+    def _execute_snapshot_probe(self, key: str, probe_name: str) -> Any:
+        try:
+            probe = getattr(self.broker, probe_name)
+            if not callable(probe):
+                raise TypeError(f"{probe_name} is not callable")
+            return probe()
+        except Exception as error:
+            logger.warning("Failed to collect %s: %s", key, error)
+            return self._snapshot_error_payload(error)
+
+    @staticmethod
+    def _snapshot_error_payload(error: Exception) -> dict[str, Any]:
+        return {
+            "error": {
+                "message": str(error),
+                "type": type(error).__name__,
+            }
+        }
 
     def convert(self, payload: dict[str, Any], commit: bool = False) -> dict[str, Any]:
         quote = self.broker.create_convert_quote(payload)

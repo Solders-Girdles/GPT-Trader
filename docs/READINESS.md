@@ -17,6 +17,15 @@ Each pillar has measurable evidence so the decision is objective, repeatable, an
 3. Fill in the checklist below with evidence paths and notes.
 4. Enable the readiness gate in preflight/CI for enforcement.
 
+## Readiness gate freshness guard
+
+`scripts/ci/check_readiness_gate.py` now enforces a freshness guard on the latest daily report.
+Any report older than `GPT_TRADER_READINESS_MAX_REPORT_AGE_DAYS` (default: 7 days) or the `--max-report-age-days`
+value is considered stale. Stale inputs produce a clear `Readiness gate degraded …` message and the command exits
+successfully unless `--strict` (or `GPT_TRADER_READINESS_STRICT=1`) is provided, in which case the gate fails to
+preserve the legacy strict behavior. Set `--max-report-age-days 0` (or the same env var) to disable the guard,
+or raise the threshold when reporting cadence is slower.
+
 ## Evidence sources
 
 - Preflight report: `preflight_report_YYYYMMDD_HHMMSS.json`

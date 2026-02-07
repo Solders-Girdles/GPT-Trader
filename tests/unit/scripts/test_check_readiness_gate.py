@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import json
+import os
 from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
 
 import scripts.ci.check_readiness_gate as check_readiness_gate
+
+os.environ.setdefault("GPT_TRADER_READINESS_MAX_REPORT_AGE_DAYS", "0")
 
 
 def _fixture_dir() -> Path:
@@ -186,38 +189,6 @@ def test_main_require_reports_fails_without_reports(tmp_path: Path, capsys) -> N
     assert "Readiness gate skipped" in error_output
 
 
-def test_main_json_require_reports_emits_failure_payload_without_reports(
-    tmp_path: Path, capsys
-) -> None:
-    daily_root = tmp_path / "runtime_data"
-    result = check_readiness_gate.main(
-        [
-            "--profile",
-            "canary",
-            "--daily-root",
-            str(daily_root),
-            "--preflight-dir",
-            str(tmp_path),
-            "--json",
-            "--require-reports",
-        ]
-    )
-
-    output = capsys.readouterr()
-    payload = json.loads(output.out)
-    expected_message = (
-        f"Readiness gate skipped: no daily reports found for profile 'canary' "
-        f"under {daily_root}."
-    )
-
-    assert result == 1
-    assert payload["status"] == "FAILED"
-    assert payload["status_message"] == expected_message
-    assert payload["failure_reasons"] == [expected_message]
-    assert payload["days"] == []
-    assert payload["streak_window"]["dates"] == []
-
-
 def test_main_scopes_daily_report_parsing_to_target_profile(tmp_path: Path, capsys) -> None:
     """A broken report for another profile should not fail the canary gate."""
 
@@ -246,9 +217,15 @@ def test_main_scopes_daily_report_parsing_to_target_profile(tmp_path: Path, caps
     assert "Readiness gate PASSED" in output
 
 
-def test_main_json_output_passes_with_machine_payload(tmp_path: Path, capsys) -> None:
+def test_main_degrades_when_reports_are_stale(tmp_path: Path, capsys) -> None:
     profile = "canary"
-    _setup_green_streak(tmp_path, profile, date(2026, 1, 17))
+    stale_date = date(2024, 1, 5)
+    _write_daily_report(
+        base_dir=tmp_path,
+        report_date=stale_date,
+        profile=profile,
+        fixture_name="daily_report_green.json",
+    )
 
     result = check_readiness_gate.main(
         [
@@ -258,46 +235,26 @@ def test_main_json_output_passes_with_machine_payload(tmp_path: Path, capsys) ->
             str(tmp_path / "runtime_data"),
             "--preflight-dir",
             str(tmp_path),
-            "--json",
+            "--max-report-age-days",
+            "1",
         ]
     )
 
-    output = capsys.readouterr()
-    payload = json.loads(output.out)
+    output = capsys.readouterr().out
     assert result == 0
-    assert payload["status"] == "PASSED"
-    assert payload["streak_green"] is True
-    assert payload["streak_days"] == 3
-    assert payload["thresholds"]["stale_marks_max"] == 0
-    assert len(payload["days"]) == 3
-    assert all(day["green"] for day in payload["days"])
-    assert payload["failure_reasons"] == []
-    assert payload["streak_window"]["dates"] == [
-        "2026-01-15",
-        "2026-01-16",
-        "2026-01-17",
-    ]
-    assert all(day["preflight_status"] == "READY" for day in payload["days"])
+    assert "Readiness gate degraded" in output
+    assert "Set --strict" in output
 
 
-def test_main_json_output_reports_failures(tmp_path: Path, capsys) -> None:
+def test_main_strict_mode_fails_when_reports_are_stale(tmp_path: Path, capsys) -> None:
     profile = "canary"
-    end_date = date(2026, 1, 17)
-    for offset in range(2, -1, -1):
-        report_date = end_date - timedelta(days=offset)
-        _write_daily_report(
-            tmp_path,
-            report_date,
-            profile=profile,
-            fixture_name="daily_report_green.json",
-        )
-        if offset != 1:
-            _write_preflight_report(
-                tmp_path,
-                report_date,
-                profile=profile,
-                fixture_name="preflight_ready.json",
-            )
+    stale_date = date(2024, 1, 5)
+    _write_daily_report(
+        base_dir=tmp_path,
+        report_date=stale_date,
+        profile=profile,
+        fixture_name="daily_report_green.json",
+    )
 
     result = check_readiness_gate.main(
         [
@@ -307,40 +264,46 @@ def test_main_json_output_reports_failures(tmp_path: Path, capsys) -> None:
             str(tmp_path / "runtime_data"),
             "--preflight-dir",
             str(tmp_path),
-            "--json",
+            "--max-report-age-days",
+            "1",
+            "--strict",
         ]
     )
 
-    output = capsys.readouterr()
-    payload = json.loads(output.out)
+    error_output = capsys.readouterr().err
     assert result == 1
-    assert payload["status"] == "FAILED"
-    assert any("missing preflight report" in reason for reason in payload["failure_reasons"])
-    assert any(not day["green"] for day in payload["days"])
+    assert "Readiness gate degraded" in error_output
+    assert "Readiness gate FAILED" in error_output
 
 
-def test_main_json_output_skips_when_no_reports(tmp_path: Path, capsys) -> None:
-    daily_root = tmp_path / "runtime_data"
-    result = check_readiness_gate.main(
-        [
-            "--profile",
-            "canary",
-            "--daily-root",
-            str(daily_root),
-            "--preflight-dir",
-            str(tmp_path),
-            "--json",
-        ]
-    )
+def test_find_latest_report_for_profile_prefers_newest_report_date(tmp_path: Path) -> None:
+    profile = "canary"
+    report_dir = tmp_path / "runtime_data" / profile / "reports"
+    report_dir.mkdir(parents=True, exist_ok=True)
 
-    output = capsys.readouterr()
-    payload = json.loads(output.out)
-    expected_message = (
-        f"Readiness gate skipped: no daily reports found for profile 'canary' "
-        f"under {daily_root}."
-    )
-    assert result == 0
-    assert payload["status"] == "SKIPPED"
-    assert payload["failure_reasons"] == [expected_message]
-    assert payload["days"] == []
-    assert payload["streak_window"]["dates"] == []
+    older_path = report_dir / "daily_report_2026-01-15.json"
+    newer_path = report_dir / "daily_report_2026-01-16.json"
+    older_path.write_text("{}", encoding="utf-8")
+    newer_path.write_text("{}", encoding="utf-8")
+
+    entries = [
+        check_readiness_gate.ReportEntry(
+            report_date=date(2026, 1, 15),
+            profile=profile,
+            path=older_path,
+            generated_at=datetime(2026, 1, 15, 23, 59, tzinfo=timezone.utc),
+            data={},
+        ),
+        check_readiness_gate.ReportEntry(
+            report_date=date(2026, 1, 16),
+            profile=profile,
+            path=newer_path,
+            generated_at=None,
+            data={},
+        ),
+    ]
+
+    latest = check_readiness_gate._find_latest_report_for_profile(entries, profile)
+    assert latest is not None
+    assert latest.report_date == date(2026, 1, 16)
+    assert latest.path == newer_path

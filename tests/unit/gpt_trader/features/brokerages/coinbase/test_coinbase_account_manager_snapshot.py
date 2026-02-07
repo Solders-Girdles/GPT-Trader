@@ -78,6 +78,36 @@ class TestCoinbaseAccountManagerSnapshot:
         assert snapshot["intx_available"] is True
         assert snapshot["intx_portfolio_uuid"] == "pf-1"
 
+    def test_snapshot_records_error_payloads(self) -> None:
+        class FailingFeeScheduleBroker(StubBroker):
+            def get_fee_schedule(self):
+                raise RuntimeError("boom")
+
+        broker = FailingFeeScheduleBroker()
+        store = StubEventStore()
+        manager = CoinbaseAccountManager(broker, event_store=store)
+
+        snapshot = manager.snapshot()
+
+        assert snapshot["key_permissions"]["can_trade"] is True
+        assert snapshot["fee_schedule"]["error"]["message"] == "boom"
+        assert snapshot["fee_schedule"]["error"]["type"] == "RuntimeError"
+        assert snapshot["portfolios"][0]["uuid"] == "pf-1"
+
+    def test_snapshot_handles_missing_optional_probe(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.delattr(StubBroker, "get_cfm_balance_summary")
+
+        broker = StubBroker()
+        store = StubEventStore()
+        manager = CoinbaseAccountManager(broker, event_store=store)
+
+        snapshot = manager.snapshot()
+
+        error_payload = snapshot["cfm_balance_summary"]["error"]
+        assert error_payload["type"] == "AttributeError"
+        assert "get_cfm_balance_summary" in error_payload["message"]
+        assert snapshot["cfm_sweeps"][0]["sweep_id"] == "sweep-1"
+
     def test_convert_commits_when_requested(self) -> None:
         broker = StubBroker()
         store = StubEventStore()

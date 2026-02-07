@@ -4,7 +4,7 @@ Manages Coinbase account state, positions, balances, and CFM/INTX specific featu
 
 from __future__ import annotations
 
-from typing import Callable, TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Callable, cast
 
 from gpt_trader.utilities.logging_patterns import get_logger
 from gpt_trader.utilities.telemetry import emit_metric

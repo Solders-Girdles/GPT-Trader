@@ -120,9 +120,7 @@ def normalize_preflight_result(
             payload_status = payload
 
     normalized_status = (
-        _coerce_preflight_status(status)
-        or _coerce_preflight_status(payload_status)
-        or "pass"
+        _coerce_preflight_status(status) or _coerce_preflight_status(payload_status) or "pass"
     )
     normalized_message = message or payload_message or ""
     normalized_details = _coerce_preflight_details(

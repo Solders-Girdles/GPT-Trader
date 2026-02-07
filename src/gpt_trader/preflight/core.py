@@ -57,19 +57,13 @@ class PreflightCheck:
         return self.context.config
 
     # Logging helpers (preserve original surface area)
-    def log_success(
-        self, message: str, details: Mapping[str, Any] | str | None = None
-    ) -> None:
+    def log_success(self, message: str, details: Mapping[str, Any] | str | None = None) -> None:
         self.context.log_success(message, details=details)
 
-    def log_warning(
-        self, message: str, details: Mapping[str, Any] | str | None = None
-    ) -> None:
+    def log_warning(self, message: str, details: Mapping[str, Any] | str | None = None) -> None:
         self.context.log_warning(message, details=details)
 
-    def log_error(
-        self, message: str, details: Mapping[str, Any] | str | None = None
-    ) -> None:
+    def log_error(self, message: str, details: Mapping[str, Any] | str | None = None) -> None:
         self.context.log_error(message, details=details)
 
     def log_info(self, message: str) -> None:

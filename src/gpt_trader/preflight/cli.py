@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import argparse
 import os
 from collections.abc import Callable, Sequence
 from datetime import datetime, timezone
 
+from .cli_args import PreflightCliArgs, parse_preflight_args
 from .context import Colors
 from .core import PreflightCheck
 
@@ -29,23 +29,11 @@ def _header(profile: str) -> None:
 
 def main(argv: Sequence[str] | None = None) -> int:
     """Entry-point for production preflight command."""
-    parser = argparse.ArgumentParser(description="Production preflight check for GPT-Trader")
-    parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose output")
-    parser.add_argument(
-        "--profile",
-        "-p",
-        default="canary",
-        choices=["dev", "canary", "prod"],
-        help="Trading profile to validate (default: canary)",
-    )
-    parser.add_argument(
-        "--warn-only",
-        action="store_true",
-        help="Downgrade diagnostic failures to warnings (also: GPT_TRADER_PREFLIGHT_WARN_ONLY=1)",
-    )
+    args = parse_preflight_args(argv)
+    return _run_preflight(args)
 
-    args = parser.parse_args(argv)
 
+def _run_preflight(args: PreflightCliArgs) -> int:
     if load_dotenv is not None:
         load_dotenv()
 
@@ -78,5 +66,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         except Exception as exc:  # pragma: no cover - defensive runtime safeguard
             checker.log_error(f"Check failed with exception: {exc}")
 
-    success, _status = checker.generate_report()
+    success, _status = checker.generate_report(
+        report_dir=args.report_dir, report_path=args.report_path
+    )
     return 0 if success else 1

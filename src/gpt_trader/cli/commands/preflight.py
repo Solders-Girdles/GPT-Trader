@@ -6,8 +6,7 @@ from argparse import Namespace
 from typing import Any
 
 from gpt_trader.preflight import run_preflight_cli
-
-_PROFILE_CHOICES = ["dev", "canary", "prod"]
+from gpt_trader.preflight.cli_args import add_preflight_arguments
 
 
 def register(subparsers: Any) -> None:
@@ -17,19 +16,7 @@ def register(subparsers: Any) -> None:
         help="Run production preflight checks",
         description="Run production preflight checks for GPT-Trader",
     )
-    parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose output")
-    parser.add_argument(
-        "--profile",
-        "-p",
-        default="canary",
-        choices=_PROFILE_CHOICES,
-        help="Trading profile to validate (default: canary)",
-    )
-    parser.add_argument(
-        "--warn-only",
-        action="store_true",
-        help="Downgrade diagnostic failures to warnings (also: GPT_TRADER_PREFLIGHT_WARN_ONLY=1)",
-    )
+    add_preflight_arguments(parser)
     parser.set_defaults(handler=execute)
 
 
@@ -40,4 +27,8 @@ def execute(args: Namespace) -> int:
         argv.append("--verbose")
     if getattr(args, "warn_only", False):
         argv.append("--warn-only")
+    if getattr(args, "report_dir", None):
+        argv.extend(["--report-dir", str(args.report_dir)])
+    if getattr(args, "report_path", None):
+        argv.extend(["--report-path", str(args.report_path)])
     return run_preflight_cli(argv)

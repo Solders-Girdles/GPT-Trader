@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Mapping
 
 from .checks import (
@@ -131,5 +132,7 @@ class PreflightCheck:
     def simulate_dry_run(self) -> bool:
         return simulate_dry_run(self)
 
-    def generate_report(self) -> tuple[bool, str]:
-        return generate_report(self)
+    def generate_report(
+        self, *, report_dir: Path | None = None, report_path: Path | None = None
+    ) -> tuple[bool, str]:
+        return generate_report(self, report_dir=report_dir, report_path=report_path)

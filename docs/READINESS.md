@@ -225,7 +225,10 @@ Run the CI readiness gate (3-day streak):
 ```bash
 uv run python scripts/ci/check_readiness_gate.py --profile canary
 uv run python scripts/ci/check_readiness_gate.py --profile canary --update-docs
+uv run python scripts/ci/check_readiness_gate.py --profile canary --json
 ```
+
+Automation tooling can run the same gate with `--json` to receive a structured payload that includes profile info, thresholds, the per-day streak window, and failure reasons.
 
 To require reports (no skip when artifacts are missing), add `--require-reports`.
 

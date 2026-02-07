@@ -60,6 +60,7 @@ class DayEvaluation:
     green: bool
     notes: tuple[str, ...]
     pillars: tuple[PillarEvaluation, ...]
+    preflight_status: str | None
 
 
 @dataclass(frozen=True)
@@ -111,6 +112,11 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         "--docs-path",
         default=str(REPO_ROOT / "docs" / "READINESS.md"),
         help="Path to READINESS.md (used with --update-docs).",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit structured JSON output instead of the human-readable table.",
     )
     parser.add_argument(
         "--max-report-age-days",
@@ -488,14 +494,15 @@ def _evaluate_profile(
                 green = False
                 notes.extend(pillar_notes)
 
+        preflight_status: str | None = None
         if preflight_entry is None:
             green = False
             notes.append("missing preflight report")
         else:
-            status = str(preflight_entry.data.get("status", "UNKNOWN"))
-            if status != "READY":
+            preflight_status = str(preflight_entry.data.get("status", "UNKNOWN"))
+            if preflight_status != "READY":
                 green = False
-                notes.append(f"preflight status {status}")
+                notes.append(f"preflight status {preflight_status}")
 
         evaluations.append(
             DayEvaluation(
@@ -505,6 +512,7 @@ def _evaluate_profile(
                 green=green,
                 notes=tuple(notes),
                 pillars=pillars,
+                preflight_status=preflight_status,
             )
         )
 
@@ -540,6 +548,84 @@ def _format_table(entries: list[DayEvaluation], root: Path) -> str:
             f"| {entry.report_date.isoformat()} | {daily_path} | {preflight_path} | {green_label} | {notes} |"
         )
     return "\n".join(lines)
+
+
+def _relative_path(path: Path | None) -> str | None:
+    if path is None:
+        return None
+    try:
+        resolved = path.resolve()
+    except OSError:
+        resolved = path
+    try:
+        relative = resolved.relative_to(REPO_ROOT)
+    except ValueError:
+        relative = resolved
+    return str(relative)
+
+
+def _day_payload(entry: DayEvaluation) -> dict[str, Any]:
+    return {
+        "date": entry.report_date.isoformat(),
+        "green": entry.green,
+        "notes": list(entry.notes),
+        "pillars": [
+            {"name": pillar.name, "green": pillar.green, "reasons": list(pillar.reasons)}
+            for pillar in entry.pillars
+        ],
+        "daily_report_path": _relative_path(entry.daily_path),
+        "preflight_path": _relative_path(entry.preflight_path),
+        "preflight_status": entry.preflight_status,
+    }
+
+
+def _collect_failure_reasons(entries: list[DayEvaluation]) -> list[str]:
+    reasons: list[str] = []
+    for entry in entries:
+        if entry.green:
+            continue
+        entry_notes = "; ".join(entry.notes) if entry.notes else "not green"
+        reasons.append(f"{entry.report_date.isoformat()}: {entry_notes}")
+    return reasons
+
+
+def _build_json_payload(
+    profile: str,
+    streak_days: int,
+    thresholds: Thresholds,
+    evaluations: list[DayEvaluation],
+    streak_green: bool,
+    status: str,
+    status_message: str,
+    extra_failure_reasons: Sequence[str] | None = None,
+) -> dict[str, Any]:
+    dates = [entry.report_date.isoformat() for entry in evaluations]
+    streak_window = {
+        "start": dates[0] if dates else None,
+        "end": dates[-1] if dates else None,
+        "dates": dates,
+    }
+    failure_reasons = list(_collect_failure_reasons(evaluations))
+    if extra_failure_reasons:
+        failure_reasons.extend(extra_failure_reasons)
+    return {
+        "profile": profile,
+        "streak_days": streak_days,
+        "streak_window": streak_window,
+        "streak_green": streak_green,
+        "status": status,
+        "status_message": status_message,
+        "thresholds": {
+            "stale_marks_max": thresholds.stale_marks_max,
+            "ws_reconnects_max": thresholds.ws_reconnects_max,
+            "unfilled_orders_max": thresholds.unfilled_orders_max,
+            "api_errors_max": thresholds.api_errors_max,
+            "guard_triggers_max": thresholds.guard_triggers_max,
+            "liveness_max_age_seconds": thresholds.liveness_max_age_seconds,
+        },
+        "days": [_day_payload(entry) for entry in evaluations],
+        "failure_reasons": failure_reasons,
+    }
 
 
 def _update_docs_table(docs_path: Path, table_text: str) -> None:
@@ -706,43 +792,88 @@ def main(argv: Sequence[str] | None = None) -> int:
             f"under {daily_root}."
         )
         if args.require_reports:
+            if args.json:
+                payload = _build_json_payload(
+                    profile=profile,
+                    streak_days=streak_days,
+                    thresholds=thresholds,
+                    evaluations=evaluations,
+                    streak_green=streak_green,
+                    status="FAILED",
+                    status_message=message,
+                    extra_failure_reasons=(message,),
+                )
+                print(json.dumps(payload))
+                return 1
             print(f"Error: {message}", file=sys.stderr)
             return 1
+        if args.json:
+            payload = _build_json_payload(
+                profile=profile,
+                streak_days=streak_days,
+                thresholds=thresholds,
+                evaluations=evaluations,
+                streak_green=streak_green,
+                status="SKIPPED",
+                status_message=message,
+                extra_failure_reasons=(message,),
+            )
+            print(json.dumps(payload))
+            return 0
         print(message)
         return 0
 
-    print(
-        "Readiness gate (profile={profile}, streak_days={streak_days})".format(
-            profile=profile,
-            streak_days=streak_days,
-        )
-    )
-    print(
-        "Thresholds: stale_marks<={stale_marks}, ws_reconnects<={ws_reconnects}, "
-        "unfilled_orders<={unfilled}, api_errors<={api_errors}, guard_triggers<={guard}, "
-        "liveness_max_age_seconds<={liveness}".format(
-            stale_marks=thresholds.stale_marks_max,
-            ws_reconnects=thresholds.ws_reconnects_max,
-            unfilled=thresholds.unfilled_orders_max,
-            api_errors=thresholds.api_errors_max,
-            guard=thresholds.guard_triggers_max,
-            liveness=thresholds.liveness_max_age_seconds,
-        )
-    )
-
     table_text = _format_table(evaluations, REPO_ROOT)
-    print("\n" + table_text + "\n")
+
+    if not args.json:
+        print(
+            "Readiness gate (profile={profile}, streak_days={streak_days})".format(
+                profile=profile,
+                streak_days=streak_days,
+            )
+        )
+        print(
+            "Thresholds: stale_marks<={stale_marks}, ws_reconnects<={ws_reconnects}, "
+            "unfilled_orders<={unfilled}, api_errors<={api_errors}, guard_triggers<={guard}, "
+            "liveness_max_age_seconds<={liveness}".format(
+                stale_marks=thresholds.stale_marks_max,
+                ws_reconnects=thresholds.ws_reconnects_max,
+                unfilled=thresholds.unfilled_orders_max,
+                api_errors=thresholds.api_errors_max,
+                guard=thresholds.guard_triggers_max,
+                liveness=thresholds.liveness_max_age_seconds,
+            )
+        )
+        print("\n" + table_text + "\n")
 
     if args.update_docs:
         docs_path = Path(args.docs_path).expanduser()
         _update_docs_table(docs_path, table_text)
-        print(f"Updated {docs_path}")
+        if args.json:
+            print(f"Updated {docs_path}", file=sys.stderr)
+        else:
+            print(f"Updated {docs_path}")
+
+    status = "PASSED" if streak_green else "FAILED"
+    status_message = (
+        f"Readiness gate PASSED: {streak_days}-day GREEN streak satisfied."
+        if streak_green
+        else f"Readiness gate FAILED: {streak_days}-day GREEN streak not satisfied."
+    )
+    payload = _build_json_payload(
+        profile=profile,
+        streak_days=streak_days,
+        thresholds=thresholds,
+        evaluations=evaluations,
+        streak_green=streak_green,
+        status=status,
+        status_message=status_message,
+    )
+    if args.json:
+        print(json.dumps(payload))
 
     if not streak_green:
-        print(
-            f"Readiness gate FAILED: {streak_days}-day GREEN streak not satisfied.",
-            file=sys.stderr,
-        )
+        print(status_message, file=sys.stderr)
         for entry in evaluations:
             if entry.green:
                 continue
@@ -750,7 +881,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(f"- {entry.report_date.isoformat()}: {reasons}", file=sys.stderr)
         return 1
 
-    print(f"Readiness gate PASSED: {streak_days}-day GREEN streak satisfied.")
+    if not args.json:
+        print(status_message)
     return 0
 
 

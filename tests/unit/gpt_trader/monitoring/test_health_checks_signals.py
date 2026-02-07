@@ -7,6 +7,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from gpt_trader.monitoring.metrics_collector import reset_all
+from gpt_trader.utilities.time_provider import FakeClock
 
 
 @pytest.fixture(autouse=True)
@@ -238,66 +239,108 @@ class TestCheckWsStalenessSignal:
 
     def test_ws_fresh_messages(self) -> None:
         """Test healthy WS with recent messages."""
-        import time
-
         from gpt_trader.monitoring.health_checks import check_ws_staleness_signal
         from gpt_trader.monitoring.health_signals import HealthStatus
 
+        clock = FakeClock(start_time=1000.0)
         broker = MagicMock()
         broker.get_ws_health.return_value = {
             "connected": True,
-            "last_message_ts": time.time() - 5,  # 5 seconds ago
+            "last_message_ts": 995.0,  # 5 seconds ago
         }
 
-        signal = check_ws_staleness_signal(broker)
+        signal = check_ws_staleness_signal(broker, time_provider=clock)
 
         assert signal.name == "ws_staleness"
         assert signal.status == HealthStatus.OK
-        assert signal.value < 10  # Should be close to 5 seconds
+        assert signal.value == pytest.approx(5.0)
 
     def test_ws_stale_messages_warn(self) -> None:
         """Test warning when messages are moderately stale."""
-        import time
-
         from gpt_trader.monitoring.health_checks import check_ws_staleness_signal
         from gpt_trader.monitoring.health_signals import HealthStatus, HealthThresholds
 
+        clock = FakeClock(start_time=1000.0)
         broker = MagicMock()
         broker.get_ws_health.return_value = {
             "connected": True,
-            "last_message_ts": time.time() - 45,  # 45 seconds ago
+            "last_message_ts": 955.0,  # 45 seconds ago
         }
 
         thresholds = HealthThresholds(
             ws_staleness_seconds_warn=30.0,
             ws_staleness_seconds_crit=60.0,
         )
-        signal = check_ws_staleness_signal(broker, thresholds=thresholds)
+        signal = check_ws_staleness_signal(
+            broker,
+            thresholds=thresholds,
+            time_provider=clock,
+        )
 
         assert signal.status == HealthStatus.WARN
-        assert 40 < signal.value < 50
+        assert signal.value == pytest.approx(45.0)
 
     def test_ws_stale_messages_crit(self) -> None:
         """Test critical when messages are very stale."""
-        import time
-
         from gpt_trader.monitoring.health_checks import check_ws_staleness_signal
         from gpt_trader.monitoring.health_signals import HealthStatus, HealthThresholds
 
+        clock = FakeClock(start_time=1000.0)
         broker = MagicMock()
         broker.get_ws_health.return_value = {
             "connected": True,
-            "last_message_ts": time.time() - 120,  # 2 minutes ago
+            "last_message_ts": 880.0,  # 2 minutes ago
         }
 
         thresholds = HealthThresholds(
             ws_staleness_seconds_warn=30.0,
             ws_staleness_seconds_crit=60.0,
         )
-        signal = check_ws_staleness_signal(broker, thresholds=thresholds)
+        signal = check_ws_staleness_signal(
+            broker,
+            thresholds=thresholds,
+            time_provider=clock,
+        )
 
         assert signal.status == HealthStatus.CRIT
-        assert signal.value > 100
+        assert signal.value == pytest.approx(120.0)
+
+    @pytest.mark.parametrize(
+        ("age_seconds", "expected_status"),
+        [
+            (29.9, "OK"),
+            (30.0, "WARN"),
+            (60.1, "CRIT"),
+        ],
+    )
+    def test_ws_staleness_signal_threshold_boundaries(
+        self,
+        age_seconds: float,
+        expected_status: str,
+    ) -> None:
+        """Test staleness signal transitions around threshold boundaries."""
+        from gpt_trader.monitoring.health_checks import check_ws_staleness_signal
+        from gpt_trader.monitoring.health_signals import HealthStatus, HealthThresholds
+
+        clock = FakeClock(start_time=1000.0)
+        broker = MagicMock()
+        broker.get_ws_health.return_value = {
+            "connected": True,
+            "last_message_ts": clock.time() - age_seconds,
+        }
+
+        thresholds = HealthThresholds(
+            ws_staleness_seconds_warn=30.0,
+            ws_staleness_seconds_crit=60.0,
+        )
+        signal = check_ws_staleness_signal(
+            broker,
+            thresholds=thresholds,
+            time_provider=clock,
+        )
+
+        assert signal.status == HealthStatus(expected_status)
+        assert signal.value == pytest.approx(age_seconds)
 
     def test_ws_exception_returns_unknown(self) -> None:
         """Test that exceptions result in UNKNOWN status."""

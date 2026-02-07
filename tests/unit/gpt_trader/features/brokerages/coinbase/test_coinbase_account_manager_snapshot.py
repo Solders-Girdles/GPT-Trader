@@ -78,6 +78,22 @@ class TestCoinbaseAccountManagerSnapshot:
         assert snapshot["intx_available"] is True
         assert snapshot["intx_portfolio_uuid"] == "pf-1"
 
+    def test_snapshot_records_error_payloads(self) -> None:
+        class FailingFeeScheduleBroker(StubBroker):
+            def get_fee_schedule(self):
+                raise RuntimeError("boom")
+
+        broker = FailingFeeScheduleBroker()
+        store = StubEventStore()
+        manager = CoinbaseAccountManager(broker, event_store=store)
+
+        snapshot = manager.snapshot()
+
+        assert snapshot["key_permissions"]["can_trade"] is True
+        assert snapshot["fee_schedule"]["error"]["message"] == "boom"
+        assert snapshot["fee_schedule"]["error"]["type"] == "RuntimeError"
+        assert snapshot["portfolios"][0]["uuid"] == "pf-1"
+
     def test_convert_commits_when_requested(self) -> None:
         broker = StubBroker()
         store = StubEventStore()

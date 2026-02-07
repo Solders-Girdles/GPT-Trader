@@ -45,6 +45,7 @@
       "collect_snapshot",
       "cycle",
       "daily_tracking",
+      "data_quality_check",
       "database_init",
       "database_repair",
       "degradation",
@@ -414,6 +415,23 @@
       "occurrence_count": 3,
       "source_files": [
         "features/live_trade/engines/strategy.py"
+      ],
+      "statuses": null
+    },
+    "data_quality_check": {
+      "common_fields": [
+        "interval",
+        "issue_type",
+        "symbol",
+        "timestamp"
+      ],
+      "components": null,
+      "levels": [
+        "INFO"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "features/data/data.py"
       ],
       "statuses": null
     },
@@ -1507,7 +1525,7 @@
         "ERROR",
         "INFO"
       ],
-      "occurrence_count": 11,
+      "occurrence_count": 12,
       "source_files": [
         "features/live_trade/engines/strategy.py",
         "features/live_trade/execution/order_event_recorder.py",
@@ -2492,7 +2510,6 @@
     "__all__": 4,
     "_stream_task": 4,
     "_tracer": 4,
-    "_tracing_enabled": 3,
     "action": 4,
     "broker": 8,
     "client_ip": 4,
@@ -2505,27 +2522,28 @@
     "event_type": 5,
     "granularity": 5,
     "guard_name": 10,
+    "issue_type": 4,
     "latency_seconds": 5,
     "mode": 4,
     "order_id": 23,
     "outcome": 5,
     "path": 8,
     "portfolio_id": 4,
-    "quantity": 5,
+    "price": 4,
+    "quantity": 6,
     "reason": 19,
     "service": 9,
-    "severity": 4,
-    "side": 19,
-    "stage": 157,
-    "symbol": 66
+    "side": 20,
+    "stage": 158,
+    "symbol": 68
   },
   "level_distribution": {
     "CRITICAL": 1,
     "DEBUG": 48,
     "ERROR": 79,
-    "INFO": 119,
+    "INFO": 121,
     "WARNING": 72
   },
-  "total_event_types": 132,
+  "total_event_types": 133,
   "version": "1.0"
 }

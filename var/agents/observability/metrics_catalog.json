@@ -115,7 +115,7 @@
       ],
       "locations": [
         {
-          "line": 280,
+          "line": 281,
           "path": "src/gpt_trader/features/data/data.py"
         }
       ],
@@ -133,7 +133,7 @@
       ],
       "locations": [
         {
-          "line": 287,
+          "line": 288,
           "path": "src/gpt_trader/features/data/data.py"
         }
       ],
@@ -149,7 +149,7 @@
       ],
       "locations": [
         {
-          "line": 275,
+          "line": 276,
           "path": "src/gpt_trader/features/data/data.py"
         }
       ],
@@ -257,7 +257,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 663,
+          "line": 672,
           "path": "src/gpt_trader/features/live_trade/execution/order_submission.py"
         }
       ],
@@ -273,7 +273,7 @@
       ],
       "locations": [
         {
-          "line": 194,
+          "line": 200,
           "path": "src/gpt_trader/features/live_trade/execution/order_submission.py"
         }
       ],
@@ -290,7 +290,7 @@
       ],
       "locations": [
         {
-          "line": 168,
+          "line": 174,
           "path": "src/gpt_trader/features/live_trade/execution/order_submission.py"
         }
       ],
@@ -357,11 +357,11 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 321,
+          "line": 344,
           "path": "src/gpt_trader/monitoring/health_checks.py"
         },
         {
-          "line": 346,
+          "line": 369,
           "path": "src/gpt_trader/monitoring/health_checks.py"
         }
       ],
@@ -376,7 +376,7 @@
       ],
       "locations": [
         {
-          "line": 316,
+          "line": 339,
           "path": "src/gpt_trader/monitoring/health_checks.py"
         }
       ],
@@ -389,7 +389,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 391,
+          "line": 414,
           "path": "src/gpt_trader/monitoring/health_checks.py"
         }
       ],
@@ -402,12 +402,8 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 2209,
-          "path": "src/gpt_trader/features/live_trade/engines/strategy.py"
-        },
-        {
-          "line": 151,
-          "path": "src/gpt_trader/features/live_trade/execution/router.py"
+          "line": 193,
+          "path": "src/gpt_trader/monitoring/metrics_collector.py"
         }
       ],
       "name": "gpt_trader_trades_blocked_total",
@@ -419,8 +415,8 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 946,
-          "path": "src/gpt_trader/features/live_trade/execution/order_submission.py"
+          "line": 188,
+          "path": "src/gpt_trader/monitoring/metrics_collector.py"
         }
       ],
       "name": "gpt_trader_trades_executed_total",

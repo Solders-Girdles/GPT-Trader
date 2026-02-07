@@ -4,9 +4,9 @@ import os
 from collections.abc import Callable, Sequence
 from datetime import datetime, timezone
 
+from .cli_args import PreflightCliArgs, parse_preflight_args
 from .context import Colors
 from .core import PreflightCheck
-from .cli_args import PreflightCliArgs, parse_preflight_args
 
 load_dotenv: Callable[..., bool] | None
 try:

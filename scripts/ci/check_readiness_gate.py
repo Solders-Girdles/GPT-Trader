@@ -672,6 +672,19 @@ def main(argv: Sequence[str] | None = None) -> int:
             f"under {daily_root}."
         )
         if args.require_reports:
+            if args.json:
+                payload = _build_json_payload(
+                    profile=profile,
+                    streak_days=streak_days,
+                    thresholds=thresholds,
+                    evaluations=evaluations,
+                    streak_green=streak_green,
+                    status="FAILED",
+                    status_message=message,
+                    extra_failure_reasons=(message,),
+                )
+                print(json.dumps(payload))
+                return 1
             print(f"Error: {message}", file=sys.stderr)
             return 1
         if args.json:

@@ -186,6 +186,38 @@ def test_main_require_reports_fails_without_reports(tmp_path: Path, capsys) -> N
     assert "Readiness gate skipped" in error_output
 
 
+def test_main_json_require_reports_emits_failure_payload_without_reports(
+    tmp_path: Path, capsys
+) -> None:
+    daily_root = tmp_path / "runtime_data"
+    result = check_readiness_gate.main(
+        [
+            "--profile",
+            "canary",
+            "--daily-root",
+            str(daily_root),
+            "--preflight-dir",
+            str(tmp_path),
+            "--json",
+            "--require-reports",
+        ]
+    )
+
+    output = capsys.readouterr()
+    payload = json.loads(output.out)
+    expected_message = (
+        f"Readiness gate skipped: no daily reports found for profile 'canary' "
+        f"under {daily_root}."
+    )
+
+    assert result == 1
+    assert payload["status"] == "FAILED"
+    assert payload["status_message"] == expected_message
+    assert payload["failure_reasons"] == [expected_message]
+    assert payload["days"] == []
+    assert payload["streak_window"]["dates"] == []
+
+
 def test_main_scopes_daily_report_parsing_to_target_profile(tmp_path: Path, capsys) -> None:
     """A broken report for another profile should not fail the canary gate."""
 

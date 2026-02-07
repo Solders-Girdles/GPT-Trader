@@ -94,6 +94,20 @@ class TestCoinbaseAccountManagerSnapshot:
         assert snapshot["fee_schedule"]["error"]["type"] == "RuntimeError"
         assert snapshot["portfolios"][0]["uuid"] == "pf-1"
 
+    def test_snapshot_handles_missing_optional_probe(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.delattr(StubBroker, "get_cfm_balance_summary")
+
+        broker = StubBroker()
+        store = StubEventStore()
+        manager = CoinbaseAccountManager(broker, event_store=store)
+
+        snapshot = manager.snapshot()
+
+        error_payload = snapshot["cfm_balance_summary"]["error"]
+        assert error_payload["type"] == "AttributeError"
+        assert "get_cfm_balance_summary" in error_payload["message"]
+        assert snapshot["cfm_sweeps"][0]["sweep_id"] == "sweep-1"
+
     def test_convert_commits_when_requested(self) -> None:
         broker = StubBroker()
         store = StubEventStore()

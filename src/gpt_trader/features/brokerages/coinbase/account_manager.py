@@ -4,7 +4,7 @@ Manages Coinbase account state, positions, balances, and CFM/INTX specific featu
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Callable, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from gpt_trader.utilities.logging_patterns import get_logger
 from gpt_trader.utilities.telemetry import emit_metric
@@ -25,21 +25,21 @@ class CoinbaseAccountManager:
     def snapshot(self) -> dict[str, Any]:
         snapshot_data: dict[str, Any] = {}
 
-        snapshot_probes: list[tuple[str, Callable[[], Any]]] = [
-            ("key_permissions", self.broker.get_key_permissions),
-            ("fee_schedule", self.broker.get_fee_schedule),
-            ("limits", self.broker.get_account_limits),
-            ("transaction_summary", self.broker.get_transaction_summary),
-            ("payment_methods", self.broker.list_payment_methods),
-            ("portfolios", self.broker.list_portfolios),
-            ("cfm_balance_summary", self.broker.get_cfm_balance_summary),
-            ("cfm_sweeps", self.broker.list_cfm_sweeps),
-            ("cfm_sweeps_schedule", self.broker.get_cfm_sweeps_schedule),
-            ("cfm_margin_window", self.broker.get_cfm_margin_window),
+        snapshot_probes: list[tuple[str, str]] = [
+            ("key_permissions", "get_key_permissions"),
+            ("fee_schedule", "get_fee_schedule"),
+            ("limits", "get_account_limits"),
+            ("transaction_summary", "get_transaction_summary"),
+            ("payment_methods", "list_payment_methods"),
+            ("portfolios", "list_portfolios"),
+            ("cfm_balance_summary", "get_cfm_balance_summary"),
+            ("cfm_sweeps", "list_cfm_sweeps"),
+            ("cfm_sweeps_schedule", "get_cfm_sweeps_schedule"),
+            ("cfm_margin_window", "get_cfm_margin_window"),
         ]
 
-        for key, probe in snapshot_probes:
-            snapshot_data[key] = self._execute_snapshot_probe(key, probe)
+        for key, probe_name in snapshot_probes:
+            snapshot_data[key] = self._execute_snapshot_probe(key, probe_name)
 
         # INTX Status
         snapshot_data["intx_available"] = self.broker.supports_intx()
@@ -103,8 +103,11 @@ class CoinbaseAccountManager:
 
         return snapshot_data
 
-    def _execute_snapshot_probe(self, key: str, probe: Callable[[], Any]) -> Any:
+    def _execute_snapshot_probe(self, key: str, probe_name: str) -> Any:
         try:
+            probe = getattr(self.broker, probe_name)
+            if not callable(probe):
+                raise TypeError(f"{probe_name} is not callable")
             return probe()
         except Exception as error:
             logger.warning("Failed to collect %s: %s", key, error)

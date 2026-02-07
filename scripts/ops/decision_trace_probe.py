@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import logging
 import sqlite3
 import sys
@@ -22,6 +23,10 @@ from gpt_trader.config.types import Profile
 from gpt_trader.core import OrderSide
 
 PROBE_REASON = "ops: decision_id probe (quantity_override=0)"
+EXIT_OK = 0
+EXIT_INVALID_INPUT = 2
+EXIT_PROBE_ERROR = 3
+EXIT_EVENT_STORE_ERROR = 4
 
 
 def _parse_args() -> argparse.Namespace:
@@ -41,6 +46,11 @@ def _parse_args() -> argparse.Namespace:
         type=Path,
         default=Path("."),
         help="Repo/runtime root (default: .)",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit JSON output for automation parsing",
     )
     return parser.parse_args()
 
@@ -68,9 +78,9 @@ def _read_latest_trace(events_db: Path) -> tuple[int | None, str | None]:
         connection.close()
 
 
-def _format_timestamp(value: str | None) -> str:
+def _normalize_timestamp(value: str | None) -> str | None:
     if not value:
-        return "-"
+        return None
     try:
         dt = datetime.fromisoformat(value.replace(" ", "T"))
         if dt.tzinfo is None:
@@ -78,6 +88,11 @@ def _format_timestamp(value: str | None) -> str:
         return dt.isoformat()
     except ValueError:
         return value
+
+
+def _format_timestamp(value: str | None) -> str:
+    normalized = _normalize_timestamp(value)
+    return normalized or "-"
 
 
 def _build_config(profile_name: str, runtime_root: Path) -> BotConfig:
@@ -116,33 +131,105 @@ async def _run_probe(
         clear_application_container()
 
 
+def _summarize_reason(reason: str | None) -> str | None:
+    if not reason:
+        return None
+    return " ".join(reason.split())
+
+
+def _build_json_payload(
+    *,
+    status: str,
+    decision_id: str | None,
+    reason: str | None,
+    latest_id: int | None,
+    latest_ts: str | None,
+) -> dict[str, object]:
+    normalized_ts = _normalize_timestamp(latest_ts)
+    found = latest_id is not None or normalized_ts is not None
+    return {
+        "status": status,
+        "decision_id": decision_id,
+        "blocked_reason": _summarize_reason(reason),
+        "latest_trace": {
+            "found": found,
+            "id": latest_id,
+            "timestamp": normalized_ts,
+        },
+    }
+
+
+def _print_json_payload(payload: dict[str, object]) -> None:
+    print(json.dumps(payload, sort_keys=True))
+
+
+def _emit_error(message: str, *, json_output: bool, exit_code: int) -> int:
+    if json_output:
+        _print_json_payload({"status": "error", "error": message})
+    else:
+        print(f"error={message}")
+    return exit_code
+
+
 def main() -> int:
     args = _parse_args()
 
     logging.getLogger("gpt_trader").setLevel(logging.WARNING)
 
     side = OrderSide.BUY if args.side == "buy" else OrderSide.SELL
-    config = _build_config(args.profile, args.runtime_root)
+    try:
+        config = _build_config(args.profile, args.runtime_root)
+    except ValueError:
+        valid_profiles = ", ".join(profile.value for profile in Profile)
+        return _emit_error(
+            f"invalid profile: {args.profile} (valid: {valid_profiles})",
+            json_output=args.json,
+            exit_code=EXIT_INVALID_INPUT,
+        )
 
     events_db = Path(config.runtime_root) / "runtime_data" / args.profile / "events.db"
 
-    async def runner() -> int:
-        status, decision_id, reason = await _run_probe(
-            symbol=args.symbol,
-            side=side,
-            config=config,
+    try:
+        status, decision_id, reason = asyncio.run(
+            _run_probe(
+                symbol=args.symbol,
+                side=side,
+                config=config,
+            )
         )
         latest_id, latest_ts = _read_latest_trace(events_db)
-        print(f"status={status}")
-        print(f"decision_id={decision_id or '-'}")
-        if reason:
-            print(f"blocked_reason={reason}")
-        if latest_id is not None:
-            print(f"latest_trace_id={latest_id}")
-        print(f"latest_trace_ts={_format_timestamp(latest_ts)}")
-        return 0
+    except sqlite3.Error as exc:
+        return _emit_error(
+            f"failed to read events.db: {exc}",
+            json_output=args.json,
+            exit_code=EXIT_EVENT_STORE_ERROR,
+        )
+    except Exception as exc:
+        return _emit_error(
+            f"probe failed: {exc}",
+            json_output=args.json,
+            exit_code=EXIT_PROBE_ERROR,
+        )
 
-    return asyncio.run(runner())
+    if args.json:
+        payload = _build_json_payload(
+            status=status,
+            decision_id=decision_id,
+            reason=reason,
+            latest_id=latest_id,
+            latest_ts=latest_ts,
+        )
+        _print_json_payload(payload)
+        return EXIT_OK
+
+    print(f"status={status}")
+    print(f"decision_id={decision_id or '-'}")
+    if reason:
+        print(f"blocked_reason={reason}")
+    if latest_id is not None:
+        print(f"latest_trace_id={latest_id}")
+    print(f"latest_trace_ts={_format_timestamp(latest_ts)}")
+    return EXIT_OK
 
 
 if __name__ == "__main__":

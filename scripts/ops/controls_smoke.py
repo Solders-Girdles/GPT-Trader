@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import signal
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -22,6 +23,9 @@ from gpt_trader.features.live_trade.execution.submission_result import OrderSubm
 from gpt_trader.features.live_trade.strategies.perps_baseline import Action, Decision
 
 OUTPUT_DIR = Path("var/ops")
+EXIT_SUCCESS = 0
+EXIT_GUARD_BLOCKED = 1
+EXIT_RUNTIME_FAILURE = 2
 
 
 @dataclass
@@ -31,8 +35,29 @@ class SmokeResult:
     detail: dict[str, Any]
 
 
+@dataclass(frozen=True)
+class ExitOutcome:
+    label: str
+    exit_code: int
+
+
+class SignalInterrupt(Exception):
+    def __init__(self, signum: int) -> None:
+        super().__init__(f"signal {signum}")
+        self.signum = signum
+
+
 def _utc_timestamp() -> str:
     return datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+
+
+def _install_signal_handlers() -> None:
+    def _handle_signal(signum: int, _: Any) -> None:
+        raise SignalInterrupt(signum)
+
+    for signal_name in ("SIGINT", "SIGTERM"):
+        if hasattr(signal, signal_name):
+            signal.signal(getattr(signal, signal_name), _handle_signal)
 
 
 def _build_engine() -> TradingEngine:
@@ -213,7 +238,7 @@ def _run_reduce_only_allows_exit(engine: TradingEngine) -> SmokeResult:
     return SmokeResult("reduce_only_exit", "failed", detail)
 
 
-def main() -> int:
+def _run_smoke_checks() -> list[SmokeResult]:
     with (
         patch(
             "gpt_trader.features.live_trade.engines.strategy.create_strategy",
@@ -249,31 +274,79 @@ def main() -> int:
             new=_bypass_order_guards,
         ),
     ):
-        results = [
+        return [
             _run_kill_switch(engine),
             _run_reduce_only_blocks_entry(engine),
             _run_reduce_only_allows_exit(engine),
         ]
 
-    output = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "results": [
-            {"name": result.name, "status": result.status, "detail": result.detail}
-            for result in results
-        ],
-    }
 
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    output_path = OUTPUT_DIR / f"controls_smoke_{_utc_timestamp()}.json"
-    output_path.write_text(json.dumps(output, indent=2))
-    print(f"output_path={output_path}")
+def _is_guard_blocked(result: SmokeResult) -> bool:
+    return result.detail.get("status") == OrderSubmissionStatus.BLOCKED.value
 
-    if any(result.status != "passed" for result in results):
+
+def _determine_outcome(results: list[SmokeResult]) -> ExitOutcome:
+    if not results:
+        return ExitOutcome("runtime_failure", EXIT_RUNTIME_FAILURE)
+    if all(result.status == "passed" for result in results):
+        return ExitOutcome("success", EXIT_SUCCESS)
+    failed_results = [result for result in results if result.status != "passed"]
+    if failed_results and all(_is_guard_blocked(result) for result in failed_results):
+        return ExitOutcome("guard_blocked", EXIT_GUARD_BLOCKED)
+    return ExitOutcome("runtime_failure", EXIT_RUNTIME_FAILURE)
+
+
+def _format_signal_error(signum: int) -> str:
+    try:
+        signal_name = signal.Signals(signum).name.lower()
+    except ValueError:
+        signal_name = str(signum)
+    return f"signal_{signal_name}"
+
+
+def _emit_status(outcome: ExitOutcome, output_path: Path | None, error: str | None) -> None:
+    if output_path is not None:
+        print(f"output_path={output_path}")
+    print(f"outcome={outcome.label}")
+    print(f"exit_code={outcome.exit_code}")
+    if error:
+        print(f"error={error}")
+
+
+def main() -> int:
+    _install_signal_handlers()
+    outcome = ExitOutcome("runtime_failure", EXIT_RUNTIME_FAILURE)
+    output_path: Path | None = None
+    error: str | None = None
+    try:
+        results = _run_smoke_checks()
+        outcome = _determine_outcome(results)
+        output = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "outcome": outcome.label,
+            "exit_code": outcome.exit_code,
+            "results": [
+                {"name": result.name, "status": result.status, "detail": result.detail}
+                for result in results
+            ],
+        }
+
+        OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+        output_path = OUTPUT_DIR / f"controls_smoke_{_utc_timestamp()}.json"
+        output_path.write_text(json.dumps(output, indent=2))
+    except SignalInterrupt as exc:
+        outcome = ExitOutcome("runtime_failure", EXIT_RUNTIME_FAILURE)
+        error = _format_signal_error(exc.signum)
+    except KeyboardInterrupt:
+        outcome = ExitOutcome("runtime_failure", EXIT_RUNTIME_FAILURE)
+        error = "keyboard_interrupt"
+    except Exception as exc:  # noqa: BLE001 - compact CLI error signal
+        outcome = ExitOutcome("runtime_failure", EXIT_RUNTIME_FAILURE)
+        error = str(exc) or exc.__class__.__name__
+    finally:
+        _emit_status(outcome, output_path, error)
         clear_application_container()
-        return 1
-
-    clear_application_container()
-    return 0
+    return outcome.exit_code
 
 
 if __name__ == "__main__":

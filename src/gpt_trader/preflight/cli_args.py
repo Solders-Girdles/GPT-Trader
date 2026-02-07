@@ -72,9 +72,7 @@ def _normalize_preflight_args(
     )
 
 
-def _normalize_report_dir(
-    parser: argparse.ArgumentParser, value: Path | None
-) -> Path | None:
+def _normalize_report_dir(parser: argparse.ArgumentParser, value: Path | None) -> Path | None:
     if value is None:
         return None
     resolved = value.expanduser().resolve(strict=False)
@@ -83,9 +81,7 @@ def _normalize_report_dir(
     return resolved
 
 
-def _normalize_report_path(
-    parser: argparse.ArgumentParser, value: Path | None
-) -> Path | None:
+def _normalize_report_path(parser: argparse.ArgumentParser, value: Path | None) -> Path | None:
     if value is None:
         return None
     resolved = value.expanduser().resolve(strict=False)

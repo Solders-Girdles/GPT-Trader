@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-import builtins
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 import pytest
 
 from gpt_trader.preflight.core import PreflightCheck
-from gpt_trader.preflight.report import generate_report
+from gpt_trader.preflight.report import format_preflight_report, generate_report
 
 
 @pytest.fixture
@@ -136,10 +136,10 @@ class TestGenerateReport:
         checker = PreflightCheck()
         checker.context.successes.append("Success")
 
-        def deny_open(*_args: object, **_kwargs: object) -> Any:
+        def deny_write(*_args: object, **_kwargs: object) -> Any:
             raise PermissionError("Cannot write")
 
-        monkeypatch.setattr(builtins, "open", deny_open)
+        monkeypatch.setattr("gpt_trader.preflight.report.write_preflight_report", deny_write)
 
         success, status = generate_report(checker)
 
@@ -173,3 +173,22 @@ class TestReportCalculations:
 
         report_data = _read_report(report_cwd)
         assert report_data["total_checks"] == 6  # 3 + 2 + 1
+
+
+class TestReportFormatting:
+    """Test pure report formatting utilities."""
+
+    def test_format_preflight_report_is_pure(self, report_cwd: Path) -> None:
+        checker = PreflightCheck(profile="prod")
+        checker.context.successes.extend(["S1", "S2"])
+        checker.context.warnings.append("W1")
+        timestamp = datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+
+        report_data = format_preflight_report(checker, timestamp=timestamp)
+
+        assert report_data["timestamp"] == timestamp.isoformat()
+        assert report_data["profile"] == "prod"
+        assert report_data["status"] == "READY"
+        assert report_data["details"]["successes"] == ["S1", "S2"]
+        assert report_data["details"]["warnings"] == ["W1"]
+        assert not list(report_cwd.glob("preflight_report_*.json"))

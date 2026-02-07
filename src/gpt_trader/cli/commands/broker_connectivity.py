@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from argparse import Namespace
 from typing import Any
 
@@ -32,6 +33,54 @@ INVALID_ENDPOINT_REMEDIATION = "Use a known endpoint name or full path/URL."
 RATE_LIMIT_REMEDIATION = "Wait and retry with backoff; reduce request rate."
 NETWORK_REMEDIATION = "Check network/DNS/proxy/firewall and retry."
 TRANSIENT_REMEDIATION = "Retry with backoff and check Coinbase status."
+
+MAX_ERROR_DETAIL_CHARS = 300
+TRUNCATION_SUFFIX = "...(truncated)"
+
+_SENSITIVE_SUBSTITUTIONS: list[tuple[re.Pattern[str], str]] = [
+    (
+        re.compile(
+            r"(?i)(token|api[_-]?key|apikey|private[_-]?key|password|secret|signature)\s*=\s*([^\s,;]+)"
+        ),
+        r"\1=[REDACTED]",
+    ),
+    (
+        re.compile(r"(?i)authorization\s*:\s*bearer\s+([^\s]+)"),
+        "Authorization: Bearer [REDACTED]",
+    ),
+    (
+        re.compile(r"(?i)bearer\s+([A-Za-z0-9._\-+/=]+)"),
+        "Bearer [REDACTED]",
+    ),
+    (
+        re.compile(
+            r"-----BEGIN [A-Z ]*PRIVATE KEY-----.*?-----END [A-Z ]*PRIVATE KEY-----",
+            re.DOTALL,
+        ),
+        "[REDACTED PRIVATE KEY]",
+    ),
+]
+
+
+def _sanitize_detail(text: str) -> str:
+    if not text:
+        return ""
+
+    sanitized = text
+    for pattern, replacement in _SENSITIVE_SUBSTITUTIONS:
+        sanitized = pattern.sub(replacement, sanitized)
+
+    if len(sanitized) > MAX_ERROR_DETAIL_CHARS:
+        cutoff = MAX_ERROR_DETAIL_CHARS - len(TRUNCATION_SUFFIX)
+        sanitized = sanitized[: max(cutoff, 0)] + TRUNCATION_SUFFIX
+
+    return sanitized
+
+
+def _sanitize_raw_response(raw_response: Any | None) -> Any | None:
+    if isinstance(raw_response, str):
+        return _sanitize_detail(raw_response)
+    return raw_response
 
 
 class MissingCredentialsError(RuntimeError):
@@ -110,7 +159,7 @@ def _handle_coinbase_check(args: Namespace) -> CliResponse | int:
             remediation=INVALID_ENDPOINT_REMEDIATION,
         )
     except AuthError as exc:
-        summary = f"Authentication failed: {exc}"
+        summary = f"Authentication failed: {_sanitize_detail(str(exc))}"
         return _emit_error(
             output_format,
             CliErrorCode.AUTHENTICATION_FAILED,
@@ -122,7 +171,7 @@ def _handle_coinbase_check(args: Namespace) -> CliResponse | int:
             remediation=AUTH_REMEDIATION,
         )
     except PermissionDeniedError as exc:
-        summary = f"Permission denied: {exc}"
+        summary = f"Permission denied: {_sanitize_detail(str(exc))}"
         return _emit_error(
             output_format,
             CliErrorCode.AUTHENTICATION_FAILED,
@@ -134,7 +183,7 @@ def _handle_coinbase_check(args: Namespace) -> CliResponse | int:
             remediation=AUTH_REMEDIATION,
         )
     except RateLimitError as exc:
-        summary = f"Rate limited: {exc}"
+        summary = f"Rate limited: {_sanitize_detail(str(exc))}"
         return _emit_error(
             output_format,
             CliErrorCode.RATE_LIMITED,
@@ -146,7 +195,7 @@ def _handle_coinbase_check(args: Namespace) -> CliResponse | int:
             remediation=RATE_LIMIT_REMEDIATION,
         )
     except TransientBrokerError as exc:
-        summary = f"Service unavailable: {exc}"
+        summary = f"Service unavailable: {_sanitize_detail(str(exc))}"
         return _emit_error(
             output_format,
             CliErrorCode.API_ERROR,
@@ -158,7 +207,7 @@ def _handle_coinbase_check(args: Namespace) -> CliResponse | int:
             remediation=TRANSIENT_REMEDIATION,
         )
     except requests.exceptions.SSLError as exc:
-        summary = f"SSL error: {exc}"
+        summary = f"SSL error: {_sanitize_detail(str(exc))}"
         return _emit_error(
             output_format,
             CliErrorCode.NETWORK_ERROR,
@@ -170,7 +219,7 @@ def _handle_coinbase_check(args: Namespace) -> CliResponse | int:
             remediation=NETWORK_REMEDIATION,
         )
     except (requests.Timeout, requests.ConnectionError, ConnectionError) as exc:
-        summary = f"Network timeout/error: {exc}"
+        summary = f"Network timeout/error: {_sanitize_detail(str(exc))}"
         return _emit_error(
             output_format,
             CliErrorCode.NETWORK_ERROR,
@@ -182,7 +231,8 @@ def _handle_coinbase_check(args: Namespace) -> CliResponse | int:
             remediation=NETWORK_REMEDIATION,
         )
     except Exception as exc:  # noqa: BLE001
-        summary = f"{type(exc).__name__}: {exc}"
+        detail = _sanitize_detail(str(exc))
+        summary = f"{type(exc).__name__}: {detail}" if detail else type(exc).__name__
         return _emit_error(
             output_format,
             CliErrorCode.OPERATION_FAILED,
@@ -276,7 +326,7 @@ def _emit_result(
             "resolved_endpoint": resolved_endpoint,
             "timeout": timeout,
             "summary": summary,
-            "raw_response": raw_response,
+            "raw_response": _sanitize_raw_response(raw_response),
         }
         if success:
             return CliResponse.success_response(command=COMMAND_NAME, data=data)
@@ -311,7 +361,7 @@ def _emit_error(
             "resolved_endpoint": resolved_endpoint,
             "timeout": timeout,
             "summary": summary,
-            "raw_response": raw_response,
+            "raw_response": _sanitize_raw_response(raw_response),
         }
         if remediation:
             details["remediation"] = remediation
@@ -333,7 +383,7 @@ def _format_raw_response(raw_response: Any | None) -> str:
     if raw_response is None:
         return "(none)"
     if isinstance(raw_response, str):
-        return raw_response
+        return _sanitize_detail(raw_response)
     try:
         return json.dumps(raw_response, default=str)
     except TypeError:

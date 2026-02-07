@@ -78,10 +78,13 @@ def iter_repo_path_references(content: str) -> list[str]:
     references: list[str] = []
     for match in REPO_PATH_PATTERN.finditer(content):
         candidate = match.group("path")
-        candidate = candidate.split("::", maxsplit=1)[0].rstrip(".,;:")
+        candidate = candidate.split("::", maxsplit=1)[0]
         if not candidate:
             continue
         if any(token in candidate for token in ("...", "*", "?", "<", ">", "{", "}")):
+            continue
+        candidate = candidate.rstrip(".,;:")
+        if not candidate:
             continue
         references.append(candidate)
     return references

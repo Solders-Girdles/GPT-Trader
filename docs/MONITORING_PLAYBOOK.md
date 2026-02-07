@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2026-02-04
+last-updated: 2026-02-06
 ---
 
 This playbook covers the spot-first GPT-Trader monitoring stack including metrics export, dashboards, alerting, and incident response.
@@ -308,6 +308,9 @@ Manual import uses the JSON files in
 - [ ] Update runbooks if threshold changes needed
 
 ## Health Checks
+
+For the health-check extension contract, registration flow, and result shape,
+see [Observability Reference](OBSERVABILITY.md#health-check-extension-contract).
 
 ```python
 from gpt_trader.monitoring.health_checks import (

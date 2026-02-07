@@ -11,13 +11,14 @@ from gpt_trader.features.live_trade.execution.order_submission import OrderSubmi
 from gpt_trader.utilities.time_provider import FakeClock
 
 
-def test_submit_order_retries_transient_error_once(
+def test_submit_order_retries_when_classified_transient_then_success(
     mock_broker: MagicMock,
     mock_event_store: MagicMock,
     open_orders: list[str],
     submit_order_with_result_call,
     mock_order,
 ) -> None:
+    """Transient classification should trigger exactly one retry before success."""
     sleep_calls: list[float] = []
 
     submitter = OrderSubmitter(
@@ -28,7 +29,10 @@ def test_submit_order_retries_transient_error_once(
         enable_retries=True,
         sleep_fn=sleep_calls.append,
     )
-    mock_broker.place_order.side_effect = [ConnectionError("network down"), mock_order]
+    mock_broker.place_order.side_effect = [
+        ValueError("timeout waiting for broker"),
+        mock_order,
+    ]
 
     outcome = submit_order_with_result_call(submitter, client_order_id="retry-123")
 
@@ -41,12 +45,43 @@ def test_submit_order_retries_transient_error_once(
     assert delay <= order_submission_module.SUBMISSION_RETRY_POLICY.max_delay
 
 
-def test_submit_order_no_retry_on_non_transient_error(
+def test_submit_order_retries_transient_then_fails_after_retry_cap(
     mock_broker: MagicMock,
     mock_event_store: MagicMock,
     open_orders: list[str],
     submit_order_with_result_call,
 ) -> None:
+    """Transient failures should stop after the single allowed retry."""
+    sleep_calls: list[float] = []
+
+    submitter = OrderSubmitter(
+        broker=mock_broker,
+        event_store=mock_event_store,
+        bot_id="test-bot",
+        open_orders=open_orders,
+        enable_retries=True,
+        sleep_fn=sleep_calls.append,
+    )
+    mock_broker.place_order.side_effect = [
+        ConnectionError("network down"),
+        ConnectionError("network still down"),
+    ]
+
+    outcome = submit_order_with_result_call(submitter, client_order_id="retry-789")
+
+    assert outcome.failed is True
+    assert outcome.reason == "network"
+    assert mock_broker.place_order.call_count == 2
+    assert len(sleep_calls) == 1
+
+
+def test_submit_order_no_retry_when_classified_non_transient(
+    mock_broker: MagicMock,
+    mock_event_store: MagicMock,
+    open_orders: list[str],
+    submit_order_with_result_call,
+) -> None:
+    """Non-transient classification should not trigger retries."""
     sleep_calls: list[float] = []
 
     submitter = OrderSubmitter(

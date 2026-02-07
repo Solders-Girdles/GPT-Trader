@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Mapping
 
 from .context import Colors
 
@@ -11,30 +11,89 @@ if TYPE_CHECKING:
     from gpt_trader.preflight.core import PreflightCheck
 
 
+def evaluate_preflight_status(
+    *,
+    success_count: int,
+    warning_count: int,
+    error_count: int,
+) -> tuple[str, str]:
+    """Return status label and message for the given totals."""
+    if error_count == 0:
+        if warning_count <= 3:
+            return "READY", "System is READY for production trading (with caution)"
+        return "REVIEW", "System has warnings - review before proceeding"
+    return "NOT READY", "System is NOT READY - critical issues must be resolved"
+
+
+def format_preflight_report(
+    checker: PreflightCheck,
+    *,
+    timestamp: datetime | None = None,
+) -> dict[str, Any]:
+    """Return report payload without IO side effects."""
+    if timestamp is None:
+        timestamp = datetime.now(timezone.utc)
+
+    ctx = checker.context
+    status, _message = evaluate_preflight_status(
+        success_count=len(ctx.successes),
+        warning_count=len(ctx.warnings),
+        error_count=len(ctx.errors),
+    )
+    total_checks = len(ctx.successes) + len(ctx.warnings) + len(ctx.errors)
+
+    return {
+        "timestamp": timestamp.isoformat(),
+        "profile": checker.profile,
+        "status": status,
+        "successes": len(ctx.successes),
+        "warnings": len(ctx.warnings),
+        "errors": len(ctx.errors),
+        "details": {
+            "successes": list(ctx.successes),
+            "warnings": list(ctx.warnings),
+            "errors": list(ctx.errors),
+        },
+        "total_checks": total_checks,
+    }
+
+
+def serialize_preflight_report(report_payload: Mapping[str, Any]) -> str:
+    """Serialize report payload to JSON text."""
+    return json.dumps(report_payload, indent=2)
+
+
+def report_path_for_timestamp(timestamp: datetime) -> Path:
+    """Resolve report path for the provided timestamp."""
+    return Path(f"preflight_report_{timestamp.strftime('%Y%m%d_%H%M%S')}.json")
+
+
+def write_preflight_report(report_path: Path, report_content: str) -> None:
+    """Persist report content to disk."""
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    report_path.write_text(report_content, encoding="utf-8")
+
+
 def generate_report(checker: PreflightCheck) -> tuple[bool, str]:
     """Render terminal summary and persist JSON report."""
     ctx = checker.context
     checker.section_header("PREFLIGHT REPORT")
 
-    total_checks = len(ctx.successes) + len(ctx.warnings) + len(ctx.errors)
     print(f"\n{Colors.BOLD}Summary:{Colors.RESET}")
     print(f"  {Colors.GREEN}✅ Passed: {len(ctx.successes)}{Colors.RESET}")
     print(f"  {Colors.YELLOW}⚠️  Warnings: {len(ctx.warnings)}{Colors.RESET}")
     print(f"  {Colors.RED}❌ Failed: {len(ctx.errors)}{Colors.RESET}")
 
-    if len(ctx.errors) == 0:
-        if len(ctx.warnings) <= 3:
-            status = "READY"
-            color = Colors.GREEN
-            message = "System is READY for production trading (with caution)"
-        else:
-            status = "REVIEW"
-            color = Colors.YELLOW
-            message = "System has warnings - review before proceeding"
-    else:
-        status = "NOT READY"
-        color = Colors.RED
-        message = "System is NOT READY - critical issues must be resolved"
+    status, message = evaluate_preflight_status(
+        success_count=len(ctx.successes),
+        warning_count=len(ctx.warnings),
+        error_count=len(ctx.errors),
+    )
+    color = {
+        "READY": Colors.GREEN,
+        "REVIEW": Colors.YELLOW,
+        "NOT READY": Colors.RED,
+    }[status]
 
     print(f"\n{Colors.BOLD}{color}{'=' * 70}{Colors.RESET}")
     print(f"{Colors.BOLD}{color}STATUS: {status}{Colors.RESET}")
@@ -60,25 +119,12 @@ def generate_report(checker: PreflightCheck) -> tuple[bool, str]:
         print("4. Verify credentials and API connectivity")
 
     timestamp = datetime.now(timezone.utc)
-    report_path = Path(f"preflight_report_{timestamp.strftime('%Y%m%d_%H%M%S')}.json")
-    report_data = {
-        "timestamp": timestamp.isoformat(),
-        "profile": checker.profile,
-        "status": status,
-        "successes": len(ctx.successes),
-        "warnings": len(ctx.warnings),
-        "errors": len(ctx.errors),
-        "details": {
-            "successes": ctx.successes,
-            "warnings": ctx.warnings,
-            "errors": ctx.errors,
-        },
-        "total_checks": total_checks,
-    }
+    report_payload = format_preflight_report(checker, timestamp=timestamp)
+    report_content = serialize_preflight_report(report_payload)
+    report_path = report_path_for_timestamp(timestamp)
 
     try:
-        with open(report_path, "w") as handle:
-            json.dump(report_data, handle, indent=2)
+        write_preflight_report(report_path, report_content)
         print(f"\n{Colors.CYAN}Report saved to: {report_path}{Colors.RESET}")
     except Exception as exc:
         print(f"\n{Colors.YELLOW}Could not save report: {exc}{Colors.RESET}")

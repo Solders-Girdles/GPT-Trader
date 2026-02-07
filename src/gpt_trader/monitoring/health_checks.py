@@ -710,11 +710,14 @@ class HealthCheckRunner:
                 HealthCheckDescriptor(
                     name="market_data_feed",
                     mode="fast",
-                    run=partial(
-                        check_market_data_feed_staleness,
-                        market_data_service,
-                        thresholds=self._signal_thresholds,
-                        time_provider=self._time_provider,
+                    run=cast(
+                        Callable[[], HealthCheckOutcome],
+                        partial(
+                            check_market_data_feed_staleness,
+                            market_data_service,
+                            thresholds=self._signal_thresholds,
+                            time_provider=self._time_provider,
+                        ),
                     ),
                 )
             )

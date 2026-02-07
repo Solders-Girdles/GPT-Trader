@@ -2,11 +2,15 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Mapping
 
 from gpt_trader.features.brokerages.coinbase.credentials import (
     ResolvedCoinbaseCredentials,
     resolve_coinbase_credentials,
+)
+from gpt_trader.preflight.validation_result import (
+    PreflightResultPayload,
+    normalize_preflight_result,
 )
 
 
@@ -31,19 +35,34 @@ class PreflightContext:
     errors: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     successes: list[str] = field(default_factory=list)
+    results: list[PreflightResultPayload] = field(default_factory=list)
     config: dict[str, Any] = field(default_factory=dict)
 
     # ----- Logging helpers -------------------------------------------------
-    def log_success(self, message: str) -> None:
+    def _record_result(
+        self,
+        *,
+        status: str,
+        message: str,
+        details: Mapping[str, Any] | str | None = None,
+    ) -> None:
+        self.results.append(
+            normalize_preflight_result(status=status, message=message, details=details)
+        )
+
+    def log_success(self, message: str, details: Mapping[str, Any] | str | None = None) -> None:
         self.successes.append(message)
+        self._record_result(status="pass", message=message, details=details)
         print(f"{Colors.GREEN}✅ {message}{Colors.RESET}")
 
-    def log_warning(self, message: str) -> None:
+    def log_warning(self, message: str, details: Mapping[str, Any] | str | None = None) -> None:
         self.warnings.append(message)
+        self._record_result(status="warn", message=message, details=details)
         print(f"{Colors.YELLOW}⚠️  {message}{Colors.RESET}")
 
-    def log_error(self, message: str) -> None:
+    def log_error(self, message: str, details: Mapping[str, Any] | str | None = None) -> None:
         self.errors.append(message)
+        self._record_result(status="fail", message=message, details=details)
         print(f"{Colors.RED}❌ {message}{Colors.RESET}")
 
     def log_info(self, message: str) -> None:

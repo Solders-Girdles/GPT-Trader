@@ -17,20 +17,20 @@ class TestCheckWsFreshness:
         """Test handling when broker doesn't support WS health."""
         broker = MagicMock(spec=["list_balances"])  # No get_ws_health
 
-        healthy, details = check_ws_freshness(broker)
+        result = check_ws_freshness(broker)
 
-        assert healthy is True
-        assert details.get("ws_not_supported") is True
+        assert result.healthy is True
+        assert result.details.get("ws_not_supported") is True
 
     def test_ws_not_initialized(self) -> None:
         """Test handling when WS not initialized (returns None)."""
         broker = MagicMock()
         broker.get_ws_health.return_value = None
 
-        healthy, details = check_ws_freshness(broker)
+        result = check_ws_freshness(broker)
 
-        assert healthy is True
-        assert details.get("ws_not_initialized") is True
+        assert result.healthy is True
+        assert result.details.get("ws_not_initialized") is True
 
     def test_ws_connected_and_fresh(self) -> None:
         """Test healthy WS with fresh messages."""
@@ -46,11 +46,11 @@ class TestCheckWsFreshness:
             "max_attempts_triggered": False,
         }
 
-        healthy, details = check_ws_freshness(broker)
+        result = check_ws_freshness(broker)
 
-        assert healthy is True
-        assert details["connected"] is True
-        assert details["stale"] is False
+        assert result.healthy is True
+        assert result.details["connected"] is True
+        assert result.details["stale"] is False
 
     def test_ws_stale_message(self) -> None:
         """Test failure when messages are stale."""
@@ -66,11 +66,11 @@ class TestCheckWsFreshness:
             "max_attempts_triggered": False,
         }
 
-        healthy, details = check_ws_freshness(broker, message_stale_seconds=60.0)
+        result = check_ws_freshness(broker, message_stale_seconds=60.0)
 
-        assert healthy is False
-        assert details["stale"] is True
-        assert details["stale_reason"] == "message"
+        assert result.healthy is False
+        assert result.details["stale"] is True
+        assert result.details["stale_reason"] == "message"
 
     def test_ws_disconnected(self) -> None:
         """Test failure when WS is disconnected."""
@@ -84,10 +84,10 @@ class TestCheckWsFreshness:
             "max_attempts_triggered": False,
         }
 
-        healthy, details = check_ws_freshness(broker)
+        result = check_ws_freshness(broker)
 
-        assert healthy is False
-        assert details["connected"] is False
+        assert result.healthy is False
+        assert result.details["connected"] is False
 
     def test_ws_max_attempts_triggered(self) -> None:
         """Test critical failure when max reconnect attempts triggered."""
@@ -101,11 +101,11 @@ class TestCheckWsFreshness:
             "max_attempts_triggered": True,
         }
 
-        healthy, details = check_ws_freshness(broker)
+        result = check_ws_freshness(broker)
 
-        assert healthy is False
-        assert details["max_attempts_triggered"] is True
-        assert details["severity"] == "critical"
+        assert result.healthy is False
+        assert result.details["max_attempts_triggered"] is True
+        assert result.details["severity"] == "critical"
 
     def test_ws_freshness_uses_time_provider(self) -> None:
         """Test freshness checks use the injected time provider."""
@@ -120,27 +120,27 @@ class TestCheckWsFreshness:
             "max_attempts_triggered": False,
         }
 
-        healthy, details = check_ws_freshness(
+        result = check_ws_freshness(
             broker,
             message_stale_seconds=10.0,
             heartbeat_stale_seconds=15.0,
             time_provider=clock,
         )
 
-        assert healthy is True
-        assert details["stale"] is False
+        assert result.healthy is True
+        assert result.details["stale"] is False
 
         clock.advance(20.0)
-        healthy, details = check_ws_freshness(
+        result = check_ws_freshness(
             broker,
             message_stale_seconds=10.0,
             heartbeat_stale_seconds=15.0,
             time_provider=clock,
         )
 
-        assert healthy is False
-        assert details["stale"] is True
-        assert details["stale_reason"] == "message"
+        assert result.healthy is False
+        assert result.details["stale"] is True
+        assert result.details["stale_reason"] == "message"
 
     @pytest.mark.parametrize(
         ("message_age", "expected_stale"),
@@ -167,19 +167,19 @@ class TestCheckWsFreshness:
             "max_attempts_triggered": False,
         }
 
-        healthy, details = check_ws_freshness(
+        result = check_ws_freshness(
             broker,
             message_stale_seconds=10.0,
             heartbeat_stale_seconds=15.0,
             time_provider=clock,
         )
 
-        assert details["stale"] is expected_stale
+        assert result.details["stale"] is expected_stale
         if expected_stale:
-            assert healthy is False
-            assert details["stale_reason"] == "message"
+            assert result.healthy is False
+            assert result.details["stale_reason"] == "message"
         else:
-            assert healthy is True
+            assert result.healthy is True
 
     def test_ws_connected_with_unparseable_message_timestamp(self) -> None:
         """Connected WS should fail closed when message timestamp is invalid."""
@@ -195,11 +195,11 @@ class TestCheckWsFreshness:
             "max_attempts_triggered": False,
         }
 
-        healthy, details = check_ws_freshness(broker)
+        result = check_ws_freshness(broker)
 
-        assert healthy is False
-        assert details["stale"] is True
-        assert details["stale_reason"] == "message_timestamp_unparseable"
+        assert result.healthy is False
+        assert result.details["stale"] is True
+        assert result.details["stale_reason"] == "message_timestamp_unparseable"
 
     def test_ws_connected_with_unparseable_heartbeat_timestamp(self) -> None:
         """Connected WS should fail closed when heartbeat timestamp is invalid."""
@@ -215,11 +215,11 @@ class TestCheckWsFreshness:
             "max_attempts_triggered": False,
         }
 
-        healthy, details = check_ws_freshness(broker)
+        result = check_ws_freshness(broker)
 
-        assert healthy is False
-        assert details["stale"] is True
-        assert details["stale_reason"] == "heartbeat_timestamp_unparseable"
+        assert result.healthy is False
+        assert result.details["stale"] is True
+        assert result.details["stale_reason"] == "heartbeat_timestamp_unparseable"
 
     def test_ws_connected_with_missing_timestamps_keeps_prior_behavior(self) -> None:
         """Connected WS without timestamp values keeps legacy missing-data behavior."""
@@ -233,7 +233,7 @@ class TestCheckWsFreshness:
             "max_attempts_triggered": False,
         }
 
-        healthy, details = check_ws_freshness(broker)
+        result = check_ws_freshness(broker)
 
-        assert healthy is True
-        assert details["stale"] is False
+        assert result.healthy is True
+        assert result.details["stale"] is False

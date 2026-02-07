@@ -4,9 +4,9 @@ Active health check implementations.
 Provides concrete health check functions that probe system components
 and return structured results for the health server.
 
-Each check returns (bool, dict) where:
-- bool: True if healthy, False if unhealthy
-- dict: Details including severity, latency, error messages
+Each check returns HealthCheckResult where:
+- healthy: True if healthy, False if unhealthy
+- details: Details including severity, latency, error messages
 """
 
 from __future__ import annotations
@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from functools import partial
 from typing import TYPE_CHECKING, Any, Literal, cast
 
+from gpt_trader.monitoring.interfaces import HealthCheckResult
 from gpt_trader.monitoring.metrics_collector import record_counter
 from gpt_trader.monitoring.profiling import profile_span
 from gpt_trader.utilities.datetime_helpers import age_since_timestamp_seconds
@@ -44,16 +45,10 @@ TICKER_CACHE_UNAVAILABLE_COUNTER = "gpt_trader_ticker_cache_unavailable_total"
 TICKER_STALE_SYMBOLS_COUNTER = "gpt_trader_ticker_stale_symbols_total"
 
 
-@dataclass
-class HealthCheckResult:
-    """Result of a health check."""
-
-    healthy: bool
-    details: dict[str, Any]
-
-
-HealthCheckOutcome = tuple[bool, dict[str, Any]]
+HealthCheckOutcome = HealthCheckResult
 HealthCheckMode = Literal["blocking", "fast"]
+
+HealthCheckCallable = Callable[[], HealthCheckResult | tuple[bool, dict[str, Any]]]
 
 
 @dataclass(frozen=True)
@@ -65,7 +60,44 @@ class HealthCheckDescriptor:
     run: Callable[[], HealthCheckOutcome]
 
 
-def check_broker_ping(broker: BrokerProtocol) -> tuple[bool, dict[str, Any]]:
+def _coerce_health_check_result(
+    result: HealthCheckResult | tuple[bool, dict[str, Any]] | tuple[bool, dict[str, Any] | None],
+) -> HealthCheckResult:
+    if isinstance(result, HealthCheckResult):
+        return result
+    healthy, details = result
+    return HealthCheckResult(healthy=healthy, details=details or {})
+
+
+def run_health_check(check_fn: HealthCheckCallable) -> HealthCheckResult:
+    """Run a health check callable and normalize the result."""
+    try:
+        return _coerce_health_check_result(check_fn())
+    except Exception as exc:
+        return HealthCheckResult(healthy=False, details={"error": str(exc)})
+
+
+def record_health_check_result(
+    health_state: "HealthState",
+    name: str,
+    result: HealthCheckResult | tuple[bool, dict[str, Any]] | tuple[bool, dict[str, Any] | None],
+) -> HealthCheckResult:
+    """Record a normalized health check result in the shared health state."""
+    normalized = _coerce_health_check_result(result)
+    health_state.add_check(name, normalized)
+    return normalized
+
+
+def register_health_check(
+    health_state: "HealthState",
+    name: str,
+    check_fn: HealthCheckCallable,
+) -> HealthCheckResult:
+    """Run and record a health check in the shared health state."""
+    return record_health_check_result(health_state, name, run_health_check(check_fn))
+
+
+def check_broker_ping(broker: BrokerProtocol) -> HealthCheckResult:
     """
     Check broker connectivity by making a lightweight API call.
 
@@ -76,7 +108,7 @@ def check_broker_ping(broker: BrokerProtocol) -> tuple[bool, dict[str, Any]]:
         broker: Broker protocol instance.
 
     Returns:
-        Tuple of (healthy, details) where details includes:
+        HealthCheckResult where details includes:
             - latency_ms: Round-trip time in milliseconds
             - error: Exception string if failed
             - method: Which method was used for the check
@@ -107,7 +139,7 @@ def check_broker_ping(broker: BrokerProtocol) -> tuple[bool, dict[str, Any]]:
             details["severity"] = "warning"
             details["warning"] = "High latency detected"
 
-        return True, details
+        return HealthCheckResult(healthy=True, details=details)
 
     except Exception as exc:
         latency_ms = (time.perf_counter() - start) * 1000
@@ -124,7 +156,7 @@ def check_broker_ping(broker: BrokerProtocol) -> tuple[bool, dict[str, Any]]:
             error=str(exc),
             latency_ms=latency_ms,
         )
-        return False, details
+        return HealthCheckResult(healthy=False, details=details)
 
 
 def check_ws_freshness(
@@ -132,7 +164,7 @@ def check_ws_freshness(
     message_stale_seconds: float = 60.0,
     heartbeat_stale_seconds: float = 120.0,
     time_provider: TimeProvider | None = None,
-) -> tuple[bool, dict[str, Any]]:
+) -> HealthCheckResult:
     """
     Check WebSocket connection health and message freshness.
 
@@ -143,7 +175,7 @@ def check_ws_freshness(
         time_provider: Optional time provider for deterministic freshness checks.
 
     Returns:
-        Tuple of (healthy, details) where details includes:
+        HealthCheckResult where details includes:
             - connected: Whether WS is currently connected
             - last_message_age_seconds: Age of last message
             - last_heartbeat_age_seconds: Age of last heartbeat
@@ -157,7 +189,7 @@ def check_ws_freshness(
         details["error"] = "Broker does not support WebSocket health checks"
         details["ws_not_supported"] = True
         # Not having WS is not necessarily unhealthy - it's optional
-        return True, details
+        return HealthCheckResult(healthy=True, details=details)
 
     try:
         health = broker.get_ws_health()
@@ -165,7 +197,7 @@ def check_ws_freshness(
         if not health:
             # WS not initialized - this is OK, streaming is optional
             details["ws_not_initialized"] = True
-            return True, details
+            return HealthCheckResult(healthy=True, details=details)
 
         clock = time_provider or get_clock()
         now = clock.time()
@@ -226,13 +258,13 @@ def check_ws_freshness(
         # Max attempts triggered is critical
         if max_attempts_triggered:
             details["severity"] = "critical"
-            return False, details
+            return HealthCheckResult(healthy=False, details=details)
 
         # Disconnected or stale is a failure
         if not connected or is_stale:
-            return False, details
+            return HealthCheckResult(healthy=False, details=details)
 
-        return True, details
+        return HealthCheckResult(healthy=True, details=details)
 
     except Exception as exc:
         details["error"] = str(exc)
@@ -242,7 +274,7 @@ def check_ws_freshness(
             operation="health_check",
             error=str(exc),
         )
-        return False, details
+        return HealthCheckResult(healthy=False, details=details)
 
 
 def _coerce_symbol_list(raw: Any) -> list[str]:
@@ -309,7 +341,7 @@ def _resolve_ticker_freshness_provider(
 
 def check_ticker_freshness(
     market_data_service: TickerFreshnessService | None,
-) -> tuple[bool, dict[str, Any]]:
+) -> HealthCheckResult:
     """
     Check market data ticker freshness using a freshness provider.
 
@@ -317,7 +349,7 @@ def check_ticker_freshness(
         market_data_service: Market data service or provider that exposes ticker freshness.
 
     Returns:
-        Tuple of (healthy, details) where details includes:
+        HealthCheckResult where details includes:
             - symbols_checked: Symbols evaluated
             - stale_symbols: Symbols with stale or missing tickers
             - stale_count: Count of stale symbols
@@ -334,10 +366,10 @@ def check_ticker_freshness(
     """
     details: dict[str, Any] = {"severity": "warning"}
 
-    def record_outcome(healthy: bool, details: dict[str, Any]) -> tuple[bool, dict[str, Any]]:
+    def record_outcome(healthy: bool, details: dict[str, Any]) -> HealthCheckResult:
         result = "ok" if healthy else "error"
         record_counter(TICKER_FRESHNESS_CHECKS_COUNTER, labels={"result": result})
-        return healthy, details
+        return HealthCheckResult(healthy=healthy, details=details)
 
     with profile_span("ticker_freshness"):
         if market_data_service is None:
@@ -422,7 +454,7 @@ def check_ticker_freshness(
 def check_degradation_state(
     degradation_state: DegradationState,
     risk_manager: RiskManagerProtocol | None = None,
-) -> tuple[bool, dict[str, Any]]:
+) -> HealthCheckResult:
     """
     Check trading degradation state.
 
@@ -431,7 +463,7 @@ def check_degradation_state(
         risk_manager: Optional LiveRiskManager to check reduce-only mode.
 
     Returns:
-        Tuple of (healthy, details) where details includes:
+        HealthCheckResult where details includes:
             - global_paused: Whether all trading is paused
             - global_pause_reason: Reason for global pause
             - paused_symbol_count: Number of symbols with individual pauses
@@ -493,15 +525,15 @@ def check_degradation_state(
         # Global pause is critical
         if global_paused:
             details["severity"] = "critical"
-            return False, details
+            return HealthCheckResult(healthy=False, details=details)
 
         # Reduce-only or symbol pauses are warnings but not failures
         if reduce_only or paused_symbols:
             details["severity"] = "warning"
             # Return healthy but with warning details
-            return True, details
+            return HealthCheckResult(healthy=True, details=details)
 
-        return True, details
+        return HealthCheckResult(healthy=True, details=details)
 
     except Exception as exc:
         details["error"] = str(exc)
@@ -512,7 +544,7 @@ def check_degradation_state(
             operation="health_check",
             error=str(exc),
         )
-        return False, details
+        return HealthCheckResult(healthy=False, details=details)
 
 
 class HealthCheckRunner:
@@ -687,35 +719,35 @@ class HealthCheckRunner:
             broker_calls = None
 
         async def run_blocking(
-            callable_obj: Callable[[], HealthCheckOutcome],
-        ) -> HealthCheckOutcome:
+            callable_obj: HealthCheckCallable,
+        ) -> HealthCheckResult:
             if broker_calls is None:
-                return await asyncio.to_thread(callable_obj)
-            return await broker_calls(callable_obj)
+                return await asyncio.to_thread(run_health_check, callable_obj)
+            return await broker_calls(partial(run_health_check, callable_obj))
 
         for check in self._health_check_registry():
             try:
                 if check.mode == "blocking":
-                    healthy, details = await run_blocking(check.run)
+                    result = await run_blocking(check.run)
                 else:
-                    healthy, details = check.run()
-                health_state.add_check(check.name, healthy, details)
+                    result = run_health_check(check.run)
             except Exception as exc:
-                health_state.add_check(check.name, False, {"error": str(exc)})
+                result = HealthCheckResult(healthy=False, details={"error": str(exc)})
+            record_health_check_result(health_state, check.name, result)
 
-    def run_checks_sync(self) -> dict[str, tuple[bool, dict[str, Any]]]:
+    def run_checks_sync(self) -> dict[str, HealthCheckResult]:
         """
         Run all checks synchronously and return results.
 
         Useful for testing or one-off health checks.
 
         Returns:
-            Dict mapping check name to (healthy, details) tuple.
+            Dict mapping check name to HealthCheckResult.
         """
-        results: dict[str, HealthCheckOutcome] = {}
+        results: dict[str, HealthCheckResult] = {}
 
         for check in self._health_check_registry():
-            results[check.name] = check.run()
+            results[check.name] = run_health_check(check.run)
 
         return results
 
@@ -1002,6 +1034,7 @@ __all__ = [
     "TICKER_FRESHNESS_CHECKS_COUNTER",
     "TICKER_CACHE_UNAVAILABLE_COUNTER",
     "TICKER_STALE_SYMBOLS_COUNTER",
+    "register_health_check",
     "check_broker_ping",
     "check_ticker_freshness",
     "check_ws_freshness",

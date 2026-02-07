@@ -1098,7 +1098,7 @@ class StatusReporter:
         try:
             from gpt_trader.monitoring.health_checks import check_ticker_freshness
 
-            healthy, details = check_ticker_freshness(self._market_data_service)
+            result = check_ticker_freshness(self._market_data_service)
         except Exception as exc:
             logger.warning(
                 "Ticker freshness summary failed",
@@ -1110,6 +1110,7 @@ class StatusReporter:
             summary.reason = "ticker_freshness_check_error"
             return summary
 
+        details = result.details
         if not isinstance(details, dict):
             details = {}
 
@@ -1128,7 +1129,7 @@ class StatusReporter:
         summary.stale_count = stale_count
         summary.stale_symbols = stale_symbols
 
-        status = "pass" if healthy else "fail"
+        status = "pass" if result.healthy else "fail"
         if details.get("skipped"):
             status = "skip"
         summary.status = status

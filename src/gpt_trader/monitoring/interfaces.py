@@ -4,7 +4,7 @@ Local types for system monitoring.
 Complete isolation - no external dependencies.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import Any, Literal
@@ -17,6 +17,25 @@ class ComponentStatus(Enum):
     DEGRADED = "degraded"
     UNHEALTHY = "unhealthy"
     UNKNOWN = "unknown"
+
+
+@dataclass(frozen=True)
+class HealthCheckResult:
+    """Typed result for a health check."""
+
+    healthy: bool
+    details: dict[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        if self.details is None:
+            object.__setattr__(self, "details", {})
+
+    @property
+    def status(self) -> Literal["pass", "fail"]:
+        return "pass" if self.healthy else "fail"
+
+    def to_payload(self) -> dict[str, Any]:
+        return {"status": self.status, "details": dict(self.details)}
 
 
 @dataclass

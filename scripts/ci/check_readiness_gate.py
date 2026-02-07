@@ -15,13 +15,15 @@ import re
 import sys
 from collections.abc import Sequence
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 TABLE_START = "<!-- readiness-streak-table:start -->"
 TABLE_END = "<!-- readiness-streak-table:end -->"
+DEFAULT_MAX_REPORT_AGE_DAYS = 7
+STRICT_ENV_VAR = "GPT_TRADER_READINESS_STRICT"
 
 
 @dataclass(frozen=True)
@@ -58,6 +60,13 @@ class DayEvaluation:
     green: bool
     notes: tuple[str, ...]
     pillars: tuple[PillarEvaluation, ...]
+
+
+@dataclass(frozen=True)
+class FreshnessStatus:
+    latest_date: date
+    age: timedelta
+    max_age_days: int
 
 
 def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -102,6 +111,21 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         "--docs-path",
         default=str(REPO_ROOT / "docs" / "READINESS.md"),
         help="Path to READINESS.md (used with --update-docs).",
+    )
+    parser.add_argument(
+        "--max-report-age-days",
+        type=int,
+        default=None,
+        help=(
+            f"Skip/degrade when the latest daily report is older than this many days "
+            f"(default: {DEFAULT_MAX_REPORT_AGE_DAYS}, set GPT_TRADER_READINESS_MAX_REPORT_AGE_DAYS "
+            "or use 0 to disable)."
+        ),
+    )
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="Disable the freshness guard and keep strict failure behavior even when reports are stale (or set GPT_TRADER_READINESS_STRICT=1).",
     )
     return parser.parse_args(argv)
 
@@ -267,6 +291,16 @@ def _select_latest(entries: list[ReportEntry]) -> ReportEntry:
             return (0, 0.0)
 
     return max(entries, key=sort_key)
+
+
+def _find_latest_report_for_profile(
+    reports: list[ReportEntry],
+    profile: str,
+) -> ReportEntry | None:
+    filtered = [report for report in reports if report.profile == profile]
+    if not filtered:
+        return None
+    return _select_latest(filtered)
 
 
 def _evaluate_liveness_snapshot(
@@ -532,6 +566,60 @@ def _thresholds_from_env() -> Thresholds:
     )
 
 
+def _get_env_bool(key: str, default: bool) -> bool:
+    raw = os.getenv(key)
+    if raw is None or raw == "":
+        return default
+    return raw == "1"
+
+
+def _resolve_max_report_age_days(cli_value: int | None) -> int | None:
+    if cli_value is not None:
+        candidate = cli_value
+    else:
+        candidate = _get_env_int(
+            "GPT_TRADER_READINESS_MAX_REPORT_AGE_DAYS", DEFAULT_MAX_REPORT_AGE_DAYS
+        )
+    if candidate <= 0:
+        return None
+    return candidate
+
+
+def _report_entry_timestamp(entry: ReportEntry) -> datetime:
+    if entry.generated_at is not None:
+        return entry.generated_at.astimezone(timezone.utc)
+    try:
+        mtime = entry.path.stat().st_mtime
+    except OSError:
+        return datetime.combine(entry.report_date, time.min, tzinfo=timezone.utc)
+    return datetime.fromtimestamp(mtime, timezone.utc)
+
+
+def _check_report_freshness(
+    entry: ReportEntry,
+    max_age_days: int,
+    reference: datetime,
+) -> FreshnessStatus | None:
+    if max_age_days <= 0:
+        return None
+    timestamp = _report_entry_timestamp(entry)
+    age = reference - timestamp
+    if age.total_seconds() <= 0:
+        return None
+    allowed = timedelta(days=max_age_days)
+    if age <= allowed:
+        return None
+    return FreshnessStatus(latest_date=entry.report_date, age=age, max_age_days=max_age_days)
+
+
+def _format_age(age: timedelta) -> str:
+    days = age.total_seconds() / 86400
+    if days >= 1:
+        return f"{days:.1f} day(s)"
+    hours = age.total_seconds() / 3600
+    return f"{hours:.1f} hour(s)"
+
+
 def _resolve_daily_reports_root(daily_root: Path, profile: str) -> Path:
     """Resolve the directory to scan for daily reports.
 
@@ -570,6 +658,36 @@ def main(argv: Sequence[str] | None = None) -> int:
         for error in errors:
             print(f"Error: {error}", file=sys.stderr)
         return 1
+
+    max_age_days = _resolve_max_report_age_days(args.max_report_age_days)
+    strict_mode = args.strict or _get_env_bool(STRICT_ENV_VAR, False)
+    reference_time = datetime.now(timezone.utc)
+    if max_age_days is not None:
+        latest_entry = _find_latest_report_for_profile(daily_reports, profile)
+        if latest_entry is not None:
+            freshness_status = _check_report_freshness(
+                latest_entry,
+                max_age_days,
+                reference_time,
+            )
+            if freshness_status is not None:
+                message = (
+                    f"Readiness gate degraded: latest daily report for profile '{profile}' "
+                    f"dated {freshness_status.latest_date.isoformat()} is "
+                    f"{_format_age(freshness_status.age)} old (max {freshness_status.max_age_days} day(s))."
+                )
+                if strict_mode:
+                    print(message, file=sys.stderr)
+                    print(
+                        "Readiness gate FAILED: stale daily report exceeds max age.",
+                        file=sys.stderr,
+                    )
+                    return 1
+                print(message)
+                print(
+                    "Set --strict or GPT_TRADER_READINESS_STRICT=1 to fail on stale reports.",
+                )
+                return 0
 
     thresholds = _thresholds_from_env()
     evaluations, streak_green = _evaluate_profile(

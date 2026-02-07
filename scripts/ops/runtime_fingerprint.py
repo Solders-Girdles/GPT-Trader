@@ -7,7 +7,11 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
-from scripts.ops import formatting
+try:
+    from scripts.ops import formatting
+except ModuleNotFoundError:  # pragma: no cover
+    # Allow direct script execution (e.g. `python3 scripts/ops/runtime_fingerprint.py ...`).
+    import formatting  # type: ignore
 
 
 def _parse_args() -> argparse.Namespace:

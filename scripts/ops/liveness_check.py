@@ -8,7 +8,11 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
-from scripts.ops import formatting
+try:
+    from scripts.ops import formatting
+except ModuleNotFoundError:  # pragma: no cover
+    # Allow direct script execution (e.g. `python3 scripts/ops/liveness_check.py ...`).
+    import formatting  # type: ignore
 
 DEFAULT_EVENT_TYPES = ("heartbeat", "price_tick")
 DEFAULT_MAX_AGE_SECONDS = 300

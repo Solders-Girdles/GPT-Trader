@@ -8,7 +8,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from scripts.ops import formatting
+try:
+    from scripts.ops import formatting
+except ModuleNotFoundError:  # pragma: no cover
+    # Allow direct script execution (e.g. `python3 scripts/ops/tail_decision_traces.py ...`).
+    import formatting  # type: ignore
 
 
 @dataclass(frozen=True)

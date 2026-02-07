@@ -905,12 +905,14 @@ def _ratio_or_zero(numerator: int | float, denominator: int | float) -> float:
 def check_ws_staleness_signal(
     broker: BrokerProtocol,
     thresholds: HealthThresholds | None = None,
+    time_provider: TimeProvider | None = None,
 ) -> HealthSignal:
     """Check WebSocket staleness as a health signal.
 
     Args:
         broker: Broker protocol instance.
         thresholds: Optional custom thresholds.
+        time_provider: Optional time provider for deterministic staleness checks.
 
     Returns:
         HealthSignal for WebSocket staleness.
@@ -949,7 +951,8 @@ def check_ws_staleness_signal(
                 details={"ws_not_initialized": True},
             )
 
-        now = time.time()
+        clock = time_provider or get_clock()
+        now = clock.time()
         raw_last_message_ts = health.get("last_message_ts", 0)
         message_ts, staleness = age_since_timestamp_seconds(
             raw_last_message_ts,

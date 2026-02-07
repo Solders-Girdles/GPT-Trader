@@ -197,6 +197,10 @@ class HealthThresholds:
     ws_staleness_seconds_warn: float = 30.0  # 30 seconds warning
     ws_staleness_seconds_crit: float = 60.0  # 60 seconds critical
 
+    # Market data feed staleness (seconds since last ticker update)
+    market_data_staleness_seconds_warn: float = 10.0  # 10 seconds warning
+    market_data_staleness_seconds_crit: float = 30.0  # 30 seconds critical
+
     # Guard trip frequency (trips in window)
     guard_trip_count_warn: int = 3  # 3 trips warning
     guard_trip_count_crit: int = 10  # 10 trips critical

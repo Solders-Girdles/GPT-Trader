@@ -46,6 +46,10 @@ class HealthThresholdsConfig:
     ws_staleness_seconds_warn: float = 30.0  # 30 seconds warning
     ws_staleness_seconds_crit: float = 60.0  # 60 seconds critical
 
+    # Market data feed staleness (seconds since last ticker update)
+    market_data_staleness_seconds_warn: float = 10.0  # 10 seconds warning
+    market_data_staleness_seconds_crit: float = 30.0  # 30 seconds critical
+
     # Guard trip frequency (trips in window)
     guard_trip_count_warn: int = 3  # 3 trips warning
     guard_trip_count_crit: int = 10  # 10 trips critical
@@ -67,6 +71,8 @@ class HealthThresholdsConfig:
             broker_latency_ms_crit=self.broker_latency_ms_crit,
             ws_staleness_seconds_warn=self.ws_staleness_seconds_warn,
             ws_staleness_seconds_crit=self.ws_staleness_seconds_crit,
+            market_data_staleness_seconds_warn=self.market_data_staleness_seconds_warn,
+            market_data_staleness_seconds_crit=self.market_data_staleness_seconds_crit,
             guard_trip_count_warn=self.guard_trip_count_warn,
             guard_trip_count_crit=self.guard_trip_count_crit,
             missing_decision_id_count_warn=self.missing_decision_id_count_warn,
@@ -388,6 +394,12 @@ class BotConfig:
             broker_latency_ms_crit=_health_float("BROKER_LATENCY_MS_CRIT", 3000.0),
             ws_staleness_seconds_warn=_health_float("WS_STALENESS_SECONDS_WARN", 30.0),
             ws_staleness_seconds_crit=_health_float("WS_STALENESS_SECONDS_CRIT", 60.0),
+            market_data_staleness_seconds_warn=_health_float(
+                "MARKET_DATA_STALENESS_SECONDS_WARN", 10.0
+            ),
+            market_data_staleness_seconds_crit=_health_float(
+                "MARKET_DATA_STALENESS_SECONDS_CRIT", 30.0
+            ),
             guard_trip_count_warn=_health_int("GUARD_TRIP_COUNT_WARN", 3),
             guard_trip_count_crit=_health_int("GUARD_TRIP_COUNT_CRIT", 10),
             missing_decision_id_count_warn=_health_int("MISSING_DECISION_ID_COUNT_WARN", 1),

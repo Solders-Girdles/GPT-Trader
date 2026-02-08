@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import pytest
 
+from typing import Any
+
 from gpt_trader.core import InvalidRequestError
 from gpt_trader.features.brokerages.coinbase.account_manager import CoinbaseAccountManager
 from tests.unit.gpt_trader.features.brokerages.coinbase.helpers import StubBroker, StubEventStore
@@ -12,6 +14,10 @@ pytestmark = pytest.mark.endpoints
 
 
 class TestCoinbaseAccountManagerSnapshot:
+    @staticmethod
+    def _freshness(snapshot: dict[str, Any], section: str) -> dict[str, Any]:
+        return snapshot["freshness"][section]
+
     def test_snapshot_collects_all_sections(self) -> None:
         broker = StubBroker()
         store = StubEventStore()
@@ -37,6 +43,9 @@ class TestCoinbaseAccountManagerSnapshot:
         assert any(
             metric[1].get("event_type") == "account_manager_snapshot" for metric in store.metrics
         )
+        assert self._freshness(snapshot, "key_permissions")["status"] == "fresh"
+        assert self._freshness(snapshot, "cfm_balance_summary")["status"] == "fresh"
+        assert self._freshness(snapshot, "intx_balances")["status"] == "fresh"
 
     def test_intx_unavailable_marks_reason(self) -> None:
         broker = StubBroker()
@@ -52,6 +61,10 @@ class TestCoinbaseAccountManagerSnapshot:
             "intx_portfolio_not_found",
         }
         assert snapshot["intx_balances"] == []
+        metadata = self._freshness(snapshot, "intx_balances")
+        assert metadata["status"] == "unavailable"
+        assert metadata["error_code"] == "INTX_NOT_SUPPORTED"
+        assert self._freshness(snapshot, "intx_available")["status"] == "unavailable"
 
     def test_intx_recovers_after_refresh(self) -> None:
         class FailingIntxBroker(StubBroker):
@@ -77,6 +90,7 @@ class TestCoinbaseAccountManagerSnapshot:
 
         assert snapshot["intx_available"] is True
         assert snapshot["intx_portfolio_uuid"] == "pf-1"
+        assert self._freshness(snapshot, "intx_balances")["status"] == "fresh"
 
     def test_snapshot_records_error_payloads(self) -> None:
         class FailingFeeScheduleBroker(StubBroker):
@@ -93,6 +107,10 @@ class TestCoinbaseAccountManagerSnapshot:
         assert snapshot["fee_schedule"]["error"]["message"] == "boom"
         assert snapshot["fee_schedule"]["error"]["type"] == "RuntimeError"
         assert snapshot["portfolios"][0]["uuid"] == "pf-1"
+        metadata = self._freshness(snapshot, "fee_schedule")
+        assert metadata["status"] == "error"
+        assert metadata["error_code"] == "RuntimeError"
+        assert "fetched_at" in metadata
 
     def test_snapshot_handles_missing_optional_probe(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.delattr(StubBroker, "get_cfm_balance_summary")
@@ -107,6 +125,9 @@ class TestCoinbaseAccountManagerSnapshot:
         assert error_payload["type"] == "AttributeError"
         assert "get_cfm_balance_summary" in error_payload["message"]
         assert snapshot["cfm_sweeps"][0]["sweep_id"] == "sweep-1"
+        metadata = self._freshness(snapshot, "cfm_balance_summary")
+        assert metadata["status"] == "error"
+        assert metadata["error_code"] == "AttributeError"
 
     def test_convert_commits_when_requested(self) -> None:
         broker = StubBroker()

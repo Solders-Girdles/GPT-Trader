@@ -73,6 +73,12 @@ For testing without real API access, set `MOCK_BROKER=1` in `.env`.
 | `uv run pytest tests/unit/path/to/test.py -v` | Run single test file |
 | `uv run pytest tests/unit --cov=src/gpt_trader` | Run with coverage |
 
+### Local CI
+
+Run `uv run local-ci` (or `python -m gpt_trader.ci.local_ci`) with the default strict/full profile when you want to mirror the required PR checks. Strict/full keeps the readiness gate and agent artifacts freshness steps enabled so the local run mirrors CI; the CLI prints the selected profile and the readiness/artifact statuses before executing commands.
+
+For faster loops without readiness reports or regenerating `var/agents`, use the quick/dev profile via `--profile quick` or `--profile dev`. That profile disables the readiness gate and agent artifacts freshness steps (the output notes which checks were skipped and why), but run the strict profile before pushing or merging to ensure those gated checks execute locally.
+
 ## GitHub Workflow
 
 `main` is protected: changes must land via pull request, with required checks passing (0 approvals required). Use auto-merge to keep the loop fast.

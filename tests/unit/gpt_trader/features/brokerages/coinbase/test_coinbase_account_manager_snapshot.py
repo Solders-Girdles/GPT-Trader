@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 
 from gpt_trader.core import InvalidRequestError
@@ -12,6 +14,10 @@ pytestmark = pytest.mark.endpoints
 
 
 class TestCoinbaseAccountManagerSnapshot:
+    @staticmethod
+    def _freshness(snapshot: dict[str, Any], section: str) -> dict[str, Any]:
+        return snapshot["freshness"][section]
+
     def test_snapshot_collects_all_sections(self) -> None:
         broker = StubBroker()
         store = StubEventStore()
@@ -37,6 +43,9 @@ class TestCoinbaseAccountManagerSnapshot:
         assert any(
             metric[1].get("event_type") == "account_manager_snapshot" for metric in store.metrics
         )
+        assert self._freshness(snapshot, "key_permissions")["status"] == "fresh"
+        assert self._freshness(snapshot, "cfm_balance_summary")["status"] == "fresh"
+        assert self._freshness(snapshot, "intx_balances")["status"] == "fresh"
 
     def test_intx_unavailable_marks_reason(self) -> None:
         broker = StubBroker()
@@ -55,6 +64,10 @@ class TestCoinbaseAccountManagerSnapshot:
         assert any(
             metric[1].get("event_type") == "account_manager_snapshot" for metric in store.metrics
         )
+        metadata = self._freshness(snapshot, "intx_balances")
+        assert metadata["status"] == "unavailable"
+        assert metadata["error_code"] == "INTX_NOT_SUPPORTED"
+        assert self._freshness(snapshot, "intx_available")["status"] == "unavailable"
 
     def test_intx_portfolio_not_found_marks_reason(self) -> None:
         class MissingPortfolioBroker(StubBroker):
@@ -77,6 +90,7 @@ class TestCoinbaseAccountManagerSnapshot:
         assert any(
             metric[1].get("event_type") == "account_manager_snapshot" for metric in store.metrics
         )
+        assert self._freshness(snapshot, "intx_available")["status"] == "unavailable"
 
     def test_intx_recovers_after_refresh(self) -> None:
         class FailingIntxBroker(StubBroker):
@@ -111,6 +125,28 @@ class TestCoinbaseAccountManagerSnapshot:
             metric[1].get("event_type") == "account_manager_snapshot" for metric in store.metrics
         )
         assert "intx_unavailable_reason" not in snapshot
+        assert self._freshness(snapshot, "intx_balances")["status"] == "fresh"
+
+    def test_stale_uuid_cleared_when_refresh_returns_none(self) -> None:
+        class StaleUuidBroker(StubBroker):
+            def get_intx_balances(self, portfolio_uuid=None):
+                raise RuntimeError("portfolio gone")
+
+            def resolve_intx_portfolio(self, preferred_uuid=None, refresh=False):
+                if refresh:
+                    return None
+                return "pf-stale"
+
+        broker = StaleUuidBroker()
+        store = StubEventStore()
+        manager = CoinbaseAccountManager(broker, event_store=store)
+
+        snapshot = manager.snapshot()
+
+        assert snapshot["intx_available"] is False
+        assert snapshot["intx_unavailable_reason"] == "intx_portfolio_not_found"
+        assert "intx_portfolio_uuid" not in snapshot
+        assert self._freshness(snapshot, "intx_available")["status"] == "unavailable"
 
     def test_snapshot_records_error_payloads(self) -> None:
         class FailingFeeScheduleBroker(StubBroker):
@@ -130,8 +166,12 @@ class TestCoinbaseAccountManagerSnapshot:
         assert any(
             metric[1].get("event_type") == "account_manager_snapshot" for metric in store.metrics
         )
+        metadata = self._freshness(snapshot, "fee_schedule")
+        assert metadata["status"] == "error"
+        assert metadata["error_code"] == "RuntimeError"
+        assert "fetched_at" in metadata
 
-    def test_intx_temporary_failure_preserves_snapshot_keys(self) -> None:
+    def test_intx_temporary_failure_isolates_section(self) -> None:
         class TempFailBroker(StubBroker):
             def list_intx_positions(self, portfolio_uuid=None):
                 raise RuntimeError("INTX service temporarily unavailable")
@@ -144,13 +184,16 @@ class TestCoinbaseAccountManagerSnapshot:
 
         assert snapshot["intx_available"] is True
         assert snapshot["intx_portfolio_uuid"] == "pf-1"
-        assert snapshot["intx_unavailable_reason"] == "INTX service temporarily unavailable"
-        assert snapshot["intx_balances"] == []
+        assert snapshot["intx_balances"][0]["asset"] == "USD"
         assert snapshot["intx_positions"] == []
-        assert snapshot["intx_collateral"] == {}
+        assert snapshot["intx_collateral"]["collateral_value"] == "750.00"
+        assert "intx_unavailable_reason" not in snapshot
         assert any(
             metric[1].get("event_type") == "account_manager_snapshot" for metric in store.metrics
         )
+        assert self._freshness(snapshot, "intx_positions")["status"] == "error"
+        assert self._freshness(snapshot, "intx_balances")["status"] == "fresh"
+        assert self._freshness(snapshot, "intx_collateral")["status"] == "fresh"
 
     def test_snapshot_handles_missing_optional_probe(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.delattr(StubBroker, "get_cfm_balance_summary")
@@ -165,6 +208,9 @@ class TestCoinbaseAccountManagerSnapshot:
         assert error_payload["type"] == "AttributeError"
         assert "get_cfm_balance_summary" in error_payload["message"]
         assert snapshot["cfm_sweeps"][0]["sweep_id"] == "sweep-1"
+        metadata = self._freshness(snapshot, "cfm_balance_summary")
+        assert metadata["status"] == "error"
+        assert metadata["error_code"] == "AttributeError"
 
     def test_convert_commits_when_requested(self) -> None:
         broker = StubBroker()

@@ -56,6 +56,43 @@ class PlannedStep:
 
 
 @dataclass(frozen=True)
+class LocalCIProfile:
+    canonical_name: str
+    description: str
+    readiness_enabled: bool
+    readiness_skip_reason: str | None
+    agent_artifacts_enabled: bool
+    agent_artifacts_skip_reason: str | None
+
+
+LOCAL_CI_PROFILES: dict[str, LocalCIProfile] = {
+    "strict": LocalCIProfile(
+        canonical_name="strict",
+        description="Strict profile mirrors the required CI checks, including the readiness gate and agent artifacts freshness steps.",
+        readiness_enabled=True,
+        readiness_skip_reason=None,
+        agent_artifacts_enabled=True,
+        agent_artifacts_skip_reason=None,
+    ),
+    "quick": LocalCIProfile(
+        canonical_name="quick",
+        description="Quick/dev profile skips the readiness gate and agent artifacts freshness so you can run local CI without generating readiness reports or regenerating agent artifacts.",
+        readiness_enabled=False,
+        readiness_skip_reason="Use the strict profile when you need the readiness gate; quick/dev skips it because readiness data may be missing in short-lived loops.",
+        agent_artifacts_enabled=False,
+        agent_artifacts_skip_reason="Agent artifacts freshness is disabled in quick/dev to avoid regenerating var/agents; run strict before merging if you need that check.",
+    ),
+}
+
+PROFILE_ALIASES: dict[str, str] = {
+    "strict": "strict",
+    "full": "strict",
+    "quick": "quick",
+    "dev": "quick",
+}
+
+
+@dataclass(frozen=True)
 class StepResult:
     label: str
     status: str
@@ -95,10 +132,48 @@ def parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
         action="store_true",
         help="Include agent-health fast checks (CI: agent-health).",
     )
+    parser.add_argument(
+        "--profile",
+        "-p",
+        type=str.lower,
+        choices=sorted(PROFILE_ALIASES.keys()),
+        default="strict",
+        help="Select a local CI profile (strict/full vs quick/dev).",
+    )
     return parser.parse_args(argv)
 
 
-def build_steps(args: argparse.Namespace) -> list[PlannedStep]:
+def resolve_profile(selection: str) -> LocalCIProfile:
+    canonical = PROFILE_ALIASES.get(selection)
+    if canonical is None:
+        raise ValueError(f"Unknown local CI profile '{selection}'")
+    return LOCAL_CI_PROFILES[canonical]
+
+
+def _format_check_status(name: str, enabled: bool, reason: str | None) -> str:
+    if enabled:
+        return f"{name}: enabled"
+    if reason:
+        return f"{name}: disabled — {reason}"
+    return f"{name}: disabled"
+
+
+def print_profile_banner(selection: str, profile: LocalCIProfile) -> None:
+    alias_note = "" if selection == profile.canonical_name else f" (alias '{selection}')"
+    print(f"\nLocal CI profile: {profile.canonical_name}{alias_note}", flush=True)
+    print(profile.description, flush=True)
+    print("Profile check status:", flush=True)
+    print(
+        f"  - {_format_check_status('Readiness gate', profile.readiness_enabled, profile.readiness_skip_reason)}",
+        flush=True,
+    )
+    print(
+        f"  - {_format_check_status('Agent artifacts freshness', profile.agent_artifacts_enabled, profile.agent_artifacts_skip_reason)}",
+        flush=True,
+    )
+
+
+def build_steps(profile: LocalCIProfile, args: argparse.Namespace) -> list[PlannedStep]:
     test_env = {
         "GPT_TRADER_STRICT_CONTAINER": "1",
         "PYTHONWARNINGS": "default",
@@ -161,6 +236,8 @@ def build_steps(args: argparse.Namespace) -> list[PlannedStep]:
         PlannedStep(
             label="Agent artifacts freshness",
             command=["uv", "run", "agent-regenerate", "--verify"],
+            enabled=profile.agent_artifacts_enabled,
+            skip_reason=profile.agent_artifacts_skip_reason,
         ),
         PlannedStep(
             label="TUI CSS check",
@@ -187,6 +264,8 @@ def build_steps(args: argparse.Namespace) -> list[PlannedStep]:
                 "canary",
                 "--strict",
             ],
+            enabled=profile.readiness_enabled,
+            skip_reason=profile.readiness_skip_reason,
         ),
         PlannedStep(
             label="Check legacy triage alignment",
@@ -310,9 +389,11 @@ def print_summary(results: Sequence[StepResult]) -> None:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(argv)
+    profile = resolve_profile(args.profile)
     repo_root = find_repo_root(Path(__file__).resolve())
     os.chdir(repo_root)
-    steps = build_steps(args)
+    print_profile_banner(args.profile, profile)
+    steps = build_steps(profile, args)
     results = run_steps(steps, repo_root)
     print_summary(results)
     return 1 if any(result.status == "fail" for result in results) else 0

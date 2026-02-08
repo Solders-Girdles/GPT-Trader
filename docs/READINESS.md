@@ -253,3 +253,16 @@ Notes:
   - `GPT_TRADER_READINESS_LIVENESS_MAX_AGE_SECONDS` (default: 300)
 - Readiness also checks event-stream liveness via the latest `events.db` entry.
 - Use `GPT_TRADER_PREFLIGHT_WARN_ONLY=1` to downgrade failures to warnings.
+
+## Readiness gate inputs & stale-data interpretation
+
+The readiness gate inspects a small collection of artifacts before classifying the streak window as green. Local CI runs the gate with `PREFLIGHT_PROFILE=canary` and `READINESS_REPORT_DIR=runtime_data/canary/reports`, so keep the following paths fresh for the profile you care about:
+
+- `runtime_data/<profile>/reports/daily_report_YYYY-MM-DD.json`: the daily report the gate reads for health and freshness. `uv run gpt-trader report daily --profile <profile> --report-format both` writes this file, and `make canary-daily` convenes the full flow for canary.
+- `preflight_report_<timestamp>.json`: produced by `make preflight-readiness` or `uv run python scripts/production_preflight.py --profile <profile>` when `GPT_TRADER_READINESS_REPORT` (or `READINESS_REPORT_DIR`) points at the same report directory.
+- `runtime_data/<profile>/events.db`: used for liveness checks; missing or unreadable stores show `health.liveness.status = "UNKNOWN"` plus a `health.liveness.fallback.reason` inside the daily report.
+- `var/data/status.json` (or the `status_file` you configure): covering the status checks that the readiness gate includes.
+
+If these artifacts are missing or older than the allowed window, the gate emits `Readiness gate degraded …` with the offending path and age. For example, the message will name the report file and state `X days old (max allowed 7)` if `GPT_TRADER_READINESS_MAX_REPORT_AGE_DAYS` (default 7) or `--max-report-age-days` is exceeded. Regenerate the report + preflight/respectively by running `make canary-daily` (or, for another profile, `uv run gpt-trader report daily --profile <profile> --report-format both`, `READINESS_REPORT_DIR=runtime_data/<profile>/reports PREFLIGHT_PROFILE=<profile> make preflight-readiness`, and `make readiness-window PREFLIGHT_PROFILE=<profile>`). After the refreshed artifacts are in place, rerun `uv run python scripts/ci/check_readiness_gate.py --profile <profile>` or `uv run local-ci`. When your reporting cadence is intentionally slower than 7 days, raise the threshold (e.g., `export GPT_TRADER_READINESS_MAX_REPORT_AGE_DAYS=14` or `uv run python scripts/ci/check_readiness_gate.py --max-report-age-days 14`) and add `--strict`/`GPT_TRADER_READINESS_STRICT=1` if you want stale data to fail rather than degrade.
+
+The gate follows the `PREFLIGHT_PROFILE`/`READINESS_REPORT_DIR` pair, so swap `canary` for `prod`, `dev`, or another profile whenever you run the gate locally. For a detailed troubleshooting flow that connects `uv run local-ci` to these inputs, see the [Local CI troubleshooting](DEVELOPMENT_GUIDELINES.md#local-ci-troubleshooting) steps in the development guidelines.

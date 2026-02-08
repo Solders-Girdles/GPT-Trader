@@ -228,6 +228,18 @@ class TestStatusReporterUpdates:
         reporter.set_heartbeat_service(mock_heartbeat)
         assert reporter._heartbeat_service is mock_heartbeat
 
+    def test_add_and_remove_observer(self) -> None:
+        reporter = StatusReporter()
+
+        def observer(status: BotStatus) -> None:
+            _ = status
+
+        reporter.add_observer(observer)
+        assert observer in reporter._observers
+
+        reporter.remove_observer(observer)
+        assert observer not in reporter._observers
+
 
 class TestStatusReporterStop:
 

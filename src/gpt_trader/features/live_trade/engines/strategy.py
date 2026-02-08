@@ -1636,7 +1636,7 @@ class TradingEngine(BaseEngine):
             self.context.risk_manager.last_mark_update[symbol] = time.time()
 
         self._status_reporter.update_price(symbol, price)
-        self._record_price_tick(symbol, price)
+        await self._price_tick_store.record_price_tick_async(symbol, price)
 
         position_state = self._build_position_state(symbol, positions)
         with profile_span("strategy_decision", {"symbol": symbol}) as _strat_span:

@@ -3,6 +3,8 @@ from __future__ import annotations
 from decimal import Decimal
 from unittest.mock import MagicMock
 
+import pytest
+
 from gpt_trader.features.live_trade.engines.price_tick_store import (
     EVENT_PRICE_TICK,
     MAX_PRICE_HISTORY,
@@ -100,3 +102,32 @@ def test_record_price_tick_enforces_max_history() -> None:
 
     assert len(store.price_history["BTC-USD"]) == MAX_PRICE_HISTORY
     assert list(store.price_history["BTC-USD"])[-1] == Decimal(str(MAX_PRICE_HISTORY + 4))
+
+
+@pytest.mark.asyncio
+async def test_record_price_tick_async_offloads_store_to_thread(monkeypatch) -> None:
+    event_store = MagicMock()
+    store = PriceTickStore(event_store=event_store, symbols=["BTC-USD"], bot_id="bot-1")
+    monkeypatch.setattr(
+        "gpt_trader.features.live_trade.engines.price_tick_store.time.time", lambda: 456.0
+    )
+
+    await store.record_price_tick_async("BTC-USD", Decimal("42000"))
+
+    assert list(store.price_history["BTC-USD"]) == [Decimal("42000")]
+    event_store.store.assert_called_once()
+    payload = event_store.store.call_args.args[0]
+    assert payload["type"] == EVENT_PRICE_TICK
+    assert payload["data"]["symbol"] == "BTC-USD"
+    assert payload["data"]["price"] == "42000"
+    assert payload["data"]["timestamp"] == 456.0
+    assert payload["data"]["bot_id"] == "bot-1"
+
+
+@pytest.mark.asyncio
+async def test_record_price_tick_async_without_event_store() -> None:
+    store = PriceTickStore(event_store=None, symbols=["BTC-USD"], bot_id="bot-1")
+
+    await store.record_price_tick_async("BTC-USD", Decimal("42000"))
+
+    assert list(store.price_history["BTC-USD"]) == [Decimal("42000")]

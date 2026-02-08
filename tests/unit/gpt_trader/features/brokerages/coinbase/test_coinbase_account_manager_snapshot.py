@@ -47,11 +47,36 @@ class TestCoinbaseAccountManagerSnapshot:
         snapshot = manager.snapshot()
 
         assert snapshot["intx_available"] is False
-        assert snapshot["intx_unavailable_reason"] in {
-            "intx_not_supported",
-            "intx_portfolio_not_found",
-        }
+        assert snapshot["intx_unavailable_reason"] == "intx_not_supported"
         assert snapshot["intx_balances"] == []
+        assert snapshot["intx_positions"] == []
+        assert snapshot["intx_collateral"] == {}
+        assert "intx_portfolio_uuid" not in snapshot
+        assert any(
+            metric[1].get("event_type") == "account_manager_snapshot" for metric in store.metrics
+        )
+
+    def test_intx_portfolio_not_found_marks_reason(self) -> None:
+        class MissingPortfolioBroker(StubBroker):
+            def resolve_intx_portfolio(self, preferred_uuid=None, refresh=False):
+                self.calls.append(("resolve_intx", preferred_uuid, refresh))
+                return None
+
+        broker = MissingPortfolioBroker()
+        store = StubEventStore()
+        manager = CoinbaseAccountManager(broker, event_store=store)
+
+        snapshot = manager.snapshot()
+
+        assert snapshot["intx_available"] is False
+        assert snapshot["intx_unavailable_reason"] == "intx_portfolio_not_found"
+        assert snapshot["intx_balances"] == []
+        assert snapshot["intx_positions"] == []
+        assert snapshot["intx_collateral"] == {}
+        assert "intx_portfolio_uuid" not in snapshot
+        assert any(
+            metric[1].get("event_type") == "account_manager_snapshot" for metric in store.metrics
+        )
 
     def test_intx_recovers_after_refresh(self) -> None:
         class FailingIntxBroker(StubBroker):
@@ -65,6 +90,7 @@ class TestCoinbaseAccountManagerSnapshot:
                 return super().get_intx_balances(portfolio_uuid)
 
             def resolve_intx_portfolio(self, preferred_uuid=None, refresh=False):
+                self.calls.append(("resolve_intx", preferred_uuid, refresh))
                 if refresh:
                     return "pf-1"
                 return super().resolve_intx_portfolio(preferred_uuid, refresh)
@@ -77,6 +103,14 @@ class TestCoinbaseAccountManagerSnapshot:
 
         assert snapshot["intx_available"] is True
         assert snapshot["intx_portfolio_uuid"] == "pf-1"
+        assert snapshot["intx_balances"][0]["asset"] == "USD"
+        assert snapshot["intx_positions"][0]["symbol"] == "BTC-USD"
+        assert snapshot["intx_collateral"]["collateral_value"] == "750.00"
+        assert ("resolve_intx", None, True) in broker.calls
+        assert any(
+            metric[1].get("event_type") == "account_manager_snapshot" for metric in store.metrics
+        )
+        assert "intx_unavailable_reason" not in snapshot
 
     def test_snapshot_records_error_payloads(self) -> None:
         class FailingFeeScheduleBroker(StubBroker):
@@ -93,6 +127,30 @@ class TestCoinbaseAccountManagerSnapshot:
         assert snapshot["fee_schedule"]["error"]["message"] == "boom"
         assert snapshot["fee_schedule"]["error"]["type"] == "RuntimeError"
         assert snapshot["portfolios"][0]["uuid"] == "pf-1"
+        assert any(
+            metric[1].get("event_type") == "account_manager_snapshot" for metric in store.metrics
+        )
+
+    def test_intx_temporary_failure_preserves_snapshot_keys(self) -> None:
+        class TempFailBroker(StubBroker):
+            def list_intx_positions(self, portfolio_uuid=None):
+                raise RuntimeError("INTX service temporarily unavailable")
+
+        broker = TempFailBroker()
+        store = StubEventStore()
+        manager = CoinbaseAccountManager(broker, event_store=store)
+
+        snapshot = manager.snapshot()
+
+        assert snapshot["intx_available"] is True
+        assert snapshot["intx_portfolio_uuid"] == "pf-1"
+        assert snapshot["intx_unavailable_reason"] == "INTX service temporarily unavailable"
+        assert snapshot["intx_balances"] == []
+        assert snapshot["intx_positions"] == []
+        assert snapshot["intx_collateral"] == {}
+        assert any(
+            metric[1].get("event_type") == "account_manager_snapshot" for metric in store.metrics
+        )
 
     def test_snapshot_handles_missing_optional_probe(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.delattr(StubBroker, "get_cfm_balance_summary")

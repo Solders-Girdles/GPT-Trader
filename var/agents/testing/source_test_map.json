@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 667,
-    "source_modules": 354,
+    "tests_scanned": 669,
+    "source_modules": 356,
     "unresolved_modules": 3
   },
   "source_to_tests": {
@@ -575,7 +575,8 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_rest_service_edges.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_ticker_cache.py",
-      "tests/unit/gpt_trader/monitoring/test_health_checks.py"
+      "tests/unit/gpt_trader/monitoring/test_health_checks.py",
+      "tests/unit/gpt_trader/monitoring/test_health_checks_market_data_staleness.py"
     ],
     "gpt_trader.features.brokerages.coinbase.models": [
       "tests/contract/test_coinbase_api_contract.py",
@@ -764,6 +765,7 @@
       "tests/unit/gpt_trader/features/live_trade/test_degradation_status_and_clear_all.py"
     ],
     "gpt_trader.features.live_trade.engines": [
+      "tests/unit/gpt_trader/features/live_trade/engines/test_equity_calculator.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_market_data.py",
       "tests/unit/gpt_trader/monitoring/test_memory_metrics.py",
       "tests/unit/gpt_trader/monitoring/test_resource_metrics_edges.py"
@@ -1332,12 +1334,17 @@
     "gpt_trader.monitoring.health_checks": [
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_health.py",
       "tests/unit/gpt_trader/monitoring/test_health_checks.py",
+      "tests/unit/gpt_trader/monitoring/test_health_checks_market_data_feed_staleness.py",
+      "tests/unit/gpt_trader/monitoring/test_health_checks_market_data_staleness.py",
       "tests/unit/gpt_trader/monitoring/test_health_checks_runner.py",
       "tests/unit/gpt_trader/monitoring/test_health_checks_signals.py",
       "tests/unit/gpt_trader/monitoring/test_health_checks_websocket.py",
+      "tests/unit/gpt_trader/monitoring/test_status_reporter_file_output.py",
       "tests/unit/gpt_trader/monitoring/test_ticker_freshness_provider_resolution.py"
     ],
     "gpt_trader.monitoring.health_signals": [
+      "tests/unit/gpt_trader/monitoring/test_health_checks_market_data_feed_staleness.py",
+      "tests/unit/gpt_trader/monitoring/test_health_checks_market_data_staleness.py",
       "tests/unit/gpt_trader/monitoring/test_health_checks_signals.py",
       "tests/unit/gpt_trader/monitoring/test_health_signals.py",
       "tests/unit/gpt_trader/monitoring/test_health_signals_summary.py"
@@ -1346,6 +1353,10 @@
       "tests/unit/gpt_trader/monitoring/test_heartbeat.py",
       "tests/unit/gpt_trader/monitoring/test_heartbeat_edges.py",
       "tests/unit/gpt_trader/monitoring/test_heartbeat_error_handling.py"
+    ],
+    "gpt_trader.monitoring.interfaces": [
+      "tests/unit/gpt_trader/app/test_health_server_helpers.py",
+      "tests/unit/gpt_trader/app/test_health_server_state.py"
     ],
     "gpt_trader.monitoring.metrics_collector": [
       "tests/integration/test_order_flow.py",
@@ -1476,6 +1487,9 @@
       "tests/unit/gpt_trader/preflight/test_checks_validation.py"
     ],
     "gpt_trader.preflight.cli": [
+      "tests/unit/gpt_trader/preflight/test_cli.py"
+    ],
+    "gpt_trader.preflight.cli_args": [
       "tests/unit/gpt_trader/preflight/test_cli.py"
     ],
     "gpt_trader.preflight.context": [
@@ -1948,6 +1962,9 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_ticker_cache.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_retry.py",
       "tests/unit/gpt_trader/monitoring/test_health_checks.py",
+      "tests/unit/gpt_trader/monitoring/test_health_checks_market_data_feed_staleness.py",
+      "tests/unit/gpt_trader/monitoring/test_health_checks_market_data_staleness.py",
+      "tests/unit/gpt_trader/monitoring/test_health_checks_signals.py",
       "tests/unit/gpt_trader/monitoring/test_health_checks_websocket.py",
       "tests/unit/gpt_trader/monitoring/test_status_reporter_time.py",
       "tests/unit/gpt_trader/utilities/test_clock.py",
@@ -2273,10 +2290,12 @@
       "gpt_trader.config.types"
     ],
     "tests/unit/gpt_trader/app/test_health_server_helpers.py": [
-      "gpt_trader.app.health_server"
+      "gpt_trader.app.health_server",
+      "gpt_trader.monitoring.interfaces"
     ],
     "tests/unit/gpt_trader/app/test_health_server_state.py": [
-      "gpt_trader.app.health_server"
+      "gpt_trader.app.health_server",
+      "gpt_trader.monitoring.interfaces"
     ],
     "tests/unit/gpt_trader/backtesting/chaos/test_scenarios.py": [
       "gpt_trader.backtesting.chaos.scenarios"
@@ -3005,6 +3024,7 @@
     "tests/unit/gpt_trader/features/live_trade/engines/test_equity_calculator.py": [
       "gpt_trader.core",
       "gpt_trader.features.live_trade.degradation",
+      "gpt_trader.features.live_trade.engines",
       "gpt_trader.features.live_trade.engines.equity_calculator",
       "gpt_trader.utilities.async_tools"
     ],
@@ -3806,6 +3826,17 @@
       "gpt_trader.monitoring.metrics_exporter",
       "gpt_trader.utilities.time_provider"
     ],
+    "tests/unit/gpt_trader/monitoring/test_health_checks_market_data_feed_staleness.py": [
+      "gpt_trader.monitoring.health_checks",
+      "gpt_trader.monitoring.health_signals",
+      "gpt_trader.utilities.time_provider"
+    ],
+    "tests/unit/gpt_trader/monitoring/test_health_checks_market_data_staleness.py": [
+      "gpt_trader.features.brokerages.coinbase.market_data_service",
+      "gpt_trader.monitoring.health_checks",
+      "gpt_trader.monitoring.health_signals",
+      "gpt_trader.utilities.time_provider"
+    ],
     "tests/unit/gpt_trader/monitoring/test_health_checks_runner.py": [
       "gpt_trader.app.health_server",
       "gpt_trader.monitoring",
@@ -3814,7 +3845,8 @@
     "tests/unit/gpt_trader/monitoring/test_health_checks_signals.py": [
       "gpt_trader.monitoring.health_checks",
       "gpt_trader.monitoring.health_signals",
-      "gpt_trader.monitoring.metrics_collector"
+      "gpt_trader.monitoring.metrics_collector",
+      "gpt_trader.utilities.time_provider"
     ],
     "tests/unit/gpt_trader/monitoring/test_health_checks_websocket.py": [
       "gpt_trader.monitoring.health_checks",
@@ -3866,6 +3898,7 @@
       "gpt_trader.monitoring.status_reporter"
     ],
     "tests/unit/gpt_trader/monitoring/test_status_reporter_file_output.py": [
+      "gpt_trader.monitoring.health_checks",
       "gpt_trader.monitoring.status_reporter"
     ],
     "tests/unit/gpt_trader/monitoring/test_status_reporter_health.py": [
@@ -3969,7 +4002,8 @@
       "gpt_trader.preflight.core"
     ],
     "tests/unit/gpt_trader/preflight/test_cli.py": [
-      "gpt_trader.preflight.cli"
+      "gpt_trader.preflight.cli",
+      "gpt_trader.preflight.cli_args"
     ],
     "tests/unit/gpt_trader/preflight/test_context_colors_and_init.py": [
       "gpt_trader.preflight.context"
@@ -4845,6 +4879,7 @@
     "gpt_trader.monitoring.health_checks": "src/gpt_trader/monitoring/health_checks.py",
     "gpt_trader.monitoring.health_signals": "src/gpt_trader/monitoring/health_signals.py",
     "gpt_trader.monitoring.heartbeat": "src/gpt_trader/monitoring/heartbeat.py",
+    "gpt_trader.monitoring.interfaces": "src/gpt_trader/monitoring/interfaces.py",
     "gpt_trader.monitoring.metrics_collector": "src/gpt_trader/monitoring/metrics_collector.py",
     "gpt_trader.monitoring.metrics_exporter": "src/gpt_trader/monitoring/metrics_exporter.py",
     "gpt_trader.monitoring.notifications.backends": "src/gpt_trader/monitoring/notifications/backends.py",
@@ -4874,6 +4909,7 @@
     "gpt_trader.preflight.checks.system": "src/gpt_trader/preflight/checks/system.py",
     "gpt_trader.preflight.checks.test_suite": "src/gpt_trader/preflight/checks/test_suite.py",
     "gpt_trader.preflight.cli": "src/gpt_trader/preflight/cli.py",
+    "gpt_trader.preflight.cli_args": "src/gpt_trader/preflight/cli_args.py",
     "gpt_trader.preflight.context": "src/gpt_trader/preflight/context.py",
     "gpt_trader.preflight.core": "src/gpt_trader/preflight/core.py",
     "gpt_trader.preflight.report": "src/gpt_trader/preflight/report.py",

@@ -979,7 +979,9 @@
     },
     "health_check": {
       "common_fields": [
+        "details",
         "error",
+        "healthy",
         "latency_ms"
       ],
       "components": null,
@@ -2028,8 +2030,8 @@
     },
     "status_reporter": {
       "common_fields": [
-        "details",
-        "error"
+        "error",
+        "result"
       ],
       "components": null,
       "levels": [
@@ -2515,6 +2517,7 @@
     "client_ip": 4,
     "client_order_id": 11,
     "consecutive_failures": 5,
+    "details": 4,
     "error": 42,
     "error_message": 85,
     "error_msg": 5,
@@ -2529,7 +2532,6 @@
     "outcome": 5,
     "path": 8,
     "portfolio_id": 4,
-    "price": 4,
     "quantity": 6,
     "reason": 19,
     "service": 9,

@@ -49,6 +49,32 @@ def test_read_recent_events(tmp_path: Path) -> None:
         engine.close()
 
 
+def test_read_events_by_symbol(tmp_path: Path) -> None:
+    database_path = tmp_path / "events.db"
+    engine = DatabaseEngine(database_path)
+    try:
+        engine.initialize()
+
+        engine.write_event("price_tick", {"symbol": "BTC-USD", "price": "100"}, None)
+        engine.write_event("price_tick", {"symbol": "ETH-USD", "price": "50"}, None)
+        engine.write_event("price_tick", {"symbol": "BTC-USD", "price": "101"}, None)
+        engine.write_event("trade", {"amount": 5}, None)  # no symbol
+
+        btc_events = engine.read_events_by_symbol("BTC-USD")
+        assert len(btc_events) == 2
+        assert btc_events[0]["data"]["price"] == "100"
+        assert btc_events[1]["data"]["price"] == "101"
+
+        eth_events = engine.read_events_by_symbol("ETH-USD")
+        assert len(eth_events) == 1
+        assert eth_events[0]["data"]["price"] == "50"
+
+        none_events = engine.read_events_by_symbol("SOL-USD")
+        assert len(none_events) == 0
+    finally:
+        engine.close()
+
+
 def test_read_events_by_bot(tmp_path: Path) -> None:
     database_path = tmp_path / "events.db"
     engine = DatabaseEngine(database_path)

@@ -113,7 +113,13 @@ def test_generate_uses_expected_files_and_cutoff(tmp_path, generator_mocks) -> N
     )
     assert generator_mocks["load_liveness_snapshot"].call_count == 0
     assert generator_mocks["load_runtime_fingerprint"].call_count == 0
-    assert report.liveness is None
+    assert report.liveness is not None
+    assert report.liveness["status"] == "UNKNOWN"
+    events = report.liveness["events"]
+    assert set(events) == {"heartbeat", "price_tick"}
+    fallback = report.liveness["fallback"]
+    assert fallback["reason"] == generator_module.LIVENESS_FALLBACK_REASON_DB_MISSING
+    assert fallback["source"] == str(generator.events_file.with_name("events.db"))
     assert report.runtime is None
     assert report.date == "2024-02-02"
     assert report.profile == "alpha"
@@ -132,6 +138,10 @@ def test_generate_liveness_uses_generated_at(tmp_path, generator_mocks, fixed_ge
         events_db, now=fixed_generated_at
     )
     assert report.generated_at == fixed_generated_at.isoformat()
+    assert report.liveness is not None
+    fallback = report.liveness["fallback"]
+    assert fallback["reason"] == generator_module.LIVENESS_FALLBACK_REASON_SNAPSHOT_UNAVAILABLE
+    assert fallback["source"] == str(events_db)
 
 
 def test_save_report_writes_json_and_text(tmp_path) -> None:

@@ -71,6 +71,27 @@ def _setup_green_streak(base_dir: Path, profile: str, end_date: date) -> None:
         )
 
 
+def test_evaluate_liveness_snapshot_reports_fallback_reason() -> None:
+    fallback_payload = {
+        "status": "UNKNOWN",
+        "max_age_seconds": 300,
+        "event_types": ["heartbeat", "price_tick"],
+        "events": {
+            "heartbeat": {"event_id": None, "timestamp": None, "age_seconds": None},
+            "price_tick": {"event_id": None, "timestamp": None, "age_seconds": None},
+        },
+        "fallback": {"reason": "events.db unavailable", "source": "/runtime_data/canary/events.db"},
+    }
+    ok, message = check_readiness_gate._evaluate_liveness_snapshot(
+        fallback_payload,
+        300,
+    )
+    assert ok is False
+    assert "liveness fallback" in message
+    assert "events.db unavailable" in message
+    assert "source=/runtime_data/canary/events.db" in message
+
+
 def test_main_passes_with_green_streak(tmp_path: Path, capsys) -> None:
     profile = "canary"
     _setup_green_streak(tmp_path, profile, date(2026, 1, 17))

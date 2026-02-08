@@ -247,6 +247,27 @@ class DatabaseEngine:
             for row in reversed(rows)
         ]
 
+    def read_events_by_symbol(self, symbol: str) -> list[dict[str, Any]]:
+        """
+        Read events filtered by symbol using the JSON payload index.
+
+        Args:
+            symbol: Trading pair symbol (e.g., "BTC-USD")
+
+        Returns:
+            List of events whose payload contains the given symbol
+        """
+        connection = self._get_connection()
+        cursor = connection.execute(
+            """
+            SELECT event_type, payload FROM events
+            WHERE json_extract(payload, '$.symbol') = ?
+            ORDER BY id ASC
+            """,
+            (symbol,),
+        )
+        return [{"type": row["event_type"], "data": json.loads(row["payload"])} for row in cursor]
+
     def read_events_by_bot(self, bot_id: str) -> list[dict[str, Any]]:
         """
         Read events for a specific bot.

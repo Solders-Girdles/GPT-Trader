@@ -347,6 +347,33 @@ def load_liveness_snapshot(
     }
 
 
+def build_liveness_fallback(
+    reason: str,
+    *,
+    source: str | None = None,
+    max_age_seconds: int = _DEFAULT_LIVENESS_MAX_AGE_SECONDS,
+    event_types: tuple[str, ...] = _DEFAULT_LIVENESS_EVENT_TYPES,
+) -> dict[str, Any]:
+    """Create a fallback liveness payload when the source data is unavailable."""
+    fallback: dict[str, Any] = {"reason": reason}
+    if source:
+        fallback["source"] = source
+    events: dict[str, dict[str, Any]] = {}
+    for event_type in event_types:
+        events[str(event_type)] = {
+            "event_id": None,
+            "timestamp": None,
+            "age_seconds": None,
+        }
+    return {
+        "status": "UNKNOWN",
+        "max_age_seconds": max_age_seconds,
+        "event_types": [str(event_type) for event_type in event_types],
+        "events": events,
+        "fallback": fallback,
+    }
+
+
 def load_runtime_fingerprint(events_db: Path) -> dict[str, Any] | None:
     if not events_db.exists():
         return None
@@ -379,6 +406,7 @@ def load_runtime_fingerprint(events_db: Path) -> dict[str, Any] | None:
 
 
 __all__ = [
+    "build_liveness_fallback",
     "load_metrics",
     "load_events_since",
     "load_unfilled_orders_count",

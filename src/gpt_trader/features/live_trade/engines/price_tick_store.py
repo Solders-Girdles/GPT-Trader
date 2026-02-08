@@ -8,6 +8,7 @@ Extracted from TradingEngine to separate concerns:
 
 from __future__ import annotations
 
+import asyncio
 import time
 from collections import defaultdict, deque
 from decimal import Decimal
@@ -151,3 +152,28 @@ class PriceTickStore:
                 },
             }
         )
+
+    async def record_price_tick_async(self, symbol: str, price: Decimal) -> None:
+        """Persist price tick, offloading the SQLite write to a thread.
+
+        Updates in-memory price history immediately, then offloads the
+        blocking EventStore.store() call via asyncio.to_thread to avoid
+        stalling the async trading loop.
+        """
+        if symbol not in self._price_history:
+            self._price_history[symbol] = deque(maxlen=MAX_PRICE_HISTORY)
+        self._price_history[symbol].append(price)
+
+        if self._event_store is None:
+            return
+
+        event = {
+            "type": EVENT_PRICE_TICK,
+            "data": {
+                "symbol": symbol,
+                "price": str(price),
+                "timestamp": time.time(),
+                "bot_id": self._bot_id,
+            },
+        }
+        await asyncio.to_thread(self._event_store.store, event)

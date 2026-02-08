@@ -25,7 +25,6 @@ from .loaders import (
 from .logging_utils import logger  # naming: allow
 from .models import DailyReport
 
-
 LIVENESS_FALLBACK_REASON_DB_MISSING = "events.db unavailable"
 LIVENESS_FALLBACK_REASON_SNAPSHOT_UNAVAILABLE = "liveness snapshot unavailable"
 

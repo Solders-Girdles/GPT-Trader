@@ -72,6 +72,30 @@ class TestCheckWsFreshness:
         assert result.details["stale"] is True
         assert result.details["stale_reason"] == "message"
 
+    def test_ws_stale_heartbeat(self) -> None:
+        """Test failure when heartbeat is stale but message is fresh."""
+        import time
+
+        broker = MagicMock()
+        broker.get_ws_health.return_value = {
+            "connected": True,
+            "last_message_ts": time.time() - 5,
+            "last_heartbeat_ts": time.time() - 180,
+            "gap_count": 0,
+            "reconnect_count": 0,
+            "max_attempts_triggered": False,
+        }
+
+        result = check_ws_freshness(
+            broker,
+            message_stale_seconds=60.0,
+            heartbeat_stale_seconds=120.0,
+        )
+
+        assert result.healthy is False
+        assert result.details["stale"] is True
+        assert result.details["stale_reason"] == "heartbeat"
+
     def test_ws_disconnected(self) -> None:
         """Test failure when WS is disconnected."""
         broker = MagicMock()

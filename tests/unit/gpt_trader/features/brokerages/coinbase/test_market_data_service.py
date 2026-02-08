@@ -6,6 +6,7 @@ from gpt_trader.features.brokerages.coinbase.market_data_service import (
     CoinbaseTickerService,
     MarketDataService,
     Ticker,
+    TickerCache,
 )
 from gpt_trader.utilities.datetime_helpers import utc_now
 
@@ -166,6 +167,15 @@ class TestCoinbaseTickerService:
         service.set_symbols([])
 
         assert service._symbols == []
+
+    def test_get_last_ticker_timestamp_reads_from_cache(self) -> None:
+        """Service should expose the latest timestamp tracked by its cache."""
+        cache = TickerCache()
+        latest = utc_now()
+        cache.update(Ticker(symbol="BTC-USD", bid=1.0, ask=2.0, last=1.5, ts=latest))
+        service = CoinbaseTickerService(symbols=["BTC-USD"], ticker_cache=cache)
+
+        assert service.get_last_ticker_timestamp() == latest
 
     def test_multiple_start_stop_cycles(self) -> None:
         """Test multiple start/stop cycles."""

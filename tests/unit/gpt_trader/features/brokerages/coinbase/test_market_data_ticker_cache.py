@@ -143,6 +143,34 @@ class TestTickerCache:
 
         assert result is ticker
 
+    def test_get_last_ticker_timestamp_empty_cache(self) -> None:
+        cache = TickerCache()
+
+        assert cache.get_last_ticker_timestamp() is None
+
+    def test_get_last_ticker_timestamp_tracks_newest_value(self) -> None:
+        cache = TickerCache()
+        base_time = datetime(2024, 1, 1, tzinfo=UTC)
+        newest_time = base_time + timedelta(seconds=30)
+
+        cache.update(Ticker(symbol="BTC-USD", bid=1.0, ask=2.0, last=1.5, ts=newest_time))
+        cache.update(Ticker(symbol="ETH-USD", bid=1.0, ask=2.0, last=1.5, ts=base_time))
+
+        assert cache.get_last_ticker_timestamp() == newest_time
+
+    def test_update_normalizes_naive_timestamp_to_utc(self) -> None:
+        cache = TickerCache()
+        naive_ts = datetime(2024, 1, 1, 12, 0, 0)
+        ticker = Ticker(symbol="BTC-USD", bid=1.0, ask=2.0, last=1.5, ts=naive_ts)
+
+        cache.update(ticker)
+
+        cached = cache.get("BTC-USD")
+        assert cached is not None
+        assert cached.ts.tzinfo is not None
+        assert cached.ts.utcoffset() == timedelta(0)
+        assert cache.get_last_ticker_timestamp() == cached.ts
+
 
 class TestTickerServiceEdges:
     """Edge case tests for ticker service and cache."""

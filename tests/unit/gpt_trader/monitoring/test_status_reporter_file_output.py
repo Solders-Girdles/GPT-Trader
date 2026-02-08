@@ -224,6 +224,68 @@ def test_ticker_freshness_summary_caps_symbols() -> None:
     assert len(summary["stale_symbols"]) == MAX_TICKER_FRESHNESS_SYMBOLS
 
 
+def test_ticker_freshness_summary_no_symbols_uses_default_reason() -> None:
+    reporter = StatusReporter()
+    service = _FakeMarketDataService(
+        symbols=[],
+        stale_symbols=set(),
+    )
+    reporter.set_market_data_service(service)
+
+    reporter._update_status()
+    payload = reporter._serialize_status()
+    summary = payload["ticker_freshness"]
+
+    assert summary["status"] == "pass"
+    assert summary["severity"] == "ok"
+    assert summary["reason"] == "no_symbols_configured"
+
+
+def test_ticker_freshness_summary_skip_without_reason_uses_fallback(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from gpt_trader.monitoring.health_checks import HealthCheckResult
+
+    reporter = StatusReporter()
+    reporter.set_market_data_service(object())
+
+    def _fake_check(_service):
+        return HealthCheckResult(
+            healthy=True,
+            details={
+                "skipped": True,
+                "symbol_count": 0,
+                "stale_count": 0,
+                "stale_symbols": [],
+            },
+        )
+
+    monkeypatch.setattr("gpt_trader.monitoring.health_checks.check_ticker_freshness", _fake_check)
+
+    summary = reporter._build_ticker_freshness_summary()
+
+    assert summary.status == "skip"
+    assert summary.reason == "ticker_freshness_skipped"
+
+
+def test_ticker_freshness_summary_handles_health_check_exception(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reporter = StatusReporter()
+    reporter.set_market_data_service(object())
+
+    def _raise(_service):
+        raise RuntimeError("ticker freshness failed")
+
+    monkeypatch.setattr("gpt_trader.monitoring.health_checks.check_ticker_freshness", _raise)
+
+    summary = reporter._build_ticker_freshness_summary()
+
+    assert summary.status == "fail"
+    assert summary.severity == "critical"
+    assert summary.reason == "ticker_freshness_check_error"
+
+
 class TestStatusReporterStart:
     """Tests for StatusReporter start method."""
 
@@ -250,6 +312,16 @@ class TestStatusReporterStart:
                 assert reporter._start_time > 0
             finally:
                 await reporter.stop()
+
+    @pytest.mark.asyncio
+    async def test_start_returns_existing_task_when_already_running(self) -> None:
+        reporter = StatusReporter()
+        reporter._running = True
+        reporter._task = None
+
+        result = await reporter.start()
+
+        assert result is None
 
     @pytest.mark.asyncio
     async def test_start_writes_initial_status(self) -> None:

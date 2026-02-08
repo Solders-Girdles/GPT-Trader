@@ -165,6 +165,62 @@ class TestOrderRouterAsyncExecution:
         assert collector.counters["gpt_trader_trades_blocked_total"] == 1
 
     @pytest.mark.asyncio
+    async def test_execute_async_blocked_with_decision_trace_skips_metric_increment(self) -> None:
+        """When a decision trace exists, blocked count should not be double-counted."""
+        submitter = AsyncMock(
+            return_value=OrderSubmissionResult(
+                status=OrderSubmissionStatus.BLOCKED,
+                reason="paused:degraded",
+                decision_trace=object(),
+            )
+        )
+        equity_provider = Mock(return_value=Decimal("10000"))
+        router = OrderRouter(
+            submitter=submitter,
+            equity_provider=equity_provider,
+        )
+
+        decision = HybridDecision(
+            action=Action.BUY,
+            symbol="BTC-USD",
+            mode=TradingMode.SPOT_ONLY,
+            quantity=Decimal("0.1"),
+        )
+
+        result = await router.execute_async(decision, Decimal("50000"))
+
+        assert result.success is False
+        assert result.error_code == "ORDER_BLOCKED"
+        from gpt_trader.monitoring.metrics_collector import get_metrics_collector
+
+        collector = get_metrics_collector()
+        assert collector.counters.get("gpt_trader_trades_blocked_total", 0) == 0
+
+    @pytest.mark.asyncio
+    async def test_execute_async_returns_invalid_action_when_side_resolution_fails(self) -> None:
+        """Unexpected action->side resolution failures should be explicit."""
+        submitter = AsyncMock()
+        equity_provider = Mock(return_value=Decimal("10000"))
+        router = OrderRouter(
+            submitter=submitter,
+            equity_provider=equity_provider,
+        )
+        router._action_to_side = Mock(return_value=None)
+
+        decision = HybridDecision(
+            action=Action.BUY,
+            symbol="BTC-USD",
+            mode=TradingMode.SPOT_ONLY,
+            quantity=Decimal("0.1"),
+        )
+
+        result = await router.execute_async(decision, Decimal("50000"))
+
+        assert result.success is False
+        assert result.error_code == "INVALID_ACTION"
+        submitter.assert_not_awaited()
+
+    @pytest.mark.asyncio
     async def test_execute_async_handles_submitter_exception(self) -> None:
         """execute_async returns failure on submitter exception."""
         submitter = AsyncMock(side_effect=Exception("Guard rejected"))

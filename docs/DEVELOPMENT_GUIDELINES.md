@@ -156,7 +156,7 @@ Local CI (`make ci-required` / `uv run local-ci`) can report failures before the
 3. If the gate complains about report age, regenerate the report and optionally raise `GPT_TRADER_READINESS_MAX_REPORT_AGE_DAYS` (or pass `--max-report-age-days`) when your cadence is longer than the default 7 days; add `--strict` or set `GPT_TRADER_READINESS_STRICT=1` if you want the gate to fail instead of degrade.
 4. Rerun `uv run python scripts/ci/check_readiness_gate.py --profile <profile>` or `uv run local-ci` to confirm the gate now sees the refreshed data.
 5. The gate also reads `runtime_data/<profile>/events.db` for liveness and `var/data/status.json` (or your configured status file), so ensure those files exist alongside the report directory before rerunning local CI.
-6. For more background on the required files, freshness windows, and how stale data is interpreted, see [Readiness gate inputs & stale-data interpretation](docs/READINESS.md#readiness-gate-inputs--stale-data-interpretation).
+6. For more background on the required files, freshness windows, and how stale data is interpreted, see [Readiness gate inputs & stale-data interpretation](READINESS.md#readiness-gate-inputs--stale-data-interpretation).
 
 ### Agent Artifacts Freshness
 

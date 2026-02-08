@@ -143,3 +143,61 @@ def test_historical_data_point_has_market_data() -> None:
         spread_bps=None,
     )
     assert with_trade_flow.has_market_data() is True
+
+
+def test_load_all_symbols_returns_all_symbols() -> None:
+    ts = datetime(2024, 1, 1, tzinfo=timezone.utc)
+    events = [
+        {
+            "type": "price_tick",
+            "data": {"symbol": "BTC-USD", "timestamp": ts, "price": "100"},
+        },
+        {
+            "type": "price_tick",
+            "data": {"symbol": "ETH-USD", "timestamp": ts, "price": "50"},
+        },
+        {
+            "type": "price_tick",
+            "data": {
+                "symbol": "BTC-USD",
+                "timestamp": ts + timedelta(minutes=1),
+                "price": "101",
+            },
+        },
+    ]
+
+    loader = HistoricalDataLoader(StubEventStore(events))
+    results = loader.load_all_symbols()
+
+    assert set(results.keys()) == {"BTC-USD", "ETH-USD"}
+    assert results["BTC-USD"].count == 2
+    assert results["ETH-USD"].count == 1
+    assert results["BTC-USD"].data_points[0].mark_price == Decimal("100")
+    assert results["ETH-USD"].data_points[0].mark_price == Decimal("50")
+
+
+def test_load_all_symbols_single_list_events_call() -> None:
+    """Regression: load_all_symbols must call list_events exactly once (no N+1)."""
+    ts = datetime(2024, 1, 1, tzinfo=timezone.utc)
+    symbols = [f"SYM{i}-USD" for i in range(10)]
+    events = [
+        {"type": "price_tick", "data": {"symbol": s, "timestamp": ts, "price": "1"}}
+        for s in symbols
+    ]
+
+    call_count = 0
+
+    class CountingEventStore:
+        def __init__(self, store_events: list[dict]) -> None:
+            self._events = store_events
+
+        def list_events(self) -> list[dict]:
+            nonlocal call_count
+            call_count += 1
+            return list(self._events)
+
+    loader = HistoricalDataLoader(CountingEventStore(events))  # type: ignore[arg-type]
+    results = loader.load_all_symbols()
+
+    assert len(results) == 10
+    assert call_count == 1

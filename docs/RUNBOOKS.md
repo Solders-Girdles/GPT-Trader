@@ -241,7 +241,7 @@ cat status.json | jq '.heartbeat'
 **Notification Channel:** status.json `health_issues` field
 
 #### Description
-Price data has not been updated for longer than the configured threshold (default: 2 minutes).
+Price data has not been updated for longer than the configured threshold (default: 30 seconds).
 
 #### Common Causes
 1. **WebSocket disconnection** - Stream connection lost

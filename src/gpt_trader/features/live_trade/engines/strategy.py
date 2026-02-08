@@ -1752,8 +1752,109 @@ class TradingEngine(BaseEngine):
                         "error": str(e),
                     },
                 )
-        elif decision.action == Action.CLOSE and position_state:
-            logger.info(f"CLOSE signal for {symbol} - not fully implemented yet")
+        elif decision.action == Action.CLOSE:
+            if position_state is None:
+                logger.info(
+                    "CLOSE signal ignored - no open position",
+                    symbol=symbol,
+                    action=decision.action.value,
+                    operation="order_placement",
+                    stage="skip",
+                )
+                return
+
+            close_order = self._resolve_close_order(position_state)
+            if close_order is None:
+                logger.warning(
+                    "CLOSE signal ignored - invalid position state",
+                    symbol=symbol,
+                    action=decision.action.value,
+                    position_state=position_state,
+                    operation="order_placement",
+                    stage="invalid_position_state",
+                )
+                return
+
+            close_side, close_quantity = close_order
+            logger.info(
+                "Executing close order",
+                symbol=symbol,
+                action=decision.action.value,
+                side=close_side.value,
+                quantity=str(close_quantity),
+                operation="order_placement",
+                stage="start",
+            )
+            try:
+                with profile_span(
+                    "order_placement",
+                    {"symbol": symbol, "action": decision.action.value, "side": close_side.value},
+                ):
+                    result = await self.submit_order(
+                        symbol=symbol,
+                        side=close_side,
+                        price=price,
+                        equity=equity,
+                        quantity_override=close_quantity,
+                        reduce_only=True,
+                        reason=decision.reason,
+                        confidence=decision.confidence,
+                    )
+                if result.blocked:
+                    logger.warning(
+                        "Close order blocked",
+                        symbol=symbol,
+                        action=decision.action.value,
+                        side=close_side.value,
+                        reason=result.reason,
+                        operation="order_placement",
+                        stage="blocked",
+                    )
+                elif result.failed:
+                    logger.error(
+                        "Close order submission failed",
+                        symbol=symbol,
+                        action=decision.action.value,
+                        side=close_side.value,
+                        reason=result.reason,
+                        error_message=result.error,
+                        operation="order_placement",
+                        stage="failed",
+                    )
+                    failure_detail = result.error or result.reason or "unknown"
+                    await self._notify(
+                        title="Close Order Submission Failed",
+                        message=f"Failed to close {symbol}: {failure_detail}",
+                        severity=AlertSeverity.ERROR,
+                        context={
+                            "symbol": symbol,
+                            "action": decision.action.value,
+                            "side": close_side.value,
+                            "reason": result.reason,
+                            "error": result.error,
+                        },
+                    )
+            except Exception as e:
+                logger.error(
+                    "Close order placement failed",
+                    symbol=symbol,
+                    action=decision.action.value,
+                    side=close_side.value,
+                    error_message=str(e),
+                    operation="order_placement",
+                    stage="failed",
+                )
+                await self._notify(
+                    title="Close Order Placement Failed",
+                    message=f"Failed to close {symbol}: {e}",
+                    severity=AlertSeverity.ERROR,
+                    context={
+                        "symbol": symbol,
+                        "action": decision.action.value,
+                        "side": close_side.value,
+                        "error": str(e),
+                    },
+                )
 
     async def _fetch_total_equity(self, positions: dict[str, Position]) -> Decimal | None:
         """Fetch total equity = collateral + unrealized PnL."""
@@ -1798,6 +1899,30 @@ class TradingEngine(BaseEngine):
             "side": pos.side,
             # Add other fields if needed by strategy
         }
+
+    def _resolve_close_order(
+        self, position_state: dict[str, Any]
+    ) -> tuple[OrderSide, Decimal] | None:
+        """Derive close side/quantity from strategy position state."""
+        raw_quantity = position_state.get("quantity", Decimal("0"))
+        try:
+            signed_quantity = Decimal(str(raw_quantity))
+        except (InvalidOperation, TypeError, ValueError):
+            return None
+
+        close_quantity = abs(signed_quantity)
+        if close_quantity <= 0:
+            return None
+
+        side_raw = str(position_state.get("side", "")).strip().lower()
+        if side_raw == "long":
+            return OrderSide.SELL, close_quantity
+        if side_raw == "short":
+            return OrderSide.BUY, close_quantity
+
+        # Legacy fallback: infer direction from quantity sign when side is missing.
+        inferred_side = OrderSide.BUY if signed_quantity < 0 else OrderSide.SELL
+        return inferred_side, close_quantity
 
     def _record_price_tick(self, symbol: str, price: Decimal) -> None:
         """Persist price tick to EventStore for crash recovery.
@@ -2436,9 +2561,45 @@ class TradingEngine(BaseEngine):
     ) -> tuple[Decimal, OrderSubmissionResult | None]:
         risk_manager = self.context.risk_manager
         if risk_manager is None:
-            logger.warning("No risk manager configured - skipping reduce-only checks")
-            trace.record_outcome("reduce_only", "skipped")
-            return quantity, None
+            error_msg = "risk_manager_unavailable"
+            logger.error(
+                "Order blocked - risk manager unavailable",
+                symbol=symbol,
+                side=side.value,
+                operation="reduce_only",
+                stage="missing_risk_manager",
+            )
+            self._emit_trade_gate_blocked(
+                gate="reduce_only",
+                symbol=symbol,
+                side=side,
+                reason=error_msg,
+                params={
+                    "is_reducing": is_reducing,
+                    "reduce_only_flag": reduce_only_flag,
+                },
+                decision_id=trace.decision_id,
+            )
+            self._order_submitter.record_rejection(symbol, side.value, quantity, price, error_msg)
+            await self._notify(
+                title="Order Blocked - Risk Manager Unavailable",
+                message=(
+                    f"Cannot place {side.value} order for {symbol}: "
+                    "risk manager is required for reduce-only enforcement"
+                ),
+                severity=AlertSeverity.ERROR,
+                context={
+                    "symbol": symbol,
+                    "side": side.value,
+                    "reason": error_msg,
+                },
+            )
+            trace.record_outcome("reduce_only", "blocked", detail=error_msg)
+            return quantity, self._finalize_decision_trace(
+                trace,
+                status=OrderSubmissionStatus.BLOCKED,
+                reason=error_msg,
+            )
 
         daily_pnl_triggered = bool(getattr(risk_manager, "_daily_pnl_triggered", False))
         reduce_only_mode = risk_manager.is_reduce_only_mode()

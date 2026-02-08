@@ -446,8 +446,11 @@ class LiveRiskManager:
         if last_update is None:
             return True
 
-        staleness_threshold = 120.0  # seconds
-        if self.config and hasattr(self.config, "mark_staleness_threshold"):
+        staleness_threshold = 30.0  # seconds
+        if self.config and hasattr(self.config, "mark_staleness_threshold_seconds"):
+            staleness_threshold = float(self.config.mark_staleness_threshold_seconds)
+        elif self.config and hasattr(self.config, "mark_staleness_threshold"):
+            # Backward-compatible fallback for legacy test/mocked config objects.
             staleness_threshold = float(self.config.mark_staleness_threshold)
 
         return (time.time() - last_update) > staleness_threshold

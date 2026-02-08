@@ -47,6 +47,15 @@ class TestBotConfigEnvAliasing:
         config = BotConfig.from_env()
         assert config.order_submission_retries_enabled is True
 
+    def test_execution_resilience_defaults_enabled(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.delenv("ORDER_SUBMISSION_RETRIES_ENABLED", raising=False)
+        monkeypatch.delenv("BROKER_CALLS_USE_DEDICATED_EXECUTOR", raising=False)
+        from gpt_trader.app.config.bot_config import BotConfig
+
+        config = BotConfig.from_env()
+        assert config.order_submission_retries_enabled is True
+        assert config.broker_calls_use_dedicated_executor is True
+
     def test_health_market_data_staleness_thresholds_from_env(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

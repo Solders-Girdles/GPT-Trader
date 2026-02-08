@@ -38,6 +38,9 @@ ALLOWLIST_REASONS: dict[str, str] = {
     "tests/unit/scripts/test_check_test_hygiene.py": (
         "Comprehensive CI script coverage requires testing all validation rules (markers, thresholds, patch usage, etc.)."
     ),
+    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_orders.py": (
+        "Order engine tests cover BUY/SELL/CLOSE signal paths and risk-manager enforcement; split pending."
+    ),
 }
 ALLOWLIST: set[str] = set(ALLOWLIST_REASONS)
 PATCH_ALLOWLIST: set[str] = set()

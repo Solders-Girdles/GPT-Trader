@@ -248,6 +248,101 @@ async def test_stale_mark_allows_reduce_only_when_configured(engine) -> None:
 
 
 @pytest.mark.asyncio
+async def test_close_signal_submits_reduce_only_exit_for_long_position(
+    engine, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _mock_security_validation(monkeypatch)
+    engine.context.risk_manager.is_reduce_only_mode.return_value = False
+    engine._order_validator.validate_exchange_rules.side_effect = lambda **kwargs: (
+        kwargs["order_quantity"],
+        None,
+    )
+    engine._order_validator.finalize_reduce_only_flag.side_effect = lambda reduce_only, _symbol: (
+        reduce_only
+    )
+    engine._current_positions = {"BTC-USD": make_position(qty="0.75", side="long")}
+
+    await engine._handle_decision(
+        symbol="BTC-USD",
+        decision=Decision(Action.CLOSE, "exit_long"),
+        price=Decimal("50000"),
+        equity=Decimal("10000"),
+        position_state={
+            "quantity": Decimal("0.75"),
+            "entry_price": Decimal("40000"),
+            "side": "long",
+        },
+    )
+
+    engine._order_submitter.submit_order_with_result.assert_called_once()
+    call_kwargs = engine._order_submitter.submit_order_with_result.call_args[1]
+    assert call_kwargs["side"] == OrderSide.SELL
+    assert call_kwargs["order_quantity"] == Decimal("0.75")
+    assert call_kwargs["reduce_only"] is True
+
+
+@pytest.mark.asyncio
+async def test_close_signal_submits_reduce_only_exit_for_short_position(
+    engine, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _mock_security_validation(monkeypatch)
+    engine.context.risk_manager.is_reduce_only_mode.return_value = False
+    engine._order_validator.validate_exchange_rules.side_effect = lambda **kwargs: (
+        kwargs["order_quantity"],
+        None,
+    )
+    engine._order_validator.finalize_reduce_only_flag.side_effect = lambda reduce_only, _symbol: (
+        reduce_only
+    )
+    engine._current_positions = {"BTC-USD": make_position(qty="0.5", side="short")}
+
+    await engine._handle_decision(
+        symbol="BTC-USD",
+        decision=Decision(Action.CLOSE, "exit_short"),
+        price=Decimal("50000"),
+        equity=Decimal("10000"),
+        position_state={
+            "quantity": Decimal("0.5"),
+            "entry_price": Decimal("40000"),
+            "side": "short",
+        },
+    )
+
+    engine._order_submitter.submit_order_with_result.assert_called_once()
+    call_kwargs = engine._order_submitter.submit_order_with_result.call_args[1]
+    assert call_kwargs["side"] == OrderSide.BUY
+    assert call_kwargs["order_quantity"] == Decimal("0.5")
+    assert call_kwargs["reduce_only"] is True
+
+
+@pytest.mark.asyncio
+async def test_order_blocked_when_risk_manager_unavailable(
+    engine, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _mock_security_validation(monkeypatch)
+    engine.context.risk_manager = None
+
+    result = await engine._validate_and_place_order(
+        symbol="BTC-USD",
+        decision=Decision(Action.BUY, "test"),
+        price=Decimal("50000"),
+        equity=Decimal("10000"),
+    )
+
+    assert result.status == OrderSubmissionStatus.BLOCKED
+    assert result.reason == "risk_manager_unavailable"
+    engine._order_submitter.submit_order_with_result.assert_not_called()
+
+
+def test_resolve_close_order_legacy_signed_quantity_fallback(engine) -> None:
+    close_for_short = engine._resolve_close_order({"quantity": Decimal("-0.75")})
+    close_for_long = engine._resolve_close_order({"quantity": Decimal("0.75")})
+
+    assert close_for_short == (OrderSide.BUY, Decimal("0.75"))
+    assert close_for_long == (OrderSide.SELL, Decimal("0.75"))
+
+
+@pytest.mark.asyncio
 async def test_slippage_failures_pause_symbol_after_threshold(engine) -> None:
     from gpt_trader.features.live_trade.risk.manager import ValidationError
 

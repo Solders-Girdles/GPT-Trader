@@ -217,16 +217,16 @@ class TestCheckMarkStaleness:
         assert manager.check_mark_staleness("BTC-USD") is True  # 50 > 30
 
     def test_default_threshold_without_config(self) -> None:
-        """Should use default 120 second threshold."""
+        """Should use default 30 second threshold."""
         manager = LiveRiskManager()
-        manager.last_mark_update["BTC-USD"] = time.time() - 100
+        manager.last_mark_update["BTC-USD"] = time.time() - 20
 
-        assert manager.check_mark_staleness("BTC-USD") is False  # 100 < 120
+        assert manager.check_mark_staleness("BTC-USD") is False  # 20 < 30
 
     def test_exact_boundary(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Should handle exact threshold boundary."""
         monkeypatch.setattr(time, "time", lambda: 1000.0)
         manager = LiveRiskManager()
-        manager.last_mark_update["BTC-USD"] = 880.0  # Exactly 120 seconds ago
+        manager.last_mark_update["BTC-USD"] = 970.0  # Exactly 30 seconds ago
 
-        assert manager.check_mark_staleness("BTC-USD") is False  # 120 > 120 is False
+        assert manager.check_mark_staleness("BTC-USD") is False  # 30 > 30 is False

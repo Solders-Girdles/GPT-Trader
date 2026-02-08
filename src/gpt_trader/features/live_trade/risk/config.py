@@ -109,6 +109,7 @@ class RiskConfig:
 
     # Mark staleness: pause symbol duration when mark price is stale
     mark_staleness_cooldown_seconds: int = 120  # 2 minutes
+    mark_staleness_threshold_seconds: float = 30.0  # Max allowed mark age before stale
     mark_staleness_allow_reduce_only: bool = True  # Allow reduce-only during mark staleness
 
     # Slippage guard: pause symbol after repeated failures
@@ -170,6 +171,9 @@ class RiskConfig:
             # Graceful degradation settings
             api_health_cooldown_seconds=int(_get_env("API_HEALTH_COOLDOWN_SECONDS", "300")),
             mark_staleness_cooldown_seconds=int(_get_env("MARK_STALENESS_COOLDOWN_SECONDS", "120")),
+            mark_staleness_threshold_seconds=float(
+                _get_env("MARK_STALENESS_THRESHOLD_SECONDS", "30")
+            ),
             mark_staleness_allow_reduce_only=_get_env("MARK_STALENESS_ALLOW_REDUCE_ONLY", "1")
             == "1",
             slippage_failure_pause_after=int(_get_env("SLIPPAGE_FAILURE_PAUSE_AFTER", "3")),

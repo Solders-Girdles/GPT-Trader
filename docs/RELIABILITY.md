@@ -31,7 +31,7 @@ Implementation references:
 | --- | --- | --- | --- |
 | Preflight diagnostics fail | `scripts/production_preflight.py` errors on API, accounts, or market data | Exit non-zero; block startup unless warn-only | `--warn-only` or `GPT_TRADER_PREFLIGHT_WARN_ONLY=1` |
 | API health trip | ApiHealthGuard sees open circuit or thresholds | Cancel open orders, reduce-only, global pause | `RISK_API_HEALTH_COOLDOWN_SECONDS` |
-| Mark staleness | `check_mark_staleness` true | Pause symbol; allow reduce-only if configured | `RISK_MARK_STALENESS_COOLDOWN_SECONDS`, `RISK_MARK_STALENESS_ALLOW_REDUCE_ONLY` |
+| Mark staleness | `check_mark_staleness` true | Pause symbol; allow reduce-only if configured | `RISK_MARK_STALENESS_THRESHOLD_SECONDS`, `RISK_MARK_STALENESS_COOLDOWN_SECONDS`, `RISK_MARK_STALENESS_ALLOW_REDUCE_ONLY` |
 | Slippage failures | Repeated slippage guard ValidationError | Pause symbol after threshold | `RISK_SLIPPAGE_FAILURE_PAUSE_AFTER`, `RISK_SLIPPAGE_PAUSE_SECONDS` |
 | Validation infra failure | ValidationFailureTracker escalation | Reduce-only + global pause | `RISK_VALIDATION_FAILURE_COOLDOWN_SECONDS` |
 | Preview failures | Preview exceptions reach threshold | Disable preview for the session | `RISK_PREVIEW_FAILURE_DISABLE_AFTER` |
@@ -58,6 +58,7 @@ Graceful Degradation:
 | Env Var | Default | Purpose |
 | --- | --- | --- |
 | `RISK_API_HEALTH_COOLDOWN_SECONDS` | `300` | Global pause duration after API health trip |
+| `RISK_MARK_STALENESS_THRESHOLD_SECONDS` | `30` | Max mark age before symbol is considered stale |
 | `RISK_MARK_STALENESS_COOLDOWN_SECONDS` | `120` | Per-symbol pause when mark data is stale |
 | `RISK_MARK_STALENESS_ALLOW_REDUCE_ONLY` | `1` | Allow reduce-only during mark staleness |
 | `RISK_SLIPPAGE_FAILURE_PAUSE_AFTER` | `3` | Failures before symbol pause |
@@ -104,8 +105,8 @@ Execution Resilience:
 
 | Env Var | Default | Purpose |
 | --- | --- | --- |
-| `ORDER_SUBMISSION_RETRIES_ENABLED` | `0` | Enable broker submission retries (off by default) |
-| `BROKER_CALLS_USE_DEDICATED_EXECUTOR` | `0` | Run broker calls in a dedicated thread pool |
+| `ORDER_SUBMISSION_RETRIES_ENABLED` | `1` | Enable broker submission retries |
+| `BROKER_CALLS_USE_DEDICATED_EXECUTOR` | `1` | Run broker calls in a dedicated thread pool |
 
 ## Observability
 
@@ -198,8 +199,8 @@ The strategy engine parallelizes independent broker operations:
 - `_fetch_positions()` and `_audit_orders()` run concurrently via `asyncio.create_task()`
 - Per-symbol ticker and candles fetches are bounded by `asyncio.Semaphore` (default 5 concurrent calls)
 - Configurable via `config.max_concurrent_rest_calls` (defaults to 5)
-- Optional dedicated executor via `config.broker_calls_use_dedicated_executor` (defaults to `False`)
-- Order submission retries are optional via `config.order_submission_retries_enabled` / `ORDER_SUBMISSION_RETRIES_ENABLED` (defaults to `False`)
+- Optional dedicated executor via `config.broker_calls_use_dedicated_executor` (defaults to `True`)
+- Order submission retries are optional via `config.order_submission_retries_enabled` / `ORDER_SUBMISSION_RETRIES_ENABLED` (defaults to `True`)
 
 This reduces cycle latency by overlapping I/O-bound operations while preventing API rate limit exhaustion.
 

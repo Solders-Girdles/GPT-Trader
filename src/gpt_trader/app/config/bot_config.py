@@ -194,10 +194,10 @@ class BotConfig:
     enable_order_preview: bool = False
     use_limit_orders: bool = False
     market_order_fallback: bool = True
-    # Off by default; enable after monitoring confirms no duplicate/ghost orders.
-    order_submission_retries_enabled: bool = False
+    # Enabled by default for resiliency; disable only for controlled troubleshooting.
+    order_submission_retries_enabled: bool = True
     account_telemetry_interval: int | None = None
-    broker_calls_use_dedicated_executor: bool = False
+    broker_calls_use_dedicated_executor: bool = True
 
     # System
     log_level: str = "INFO"
@@ -425,7 +425,7 @@ class BotConfig:
             status_interval=parse_int_env("STATUS_INTERVAL", 60) or 60,
             status_enabled=parse_bool_env("STATUS_ENABLED", default=True),
             broker_calls_use_dedicated_executor=parse_bool_env(
-                "BROKER_CALLS_USE_DEDICATED_EXECUTOR", default=False
+                "BROKER_CALLS_USE_DEDICATED_EXECUTOR", default=True
             ),
             derivatives_enabled=derivatives_enabled,
             # Inherited from RuntimeSettings
@@ -461,7 +461,7 @@ class BotConfig:
             spot_force_live=parse_bool_env("SPOT_FORCE_LIVE", default=False),
             enable_order_preview=parse_bool_env("ORDER_PREVIEW_ENABLED", default=False),
             order_submission_retries_enabled=parse_bool_env(
-                "ORDER_SUBMISSION_RETRIES_ENABLED", default=False
+                "ORDER_SUBMISSION_RETRIES_ENABLED", default=True
             ),
             # Risk modes from env (CLI/profile override these)
             reduce_only_mode=parse_bool_env("RISK_REDUCE_ONLY_MODE", default=False),

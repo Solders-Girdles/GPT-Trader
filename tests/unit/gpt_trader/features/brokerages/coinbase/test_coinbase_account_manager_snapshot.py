@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import pytest
-
 from typing import Any
+
+import pytest
 
 from gpt_trader.core import InvalidRequestError
 from gpt_trader.features.brokerages.coinbase.account_manager import CoinbaseAccountManager

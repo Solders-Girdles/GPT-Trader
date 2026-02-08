@@ -35,9 +35,7 @@ def _write_daily_report(
         data["generated_at"] = f"{report_date.isoformat()}T00:10:00Z"
     else:
         data["generated_at"] = (
-            generated_at.astimezone(timezone.utc)
-            .isoformat()
-            .replace("+00:00", "Z")
+            generated_at.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
         )
     report_dir = base_dir / "runtime_data" / profile / "reports"
     report_dir.mkdir(parents=True, exist_ok=True)
@@ -58,11 +56,7 @@ def _write_preflight_report(
     data["profile"] = profile
     if timestamp is None:
         timestamp = datetime.combine(report_date, time(1, 0), tzinfo=timezone.utc)
-    data["timestamp"] = (
-        timestamp.astimezone(timezone.utc)
-        .isoformat()
-        .replace("+00:00", "Z")
-    )
+    data["timestamp"] = timestamp.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
     report_path = base_dir / f"preflight_report_{report_date.strftime('%Y%m%d')}_010000.json"
     report_path.write_text(json.dumps(data), encoding="utf-8")
     return report_path
@@ -306,8 +300,7 @@ def test_main_degrades_when_reports_are_stale(
     assert result == 0
     assert (
         "Readiness gate degraded: latest daily report for profile 'canary' "
-        "dated 2026-02-01 is 7.0 day(s) old (max 1 day(s))."
-        in output
+        "dated 2026-02-01 is 7.0 day(s) old (max 1 day(s))." in output
     )
     assert "Set --strict" in output
     assert "Readiness gate PASSED" not in output
@@ -357,8 +350,7 @@ def test_main_strict_mode_fails_when_reports_are_stale(
     assert result == 1
     assert (
         "Readiness gate degraded: latest daily report for profile 'canary' "
-        "dated 2026-02-01 is 7.0 day(s) old (max 1 day(s))."
-        in error_output
+        "dated 2026-02-01 is 7.0 day(s) old (max 1 day(s))." in error_output
     )
     assert "Readiness gate FAILED: stale daily report exceeds max age." in error_output
     assert "GREEN streak" not in error_output

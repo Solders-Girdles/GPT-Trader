@@ -4,6 +4,8 @@ Manages Coinbase account state, positions, balances, and CFM/INTX specific featu
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, cast
 
 from gpt_trader.utilities.logging_patterns import get_logger
@@ -18,12 +20,17 @@ logger = get_logger(__name__, component="coinbase_account")
 
 
 class CoinbaseAccountManager:
+    _FRESHNESS_FRESH = "fresh"
+    _FRESHNESS_ERROR = "error"
+    _FRESHNESS_UNAVAILABLE = "unavailable"
+
     def __init__(self, broker: CoinbaseBrokerage, event_store: EventStore):
         self.broker = broker
         self._event_store = event_store
 
     def snapshot(self) -> dict[str, Any]:
         snapshot_data: dict[str, Any] = {}
+        freshness_data: dict[str, dict[str, Any]] = {}
 
         snapshot_probes: list[tuple[str, str]] = [
             ("key_permissions", "get_key_permissions"),
@@ -39,60 +46,72 @@ class CoinbaseAccountManager:
         ]
 
         for key, probe_name in snapshot_probes:
-            snapshot_data[key] = self._execute_snapshot_probe(key, probe_name)
+            result, metadata = self._execute_snapshot_probe(key, probe_name)
+            snapshot_data[key] = result
+            freshness_data[key] = metadata
 
-        # INTX Status
-        snapshot_data["intx_available"] = self.broker.supports_intx()
-        if not snapshot_data["intx_available"]:
-            snapshot_data["intx_unavailable_reason"] = "intx_not_supported"
-            snapshot_data["intx_balances"] = []
-            snapshot_data["intx_positions"] = []
-            snapshot_data["intx_collateral"] = {}
+        intx_available = self.broker.supports_intx()
+        snapshot_data["intx_available"] = intx_available
+        freshness_data["intx_available"] = self._freshness_entry(
+            self._FRESHNESS_FRESH if intx_available else self._FRESHNESS_UNAVAILABLE,
+            error_code=None if intx_available else "INTX_NOT_SUPPORTED",
+        )
+
+        if not intx_available:
+            self._record_intx_fallback(
+                snapshot_data,
+                freshness_data,
+                reason="intx_not_supported",
+                status=self._FRESHNESS_UNAVAILABLE,
+                error_code="INTX_NOT_SUPPORTED",
+            )
         else:
             try:
-                # Resolve INTX portfolio
                 intx_portfolio_uuid = self.broker.resolve_intx_portfolio()
+                balances, balances_meta, resolved_uuid = self._fetch_intx_balances_with_retry(
+                    intx_portfolio_uuid
+                )
+                snapshot_data["intx_balances"] = balances
+                freshness_data["intx_balances"] = balances_meta
 
-                # Try to get balances, if fails with specific error, refresh portfolio
-                try:
-                    if intx_portfolio_uuid:
-                        snapshot_data["intx_balances"] = self.broker.get_intx_balances(
-                            intx_portfolio_uuid
-                        )
-                except Exception:
-                    # Retry with refresh
-                    intx_portfolio_uuid = self.broker.resolve_intx_portfolio(refresh=True)
-                    if intx_portfolio_uuid:
-                        snapshot_data["intx_balances"] = self.broker.get_intx_balances(
-                            intx_portfolio_uuid
-                        )
-
-                if not intx_portfolio_uuid:
+                target_uuid = resolved_uuid
+                if not target_uuid:
                     snapshot_data["intx_available"] = False
-                    snapshot_data["intx_unavailable_reason"] = "intx_portfolio_not_found"
-                    snapshot_data["intx_balances"] = []
-                    snapshot_data["intx_positions"] = []
-                    snapshot_data["intx_collateral"] = {}
-                else:
-                    snapshot_data["intx_portfolio_uuid"] = intx_portfolio_uuid
-                    # If balances not set yet (no error or recovered)
-                    if "intx_balances" not in snapshot_data:
-                        snapshot_data["intx_balances"] = self.broker.get_intx_balances(
-                            intx_portfolio_uuid
-                        )
-
-                    snapshot_data["intx_positions"] = self.broker.list_intx_positions(
-                        intx_portfolio_uuid
+                    self._record_intx_fallback(
+                        snapshot_data,
+                        freshness_data,
+                        reason="intx_portfolio_not_found",
+                        status=self._FRESHNESS_UNAVAILABLE,
+                        error_code="INTX_PORTFOLIO_NOT_FOUND",
                     )
-                    snapshot_data["intx_collateral"] = self.broker.get_intx_multi_asset_collateral()
+                else:
+                    snapshot_data["intx_portfolio_uuid"] = target_uuid
+                    positions, positions_meta = self._fetch_intx_section(
+                        "intx_positions",
+                        lambda: self.broker.list_intx_positions(target_uuid),
+                        [],
+                    )
+                    snapshot_data["intx_positions"] = positions
+                    freshness_data["intx_positions"] = positions_meta
+
+                    collateral, collateral_meta = self._fetch_intx_section(
+                        "intx_collateral",
+                        self.broker.get_intx_multi_asset_collateral,
+                        {},
+                    )
+                    snapshot_data["intx_collateral"] = collateral
+                    freshness_data["intx_collateral"] = collateral_meta
             except Exception as e:
                 logger.warning(f"Failed to get INTX data: {e}")
-                # Don't mark as unavailable just because data fetch failed (could be temporary)
-                # snapshot_data["intx_available"] = False
-                snapshot_data["intx_unavailable_reason"] = str(e)
-                snapshot_data["intx_balances"] = []
-                snapshot_data["intx_positions"] = []
-                snapshot_data["intx_collateral"] = {}
+                self._record_intx_fallback(
+                    snapshot_data,
+                    freshness_data,
+                    reason=str(e),
+                    status=self._FRESHNESS_ERROR,
+                    error_code=self._error_code_from_exception(e),
+                )
+
+        snapshot_data["freshness"] = freshness_data
 
         emit_metric(
             self._event_store,
@@ -103,15 +122,22 @@ class CoinbaseAccountManager:
 
         return snapshot_data
 
-    def _execute_snapshot_probe(self, key: str, probe_name: str) -> Any:
+    def _execute_snapshot_probe(self, key: str, probe_name: str) -> tuple[Any, dict[str, Any]]:
         try:
             probe = getattr(self.broker, probe_name)
             if not callable(probe):
                 raise TypeError(f"{probe_name} is not callable")
-            return probe()
+            result = probe()
+            return result, self._freshness_entry(self._FRESHNESS_FRESH)
         except Exception as error:
             logger.warning("Failed to collect %s: %s", key, error)
-            return self._snapshot_error_payload(error)
+            return (
+                self._snapshot_error_payload(error),
+                self._freshness_entry(
+                    self._FRESHNESS_ERROR,
+                    error_code=self._error_code_from_exception(error),
+                ),
+            )
 
     @staticmethod
     def _snapshot_error_payload(error: Exception) -> dict[str, Any]:
@@ -121,6 +147,96 @@ class CoinbaseAccountManager:
                 "type": type(error).__name__,
             }
         }
+
+    def _fetch_intx_balances_with_retry(
+        self, portfolio_uuid: str | None
+    ) -> tuple[list[Any], dict[str, Any], str | None]:
+        if not portfolio_uuid:
+            return (
+                [],
+                self._freshness_entry(
+                    self._FRESHNESS_UNAVAILABLE,
+                    error_code="INTX_PORTFOLIO_NOT_FOUND",
+                ),
+                None,
+            )
+        try:
+            balances = self.broker.get_intx_balances(portfolio_uuid)
+            return balances, self._freshness_entry(self._FRESHNESS_FRESH), portfolio_uuid
+        except Exception as error:
+            logger.warning("Failed to collect intx_balances: %s", error)
+            refreshed_uuid = self.broker.resolve_intx_portfolio(refresh=True)
+            if refreshed_uuid:
+                try:
+                    balances = self.broker.get_intx_balances(refreshed_uuid)
+                    return balances, self._freshness_entry(self._FRESHNESS_FRESH), refreshed_uuid
+                except Exception as retry_error:
+                    logger.warning("Retry failed for intx_balances: %s", retry_error)
+                    return (
+                        [],
+                        self._freshness_entry(
+                            self._FRESHNESS_ERROR,
+                            error_code=self._error_code_from_exception(retry_error),
+                        ),
+                        refreshed_uuid,
+                    )
+            return (
+                [],
+                self._freshness_entry(
+                    self._FRESHNESS_ERROR,
+                    error_code=self._error_code_from_exception(error),
+                ),
+                None,
+            )
+
+    def _fetch_intx_section(
+        self, key: str, fetcher: Callable[[], Any], default: Any
+    ) -> tuple[Any, dict[str, Any]]:
+        try:
+            value = fetcher()
+            return value, self._freshness_entry(self._FRESHNESS_FRESH)
+        except Exception as error:
+            logger.warning("Failed to collect %s: %s", key, error)
+            return (
+                default,
+                self._freshness_entry(
+                    self._FRESHNESS_ERROR,
+                    error_code=self._error_code_from_exception(error),
+                ),
+            )
+
+    def _record_intx_fallback(
+        self,
+        snapshot_data: dict[str, Any],
+        freshness_data: dict[str, dict[str, Any]],
+        *,
+        reason: str,
+        status: str,
+        error_code: str,
+    ) -> None:
+        snapshot_data["intx_unavailable_reason"] = reason
+        snapshot_data["intx_balances"] = []
+        snapshot_data["intx_positions"] = []
+        snapshot_data["intx_collateral"] = {}
+        freshness_data["intx_available"] = self._freshness_entry(status, error_code=error_code)
+        for section in ("intx_balances", "intx_positions", "intx_collateral"):
+            freshness_data[section] = self._freshness_entry(status, error_code=error_code)
+
+    def _freshness_entry(self, status: str, *, error_code: str | None = None) -> dict[str, Any]:
+        entry: dict[str, Any] = {
+            "status": status,
+            "fetched_at": self._current_timestamp(),
+        }
+        if error_code:
+            entry["error_code"] = error_code
+        return entry
+
+    def _current_timestamp(self) -> str:
+        return datetime.now(timezone.utc).isoformat()
+
+    @staticmethod
+    def _error_code_from_exception(error: Exception) -> str:
+        return getattr(error, "error_code", type(error).__name__)
 
     def convert(self, payload: dict[str, Any], commit: bool = False) -> dict[str, Any]:
         quote = self.broker.create_convert_quote(payload)

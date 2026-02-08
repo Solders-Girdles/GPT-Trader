@@ -137,6 +137,27 @@ If you prefer calling the script directly, run:
 python scripts/ci/local_ci.py
 ```
 
+Need help diagnosing `uv run local-ci` failures? See the [Local CI troubleshooting](#local-ci-troubleshooting) steps below.
+
+### Local CI troubleshooting
+
+Local CI (`make ci-required` / `uv run local-ci`) can report failures before the unit tests run. Two recurring causes are stale agent artifacts and readiness gate inputs. When you hit one of these failures, follow the sequence below before re-running the command.
+
+#### 1. Agent artifacts freshness
+
+1. Run `uv run agent-regenerate` from the repo root to redraw `var/agents/**` from their sources.
+2. Stage the updated artifacts and rerun `uv run agent-regenerate --verify` (or `make agent-verify`).
+3. If the failure persists, compare `git status var/agents` and resolve any upstream conflicts in the source inputs under `scripts/agents/**` or `config/environments/.env.template` before regenerating again.
+
+#### 2. Readiness gate staleness
+
+1. Local CI runs the readiness gate with `PREFLIGHT_PROFILE=canary` and `READINESS_REPORT_DIR=runtime_data/canary/reports`. Check the `scripts/ci/check_readiness_gate.py` or `uv run local-ci` output for `Readiness gate degraded …` (missing report) or `Readiness gate degraded: latest report … is X days old` errors.
+2. Generate fresh inputs for your profile (`canary` by default) by running `make canary-daily`, which creates a fresh daily report, `preflight_report_*.json`, and readiness window state. For other profiles, use `uv run gpt-trader report daily --profile <profile> --report-format both` plus `READINESS_REPORT_DIR=runtime_data/<profile>/reports PREFLIGHT_PROFILE=<profile> make preflight-readiness` and `make readiness-window PREFLIGHT_PROFILE=<profile>`.
+3. If the gate complains about report age, regenerate the report and optionally raise `GPT_TRADER_READINESS_MAX_REPORT_AGE_DAYS` (or pass `--max-report-age-days`) when your cadence is longer than the default 7 days; add `--strict` or set `GPT_TRADER_READINESS_STRICT=1` if you want the gate to fail instead of degrade.
+4. Rerun `uv run python scripts/ci/check_readiness_gate.py --profile <profile>` or `uv run local-ci` to confirm the gate now sees the refreshed data.
+5. The gate also reads `runtime_data/<profile>/events.db` for liveness and `var/data/status.json` (or your configured status file), so ensure those files exist alongside the report directory before rerunning local CI.
+6. For more background on the required files, freshness windows, and how stale data is interpreted, see [Readiness gate inputs & stale-data interpretation](READINESS.md#readiness-gate-inputs--stale-data-interpretation).
+
 ### Agent Artifacts Freshness
 
 The required **Agent Artifacts Freshness** check verifies generated inventories

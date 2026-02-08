@@ -33,6 +33,7 @@ or raise the threshold when reporting cadence is slower.
 - Status report: `var/data/status.json` (or configured `status_file`)
 - Event store: `runtime_data/<profile>/events.db` and `runtime_data/<profile>/orders.db`
 - Health endpoint: `http://localhost:8080/health` (if enabled)
+- When the event store is missing or unreadable, the daily report includes `health.liveness.status = "UNKNOWN"` with a `health.liveness.fallback` payload (`reason` + `source`). Automated gates surface `fallback.reason` (e.g., `events.db unavailable`) so operators can tell unavailable data apart from genuine `RED`/`GREEN` states.
 
 ## 3-day GREEN streak log
 

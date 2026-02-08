@@ -124,7 +124,58 @@ class HistoricalDataLoader:
         Returns:
             DataLoadResult with reconstructed data points.
         """
-        events = self._event_store.list_events()
+        events = self._event_store.list_events_by_symbol(symbol)
+        return self._process_events_for_symbol(
+            events, symbol, max_points, include_orderbook, include_trade_flow
+        )
+
+    def load_all_symbols(
+        self,
+        max_points_per_symbol: int | None = None,
+    ) -> dict[str, DataLoadResult]:
+        """Load data for all symbols in the event store.
+
+        Returns:
+            Dict mapping symbol to DataLoadResult.
+        """
+        all_events = self._event_store.list_events()
+
+        # Group events by symbol in a single pass
+        events_by_symbol: dict[str, list[dict[str, Any]]] = {}
+        for event in all_events:
+            data = event.get("data", {})
+            symbol = data.get("symbol")
+            if symbol:
+                events_by_symbol.setdefault(symbol, []).append(event)
+
+        results = {}
+        for symbol, symbol_events in events_by_symbol.items():
+            results[symbol] = self._process_events_for_symbol(
+                symbol_events, symbol, max_points_per_symbol
+            )
+
+        return results
+
+    def _process_events_for_symbol(
+        self,
+        events: list[dict[str, Any]],
+        symbol: str,
+        max_points: int | None = None,
+        include_orderbook: bool = True,
+        include_trade_flow: bool = True,
+    ) -> DataLoadResult:
+        """Process a list of events and build a DataLoadResult for a symbol.
+
+        Args:
+            events: Pre-fetched events (may contain events for other symbols).
+            symbol: Target symbol to filter for.
+            max_points: Maximum data points to return (None = all).
+            include_orderbook: Include orderbook snapshots if available.
+            include_trade_flow: Include trade flow stats if available.
+
+        Returns:
+            DataLoadResult with reconstructed data points.
+        """
         logger.info(
             "Loading historical data",
             symbol=symbol,
@@ -232,31 +283,6 @@ class HistoricalDataLoader:
         )
 
         return result
-
-    def load_all_symbols(
-        self,
-        max_points_per_symbol: int | None = None,
-    ) -> dict[str, DataLoadResult]:
-        """Load data for all symbols in the event store.
-
-        Returns:
-            Dict mapping symbol to DataLoadResult.
-        """
-        events = self._event_store.list_events()
-
-        # Find all symbols
-        symbols: set[str] = set()
-        for event in events:
-            data = event.get("data", {})
-            symbol = data.get("symbol")
-            if symbol:
-                symbols.add(symbol)
-
-        results = {}
-        for symbol in symbols:
-            results[symbol] = self.load_symbol(symbol, max_points=max_points_per_symbol)
-
-        return results
 
     def _parse_timestamp(self, ts: Any) -> datetime:
         """Parse timestamp from various formats."""

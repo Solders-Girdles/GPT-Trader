@@ -31,15 +31,11 @@ def test_quick_profile_skips_readiness_and_agent_artifacts() -> None:
 
     readiness_step = _find_step(steps, "Readiness gate (3-day streak)")
     assert readiness_step.enabled is False
-    assert (
-        "Use the strict profile when you need the readiness gate" in readiness_step.skip_reason
-    )
+    assert "Use the strict profile when you need the readiness gate" in readiness_step.skip_reason
 
     artifacts_step = _find_step(steps, "Agent artifacts freshness")
     assert artifacts_step.enabled is False
-    assert (
-        "Agent artifacts freshness is disabled in quick/dev" in artifacts_step.skip_reason
-    )
+    assert "Agent artifacts freshness is disabled in quick/dev" in artifacts_step.skip_reason
 
 
 def test_strict_profile_runs_readiness_and_agent_artifacts() -> None:

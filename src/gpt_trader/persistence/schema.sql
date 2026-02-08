@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS events (
 CREATE INDEX IF NOT EXISTS idx_events_timestamp ON events(timestamp);
 CREATE INDEX IF NOT EXISTS idx_events_bot_id ON events(bot_id);
 CREATE INDEX IF NOT EXISTS idx_events_type ON events(event_type);
+CREATE INDEX IF NOT EXISTS idx_events_symbol ON events(json_extract(payload, '$.symbol'));
 
 -- Schema version tracking for future migrations
 CREATE TABLE IF NOT EXISTS schema_version (

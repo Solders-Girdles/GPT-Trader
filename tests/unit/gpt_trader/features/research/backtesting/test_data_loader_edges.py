@@ -17,6 +17,9 @@ class StubEventStore:
     def list_events(self) -> list[dict]:
         return list(self._events)
 
+    def list_events_by_symbol(self, symbol: str) -> list[dict]:
+        return [e for e in self._events if e.get("data", {}).get("symbol") == symbol]
+
 
 def test_load_symbol_filters_invalid_and_truncates() -> None:
     ts1 = datetime(2024, 1, 1, tzinfo=timezone.utc)
@@ -174,6 +177,39 @@ def test_load_all_symbols_returns_all_symbols() -> None:
     assert results["ETH-USD"].count == 1
     assert results["BTC-USD"].data_points[0].mark_price == Decimal("100")
     assert results["ETH-USD"].data_points[0].mark_price == Decimal("50")
+
+
+def test_load_symbol_uses_filtered_query() -> None:
+    """load_symbol must call list_events_by_symbol, not list_events."""
+    ts = datetime(2024, 1, 1, tzinfo=timezone.utc)
+    events = [
+        {"type": "price_tick", "data": {"symbol": "BTC-USD", "timestamp": ts, "price": "100"}},
+        {"type": "price_tick", "data": {"symbol": "ETH-USD", "timestamp": ts, "price": "50"}},
+    ]
+
+    list_events_calls = 0
+    filtered_calls: list[str] = []
+
+    class TrackingEventStore:
+        def __init__(self, store_events: list[dict]) -> None:
+            self._events = store_events
+
+        def list_events(self) -> list[dict]:
+            nonlocal list_events_calls
+            list_events_calls += 1
+            return list(self._events)
+
+        def list_events_by_symbol(self, symbol: str) -> list[dict]:
+            filtered_calls.append(symbol)
+            return [e for e in self._events if e.get("data", {}).get("symbol") == symbol]
+
+    loader = HistoricalDataLoader(TrackingEventStore(events))  # type: ignore[arg-type]
+    result = loader.load_symbol("BTC-USD")
+
+    assert result.count == 1
+    assert result.data_points[0].mark_price == Decimal("100")
+    assert list_events_calls == 0, "load_symbol should not call list_events"
+    assert filtered_calls == ["BTC-USD"]
 
 
 def test_load_all_symbols_single_list_events_call() -> None:

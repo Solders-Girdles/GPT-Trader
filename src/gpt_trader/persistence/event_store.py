@@ -97,6 +97,19 @@ class EventStore:
             return self._database.read_all_events()
         return list(self._events)
 
+    def list_events_by_symbol(self, symbol: str) -> list[dict[str, Any]]:
+        """Return events filtered by trading symbol.
+
+        In persistent mode, uses an indexed database query to avoid
+        reading and deserializing all events.
+
+        Args:
+            symbol: Trading pair symbol (e.g., "BTC-USD").
+        """
+        if self._database is not None:
+            return self._database.read_events_by_symbol(symbol)
+        return [event for event in self._events if event.get("data", {}).get("symbol") == symbol]
+
     def _extract_bot_id(self, data: dict[str, Any]) -> str | None:
         """Extract bot_id from event data for database indexing."""
         # Direct field

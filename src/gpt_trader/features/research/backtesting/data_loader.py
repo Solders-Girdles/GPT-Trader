@@ -124,7 +124,7 @@ class HistoricalDataLoader:
         Returns:
             DataLoadResult with reconstructed data points.
         """
-        events = self._event_store.list_events()
+        events = self._event_store.list_events_by_symbol(symbol)
         return self._process_events_for_symbol(
             events, symbol, max_points, include_orderbook, include_trade_flow
         )

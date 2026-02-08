@@ -199,6 +199,87 @@ def test_update_account_accepts_object_balances_and_coerces_invalid() -> None:
     assert balances[0].hold == Decimal("0")
 
 
+def test_update_ws_health_coerces_invalid_timestamps_and_clamps_future_age(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import gpt_trader.monitoring.status_reporter as status_reporter
+    from gpt_trader.monitoring.metrics_collector import get_metrics_collector
+
+    class _Clock:
+        def time(self) -> float:
+            return 1000.0
+
+    reset_all()
+    monkeypatch.setattr(status_reporter, "get_clock", lambda: _Clock())
+    reporter = StatusReporter()
+
+    reporter.update_ws_health(
+        {
+            "connected": True,
+            "last_message_ts": True,
+            "last_heartbeat_ts": "invalid",
+            "last_close_ts": 1010.0,
+            "last_error_ts": 1020.0,
+            "gap_count": "3",
+            "reconnect_count": "2",
+        }
+    )
+
+    websocket = reporter._status.websocket
+    assert websocket.last_message_ts is None
+    assert websocket.last_heartbeat_ts is None
+    assert websocket.last_close_ts == 1010.0
+    assert websocket.last_error_ts == 1020.0
+    assert websocket.gap_count == 3
+    assert websocket.reconnect_count == 2
+
+    collector = get_metrics_collector()
+    assert collector.gauges["gpt_trader_ws_last_message_age_seconds"] == 0.0
+    assert collector.gauges["gpt_trader_ws_last_heartbeat_age_seconds"] == 0.0
+    assert collector.gauges["gpt_trader_ws_last_close_age_seconds"] == 0.0
+    assert collector.gauges["gpt_trader_ws_last_error_age_seconds"] == 0.0
+
+
+def test_update_risk_normalizes_guard_payloads() -> None:
+    reporter = StatusReporter()
+
+    reporter.update_risk(
+        max_leverage=3.0,
+        daily_loss_limit=2.5,
+        current_daily_loss=1.1,
+        reduce_only=True,
+        reduce_reason="guard_trip",
+        guards=[
+            {
+                "name": "max_slippage",
+                "severity": "HIGH",
+                "last_triggered": "bad-timestamp",
+                "triggered_count": "7",
+                "description": "Price impact",
+            },
+            "manual_guard",
+        ],
+    )
+
+    guards = reporter._status.risk.guards
+    assert len(guards) == 2
+    assert guards[0].name == "max_slippage"
+    assert guards[0].severity == "HIGH"
+    assert guards[0].last_triggered == 0.0
+    assert guards[0].triggered_count == 7
+    assert guards[1].name == "manual_guard"
+
+    reporter.update_risk(
+        max_leverage=3.0,
+        daily_loss_limit=2.5,
+        current_daily_loss=1.1,
+        reduce_only=False,
+        reduce_reason="",
+        active_guards=["cooldown_guard"],
+    )
+    assert [guard.name for guard in reporter._status.risk.guards] == ["cooldown_guard"]
+
+
 class TestStatusReporterHealth:
     """Tests for StatusReporter health assessment."""
 

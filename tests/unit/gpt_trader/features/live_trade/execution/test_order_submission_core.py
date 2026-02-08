@@ -8,7 +8,11 @@ from unittest.mock import MagicMock
 import pytest
 
 from gpt_trader.core import Order, OrderSide, OrderType, TimeInForce
-from gpt_trader.features.live_trade.execution.order_submission import OrderSubmitter
+from gpt_trader.features.live_trade.execution.order_submission import (
+    OrderSubmissionOutcome,
+    OrderSubmissionOutcomeStatus,
+    OrderSubmitter,
+)
 
 
 class TestOrderSubmitterInit:
@@ -203,3 +207,120 @@ class TestExecuteBrokerOrder:
                 reduce_only=False,
                 leverage=10,
             )
+
+
+class TestOrderSubmitterCompatibilityWrappers:
+    """Tests legacy wrapper methods around structured outcomes."""
+
+    def test_generate_client_order_id_delegates_to_submit_id(
+        self,
+        submitter: OrderSubmitter,
+    ) -> None:
+        assert submitter.generate_client_order_id("decision-123") == "decision-123"
+
+    def test_submit_order_inner_returns_order_id_for_success(
+        self,
+        submitter: OrderSubmitter,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        monkeypatch.setattr(
+            submitter,
+            "_submit_order_inner_result",
+            MagicMock(
+                return_value=OrderSubmissionOutcome(
+                    status=OrderSubmissionOutcomeStatus.SUCCESS,
+                    order_id="order-success-1",
+                )
+            ),
+        )
+
+        result = submitter._submit_order_inner(
+            submit_id="decision-123",
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_type=OrderType.LIMIT,
+            order_quantity=Decimal("1.0"),
+            price=Decimal("50000"),
+            effective_price=Decimal("50000"),
+            stop_price=None,
+            tif=TimeInForce.GTC,
+            reduce_only=False,
+            leverage=5,
+        )
+
+        assert result == "order-success-1"
+
+    def test_submit_order_inner_returns_raw_order_in_integration_mode(
+        self,
+        mock_broker: MagicMock,
+        mock_event_store: MagicMock,
+        open_orders: list[str],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        submitter = OrderSubmitter(
+            broker=mock_broker,
+            event_store=mock_event_store,
+            bot_id="test-bot",
+            open_orders=open_orders,
+            integration_mode=True,
+        )
+        raw_order = MagicMock(id="order-integration-1")
+        monkeypatch.setattr(
+            submitter,
+            "_submit_order_inner_result",
+            MagicMock(
+                return_value=OrderSubmissionOutcome(
+                    status=OrderSubmissionOutcomeStatus.SUCCESS,
+                    order_id="order-integration-1",
+                    order=raw_order,
+                )
+            ),
+        )
+
+        result = submitter._submit_order_inner(
+            submit_id="decision-123",
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_type=OrderType.LIMIT,
+            order_quantity=Decimal("1.0"),
+            price=Decimal("50000"),
+            effective_price=Decimal("50000"),
+            stop_price=None,
+            tif=TimeInForce.GTC,
+            reduce_only=False,
+            leverage=5,
+        )
+
+        assert result is raw_order
+
+    def test_submit_order_inner_returns_none_for_failed_outcome(
+        self,
+        submitter: OrderSubmitter,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        monkeypatch.setattr(
+            submitter,
+            "_submit_order_inner_result",
+            MagicMock(
+                return_value=OrderSubmissionOutcome(
+                    status=OrderSubmissionOutcomeStatus.FAILED,
+                    reason="network",
+                )
+            ),
+        )
+
+        result = submitter._submit_order_inner(
+            submit_id="decision-123",
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_type=OrderType.LIMIT,
+            order_quantity=Decimal("1.0"),
+            price=Decimal("50000"),
+            effective_price=Decimal("50000"),
+            stop_price=None,
+            tif=TimeInForce.GTC,
+            reduce_only=False,
+            leverage=5,
+        )
+
+        assert result is None

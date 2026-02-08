@@ -965,12 +965,20 @@ class StatusReporter:
                 if isinstance(guard, GuardStatus):
                     normalized.append(guard)
                 elif isinstance(guard, dict):
+                    try:
+                        last_triggered = float(guard.get("last_triggered", 0.0) or 0.0)
+                    except (TypeError, ValueError):
+                        last_triggered = 0.0
+                    try:
+                        triggered_count = int(guard.get("triggered_count", 0) or 0)
+                    except (TypeError, ValueError):
+                        triggered_count = 0
                     normalized.append(
                         GuardStatus(
                             name=str(guard.get("name", "")),
                             severity=str(guard.get("severity", "MEDIUM")),
-                            last_triggered=float(guard.get("last_triggered", 0.0) or 0.0),
-                            triggered_count=int(guard.get("triggered_count", 0) or 0),
+                            last_triggered=last_triggered,
+                            triggered_count=triggered_count,
                             description=str(guard.get("description", "") or ""),
                         )
                     )

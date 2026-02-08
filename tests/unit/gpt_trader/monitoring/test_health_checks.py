@@ -143,6 +143,42 @@ class TestCheckDegradationState:
         assert "BTC-USD" in result.details["paused_symbols"]
         assert result.details["severity"] == "warning"
 
+    def test_non_dict_paused_symbols_falls_back_to_empty(self) -> None:
+        """Malformed paused_symbols payload should not crash the check."""
+        degradation_state = MagicMock()
+        degradation_state.get_status.return_value = {
+            "global_paused": False,
+            "global_reason": None,
+            "paused_symbols": ["BTC-USD"],
+            "global_remaining_seconds": 0,
+        }
+
+        result = check_degradation_state(degradation_state)
+
+        assert result.healthy is True
+        assert result.details["paused_symbol_count"] == 0
+
+    def test_cfm_reduce_only_attribute_fallback(self) -> None:
+        """Legacy CFM reduce-only attributes should still set warning state."""
+        degradation_state = MagicMock()
+        degradation_state.get_status.return_value = {
+            "global_paused": False,
+            "global_reason": None,
+            "paused_symbols": {},
+            "global_remaining_seconds": 0,
+        }
+
+        class LegacyRiskManager:
+            _cfm_reduce_only_mode = True
+            _cfm_reduce_only_reason = "cfm_pause"
+
+        result = check_degradation_state(degradation_state, LegacyRiskManager())
+
+        assert result.healthy is True
+        assert result.details["reduce_only_mode"] is True
+        assert result.details["reduce_only_reason"] == "cfm_pause"
+        assert result.details["severity"] == "warning"
+
 
 class FakeMarketDataService:
     def __init__(self, symbols: list[str], ticker_cache: TickerCache) -> None:

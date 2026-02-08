@@ -92,6 +92,27 @@ class TestCoinbaseAccountManagerSnapshot:
         assert snapshot["intx_portfolio_uuid"] == "pf-1"
         assert self._freshness(snapshot, "intx_balances")["status"] == "fresh"
 
+    def test_stale_uuid_cleared_when_refresh_returns_none(self) -> None:
+        class StaleUuidBroker(StubBroker):
+            def get_intx_balances(self, portfolio_uuid=None):
+                raise RuntimeError("portfolio gone")
+
+            def resolve_intx_portfolio(self, preferred_uuid=None, refresh=False):
+                if refresh:
+                    return None
+                return "pf-stale"
+
+        broker = StaleUuidBroker()
+        store = StubEventStore()
+        manager = CoinbaseAccountManager(broker, event_store=store)
+
+        snapshot = manager.snapshot()
+
+        assert snapshot["intx_available"] is False
+        assert snapshot["intx_unavailable_reason"] == "intx_portfolio_not_found"
+        assert "intx_portfolio_uuid" not in snapshot
+        assert self._freshness(snapshot, "intx_available")["status"] == "unavailable"
+
     def test_snapshot_records_error_payloads(self) -> None:
         class FailingFeeScheduleBroker(StubBroker):
             def get_fee_schedule(self):

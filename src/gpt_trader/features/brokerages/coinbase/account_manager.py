@@ -4,8 +4,9 @@ Manages Coinbase account state, positions, balances, and CFM/INTX specific featu
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Any, Callable, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from gpt_trader.utilities.logging_patterns import get_logger
 from gpt_trader.utilities.telemetry import emit_metric
@@ -73,7 +74,7 @@ class CoinbaseAccountManager:
                 snapshot_data["intx_balances"] = balances
                 freshness_data["intx_balances"] = balances_meta
 
-                target_uuid = resolved_uuid or intx_portfolio_uuid
+                target_uuid = resolved_uuid
                 if not target_uuid:
                     snapshot_data["intx_available"] = False
                     self._record_intx_fallback(
@@ -185,7 +186,7 @@ class CoinbaseAccountManager:
                     self._FRESHNESS_ERROR,
                     error_code=self._error_code_from_exception(error),
                 ),
-                portfolio_uuid,
+                None,
             )
 
     def _fetch_intx_section(
@@ -217,6 +218,7 @@ class CoinbaseAccountManager:
         snapshot_data["intx_balances"] = []
         snapshot_data["intx_positions"] = []
         snapshot_data["intx_collateral"] = {}
+        freshness_data["intx_available"] = self._freshness_entry(status, error_code=error_code)
         for section in ("intx_balances", "intx_positions", "intx_collateral"):
             freshness_data[section] = self._freshness_entry(status, error_code=error_code)
 

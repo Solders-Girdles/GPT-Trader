@@ -228,7 +228,9 @@ class TestStrategyProfileDiffCommand:
         assert data["baseline_path"] == str(baseline)
         assert data["runtime_profile_path"] == str(runtime)
         assert isinstance(data["diff"], list)
-        assert any(entry["path"] == "risk.max" and entry["status"] == "changed" for entry in data["diff"])
+        assert any(
+            entry["path"] == "risk.max" and entry["status"] == "changed" for entry in data["diff"]
+        )
 
     def test_cli_profile_diff_missing_runtime_profile_returns_error(self, tmp_path, capsys) -> None:
         baseline = tmp_path / "baseline.json"

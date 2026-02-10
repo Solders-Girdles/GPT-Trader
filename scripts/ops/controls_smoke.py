@@ -68,6 +68,24 @@ SUMMARY_SCHEMA_VERSION = "1.0"
 DEFAULT_SUMMARY_MAX_FAILURES = 3
 _SUMMARY_FAILURE_PRIORITY = {"fail": 0, "warn": 1}
 
+SUMMARY_TOP_LEVEL_KEYS = (
+    "timestamp",
+    "outcome",
+    "exit_code",
+    "summary_version",
+    "source",
+    "summary",
+)
+SUMMARY_SUMMARY_KEYS = (
+    "severity_counts",
+    "top_failing_checks",
+    "total_failing_checks",
+    "max_displayed_failures",
+    "truncated",
+)
+SUMMARY_SEVERITY_KEYS = ("pass", "warn", "fail")
+SUMMARY_FAILURE_ENTRY_KEYS = ("name", "severity", "detail")
+
 
 @dataclass(frozen=True)
 class ControlsSmokeCliArgs:
@@ -375,13 +393,61 @@ def summarize_smoke_results(
     )
 
 
+def validate_summary_payload(payload: dict[str, Any]) -> None:
+    if not isinstance(payload, dict):
+        raise ValueError("summary payload must be a dict")
+
+    missing_top = [key for key in SUMMARY_TOP_LEVEL_KEYS if key not in payload]
+    if missing_top:
+        raise ValueError(f"missing summary keys: {missing_top}")
+
+    summary = payload["summary"]
+    if not isinstance(summary, dict):
+        raise ValueError("summary field must be a dict")
+
+    missing_summary = [key for key in SUMMARY_SUMMARY_KEYS if key not in summary]
+    if missing_summary:
+        raise ValueError(f"summary missing keys: {missing_summary}")
+
+    severity_counts = summary["severity_counts"]
+    if not isinstance(severity_counts, dict):
+        raise ValueError("severity_counts must be a dict")
+
+    missing_severity = [key for key in SUMMARY_SEVERITY_KEYS if key not in severity_counts]
+    if missing_severity:
+        raise ValueError(f"severity_counts missing keys: {missing_severity}")
+
+    top_failures = summary["top_failing_checks"]
+    if not isinstance(top_failures, list):
+        raise ValueError("top_failing_checks must be a list")
+
+    for entry in top_failures:
+        if not isinstance(entry, dict):
+            raise ValueError("each failing check entry must be a dict")
+        missing_entry_keys = [key for key in SUMMARY_FAILURE_ENTRY_KEYS if key not in entry]
+        if missing_entry_keys:
+            raise ValueError(f"failing check entry missing keys: {missing_entry_keys}")
+
+    total = summary["total_failing_checks"]
+    if not isinstance(total, int):
+        raise ValueError("total_failing_checks must be an int")
+
+    max_displayed = summary["max_displayed_failures"]
+    if not isinstance(max_displayed, int):
+        raise ValueError("max_displayed_failures must be an int")
+
+    truncated = summary["truncated"]
+    if not isinstance(truncated, bool):
+        raise ValueError("truncated must be a bool")
+
+
 def build_summary_payload(
     results: list[SmokeResult],
     outcome: ExitOutcome,
     max_top_failures: int = DEFAULT_SUMMARY_MAX_FAILURES,
 ) -> dict[str, Any]:
     summary = summarize_smoke_results(results, max_top_failures=max_top_failures)
-    return {
+    payload = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "outcome": outcome.label,
         "exit_code": outcome.exit_code,
@@ -389,6 +455,8 @@ def build_summary_payload(
         "source": "controls_smoke",
         "summary": summary.to_dict(),
     }
+    validate_summary_payload(payload)
+    return payload
 
 
 def parse_args(argv: Sequence[str] | None = None) -> ControlsSmokeCliArgs:

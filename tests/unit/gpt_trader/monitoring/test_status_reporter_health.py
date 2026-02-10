@@ -11,7 +11,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from gpt_trader.monitoring.metrics_collector import reset_all
-from gpt_trader.monitoring.status_reporter import StatusReporter
+from gpt_trader.monitoring.status_reporter import HEARTBEAT_LAG_METRIC, StatusReporter
 
 
 class _BalanceStub:
@@ -211,6 +211,8 @@ def test_update_ws_health_coerces_invalid_timestamps_and_clamps_future_age(
 
     reset_all()
     monkeypatch.setattr(status_reporter, "get_clock", lambda: _Clock())
+    mock_record_histogram = MagicMock()
+    monkeypatch.setattr(status_reporter, "record_histogram", mock_record_histogram)
     reporter = StatusReporter()
 
     reporter.update_ws_health(
@@ -238,6 +240,29 @@ def test_update_ws_health_coerces_invalid_timestamps_and_clamps_future_age(
     assert collector.gauges["gpt_trader_ws_last_heartbeat_age_seconds"] == 0.0
     assert collector.gauges["gpt_trader_ws_last_close_age_seconds"] == 0.0
     assert collector.gauges["gpt_trader_ws_last_error_age_seconds"] == 0.0
+    mock_record_histogram.assert_not_called()
+
+
+def test_update_ws_health_records_heartbeat_lag_histogram(monkeypatch: pytest.MonkeyPatch) -> None:
+    import gpt_trader.monitoring.status_reporter as status_reporter
+
+    class _Clock:
+        def time(self) -> float:
+            return 2000.0
+
+    monkeypatch.setattr(status_reporter, "get_clock", lambda: _Clock())
+    mock_record_histogram = MagicMock()
+    monkeypatch.setattr(status_reporter, "record_histogram", mock_record_histogram)
+
+    reporter = StatusReporter()
+    heartbeat_ts = 1900.0
+    reporter.update_ws_health({"last_heartbeat_ts": heartbeat_ts})
+
+    mock_record_histogram.assert_called_once_with(
+        HEARTBEAT_LAG_METRIC,
+        100.0,
+        buckets=status_reporter.HEARTBEAT_LAG_BUCKETS,
+    )
 
 
 def test_update_risk_normalizes_guard_payloads() -> None:

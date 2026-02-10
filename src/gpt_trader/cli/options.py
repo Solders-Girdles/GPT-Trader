@@ -5,7 +5,12 @@ from __future__ import annotations
 from argparse import ArgumentParser
 from pathlib import Path
 
-PROFILE_CHOICES = ["dev", "demo", "prod", "canary", "spot", "paper"]
+from gpt_trader.app.config.profile_loader import (
+    DEFAULT_RUNTIME_PROFILE_NAME,
+    RUNTIME_PROFILE_CHOICES,
+)
+
+PROFILE_CHOICES = list(RUNTIME_PROFILE_CHOICES)
 OUTPUT_FORMAT_CHOICES = ["text", "json"]
 
 
@@ -57,7 +62,7 @@ def add_profile_option(parser: ArgumentParser) -> None:
     parser.add_argument(
         "--profile",
         type=str,
-        default="dev",
+        default=DEFAULT_RUNTIME_PROFILE_NAME,
         choices=PROFILE_CHOICES,
         help="Configuration profile",
     )

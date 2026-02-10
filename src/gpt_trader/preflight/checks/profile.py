@@ -3,6 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from gpt_trader.app.config.profile_loader import get_profile_registry_entry_by_name
+
 if TYPE_CHECKING:
     from gpt_trader.preflight.core import PreflightCheck
 
@@ -11,7 +13,9 @@ def check_profile_configuration(checker: PreflightCheck) -> bool:
     """Validate the selected trading profile configuration file."""
     checker.section_header("8. PROFILE CONFIGURATION")
 
-    profile_path = Path(f"config/profiles/{checker.profile}.yaml")
+    entry = get_profile_registry_entry_by_name(checker.profile)
+    profile_filename = entry.yaml_filename if entry else f"{checker.profile}.yaml"
+    profile_path = Path("config") / "profiles" / profile_filename
     if profile_path.exists():
         checker.log_success(f"Profile '{checker.profile}' found at {profile_path}")
 

@@ -20,7 +20,7 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from gpt_trader.monitoring.metrics_collector import record_gauge
+from gpt_trader.monitoring.metrics_collector import record_gauge, record_histogram
 from gpt_trader.utilities.datetime_helpers import normalize_to_utc, parse_iso_to_epoch
 from gpt_trader.utilities.logging_patterns import get_logger
 from gpt_trader.utilities.time_provider import get_clock
@@ -40,6 +40,24 @@ def _format_timestamp_iso(timestamp: float) -> str:
 
 def _clock_time() -> float:
     return get_clock().time()
+
+
+HEARTBEAT_LAG_METRIC = "gpt_trader_ws_heartbeat_lag_seconds"
+HEARTBEAT_LAG_BUCKETS = (
+    0.01,
+    0.05,
+    0.1,
+    0.25,
+    0.5,
+    1.0,
+    2.0,
+    5.0,
+    10.0,
+    30.0,
+    60.0,
+    120.0,
+    300.0,
+)
 
 
 @dataclass
@@ -1048,6 +1066,11 @@ class StatusReporter:
             last_heartbeat_ts is not None and (now - last_heartbeat_ts) > 30
         )
 
+        message_age = _age_seconds(last_message_ts)
+        heartbeat_age = _age_seconds(last_heartbeat_ts)
+        close_age = _age_seconds(self._status.websocket.last_close_ts)
+        error_age = _age_seconds(self._status.websocket.last_error_ts)
+
         # Record WS health gauges for metrics
         try:
             record_gauge(
@@ -1068,20 +1091,26 @@ class StatusReporter:
             )
             record_gauge(
                 "gpt_trader_ws_last_message_age_seconds",
-                _age_seconds(self._status.websocket.last_message_ts),
+                message_age,
             )
             record_gauge(
                 "gpt_trader_ws_last_heartbeat_age_seconds",
-                _age_seconds(self._status.websocket.last_heartbeat_ts),
+                heartbeat_age,
             )
             record_gauge(
                 "gpt_trader_ws_last_close_age_seconds",
-                _age_seconds(self._status.websocket.last_close_ts),
+                close_age,
             )
             record_gauge(
                 "gpt_trader_ws_last_error_age_seconds",
-                _age_seconds(self._status.websocket.last_error_ts),
+                error_age,
             )
+            if last_heartbeat_ts is not None:
+                record_histogram(
+                    HEARTBEAT_LAG_METRIC,
+                    heartbeat_age,
+                    buckets=HEARTBEAT_LAG_BUCKETS,
+                )
         except Exception:
             pass  # Don't let metrics errors affect operation
 

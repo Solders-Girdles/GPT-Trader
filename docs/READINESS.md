@@ -182,6 +182,12 @@ Checklist:
 - [ ] Evidence path(s): `var/ops/controls_smoke_20260117_123003.json`
 - [ ] Notes: 2026-01-17 ops controls smoke run. kill_switch blocked (decision_id=decision-1). reduce_only_mode blocked new entries and allowed exit (order_id=order-1).
 
+#### Dry-run controls summary
+
+- Run `uv run gpt-trader controls summary --format json` for a deterministic dry-run summary that highlights pass/warn/fail counts, a truncated (default 3) list of top failing checks, and the control outcome/exit code for automation.
+- Adjust the number of reported failures with `--max-top-failures` (defaults to 3) or use `python scripts/ops/controls_smoke.py --dry-run-summary --max-summary-failures N` directly.
+- Exit codes remain stable for automation: `0` for success, `1` when guards intentionally block (guard_blocked), and `2` for unexpected runtime failures. The summary command is read-only (`was_noop=true`) and can be used before any runtime changes.
+
 ### 8) Security and credential hygiene
 
 What good looks like: secrets flow and permission checks are correct; no plaintext credentials

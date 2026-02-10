@@ -4,6 +4,8 @@ from __future__ import annotations
 import asyncio
 import json
 import signal
+from argparse import ArgumentParser
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -39,6 +41,38 @@ class SmokeResult:
 class ExitOutcome:
     label: str
     exit_code: int
+
+
+@dataclass(frozen=True)
+class SmokeSummary:
+    severity_counts: dict[str, int]
+    top_failing_checks: list[dict[str, Any]]
+    total_failing_checks: int
+    max_displayed_failures: int
+
+    @property
+    def truncated(self) -> bool:
+        return self.total_failing_checks > self.max_displayed_failures
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "severity_counts": self.severity_counts,
+            "top_failing_checks": self.top_failing_checks,
+            "total_failing_checks": self.total_failing_checks,
+            "max_displayed_failures": self.max_displayed_failures,
+            "truncated": self.truncated,
+        }
+
+
+SUMMARY_SCHEMA_VERSION = "1.0"
+DEFAULT_SUMMARY_MAX_FAILURES = 3
+_SUMMARY_FAILURE_PRIORITY = {"fail": 0, "warn": 1}
+
+
+@dataclass(frozen=True)
+class ControlsSmokeCliArgs:
+    dry_run_summary: bool
+    max_summary_failures: int
 
 
 class SignalInterrupt(Exception):
@@ -238,7 +272,7 @@ def _run_reduce_only_allows_exit(engine: TradingEngine) -> SmokeResult:
     return SmokeResult("reduce_only_exit", "failed", detail)
 
 
-def _run_smoke_checks() -> list[SmokeResult]:
+def run_smoke_checks() -> list[SmokeResult]:
     with (
         patch(
             "gpt_trader.features.live_trade.engines.strategy.create_strategy",
@@ -281,19 +315,100 @@ def _run_smoke_checks() -> list[SmokeResult]:
         ]
 
 
-def _is_guard_blocked(result: SmokeResult) -> bool:
+def is_guard_blocked(result: SmokeResult) -> bool:
     return result.detail.get("status") == OrderSubmissionStatus.BLOCKED.value
 
 
-def _determine_outcome(results: list[SmokeResult]) -> ExitOutcome:
+def determine_outcome(results: list[SmokeResult]) -> ExitOutcome:
     if not results:
         return ExitOutcome("runtime_failure", EXIT_RUNTIME_FAILURE)
     if all(result.status == "passed" for result in results):
         return ExitOutcome("success", EXIT_SUCCESS)
     failed_results = [result for result in results if result.status != "passed"]
-    if failed_results and all(_is_guard_blocked(result) for result in failed_results):
+    if failed_results and all(is_guard_blocked(result) for result in failed_results):
         return ExitOutcome("guard_blocked", EXIT_GUARD_BLOCKED)
     return ExitOutcome("runtime_failure", EXIT_RUNTIME_FAILURE)
+
+
+def _classify_severity(result: SmokeResult) -> str:
+    if result.status == "passed":
+        return "pass"
+    if is_guard_blocked(result):
+        return "warn"
+    return "fail"
+
+
+def summarize_smoke_results(
+    results: list[SmokeResult],
+    max_top_failures: int = DEFAULT_SUMMARY_MAX_FAILURES,
+) -> SmokeSummary:
+    severity_counts = {"pass": 0, "warn": 0, "fail": 0}
+    failures: list[dict[str, Any]] = []
+    for result in results:
+        severity = _classify_severity(result)
+        severity_counts[severity] += 1
+
+        if severity != "pass":
+            failures.append(
+                {
+                    "name": result.name,
+                    "severity": severity,
+                    "detail": result.detail,
+                }
+            )
+
+    sorted_failures = sorted(
+        failures,
+        key=lambda payload: (
+            _SUMMARY_FAILURE_PRIORITY.get(payload["severity"], 0),
+            payload["name"],
+        ),
+    )
+    displayed = max(0, max_top_failures)
+    top_failures = sorted_failures[:displayed] if displayed > 0 else []
+
+    return SmokeSummary(
+        severity_counts=severity_counts,
+        top_failing_checks=top_failures,
+        total_failing_checks=len(failures),
+        max_displayed_failures=displayed,
+    )
+
+
+def build_summary_payload(
+    results: list[SmokeResult],
+    outcome: ExitOutcome,
+    max_top_failures: int = DEFAULT_SUMMARY_MAX_FAILURES,
+) -> dict[str, Any]:
+    summary = summarize_smoke_results(results, max_top_failures=max_top_failures)
+    return {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "outcome": outcome.label,
+        "exit_code": outcome.exit_code,
+        "summary_version": SUMMARY_SCHEMA_VERSION,
+        "source": "controls_smoke",
+        "summary": summary.to_dict(),
+    }
+
+
+def parse_args(argv: Sequence[str] | None = None) -> ControlsSmokeCliArgs:
+    parser = ArgumentParser(description="Run controls smoke guard checks")
+    parser.add_argument(
+        "--dry-run-summary",
+        action="store_true",
+        help="Print a deterministic summary (pass/warn/fail counts) without persisting artifacts",
+    )
+    parser.add_argument(
+        "--max-summary-failures",
+        type=int,
+        default=DEFAULT_SUMMARY_MAX_FAILURES,
+        help=f"Maximum number of failing checks to include in the summary (default: {DEFAULT_SUMMARY_MAX_FAILURES})",
+    )
+    parsed = parser.parse_args(argv)
+    return ControlsSmokeCliArgs(
+        dry_run_summary=bool(parsed.dry_run_summary),
+        max_summary_failures=max(0, parsed.max_summary_failures or 0),
+    )
 
 
 def _format_signal_error(signum: int) -> str:
@@ -313,27 +428,35 @@ def _emit_status(outcome: ExitOutcome, output_path: Path | None, error: str | No
         print(f"error={error}")
 
 
-def main() -> int:
+def main(argv: Sequence[str] | None = None) -> int:
+    args = parse_args(argv)
+    summary_mode = args.dry_run_summary
     _install_signal_handlers()
     outcome = ExitOutcome("runtime_failure", EXIT_RUNTIME_FAILURE)
     output_path: Path | None = None
     error: str | None = None
     try:
-        results = _run_smoke_checks()
-        outcome = _determine_outcome(results)
-        output = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "outcome": outcome.label,
-            "exit_code": outcome.exit_code,
-            "results": [
-                {"name": result.name, "status": result.status, "detail": result.detail}
-                for result in results
-            ],
-        }
+        results = run_smoke_checks()
+        outcome = determine_outcome(results)
+        if summary_mode:
+            summary_payload = build_summary_payload(
+                results, outcome, max_top_failures=args.max_summary_failures
+            )
+            print(json.dumps(summary_payload, indent=2, default=str))
+        else:
+            output = {
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "outcome": outcome.label,
+                "exit_code": outcome.exit_code,
+                "results": [
+                    {"name": result.name, "status": result.status, "detail": result.detail}
+                    for result in results
+                ],
+            }
 
-        OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-        output_path = OUTPUT_DIR / f"controls_smoke_{_utc_timestamp()}.json"
-        output_path.write_text(json.dumps(output, indent=2))
+            OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+            output_path = OUTPUT_DIR / f"controls_smoke_{_utc_timestamp()}.json"
+            output_path.write_text(json.dumps(output, indent=2))
     except SignalInterrupt as exc:
         outcome = ExitOutcome("runtime_failure", EXIT_RUNTIME_FAILURE)
         error = _format_signal_error(exc.signum)
@@ -344,7 +467,8 @@ def main() -> int:
         outcome = ExitOutcome("runtime_failure", EXIT_RUNTIME_FAILURE)
         error = str(exc) or exc.__class__.__name__
     finally:
-        _emit_status(outcome, output_path, error)
+        if not summary_mode or error:
+            _emit_status(outcome, output_path, error)
         clear_application_container()
     return outcome.exit_code
 

@@ -1,0 +1,77 @@
+{
+  "schema_version": "gpt_trader:preflight:diagnostics:v1",
+  "timestamp": "2025-02-05T12:34:56+00:00",
+  "profile": "golden-profile",
+  "bundle": {
+    "readiness": {
+      "status": "READY",
+      "message": "System is READY for production trading (with caution)",
+      "counts": {
+        "pass": 2,
+        "warn": 1,
+        "fail": 0,
+        "total": 3
+      },
+      "checks": [
+        {
+          "status": "pass",
+          "message": "env ready",
+          "details": {
+            "status_code": 200
+          }
+        },
+        {
+          "status": "warn",
+          "message": "slow response",
+          "details": {
+            "credentials": "<redacted>",
+            "timeout": "5s"
+          }
+        },
+        {
+          "status": "pass",
+          "message": "market ok",
+          "details": {
+            "notes": "on watch",
+            "secret_token": "<redacted>"
+          }
+        }
+      ]
+    },
+    "config": {
+      "profile": "golden-profile",
+      "warn_only": false,
+      "trading_modes": [
+        "cfm",
+        "spot"
+      ],
+      "cfm_enabled": true,
+      "intx_perps_enabled": false,
+      "intends_real_orders": true,
+      "requires_trade_permission": true,
+      "expected_env_defaults": {
+        "API_KEY": {
+          "value": "<redacted>",
+          "required": true
+        },
+        "REGION": {
+          "value": "us-east-1",
+          "required": false
+        }
+      },
+      "checks_run": [
+        "check_environment_variables",
+        "check_pretrade_diagnostics",
+        "check_readiness_report"
+      ]
+    },
+    "environment": {
+      "python_version": "3.12.0",
+      "platform": "TestOS 1.0",
+      "cwd": "/tmp/diagnostics",
+      "timezone": "UTC",
+      "remote_checks_skipped": false,
+      "cdp_credentials_present": false
+    }
+  }
+}

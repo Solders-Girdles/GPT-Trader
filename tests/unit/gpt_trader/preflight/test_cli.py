@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -69,6 +70,7 @@ class TestParsePreflightArgs:
             verbose=False,
             profile="canary",
             warn_only=False,
+            diagnostics_bundle=False,
             report_dir=None,
             report_path=None,
         )
@@ -77,6 +79,11 @@ class TestParsePreflightArgs:
         parsed = parse_preflight_args(["--warn-only"])
 
         assert parsed.warn_only is True
+
+    def test_diagnostics_bundle_flag(self) -> None:
+        parsed = parse_preflight_args(["--diagnostics-bundle"])
+
+        assert parsed.diagnostics_bundle is True
 
     def test_report_dir_resolves_absolute(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -190,3 +197,29 @@ class TestMain:
         main(["--warn-only"])
 
         assert os.environ.get("GPT_TRADER_PREFLIGHT_WARN_ONLY") == "1"
+
+    def test_diagnostics_bundle_mode_outputs_bundle(self, cli_mocks: CLIMocks, monkeypatch, capsys):
+        bundle = {
+            "schema_version": "test:v1",
+            "bundle": {"readiness": {"status": "READY", "message": ""}},
+        }
+        monkeypatch.setattr(
+            "gpt_trader.preflight.cli.build_diagnostics_bundle",
+            lambda profile, **kwargs: bundle,
+        )
+
+        assert main(["--diagnostics-bundle"]) == 0
+        captured = capsys.readouterr()
+        assert json.loads(captured.out) == bundle
+        cli_mocks.preflight_class.assert_not_called()
+        cli_mocks.header.assert_not_called()
+
+    def test_diagnostics_bundle_mode_handles_exceptions(self, monkeypatch, capsys):
+        def _boom(*_args, **_kwargs):
+            raise RuntimeError("boom")
+
+        monkeypatch.setattr("gpt_trader.preflight.cli.build_diagnostics_bundle", _boom)
+
+        assert main(["--diagnostics-bundle"]) == 1
+        captured = capsys.readouterr()
+        assert "Error generating diagnostics bundle" in captured.err

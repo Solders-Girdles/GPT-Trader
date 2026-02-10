@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import json
 import os
+import sys
 from collections.abc import Callable, Sequence
 from datetime import datetime, timezone
 
 from .cli_args import PreflightCliArgs, parse_preflight_args
 from .context import Colors
 from .core import PreflightCheck
+from .diagnostics_bundle import build_diagnostics_bundle
 
 load_dotenv: Callable[..., bool] | None
 try:
@@ -36,6 +39,9 @@ def main(argv: Sequence[str] | None = None) -> int:
 def _run_preflight(args: PreflightCliArgs) -> int:
     if load_dotenv is not None:
         load_dotenv()
+
+    if args.diagnostics_bundle:
+        return _emit_diagnostics_bundle(args)
 
     # Set warn-only env var if CLI flag is provided
     if args.warn_only:
@@ -70,3 +76,15 @@ def _run_preflight(args: PreflightCliArgs) -> int:
         report_dir=args.report_dir, report_path=args.report_path
     )
     return 0 if success else 1
+
+
+def _emit_diagnostics_bundle(args: PreflightCliArgs) -> int:
+    try:
+        bundle = build_diagnostics_bundle(
+            profile=args.profile, verbose=args.verbose, warn_only=args.warn_only
+        )
+        print(json.dumps(bundle, indent=2))
+        return 0
+    except Exception as exc:  # pragma: no cover - defensive safeguard
+        print(f"Error generating diagnostics bundle: {exc}", file=sys.stderr)
+        return 1

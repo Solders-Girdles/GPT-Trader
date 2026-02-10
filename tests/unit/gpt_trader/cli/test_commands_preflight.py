@@ -35,3 +35,19 @@ def test_preflight_execute_delegates(monkeypatch) -> None:
 
     assert exit_code == 0
     assert captured["argv"] == ["--profile", "prod", "--verbose", "--warn-only"]
+
+
+def test_preflight_execute_sends_bundle_flag(monkeypatch) -> None:
+    captured: dict[str, list[str]] = {}
+
+    def fake_run(argv=None):
+        captured["argv"] = list(argv or [])
+        return 0
+
+    monkeypatch.setattr(preflight_cmd, "run_preflight_cli", fake_run)
+
+    args = Namespace(profile="prod", diagnostics_bundle=True)
+    exit_code = preflight_cmd.execute(args)
+
+    assert exit_code == 0
+    assert "--diagnostics-bundle" in captured["argv"]

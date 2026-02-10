@@ -5,7 +5,12 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-PROFILE_CHOICES = ("dev", "canary", "prod")
+from gpt_trader.app.config.profile_loader import (
+    DEFAULT_PREFLIGHT_PROFILE_NAME,
+    PREFLIGHT_PROFILE_CHOICES,
+)
+
+PROFILE_CHOICES = PREFLIGHT_PROFILE_CHOICES
 
 
 @dataclass(frozen=True)
@@ -22,7 +27,7 @@ def add_preflight_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--profile",
         "-p",
-        default="canary",
+        default=DEFAULT_PREFLIGHT_PROFILE_NAME,
         choices=PROFILE_CHOICES,
         help="Trading profile to validate (default: canary)",
     )

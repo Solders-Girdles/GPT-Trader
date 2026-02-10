@@ -11,7 +11,11 @@ from gpt_trader.app.containers.persistence import PersistenceContainer
 from gpt_trader.app.containers.risk_validation import RiskValidationContainer
 from gpt_trader.app.health_server import HealthState
 from gpt_trader.app.protocols import EventStoreProtocol
-from gpt_trader.app.runtime import RuntimePaths
+from gpt_trader.app.runtime import (
+    RuntimePaths,
+    RuntimeSettingsSnapshot,
+    create_runtime_settings_snapshot,
+)
 from gpt_trader.config.types import Profile
 from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
 from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
@@ -48,12 +52,14 @@ class ApplicationContainer:
 
     def __init__(self, config: BotConfig):
         self.config = config
+        self._runtime_settings_snapshot = create_runtime_settings_snapshot(config)
 
         # Sub-containers (lazily delegate to these for grouped dependencies)
         self._config_container = ConfigContainer(config=config)
         self._observability = ObservabilityContainer(config=config)
         self._persistence = PersistenceContainer(
             config=config,
+            runtime_settings_snapshot=self._runtime_settings_snapshot,
             profile_provider=lambda: cast(Profile, config.profile),
         )
         self._brokerage = BrokerageContainer(
@@ -75,6 +81,11 @@ class ApplicationContainer:
     def runtime_paths(self) -> RuntimePaths:
         """Delegate to PersistenceContainer."""
         return self._persistence.runtime_paths
+
+    @property
+    def runtime_settings_snapshot(self) -> RuntimeSettingsSnapshot:
+        """Immutable snapshot of the runtime configuration."""
+        return self._runtime_settings_snapshot
 
     @property
     def event_store(self) -> EventStore:

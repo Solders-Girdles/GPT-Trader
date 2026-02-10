@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from gpt_trader.app.runtime.settings import RuntimeSettingsSnapshot
+
 if TYPE_CHECKING:
     from gpt_trader.app.config import BotConfig
 
@@ -20,7 +22,7 @@ class RuntimePaths:
 
 def resolve_runtime_paths(
     *,
-    config: BotConfig,
+    config: BotConfig | RuntimeSettingsSnapshot,
     profile: Any,
     bot_name: str = "runtime_data",
 ) -> RuntimePaths:
@@ -28,7 +30,7 @@ def resolve_runtime_paths(
 
     profile_value = profile.value if hasattr(profile, "value") else str(profile)
 
-    runtime_root = Path(config.runtime_root)
+    runtime_root = Path(getattr(config, "runtime_root", "."))
     storage_dir = runtime_root / f"{bot_name}/{profile_value}"
     storage_dir.mkdir(parents=True, exist_ok=True)
 

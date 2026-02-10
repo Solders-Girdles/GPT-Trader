@@ -2,15 +2,30 @@
 
 from __future__ import annotations
 
+import runpy
 from argparse import Namespace
+from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
-
-from scripts.ops import controls_smoke
 
 from gpt_trader.cli import options
 from gpt_trader.cli.response import CliResponse
 
 COMMAND_NAME = "controls summary"
+
+
+def _load_controls_smoke_module() -> Any:
+    try:
+        from scripts.ops import controls_smoke as module
+
+        return module
+    except ModuleNotFoundError:
+        module_path = Path(__file__).resolve().parents[4] / "scripts" / "ops" / "controls_smoke.py"
+        namespace = runpy.run_path(str(module_path))
+        return SimpleNamespace(**namespace)
+
+
+controls_smoke = _load_controls_smoke_module()
 
 
 def register(subparsers: Any) -> None:

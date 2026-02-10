@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-from argparse import ArgumentParser
-from collections.abc import Sequence
 import asyncio
 import json
 import signal
+from argparse import ArgumentParser
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal

@@ -462,6 +462,36 @@ The live trade layer provides coordinated control across trading operations thro
 - `app/runtime/paths.py` - Runtime path resolution
 - `app/bootstrap.py` - Bot creation helpers (`build_bot`, `bot_from_profile`)
 
+### Runtime Profile Registry
+
+`src/gpt_trader/app/config/profile_loader.py` hoists the runtime profile registry that ties every `Profile` enum to:
+
+- a shared `ProfileSchema` that seeds both runtime and preflight configuration flows,
+- env-var defaults/operators expectations (`env_defaults`) so downstream automation can validate staging vs. production behavior, and
+- metadata such as `preflight_supported` and `preflight_default` so readiness tooling knows which profile to hydrate.
+
+`ProfileLoader` and `build_profile_config` are the concrete entrypoints maintainers should follow when touching profile loading or registry responsibilities.
+
+Supported profile sources:
+
+- `config/profiles/<profile>.yaml` (YAML-first loading via `ProfileLoader.load`)
+- `_PROFILE_DEFAULTS` hardcoded fallbacks in the same module when a profile YAML file is missing
+- CLI overrides baked into `src/gpt_trader/cli/services.py:build_config_from_args()` (e.g., `--profile`, `--dry-run`, `--symbols`, `--config`)
+- Environment variables surfaced by `BotConfig.from_env()` (e.g., `DRY_RUN`, `RISK_*`, `TRADING_SYMBOLS`, `MOCK_BROKER`)
+- Runtime artifacts under `runtime_data/<profile>/…` that the readiness gate consumes (see [Readiness pillars](READINESS.md#readiness-pillars-must-have))
+
+Override order followed when building a `BotConfig`:
+
+| Priority | Source | Mechanism |
+| --- | --- | --- |
+| 1 | CLI arguments | `build_config_from_args()` overrides everything else with flags such as `--dry-run`, `--symbols`, and `--time-in-force` after a profile/config file loads. |
+| 2 | Config file (`--config`) | Loading `--config path/to.yaml` short-circuits profile lookup and shapes the base config before CLI tweaks. |
+| 3 | Profile loader | `ProfileLoader.load()` reads `config/profiles/<profile>.yaml` (YAML first) or `_PROFILE_DEFAULTS`, then funnels the schema through `build_profile_config()`. |
+| 4 | Environment variables | `BotConfig.from_env()` seeds fields such as `DRY_RUN`, `RISK_*`, `STATUS_INTERVAL`, and `MOCK_BROKER` before any profile materializes. |
+| 5 | Built-in defaults | The dataclasses inside `ProfileSchema`/`ProfileRegistryEntry` ensure deterministic values when no other source supplies a field. |
+
+The readiness gate and CLI preflight scripts consume the same registry so that `PREFLIGHT_PROFILE`, `READINESS_REPORT_DIR`, and `runtime_data/<profile>` artifacts stay aligned with whatever the CLI is currently driving.
+
 ## What's Actually Working
 
 ### ✅ Fully Operational

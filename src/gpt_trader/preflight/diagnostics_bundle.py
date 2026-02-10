@@ -6,8 +6,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping
 
-from gpt_trader.preflight.core import PreflightCheck
 from gpt_trader.preflight.context import PreflightContext
+from gpt_trader.preflight.core import PreflightCheck
 from gpt_trader.preflight.report import evaluate_preflight_status
 from gpt_trader.preflight.validation_result import PreflightResultPayload
 
@@ -75,6 +75,7 @@ def build_diagnostics_bundle(
 # -----------------------------------------------------------------------------
 # Helpers
 # -----------------------------------------------------------------------------
+
 
 def _silence_context(context: PreflightContext) -> None:
     """Mute console output while still tracking structured results."""

@@ -3,7 +3,9 @@ from __future__ import annotations
 from gpt_trader.preflight.diagnostics_bundle import _format_readiness_payload
 
 
-def _make_result(status: str, message: str, details: dict[str, object] | None = None) -> dict[str, object]:
+def _make_result(
+    status: str, message: str, details: dict[str, object] | None = None
+) -> dict[str, object]:
     return {"status": status, "message": message, "details": details or {}}
 
 

@@ -31,11 +31,12 @@ Schema Structure:
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import time
 from decimal import Decimal
 from pathlib import Path
+from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
 
 from gpt_trader.config import path_registry
@@ -229,6 +230,48 @@ class ProfileSchema:
         )
 
 
+@dataclass(frozen=True)
+class ProfileRegistryEntry:
+    """Shared metadata for runtime and preflight profile consumers."""
+
+    profile: Profile
+    schema: ProfileSchema
+    env_defaults: Mapping[str, tuple[str, bool]]
+    preflight_supported: bool = False
+    preflight_default: bool = False
+
+    @property
+    def profile_name(self) -> str:
+        return self.profile.value
+
+    @property
+    def yaml_filename(self) -> str:
+        return f"{self.profile.value}.yaml"
+
+
+# Environment defaults grouped by prod-like/dev-like semantics so multiple
+# profiles share the same expectations.
+_DEV_ENV_DEFAULTS = MappingProxyType(
+    {
+        "BROKER": ("coinbase", True),
+        "COINBASE_SANDBOX": ("1", False),
+        "COINBASE_API_MODE": ("advanced", False),
+        "COINBASE_ENABLE_INTX_PERPS": ("0", False),
+    }
+)
+_PROD_ENV_DEFAULTS = MappingProxyType(
+    {
+        "BROKER": ("coinbase", True),
+        "COINBASE_SANDBOX": ("0", True),
+        "COINBASE_API_MODE": ("advanced", True),
+        "COINBASE_ENABLE_INTX_PERPS": ("0", True),
+    }
+)
+
+# Profiles that are treated as dev/test/paper style for env defaults + remote checks
+_DEV_LIKE_PROFILES = {Profile.DEV, Profile.TEST, Profile.PAPER}
+
+
 # Hardcoded profile defaults for when YAML files don't exist
 _PROFILE_DEFAULTS: dict[Profile, ProfileSchema] = {
     Profile.DEV: ProfileSchema(
@@ -359,6 +402,65 @@ _PROFILE_DEFAULTS: dict[Profile, ProfileSchema] = {
 }
 
 
+_PROFILE_REGISTRY: dict[Profile, ProfileRegistryEntry] = {}
+for profile_value, schema in _PROFILE_DEFAULTS.items():
+    entry = ProfileRegistryEntry(
+        profile=profile_value,
+        schema=schema,
+        env_defaults=_DEV_ENV_DEFAULTS if profile_value in _DEV_LIKE_PROFILES else _PROD_ENV_DEFAULTS,
+        preflight_supported=profile_value in {Profile.DEV, Profile.CANARY, Profile.PROD},
+        preflight_default=profile_value is Profile.CANARY,
+    )
+    _PROFILE_REGISTRY[profile_value] = entry
+
+PROFILE_REGISTRY = MappingProxyType(_PROFILE_REGISTRY)
+PROFILE_REGISTRY_BY_NAME = MappingProxyType(
+    {entry.profile.value: entry for entry in PROFILE_REGISTRY.values()}
+)
+
+RUNTIME_PROFILE_CHOICES = (
+    Profile.DEV.value,
+    Profile.DEMO.value,
+    Profile.PROD.value,
+    Profile.CANARY.value,
+    Profile.SPOT.value,
+    Profile.PAPER.value,
+)
+DEFAULT_RUNTIME_PROFILE_NAME = Profile.DEV.value
+
+_PREFLIGHT_PROFILE_SEQUENCE = (Profile.DEV, Profile.CANARY, Profile.PROD)
+PREFLIGHT_PROFILE_CHOICES = tuple(entry.value for entry in _PREFLIGHT_PROFILE_SEQUENCE)
+DEFAULT_PREFLIGHT_PROFILE_NAME = Profile.CANARY.value
+
+
+def get_profile_registry_entry(profile: Profile) -> ProfileRegistryEntry | None:
+    """Return the registry entry for a Profile enum member."""
+    return PROFILE_REGISTRY.get(profile)
+
+
+def get_profile_registry_entry_by_name(name: str | None) -> ProfileRegistryEntry | None:
+    """Return the registry entry keyed by the lowercase profile name."""
+    if not name:
+        return None
+    return PROFILE_REGISTRY_BY_NAME.get(name.lower())
+
+
+def get_env_defaults_for_profile(name: str | None) -> Mapping[str, tuple[str, bool]]:
+    """Return the expected env defaults for the given profile name."""
+    entry = get_profile_registry_entry_by_name(name)
+    if entry is not None:
+        return entry.env_defaults
+    return _PROD_ENV_DEFAULTS
+
+
+def is_dev_profile(name: str | None) -> bool:
+    """Return True if the profile name belongs to a dev-like preset."""
+    entry = get_profile_registry_entry_by_name(name)
+    if entry is None:
+        return False
+    return entry.profile in _DEV_LIKE_PROFILES
+
+
 class ProfileLoader:
     """Loads profile configuration from YAML files with hardcoded fallbacks.
 
@@ -382,10 +484,9 @@ class ProfileLoader:
         """
         yaml_path = self.profiles_dir / f"{profile.value}.yaml"
 
-        # Start with hardcoded defaults
-        defaults = _PROFILE_DEFAULTS.get(profile)
-        if defaults is None:
-            defaults = ProfileSchema(profile_name=profile.value)
+        # Start with hardcoded defaults from the shared registry
+        entry = get_profile_registry_entry(profile)
+        defaults = entry.schema if entry is not None else ProfileSchema(profile_name=profile.value)
 
         # Try to load and merge YAML
         if yaml_path.exists():
@@ -599,6 +700,16 @@ __all__ = [
     "MonitoringConfig",
     "ProfileLoader",
     "ProfileSchema",
+    "ProfileRegistryEntry",
+    "PROFILE_REGISTRY",
+    "get_profile_registry_entry",
+    "get_profile_registry_entry_by_name",
+    "get_env_defaults_for_profile",
+    "is_dev_profile",
+    "DEFAULT_RUNTIME_PROFILE_NAME",
+    "RUNTIME_PROFILE_CHOICES",
+    "DEFAULT_PREFLIGHT_PROFILE_NAME",
+    "PREFLIGHT_PROFILE_CHOICES",
     "RiskConfig",
     "SessionConfig",
     "StrategyConfig",

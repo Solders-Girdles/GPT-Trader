@@ -4,6 +4,10 @@ import os
 from dataclasses import dataclass, field
 from typing import Any, Mapping
 
+from gpt_trader.app.config.profile_loader import (
+    get_env_defaults_for_profile,
+    is_dev_profile,
+)
 from gpt_trader.features.brokerages.coinbase.credentials import (
     ResolvedCoinbaseCredentials,
     resolve_coinbase_credentials,
@@ -99,24 +103,12 @@ class PreflightContext:
             return False
         if os.getenv("COINBASE_PREFLIGHT_SKIP_REMOTE") == "1":
             return True
-        if self.profile == "dev" and not self.has_real_cdp_credentials():
+        if is_dev_profile(self.profile) and not self.has_real_cdp_credentials():
             return True
         return False
 
-    def expected_env_defaults(self) -> dict[str, tuple[str, bool]]:
-        if self.profile == "dev":
-            return {
-                "BROKER": ("coinbase", True),
-                "COINBASE_SANDBOX": ("1", False),
-                "COINBASE_API_MODE": ("advanced", False),
-                "COINBASE_ENABLE_INTX_PERPS": ("0", False),
-            }
-        return {
-            "BROKER": ("coinbase", True),
-            "COINBASE_SANDBOX": ("0", True),
-            "COINBASE_API_MODE": ("advanced", True),
-            "COINBASE_ENABLE_INTX_PERPS": ("0", True),
-        }
+    def expected_env_defaults(self) -> Mapping[str, tuple[str, bool]]:
+        return get_env_defaults_for_profile(self.profile)
 
     def _env_bool(self, key: str, default: bool = False) -> bool:
         raw = os.getenv(key)

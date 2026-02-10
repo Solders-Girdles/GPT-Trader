@@ -211,7 +211,9 @@ def test_build_summary_payload_validates_schema_and_includes_required_fields() -
 
     controls_smoke.validate_summary_payload(payload)
     assert payload["summary"]["severity_counts"]["fail"] == 1
-    assert payload["summary"]["max_displayed_failures"] == controls_smoke.DEFAULT_SUMMARY_MAX_FAILURES
+    assert (
+        payload["summary"]["max_displayed_failures"] == controls_smoke.DEFAULT_SUMMARY_MAX_FAILURES
+    )
 
 
 def test_validate_summary_payload_rejects_missing_fields() -> None:

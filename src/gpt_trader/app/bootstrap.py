@@ -30,6 +30,7 @@ from gpt_trader.features.live_trade.symbols import PERPS_ALLOWLIST, normalize_sy
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
+    from gpt_trader.app.runtime import RuntimeSettingsSnapshot
     from gpt_trader.features.live_trade.bot import TradingBot
 
 logger = get_logger(__name__, component="bot_bootstrap")
@@ -70,7 +71,7 @@ def normalise_symbols(
 
 def resolve_runtime_paths(
     profile: Profile,
-    config: BotConfig,
+    config: BotConfig | RuntimeSettingsSnapshot,
 ) -> RuntimePaths:
     """Determine and materialise storage directories for the bot."""
 

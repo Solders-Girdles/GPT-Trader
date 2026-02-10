@@ -56,7 +56,7 @@ def check_profile_configuration(checker: PreflightCheck) -> bool:
                 path=profile_path,
                 exception=exc,
             )
-            checker.log_error("Failed to parse profile", details=payload)
+            checker.log_error(f"Failed to parse profile: {exc}", details=payload)
             return False
 
     payload = profile_yaml_missing_payload(

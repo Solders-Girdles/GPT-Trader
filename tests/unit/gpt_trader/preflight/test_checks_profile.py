@@ -104,7 +104,7 @@ risk_management:
         result = check_profile_configuration(checker)
 
         assert result is False
-        assert any("Failed to parse profile" in e for e in checker.errors)
+        assert any(e.startswith("Failed to parse profile:") for e in checker.errors)
         details = _last_result_details(checker)
         assert details.get("category") == "yaml_parse"
         assert details.get("severity") == "error"

@@ -9,8 +9,8 @@ import pytest
 
 from gpt_trader.preflight.diagnostics_bundle import (
     CHECK_NAMES,
-    build_diagnostics_bundle,
     _format_readiness_payload,
+    build_diagnostics_bundle,
 )
 
 
@@ -54,9 +54,7 @@ def test_readiness_summary_all_passes() -> None:
     assert payload["message"].startswith("System is READY")
 
 
-FIXTURE_DIR = (
-    Path(__file__).resolve().parent / "fixtures" / "diagnostics_bundle"
-)
+FIXTURE_DIR = Path(__file__).resolve().parent / "fixtures" / "diagnostics_bundle"
 PROFILE_NAME = "golden-profile"
 FIXED_TIMESTAMP = datetime(2025, 2, 5, 12, 34, 56, tzinfo=timezone.utc)
 FIXED_PYTHON_VERSION = "3.12.0"
@@ -131,14 +129,14 @@ def _make_preflight_stub(context: _DummyContext) -> type:
 
 def _patch_stable_environment(monkeypatch: pytest.MonkeyPatch) -> None:
     class FixedDatetimeValue(datetime):
-        def __new__(cls, *args: object, **kwargs: object) -> \"FixedDatetimeValue\":
+        def __new__(cls, *args: object, **kwargs: object) -> FixedDatetimeValue:
             return datetime.__new__(cls, *args, **kwargs)
 
-        def astimezone(self, tz=None) -> \"FixedDatetimeValue\":
+        def astimezone(self, tz=None) -> FixedDatetimeValue:
             return self
 
         def tzname(self) -> str:
-            return \"UTC\"
+            return "UTC"
 
     class FixedDatetime:
         @classmethod
@@ -152,7 +150,6 @@ def _patch_stable_environment(monkeypatch: pytest.MonkeyPatch) -> None:
                 FIXED_TIMESTAMP.second,
                 tzinfo=timezone.utc,
             )
-
 
     monkeypatch.setattr(
         "gpt_trader.preflight.diagnostics_bundle.datetime",

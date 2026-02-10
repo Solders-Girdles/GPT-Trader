@@ -9,6 +9,7 @@ from . import (
     preflight,
     report,
     run,
+    strategy_profile,
     treasury,
     tui,
 )
@@ -22,6 +23,7 @@ __all__ = [
     "preflight",
     "report",
     "run",
+    "strategy_profile",
     "treasury",
     "tui",
 ]

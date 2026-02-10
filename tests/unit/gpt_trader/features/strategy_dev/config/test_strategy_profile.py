@@ -1,5 +1,8 @@
 """Tests for strategy profile module."""
 
+from typing import Any
+
+from gpt_trader.features.strategy_dev.config.diff import compute_profile_diff
 from gpt_trader.features.strategy_dev.config.strategy_profile import (
     ExecutionConfig,
     RegimeConfig,
@@ -230,3 +233,62 @@ class TestStrategyProfile:
         assert len(restored.signals) == 2
         assert restored.risk.max_position_size == 0.05
         assert restored.tags == ["test", "backtest"]
+
+
+class TestStrategyProfileDiff:
+    """Tests for profile diff helpers."""
+
+    def _index_by_path(self, entries: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+        return {entry["path"]: entry for entry in entries}
+
+    def test_diff_detects_changes_and_missing(self) -> None:
+        baseline = {
+            "name": "strategy",
+            "risk": {"max_position_size": 0.1},
+            "signals": ["a"],
+        }
+        runtime = {
+            "name": "strategy",
+            "risk": {"max_position_size": 0.2},
+            "signals": ["b"],
+            "extra": True,
+        }
+
+        entries = compute_profile_diff(baseline, runtime)
+        indexed = self._index_by_path(entries)
+
+        assert indexed["name"]["status"] == "unchanged"
+        assert indexed["risk.max_position_size"]["status"] == "changed"
+        assert indexed["signals"]["status"] == "changed"
+        assert indexed["extra"]["status"] == "changed"
+        assert indexed["extra"]["baseline_value"] is None
+
+    def test_diff_handles_missing_runtime_key(self) -> None:
+        baseline = {"name": "strategy", "version": "1.0"}
+        runtime = {"name": "strategy"}
+
+        entries = compute_profile_diff(baseline, runtime)
+        indexed = self._index_by_path(entries)
+
+        assert indexed["version"]["status"] == "missing"
+        assert indexed["version"]["runtime_value"] is None
+
+    def test_diff_includes_nested_entries(self) -> None:
+        baseline = {"risk": {"max": 1, "min": 0}}
+        runtime = {"risk": {"max": 1, "min": 0}}
+
+        entries = compute_profile_diff(baseline, runtime)
+        indexed = self._index_by_path(entries)
+
+        assert indexed["risk.max"]["status"] == "unchanged"
+        assert indexed["risk.min"]["status"] == "unchanged"
+
+    def test_diff_skips_ignored_fields(self) -> None:
+        baseline = {"created_at": "2025-02-01T00:00:00Z", "name": "strategy"}
+        runtime = {"created_at": "2025-02-02T00:00:00Z", "name": "strategy"}
+
+        entries = compute_profile_diff(baseline, runtime)
+        indexed = self._index_by_path(entries)
+
+        assert "created_at" not in indexed
+        assert indexed["name"]["status"] == "unchanged"

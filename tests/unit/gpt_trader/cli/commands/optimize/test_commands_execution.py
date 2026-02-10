@@ -3,12 +3,17 @@
 from __future__ import annotations
 
 from argparse import Namespace
+from pathlib import Path
+from typing import Any
 from unittest.mock import MagicMock
+import json
 
 import pytest
 
+from gpt_trader.cli.commands import strategy_profile as strategy_cmd
 from gpt_trader.cli.commands.optimize import apply, compare, export, run, view
 from gpt_trader.cli.commands.optimize import list as list_cmd
+from gpt_trader.cli.response import CliErrorCode, CliResponse
 
 
 class TestRunCommand:
@@ -139,3 +144,58 @@ class TestApplyCommand:
         result = apply.execute(args)
 
         assert result == 1  # Error: no runs found
+
+
+class TestStrategyProfileDiffCommand:
+    """Tests for the strategy profile diff CLI."""
+
+    def _write_json(self, path: Path, data: dict[str, Any]) -> None:
+        with path.open("w") as f:
+            json.dump(data, f)
+
+    def test_execute_returns_diff_entries(
+        self, tmp_path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        baseline = tmp_path / "baseline.json"
+        runtime = tmp_path / "runtime.json"
+        self._write_json(baseline, {"name": "alpha", "risk": {"max": 0.1}})
+        self._write_json(runtime, {"name": "alpha", "risk": {"max": 0.2}})
+
+        args = Namespace(
+            baseline=str(baseline),
+            runtime_profile=str(runtime),
+            runtime_root=str(tmp_path),
+            profile="dev",
+            ignore_fields=[],
+            output_format="json",
+            output=None,
+            quiet=False,
+        )
+
+        response = strategy_cmd.execute_profile_diff(args)
+        assert isinstance(response, CliResponse)
+        assert response.success
+        diff = response.data["diff"]
+        assert any(entry["path"] == "risk.max" and entry["status"] == "changed" for entry in diff)
+
+    def test_execute_missing_runtime_profile_returns_error(self, tmp_path) -> None:
+        baseline = tmp_path / "baseline.json"
+        self._write_json(baseline, {"name": "alpha"})
+        runtime = tmp_path / "missing.json"
+
+        args = Namespace(
+            baseline=str(baseline),
+            runtime_profile=str(runtime),
+            runtime_root=str(tmp_path),
+            profile="dev",
+            ignore_fields=[],
+            output_format="json",
+            output=None,
+            quiet=False,
+        )
+
+        response = strategy_cmd.execute_profile_diff(args)
+        assert isinstance(response, CliResponse)
+        assert not response.success
+        assert response.errors
+        assert response.errors[0].code == CliErrorCode.FILE_NOT_FOUND.value

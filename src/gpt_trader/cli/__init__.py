@@ -33,6 +33,7 @@ from gpt_trader.cli.commands import (  # noqa: E402
     preflight,
     report,
     run,
+    strategy_profile,
     treasury,
     tui,
 )
@@ -51,6 +52,7 @@ COMMAND_NAMES = {
     "treasury",
     "report",
     "optimize",
+    "strategy",
     "tui",
     "preflight",
 }
@@ -181,6 +183,7 @@ def _build_parser() -> argparse.ArgumentParser:
     orders.register(subparsers)
     treasury.register(subparsers)
     report.register(subparsers)
+    strategy_profile.register(subparsers)
     optimize.register(subparsers)
     preflight.register(subparsers)
     broker_connectivity.register(subparsers)

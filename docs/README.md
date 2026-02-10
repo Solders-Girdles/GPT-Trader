@@ -74,6 +74,8 @@ When adding a new doc, link it below in the best-fit section.
 
 ## Configuration
 
+- [Strategy Profile Diff](STRATEGY_PROFILE_DIFF.md) - Compare baseline strategy settings against runtime profile values
+
 ### Trading Profiles
 | Profile | Environment | Use Case |
 |---------|-------------|----------|

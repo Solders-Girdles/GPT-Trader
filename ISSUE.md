@@ -1,51 +1,58 @@
-# GitHub Issue #578: [architecture] Centralize HealthCheckRunner registration with typed results
-https://github.com/Solders-Girdles/GPT-Trader/issues/578
-
-## Title
-`[architecture] Centralize HealthCheckRunner registration with typed results`
+# GitHub Issue #675: [enhancement] Add strategy profile diff command for active runtime
+https://github.com/Solders-Girdles/GPT-Trader/issues/675
 
 ## Why / Context
-Health checks are currently wired directly inside `HealthCheckRunner._execute_checks()` and again in `run_checks_sync()`. As we add checks (ticker freshness, degradation, etc.), it’s easy for async/sync paths to drift or for naming/details conventions to diverge.
+Operators need a direct way to understand profile drift between configured and active runtime values.
 
 ## Scope
 **In scope**
-- Introduce a small, typed registry/descriptor for health checks (name + callable + “blocking vs fast” or similar).
-- Use that registry in both `run_checks_sync()` and `_execute_checks()` so the check set stays consistent.
-- Keep behavior the same (no semantic changes to health check outcomes).
+- Add a command that diffs active runtime profile values against configured baseline.
+- Provide deterministic output suitable for automation parsing.
+- Document diff semantics and ignored fields.
 
 **Out of scope**
-- Reworking the health server API.
-- Changing check logic (other than wiring).
+- Automatic profile mutation based on diff output.
+- Schema changes to unrelated strategy modules.
 
 Constraints:
 - Keep changes small/mergeable.
 - Deterministic tests only.
+- Avoid touching unrelated generated artifacts unless required.
 
 ## Acceptance Criteria (required)
-- [ ] There is a single source of truth for which checks run (no duplication between async and sync paths).
-- [ ] Existing unit tests still pass, and at least one test asserts that the registry drives both paths.
-- [ ] No behavior change in health check results (only wiring/structure).
+- [ ] Command prints stable diff entries for changed/unchanged/missing keys.
+- [ ] Output can be emitted in machine-readable mode.
+- [ ] Ignored/noisy fields are explicit and tested.
+- [ ] Unit tests cover no-diff, partial-diff, and missing-profile scenarios.
 
 ## Implementation Notes / Pointers
 **Likely files / modules:**
-- `src/gpt_trader/monitoring/health_checks.py` (`HealthCheckRunner`)
+- `src/gpt_trader/features/strategy_dev/config/strategy_profile.py`
+- `src/gpt_trader/features/strategy_dev/config/registry.py`
+- `src/gpt_trader/cli/commands/optimize/compare.py`
 
 **Related tests:**
-- `tests/unit/gpt_trader/monitoring/test_health_checks_runner.py`
+- `tests/unit/gpt_trader/features/strategy_dev/config/test_strategy_profile.py`
+- `tests/unit/gpt_trader/features/strategy_dev/config/test_registry.py`
+- `tests/unit/gpt_trader/cli/commands/optimize/test_commands_execution.py`
+
+**Edge cases to handle:**
+- Nested config values should diff deterministically.
+- Missing active-profile values should be represented explicitly.
+- Ordering in rendered diffs should remain stable.
 
 ## Commands (local)
-- `make lint-fmt-fix`
-- `make typecheck`
-- `pytest -q tests/unit/gpt_trader/monitoring/test_health_checks_runner.py`
+- `make fmt`
+- `make lint`
+- `uv run pytest -q tests/unit/gpt_trader/features/strategy_dev/config/test_strategy_profile.py tests/unit/gpt_trader/cli/commands/optimize/test_commands_execution.py`
 
 ## PR Requirements
 - PR title should match the issue.
 - PR body must include: `Fixes #<issue-number>`
-- CI must be green.
+- CI must be green; if Agent Artifacts Freshness fails, run `uv run agent-regenerate`, then commit `var/agents/...` updates.
 
 ## Codex-Ready Checklist (for the issue creator)
 - [x] Clear acceptance criteria
 - [x] At least one file pointer
 - [x] Commands included
-- [x] No ambiguous “do the right thing” language
-
+- [x] No ambiguous "do the right thing" language

@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import io
 import os
 import platform
+from collections.abc import Mapping
+from contextlib import redirect_stdout
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from gpt_trader.preflight.context import PreflightContext
 from gpt_trader.preflight.core import PreflightCheck
@@ -43,19 +46,19 @@ def build_diagnostics_bundle(
 
     checker = PreflightCheck(verbose=verbose, profile=profile)
     context = checker.context
-    _silence_context(context)
 
     if warn_only:
         os.environ["GPT_TRADER_PREFLIGHT_WARN_ONLY"] = "1"
 
-    for check_name in CHECK_NAMES:
-        check = getattr(checker, check_name, None)
-        if check is None:
-            continue
-        try:
-            check()
-        except Exception as exc:  # pragma: no cover - defensive safeguard
-            checker.log_error(f"{check_name} failed to run: {exc}")
+    with redirect_stdout(io.StringIO()):
+        for check_name in CHECK_NAMES:
+            check = getattr(checker, check_name, None)
+            if check is None:
+                continue
+            try:
+                check()
+            except Exception as exc:  # pragma: no cover - defensive safeguard
+                checker.log_error(f"{check_name} failed to run: {exc}")
 
     readiness = _format_readiness_payload(context.results)
     bundle: dict[str, Any] = {
@@ -70,29 +73,6 @@ def build_diagnostics_bundle(
     }
 
     return bundle
-
-
-# -----------------------------------------------------------------------------
-# Helpers
-# -----------------------------------------------------------------------------
-
-
-def _silence_context(context: PreflightContext) -> None:
-    """Mute console output while still tracking structured results."""
-
-    def _log(status: str, message: str, details: Mapping[str, Any] | str | None) -> None:
-        context.successes.append(message) if status == "pass" else None
-        if status == "warn":
-            context.warnings.append(message)
-        if status == "fail":
-            context.errors.append(message)
-        context._record_result(status=status, message=message, details=details)
-
-    context.log_success = lambda message, details=None: _log("pass", message, details)
-    context.log_warning = lambda message, details=None: _log("warn", message, details)
-    context.log_error = lambda message, details=None: _log("fail", message, details)
-    context.log_info = lambda message: None
-    context.section_header = lambda title: None
 
 
 def _format_readiness_payload(results: list[PreflightResultPayload]) -> dict[str, Any]:

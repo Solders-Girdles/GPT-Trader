@@ -5,9 +5,10 @@ from __future__ import annotations
 from argparse import Namespace
 from typing import Any
 
+from scripts.ops import controls_smoke
+
 from gpt_trader.cli import options
 from gpt_trader.cli.response import CliResponse
-from scripts.ops import controls_smoke
 
 COMMAND_NAME = "controls summary"
 

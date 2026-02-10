@@ -9,7 +9,9 @@ from scripts.ops import controls_smoke
 from gpt_trader.cli.commands import controls as controls_cmd
 
 
-def _make_smoke_result(name: str, status: str, detail: dict[str, str]) -> controls_smoke.SmokeResult:
+def _make_smoke_result(
+    name: str, status: str, detail: dict[str, str]
+) -> controls_smoke.SmokeResult:
     """Helper to build deterministic smoke results."""
 
     return controls_smoke.SmokeResult(name=name, status=status, detail=detail)
@@ -44,9 +46,7 @@ def test_handle_summary_warns_on_guard_blocks(monkeypatch) -> None:
     response = controls_cmd._handle_summary(args)
 
     assert response.exit_code == controls_smoke.EXIT_GUARD_BLOCKED
-    assert response.warnings == [
-        "1 controls were guard-blocked (guard checks still functional)"
-    ]
+    assert response.warnings == ["1 controls were guard-blocked (guard checks still functional)"]
     assert response.data["summary"]["severity_counts"]["warn"] == 1
 
 

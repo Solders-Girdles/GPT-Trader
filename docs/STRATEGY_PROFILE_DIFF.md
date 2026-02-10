@@ -1,3 +1,8 @@
+---
+status: current
+last-updated: 2026-02-10
+---
+
 # Strategy Profile Diff
 
 Operators can now compare the StrategyProfile loaded from disk (baseline) against the active strategy profile emitted by a live runtime.

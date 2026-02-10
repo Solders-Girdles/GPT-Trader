@@ -20,6 +20,11 @@ This page is intentionally thin. Metric names/labels and event schemas are gener
 - Metrics export: `scripts/monitoring/export_metrics.py`
 - Tracing helpers: `src/gpt_trader/observability/tracing.py`
 
+## Heartbeat Metrics
+
+- `gpt_trader_ws_last_heartbeat_age_seconds` *(gauge)* — Age of the most recent WebSocket heartbeat at the time of the `StatusReporter` update, reported in **seconds**. When no timestamp is available the gauge stays at `0`.
+- `gpt_trader_ws_heartbeat_lag_seconds` *(histogram)* — Distribution of observed heartbeat lag as it appears in the `/status` payload (seconds). Samples are recorded only when a valid heartbeat timestamp exists; bucket boundaries are fixed at 0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0, 120.0, and 300.0 seconds.
+
 ## Health-Check Extension Contract
 
 Health checks are registered in the health check runner and surfaced by the

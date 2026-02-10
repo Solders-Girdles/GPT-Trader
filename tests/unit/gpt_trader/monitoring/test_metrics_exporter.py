@@ -161,10 +161,7 @@ def _build_heartbeat_histogram_summary(
     """Helper for building heartbeat histogram summaries."""
 
     assert len(bucket_counts) == len(HEARTBEAT_LAG_BUCKETS)
-    bucket_map = {
-        str(bound): count
-        for bound, count in zip(HEARTBEAT_LAG_BUCKETS, bucket_counts)
-    }
+    bucket_map = {str(bound): count for bound, count in zip(HEARTBEAT_LAG_BUCKETS, bucket_counts)}
     count = sum(bucket_counts)
     return {
         "histograms": {
@@ -184,12 +181,8 @@ def _expected_heartbeat_bucket_lines(bucket_counts: tuple[int, ...]) -> list[str
     cumulative = 0
     for bound, bucket in zip(HEARTBEAT_LAG_BUCKETS, bucket_counts):
         cumulative += bucket
-        expected.append(
-            f'{HEARTBEAT_LAG_METRIC}_bucket{{le="{bound}"}} {cumulative}'
-        )
-    expected.append(
-        f'{HEARTBEAT_LAG_METRIC}_bucket{{le="+Inf"}} {sum(bucket_counts)}'
-    )
+        expected.append(f'{HEARTBEAT_LAG_METRIC}_bucket{{le="{bound}"}} {cumulative}')
+    expected.append(f'{HEARTBEAT_LAG_METRIC}_bucket{{le="+Inf"}} {sum(bucket_counts)}')
     return expected
 
 

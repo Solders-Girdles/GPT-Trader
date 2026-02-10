@@ -27,6 +27,8 @@ def execute(args: Namespace) -> int:
         argv.append("--verbose")
     if getattr(args, "warn_only", False):
         argv.append("--warn-only")
+    if getattr(args, "diagnostics_bundle", False):
+        argv.append("--diagnostics-bundle")
     if getattr(args, "report_dir", None):
         argv.extend(["--report-dir", str(args.report_dir)])
     if getattr(args, "report_path", None):

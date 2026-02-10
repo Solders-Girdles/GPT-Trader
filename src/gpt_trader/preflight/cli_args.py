@@ -18,6 +18,7 @@ class PreflightCliArgs:
     verbose: bool
     profile: str
     warn_only: bool
+    diagnostics_bundle: bool
     report_dir: Path | None
     report_path: Path | None
 
@@ -35,6 +36,11 @@ def add_preflight_arguments(parser: argparse.ArgumentParser) -> None:
         "--warn-only",
         action="store_true",
         help="Downgrade diagnostic failures to warnings (also: GPT_TRADER_PREFLIGHT_WARN_ONLY=1)",
+    )
+    parser.add_argument(
+        "--diagnostics-bundle",
+        action="store_true",
+        help="Emit a compact diagnostics bundle (JSON) instead of the regular report",
     )
 
     output_group = parser.add_mutually_exclusive_group()
@@ -72,6 +78,7 @@ def _normalize_preflight_args(
         verbose=bool(args.verbose),
         profile=str(args.profile),
         warn_only=bool(args.warn_only),
+        diagnostics_bundle=bool(args.diagnostics_bundle),
         report_dir=report_dir,
         report_path=report_path,
     )

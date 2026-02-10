@@ -7,13 +7,20 @@ The diff command produces deterministic entries for **changed**, **unchanged**, 
 
 ```bash
 gpt-trader strategy profile-diff \
-  --baseline config/strategy_profiles/btc_momentum.json \
+  --baseline config/profiles/dev.yaml \
   --profile dev \
   --runtime-root /path/to/repo \
   --format text
 ```
 
-By default the runtime profile is read from `runtime_data/<profile>/strategy_profile.json`. Provide `--runtime-profile` to point to a different file.
+By default the runtime profile path is resolved using the first existing file from:
+
+1. `runtime_data/<profile>/strategy_profile.json`
+2. `config/profiles/<profile>.yaml`
+3. `config/profiles/<profile>.yml`
+4. `config/profiles/<profile>.json`
+
+Provide `--runtime-profile` to point to an explicit file.
 
 Use `--format json` to receive structured output:
 

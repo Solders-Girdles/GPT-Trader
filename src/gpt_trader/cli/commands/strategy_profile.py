@@ -14,12 +14,13 @@ from gpt_trader.cli.response import CliErrorCode, CliResponse
 from gpt_trader.features.strategy_dev.config.diff import (
     DEFAULT_IGNORED_FIELDS,
     ProfileDiffEntry,
+    ProfileDiffStatus,
     compute_profile_diff,
 )
 
 COMMAND_NAME = "strategy profile diff"
 _DEFAULT_RUNTIME_PROFILE_FILENAME = "strategy_profile.json"
-_STATUS_ORDER = ("changed", "missing", "unchanged")
+_STATUS_ORDER: tuple[ProfileDiffStatus, ...] = ("changed", "missing", "unchanged")
 
 
 def register(subparsers: Any) -> None:
@@ -83,9 +84,17 @@ def execute_profile_diff(args: Namespace) -> CliResponse | int:
 
     if args.runtime_profile:
         runtime_path = Path(args.runtime_profile)
+        attempted_runtime_paths = [runtime_path]
     else:
         runtime_root = Path(args.runtime_root)
-        runtime_path = runtime_root / "runtime_data" / args.profile / _DEFAULT_RUNTIME_PROFILE_FILENAME
+        attempted_runtime_paths = _candidate_runtime_profile_paths(
+            runtime_root=runtime_root,
+            profile_name=args.profile,
+        )
+        runtime_path = _resolve_runtime_profile_path(
+            runtime_root=runtime_root,
+            profile_name=args.profile,
+        )
 
     try:
         baseline_data = _load_profile_file(baseline_path)
@@ -107,11 +116,14 @@ def execute_profile_diff(args: Namespace) -> CliResponse | int:
     try:
         runtime_data = _load_profile_file(runtime_path)
     except FileNotFoundError:
+        details: dict[str, Any] = {"path": str(runtime_path)}
+        if len(attempted_runtime_paths) > 1:
+            details["attempted_paths"] = [str(path) for path in attempted_runtime_paths]
         return CliResponse.error_response(
             command=COMMAND_NAME,
             code=CliErrorCode.FILE_NOT_FOUND,
             message=f"Runtime profile not found: {runtime_path}",
-            details={"path": str(runtime_path)},
+            details=details,
         )
     except ValueError as exc:
         return CliResponse.error_response(
@@ -168,6 +180,26 @@ def _load_profile_file(path: Path) -> dict[str, Any]:
         raise ValueError("Profile payload must be an object")
 
     return data
+
+
+def _candidate_runtime_profile_paths(*, runtime_root: Path, profile_name: str) -> list[Path]:
+    return [
+        runtime_root / "runtime_data" / profile_name / _DEFAULT_RUNTIME_PROFILE_FILENAME,
+        runtime_root / "config" / "profiles" / f"{profile_name}.yaml",
+        runtime_root / "config" / "profiles" / f"{profile_name}.yml",
+        runtime_root / "config" / "profiles" / f"{profile_name}.json",
+    ]
+
+
+def _resolve_runtime_profile_path(*, runtime_root: Path, profile_name: str) -> Path:
+    candidates = _candidate_runtime_profile_paths(
+        runtime_root=runtime_root,
+        profile_name=profile_name,
+    )
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return candidates[0]
 
 
 def _format_profile_diff_text(entries: list[ProfileDiffEntry]) -> str:

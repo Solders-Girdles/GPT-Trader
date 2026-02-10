@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+import json
 from argparse import Namespace
 from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock
-import json
 
 import pytest
 
@@ -153,9 +153,7 @@ class TestStrategyProfileDiffCommand:
         with path.open("w") as f:
             json.dump(data, f)
 
-    def test_execute_returns_diff_entries(
-        self, tmp_path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_execute_returns_diff_entries(self, tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
         baseline = tmp_path / "baseline.json"
         runtime = tmp_path / "runtime.json"
         self._write_json(baseline, {"name": "alpha", "risk": {"max": 0.1}})
@@ -199,3 +197,27 @@ class TestStrategyProfileDiffCommand:
         assert not response.success
         assert response.errors
         assert response.errors[0].code == CliErrorCode.FILE_NOT_FOUND.value
+
+    def test_execute_uses_first_existing_default_runtime_profile_path(self, tmp_path) -> None:
+        baseline = tmp_path / "baseline.json"
+        self._write_json(baseline, {"name": "alpha", "risk": {"max": 0.1}})
+
+        runtime_profile = tmp_path / "config" / "profiles" / "dev.yaml"
+        runtime_profile.parent.mkdir(parents=True, exist_ok=True)
+        runtime_profile.write_text("name: alpha\nrisk:\n  max: 0.2\n")
+
+        args = Namespace(
+            baseline=str(baseline),
+            runtime_profile=None,
+            runtime_root=str(tmp_path),
+            profile="dev",
+            ignore_fields=[],
+            output_format="json",
+            output=None,
+            quiet=False,
+        )
+
+        response = strategy_cmd.execute_profile_diff(args)
+        assert isinstance(response, CliResponse)
+        assert response.success
+        assert response.data["runtime_profile_path"] == str(runtime_profile)

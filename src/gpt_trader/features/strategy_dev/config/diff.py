@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Iterable, Literal, TypedDict
+from collections.abc import Iterable
+from typing import Any, Literal, TypedDict
 
 ProfileDiffStatus = Literal["changed", "unchanged", "missing"]
 
@@ -118,7 +119,7 @@ def _compare_value(
 
 def _values_equal(left: Any, right: Any) -> bool:
     """Determine equality while normalizing nested dictionaries."""
-    return _normalize(left) == _normalize(right)
+    return bool(_normalize(left) == _normalize(right))
 
 
 def _normalize(value: Any) -> Any:

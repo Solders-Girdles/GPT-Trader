@@ -56,7 +56,6 @@ def build_config_from_args(args: Namespace, **kwargs: Any) -> BotConfig:
     - monitoring: log level, status settings
     - execution: dry_run, mock_broker, time_in_force
     """
-    from gpt_trader.app.config.profile_loader import ProfileLoader
     from gpt_trader.config.types import Profile
 
     # 1. Check for --config flag first (takes precedence over profile)
@@ -69,7 +68,9 @@ def build_config_from_args(args: Namespace, **kwargs: Any) -> BotConfig:
         config = BotConfig.from_env()
 
         # Load Profile if specified using ProfileLoader
-        profile_name = getattr(args, "profile", DEFAULT_RUNTIME_PROFILE_NAME) or DEFAULT_RUNTIME_PROFILE_NAME
+        profile_name = (
+            getattr(args, "profile", DEFAULT_RUNTIME_PROFILE_NAME) or DEFAULT_RUNTIME_PROFILE_NAME
+        )
 
         try:
             # Try to convert profile name to Profile enum

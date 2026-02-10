@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 from .checks import (
     check_api_connectivity,
@@ -83,7 +84,7 @@ class PreflightCheck:
     def _should_skip_remote_checks(self) -> bool:
         return self.context.should_skip_remote_checks()
 
-    def _expected_env_defaults(self) -> dict[str, tuple[str, bool]]:
+    def _expected_env_defaults(self) -> Mapping[str, tuple[str, bool]]:
         return self.context.expected_env_defaults()
 
     def _build_cdp_client(self) -> Any:

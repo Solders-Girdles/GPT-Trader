@@ -41,6 +41,7 @@ def _sanitize_text(value: str | None, fallback: str) -> str:
         return fallback
     return normalized.splitlines()[0]
 
+
 def _normalize_remediation(value: str | None, fallback: str) -> str:
     if not value:
         return fallback
@@ -109,12 +110,8 @@ def profile_yaml_missing_payload(
 ) -> ProfileErrorPayload:
     """Describe a missing profile YAML file."""
 
-    reason = (
-        f"Profile YAML not found at {path or profile}."
-    )
-    remediation = (
-        f"Create {path or 'config/profiles/<profile>.yaml'} or rely on the shared defaults before retrying."
-    )
+    reason = f"Profile YAML not found at {path or profile}."
+    remediation = f"Create {path or 'config/profiles/<profile>.yaml'} or rely on the shared defaults before retrying."
     return format_profile_error_payload(
         profile=profile,
         path=path,

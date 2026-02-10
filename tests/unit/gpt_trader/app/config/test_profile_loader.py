@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-import pytest
 from decimal import Decimal
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import MagicMock
+
+import pytest
 
 from gpt_trader.app.config.profile_loader import (
     ProfileLoader,
@@ -125,6 +126,7 @@ monitoring:
         assert details["category"] == "missing_file"
         assert details["severity"] == "warning"
         assert details["reason"].startswith("Profile YAML not found")
+
 
 class TestProfileSchema:
     """Tests for ProfileSchema dataclass."""

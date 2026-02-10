@@ -3,6 +3,10 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from gpt_trader.app.config.profile_error_payloads import (
+    profile_yaml_missing_payload,
+    profile_yaml_parse_error_payload,
+)
 from gpt_trader.app.config.profile_loader import get_profile_registry_entry_by_name
 
 if TYPE_CHECKING:
@@ -46,12 +50,23 @@ def check_profile_configuration(checker: PreflightCheck) -> bool:
 
             checker.log_success(f"Profile '{checker.profile}' validated")
             return True
-
         except Exception as exc:
-            checker.log_error(f"Failed to parse profile: {exc}")
+            payload = profile_yaml_parse_error_payload(
+                profile=checker.profile,
+                path=profile_path,
+                exception=exc,
+            )
+            checker.log_error("Failed to parse profile", details=payload)
             return False
 
-    checker.log_warning(f"Profile '{checker.profile}' not found, will use defaults")
+    payload = profile_yaml_missing_payload(
+        profile=checker.profile,
+        path=profile_path,
+    )
+    checker.log_warning(
+        f"Profile '{checker.profile}' not found, will use defaults",
+        details=payload,
+    )
     if checker.profile == "canary":
         checker.log_info("Canary defaults: 0.01 BTC max, 1% daily loss, reduce-only")
     elif checker.profile == "prod":

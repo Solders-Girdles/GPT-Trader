@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import pytest
 from decimal import Decimal
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import MagicMock
 
 from gpt_trader.app.config.profile_loader import (
     ProfileLoader,
@@ -80,6 +82,49 @@ monitoring:
                 assert schema is not None
                 assert schema.profile_name == profile.value
 
+    def test_logs_payload_on_yaml_parse_error(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """YAML parse failures log a normalized payload."""
+        mock_logger = MagicMock()
+        monkeypatch.setattr("gpt_trader.app.config.profile_loader.logger", mock_logger)
+
+        yaml_path = tmp_path / "dev.yaml"
+        yaml_path.write_text("invalid: [")
+
+        loader = ProfileLoader(profiles_dir=tmp_path)
+        schema = loader.load(Profile.DEV)
+
+        assert schema.profile_name == "dev"
+        assert mock_logger.warning.call_count == 1
+        logged_kwargs = mock_logger.warning.call_args.kwargs
+        details = logged_kwargs.get("details", {})
+        assert details["profile"] == "dev"
+        assert details["category"] == "yaml_parse"
+        assert details["severity"] == "error"
+        reason = details["reason"]
+        assert "while parsing" in reason
+        assert "\n" not in reason
+        assert "Defaults are provided" in details["remediation"]
+        assert "\n" not in details["remediation"]
+
+    def test_logs_payload_when_profile_missing(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Missing profile YAML logs a normalized warning payload."""
+        mock_logger = MagicMock()
+        monkeypatch.setattr("gpt_trader.app.config.profile_loader.logger", mock_logger)
+
+        loader = ProfileLoader(profiles_dir=tmp_path)
+        schema = loader.load(Profile.DEV)
+
+        assert schema.profile_name == "dev"
+        assert mock_logger.warning.call_count == 1
+        logged_kwargs = mock_logger.warning.call_args.kwargs
+        details = logged_kwargs.get("details", {})
+        assert details["category"] == "missing_file"
+        assert details["severity"] == "warning"
+        assert details["reason"].startswith("Profile YAML not found")
 
 class TestProfileSchema:
     """Tests for ProfileSchema dataclass."""

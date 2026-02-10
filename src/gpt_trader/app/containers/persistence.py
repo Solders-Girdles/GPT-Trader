@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from gpt_trader.app.config import BotConfig
-from gpt_trader.app.runtime import RuntimePaths, resolve_runtime_paths
+from gpt_trader.app.runtime import RuntimePaths, RuntimeSettingsSnapshot, resolve_runtime_paths
 from gpt_trader.config.types import Profile
 from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.persistence.orders_store import OrdersStore
@@ -33,6 +33,7 @@ class PersistenceContainer:
     def __init__(
         self,
         config: BotConfig,
+        runtime_settings_snapshot: RuntimeSettingsSnapshot,
         profile_provider: Callable[[], Profile],
     ):
         self._config = config
@@ -41,6 +42,7 @@ class PersistenceContainer:
         self._runtime_paths: RuntimePaths | None = None
         self._event_store: EventStore | None = None
         self._orders_store: OrdersStore | None = None
+        self._runtime_settings_snapshot = runtime_settings_snapshot
 
     @property
     def runtime_paths(self) -> RuntimePaths:
@@ -48,7 +50,7 @@ class PersistenceContainer:
         if self._runtime_paths is None:
             profile = self._profile_provider()
             self._runtime_paths = resolve_runtime_paths(
-                config=self._config,
+                config=self._runtime_settings_snapshot,
                 profile=profile,
             )
         return self._runtime_paths

@@ -8,24 +8,29 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
+from gpt_trader.app.container import clear_application_container
 from gpt_trader.cli import options
 from gpt_trader.cli.response import CliResponse
 
 COMMAND_NAME = "controls summary"
+DEFAULT_SUMMARY_MAX_FAILURES = 3
+_controls_smoke_module: Any | None = None
 
 
 def _load_controls_smoke_module() -> Any:
-    try:
-        from scripts.ops import controls_smoke as module
-
-        return module
-    except ModuleNotFoundError:
-        module_path = Path(__file__).resolve().parents[4] / "scripts" / "ops" / "controls_smoke.py"
-        namespace = runpy.run_path(str(module_path))
-        return SimpleNamespace(**namespace)
+    module_path = Path(__file__).resolve().parents[4] / "scripts" / "ops" / "controls_smoke.py"
+    if not module_path.exists():
+        msg = f"controls smoke module not found at expected path: {module_path}"
+        raise ModuleNotFoundError(msg)
+    namespace = runpy.run_path(str(module_path))
+    return SimpleNamespace(**namespace)
 
 
-controls_smoke = _load_controls_smoke_module()
+def _get_controls_smoke_module() -> Any:
+    global _controls_smoke_module
+    if _controls_smoke_module is None:
+        _controls_smoke_module = _load_controls_smoke_module()
+    return _controls_smoke_module
 
 
 def register(subparsers: Any) -> None:
@@ -45,7 +50,7 @@ def register(subparsers: Any) -> None:
     summary.add_argument(
         "--max-top-failures",
         type=int,
-        default=controls_smoke.DEFAULT_SUMMARY_MAX_FAILURES,
+        default=DEFAULT_SUMMARY_MAX_FAILURES,
         help="Maximum number of failing checks to include in the summary (default: %(default)s)",
     )
     summary.set_defaults(handler=_handle_summary, subcommand="summary")
@@ -53,31 +58,35 @@ def register(subparsers: Any) -> None:
 
 def _handle_summary(args: Namespace) -> CliResponse:
     """Handle the controls summary subcommand."""
+    controls_smoke = _get_controls_smoke_module()
     limit = max(0, args.max_top_failures or 0)
-    results = controls_smoke.run_smoke_checks()
-    outcome = controls_smoke.determine_outcome(results)
-    payload = controls_smoke.build_summary_payload(
-        results,
-        outcome,
-        max_top_failures=limit,
-    )
-
-    severity_counts = payload["summary"]["severity_counts"]
-    warnings: list[str] = []
-    if severity_counts["fail"] > 0:
-        warnings.append(
-            f"{severity_counts['fail']} unexpected failures detected (exit_code={outcome.exit_code})"
-        )
-    elif severity_counts["warn"] > 0:
-        warnings.append(
-            f"{severity_counts['warn']} controls were guard-blocked (guard checks still functional)"
+    try:
+        results = controls_smoke.run_smoke_checks()
+        outcome = controls_smoke.determine_outcome(results)
+        payload = controls_smoke.build_summary_payload(
+            results,
+            outcome,
+            max_top_failures=limit,
         )
 
-    return CliResponse(
-        success=True,
-        command=COMMAND_NAME,
-        data=payload,
-        warnings=warnings,
-        exit_code=outcome.exit_code,
-        was_noop=True,
-    )
+        severity_counts = payload["summary"]["severity_counts"]
+        warnings: list[str] = []
+        if severity_counts["fail"] > 0:
+            warnings.append(
+                f"{severity_counts['fail']} unexpected failures detected (exit_code={outcome.exit_code})"
+            )
+        elif severity_counts["warn"] > 0:
+            warnings.append(
+                f"{severity_counts['warn']} controls were guard-blocked (guard checks still functional)"
+            )
+
+        return CliResponse(
+            success=True,
+            command=COMMAND_NAME,
+            data=payload,
+            warnings=warnings,
+            exit_code=outcome.exit_code,
+            was_noop=True,
+        )
+    finally:
+        clear_application_container()

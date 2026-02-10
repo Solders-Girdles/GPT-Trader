@@ -17,7 +17,12 @@ def _make_smoke_result(
     return controls_smoke.SmokeResult(name=name, status=status, detail=detail)
 
 
+def _bind_controls_smoke_module(monkeypatch) -> None:
+    monkeypatch.setattr(controls_cmd, "_get_controls_smoke_module", lambda: controls_smoke)
+
+
 def test_handle_summary_success(monkeypatch) -> None:
+    _bind_controls_smoke_module(monkeypatch)
     results = [
         _make_smoke_result("guard_one", "passed", {"status": "blocked"}),
         _make_smoke_result("guard_two", "passed", {"status": "success"}),
@@ -36,6 +41,7 @@ def test_handle_summary_success(monkeypatch) -> None:
 
 
 def test_handle_summary_warns_on_guard_blocks(monkeypatch) -> None:
+    _bind_controls_smoke_module(monkeypatch)
     results = [
         _make_smoke_result("guard_block", "failed", {"status": "blocked"}),
     ]
@@ -51,6 +57,7 @@ def test_handle_summary_warns_on_guard_blocks(monkeypatch) -> None:
 
 
 def test_handle_summary_respects_max_failures(monkeypatch) -> None:
+    _bind_controls_smoke_module(monkeypatch)
     results = [
         _make_smoke_result("a_fail", "failed", {"status": "success"}),
         _make_smoke_result("b_warn", "failed", {"status": "blocked"}),
@@ -68,3 +75,21 @@ def test_handle_summary_respects_max_failures(monkeypatch) -> None:
     assert summary["top_failing_checks"] == [
         {"name": "a_fail", "severity": "fail", "detail": {"status": "success"}}
     ]
+
+
+def test_handle_summary_clears_global_container(monkeypatch) -> None:
+    _bind_controls_smoke_module(monkeypatch)
+    results = [_make_smoke_result("guard_one", "passed", {"status": "success"})]
+    clear_calls: list[None] = []
+
+    monkeypatch.setattr(controls_smoke, "run_smoke_checks", lambda: results)
+    monkeypatch.setattr(
+        controls_cmd,
+        "clear_application_container",
+        lambda: clear_calls.append(None),
+    )
+
+    args = SimpleNamespace(max_top_failures=3)
+    controls_cmd._handle_summary(args)
+
+    assert len(clear_calls) == 1

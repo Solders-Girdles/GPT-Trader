@@ -407,7 +407,9 @@ for profile_value, schema in _PROFILE_DEFAULTS.items():
     entry = ProfileRegistryEntry(
         profile=profile_value,
         schema=schema,
-        env_defaults=_DEV_ENV_DEFAULTS if profile_value in _DEV_LIKE_PROFILES else _PROD_ENV_DEFAULTS,
+        env_defaults=(
+            _DEV_ENV_DEFAULTS if profile_value in _DEV_LIKE_PROFILES else _PROD_ENV_DEFAULTS
+        ),
         preflight_supported=profile_value in {Profile.DEV, Profile.CANARY, Profile.PROD},
         preflight_default=profile_value is Profile.CANARY,
     )

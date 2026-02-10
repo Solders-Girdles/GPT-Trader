@@ -46,3 +46,19 @@ def test_ensure_runtime_settings_snapshot_handles_both_types() -> None:
 
     assert isinstance(result, RuntimeSettingsSnapshot)
     assert result is not snapshot
+
+
+def test_runtime_settings_snapshot_handles_opaque_metadata_values() -> None:
+    """Snapshot generation should not deepcopy arbitrary metadata objects."""
+
+    class _OpaqueObject:
+        def __deepcopy__(self, memo):  # pragma: no cover - guardrail for behavior
+            raise TypeError("opaque object cannot be deep-copied")
+
+    config = BotConfig()
+    opaque = _OpaqueObject()
+    config.metadata["opaque"] = opaque
+
+    snapshot = create_runtime_settings_snapshot(config)
+
+    assert snapshot.config_data.metadata.opaque is opaque

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import json
 import os
-from collections.abc import Mapping
-from dataclasses import asdict, is_dataclass
+from collections.abc import ItemsView, Iterator, KeysView, Mapping
+from dataclasses import fields, is_dataclass
 from decimal import Decimal
 from enum import Enum
 from types import MappingProxyType
@@ -18,6 +18,7 @@ class FrozenConfigProxy(Mapping[str, Any]):
     """Read-only view of configuration data with attribute access."""
 
     __slots__ = ("_data",)
+    _data: MappingProxyType[str, Any]
 
     def __init__(self, source: dict[str, Any]) -> None:
         object.__setattr__(
@@ -29,7 +30,7 @@ class FrozenConfigProxy(Mapping[str, Any]):
     def __getitem__(self, key: str) -> Any:
         return self._data[key]
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         return iter(self._data)
 
     def __len__(self) -> int:
@@ -45,15 +46,19 @@ class FrozenConfigProxy(Mapping[str, Any]):
             raise AttributeError("FrozenConfigProxy is immutable")
         super().__setattr__(name, value)
 
-    def items(self):
+    def items(self) -> ItemsView[str, Any]:
         return self._data.items()
 
-    def keys(self):
+    def keys(self) -> KeysView[str]:
         return self._data.keys()
 
 
 def _freeze_dict(source: dict[str, Any]) -> FrozenConfigProxy:
     return FrozenConfigProxy(source)
+
+
+def _dataclass_to_shallow_dict(value: Any) -> dict[str, Any]:
+    return {field.name: getattr(value, field.name) for field in fields(value)}
 
 
 def _freeze_value(value: Any) -> Any:
@@ -72,7 +77,7 @@ def _freeze_value(value: Any) -> Any:
     if isinstance(value, Enum):
         return value.value
     if is_dataclass(value):
-        return _freeze_value(asdict(value))
+        return _freeze_dict(_dataclass_to_shallow_dict(value))
     return value
 
 
@@ -106,7 +111,9 @@ class RuntimeSettingsSnapshot:
 
     __slots__ = ("_config", "_env")
 
-    def __init__(self, config_data: FrozenConfigProxy, env_vars: MappingProxyType[str, str]) -> None:
+    def __init__(
+        self, config_data: FrozenConfigProxy, env_vars: MappingProxyType[str, str]
+    ) -> None:
         self._config = config_data
         self._env = env_vars
 
@@ -143,15 +150,15 @@ class RuntimeSettingsSnapshot:
     def __contains__(self, name: object) -> bool:
         return isinstance(name, str) and name in self._config
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         return iter(self._config)
 
 
 def create_runtime_settings_snapshot(config: BotConfig) -> RuntimeSettingsSnapshot:
     """Create a snapshot from a mutable BotConfig."""
 
-    config_dict = asdict(config)
-    frozen_config = _freeze_value(config_dict)
+    config_dict = _dataclass_to_shallow_dict(config)
+    frozen_config = _freeze_dict(config_dict)
     env_snapshot = _capture_environment()
     return RuntimeSettingsSnapshot(config_data=frozen_config, env_vars=env_snapshot)
 

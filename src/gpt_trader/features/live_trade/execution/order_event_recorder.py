@@ -13,6 +13,11 @@ from typing import Any
 from gpt_trader.app.protocols import EventStoreProtocol
 from gpt_trader.core import OrderSide, OrderType
 from gpt_trader.features.live_trade.execution.decision_trace import OrderDecisionTrace
+from gpt_trader.features.live_trade.execution.order_event_schema import (
+    OrderEventSchemaError,
+    OrderPreviewEvent,
+    OrderRejectionEvent,
+)
 from gpt_trader.features.live_trade.execution.rejection_reason import (
     normalize_rejection_reason,
 )
@@ -54,18 +59,28 @@ class OrderEventRecorder:
         """Record order preview for analysis."""
         if preview is None:
             return
+        try:
+            payload = OrderPreviewEvent(
+                symbol=symbol,
+                side=side,
+                order_type=order_type,
+                quantity=quantity,
+                price=price,
+                preview=preview,
+            ).serialize()
+        except OrderEventSchemaError as exc:  # pragma: no cover - defensive
+            logger.error(
+                "Failed to normalize order preview payload",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="record_preview",
+                symbol=symbol,
+            )
+            raise
         emit_metric(
             self._event_store,
             self._bot_id,
-            {
-                "event_type": "order_preview",
-                "symbol": symbol,
-                "side": side.value,
-                "order_type": order_type.value,
-                "quantity": str(quantity),
-                "price": str(price) if price is not None else "market",
-                "preview": preview,
-            },
+            payload,
             logger=get_monitoring_logger(),
         )
         try:
@@ -129,19 +144,30 @@ class OrderEventRecorder:
             operation="order_rejected",
             stage="record",
         )
+        try:
+            payload = OrderRejectionEvent(
+                symbol=symbol,
+                side=side,
+                quantity=quantity,
+                price=price,
+                reason=normalized_reason,
+                reason_detail=reason_detail,
+                client_order_id=effective_order_id,
+            ).serialize()
+        except OrderEventSchemaError as exc:  # pragma: no cover - defensive
+            logger.error(
+                "Failed to normalize order rejection payload",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="record_rejection",
+                symbol=symbol,
+                reason=normalized_reason,
+            )
+            raise
         emit_metric(
             self._event_store,
             self._bot_id,
-            {
-                "event_type": "order_rejected",
-                "symbol": symbol,
-                "side": side,
-                "quantity": str(quantity),
-                "price": str(price) if price is not None else "market",
-                "reason": normalized_reason,
-                "reason_detail": reason_detail,
-                "client_order_id": effective_order_id,
-            },
+            payload,
             logger=get_monitoring_logger(),
         )
         try:

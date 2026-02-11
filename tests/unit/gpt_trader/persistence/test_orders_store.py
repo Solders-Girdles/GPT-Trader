@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import pytest
+
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -135,6 +138,52 @@ class TestOrdersStore:
                 btc_orders = store.get_orders_by_symbol("BTC-USD")
                 assert len(btc_orders) == 1
                 assert btc_orders[0].symbol == "BTC-USD"
+
+    def test_list_orders_filters_and_limit(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            with OrdersStore(tmpdir) as store:
+                base = datetime(2025, 1, 1, tzinfo=timezone.utc)
+                older = create_test_order(
+                    order_id="old",
+                    status=OrderStatus.OPEN,
+                    symbol="BTC-USD",
+                    created_at=base,
+                    updated_at=base,
+                )
+                newer = create_test_order(
+                    order_id="new",
+                    status=OrderStatus.FILLED,
+                    symbol="BTC-USD",
+                    created_at=base + timedelta(days=1),
+                    updated_at=base + timedelta(days=1),
+                )
+                other = create_test_order(
+                    order_id="other",
+                    status=OrderStatus.CANCELLED,
+                    symbol="ETH-USD",
+                    created_at=base + timedelta(days=2),
+                    updated_at=base + timedelta(days=2),
+                )
+
+                for order in (older, newer, other):
+                    store.save_order(order)
+
+                recent = store.list_orders(limit=2)
+                assert [record.order_id for record in recent] == ["other", "new"]
+
+                filtered = store.list_orders(
+                    limit=5,
+                    symbol="BTC-USD",
+                    status=OrderStatus.FILLED,
+                )
+                assert len(filtered) == 1
+                assert filtered[0].order_id == "new"
+
+    def test_list_orders_requires_positive_limit(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            with OrdersStore(tmpdir) as store:
+                with pytest.raises(ValueError):
+                    store.list_orders(limit=0)
 
     def test_update_status(self) -> None:
         with TemporaryDirectory() as tmpdir:

@@ -329,11 +329,20 @@ def _format_comparison_matrix(
     header.extend(_format_header_label(run, baseline_run_id) for run in runs)
 
     rows: list[list[str]] = []
-    for matrix_row in matrix:
-        entries = [matrix_row["label"]]
-        entry_map = {entry["run_id"]: entry for entry in matrix_row.get("values", [])}
+    for row in matrix:
+        entries: list[str] = [str(row.get("label", ""))]
+        raw_values = row.get("values", [])
+        entry_map: dict[str, dict[str, Any]] = {}
+        if isinstance(raw_values, list):
+            for raw_entry in raw_values:
+                if not isinstance(raw_entry, dict):
+                    continue
+                run_key = str(raw_entry.get("run_id", ""))
+                if run_key:
+                    entry_map[run_key] = raw_entry
         for run in runs:
-            entry = entry_map.get(run["run_id"], {"value": None, "delta": None})
+            run_id = str(run.get("run_id", ""))
+            entry = entry_map.get(run_id, {"value": None, "delta": None})
             entry_value = _format_matrix_value(entry.get("value"))
             delta_str = _format_delta(entry.get("delta"))
             entries.append(f"{entry_value} (Δ {delta_str})")
@@ -353,9 +362,9 @@ def _format_comparison_matrix(
     formatted.append(header_line)
     formatted.append(separator)
 
-    for row_cells in rows:
+    for row_values in rows:
         row_line = " | ".join(
-            row_cells[col_idx].ljust(col_widths[col_idx]) for col_idx in range(len(header))
+            row_values[col_idx].ljust(col_widths[col_idx]) for col_idx in range(len(header))
         )
         formatted.append(row_line)
 
@@ -364,8 +373,9 @@ def _format_comparison_matrix(
 
 def _format_header_label(run: dict[str, Any], baseline_run_id: str | None) -> str:
     """Create a column header label for a run."""
-    label = str(run["run_id"])
-    if baseline_run_id and run["run_id"] == baseline_run_id:
+    run_id = str(run.get("run_id", ""))
+    label = run_id
+    if baseline_run_id and run_id == baseline_run_id:
         label += " (baseline)"
     return label
 
